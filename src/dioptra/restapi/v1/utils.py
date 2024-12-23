@@ -153,6 +153,7 @@ def build_experiment_snapshot_ref(experiment: models.Experiment) -> dict[str, An
         The ExperimentSnapshotRef dictionary.
     """
     return {
+        "id": experiment.resource_id,
         "snapshot_id": experiment.resource_snapshot_id,
         "name": experiment.name,
         "group": build_group_ref(experiment.resource.owner),
@@ -346,6 +347,7 @@ def build_entrypoint_snapshot_ref(entrypoint: models.EntryPoint) -> dict[str, An
         The EntrypointSnapshotRef dictionary.
     """
     return {
+        "id": entrypoint.resource_id,
         "snapshot_id": entrypoint.resource_snapshot_id,
         "name": entrypoint.name,
         "group": build_group_ref(entrypoint.resource.owner),

@@ -367,9 +367,9 @@ def test_create_job(
     monkeypatch.setattr(rq_service, "RQQueue", mock_rq.MockRQQueue)
 
     description = "The new job."
-    queue_id = registered_queues["queue1"]["snapshot"]
-    experiment_id = registered_experiments["experiment1"]["snapshot"]
-    entrypoint_id = registered_entrypoints["entrypoint1"]["snapshot"]
+    queue_id = registered_queues["queue1"]["id"]
+    experiment_id = registered_experiments["experiment1"]["id"]
+    entrypoint_id = registered_entrypoints["entrypoint1"]["id"]
     values = {
         registered_entrypoints["entrypoint1"]["parameters"][0]["name"]: "new_value",
     }
@@ -731,7 +731,7 @@ def test_modify_job_status(
     """
     job_to_change_status = registered_jobs["job1"]
     job_id = job_to_change_status["id"]
-    experiment_id = job_to_change_status["experiment"]["snapshotId"]
+    experiment_id = job_to_change_status["experiment"]["id"]
     new_status = "started"
     dioptra_client.experiments.jobs.set_status(
         experiment_id=experiment_id, job_id=job_id, status=new_status
