@@ -726,6 +726,7 @@ def registered_mlflowrun_incomplete(
     return responses
 
 
+@pytest.fixture
 def resources_tar_file():
     root_dir = Path(__file__).absolute().parent / "resource_import_files"
 
