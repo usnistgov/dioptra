@@ -353,6 +353,20 @@ class MLFlowError(DioptraError):
         super().__init__(message)
 
 
+class GitError(DioptraError):
+    """Git Error."""
+
+    def __init__(self, message: str):
+        super().__init__(message)
+
+
+class ImportFailedError(DioptraError):
+    """Import failed Error."""
+
+    def __init__(self, message: str):
+        super().__init__(message)
+
+
 def error_result(
     error: DioptraError, status: http.HTTPStatus, detail: dict[str, typing.Any]
 ) -> tuple[dict[str, typing.Any], int]:
@@ -470,6 +484,16 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
     def handle_mlflow_error(error: MLFlowError):
         log.debug(error.to_message())
         return error_result(error, http.HTTPStatus.INTERNAL_SERVER_ERROR, {})
+
+    @api.errorhandler(GitError)
+    def handle_git_error(error: GitError):
+        log.debug(error.to_message())
+        return error_result(error, http.HTTPStatus.INTERNAL_SERVER_ERROR, {})
+
+    @api.errorhandler(GitError)
+    def handle_import_failed_error(error: ImportFailedError):
+        log.debug(error.to_message())
+        return error_result(error, http.HTTPStatus.BAD_REQUEST, {})
 
     @api.errorhandler(DioptraError)
     def handle_base_error(error: DioptraError):

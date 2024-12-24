@@ -32,7 +32,7 @@ from structlog.stdlib import BoundLogger
 from werkzeug.datastructures import FileStorage
 
 from dioptra.restapi.db import db, models
-from dioptra.restapi.errors import DioptraError
+from dioptra.restapi.errors import GitError, ImportFailedError
 from dioptra.restapi.v1.entrypoints.service import (
     EntrypointIdService,
     EntrypointNameService,
@@ -194,18 +194,18 @@ class ResourceImportService(object):
                     with tarfile.open(fileobj=BytesIO(bytes), mode="r:*") as tar:
                         tar.extractall(path=working_dir, filter="data")
                 except Exception as e:
-                    raise DioptraError("Failed to read uploaded tarfile") from e
+                    raise ImportFailedError("Failed to read uploaded tarfile") from e
                 hash = str(sha256(bytes).hexdigest())
             else:
                 try:
                     hash = clone_git_repository(git_url, working_dir)
                 except Exception as e:
-                    raise DioptraError("Failed to clone repository") from e
+                    raise GitError("Failed to clone repository: {git_url}") from e
 
             try:
                 config = toml.load(working_dir / config_path)
             except Exception as e:
-                raise DioptraError(
+                raise ImportFailedError(
                     f"Failed to load resource import config from {config_path}."
                 ) from e
 
