@@ -125,7 +125,7 @@ class PluginService(object):
             else:
                 raise EntityExistsError(
                     PLUGIN_RESOURCE_TYPE,
-                    duplicate.resource_id,
+                    existing.resource_id,
                     name=name,
                     group_id=group_id,
                 )
