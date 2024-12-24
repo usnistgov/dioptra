@@ -15,13 +15,14 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from pathlib import Path
-from typing import ClassVar, Final, TypeVar
+from typing import ClassVar, Final, Literal, TypeVar
 
 from .base import CollectionClient, IllegalArgumentError
 
 T = TypeVar("T")
 
 JOB_FILES_DOWNLOAD: Final[str] = "jobFilesDownload"
+RESOURCE_IMPORT: Final[str] = "resourceImport"
 
 
 class WorkflowsCollectionClient(CollectionClient[T]):
@@ -86,3 +87,50 @@ class WorkflowsCollectionClient(CollectionClient[T]):
         return self._session.download(
             self.url, JOB_FILES_DOWNLOAD, output_path=job_files_path, params=params
         )
+
+    def import_resources_from_git(
+        self,
+        group_id: int,
+        git_url: str,
+        config_path: str | None = "dioptra.toml",
+        resolve_name_conflict_strategy: Literal["fail", "overwrite"] | None = "fail",
+    ):
+        """ """
+
+        json_ = {
+            "group": group_id,
+            "sourceType": "git",
+            "gitUrl": git_url,
+        }
+
+        if config_path is not None:
+            json_["configPath"] = config_path
+
+        if resolve_name_conflict_strategy is not None:
+            json_["resolveNameConflictStrategy"] = resolve_name_conflict_strategy
+
+        # need to update post to specify that json should be sent as form data
+        self._session.post(self.url, RESOURCE_IMPORT, json_=json_)
+
+    def import_resources_from_archive(
+        self,
+        group_id: int,
+        archive_file_path: Path,
+        config_path: str = "dioptra.toml",
+        resolve_name_conflict_strategy: Literal["fail", "overwrite"] = "fail",
+    ):
+        """ """
+
+        json_ = {
+            "group": group_id,
+            "sourceType": "upload",
+        }
+
+        if config_path is not None:
+            json_["configPath"] = config_path
+
+        if resolve_name_conflict_strategy is not None:
+            json_["resolveNameConflictStrategy"] = resolve_name_conflict_strategy
+
+        # need to update post to specify that json should be sent as form data
+        return self._session.post(self.url, RESOURCE_IMPORT, json_=json_)
