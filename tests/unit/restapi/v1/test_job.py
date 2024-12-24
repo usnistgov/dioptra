@@ -470,7 +470,7 @@ def test_metrics(
         mlflow.exceptions, "MlflowException", mock_mlflow.MockMlflowException
     )
 
-    experiment_id = registered_experiments["experiment1"]["snapshot"]
+    experiment_id = registered_experiments["experiment1"]["id"]
     job1_id = registered_jobs["job1"]["id"]
     job2_id = registered_jobs["job2"]["id"]
     job3_id = registered_jobs["job3"]["id"]
@@ -768,7 +768,7 @@ def test_manage_job_snapshots(
     job_to_change_status = registered_jobs["job1"]
     job_id = job_to_change_status["id"]
     dioptra_client.experiments.jobs.set_status(
-        experiment_id=job_to_change_status["experiment"]["snapshotId"],
+        experiment_id=job_to_change_status["experiment"]["id"],
         job_id=job_id,
         status="started",
     )
