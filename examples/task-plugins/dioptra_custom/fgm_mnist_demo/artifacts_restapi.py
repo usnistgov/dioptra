@@ -18,6 +18,7 @@ import requests
 import structlog
 import os
 from dioptra import pyplugs
+from dioptra.client import connect_json_dioptra_client
 from structlog.stdlib import BoundLogger
 from posixpath import join as urljoin
 from urllib.parse import urlparse, urlunparse

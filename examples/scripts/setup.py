@@ -184,7 +184,7 @@ def get_plugins_to_register(
         else:
             upload['inputParams'] = []
         if 'outputs' in definition:
-            outputs = definition['outputs']
+            outputs = definition['outputs'] if type(definition['outputs']) == list else [definition['outputs']]
             upload['outputParams'] = create_outputParam_object(client, outputs, types)
         else:
             upload['outputParams'] = []
