@@ -21,6 +21,7 @@ from __future__ import annotations
 from typing import Dict
 
 import mlflow
+from .restapi import post_metrics
 import structlog
 from structlog.stdlib import BoundLogger
 
@@ -52,9 +53,9 @@ def log_metrics(metrics: Dict[str, float]) -> None:
         - :py:func:`mlflow.log_metric`
     """
     for metric_name, metric_value in metrics.items():
-        mlflow.log_metric(key=metric_name, value=metric_value)
+        post_metrics(metric_name=metric_name, metric_value=metric_value)
         LOGGER.info(
-            "Log metric to MLFlow Tracking server",
+            "Logging metric",
             metric_name=metric_name,
             metric_value=metric_value,
         )

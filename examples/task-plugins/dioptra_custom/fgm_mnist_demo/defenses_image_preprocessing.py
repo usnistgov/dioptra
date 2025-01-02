@@ -19,7 +19,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Tuple, Union, Any
 
-import mlflow
+from.restapi import post_metrics
+
 import numpy as np
 import pandas as pd
 import scipy.stats
@@ -173,12 +174,10 @@ def _log_distance_metrics(distance_metrics_: Dict[str, List[List[float]]]) -> No
     del distance_metrics_["label"]
     for metric_name, metric_values_list in distance_metrics_.items():
         metric_values = np.array(metric_values_list)
-        mlflow.log_metric(key=f"{metric_name}_mean", value=metric_values.mean())
-        mlflow.log_metric(key=f"{metric_name}_median", value=np.median(metric_values))
-        mlflow.log_metric(key=f"{metric_name}_stdev", value=metric_values.std())
-        mlflow.log_metric(
-            key=f"{metric_name}_iqr", value=scipy.stats.iqr(metric_values)
-        )
-        mlflow.log_metric(key=f"{metric_name}_min", value=metric_values.min())
-        mlflow.log_metric(key=f"{metric_name}_max", value=metric_values.max())
+        post_metrics(metric_name=f"{metric_name}_mean", metric_value=metric_values.mean())
+        post_metrics(metric_name=f"{metric_name}_median", metric_value=np.median(metric_values))
+        post_metrics(metric_name=f"{metric_name}_stdev", metric_value=metric_values.std())
+        post_metrics(metric_name=f"{metric_name}_iqr", metric_value=scipy.stats.iqr(metric_values))
+        post_metrics(metric_name=f"{metric_name}_min", metric_value=metric_values.min())
+        post_metrics(metric_name=f"{metric_name}_max", metric_value=metric_values.max())
         LOGGER.info("logged distance-based metric", metric_name=metric_name)

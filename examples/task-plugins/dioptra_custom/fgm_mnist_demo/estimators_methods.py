@@ -19,7 +19,7 @@ from __future__ import annotations
 import datetime
 from typing import Any, Dict, Optional
 
-import mlflow
+from .restapi import post_metrics
 import structlog
 from structlog.stdlib import BoundLogger
 
@@ -75,8 +75,7 @@ def fit(
 
     total_seconds: float = (time_end - time_start).total_seconds()
     total_minutes: float = total_seconds / 60
-
-    mlflow.log_metric("training_time_in_minutes", total_minutes)
+    post_metrics(metric_name="training_time_in_minutes", metric_value=total_minutes)
     LOGGER.info(
         "Estimator fit complete",
         timestamp=time_end.isoformat(),

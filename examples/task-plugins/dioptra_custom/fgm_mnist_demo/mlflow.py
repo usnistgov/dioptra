@@ -29,7 +29,7 @@ from mlflow.tracking import MlflowClient
 from structlog.stdlib import BoundLogger
 
 from dioptra import pyplugs
-from .artifacts_restapi import upload_model_to_restapi
+from .restapi import upload_model_to_restapi
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 

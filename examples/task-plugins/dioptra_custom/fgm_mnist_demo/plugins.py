@@ -19,7 +19,6 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Tuple, Union, Any
 
-import mlflow
 import numpy as np
 import pandas as pd
 import scipy.stats
@@ -41,7 +40,7 @@ from .tracking_mlflow import log_parameters, log_tensorflow_keras_estimator, log
 from .data_tensorflow import get_n_classes_from_directory_iterator, create_image_dataset, predictions_to_df, df_to_predictions
 from .estimators_methods import fit
 from .mlflow import add_model_to_registry
-from .artifacts_restapi import get_uri_for_model, get_uris_for_job, get_uris_for_artifacts
+from .restapi import get_uri_for_model, get_uris_for_job, get_uris_for_artifacts
 from .artifacts_utils import make_directories, extract_tarfile
 from .metrics_distance import get_distance_metric_list
 from .attacks_fgm import fgm

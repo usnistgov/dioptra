@@ -53,6 +53,12 @@ def get_uris_for_artifacts(artifact_ids):
     dioptra_client = get_logged_in_session()
     return [dioptra_client.artifacts.get_by_id(artifact_id=aid) for aid in artifact_ids]
 
+def post_metrics(metric_name, metric_value, job_id=None, metric_step=None):
+    dioptra_client = get_logged_in_session()
+    if (job_id == None):
+        job_id = os.environ['__JOB_ID']
+    return dioptra_client.jobs.append_metric_by_id(job_id=job_id, metric_name=metric_name, metric_value=metric_value, metric_step=metric_step)
+
 def get_logged_in_session():
     url = "http://dioptra-deployment-restapi:5000/"
     dioptra_client = connect_json_dioptra_client(url)

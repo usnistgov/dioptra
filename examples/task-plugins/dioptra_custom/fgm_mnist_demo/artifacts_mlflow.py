@@ -34,7 +34,7 @@ from structlog.stdlib import BoundLogger
 from dioptra import pyplugs
 from dioptra.sdk.utilities.paths import set_path_ext
 
-from .artifacts_restapi import upload_artifact_to_restapi
+from .restapi import upload_artifact_to_restapi
 from .artifacts_exceptions import UnsupportedDataFrameFileFormatError
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -42,7 +42,7 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 @pyplugs.register
 def download_all_artifacts(
-    uris: List[str], destinations: List[str|Path]
+    uris: List[str], destinations: List[str]
 ) -> List[str]:
     download_paths = []
     for uri in uris:
@@ -203,7 +203,7 @@ def download_df(
 
         if func is None:
             raise UnsupportedDataFrameFileFormatError(
-                f"Serializing data frames from the {file_format} format is not supported"
+                f"Serializing data frames from the {format} format is not supported"
             )
         
         return func
