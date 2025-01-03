@@ -173,7 +173,7 @@ def _log_distance_metrics(distance_metrics_: Dict[str, List[List[float]]]) -> No
     del distance_metrics_["image"]
     del distance_metrics_["label"]
     for metric_name, metric_values_list in distance_metrics_.items():
-        metric_values = np.array(metric_values_list)
+        metric_values = np.array(metric_values_list).astype('float64')
         post_metrics(metric_name=f"{metric_name}_mean", metric_value=metric_values.mean())
         post_metrics(metric_name=f"{metric_name}_median", metric_value=np.median(metric_values))
         post_metrics(metric_name=f"{metric_name}_stdev", metric_value=metric_values.std())

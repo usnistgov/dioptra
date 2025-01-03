@@ -82,27 +82,6 @@ def add_model_to_registry(
 
 
 @pyplugs.register
-def get_experiment_name(active_run: MlflowRun) -> str:
-    """Gets the name of the experiment for the current run.
-
-    Args:
-        active_run: The :py:class:`mlflow.ActiveRun` object managing the current run's
-            state.
-
-    Returns:
-        The name of the experiment.
-    """
-    experiment_name: str = (
-        MlflowClient().get_experiment(active_run.info.experiment_id).name
-    )
-    LOGGER.info(
-        "Obtained experiment name of active run", experiment_name=experiment_name
-    )
-
-    return experiment_name
-
-
-@pyplugs.register
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
 def load_tensorflow_keras_classifier(uri: str) -> Sequential:
     """Loads a registered Keras classifier.

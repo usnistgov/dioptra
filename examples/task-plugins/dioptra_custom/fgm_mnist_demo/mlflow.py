@@ -74,29 +74,6 @@ def add_model_to_registry(name: str, model_dir: str) -> Optional[ModelVersion]:
 
 
 @pyplugs.register
-def get_experiment_name() -> str:
-    """Gets the name of the experiment for the current run.
-
-    Args:
-        active_run: The :py:class:`mlflow.ActiveRun` object managing the current run's
-            state.
-
-    Returns:
-        The name of the experiment.
-    """
-    active_run = mlflow.active_run()
-
-    experiment_name: str = (
-        MlflowClient().get_experiment(active_run.info.experiment_id).name
-    )
-    LOGGER.info(
-        "Obtained experiment name of active run", experiment_name=experiment_name
-    )
-
-    return experiment_name
-
-
-@pyplugs.register
 def prepend_cwd(path: str) -> Path:
     ret = Path.cwd() / path
     return ret
