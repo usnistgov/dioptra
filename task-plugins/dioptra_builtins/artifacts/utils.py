@@ -23,7 +23,7 @@ import tarfile
 import uuid
 from pathlib import Path
 from tarfile import TarFile
-from typing import Any, List, Union
+from typing import Any, List, Literal, Union
 
 import structlog
 from structlog.stdlib import BoundLogger
@@ -54,7 +54,7 @@ def safe_extract(tar: TarFile, path: Union[str, Path] = ".") -> None:
 @pyplugs.register
 def extract_tarfile(
     filepath: Union[str, Path],
-    tarball_read_mode: str = "r:gz",
+    tarball_read_mode: Literal["r", "r:*", "r:", "r:gz", "r:bz2", "r:xz"] = "r:gz",
     output_dir: Any = None,
 ) -> None:
     """Extracts a tarball archive into the current working directory.
@@ -93,7 +93,7 @@ def make_directories(dirs: List[Union[str, Path]]) -> None:
 @pyplugs.register
 def extract_tarfile_in_unique_subdir(
     filepath: Union[str, Path],
-    tarball_read_mode: str = "r:gz",
+    tarball_read_mode: Literal["r", "r:*", "r:", "r:gz", "r:bz2", "r:xz"] = "r:gz",
 ) -> Path:
     """Extracts a tarball archive into a unique subdirectory of the
     current working directory.

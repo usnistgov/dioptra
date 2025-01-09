@@ -35,10 +35,7 @@ from prefect import task
 from structlog.stdlib import BoundLogger
 
 from dioptra import pyplugs
-from dioptra.sdk.exceptions import (
-    ARTDependencyError,
-    TensorflowDependencyError,
-)
+from dioptra.sdk.exceptions import ARTDependencyError, TensorflowDependencyError
 from dioptra.sdk.utilities.decorators import require_package
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -50,7 +47,7 @@ try:
         PoisoningAttackBackdoor,
     )
     from art.attacks.poisoning.perturbations import add_pattern_bd
-    from art.estimators.classification import KerasClassifier
+    from art.estimators.classification import TensorFlowV2Classifier
     from art.utils import to_categorical
     from tensorflow.keras.metrics import Metric
     from tensorflow.keras.models import Model
@@ -91,8 +88,10 @@ def create_adv_embedding_model(
     metrics: List[Union[Metric, FunctionType]],
 ) -> Model:
 
-    poison_model = KerasClassifier(model)
     n_classes = len(training_ds.class_indices)
+    poison_model = TensorFlowV2Classifier(
+        model, nb_classes=n_classes, input_shape=model.input_shape
+    )
 
     x_train, y_train = training_ds.next()
 
@@ -255,7 +254,7 @@ def create_adversarial_poison_data(
 def create_adversarial_clean_poison_dataset(
     data_dir: str,
     adv_data_dir: Union[str, Path],
-    keras_classifier: KerasClassifier,
+    keras_classifier: TensorFlowV2Classifier,
     image_size: Tuple[int, int, int],
     distance_metrics_list: Optional[List[Tuple[str, Callable[..., np.ndarray]]]] = None,
     rescale: float = 1.0 / 255,

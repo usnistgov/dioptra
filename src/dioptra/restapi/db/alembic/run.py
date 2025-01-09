@@ -196,6 +196,64 @@ def _flask_db_migrate(
     )
 
 
+def _flask_db_revision(
+    alembic_dir: Path,
+    message: str | None,
+    autogenerate: bool,
+    sql: bool,
+    head: str | None,
+    splice: bool,
+    branch_label: str | None,
+    version_path: str | None,
+    rev_id: str | None,
+) -> None:
+    """Autogenerate a new revision file.
+
+    Args:
+        alembic_dir: Path to directory containing the Alembic migration scripts.
+        message: The revision message.
+        autogenerate: Populate revision script with candidate migration operations,
+            based on comparison of database to model.
+        sql: Don't emit SQL to database - dump to standard output instead.
+        head: Specify head revision or <branchname>@head to base new revision on.
+        splice: Allow a non-head revision as the "head" to splice onto.
+        branch_label: Specify a branch label to apply to the new revision.
+        version_path: Specify specific path from config for version file.
+        rev_id: Specify a hardcoded revision id instead of generating one.
+    """
+    args = ["flask", "db", "revision", "-d", str(alembic_dir)]
+
+    if message is not None:
+        args.extend(["--message", message])
+
+    if autogenerate:
+        args.append("--autogenerate")
+
+    if sql:
+        args.append("--sql")
+
+    if head is not None:
+        args.extend(["--head", head])
+
+    if splice:
+        args.append("--splice")
+
+    if branch_label is not None:
+        args.extend(["--branch-label", branch_label])
+
+    if version_path is not None:
+        args.extend(["--version-path", version_path])
+
+    if rev_id is not None:
+        args.extend(["--rev-id", rev_id])
+
+    subprocess.run(
+        args=args,
+        capture_output=False,
+        text=True,
+    )
+
+
 def autoupgrade_cmd(alembic_dir: Path) -> None:
     """Command for automatically upgrading the database schema to the latest version.
 
@@ -425,6 +483,87 @@ def migrate(
         version_path=version_path,
         rev_id=rev_id,
         x_arg=x_arg,
+    )
+
+
+@cli.command()
+@click.option(
+    "-d",
+    "--directory",
+    type=click.Path(exists=True, file_okay=False, dir_okay=True, path_type=Path),
+    default=Path("src", "dioptra", "restapi", "db", "alembic"),
+    help='Migration script directory (default is "src/dioptra/restapi/db/alembic")',
+)
+@click.option("-m", "--message", type=click.STRING, help="Revision message")
+@click.option(
+    "--autogenerate",
+    type=click.BOOL,
+    default=False,
+    is_flag=True,
+    help=(
+        "Populate revision script with candidate migration operations, based on "
+        "comparison of database to model"
+    ),
+)
+@click.option(
+    "--sql",
+    type=click.BOOL,
+    default=False,
+    is_flag=True,
+    help="Don't emit SQL to database - dump to standard output instead",
+)
+@click.option(
+    "--head",
+    type=click.STRING,
+    help="Specify head revision or <branchname>@head to base new revision on",
+)
+@click.option(
+    "--splice",
+    type=click.BOOL,
+    default=False,
+    is_flag=True,
+    help='Allow a non-head revision as the "head" to splice onto',
+)
+@click.option(
+    "--branch-label",
+    type=click.STRING,
+    help="Specify a branch label to apply to the new revision",
+)
+@click.option(
+    "--version-path",
+    type=click.STRING,
+    help="Specify specific path from config for version file",
+)
+@click.option(
+    "--rev-id",
+    type=click.STRING,
+    help="Specify a hardcoded revision id instead of generating one",
+)
+def revision(
+    directory: Path,
+    message: str | None,
+    autogenerate: bool,
+    sql: bool,
+    head: str | None,
+    splice: bool,
+    branch_label: str | None,
+    version_path: str | None,
+    rev_id: str | None,
+):
+    """Create a new revision file (Alias for 'flask db revision')."""
+    if not is_db_uri_set():
+        return None
+
+    _flask_db_revision(
+        alembic_dir=directory,
+        message=message,
+        autogenerate=autogenerate,
+        sql=sql,
+        head=head,
+        splice=splice,
+        branch_label=branch_label,
+        version_path=version_path,
+        rev_id=rev_id,
     )
 
 

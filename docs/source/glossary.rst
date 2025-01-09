@@ -46,7 +46,7 @@ Glossary
       A copy of the paper is available on the arXiv at https://arxiv.org/abs/1511.07528.
 
    JSON
-      An acronym for the term *Javascript Object Notation*.
+      An acronym for the term *JavaScript Object Notation*.
       JSON is a lightweight data-interchange format that is completely language independent despite being based on a subset of the JavaScript Programming Language Standard ECMA-262 3rd Edition - December 1999.
       For more information, see https://www.json.org.
 

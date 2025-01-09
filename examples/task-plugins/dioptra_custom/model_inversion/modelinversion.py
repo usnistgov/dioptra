@@ -31,7 +31,7 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 try:
     from art.attacks.inference.model_inversion import MIFace
-    from art.estimators.classification import KerasClassifier
+    from art.estimators.classification import TensorFlowV2Classifier
 
 except ImportError:  # pragma: nocover
     LOGGER.warn(
@@ -54,7 +54,7 @@ except ImportError:  # pragma: nocover
 @require_package("art", exc_type=ARTDependencyError)
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
 def infer_model_inversion(
-    keras_classifier: KerasClassifier,
+    keras_classifier: TensorFlowV2Classifier,
     adv_data_dir: Union[str, Path],
     batch_size: int = 32,
     classes: int = 10,
@@ -83,8 +83,11 @@ def infer_model_inversion(
 
 
 def _init_miface(
-    keras_classifier: KerasClassifier, batch_size: int, **kwargs
+    keras_classifier: TensorFlowV2Classifier, batch_size: int, **kwargs
 ) -> MIFace:
+    # MIFace uses the classifier's input shape but does not expect None as the first
+    # element representing batch size.
+    keras_classifier._input_shape = keras_classifier.input_shape[1:]
     attack: MIFace = MIFace(keras_classifier, batch_size=batch_size, **kwargs)
     return attack
 

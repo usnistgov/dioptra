@@ -22,7 +22,7 @@ entry point run.
 
 import tarfile
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional, Union
+from typing import Any, Callable, Dict, Literal, Optional, Union
 
 import mlflow
 import pandas as pd
@@ -183,7 +183,7 @@ def upload_data_frame_artifact(
 def upload_directory_as_tarball_artifact(
     source_dir: Union[str, Path],
     tarball_filename: str,
-    tarball_write_mode: str = "w:gz",
+    tarball_write_mode: Literal["w", "w:", "w:gz", "x:bz2", "w:xz"] = "w:gz",
     working_dir: Optional[Union[str, Path]] = None,
 ) -> None:
     """Archives a directory and uploads it as an artifact of the active MLFlow run.

@@ -55,7 +55,7 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 try:
     from art.attacks.evasion import FastGradientMethod
-    from art.estimators.classification import KerasClassifier
+    from art.estimators.classification import TensorFlowV2Classifier
 
 except ImportError:  # pragma: nocover
     LOGGER.warn(
@@ -80,7 +80,7 @@ except ImportError:  # pragma: nocover
 def create_adversarial_fgm_dataset(
     data_dir: str,
     adv_data_dir: Union[str, Path],
-    keras_classifier: KerasClassifier,
+    keras_classifier: TensorFlowV2Classifier,
     image_size: Tuple[int, int, int],
     distance_metrics_list: Optional[List[Tuple[str, Callable[..., np.ndarray]]]] = None,
     rescale: float = 1.0 / 255,
@@ -102,7 +102,7 @@ def create_adversarial_fgm_dataset(
         data_dir: The directory containing the clean test images.
         adv_data_dir: The directory to use when saving the generated adversarial images.
         keras_classifier: A trained :py:class:`~art.estimators.classification\\
-            .KerasClassifier`.
+            .TensorFlowV2Classifier`.
         image_size: A tuple of integers `(height, width, channels)` used to preprocess
             the images so that they all have the same dimensions and number of color
             channels. `channels=3` means RGB color images and `channels=1` means
@@ -209,13 +209,13 @@ def create_adversarial_fgm_dataset(
 
 
 def _init_fgm(
-    keras_classifier: KerasClassifier, batch_size: int, **kwargs
+    keras_classifier: TensorFlowV2Classifier, batch_size: int, **kwargs
 ) -> FastGradientMethod:
     """Initializes :py:class:`~art.attacks.evasion.FastGradientMethod`.
 
     Args:
         keras_classifier: A trained :py:class:`~art.estimators.classification\\
-            .KerasClassifier`.
+            .TensorFlowV2Classifier`.
         batch_size: The size of the batch on which adversarial samples are generated.
 
     Returns:

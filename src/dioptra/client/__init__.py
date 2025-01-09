@@ -14,8 +14,14 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from __future__ import annotations
+from .client import (
+    DioptraClient,
+    connect_json_dioptra_client,
+    connect_response_dioptra_client,
+)
 
-from ._client import DioptraClient
-
-__all__ = ["DioptraClient"]
+__all__ = [
+    "connect_response_dioptra_client",
+    "connect_json_dioptra_client",
+    "DioptraClient",
+]

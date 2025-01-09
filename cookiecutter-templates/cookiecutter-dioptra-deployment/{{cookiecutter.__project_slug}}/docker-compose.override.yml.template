@@ -27,7 +27,7 @@
 # configuration changes.
 #
 # A datasets directory is configured in the main docker-compose.yml file in the
-# cookicutter deployment generation. It is recommended that datasets_directory
+# cookiecutter deployment generation. It is recommended that datasets_directory
 # be left blank if mounts are being configured here.
 # ------------------------------------------------------------------------------
 

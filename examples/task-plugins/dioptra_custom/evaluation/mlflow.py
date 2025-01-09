@@ -33,9 +33,7 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
 @pyplugs.register
-def add_model_to_registry(
-    name: str, model_dir: str
-) -> Optional[ModelVersion]:
+def add_model_to_registry(name: str, model_dir: str) -> Optional[ModelVersion]:
     """Registers a trained model logged during the current run to the MLFlow registry.
 
     Args:

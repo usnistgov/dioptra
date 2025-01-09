@@ -21,7 +21,7 @@
 
 # -- Prerequisite: copy files ------------------------------------------------------------------------
 
-FROM ubuntu:focal AS copy-files
+FROM ubuntu:jammy AS copy-files
 
 COPY --chown=root:root --chmod=0644 docker/configs/nginx.conf /files/nginx.conf
 
@@ -31,7 +31,7 @@ COPY --chown=root:root --chmod=0644 docker/configs/nginx.conf /files/nginx.conf
 
 # -- Base image --------------------------------------------------------------------------------------
 
-FROM ubuntu:focal AS base
+FROM ubuntu:jammy AS base
 
 USER root
 
@@ -41,26 +41,15 @@ ENV LANGUAGE C.UTF-8
 ENV LC_ALL C.UTF-8
 
 RUN apt-get update && \
-    echo "===> Upgrade existing packages...." && \
     apt-get -y upgrade && \
-    echo "===> Installing ca-certificates curl gnupg netcat nginx wget...." && \
     apt-get install -yq --no-install-recommends \
     ca-certificates \
     curl \
+    git \
     gnupg \
     netcat \
     nginx \
     wget && \
-    echo "===> Fetch official Ubuntu Git Maintainers signing key...." && \
-    apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys E1DD270288B4E6030699E45FA1715D88E1DF1F24 && \
-    echo "===> Add Git stable releases repo...." && \
-    UBUNTU_CODENAME="$(. /etc/os-release && echo ${UBUNTU_CODENAME})" && \
-    echo "deb http://ppa.launchpadcontent.net/git-core/ppa/ubuntu ${UBUNTU_CODENAME} main" >> /etc/apt/sources.list.d/git-core.list && \
-    echo "deb-src http://ppa.launchpadcontent.net/git-core/ppa/ubuntu ${UBUNTU_CODENAME} main" >> /etc/apt/sources.list.d/git-core.list && \
-    echo "===> Installing git...." && \
-    apt-get update && \
-    apt-get install -yq --no-install-recommends \
-    git && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 

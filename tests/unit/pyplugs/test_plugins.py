@@ -113,7 +113,7 @@ def test_list_funcs(plugin_package):
 
 
 def test_package_non_existing():
-    """Test that a non-existent package raises an appropriate error"""
+    """Test that a nonexistent package raises an appropriate error"""
     with pytest.raises(UnknownPackageError):
         pyplugs.names("dioptra.pyplugs.non_existent")
 
@@ -128,7 +128,7 @@ def test_plugin_exists(plugin_package):
 def test_plugin_not_exists(plugin_package, plugin_name):
     """Test that a non-existing plugin raises UnknownPluginError
 
-    Tests both for an existing module (no_plugins) and a non-existent module
+    Tests both for an existing module (no_plugins) and a nonexistent module
     (non_existent).
     """
     with pytest.raises(UnknownPluginError):

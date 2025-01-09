@@ -398,7 +398,6 @@ vignettes/*.pdf
 
 # Javascript
 node_modules/
-package-lock.json
 
 # ---------------------------
 # BEGIN Whitelisted Files
@@ -431,3 +430,4 @@ package-lock.json
 !docker/**/etc
 !tests/**/lib
 !src/**/tags
+!src/**/lib

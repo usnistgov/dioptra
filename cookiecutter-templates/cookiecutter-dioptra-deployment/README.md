@@ -5,7 +5,7 @@ A Cookiecutter template that generates the scripts, configuration files, and Doc
 ## Prerequisites
 
 -   [Bash v5 or higher](https://tiswww.case.edu/php/chet/bash/bashtop.html)
--   [Python 3.9 or higher](https://www.python.org/)
+-   [Python 3.11 or higher](https://www.python.org/)
 -   [Cruft 2.15.0 or higher](https://cruft.github.io/cruft/)
 -   [Docker Engine 20.10.13 or higher](https://docs.docker.com/engine/install/)
 -   [Docker Compose](https://docs.docker.com/compose/install/)

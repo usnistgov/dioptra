@@ -15,18 +15,35 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The module defining the endpoints for Queue resources."""
-from __future__ import annotations
-
 import uuid
+from typing import cast
+from urllib.parse import unquote
 
 import structlog
 from flask import request
 from flask_accepts import accepts, responds
 from flask_login import login_required
 from flask_restx import Namespace, Resource
+from injector import inject
 from structlog.stdlib import BoundLogger
 
+from dioptra.restapi.db import models
+from dioptra.restapi.routes import V1_QUEUES_ROUTE
+from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.schemas import IdStatusResponseSchema
+from dioptra.restapi.v1.shared.drafts.controller import (
+    generate_resource_drafts_endpoint,
+    generate_resource_drafts_id_endpoint,
+    generate_resource_id_draft_endpoint,
+)
+from dioptra.restapi.v1.shared.snapshots.controller import (
+    generate_resource_snapshots_endpoint,
+    generate_resource_snapshots_id_endpoint,
+)
+from dioptra.restapi.v1.shared.tags.controller import (
+    generate_resource_tags_endpoint,
+    generate_resource_tags_id_endpoint,
+)
 
 from .schema import (
     QueueGetQueryParameters,
@@ -34,6 +51,7 @@ from .schema import (
     QueuePageSchema,
     QueueSchema,
 )
+from .service import RESOURCE_TYPE, SEARCHABLE_FIELDS, QueueIdService, QueueService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -42,6 +60,18 @@ api: Namespace = Namespace("Queues", description="Queues endpoint")
 
 @api.route("/")
 class QueueEndpoint(Resource):
+    @inject
+    def __init__(self, queue_service: QueueService, *args, **kwargs) -> None:
+        """Initialize the queue resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            queue_service: A QueueService object.
+        """
+        self._queue_service = queue_service
+        super().__init__(*args, **kwargs)
+
     @login_required
     @accepts(query_params_schema=QueueGetQueryParameters, api=api)
     @responds(schema=QueuePageSchema, api=api)
@@ -50,8 +80,37 @@ class QueueEndpoint(Resource):
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="Queue", request_type="GET"
         )
-        log.debug("Request received")
         parsed_query_params = request.parsed_query_params  # noqa: F841
+
+        group_id = parsed_query_params["group_id"]
+        search_string = unquote(parsed_query_params["search"])
+        page_index = parsed_query_params["index"]
+        page_length = parsed_query_params["page_length"]
+        sort_by_string = parsed_query_params["sort_by"]
+        descending = parsed_query_params["descending"]
+
+        queues, total_num_queues = self._queue_service.get(
+            group_id=group_id,
+            search_string=search_string,
+            page_index=page_index,
+            page_length=page_length,
+            sort_by_string=sort_by_string,
+            descending=descending,
+            log=log,
+        )
+        return utils.build_paging_envelope(
+            V1_QUEUES_ROUTE,
+            build_fn=utils.build_queue,
+            data=queues,
+            group_id=group_id,
+            query=search_string,
+            draft_type=None,
+            index=page_index,
+            length=page_length,
+            total_num_elements=total_num_queues,
+            sort_by=sort_by_string,
+            descending=descending,
+        )
 
     @login_required
     @accepts(schema=QueueSchema, api=api)
@@ -61,13 +120,32 @@ class QueueEndpoint(Resource):
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="Queue", request_type="POST"
         )
-        log.debug("Request received")
         parsed_obj = request.parsed_obj  # noqa: F841
+
+        queue = self._queue_service.create(
+            name=parsed_obj["name"],
+            description=parsed_obj["description"],
+            group_id=parsed_obj["group_id"],
+            log=log,
+        )
+        return utils.build_queue(queue)
 
 
 @api.route("/<int:id>")
 @api.param("id", "ID for the Queue resource.")
 class QueueIdEndpoint(Resource):
+    @inject
+    def __init__(self, queue_id_service: QueueIdService, *args, **kwargs) -> None:
+        """Initialize the queue resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            queue_id_service: A QueueIdService object.
+        """
+        self._queue_id_service = queue_id_service
+        super().__init__(*args, **kwargs)
+
     @login_required
     @responds(schema=QueueSchema, api=api)
     def get(self, id: int):
@@ -75,7 +153,11 @@ class QueueIdEndpoint(Resource):
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="Queue", request_type="GET", id=id
         )
-        log.debug("Request received")
+        queue = cast(
+            models.Queue,
+            self._queue_id_service.get(id, error_if_not_found=True, log=log),
+        )
+        return utils.build_queue(queue)
 
     @login_required
     @responds(schema=IdStatusResponseSchema, api=api)
@@ -84,7 +166,7 @@ class QueueIdEndpoint(Resource):
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="Queue", request_type="DELETE", id=id
         )
-        log.debug("Request received")
+        return self._queue_id_service.delete(queue_id=id, log=log)
 
     @login_required
     @accepts(schema=QueueMutableFieldsSchema, api=api)
@@ -94,5 +176,59 @@ class QueueIdEndpoint(Resource):
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="Queue", request_type="PUT", id=id
         )
-        log.debug("Request received")
-        parsed_obj = request.parsed_obj  # type: ignore # noqa: F841
+        parsed_obj = request.parsed_obj  # type: ignore
+        queue = cast(
+            models.Queue,
+            self._queue_id_service.modify(
+                id,
+                name=parsed_obj["name"],
+                description=parsed_obj["description"],
+                error_if_not_found=True,
+                log=log,
+            ),
+        )
+        return utils.build_queue(queue)
+
+
+QueueDraftResource = generate_resource_drafts_endpoint(
+    api,
+    resource_name=RESOURCE_TYPE,
+    route_prefix=V1_QUEUES_ROUTE,
+    request_schema=QueueSchema,
+)
+QueueDraftIdResource = generate_resource_drafts_id_endpoint(
+    api,
+    resource_name=RESOURCE_TYPE,
+    request_schema=QueueMutableFieldsSchema,
+)
+QueueIdDraftResource = generate_resource_id_draft_endpoint(
+    api,
+    resource_name=RESOURCE_TYPE,
+    request_schema=QueueMutableFieldsSchema,
+)
+
+QueueSnapshotsResource = generate_resource_snapshots_endpoint(
+    api=api,
+    resource_model=models.Queue,
+    resource_name=RESOURCE_TYPE,
+    route_prefix=V1_QUEUES_ROUTE,
+    searchable_fields=SEARCHABLE_FIELDS,
+    page_schema=QueuePageSchema,
+    build_fn=utils.build_queue,
+)
+QueueSnapshotsIdResource = generate_resource_snapshots_id_endpoint(
+    api=api,
+    resource_model=models.Queue,
+    resource_name=RESOURCE_TYPE,
+    response_schema=QueueSchema,
+    build_fn=utils.build_queue,
+)
+
+QueueTagsResource = generate_resource_tags_endpoint(
+    api=api,
+    resource_name=RESOURCE_TYPE,
+)
+QueueTagsIdResource = generate_resource_tags_id_endpoint(
+    api=api,
+    resource_name=RESOURCE_TYPE,
+)

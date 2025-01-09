@@ -16,8 +16,7 @@ set -euo pipefail ${DEBUG:+-x}
 # Global parameters
 ###########################################################################################
 
-SHORT_CMD="python"
-LONG_CMD="python -m dioptra.rq.cli.rq worker"
+CMD="python /opt/venv/bin/dioptra-worker-v1"
 LOGNAME="Worker Healthcheck"
 
 ###########################################################################################
@@ -63,19 +62,19 @@ log_info() {
 ###########################################################################################
 
 __get_num_procs() {
-  ps -C "${SHORT_CMD}" --no-headers -o cmd | grep -E "^${LONG_CMD}" | wc -l
+  ps -ax | grep "${CMD}" | grep -v grep | wc -l
 }
 
 healthcheck_process() {
   local num_procs
 
   if ! num_procs="$(__get_num_procs)"; then
-    log_error "Polling of ${_arg_cmd} with ps failed."
+    log_error "Polling of ${$CMD} with ps failed."
     exit 1
   fi
 
   if ((num_procs != 1)); then
-    log_error "Process count for ${_arg_cmd} is ${num_procs} instead of 1." 1>&2
+    log_error "Process count for ${CMD} is ${num_procs} instead of 1." 1>&2
     exit 1
   fi
 }

@@ -1,19 +1,18 @@
 # Dioptra Examples and Demos
 
+> [!CAUTION]
+> **DEPRECATED**
+>
+> All folders with the prefix `DEPRECATED-` are examples that are obsolete and will not
+> work with the v1.0.0 release of Dioptra. They are retained for reference only. Some
+> may be ported to work with v1.0.0 in the future.
+
 <!-- markdownlint-disable MD007 MD030 -->
 - [Creating a virtual environment](#creating-a-virtual-environment)
 - [Downloading Datasets](#downloading-datasets)
   - [Prerequisites](#prerequisites)
   - [Usage](#usage)
   - [Examples](#examples)
-- [Registering Custom Task Plugins](#registering-custom-task-plugins)
-  - [Prerequisites](#prerequisites-1)
-  - [Usage](#usage-1)
-  - [Examples](#examples-1)
-- [Registering Queues](#registering-queues)
-  - [Prerequisites](#prerequisites-2)
-  - [Usage](#usage-2)
-  - [Examples](#examples-2)
 - [Mounting the data folder in the worker containers](#mounting-the-data-folder-in-the-worker-containers)
 - [Starting Jupyter Lab](#starting-jupyter-lab)
 <!-- markdownlint-enable MD007 MD030 -->
@@ -115,88 +114,6 @@ python ./scripts/download_data.py roadsigns
 # stop early and if the folder /dioptra/data/Fruits360 exists and the dataset
 # zip file downloaded from Kaggle will not be removed.
 python ./scripts/download_data.py --output /dioptra/data fruits360 --no-remove-zip
-```
-
-## Registering Custom Task Plugins
-
-The script [examples/scripts/register_task_plugins.py](./scripts/register_task_plugins.py) should be used to register the custom task plugins used in Dioptra's examples and demos.
-
-### Prerequisites
-
-[Create and activate the examples/.venv virtual environment](#creating-a-virtual-environment) if you have not already done so.
-You will also need to have an instance of Dioptra running, see [../cookiecutter-templates/cookiecutter-dioptra-deployment/README.md](../cookiecutter-templates/cookiecutter-dioptra-deployment/README.md) and the [Building the containers](https://pages.nist.gov/dioptra/getting-started/building-the-containers.html) and [Running Dioptra](https://pages.nist.gov/dioptra/getting-started/running-dioptra.html) sections of the published documentation for instructions.
-
-### Usage
-
-Run the following to register the custom task plugins used in Dioptra's examples and demos:
-
-```bash
-python ./scripts/register_task_plugins.py
-```
-
-For the full list of options, run `python ./scripts/register_task_plugins.py -h` to display the script's help message:
-
-    Usage: register_task_plugins.py [OPTIONS]
-
-      Register the custom task plugins used in Dioptra's examples and demos.
-
-    Options:
-      --plugins-dir DIRECTORY  The path to the directory containing the custom
-                               task plugin subdirectories.  [default: ./task-
-                               plugins]
-      --api-url TEXT           The url to the Dioptra REST API.  [default:
-                               http://localhost]
-      -f, --force              Remove and re-register any existing custom task
-                               plugins.
-      -h, --help               Show this message and exit.
-
-### Examples
-
-```sh
-# Registers the plugins to the REST API url https://dioptra.example.org
-python ./scripts/register_task_plugins.py --api-url https://dioptra.example.org
-```
-
-## Registering Queues
-
-The script [examples/scripts/register_queues.py](./scripts/register_queues.py) should be used to register the queues used in Dioptra's examples and demos.
-
-### Prerequisites
-
-[Create and activate the examples/.venv virtual environment](#creating-a-virtual-environment) if you have not already done so.
-You will also need to have an instance of Dioptra running, see [../cookiecutter-templates/cookiecutter-dioptra-deployment/README.md](../cookiecutter-templates/cookiecutter-dioptra-deployment/README.md) and the [Building the containers](https://pages.nist.gov/dioptra/getting-started/building-the-containers.html) and [Running Dioptra](https://pages.nist.gov/dioptra/getting-started/running-dioptra.html) sections of the published documentation for instructions.
-
-### Usage
-
-Run the following to register the queues used in Dioptra's examples and demos:
-
-```bash
-python ./scripts/register_queues.py
-```
-
-For the full list of options, run `python ./scripts/register_queues.py -h` to display the script's help message:
-
-    Usage: register_queues.py [OPTIONS]
-
-      Register the queues used in Dioptra's examples and demos.
-
-    Options:
-      --queue TEXT    The queue name to register.  [default: tensorflow_cpu,
-                      tensorflow_gpu, pytorch_cpu, pytorch_gpu]
-      --api-url TEXT  The url to the Dioptra REST API.  [default:
-                      http://localhost]
-      -h, --help      Show this message and exit.
-
-### Examples
-
-```sh
-# Registers the default queues to the REST API url https://dioptra.example.org
-python ./scripts/register_queues.py --api-url https://dioptra.example.org
-
-# Registers the queues tensorflow_cpu_highmem and tensorflow_gpu_highmem to the
-# REST API at the default url http://localhost
-python ./scripts/register_queues.py \
-  --queue tensorflow_cpu_highmem --queue tensorflow_gpu_highmem
 ```
 
 ## Mounting the data folder in the worker containers

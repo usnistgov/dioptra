@@ -14,4 +14,4 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-__version__ = "0.0.0"
+__version__ = "1.0.0dev0"

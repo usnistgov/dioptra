@@ -37,7 +37,7 @@ sys.path.insert(0, os.path.abspath("../../src"))
 # -- Project information -----------------------------------------------------
 
 project = "Dioptra"
-release = "0.0.0"
+release = "1.0.0-dev"
 version = ".".join(release.split(".")[:2])
 
 # -- General configuration ---------------------------------------------------
@@ -171,10 +171,6 @@ intersphinx_mapping = {
     "scipy": ("https://docs.scipy.org/doc/scipy/", None),
     "sklearn": ("https://scikit-learn.org/1.0/", None),
     "structlog": ("https://www.structlog.org/en/stable/", None),
-    "tensorflow": (
-        "https://www.tensorflow.org/versions/r2.8/api_docs/python/",
-        "tf28_py_objects.inv",
-    ),
 }
 
 # -- Options for napoleon extension ------------------------------------------

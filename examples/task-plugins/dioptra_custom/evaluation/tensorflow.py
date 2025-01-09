@@ -33,7 +33,7 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 try:
     from tensorflow.keras.callbacks import Callback
     from tensorflow.keras.metrics import Metric
-    from tensorflow.keras.optimizers.legacy import Optimizer
+    from tensorflow.keras.optimizers import Optimizer
 
 except ImportError:  # pragma: nocover
     LOGGER.warn(

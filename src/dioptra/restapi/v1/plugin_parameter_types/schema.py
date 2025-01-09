@@ -15,11 +15,17 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The schemas for serializing/deserializing PluginParameterType resources."""
-from __future__ import annotations
+from marshmallow import Schema, fields
 
-from marshmallow import fields
-
-from dioptra.restapi.v1.schemas import generate_base_resource_ref_schema
+from dioptra.restapi.v1.schemas import (
+    BasePageSchema,
+    GroupIdQueryParametersSchema,
+    PagingQueryParametersSchema,
+    SearchQueryParametersSchema,
+    SortByGetQueryParametersSchema,
+    generate_base_resource_ref_schema,
+    generate_base_resource_schema,
+)
 
 PluginParameterTypeRefBaseSchema = generate_base_resource_ref_schema(
     "PluginParameterType"
@@ -33,7 +39,56 @@ class PluginParameterTypeRefSchema(PluginParameterTypeRefBaseSchema):  # type: i
         attribute="name",
         metadata=dict(description="Name of the PluginParameterType resource."),
     )
+
+
+class PluginParameterTypeMutableFieldsSchema(Schema):
+    """The fields schema for the mutable data in a PluginParameterType resource."""
+
+    name = fields.String(
+        attribute="name",
+        metadata=dict(description="Name of the PluginParameterType resource."),
+        required=True,
+    )
+    description = fields.String(
+        attribute="description",
+        metadata=dict(description="Description of the PluginParameterType resource."),
+        load_default=None,
+    )
     structure = fields.Dict(
         attribute="structure",
         metadata=dict(description="Structure of the PluginParameterType resource."),
+        load_default=None,
     )
+
+
+PluginParameterTypeBaseSchema = generate_base_resource_schema(
+    "PluginParameterType", snapshot=True
+)
+
+
+class PluginParameterTypeSchema(
+    PluginParameterTypeMutableFieldsSchema, PluginParameterTypeBaseSchema  # type: ignore
+):
+    """The schema for the data stored in a PluginParameterType resource."""
+
+
+class PluginParameterTypePageSchema(BasePageSchema):
+    """The paged schema for the data stored in a PluginParameterType resource."""
+
+    data = fields.Nested(
+        PluginParameterTypeSchema,
+        many=True,
+        metadata=dict(
+            description="List of PluginParameterType resources in the current page."
+        ),
+    )
+
+
+class PluginParameterTypeGetQueryParameters(
+    PagingQueryParametersSchema,
+    GroupIdQueryParametersSchema,
+    SearchQueryParametersSchema,
+    SortByGetQueryParametersSchema,
+):
+    """The query parameters for the GET method of the /pluginParameterTypes
+    endpoint."""

@@ -15,9 +15,8 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """Common schemas for serializing/deserializing resources."""
-from __future__ import annotations
 
-from typing import Union
+import enum
 
 from marshmallow import Schema, fields
 
@@ -28,7 +27,7 @@ def generate_base_resource_schema(name: str, snapshot: bool) -> type[Schema]:
     from dioptra.restapi.v1.tags.schema import TagRefSchema
     from dioptra.restapi.v1.users.schema import UserRefSchema
 
-    schema: dict[str, Union[fields.Field, type]] = {
+    schema: dict[str, fields.Field | type] = {
         "id": fields.Integer(
             attribute="id",
             metadata=dict(description=f"ID for the {name} resource."),
@@ -36,15 +35,18 @@ def generate_base_resource_schema(name: str, snapshot: bool) -> type[Schema]:
         ),
         "snapshotId": fields.Integer(
             attribute="snapshot_id",
+            data_key="snapshot",
             metadata=dict(description=f"ID for the underlying {name} snapshot."),
             dump_only=True,
         ),
         "groupId": fields.Integer(
             attribute="group_id",
+            data_key="group",
             metadata=dict(
                 description=f"ID of the Group that will own the {name} resource."
             ),
             load_only=True,
+            required=True,
         ),
         "group": fields.Nested(
             GroupRefSchema,
@@ -65,6 +67,13 @@ def generate_base_resource_schema(name: str, snapshot: bool) -> type[Schema]:
             ),
             dump_only=True,
         ),
+        "snapshotCreatedOn": fields.DateTime(
+            attribute="snapshot_created_on",
+            metadata=dict(
+                description=f"Timestamp when the {name} resource snapshot was created."
+            ),
+            dump_only=True,
+        ),
         "lastModifiedOn": fields.DateTime(
             attribute="last_modified_on",
             metadata=dict(
@@ -79,10 +88,17 @@ def generate_base_resource_schema(name: str, snapshot: bool) -> type[Schema]:
             ),
             dump_only=True,
         ),
+        "hasDraft": fields.Bool(
+            attribute="has_draft",
+            metadata=dict(
+                description=f"Whether a draft exists for the {name} resource."
+            ),
+            dump_only=True,
+        ),
         "tags": fields.Nested(
             TagRefSchema,
             attribute="tags",
-            metadata=dict(description="Tags associated with the {name} resource."),
+            metadata=dict(description=f"Tags associated with the {name} resource."),
             many=True,
             dump_only=True,
         ),
@@ -103,13 +119,13 @@ def generate_base_resource_ref_schema(
     """Generates the base schema for a ResourceRef."""
     from dioptra.restapi.v1.groups.schema import GroupRefSchema
 
-    schema: dict[str, Union[fields.Field, type]] = {
+    schema: dict[str, fields.Field | type] = {
         "id": fields.Integer(
             attribute="id",
             metadata=dict(description=f"ID for the {name} resource."),
         ),
         "snapshotId": fields.Integer(
-            attribute="id",
+            attribute="snapshot_id",
             metadata=dict(description=f"Snapshot ID for the {name} resource."),
         ),
         "group": fields.Nested(
@@ -124,13 +140,12 @@ def generate_base_resource_ref_schema(
         ),
     }
 
-    if not keep_snapshot_id:
+    if keep_snapshot_id:
+        schema.pop("id")
+        return Schema.from_dict(schema, name=f"{name}SnapshotRefBaseSchema")
+    else:
         schema.pop("snapshotId")
-
-    return Schema.from_dict(schema, name="f{name}RefBaseSchema")
-
-
-SnapshotRefSchema = generate_base_resource_ref_schema("Snapshot", keep_snapshot_id=True)
+        return Schema.from_dict(schema, name=f"{name}RefBaseSchema")
 
 
 class BasePageSchema(Schema):
@@ -143,6 +158,10 @@ class BasePageSchema(Schema):
     isComplete = fields.Boolean(
         attribute="is_complete",
         metadata=dict(description="Boolean indicating if more data is available."),
+    )
+    totalNumResults = fields.Integer(
+        attribute="total_num_results",
+        metadata=dict(description="Total number of results."),
     )
     first = fields.Url(
         attribute="first",
@@ -182,28 +201,82 @@ class ResourceTypeQueryParametersSchema(Schema):
     resourceType = fields.String(
         attribute="resource_type",
         metadata=dict(description="Filter results by the type of resource."),
+        load_default=None,
     )
 
 
 class GroupIdQueryParametersSchema(Schema):
     """A schema for adding group_id query parameters to a resource endpoint."""
 
-    groupId = fields.String(
+    groupId = fields.Integer(
         attribute="group_id",
         metadata=dict(description="Filter results by the Group ID."),
+        load_default=None,
+    )
+
+
+class DraftTypes(enum.Enum):
+    ALL = "all"
+    EXISTING = "existing"
+    NEW = "new"
+
+
+class DraftTypeQueryParametersSchema(Schema):
+    """A schema for adding draft_type query parameters to a resource endpoint."""
+
+    draftType = fields.Enum(
+        DraftTypes,
+        attribute="draft_type",
+        metadata=dict(
+            description="The type of drafts to return: all, existing, or new."
+        ),
+        by_value=True,
+        load_default=DraftTypes.ALL,
     )
 
 
 class SearchQueryParametersSchema(Schema):
     """A schema for adding search query parameters to a resource endpoint."""
 
-    query = fields.String(
-        attribute="query",
+    search = fields.String(
+        attribute="search",
         metadata=dict(description="Search terms for the query (* and ? wildcards)."),
+        load_default="",
     )
-    field = fields.Integer(
-        attribute="field",
-        metadata=dict(description="Name of the resource field to search."),
+
+
+class SortByGetQueryParametersSchema(Schema):
+    """A schema for adding sort query parameters to a resource endpoint."""
+
+    sortBy = fields.String(
+        attribute="sort_by",
+        metadata=dict(description="The name of the column to sort."),
+        load_default="",
+    )
+
+    descending = fields.Bool(
+        attribute="descending",
+        metadata=dict(
+            description="Boolean indicating whether to sort by descending or not."
+        ),
+        load_default=False,
+    )
+
+
+class ResourceGetQueryParameters(
+    PagingQueryParametersSchema,
+    SearchQueryParametersSchema,
+):
+    """The query parameters for the GET method of the resource endpoints."""
+
+
+class IdListSchema(Schema):
+    """The schema for a list of IDs."""
+
+    ids = fields.List(
+        fields.Integer(),
+        attribute="ids",
+        metadata=dict(description="List of identifiers for one or more objects."),
     )
 
 
@@ -220,4 +293,14 @@ class IdStatusResponseSchema(Schema):
     status = fields.String(
         attribute="status",
         metadata=dict(description="The status of the request."),
+    )
+
+
+class ResourceUrlsPageSchema(BasePageSchema):
+    """The paged schema for the Resource URLs."""
+
+    data = fields.List(
+        fields.String(),
+        many=True,
+        metadata=dict(description="List of Resource URLs in the current page."),
     )

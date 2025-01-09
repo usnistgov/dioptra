@@ -537,7 +537,7 @@ endif
 	$(call save_sentinel_file,$@)
 
 #################################################################################
-# AUTO-GENERATED PROJECT BUILD RECEIPES                                         #
+# AUTO-GENERATED PROJECT BUILD RECIPES                                          #
 #################################################################################
 
 $(call generate_full_docker_image_recipe,MLFLOW_TRACKING,CONTAINER_IMAGE_TAG)

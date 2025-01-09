@@ -289,7 +289,11 @@ prepare_build_dir() {
     "public"
     "index.html"
     "package.json"
-    "vite.config.js"
+    "package-lock.json"
+    "tsconfig.json"
+    "tsconfig.app.json"
+    "tsconfig.node.json"
+    "vite.config.ts"
   )
 
   log_info "Creating the build directory ${BUILD_DIR}"
@@ -348,10 +352,10 @@ copy_dist_to_output() {
 compile_vue_js_frontend() {
   cd "${BUILD_DIR}"
 
-  log_info "Installing node packages using npm install"
+  log_info "Installing node packages using npm ci"
 
-  if ! npm install; then
-    log_error "Installing node modules using npm install failed, exiting..."
+  if ! npm ci; then
+    log_error "Installing node modules using npm ci failed, exiting..."
     exit 1
   fi
 

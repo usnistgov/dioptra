@@ -42,27 +42,34 @@ Email us: dioptra@nist.gov
    getting-started/building-the-containers
    getting-started/running-dioptra
    getting-started/acquiring-datasets
-   getting-started/examples-setup
-.. getting-started/installation
+.. getting-started/examples-setup
+   getting-started/installation
 
 .. toctree::
    :hidden:
    :maxdepth: -1
    :caption: User Guide
 
-   user-guide/the-basics
+   user-guide/the-web-frontend
+.. user-guide/the-basics
    user-guide/entry-points
    user-guide/task-plugins
    user-guide/custom-entry-points
-   user-guide/task_engine_doc
    user-guide/custom-task-plugins
    user-guide/generics-plugin-system
    user-guide/task-plugins-collection
-   user-guide/api-reference-sdk
-   user-guide/api-reference-client
-   user-guide/api-reference-restapi
 
 .. toctree::
+   :hidden:
+   :maxdepth: -1
+   :caption: Reference
+
+   reference/task-engine-reference
+   reference/api-reference-restapi
+.. reference/api-reference-sdk
+   reference/api-reference-client
+
+.. .. toctree::
    :hidden:
    :maxdepth: -1
    :caption: Deployment Guide

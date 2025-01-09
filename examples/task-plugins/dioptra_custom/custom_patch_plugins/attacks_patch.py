@@ -35,7 +35,7 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 try:
     from art.attacks.evasion import AdversarialPatch
-    from art.estimators.classification import KerasClassifier
+    from art.estimators.classification import TensorFlowV2Classifier
 
 except ImportError:  # pragma: nocover
     LOGGER.warn(
@@ -60,7 +60,7 @@ except ImportError:  # pragma: nocover
 def create_adversarial_patches(
     data_dir: str,
     adv_data_dir: Union[str, Path],
-    keras_classifier: KerasClassifier,
+    keras_classifier: TensorFlowV2Classifier,
     image_size: Tuple[int, int, int],
     patch_target: int,
     num_patch: int,
@@ -144,7 +144,7 @@ def create_adversarial_patch_dataset(
     adv_data_dir: Union[str, Path],
     patch_dir: str,
     patch_application_rate: float,
-    keras_classifier: KerasClassifier,
+    keras_classifier: TensorFlowV2Classifier,
     image_size: Tuple[int, int, int],
     patch_shape: Tuple,
     distance_metrics_list: Optional[List[Tuple[str, Callable[..., np.ndarray]]]] = None,
@@ -288,7 +288,7 @@ def create_adversarial_patch_dataset(
 
 
 def _init_patch(
-    keras_classifier: KerasClassifier, batch_size: int, **kwargs
+    keras_classifier: TensorFlowV2Classifier, batch_size: int, **kwargs
 ) -> AdversarialPatch:
     attack = AdversarialPatch(
         classifier=keras_classifier, batch_size=batch_size, **kwargs

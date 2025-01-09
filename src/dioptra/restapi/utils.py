@@ -25,6 +25,8 @@ from __future__ import annotations
 
 import datetime
 import functools
+from collections import Counter
+from importlib.resources import as_file, files
 from typing import Any, Callable, List, Protocol, Type, cast
 
 from flask.views import View
@@ -38,7 +40,7 @@ from marshmallow.schema import SchemaMeta
 from typing_extensions import TypedDict
 from werkzeug.datastructures import FileStorage
 
-from dioptra.restapi.v0.shared.request_scope import set_request_scope_callbacks
+from dioptra.restapi.v1.shared.request_scope import set_request_scope_callbacks
 
 from .custom_schema_fields import FileUpload
 
@@ -182,6 +184,24 @@ def slugify(text: str) -> str:
     return text.lower().strip().replace(" ", "-")
 
 
+def read_text_file(package: str, filename: str) -> str:
+    """Read a text file from a specified package into a string.
+
+    Args:
+        package: The name of the Python package containing the text file. This should
+            be a string representing the package's import path, for example
+            "my_package.subpackage".
+        filename: The base name of the text file, including its extension. For
+            example, "data.txt".
+
+    Returns:
+        A string with the contents of the text file.
+    """
+    traversable = files(package).joinpath(filename)
+    with as_file(traversable) as fp:
+        return fp.read_text()
+
+
 class _ClassBasedViewFunction(Protocol):
     """
     We distinguish a class-based view function from other view functions
@@ -306,3 +326,26 @@ TYPE_MAP_MA_TO_REQPARSE = {
     ma.URL: str,
     ma.UUID: str,
 }
+
+
+# Validation Functions
+def find_non_unique(name: str, parameters: list[dict[str, Any]]) -> list[str]:
+    """
+    Finds all values of a key that are not unique in a list of dictionaries.
+    Useful for checking that a provided input satisfies uniqueness constraints.
+
+    Note that the key name must be in every dictionary of the provided list.
+
+    Args:
+        name: the name of the parameter to check
+        parameters: the input parameters to check
+
+    Returns:
+        A list of all values that were provided more than once, or an empty list if all
+        values of the key were unique
+    """
+    name_count: Counter = Counter()
+    # this line fails if a parameter is missing a "name" value
+    name_count.update([parameter[name] for parameter in parameters])
+    # create a list of all name values that appear more than once
+    return [key for key in name_count.keys() if name_count[key] > 1]

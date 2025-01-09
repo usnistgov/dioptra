@@ -15,8 +15,6 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The schemas for serializing/deserializing Queue resources."""
-from __future__ import annotations
-
 from marshmallow import Schema, fields
 
 from dioptra.restapi.v1.schemas import (
@@ -24,11 +22,15 @@ from dioptra.restapi.v1.schemas import (
     GroupIdQueryParametersSchema,
     PagingQueryParametersSchema,
     SearchQueryParametersSchema,
+    SortByGetQueryParametersSchema,
     generate_base_resource_ref_schema,
     generate_base_resource_schema,
 )
 
 QueueRefBaseSchema = generate_base_resource_ref_schema("Queue")
+QueueSnapshotRefBaseSchema = generate_base_resource_ref_schema(
+    "Queue", keep_snapshot_id=True
+)
 
 
 class QueueRefSchema(QueueRefBaseSchema):  # type: ignore
@@ -40,15 +42,27 @@ class QueueRefSchema(QueueRefBaseSchema):  # type: ignore
     )
 
 
+class QueueSnapshotRefSchema(QueueSnapshotRefBaseSchema):  # type: ignore
+    """The snapshot reference schema for the data stored in a Queue resource."""
+
+    name = fields.String(
+        attribute="name",
+        metadata=dict(description="Name of the Queue resource."),
+    )
+
+
 class QueueMutableFieldsSchema(Schema):
     """The fields schema for the mutable data in a Queue resource."""
 
     name = fields.String(
-        attribute="name", metadata=dict(description="Name of the Queue resource.")
+        attribute="name",
+        metadata=dict(description="Name of the Queue resource."),
+        required=True,
     )
     description = fields.String(
         attribute="description",
         metadata=dict(description="Description of the Queue resource."),
+        load_default=None,
     )
 
 
@@ -73,5 +87,6 @@ class QueueGetQueryParameters(
     PagingQueryParametersSchema,
     GroupIdQueryParametersSchema,
     SearchQueryParametersSchema,
+    SortByGetQueryParametersSchema,
 ):
     """The query parameters for the GET method of the /queues endpoint."""

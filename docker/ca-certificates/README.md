@@ -20,4 +20,4 @@ There are some common situations where it is necessary to provide one or more ex
 2.  You are building the containers in a corporate environment that has its own certificate authority and the containers need access to resources or repository mirrors on the corporate network.
 
 If these situations do not apply to you, or if you are unsure if they apply to you, then it is recommended that you try to build the containers without adding anything to this folder first.
-If the build process fails due to an HTTPS or SSL error, then that is a a telltale sign that you need to add extra CA certificates to this folder.
+If the build process fails due to an HTTPS or SSL error, then that is a telltale sign that you need to add extra CA certificates to this folder.
