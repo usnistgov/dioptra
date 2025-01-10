@@ -21,6 +21,7 @@ from typing import Any, Final, Generic, TypeVar
 from .artifacts import ArtifactsCollectionClient
 from .auth import AuthCollectionClient
 from .base import DioptraResponseProtocol, DioptraSession
+from .echoes import EchoesCollectionClient
 from .entrypoints import EntrypointsCollectionClient
 from .experiments import ExperimentsCollectionClient
 from .groups import GroupsCollectionClient
@@ -62,6 +63,7 @@ class DioptraClient(Generic[T]):
         self._models = ModelsCollectionClient[T](session)
         self._artifacts = ArtifactsCollectionClient[T](session)
         self._workflows = WorkflowsCollectionClient[T](session)
+        self._echoes = EchoesCollectionClient[T](session)
 
     @property
     def users(self) -> UsersCollectionClient[T]:
@@ -127,6 +129,11 @@ class DioptraClient(Generic[T]):
     def workflows(self) -> WorkflowsCollectionClient[T]:
         """The client for managing Dioptra's /workflows collection."""
         return self._workflows
+
+    @property
+    def echoes(self) -> EchoesCollectionClient[T]:
+        """The client for managing Dioptra's /echoes collection."""
+        return self._echoes
 
     def close(self) -> None:
         """Close the client's connection to the API."""
