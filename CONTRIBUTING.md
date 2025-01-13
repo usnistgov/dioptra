@@ -18,7 +18,7 @@ NIST reserves the right to reject, remove, or edit any contribution or feedback,
 
 -   makes unsupported accusations;
 
--   includes personally identifiable or business identifiable information according to Department of Commerce Office of Privacy and Open Government [guidelines](https://www.osec.doc.gov/opog/privacy/PII_BII.html)
+-   includes personally identifiable or business identifiable information according to Department of Commerce Office of Privacy and Open Government [guidelines](https://www.commerce.gov/sites/default/files/opog/DOC_PA_PII_and_BII_Breach_Notification_Plan.pdf)
 
 ## Contributor Responsibilities
 
