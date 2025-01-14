@@ -17,8 +17,6 @@
 """The schemas for serializing/deserializing Group resource."""
 from __future__ import annotations
 
-from typing import Union
-
 from marshmallow import Schema, fields, missing
 
 from dioptra.restapi.v1.schemas import (
@@ -48,7 +46,7 @@ class GroupRefSchema(Schema):
 def generate_group_permissions_schema(
     is_response: bool, use_defaults: bool
 ) -> type[Schema]:
-    schema: dict[str, Union[fields.Field, type]] = {
+    schema: dict[str, fields.Field] = {
         "read": fields.Boolean(
             attribute="read",
             metadata=dict(description="Permission for member to read Group."),
