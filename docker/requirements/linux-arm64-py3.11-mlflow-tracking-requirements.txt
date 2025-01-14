@@ -8,9 +8,9 @@ alembic==1.14.0
     # via mlflow
 blinker==1.9.0
     # via flask
-boto3==1.35.69
+boto3==1.35.95
     # via -r docker/pip-tools/mlflow-tracking-requirements.in
-botocore==1.35.69
+botocore==1.35.95
     # via
     #   boto3
     #   s3transfer
@@ -18,11 +18,11 @@ cachetools==5.5.0
     # via
     #   google-auth
     #   mlflow-skinny
-certifi==2024.8.30
+certifi==2024.12.14
     # via requests
-charset-normalizer==3.4.0
+charset-normalizer==3.4.1
     # via requests
-click==8.1.7
+click==8.1.8
     # via
     #   flask
     #   mlflow-skinny
@@ -32,7 +32,7 @@ contourpy==1.3.1
     # via matplotlib
 cycler==0.12.1
     # via matplotlib
-databricks-sdk==0.38.0
+databricks-sdk==0.40.0
     # via mlflow-skinny
 deprecated==1.2.15
     # via
@@ -42,13 +42,13 @@ docker==7.1.0
     # via mlflow
 flask==3.1.0
     # via mlflow
-fonttools==4.55.0
+fonttools==4.55.3
     # via matplotlib
-gitdb==4.0.11
+gitdb==4.0.12
     # via gitpython
-gitpython==3.1.43
+gitpython==3.1.44
     # via mlflow-skinny
-google-auth==2.36.0
+google-auth==2.37.0
     # via databricks-sdk
 graphene==3.4.3
     # via mlflow
@@ -70,7 +70,7 @@ importlib-metadata==8.5.0
     #   opentelemetry-api
 itsdangerous==2.2.0
     # via flask
-jinja2==3.1.4
+jinja2==3.1.5
     # via
     #   flask
     #   mlflow
@@ -80,9 +80,9 @@ jmespath==1.0.1
     #   botocore
 joblib==1.4.2
     # via scikit-learn
-kiwisolver==1.4.7
+kiwisolver==1.4.8
     # via matplotlib
-mako==1.3.6
+mako==1.3.8
     # via alembic
 markdown==3.7
     # via mlflow
@@ -91,13 +91,13 @@ markupsafe==3.0.2
     #   jinja2
     #   mako
     #   werkzeug
-matplotlib==3.9.2
+matplotlib==3.10.0
     # via mlflow
-mlflow==2.18.0
+mlflow==2.19.0
     # via -r docker/pip-tools/mlflow-tracking-requirements.in
-mlflow-skinny==2.18.0
+mlflow-skinny==2.19.0
     # via mlflow
-numpy==2.1.3
+numpy==2.2.1
     # via
     #   contourpy
     #   matplotlib
@@ -105,14 +105,14 @@ numpy==2.1.3
     #   pandas
     #   scikit-learn
     #   scipy
-opentelemetry-api==1.28.2
+opentelemetry-api==1.29.0
     # via
     #   mlflow-skinny
     #   opentelemetry-sdk
     #   opentelemetry-semantic-conventions
-opentelemetry-sdk==1.28.2
+opentelemetry-sdk==1.29.0
     # via mlflow-skinny
-opentelemetry-semantic-conventions==0.49b2
+opentelemetry-semantic-conventions==0.50b0
     # via opentelemetry-sdk
 packaging==24.2
     # via
@@ -121,9 +121,9 @@ packaging==24.2
     #   mlflow-skinny
 pandas==2.2.3
     # via mlflow
-pillow==11.0.0
+pillow==11.1.0
     # via matplotlib
-protobuf==5.28.3
+protobuf==5.29.3
     # via mlflow-skinny
 psycopg2-binary==2.9.10
     # via -r docker/pip-tools/mlflow-tracking-requirements.in
@@ -135,7 +135,7 @@ pyasn1==0.6.1
     #   rsa
 pyasn1-modules==0.4.1
     # via google-auth
-pyparsing==3.2.0
+pyparsing==3.2.1
     # via matplotlib
 python-dateutil==2.9.0.post0
     # via
@@ -156,23 +156,23 @@ rsa==4.9
     # via google-auth
 s3transfer==0.10.4
     # via boto3
-scikit-learn==1.5.2
+scikit-learn==1.6.0
     # via mlflow
-scipy==1.14.1
+scipy==1.15.0
     # via
     #   mlflow
     #   scikit-learn
 simplejson==3.19.3
     # via -r docker/pip-tools/mlflow-tracking-requirements.in
-six==1.16.0
+six==1.17.0
     # via python-dateutil
-smmap==5.0.1
+smmap==5.0.2
     # via gitdb
 sqlalchemy==2.0.36
     # via
     #   alembic
     #   mlflow
-sqlparse==0.5.2
+sqlparse==0.5.3
     # via mlflow-skinny
 threadpoolctl==3.5.0
     # via scikit-learn
@@ -184,7 +184,7 @@ typing-extensions==4.12.2
     #   sqlalchemy
 tzdata==2024.2
     # via pandas
-urllib3==2.2.3
+urllib3==2.3.0
     # via
     #   botocore
     #   docker
