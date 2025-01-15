@@ -15,6 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """Fixtures representing resources needed for test suites"""
+import os
 import tarfile
 import textwrap
 from collections.abc import Iterator
@@ -32,7 +33,11 @@ from flask_sqlalchemy import SQLAlchemy
 from injector import Injector
 from pytest import MonkeyPatch
 
-from dioptra.client import DioptraFile, select_one_or_more_files
+from dioptra.client import (
+    DioptraFile,
+    select_files_in_directory,
+    select_one_or_more_files,
+)
 
 from ..lib import actions, mock_rq
 
@@ -730,18 +735,25 @@ def registered_mlflowrun_incomplete(
 
 @pytest.fixture
 def resources_tar_file() -> DioptraFile:
-    root_dir = Path(__file__).absolute().parent / "resource_import_files"
+    os.chdir(Path(__file__).absolute().parent / "resource_import_files")
 
     f = NamedTemporaryFile(suffix=".tar.gz")
     with tarfile.open(fileobj=f, mode="w:gz") as tar:
-        tar.add(root_dir / "dioptra.toml", arcname="dioptra.toml")
-        tar.add(root_dir / "hello_world", arcname="plugins/hello_world", recursive=True)
-        tar.add(root_dir / "hello-world.yaml", arcname="examples/hello-world.yaml")
+        tar.add("dioptra.toml")
+        tar.add("plugins", recursive=True)
+        tar.add("examples/hello-world.yaml")
     f.seek(0)
 
     yield select_one_or_more_files([f.name])[0]
 
     f.close()
+
+
+@pytest.fixture
+def resources_files() -> DioptraFile:
+    os.chdir(Path(__file__).absolute().parent / "resource_import_files")
+
+    return select_files_in_directory(".", recursive=True)
 
 
 @pytest.fixture

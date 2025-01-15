@@ -90,7 +90,7 @@ def assert_resource_import_overwrite_works(
 # -- Tests -----------------------------------------------------------------------------
 
 
-def test_resource_import(
+def test_resource_import_from_archive_file(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
@@ -99,6 +99,19 @@ def test_resource_import(
 ):
     group_id = auth_account["groups"][0]["id"]
     dioptra_client.workflows.import_resources(group_id, archive_file=resources_tar_file)
+
+    assert_imported_resources_match_expected(dioptra_client, resources_import_config)
+
+
+def test_resource_import_from_files(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    resources_files: list[DioptraFile],
+    resources_import_config: dict[str, Any],
+):
+    group_id = auth_account["groups"][0]["id"]
+    dioptra_client.workflows.import_resources(group_id, files=resources_files)
 
     assert_imported_resources_match_expected(dioptra_client, resources_import_config)
 

@@ -19,7 +19,7 @@ from enum import Enum
 
 from marshmallow import Schema, ValidationError, fields, validates_schema
 
-from dioptra.restapi.custom_schema_fields import FileUpload
+from dioptra.restapi.custom_schema_fields import FileUpload, MultiFileUpload
 
 
 class FileTypes(Enum):
@@ -47,7 +47,8 @@ class JobFilesDownloadQueryParametersSchema(Schema):
 
 class ResourceImportSourceTypes(Enum):
     GIT = "git"
-    UPLOAD = "upload"
+    UPLOAD_ARCHIVE = "upload_archive"
+    UPLOAD_FILES = "upload_files"
 
 
 class ResourceImportResolveNameConflictsStrategy(Enum):
@@ -69,14 +70,17 @@ class ResourceImportSchema(Schema):
     sourceType = fields.Enum(
         ResourceImportSourceTypes,
         attribute="source_type",
-        metadata=dict(description="The source of the resources to import."),
+        metadata=dict(
+            description="The source of the resources to import"
+            "('upload_archive', 'upload_files', or 'git'."
+        ),
         by_value=True,
         required=True,
     )
     gitUrl = fields.String(
         attribute="git_url",
         metadata=dict(
-            description="The URL of the git repository containing resources to import. "
+            description="The URL of the git repository containing resources to import."
             "A git branch can optionally be specified by appending #BRANCH_NAME. "
             "Used when sourceType is 'git'."
         ),
@@ -87,8 +91,18 @@ class ResourceImportSchema(Schema):
         metadata=dict(
             type="file",
             format="binary",
-            description="The archive file containing resources to import (.tar.gz). "
-            "Used when sourceType is 'upload'.",
+            description="The archive file containing resources to import (.tar.gz)."
+            "Used when sourceType is 'upload_archive'.",
+        ),
+        required=False,
+    )
+    files = MultiFileUpload(
+        attribute="files",
+        metadata=dict(
+            type="file",
+            format="binary",
+            description="The files containing the resources to import."
+            "Used when sourceType is 'upload_files'.",
         ),
         required=False,
     )

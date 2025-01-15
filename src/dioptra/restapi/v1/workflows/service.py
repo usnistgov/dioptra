@@ -162,6 +162,7 @@ class ResourceImportService(object):
         source_type: str,
         git_url: str | None,
         archive_file: FileStorage | None,
+        files: list[FileStorage] | None,
         config_path: str,
         resolve_name_conflicts_strategy: str,
         **kwargs,
@@ -172,7 +173,8 @@ class ResourceImportService(object):
             group_id: The group to import resources into
             source_type: The source to import from (either "upload" or "git")
             git_url: The url to the git repository if source_type is "git"
-            archive_file: The contents of the upload if source_type is "upload"
+            archive_file: The contents of the upload if source_type is "upload_archive"
+            files: The contents of the upload if source_type is "upload_files"
             config_path: The path to the toml configuration file in the import source.
             resolve_name_conflicts_strategy: The strategy for resolving name conflicts.
                 Either "fail" or "overwrite"
@@ -191,7 +193,7 @@ class ResourceImportService(object):
         with TemporaryDirectory() as tmp_dir, set_cwd(tmp_dir):
             working_dir = Path(tmp_dir)
 
-            if source_type == ResourceImportSourceTypes.UPLOAD:
+            if source_type == ResourceImportSourceTypes.UPLOAD_ARCHIVE:
                 bytes = archive_file.stream.read()
                 try:
                     with tarfile.open(fileobj=BytesIO(bytes), mode="r:*") as tar:
@@ -199,11 +201,20 @@ class ResourceImportService(object):
                 except Exception as e:
                     raise ImportFailedError("Failed to read uploaded tarfile") from e
                 hash = str(sha256(bytes).hexdigest())
+            elif source_type == ResourceImportSourceTypes.UPLOAD_FILES:
+                hashes = b""
+                for file in files:
+                    Path(file.filename).parent.mkdir(parents=True, exist_ok=True)
+                    bytes = file.stream.read()
+                    with open(working_dir / file.filename, "wb") as f:
+                        f.write(bytes)
+                    hashes = hashes + sha256(bytes).digest()
+                hash = str(sha256(hashes).hexdigest())
             else:
                 try:
                     hash = clone_git_repository(cast(str, git_url), working_dir)
                 except Exception as e:
-                    raise GitError("Failed to clone repository: {git_url}") from e
+                    raise GitError(f"Failed to clone repository: {git_url}") from e
 
             try:
                 config = toml.load(working_dir / config_path)
@@ -345,7 +356,12 @@ class ResourceImportService(object):
             tasks = self._build_tasks(plugin.get("tasks", []), param_types)
             for plugin_file_path in Path(plugin["path"]).rglob("*.py"):
                 filename = str(plugin_file_path.relative_to(plugin["path"]))
-                contents = plugin_file_path.read_text()
+                try:
+                    contents = plugin_file_path.read_text()
+                except FileNotFoundError as e:
+                    raise ImportFailedError(
+                        f"Failed to read plugin file from {plugin_file_path}"
+                    ) from e
 
                 self._plugin_id_file_service.create(
                     filename,
@@ -394,7 +410,13 @@ class ResourceImportService(object):
                         entrypoint_id=existing.resource_id
                     )
 
-            contents = Path(entrypoint["path"]).read_text()
+            try:
+                contents = Path(entrypoint["path"]).read_text()
+            except FileNotFoundError as e:
+                raise ImportFailedError(
+                    f"Failed to read plugin file from {entrypoint['path']}"
+                ) from e
+
             params = [
                 {
                     "name": param["name"],
