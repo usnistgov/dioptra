@@ -14,12 +14,18 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+import posixpath
+import re
 from abc import ABC, abstractmethod
-from pathlib import Path
+from dataclasses import dataclass
+from io import BufferedReader
+from pathlib import Path, PurePosixPath, PureWindowsPath
 from posixpath import join as urljoin
 from typing import Any, ClassVar, Generic, Protocol, TypeVar
 
 T = TypeVar("T")
+
+DOTS_REGEX = re.compile(r"^\.\.\.+$")
 
 
 class DioptraClientError(Exception):
@@ -91,6 +97,52 @@ class DioptraResponseProtocol(Protocol):
         ...  # fmt: skip
 
 
+@dataclass
+class DioptraFile(object):
+    """A file to be uploaded to the Dioptra API.
+
+    Attributes:
+        filename: The name of the file.
+        stream: The file stream.
+        content_type: The content type of the file.
+    """
+
+    filename: str
+    stream: BufferedReader
+    content_type: str | None
+
+    def __post_init__(self) -> None:
+        if PureWindowsPath(self.filename).as_posix() != str(PurePosixPath(self.filename)):  # noqa: B950; fmt: skip
+            raise ValueError(
+                "Invalid filename (reason: filename is a Windows path): "
+                f"{self.filename}"
+            )
+
+        if posixpath.normpath(self.filename) != self.filename:
+            raise ValueError(
+                "Invalid filename (reason: filename is not normalized): "
+                f"{self.filename}"
+            )
+
+        if not PurePosixPath(self.filename).is_relative_to("."):
+            raise ValueError(
+                "Invalid filename (reason: filename is not relative to ./): "
+                f"{self.filename}"
+            )
+
+        if PurePosixPath("..") in PurePosixPath(posixpath.normpath(self.filename)).parents:  # noqa: B950; fmt: skip
+            raise ValueError(
+                "Invalid filename (reason: filename is not a sub-directory of ./): "
+                f"{self.filename}"
+            )
+
+        if any([DOTS_REGEX.match(str(x)) for x in PurePosixPath(posixpath.normpath(self.filename)).parts]):  # noqa: B950; fmt: skip
+            raise ValueError(
+                "Invalid filename (reason: filename contains a sub-directory name that "
+                f"is all dots): {self.filename}"
+            )
+
+
 class DioptraSession(ABC, Generic[T]):
     """The interface for communicating with the Dioptra API."""
 
@@ -117,6 +169,8 @@ class DioptraSession(ABC, Generic[T]):
         url: str,
         params: dict[str, Any] | None = None,
         json_: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+        files: dict[str, DioptraFile | list[DioptraFile]] | None = None,
     ) -> DioptraResponseProtocol:
         """Make a request to the API.
 
@@ -129,6 +183,10 @@ class DioptraSession(ABC, Generic[T]):
             params: The query parameters to include in the request. Optional, defaults
                 to None.
             json_: The JSON data to include in the request. Optional, defaults to None.
+            data: A dictionary to send in the body of the request as part of a
+                multipart form. Optional, defaults to None.
+            files: Dictionary of "name": DioptraFile or lists of DioptraFile pairs to be
+                uploaded. Optional, defaults to None.
 
         Returns:
             The response from the API.
@@ -179,6 +237,8 @@ class DioptraSession(ABC, Generic[T]):
         *parts,
         params: dict[str, Any] | None = None,
         json_: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+        files: dict[str, DioptraFile | list[DioptraFile]] | None = None,
     ) -> T:
         """Make a POST request to the API.
 
@@ -188,6 +248,10 @@ class DioptraSession(ABC, Generic[T]):
             params: The query parameters to include in the request. Optional, defaults
                 to None.
             json_: The JSON data to include in the request. Optional, defaults to None.
+            data: A dictionary to send in the body of the request as part of a
+                multipart form. Optional, defaults to None.
+            files: Dictionary of "name": DioptraFile or lists of DioptraFile pairs to be
+                uploaded. Optional, defaults to None.
 
         Returns:
             The response from the API.
@@ -311,6 +375,8 @@ class DioptraSession(ABC, Generic[T]):
         *parts,
         params: dict[str, Any] | None = None,
         json_: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+        files: dict[str, DioptraFile | list[DioptraFile]] | None = None,
     ) -> DioptraResponseProtocol:
         """Make a POST request to the API.
 
@@ -323,12 +389,21 @@ class DioptraSession(ABC, Generic[T]):
             params: The query parameters to include in the request. Optional, defaults
                 to None.
             json_: The JSON data to include in the request. Optional, defaults to None.
+            data: A dictionary to send in the body of the request as part of a
+                multipart form. Optional, defaults to None.
+            files: Dictionary of "name": DioptraFile or lists of DioptraFile pairs to be
+                uploaded. Optional, defaults to None.
 
         Returns:
             A response object that implements the DioptraResponseProtocol interface.
         """
         return self.make_request(
-            "post", self.build_url(endpoint, *parts), params=params, json_=json_
+            "post",
+            self.build_url(endpoint, *parts),
+            params=params,
+            json_=json_,
+            data=data,
+            files=files,
         )
 
     def _delete(

@@ -17,17 +17,21 @@
 import logging
 from abc import ABC, abstractmethod
 from http import HTTPStatus
+from io import BufferedReader
 from pathlib import Path
-from typing import Any, Callable, ClassVar, Final, Generic, TypeVar, cast
+from typing import Any, Callable, ClassVar, Final, Generic, TypeAlias, TypeVar, cast
 from urllib.parse import urlparse, urlunparse
 
 import requests
+from requests_toolbelt import MultipartEncoder
 
 from .base import (
     APIConnectionError,
     DioptraClientError,
+    DioptraFile,
     DioptraResponseProtocol,
     DioptraSession,
+    IllegalArgumentError,
     JSONDecodeError,
     StatusCodeError,
 )
@@ -37,6 +41,13 @@ LOGGER = logging.getLogger(__name__)
 DIOPTRA_API_VERSION: Final[str] = "v1"
 
 T = TypeVar("T")
+
+RequestsFileDataStructureType: TypeAlias = (
+    tuple[str, BufferedReader] | tuple[str, BufferedReader, str]
+)
+MultipartEncoderFields: TypeAlias = list[
+    tuple[str, RequestsFileDataStructureType | Any]
+]
 
 
 def wrap_request_method(
@@ -136,6 +147,65 @@ def is_2xx(status_code: int) -> bool:
     return status_code >= HTTPStatus.OK and status_code < HTTPStatus.MULTIPLE_CHOICES
 
 
+def format_file_for_request(file_: DioptraFile) -> RequestsFileDataStructureType:
+    """Format the DioptraFile object into a requests-compatible data structure.
+
+    Returns:
+        The file encoded as either a 2-tuple ("filename", fileobj) or a 3-tuple
+        ("filename", fileobj, "content_type").
+    """
+    if file_.content_type is None:
+        return (file_.filename, file_.stream)
+
+    return (file_.filename, file_.stream, file_.content_type)
+
+
+def to_multipart_encoder(
+    data: dict[str, Any] | None,
+    files: dict[str, DioptraFile | list[DioptraFile]] | None,
+) -> MultipartEncoder:
+    """Consolidate data and files into a multipart encoder.
+
+    Args:
+        data: A dictionary to send in the body of the request as part of a multipart
+            form.
+        files: Dictionary of "name": DioptraFile or lists of DioptraFile pairs to be
+            uploaded.
+
+    Returns:
+        A MultipartEncoder object containing the data and files.
+    """
+    merged: MultipartEncoderFields = []
+
+    if data is not None:
+        for key, value in data.items():
+            merged.append((key, value))
+
+    if files is not None:
+        for key, value in files.items():
+            if isinstance(value, DioptraFile):
+                merged.append((key, format_file_for_request(value)))
+
+            else:
+                try:
+                    for dioptra_file in value:
+                        if not isinstance(dioptra_file, DioptraFile):
+                            raise IllegalArgumentError(
+                                "Illegal type for files (reason: a list can only "
+                                f"contain the DioptraFile type): {type(dioptra_file)}."
+                            )
+
+                        merged.append((key, format_file_for_request(dioptra_file)))
+
+                except TypeError as err:
+                    raise IllegalArgumentError(
+                        "Illegal type for files (reason: must be a DioptraFile or a "
+                        f"list of DioptraFile): {type(value)}."
+                    ) from err
+
+    return MultipartEncoder(merged)
+
+
 class BaseDioptraRequestsSession(DioptraSession[T], ABC, Generic[T]):
     """
     The interface for communicating with the Dioptra API using the requests library.
@@ -180,6 +250,8 @@ class BaseDioptraRequestsSession(DioptraSession[T], ABC, Generic[T]):
         url: str,
         params: dict[str, Any] | None = None,
         json_: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+        files: dict[str, DioptraFile | list[DioptraFile]] | None = None,
     ) -> DioptraResponseProtocol:
         """Make a request to the API.
 
@@ -190,6 +262,10 @@ class BaseDioptraRequestsSession(DioptraSession[T], ABC, Generic[T]):
             params: The query parameters to include in the request. Optional, defaults
                 to None.
             json_: The JSON data to include in the request. Optional, defaults to None.
+            data: A dictionary to send in the body of the request as part of a
+                multipart form. Optional, defaults to None.
+            files: Dictionary of "name": DioptraFile or lists of DioptraFile pairs to be
+                uploaded. Optional, defaults to None.
 
         Returns:
             The response from the API.
@@ -197,6 +273,8 @@ class BaseDioptraRequestsSession(DioptraSession[T], ABC, Generic[T]):
         Raises:
             APIConnectionError: If the connection to the REST API fails.
             DioptraClientError: If an unsupported method is requested.
+            IllegalArgumentError: If the values passed to the arguments are not
+                supported by the requested method.
         """
         session = self._get_requests_session()
         methods_registry: dict[str, Callable[..., DioptraResponseProtocol]] = {
@@ -216,11 +294,41 @@ class BaseDioptraRequestsSession(DioptraSession[T], ABC, Generic[T]):
         method = methods_registry[method_name]
         method_kwargs: dict[str, Any] = {}
 
+        if method_name != "post":
+            if data:
+                raise IllegalArgumentError(
+                    "Illegal value for data (reason: data is only supported for POST "
+                    f"requests): {data}."
+                )
+
+            if files:
+                raise IllegalArgumentError(
+                    "Illegal value for files (reason: files is only supported for POST "
+                    f"requests): {files}."
+                )
+
         if json_:
+            if data:
+                raise IllegalArgumentError(
+                    "Illegal value for json_ (reason: json_ is not supported if data "
+                    f"is not None): {json_}."
+                )
+
+            if files:
+                raise IllegalArgumentError(
+                    "Illegal value for json_ (reason: json_ is not supported if files "
+                    f"is not None): {json_}."
+                )
+
             method_kwargs["json"] = json_
 
         if params:
             method_kwargs["params"] = params
+
+        if data or files:
+            merged_data = to_multipart_encoder(data=data, files=files)
+            method_kwargs["data"] = merged_data
+            method_kwargs["headers"] = {"Content-Type": merged_data.content_type}
 
         return method(url, **method_kwargs)
 
@@ -331,6 +439,8 @@ class BaseDioptraRequestsSession(DioptraSession[T], ABC, Generic[T]):
         *parts,
         params: dict[str, Any] | None = None,
         json_: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+        files: dict[str, DioptraFile | list[DioptraFile]] | None = None,
     ) -> T:
         """Make a POST request to the API.
 
@@ -340,6 +450,10 @@ class BaseDioptraRequestsSession(DioptraSession[T], ABC, Generic[T]):
             params: The query parameters to include in the request. Optional, defaults
                 to None.
             json_: The JSON data to include in the request. Optional, defaults to None.
+            data: A dictionary to send in the body of the request as part of a
+                multipart form. Optional, defaults to None.
+            files: Dictionary of "name": DioptraFile or lists of DioptraFile pairs to be
+                uploaded. Optional, defaults to None.
 
         Returns:
             The response from the API.
@@ -478,6 +592,8 @@ class DioptraRequestsSession(BaseDioptraRequestsSession[DioptraResponseProtocol]
         *parts,
         params: dict[str, Any] | None = None,
         json_: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+        files: dict[str, DioptraFile | list[DioptraFile]] | None = None,
     ) -> DioptraResponseProtocol:
         """Make a POST request to the API.
 
@@ -490,6 +606,10 @@ class DioptraRequestsSession(BaseDioptraRequestsSession[DioptraResponseProtocol]
             params: The query parameters to include in the request. Optional, defaults
                 to None.
             json_: The JSON data to include in the request. Optional, defaults to None.
+            data: A dictionary to send in the body of the request as part of a
+                multipart form. Optional, defaults to None.
+            files: Dictionary of "name": DioptraFile or lists of DioptraFile pairs to be
+                uploaded. Optional, defaults to None.
 
         Returns:
             A requests Response object.
@@ -498,7 +618,9 @@ class DioptraRequestsSession(BaseDioptraRequestsSession[DioptraResponseProtocol]
             APIConnectionError: If the connection to the REST API fails.
             DioptraClientError: If an unsupported method is requested.
         """
-        return self._post(endpoint, *parts, params=params, json_=json_)
+        return self._post(
+            endpoint, *parts, params=params, json_=json_, data=data, files=files
+        )
 
     def delete(
         self,
@@ -630,6 +752,8 @@ class DioptraRequestsSessionJson(BaseDioptraRequestsSession[dict[str, Any]]):
         *parts,
         params: dict[str, Any] | None = None,
         json_: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+        files: dict[str, DioptraFile | list[DioptraFile]] | None = None,
     ) -> dict[str, Any]:
         """Make a POST request to the API.
 
@@ -641,6 +765,10 @@ class DioptraRequestsSessionJson(BaseDioptraRequestsSession[dict[str, Any]]):
             params: The query parameters to include in the request. Optional, defaults
                 to None.
             json_: The JSON data to include in the request. Optional, defaults to None.
+            data: A dictionary to send in the body of the request as part of a
+                multipart form. Optional, defaults to None.
+            files: Dictionary of "name": DioptraFile or lists of DioptraFile pairs to be
+                uploaded. Optional, defaults to None.
 
         Returns:
             A Python dictionary containing the response data.
@@ -652,7 +780,9 @@ class DioptraRequestsSessionJson(BaseDioptraRequestsSession[dict[str, Any]]):
             StatusCodeError: If the response status code is not in the 2xx range.
         """
         return convert_response_to_dict(
-            self._post(endpoint, *parts, params=params, json_=json_)
+            self._post(
+                endpoint, *parts, params=params, json_=json_, data=data, files=files
+            )
         )
 
     def delete(

@@ -21,13 +21,16 @@ from typing import Any, Callable, Protocol, cast
 import structlog
 from flask.testing import FlaskClient
 from structlog.stdlib import BoundLogger
+from werkzeug.datastructures import FileStorage
 from werkzeug.test import TestResponse
 
 from dioptra.client.base import (
     DioptraClientError,
+    DioptraFile,
     DioptraRequestProtocol,
     DioptraResponseProtocol,
     DioptraSession,
+    IllegalArgumentError,
     StatusCodeError,
 )
 from dioptra.restapi.routes import V1_ROOT
@@ -141,6 +144,69 @@ def is_2xx(status_code: int) -> bool:
     return status_code >= HTTPStatus.OK and status_code < HTTPStatus.MULTIPLE_CHOICES
 
 
+def format_file_for_request(file_: DioptraFile) -> FileStorage:
+    """Format the DioptraFile object into a FlaskClient-compatible data structure.
+
+    Returns:
+        The file encoded as a Werkzeug FileStorage object.
+    """
+    if file_.content_type is None:
+        return FileStorage(stream=file_.stream, filename=file_.filename)
+
+    return FileStorage(
+        stream=file_.stream, filename=file_.filename, content_type=file_.content_type
+    )
+
+
+def prepare_data_and_files(
+    data: dict[str, Any] | None,
+    files: dict[str, DioptraFile | list[DioptraFile]] | None,
+) -> dict[str, Any]:
+    """Prepare the data and files for the request.
+
+    Args:
+        data: A dictionary to send in the body of the request as part of a multipart
+            form.
+        files: Dictionary of "name": DioptraFile or lists of DioptraFile pairs to be
+            uploaded.
+
+    Returns:
+        A dictionary containing the prepared data and files dictionary.
+    """
+    merged: dict[str, Any] = {}
+
+    if data is not None:
+        merged = merged | data
+
+    if files is not None:
+        for key, value in files.items():
+            if isinstance(value, DioptraFile):
+                merged[key] = format_file_for_request(value)
+
+            else:
+                formatted_files: list[FileStorage] = []
+
+                try:
+                    for dioptra_file in value:
+                        if not isinstance(dioptra_file, DioptraFile):
+                            raise IllegalArgumentError(
+                                "Illegal type for files (reason: a list can only "
+                                f"contain the DioptraFile type): {type(dioptra_file)}."
+                            )
+
+                        formatted_files.append(format_file_for_request(dioptra_file))
+
+                except TypeError as err:
+                    raise IllegalArgumentError(
+                        "Illegal type for files (reason: must be a DioptraFile or a "
+                        f"list of DioptraFile): {type(value)}."
+                    ) from err
+
+                merged[key] = formatted_files
+
+    return merged
+
+
 class DioptraFlaskClientSession(DioptraSession[DioptraResponseProtocol]):
     """
     The interface for communicating with the Dioptra API using the FlaskClient.
@@ -173,6 +239,8 @@ class DioptraFlaskClientSession(DioptraSession[DioptraResponseProtocol]):
         url: str,
         params: dict[str, Any] | None = None,
         json_: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+        files: dict[str, DioptraFile | list[DioptraFile]] | None = None,
     ) -> DioptraResponseProtocol:
         """Make a request to the API.
 
@@ -183,6 +251,10 @@ class DioptraFlaskClientSession(DioptraSession[DioptraResponseProtocol]):
             params: The query parameters to include in the request. Optional, defaults
                 to None.
             json_: The JSON data to include in the request. Optional, defaults to None.
+            data: A dictionary to send in the body of the request as part of a
+                multipart form. Optional, defaults to None.
+            files: Dictionary of "name": DioptraFile or lists of DioptraFile pairs to be
+                uploaded. Optional, defaults to None.
 
         Returns:
             The response from the API.
@@ -212,11 +284,41 @@ class DioptraFlaskClientSession(DioptraSession[DioptraResponseProtocol]):
         method = methods_registry[method_name]
         method_kwargs: dict[str, Any] = {"follow_redirects": True}
 
+        if method_name != "post":
+            if data:
+                raise IllegalArgumentError(
+                    "Illegal value for data (reason: data is only supported for POST "
+                    f"requests): {data}."
+                )
+
+            if files:
+                raise IllegalArgumentError(
+                    "Illegal value for files (reason: files is only supported for POST "
+                    f"requests): {files}."
+                )
+
         if json_:
+            if data:
+                raise IllegalArgumentError(
+                    "Illegal value for json_ (reason: json_ is not supported if data "
+                    f"is not None): {json_}."
+                )
+
+            if files:
+                raise IllegalArgumentError(
+                    "Illegal value for json_ (reason: json_ is not supported if files "
+                    f"is not None): {json_}."
+                )
+
             method_kwargs["json"] = json_
 
         if params:
             method_kwargs["query_string"] = params
+
+        if data or files:
+            merged_data = prepare_data_and_files(data=data, files=files)
+            method_kwargs["data"] = merged_data
+            method_kwargs["content_type"] = "multipart/form-data"
 
         return method(url, **method_kwargs)
 
@@ -329,6 +431,8 @@ class DioptraFlaskClientSession(DioptraSession[DioptraResponseProtocol]):
         *parts,
         params: dict[str, Any] | None = None,
         json_: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+        files: dict[str, DioptraFile | list[DioptraFile]] | None = None,
     ) -> DioptraResponseProtocol:
         """Make a POST request to the API.
 
@@ -341,11 +445,17 @@ class DioptraFlaskClientSession(DioptraSession[DioptraResponseProtocol]):
             params: The query parameters to include in the request. Optional, defaults
                 to None.
             json_: The JSON data to include in the request. Optional, defaults to None.
+            data: A dictionary to send in the body of the request as part of a
+                multipart form. Optional, defaults to None.
+            files: Dictionary of "name": DioptraFile or lists of DioptraFile pairs to be
+                uploaded. Optional, defaults to None.
 
         Returns:
             A DioptraTestResponse object.
         """
-        return self._post(endpoint, *parts, params=params, json_=json_)
+        return self._post(
+            endpoint, *parts, params=params, json_=json_, data=data, files=files
+        )
 
     def delete(
         self,
