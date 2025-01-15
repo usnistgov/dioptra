@@ -32,6 +32,8 @@ from flask_sqlalchemy import SQLAlchemy
 from injector import Injector
 from pytest import MonkeyPatch
 
+from dioptra.client import DioptraFile, select_one_or_more_files
+
 from ..lib import actions, mock_rq
 
 
@@ -727,7 +729,7 @@ def registered_mlflowrun_incomplete(
 
 
 @pytest.fixture
-def resources_tar_file():
+def resources_tar_file() -> DioptraFile:
     root_dir = Path(__file__).absolute().parent / "resource_import_files"
 
     f = NamedTemporaryFile(suffix=".tar.gz")
@@ -737,12 +739,12 @@ def resources_tar_file():
         tar.add(root_dir / "hello-world.yaml", arcname="examples/hello-world.yaml")
     f.seek(0)
 
-    yield f
+    yield select_one_or_more_files([f.name])[0]
 
     f.close()
 
 
 @pytest.fixture
-def resources_import_config():
+def resources_import_config() -> dict[str, Any]:
     root_dir = Path(__file__).absolute().parent / "resource_import_files"
     return toml.load(root_dir / "dioptra.toml")

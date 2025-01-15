@@ -15,9 +15,14 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from pathlib import Path
-from typing import ClassVar, Final, Literal, TypeVar
+from typing import Any, ClassVar, Final, Literal, TypeVar, overload
 
-from .base import CollectionClient, IllegalArgumentError
+from .base import (
+    CollectionClient,
+    DioptraFile,
+    DioptraResponseProtocol,
+    IllegalArgumentError,
+)
 
 T = TypeVar("T")
 
@@ -88,49 +93,76 @@ class WorkflowsCollectionClient(CollectionClient[T]):
             self.url, JOB_FILES_DOWNLOAD, output_path=job_files_path, params=params
         )
 
-    def import_resources_from_git(
+    @overload
+    def import_resources(
         self,
-        group_id: int,
         git_url: str,
         config_path: str | None = "dioptra.toml",
-        resolve_name_conflict_strategy: Literal["fail", "overwrite"] | None = "fail",
-    ):
-        """ """
+        resolve_name_conflicts_strategy: Literal["fail", "overwrite"] | None = "fail",
+    ) -> DioptraResponseProtocol:
+        """Signature for using import_resource from git repo"""
+        ...  # pragma: nocover
 
-        json_ = {
-            "group": group_id,
-            "sourceType": "git",
-            "gitUrl": git_url,
-        }
-
-        if config_path is not None:
-            json_["configPath"] = config_path
-
-        if resolve_name_conflict_strategy is not None:
-            json_["resolveNameConflictStrategy"] = resolve_name_conflict_strategy
-
-        # need to update post to specify that json should be sent as form data
-        self._session.post(self.url, RESOURCE_IMPORT, json_=json_)
-
-    def import_resources_from_archive(
+    @overload
+    def import_resources(
         self,
-        group_id: int,
-        archive_file_path: Path,
-        config_path: str = "dioptra.toml",
-        resolve_name_conflict_strategy: Literal["fail", "overwrite"] = "fail",
-    ):
-        """ """
+        archive_file: DioptraFile,
+        config_path: str | None = "dioptra.toml",
+        resolve_name_conflicts_strategy: Literal["fail", "overwrite"] | None = "fail",
+    ) -> DioptraResponseProtocol:
+        """Signature for using import_resource from archive file"""
+        ...  # pragma: nocover
 
-        json_ = {
-            "group": group_id,
-            "sourceType": "upload",
-        }
+    def import_resources(
+        self,
+        group_id,
+        git_url=None,
+        archive_file=None,
+        config_path="dioptra.toml",
+        resolve_name_conflicts_strategy="fail",
+    ):
+        """
+        Import resources from a archive file or git repository
+
+        Args:
+            group_id: The group to import resources into
+            source_type: The source to import from (either "upload" or "git")
+            git_url: The url to the git repository if source_type is "git"
+            archive_file: The contents of the upload if source_type is "upload"
+            config_path: The path to the toml configuration file in the import source.
+            resolve_name_conflicts_strategy: The strategy for resolving name conflicts.
+                Either "fail" or "overwrite"
+        Raises:
+            IllegalArgumentError: If only one of archive_file
+        """
+
+        if archive_file is None and git_url is None:
+            raise IllegalArgumentError(
+                "One of 'archive_file' and 'git_url' must be provided"
+            )
+
+        if archive_file is not None and git_url is not None:
+            raise IllegalArgumentError(
+                "Only one of 'archive_file' and 'git_url' can be provided"
+            )
+
+        data: dict[str, Any] = {"group": group_id}
+        files: dict[str, DioptraFile | list[DioptraFile]] = {}
+
+        if git_url is not None:
+            data["sourceType"] = "git"
+            data["gitUrl"] = git_url
+
+        if archive_file is not None:
+            data["sourceType"] = "upload"
+            files["archiveFile"] = archive_file
 
         if config_path is not None:
-            json_["configPath"] = config_path
+            data["configPath"] = config_path
 
-        if resolve_name_conflict_strategy is not None:
-            json_["resolveNameConflictStrategy"] = resolve_name_conflict_strategy
+        if resolve_name_conflicts_strategy is not None:
+            data["resolveNameConflictsStrategy"] = resolve_name_conflicts_strategy
 
-        # need to update post to specify that json should be sent as form data
-        return self._session.post(self.url, RESOURCE_IMPORT, json_=json_)
+        return self._session.post(
+            self.url, RESOURCE_IMPORT, data=data, files=files or None
+        )

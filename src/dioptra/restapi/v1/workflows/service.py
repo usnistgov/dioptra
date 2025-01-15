@@ -22,7 +22,7 @@ from hashlib import sha256
 from io import BytesIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import IO, Any, Final
+from typing import IO, Any, Final, cast
 
 import jsonschema
 import structlog
@@ -52,7 +52,9 @@ from dioptra.restapi.v1.plugins.service import (
 )
 from dioptra.sdk.utilities.paths import set_cwd
 
-from .lib import clone_git_repository, package_job_files, views
+from .lib import views
+from .lib.clone_git_repository import clone_git_repository
+from .lib.package_job_files import package_job_files
 from .schema import (
     FileTypes,
     ResourceImportResolveNameConflictsStrategy,
@@ -171,6 +173,7 @@ class ResourceImportService(object):
             source_type: The source to import from (either "upload" or "git")
             git_url: The url to the git repository if source_type is "git"
             archive_file: The contents of the upload if source_type is "upload"
+            config_path: The path to the toml configuration file in the import source.
             resolve_name_conflicts_strategy: The strategy for resolving name conflicts.
                 Either "fail" or "overwrite"
 
@@ -198,7 +201,7 @@ class ResourceImportService(object):
                 hash = str(sha256(bytes).hexdigest())
             else:
                 try:
-                    hash = clone_git_repository(git_url, working_dir)
+                    hash = clone_git_repository(cast(str, git_url), working_dir)
                 except Exception as e:
                     raise GitError("Failed to clone repository: {git_url}") from e
 
