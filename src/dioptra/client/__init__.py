@@ -14,14 +14,19 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+from .base import DioptraFile
 from .client import (
     DioptraClient,
     connect_json_dioptra_client,
     connect_response_dioptra_client,
 )
+from .utils import select_files_in_directory, select_one_or_more_files
 
 __all__ = [
     "connect_response_dioptra_client",
     "connect_json_dioptra_client",
+    "select_files_in_directory",
+    "select_one_or_more_files",
     "DioptraClient",
+    "DioptraFile",
 ]
