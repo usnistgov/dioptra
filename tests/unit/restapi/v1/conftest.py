@@ -737,16 +737,15 @@ def registered_mlflowrun_incomplete(
 def resources_tar_file() -> DioptraFile:
     os.chdir(Path(__file__).absolute().parent / "resource_import_files")
 
-    f = NamedTemporaryFile(suffix=".tar.gz")
-    with tarfile.open(fileobj=f, mode="w:gz") as tar:
-        tar.add("dioptra.toml")
-        tar.add("plugins", recursive=True)
-        tar.add(Path("examples", "hello-world.yaml"))
-    f.seek(0)
+    with NamedTemporaryFile(suffix=".tar.gz", delete=False) as f:
+        with tarfile.open(fileobj=f, mode="w:gz") as tar:
+            tar.add("dioptra.toml")
+            tar.add("plugins", recursive=True)
+            tar.add(Path("examples", "hello-world.yaml"))
 
     yield select_one_or_more_files([f.name])[0]
 
-    f.close()
+    os.unlink(f.name)
 
 
 @pytest.fixture
