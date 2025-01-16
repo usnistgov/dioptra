@@ -741,7 +741,7 @@ def resources_tar_file() -> DioptraFile:
     with tarfile.open(fileobj=f, mode="w:gz") as tar:
         tar.add("dioptra.toml")
         tar.add("plugins", recursive=True)
-        tar.add("examples/hello-world.yaml")
+        tar.add(Path("examples", "hello-world.yaml"))
     f.seek(0)
 
     yield select_one_or_more_files([f.name])[0]
