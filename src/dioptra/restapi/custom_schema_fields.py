@@ -22,3 +22,7 @@ from marshmallow.fields import Field
 
 class FileUpload(Field):
     """A field that represents a file upload."""
+
+
+class MultiFileUpload(Field):
+    """A field that represents uploading multiple files."""
