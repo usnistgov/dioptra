@@ -42,7 +42,7 @@ from werkzeug.datastructures import FileStorage
 
 from dioptra.restapi.v1.shared.request_scope import set_request_scope_callbacks
 
-from .custom_schema_fields import FileUpload
+from .custom_schema_fields import FileUpload, MultiFileUpload
 
 
 class ParametersSchema(TypedDict, total=False):
@@ -54,6 +54,7 @@ class ParametersSchema(TypedDict, total=False):
     required: bool
     default: Any | None
     help: str
+    action: str
 
 
 def as_api_parser(
@@ -155,6 +156,9 @@ def create_parameters_schema(
         location=location,
         required=field.required,
     )
+
+    if type(field) is MultiFileUpload:
+        parameters_schema["action"] = "append"
 
     if operation == "load" and field.load_default is not missing:
         parameters_schema["default"] = field.load_default
@@ -307,6 +311,7 @@ TYPE_MAP_MA_TO_REQPARSE = {
     ma.Dict: dict,
     ma.Email: str,
     FileUpload: FileStorage,
+    MultiFileUpload: FileStorage,
     ma.Float: float,
     ma.Function: str,
     ma.Int: int,
