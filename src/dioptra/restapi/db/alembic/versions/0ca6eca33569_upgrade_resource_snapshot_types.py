@@ -72,14 +72,12 @@ class ResourceTypes(AlmaTable):
     # -------------------------------------------------------------------------
 
 
-# =============================================================================
-
-
-def execute_in_session(statement) -> CursorResult:
+def execute_in_session(statement) -> CursorResult | None:
     """Reusable function to Execute SQL-Alchemy statement in a session
     Args:
         statement (_type_): _description_
     """
+    result = None
     bind = op.get_bind()
     Session = sessionmaker(bind=bind)
     with Session() as session:
@@ -87,9 +85,7 @@ def execute_in_session(statement) -> CursorResult:
         session.commit()
     # pprint(f'{dir(result)=}')
     return result
-
-
-# -----------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------
 
 
 def upgrade():
@@ -103,9 +99,7 @@ def upgrade():
         delete(ResourceTypes).where(ResourceTypes.resource_type == "resource_snapshot")
     )
     execute_in_session(delete_statement)
-
-
-# -----------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------
 
 
 def downgrade():
@@ -135,6 +129,4 @@ def downgrade():
             insert(ResourceTypes).values(resource_type="resource_snapshot")
         )
         execute_in_session(insert_statement)
-
-
-# -----------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------
