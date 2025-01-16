@@ -26,6 +26,7 @@ V1_ROOT = "api/v1"
 
 V1_ARTIFACTS_ROUTE = "artifacts"
 V1_AUTH_ROUTE = "auth"
+V1_ECHOES_ROUTE = "echoes"
 V1_ENTRYPOINTS_ROUTE = "entrypoints"
 V1_EXPERIMENTS_ROUTE = "experiments"
 V1_GROUPS_ROUTE = "groups"
@@ -48,6 +49,7 @@ def register_routes(api: Api) -> None:
     """
     from .v1.artifacts.controller import api as artifacts_api
     from .v1.auth.controller import api as auth_api
+    from .v1.echo.controller import api as echoes_api
     from .v1.entrypoints.controller import api as entrypoints_api
     from .v1.experiments.controller import api as experiments_api
     from .v1.groups.controller import api as groups_api
@@ -63,6 +65,7 @@ def register_routes(api: Api) -> None:
     api.add_namespace(auth_api, path=f"/{V1_ROOT}/{V1_AUTH_ROUTE}")
     api.add_namespace(artifacts_api, path=f"/{V1_ROOT}/{V1_ARTIFACTS_ROUTE}")
     api.add_namespace(entrypoints_api, path=f"/{V1_ROOT}/{V1_ENTRYPOINTS_ROUTE}")
+    api.add_namespace(echoes_api, path=f"/{V1_ROOT}/{V1_ECHOES_ROUTE}")
     api.add_namespace(experiments_api, path=f"/{V1_ROOT}/{V1_EXPERIMENTS_ROUTE}")
     api.add_namespace(groups_api, path=f"/{V1_ROOT}/{V1_GROUPS_ROUTE}")
     api.add_namespace(jobs_api, path=f"/{V1_ROOT}/{V1_JOBS_ROUTE}")
