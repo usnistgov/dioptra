@@ -438,7 +438,7 @@ Use this type for programs that can only read local files.</p>
 </dd>
 <dt>uri</dt><dd><p>A <a class="reference internal" href="../glossary.html#term-URI"><span class="xref std std-term">URI</span></a> for data either in a local or distributed storage system.
 Relative paths are converted to absolute paths, as in the <cite>path</cite> type.
-Use this type for programs that know how to read from distributed storage (e.g., programs that use the <a class="reference external" href="https://boto3.amazonaws.com/v1/documentation/api/latest/reference/core/boto3.html#module-boto3" title="(in Boto3 v1.35.49)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">boto3</span></code></a> package to directly access S3 storage).</p>
+Use this type for programs that know how to read from distributed storage (e.g., programs that use the <a class="reference external" href="https://boto3.amazonaws.com/v1/documentation/api/latest/reference/core/boto3.html#module-boto3" title="(in Boto3 v1.36.2)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">boto3</span></code></a> package to directly access S3 storage).</p>
 </dd>
 </dl>
 </section>
@@ -456,11 +456,11 @@ Users will have an easier time migrating their scripts to this new approach if t
 <p>The <a class="reference external" href="https://click.palletsprojects.com/en/stable/api/#module-click" title="(in Click v8.1.x)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">click</span></code></a> library should be used to create command-line interfaces for their Python scripts and to convert data types that aren’t supported by the <code class="docutils literal notranslate"><span class="pre">MLproject</span></code> file (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a> and <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>, for instance).
 The following is a short example based on the <cite>train</cite> entry point from the <code class="docutils literal notranslate"><span class="pre">MLproject</span></code> examples we considered earlier in this guide,</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># src/train.py</span>
-<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 
-<span class="kn">import</span> <span class="nn">click</span>
-<span class="kn">from</span> <span class="nn">dioptra.sdk.utilities.contexts</span> <span class="kn">import</span> <span class="n">plugin_dirs</span>
-<span class="kn">from</span> <span class="nn">dioptra.sdk.utilities.logging</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">click</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dioptra.sdk.utilities.contexts</span><span class="w"> </span><span class="kn">import</span> <span class="n">plugin_dirs</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dioptra.sdk.utilities.logging</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">StderrLogStream</span><span class="p">,</span>
     <span class="n">StdoutLogStream</span><span class="p">,</span>
     <span class="n">attach_stdout_stream_handler</span><span class="p">,</span>
@@ -470,7 +470,7 @@ The following is a short example based on the <cite>train</cite> entry point fro
 <span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_coerce_comma_separated_ints</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_coerce_comma_separated_ints</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
     <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">value</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">))</span>
 
 <span class="nd">@click</span><span class="o">.</span><span class="n">command</span><span class="p">()</span>
@@ -487,7 +487,7 @@ The following is a short example based on the <cite>train</cite> entry point fro
     <span class="n">callback</span><span class="o">=</span><span class="n">_coerce_comma_separated_ints</span><span class="p">,</span>
     <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Dimensions for the input images&quot;</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="k">def</span> <span class="nf">train</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">image_size</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">train</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">image_size</span><span class="p">):</span>
     <span class="o">...</span>
 
 
@@ -516,13 +516,13 @@ Testbed users are encouraged to peruse the Click documentation to learn more abo
 </section>
 <section id="mlflow-tracking-runs">
 <h3>MLFlow - Tracking Runs<a class="headerlink" href="#mlflow-tracking-runs" title="Permalink to this headline">#</a></h3>
-<p>Every entry point script needs to invoke <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.html#mlflow.start_run" title="(in MLflow v2.17.1)"><code class="xref py py-func docutils literal notranslate"><span class="pre">mlflow.start_run()</span></code></a> to create an active run context for MLFlow and it should be done near the top of their entry point function.
+<p>Every entry point script needs to invoke <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.html#mlflow.start_run" title="(in MLflow v2.20.0rc0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">mlflow.start_run()</span></code></a> to create an active run context for MLFlow and it should be done near the top of their entry point function.
 This context is needed when logging results and artifacts to the MLFlow Tracking service.
 The following example shows how this context would be started in the <code class="docutils literal notranslate"><span class="pre">train()</span></code> function from the previous section.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">mlflow</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">mlflow</span>
 
 <span class="c1"># Truncated...</span>
-<span class="k">def</span> <span class="nf">train</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">image_size</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">train</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">image_size</span><span class="p">):</span>
     <span class="c1"># Only use this when training a model</span>
     <span class="n">mlflow</span><span class="o">.</span><span class="n">autolog</span><span class="p">()</span>
 
@@ -534,8 +534,8 @@ The following example shows how this context would be started in the <code class
     <span class="k">return</span> <span class="n">state</span>
 </pre></div>
 </div>
-<p>Within this context block, the <code class="docutils literal notranslate"><span class="pre">active_run</span></code> variable will contain a <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.entities.html#mlflow.entities.Run" title="(in MLflow v2.17.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">mlflow.entities.Run</span></code></a> object that provides metadata about the run that is useful to have available.
-MLFlow functions like <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.html#mlflow.log_param" title="(in MLflow v2.17.1)"><code class="xref py py-func docutils literal notranslate"><span class="pre">mlflow.log_param()</span></code></a>, <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.html#mlflow.log_metric" title="(in MLflow v2.17.1)"><code class="xref py py-func docutils literal notranslate"><span class="pre">mlflow.log_metric()</span></code></a>, and <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.html#mlflow.log_artifact" title="(in MLflow v2.17.1)"><code class="xref py py-func docutils literal notranslate"><span class="pre">mlflow.log_artifact()</span></code></a> will be able to infer the current run automatically and be able to log their data to the appropriate place.
+<p>Within this context block, the <code class="docutils literal notranslate"><span class="pre">active_run</span></code> variable will contain a <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.entities.html#mlflow.entities.Run" title="(in MLflow v2.20.0rc0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">mlflow.entities.Run</span></code></a> object that provides metadata about the run that is useful to have available.
+MLFlow functions like <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.html#mlflow.log_param" title="(in MLflow v2.20.0rc0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">mlflow.log_param()</span></code></a>, <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.html#mlflow.log_metric" title="(in MLflow v2.20.0rc0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">mlflow.log_metric()</span></code></a>, and <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.html#mlflow.log_artifact" title="(in MLflow v2.20.0rc0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">mlflow.log_artifact()</span></code></a> will be able to infer the current run automatically and be able to log their data to the appropriate place.
 Please note that the <code class="docutils literal notranslate"><span class="pre">init_flow()</span></code> function is <a class="reference internal" href="#entry-points-prefect-task-execution"><span class="std std-ref">introduced in the following section</span></a>.</p>
 <p>Testbed users are encouraged to peruse the MLflow Tracking documentation to learn more about the tracking context and the kinds of things you can do when it’s active: <a class="reference external" href="https://mlflow.org/docs/latest/tracking.html">https://mlflow.org/docs/latest/tracking.html</a>.</p>
 </section>
@@ -544,13 +544,13 @@ Please note that the <code class="docutils literal notranslate"><span class="pre
 <p>The main work done within an entry point needs to use the <code class="xref py py-class docutils literal notranslate"><span class="pre">Flow</span></code> class from the <a class="reference external" href="https://www.prefect.io">Prefect</a> library to create a context for assembling the entry point script’s task workflow.
 Prefect is a modern workflow library that is aimed at helping data scientists set up task execution graphs with minimal changes to their existing code, and in Dioptra it provides a framework for wiring <a class="reference internal" href="task-plugins.html"><span class="doc">task plugins</span></a> together.
 The following example shows the beginnings of a <code class="xref py py-class docutils literal notranslate"><span class="pre">Flow</span></code> context to be run by the <code class="docutils literal notranslate"><span class="pre">train()</span></code> function in the previous section.</p>
-<div class="highlight-python notranslate" id="entry-points-prefect-task-execution-code"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">prefect</span> <span class="kn">import</span> <span class="n">Flow</span><span class="p">,</span> <span class="n">Parameter</span>
-<span class="kn">from</span> <span class="nn">dioptra</span> <span class="kn">import</span> <span class="n">pyplugs</span>
+<div class="highlight-python notranslate" id="entry-points-prefect-task-execution-code"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">prefect</span><span class="w"> </span><span class="kn">import</span> <span class="n">Flow</span><span class="p">,</span> <span class="n">Parameter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dioptra</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplugs</span>
 
 <span class="n">_PLUGINS_IMPORT_PATH</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;dioptra_builtins&quot;</span>
 
 
-<span class="k">def</span> <span class="nf">init_flow</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Flow</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">init_flow</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Flow</span><span class="p">:</span>
     <span class="k">with</span> <span class="n">Flow</span><span class="p">(</span><span class="s2">&quot;Image Resizer&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">flow</span><span class="p">:</span>
         <span class="n">data_dir</span><span class="p">,</span> <span class="n">image_size</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="s2">&quot;data_dir&quot;</span><span class="p">),</span> <span class="n">Parameter</span><span class="p">(</span><span class="s2">&quot;image_size&quot;</span><span class="p">)</span>
         <span class="n">resize_output</span> <span class="o">=</span> <span class="n">pyplugs</span><span class="o">.</span><span class="n">call_task</span><span class="p">(</span>

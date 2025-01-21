@@ -370,8 +370,8 @@ They perform a variety of basic, low-level functions such as loading models, pre
 <section id="calling-a-task-plugin">
 <h2>Calling a Task Plugin<a class="headerlink" href="#calling-a-task-plugin" title="Permalink to this headline">#</a></h2>
 <p>Let’s return to the <a class="reference internal" href="entry-points.html#entry-points-prefect-task-execution-code"><span class="std std-ref">final example from the previous guide</span></a> and expand the code to include the next task plugin call.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">prefect</span> <span class="kn">import</span> <span class="n">Flow</span><span class="p">,</span> <span class="n">Parameter</span>
-<span class="kn">from</span> <span class="nn">dioptra</span> <span class="kn">import</span> <span class="n">pyplugs</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">prefect</span><span class="w"> </span><span class="kn">import</span> <span class="n">Flow</span><span class="p">,</span> <span class="n">Parameter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dioptra</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplugs</span>
 
 <span class="k">with</span> <span class="n">Flow</span><span class="p">(</span><span class="s2">&quot;Image Resizer&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">flow</span><span class="p">:</span>
     <span class="n">data_dir</span><span class="p">,</span> <span class="n">image_size</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="s2">&quot;data_dir&quot;</span><span class="p">),</span> <span class="n">Parameter</span><span class="p">(</span><span class="s2">&quot;image_size&quot;</span><span class="p">)</span>
@@ -436,13 +436,13 @@ This means that new plugins are installed in the Testbed environment simply by c
 <h3>Registration<a class="headerlink" href="#registration" title="Permalink to this headline">#</a></h3>
 <p>PyPlugs will only be aware of functions that have a <code class="docutils literal notranslate"><span class="pre">&#64;pyplugs.register</span></code> decorator attached to them.
 The example below illustrates how to apply this decorator to a Python function so that PyPlugs can discover it and include it in its internal registry.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">numpy.random._generator</span> <span class="kn">import</span> <span class="n">Generator</span> <span class="k">as</span> <span class="n">RNGenerator</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">numpy.random._generator</span><span class="w"> </span><span class="kn">import</span> <span class="n">Generator</span> <span class="k">as</span> <span class="n">RNGenerator</span>
 
-<span class="kn">from</span> <span class="nn">dioptra</span> <span class="kn">import</span> <span class="n">pyplugs</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dioptra</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplugs</span>
 
 
 <span class="nd">@pyplugs</span><span class="o">.</span><span class="n">register</span>
-<span class="k">def</span> <span class="nf">draw_random_integer</span><span class="p">(</span><span class="n">rng</span><span class="p">:</span> <span class="n">RNGenerator</span><span class="p">,</span> <span class="n">low</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">high</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">31</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">draw_random_integer</span><span class="p">(</span><span class="n">rng</span><span class="p">:</span> <span class="n">RNGenerator</span><span class="p">,</span> <span class="n">low</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">high</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">31</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
     <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="n">high</span><span class="p">))</span>
 </pre></div>
 </div>
@@ -452,7 +452,7 @@ The example below illustrates how to apply this decorator to a Python function s
 <p>The directory where the Testbed Worker syncs the latest copies of the plugins from S3 must be added to Python’s system path so that PyPlugs can search for them.
 However, modifying the Python system path must be done with care to ensure that you will still be able to import your other installed packages and avoid creating dependency conflicts.
 For this reason, the Testbed <a class="reference internal" href="../glossary.html#term-SDK"><span class="xref std std-term">SDK</span></a> provides the <code class="xref py py-func docutils literal notranslate"><span class="pre">plugin_dirs()</span></code> function, which modifies the Python system path within a temporary context, see the example below.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dioptra.sdk.utilities.contexts</span> <span class="kn">import</span> <span class="n">plugin_dirs</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">dioptra.sdk.utilities.contexts</span><span class="w"> </span><span class="kn">import</span> <span class="n">plugin_dirs</span>
 
 <span class="k">with</span> <span class="n">plugin_dirs</span><span class="p">():</span>
     <span class="n">_</span> <span class="o">=</span> <span class="n">entry_point_script</span><span class="p">()</span>

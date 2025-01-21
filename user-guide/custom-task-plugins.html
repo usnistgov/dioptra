@@ -408,10 +408,10 @@ For additional examples on how these plugins are constructed, you can refer to <
 <h2>Creating a Built-in Task<a class="headerlink" href="#creating-a-built-in-task" title="Permalink to this headline">#</a></h2>
 <p>To create a built-in task, first the user must identify which built-in subdirectory (artifacts, attacks, etc.) should contain the new task.
 Once this is done, the task can be declared as follows:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dioptra</span> <span class="kn">import</span> <span class="n">pyplugs</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">dioptra</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplugs</span>
 
 <span class="nd">@pyplugs</span><span class="o">.</span><span class="n">register</span>
-<span class="k">def</span> <span class="nf">add_values</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">add_values</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span>
 </pre></div>
 </div>
@@ -420,7 +420,7 @@ Those tasks may then be chained together.
 Tasks can be as complex as needed with no ill effect.
 For a slightly more complex task, consider the sample below, which will generate random samples according to the parameters you set.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@pyplugs</span><span class="o">.</span><span class="n">register</span>
-<span class="k">def</span> <span class="nf">draw_random_integers</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">draw_random_integers</span><span class="p">(</span>
     <span class="n">rng</span><span class="p">:</span> <span class="n">RNGenerator</span><span class="p">,</span>
     <span class="n">low</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
     <span class="n">high</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">31</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
@@ -434,9 +434,9 @@ For a slightly more complex task, consider the sample below, which will generate
 </div>
 <p>To access the built-in task from a given example, users will need to call the plugin-task using the following notation in their flow pipeline.
 Note that we assumed these new tasks have been saved in a module named <code class="docutils literal notranslate"><span class="pre">ops.py</span></code> under the <cite>data</cite> task plugins directory:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dioptra</span> <span class="kn">import</span> <span class="n">pyplugs</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">dioptra</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplugs</span>
 <span class="o">...</span>
-<span class="k">def</span> <span class="nf">custom_flow</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Flow</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">custom_flow</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Flow</span><span class="p">:</span>
     <span class="o">...</span>
     <span class="o">//</span> <span class="n">Call</span> <span class="n">new</span> <span class="n">builtin</span> <span class="n">task</span><span class="o">.</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">pyplugs</span><span class="o">.</span><span class="n">call_task</span><span class="p">(</span>
@@ -454,14 +454,14 @@ Note that we assumed these new tasks have been saved in a module named <code cla
 <h2>Creating a Local Task<a class="headerlink" href="#creating-a-local-task" title="Permalink to this headline">#</a></h2>
 <p>In general the major difference besides location of local task plugins is that the <cite>&#64;task</cite> decorator now replaces the <cite>&#64;pyplugs.register</cite> decorator.
 The task decorator is imported from the prefect library:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">prefect</span> <span class="kn">import</span> <span class="n">task</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">prefect</span><span class="w"> </span><span class="kn">import</span> <span class="n">task</span>
 
 <span class="nd">@task</span>
-<span class="k">def</span> <span class="nf">add_values</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">add_values</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span>
 
 <span class="nd">@task</span>
-<span class="k">def</span> <span class="nf">draw_random_integers</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">draw_random_integers</span><span class="p">(</span>
     <span class="n">rng</span><span class="p">:</span> <span class="n">RNGenerator</span><span class="p">,</span>
     <span class="n">low</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
     <span class="n">high</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">31</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
@@ -474,9 +474,9 @@ The task decorator is imported from the prefect library:</p>
 </pre></div>
 </div>
 <p>Furthermore as seen in the <a class="reference internal" href="custom-entry-points.html#user-guide-custom-entry-points"><span class="std std-ref">previous guide on building new entry points</span></a> calling local tasks is also more similar to calling a local python function:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">.tasks</span> <span class="kn">import</span> <span class="n">add_values</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">.tasks</span><span class="w"> </span><span class="kn">import</span> <span class="n">add_values</span>
 <span class="o">...</span>
-<span class="k">def</span> <span class="nf">custom_flow</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Flow</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">custom_flow</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Flow</span><span class="p">:</span>
     <span class="o">...</span>
     <span class="o">//</span> <span class="n">Call</span> <span class="n">new</span> <span class="n">local</span> <span class="n">task</span><span class="o">.</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">add_values</span><span class="p">(</span>

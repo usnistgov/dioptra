@@ -307,25 +307,25 @@ document.write(`
 <span class="sd">.. |L2| replace:: L\\ :sub:`2`</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">structlog</span>
-<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">wasserstein_distance</span>
-<span class="kn">from</span> <span class="nn">sklearn.metrics.pairwise</span> <span class="kn">import</span> <span class="n">paired_distances</span>
-<span class="kn">from</span> <span class="nn">structlog.stdlib</span> <span class="kn">import</span> <span class="n">BoundLogger</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">structlog</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.stats</span><span class="w"> </span><span class="kn">import</span> <span class="n">wasserstein_distance</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.metrics.pairwise</span><span class="w"> </span><span class="kn">import</span> <span class="n">paired_distances</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">structlog.stdlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">BoundLogger</span>
 
-<span class="kn">from</span> <span class="nn">dioptra</span> <span class="kn">import</span> <span class="n">pyplugs</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dioptra</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplugs</span>
 
-<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="kn">import</span> <span class="n">UnknownDistanceMetricError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">UnknownDistanceMetricError</span>
 
 <span class="n">LOGGER</span><span class="p">:</span> <span class="n">BoundLogger</span> <span class="o">=</span> <span class="n">structlog</span><span class="o">.</span><span class="n">stdlib</span><span class="o">.</span><span class="n">get_logger</span><span class="p">()</span>
 
 
 <div class="viewcode-block" id="get_distance_metric_list"><a class="viewcode-back" href="../../../reference/api-task-plugins/api-builtins-metrics.html#dioptra_builtins.metrics.distance.get_distance_metric_list">[docs]</a><span class="nd">@pyplugs</span><span class="o">.</span><span class="n">register</span>
-<span class="k">def</span> <span class="nf">get_distance_metric_list</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_distance_metric_list</span><span class="p">(</span>
     <span class="n">request</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Gets multiple distance metric functions from the registry.</span>
@@ -372,7 +372,7 @@ document.write(`
 
 
 <div class="viewcode-block" id="get_distance_metric"><a class="viewcode-back" href="../../../reference/api-task-plugins/api-builtins-metrics.html#dioptra_builtins.metrics.distance.get_distance_metric">[docs]</a><span class="nd">@pyplugs</span><span class="o">.</span><span class="n">register</span>
-<span class="k">def</span> <span class="nf">get_distance_metric</span><span class="p">(</span><span class="n">func</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_distance_metric</span><span class="p">(</span><span class="n">func</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Gets a distance metric function from the registry.</span>
 
 <span class="sd">    The following metrics are available in the registry,</span>
@@ -409,7 +409,7 @@ document.write(`
     <span class="k">return</span> <span class="n">metric_callable</span></div>
 
 
-<div class="viewcode-block" id="l_inf_norm"><a class="viewcode-back" href="../../../reference/api-task-plugins/api-builtins-metrics.html#dioptra_builtins.metrics.distance.l_inf_norm">[docs]</a><span class="k">def</span> <span class="nf">l_inf_norm</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<div class="viewcode-block" id="l_inf_norm"><a class="viewcode-back" href="../../../reference/api-task-plugins/api-builtins-metrics.html#dioptra_builtins.metrics.distance.l_inf_norm">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">l_inf_norm</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculates the |Linf| norm between a batch of two matrices.</span>
 
 <span class="sd">    Args:</span>
@@ -425,7 +425,7 @@ document.write(`
     <span class="k">return</span> <span class="n">metric</span></div>
 
 
-<div class="viewcode-block" id="l_1_norm"><a class="viewcode-back" href="../../../reference/api-task-plugins/api-builtins-metrics.html#dioptra_builtins.metrics.distance.l_1_norm">[docs]</a><span class="k">def</span> <span class="nf">l_1_norm</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<div class="viewcode-block" id="l_1_norm"><a class="viewcode-back" href="../../../reference/api-task-plugins/api-builtins-metrics.html#dioptra_builtins.metrics.distance.l_1_norm">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">l_1_norm</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculates the |L1| norm between a batch of two matrices.</span>
 
 <span class="sd">    Args:</span>
@@ -441,7 +441,7 @@ document.write(`
     <span class="k">return</span> <span class="n">metric</span></div>
 
 
-<div class="viewcode-block" id="l_2_norm"><a class="viewcode-back" href="../../../reference/api-task-plugins/api-builtins-metrics.html#dioptra_builtins.metrics.distance.l_2_norm">[docs]</a><span class="k">def</span> <span class="nf">l_2_norm</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<div class="viewcode-block" id="l_2_norm"><a class="viewcode-back" href="../../../reference/api-task-plugins/api-builtins-metrics.html#dioptra_builtins.metrics.distance.l_2_norm">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">l_2_norm</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculates the |L2| norm between a batch of two matrices.</span>
 
 <span class="sd">    Args:</span>
@@ -457,7 +457,7 @@ document.write(`
     <span class="k">return</span> <span class="n">metric</span></div>
 
 
-<div class="viewcode-block" id="paired_cosine_similarities"><a class="viewcode-back" href="../../../reference/api-task-plugins/api-builtins-metrics.html#dioptra_builtins.metrics.distance.paired_cosine_similarities">[docs]</a><span class="k">def</span> <span class="nf">paired_cosine_similarities</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<div class="viewcode-block" id="paired_cosine_similarities"><a class="viewcode-back" href="../../../reference/api-task-plugins/api-builtins-metrics.html#dioptra_builtins.metrics.distance.paired_cosine_similarities">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">paired_cosine_similarities</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculates the cosine similarity between a batch of two matrices.</span>
 
 <span class="sd">    Args:</span>
@@ -473,7 +473,7 @@ document.write(`
     <span class="k">return</span> <span class="n">metric</span></div>
 
 
-<div class="viewcode-block" id="paired_euclidean_distances"><a class="viewcode-back" href="../../../reference/api-task-plugins/api-builtins-metrics.html#dioptra_builtins.metrics.distance.paired_euclidean_distances">[docs]</a><span class="k">def</span> <span class="nf">paired_euclidean_distances</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<div class="viewcode-block" id="paired_euclidean_distances"><a class="viewcode-back" href="../../../reference/api-task-plugins/api-builtins-metrics.html#dioptra_builtins.metrics.distance.paired_euclidean_distances">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">paired_euclidean_distances</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculates the Euclidean distance between a batch of two matrices.</span>
 
 <span class="sd">    The Euclidean distance is equivalent to the |L2| norm.</span>
@@ -489,7 +489,7 @@ document.write(`
     <span class="k">return</span> <span class="n">metric</span></div>
 
 
-<div class="viewcode-block" id="paired_manhattan_distances"><a class="viewcode-back" href="../../../reference/api-task-plugins/api-builtins-metrics.html#dioptra_builtins.metrics.distance.paired_manhattan_distances">[docs]</a><span class="k">def</span> <span class="nf">paired_manhattan_distances</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<div class="viewcode-block" id="paired_manhattan_distances"><a class="viewcode-back" href="../../../reference/api-task-plugins/api-builtins-metrics.html#dioptra_builtins.metrics.distance.paired_manhattan_distances">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">paired_manhattan_distances</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculates the Manhattan distance between a batch of two matrices.</span>
 
 <span class="sd">    The Manhattan distance is equivalent to the |L1| norm.</span>
@@ -505,7 +505,7 @@ document.write(`
     <span class="k">return</span> <span class="n">metric</span></div>
 
 
-<div class="viewcode-block" id="paired_wasserstein_distances"><a class="viewcode-back" href="../../../reference/api-task-plugins/api-builtins-metrics.html#dioptra_builtins.metrics.distance.paired_wasserstein_distances">[docs]</a><span class="k">def</span> <span class="nf">paired_wasserstein_distances</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<div class="viewcode-block" id="paired_wasserstein_distances"><a class="viewcode-back" href="../../../reference/api-task-plugins/api-builtins-metrics.html#dioptra_builtins.metrics.distance.paired_wasserstein_distances">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">paired_wasserstein_distances</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculates the Wasserstein distance between a batch of two matrices.</span>
 
 <span class="sd">    Args:</span>
@@ -519,7 +519,7 @@ document.write(`
 <span class="sd">        - :py:func:`scipy.stats.wasserstein_distance`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">wrapped_metric</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">wrapped_metric</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">wasserstein_distance</span><span class="p">(</span><span class="n">u_values</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">v_values</span><span class="o">=</span><span class="n">Y</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="n">metric</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">paired_distances</span><span class="p">(</span>
@@ -528,7 +528,7 @@ document.write(`
     <span class="k">return</span> <span class="n">metric</span></div>
 
 
-<span class="k">def</span> <span class="nf">_flatten_batch</span><span class="p">(</span><span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_flatten_batch</span><span class="p">(</span><span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Flattens each of the matrices in a batch into a one-dimensional array.</span>
 
 <span class="sd">    Args:</span>
@@ -542,7 +542,7 @@ document.write(`
     <span class="k">return</span> <span class="n">X</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">num_samples</span><span class="p">,</span> <span class="n">num_matrix_elements</span><span class="p">))</span>
 
 
-<span class="k">def</span> <span class="nf">_matrix_difference_l_norm</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">order</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_matrix_difference_l_norm</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">order</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculates a batch of norms of the difference between two matrices.</span>
 
 <span class="sd">    Args:</span>
@@ -562,7 +562,7 @@ document.write(`
     <span class="k">return</span> <span class="n">y_diff_l_norm</span>
 
 
-<span class="k">def</span> <span class="nf">_normalize_batch</span><span class="p">(</span><span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">order</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_normalize_batch</span><span class="p">(</span><span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">order</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Normalizes a batch of matrices by their norms.</span>
 
 <span class="sd">    Args:</span>

@@ -321,27 +321,27 @@ document.write(`
 <span class="sd">   .readthedocs.io/en/latest/modules/attacks/evasion.html#fast-gradient-method-fgm&gt;`__</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
-<span class="kn">import</span> <span class="nn">mlflow</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="kn">import</span> <span class="nn">scipy.stats</span>
-<span class="kn">import</span> <span class="nn">structlog</span>
-<span class="kn">from</span> <span class="nn">structlog.stdlib</span> <span class="kn">import</span> <span class="n">BoundLogger</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">mlflow</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">scipy.stats</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">structlog</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">structlog.stdlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">BoundLogger</span>
 
-<span class="kn">from</span> <span class="nn">dioptra</span> <span class="kn">import</span> <span class="n">pyplugs</span>
-<span class="kn">from</span> <span class="nn">dioptra.sdk.exceptions</span> <span class="kn">import</span> <span class="n">ARTDependencyError</span><span class="p">,</span> <span class="n">TensorflowDependencyError</span>
-<span class="kn">from</span> <span class="nn">dioptra.sdk.utilities.decorators</span> <span class="kn">import</span> <span class="n">require_package</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dioptra</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplugs</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dioptra.sdk.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">ARTDependencyError</span><span class="p">,</span> <span class="n">TensorflowDependencyError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dioptra.sdk.utilities.decorators</span><span class="w"> </span><span class="kn">import</span> <span class="n">require_package</span>
 
 <span class="n">LOGGER</span><span class="p">:</span> <span class="n">BoundLogger</span> <span class="o">=</span> <span class="n">structlog</span><span class="o">.</span><span class="n">stdlib</span><span class="o">.</span><span class="n">get_logger</span><span class="p">()</span>
 
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">art.attacks.evasion</span> <span class="kn">import</span> <span class="n">FastGradientMethod</span>
-    <span class="kn">from</span> <span class="nn">art.estimators.classification</span> <span class="kn">import</span> <span class="n">TensorFlowV2Classifier</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">art.attacks.evasion</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastGradientMethod</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">art.estimators.classification</span><span class="w"> </span><span class="kn">import</span> <span class="n">TensorFlowV2Classifier</span>
 
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>  <span class="c1"># pragma: nocover</span>
     <span class="n">LOGGER</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
@@ -351,7 +351,7 @@ document.write(`
 
 
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">tensorflow.keras.preprocessing.image</span> <span class="kn">import</span> <span class="n">ImageDataGenerator</span><span class="p">,</span> <span class="n">save_img</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">tensorflow.keras.preprocessing.image</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageDataGenerator</span><span class="p">,</span> <span class="n">save_img</span>
 
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>  <span class="c1"># pragma: nocover</span>
     <span class="n">LOGGER</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
@@ -363,7 +363,7 @@ document.write(`
 <div class="viewcode-block" id="create_adversarial_fgm_dataset"><a class="viewcode-back" href="../../../reference/api-task-plugins/api-builtins-attacks.html#dioptra_builtins.attacks.fgm.create_adversarial_fgm_dataset">[docs]</a><span class="nd">@pyplugs</span><span class="o">.</span><span class="n">register</span>
 <span class="nd">@require_package</span><span class="p">(</span><span class="s2">&quot;art&quot;</span><span class="p">,</span> <span class="n">exc_type</span><span class="o">=</span><span class="n">ARTDependencyError</span><span class="p">)</span>
 <span class="nd">@require_package</span><span class="p">(</span><span class="s2">&quot;tensorflow&quot;</span><span class="p">,</span> <span class="n">exc_type</span><span class="o">=</span><span class="n">TensorflowDependencyError</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">create_adversarial_fgm_dataset</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_adversarial_fgm_dataset</span><span class="p">(</span>
     <span class="n">data_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">adv_data_dir</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">],</span>
     <span class="n">keras_classifier</span><span class="p">:</span> <span class="n">TensorFlowV2Classifier</span><span class="p">,</span>
@@ -494,7 +494,7 @@ document.write(`
     <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">distance_metrics_</span><span class="p">)</span></div>
 
 
-<span class="k">def</span> <span class="nf">_init_fgm</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_init_fgm</span><span class="p">(</span>
     <span class="n">keras_classifier</span><span class="p">:</span> <span class="n">TensorFlowV2Classifier</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FastGradientMethod</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Initializes :py:class:`~art.attacks.evasion.FastGradientMethod`.</span>
@@ -513,7 +513,7 @@ document.write(`
     <span class="k">return</span> <span class="n">attack</span>
 
 
-<span class="k">def</span> <span class="nf">_save_adv_batch</span><span class="p">(</span><span class="n">adv_batch</span><span class="p">,</span> <span class="n">adv_data_dir</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">clean_filenames</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_save_adv_batch</span><span class="p">(</span><span class="n">adv_batch</span><span class="p">,</span> <span class="n">adv_data_dir</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">clean_filenames</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Saves a batch of adversarial images to disk.</span>
 
 <span class="sd">    Args:</span>
@@ -535,7 +535,7 @@ document.write(`
         <span class="n">save_img</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">adv_image_path</span><span class="p">),</span> <span class="n">x</span><span class="o">=</span><span class="n">adv_image</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_evaluate_distance_metrics</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_evaluate_distance_metrics</span><span class="p">(</span>
     <span class="n">clean_filenames</span><span class="p">,</span> <span class="n">distance_metrics_</span><span class="p">,</span> <span class="n">clean_batch</span><span class="p">,</span> <span class="n">adv_batch</span><span class="p">,</span> <span class="n">distance_metrics_list</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculates distance metrics for a batch of clean/adversarial image pairs.</span>
@@ -557,7 +557,7 @@ document.write(`
         <span class="n">distance_metrics_</span><span class="p">[</span><span class="n">metric_name</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">metric</span><span class="p">(</span><span class="n">clean_batch</span><span class="p">,</span> <span class="n">adv_batch</span><span class="p">))</span>
 
 
-<span class="k">def</span> <span class="nf">_log_distance_metrics</span><span class="p">(</span><span class="n">distance_metrics_</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_log_distance_metrics</span><span class="p">(</span><span class="n">distance_metrics_</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Logs the distance metrics summary statistics to the MLFlow Tracking service.</span>
 
 <span class="sd">    The following summary statistics are calculated and logged to the MLFlow Tracking</span>

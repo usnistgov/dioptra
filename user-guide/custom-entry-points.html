@@ -471,7 +471,7 @@ Users are also allowed to initialize and pass through additional parameter value
 <p>Next, we will define the flow pipeline itself.
 We will start with the input parameters we need to provide to the current Flow.
 Here we will define the name of each parameter and their associated parameter information:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">init_hello_world_flow</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Flow</span><span class="p">:</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">init_hello_world_flow</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Flow</span><span class="p">:</span>
     <span class="k">with</span> <span class="n">Flow</span><span class="p">(</span><span class="s2">&quot;&lt;Description of What this Flow Does Here&gt;&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">flow</span><span class="p">:</span>
         <span class="p">(</span>
             <span class="n">runID_A</span><span class="p">,</span>
@@ -498,7 +498,7 @@ The only way to view what <code class="docutils literal notranslate"><span class
 Once <code class="docutils literal notranslate"><span class="pre">task_A</span></code> is executed in the pipeline, the corresponding parameter value will be accessed and printed by that task.</p>
 </div>
 <p>Now that our parameters are all available in our Flow pipeline, we can setup our task calls as follows:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">process_artifacts_flow</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Flow</span><span class="p">:</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">process_artifacts_flow</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Flow</span><span class="p">:</span>
     <span class="k">with</span> <span class="n">Flow</span><span class="p">(</span><span class="s2">&quot;&lt;Description of What this Flow Does Here&gt;&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">flow</span><span class="p">:</span>
         <span class="p">(</span>
             <span class="o">...</span> <span class="c1"># parameter init.</span>

@@ -306,24 +306,24 @@ document.write(`
 <span class="sd">   &lt;https://adversarial-robustness-toolbox.readthedocs.io/en/latest/&gt;`__</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">structlog</span>
-<span class="kn">from</span> <span class="nn">structlog.stdlib</span> <span class="kn">import</span> <span class="n">BoundLogger</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">structlog</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">structlog.stdlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">BoundLogger</span>
 
-<span class="kn">from</span> <span class="nn">dioptra</span> <span class="kn">import</span> <span class="n">pyplugs</span>
-<span class="kn">from</span> <span class="nn">dioptra.sdk.exceptions</span> <span class="kn">import</span> <span class="n">ARTDependencyError</span><span class="p">,</span> <span class="n">TensorflowDependencyError</span>
-<span class="kn">from</span> <span class="nn">dioptra.sdk.utilities.decorators</span> <span class="kn">import</span> <span class="n">require_package</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dioptra</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplugs</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dioptra.sdk.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">ARTDependencyError</span><span class="p">,</span> <span class="n">TensorflowDependencyError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dioptra.sdk.utilities.decorators</span><span class="w"> </span><span class="kn">import</span> <span class="n">require_package</span>
 
-<span class="kn">from</span> <span class="nn">.mlflow</span> <span class="kn">import</span> <span class="n">load_tensorflow_keras_classifier</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.mlflow</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_tensorflow_keras_classifier</span>
 
 <span class="n">LOGGER</span><span class="p">:</span> <span class="n">BoundLogger</span> <span class="o">=</span> <span class="n">structlog</span><span class="o">.</span><span class="n">stdlib</span><span class="o">.</span><span class="n">get_logger</span><span class="p">()</span>
 
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">art.estimators.classification</span> <span class="kn">import</span> <span class="n">TensorFlowV2Classifier</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">art.estimators.classification</span><span class="w"> </span><span class="kn">import</span> <span class="n">TensorFlowV2Classifier</span>
 
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>  <span class="c1"># pragma: nocover</span>
     <span class="n">LOGGER</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
@@ -333,8 +333,8 @@ document.write(`
 
 
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">tensorflow.keras</span> <span class="kn">import</span> <span class="n">losses</span>
-    <span class="kn">from</span> <span class="nn">tensorflow.keras.models</span> <span class="kn">import</span> <span class="n">Sequential</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">tensorflow.keras</span><span class="w"> </span><span class="kn">import</span> <span class="n">losses</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">tensorflow.keras.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequential</span>
 
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>  <span class="c1"># pragma: nocover</span>
     <span class="n">LOGGER</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
@@ -346,7 +346,7 @@ document.write(`
 <div class="viewcode-block" id="load_wrapped_tensorflow_keras_classifier"><a class="viewcode-back" href="../../../reference/api-task-plugins/api-builtins-registry.html#dioptra_builtins.registry.art.load_wrapped_tensorflow_keras_classifier">[docs]</a><span class="nd">@pyplugs</span><span class="o">.</span><span class="n">register</span>
 <span class="nd">@require_package</span><span class="p">(</span><span class="s2">&quot;art&quot;</span><span class="p">,</span> <span class="n">exc_type</span><span class="o">=</span><span class="n">ARTDependencyError</span><span class="p">)</span>
 <span class="nd">@require_package</span><span class="p">(</span><span class="s2">&quot;tensorflow&quot;</span><span class="p">,</span> <span class="n">exc_type</span><span class="o">=</span><span class="n">TensorflowDependencyError</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">load_wrapped_tensorflow_keras_classifier</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_wrapped_tensorflow_keras_classifier</span><span class="p">(</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">version</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="n">imagenet_preprocessing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>

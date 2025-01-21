@@ -302,20 +302,20 @@ document.write(`
 <span class="c1"># https://creativecommons.org/licenses/by/4.0/legalcode</span>
 <span class="sd">&quot;&quot;&quot;A task plugin module for initializing and configuring Tensorflow.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span> <span class="nn">structlog</span>
-<span class="kn">from</span> <span class="nn">structlog.stdlib</span> <span class="kn">import</span> <span class="n">BoundLogger</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">structlog</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">structlog.stdlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">BoundLogger</span>
 
-<span class="kn">from</span> <span class="nn">dioptra</span> <span class="kn">import</span> <span class="n">pyplugs</span>
-<span class="kn">from</span> <span class="nn">dioptra.sdk.exceptions</span> <span class="kn">import</span> <span class="n">TensorflowDependencyError</span>
-<span class="kn">from</span> <span class="nn">dioptra.sdk.utilities.decorators</span> <span class="kn">import</span> <span class="n">require_package</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dioptra</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplugs</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dioptra.sdk.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">TensorflowDependencyError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dioptra.sdk.utilities.decorators</span><span class="w"> </span><span class="kn">import</span> <span class="n">require_package</span>
 
 <span class="n">LOGGER</span><span class="p">:</span> <span class="n">BoundLogger</span> <span class="o">=</span> <span class="n">structlog</span><span class="o">.</span><span class="n">stdlib</span><span class="o">.</span><span class="n">get_logger</span><span class="p">()</span>
 
 
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
 
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>  <span class="c1"># pragma: nocover</span>
     <span class="n">LOGGER</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
@@ -326,7 +326,7 @@ document.write(`
 
 <div class="viewcode-block" id="init_tensorflow"><a class="viewcode-back" href="../../../reference/api-task-plugins/api-builtins-backend_configs.html#dioptra_builtins.backend_configs.tensorflow.init_tensorflow">[docs]</a><span class="nd">@pyplugs</span><span class="o">.</span><span class="n">register</span>
 <span class="nd">@require_package</span><span class="p">(</span><span class="s2">&quot;tensorflow&quot;</span><span class="p">,</span> <span class="n">exc_type</span><span class="o">=</span><span class="n">TensorflowDependencyError</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">init_tensorflow</span><span class="p">(</span><span class="n">seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">init_tensorflow</span><span class="p">(</span><span class="n">seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Initializes Tensorflow to ensure reproducibility.</span>
 
 <span class="sd">    This task plugin **must** be run before any other features from Tensorflow are used</span>

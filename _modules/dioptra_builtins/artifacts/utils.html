@@ -302,24 +302,24 @@ document.write(`
 <span class="c1"># https://creativecommons.org/licenses/by/4.0/legalcode</span>
 <span class="sd">&quot;&quot;&quot;A task plugin module containing generic utilities for managing artifacts.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">tarfile</span>
-<span class="kn">import</span> <span class="nn">uuid</span>
-<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span> <span class="nn">tarfile</span> <span class="kn">import</span> <span class="n">TarFile</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tarfile</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">uuid</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tarfile</span><span class="w"> </span><span class="kn">import</span> <span class="n">TarFile</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span>
 
-<span class="kn">import</span> <span class="nn">structlog</span>
-<span class="kn">from</span> <span class="nn">structlog.stdlib</span> <span class="kn">import</span> <span class="n">BoundLogger</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">structlog</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">structlog.stdlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">BoundLogger</span>
 
-<span class="kn">from</span> <span class="nn">dioptra</span> <span class="kn">import</span> <span class="n">pyplugs</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dioptra</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplugs</span>
 
 <span class="n">LOGGER</span><span class="p">:</span> <span class="n">BoundLogger</span> <span class="o">=</span> <span class="n">structlog</span><span class="o">.</span><span class="n">stdlib</span><span class="o">.</span><span class="n">get_logger</span><span class="p">()</span>
 
 
-<div class="viewcode-block" id="is_within_directory"><a class="viewcode-back" href="../../../reference/api-task-plugins/api-builtins-artifacts.html#dioptra_builtins.artifacts.utils.is_within_directory">[docs]</a><span class="k">def</span> <span class="nf">is_within_directory</span><span class="p">(</span><span class="n">directory</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">],</span> <span class="n">target</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<div class="viewcode-block" id="is_within_directory"><a class="viewcode-back" href="../../../reference/api-task-plugins/api-builtins-artifacts.html#dioptra_builtins.artifacts.utils.is_within_directory">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">is_within_directory</span><span class="p">(</span><span class="n">directory</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">],</span> <span class="n">target</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
     <span class="n">abs_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span>
     <span class="n">abs_target</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
 
@@ -328,7 +328,7 @@ document.write(`
     <span class="k">return</span> <span class="n">prefix</span> <span class="o">==</span> <span class="n">abs_directory</span></div>
 
 
-<div class="viewcode-block" id="safe_extract"><a class="viewcode-back" href="../../../reference/api-task-plugins/api-builtins-artifacts.html#dioptra_builtins.artifacts.utils.safe_extract">[docs]</a><span class="k">def</span> <span class="nf">safe_extract</span><span class="p">(</span><span class="n">tar</span><span class="p">:</span> <span class="n">TarFile</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="safe_extract"><a class="viewcode-back" href="../../../reference/api-task-plugins/api-builtins-artifacts.html#dioptra_builtins.artifacts.utils.safe_extract">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">safe_extract</span><span class="p">(</span><span class="n">tar</span><span class="p">:</span> <span class="n">TarFile</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">member</span> <span class="ow">in</span> <span class="n">tar</span><span class="o">.</span><span class="n">getmembers</span><span class="p">():</span>
         <span class="n">member_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">member</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">is_within_directory</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">member_path</span><span class="p">):</span>
@@ -338,7 +338,7 @@ document.write(`
 
 
 <div class="viewcode-block" id="extract_tarfile"><a class="viewcode-back" href="../../../reference/api-task-plugins/api-builtins-artifacts.html#dioptra_builtins.artifacts.utils.extract_tarfile">[docs]</a><span class="nd">@pyplugs</span><span class="o">.</span><span class="n">register</span>
-<span class="k">def</span> <span class="nf">extract_tarfile</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">extract_tarfile</span><span class="p">(</span>
     <span class="n">filepath</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">],</span>
     <span class="n">tarball_read_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;r:gz&quot;</span><span class="p">,</span>
     <span class="n">output_dir</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -363,7 +363,7 @@ document.write(`
 
 
 <div class="viewcode-block" id="make_directories"><a class="viewcode-back" href="../../../reference/api-task-plugins/api-builtins-artifacts.html#dioptra_builtins.artifacts.utils.make_directories">[docs]</a><span class="nd">@pyplugs</span><span class="o">.</span><span class="n">register</span>
-<span class="k">def</span> <span class="nf">make_directories</span><span class="p">(</span><span class="n">dirs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">make_directories</span><span class="p">(</span><span class="n">dirs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Creates directories if they do not exist.</span>
 
 <span class="sd">    Args:</span>
@@ -377,7 +377,7 @@ document.write(`
 
 
 <div class="viewcode-block" id="extract_tarfile_in_unique_subdir"><a class="viewcode-back" href="../../../reference/api-task-plugins/api-builtins-artifacts.html#dioptra_builtins.artifacts.utils.extract_tarfile_in_unique_subdir">[docs]</a><span class="nd">@pyplugs</span><span class="o">.</span><span class="n">register</span>
-<span class="k">def</span> <span class="nf">extract_tarfile_in_unique_subdir</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">extract_tarfile_in_unique_subdir</span><span class="p">(</span>
     <span class="n">filepath</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">],</span>
     <span class="n">tarball_read_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;r:gz&quot;</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>

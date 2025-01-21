@@ -302,22 +302,22 @@ document.write(`
 <span class="c1"># https://creativecommons.org/licenses/by/4.0/legalcode</span>
 <span class="sd">&quot;&quot;&quot;Neural network image classifiers implemented in Tensorflow/Keras.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span> <span class="nn">types</span> <span class="kn">import</span> <span class="n">FunctionType</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">types</span><span class="w"> </span><span class="kn">import</span> <span class="n">FunctionType</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
-<span class="kn">import</span> <span class="nn">structlog</span>
-<span class="kn">from</span> <span class="nn">structlog.stdlib</span> <span class="kn">import</span> <span class="n">BoundLogger</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">structlog</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">structlog.stdlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">BoundLogger</span>
 
-<span class="kn">from</span> <span class="nn">dioptra</span> <span class="kn">import</span> <span class="n">pyplugs</span>
-<span class="kn">from</span> <span class="nn">dioptra.sdk.exceptions</span> <span class="kn">import</span> <span class="n">TensorflowDependencyError</span>
-<span class="kn">from</span> <span class="nn">dioptra.sdk.utilities.decorators</span> <span class="kn">import</span> <span class="n">require_package</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dioptra</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplugs</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dioptra.sdk.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">TensorflowDependencyError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dioptra.sdk.utilities.decorators</span><span class="w"> </span><span class="kn">import</span> <span class="n">require_package</span>
 
 <span class="n">LOGGER</span><span class="p">:</span> <span class="n">BoundLogger</span> <span class="o">=</span> <span class="n">structlog</span><span class="o">.</span><span class="n">stdlib</span><span class="o">.</span><span class="n">get_logger</span><span class="p">()</span>
 
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">tensorflow.keras.layers</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">tensorflow.keras.layers</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
         <span class="n">BatchNormalization</span><span class="p">,</span>
         <span class="n">Conv2D</span><span class="p">,</span>
         <span class="n">Dense</span><span class="p">,</span>
@@ -325,9 +325,9 @@ document.write(`
         <span class="n">Flatten</span><span class="p">,</span>
         <span class="n">MaxPooling2D</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="kn">from</span> <span class="nn">tensorflow.keras.metrics</span> <span class="kn">import</span> <span class="n">Metric</span>
-    <span class="kn">from</span> <span class="nn">tensorflow.keras.models</span> <span class="kn">import</span> <span class="n">Sequential</span>
-    <span class="kn">from</span> <span class="nn">tensorflow.keras.optimizers</span> <span class="kn">import</span> <span class="n">Optimizer</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">tensorflow.keras.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">Metric</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">tensorflow.keras.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequential</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">tensorflow.keras.optimizers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optimizer</span>
 
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>  <span class="c1"># pragma: nocover</span>
     <span class="n">LOGGER</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
@@ -338,7 +338,7 @@ document.write(`
 
 <div class="viewcode-block" id="init_classifier"><a class="viewcode-back" href="../../../reference/api-task-plugins/api-builtins-estimators.html#dioptra_builtins.estimators.keras_classifiers.init_classifier">[docs]</a><span class="nd">@pyplugs</span><span class="o">.</span><span class="n">register</span>
 <span class="nd">@require_package</span><span class="p">(</span><span class="s2">&quot;tensorflow&quot;</span><span class="p">,</span> <span class="n">exc_type</span><span class="o">=</span><span class="n">TensorflowDependencyError</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">init_classifier</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">init_classifier</span><span class="p">(</span>
     <span class="n">model_architecture</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">optimizer</span><span class="p">:</span> <span class="n">Optimizer</span><span class="p">,</span>
     <span class="n">metrics</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Metric</span><span class="p">,</span> <span class="n">FunctionType</span><span class="p">]],</span>
@@ -390,7 +390,7 @@ document.write(`
     <span class="k">return</span> <span class="n">classifier</span></div>
 
 
-<div class="viewcode-block" id="shallow_net"><a class="viewcode-back" href="../../../reference/api-task-plugins/api-builtins-estimators.html#dioptra_builtins.estimators.keras_classifiers.shallow_net">[docs]</a><span class="k">def</span> <span class="nf">shallow_net</span><span class="p">(</span><span class="n">input_shape</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">n_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequential</span><span class="p">:</span>
+<div class="viewcode-block" id="shallow_net"><a class="viewcode-back" href="../../../reference/api-task-plugins/api-builtins-estimators.html#dioptra_builtins.estimators.keras_classifiers.shallow_net">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">shallow_net</span><span class="p">(</span><span class="n">input_shape</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">n_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequential</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Builds an untrained shallow neural network architecture for Tensorflow/Keras.</span>
 
 <span class="sd">    Args:</span>
@@ -419,7 +419,7 @@ document.write(`
     <span class="k">return</span> <span class="n">model</span></div>
 
 
-<div class="viewcode-block" id="le_net"><a class="viewcode-back" href="../../../reference/api-task-plugins/api-builtins-estimators.html#dioptra_builtins.estimators.keras_classifiers.le_net">[docs]</a><span class="k">def</span> <span class="nf">le_net</span><span class="p">(</span><span class="n">input_shape</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">n_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequential</span><span class="p">:</span>
+<div class="viewcode-block" id="le_net"><a class="viewcode-back" href="../../../reference/api-task-plugins/api-builtins-estimators.html#dioptra_builtins.estimators.keras_classifiers.le_net">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">le_net</span><span class="p">(</span><span class="n">input_shape</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">n_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequential</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Builds an untrained LeNet-5 neural network architecture for Tensorflow/Keras.</span>
 
 <span class="sd">    Args:</span>
@@ -457,7 +457,7 @@ document.write(`
     <span class="k">return</span> <span class="n">model</span></div>
 
 
-<div class="viewcode-block" id="alex_net"><a class="viewcode-back" href="../../../reference/api-task-plugins/api-builtins-estimators.html#dioptra_builtins.estimators.keras_classifiers.alex_net">[docs]</a><span class="k">def</span> <span class="nf">alex_net</span><span class="p">(</span><span class="n">input_shape</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">n_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequential</span><span class="p">:</span>
+<div class="viewcode-block" id="alex_net"><a class="viewcode-back" href="../../../reference/api-task-plugins/api-builtins-estimators.html#dioptra_builtins.estimators.keras_classifiers.alex_net">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">alex_net</span><span class="p">(</span><span class="n">input_shape</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">n_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequential</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Builds an untrained AlexNet neural network architecture for Tensorflow/Keras.</span>
 
 <span class="sd">    Args:</span>

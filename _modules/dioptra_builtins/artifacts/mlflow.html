@@ -306,26 +306,26 @@ document.write(`
 <span class="sd">entry point run.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">tarfile</span>
-<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tarfile</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
 
-<span class="kn">import</span> <span class="nn">mlflow</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="kn">import</span> <span class="nn">structlog</span>
-<span class="kn">from</span> <span class="nn">mlflow.tracking</span> <span class="kn">import</span> <span class="n">MlflowClient</span>
-<span class="kn">from</span> <span class="nn">structlog.stdlib</span> <span class="kn">import</span> <span class="n">BoundLogger</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">mlflow</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">structlog</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mlflow.tracking</span><span class="w"> </span><span class="kn">import</span> <span class="n">MlflowClient</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">structlog.stdlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">BoundLogger</span>
 
-<span class="kn">from</span> <span class="nn">dioptra</span> <span class="kn">import</span> <span class="n">pyplugs</span>
-<span class="kn">from</span> <span class="nn">dioptra.sdk.utilities.paths</span> <span class="kn">import</span> <span class="n">set_path_ext</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dioptra</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplugs</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dioptra.sdk.utilities.paths</span><span class="w"> </span><span class="kn">import</span> <span class="n">set_path_ext</span>
 
-<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="kn">import</span> <span class="n">UnsupportedDataFrameFileFormatError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">UnsupportedDataFrameFileFormatError</span>
 
 <span class="n">LOGGER</span><span class="p">:</span> <span class="n">BoundLogger</span> <span class="o">=</span> <span class="n">structlog</span><span class="o">.</span><span class="n">stdlib</span><span class="o">.</span><span class="n">get_logger</span><span class="p">()</span>
 
 
 <div class="viewcode-block" id="download_all_artifacts_in_run"><a class="viewcode-back" href="../../../reference/api-task-plugins/api-builtins-artifacts.html#dioptra_builtins.artifacts.mlflow.download_all_artifacts_in_run">[docs]</a><span class="nd">@pyplugs</span><span class="o">.</span><span class="n">register</span>
-<span class="k">def</span> <span class="nf">download_all_artifacts_in_run</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">download_all_artifacts_in_run</span><span class="p">(</span>
     <span class="n">run_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">artifact_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">destination_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Downloads an artifact file or directory from a previous MLFlow run.</span>
@@ -357,7 +357,7 @@ document.write(`
 
 
 <div class="viewcode-block" id="upload_data_frame_artifact"><a class="viewcode-back" href="../../../reference/api-task-plugins/api-builtins-artifacts.html#dioptra_builtins.artifacts.mlflow.upload_data_frame_artifact">[docs]</a><span class="nd">@pyplugs</span><span class="o">.</span><span class="n">register</span>
-<span class="k">def</span> <span class="nf">upload_data_frame_artifact</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">upload_data_frame_artifact</span><span class="p">(</span>
     <span class="n">data_frame</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
     <span class="n">file_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">file_format</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -397,7 +397,7 @@ document.write(`
 <span class="sd">        - :py:meth:`pandas.DataFrame.to_pickle`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">to_format</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_format</span><span class="p">(</span>
         <span class="n">data_frame</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="nb">format</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="n">filepath</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">output_dir</span><span class="p">)</span> <span class="o">/</span> <span class="n">Path</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span><span class="o">.</span><span class="n">name</span>
@@ -466,7 +466,7 @@ document.write(`
 
 
 <div class="viewcode-block" id="upload_directory_as_tarball_artifact"><a class="viewcode-back" href="../../../reference/api-task-plugins/api-builtins-artifacts.html#dioptra_builtins.artifacts.mlflow.upload_directory_as_tarball_artifact">[docs]</a><span class="nd">@pyplugs</span><span class="o">.</span><span class="n">register</span>
-<span class="k">def</span> <span class="nf">upload_directory_as_tarball_artifact</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">upload_directory_as_tarball_artifact</span><span class="p">(</span>
     <span class="n">source_dir</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">],</span>
     <span class="n">tarball_filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">tarball_write_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;w:gz&quot;</span><span class="p">,</span>
@@ -506,7 +506,7 @@ document.write(`
 
 
 <div class="viewcode-block" id="upload_file_as_artifact"><a class="viewcode-back" href="../../../reference/api-task-plugins/api-builtins-artifacts.html#dioptra_builtins.artifacts.mlflow.upload_file_as_artifact">[docs]</a><span class="nd">@pyplugs</span><span class="o">.</span><span class="n">register</span>
-<span class="k">def</span> <span class="nf">upload_file_as_artifact</span><span class="p">(</span><span class="n">artifact_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">upload_file_as_artifact</span><span class="p">(</span><span class="n">artifact_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Uploads a file as an artifact of the active MLFlow run.</span>
 
 <span class="sd">    Args:</span>

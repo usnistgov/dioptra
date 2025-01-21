@@ -308,21 +308,21 @@ document.write(`
 <span class="sd">   .DirectoryIterator`</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
 
-<span class="kn">import</span> <span class="nn">structlog</span>
-<span class="kn">from</span> <span class="nn">structlog.stdlib</span> <span class="kn">import</span> <span class="n">BoundLogger</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">structlog</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">structlog.stdlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">BoundLogger</span>
 
-<span class="kn">from</span> <span class="nn">dioptra</span> <span class="kn">import</span> <span class="n">pyplugs</span>
-<span class="kn">from</span> <span class="nn">dioptra.sdk.exceptions</span> <span class="kn">import</span> <span class="n">TensorflowDependencyError</span>
-<span class="kn">from</span> <span class="nn">dioptra.sdk.utilities.decorators</span> <span class="kn">import</span> <span class="n">require_package</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dioptra</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplugs</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dioptra.sdk.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">TensorflowDependencyError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dioptra.sdk.utilities.decorators</span><span class="w"> </span><span class="kn">import</span> <span class="n">require_package</span>
 
 <span class="n">LOGGER</span><span class="p">:</span> <span class="n">BoundLogger</span> <span class="o">=</span> <span class="n">structlog</span><span class="o">.</span><span class="n">stdlib</span><span class="o">.</span><span class="n">get_logger</span><span class="p">()</span>
 
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">tensorflow.keras.preprocessing.image</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">tensorflow.keras.preprocessing.image</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
         <span class="n">DirectoryIterator</span><span class="p">,</span>
         <span class="n">ImageDataGenerator</span><span class="p">,</span>
     <span class="p">)</span>
@@ -336,7 +336,7 @@ document.write(`
 
 <div class="viewcode-block" id="create_image_dataset"><a class="viewcode-back" href="../../../reference/api-task-plugins/api-builtins-data.html#dioptra_builtins.data.tensorflow.create_image_dataset">[docs]</a><span class="nd">@pyplugs</span><span class="o">.</span><span class="n">register</span>
 <span class="nd">@require_package</span><span class="p">(</span><span class="s2">&quot;tensorflow&quot;</span><span class="p">,</span> <span class="n">exc_type</span><span class="o">=</span><span class="n">TensorflowDependencyError</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">create_image_dataset</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_image_dataset</span><span class="p">(</span>
     <span class="n">data_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">subset</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
     <span class="n">image_size</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
@@ -402,7 +402,7 @@ document.write(`
 
 <div class="viewcode-block" id="get_n_classes_from_directory_iterator"><a class="viewcode-back" href="../../../reference/api-task-plugins/api-builtins-data.html#dioptra_builtins.data.tensorflow.get_n_classes_from_directory_iterator">[docs]</a><span class="nd">@pyplugs</span><span class="o">.</span><span class="n">register</span>
 <span class="nd">@require_package</span><span class="p">(</span><span class="s2">&quot;tensorflow&quot;</span><span class="p">,</span> <span class="n">exc_type</span><span class="o">=</span><span class="n">TensorflowDependencyError</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">get_n_classes_from_directory_iterator</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">DirectoryIterator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_n_classes_from_directory_iterator</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">DirectoryIterator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the number of unique labels found by the |directory_iterator|.</span>
 
 <span class="sd">    Args:</span>

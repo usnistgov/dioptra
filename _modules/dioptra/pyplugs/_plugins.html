@@ -327,13 +327,13 @@ document.write(`
 <span class="c1"># SOFTWARE.</span>
 <span class="sd">&quot;&quot;&quot;Decorators for registering plugins&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span> <span class="nn">functools</span>
-<span class="kn">import</span> <span class="nn">importlib</span>
-<span class="kn">import</span> <span class="nn">sys</span>
-<span class="kn">import</span> <span class="nn">textwrap</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">functools</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">importlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">textwrap</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">TYPE_CHECKING</span><span class="p">,</span>
     <span class="n">Any</span><span class="p">,</span>
     <span class="n">Callable</span><span class="p">,</span>
@@ -347,28 +347,28 @@ document.write(`
     <span class="n">overload</span><span class="p">,</span>
 <span class="p">)</span>
 
-<span class="kn">import</span> <span class="nn">structlog</span>
-<span class="kn">from</span> <span class="nn">structlog.stdlib</span> <span class="kn">import</span> <span class="n">BoundLogger</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">structlog</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">structlog.stdlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">BoundLogger</span>
 
-<span class="kn">from</span> <span class="nn">dioptra.sdk.exceptions</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dioptra.sdk.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">PrefectDependencyError</span><span class="p">,</span>
     <span class="n">UnknownPackageError</span><span class="p">,</span>
     <span class="n">UnknownPluginError</span><span class="p">,</span>
     <span class="n">UnknownPluginFunctionError</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">dioptra.sdk.utilities.decorators</span> <span class="kn">import</span> <span class="n">require_package</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dioptra.sdk.utilities.decorators</span><span class="w"> </span><span class="kn">import</span> <span class="n">require_package</span>
 
 <span class="n">LOGGER</span><span class="p">:</span> <span class="n">BoundLogger</span> <span class="o">=</span> <span class="n">structlog</span><span class="o">.</span><span class="n">stdlib</span><span class="o">.</span><span class="n">get_logger</span><span class="p">()</span>
 
 
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">importlib</span> <span class="kn">import</span> <span class="n">resources</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">importlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">resources</span>
 
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>  <span class="c1"># pragma: nocover</span>
-    <span class="kn">import</span> <span class="nn">importlib_resources</span> <span class="k">as</span> <span class="nn">resources</span>  <span class="c1"># type: ignore</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">importlib_resources</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">resources</span>  <span class="c1"># type: ignore</span>
 
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">prefect</span> <span class="kn">import</span> <span class="n">task</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">prefect</span><span class="w"> </span><span class="kn">import</span> <span class="n">task</span>
 
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>  <span class="c1"># pragma: nocover</span>
     <span class="n">LOGGER</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
@@ -377,20 +377,20 @@ document.write(`
     <span class="p">)</span>
 
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Protocol</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Protocol</span>
 
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>  <span class="c1"># pragma: nocover</span>
-    <span class="kn">from</span> <span class="nn">typing_extensions</span> <span class="kn">import</span> <span class="n">Protocol</span>  <span class="c1"># type: ignore</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">typing_extensions</span><span class="w"> </span><span class="kn">import</span> <span class="n">Protocol</span>  <span class="c1"># type: ignore</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">prefect.tasks.core.function</span> <span class="kn">import</span> <span class="n">FunctionTask</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">prefect.tasks.core.function</span><span class="w"> </span><span class="kn">import</span> <span class="n">FunctionTask</span>
 
 
 <span class="c1"># Structural subtyping</span>
-<span class="k">class</span> <span class="nc">NoutPlugin</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">NoutPlugin</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
     <span class="n">_task_nout</span><span class="p">:</span> <span class="nb">int</span>
 
-    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span> <span class="o">...</span>  <span class="c1"># noqa: E704; pragma: nocover</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span> <span class="o">...</span>  <span class="c1"># noqa: E704; pragma: nocover</span>
 
 
 <span class="c1"># Type aliases</span>
@@ -398,7 +398,7 @@ document.write(`
 <span class="n">Plugin</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
 
 
-<span class="k">class</span> <span class="nc">PluginInfo</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">PluginInfo</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Information about one plug-in&quot;&quot;&quot;</span>
 
     <span class="n">package_name</span><span class="p">:</span> <span class="nb">str</span>
@@ -416,21 +416,21 @@ document.write(`
 
 
 <span class="nd">@overload</span>
-<span class="k">def</span> <span class="nf">register</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">sort_value</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Plugin</span><span class="p">],</span> <span class="n">Plugin</span><span class="p">]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">sort_value</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Plugin</span><span class="p">],</span> <span class="n">Plugin</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Signature for using decorator with parameters&quot;&quot;&quot;</span>
     <span class="o">...</span>  <span class="c1"># pragma: nocover</span>
 
 
 <span class="nd">@overload</span>
-<span class="k">def</span> <span class="nf">register</span><span class="p">(</span><span class="n">func</span><span class="p">:</span> <span class="n">Plugin</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Plugin</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="n">func</span><span class="p">:</span> <span class="n">Plugin</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Plugin</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Signature for using decorator without parameters&quot;&quot;&quot;</span>
     <span class="o">...</span>  <span class="c1"># pragma: nocover</span>
 
 
-<div class="viewcode-block" id="register"><a class="viewcode-back" href="../../../reference/api-sdk/api-pyplugs.html#dioptra.pyplugs.register">[docs]</a><span class="k">def</span> <span class="nf">register</span><span class="p">(</span><span class="n">_func</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">sort_value</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<div class="viewcode-block" id="register"><a class="viewcode-back" href="../../../reference/api-sdk/api-pyplugs.html#dioptra.pyplugs.register">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="n">_func</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">sort_value</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Decorator for registering a new plug-in&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">decorator_register</span><span class="p">(</span><span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">T</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">T</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">decorator_register</span><span class="p">(</span><span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">T</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">T</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Store information about the given function&quot;&quot;&quot;</span>
         <span class="n">package_name</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">plugin_name</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="vm">__module__</span><span class="o">.</span><span class="n">rpartition</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
         <span class="n">description</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">doc</span> <span class="o">=</span> <span class="p">(</span><span class="n">func</span><span class="o">.</span><span class="vm">__doc__</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -459,8 +459,8 @@ document.write(`
         <span class="k">return</span> <span class="n">decorator_register</span><span class="p">(</span><span class="n">_func</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="task_nout"><a class="viewcode-back" href="../../../reference/api-sdk/api-pyplugs.html#dioptra.pyplugs.task_nout">[docs]</a><span class="k">def</span> <span class="nf">task_nout</span><span class="p">(</span><span class="n">nout</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Plugin</span><span class="p">],</span> <span class="n">NoutPlugin</span><span class="p">]:</span>
-    <span class="k">def</span> <span class="nf">decorator</span><span class="p">(</span><span class="n">func</span><span class="p">:</span> <span class="n">Plugin</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NoutPlugin</span><span class="p">:</span>
+<div class="viewcode-block" id="task_nout"><a class="viewcode-back" href="../../../reference/api-sdk/api-pyplugs.html#dioptra.pyplugs.task_nout">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">task_nout</span><span class="p">(</span><span class="n">nout</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Plugin</span><span class="p">],</span> <span class="n">NoutPlugin</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">decorator</span><span class="p">(</span><span class="n">func</span><span class="p">:</span> <span class="n">Plugin</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NoutPlugin</span><span class="p">:</span>
         <span class="c1"># We&#39;re just assigning an attribute, and we need mypy to let us</span>
         <span class="c1"># do that.  So we just force a type change, to a callable type which</span>
         <span class="c1"># includes an attribute.</span>
@@ -472,14 +472,14 @@ document.write(`
     <span class="k">return</span> <span class="n">decorator</span></div>
 
 
-<div class="viewcode-block" id="names"><a class="viewcode-back" href="../../../reference/api-sdk/api-pyplugs.html#dioptra.pyplugs.names">[docs]</a><span class="k">def</span> <span class="nf">names</span><span class="p">(</span><span class="n">package</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<div class="viewcode-block" id="names"><a class="viewcode-back" href="../../../reference/api-sdk/api-pyplugs.html#dioptra.pyplugs.names">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">names</span><span class="p">(</span><span class="n">package</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;List all plug-ins in one package&quot;&quot;&quot;</span>
     <span class="n">_import_all</span><span class="p">(</span><span class="n">package</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">_PLUGINS</span><span class="p">[</span><span class="n">package</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="n">info</span><span class="p">(</span><span class="n">package</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span><span class="o">.</span><span class="n">sort_value</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="funcs"><a class="viewcode-back" href="../../../reference/api-sdk/api-pyplugs.html#dioptra.pyplugs.funcs">[docs]</a><span class="k">def</span> <span class="nf">funcs</span><span class="p">(</span><span class="n">package</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">plugin</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<div class="viewcode-block" id="funcs"><a class="viewcode-back" href="../../../reference/api-sdk/api-pyplugs.html#dioptra.pyplugs.funcs">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">funcs</span><span class="p">(</span><span class="n">package</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">plugin</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;List all functions in one plug-in&quot;&quot;&quot;</span>
     <span class="n">_import</span><span class="p">(</span><span class="n">package</span><span class="p">,</span> <span class="n">plugin</span><span class="p">)</span>
     <span class="n">plugin_info</span> <span class="o">=</span> <span class="n">_PLUGINS</span><span class="p">[</span><span class="n">package</span><span class="p">][</span><span class="n">plugin</span><span class="p">]</span>
@@ -487,7 +487,7 @@ document.write(`
     <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">plugin_info</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span></div>
 
 
-<div class="viewcode-block" id="info"><a class="viewcode-back" href="../../../reference/api-sdk/api-pyplugs.html#dioptra.pyplugs.info">[docs]</a><span class="k">def</span> <span class="nf">info</span><span class="p">(</span><span class="n">package</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">plugin</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PluginInfo</span><span class="p">:</span>
+<div class="viewcode-block" id="info"><a class="viewcode-back" href="../../../reference/api-sdk/api-pyplugs.html#dioptra.pyplugs.info">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">info</span><span class="p">(</span><span class="n">package</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">plugin</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PluginInfo</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get information about a plug-in&quot;&quot;&quot;</span>
     <span class="n">_import</span><span class="p">(</span><span class="n">package</span><span class="p">,</span> <span class="n">plugin</span><span class="p">)</span>
 
@@ -498,7 +498,7 @@ document.write(`
         <span class="k">raise</span> <span class="n">UnknownPluginError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Could not find any plug-in named </span><span class="si">{</span><span class="n">plugin</span><span class="si">!r}</span><span class="s2"> inside </span><span class="si">{</span><span class="n">package</span><span class="si">!r}</span><span class="s2">. &quot;</span>
             <span class="s2">&quot;Use pyplugs.register to register functions as plug-ins&quot;</span>
-        <span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
+        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
 
     <span class="n">func</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">plugin_info</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span> <span class="k">if</span> <span class="n">func</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">func</span>
 
@@ -509,10 +509,10 @@ document.write(`
         <span class="k">raise</span> <span class="n">UnknownPluginFunctionError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Could not find any function named </span><span class="si">{</span><span class="n">func</span><span class="si">!r}</span><span class="s2"> inside &#39;</span><span class="si">{</span><span class="n">package</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">plugin</span><span class="si">}</span><span class="s2">&#39;. &quot;</span>
             <span class="s2">&quot;Use pyplugs.register to register plug-in functions&quot;</span>
-        <span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span></div>
+        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span></div>
 
 
-<div class="viewcode-block" id="exists"><a class="viewcode-back" href="../../../reference/api-sdk/api-pyplugs.html#dioptra.pyplugs.exists">[docs]</a><span class="k">def</span> <span class="nf">exists</span><span class="p">(</span><span class="n">package</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">plugin</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<div class="viewcode-block" id="exists"><a class="viewcode-back" href="../../../reference/api-sdk/api-pyplugs.html#dioptra.pyplugs.exists">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">exists</span><span class="p">(</span><span class="n">package</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">plugin</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if a given plugin exists&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">package</span> <span class="ow">in</span> <span class="n">_PLUGINS</span> <span class="ow">and</span> <span class="n">plugin</span> <span class="ow">in</span> <span class="n">_PLUGINS</span><span class="p">[</span><span class="n">package</span><span class="p">]:</span>
         <span class="k">return</span> <span class="kc">True</span>
@@ -527,12 +527,12 @@ document.write(`
         <span class="k">return</span> <span class="n">package</span> <span class="ow">in</span> <span class="n">_PLUGINS</span> <span class="ow">and</span> <span class="n">plugin</span> <span class="ow">in</span> <span class="n">_PLUGINS</span><span class="p">[</span><span class="n">package</span><span class="p">]</span></div>
 
 
-<div class="viewcode-block" id="get"><a class="viewcode-back" href="../../../reference/api-sdk/api-pyplugs.html#dioptra.pyplugs.get">[docs]</a><span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="n">package</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">plugin</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Plugin</span><span class="p">:</span>
+<div class="viewcode-block" id="get"><a class="viewcode-back" href="../../../reference/api-sdk/api-pyplugs.html#dioptra.pyplugs.get">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span><span class="n">package</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">plugin</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Plugin</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get a given plugin&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">info</span><span class="p">(</span><span class="n">package</span><span class="p">,</span> <span class="n">plugin</span><span class="p">,</span> <span class="n">func</span><span class="p">)</span><span class="o">.</span><span class="n">func</span></div>
 
 
-<div class="viewcode-block" id="call"><a class="viewcode-back" href="../../../reference/api-sdk/api-pyplugs.html#dioptra.pyplugs.call">[docs]</a><span class="k">def</span> <span class="nf">call</span><span class="p">(</span>
+<div class="viewcode-block" id="call"><a class="viewcode-back" href="../../../reference/api-sdk/api-pyplugs.html#dioptra.pyplugs.call">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">call</span><span class="p">(</span>
     <span class="n">package</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">plugin</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Call the given plugin&quot;&quot;&quot;</span>
@@ -542,7 +542,7 @@ document.write(`
 
 
 <div class="viewcode-block" id="get_task"><a class="viewcode-back" href="../../../reference/api-sdk/api-pyplugs.html#dioptra.pyplugs.get_task">[docs]</a><span class="nd">@require_package</span><span class="p">(</span><span class="s2">&quot;prefect&quot;</span><span class="p">,</span> <span class="n">exc_type</span><span class="o">=</span><span class="n">PrefectDependencyError</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">get_task</span><span class="p">(</span><span class="n">package</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">plugin</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FunctionTask</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_task</span><span class="p">(</span><span class="n">package</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">plugin</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FunctionTask</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get a given plugin wrapped as a prefect task&quot;&quot;&quot;</span>
     <span class="n">plugin_func</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Plugin</span><span class="p">,</span> <span class="n">NoutPlugin</span><span class="p">]</span> <span class="o">=</span> <span class="n">info</span><span class="p">(</span><span class="n">package</span><span class="p">,</span> <span class="n">plugin</span><span class="p">,</span> <span class="n">func</span><span class="p">)</span><span class="o">.</span><span class="n">func</span>
     <span class="n">nout</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">plugin_func</span><span class="p">,</span> <span class="s2">&quot;_task_nout&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
@@ -551,7 +551,7 @@ document.write(`
 
 
 <div class="viewcode-block" id="call_task"><a class="viewcode-back" href="../../../reference/api-sdk/api-pyplugs.html#dioptra.pyplugs.call_task">[docs]</a><span class="nd">@require_package</span><span class="p">(</span><span class="s2">&quot;prefect&quot;</span><span class="p">,</span> <span class="n">exc_type</span><span class="o">=</span><span class="n">PrefectDependencyError</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">call_task</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">call_task</span><span class="p">(</span>
     <span class="n">package</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">plugin</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Call the given plugin as a prefect task&quot;&quot;&quot;</span>
@@ -560,7 +560,7 @@ document.write(`
     <span class="k">return</span> <span class="n">plugin_task</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 
-<span class="k">def</span> <span class="nf">_import</span><span class="p">(</span><span class="n">package</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">plugin</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_import</span><span class="p">(</span><span class="n">package</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">plugin</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Import the given plugin file from a package&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">package</span> <span class="ow">in</span> <span class="n">_PLUGINS</span> <span class="ow">and</span> <span class="n">plugin</span> <span class="ow">in</span> <span class="n">_PLUGINS</span><span class="p">[</span><span class="n">package</span><span class="p">]:</span>
         <span class="k">return</span> <span class="kc">None</span>
@@ -583,21 +583,21 @@ document.write(`
             <span class="n">message</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Plugin </span><span class="si">{</span><span class="n">plugin</span><span class="si">!r}</span><span class="s2"> not found&quot;</span>
             <span class="k">if</span> <span class="n">package</span><span class="p">:</span>
                 <span class="n">message</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; in </span><span class="si">{</span><span class="n">package</span><span class="si">!r}</span><span class="s2">&quot;</span>
-            <span class="k">raise</span> <span class="n">UnknownPluginError</span><span class="p">(</span><span class="n">message</span><span class="p">)</span> <span class="kn">from</span> <span class="kc">None</span>
+            <span class="k">raise</span> <span class="n">UnknownPluginError</span><span class="p">(</span><span class="n">message</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
 
         <span class="k">elif</span> <span class="nb">repr</span><span class="p">(</span><span class="n">package</span><span class="p">)</span> <span class="ow">in</span> <span class="n">err</span><span class="o">.</span><span class="n">msg</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">UnknownPackageError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Package </span><span class="si">{</span><span class="n">package</span><span class="si">!r}</span><span class="s2"> does not exist&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="kc">None</span>
+            <span class="k">raise</span> <span class="n">UnknownPackageError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Package </span><span class="si">{</span><span class="n">package</span><span class="si">!r}</span><span class="s2"> does not exist&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
 
         <span class="k">raise</span>
 
 
-<span class="k">def</span> <span class="nf">_import_all</span><span class="p">(</span><span class="n">package</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_import_all</span><span class="p">(</span><span class="n">package</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Import all plugins in a package&quot;&quot;&quot;</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">all_resources</span> <span class="o">=</span> <span class="n">resources</span><span class="o">.</span><span class="n">contents</span><span class="p">(</span><span class="n">package</span><span class="p">)</span>
 
     <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">UnknownPackageError</span><span class="p">(</span><span class="n">err</span><span class="p">)</span> <span class="kn">from</span> <span class="kc">None</span>
+        <span class="k">raise</span> <span class="n">UnknownPackageError</span><span class="p">(</span><span class="n">err</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
 
     <span class="c1"># Note that we have tried to import the package by adding it to _PLUGINS</span>
     <span class="n">_PLUGINS</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">package</span><span class="p">,</span> <span class="p">{})</span>
@@ -615,44 +615,44 @@ document.write(`
             <span class="k">pass</span>  <span class="c1"># Don&#39;t let errors in one plugin, affect the others</span>
 
 
-<div class="viewcode-block" id="names_factory"><a class="viewcode-back" href="../../../reference/api-sdk/api-pyplugs.html#dioptra.pyplugs.names_factory">[docs]</a><span class="k">def</span> <span class="nf">names_factory</span><span class="p">(</span><span class="n">package</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<div class="viewcode-block" id="names_factory"><a class="viewcode-back" href="../../../reference/api-sdk/api-pyplugs.html#dioptra.pyplugs.names_factory">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">names_factory</span><span class="p">(</span><span class="n">package</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a names() function for one package&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="n">names</span><span class="p">,</span> <span class="n">package</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="funcs_factory"><a class="viewcode-back" href="../../../reference/api-sdk/api-pyplugs.html#dioptra.pyplugs.funcs_factory">[docs]</a><span class="k">def</span> <span class="nf">funcs_factory</span><span class="p">(</span><span class="n">package</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<div class="viewcode-block" id="funcs_factory"><a class="viewcode-back" href="../../../reference/api-sdk/api-pyplugs.html#dioptra.pyplugs.funcs_factory">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">funcs_factory</span><span class="p">(</span><span class="n">package</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a funcs() function for one package&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="n">funcs</span><span class="p">,</span> <span class="n">package</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="info_factory"><a class="viewcode-back" href="../../../reference/api-sdk/api-pyplugs.html#dioptra.pyplugs.info_factory">[docs]</a><span class="k">def</span> <span class="nf">info_factory</span><span class="p">(</span><span class="n">package</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span> <span class="n">PluginInfo</span><span class="p">]:</span>
+<div class="viewcode-block" id="info_factory"><a class="viewcode-back" href="../../../reference/api-sdk/api-pyplugs.html#dioptra.pyplugs.info_factory">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">info_factory</span><span class="p">(</span><span class="n">package</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span> <span class="n">PluginInfo</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a info() function for one package&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">package</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="exists_factory"><a class="viewcode-back" href="../../../reference/api-sdk/api-pyplugs.html#dioptra.pyplugs.exists_factory">[docs]</a><span class="k">def</span> <span class="nf">exists_factory</span><span class="p">(</span><span class="n">package</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]:</span>
+<div class="viewcode-block" id="exists_factory"><a class="viewcode-back" href="../../../reference/api-sdk/api-pyplugs.html#dioptra.pyplugs.exists_factory">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">exists_factory</span><span class="p">(</span><span class="n">package</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create an exists() function for one package&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="n">exists</span><span class="p">,</span> <span class="n">package</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="get_factory"><a class="viewcode-back" href="../../../reference/api-sdk/api-pyplugs.html#dioptra.pyplugs.get_factory">[docs]</a><span class="k">def</span> <span class="nf">get_factory</span><span class="p">(</span><span class="n">package</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span> <span class="n">Plugin</span><span class="p">]:</span>
+<div class="viewcode-block" id="get_factory"><a class="viewcode-back" href="../../../reference/api-sdk/api-pyplugs.html#dioptra.pyplugs.get_factory">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">get_factory</span><span class="p">(</span><span class="n">package</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span> <span class="n">Plugin</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a get() function for one package&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="n">get</span><span class="p">,</span> <span class="n">package</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="call_factory"><a class="viewcode-back" href="../../../reference/api-sdk/api-pyplugs.html#dioptra.pyplugs.call_factory">[docs]</a><span class="k">def</span> <span class="nf">call_factory</span><span class="p">(</span><span class="n">package</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<div class="viewcode-block" id="call_factory"><a class="viewcode-back" href="../../../reference/api-sdk/api-pyplugs.html#dioptra.pyplugs.call_factory">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">call_factory</span><span class="p">(</span><span class="n">package</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a call() function for one package&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="n">call</span><span class="p">,</span> <span class="n">package</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="get_task_factory"><a class="viewcode-back" href="../../../reference/api-sdk/api-pyplugs.html#dioptra.pyplugs.get_task_factory">[docs]</a><span class="nd">@require_package</span><span class="p">(</span><span class="s2">&quot;prefect&quot;</span><span class="p">,</span> <span class="n">exc_type</span><span class="o">=</span><span class="n">PrefectDependencyError</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">get_task_factory</span><span class="p">(</span><span class="n">package</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span> <span class="n">FunctionTask</span><span class="p">]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_task_factory</span><span class="p">(</span><span class="n">package</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span> <span class="n">FunctionTask</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a get_task() function for one package&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="n">get_task</span><span class="p">,</span> <span class="n">package</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="call_task_factory"><a class="viewcode-back" href="../../../reference/api-sdk/api-pyplugs.html#dioptra.pyplugs.call_task_factory">[docs]</a><span class="nd">@require_package</span><span class="p">(</span><span class="s2">&quot;prefect&quot;</span><span class="p">,</span> <span class="n">exc_type</span><span class="o">=</span><span class="n">PrefectDependencyError</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">call_task_factory</span><span class="p">(</span><span class="n">package</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">call_task_factory</span><span class="p">(</span><span class="n">package</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a call_task() function for one package&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="n">call_task</span><span class="p">,</span> <span class="n">package</span><span class="p">)</span></div>
 
