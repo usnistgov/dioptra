@@ -58,13 +58,13 @@ This will generate a setup that is appropriate for testing Dioptra on your perso
    source venv-deploy/bin/activate
    python -m pip install --upgrade pip cruft jinja2
 
-   # Run cruft and set the template's variables
+Next, run cruft to begin the deployment process. The following command will run cruft and use all of the default template values. If you wish to configure the deployment other than using the default values, see the :ref:`Applying the template <getting-started-running-dioptra-applying-the-template>` section for detailed description of the template values and how to configure them.
+
+.. code:: sh
+
    cruft create https://github.com/usnistgov/dioptra --checkout $DIOPTRA_BRANCH \
-     --directory cookiecutter-templates/cookiecutter-dioptra-deployment
+     --directory cookiecutter-templates/cookiecutter-dioptra-deployment --no-input
 
-Cruft will now run and prompt you to configure the deployment. See the :ref:`Applying the template <getting-started-running-dioptra-applying-the-template>` section for detailed description of each prompt.
-
-We recommend identifying a location to store datasets you will want to use with Dioptra at this point and setting the ``datasets_directory`` variable accordingly. See the :ref:`Downloading the datasets <getting-started-acquiring-datasets>` section for more details.
 
 Once you have configured your deployment, continue following the instructions for initializing and starting your deployment below.
 
@@ -96,13 +96,40 @@ Applying the template
 ---------------------
 
 Create the folder where you plan to keep the deployment folder and change into it so that it becomes your working directory.
-Next, run cruft and apply the Dioptra Deployment template.
+Next, run cruft and apply the Dioptra Deployment template. There are four different methods for configuring the deployment.
+
+1) Have cruft ask for each variable:
 
 .. code:: sh
 
    # To use the template published on the dev branch, use '--checkout dev' instead
    cruft create https://github.com/usnistgov/dioptra --checkout main \
      --directory cookiecutter-templates/cookiecutter-dioptra-deployment
+
+2) Have cruft automatically apply the default template values:
+
+.. code:: sh
+
+   cruft create https://github.com/usnistgov/dioptra --checkout main \
+     --directory cookiecutter-templates/cookiecutter-dioptra-deployment --no-input
+
+3) Have cruft use default values except for those specified:
+
+.. code:: sh
+
+   cruft create https://github.com/usnistgov/dioptra --checkout main \
+     --directory cookiecutter-templates/cookiecutter-dioptra-deployment --no-input \
+     --extra-context '{"datasets_directory": "~/datasets"}'
+
+4) Have cruft use default values except for those given in a file:
+
+.. code:: sh
+
+   cruft create https://github.com/usnistgov/dioptra --checkout main \
+     --directory cookiecutter-templates/cookiecutter-dioptra-deployment --no-input \
+     --extra-context-file overrides.json
+
+If you selected 1) above, you will now be asked to set the variables needed to customize the generated configuration files.
 
 .. margin::
 
@@ -113,7 +140,6 @@ Next, run cruft and apply the Dioptra Deployment template.
       If it has, remove it.
       To start over, re-run the ``cruft`` command.
 
-You will now be asked to set the variables needed to customize the generated configuration files.
 In most cases you can just use the default value, but there are a few that you may need to customize.
 Below is a full list of the variables, their default values, and explanations of what they mean.
 
@@ -173,6 +199,7 @@ Below is a full list of the variables, their default values, and explanations of
   If the provided path is not valid, the `init-deployment.sh` script will fail.
   More advanced configurations can be achieved by modifying the `docker-compose.override.yml` file.
   (default: ``""``)
+  See the :ref:`Downloading the datasets <getting-started-acquiring-datasets>` section for more details.
 
 Example
 ~~~~~~~
