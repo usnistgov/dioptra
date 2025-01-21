@@ -995,6 +995,80 @@ def test_register_plugin_file(
     )
 
 
+@pytest.mark.parametrize(
+    "filename, expected_status_code",
+    [
+        # fmt: off
+        # Valid paths
+        (r"hello.py", HTTPStatus.OK),
+        (r"hello_world.py", HTTPStatus.OK),
+        (r"hello_world/main.py", HTTPStatus.OK),
+        (r"package/sub_package/module.py", HTTPStatus.OK),
+        (r"a/b/c/d/e/f/g/h/i/j/k/l/m/n/o/p.py", HTTPStatus.OK),  # Many nested directories # noqa: B950 # fmt: skip
+        (r"_underscore_start.py", HTTPStatus.OK),
+        # Invalid paths
+        (r"hello world.py", HTTPStatus.BAD_REQUEST),        # Space in filename
+        (r"3ight/hello.py", HTTPStatus.BAD_REQUEST),        # Directory starting with a number # noqa: B950
+        (r"hello_world//main.py", HTTPStatus.BAD_REQUEST),  # Double slash
+        (r"module.py.txt", HTTPStatus.BAD_REQUEST),         # Wrong extension
+        (r"/absolute/path.py", HTTPStatus.BAD_REQUEST),     # Absolute path
+        (r".py", HTTPStatus.BAD_REQUEST),                   # Just the extension
+        (r"hello.py/", HTTPStatus.BAD_REQUEST),             # Ends with a slash
+        (r"/hello.py", HTTPStatus.BAD_REQUEST),             # Starts with a slash
+        (r"hello..py", HTTPStatus.BAD_REQUEST),             # Double dot in extension
+        (r"hello.py.py", HTTPStatus.BAD_REQUEST),           # Double .py extension
+        (r"hello_.py", HTTPStatus.BAD_REQUEST),             # Ends with underscore before extension # noqa: B950
+        (r"_/hello.py", HTTPStatus.BAD_REQUEST),            # Single underscore directory name # noqa: B950
+        (r"hello/_.py", HTTPStatus.BAD_REQUEST),            # Single underscore filename
+        (r"hello/_file.py", HTTPStatus.BAD_REQUEST),        # Underscore start in nested file # noqa: B950
+        (r"HELLO.PY", HTTPStatus.BAD_REQUEST),              # Uppercase extension (assuming case-sensitive) # noqa: B950
+        (r"hello.pY", HTTPStatus.BAD_REQUEST),              # Mixed case extension
+        (r"hello/world/.py", HTTPStatus.BAD_REQUEST),       # Hidden file in nested directory # noqa: B950
+        (r"hello/.world/file.py", HTTPStatus.BAD_REQUEST),  # Hidden directory
+        (r" hello.py", HTTPStatus.BAD_REQUEST),             # Leading space
+        (r"hello.py ", HTTPStatus.BAD_REQUEST),             # Trailing space
+        (r"\thello.py", HTTPStatus.BAD_REQUEST),            # Tab character
+        (r"hello\world.py", HTTPStatus.BAD_REQUEST),        # Backslash instead of forward slash # noqa: B950
+        (r"hello:world.py", HTTPStatus.BAD_REQUEST),        # Invalid character (colon)
+        (r"hello@world.py", HTTPStatus.BAD_REQUEST),        # Invalid character (at sign) # noqa: B950
+        (r"hello/world.py/extra", HTTPStatus.BAD_REQUEST),  # Extra content after .py
+        (r"", HTTPStatus.BAD_REQUEST),                      # Empty string
+        (r"hello/", HTTPStatus.BAD_REQUEST),                # Directory without file
+        (r"hello.py/world.py", HTTPStatus.BAD_REQUEST),     # .py in middle of path
+        (r"1/2/3/4.py", HTTPStatus.BAD_REQUEST),            # All numeric directory names # noqa: B950
+        (r"../sample.py", HTTPStatus.BAD_REQUEST),          # No relative paths
+        (r"..sample.py", HTTPStatus.BAD_REQUEST),           # No prefix with dots
+        # fmt: on
+    ],
+)
+def test_plugin_file_filename_regex(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_plugins: dict[str, Any],
+    filename: str,
+    expected_status_code: HTTPStatus,
+) -> None:
+    """Test that the regular expression for validating plugin file filenames is able to
+    handle a variety of malformed inputs.
+
+    Given an authenticated user and a registered plugin, this test validates the
+    following sequence of actions:
+
+    - The user registers a plugin file with either a valid or invalid filename.
+    - The response status code returns 200 (OK) if the filename is valid or 400
+      (BAD REQUEST) if the filename is invalid.
+    """
+    registered_plugin = registered_plugins["plugin1"]
+    response = dioptra_client.plugins.files.create(
+        plugin_id=registered_plugin["id"],
+        filename=filename,
+        contents="# Empty file",
+        tasks=[],
+    )
+    assert response.status_code == expected_status_code
+
+
 def test_plugin_file_get_all(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
