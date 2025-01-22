@@ -77,7 +77,7 @@ def execute_in_session(statement) -> CursorResult | None:
     Args:
         statement (_type_): _description_
     """
-    result = None
+    result: CursorResult | None = None
     bind = op.get_bind()
     Session = sessionmaker(bind=bind)
     with Session() as session:
