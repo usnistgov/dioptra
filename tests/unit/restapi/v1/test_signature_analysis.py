@@ -25,7 +25,7 @@ from dioptra.client.client import DioptraClient
 
 expected_outputs = {}
 
-expected_outputs["test_real_world.py"] = [
+expected_outputs["sample_test_real_world.py"] = [
     {
         "name": "load_dataset",
         "inputs": [
@@ -321,11 +321,11 @@ expected_outputs["test_real_world.py"] = [
     },
 ]
 
-expected_outputs["test_alias.py"] = [
+expected_outputs["sample_test_alias.py"] = [
     {"name": "test_plugin", "inputs": [], "outputs": [], "missing_types": []}
 ]
 
-expected_outputs["test_complex_type.py"] = [
+expected_outputs["sample_test_complex_type.py"] = [
     {
         "name": "the_plugin",
         "inputs": [
@@ -343,7 +343,7 @@ expected_outputs["test_complex_type.py"] = [
     }
 ]
 
-expected_outputs["test_function_type.py"] = [
+expected_outputs["sample_test_function_type.py"] = [
     {
         "name": "plugin_func",
         "inputs": [
@@ -360,11 +360,11 @@ expected_outputs["test_function_type.py"] = [
     }
 ]
 
-expected_outputs["test_none_return.py"] = [
+expected_outputs["sample_test_none_return.py"] = [
     {"name": "my_plugin", "inputs": [], "outputs": [], "missing_types": []}
 ]
 
-expected_outputs["test_optional.py"] = [
+expected_outputs["sample_test_optional.py"] = [
     {
         "name": "do_things",
         "inputs": [
@@ -386,20 +386,20 @@ expected_outputs["test_optional.py"] = [
     }
 ]
 
-expected_outputs["test_pyplugs_alias.py"] = [
+expected_outputs["sample_test_pyplugs_alias.py"] = [
     {"name": "test_plugin", "inputs": [], "outputs": [], "missing_types": []}
 ]
 
-expected_outputs["test_redefinition.py"] = [
+expected_outputs["sample_test_redefinition.py"] = [
     {"name": "test_plugin", "inputs": [], "outputs": [], "missing_types": []},
     {"name": "test_plugin2", "inputs": [], "outputs": [], "missing_types": []},
 ]
 
-expected_outputs["test_register_alias.py"] = [
+expected_outputs["sample_test_register_alias.py"] = [
     {"name": "test_plugin", "inputs": [], "outputs": [], "missing_types": []}
 ]
 
-expected_outputs["test_type_conflict.py"] = [
+expected_outputs["sample_test_type_conflict.py"] = [
     {
         "name": "plugin_func",
         "inputs": [
