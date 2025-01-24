@@ -769,6 +769,7 @@ def remove_tag(
         follow_redirects=True,
     )
 
+
 def post_metrics(
     client: FlaskClient, job_id: int, metric_name: str, metric_value: float
 ) -> TestResponse:

@@ -25,7 +25,12 @@ from flask_restx import Namespace, Resource
 from injector import inject
 from structlog.stdlib import BoundLogger
 
-from .schema import FileTypes, JobFilesDownloadQueryParametersSchema, SignatureAnalysisSchema, SignatureAnalysisOutputSchema
+from .schema import (
+    FileTypes,
+    JobFilesDownloadQueryParametersSchema,
+    SignatureAnalysisOutputSchema,
+    SignatureAnalysisSchema,
+)
 from .service import JobFilesDownloadService, SignatureAnalysisService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()

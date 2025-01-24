@@ -15,9 +15,10 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 import pytest
-from dioptra.restapi.db.models.utils import depth_limited_repr
 import sqlalchemy as sa
 import sqlalchemy.orm as sao
+
+from dioptra.restapi.db.models.utils import depth_limited_repr
 
 
 class TestBase(sao.DeclarativeBase):
@@ -44,13 +45,14 @@ class C(TestBase):
 
 
 @pytest.mark.parametrize(
-    "struct, expected_repr", [
+    "struct, expected_repr",
+    [
         (1, "1"),
         ("a", "'a'"),
         (False, "False"),
         (None, "None"),
         (b"abc", "b'abc'"),
-        (bytearray(b'abc'), "bytearray(b'abc')"),
+        (bytearray(b"abc"), "bytearray(b'abc')"),
         ([], "[]"),
         ([1], "[1]"),
         ([1, "foo"], "[1, 'foo']"),
@@ -62,7 +64,7 @@ class C(TestBase):
         (range(3), "[0, 1, 2]"),
         ({1, 2, 3}, "[1, 2, 3]"),
         ((1, 2, 3), "[1, 2, 3]"),
-    ]
+    ],
 )
 def test_simple_repr(struct, expected_repr):
 
@@ -126,14 +128,7 @@ def test_orm_mixed():
     b = B(id=2)
     a = A(id=1, bs=[b])
 
-    value = {
-        "a": {
-            "b": [
-                1,
-                a
-            ]
-        }
-    }
+    value = {"a": {"b": [1, a]}}
 
     # depth does not affect traversal of plain data structures, only the
     # ORM instances

@@ -1,330 +1,426 @@
-expected_outputs = {}
-
-expected_outputs['test_real_world.py'] = [{'name': 'load_dataset',
-  'inputs': [{'name': 'ep_seed', 'type': 'integer', 'required': False},
-   {'name': 'training_dir', 'type': 'string', 'required': False},
-   {'name': 'testing_dir', 'type': 'string', 'required': False},
-   {'name': 'subsets', 'type': 'list_str', 'required': False},
-   {'name': 'image_size', 'type': 'tuple_int_int_int', 'required': False},
-   {'name': 'rescale', 'type': 'number', 'required': False},
-   {'name': 'validation_split', 'type': 'optional_float', 'required': False},
-   {'name': 'batch_size', 'type': 'integer', 'required': False},
-   {'name': 'label_mode', 'type': 'string', 'required': False},
-   {'name': 'shuffle', 'type': 'boolean', 'required': False}],
-  'outputs': [{'name': 'output', 'type': 'directoryiterator'}],
-  'missing_types': [{'proposed_type': 'list_str', 'missing_type': 'List[str]'},
-   {'proposed_type': 'tuple_int_int_int',
-    'missing_type': 'Tuple[int, int, int]'},
-   {'proposed_type': 'optional_float', 'missing_type': 'Optional[float]'},
-   {'proposed_type': 'directoryiterator',
-    'missing_type': 'DirectoryIterator'}]},
- {'name': 'create_model',
-  'inputs': [{'name': 'dataset',
-    'type': 'directoryiterator',
-    'required': False},
-   {'name': 'model_architecture', 'type': 'string', 'required': False},
-   {'name': 'input_shape', 'type': 'tuple_int_int_int', 'required': False},
-   {'name': 'loss', 'type': 'string', 'required': False},
-   {'name': 'learning_rate', 'type': 'number', 'required': False},
-   {'name': 'optimizer', 'type': 'string', 'required': False},
-   {'name': 'metrics_list', 'type': 'list_dict_str_any', 'required': False}],
-  'outputs': [],
-  'missing_types': [{'proposed_type': 'directoryiterator',
-    'missing_type': 'DirectoryIterator'},
-   {'proposed_type': 'tuple_int_int_int',
-    'missing_type': 'Tuple[int, int, int]'},
-   {'proposed_type': 'list_dict_str_any',
-    'missing_type': 'List[Dict[str, Any]]'}]},
- {'name': 'load_model',
-  'inputs': [{'name': 'model_name', 'type': 'str_none', 'required': False},
-   {'name': 'model_version', 'type': 'int_none', 'required': False},
-   {'name': 'imagenet_preprocessing', 'type': 'boolean', 'required': False},
-   {'name': 'art', 'type': 'boolean', 'required': False},
-   {'name': 'image_size', 'type': 'any', 'required': False},
-   {'name': 'classifier_kwargs',
-    'type': 'optional_dict_str_any',
-    'required': False}],
-  'outputs': [],
-  'missing_types': [{'proposed_type': 'str_none',
-    'missing_type': 'str | None'},
-   {'proposed_type': 'int_none', 'missing_type': 'int | None'},
-   {'proposed_type': 'optional_dict_str_any',
-    'missing_type': 'Optional[Dict[str, Any]]'}]},
- {'name': 'train',
-  'inputs': [{'name': 'estimator', 'type': 'any', 'required': True},
-   {'name': 'x', 'type': 'any', 'required': False},
-   {'name': 'y', 'type': 'any', 'required': False},
-   {'name': 'callbacks_list', 'type': 'list_dict_str_any', 'required': False},
-   {'name': 'fit_kwargs', 'type': 'optional_dict_str_any', 'required': False}],
-  'outputs': [],
-  'missing_types': [{'proposed_type': 'list_dict_str_any',
-    'missing_type': 'List[Dict[str, Any]]'},
-   {'proposed_type': 'optional_dict_str_any',
-    'missing_type': 'Optional[Dict[str, Any]]'}]},
- {'name': 'save_artifacts_and_models',
-  'inputs': [{'name': 'artifacts',
-    'type': 'list_dict_str_any',
-    'required': False},
-   {'name': 'models', 'type': 'list_dict_str_any', 'required': False}],
-  'outputs': [],
-  'missing_types': [{'proposed_type': 'list_dict_str_any',
-    'missing_type': 'List[Dict[str, Any]]'}]},
- {'name': 'load_artifacts_for_job',
-  'inputs': [{'name': 'job_id', 'type': 'string', 'required': True},
-   {'name': 'files', 'type': 'list_str_path', 'required': False},
-   {'name': 'extract_files', 'type': 'list_str_path', 'required': False}],
-  'outputs': [],
-  'missing_types': [{'proposed_type': 'list_str_path',
-    'missing_type': 'List[str | Path]'}]},
- {'name': 'load_artifacts',
-  'inputs': [{'name': 'artifact_ids', 'type': 'list_int', 'required': False},
-   {'name': 'extract_files', 'type': 'list_str_path', 'required': False}],
-  'outputs': [],
-  'missing_types': [{'proposed_type': 'list_int', 'missing_type': 'List[int]'},
-   {'proposed_type': 'list_str_path', 'missing_type': 'List[str | Path]'}]},
- {'name': 'attack_fgm',
-  'inputs': [{'name': 'dataset', 'type': 'any', 'required': True},
-   {'name': 'adv_data_dir', 'type': 'union_str_path', 'required': True},
-   {'name': 'classifier', 'type': 'any', 'required': True},
-   {'name': 'distance_metrics', 'type': 'list_dict_str_str', 'required': True},
-   {'name': 'batch_size', 'type': 'integer', 'required': False},
-   {'name': 'eps', 'type': 'number', 'required': False},
-   {'name': 'eps_step', 'type': 'number', 'required': False},
-   {'name': 'minimal', 'type': 'boolean', 'required': False},
-   {'name': 'norm', 'type': 'union_int_float_str', 'required': False}],
-  'outputs': [],
-  'missing_types': [{'proposed_type': 'union_str_path',
-    'missing_type': 'Union[str, Path]'},
-   {'proposed_type': 'list_dict_str_str',
-    'missing_type': 'List[Dict[str, str]]'},
-   {'proposed_type': 'union_int_float_str',
-    'missing_type': 'Union[int, float, str]'}]},
- {'name': 'attack_patch',
-  'inputs': [{'name': 'data_flow', 'type': 'any', 'required': True},
-   {'name': 'adv_data_dir', 'type': 'union_str_path', 'required': True},
-   {'name': 'model', 'type': 'any', 'required': True},
-   {'name': 'patch_target', 'type': 'integer', 'required': True},
-   {'name': 'num_patch', 'type': 'integer', 'required': True},
-   {'name': 'num_patch_samples', 'type': 'integer', 'required': True},
-   {'name': 'rotation_max', 'type': 'number', 'required': True},
-   {'name': 'scale_min', 'type': 'number', 'required': True},
-   {'name': 'scale_max', 'type': 'number', 'required': True},
-   {'name': 'learning_rate', 'type': 'number', 'required': True},
-   {'name': 'max_iter', 'type': 'integer', 'required': True},
-   {'name': 'patch_shape', 'type': 'tuple', 'required': True}],
-  'outputs': [],
-  'missing_types': [{'proposed_type': 'union_str_path',
-    'missing_type': 'Union[str, Path]'},
-   {'proposed_type': 'tuple', 'missing_type': 'Tuple'}]},
- {'name': 'augment_patch',
-  'inputs': [{'name': 'data_flow', 'type': 'any', 'required': True},
-   {'name': 'adv_data_dir', 'type': 'union_str_path', 'required': True},
-   {'name': 'patch_dir', 'type': 'union_str_path', 'required': True},
-   {'name': 'model', 'type': 'any', 'required': True},
-   {'name': 'patch_shape', 'type': 'tuple', 'required': True},
-   {'name': 'distance_metrics', 'type': 'list_dict_str_str', 'required': True},
-   {'name': 'batch_size', 'type': 'integer', 'required': False},
-   {'name': 'patch_scale', 'type': 'number', 'required': False},
-   {'name': 'rotation_max', 'type': 'number', 'required': False},
-   {'name': 'scale_min', 'type': 'number', 'required': False},
-   {'name': 'scale_max', 'type': 'number', 'required': False}],
-  'outputs': [],
-  'missing_types': [{'proposed_type': 'union_str_path',
-    'missing_type': 'Union[str, Path]'},
-   {'proposed_type': 'tuple', 'missing_type': 'Tuple'},
-   {'proposed_type': 'list_dict_str_str',
-    'missing_type': 'List[Dict[str, str]]'}]},
- {'name': 'model_metrics',
-  'inputs': [{'name': 'classifier', 'type': 'any', 'required': True},
-   {'name': 'dataset', 'type': 'any', 'required': True}],
-  'outputs': [],
-  'missing_types': []},
- {'name': 'prediction_metrics',
-  'inputs': [{'name': 'y_true', 'type': 'np_ndarray', 'required': True},
-   {'name': 'y_pred', 'type': 'np_ndarray', 'required': True},
-   {'name': 'metrics_list', 'type': 'list_dict_str_str', 'required': True},
-   {'name': 'func_kwargs',
-    'type': 'dict_str_dict_str_any',
-    'required': False}],
-  'outputs': [],
-  'missing_types': [{'proposed_type': 'np_ndarray',
-    'missing_type': 'np.ndarray'},
-   {'proposed_type': 'list_dict_str_str',
-    'missing_type': 'List[Dict[str, str]]'},
-   {'proposed_type': 'dict_str_dict_str_any',
-    'missing_type': 'Dict[str, Dict[str, Any]]'}]},
- {'name': 'augment_data',
-  'inputs': [{'name': 'dataset', 'type': 'any', 'required': True},
-   {'name': 'def_data_dir', 'type': 'union_str_path', 'required': True},
-   {'name': 'image_size', 'type': 'tuple_int_int_int', 'required': True},
-   {'name': 'distance_metrics', 'type': 'list_dict_str_str', 'required': True},
-   {'name': 'batch_size', 'type': 'integer', 'required': False},
-   {'name': 'def_type', 'type': 'string', 'required': False},
-   {'name': 'defense_kwargs',
-    'type': 'optional_dict_str_any',
-    'required': False}],
-  'outputs': [],
-  'missing_types': [{'proposed_type': 'union_str_path',
-    'missing_type': 'Union[str, Path]'},
-   {'proposed_type': 'tuple_int_int_int',
-    'missing_type': 'Tuple[int, int, int]'},
-   {'proposed_type': 'list_dict_str_str',
-    'missing_type': 'List[Dict[str, str]]'},
-   {'proposed_type': 'optional_dict_str_any',
-    'missing_type': 'Optional[Dict[str, Any]]'}]},
- {'name': 'predict',
-  'inputs': [{'name': 'classifier', 'type': 'any', 'required': True},
-   {'name': 'dataset', 'type': 'any', 'required': True},
-   {'name': 'show_actual', 'type': 'boolean', 'required': False},
-   {'name': 'show_target', 'type': 'boolean', 'required': False}],
-  'outputs': [],
-  'missing_types': []},
- {'name': 'load_predictions',
-  'inputs': [{'name': 'paths', 'type': 'list_str', 'required': True},
-   {'name': 'filename', 'type': 'string', 'required': True},
-   {'name': 'format', 'type': 'string', 'required': False},
-   {'name': 'dataset', 'type': 'directoryiterator', 'required': False},
-   {'name': 'n_classes', 'type': 'integer', 'required': False}],
-  'outputs': [],
-  'missing_types': [{'proposed_type': 'list_str', 'missing_type': 'List[str]'},
-   {'proposed_type': 'directoryiterator',
-    'missing_type': 'DirectoryIterator'}]}]
-
-expected_outputs['test_alias.py'] = [{
-    'name':'test_plugin',
-    'inputs': [],
-    'outputs': [],
-    'missing_types': []
-}]
-
-expected_outputs['test_complex_type.py'] = [{
-    'name':'the_plugin',
-    'inputs': [
-        {
-            'name': 'arg1',
-            'type': 'optional_str',
-            'required': True,
-        }
-    ],
-    'outputs': [
-        {
-            'name': 'output',
-            'type': 'union_int_bool'
-        }
-    ],
-    'missing_types': [
-        {'proposed_type': 'optional_str', 'missing_type': 'Optional[str]'},
-        {'proposed_type': 'union_int_bool', 'missing_type': 'Union[int, bool]'},
-    ]
-}]
-
-expected_outputs['test_function_type.py'] = [{
-    'name':'plugin_func',
-    'inputs': [
-        {
-            'name': 'arg1',
-            'type': 'type1',
-            'required': True,
-        }
-    ],
-    'outputs': [
-        {
-            'name': 'output',
-            'type': 'type1'
-        }
-    ],
-    'missing_types': [
-        {'proposed_type': 'type1', 'missing_type': 'foo(2)'},
-    ]
-}]
-
-expected_outputs['test_none_return.py'] = [{
-    'name':'my_plugin',
-    'inputs': [],
-    'outputs': [],
-    'missing_types': []
-}]
-
-expected_outputs['test_optional.py'] = [{
-    'name':'do_things',
-    'inputs': [        
-        {
-            'name': 'arg1',
-            'type': 'optional_str',
-            'required': True,
-        },
-        {
-            'name': 'arg2',
-            'type': 'integer',
-            'required': False,
-        },
-
-    ],
-    'outputs': [],
-    'missing_types': [
-        {'proposed_type': 'optional_str', 'missing_type': 'Optional[str]'},        
-    ]
-}]
-
-expected_outputs['test_pyplugs_alias.py'] = [{
-    'name':'test_plugin',
-    'inputs': [],
-    'outputs': [],
-    'missing_types': []
-}]
-
-expected_outputs['test_redefinition.py'] = [{
-    'name':'test_plugin',
-    'inputs': [],
-    'outputs': [],
-    'missing_types': []
-},{
-    'name':'test_plugin2',
-    'inputs': [],
-    'outputs': [],
-    'missing_types': []
-}]
-
-expected_outputs['test_register_alias.py'] = [{
-    'name':'test_plugin',
-    'inputs': [],
-    'outputs': [],
-    'missing_types': []
-}]
-
-expected_outputs['test_type_conflict.py'] = [{
-    'name':'plugin_func',
-    'inputs': [
-        {
-            'name': 'arg1',
-            'type': 'type2',
-            'required': True,
-        },
-        {
-            'name': 'arg2',
-            'type': 'type1',
-            'required': True,
-        }
-    ],
-    'outputs': [
-        {
-            'name': 'output',
-            'type': 'type2'
-        }
-    ],
-    'missing_types': [
-        {'proposed_type': 'type2', 'missing_type': 'foo(2)'},
-        {'proposed_type': 'type1', 'missing_type': 'Type1'},
-    ]
-}]
-
+# This Software (Dioptra) is being made available as a public service by the
+# National Institute of Standards and Technology (NIST), an Agency of the United
+# States Department of Commerce. This software was developed in part by employees of
+# NIST and in part by NIST contractors. Copyright in portions of this software that
+# were developed by NIST contractors has been licensed or assigned to NIST. Pursuant
+# to Title 17 United States Code Section 105, works of NIST employees are not
+# subject to copyright protection in the United States. However, NIST may hold
+# international copyright in software created by its employees and domestic
+# copyright (or licensing rights) in portions of software that were assigned or
+# licensed to NIST. To the extent that NIST holds copyright in this software, it is
+# being made available under the Creative Commons Attribution 4.0 International
+# license (CC BY 4.0). The disclaimers of the CC BY 4.0 license apply to all parts
+# of the software developed or licensed by NIST.
+#
+# ACCESS THE FULL CC BY 4.0 LICENSE HERE:
+# https://creativecommons.org/licenses/by/4.0/legalcode
+from http import HTTPStatus
 from pathlib import Path
 from typing import Any
-from http import HTTPStatus
+
 from flask_sqlalchemy import SQLAlchemy
 
 from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
+
+expected_outputs = {}
+
+expected_outputs["test_real_world.py"] = [
+    {
+        "name": "load_dataset",
+        "inputs": [
+            {"name": "ep_seed", "type": "integer", "required": False},
+            {"name": "training_dir", "type": "string", "required": False},
+            {"name": "testing_dir", "type": "string", "required": False},
+            {"name": "subsets", "type": "list_str", "required": False},
+            {"name": "image_size", "type": "tuple_int_int_int", "required": False},
+            {"name": "rescale", "type": "number", "required": False},
+            {"name": "validation_split", "type": "optional_float", "required": False},
+            {"name": "batch_size", "type": "integer", "required": False},
+            {"name": "label_mode", "type": "string", "required": False},
+            {"name": "shuffle", "type": "boolean", "required": False},
+        ],
+        "outputs": [{"name": "output", "type": "directoryiterator"}],
+        "missing_types": [
+            {"proposed_type": "list_str", "missing_type": "List[str]"},
+            {
+                "proposed_type": "tuple_int_int_int",
+                "missing_type": "Tuple[int, int, int]",
+            },
+            {"proposed_type": "optional_float", "missing_type": "Optional[float]"},
+            {"proposed_type": "directoryiterator", "missing_type": "DirectoryIterator"},
+        ],
+    },
+    {
+        "name": "create_model",
+        "inputs": [
+            {"name": "dataset", "type": "directoryiterator", "required": False},
+            {"name": "model_architecture", "type": "string", "required": False},
+            {"name": "input_shape", "type": "tuple_int_int_int", "required": False},
+            {"name": "loss", "type": "string", "required": False},
+            {"name": "learning_rate", "type": "number", "required": False},
+            {"name": "optimizer", "type": "string", "required": False},
+            {"name": "metrics_list", "type": "list_dict_str_any", "required": False},
+        ],
+        "outputs": [],
+        "missing_types": [
+            {"proposed_type": "directoryiterator", "missing_type": "DirectoryIterator"},
+            {
+                "proposed_type": "tuple_int_int_int",
+                "missing_type": "Tuple[int, int, int]",
+            },
+            {
+                "proposed_type": "list_dict_str_any",
+                "missing_type": "List[Dict[str, Any]]",
+            },
+        ],
+    },
+    {
+        "name": "load_model",
+        "inputs": [
+            {"name": "model_name", "type": "str_none", "required": False},
+            {"name": "model_version", "type": "int_none", "required": False},
+            {"name": "imagenet_preprocessing", "type": "boolean", "required": False},
+            {"name": "art", "type": "boolean", "required": False},
+            {"name": "image_size", "type": "any", "required": False},
+            {
+                "name": "classifier_kwargs",
+                "type": "optional_dict_str_any",
+                "required": False,
+            },
+        ],
+        "outputs": [],
+        "missing_types": [
+            {"proposed_type": "str_none", "missing_type": "str | None"},
+            {"proposed_type": "int_none", "missing_type": "int | None"},
+            {
+                "proposed_type": "optional_dict_str_any",
+                "missing_type": "Optional[Dict[str, Any]]",
+            },
+        ],
+    },
+    {
+        "name": "train",
+        "inputs": [
+            {"name": "estimator", "type": "any", "required": True},
+            {"name": "x", "type": "any", "required": False},
+            {"name": "y", "type": "any", "required": False},
+            {"name": "callbacks_list", "type": "list_dict_str_any", "required": False},
+            {"name": "fit_kwargs", "type": "optional_dict_str_any", "required": False},
+        ],
+        "outputs": [],
+        "missing_types": [
+            {
+                "proposed_type": "list_dict_str_any",
+                "missing_type": "List[Dict[str, Any]]",
+            },
+            {
+                "proposed_type": "optional_dict_str_any",
+                "missing_type": "Optional[Dict[str, Any]]",
+            },
+        ],
+    },
+    {
+        "name": "save_artifacts_and_models",
+        "inputs": [
+            {"name": "artifacts", "type": "list_dict_str_any", "required": False},
+            {"name": "models", "type": "list_dict_str_any", "required": False},
+        ],
+        "outputs": [],
+        "missing_types": [
+            {
+                "proposed_type": "list_dict_str_any",
+                "missing_type": "List[Dict[str, Any]]",
+            }
+        ],
+    },
+    {
+        "name": "load_artifacts_for_job",
+        "inputs": [
+            {"name": "job_id", "type": "string", "required": True},
+            {"name": "files", "type": "list_str_path", "required": False},
+            {"name": "extract_files", "type": "list_str_path", "required": False},
+        ],
+        "outputs": [],
+        "missing_types": [
+            {"proposed_type": "list_str_path", "missing_type": "List[str | Path]"}
+        ],
+    },
+    {
+        "name": "load_artifacts",
+        "inputs": [
+            {"name": "artifact_ids", "type": "list_int", "required": False},
+            {"name": "extract_files", "type": "list_str_path", "required": False},
+        ],
+        "outputs": [],
+        "missing_types": [
+            {"proposed_type": "list_int", "missing_type": "List[int]"},
+            {"proposed_type": "list_str_path", "missing_type": "List[str | Path]"},
+        ],
+    },
+    {
+        "name": "attack_fgm",
+        "inputs": [
+            {"name": "dataset", "type": "any", "required": True},
+            {"name": "adv_data_dir", "type": "union_str_path", "required": True},
+            {"name": "classifier", "type": "any", "required": True},
+            {"name": "distance_metrics", "type": "list_dict_str_str", "required": True},
+            {"name": "batch_size", "type": "integer", "required": False},
+            {"name": "eps", "type": "number", "required": False},
+            {"name": "eps_step", "type": "number", "required": False},
+            {"name": "minimal", "type": "boolean", "required": False},
+            {"name": "norm", "type": "union_int_float_str", "required": False},
+        ],
+        "outputs": [],
+        "missing_types": [
+            {"proposed_type": "union_str_path", "missing_type": "Union[str, Path]"},
+            {
+                "proposed_type": "list_dict_str_str",
+                "missing_type": "List[Dict[str, str]]",
+            },
+            {
+                "proposed_type": "union_int_float_str",
+                "missing_type": "Union[int, float, str]",
+            },
+        ],
+    },
+    {
+        "name": "attack_patch",
+        "inputs": [
+            {"name": "data_flow", "type": "any", "required": True},
+            {"name": "adv_data_dir", "type": "union_str_path", "required": True},
+            {"name": "model", "type": "any", "required": True},
+            {"name": "patch_target", "type": "integer", "required": True},
+            {"name": "num_patch", "type": "integer", "required": True},
+            {"name": "num_patch_samples", "type": "integer", "required": True},
+            {"name": "rotation_max", "type": "number", "required": True},
+            {"name": "scale_min", "type": "number", "required": True},
+            {"name": "scale_max", "type": "number", "required": True},
+            {"name": "learning_rate", "type": "number", "required": True},
+            {"name": "max_iter", "type": "integer", "required": True},
+            {"name": "patch_shape", "type": "tuple", "required": True},
+        ],
+        "outputs": [],
+        "missing_types": [
+            {"proposed_type": "union_str_path", "missing_type": "Union[str, Path]"},
+            {"proposed_type": "tuple", "missing_type": "Tuple"},
+        ],
+    },
+    {
+        "name": "augment_patch",
+        "inputs": [
+            {"name": "data_flow", "type": "any", "required": True},
+            {"name": "adv_data_dir", "type": "union_str_path", "required": True},
+            {"name": "patch_dir", "type": "union_str_path", "required": True},
+            {"name": "model", "type": "any", "required": True},
+            {"name": "patch_shape", "type": "tuple", "required": True},
+            {"name": "distance_metrics", "type": "list_dict_str_str", "required": True},
+            {"name": "batch_size", "type": "integer", "required": False},
+            {"name": "patch_scale", "type": "number", "required": False},
+            {"name": "rotation_max", "type": "number", "required": False},
+            {"name": "scale_min", "type": "number", "required": False},
+            {"name": "scale_max", "type": "number", "required": False},
+        ],
+        "outputs": [],
+        "missing_types": [
+            {"proposed_type": "union_str_path", "missing_type": "Union[str, Path]"},
+            {"proposed_type": "tuple", "missing_type": "Tuple"},
+            {
+                "proposed_type": "list_dict_str_str",
+                "missing_type": "List[Dict[str, str]]",
+            },
+        ],
+    },
+    {
+        "name": "model_metrics",
+        "inputs": [
+            {"name": "classifier", "type": "any", "required": True},
+            {"name": "dataset", "type": "any", "required": True},
+        ],
+        "outputs": [],
+        "missing_types": [],
+    },
+    {
+        "name": "prediction_metrics",
+        "inputs": [
+            {"name": "y_true", "type": "np_ndarray", "required": True},
+            {"name": "y_pred", "type": "np_ndarray", "required": True},
+            {"name": "metrics_list", "type": "list_dict_str_str", "required": True},
+            {"name": "func_kwargs", "type": "dict_str_dict_str_any", "required": False},
+        ],
+        "outputs": [],
+        "missing_types": [
+            {"proposed_type": "np_ndarray", "missing_type": "np.ndarray"},
+            {
+                "proposed_type": "list_dict_str_str",
+                "missing_type": "List[Dict[str, str]]",
+            },
+            {
+                "proposed_type": "dict_str_dict_str_any",
+                "missing_type": "Dict[str, Dict[str, Any]]",
+            },
+        ],
+    },
+    {
+        "name": "augment_data",
+        "inputs": [
+            {"name": "dataset", "type": "any", "required": True},
+            {"name": "def_data_dir", "type": "union_str_path", "required": True},
+            {"name": "image_size", "type": "tuple_int_int_int", "required": True},
+            {"name": "distance_metrics", "type": "list_dict_str_str", "required": True},
+            {"name": "batch_size", "type": "integer", "required": False},
+            {"name": "def_type", "type": "string", "required": False},
+            {
+                "name": "defense_kwargs",
+                "type": "optional_dict_str_any",
+                "required": False,
+            },
+        ],
+        "outputs": [],
+        "missing_types": [
+            {"proposed_type": "union_str_path", "missing_type": "Union[str, Path]"},
+            {
+                "proposed_type": "tuple_int_int_int",
+                "missing_type": "Tuple[int, int, int]",
+            },
+            {
+                "proposed_type": "list_dict_str_str",
+                "missing_type": "List[Dict[str, str]]",
+            },
+            {
+                "proposed_type": "optional_dict_str_any",
+                "missing_type": "Optional[Dict[str, Any]]",
+            },
+        ],
+    },
+    {
+        "name": "predict",
+        "inputs": [
+            {"name": "classifier", "type": "any", "required": True},
+            {"name": "dataset", "type": "any", "required": True},
+            {"name": "show_actual", "type": "boolean", "required": False},
+            {"name": "show_target", "type": "boolean", "required": False},
+        ],
+        "outputs": [],
+        "missing_types": [],
+    },
+    {
+        "name": "load_predictions",
+        "inputs": [
+            {"name": "paths", "type": "list_str", "required": True},
+            {"name": "filename", "type": "string", "required": True},
+            {"name": "format", "type": "string", "required": False},
+            {"name": "dataset", "type": "directoryiterator", "required": False},
+            {"name": "n_classes", "type": "integer", "required": False},
+        ],
+        "outputs": [],
+        "missing_types": [
+            {"proposed_type": "list_str", "missing_type": "List[str]"},
+            {"proposed_type": "directoryiterator", "missing_type": "DirectoryIterator"},
+        ],
+    },
+]
+
+expected_outputs["test_alias.py"] = [
+    {"name": "test_plugin", "inputs": [], "outputs": [], "missing_types": []}
+]
+
+expected_outputs["test_complex_type.py"] = [
+    {
+        "name": "the_plugin",
+        "inputs": [
+            {
+                "name": "arg1",
+                "type": "optional_str",
+                "required": True,
+            }
+        ],
+        "outputs": [{"name": "output", "type": "union_int_bool"}],
+        "missing_types": [
+            {"proposed_type": "optional_str", "missing_type": "Optional[str]"},
+            {"proposed_type": "union_int_bool", "missing_type": "Union[int, bool]"},
+        ],
+    }
+]
+
+expected_outputs["test_function_type.py"] = [
+    {
+        "name": "plugin_func",
+        "inputs": [
+            {
+                "name": "arg1",
+                "type": "type1",
+                "required": True,
+            }
+        ],
+        "outputs": [{"name": "output", "type": "type1"}],
+        "missing_types": [
+            {"proposed_type": "type1", "missing_type": "foo(2)"},
+        ],
+    }
+]
+
+expected_outputs["test_none_return.py"] = [
+    {"name": "my_plugin", "inputs": [], "outputs": [], "missing_types": []}
+]
+
+expected_outputs["test_optional.py"] = [
+    {
+        "name": "do_things",
+        "inputs": [
+            {
+                "name": "arg1",
+                "type": "optional_str",
+                "required": True,
+            },
+            {
+                "name": "arg2",
+                "type": "integer",
+                "required": False,
+            },
+        ],
+        "outputs": [],
+        "missing_types": [
+            {"proposed_type": "optional_str", "missing_type": "Optional[str]"},
+        ],
+    }
+]
+
+expected_outputs["test_pyplugs_alias.py"] = [
+    {"name": "test_plugin", "inputs": [], "outputs": [], "missing_types": []}
+]
+
+expected_outputs["test_redefinition.py"] = [
+    {"name": "test_plugin", "inputs": [], "outputs": [], "missing_types": []},
+    {"name": "test_plugin2", "inputs": [], "outputs": [], "missing_types": []},
+]
+
+expected_outputs["test_register_alias.py"] = [
+    {"name": "test_plugin", "inputs": [], "outputs": [], "missing_types": []}
+]
+
+expected_outputs["test_type_conflict.py"] = [
+    {
+        "name": "plugin_func",
+        "inputs": [
+            {
+                "name": "arg1",
+                "type": "type2",
+                "required": True,
+            },
+            {
+                "name": "arg2",
+                "type": "type1",
+                "required": True,
+            },
+        ],
+        "outputs": [{"name": "output", "type": "type2"}],
+        "missing_types": [
+            {"proposed_type": "type2", "missing_type": "foo(2)"},
+            {"proposed_type": "type1", "missing_type": "Type1"},
+        ],
+    }
+]
 
 # -- Assertions ------------------------------------------------------------------------
 
@@ -358,20 +454,26 @@ def assert_signature_analysis_response_matches_expectations(
     assert isinstance(response["missing_types"], list)
     assert isinstance(response["inputs"], list)
 
-    def sort_by_name(lst, k='name'):
+    def sort_by_name(lst, k="name"):
         return sorted(lst, key=lambda x: x[k])
 
-    assert sort_by_name(response["outputs"]) == sort_by_name(expected_contents["outputs"])
+    assert sort_by_name(response["outputs"]) == sort_by_name(
+        expected_contents["outputs"]
+    )
     assert sort_by_name(response["inputs"]) == sort_by_name(expected_contents["inputs"])
-    assert sort_by_name(response["missing_types"], k='proposed_type') == sort_by_name(expected_contents["missing_types"], k='proposed_type')
-    
+    assert sort_by_name(response["missing_types"], k="proposed_type") == sort_by_name(
+        expected_contents["missing_types"], k="proposed_type"
+    )
+
 
 def assert_signature_analysis_responses_matches_expectations(
     responses: list[dict[str, Any]], expected_contents: list[dict[str, Any]]
 ) -> None:
-    assert (len(responses) == len(expected_contents))
+    assert len(responses) == len(expected_contents)
     for response in responses:
-        assert_signature_analysis_response_matches_expectations(response, [a for a in expected_contents if a['name']==response['name']][0])
+        assert_signature_analysis_response_matches_expectations(
+            response, [a for a in expected_contents if a["name"] == response["name"]][0]
+        )
 
 
 def assert_signature_analysis_file_load_and_contents(
@@ -380,18 +482,26 @@ def assert_signature_analysis_file_load_and_contents(
 ):
     location = Path("tests/unit/restapi/v1/signature_analysis") / filename
     file_analysis = dioptra_client.workflows.signature_analysis_file(str(location))
-    with location.open('r') as f:
-      contents = f.read()
-    contents_analysis = dioptra_client.workflows.signature_analysis_contents(contents, filename)
+    with location.open("r") as f:
+        contents = f.read()
+    contents_analysis = dioptra_client.workflows.signature_analysis_contents(
+        contents, filename
+    )
 
-    assert(file_analysis.status_code == HTTPStatus.OK)
-    assert(contents_analysis.status_code == HTTPStatus.OK)
-    
-    assert_signature_analysis_responses_matches_expectations(file_analysis.json()["plugins"], expected_contents=expected_outputs[filename])
-    assert_signature_analysis_responses_matches_expectations(contents_analysis.json()["plugins"], expected_contents=expected_outputs[filename])
+    assert file_analysis.status_code == HTTPStatus.OK
+    assert contents_analysis.status_code == HTTPStatus.OK
+
+    assert_signature_analysis_responses_matches_expectations(
+        file_analysis.json()["plugins"], expected_contents=expected_outputs[filename]
+    )
+    assert_signature_analysis_responses_matches_expectations(
+        contents_analysis.json()["plugins"],
+        expected_contents=expected_outputs[filename],
+    )
 
 
 # -- Tests -----------------------------------------------------------------------------
+
 
 def test_signature_analysis(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
@@ -408,4 +518,6 @@ def test_signature_analysis(
     """
 
     for fn in expected_outputs:
-        assert_signature_analysis_file_load_and_contents(dioptra_client=dioptra_client, filename=fn)
+        assert_signature_analysis_file_load_and_contents(
+            dioptra_client=dioptra_client, filename=fn
+        )

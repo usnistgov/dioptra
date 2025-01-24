@@ -137,7 +137,7 @@ def not_a_plugin():
 def test_plugin_recognition_complex():
     source = """\
 from dioptra.pyplugs import register
-import aaa 
+import aaa
 
 @register()
 def test_plugin():
@@ -149,7 +149,7 @@ def not_a_plugin():
 
 class SomeClass:
     pass
-    
+
 def some_other_func():
     pass
 
@@ -199,7 +199,7 @@ def test_plugin(
                 {"name": "arg5", "required": True, "type": "null"},
             ],
             "outputs": [],
-            "suggested_types": []
+            "suggested_types": [],
         }
     ]
 
@@ -216,12 +216,7 @@ def my_plugin() -> None:
 
     signatures = list(get_plugin_signatures(source))
     assert signatures == [
-        {
-            "name": "my_plugin",
-            "inputs": [],
-            "outputs": [],
-            "suggested_types": []
-        }
+        {"name": "my_plugin", "inputs": [], "outputs": [], "suggested_types": []}
     ]
 
 
@@ -238,15 +233,11 @@ def the_plugin(arg1: SomeType) -> SomeType:
     assert signatures == [
         {
             "name": "the_plugin",
-            "inputs": [
-                {"name": "arg1", "required": True, "type": "sometype"}
-            ],
-            "outputs": [
-                {"name": "output", "type": "sometype"}
-            ],
+            "inputs": [{"name": "arg1", "required": True, "type": "sometype"}],
+            "outputs": [{"name": "output", "type": "sometype"}],
             "suggested_types": [
                 {"suggestion": "sometype", "type_annotation": "SomeType"}
-            ]
+            ],
         }
     ]
 
@@ -264,16 +255,12 @@ def the_plugin(arg1: Optional[str]) -> Union[int, bool]:
     assert signatures == [
         {
             "name": "the_plugin",
-            "inputs": [
-                {"name": "arg1", "required": True, "type": "optional_str"}
-            ],
-            "outputs": [
-                {"name": "output", "type": "union_int_bool"}
-            ],
+            "inputs": [{"name": "arg1", "required": True, "type": "optional_str"}],
+            "outputs": [{"name": "output", "type": "union_int_bool"}],
             "suggested_types": [
                 {"suggestion": "optional_str", "type_annotation": "Optional[str]"},
-                {"suggestion": "union_int_bool", "type_annotation": "Union[int, bool]"}
-            ]
+                {"suggestion": "union_int_bool", "type_annotation": "Union[int, bool]"},
+            ],
         }
     ]
 
@@ -292,15 +279,9 @@ def plugin_func(arg1: foo(2)) -> foo(2):
     assert signatures == [
         {
             "name": "plugin_func",
-            "inputs": [
-                {"name": "arg1", "required": True, "type": "type1"}
-            ],
-            "outputs": [
-                {"name": "output", "type": "type1"}
-            ],
-            "suggested_types": [
-                {"suggestion": "type1", "type_annotation": "foo(2)"}
-            ]
+            "inputs": [{"name": "arg1", "required": True, "type": "type1"}],
+            "outputs": [{"name": "output", "type": "type1"}],
+            "suggested_types": [{"suggestion": "type1", "type_annotation": "foo(2)"}],
         }
     ]
 
@@ -323,15 +304,13 @@ def plugin_func(arg1: foo(2), arg2: Type1) -> foo(2):
             "name": "plugin_func",
             "inputs": [
                 {"name": "arg1", "required": True, "type": "type2"},
-                {"name": "arg2", "required": True, "type": "type1"}
+                {"name": "arg2", "required": True, "type": "type1"},
             ],
-            "outputs": [
-                {"name": "output", "type": "type2"}
-            ],
+            "outputs": [{"name": "output", "type": "type2"}],
             "suggested_types": [
                 {"suggestion": "type1", "type_annotation": "Type1"},
-                {"suggestion": "type2", "type_annotation": "foo(2)"}
-            ]
+                {"suggestion": "type2", "type_annotation": "foo(2)"},
+            ],
         }
     ]
 
@@ -351,11 +330,11 @@ def do_things(arg1: Optional[str], arg2: int = 123):
             "name": "do_things",
             "inputs": [
                 {"name": "arg1", "required": True, "type": "optional_str"},
-                {"name": "arg2", "required": False, "type": "integer"}
+                {"name": "arg2", "required": False, "type": "integer"},
             ],
             "outputs": [],
             "suggested_types": [
                 {"suggestion": "optional_str", "type_annotation": "Optional[str]"}
-            ]
+            ],
         }
     ]
