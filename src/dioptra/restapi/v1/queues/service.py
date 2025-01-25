@@ -23,10 +23,9 @@ from typing import Any, Final
 import structlog
 from flask_login import current_user
 from injector import inject
-from sqlalchemy import Integer, select
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.db import db, models
+from dioptra.restapi.db import models
 from dioptra.restapi.db.repository.utils import DeletionPolicy
 from dioptra.restapi.db.unit_of_work import UnitOfWork
 from dioptra.restapi.errors import EntityDoesNotExistError
@@ -147,20 +146,16 @@ class QueueService(object):
             DeletionPolicy.NOT_DELETED,
         )
 
-        drafts_stmt = select(
-            models.DraftResource.payload["resource_id"].as_string().cast(Integer)
-        ).where(
-            models.DraftResource.payload["resource_id"]
-            .as_string()
-            .cast(Integer)
-            .in_(tuple(queue.resource_id for queue in queues)),
-            models.DraftResource.user_id == current_user.user_id,
-        )
         queues_dict: dict[int, utils.QueueDict] = {
             queue.resource_id: utils.QueueDict(queue=queue, has_draft=False)
             for queue in queues
         }
-        for resource_id in db.session.scalars(drafts_stmt):
+
+        resource_ids_with_drafts = self._uow.drafts_repo.has_draft_modifications(
+            queues,
+            current_user,
+        )
+        for resource_id in resource_ids_with_drafts:
             queues_dict[resource_id]["has_draft"] = True
 
         return list(queues_dict.values()), total_num_queues
@@ -222,17 +217,10 @@ class QueueIdService(object):
             else:
                 return None
 
-        drafts_stmt = (
-            select(models.DraftResource.draft_resource_id)
-            .where(
-                models.DraftResource.payload["resource_id"].as_string().cast(Integer)
-                == queue.resource_id,
-                models.DraftResource.user_id == current_user.user_id,
-            )
-            .exists()
-            .select()
+        has_draft = self._uow.drafts_repo.has_draft_modification(
+            queue,
+            current_user,
         )
-        has_draft = db.session.scalar(drafts_stmt)
 
         return utils.QueueDict(queue=queue, has_draft=has_draft)
 

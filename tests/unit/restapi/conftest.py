@@ -37,6 +37,7 @@ from requests import ConnectionError
 from requests import Session as RequestsSession
 
 from dioptra.restapi.db import db as restapi_db
+from dioptra.restapi.db.repository.drafts import DraftsRepository
 from dioptra.restapi.db.repository.groups import GroupRepository
 from dioptra.restapi.db.repository.queues import QueueRepository
 from dioptra.restapi.db.repository.users import UserRepository
@@ -256,6 +257,13 @@ def user_repo(db: SQLAlchemy) -> UserRepository:
 @pytest.fixture
 def queue_repo(db: SQLAlchemy) -> QueueRepository:
     repo = QueueRepository(db.session)
+
+    return repo
+
+
+@pytest.fixture
+def drafts_repo(db: SQLAlchemy) -> DraftsRepository:
+    repo = DraftsRepository(db.session)
 
     return repo
 

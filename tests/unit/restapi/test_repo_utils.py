@@ -463,6 +463,9 @@ def test_snapshot_exists(db, fake_data, account):
     result = utils.snapshot_exists(db.session, queue)
     assert result
 
+    result = utils.snapshot_exists(db.session, queue.resource_snapshot_id)
+    assert result
+
 
 def test_snapshot_not_exists(db, fake_data, account):
     queue = fake_data.queue(account.user, account.group)
@@ -473,6 +476,9 @@ def test_snapshot_not_exists(db, fake_data, account):
     result = utils.snapshot_exists(db.session, queue)
     assert not result
 
+    result = utils.snapshot_exists(db.session, queue.resource_snapshot_id)
+    assert not result
+
 
 def test_assert_snapshot_exists(db, fake_data, account):
     queue = fake_data.queue(account.user, account.group)
@@ -480,6 +486,7 @@ def test_assert_snapshot_exists(db, fake_data, account):
     db.session.commit()
 
     utils.assert_snapshot_exists(db.session, queue)
+    utils.assert_snapshot_exists(db.session, queue.resource_snapshot_id)
 
 
 def test_assert_snapshot_exists_not_exists(db, fake_data, account):
@@ -487,6 +494,9 @@ def test_assert_snapshot_exists_not_exists(db, fake_data, account):
 
     with pytest.raises(EntityDoesNotExistError):
         utils.assert_snapshot_exists(db.session, queue)
+
+    with pytest.raises(EntityDoesNotExistError):
+        utils.assert_snapshot_exists(db.session, 999999)
 
 
 def test_assert_snapshot_does_not_exist(db, fake_data, account):
@@ -497,11 +507,15 @@ def test_assert_snapshot_does_not_exist(db, fake_data, account):
     with pytest.raises(EntityExistsError):
         utils.assert_snapshot_does_not_exist(db.session, queue)
 
+    with pytest.raises(EntityExistsError):
+        utils.assert_snapshot_does_not_exist(db.session, queue.resource_snapshot_id)
+
 
 def test_assert_snapshot_does_not_exist_not_exists(db, fake_data, account):
     queue = fake_data.queue(account.user, account.group)
 
     utils.assert_snapshot_does_not_exist(db.session, queue)
+    utils.assert_snapshot_does_not_exist(db.session, 999999)
 
 
 def test_delete_resource(db, account, fake_data):

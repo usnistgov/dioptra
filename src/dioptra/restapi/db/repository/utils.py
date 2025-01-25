@@ -23,6 +23,7 @@ import sqlalchemy.sql.expression as sae
 from sqlalchemy.orm import Session, aliased, scoped_session
 
 from dioptra.restapi.db.models import (
+    DraftResource,
     Group,
     GroupLock,
     GroupMember,
@@ -38,6 +39,8 @@ from dioptra.restapi.db.models.constants import (
     user_lock_types,
 )
 from dioptra.restapi.errors import (
+    DraftAlreadyExistsError,
+    DraftDoesNotExistError,
     EntityDeletedError,
     EntityDoesNotExistError,
     EntityExistsError,
@@ -158,6 +161,50 @@ def get_resource_id(resource: Resource | ResourceSnapshot | int) -> int | None:
             resource_id = resource.resource.resource_id
 
     return resource_id
+
+
+def get_draft_id(draft: DraftResource | int) -> int | None:
+    """
+    Helper for APIs which allow a DraftResource object or draft_resource_id
+    integer primary key value.  This normalizes the value to the
+    draft_resource_id value, or None (if a DraftResource object was passed
+    with a null .draft_resource_id attribute).
+
+    Args:
+        draft: A DraftResource object or draft_resource_id integer primary key
+            value
+
+    Returns:
+        A draft ID or None
+    """
+    if isinstance(draft, int):
+        draft_id = draft
+    else:
+        draft_id = draft.draft_resource_id
+
+    return draft_id
+
+
+def get_resource_snapshot_id(snapshot: ResourceSnapshot | int) -> int | None:
+    """
+    Helper for APIs which allow a ResourceSnapshot object or
+    resource_snapshot_id integer primary key value.  This normalizes the value
+    to the resource_snapshot_id value, or None (if a ResourceSnapshot object
+    was passed with a null .resource_snapshot_id attribute).
+
+    Args:
+        snapshot: A ResourceSnapshot object or resource_snapshot_id integer
+            primary key value
+
+    Returns:
+        A resource snapshot ID or None
+    """
+    if isinstance(snapshot, int):
+        snapshot_id = snapshot
+    else:
+        snapshot_id = snapshot.resource_snapshot_id
+
+    return snapshot_id
 
 
 def user_exists(session: CompatibleSession[S], user: User | int) -> ExistenceResult:
@@ -289,7 +336,9 @@ def resource_exists(
     return exists
 
 
-def snapshot_exists(session: CompatibleSession[S], snapshot: ResourceSnapshot) -> bool:
+def snapshot_exists(
+    session: CompatibleSession[S], snapshot: ResourceSnapshot | int
+) -> bool:
     """
     Check whether the given snapshot exists in the database.  Snapshots can't
     be individually deleted (only the resources), so a deletion check is not
@@ -297,22 +346,24 @@ def snapshot_exists(session: CompatibleSession[S], snapshot: ResourceSnapshot) -
 
     Args:
         session: An SQLAlchemy session
-        snapshot: Any snapshot object
+        snapshot: A snapshot object or resource_snapshot_id integer primary key
+            value
 
     Returns:
         True if the snapshot exists; False if not
     """
 
-    if snapshot.resource_snapshot_id is None:
+    snapshot_id = get_resource_snapshot_id(snapshot)
+
+    exists: bool | None
+    if snapshot_id is None:
         exists = False
 
     else:
         sub_stmt: sa.Select = (
             sa.select(sa.literal_column("1"))
             .select_from(ResourceSnapshot)
-            .where(
-                ResourceSnapshot.resource_snapshot_id == snapshot.resource_snapshot_id
-            )
+            .where(ResourceSnapshot.resource_snapshot_id == snapshot_id)
         )
         exists_stmt = sa.select(sub_stmt.exists())
 
@@ -320,6 +371,40 @@ def snapshot_exists(session: CompatibleSession[S], snapshot: ResourceSnapshot) -
 
         # For mypy.  I think a "select exists(....)" should always return true
         # or false.
+        assert exists is not None
+
+    return exists
+
+
+def draft_exists(session: CompatibleSession[S], draft: DraftResource | int) -> bool:
+    """
+    Check whether the given draft exists in the database.
+
+    Args:
+        session: An SQLAlchemy session
+        draft: A DraftResource object, or draft_resource_id primary key
+            value
+
+    Returns:
+        True if the snapshot exists; False if not
+    """
+    draft_id = get_draft_id(draft)
+
+    exists: bool | None
+    if draft_id is None:
+        exists = False
+    else:
+
+        sub_stmt: sa.Select = (
+            sa.select(sa.literal_column("1"))
+            .select_from(DraftResource)
+            .where(DraftResource.draft_resource_id == draft_id)
+        )
+        exists_stmt = sa.select(sub_stmt.exists())
+
+        exists = session.scalar(exists_stmt)
+
+        # a "SELECT EXISTS(...)" should always return a row (true/false).
         assert exists is not None
 
     return exists
@@ -448,7 +533,8 @@ def assert_resource_exists(
 
 
 def assert_snapshot_exists(
-    session: CompatibleSession[S], snapshot: ResourceSnapshot
+    session: CompatibleSession[S],
+    snapshot: ResourceSnapshot | int,
 ) -> None:
     """
     Check whether the given snapshot exists in the database.  Snapshots can't
@@ -464,9 +550,33 @@ def assert_snapshot_exists(
     """
 
     if not snapshot_exists(session, snapshot):
-        raise EntityDoesNotExistError(
-            snapshot.resource_type, resource_snapshot_id=snapshot.resource_snapshot_id
-        )
+        if isinstance(snapshot, int):
+            resource_type = None
+        else:
+            resource_type = snapshot.resource_type
+
+        snapshot_id = get_resource_snapshot_id(snapshot)
+
+        raise EntityDoesNotExistError(resource_type, resource_snapshot_id=snapshot_id)
+
+
+def assert_draft_exists(
+    session: CompatibleSession[S], draft: DraftResource | int
+) -> None:
+    """
+    Check whether the given draft exists in the database.
+
+    Args:
+        session: An SQLAlchemy session
+        draft: A DraftResource object, or draft_resource_id primary key
+            value
+
+    Raises:
+        DraftDoesNotExistError: if the draft doesn't exist
+    """
+    if not draft_exists(session, draft):
+        draft_id = get_draft_id(draft)
+        raise DraftDoesNotExistError(draft_resource_id=draft_id)
 
 
 def assert_user_does_not_exist(
@@ -594,7 +704,7 @@ def assert_resource_does_not_exist(
 
 
 def assert_snapshot_does_not_exist(
-    session: CompatibleSession[S], snapshot: ResourceSnapshot
+    session: CompatibleSession[S], snapshot: ResourceSnapshot | int
 ) -> None:
     """
     Check whether the given snapshot exists in the database.  Snapshots can't
@@ -610,11 +720,50 @@ def assert_snapshot_does_not_exist(
     """
 
     if snapshot_exists(session, snapshot):
+        if isinstance(snapshot, int):
+            resource_type = None
+        else:
+            resource_type = snapshot.resource_type
+
+        snapshot_id = get_resource_snapshot_id(snapshot)
+
+        # The snapshot exists (see the "if" statement above), therefore
+        # its ID can't be None.
+        assert snapshot_id is not None
+
         raise EntityExistsError(
-            snapshot.resource_type,
-            snapshot.resource_snapshot_id,
-            resource_snapshot_id=snapshot.resource_snapshot_id,
+            resource_type,
+            snapshot_id,
+            resource_snapshot_id=snapshot_id,
         )
+
+
+def assert_draft_does_not_exist(
+    session: CompatibleSession[S], draft: DraftResource | int
+) -> None:
+    """
+    Check whether the given draft exists in the database.
+
+    Args:
+        session: An SQLAlchemy session
+        draft: A DraftResource object, or draft_resource_id primary key
+            value
+
+    Raises:
+        DraftAlreadyExistsError: if the draft exists
+    """
+    if draft_exists(session, draft):
+        draft_id = get_draft_id(draft)
+
+        # draft_id can't be done if the draft exists in the db
+        assert draft_id is not None
+
+        if isinstance(draft, int):
+            resource_type = "resource"
+        else:
+            resource_type = draft.resource_type
+
+        raise DraftAlreadyExistsError(resource_type, draft_id)
 
 
 def _assert_exists(

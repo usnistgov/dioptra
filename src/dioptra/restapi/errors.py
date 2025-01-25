@@ -436,6 +436,73 @@ class MismatchedResourceTypeError(DioptraError):
         self.found_type = found_type
 
 
+class MalformedDraftResourceError(DioptraError):
+    """A draft resource payload was malformed"""
+
+    def __init__(self) -> None:
+        msg = (
+            'A non-nested draft resource payload must have a "group_id"'
+            " property which indicates which group will own the resulting"
+            " resource."
+        )
+        super().__init__(msg)
+
+
+class DraftTargetOwnerMismatch(DioptraError):
+    """
+    A draft modification's target_owner doesn't match the owner of the resource
+    being modified.
+    """
+
+    def __init__(self, target_owner_id: int, resource_owner_id: int) -> None:
+        msg = (
+            "Draft modification target_owner/resource owner mismatch:"
+            f" {target_owner_id}, {resource_owner_id}"
+        )
+        super().__init__(msg)
+
+        self.draft_owner_id = target_owner_id
+        self.resource_owner_id = resource_owner_id
+
+
+class DraftBaseInvalidError(DioptraError):
+    """
+    A draft has a base_resource_id referring to a type of resource which is not
+    valid as a parent type of the draft resource type.
+    """
+
+    def __init__(
+        self, base_resource_id: int, parent_type: str, child_type: str
+    ) -> None:
+        msg = (
+            f"Invalid draft base resource ID: resource type {parent_type!r}"
+            f" is not a valid parent of resource type {child_type!r}:"
+            f" {base_resource_id}"
+        )
+        super().__init__(msg)
+
+        self.base_resource_id = base_resource_id
+        self.parent_type = parent_type
+        self.child_type = child_type
+
+
+class DraftSnapshotIdInvalidError(DioptraError):
+    """
+    A draft modification's resource snapshot ID does not represent a snapshot
+    of the resource represented by the draft's resource ID.
+    """
+
+    def __init__(self, resource_id: int, resource_snapshot_id: int):
+        msg = (
+            f"Resource snapshot {resource_snapshot_id} is not a snapshot"
+            f" of resource {resource_id}"
+        )
+        super().__init__(msg)
+
+        self.resource_id = resource_id
+        self.resource_snapshot_id = resource_snapshot_id
+
+
 def error_result(
     error: DioptraError, status: http.HTTPStatus, detail: dict[str, typing.Any]
 ) -> tuple[dict[str, typing.Any], int]:
