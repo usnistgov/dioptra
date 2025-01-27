@@ -74,12 +74,12 @@ act --graph
 ## <a id="act-env"> Before Running ACT start your container environment (Docker or Rancher)</a>
 
 ### For ❗Rancher Desktop❗ or ❗non-default Docker configurations❗ [set DOCKER_HOST](https://nektosact.com/missing_functionality/docker_context.html) environment variable:
- - #### Before running act in a regular setup:
+ - #### Do this in the same terminal where you plan to use ACT before running ACT.
 ```sh
 export DOCKER_HOST=$(docker context inspect --format '{{.Endpoints.docker.Host}}')
 ```
 ### For ❗hosts requiring certificates❗[set DOCKER_CERT_PATH](https://nektosact.com/missing_functionality/docker_context.html) environment variable:
- - #### If your host requires certificates:
+ - #### Do this ONLY if your host requires certificates.
 ```
 export DOCKER_CERT_PATH=$(docker context inspect --format '{{.Storage.TLSPath}}')/docker
 ```  
@@ -109,12 +109,12 @@ curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/nektos/ac
 ---
 ## <a id="act-run"> Run desired github workflow or job locally</a> 
 
- - Either using the workflow filename (e.g. tox-tests.yml) to run all jobs in file:
+ - ### Either using the workflow filename (e.g. tox-tests.yml) to run all jobs in file:
 ```sh
 act -W ".github/workflows/tox-tests.yml" --container-architecture linux/amd64
 ```
 
- - Or using the job name (e.g. linting-and-style-checks) to run only a particular part of the YAML file:
+ - ### Or using the job name (e.g. linting-and-style-checks) to run only a particular part of the YAML file:
 ```sh
 act -j linting-and-style-checks --container-architecture linux/amd64
 ```
