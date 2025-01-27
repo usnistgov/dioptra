@@ -18,6 +18,7 @@
 import json
 import os
 import pytest
+import re
 import shutil
 import subprocess
 import yaml
@@ -25,31 +26,16 @@ import yaml
 TEMPLATE_REPO = 'https://github.com/usnistgov/dioptra'
 BRANCH = "dev"
 TEST_DIR = "test_cruft_deploy"
+
+# Based on cookiecutter.json
 EXPECTED_DEFAULTS = {
-    # DONE
-    #check the deployment folder name
     "deployment_name": "dioptra-deployment", # slugified deployment name
-
-    #maybe check images in docker-compose?
-    # DONE
     "container_tag": "dev",
-
     "docker_compose_path": "docker compose",
-
-    #check deployment/config/nginx/http(s)_ dbadmin.conf, minio.conf, mlflow.conf, restapi
     "nginx_server_name": "dioptra.example.org",
-
-    #check docker-compose.yml?
     "nginx_expose_ports_on_localhost_only": "True",
-
-    #check deployment/docker-compose.init.yml db: image: postgres:#
     "postgres_container_tag": "15",
-
-    # DONE
-    #check deployment/envs/dioptra-deployment-dbadmin.env
     "pgadmin_default_email": "dioptra@example.com",
-
-    #check deployment/docker-compose.yml for number of named containers
     "num_tensorflow_cpu_workers": "1",
     "num_tensorflow_gpu_workers": "0",
     "num_pytorch_cpu_workers": "1",
@@ -78,7 +64,12 @@ def rendered_folder():
 
     rendered_folders = os.listdir(TEST_DIR)
     assert len(rendered_folders) == 1, 'The wrong number of deployment folders was generated.'
-    return os.path.join(TEST_DIR, rendered_folders[0])
+
+    rendered_path = os.path.join(TEST_DIR, rendered_folders[0])
+    yield rendered_path
+
+    # Clean up after tests run
+    shutil.rmtree(TEST_DIR)
 
 
 def test_deployment_name(rendered_folder):
@@ -107,6 +98,115 @@ def test_dioptra_container_tags(rendered_folder):
             assert tag == expected_tag, (
                 f"Service '{service_name}' has incorrect tag. "
                 f"Expected: '{expected_tag}', Found: '{tag}'"
+            )
+
+
+def test_docker_compose_path(rendered_folder):
+    """Test that the docker compose path was correctly set in init-deployment.sh"""
+    script_name = "init-deployment.sh"
+    script_path = os.path.join(rendered_folder, script_name)
+    expected_value = EXPECTED_DEFAULTS["docker_compose_path"]
+
+    assert os.path.exists(script_path), f"{script_name} not found at: {script_path}"
+
+    with open(script_path, 'r') as script_file:
+        script_content = script_file.read()
+
+    # Ensure cookiecutter placeholder value no longer exists
+    placeholder_value = " {{ cookiecutter.docker_compose_path }} "
+    assert placeholder_value not in script_content, (
+        f"Placeholder {placeholder_value} should not be in {script_path}"
+    )
+
+    # Get the docker_compose() function contents
+    compose_function_pattern = r"^docker_compose\(\) \{.*?^\}$"
+    match = re.search(compose_function_pattern, script_content, re.DOTALL | re.MULTILINE)
+    assert match, f"docker_compose() function not found in {script_path}"
+    function_content = match.group()
+
+    # Expected lines in the init-deployment.sh docker_compose() function
+    expected_usage_1 = f'  if ! {expected_value} ' + '"${@}"; then'
+    expected_usage_2 = f'      "{expected_value}, exiting..."'
+
+    assert expected_usage_1 in function_content, (
+        f"Expected usage '{expected_usage_1} not found in docker_compose () function."
+    )
+
+    assert expected_usage_2 in function_content, (
+        f"Expected usage '{expected_usage_2} not found in docker_compose () function."
+    )
+
+
+def test_nginx_expose_ports_on_localhost_only(rendered_folder):
+    """Test that the nginx service container's ports are assigned correctly."""
+    # expected_prefix assuming nginx_expose_ports_on_localhost_only = True 
+    expected_prefix = "127.0.0.1:"
+    compose_file_path = os.path.join(rendered_folder, "docker-compose.yml")
+    assert os.path.exists(compose_file_path), f"{compose_file_path} not found."
+
+    with open(compose_file_path, 'r') as compose_file:
+        compose_content = yaml.safe_load(compose_file)
+
+    # Find the nginx service name in the docker compose services, otherwise None
+    nginx_service_name = next(
+        (service_name for service_name in compose_content.get("services", {}) 
+            if service_name.endswith("nginx")), 
+         None,
+    )
+    assert nginx_service_name, (
+        f"No service found with a name ending in 'nginx' in {compose_file_path}."
+    )
+
+    nginx_service = compose_content["services"][nginx_service_name]
+    assert nginx_service, f"Nginx service not found in {compose_file_path}"
+
+    ports = nginx_service.get("ports", [])
+    assert ports, f"No ports defined for the Nginx service in {compose_file_path}"
+
+    for port in ports:
+        assert port.startswith(expected_prefix), (
+            f"Port '{port}' does not start with '{expected_prefix}'."
+        )
+
+
+def test_nginx_server_name(rendered_folder):
+    """Test that the nginx server name propogates to the conf files"""
+    nginx_config_dir = os.path.join(rendered_folder, "config", "nginx")
+    expected_name = EXPECTED_DEFAULTS["nginx_server_name"]
+    conf_files = [
+        "http_dbadmin.conf",
+        "http_minio.conf",
+        "http_mlflow.conf",
+        "http_restapi.conf",
+        "https_dbadmin.conf",
+        "https_minio.conf",
+        "https_mlflow.conf",
+        "https_restapi.conf", 
+    ]
+
+    assert os.path.exists(nginx_config_dir), (
+        f"Nginx config directory not found: {nginx_config_dir}"
+    )
+
+    for conf_file in conf_files:
+        conf_path = os.path.join(nginx_config_dir, conf_file)
+        assert os.path.exists(conf_path), f"'{conf_file}' does not exist"
+
+        with open(conf_path, 'r') as file:
+            conf_content = file.read()
+
+        # Some files have multiple server blocks, get them all
+        server_blocks = re.findall(r"server\s*{.*?}", conf_content, re.DOTALL)
+        assert server_blocks, f"No 'server' blocks found in {conf_file}"
+
+        for server_block in server_blocks:
+            server_name_search = re.search(r"server_name\s+(.+?);", server_block)
+            assert server_name_search, f"Server block without 'server_name' found in {conf_file}"
+
+            found_server_name = server_name_search.group(1).strip()
+            assert found_server_name == expected_name, (
+                f"Expected server_name '{expected_name}' but found " 
+                f"'{found_server_name}' in {conf_file}"
             )
 
 
@@ -140,3 +240,42 @@ def test_postgres_container_tag(rendered_folder):
         f"Service '{image}' has incorrect tag. "
         f"Expected: '{expected_tag}'" 
     )
+
+
+def test_worker_services(rendered_folder):
+    """Test that the number of worker containers matches the respective variables."""
+    worker_names = {
+        "num_tensorflow_cpu_workers" : "tfcpu",
+        "num_tensorflow_gpu_workers" : "tfgpu",
+        "num_pytorch_cpu_workers" : "pytorchcpu",
+        "num_pytorch_gpu_workers" : "pytorchgpu",
+    }
+
+    deployment_name = EXPECTED_DEFAULTS["deployment_name"]
+    docker_compose_path = os.path.join(rendered_folder, "docker-compose.yml")
+
+    assert docker_compose_path, (
+        f"Docker compose file not found at '{docker_compose_path}'"
+    )
+
+    with open(docker_compose_path, 'r') as file:
+        docker_compose = yaml.safe_load(file)
+
+    services = docker_compose.get("services", {})
+
+    for worker_type, service_suffix in worker_names.items():
+        expected_count = int(EXPECTED_DEFAULTS[worker_type])
+
+        for i in range(1, expected_count +1):
+            # ':02d' to ensure that the number is expressed as 2 digits
+            service_name = f"{deployment_name}-{service_suffix}-{i:02d}"
+            assert service_name in services, (
+                f"Missing service: {service_name} for {worker_type}"
+            )
+
+        # Check if there is a worker index above what is expected
+        extra_service_name = f"{deployment_name}-{service_suffix}-{expected_count +1:02d}"
+        assert extra_service_name not in services, (
+            f"Unexpected service: {extra_service_name} for {worker_type}; "
+            f"expected count of {expected_count}"
+        )
