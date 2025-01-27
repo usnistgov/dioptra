@@ -58,11 +58,21 @@ This will generate a setup that is appropriate for testing Dioptra on your perso
    source venv-deploy/bin/activate
    python -m pip install --upgrade pip cruft jinja2
 
+Next, run cruft with the default variables, or get prompted to specify them manually:
+
+.. code:: sh
+
+   # Run cruft with default template values
+   cruft create https://github.com/usnistgov/dioptra --checkout $DIOPTRA_BRANCH \
+     --directory cookiecutter-templates/cookiecutter-dioptra-deployment --no-input
+
+   # OR
+
    # Run cruft and set the template's variables
    cruft create https://github.com/usnistgov/dioptra --checkout $DIOPTRA_BRANCH \
      --directory cookiecutter-templates/cookiecutter-dioptra-deployment
 
-Cruft will now run and prompt you to configure the deployment. See the :ref:`Applying the template <getting-started-running-dioptra-applying-the-template>` section for detailed description of each prompt.
+Cruft will now run and, if requested, prompt you to configure the deployment. See the :ref:`Applying the template <getting-started-running-dioptra-applying-the-template>` section for detailed description of each prompt.
 
 We recommend identifying a location to store datasets you will want to use with Dioptra at this point and setting the ``datasets_directory`` variable accordingly. See the :ref:`Downloading the datasets <getting-started-acquiring-datasets>` section for more details.
 
