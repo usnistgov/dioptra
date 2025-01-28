@@ -167,9 +167,9 @@
     }
   }
 
-  async function updateDraftLinkedToQueue(queueId, name, description) {
+  async function updateDraftLinkedToQueue(queueId, name, description, snapshotId) {
     try {
-      await api.updateDraftLinkedtoQueue(queueId, name, description)
+      await api.updateDraftLinkedtoQueue(queueId, name, description, snapshotId)
       notify.success(`Successfully updated '${name}'`)
       showDraftDialog.value = false
     } catch(err) {

@@ -257,8 +257,14 @@ export async function updateDraft<T extends ItemType>(type: T, draftId: string, 
   return await axios.put(`/api/${type}/drafts/${draftId}`, params)
 }
 
-export async function updateDraftLinkedtoQueue(queueId: number, name: string, description: string) {
-  return await axios.put(`/api/queues/${queueId}/draft`, { name, description })
+export async function updateDraftLinkedtoQueue(queueId: number, name: string, description: string, snapshotId: number) {
+  return await axios.put(`/api/queues/${queueId}/draft`, { 
+    resourceSnapshot: snapshotId,
+    resourceData: {
+      name, 
+      description,
+    }
+   })
 }
 
 export async function deleteItem<T extends ItemType>(type: T, id: number) {

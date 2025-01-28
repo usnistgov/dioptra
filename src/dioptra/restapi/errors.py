@@ -206,6 +206,20 @@ class DraftAlreadyExistsError(DioptraError):
         self.resource_id = id
 
 
+class InvalidDraftBaseResourceSnapshotError(DioptraError):
+    """The draft's base snapshot identifier is invalid."""
+
+    def __init__(
+        self,
+        message: str,
+        base_resource_snapshot_id: int,
+        provided_resource_snapshot_id: int,
+    ):
+        super().__init__(message)
+        self.base_resource_snapshot_id = base_resource_snapshot_id
+        self.provided_resource_snapshot_id = provided_resource_snapshot_id
+
+
 class SortParameterValidationError(DioptraError):
     """The sort parameters are not valid."""
 
@@ -417,6 +431,20 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
     def handle_draft_already_exists(error: DraftAlreadyExistsError):
         log.debug(error.to_message())
         return error_result(error, http.HTTPStatus.BAD_REQUEST, {})
+
+    @api.errorhandler(InvalidDraftBaseResourceSnapshotError)
+    def handle_invalid_draft_base_resource_snapshot(
+        error: InvalidDraftBaseResourceSnapshotError,
+    ):
+        log.debug(error.to_message())
+        return error_result(
+            error,
+            http.HTTPStatus.BAD_REQUEST,
+            {
+                "base_resource_snapshot_id": error.base_resource_snapshot_id,
+                "provided_resource_snapshot_id": error.provided_resource_snapshot_id,
+            },
+        )
 
     @api.errorhandler(LockError)
     def handle_lock_error(error: LockError):

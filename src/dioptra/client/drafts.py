@@ -373,11 +373,14 @@ class ModifyResourceDraftsSubCollectionClient(SubCollectionClient[T]):
             json_=self._validate_fields(kwargs),
         )
 
-    def modify(self, *resource_ids: str | int, **kwargs) -> T:
+    def modify(
+        self, *resource_ids: str | int, resource_snapshot_id: str | int, **kwargs
+    ) -> T:
         """Modify a resource modification draft.
 
         Args:
             *resource_ids: The parent resource ids that own the sub-collection.
+            resource_snapshot_id: The resource snapshot id the draft is based on.
             **kwargs: The draft fields to modify.
 
         Returns:
@@ -389,7 +392,10 @@ class ModifyResourceDraftsSubCollectionClient(SubCollectionClient[T]):
         """
         return self._session.put(
             self.build_sub_collection_url(*resource_ids),
-            json_=self._validate_fields(kwargs),
+            json_={
+                "resourceSnapshot": int(resource_snapshot_id),
+                "resourceData": self._validate_fields(kwargs),
+            },
         )
 
     def delete(self, *resource_ids: str | int) -> T:
