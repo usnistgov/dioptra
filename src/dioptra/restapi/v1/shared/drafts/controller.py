@@ -25,14 +25,19 @@ from flask_accepts import accepts, responds
 from flask_login import login_required
 from flask_restx import Namespace, Resource
 from injector import ClassAssistedBuilder, inject
-from marshmallow import Schema
+from marshmallow import Schema, fields
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.schemas import IdStatusResponseSchema
 
-from .schema import DraftGetQueryParameters, DraftPageSchema, DraftSchema
+from .schema import (
+    DraftGetQueryParameters,
+    DraftPageSchema,
+    DraftSchema,
+    ModifyDraftBaseSchema,
+)
 from .service import (
     ResourceDraftsIdService,
     ResourceDraftsService,
@@ -233,6 +238,13 @@ def generate_resource_id_draft_endpoint(
     else:
         model_name = "Draft" + "".join(request_schema.__name__.rsplit("Schema", 1))
 
+    class ModifyDraftSchema(ModifyDraftBaseSchema):
+        resourceData = fields.Nested(
+            request_schema,
+            attribute="resource_data",
+            metadata=dict(description="Draft resource data."),
+        )
+
     @api.route("/<int:id>/draft")
     @api.param("id", "ID for the resource.")
     class ResourcesIdDraftEndpoint(Resource):
@@ -261,7 +273,7 @@ def generate_resource_id_draft_endpoint(
             )
 
         @login_required
-        @accepts(schema=request_schema, model_name=model_name, api=api)
+        @accepts(schema=request_schema, model_name="Create" + model_name, api=api)
         @responds(schema=DraftSchema, api=api)
         def post(self, id: int):
             """Creates a Draft for this resource."""
@@ -277,7 +289,7 @@ def generate_resource_id_draft_endpoint(
             )
 
         @login_required
-        @accepts(schema=request_schema, model_name=model_name, api=api)
+        @accepts(schema=ModifyDraftSchema, model_name="Modify" + model_name, api=api)
         @responds(schema=DraftSchema, api=api)
         def put(self, id: int):
             """Modifies the Draft for this resource."""
@@ -513,6 +525,13 @@ def generate_nested_resource_id_draft_endpoint(
             request_schema.__name__.rsplit("Schema", 1)
         )
 
+    class ModifyDraftSchema(ModifyDraftBaseSchema):
+        resourceData = fields.Nested(
+            request_schema,
+            attribute="resource_data",
+            metadata=dict(description="Draft resource data."),
+        )
+
     @api.route(f"/<int:id>/{resource_route}/<int:{resource_id}>/draft")
     @api.param("id", "ID for the resource.")
     class ResourcesIdDraftEndpoint(Resource):
@@ -551,7 +570,7 @@ def generate_nested_resource_id_draft_endpoint(
             )
 
         @login_required
-        @accepts(schema=request_schema, model_name=model_name, api=api)
+        @accepts(schema=request_schema, model_name="Create" + model_name, api=api)
         @responds(schema=DraftSchema, api=api)
         def post(self, id: int, **kwargs):
             """Creates a Draft for this resource."""
@@ -577,7 +596,7 @@ def generate_nested_resource_id_draft_endpoint(
             )
 
         @login_required
-        @accepts(schema=request_schema, model_name=model_name, api=api)
+        @accepts(schema=ModifyDraftSchema, model_name="Modify" + model_name, api=api)
         @responds(schema=DraftSchema, api=api)
         def put(self, id: int, **kwargs):
             """Modifies the Draft for this resource."""

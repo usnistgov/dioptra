@@ -108,7 +108,7 @@ def step_get_plugin_short_name(step: Mapping[str, Any]) -> Optional[str]:
 
 
 def step_get_invocation_arg_specs(
-    step_def: Mapping[str, Any]
+    step_def: Mapping[str, Any],
 ) -> Union[tuple[list[Any], Mapping[str, Any]], tuple[None, None]]:
     """
     Get invocation positional and keyword arg specs from the given step.  This

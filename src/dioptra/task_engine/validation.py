@@ -28,7 +28,7 @@ _SCHEMA_FILENAME = "experiment_schema.json"
 
 
 def _instance_path_to_description(  # noqa: C901
-    instance_path: Sequence[Union[int, str]]
+    instance_path: Sequence[Union[int, str]],
 ) -> str:
     """
     Create a nice description of the location in an experiment description
@@ -238,7 +238,7 @@ def _check_name_collisions(experiment_desc: Mapping[str, Any]) -> list[Validatio
 
 
 def _check_global_parameter_types(
-    experiment_desc: Mapping[str, Any]
+    experiment_desc: Mapping[str, Any],
 ) -> list[ValidationIssue]:
     """
     Check whether all global parameter types are valid.
@@ -296,7 +296,7 @@ def _check_global_parameter_types(
 
 
 def _check_type_definition_type_references(
-    experiment_desc: Mapping[str, Any]
+    experiment_desc: Mapping[str, Any],
 ) -> list[ValidationIssue]:
     """
     Check for references to undefined types in all type definitions.
@@ -332,7 +332,7 @@ def _check_type_definition_type_references(
 
 
 def _check_type_reference_cycle(
-    experiment_desc: Mapping[str, Any]
+    experiment_desc: Mapping[str, Any],
 ) -> list[ValidationIssue]:
     """
     Check for a reference cycle among type definitions.
@@ -367,7 +367,7 @@ def _check_type_reference_cycle(
 
 
 def _check_union_member_duplicates(
-    experiment_desc: Mapping[str, Any]
+    experiment_desc: Mapping[str, Any],
 ) -> list[ValidationIssue]:
     """
     Check for union type definitions for which there is duplication in the
@@ -422,7 +422,7 @@ def _check_union_member_duplicates(
 
 
 def _check_task_plugin_references(
-    experiment_desc: Mapping[str, Any]
+    experiment_desc: Mapping[str, Any],
 ) -> list[ValidationIssue]:
     """
     Check whether all task plugin short names refer to known task plugins.
@@ -453,7 +453,7 @@ def _check_task_plugin_references(
 
 
 def _check_task_plugin_pyplugs_coords(
-    experiment_desc: Mapping[str, Any]
+    experiment_desc: Mapping[str, Any],
 ) -> list[ValidationIssue]:
     """
     Check task plugin IDs for validity.  They must at minimum include a module
@@ -492,7 +492,7 @@ def _check_task_plugin_pyplugs_coords(
 
 
 def _check_task_plugin_io_names(
-    experiment_desc: Mapping[str, Any]
+    experiment_desc: Mapping[str, Any],
 ) -> list[ValidationIssue]:
     """
     Check task definitions for duplicate input and output names.
@@ -557,7 +557,7 @@ def _check_task_plugin_io_names(
 
 
 def _check_task_plugin_io_types(
-    experiment_desc: Mapping[str, Any]
+    experiment_desc: Mapping[str, Any],
 ) -> list[ValidationIssue]:
     """
     Check task definition input and output type names for validity: whether
@@ -616,7 +616,7 @@ def _check_task_plugin_io_types(
 
 
 def _check_graph_references(  # noqa: C901
-    experiment_desc: Mapping[str, Any]
+    experiment_desc: Mapping[str, Any],
 ) -> list[ValidationIssue]:
     """
     Scan for references within task invocations, check whether they are legal,
@@ -702,7 +702,7 @@ def _check_graph_references(  # noqa: C901
 
 
 def _check_graph_dependencies(
-    experiment_desc: Mapping[str, Any]
+    experiment_desc: Mapping[str, Any],
 ) -> list[ValidationIssue]:
     """
     Check explicitly declared dependencies for each step and ensure they refer

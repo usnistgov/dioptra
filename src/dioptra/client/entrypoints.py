@@ -350,7 +350,10 @@ class EntrypointsCollectionClient(CollectionClient[T]):
 
             # PUT /api/v1/entrypoints/1/draft
             client.entrypoints.modify_resource_drafts.modify(
-                1, name="new-name", description="new-description"
+                1,
+                resource_snapshot_id=1,
+                name="new-name",
+                description="new-description"
             )
 
             # POST /api/v1/entrypoints/1/draft

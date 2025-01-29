@@ -308,7 +308,7 @@ def build_type(
 
 
 def get_dependency_types(  # noqa: C901
-    type_def: Optional[Union[_TypeDefinition, str]]
+    type_def: Optional[Union[_TypeDefinition, str]],
 ) -> Iterator[str]:
     """
     Search the given type definition and generate all references to other
@@ -395,7 +395,7 @@ def get_sorted_types(type_defs: Mapping[str, _TypeDefinition]) -> list[str]:
 
 
 def build_type_registry(
-    type_defs: Mapping[str, _TypeDefinition]
+    type_defs: Mapping[str, _TypeDefinition],
 ) -> Mapping[str, types.Type]:
     """
     Create a type registry from a set of type definitions.
