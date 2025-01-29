@@ -41,15 +41,17 @@ depends_on = None
 text_ = Annotated[str, mapped_column(sa.Text())]
 
 # The data to up/down-grade
-ENUM_TABLE = "resource_types"       ### The table to up/down-grade
-TABLE_ENTRY = 'resource_snapshot'   ### The entry to up/down-grade
+ENUM_TABLE = "resource_types"  ### The table to up/down-grade
+TABLE_ENTRY = "resource_snapshot"  ### The entry to up/down-grade
 
 
 class UpgradeBase(DeclarativeBase, MappedAsDataclass):
     pass
 
+
 class DowngradeBase(DeclarativeBase, MappedAsDataclass):
     pass
+
 
 class ResourceTypeUpgrade(UpgradeBase):
     __tablename__ = ENUM_TABLE
