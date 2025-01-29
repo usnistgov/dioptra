@@ -24,6 +24,7 @@ from http import HTTPStatus
 from typing import Any
 
 import pytest
+import time
 from flask_sqlalchemy import SQLAlchemy
 from pytest import MonkeyPatch
 
@@ -485,24 +486,31 @@ def test_metrics(
         metric_name="accuracy",
         metric_value=4.1,
     ).json()
+    # The mlflow tracking server tracks time at millisecond resolution. For this test,
+    # where the mlflow service is mocked, we need to introduce some latency to ensure
+    # multiple metrics don't receive the same timestamp
+    time.sleep(0.002)
 
     metric_response = dioptra_client.jobs.append_metric_by_id(  # noqa: F841
         job_id=job1_id,
         metric_name="accuracy",
         metric_value=4.2,
     ).json()
+    time.sleep(0.002)
 
     metric_response = dioptra_client.jobs.append_metric_by_id(  # noqa: F841
         job_id=job1_id,
         metric_name="roc_auc",
         metric_value=0.99,
     ).json()
+    time.sleep(0.002)
 
     metric_response = dioptra_client.jobs.append_metric_by_id(  # noqa: F841
         job_id=job2_id,
         metric_name="job_2_metric",
         metric_value=0.11,
     ).json()
+    time.sleep(0.002)
 
     assert_job_metrics_matches_expectations(
         dioptra_client,
