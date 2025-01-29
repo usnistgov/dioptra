@@ -19,14 +19,16 @@ import uuid
 
 import structlog
 from flask import request, send_file
-from flask_accepts import accepts
+from flask_accepts import accepts, responds
 from flask_login import login_required
 from flask_restx import Namespace, Resource
 from injector import inject
 from structlog.stdlib import BoundLogger
 
+from dioptra.restapi.v1.schemas import IdStatusResponseSchema
+
 from .schema import FileTypes, JobFilesDownloadQueryParametersSchema
-from .service import JobFilesDownloadService
+from .service import DraftCommitService, JobFilesDownloadService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -78,3 +80,30 @@ class JobFilesDownloadEndpoint(Resource):
             mimetype=mimetype[parsed_query_params["file_type"]],
             download_name=download_name[parsed_query_params["file_type"]],
         )
+
+
+@api.route("/draftCommit/<int:id>")
+@api.param("id", "ID for the Draft resource.")
+class DraftCommitEndpoint(Resource):
+    @inject
+    def __init__(
+        self, draft_commit_service: DraftCommitService, *args, **kwargs
+    ) -> None:
+        """Initialize the workflow resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            draft_commit_service: A DraftCommitService object.
+        """
+        self._draft_commit_service = draft_commit_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    @responds(schema=IdStatusResponseSchema, api=api)
+    def post(self, id: int):
+        """Commit a draft as a new resource"""  # noqa: B950
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="DraftCommit", request_type="POST"
+        )  # noqa: F841
+        return self._draft_commit_service.commit_draft(draft_id=id, log=log)

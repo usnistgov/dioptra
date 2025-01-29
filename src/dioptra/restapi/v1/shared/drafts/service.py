@@ -467,15 +467,6 @@ class ResourceIdDraftService(object):
         if draft is None:
             return None, num_other_drafts
 
-        # NOTE: This check disables the ability to change the base snapshot ID.
-        # It is scheduled to be removed as part of the draft commit workflow feature.
-        if draft.payload["resource_snapshot_id"] != payload["resource_snapshot_id"]:
-            raise InvalidDraftBaseResourceSnapshotError(
-                "The provided resource snapshot must match the base resource snapshot",
-                base_resource_snapshot_id=draft.payload["resource_snapshot_id"],
-                provided_resource_snapshot_id=payload["resource_snapshot_id"],
-            )
-
         if draft.payload["resource_snapshot_id"] > payload["resource_snapshot_id"]:
             raise InvalidDraftBaseResourceSnapshotError(
                 "The provided resource snapshot must be greater than or equal to "
