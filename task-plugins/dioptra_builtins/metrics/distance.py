@@ -40,7 +40,7 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 @pyplugs.register
 def get_distance_metric_list(
-    request: List[Dict[str, str]]
+    request: List[Dict[str, str]],
 ) -> List[Tuple[str, Callable[..., np.ndarray]]]:
     """Gets multiple distance metric functions from the registry.
 
