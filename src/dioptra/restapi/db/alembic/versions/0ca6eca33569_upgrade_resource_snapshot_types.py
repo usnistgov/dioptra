@@ -10,8 +10,6 @@ from typing import Annotated, Any
 
 import sqlalchemy as sa
 from alembic import op
-
-# from sqlalchemy import delete, insert, select
 from sqlalchemy.engine.cursor import CursorResult
 from sqlalchemy.orm import (
     DeclarativeBase,
