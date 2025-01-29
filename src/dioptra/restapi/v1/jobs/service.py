@@ -43,11 +43,15 @@ from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.entrypoints.service import (
     RESOURCE_TYPE as ENTRYPOINT_RESOURCE_TYPE,
 )
-from dioptra.restapi.v1.entrypoints.service import EntrypointIdService
+from dioptra.restapi.v1.entrypoints.service import (
+    EntrypointIdService,
+)
 from dioptra.restapi.v1.experiments.service import (
     RESOURCE_TYPE as EXPERIMENT_RESOURCE_TYPE,
 )
-from dioptra.restapi.v1.experiments.service import ExperimentIdService
+from dioptra.restapi.v1.experiments.service import (
+    ExperimentIdService,
+)
 from dioptra.restapi.v1.groups.service import GroupIdService
 from dioptra.restapi.v1.queues.service import RESOURCE_TYPE as QUEUE_RESOURCE_TYPE
 from dioptra.restapi.v1.queues.service import QueueIdService
