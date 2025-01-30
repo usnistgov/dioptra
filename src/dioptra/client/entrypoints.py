@@ -26,6 +26,7 @@ from .drafts import (
     ModifyResourceDraftsSubCollectionClient,
     NewResourceDraftsSubCollectionClient,
     make_draft_fields_validator,
+    make_field_names_to_camel_case_converter,
 )
 from .snapshots import SnapshotsSubCollectionClient
 from .tags import TagsSubCollectionClient
@@ -37,6 +38,9 @@ DRAFT_FIELDS: Final[set[str]] = {
     "parameters",
     "queues",
     "plugins",
+}
+FIELD_NAMES_TO_CAMEL_CASE: Final[dict[str, str]] = {
+    "task_graph": "taskGraph",
 }
 
 T = TypeVar("T")
@@ -280,6 +284,9 @@ class EntrypointsCollectionClient(CollectionClient[T]):
                 resource_name=self.name,
             ),
             root_collection=self,
+            convert_field_names_fn=make_field_names_to_camel_case_converter(
+                name_mapping=FIELD_NAMES_TO_CAMEL_CASE
+            ),
         )
         self._modify_resource_drafts = ModifyResourceDraftsSubCollectionClient[T](
             session=session,
@@ -288,6 +295,9 @@ class EntrypointsCollectionClient(CollectionClient[T]):
                 resource_name=self.name,
             ),
             root_collection=self,
+            convert_field_names_fn=make_field_names_to_camel_case_converter(
+                name_mapping=FIELD_NAMES_TO_CAMEL_CASE
+            ),
         )
         self._snapshots = SnapshotsSubCollectionClient[T](
             session=session, root_collection=self
