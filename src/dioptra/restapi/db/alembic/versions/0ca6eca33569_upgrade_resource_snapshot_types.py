@@ -38,7 +38,9 @@ down_revision = "6a75ede23821"
 branch_labels = None
 depends_on = None
 
+
 text_ = Annotated[str, mapped_column(sa.Text())]
+
 
 # The data to up/down-grade
 ENUM_TABLE = "resource_types"  ### The table to up/down-grade
