@@ -1187,9 +1187,7 @@ def _get_entrypoint_plugin_snapshots(
     plugins = [
         utils.PluginWithFilesDict(
             plugin=entry_point_plugin.plugin,
-            plugin_files=[
-                plugin_file for plugin_file in entry_point_plugin.plugin.plugin_files
-            ],
+            plugin_files=entry_point_plugin.plugin.plugin_files,
             has_draft=False,
         )
         for entry_point_plugin in entrypoint.entry_point_plugins
