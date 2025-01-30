@@ -74,7 +74,7 @@ def package_job_files(
         )
         task_engine_yaml_path = export_task_engine_yaml(
             entrypoint=entry_point,
-            entry_point_plugin_files=entry_point_plugin_files,
+            plugin_plugin_files=entry_point_plugin_files,
             plugin_parameter_types=plugin_parameter_types,
             base_dir=base_dir,
             logger=log,
