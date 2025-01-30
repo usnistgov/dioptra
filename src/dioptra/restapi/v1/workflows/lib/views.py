@@ -99,30 +99,22 @@ def get_entry_point_plugin_files(
     """
     log = logger or LOGGER.new()  # noqa: F841
 
-    entry_point_resource_snapshot_id_stmt = (
-        select(models.EntryPoint.resource_snapshot_id)
+    entry_point_resource_snapshot_stmt = (
+        select(models.EntryPoint)
         .join(models.EntryPointJob)
         .where(
             models.EntryPointJob.job_resource_id == job_id,
         )
     )
+    entry_point = db.session.scalar(entry_point_resource_snapshot_stmt)
 
-    # Get plugins linked to the entry point
-    entry_point_plugins_stmt = select(
-        models.EntryPointPlugin.plugin_resource_snapshot_id
-    ).where(
-        models.EntryPointPlugin.entry_point_resource_snapshot_id
-        == entry_point_resource_snapshot_id_stmt.scalar_subquery()
-    )
+    plugin_plugin_files = [
+        plugin_plugin_file
+        for entry_point_plugin in entry_point.entry_point_plugins
+        for plugin_plugin_file in entry_point_plugin.plugin.plugin_plugin_files
+    ]
 
-    # Get plugin files linked to these plugins
-    entry_point_plugin_files_stmt = select(models.PluginPluginFile).where(
-        models.PluginPluginFile.plugin_resource_snapshot_id.in_(
-            entry_point_plugins_stmt
-        )
-    )
-
-    return list(db.session.scalars(entry_point_plugin_files_stmt).unique().all())
+    return plugin_plugin_files
 
 
 def get_job_parameter_values(

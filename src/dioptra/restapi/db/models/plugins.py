@@ -41,6 +41,9 @@ class Plugin(ResourceSnapshot):
     name: Mapped[text_] = mapped_column(nullable=False, index=True)
 
     # Relationships
+    plugin_plugin_files: Mapped[list["PluginPluginFile"]] = relationship(
+        init=False, back_populates="plugin_file"
+    )
     plugin_files: Mapped[list["PluginFile"]] = relationship(
         "PluginFile",
         secondary="plugin_plugin_files",
