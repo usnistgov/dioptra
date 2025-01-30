@@ -726,6 +726,7 @@ class PluginIdFileService(object):
             utils.PluginWithFilesDict,
             self._plugin_id_service.get(plugin_id, error_if_not_found=True),
         )
+        plugin = plugin_dict["plugin"]
 
         # Validate that the proposed filename hasn't already been used in the plugin.
         duplicate = self._plugin_file_name_service.get(
@@ -739,11 +740,17 @@ class PluginIdFileService(object):
                 plugin_id=plugin_id,
             )
 
-        # The owner of the PluginFile resource must match the owner of the Plugin
-        # resource.
-        plugin = plugin_dict["plugin"]
+        # a new plugin file creates a new plugin snapshot
+        new_plugin = models.Plugin(
+            name=plugin.name,
+            description=plugin.description,
+            resource=plugin.resource,
+            creator=current_user,
+        )
+        db.session.add(new_plugin)
+
         resource = models.Resource(
-            resource_type=PLUGIN_FILE_RESOURCE_TYPE, owner=plugin.resource.owner
+            resource_type=PLUGIN_FILE_RESOURCE_TYPE, owner=new_plugin.resource.owner
         )
         new_plugin_file = models.PluginFile(
             filename=filename,
@@ -752,11 +759,11 @@ class PluginIdFileService(object):
             resource=resource,
             creator=current_user,
         )
-
-        new_plugin_file.parents.append(plugin.resource)
+        new_plugin_file.parents.append(new_plugin.resource)
         db.session.add(new_plugin_file)
 
-        _update_plugin_and_file_snapshots(plugin, new_plugin_file)
+        new_plugin_files = plugin.plugin_files + [new_plugin_file]
+        _associate_plugin_with_plugin_files(new_plugin, new_plugin_files)
 
         _add_plugin_tasks(tasks, plugin_file=new_plugin_file, log=log)
 
@@ -1114,6 +1121,15 @@ class PluginIdFileIdService(object):
                     plugin_id=plugin_id,
                 )
 
+        # a modification to a plugin file creates a new plugin snapshot
+        new_plugin = models.Plugin(
+            name=plugin.name,
+            description=plugin.description,
+            resource=plugin.resource,
+            creator=current_user,
+        )
+        db.session.add(new_plugin)
+
         updated_plugin_file = models.PluginFile(
             filename=filename,
             contents=contents,
@@ -1123,7 +1139,11 @@ class PluginIdFileIdService(object):
         )
         db.session.add(updated_plugin_file)
 
-        _update_plugin_and_file_snapshots(plugin, updated_plugin_file)
+        new_plugin_files = {
+            plugin_file.resource_id: plugin_file for plugin_file in plugin.plugin_files
+        }
+        new_plugin_files[updated_plugin_file.resource_id] = updated_plugin_file
+        _associate_plugin_with_plugin_files(new_plugin, new_plugin_files.values())
 
         _add_plugin_tasks(tasks, plugin_file=updated_plugin_file, log=log)
 
@@ -1186,7 +1206,21 @@ class PluginIdFileIdService(object):
                 plugin_file_id=plugin_file_id,
             )
 
-        _update_plugin_and_file_snapshots(plugin, plugin_file, delete=True)
+        # a deletion of a plugin file creates a new plugin snapshot
+        new_plugin = models.Plugin(
+            name=plugin.name,
+            description=plugin.description,
+            resource=plugin.resource,
+            creator=current_user,
+        )
+        db.session.add(new_plugin)
+
+        new_plugin_files = [
+            plugin_file
+            for plugin_file in plugin.plugin_files
+            if plugin_file.resource_id != plugin_file_id
+        ]
+        _associate_plugin_with_plugin_files(new_plugin, new_plugin_files)
 
         plugin_file_id_to_return = plugin_file.resource_id  # to return to user
         db.session.add(
@@ -1197,11 +1231,7 @@ class PluginIdFileIdService(object):
         )
         db.session.commit()
 
-        log.debug(
-            "Plugin file deleted",
-            plugin_id=plugin_id,
-        )
-
+        log.debug("Plugin file deleted", plugin_id=plugin_id)
         return {"status": "Success", "id": [plugin_file_id_to_return]}
 
 
@@ -1307,6 +1337,16 @@ def _get_referenced_parameter_types(
     return {x.resource_id: x for x in parameter_types}
 
 
+def _associate_plugin_with_plugin_files(
+    plugin: models.Plugin, plugin_files: list[models.PluginFile]
+) -> None:
+    for plugin_file in plugin_files:
+        plugin_plugin_file = models.PluginPluginFile(
+            plugin=plugin, plugin_file=plugin_file
+        )
+        db.session.add(plugin_plugin_file)
+
+
 def _add_plugin_tasks(
     tasks: list[dict[str, Any]], plugin_file: models.PluginFile, log: BoundLogger
 ) -> None:
@@ -1326,36 +1366,3 @@ def _add_plugin_tasks(
             log=log,
         )
         db.session.add(plugin_task)
-
-
-def _update_plugin_and_file_snapshots(
-    plugin: models.Plugin,
-    plugin_file: models.PluginFile,
-    delete: bool = False,
-) -> None:
-    # use this method when creating, modifying, or deleting plugin files.
-
-    # add snapshot for plugin
-    new_plugin = models.Plugin(
-        name=plugin.name,
-        description=plugin.description,
-        resource=plugin.resource,
-        creator=current_user,
-    )
-    db.session.add(new_plugin)
-
-    # add snapshot for existing plugin_plugin_files
-    for existing_plugin_file in plugin.plugin_files:
-        if existing_plugin_file.resource_id == plugin_file.resource_id:
-            continue
-
-        plugin_plugin_file = models.PluginPluginFile(
-            plugin=new_plugin, plugin_file=existing_plugin_file
-        )
-        db.session.add(plugin_plugin_file)
-
-    if not delete:  # add snapshot for new plugin_plugin_file
-        new_plugin_plugin_file = models.PluginPluginFile(
-            plugin=new_plugin, plugin_file=plugin_file
-        )
-        db.session.add(new_plugin_plugin_file)
