@@ -28,6 +28,8 @@ from flask import request
 from flask_restx import Api
 from structlog.stdlib import BoundLogger
 
+from dioptra.task_engine.issues import ValidationIssue
+
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
@@ -324,6 +326,14 @@ class PluginParameterTypeMatchesBuiltinTypeError(DioptraError):
         )
 
 
+class EntrpointWorkflowYamlValidationError(DioptraError):
+    """The entrypoint worklfow yaml is invalid."""
+
+    def __init__(self, issues: list[ValidationIssue]):
+        super().__init__("The entrypoint worklfow yaml is invalid.")
+        self.issues = issues
+
+
 # User Errors
 class NoCurrentUserError(DioptraError):
     """There is no currently logged-in user."""
@@ -475,3 +485,12 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
     def handle_base_error(error: DioptraError):
         log.debug(error.to_message())
         return error_result(error, http.HTTPStatus.BAD_REQUEST, {})
+    
+    @api.errorhandler(DioptraError)
+    def handle_entrypoint_workflow_yaml_validation_error(error: EntrpointWorkflowYamlValidationError):
+        log.debug(error.to_message())
+        return error_result(
+            error, 
+            http.HTTPStatus.UNPROCESSABLE_ENTITY, 
+            {"issues": [{"type": str(issue.type), "severity": str(issue.severity), "message": issue.message} for issue in error.args[0]]}
+        )
