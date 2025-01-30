@@ -43,6 +43,8 @@ export const useLoginStore = defineStore('login', () => {
     jobs: {},
     files: {},
   })
+
+  const triggerPopup = ref(false)
   
   const showRightDrawer = ref(false)
   const selectedSnapshot = ref()
@@ -52,5 +54,5 @@ export const useLoginStore = defineStore('login', () => {
   // function()'s are actions
   
 
-  return { loggedInUser, loggedInGroup, groups, users, savedForms, showRightDrawer, selectedSnapshot };
+  return { loggedInUser, loggedInGroup, groups, users, savedForms, showRightDrawer, selectedSnapshot, triggerPopup };
 })

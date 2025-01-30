@@ -65,20 +65,6 @@
     </template>
   </TableComponent>
 
-  <q-btn 
-    class="fixedButton"
-    round
-    color="primary"
-    icon="add"
-    size="lg"
-    to="/entrypoints/new"
-  >
-    <span class="sr-only">Register new Entrypoint</span>
-    <q-tooltip>
-      Register new Entrypoint
-    </q-tooltip>
-  </q-btn>
-
   <InfoPopupDialog
     v-model="showTaskGraphDialog"
   >

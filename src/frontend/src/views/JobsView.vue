@@ -36,19 +36,6 @@
       />
     </template>
   </TableComponent>
-  <q-btn 
-    class="fixedButton"
-    round
-    color="primary"
-    icon="add"
-    size="lg"
-    :to="`/experiments/${route.params.id}/jobs/new`"
-  >
-    <span class="sr-only">Create a new Job</span>
-    <q-tooltip>
-      Create a new Job
-    </q-tooltip>
-  </q-btn>
 
   <DeleteDialog 
     v-model="showDeleteDialog"

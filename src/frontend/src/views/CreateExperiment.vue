@@ -120,11 +120,10 @@
 
   <div :class="`float-right`">
       <q-btn  
-        to="/experiments"
         color="negative" 
         label="Cancel"
         class="q-mr-lg"
-        @click="confirmLeave = true"
+        @click="confirmLeave = true; router.back()"
       />
       <q-btn  
         @click="submit()" 

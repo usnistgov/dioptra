@@ -17,19 +17,7 @@
       </q-chip>
     </template>
   </TableComponent>
-  <q-btn 
-    class="fixedButton"
-    round
-    color="primary"
-    icon="add"
-    size="lg"
-    @click="showAddDialog = true"
-  >
-    <span class="sr-only">Register a new Tag</span>
-    <q-tooltip>
-      Register a new Tag
-    </q-tooltip>
-  </q-btn>
+
   <AddTagsDialog 
     v-model="showAddDialog"
     @addTag="addTag"
@@ -52,6 +40,9 @@
   import AddTagsDialog from '@/dialogs/AddTagsDialog.vue'
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'
   import PageTitle from '@/components/PageTitle.vue'
+  import { useLoginStore } from '@/stores/LoginStore'
+
+  const store = useLoginStore()
 
   const showAddDialog = ref(false)
   const showDeleteDialog = ref(false)
@@ -122,5 +113,12 @@
       notify.error(err.response.data.message);
     }
   }
+
+  watch(() => store.triggerPopup, (newVal) => {
+    if(newVal) {
+      showAddDialog.value = true
+      store.triggerPopup = false
+    }
+  })
 
 </script>

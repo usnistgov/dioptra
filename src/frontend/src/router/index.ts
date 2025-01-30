@@ -6,23 +6,27 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      component: HomeView
+      component: HomeView,
+      name: 'home'
     },
     {
       path: '/entrypoints',
-      component: () => import('../views/EntryPointsView.vue')
+      component: () => import('../views/EntryPointsView.vue'),
+      name: 'entrypoints'
     },
     {
       path: '/entrypoints/:id',
-      component: () => import('../views/CreateEntryPoint.vue')
+      component: () => import('../views/CreateEntryPoint.vue'),
     },
     {
       path: '/plugins',
-      component: () => import('../views/PluginsView.vue')
+      component: () => import('../views/PluginsView.vue'),
+      name: 'plugins'
     },
     {
       path: '/plugins/:id/files',
-      component: () => import('../views/PluginFiles.vue')
+      component: () => import('../views/PluginFiles.vue'),
+      name: 'pluginFiles'
     },
     {
       path: '/plugins/:id/files/:fileId',
@@ -30,19 +34,23 @@ const router = createRouter({
     },
     {
       path: '/queues',
-      component: () => import('../views/QueuesView.vue')
+      component: () => import('../views/QueuesView.vue'),
+      name: 'queues'
     },
     {
       path: '/experiments',
-      component: () => import('../views/ExperimentsView.vue')
+      component: () => import('../views/ExperimentsView.vue'),
+      name: 'experiments'
     },
     {
       path: '/jobs',
-      component: () => import('../views/AllJobsView.vue')
+      component: () => import('../views/AllJobsView.vue'),
+      name: 'jobs'
     },
     {
       path: '/experiments/:id/jobs',
-      component: () => import('../views/JobsView.vue')
+      component: () => import('../views/JobsView.vue'),
+      name: 'experimentJobs'
     },
     {
       path: '/experiments/:id/jobs/:jobId',
@@ -67,19 +75,23 @@ const router = createRouter({
     },
     {
       path: '/tags',
-      component: () => import('../views/TagsView.vue')
+      component: () => import('../views/TagsView.vue'),
+      name: 'tags'
     },
     {
       path: '/pluginParams',
-      component: () => import('../views/PluginParamsView.vue')
+      component: () => import('../views/PluginParamsView.vue'),
+      name: 'pluginParams'
     },
     {
       path: '/models',
-      component: () => import('../views/ModelsView.vue')
+      component: () => import('../views/ModelsView.vue'),
+      name: 'models'
     },
     {
       path: '/artifacts',
-      component: () => import('../views/ArtifactsView.vue')
+      component: () => import('../views/ArtifactsView.vue'),
+      name: 'artifacts'
     },
     {
       path: '/login',

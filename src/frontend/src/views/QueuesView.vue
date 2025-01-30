@@ -24,19 +24,7 @@
       />
     </template>
   </TableComponent>
-  <q-btn 
-    class="fixedButton"
-    round
-    color="primary"
-    icon="add"
-    size="lg"
-    @click="showQueueDialog = true"
-  >
-    <span class="sr-only">Register a new Queue</span>
-    <q-tooltip>
-      Register a new Queue
-    </q-tooltip>
-  </q-btn>
+
   <QueueDialog 
     v-model="showQueueDialog"
     @addQueue="addQueue"
@@ -200,5 +188,12 @@
   }
 
   const editObjTags = ref({})
+
+  watch(() => store.triggerPopup, (newVal) => {
+    if(newVal) {
+      showQueueDialog.value = true
+      store.triggerPopup = false
+    }
+  })
 
 </script>

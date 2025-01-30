@@ -15,6 +15,7 @@
         :style="{ 'margin-top': isMobile ? '10px' : '25px', height: '100' }"
       >
         <router-view />
+        <CreateButton v-if="addCreateButton" />
       </div>
     </q-page-container>
 
@@ -31,6 +32,7 @@
   import AccessibilityTest from '@/components/AccessibilityTest.vue'
   import { useQuasar } from 'quasar'
   import { computed, provide, watch } from 'vue'
+  import CreateButton from './components/CreateButton.vue'
   import { useLoginStore } from '@/stores/LoginStore'
   import SnapshotList from './components/SnapshotList.vue'
 
@@ -63,5 +65,25 @@
       store.selectedSnapshot = null
     }
   })
+
+  const includeCreateButton = [
+    'home',
+    'experiments',
+    'experimentJobs',
+    'entrypoints',
+    'plugins',
+    'pluginFiles',
+    'queues',
+    'jobs',
+    'pluginParams',
+    'tags',
+    'models',
+    'artifacts'
+  ]
+
+  const addCreateButton = computed(() => {
+    return typeof route.name === 'string' && includeCreateButton.includes(route.name)
+  })
+
 
 </script>
