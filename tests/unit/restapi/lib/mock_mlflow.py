@@ -49,7 +49,9 @@ class MockMlflowClient(object):
             # find the latest metric for each metric name
             if (
                 metric.key not in output_metrics
-                or metric.timestamp > output_metrics[metric.key].timestamp
+                # use >= here since we append to the list in log_metric and want to make sure we 
+                # return the latest metric available if they have the same timestamp
+                or metric.timestamp >= output_metrics[metric.key].timestamp 
             ):
                 output_metrics[metric.key] = metric
 
