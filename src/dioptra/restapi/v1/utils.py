@@ -288,6 +288,7 @@ def build_plugin_snapshot_ref(plugin: models.Plugin) -> dict[str, Any]:
         The PluginSnapshotRef dictionary.
     """
     return {
+        "id": plugin.resource_id,
         "snapshot_id": plugin.resource_snapshot_id,
         "name": plugin.name,
         "group": build_group_ref(plugin.resource.owner),
@@ -401,6 +402,7 @@ def build_queue_snapshot_ref(queue: models.Queue) -> dict[str, Any]:
         The QueueSnapshotRef dictionary.
     """
     return {
+        "id": queue.resource_id,
         "snapshot_id": queue.resource_snapshot_id,
         "name": queue.name,
         "group": build_group_ref(queue.resource.owner),

@@ -99,16 +99,19 @@ def assert_job_response_contents_matches_expectations(
     asserts.assert_queue_ref_contents_matches_expectations(
         queue=response["queue"],
         expected_queue_id=expected_contents["queue_id"],
+        expected_queue_snapshot_id=expected_contents["queue_snapshot_id"],
         expected_group_id=expected_contents["group_id"],
     )
     asserts.assert_experiment_ref_contents_matches_expectations(
         experiment=response["experiment"],
         expected_experiment_id=expected_contents["experiment_id"],
+        expected_experiment_snapshot_id=expected_contents["experiment_snapshot_id"],
         expected_group_id=expected_contents["group_id"],
     )
     asserts.assert_entrypoint_ref_contents_matches_expectations(
         entrypoint=response["entrypoint"],
         expected_entrypoint_id=expected_contents["entrypoint_id"],
+        expected_entrypoint_snapshot_id=expected_contents["entrypoint_snapshot_id"],
         expected_group_id=expected_contents["group_id"],
     )
 
@@ -393,6 +396,9 @@ def test_create_job(
       *Note: group_id is given as an arg for registration in the service layer
     """
 
+    queue_id = registered_queues["queue1"]["id"]
+    experiment_id = registered_experiments["experiment1"]["id"]
+    entrypoint_id = registered_entrypoints["entrypoint1"]["id"]
     queue_snapshot_id = registered_queues["queue1"]["snapshot"]
     experiment_snapshot_id = registered_experiments["experiment1"]["snapshot"]
     entrypoint_snapshot_id = registered_entrypoints["entrypoint1"]["snapshot"]
@@ -408,9 +414,12 @@ def test_create_job(
             "values": values,
             "user_id": auth_account["id"],
             "group_id": registered_experiments["experiment1"]["group"]["id"],
-            "queue_id": queue_snapshot_id,
-            "experiment_id": experiment_snapshot_id,
-            "entrypoint_id": entrypoint_snapshot_id,
+            "queue_id": queue_id,
+            "experiment_id": experiment_id,
+            "entrypoint_id": entrypoint_id,
+            "queue_snapshot_id": queue_snapshot_id,
+            "experiment_snapshot_id": experiment_snapshot_id,
+            "entrypoint_snapshot_id": entrypoint_snapshot_id,
         },
     )
 
