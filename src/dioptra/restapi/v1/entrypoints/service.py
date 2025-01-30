@@ -722,18 +722,19 @@ class EntrypointIdPluginsIdService(object):
             ),
         )["entry_point"]
 
-        plugin = {
-            entry_point_plugin.plugin.resource_id: entry_point_plugin.plugin
+        plugin = [
+            entry_point_plugin.plugin
             for entry_point_plugin in entrypoint.entry_point_plugins
-        }.get(plugin_id, None)
+            if plugin_id == entry_point_plugin.plugin.resource_id
+        ]
 
-        if plugin is None:
+        if not plugin:
             raise EntityDoesNotExistError(
                 PLUGIN_RESOURCE_TYPE, entrypoint_id=entrypoint_id, plugin_id=plugin_id
             )
 
         return utils.PluginWithFilesDict(
-            plugin=plugin, plugin_files=plugin.plugin_files, has_draft=None
+            plugin=plugin[0], plugin_files=plugin[0].plugin_files, has_draft=None
         )
 
     def delete(
