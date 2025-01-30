@@ -59,7 +59,12 @@ class MockMlflowClient(object):
         return run
 
     def log_metric(
-        self, id: str, key: str, value: float, step: Optional[int] = None, timestamp: Optional[int] = None
+        self,
+        id: str,
+        key: str,
+        value: float,
+        step: Optional[int] = None,
+        timestamp: Optional[int] = None,
     ):
         if id not in active_runs:
             active_runs[id] = []
