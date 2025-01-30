@@ -18,11 +18,12 @@
 from __future__ import annotations
 
 import uuid
+from pathlib import Path
 from typing import cast
 from urllib.parse import unquote
 
 import structlog
-from flask import request
+from flask import request, send_file
 from flask_accepts import accepts, responds
 from flask_login import login_required
 from flask_restx import Namespace, Resource
@@ -31,6 +32,7 @@ from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
 from dioptra.restapi.routes import V1_ARTIFACTS_ROUTE
+from dioptra.restapi.utils import as_api_parser, as_parameters_schema_list
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.shared.snapshots.controller import (
     generate_resource_snapshots_endpoint,
@@ -38,6 +40,8 @@ from dioptra.restapi.v1.shared.snapshots.controller import (
 )
 
 from .schema import (
+    ArtifactContentsGetQueryParameters,
+    ArtifactFileSchema,
     ArtifactGetQueryParameters,
     ArtifactMutableFieldsSchema,
     ArtifactPageSchema,
@@ -46,6 +50,7 @@ from .schema import (
 from .service import (
     RESOURCE_TYPE,
     SEARCHABLE_FIELDS,
+    ArtifactIdContentsService,
     ArtifactIdService,
     ArtifactService,
 )
@@ -69,7 +74,6 @@ class ArtifactEndpoint(Resource):
         self._artifact_service = artifact_service
         super().__init__(*args, **kwargs)
 
-    @login_required
     @accepts(query_params_schema=ArtifactGetQueryParameters, api=api)
     @responds(schema=ArtifactPageSchema, api=api)
     def get(self):
@@ -110,7 +114,15 @@ class ArtifactEndpoint(Resource):
         )
 
     @login_required
-    @accepts(schema=ArtifactSchema, api=api)
+    @api.expect(
+        as_api_parser(
+            api,
+            as_parameters_schema_list(
+                ArtifactSchema, operation="load", location="form"
+            ),
+        )
+    )
+    @accepts(form_schema=ArtifactSchema, api=api)
     @responds(schema=ArtifactSchema, api=api)
     def post(self):
         """Creates an Artifact resource."""
@@ -118,13 +130,14 @@ class ArtifactEndpoint(Resource):
             request_id=str(uuid.uuid4()), resource="Artifact", request_type="POST"
         )
         log.debug("Request received")
-        parsed_obj = request.parsed_obj  # noqa: F841
+        parsed_form = request.parsed_form  # noqa: F841
 
         artifact = self._artifact_service.create(
-            uri=parsed_obj["uri"],
-            description=parsed_obj["description"],
-            group_id=parsed_obj["group_id"],
-            job_id=parsed_obj["job_id"],
+            artifact_file=request.files.get("artifactFile", None),
+            artifact_type=parsed_form["artifact_type"],
+            description=parsed_form["description"],
+            group_id=parsed_form["group_id"],
+            job_id=parsed_form["job_id"],
             log=log,
         )
         return utils.build_artifact(artifact)
@@ -152,10 +165,13 @@ class ArtifactIdEndpoint(Resource):
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="Artifact", request_type="GET", id=id
         )
-        artifact = cast(
-            models.Artifact,
-            self._artifact_id_service.get(id, error_if_not_found=True, log=log),
-        )
+
+        artifact = self._artifact_id_service.get(id, error_if_not_found=True, log=log)
+
+        if type(artifact) is str:
+            return artifact
+
+        artifact = cast(models.Artifact, artifact)
         return utils.build_artifact(artifact)
 
     @login_required
@@ -177,6 +193,58 @@ class ArtifactIdEndpoint(Resource):
             ),
         )
         return utils.build_artifact(artifact)
+
+
+@api.route("/<int:id>/contents")
+@api.param("id", "ID for the Artifact resource.")
+class ArtifactIdContentsEndpoint(Resource):
+    @inject
+    def __init__(
+        self, artifact_id_contents_service: ArtifactIdContentsService, *args, **kwargs
+    ) -> None:
+        """Initialize the artifact id contents resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            artifact_id_contents_service: A ArtifactIdContentsService object.
+        """
+        self._artifact_id_contents_service = artifact_id_contents_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    @accepts(query_params_schema=ArtifactContentsGetQueryParameters, api=api)
+    @responds(schema=ArtifactFileSchema(many=True), api=api)
+    def get(self, id: int):
+        """Gets a list of all files associated with an Artifact resource."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="Artifact", request_type="GET", id=id
+        )
+        parsed_query_params = request.parsed_query_params  # type: ignore # noqa: F841
+
+        path = parsed_query_params["path"]
+
+        contents, is_dir, artifact_name, mimetype = (
+            self._artifact_id_contents_service.get(
+                artifact_id=id,
+                path=path,
+                log=log,
+            )
+        )
+
+        if path is None and is_dir:
+            path = Path(f"artifact_{id}.json").name
+        elif path is None:
+            path = artifact_name
+        else:
+            path = Path(path).name
+
+        return send_file(
+            path_or_file=contents,
+            mimetype=mimetype,
+            as_attachment=False,
+            download_name=path,
+        )
 
 
 ArtifactSnapshotsResource = generate_resource_snapshots_endpoint(

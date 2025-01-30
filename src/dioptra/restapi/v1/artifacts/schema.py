@@ -15,8 +15,9 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The schemas for serializing/deserializing Artifact resources."""
-from marshmallow import Schema, fields
+from marshmallow import Schema, fields, validate
 
+from dioptra.restapi.custom_schema_fields import FileUpload
 from dioptra.restapi.v1.schemas import (
     BasePageSchema,
     GroupIdQueryParametersSchema,
@@ -42,6 +43,37 @@ class ArtifactRefSchema(ArtifactRefBaseSchema):  # type: ignore
     )
 
 
+class ArtifactFileMetadataSchema(Schema):
+    """The schema for the artifact file metadata."""
+
+    fileType = fields.String(
+        attribute="file_type",
+        metadata=dict(description="The type of the file."),
+        dump_only=True,
+    )
+    fileSize = fields.Integer(
+        attribute="file_size",
+        metadata=dict(description="The size in bytes of the file."),
+        dump_only=True,
+    )
+    fileUrl = fields.Url(
+        attribute="file_url",
+        metadata=dict(description="URL for accessing the contents of the file."),
+        relative=True,
+        dump_only=True,
+    )
+
+
+class ArtifactFileSchema(ArtifactFileMetadataSchema):
+    """The schema for an artifact file."""
+
+    relativePath = fields.String(
+        attribute="relative_path",
+        metadata=dict(description="Relative path to the Artifact URI."),
+        dump_only=True,
+    )
+
+
 class ArtifactMutableFieldsSchema(Schema):
     """The fields schema for the mutable data in a Artifact resource."""
 
@@ -55,7 +87,9 @@ class ArtifactMutableFieldsSchema(Schema):
 ArtifactBaseSchema = generate_base_resource_schema("Artifact", snapshot=True)
 
 
-class ArtifactSchema(ArtifactMutableFieldsSchema, ArtifactBaseSchema):  # type: ignore
+class ArtifactSchema(
+    ArtifactFileMetadataSchema, ArtifactMutableFieldsSchema, ArtifactBaseSchema
+):  # type: ignore
     """The schema for the data stored in an Artifact resource."""
 
     jobId = fields.Int(
@@ -64,9 +98,22 @@ class ArtifactSchema(ArtifactMutableFieldsSchema, ArtifactBaseSchema):  # type: 
         metadata=dict(description="id of the job that produced this Artifact"),
         required=True,
     )
-    uri = fields.String(
-        attribute="uri",
-        metadata=dict(description="URL pointing to the location of the Artifact."),
+    artifactFile = FileUpload(
+        attribute="artifact_file",
+        metadata=dict(
+            type="file",
+            format="binary",
+            description="The artifact file.",
+        ),
+        required=False,
+    )
+    artifactType = fields.String(
+        attribute="artifact_type",
+        validate=validate.OneOf(["file", "dir", "archive"]),
+        metadata=dict(
+            description="Indicates what type of \
+            artifact this is (file or dir or archive)."
+        ),
         required=True,
     )
 
@@ -78,6 +125,16 @@ class ArtifactPageSchema(BasePageSchema):
         ArtifactSchema,
         many=True,
         metadata=dict(description="List of Artifact resources in the current page."),
+    )
+
+
+class ArtifactContentsGetQueryParameters(Schema):
+    """A schema for adding artifact contents query parameters to a resource endpoint."""
+
+    path = fields.String(
+        attribute="path",
+        metadata=dict(description="Path of a specific artifact."),
+        load_default=None,
     )
 
 
