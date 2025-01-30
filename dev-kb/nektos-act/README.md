@@ -1,5 +1,5 @@
 # Nektos-ACT Use Guide
-## The guide describes use of Nektos-ACT for developing, debugging, and running github actions locally
+### This guide describes necessary steps to use of Nektos-ACT for developing, debugging, and running github actions locally
 
 # [ACT by Nektos](https://nektosact.com/introduction.html) for developers.
  - [How to install ACT](#act-install)
