@@ -58,11 +58,40 @@ This will generate a setup that is appropriate for testing Dioptra on your perso
    source venv-deploy/bin/activate
    python -m pip install --upgrade pip cruft jinja2
 
-   # Run cruft and set the template's variables
+Next, run cruft to begin the deployment process. There are four different methods for configuring the deployment. For new users, 1) is recommended.
+
+1) Have cruft ask for each variable:
+
+.. code:: sh
+
    cruft create https://github.com/usnistgov/dioptra --checkout $DIOPTRA_BRANCH \
      --directory cookiecutter-templates/cookiecutter-dioptra-deployment
 
-Cruft will now run and prompt you to configure the deployment. See the :ref:`Applying the template <getting-started-running-dioptra-applying-the-template>` section for detailed description of each prompt.
+2) Have cruft automatically apply the default template values:
+
+.. code:: sh
+
+   cruft create https://github.com/usnistgov/dioptra --checkout $DIOPTRA_BRANCH \
+     --directory cookiecutter-templates/cookiecutter-dioptra-deployment --no-input
+
+3) Have cruft use default values except for those specified:
+
+.. code:: sh
+
+   cruft create https://github.com/usnistgov/dioptra --checkout $DIOPTRA_BRANCH \
+     --directory cookiecutter-templates/cookiecutter-dioptra-deployment --no-input \
+     --extra-context '{"datasets_directory": "~/datasets"}'
+
+4) Have cruft use default values except for those given in a file:
+
+.. code:: sh
+
+   cruft create https://github.com/usnistgov/dioptra --checkout $DIOPTRA_BRANCH \
+     --directory cookiecutter-templates/cookiecutter-dioptra-deployment --no-input \
+     --extra-context-file overrides.json
+
+
+Cruft will now run and, if requested, prompt you to configure the deployment. See the :ref:`Applying the template <getting-started-running-dioptra-applying-the-template>` section for detailed description of each prompt.
 
 We recommend identifying a location to store datasets you will want to use with Dioptra at this point and setting the ``datasets_directory`` variable accordingly. See the :ref:`Downloading the datasets <getting-started-acquiring-datasets>` section for more details.
 
