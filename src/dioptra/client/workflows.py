@@ -22,6 +22,7 @@ from .base import CollectionClient, IllegalArgumentError
 T = TypeVar("T")
 
 JOB_FILES_DOWNLOAD: Final[str] = "jobFilesDownload"
+DRAFT_COMMIT: Final[str] = "draftCommit"
 
 
 class WorkflowsCollectionClient(CollectionClient[T]):
@@ -86,3 +87,22 @@ class WorkflowsCollectionClient(CollectionClient[T]):
         return self._session.download(
             self.url, JOB_FILES_DOWNLOAD, output_path=job_files_path, params=params
         )
+
+    def commit_draft(
+        self,
+        draft_id: str | int,
+    ) -> T:
+        """
+        Commit a draft as a new resource snapshot.
+
+        The draft can be a draft of a new resource or a draft modifications to an
+        existing resource.
+
+        Args:
+            draft_id: The draft id, an intiger.
+
+        Returns:
+            A dictionary containing the contents of the new resource.
+        """
+
+        return self._session.post(self.url, DRAFT_COMMIT, str(draft_id))
