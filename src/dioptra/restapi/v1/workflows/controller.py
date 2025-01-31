@@ -25,8 +25,14 @@ from flask_restx import Namespace, Resource
 from injector import inject
 from structlog.stdlib import BoundLogger
 
-from .schema import FileTypes, JobFilesDownloadQueryParametersSchema
-from .service import JobFilesDownloadService
+from dioptra.restapi.utils import as_api_parser, as_parameters_schema_list
+
+from .schema import (
+    FileTypes,
+    JobFilesDownloadQueryParametersSchema,
+    ResourceImportSchema,
+)
+from .service import JobFilesDownloadService, ResourceImportService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -77,4 +83,51 @@ class JobFilesDownloadEndpoint(Resource):
             as_attachment=True,
             mimetype=mimetype[parsed_query_params["file_type"]],
             download_name=download_name[parsed_query_params["file_type"]],
+        )
+
+
+@api.route("/resourceImport")
+class ResourceImport(Resource):
+    @inject
+    def __init__(
+        self, resource_import_service: ResourceImportService, *args, **kwargs
+    ) -> None:
+        """Initialize the workflow resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            resource_import_service: A ResourceImportService object.
+        """
+        self._resource_import_service = resource_import_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    @api.expect(
+        as_api_parser(
+            api,
+            as_parameters_schema_list(
+                ResourceImportSchema, operation="load", location="form"
+            ),
+        )
+    )
+    @accepts(form_schema=ResourceImportSchema, api=api)
+    def post(self):
+        """Import resources from an external source."""  # noqa: B950
+        log = LOGGER.new(  # noqa: F841
+            request_id=str(uuid.uuid4()), resource="ResourceImport", request_type="POST"
+        )
+        parsed_form = request.parsed_form
+
+        return self._resource_import_service.import_resources(
+            group_id=parsed_form["group_id"],
+            source_type=parsed_form["source_type"],
+            git_url=parsed_form.get("git_url", None),
+            archive_file=request.files.get("archiveFile", None),
+            files=request.files.getlist("files", None),
+            config_path=parsed_form["config_path"],
+            resolve_name_conflicts_strategy=parsed_form[
+                "resolve_name_conflicts_strategy"
+            ],
+            log=log,
         )

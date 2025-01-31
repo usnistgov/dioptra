@@ -15,13 +15,19 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from pathlib import Path
-from typing import ClassVar, Final, TypeVar
+from typing import Any, ClassVar, Final, Literal, TypeVar, overload
 
-from .base import CollectionClient, IllegalArgumentError
+from .base import (
+    CollectionClient,
+    DioptraFile,
+    DioptraResponseProtocol,
+    IllegalArgumentError,
+)
 
 T = TypeVar("T")
 
 JOB_FILES_DOWNLOAD: Final[str] = "jobFilesDownload"
+RESOURCE_IMPORT: Final[str] = "resourceImport"
 
 
 class WorkflowsCollectionClient(CollectionClient[T]):
@@ -85,4 +91,99 @@ class WorkflowsCollectionClient(CollectionClient[T]):
 
         return self._session.download(
             self.url, JOB_FILES_DOWNLOAD, output_path=job_files_path, params=params
+        )
+
+    @overload
+    def import_resources(
+        self,
+        git_url: str,
+        config_path: str | None = "dioptra.toml",
+        resolve_name_conflicts_strategy: Literal["fail", "overwrite"] | None = "fail",
+    ) -> DioptraResponseProtocol:
+        """Signature for using import_resource from git repo"""
+        ...  # pragma: nocover
+
+    @overload
+    def import_resources(
+        self,
+        archive_file: DioptraFile,
+        config_path: str | None = "dioptra.toml",
+        resolve_name_conflicts_strategy: Literal["fail", "overwrite"] | None = "fail",
+    ) -> DioptraResponseProtocol:
+        """Signature for using import_resource from archive file"""
+        ...  # pragma: nocover
+
+    @overload
+    def import_resources(
+        self,
+        files: list[DioptraFile],
+        config_path: str | None = "dioptra.toml",
+        resolve_name_conflicts_strategy: Literal["fail", "overwrite"] | None = "fail",
+    ) -> DioptraResponseProtocol:
+        """Signature for using import_resource from archive file"""
+        ...  # pragma: nocover
+
+    def import_resources(
+        self,
+        group_id,
+        git_url=None,
+        archive_file=None,
+        files=None,
+        config_path="dioptra.toml",
+        resolve_name_conflicts_strategy="fail",
+    ):
+        """
+        Import resources from a archive file or git repository
+
+        Args:
+            group_id: The group to import resources into
+            source_type: The source to import from
+            git_url: The url to the git repository if source_type is "git"
+            archive_file: The contents of the upload if source_type is "upload_archive"
+            files: The contents of the upload if source_type is "upload_files"
+            config_path: The path to the toml configuration file in the import source.
+            resolve_name_conflicts_strategy: The strategy for resolving name conflicts.
+                Either "fail" or "overwrite"
+        Raises:
+            IllegalArgumentError: If more than one import source is provided or if no
+                import source is provided.
+        """
+
+        import_source_args = [git_url, archive_file, files]
+        num_provided_import_source_args = sum(
+            arg is not None for arg in import_source_args
+        )
+
+        if num_provided_import_source_args == 0:
+            raise IllegalArgumentError(
+                "One of (git_url, archive_file, or files) must be provided"
+            )
+        elif num_provided_import_source_args > 1:
+            raise IllegalArgumentError(
+                "Only one of (git_url, archive_file and files) can be provided"
+            )
+
+        data: dict[str, Any] = {"group": str(group_id)}
+        files_: dict[str, DioptraFile | list[DioptraFile]] = {}
+
+        if git_url is not None:
+            data["sourceType"] = "git"
+            data["gitUrl"] = git_url
+
+        if archive_file is not None:
+            data["sourceType"] = "upload_archive"
+            files_["archiveFile"] = archive_file
+
+        if files is not None:
+            data["sourceType"] = "upload_files"
+            files_["files"] = files
+
+        if config_path is not None:
+            data["configPath"] = config_path
+
+        if resolve_name_conflicts_strategy is not None:
+            data["resolveNameConflictsStrategy"] = resolve_name_conflicts_strategy
+
+        return self._session.post(
+            self.url, RESOURCE_IMPORT, data=data, files=files_ or None
         )
