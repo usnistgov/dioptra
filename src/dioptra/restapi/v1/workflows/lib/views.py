@@ -86,7 +86,7 @@ def get_experiment(job_id: int, logger: BoundLogger | None = None) -> models.Exp
 
 def get_entry_point_plugin_files(
     job_id: int, logger: BoundLogger | None = None
-) -> list[models.EntryPointPluginFile]:
+) -> list[models.PluginPluginFile]:
     """Run a query to get the plugin files for an entrypoint.
 
     Args:
@@ -99,18 +99,22 @@ def get_entry_point_plugin_files(
     """
     log = logger or LOGGER.new()  # noqa: F841
 
-    entry_point_resource_snapshot_id_stmt = (
-        select(models.EntryPoint.resource_snapshot_id)
+    entry_point_resource_snapshot_stmt = (
+        select(models.EntryPoint)
         .join(models.EntryPointJob)
         .where(
             models.EntryPointJob.job_resource_id == job_id,
         )
     )
-    entry_point_plugin_files_stmt = select(models.EntryPointPluginFile).where(
-        models.EntryPointPluginFile.entry_point_resource_snapshot_id
-        == entry_point_resource_snapshot_id_stmt.scalar_subquery(),
-    )
-    return list(db.session.scalars(entry_point_plugin_files_stmt).unique().all())
+    entry_point = db.session.scalar(entry_point_resource_snapshot_stmt)
+
+    plugin_plugin_files = [
+        plugin_plugin_file
+        for entry_point_plugin in entry_point.entry_point_plugins
+        for plugin_plugin_file in entry_point_plugin.plugin.plugin_plugin_files
+    ]
+
+    return plugin_plugin_files
 
 
 def get_job_parameter_values(

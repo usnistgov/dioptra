@@ -50,7 +50,7 @@ YAML_EXPORT_SETTINGS: Final[dict[str, Any]] = {
 
 def export_task_engine_yaml(
     entrypoint: models.EntryPoint,
-    entry_point_plugin_files: list[models.EntryPointPluginFile],
+    plugin_plugin_files: list[models.PluginPluginFile],
     plugin_parameter_types: list[models.PluginTaskParameterType],
     base_dir: Path,
     logger: BoundLogger | None = None,
@@ -59,7 +59,7 @@ def export_task_engine_yaml(
 
     Args:
         entrypoint: The entrypoint to export.
-        entry_point_plugin_files: The entrypoint's plugin files.
+        plugin_plugin_files: The entrypoint's plugin files.
         plugin_parameter_types: The latest snapshots of the plugin parameter types
             accessible to the entrypoint.
         base_dir: The directory to export the task engine YAML file to.
@@ -73,7 +73,7 @@ def export_task_engine_yaml(
     task_yaml_path = Path(base_dir, entrypoint.name).with_suffix(".yml")
     task_engine_dict = build_task_engine_dict(
         entrypoint=entrypoint,
-        entry_point_plugin_files=entry_point_plugin_files,
+        plugin_plugin_files=plugin_plugin_files,
         plugin_parameter_types=plugin_parameter_types,
     )
 
@@ -85,7 +85,7 @@ def export_task_engine_yaml(
 
 def build_task_engine_dict(
     entrypoint: models.EntryPoint,
-    entry_point_plugin_files: list[models.EntryPointPluginFile],
+    plugin_plugin_files: list[models.PluginPluginFile],
     plugin_parameter_types: list[models.PluginTaskParameterType],
     logger: BoundLogger | None = None,
 ) -> dict[str, Any]:
@@ -93,7 +93,7 @@ def build_task_engine_dict(
 
     Args:
         entrypoint: The entrypoint to export.
-        entry_point_plugin_files: The entrypoint's plugin files.
+        plugin_plugin_files: The entrypoint's plugin files.
         plugin_parameter_types: The latest snapshots of the plugin parameter types
             accessible to the entrypoint.
         logger: A structlog logger object to use for logging. A new logger will be
@@ -104,7 +104,7 @@ def build_task_engine_dict(
     """
     log = logger or LOGGER.new()  # noqa: F841
     tasks, parameter_types = extract_tasks(
-        entry_point_plugin_files, plugin_parameter_types=plugin_parameter_types
+        plugin_plugin_files, plugin_parameter_types=plugin_parameter_types
     )
     parameters = extract_parameters(entrypoint)
     graph = extract_graph(entrypoint)
@@ -147,14 +147,14 @@ def extract_parameters(
 
 
 def extract_tasks(
-    entry_point_plugin_files: list[models.EntryPointPluginFile],
+    plugin_plugin_files: list[models.PluginPluginFile],
     plugin_parameter_types: list[models.PluginTaskParameterType],
     logger: BoundLogger | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """Extract the plugin tasks and parameter types from the entrypoint plugin files.
 
     Args:
-        entry_point_plugin_files: The entrypoint's plugin files.
+        plugin_plugin_files: The entrypoint's plugin files.
         plugin_parameter_types: The latest snapshots of the plugin parameter types
             accessible to the entrypoint.
         logger: A structlog logger object to use for logging. A new logger will be
@@ -168,9 +168,9 @@ def extract_tasks(
 
     tasks: dict[str, Any] = {}
     parameter_types: dict[str, Any] = {}
-    for entry_point_plugin_file in entry_point_plugin_files:
-        plugin = entry_point_plugin_file.plugin
-        plugin_file = entry_point_plugin_file.plugin_file
+    for plugin_plugin_file in plugin_plugin_files:
+        plugin = plugin_plugin_file.plugin
+        plugin_file = plugin_plugin_file.plugin_file
 
         for task in plugin_file.tasks:
             input_parameters = sorted(

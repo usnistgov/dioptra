@@ -99,16 +99,19 @@ def assert_job_response_contents_matches_expectations(
     asserts.assert_queue_ref_contents_matches_expectations(
         queue=response["queue"],
         expected_queue_id=expected_contents["queue_id"],
+        expected_queue_snapshot_id=expected_contents["queue_snapshot_id"],
         expected_group_id=expected_contents["group_id"],
     )
     asserts.assert_experiment_ref_contents_matches_expectations(
         experiment=response["experiment"],
         expected_experiment_id=expected_contents["experiment_id"],
+        expected_experiment_snapshot_id=expected_contents["experiment_snapshot_id"],
         expected_group_id=expected_contents["group_id"],
     )
     asserts.assert_entrypoint_ref_contents_matches_expectations(
         entrypoint=response["entrypoint"],
         expected_entrypoint_id=expected_contents["entrypoint_id"],
+        expected_entrypoint_snapshot_id=expected_contents["entrypoint_snapshot_id"],
         expected_group_id=expected_contents["group_id"],
     )
 
@@ -367,9 +370,9 @@ def test_create_job(
     monkeypatch.setattr(rq_service, "RQQueue", mock_rq.MockRQQueue)
 
     description = "The new job."
-    queue_id = registered_queues["queue1"]["snapshot"]
-    experiment_id = registered_experiments["experiment1"]["snapshot"]
-    entrypoint_id = registered_entrypoints["entrypoint1"]["snapshot"]
+    queue_id = registered_queues["queue1"]["id"]
+    experiment_id = registered_experiments["experiment1"]["id"]
+    entrypoint_id = registered_entrypoints["entrypoint1"]["id"]
     values = {
         registered_entrypoints["entrypoint1"]["parameters"][0]["name"]: "new_value",
     }
@@ -392,6 +395,14 @@ def test_create_job(
     expected_contents: The raw data passed to actions.py::register_job() as *args
       *Note: group_id is given as an arg for registration in the service layer
     """
+
+    queue_id = registered_queues["queue1"]["id"]
+    experiment_id = registered_experiments["experiment1"]["id"]
+    entrypoint_id = registered_entrypoints["entrypoint1"]["id"]
+    queue_snapshot_id = registered_queues["queue1"]["snapshot"]
+    experiment_snapshot_id = registered_experiments["experiment1"]["snapshot"]
+    entrypoint_snapshot_id = registered_entrypoints["entrypoint1"]["snapshot"]
+
     for param in registered_entrypoints["entrypoint1"]["parameters"][1:]:
         values[param["name"]] = param["defaultValue"]
 
@@ -406,6 +417,9 @@ def test_create_job(
             "queue_id": queue_id,
             "experiment_id": experiment_id,
             "entrypoint_id": entrypoint_id,
+            "queue_snapshot_id": queue_snapshot_id,
+            "experiment_snapshot_id": experiment_snapshot_id,
+            "entrypoint_snapshot_id": entrypoint_snapshot_id,
         },
     )
 
@@ -465,7 +479,7 @@ def test_metrics(
         mlflow.exceptions, "MlflowException", mock_mlflow.MockMlflowException
     )
 
-    experiment_id = registered_experiments["experiment1"]["snapshot"]
+    experiment_id = registered_experiments["experiment1"]["id"]
     job1_id = registered_jobs["job1"]["id"]
     job2_id = registered_jobs["job2"]["id"]
     job3_id = registered_jobs["job3"]["id"]
@@ -731,7 +745,7 @@ def test_modify_job_status(
     """
     job_to_change_status = registered_jobs["job1"]
     job_id = job_to_change_status["id"]
-    experiment_id = job_to_change_status["experiment"]["snapshotId"]
+    experiment_id = job_to_change_status["experiment"]["id"]
     new_status = "started"
     dioptra_client.experiments.jobs.set_status(
         experiment_id=experiment_id, job_id=job_id, status=new_status
@@ -763,7 +777,7 @@ def test_manage_job_snapshots(
     job_to_change_status = registered_jobs["job1"]
     job_id = job_to_change_status["id"]
     dioptra_client.experiments.jobs.set_status(
-        experiment_id=job_to_change_status["experiment"]["snapshotId"],
+        experiment_id=job_to_change_status["experiment"]["id"],
         job_id=job_id,
         status="started",
     )
