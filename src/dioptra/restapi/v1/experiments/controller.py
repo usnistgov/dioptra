@@ -28,6 +28,7 @@ from injector import inject
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
+from dioptra.restapi.db.repository.experiments import ExperimentRepository
 from dioptra.restapi.routes import V1_EXPERIMENTS_ROUTE
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.artifacts.schema import ArtifactSchema
@@ -73,7 +74,6 @@ from .schema import (
 )
 from .service import (
     RESOURCE_TYPE,
-    SEARCHABLE_FIELDS,
     ExperimentIdEntrypointsIdService,
     ExperimentIdEntrypointsService,
     ExperimentIdService,
@@ -720,7 +720,7 @@ ExperimentSnapshotsResource = generate_resource_snapshots_endpoint(
     resource_model=models.Experiment,
     resource_name=RESOURCE_TYPE,
     route_prefix=V1_EXPERIMENTS_ROUTE,
-    searchable_fields=SEARCHABLE_FIELDS,
+    searchable_fields=ExperimentRepository.SEARCHABLE_FIELDS,
     page_schema=ExperimentPageSchema,
     build_fn=utils.build_experiment,
 )
