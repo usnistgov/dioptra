@@ -15,9 +15,8 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The schemas for serializing/deserializing Artifact resources."""
-from marshmallow import Schema, fields, validate
+from marshmallow import Schema, fields
 
-from dioptra.restapi.custom_schema_fields import FileUpload
 from dioptra.restapi.v1.schemas import (
     BasePageSchema,
     GroupIdQueryParametersSchema,
@@ -89,7 +88,7 @@ ArtifactBaseSchema = generate_base_resource_schema("Artifact", snapshot=True)
 
 class ArtifactSchema(
     ArtifactFileMetadataSchema, ArtifactMutableFieldsSchema, ArtifactBaseSchema
-):  # type: ignore
+):
     """The schema for the data stored in an Artifact resource."""
 
     jobId = fields.Int(

@@ -38,7 +38,6 @@ from structlog.stdlib import BoundLogger
 from werkzeug.datastructures import FileStorage
 
 from dioptra.restapi.db import db, models
-from dioptra.restapi.db.models.artifacts import Artifact
 from dioptra.restapi.errors import (
     BackendDatabaseError,
     DioptraError,
@@ -50,7 +49,11 @@ from dioptra.restapi.errors import (
 )
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.groups.service import GroupIdService
-from dioptra.restapi.v1.jobs.service import ExperimentJobIdService, JobIdMlflowrunService, JobIdService
+from dioptra.restapi.v1.jobs.service import (
+    ExperimentJobIdService,
+    JobIdMlflowrunService,
+    JobIdService,
+)
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 from dioptra.sdk.utilities.paths import set_cwd
 
@@ -127,22 +130,25 @@ class ArtifactService(object):
         )
         job = job_dict["job"]
         job_artifacts = job_dict["artifacts"]
-        mlflow_run_id = str(self._job_id_mlflowrun_service.get(job_id=job_id)["mlflow_run_id"])
-        
+        mlflow_run_id = str(
+            self._job_id_mlflowrun_service.get(job_id=job_id)["mlflow_run_id"]
+        )
+
         # check if an artifact with the same uri and job_id has already been created
         duplicate = _get_duplicate_artifact(job_artifacts, uri)
         if duplicate is not None:
             raise EntityExistsError(RESOURCE_TYPE, duplicate.resource_id, uri=uri)
-        
+
         try:
             artifact_list = mlflow.artifacts.list_artifacts(run_id=mlflow_run_id)
             if artifact_list is None:
                 raise MLFlowError(
-                    f'No artifacts are associated with the provided MLFlow run id: "{mlflow_run_id}"'
+                    f"No artifacts are associated with the provided MLFlow run "
+                    f"id: {mlflow_run_id}"
                 )
         except mlflow.exceptions.RestException as e:
-           log.error(f'{e}')
-           raise MLFlowError(f'{e}')
+            log.error(f"{e}")
+            raise MLFlowError(f"{e}") from e
 
         artifact_list = list(artifact_list)
         exists_in_mlflow = False
@@ -150,9 +156,10 @@ class ArtifactService(object):
             if artifact.uri == uri:
                 exists_in_mlflow = True
 
-        if exists_in_mlflow == False:
+        if exists_in_mlflow is False:
             raise MLFlowError(
-                f'The specified artifact uri "{uri}" is not part of MLFlow run with id: "{mlflow_run_id}"'
+                f"The specified artifact uri {uri} is not part of MLFlow run "
+                f"id: {mlflow_run_id}"
             )
 
         group = self._group_id_service.get(group_id, error_if_not_found=True, log=log)
@@ -569,7 +576,7 @@ class ArtifactIdContentsService(object):
         if artifact_list is None:
             raise DioptraError(
                 f'An artifact file with path "{artifact_full_path}" does not '
-                'exist in MLFlow.'
+                "exist in MLFlow."
             )
 
         is_dir = True
@@ -647,7 +654,7 @@ def _get_artifact_file_list(
             if new_artifact_list is None:
                 raise DioptraError(
                     f'An artifact file with path "{current_uri}" does not '
-                    'exist in MLFlow.'
+                    "exist in MLFlow."
                 )
 
             # If it is empty, it means it is a directory with no contents
@@ -699,7 +706,9 @@ def _get_artifact_file_list(
     return contents
 
 
-def _get_duplicate_artifact(job_artifacts, new_artifact_uri) -> models.Artifact | None:
+def _get_duplicate_artifact(
+    job_artifacts: list[models.Artifact], new_artifact_uri: str
+) -> models.Artifact | None:
     for artifact in job_artifacts:
         existing_uri = artifact.uri
         if new_artifact_uri == existing_uri:
@@ -824,8 +833,8 @@ def _upload_archive_as_artifact(
                 uri = mlflow.get_artifact_uri(top_dir_name)
         else:
             raise DioptraError(
-                f'The provdided file archive ({artifact_file_name}) is an '
-                'invalid archive type.'
+                f"The provdided file archive ({artifact_file_name}) is an "
+                "invalid archive type."
             )
 
         LOGGER.info(
