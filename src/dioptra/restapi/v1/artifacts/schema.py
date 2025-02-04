@@ -98,22 +98,9 @@ class ArtifactSchema(
         metadata=dict(description="id of the job that produced this Artifact"),
         required=True,
     )
-    artifactFile = FileUpload(
-        attribute="artifact_file",
-        metadata=dict(
-            type="file",
-            format="binary",
-            description="The artifact file.",
-        ),
-        required=False,
-    )
-    artifactType = fields.String(
-        attribute="artifact_type",
-        validate=validate.OneOf(["file", "dir", "archive"]),
-        metadata=dict(
-            description="Indicates what type of \
-            artifact this is (file or dir or archive)."
-        ),
+    uri = fields.String(
+        attribute="uri",
+        metadata=dict(description="URL pointing to the location of the Artifact."),
         required=True,
     )
 
