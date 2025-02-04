@@ -1,0 +1,106 @@
+types:
+# to be developed
+  my_type_1:
+  my_type_2:
+
+parameters:
+  experiment_id: 'placeholder_id'
+  job_id: 'placeholder_id'
+  estimator_degree: 3
+
+
+tasks:
+  #load_artifacts_for_job:
+  #  plugin: dioptra_custom.data_science_example.plugins.load_artifacts_for_job
+  #  inputs:
+  #    - name: job_id
+  #      type: string
+  #      required: true
+  retrieve_first_artifact_by_job_id:
+    plugin: dioptra_custom.data_science_example.plugins.retrieve_first_artifact_by_job_id
+    inputs:
+      - name: experiment_id
+        type: string
+        required: true
+      - name: job_id
+        type: string
+        required: true
+    outputs:
+      df: any
+
+  split_df:
+    plugin: dioptra_custom.data_science_example.plugins.split_df
+    inputs: 
+    - name: df
+      type: any
+      required: true
+    - name: estimator_degree
+      type: integer
+      required: true
+    - name: x_vars
+      type: any
+      required: false
+    - name: y_var
+      type: string
+      required: false
+    - name: OOD_percent
+      type: number
+      required: false
+    - name: test_size
+      type: number
+      required: false
+    outputs:
+      splits_dict: any
+  
+  fit_linear_model:
+    plugin: dioptra_custom.data_science_example.plugins.fit_linear_model
+    inputs:
+    - name: splits_dict
+      type: any
+      required: true
+    outputs:
+      model: any
+
+  evaluate_linear_model:
+    plugin: dioptra_custom.data_science_example.plugins.evaluate_linear_model 
+    inputs:
+    - name: splits_dict
+      type: any
+      required: true
+    - name: model
+      type: any
+      required: true
+    output:
+      metrics: any
+
+
+
+graph:    
+  load:
+    #load_artifacts_for_job: 
+    #  job_id: $job_id
+    retrieve_first_artifact_by_job_id:
+      experiment_id: $experiment_id
+      job_id: $job_id
+
+  split:
+    split_df:
+      df: $load.df
+      estimator_degree: $estimator_degree
+    dependencies:
+      - load
+
+  train:
+    fit_linear_model:
+      splits_dict: $split.splits_dict
+    dependencies:
+      - split
+
+  eval:
+    evaluate_linear_model:
+      splits_dict: $split.splits_dict
+      model: $train.model
+    dependencies:
+      - train
+
+  

@@ -1,0 +1,81 @@
+types:
+# to be developed
+  my_type_1:
+  my_type_2:
+
+parameters:
+  poly_degree: 3
+  sample_size: 100
+  df_file_name: 'simulated_df.csv'
+  df_file_format: 'csv'
+
+tasks:
+  gen_poly_func:
+    plugin: dioptra_custom.data_science_example.plugins.gen_poly_func
+    inputs:
+      - name: poly_degree
+        type: integer
+        required: true
+      - name: min_x
+        type: integer
+        required: false
+      - name: max_x
+        type: integer
+        required: false
+      - name: y_range_max
+        type: integer
+        required: false
+    outputs:
+      - polynomial_dict: any
+
+
+  simulate_data_from_poly:
+    plugin: dioptra_custom.data_science_example.plugins.simulate_data_from_poly
+    inputs:
+      - name: polynomial_dict
+        type: any
+        required: true
+      - name: sample_size
+        type: integer
+        required: true
+      - name: noise_mean
+        type: number
+        required: false
+      - name: noise_var
+        type: number
+        required: false
+    outputs:
+      sim_data_df: any
+
+  upload_df:
+    plugin: dioptra_custom.data_science_example.plugins.upload_df
+    inputs:
+      - name: df
+        type: any
+        requried: true
+      - name: file_name
+        type: string
+        required: false
+      - name: file_format
+        type: string
+        required: false
+
+      
+graph:    
+  polynomial:
+    gen_poly_func:
+      poly_degree: $poly_degree    
+
+  data:
+    simulate_data_from_poly:
+      polynomial_dict: $polynomial.polynomial_dict
+      sample_size: $sample_size
+    dependencies:
+      - polynomial
+
+  save:
+    upload_df:
+      df: $data.sim_data_df
+      file_name: $df_file_name
+      file_format: $df_file_format
+          
