@@ -44,12 +44,13 @@ from dioptra.restapi.errors import (
     DioptraError,
     EntityDoesNotExistError,
     EntityExistsError,
+    MLFlowError,
     QueryParameterValidationError,
     SortParameterValidationError,
 )
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.groups.service import GroupIdService
-from dioptra.restapi.v1.jobs.service import ExperimentJobIdService, JobIdService
+from dioptra.restapi.v1.jobs.service import ExperimentJobIdService, JobIdMlflowrunService, JobIdService
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 from dioptra.sdk.utilities.paths import set_cwd
 
@@ -76,6 +77,7 @@ class ArtifactService(object):
         self,
         artifact_uri_service: ArtifactUriService,
         job_id_service: JobIdService,
+        job_id_mlflowrun_service: JobIdMlflowrunService,
         group_id_service: GroupIdService,
     ) -> None:
         """Initialize the artifact service.
@@ -90,11 +92,11 @@ class ArtifactService(object):
         self._artifact_uri_service = artifact_uri_service
         self._job_id_service = job_id_service
         self._group_id_service = group_id_service
+        self._job_id_mlflowrun_service = job_id_mlflowrun_service
 
     def create(
         self,
-        artifact_file: FileStorage | None,
-        artifact_type: str,
+        uri: str,
         description: str,
         group_id: int,
         job_id: int,
@@ -104,9 +106,7 @@ class ArtifactService(object):
         """Create a new artifact.
 
         Args:
-            artifact_name: Name of the Artifact.
-            artifact_file: The contents of the Artifact file.
-            artifact_type: Either file or dir.
+            uri: The uri of the artifact. This must be globally unique.
             description: The description of the artifact.
             group_id: The group that will own the artifact.
             commit: If True, commit the transaction. Defaults to True.
@@ -116,6 +116,7 @@ class ArtifactService(object):
 
         Raises:
             EntityExistsError: If the artifact already exists.
+            MLFlowError: If the mlflow run id does not exist.
 
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -126,39 +127,33 @@ class ArtifactService(object):
         )
         job = job_dict["job"]
         job_artifacts = job_dict["artifacts"]
-
-        if artifact_file is None:
-            raise DioptraError("Failed to read uploaded file.")
-
-        artifact_file_name = artifact_file.filename
-        if artifact_file_name is None:
-            raise DioptraError("Invalid file name to be uploaded.")
-
-        # check the job's artifacts for a file with a matching name
-        duplicate = _get_duplicate_artifact(job_artifacts, artifact_file_name)
-
+        mlflow_run_id = str(self._job_id_mlflowrun_service.get(job_id=job_id)["mlflow_run_id"])
+        
+        # check if an artifact with the same uri and job_id has already been created
+        duplicate = _get_duplicate_artifact(job_artifacts, uri)
         if duplicate is not None:
-            raise EntityExistsError(
-                RESOURCE_TYPE, duplicate.resource_id, uri=duplicate.uri
+            raise EntityExistsError(RESOURCE_TYPE, duplicate.resource_id, uri=uri)
+        
+        try:
+            artifact_list = mlflow.artifacts.list_artifacts(run_id=mlflow_run_id)
+            if artifact_list is None:
+                raise MLFlowError(
+                    f'No artifacts are associated with the provided MLFlow run id: "{mlflow_run_id}"'
+                )
+        except mlflow.exceptions.RestException as e:
+           log.error(f'{e}')
+           raise MLFlowError(f'{e}')
+
+        artifact_list = list(artifact_list)
+        exists_in_mlflow = False
+        for artifact in artifact_list:
+            if artifact.uri == uri:
+                exists_in_mlflow = True
+
+        if exists_in_mlflow == False:
+            raise MLFlowError(
+                f'The specified artifact uri "{uri}" is not part of MLFlow run with id: "{mlflow_run_id}"'
             )
-
-        if artifact_type == "file":
-            with TemporaryDirectory() as tmp_dir, set_cwd(tmp_dir):
-                working_dir = Path(tmp_dir)
-                artifact_bytes = artifact_file.stream.read()
-                temp_file_path = os.path.join(working_dir, artifact_file_name)
-                try:
-                    with open(temp_file_path, "wb") as temp_file:
-                        temp_file.write(artifact_bytes)
-                except Exception as e:
-                    raise DioptraError("Failed to write temp file.") from e
-
-                uri = _upload_file_as_artifact(artifact_path=temp_file_path)
-        elif artifact_type == "dir" or artifact_type == "archive":
-            uri = _upload_archive_as_artifact(artifact_file, artifact_file_name)
-
-        else:
-            raise DioptraError("Wrong artifact_type was provided.")
 
         group = self._group_id_service.get(group_id, error_if_not_found=True, log=log)
 
@@ -704,10 +699,10 @@ def _get_artifact_file_list(
     return contents
 
 
-def _get_duplicate_artifact(job_artifacts, new_artifact_name) -> models.Artifact | None:
+def _get_duplicate_artifact(job_artifacts, new_artifact_uri) -> models.Artifact | None:
     for artifact in job_artifacts:
-        existing_artifact_name = os.path.basename(artifact.uri)
-        if new_artifact_name == existing_artifact_name:
+        existing_uri = artifact.uri
+        if new_artifact_uri == existing_uri:
             return artifact
 
     return None
