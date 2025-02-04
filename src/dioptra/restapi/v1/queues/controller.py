@@ -28,6 +28,7 @@ from injector import inject
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
+from dioptra.restapi.db.repository.queues import QueueRepository
 from dioptra.restapi.routes import V1_QUEUES_ROUTE
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.schemas import IdStatusResponseSchema
@@ -51,7 +52,7 @@ from .schema import (
     QueuePageSchema,
     QueueSchema,
 )
-from .service import RESOURCE_TYPE, SEARCHABLE_FIELDS, QueueIdService, QueueService
+from .service import RESOURCE_TYPE, QueueIdService, QueueService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -212,7 +213,7 @@ QueueSnapshotsResource = generate_resource_snapshots_endpoint(
     resource_model=models.Queue,
     resource_name=RESOURCE_TYPE,
     route_prefix=V1_QUEUES_ROUTE,
-    searchable_fields=SEARCHABLE_FIELDS,
+    searchable_fields=QueueRepository.SEARCHABLE_FIELDS,
     page_schema=QueuePageSchema,
     build_fn=utils.build_queue,
 )
