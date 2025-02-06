@@ -25,10 +25,16 @@ from flask_restx import Namespace, Resource
 from injector import inject
 from structlog.stdlib import BoundLogger
 
-from .schema import FileTypes, JobFilesDownloadQueryParametersSchema, EntrypointWorkflowSchema
-from .service import JobFilesDownloadService
+from dioptra.restapi.v1.shared.entrypoint_validate_service import (
+    EntrypointValidateService,
+)
 
-from dioptra.restapi.v1.shared.entrypoint_validate_service import EntrypointValidateService
+from .schema import (
+    EntrypointWorkflowSchema,
+    FileTypes,
+    JobFilesDownloadQueryParametersSchema,
+)
+from .service import JobFilesDownloadService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 

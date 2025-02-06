@@ -21,10 +21,10 @@ import structlog
 from injector import inject
 from structlog.stdlib import BoundLogger
 
+from dioptra.restapi.errors import EntrypointWorkflowYamlValidationError
 from dioptra.restapi.v1.plugins.service import PluginIdsService
 from dioptra.restapi.v1.shared.build_task_engine_dict import build_task_engine_dict
 from dioptra.task_engine.validation import validate
-from dioptra.restapi.errors import EntrpointWorkflowYamlValidationError
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -64,7 +64,7 @@ class EntrypointValidateService(object):
             A success response and a indicator that states the entrypoint worklflow yaml is valid.
 
         Raises:
-            EntrpointWorkflowYamlValidationError: If the entrypoint worklflow yaml is not valid.
+            EntrypointWorkflowYamlValidationError: If the entrypoint worklflow yaml is not valid.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Validate a entrypoint workflow", task_graph=task_graph, plugin_ids=plugin_ids, entrypoint_parameters=entrypoint_parameters)
@@ -82,4 +82,4 @@ class EntrypointValidateService(object):
         if not issues:
             return {"status": "Success", "valid": True}
         else:
-            raise EntrpointWorkflowYamlValidationError(issues)
+            raise EntrypointWorkflowYamlValidationError(issues)

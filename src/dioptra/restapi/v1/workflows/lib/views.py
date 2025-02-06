@@ -20,6 +20,7 @@ from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
 from dioptra.restapi.errors import EntityDoesNotExistError
+
 # from dioptra.restapi.v1.entrypoints.service import (
 #     RESOURCE_TYPE as ENTRYPONT_RESOURCE_TYPE,
 # )

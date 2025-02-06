@@ -21,7 +21,6 @@ functionalities for the entrypoint entity. The tests ensure that the entrypoints
 registered, renamed, deleted, and locked/unlocked as expected through the REST API.
 """
 import textwrap
-
 from http import HTTPStatus
 from typing import Any
 
@@ -29,9 +28,7 @@ from flask_sqlalchemy import SQLAlchemy
 
 from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
-from dioptra.restapi.routes import V1_WORKFLOWS_ROUTE, V1_ROOT
-
-
+from dioptra.restapi.routes import V1_ROOT, V1_WORKFLOWS_ROUTE
 
 # -- Actions ---------------------------------------------------------------------------
 

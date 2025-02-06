@@ -40,8 +40,10 @@ from dioptra.restapi.v1.groups.service import GroupIdService
 from dioptra.restapi.v1.plugins.service import PluginIdsService
 from dioptra.restapi.v1.queues.service import RESOURCE_TYPE as QUEUE_RESOURCE_TYPE
 from dioptra.restapi.v1.queues.service import QueueIdsService
+from dioptra.restapi.v1.shared.entrypoint_validate_service import (
+    EntrypointValidateService,
+)
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
-from dioptra.restapi.v1.shared.entrypoint_validate_service import EntrypointValidateService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 PLUGIN_RESOURCE_TYPE: Final[str] = "entry_point_plugin"
