@@ -768,3 +768,71 @@ def remove_tag(
         f"/{V1_ROOT}/{resource_route}/{resource_id}/tags/{tag_id}",
         follow_redirects=True,
     )
+
+def post_metrics(
+    client: FlaskClient, job_id: int, metric_name: str, metric_value: float
+) -> TestResponse:
+    """Remove tag from the resource with the provided unique ID.
+
+    Args:
+        client: The Flask test client.
+        job_id: The id of the Job to post metrics to.
+        metric_name: The name of the metric.
+        metric_value: The value of the metric.
+
+    Returns:
+        The response from the API.
+    """
+
+    return client.post(
+        f"/{V1_ROOT}/{V1_JOBS_ROUTE}/{job_id}/metrics",
+        json={"name": metric_name, "value": metric_value},
+    )
+
+
+def post_mlflowrun(
+    client: FlaskClient, job_id: int, mlflow_run_id: str
+) -> TestResponse:
+    """Add an mlflow run id to a job.
+
+    Args:
+        client: The Flask test client.
+        job_id: The id of the Job.
+        mlflow_run_id: The id of the mlflow run.
+    Returns:
+        The response from the API.
+
+    """
+    payload = {"mlflowRunId": mlflow_run_id}
+    response = client.post(
+        f"/{V1_ROOT}/{V1_JOBS_ROUTE}/{job_id}/mlflowRun",
+        json=payload,
+        follow_redirects=True,
+    )
+    return response
+
+
+def post_mlflowruns(
+    client: FlaskClient, mlflowruns: dict[str, Any], registered_jobs: dict[str, Any]
+) -> dict[str, Any]:
+    """Add mlflow run ids to multiple jobs.
+
+    Args:
+        client: The Flask test client.
+        mlflowruns: A dictionary mapping job key to mlflow run id.
+        registered_jobs: A dictionary of registered jobs.
+
+    Returns:
+        The responses from the API.
+    """
+
+    responses = {}
+
+    for key in mlflowruns.keys():
+        job_id = registered_jobs[key]["id"]
+        mlflowrun_response = post_mlflowrun(
+            client=client, job_id=job_id, mlflow_run_id=mlflowruns[key].hex
+        ).get_json()
+        responses[key] = mlflowrun_response
+
+    return responses

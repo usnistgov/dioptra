@@ -27,7 +27,7 @@ def generate_base_resource_schema(name: str, snapshot: bool) -> type[Schema]:
     from dioptra.restapi.v1.tags.schema import TagRefSchema
     from dioptra.restapi.v1.users.schema import UserRefSchema
 
-    schema: dict[str, fields.Field | type] = {
+    schema: dict[str, fields.Field] = {
         "id": fields.Integer(
             attribute="id",
             metadata=dict(description=f"ID for the {name} resource."),
@@ -64,6 +64,13 @@ def generate_base_resource_schema(name: str, snapshot: bool) -> type[Schema]:
             attribute="created_on",
             metadata=dict(
                 description=f"Timestamp when the {name} resource was created."
+            ),
+            dump_only=True,
+        ),
+        "snapshotCreatedOn": fields.DateTime(
+            attribute="snapshot_created_on",
+            metadata=dict(
+                description=f"Timestamp when the {name} resource snapshot was created."
             ),
             dump_only=True,
         ),
@@ -112,7 +119,7 @@ def generate_base_resource_ref_schema(
     """Generates the base schema for a ResourceRef."""
     from dioptra.restapi.v1.groups.schema import GroupRefSchema
 
-    schema: dict[str, fields.Field | type] = {
+    schema: dict[str, fields.Field] = {
         "id": fields.Integer(
             attribute="id",
             metadata=dict(description=f"ID for the {name} resource."),

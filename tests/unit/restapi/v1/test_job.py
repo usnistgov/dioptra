@@ -20,83 +20,17 @@ This module contains a set of tests that validate the CRUD operations and additi
 functionalities for the job entity. The tests ensure that the queues can be
 registered, renamed, queried, and deleted as expected through the REST API.
 """
+from http import HTTPStatus
 from typing import Any
 
 import pytest
-from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
 from pytest import MonkeyPatch
-from werkzeug.test import TestResponse
 
-from dioptra.restapi.routes import V1_EXPERIMENTS_ROUTE, V1_JOBS_ROUTE, V1_ROOT
+from dioptra.client.base import DioptraResponseProtocol
+from dioptra.client.client import DioptraClient
 
-from ..lib import actions, asserts, helpers, mock_rq
-
-# -- Actions ---------------------------------------------------------------------------
-
-
-def delete_job(
-    client: FlaskClient,
-    job_id: int,
-) -> TestResponse:
-    """Delete a job using the API.
-
-    Args:
-        client: The Flask test client.
-        job_id: The id of the job to delete.
-
-    Returns:
-        The response from the API.
-    """
-    return client.delete(
-        f"/{V1_ROOT}/{V1_JOBS_ROUTE}/{job_id}",
-        follow_redirects=True,
-    )
-
-
-def modify_job_status(
-    client: FlaskClient,
-    experiment_id: int,
-    job_id: int,
-    new_status: str,
-) -> TestResponse:
-    """Change the status of a job using the API.
-
-    Args:
-        client: The Flask test client.
-        experiment_id: The id of the experiment the job belongs too.
-        job_id: The id of the job to delete.
-        new_status: The new status of the job.
-
-    Returns:
-        The response from the API.
-    """
-    payload = {"status": new_status}
-    return client.put(
-        f"/{V1_ROOT}/{V1_EXPERIMENTS_ROUTE}/{experiment_id}/jobs/{job_id}/status",
-        json=payload,
-        follow_redirects=True,
-    )
-
-
-def get_job(
-    client: FlaskClient,
-    job_id: int,
-) -> TestResponse:
-    """Get a job using the API.
-
-    Args:
-        client: The Flask test client.
-        job_id: The id of the job to get.
-
-    Returns:
-        The response from the API.
-    """
-    return client.get(
-        f"/{V1_ROOT}/{V1_JOBS_ROUTE}/{job_id}",
-        follow_redirects=True,
-    )
-
+from ..lib import asserts, helpers, mock_mlflow, mock_rq, routines
 
 # -- Assertions ------------------------------------------------------------------------
 
@@ -120,6 +54,7 @@ def assert_job_response_contents_matches_expectations(
         "id",
         "snapshot",
         "createdOn",
+        "snapshotCreatedOn",
         "lastModifiedOn",
         "latestSnapshot",
         "hasDraft",
@@ -179,7 +114,9 @@ def assert_job_response_contents_matches_expectations(
 
 
 def assert_retrieving_job_by_id_works(
-    client: FlaskClient, job_id: int, expected: dict[str, Any]
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    job_id: int,
+    expected: dict[str, Any],
 ) -> None:
     """Assert that retrieving a job by id works.
 
@@ -192,12 +129,12 @@ def assert_retrieving_job_by_id_works(
         AssertionError: If the response status code is not 200 or if the API response
             does not match the expected response.
     """
-    response = client.get(f"/{V1_ROOT}/{V1_JOBS_ROUTE}/{job_id}", follow_redirects=True)
-    assert response.status_code == 200 and response.get_json() == expected
+    response = dioptra_client.jobs.get_by_id(job_id)
+    assert response.status_code == HTTPStatus.OK and response.json() == expected
 
 
 def assert_retrieving_jobs_works(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     expected: list[dict[str, Any]],
     group_id: int | None = None,
     search: str | None = None,
@@ -218,29 +155,28 @@ def assert_retrieving_jobs_works(
     """
     query_string: dict[str, Any] = {}
 
-    if group_id:
-        query_string["groupId"] = group_id
+    if group_id is not None:
+        query_string["group_id"] = group_id
 
-    if search:
+    if search is not None:
         query_string["search"] = search
 
-    if paging_info:
+    if paging_info is not None:
         query_string["index"] = paging_info["index"]
-        query_string["pageLength"] = paging_info["page_length"]
+        query_string["page_length"] = paging_info["page_length"]
 
-    response = client.get(
-        f"/{V1_ROOT}/{V1_JOBS_ROUTE}",
-        query_string=query_string,
-        follow_redirects=True,
-    )
-    assert response.status_code == 200 and response.get_json()["data"] == expected
+    response = dioptra_client.jobs.get(**query_string)
+    assert response.status_code == HTTPStatus.OK and response.json()["data"] == expected
 
 
 def assert_sorting_job_works(
-    client: FlaskClient,
-    sortBy: str,
-    descending: bool,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     expected: list[str],
+    sort_by: str | None,
+    descending: bool | None,
+    group_id: int | None = None,
+    search: str | None = None,
+    paging_info: dict[str, Any] | None = None,
 ) -> None:
     """Assert that jobs can be sorted by column ascending/descending.
 
@@ -253,26 +189,32 @@ def assert_sorting_job_works(
         AssertionError: If the response status code is not 200 or if the API response
             does not match the expected response.
     """
-
     query_string: dict[str, Any] = {}
 
-    query_string["sortBy"] = sortBy
-    query_string["descending"] = descending
+    if descending is not None:
+        query_string["descending"] = descending
 
-    response = client.get(
-        f"/{V1_ROOT}/{V1_JOBS_ROUTE}",
-        query_string=query_string,
-        follow_redirects=True,
-    )
+    if sort_by is not None:
+        query_string["sort_by"] = sort_by
 
-    response_data = response.get_json()
+    if group_id is not None:
+        query_string["group_id"] = group_id
+
+    if search is not None:
+        query_string["search"] = search
+
+    if paging_info is not None:
+        query_string["index"] = paging_info["index"]
+        query_string["page_length"] = paging_info["page_length"]
+
+    response = dioptra_client.jobs.get(**query_string)
+    response_data = response.json()
     job_ids = [job["id"] for job in response_data["data"]]
-
-    assert response.status_code == 200 and job_ids == expected
+    assert response.status_code == HTTPStatus.OK and job_ids == expected
 
 
 def assert_job_is_not_found(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     job_id: int,
 ) -> None:
     """Assert that a job is not found.
@@ -284,28 +226,107 @@ def assert_job_is_not_found(
     Raises:
         AssertionError: If the response status code is not 404.
     """
-    response = client.get(
-        f"/{V1_ROOT}/{V1_JOBS_ROUTE}/{job_id}",
-        follow_redirects=True,
-    )
-    assert response.status_code == 404
+    response = dioptra_client.jobs.get_by_id(job_id)
+    assert response.status_code == HTTPStatus.NOT_FOUND
 
 
 def assert_job_status_matches_expectations(
-    client: FlaskClient, job_id: int, expected: str
+    dioptra_client: DioptraClient[DioptraResponseProtocol], job_id: int, expected: str
 ) -> None:
-    response = client.get(
-        f"/{V1_ROOT}/{V1_JOBS_ROUTE}/{job_id}/status",
-        follow_redirects=True,
+    response = dioptra_client.jobs.get_status(job_id)
+    assert (
+        response.status_code == HTTPStatus.OK and response.json()["status"] == expected
     )
-    assert response.status_code == 200 and response.get_json()["status"] == expected
+
+
+def assert_job_mlflowrun_matches_expectations(
+    dioptra_client: DioptraClient[DioptraResponseProtocol], job_id: int, expected: str
+) -> None:
+    import uuid
+
+    response = dioptra_client.jobs.get_mlflow_run_id(job_id=job_id)
+    assert (
+        response.status_code == HTTPStatus.OK
+        and uuid.UUID(response.json()["mlflowRunId"]).hex == expected
+    )
+
+
+def assert_job_mlflowrun_already_set(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    job_id: int,
+    mlflow_run_id: str,
+) -> None:
+    response = dioptra_client.jobs.set_mlflow_run_id(
+        job_id=job_id, mlflow_run_id=mlflow_run_id
+    )
+    assert (
+        response.status_code == HTTPStatus.BAD_REQUEST
+        and response.json()["error"] == "JobMlflowRunAlreadySetError"
+    )
+
+
+def assert_job_metrics_validation_error(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    job_id: int,
+    metric_name: str,
+    metric_value: float,
+) -> None:
+    response = dioptra_client.jobs.append_metric_by_id(
+        job_id=job_id, metric_name=metric_name, metric_value=metric_value
+    )
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+
+
+def assert_job_metrics_matches_expectations(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    job_id: int,
+    expected: list[dict[str, Any]],
+) -> None:
+    response = dioptra_client.jobs.get_metrics_by_id(job_id=job_id)
+    assert response.status_code == HTTPStatus.OK and response.json() == expected
+
+
+def assert_experiment_metrics_matches_expectations(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    experiment_id: int,
+    expected: list[dict[str, Any]],
+) -> None:
+    response = dioptra_client.experiments.get_metrics_by_id(experiment_id=experiment_id)
+    assert response.status_code == HTTPStatus.OK and response.json()["data"] == expected
+
+
+def assert_job_metrics_snapshots_matches_expectations(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    job_id: int,
+    metric_name: str,
+    expected: list[dict[str, Any]],
+) -> None:
+    response = dioptra_client.jobs.get_metrics_snapshots_by_id(
+        job_id=job_id, metric_name=metric_name
+    )
+    assert response.status_code == HTTPStatus.OK
+
+    history = response.json()["data"]
+
+    assert all(
+        [
+            "name" in m and "value" in m and "timestamp" in m and "step" in m
+            for m in history
+        ]
+    )
+    assert all(
+        [
+            any([e["name"] == m["name"] and e["value"] == e["value"] for e in expected])
+            for m in history
+        ]
+    )
 
 
 # -- Tests -----------------------------------------------------------------------------
 
 
 def test_create_job(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_queues: dict[str, Any],
@@ -354,15 +375,14 @@ def test_create_job(
     }
     timeout = "24h"
 
-    job_response = actions.register_job(
-        client=client,
-        queue_id=queue_id,
+    job_response = dioptra_client.experiments.jobs.create(
         experiment_id=experiment_id,
         entrypoint_id=entrypoint_id,
-        description=description,
+        queue_id=queue_id,
         values=values,
         timeout=timeout,
-    ).get_json()
+        description=description,
+    ).json()
 
     """
     Validate the response matches the expected contents
@@ -374,6 +394,7 @@ def test_create_job(
     """
     for param in registered_entrypoints["entrypoint1"]["parameters"][1:]:
         values[param["name"]] = param["defaultValue"]
+
     assert_job_response_contents_matches_expectations(
         response=job_response,
         expected_contents={
@@ -397,12 +418,159 @@ def test_create_job(
       the response of the actions.py::register_job()
     """
     assert_retrieving_job_by_id_works(
-        client, job_id=job_response["id"], expected=job_response
+        dioptra_client, job_id=job_response["id"], expected=job_response
+    )
+
+
+def test_mlflowrun(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_jobs: dict[str, Any],
+    registered_mlflowrun_incomplete: dict[str, Any],
+):
+    import uuid
+
+    job_uuid = uuid.uuid4().hex
+
+    # explicitly use job3 because we did not set a mlflowrun on this job
+
+    mlflowrun_response = dioptra_client.jobs.set_mlflow_run_id(  # noqa: F841
+        job_id=registered_jobs["job3"]["id"], mlflow_run_id=job_uuid
+    ).json()
+
+    assert_job_mlflowrun_matches_expectations(
+        dioptra_client, job_id=registered_jobs["job3"]["id"], expected=job_uuid
+    )
+
+    assert_job_mlflowrun_already_set(
+        dioptra_client, job_id=registered_jobs["job1"]["id"], mlflow_run_id=job_uuid
+    )
+
+
+def test_metrics(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_jobs: dict[str, Any],
+    registered_experiments: dict[str, Any],
+    registered_mlflowrun: dict[str, Any],
+    monkeypatch: MonkeyPatch,
+) -> None:
+    import mlflow.exceptions
+    import mlflow.tracking
+
+    monkeypatch.setattr(mlflow.tracking, "MlflowClient", mock_mlflow.MockMlflowClient)
+    monkeypatch.setattr(
+        mlflow.exceptions, "MlflowException", mock_mlflow.MockMlflowException
+    )
+
+    experiment_id = registered_experiments["experiment1"]["snapshot"]
+    job1_id = registered_jobs["job1"]["id"]
+    job2_id = registered_jobs["job2"]["id"]
+    job3_id = registered_jobs["job3"]["id"]
+
+    metric_response = dioptra_client.jobs.append_metric_by_id(  # noqa: F841
+        job_id=job1_id,
+        metric_name="accuracy",
+        metric_value=4.0,
+    ).json()
+
+    assert_job_metrics_matches_expectations(
+        dioptra_client, job_id=job1_id, expected=[{"name": "accuracy", "value": 4.0}]
+    )
+
+    metric_response = dioptra_client.jobs.append_metric_by_id(  # noqa: F841
+        job_id=job1_id,
+        metric_name="accuracy",
+        metric_value=4.1,
+    ).json()
+
+    metric_response = dioptra_client.jobs.append_metric_by_id(  # noqa: F841
+        job_id=job1_id,
+        metric_name="accuracy",
+        metric_value=4.2,
+    ).json()
+
+    metric_response = dioptra_client.jobs.append_metric_by_id(  # noqa: F841
+        job_id=job1_id,
+        metric_name="roc_auc",
+        metric_value=0.99,
+    ).json()
+
+    metric_response = dioptra_client.jobs.append_metric_by_id(  # noqa: F841
+        job_id=job2_id,
+        metric_name="job_2_metric",
+        metric_value=0.11,
+    ).json()
+
+    assert_job_metrics_matches_expectations(
+        dioptra_client,
+        job_id=job1_id,
+        expected=[
+            {"name": "accuracy", "value": 4.2},
+            {"name": "roc_auc", "value": 0.99},
+        ],
+    )
+
+    assert_job_metrics_validation_error(
+        dioptra_client,
+        job_id=job1_id,
+        metric_name="!+_",
+        metric_value=4.0,
+    )
+
+    assert_job_metrics_validation_error(
+        dioptra_client,
+        job_id=job1_id,
+        metric_name="!!!!!",
+        metric_value=4.0,
+    )
+
+    assert_job_metrics_validation_error(
+        dioptra_client,
+        job_id=job1_id,
+        metric_name="$23",
+        metric_value=4.0,
+    )
+
+    assert_job_metrics_validation_error(
+        dioptra_client,
+        job_id=job1_id,
+        metric_name="abcdefghijk(lmnop)",
+        metric_value=4.0,
+    )
+
+    assert_experiment_metrics_matches_expectations(
+        dioptra_client,
+        experiment_id=experiment_id,
+        expected=[
+            {
+                "id": job1_id,
+                "metrics": [
+                    {"name": "accuracy", "value": 4.2},
+                    {"name": "roc_auc", "value": 0.99},
+                ],
+            },
+            {"id": job2_id, "metrics": [{"name": "job_2_metric", "value": 0.11}]},
+            {"id": job3_id, "metrics": []},
+        ],
+    )
+
+    assert_job_metrics_snapshots_matches_expectations(
+        dioptra_client,
+        job_id=registered_jobs["job1"]["id"],
+        metric_name="accuracy",
+        expected=[
+            {"name": "accuracy", "value": 4.2},
+            {"name": "accuracy", "value": 4.1},
+            {"name": "accuracy", "value": 4.0},
+        ],
     )
 
 
 def test_job_get_all(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
@@ -416,7 +584,7 @@ def test_job_get_all(
     - The returned list of jobs matches the full list of registered jobs.
     """
     job_expected_list = list(registered_jobs.values())
-    assert_retrieving_jobs_works(client, expected=job_expected_list)
+    assert_retrieving_jobs_works(dioptra_client, expected=job_expected_list)
 
 
 @pytest.mark.parametrize(
@@ -430,7 +598,7 @@ def test_job_get_all(
     ],
 )
 def test_job_sort(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
@@ -453,11 +621,13 @@ def test_job_sort(
     """
 
     expected_ids = [registered_jobs[expected_name]["id"] for expected_name in expected]
-    assert_sorting_job_works(client, sortBy, descending, expected=expected_ids)
+    assert_sorting_job_works(
+        dioptra_client, sort_by=sortBy, descending=descending, expected=expected_ids
+    )
 
 
 def test_job_search_query(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
@@ -473,14 +643,16 @@ def test_job_search_query(
     """
     job_expected_list = list(registered_jobs.values())[:2]
     assert_retrieving_jobs_works(
-        client, expected=job_expected_list, search="description:*job*"
+        dioptra_client, expected=job_expected_list, search="description:*job*"
     )
     jobs_expected_list = list(registered_jobs.values())
-    assert_retrieving_jobs_works(client, expected=jobs_expected_list, search="*")
+    assert_retrieving_jobs_works(
+        dioptra_client, expected=jobs_expected_list, search="*"
+    )
 
 
 def test_job_group_query(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
@@ -496,14 +668,14 @@ def test_job_group_query(
     """
     job_expected_list = list(registered_jobs.values())
     assert_retrieving_jobs_works(
-        client,
+        dioptra_client,
         expected=job_expected_list,
         group_id=auth_account["groups"][0]["id"],
     )
 
 
 def test_delete_job(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
@@ -518,12 +690,12 @@ def test_delete_job(
     - The request fails with an appropriate error message and response code.
     """
     job_to_delete = registered_jobs["job1"]
-    delete_job(client, job_id=job_to_delete["id"])
-    assert_job_is_not_found(client, job_id=job_to_delete["id"])
+    dioptra_client.jobs.delete_by_id(job_to_delete["id"])
+    assert_job_is_not_found(dioptra_client, job_id=job_to_delete["id"])
 
 
 def test_job_get_status(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
@@ -539,12 +711,12 @@ def test_job_get_status(
     job_to_check = registered_jobs["job1"]
     status = "queued"
     assert_job_status_matches_expectations(
-        client, job_id=job_to_check["id"], expected=status
+        dioptra_client, job_id=job_to_check["id"], expected=status
     )
 
 
 def test_modify_job_status(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
@@ -561,19 +733,16 @@ def test_modify_job_status(
     job_id = job_to_change_status["id"]
     experiment_id = job_to_change_status["experiment"]["snapshotId"]
     new_status = "started"
-    modify_job_status(
-        client=client,
-        job_id=job_id,
-        experiment_id=experiment_id,
-        new_status=new_status,
+    dioptra_client.experiments.jobs.set_status(
+        experiment_id=experiment_id, job_id=job_id, status=new_status
     )
     assert_job_status_matches_expectations(
-        client, job_id=job_to_change_status["id"], expected=new_status
+        dioptra_client, job_id=job_to_change_status["id"], expected=new_status
     )
 
 
 def test_manage_job_snapshots(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
@@ -593,44 +762,24 @@ def test_manage_job_snapshots(
     """
     job_to_change_status = registered_jobs["job1"]
     job_id = job_to_change_status["id"]
-    modify_job_status(
-        client,
-        job_id=job_to_change_status["id"],
+    dioptra_client.experiments.jobs.set_status(
         experiment_id=job_to_change_status["experiment"]["snapshotId"],
-        new_status="started",
+        job_id=job_id,
+        status="started",
     )
-    modified_job = get_job(client, job_id=job_id).get_json()
-    modified_job.pop("hasDraft")
-    modified_job.pop("artifacts")
-    job_to_change_status.pop("hasDraft")
-    job_to_change_status.pop("artifacts")
-    job_to_change_status["latestSnapshot"] = False
-    job_to_change_status["lastModifiedOn"] = modified_job["lastModifiedOn"]
-    asserts.assert_retrieving_snapshot_by_id_works(
-        client,
-        resource_route=V1_JOBS_ROUTE,
-        resource_id=job_to_change_status["id"],
-        snapshot_id=job_to_change_status["snapshot"],
-        expected=job_to_change_status,
-    )
-    asserts.assert_retrieving_snapshot_by_id_works(
-        client,
-        resource_route=V1_JOBS_ROUTE,
-        resource_id=modified_job["id"],
-        snapshot_id=modified_job["snapshot"],
-        expected=modified_job,
-    )
-    expected_snapshots = [job_to_change_status, modified_job]
-    asserts.assert_retrieving_snapshots_works(
-        client,
-        resource_route=V1_JOBS_ROUTE,
-        resource_id=job_to_change_status["id"],
-        expected=expected_snapshots,
+    modified_job = dioptra_client.jobs.get_by_id(job_id).json()
+
+    # Run routine: resource snapshots tests
+    routines.run_resource_snapshots_tests(
+        dioptra_client.jobs.snapshots,
+        resource_to_rename=job_to_change_status,
+        modified_resource=modified_job,
+        drop_additional_fields=["artifacts"],
     )
 
 
 def test_tag_job(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
@@ -655,55 +804,11 @@ def test_tag_job(
       the gets the expected response of no tags
     """
     job = registered_jobs["job1"]
-    tags = [tag["id"] for tag in registered_tags.values()]
+    tag_ids = [tag["id"] for tag in registered_tags.values()]
 
-    # test append
-    response = actions.append_tags(
-        client,
-        resource_route=V1_JOBS_ROUTE,
-        resource_id=job["id"],
-        tag_ids=[tags[0], tags[1]],
+    # Run routine: resource tag tests
+    routines.run_resource_tag_tests(
+        dioptra_client.jobs.tags,
+        job["id"],
+        tag_ids=tag_ids,
     )
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.get_json(), [tags[0], tags[1]]
-    )
-    response = actions.append_tags(
-        client,
-        resource_route=V1_JOBS_ROUTE,
-        resource_id=job["id"],
-        tag_ids=[tags[1], tags[2]],
-    )
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.get_json(), [tags[0], tags[1], tags[2]]
-    )
-
-    # test remove
-    actions.remove_tag(
-        client, resource_route=V1_JOBS_ROUTE, resource_id=job["id"], tag_id=tags[1]
-    )
-    response = actions.get_tags(
-        client, resource_route=V1_JOBS_ROUTE, resource_id=job["id"]
-    )
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.get_json(), [tags[0], tags[2]]
-    )
-
-    # test modify
-    response = actions.modify_tags(
-        client,
-        resource_route=V1_JOBS_ROUTE,
-        resource_id=job["id"],
-        tag_ids=[tags[1], tags[2]],
-    )
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.get_json(), [tags[1], tags[2]]
-    )
-
-    # test delete
-    response = actions.remove_tags(
-        client, resource_route=V1_JOBS_ROUTE, resource_id=job["id"]
-    )
-    response = actions.get_tags(
-        client, resource_route=V1_JOBS_ROUTE, resource_id=job["id"]
-    )
-    asserts.assert_tags_response_contents_matches_expectations(response.get_json(), [])

@@ -32,6 +32,7 @@ from dioptra.restapi.errors import (
     DraftAlreadyExistsError,
     DraftDoesNotExistError,
     EntityDoesNotExistError,
+    InvalidDraftBaseResourceSnapshotError,
 )
 from dioptra.restapi.v1.groups.service import GroupIdService
 
@@ -466,8 +467,43 @@ class ResourceIdDraftService(object):
         if draft is None:
             return None, num_other_drafts
 
+        # NOTE: This check disables the ability to change the base snapshot ID.
+        # It is scheduled to be removed as part of the draft commit workflow feature.
+        if draft.payload["resource_snapshot_id"] != payload["resource_snapshot_id"]:
+            raise InvalidDraftBaseResourceSnapshotError(
+                "The provided resource snapshot must match the base resource snapshot",
+                base_resource_snapshot_id=draft.payload["resource_snapshot_id"],
+                provided_resource_snapshot_id=payload["resource_snapshot_id"],
+            )
+
+        if draft.payload["resource_snapshot_id"] > payload["resource_snapshot_id"]:
+            raise InvalidDraftBaseResourceSnapshotError(
+                "The provided resource snapshot must be greater than or equal to "
+                "the base resource snapshot.",
+                base_resource_snapshot_id=draft.payload["resource_snapshot_id"],
+                provided_resource_snapshot_id=payload["resource_snapshot_id"],
+            )
+
+        snapshot_exists_stmt = (
+            select(models.ResourceSnapshot)
+            .where(
+                models.ResourceSnapshot.resource_snapshot_id
+                == payload["resource_snapshot_id"]
+                and models.ResourceSnapshot.resource_type == draft.resource_type
+            )
+            .exists()
+            .select()
+        )
+        snapshot_exists = db.session.scalar(snapshot_exists_stmt)
+        if not snapshot_exists:
+            raise EntityDoesNotExistError(
+                draft.resource_type,
+                resource_snapshot_id=payload["resource_snapshot_id"],
+            )
+
         current_timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
-        draft.payload["resource_data"] = payload
+        draft.payload["resource_snapshot_id"] = payload["resource_snapshot_id"]
+        draft.payload["resource_data"] = payload["resource_data"]
         draft.last_modified_on = current_timestamp
 
         if commit:

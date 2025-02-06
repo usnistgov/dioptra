@@ -20,16 +20,16 @@ This module contains a set of tests that validate the CRUD operations and additi
 functionalities for the model entity. The tests ensure that the models can be
 registered, renamed, deleted, and locked/unlocked as expected through the REST API.
 """
-
+from http import HTTPStatus
 from typing import Any
 
 import pytest
-from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
 
-from dioptra.restapi.routes import V1_ARTIFACTS_ROUTE, V1_ROOT
+from dioptra.client.base import DioptraResponseProtocol
+from dioptra.client.client import DioptraClient
 
-from ..lib import actions, helpers
+from ..lib import helpers
 
 # -- Assertions ------------------------------------------------------------------------
 
@@ -55,6 +55,7 @@ def assert_artifact_response_contents_matches_expectations(
         "group",
         "user",
         "createdOn",
+        "snapshotCreatedOn",
         "lastModifiedOn",
         "latestSnapshot",
         "hasDraft",
@@ -70,6 +71,7 @@ def assert_artifact_response_contents_matches_expectations(
     assert isinstance(response["uri"], str)
     assert isinstance(response["description"], str)
     assert isinstance(response["createdOn"], str)
+    assert isinstance(response["snapshotCreatedOn"], str)
     assert isinstance(response["lastModifiedOn"], str)
     assert isinstance(response["latestSnapshot"], bool)
     assert isinstance(response["hasDraft"], bool)
@@ -78,6 +80,7 @@ def assert_artifact_response_contents_matches_expectations(
     assert response["description"] == expected_contents["description"]
 
     assert helpers.is_iso_format(response["createdOn"])
+    assert helpers.is_iso_format(response["snapshotCreatedOn"])
     assert helpers.is_iso_format(response["lastModifiedOn"])
 
     # Validate the UserRef structure
@@ -100,7 +103,9 @@ def assert_artifact_response_contents_matches_expectations(
 
 
 def assert_retrieving_artifact_by_id_works(
-    client: FlaskClient, artifact_id: int, expected: dict[str, Any]
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    artifact_id: int,
+    expected: dict[str, Any],
 ) -> None:
     """Assert that retrieving a artifact by id works.
 
@@ -113,14 +118,13 @@ def assert_retrieving_artifact_by_id_works(
         AssertionError: If the response status code is not 200 or if the API response
             does not match the expected response.
     """
-    response = client.get(
-        f"/{V1_ROOT}/{V1_ARTIFACTS_ROUTE}/{artifact_id}", follow_redirects=True
-    )
-    assert response.status_code == 200 and response.get_json() == expected
+    response = dioptra_client.artifacts.get_by_id(artifact_id)
+    response_data = response.json()
+    assert response.status_code == HTTPStatus.OK and response_data == expected
 
 
 def assert_retrieving_artifacts_works(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     expected: list[dict[str, Any]],
     group_id: int | None = None,
     search: str | None = None,
@@ -142,28 +146,28 @@ def assert_retrieving_artifacts_works(
     query_string: dict[str, Any] = {}
 
     if group_id is not None:
-        query_string["groupId"] = group_id
+        query_string["group_id"] = group_id
 
     if search is not None:
         query_string["search"] = search
 
     if paging_info is not None:
         query_string["index"] = paging_info["index"]
-        query_string["pageLength"] = paging_info["page_length"]
+        query_string["page_length"] = paging_info["page_length"]
 
-    response = client.get(
-        f"/{V1_ROOT}/{V1_ARTIFACTS_ROUTE}",
-        query_string=query_string,
-        follow_redirects=True,
-    )
-    assert response.status_code == 200 and response.get_json()["data"] == expected
+    response = dioptra_client.artifacts.get(**query_string)
+    response_data = response.json()["data"]
+    assert response.status_code == HTTPStatus.OK and response_data == expected
 
 
 def assert_sorting_artifact_works(
-    client: FlaskClient,
-    sortBy: str,
-    descending: bool,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     expected: list[str],
+    sort_by: str | None,
+    descending: bool | None,
+    group_id: int | None = None,
+    search: str | None = None,
+    paging_info: dict[str, Any] | None = None,
 ) -> None:
     """Assert that artifacts can be sorted by column ascending/descending.
 
@@ -179,23 +183,30 @@ def assert_sorting_artifact_works(
 
     query_string: dict[str, Any] = {}
 
-    query_string["sortBy"] = sortBy
-    query_string["descending"] = descending
+    if descending is not None:
+        query_string["descending"] = descending
 
-    response = client.get(
-        f"/{V1_ROOT}/{V1_ARTIFACTS_ROUTE}",
-        query_string=query_string,
-        follow_redirects=True,
-    )
+    if sort_by is not None:
+        query_string["sort_by"] = sort_by
 
-    response_data = response.get_json()
+    if group_id is not None:
+        query_string["group_id"] = group_id
+
+    if search is not None:
+        query_string["search"] = search
+
+    if paging_info is not None:
+        query_string["index"] = paging_info["index"]
+        query_string["page_length"] = paging_info["page_length"]
+
+    response = dioptra_client.artifacts.get(**query_string)
+    response_data = response.json()
     artifact_ids = [artifact["id"] for artifact in response_data["data"]]
-
-    assert response.status_code == 200 and artifact_ids == expected
+    assert response.status_code == HTTPStatus.OK and artifact_ids == expected
 
 
 def assert_registering_existing_artifact_uri_fails(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     uri: str,
     group_id: int,
     job_id: int,
@@ -209,21 +220,17 @@ def assert_registering_existing_artifact_uri_fails(
     Raises:
         AssertionError: If the response status code is not 400.
     """
-    response = actions.register_artifact(
-        client,
-        uri=uri,
-        description="",
-        group_id=group_id,
-        job_id=job_id,
+    response = dioptra_client.artifacts.create(
+        group_id=group_id, job_id=job_id, uri=uri, description=""
     )
-    assert response.status_code == 409
+    assert response.status_code == HTTPStatus.CONFLICT
 
 
 # -- Tests -----------------------------------------------------------------------------
 
 
 def test_create_artifact(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
@@ -241,15 +248,11 @@ def test_create_artifact(
     job_id = registered_jobs["job1"]["id"]
     user_id = auth_account["id"]
     group_id = auth_account["groups"][0]["id"]
-    artifact_response = actions.register_artifact(
-        client,
-        uri=uri,
-        job_id=job_id,
-        group_id=group_id,
-        description=description,
+    artifact_response = dioptra_client.artifacts.create(
+        group_id=group_id, job_id=job_id, uri=uri, description=description
     )
 
-    artifact_expected = artifact_response.get_json()
+    artifact_expected = artifact_response.json()
 
     assert_artifact_response_contents_matches_expectations(
         response=artifact_expected,
@@ -261,12 +264,12 @@ def test_create_artifact(
         },
     )
     assert_retrieving_artifact_by_id_works(
-        client, artifact_id=artifact_expected["id"], expected=artifact_expected
+        dioptra_client, artifact_id=artifact_expected["id"], expected=artifact_expected
     )
 
 
 def test_artifacts_get_all(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_artifacts: dict[str, Any],
@@ -285,7 +288,7 @@ def test_artifacts_get_all(
     - The returned list of artifacts matches the full list of registered artifacts.
     """
     artifacts_expected_list = list(registered_artifacts.values())
-    assert_retrieving_artifacts_works(client, expected=artifacts_expected_list)
+    assert_retrieving_artifacts_works(dioptra_client, expected=artifacts_expected_list)
 
 
 @pytest.mark.parametrize(
@@ -299,7 +302,7 @@ def test_artifacts_get_all(
     ],
 )
 def test_artifact_sort(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_artifacts: dict[str, Any],
@@ -324,11 +327,13 @@ def test_artifact_sort(
     expected_ids = [
         registered_artifacts[expected_name]["id"] for expected_name in expected
     ]
-    assert_sorting_artifact_works(client, sortBy, descending, expected=expected_ids)
+    assert_sorting_artifact_works(
+        dioptra_client, sort_by=sortBy, descending=descending, expected=expected_ids
+    )
 
 
 def test_artifact_search_query(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_artifacts: dict[str, Any],
@@ -344,14 +349,14 @@ def test_artifact_search_query(
     """
     artifacts_expected_list = list(registered_artifacts.values())[:2]
     assert_retrieving_artifacts_works(
-        client,
+        dioptra_client,
         expected=artifacts_expected_list,
         search="description:*artifact*",
     )
 
 
 def test_artifact_group_query(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_artifacts: dict[str, Any],
@@ -368,14 +373,14 @@ def test_artifact_group_query(
     """
     artifacts_expected_list = list(registered_artifacts.values())
     assert_retrieving_artifacts_works(
-        client,
+        dioptra_client,
         expected=artifacts_expected_list,
         group_id=auth_account["groups"][0]["id"],
     )
 
 
 def test_cannot_register_existing_artifact_uri(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_artifacts: dict[str, Any],
@@ -390,7 +395,7 @@ def test_cannot_register_existing_artifact_uri(
     """
     existing_artifact = registered_artifacts["artifact1"]
     assert_registering_existing_artifact_uri_fails(
-        client,
+        dioptra_client,
         uri=existing_artifact["uri"],
         group_id=existing_artifact["group"]["id"],
         job_id=0,  # TODO: fill in once job stuff is done.

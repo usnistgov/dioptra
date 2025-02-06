@@ -108,6 +108,13 @@ class DraftSchema(Schema):
     )
 
 
+class ModifyDraftBaseSchema(Schema):
+    resourceSnapshot = fields.Integer(
+        attribute="resource_snapshot_id",
+        metadata=dict(description="ID of the resource snapshot this draft modifies."),
+    )
+
+
 class DraftPageSchema(BasePageSchema):
     """The paged schema for the data stored in a Draft."""
 

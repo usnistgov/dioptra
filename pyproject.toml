@@ -72,6 +72,7 @@ dependencies = [
     "PyYAML>=6.0.0",
     "redis>=3.5.0",
     "requests>=2.25,<3",
+    "requests-toolbelt>=1.0.0",
     "rq>=1.5.0",
     "scipy>=1.4.1",
     "structlog>=20.2.0",
@@ -132,7 +133,9 @@ postgres = [
 worker = [
     "async_timeout",
     "adversarial-robustness-toolbox>=1.9.0",
+    "heart-library>=0.4.2",
     "imgaug>=0.4.0",
+    "maite>=0.6.0",
     "matplotlib",
     "nrtk>=0.3.0",
     "opencv-python",

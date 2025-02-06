@@ -21,142 +21,17 @@ functionalities for the plugin entity. The tests ensure that the plugins can be
 registered, renamed, and deleted as expected through the REST API.
 """
 import textwrap
-from typing import Any, List
+from http import HTTPStatus
+from typing import Any
 
 import pytest
-from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
-from werkzeug.test import TestResponse
 
-from dioptra.restapi.routes import (
-    V1_PLUGIN_FILES_ROUTE,
-    V1_PLUGIN_PARAMETER_TYPES_ROUTE,
-    V1_PLUGINS_ROUTE,
-    V1_ROOT,
-)
+from dioptra.client.base import DioptraResponseProtocol
+from dioptra.client.client import DioptraClient
+from dioptra.restapi.routes import V1_PLUGIN_PARAMETER_TYPES_ROUTE, V1_ROOT
 
-from ..lib import actions, asserts, helpers
-
-# -- Actions ---------------------------------------------------------------------------
-
-
-def modify_plugin(
-    client: FlaskClient,
-    plugin_id: int,
-    new_name: str,
-    new_description: str,
-) -> TestResponse:
-    """Rename a plugin using the API.
-
-    Args:
-        client: The Flask test client.
-        plugin_id: The id of the plugin to rename.
-        new_name: The new name to assign to the plugin.
-        new_description: The new description to assign to the plugin.
-
-    Returns:
-        The response from the API.
-    """
-    payload: dict[str, Any] = {"name": new_name, "description": new_description}
-
-    return client.put(
-        f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}/{plugin_id}",
-        json=payload,
-        follow_redirects=True,
-    )
-
-
-def delete_plugin_with_id(
-    client: FlaskClient,
-    plugin_id: int,
-) -> TestResponse:
-    """Delete a plugin using the API.
-
-    Args:
-        client: The Flask test client.
-        plugin_id: The id of the plugin to delete.
-
-    Returns:
-        The response from the API.
-    """
-    return client.delete(
-        f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}/{plugin_id}",
-        follow_redirects=True,
-    )
-
-
-def modify_plugin_file(
-    client: FlaskClient,
-    plugin_id: int,
-    plugin_file_id: int,
-    new_name: str,
-    new_contents: str,
-    new_description: str,
-    new_tasks: list[dict[str, Any]] | None = None,
-) -> TestResponse:
-    """Rename a plugin file using the API.
-
-    Args:
-        client: The Flask test client.
-        plugin_id: The id of the plugin to with plugin files.
-        plugin_file_id: The id of the plugin file to rename.
-        new_name: The new name to assign to the plugin file.
-        new_description: The new description to assign to the plugin file.
-        new_tasks: The new tasks to assign to the plugin file.
-
-    Returns:
-        The response from the API.
-    """
-    payload: dict[str, Any] = {
-        "filename": new_name,
-        "description": new_description,
-        "contents": new_contents,
-        "tasks": new_tasks or [],
-    }
-
-    return client.put(
-        f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}/{plugin_id}/files/{plugin_file_id}",
-        json=payload,
-        follow_redirects=True,
-    )
-
-
-def delete_plugin_file_with_id(
-    client: FlaskClient,
-    plugin_id: int,
-    plugin_file_id: int,
-) -> TestResponse:
-    """Delete a plugin file using the API.
-
-    Args:
-        client: The Flask test client.
-        plugin_id: The id of the plugin with files.
-        plugin_file_id: The id of the plugin file to delete.
-
-    Returns:
-        The response from the API.
-    """
-    return client.delete(
-        f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}/{plugin_id}/files/{plugin_file_id}",
-        follow_redirects=True,
-    )
-
-
-def delete_all_plugin_files(client: FlaskClient, plugin_id: int) -> TestResponse:
-    """Delete all plugin files for a plugin using the API.
-
-    Args:
-        client: The Flask test client.
-        plugin_id: The id of the plugin with files to delete.
-
-    Returns:
-        The response from the API.
-    """
-    return client.delete(
-        f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}/{plugin_id}/files",
-        follow_redirects=True,
-    )
-
+from ..lib import helpers, routines
 
 # -- Assertions Plugins ----------------------------------------------------------------
 
@@ -181,6 +56,7 @@ def assert_plugin_response_contents_matches_expectations(
         "group",
         "user",
         "createdOn",
+        "snapshotCreatedOn",
         "lastModifiedOn",
         "latestSnapshot",
         "hasDraft",
@@ -197,6 +73,7 @@ def assert_plugin_response_contents_matches_expectations(
     assert isinstance(response["name"], str)
     assert isinstance(response["description"], str)
     assert isinstance(response["createdOn"], str)
+    assert isinstance(response["snapshotCreatedOn"], str)
     assert isinstance(response["lastModifiedOn"], str)
     assert isinstance(response["latestSnapshot"], bool)
     assert isinstance(response["hasDraft"], bool)
@@ -205,6 +82,7 @@ def assert_plugin_response_contents_matches_expectations(
     assert response["description"] == expected_contents["description"]
 
     assert helpers.is_iso_format(response["createdOn"])
+    assert helpers.is_iso_format(response["snapshotCreatedOn"])
     assert helpers.is_iso_format(response["lastModifiedOn"])
 
     # Validate the UserRef structure
@@ -234,7 +112,7 @@ def assert_plugin_response_contents_matches_expectations(
 
 
 def assert_retrieving_plugin_by_id_works(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     plugin_id: int,
     expected: dict[str, Any],
 ) -> None:
@@ -249,14 +127,12 @@ def assert_retrieving_plugin_by_id_works(
         AssertionError: If the response status code is not 200 or if the API response
             does not match the expected response.
     """
-    response = client.get(
-        f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}/{plugin_id}", follow_redirects=True
-    )
-    assert response.status_code == 200 and response.get_json() == expected
+    response = dioptra_client.plugins.get_by_id(plugin_id)
+    assert response.status_code == HTTPStatus.OK and response.json() == expected
 
 
 def assert_retrieving_plugins_works(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     expected: list[dict[str, Any]],
     group_id: int | None = None,
     search: str | None = None,
@@ -285,21 +161,20 @@ def assert_retrieving_plugins_works(
 
     if paging_info is not None:
         query_string["index"] = paging_info["index"]
-        query_string["pageLength"] = paging_info["page_length"]
+        query_string["page_length"] = paging_info["page_length"]
 
-    response = client.get(
-        f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}",
-        query_string=query_string,
-        follow_redirects=True,
-    )
-    assert response.status_code == 200 and response.get_json()["data"] == expected
+    response = dioptra_client.plugins.get(**query_string)
+    assert response.status_code == HTTPStatus.OK and response.json()["data"] == expected
 
 
 def assert_sorting_plugin_works(
-    client: FlaskClient,
-    sortBy: str,
-    descending: bool,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     expected: list[str],
+    sort_by: str | None,
+    descending: bool | None,
+    group_id: int | None = None,
+    search: str | None = None,
+    paging_info: dict[str, Any] | None = None,
 ) -> None:
     """Assert that plugins can be sorted by column ascending/descending.
 
@@ -315,23 +190,30 @@ def assert_sorting_plugin_works(
 
     query_string: dict[str, Any] = {}
 
-    query_string["sortBy"] = sortBy
-    query_string["descending"] = descending
+    if descending is not None:
+        query_string["descending"] = descending
 
-    response = client.get(
-        f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}",
-        query_string=query_string,
-        follow_redirects=True,
-    )
+    if sort_by is not None:
+        query_string["sort_by"] = sort_by
 
-    response_data = response.get_json()
+    if group_id is not None:
+        query_string["group_id"] = group_id
+
+    if search is not None:
+        query_string["search"] = search
+
+    if paging_info is not None:
+        query_string["index"] = paging_info["index"]
+        query_string["page_length"] = paging_info["page_length"]
+
+    response = dioptra_client.plugins.get(**query_string)
+    response_data = response.json()
     plugin_ids = [plugin["id"] for plugin in response_data["data"]]
-
-    assert response.status_code == 200 and plugin_ids == expected
+    assert response.status_code == HTTPStatus.OK and plugin_ids == expected
 
 
 def assert_registering_existing_plugin_name_fails(
-    client: FlaskClient, name: str, group_id: int
+    dioptra_client: DioptraClient[DioptraResponseProtocol], name: str, group_id: int
 ) -> None:
     """Assert that registering a plugin with an existing name fails.
 
@@ -342,14 +224,16 @@ def assert_registering_existing_plugin_name_fails(
     Raises:
         AssertionError: If the response status code is not 400.
     """
-    response = actions.register_plugin(
-        client, name=name, description="", group_id=group_id
+    response = dioptra_client.plugins.create(
+        group_id=group_id, name=name, description=""
     )
-    assert response.status_code == 409
+    assert response.status_code == HTTPStatus.CONFLICT
 
 
 def assert_plugin_name_matches_expected_name(
-    client: FlaskClient, plugin_id: int, expected_name: str
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    plugin_id: int,
+    expected_name: str,
 ) -> None:
     """Assert that the name of a plugin matches the expected name.
 
@@ -362,15 +246,15 @@ def assert_plugin_name_matches_expected_name(
         AssertionError: If the response status code is not 200 or if the name of the
             plugin does not match the expected name.
     """
-    response = client.get(
-        f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}/{plugin_id}",
-        follow_redirects=True,
+    response = dioptra_client.plugins.get_by_id(plugin_id)
+    assert (
+        response.status_code == HTTPStatus.OK
+        and response.json()["name"] == expected_name
     )
-    assert response.status_code == 200 and response.get_json()["name"] == expected_name
 
 
 def assert_plugin_is_not_found(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     plugin_id: int,
 ) -> None:
     """Assert that a plugin is not found.
@@ -382,15 +266,12 @@ def assert_plugin_is_not_found(
     Raises:
         AssertionError: If the response status code is not 404.
     """
-    response = client.get(
-        f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}/{plugin_id}",
-        follow_redirects=True,
-    )
-    assert response.status_code == 404
+    response = dioptra_client.plugins.get_by_id(plugin_id)
+    assert response.status_code == HTTPStatus.NOT_FOUND
 
 
 def assert_cannot_rename_plugin_with_existing_name(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     plugin_id: int,
     existing_name: str,
     existing_description: str,
@@ -405,13 +286,10 @@ def assert_cannot_rename_plugin_with_existing_name(
     Raises:
         AssertionError: If the response status code is not 400.
     """
-    response = modify_plugin(
-        client=client,
-        plugin_id=plugin_id,
-        new_name=existing_name,
-        new_description=existing_description,
+    response = dioptra_client.plugins.modify_by_id(
+        plugin_id=plugin_id, name=existing_name, description=existing_description
     )
-    assert response.status_code == 409
+    assert response.status_code == HTTPStatus.CONFLICT
 
 
 # -- Assertions Plugin Files -----------------------------------------------------------
@@ -437,6 +315,7 @@ def assert_plugin_file_response_contents_matches_expectations(
         "group",
         "user",
         "createdOn",
+        "snapshotCreatedOn",
         "lastModifiedOn",
         "latestSnapshot",
         "hasDraft",
@@ -456,6 +335,7 @@ def assert_plugin_file_response_contents_matches_expectations(
     assert isinstance(response["description"], str)
     assert isinstance(response["contents"], str)
     assert isinstance(response["createdOn"], str)
+    assert isinstance(response["snapshotCreatedOn"], str)
     assert isinstance(response["lastModifiedOn"], str)
     assert isinstance(response["latestSnapshot"], bool)
     assert isinstance(response["hasDraft"], bool)
@@ -465,6 +345,7 @@ def assert_plugin_file_response_contents_matches_expectations(
     assert response["contents"] == expected_contents["contents"]
 
     assert helpers.is_iso_format(response["createdOn"])
+    assert helpers.is_iso_format(response["snapshotCreatedOn"])
     assert helpers.is_iso_format(response["lastModifiedOn"])
 
     # Validate the UserRef structure
@@ -501,7 +382,7 @@ def assert_plugin_file_response_contents_matches_expectations(
 
 
 def assert_retrieving_plugin_file_by_id_works(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     plugin_id: int,
     plugin_file_id: int,
     expected: dict[str, Any],
@@ -518,15 +399,14 @@ def assert_retrieving_plugin_file_by_id_works(
         AssertionError: If the response status code is not 200 or if the API response
             does not match the expected response.
     """
-    response = client.get(
-        f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}/{plugin_id}/files/{plugin_file_id}",
-        follow_redirects=True,
+    response = dioptra_client.plugins.files.get_by_id(
+        plugin_id=plugin_id, plugin_file_id=plugin_file_id
     )
-    assert response.status_code == 200 and response.get_json() == expected
+    assert response.status_code == HTTPStatus.OK and response.json() == expected
 
 
 def assert_retrieving_plugin_files_works(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     expected: list[dict[str, Any]],
     plugin_id: int,
     paging_info: dict[str, Any] | None = None,
@@ -550,22 +430,21 @@ def assert_retrieving_plugin_files_works(
 
     if paging_info is not None:
         query_string["index"] = paging_info["index"]
-        query_string["pageLength"] = paging_info["page_length"]
+        query_string["page_length"] = paging_info["page_length"]
 
-    response = client.get(
-        f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}/{plugin_id}/files",
-        query_string=query_string,
-        follow_redirects=True,
-    )
-    assert response.status_code == 200 and response.get_json()["data"] == expected
+    response = dioptra_client.plugins.files.get(plugin_id=plugin_id, **query_string)
+    assert response.status_code == HTTPStatus.OK and response.json()["data"] == expected
 
 
 def assert_sorting_plugin_file_works(
-    client: FlaskClient,
-    sortBy: str,
-    descending: bool,
-    plugin_id: int,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     expected: list[str],
+    plugin_id: str | int,
+    sort_by: str | None,
+    descending: bool | None,
+    group_id: int | None = None,
+    search: str | None = None,
+    paging_info: dict[str, Any] | None = None,
 ) -> None:
     """Assert that plugin files can be sorted by column ascending/descending.
 
@@ -581,22 +460,30 @@ def assert_sorting_plugin_file_works(
 
     query_string: dict[str, Any] = {}
 
-    query_string["sortBy"] = sortBy
-    query_string["descending"] = descending
+    if descending is not None:
+        query_string["descending"] = descending
 
-    response = client.get(
-        f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}/{plugin_id}/files",
-        query_string=query_string,
-        follow_redirects=True,
-    )
+    if sort_by is not None:
+        query_string["sort_by"] = sort_by
 
-    response_data = response.get_json()
+    if group_id is not None:
+        query_string["group_id"] = group_id
+
+    if search is not None:
+        query_string["search"] = search
+
+    if paging_info is not None:
+        query_string["index"] = paging_info["index"]
+        query_string["page_length"] = paging_info["page_length"]
+
+    response = dioptra_client.plugins.files.get(plugin_id=plugin_id, **query_string)
+    response_data = response.json()
     plugin_ids = [file["id"] for file in response_data["data"]]
-    assert response.status_code == 200 and plugin_ids == expected
+    assert response.status_code == HTTPStatus.OK and plugin_ids == expected
 
 
 def assert_registering_existing_plugin_filename_fails(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     plugin_id: int,
     existing_filename: str,
     contents: str,
@@ -613,18 +500,18 @@ def assert_registering_existing_plugin_filename_fails(
     Raises:
         AssertionError: If the response status code is not 400.
     """
-    response = actions.register_plugin_file(
-        client,
+    response = dioptra_client.plugins.files.create(
         plugin_id=plugin_id,
         filename=existing_filename,
         contents=contents,
+        tasks=[],
         description=description,
     )
-    assert response.status_code == 409
+    assert response.status_code == HTTPStatus.CONFLICT
 
 
 def assert_plugin_filename_matches_expected_name(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     plugin_id: int,
     plugin_file_id: int,
     expected_name: str,
@@ -641,17 +528,17 @@ def assert_plugin_filename_matches_expected_name(
         AssertionError: If the response status code is not 200 or if the name of the
             plugin does not match the expected name.
     """
-    response = client.get(
-        f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}/{plugin_id}/files/{plugin_file_id}",
-        follow_redirects=True,
+    response = dioptra_client.plugins.files.get_by_id(
+        plugin_id=plugin_id, plugin_file_id=plugin_file_id
     )
     assert (
-        response.status_code == 200 and response.get_json()["filename"] == expected_name
+        response.status_code == HTTPStatus.OK
+        and response.json()["filename"] == expected_name
     )
 
 
 def assert_cannot_rename_plugin_file_with_existing_name(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     plugin_id: int,
     plugin_file_id: int,
     existing_name: str,
@@ -670,19 +557,19 @@ def assert_cannot_rename_plugin_file_with_existing_name(
     Raises:
         AssertionError: If the response status code is not 400.
     """
-    response = modify_plugin_file(
-        client=client,
+    response = dioptra_client.plugins.files.modify_by_id(
         plugin_id=plugin_id,
         plugin_file_id=plugin_file_id,
-        new_name=existing_name,
-        new_description=existing_description,
-        new_contents=existing_contents,
+        filename=existing_name,
+        contents=existing_contents,
+        tasks=[],
+        description=existing_description,
     )
-    assert response.status_code == 409
+    assert response.status_code == HTTPStatus.CONFLICT
 
 
 def assert_plugin_file_is_not_found(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     plugin_id: int,
     plugin_file_id: int,
 ) -> None:
@@ -696,18 +583,17 @@ def assert_plugin_file_is_not_found(
     Raises:
         AssertionError: If the response status code is not 404.
     """
-    response = client.get(
-        f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}/{plugin_id}/files/{plugin_file_id}",
-        follow_redirects=True,
+    response = dioptra_client.plugins.files.get_by_id(
+        plugin_id=plugin_id, plugin_file_id=plugin_file_id
     )
-    assert response.status_code == 404
+    assert response.status_code == HTTPStatus.NOT_FOUND
 
 
 # -- Assertions Plugin Tasks -----------------------------------------------------------
 
 
 def assert_plugin_task_response_contents_matches_expectations(
-    response: List[dict[str, Any]], expected_contents: dict[str, Any]
+    response: list[dict[str, Any]], expected_contents: dict[str, Any]
 ) -> None:
     """Assert that plugin task response contents is valid.
 
@@ -751,7 +637,7 @@ def assert_plugin_task_response_contents_matches_expectations(
 
 
 def test_create_plugin(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
 ) -> None:
@@ -767,10 +653,10 @@ def test_create_plugin(
     description = "The first plugin."
     user_id = auth_account["id"]
     group_id = auth_account["groups"][0]["id"]
-    plugin_response = actions.register_plugin(
-        client, name=name, description=description, group_id=group_id
+    plugin_response = dioptra_client.plugins.create(
+        group_id=group_id, name=name, description=description
     )
-    plugin_expected = plugin_response.get_json()
+    plugin_expected = plugin_response.json()
     assert_plugin_response_contents_matches_expectations(
         response=plugin_expected,
         expected_contents={
@@ -781,12 +667,12 @@ def test_create_plugin(
         },
     )
     assert_retrieving_plugin_by_id_works(
-        client, plugin_id=plugin_expected["id"], expected=plugin_expected
+        dioptra_client, plugin_id=plugin_expected["id"], expected=plugin_expected
     )
 
 
 def test_plugin_get_all(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugins: dict[str, Any],
@@ -801,11 +687,11 @@ def test_plugin_get_all(
     - The returned list of plugins matches the full list of registered plugins.
     """
     plugin_expected_list = list(registered_plugins.values())
-    assert_retrieving_plugins_works(client, expected=plugin_expected_list)
+    assert_retrieving_plugins_works(dioptra_client, expected=plugin_expected_list)
 
 
 @pytest.mark.parametrize(
-    "sortBy, descending , expected",
+    "sort_by, descending , expected",
     [
         (None, None, ["plugin1", "plugin2", "plugin3"]),
         ("name", True, ["plugin2", "plugin3", "plugin1"]),
@@ -815,11 +701,11 @@ def test_plugin_get_all(
     ],
 )
 def test_plugin_sort(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugins: dict[str, Any],
-    sortBy: str,
+    sort_by: str,
     descending: bool,
     expected: list[str],
 ) -> None:
@@ -837,11 +723,16 @@ def test_plugin_sort(
     expected_ids = [
         registered_plugins[expected_name]["id"] for expected_name in expected
     ]
-    assert_sorting_plugin_works(client, sortBy, descending, expected=expected_ids)
+    assert_sorting_plugin_works(
+        dioptra_client=dioptra_client,
+        sort_by=sort_by,
+        descending=descending,
+        expected=expected_ids,
+    )
 
 
 def test_plugin_search_query(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugins: dict[str, Any],
@@ -857,14 +748,14 @@ def test_plugin_search_query(
     """
     plugin_expected_list = list(registered_plugins.values())[:2]
     assert_retrieving_plugins_works(
-        client,
+        dioptra_client=dioptra_client,
         expected=plugin_expected_list,
         search="description:*plugin*",
     )
 
 
 def test_plugin_group_query(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugins: dict[str, Any],
@@ -880,12 +771,14 @@ def test_plugin_group_query(
     """
     plugin_expected_list = list(registered_plugins.values())
     assert_retrieving_plugins_works(
-        client, expected=plugin_expected_list, group_id=auth_account["groups"][0]["id"]
+        dioptra_client,
+        expected=plugin_expected_list,
+        group_id=auth_account["groups"][0]["id"],
     )
 
 
 def test_cannot_register_existing_plugin_name(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugins: dict[str, Any],
@@ -900,14 +793,14 @@ def test_cannot_register_existing_plugin_name(
     """
     existing_plugin = registered_plugins["plugin1"]
     assert_registering_existing_plugin_name_fails(
-        client,
+        dioptra_client,
         name=existing_plugin["name"],
         group_id=existing_plugin["group"]["id"],
     )
 
 
 def test_rename_plugin(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugins: dict[str, Any],
@@ -928,14 +821,15 @@ def test_rename_plugin(
     plugin_to_rename = registered_plugins["plugin1"]
     existing_plugin = registered_plugins["plugin2"]
 
-    modified_plugin = modify_plugin(
-        client,
+    modified_plugin = dioptra_client.plugins.modify_by_id(
         plugin_id=plugin_to_rename["id"],
-        new_name=updated_plugin_name,
-        new_description=plugin_to_rename["description"],
-    ).get_json()
+        name=updated_plugin_name,
+        description=plugin_to_rename["description"],
+    ).json()
     assert_plugin_name_matches_expected_name(
-        client, plugin_id=plugin_to_rename["id"], expected_name=updated_plugin_name
+        dioptra_client,
+        plugin_id=plugin_to_rename["id"],
+        expected_name=updated_plugin_name,
     )
 
     plugin_expected_list = [
@@ -943,19 +837,20 @@ def test_rename_plugin(
         registered_plugins["plugin2"],
         registered_plugins["plugin3"],
     ]
-    assert_retrieving_plugins_works(client, expected=plugin_expected_list)
+    assert_retrieving_plugins_works(dioptra_client, expected=plugin_expected_list)
 
-    modified_plugin = modify_plugin(
-        client,
+    modified_plugin = dioptra_client.plugins.modify_by_id(
         plugin_id=plugin_to_rename["id"],
-        new_name=updated_plugin_name,
-        new_description=plugin_to_rename["description"],
-    ).get_json()
+        name=updated_plugin_name,
+        description=plugin_to_rename["description"],
+    ).json()
     assert_plugin_name_matches_expected_name(
-        client, plugin_id=plugin_to_rename["id"], expected_name=updated_plugin_name
+        dioptra_client,
+        plugin_id=plugin_to_rename["id"],
+        expected_name=updated_plugin_name,
     )
     assert_cannot_rename_plugin_with_existing_name(
-        client,
+        dioptra_client,
         plugin_id=plugin_to_rename["id"],
         existing_name=existing_plugin["name"],
         existing_description=plugin_to_rename["description"],
@@ -963,7 +858,7 @@ def test_rename_plugin(
 
 
 def test_delete_plugin_by_id(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugins: dict[str, Any],
@@ -978,15 +873,15 @@ def test_delete_plugin_by_id(
     - The request fails with an appropriate error message and response code.
     """
     plugin_to_delete = registered_plugins["plugin1"]
-    delete_plugin_with_id(client, plugin_id=plugin_to_delete["id"])
-    assert_plugin_is_not_found(client, plugin_id=plugin_to_delete["id"])
+    dioptra_client.plugins.delete_by_id(plugin_id=plugin_to_delete["id"])
+    assert_plugin_is_not_found(dioptra_client, plugin_id=plugin_to_delete["id"])
 
 
 # -- Tests Plugin Files ----------------------------------------------------------------
 
 
 def test_register_plugin_file(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugins: dict[str, Any],
@@ -1072,15 +967,14 @@ def test_register_plugin_file(
         }
     ]
 
-    plugin_file_response = actions.register_plugin_file(
-        client,
+    plugin_file_response = dioptra_client.plugins.files.create(
         plugin_id=registered_plugin["id"],
         filename=filename,
         description=description,
         contents=contents,
         tasks=tasks,
     )
-    plugin_file_expected = plugin_file_response.get_json()
+    plugin_file_expected = plugin_file_response.json()
 
     assert_plugin_file_response_contents_matches_expectations(
         response=plugin_file_expected,
@@ -1094,15 +988,89 @@ def test_register_plugin_file(
         },
     )
     assert_retrieving_plugin_file_by_id_works(
-        client,
+        dioptra_client,
         plugin_id=registered_plugin["id"],
         plugin_file_id=plugin_file_expected["id"],
         expected=plugin_file_expected,
     )
 
 
+@pytest.mark.parametrize(
+    "filename, expected_status_code",
+    [
+        # fmt: off
+        # Valid paths
+        (r"hello.py", HTTPStatus.OK),
+        (r"hello_world.py", HTTPStatus.OK),
+        (r"hello_world/main.py", HTTPStatus.OK),
+        (r"package/sub_package/module.py", HTTPStatus.OK),
+        (r"a/b/c/d/e/f/g/h/i/j/k/l/m/n/o/p.py", HTTPStatus.OK),  # Many nested directories # noqa: B950 # fmt: skip
+        (r"_underscore_start.py", HTTPStatus.OK),
+        # Invalid paths
+        (r"hello world.py", HTTPStatus.BAD_REQUEST),        # Space in filename
+        (r"3ight/hello.py", HTTPStatus.BAD_REQUEST),        # Directory starting with a number # noqa: B950
+        (r"hello_world//main.py", HTTPStatus.BAD_REQUEST),  # Double slash
+        (r"module.py.txt", HTTPStatus.BAD_REQUEST),         # Wrong extension
+        (r"/absolute/path.py", HTTPStatus.BAD_REQUEST),     # Absolute path
+        (r".py", HTTPStatus.BAD_REQUEST),                   # Just the extension
+        (r"hello.py/", HTTPStatus.BAD_REQUEST),             # Ends with a slash
+        (r"/hello.py", HTTPStatus.BAD_REQUEST),             # Starts with a slash
+        (r"hello..py", HTTPStatus.BAD_REQUEST),             # Double dot in extension
+        (r"hello.py.py", HTTPStatus.BAD_REQUEST),           # Double .py extension
+        (r"hello_.py", HTTPStatus.BAD_REQUEST),             # Ends with underscore before extension # noqa: B950
+        (r"_/hello.py", HTTPStatus.BAD_REQUEST),            # Single underscore directory name # noqa: B950
+        (r"hello/_.py", HTTPStatus.BAD_REQUEST),            # Single underscore filename
+        (r"hello/_file.py", HTTPStatus.BAD_REQUEST),        # Underscore start in nested file # noqa: B950
+        (r"HELLO.PY", HTTPStatus.BAD_REQUEST),              # Uppercase extension (assuming case-sensitive) # noqa: B950
+        (r"hello.pY", HTTPStatus.BAD_REQUEST),              # Mixed case extension
+        (r"hello/world/.py", HTTPStatus.BAD_REQUEST),       # Hidden file in nested directory # noqa: B950
+        (r"hello/.world/file.py", HTTPStatus.BAD_REQUEST),  # Hidden directory
+        (r" hello.py", HTTPStatus.BAD_REQUEST),             # Leading space
+        (r"hello.py ", HTTPStatus.BAD_REQUEST),             # Trailing space
+        (r"\thello.py", HTTPStatus.BAD_REQUEST),            # Tab character
+        (r"hello\world.py", HTTPStatus.BAD_REQUEST),        # Backslash instead of forward slash # noqa: B950
+        (r"hello:world.py", HTTPStatus.BAD_REQUEST),        # Invalid character (colon)
+        (r"hello@world.py", HTTPStatus.BAD_REQUEST),        # Invalid character (at sign) # noqa: B950
+        (r"hello/world.py/extra", HTTPStatus.BAD_REQUEST),  # Extra content after .py
+        (r"", HTTPStatus.BAD_REQUEST),                      # Empty string
+        (r"hello/", HTTPStatus.BAD_REQUEST),                # Directory without file
+        (r"hello.py/world.py", HTTPStatus.BAD_REQUEST),     # .py in middle of path
+        (r"1/2/3/4.py", HTTPStatus.BAD_REQUEST),            # All numeric directory names # noqa: B950
+        (r"../sample.py", HTTPStatus.BAD_REQUEST),          # No relative paths
+        (r"..sample.py", HTTPStatus.BAD_REQUEST),           # No prefix with dots
+        # fmt: on
+    ],
+)
+def test_plugin_file_filename_regex(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_plugins: dict[str, Any],
+    filename: str,
+    expected_status_code: HTTPStatus,
+) -> None:
+    """Test that the regular expression for validating plugin file filenames is able to
+    handle a variety of malformed inputs.
+
+    Given an authenticated user and a registered plugin, this test validates the
+    following sequence of actions:
+
+    - The user registers a plugin file with either a valid or invalid filename.
+    - The response status code returns 200 (OK) if the filename is valid or 400
+      (BAD REQUEST) if the filename is invalid.
+    """
+    registered_plugin = registered_plugins["plugin1"]
+    response = dioptra_client.plugins.files.create(
+        plugin_id=registered_plugin["id"],
+        filename=filename,
+        contents="# Empty file",
+        tasks=[],
+    )
+    assert response.status_code == expected_status_code
+
+
 def test_plugin_file_get_all(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_with_files: dict[str, Any],
@@ -1129,14 +1097,14 @@ def test_plugin_file_get_all(
     ]
 
     assert_retrieving_plugin_files_works(
-        client,
+        dioptra_client,
         plugin_id=registered_plugin["id"],
         expected=plugin_file_expected_list,
     )
 
 
 @pytest.mark.parametrize(
-    "sortBy, descending , expected",
+    "sort_by, descending , expected",
     [
         (None, None, ["plugin_file1", "plugin_file2", "plugin_file3"]),
         ("filename", True, ["plugin_file2", "plugin_file3", "plugin_file1"]),
@@ -1146,11 +1114,11 @@ def test_plugin_file_get_all(
     ],
 )
 def test_plugin_file_sort(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_with_files: dict[str, Any],
-    sortBy: str,
+    sort_by: str,
     descending: bool,
     expected: list[str],
 ) -> None:
@@ -1173,16 +1141,16 @@ def test_plugin_file_sort(
         registered_plugin_with_files[expected_name]["id"] for expected_name in expected
     ]
     assert_sorting_plugin_file_works(
-        client,
-        sortBy,
-        descending,
-        plugin_id=registered_plugin_with_files["plugin"]["id"],
+        dioptra_client,
         expected=expected_ids,
+        plugin_id=registered_plugin_with_files["plugin"]["id"],
+        sort_by=sort_by,
+        descending=descending,
     )
 
 
 def test_plugin_file_delete_all(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_with_files: dict[str, Any],
@@ -1197,20 +1165,17 @@ def test_plugin_file_delete_all(
     - The returned list of plugin files is empty.
     """
     registered_plugin = registered_plugin_with_files["plugin"]
-
     plugin_file_expected_list: list[dict[str, Any]] = []
-
-    delete_all_plugin_files(client, plugin_id=registered_plugin["id"])
-
+    dioptra_client.plugins.files.delete_all(plugin_id=registered_plugin["id"])
     assert_retrieving_plugin_files_works(
-        client,
+        dioptra_client,
         plugin_id=registered_plugin["id"],
         expected=plugin_file_expected_list,
     )
 
 
 def test_cannot_register_existing_plugin_filename(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_with_files: dict[str, Any],
@@ -1227,7 +1192,7 @@ def test_cannot_register_existing_plugin_filename(
     existing_plugin_file = registered_plugin_with_files["plugin_file1"]
 
     assert_registering_existing_plugin_filename_fails(
-        client,
+        dioptra_client,
         plugin_id=registered_plugin["id"],
         existing_filename=existing_plugin_file["filename"],
         contents=existing_plugin_file["contents"],
@@ -1236,7 +1201,7 @@ def test_cannot_register_existing_plugin_filename(
 
 
 def test_rename_plugin_file(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_with_files: dict[str, Any],
@@ -1258,22 +1223,22 @@ def test_rename_plugin_file(
     existing_plugin_file = registered_plugin_with_files["plugin_file2"]
     updated_plugin_filename = "new_name.py"
 
-    modify_plugin_file(
-        client,
+    dioptra_client.plugins.files.modify_by_id(
         plugin_id=registered_plugin["id"],
         plugin_file_id=plugin_file_to_rename["id"],
-        new_name=updated_plugin_filename,
-        new_contents=plugin_file_to_rename["contents"],
-        new_description=plugin_file_to_rename["description"],
+        filename=updated_plugin_filename,
+        contents=plugin_file_to_rename["contents"],
+        tasks=[],
+        description=plugin_file_to_rename["description"],
     )
     assert_plugin_filename_matches_expected_name(
-        client,
+        dioptra_client,
         plugin_id=registered_plugin["id"],
         plugin_file_id=plugin_file_to_rename["id"],
         expected_name=updated_plugin_filename,
     )
     assert_cannot_rename_plugin_file_with_existing_name(
-        client,
+        dioptra_client,
         plugin_id=registered_plugin["id"],
         plugin_file_id=plugin_file_to_rename["id"],
         existing_name=existing_plugin_file["filename"],
@@ -1283,7 +1248,7 @@ def test_rename_plugin_file(
 
 
 def test_delete_plugin_file_by_id(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_with_files: dict[str, Any],
@@ -1300,13 +1265,12 @@ def test_delete_plugin_file_by_id(
     registered_plugin = registered_plugin_with_files["plugin"]
     plugin_file_to_delete = registered_plugin_with_files["plugin_file1"]
 
-    delete_plugin_file_with_id(
-        client,
+    dioptra_client.plugins.files.delete_by_id(
         plugin_id=registered_plugin["id"],
         plugin_file_id=plugin_file_to_delete["id"],
     )
     assert_plugin_file_is_not_found(
-        client,
+        dioptra_client,
         plugin_id=registered_plugin["id"],
         plugin_file_id=plugin_file_to_delete["id"],
     )
@@ -1316,7 +1280,7 @@ def test_delete_plugin_file_by_id(
 
 
 def test_manage_existing_plugin_draft(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugins: dict[str, Any],
@@ -1336,67 +1300,43 @@ def test_manage_existing_plugin_draft(
     - The user attempts to retrieve information about the deleted draft.
     - The request fails with an appropriate error message and response code.
     """
+    # Requests data
     plugin = registered_plugins["plugin1"]
-    name = "draft"
-    new_name = "draft2"
     description = "description"
+    draft = {"name": "draft", "description": description}
+    draft_mod = {"name": "draft2", "description": description}
 
-    # test creation
-    payload = {"name": name, "description": description}
-    expected = {
+    # Expected responses
+    draft_expected = {
         "user_id": auth_account["id"],
         "group_id": plugin["group"]["id"],
         "resource_id": plugin["id"],
         "resource_snapshot_id": plugin["snapshot"],
         "num_other_drafts": 0,
-        "payload": payload,
+        "payload": draft,
     }
-    response = actions.create_existing_resource_draft(
-        client,
-        resource_route=V1_PLUGINS_ROUTE,
-        resource_id=plugin["id"],
-        payload=payload,
-    ).get_json()
-    asserts.assert_draft_response_contents_matches_expectations(response, expected)
-    asserts.assert_retrieving_draft_by_resource_id_works(
-        client,
-        resource_route=V1_PLUGINS_ROUTE,
-        resource_id=plugin["id"],
-        expected=response,
-    )
-    asserts.assert_creating_another_existing_draft_fails(
-        client, resource_route=V1_PLUGINS_ROUTE, resource_id=plugin["id"]
-    )
-
-    # test modification
-    payload = {"name": new_name, "description": description}
-    expected = {
+    draft_mod_expected = {
         "user_id": auth_account["id"],
         "group_id": plugin["group"]["id"],
         "resource_id": plugin["id"],
         "resource_snapshot_id": plugin["snapshot"],
         "num_other_drafts": 0,
-        "payload": payload,
+        "payload": draft_mod,
     }
-    response = actions.modify_existing_resource_draft(
-        client,
-        resource_route=V1_PLUGINS_ROUTE,
-        resource_id=plugin["id"],
-        payload=payload,
-    ).get_json()
-    asserts.assert_draft_response_contents_matches_expectations(response, expected)
 
-    # test deletion
-    actions.delete_existing_resource_draft(
-        client, resource_route=V1_PLUGINS_ROUTE, resource_id=plugin["id"]
-    )
-    asserts.assert_existing_draft_is_not_found(
-        client, resource_route=V1_PLUGINS_ROUTE, resource_id=plugin["id"]
+    # Run routine: existing resource drafts tests
+    routines.run_existing_resource_drafts_tests(
+        dioptra_client.plugins.modify_resource_drafts,
+        plugin["id"],
+        draft=draft,
+        draft_mod=draft_mod,
+        draft_expected=draft_expected,
+        draft_mod_expected=draft_mod_expected,
     )
 
 
 def test_manage_new_plugin_drafts(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
 ) -> None:
@@ -1412,87 +1352,45 @@ def test_manage_new_plugin_drafts(
     - The user attempts to retrieve information about the deleted draft.
     - The request fails with an appropriate error message and response code.
     """
+    # Requests data
     group_id = auth_account["groups"][0]["id"]
     drafts: dict[str, Any] = {
         "draft1": {"name": "plugin1", "description": "new plugin"},
         "draft2": {"name": "plugin2", "description": None},
     }
+    draft1_mod = {"name": "draft1", "description": "new description"}
 
-    # test creation
+    # Expected responses
     draft1_expected = {
         "user_id": auth_account["id"],
         "group_id": group_id,
         "payload": drafts["draft1"],
     }
-    draft1_response = actions.create_new_resource_draft(
-        client,
-        resource_route=V1_PLUGINS_ROUTE,
-        group_id=group_id,
-        payload=drafts["draft1"],
-    ).get_json()
-    asserts.assert_draft_response_contents_matches_expectations(
-        draft1_response, draft1_expected
-    )
-    asserts.assert_retrieving_draft_by_id_works(
-        client,
-        resource_route=V1_PLUGINS_ROUTE,
-        draft_id=draft1_response["id"],
-        expected=draft1_response,
-    )
     draft2_expected = {
         "user_id": auth_account["id"],
         "group_id": group_id,
         "payload": drafts["draft2"],
     }
-    draft2_response = actions.create_new_resource_draft(
-        client,
-        resource_route=V1_PLUGINS_ROUTE,
-        group_id=group_id,
-        payload=drafts["draft2"],
-    ).get_json()
-    asserts.assert_draft_response_contents_matches_expectations(
-        draft2_response, draft2_expected
-    )
-    asserts.assert_retrieving_draft_by_id_works(
-        client,
-        resource_route=V1_PLUGINS_ROUTE,
-        draft_id=draft2_response["id"],
-        expected=draft2_response,
-    )
-    asserts.assert_retrieving_drafts_works(
-        client,
-        resource_route=V1_PLUGINS_ROUTE,
-        expected=[draft1_response, draft2_response],
-    )
-
-    # test modification
-    draft1_mod = {"name": "draft1", "description": "new description"}
     draft1_mod_expected = {
         "user_id": auth_account["id"],
         "group_id": group_id,
         "payload": draft1_mod,
     }
-    response = actions.modify_new_resource_draft(
-        client,
-        resource_route=V1_PLUGINS_ROUTE,
-        draft_id=draft1_response["id"],
-        payload=draft1_mod,
-    ).get_json()
-    asserts.assert_draft_response_contents_matches_expectations(
-        response, draft1_mod_expected
-    )
 
-    # test deletion
-    actions.delete_new_resource_draft(
-        client, resource_route=V1_PLUGINS_ROUTE, draft_id=draft1_response["id"]
-    )
-    asserts.assert_new_draft_is_not_found(
-        client, resource_route=V1_PLUGINS_ROUTE, draft_id=draft1_response["id"]
+    # Run routine: new resource drafts tests
+    routines.run_new_resource_drafts_tests(
+        dioptra_client.plugins.new_resource_drafts,
+        drafts=drafts,
+        draft1_mod=draft1_mod,
+        draft1_expected=draft1_expected,
+        draft2_expected=draft2_expected,
+        draft1_mod_expected=draft1_mod_expected,
+        group_id=group_id,
     )
 
 
 def test_manage_existing_plugin_file_draft(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_with_files: dict[str, Any],
@@ -1513,11 +1411,9 @@ def test_manage_existing_plugin_file_draft(
     - The user attempts to retrieve information about the deleted draft.
     - The request fails with an appropriate error message and response code.
     """
+    # Requests data
     plugin_id = registered_plugin_with_files["plugin"]["id"]
-    resource_route = f"{V1_PLUGINS_ROUTE}/{plugin_id}/{V1_PLUGIN_FILES_ROUTE}"
     plugin_file = registered_plugin_with_files["plugin_file1"]
-    filename = "main.py"
-    new_filename = "hello_world.py"
     description = "hello world plugin"
     contents = textwrap.dedent(
         """from dioptra import pyplugs
@@ -1527,67 +1423,51 @@ def test_manage_existing_plugin_file_draft(
             return f"Hello, {name}!"
         """
     )
-
-    # test creation
-    payload = {"filename": filename, "description": description, "contents": contents}
-    expected = {
-        "user_id": auth_account["id"],
-        "group_id": plugin_file["group"]["id"],
-        "resource_id": plugin_file["id"],
-        "resource_snapshot_id": plugin_file["snapshot"],
-        "num_other_drafts": 0,
-        "payload": payload,
-    }
-    response = actions.create_existing_resource_draft(
-        client,
-        resource_route=resource_route,
-        resource_id=plugin_file["id"],
-        payload=payload,
-    ).get_json()
-    asserts.assert_draft_response_contents_matches_expectations(response, expected)
-    asserts.assert_retrieving_draft_by_resource_id_works(
-        client,
-        resource_route=resource_route,
-        resource_id=plugin_file["id"],
-        expected=response,
-    )
-    asserts.assert_creating_another_existing_draft_fails(
-        client, resource_route=resource_route, resource_id=plugin_file["id"]
-    )
-
-    # test modification
-    payload = {
-        "filename": new_filename,
+    draft = {
+        "filename": "main.py",
         "description": description,
         "contents": contents,
+        "tasks": [],
     }
-    expected = {
+    draft_mod = {
+        "filename": "hello_world.py",
+        "description": description,
+        "contents": contents,
+        "tasks": [],
+    }
+
+    # Expected responses
+    draft_expected = {
         "user_id": auth_account["id"],
         "group_id": plugin_file["group"]["id"],
         "resource_id": plugin_file["id"],
         "resource_snapshot_id": plugin_file["snapshot"],
         "num_other_drafts": 0,
-        "payload": payload,
+        "payload": draft,
     }
-    response = actions.modify_existing_resource_draft(
-        client,
-        resource_route=resource_route,
-        resource_id=plugin_file["id"],
-        payload=payload,
-    ).get_json()
-    asserts.assert_draft_response_contents_matches_expectations(response, expected)
+    draft_mod_expected = {
+        "user_id": auth_account["id"],
+        "group_id": plugin_file["group"]["id"],
+        "resource_id": plugin_file["id"],
+        "resource_snapshot_id": plugin_file["snapshot"],
+        "num_other_drafts": 0,
+        "payload": draft_mod,
+    }
 
-    # test deletion
-    actions.delete_existing_resource_draft(
-        client, resource_route=resource_route, resource_id=plugin_file["id"]
-    )
-    asserts.assert_existing_draft_is_not_found(
-        client, resource_route=resource_route, resource_id=plugin_file["id"]
+    # Run routine: existing resource drafts tests
+    routines.run_existing_resource_drafts_tests(
+        dioptra_client.plugins.files.modify_resource_drafts,
+        plugin_id,
+        plugin_file["id"],
+        draft=draft,
+        draft_mod=draft_mod,
+        draft_expected=draft_expected,
+        draft_mod_expected=draft_mod_expected,
     )
 
 
 def test_manage_new_plugin_file_drafts(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugins: dict[str, Any],
@@ -1604,10 +1484,8 @@ def test_manage_new_plugin_file_drafts(
     - The user attempts to retrieve information about the deleted draft.
     - The request fails with an appropriate error message and response code.
     """
+    # Requests data
     plugin_id = registered_plugins["plugin1"]["id"]
-    resource_route = f"{V1_PLUGINS_ROUTE}/{plugin_id}/{V1_PLUGIN_FILES_ROUTE}"
-
-    group_id = auth_account["groups"][0]["id"]
     contents = textwrap.dedent(
         """from dioptra import pyplugs
 
@@ -1621,93 +1499,54 @@ def test_manage_new_plugin_file_drafts(
             "filename": "plugin_file1.py",
             "description": "new plugin_file",
             "contents": contents,
+            "tasks": [],
         },
         "draft2": {
             "filename": "plugin_file2.py",
             "description": None,
             "contents": contents,
+            "tasks": [],
         },
     }
+    draft1_mod = {
+        "filename": "draft_plugin.py",
+        "description": "new description",
+        "contents": contents,
+        "tasks": [],
+    }
 
-    # test creation
+    # Expected responses
+    group_id = auth_account["groups"][0]["id"]
     draft1_expected = {
         "user_id": auth_account["id"],
         "group_id": group_id,
         "payload": drafts["draft1"],
     }
-    draft1_response = actions.create_new_resource_draft(
-        client,
-        resource_route=resource_route,
-        group_id=None,
-        payload=drafts["draft1"],
-    ).get_json()
-    asserts.assert_draft_response_contents_matches_expectations(
-        draft1_response, draft1_expected
-    )
-    asserts.assert_retrieving_draft_by_id_works(
-        client,
-        resource_route=resource_route,
-        draft_id=draft1_response["id"],
-        expected=draft1_response,
-    )
     draft2_expected = {
         "user_id": auth_account["id"],
         "group_id": group_id,
         "payload": drafts["draft2"],
-    }
-    draft2_response = actions.create_new_resource_draft(
-        client,
-        resource_route=resource_route,
-        group_id=None,
-        payload=drafts["draft2"],
-    ).get_json()
-    asserts.assert_draft_response_contents_matches_expectations(
-        draft2_response, draft2_expected
-    )
-    asserts.assert_retrieving_draft_by_id_works(
-        client,
-        resource_route=resource_route,
-        draft_id=draft2_response["id"],
-        expected=draft2_response,
-    )
-    asserts.assert_retrieving_drafts_works(
-        client,
-        resource_route=resource_route,
-        expected=[draft1_response, draft2_response],
-    )
-
-    # test modification
-    draft1_mod = {
-        "filename": "draft_plugin.py",
-        "description": "new description",
-        "contents": contents,
     }
     draft1_mod_expected = {
         "user_id": auth_account["id"],
         "group_id": group_id,
         "payload": draft1_mod,
     }
-    response = actions.modify_new_resource_draft(
-        client,
-        resource_route=resource_route,
-        draft_id=draft1_response["id"],
-        payload=draft1_mod,
-    ).get_json()
-    asserts.assert_draft_response_contents_matches_expectations(
-        response, draft1_mod_expected
-    )
 
-    # test deletion
-    actions.delete_new_resource_draft(
-        client, resource_route=resource_route, draft_id=draft1_response["id"]
-    )
-    asserts.assert_new_draft_is_not_found(
-        client, resource_route=resource_route, draft_id=draft1_response["id"]
+    # Run routine: new resource drafts tests
+    routines.run_new_resource_drafts_tests(
+        dioptra_client.plugins.files.new_resource_drafts,
+        plugin_id,
+        drafts=drafts,
+        draft1_mod=draft1_mod,
+        draft1_expected=draft1_expected,
+        draft2_expected=draft2_expected,
+        draft1_mod_expected=draft1_mod_expected,
     )
 
 
 def test_manage_plugin_snapshots(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugins: dict[str, Any],
@@ -1726,43 +1565,23 @@ def test_manage_plugin_snapshots(
       response
     """
     plugin_to_rename = registered_plugins["plugin1"]
-    modified_plugin = modify_plugin(
-        client,
+    modified_plugin = dioptra_client.plugins.modify_by_id(
         plugin_id=plugin_to_rename["id"],
-        new_name=plugin_to_rename["name"] + "modified",
-        new_description=plugin_to_rename["description"],
-    ).get_json()
-    modified_plugin.pop("hasDraft")
-    modified_plugin.pop("files")
-    plugin_to_rename.pop("hasDraft")
-    plugin_to_rename.pop("files")
-    plugin_to_rename["latestSnapshot"] = False
-    plugin_to_rename["lastModifiedOn"] = modified_plugin["lastModifiedOn"]
-    asserts.assert_retrieving_snapshot_by_id_works(
-        client,
-        resource_route=V1_PLUGINS_ROUTE,
-        resource_id=plugin_to_rename["id"],
-        snapshot_id=plugin_to_rename["snapshot"],
-        expected=plugin_to_rename,
-    )
-    asserts.assert_retrieving_snapshot_by_id_works(
-        client,
-        resource_route=V1_PLUGINS_ROUTE,
-        resource_id=modified_plugin["id"],
-        snapshot_id=modified_plugin["snapshot"],
-        expected=modified_plugin,
-    )
-    expected_snapshots = [plugin_to_rename, modified_plugin]
-    asserts.assert_retrieving_snapshots_works(
-        client,
-        resource_route=V1_PLUGINS_ROUTE,
-        resource_id=plugin_to_rename["id"],
-        expected=expected_snapshots,
+        name=plugin_to_rename["name"] + "modified",
+        description=plugin_to_rename["description"],
+    ).json()
+
+    # Run routine: resource snapshots tests
+    routines.run_resource_snapshots_tests(
+        dioptra_client.plugins.snapshots,
+        resource_to_rename=plugin_to_rename.copy(),
+        modified_resource=modified_plugin.copy(),
+        drop_additional_fields=["files"],
     )
 
 
 def test_manage_plugin_file_snapshots(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_with_files: dict[str, Any],
@@ -1781,7 +1600,6 @@ def test_manage_plugin_file_snapshots(
       expected response
     """
     plugin_id = registered_plugin_with_files["plugin"]["id"]
-    resource_route = f"{V1_PLUGINS_ROUTE}/{plugin_id}/{V1_PLUGIN_FILES_ROUTE}"
     plugin_file_to_rename = registered_plugin_with_files["plugin_file1"]
     contents = textwrap.dedent(
         """from dioptra import pyplugs
@@ -1792,45 +1610,27 @@ def test_manage_plugin_file_snapshots(
         """
     )
 
-    modified_plugin_file = modify_plugin_file(
-        client,
+    modified_plugin_file = dioptra_client.plugins.files.modify_by_id(
         plugin_id=plugin_id,
         plugin_file_id=plugin_file_to_rename["id"],
-        new_name="modified_" + plugin_file_to_rename["filename"],
-        new_contents=contents,
-        new_description=plugin_file_to_rename["description"],
-    ).get_json()
-    modified_plugin_file.pop("hasDraft")
-    modified_plugin_file.pop("plugin")
-    plugin_file_to_rename.pop("hasDraft")
-    plugin_file_to_rename.pop("plugin")
-    plugin_file_to_rename["latestSnapshot"] = False
-    plugin_file_to_rename["lastModifiedOn"] = modified_plugin_file["lastModifiedOn"]
-    asserts.assert_retrieving_snapshot_by_id_works(
-        client,
-        resource_route=resource_route,
-        resource_id=plugin_file_to_rename["id"],
-        snapshot_id=plugin_file_to_rename["snapshot"],
-        expected=plugin_file_to_rename,
-    )
-    asserts.assert_retrieving_snapshot_by_id_works(
-        client,
-        resource_route=resource_route,
-        resource_id=modified_plugin_file["id"],
-        snapshot_id=modified_plugin_file["snapshot"],
-        expected=modified_plugin_file,
-    )
-    expected_snapshots = [plugin_file_to_rename, modified_plugin_file]
-    asserts.assert_retrieving_snapshots_works(
-        client,
-        resource_route=resource_route,
-        resource_id=plugin_file_to_rename["id"],
-        expected=expected_snapshots,
+        filename="modified_" + plugin_file_to_rename["filename"],
+        contents=contents,
+        tasks=[],
+        description=plugin_file_to_rename["description"],
+    ).json()
+
+    # Run routine: resource snapshots tests
+    routines.run_resource_snapshots_tests(
+        dioptra_client.plugins.files.snapshots,
+        plugin_id,
+        resource_to_rename=plugin_file_to_rename.copy(),
+        modified_resource=modified_plugin_file.copy(),
+        drop_additional_fields=["plugin"],
     )
 
 
 def test_tag_plugin(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugins: dict[str, Any],
@@ -1843,64 +1643,18 @@ def test_tag_plugin(
 
     """
     plugin = registered_plugins["plugin1"]
-    tags = [tag["id"] for tag in registered_tags.values()]
+    tag_ids = [tag["id"] for tag in registered_tags.values()]
 
-    # test append
-    response = actions.append_tags(
-        client,
-        resource_route=V1_PLUGINS_ROUTE,
-        resource_id=plugin["id"],
-        tag_ids=[tags[0], tags[1]],
-    )
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.get_json(), [tags[0], tags[1]]
-    )
-    response = actions.append_tags(
-        client,
-        resource_route=V1_PLUGINS_ROUTE,
-        resource_id=plugin["id"],
-        tag_ids=[tags[1], tags[2]],
-    )
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.get_json(), [tags[0], tags[1], tags[2]]
-    )
-
-    # test remove
-    actions.remove_tag(
-        client,
-        resource_route=V1_PLUGINS_ROUTE,
-        resource_id=plugin["id"],
-        tag_id=tags[1],
-    )
-    response = actions.get_tags(
-        client, resource_route=V1_PLUGINS_ROUTE, resource_id=plugin["id"]
-    )
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.get_json(), [tags[0], tags[2]]
-    )
-
-    # test modify
-    response = actions.modify_tags(
-        client,
-        resource_route=V1_PLUGINS_ROUTE,
-        resource_id=plugin["id"],
-        tag_ids=[tags[1], tags[2]],
-    )
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.get_json(), [tags[1], tags[2]]
-    )
-
-    # test delete
-    response = actions.remove_tags(
-        client, resource_route=V1_PLUGINS_ROUTE, resource_id=plugin["id"]
-    )
-    response = actions.get_tags(
-        client, resource_route=V1_PLUGINS_ROUTE, resource_id=plugin["id"]
+    # Run routine: resource tag tests
+    routines.run_resource_tag_tests(
+        dioptra_client.plugins.tags,
+        plugin["id"],
+        tag_ids=tag_ids,
     )
 
 
 def test_tag_plugin_file(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_with_files: dict[str, Any],
@@ -1914,58 +1668,12 @@ def test_tag_plugin_file(
     """
     plugin_id = registered_plugin_with_files["plugin"]["id"]
     plugin_file = registered_plugin_with_files["plugin_file1"]
-    tags = [tag["id"] for tag in registered_tags.values()]
-    resource_route = f"{V1_PLUGINS_ROUTE}/{plugin_id}/{V1_PLUGIN_FILES_ROUTE}"
+    tag_ids = [tag["id"] for tag in registered_tags.values()]
 
-    # test append
-    response = actions.append_tags(
-        client,
-        resource_route=resource_route,
-        resource_id=plugin_file["id"],
-        tag_ids=[tags[0], tags[1]],
-    )
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.get_json(), [tags[0], tags[1]]
-    )
-    response = actions.append_tags(
-        client,
-        resource_route=resource_route,
-        resource_id=plugin_file["id"],
-        tag_ids=[tags[1], tags[2]],
-    )
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.get_json(), [tags[0], tags[1], tags[2]]
-    )
-
-    # test remove
-    actions.remove_tag(
-        client,
-        resource_route=resource_route,
-        resource_id=plugin_file["id"],
-        tag_id=tags[1],
-    )
-    response = actions.get_tags(
-        client, resource_route=resource_route, resource_id=plugin_file["id"]
-    )
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.get_json(), [tags[0], tags[2]]
-    )
-
-    # test modify
-    response = actions.modify_tags(
-        client,
-        resource_route=resource_route,
-        resource_id=plugin_file["id"],
-        tag_ids=[tags[1], tags[2]],
-    )
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.get_json(), [tags[1], tags[2]]
-    )
-
-    # test delete
-    response = actions.remove_tags(
-        client, resource_route=resource_route, resource_id=plugin_file["id"]
-    )
-    response = actions.get_tags(
-        client, resource_route=resource_route, resource_id=plugin_file["id"]
+    # Run routine: resource tag tests
+    routines.run_resource_tag_tests(
+        dioptra_client.plugins.files.tags,
+        plugin_id,
+        plugin_file["id"],
+        tag_ids=tag_ids,
     )

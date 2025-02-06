@@ -117,6 +117,14 @@ class ExperimentPageSchema(BasePageSchema):
     )
 
 
+class ExperimentMetricsGetQueryParameters(
+    PagingQueryParametersSchema,
+    SearchQueryParametersSchema,
+    SortByGetQueryParametersSchema,
+):
+    """The query parameters for the GET method of the /experiments/{id}/metrics"""
+
+
 class ExperimentGetQueryParameters(
     PagingQueryParametersSchema,
     GroupIdQueryParametersSchema,

@@ -33,7 +33,7 @@ from dioptra.restapi.v1.schemas import (
 )
 
 ALLOWED_PLUGIN_NAME_REGEX = re.compile(r"^([A-Z]|[A-Z_][A-Z0-9_]+)$", flags=re.IGNORECASE)  # noqa: B950; fmt: skip
-ALLOWED_PLUGIN_FILENAME_REGEX = re.compile(r"^([A-Za-z]|[A-Za-z_][A-Za-z0-9_]+)\.py$")
+ALLOWED_PLUGIN_FILENAME_REGEX = re.compile(r"^(?!.*/_)(?!_/)([a-zA-Z][a-zA-Z0-9_]*/)*[a-zA-Z_][a-zA-Z0-9_]*(?<!_)\.py$")  # noqa: B950; fmt: skip
 ALLOWED_PLUGIN_TASK_REGEX = re.compile(r"^([A-Z]|[A-Z_][A-Z0-9_]+)$", flags=re.IGNORECASE)  # noqa: B950; fmt: skip
 ALLOWED_PLUGIN_TASK_PARAMETER_REGEX = re.compile(r"^([A-Z]|[A-Z_][A-Z0-9_]+)$", flags=re.IGNORECASE)  # noqa: B950; fmt: skip
 

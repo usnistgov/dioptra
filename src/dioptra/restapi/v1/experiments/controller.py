@@ -35,6 +35,7 @@ from dioptra.restapi.v1.artifacts.service import JobArtifactService
 from dioptra.restapi.v1.entrypoints.schema import EntrypointRefSchema
 from dioptra.restapi.v1.jobs.schema import (
     ExperimentJobGetQueryParameters,
+    ExperimentJobsMetricsSchema,
     JobMlflowRunSchema,
     JobPageSchema,
     JobSchema,
@@ -45,6 +46,7 @@ from dioptra.restapi.v1.jobs.service import (
     ExperimentJobIdService,
     ExperimentJobIdStatusService,
     ExperimentJobService,
+    ExperimentMetricsService,
 )
 from dioptra.restapi.v1.schemas import IdListSchema, IdStatusResponseSchema
 from dioptra.restapi.v1.shared.drafts.controller import (
@@ -64,6 +66,7 @@ from dioptra.restapi.v1.shared.tags.controller import (
 from .schema import (
     ExperimentDraftSchema,
     ExperimentGetQueryParameters,
+    ExperimentMetricsGetQueryParameters,
     ExperimentMutableFieldsSchema,
     ExperimentPageSchema,
     ExperimentSchema,
@@ -519,6 +522,71 @@ class ExperimentIdJobIdArtifactsEndpoint(Resource):
             log=log,
         )
         return utils.build_artifact(artifact)
+
+
+@api.route("/<int:id>/metrics")
+@api.param("id", "ID for the Experiment resource.")
+class ExperimentIdMetricsEndpoint(Resource):
+    @inject
+    def __init__(
+        self,
+        experiment_metrics_service: ExperimentMetricsService,
+        *args,
+        **kwargs,
+    ) -> None:
+        """Initialize the Experiment Metrics resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            experiment_metrics_service: A ExperimentMetricsService object.
+        """
+        self._experiment_metrics_service = experiment_metrics_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    @accepts(query_params_schema=ExperimentMetricsGetQueryParameters, api=api)
+    @responds(schema=ExperimentJobsMetricsSchema, api=api)
+    def get(self, id: int):
+        """Gets all of the latest metrics for every job in the experiment."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="ExperimentIdMetricsEndpoint",
+            request_type="GET",
+            experiment_id=id,
+        )
+
+        parsed_query_params = request.parsed_query_params  # type: ignore
+        search_string = unquote(parsed_query_params["search"])
+        page_index = parsed_query_params["index"]
+        page_length = parsed_query_params["page_length"]
+        sort_by_string = unquote(parsed_query_params["sort_by"])
+        descending = parsed_query_params["descending"]
+
+        jobs_metrics, total_num_jobs = self._experiment_metrics_service.get(
+            experiment_id=id,
+            search_string=search_string,
+            page_index=page_index,
+            page_length=page_length,
+            sort_by_string=sort_by_string,
+            descending=descending,
+            error_if_not_found=True,
+            log=log,
+        )
+
+        return utils.build_paging_envelope(
+            f"/experiments/{id}/metrics",
+            build_fn=utils.build_metrics_snapshots,
+            data=jobs_metrics,
+            group_id=None,
+            query=None,
+            draft_type=None,
+            index=page_index,
+            length=page_length,
+            total_num_elements=total_num_jobs,
+            sort_by=None,
+            descending=None,
+        )
 
 
 @api.route("/<int:id>/entrypoints")

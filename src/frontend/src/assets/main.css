@@ -110,6 +110,7 @@ h1 {
   font-size: clamp(1rem, 10vw, 4rem) !important;
   line-height: 1 !important;
   font-weight: 400 !important;
+  margin-top: 0;
 }
 
 h2 {
@@ -120,7 +121,7 @@ h2 {
 
 .field-label {
   width: 100px;
-  font-size: 1rem;
+  font-size: .6em;
   color: black;
 }
 

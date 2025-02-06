@@ -15,24 +15,29 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """Shared assertions for REST API unit tests."""
+from http import HTTPStatus
 from typing import Any
 
-from flask.testing import FlaskClient
+from dioptra.client.drafts import (
+    ModifyResourceDraftsSubCollectionClient,
+    NewResourceDraftsSubCollectionClient,
+)
+from dioptra.client.snapshots import SnapshotsSubCollectionClient
 
-from dioptra.restapi.routes import V1_ROOT
-
-from . import actions, helpers
+from . import helpers
 
 
 def assert_base_resource_contents_match_expectations(response: dict[str, Any]) -> None:
     assert isinstance(response["id"], int)
     assert isinstance(response["snapshot"], int)
     assert isinstance(response["createdOn"], str)
+    assert isinstance(response["snapshotCreatedOn"], str)
     assert isinstance(response["lastModifiedOn"], str)
     assert isinstance(response["latestSnapshot"], bool)
     assert isinstance(response["hasDraft"], bool)
 
     assert helpers.is_iso_format(response["createdOn"])
+    assert helpers.is_iso_format(response["snapshotCreatedOn"])
     assert helpers.is_iso_format(response["lastModifiedOn"])
 
 
@@ -54,7 +59,7 @@ def assert_group_ref_contents_matches_expectations(
     assert group["id"] == expected_group_id
 
 
-def assert_tag_ref_contents_matches_expectations(tags: dict[str, Any]) -> None:
+def assert_tag_ref_contents_matches_expectations(tags: list[dict[str, Any]]) -> None:
     for tag in tags:
         assert isinstance(tag["id"], int)
         assert isinstance(tag["name"], str)
@@ -107,116 +112,6 @@ def assert_entrypoint_ref_contents_matches_expectations(
     assert entrypoint["snapshotId"] == expected_entrypoint_id
 
 
-def assert_retrieving_draft_by_resource_id_works(
-    client: FlaskClient,
-    resource_route: str,
-    resource_id: int,
-    expected: dict[str, Any],
-) -> None:
-    """Assert that retrieving an existing resource draft by resource id works.
-
-    Args:
-        client: The Flask test client.
-        resource_route: The route for the resource type.
-        resource_id: The id of the resource to retrieve the draft for.
-        expected: The expected response from the API.
-
-    Raises:
-        AssertionError: If the response status code is not 200 or if the API response
-            does not match the expected response.
-    """
-    response = client.get(
-        f"/{V1_ROOT}/{resource_route}/{resource_id}/draft", follow_redirects=True
-    )
-    assert response.status_code == 200 and response.get_json() == expected
-
-
-def assert_retrieving_draft_by_id_works(
-    client: FlaskClient,
-    resource_route: str,
-    draft_id: int,
-    expected: dict[str, Any],
-) -> None:
-    """Assert that retrieving a draft by id works.
-
-    Args:
-        client: The Flask test client.
-        resource_route: The route for the resource type.
-        draft_id: The id of the draft to retrieve.
-        expected: The expected response from the API.
-
-    Raises:
-        AssertionError: If the response status code is not 200 or if the API response
-            does not match the expected response.
-    """
-    response = client.get(
-        f"/{V1_ROOT}/{resource_route}/drafts/{draft_id}", follow_redirects=True
-    )
-    assert response.status_code == 200 and response.get_json() == expected
-
-
-def assert_retrieving_drafts_works(
-    client: FlaskClient,
-    resource_route: str,
-    expected: list[dict[str, Any]],
-    group_id: int | None = None,
-    search: str | None = None,
-    paging_info: dict[str, Any] | None = None,
-) -> None:
-    """Assert that retrieving all drafts for a resource type works.
-
-    Args:
-        client: The Flask test client.
-        resource_route: The route for the resource type.
-        expected: The expected response from the API.
-        group_id: The group ID used in query parameters.
-        search: The search string used in query parameters.
-        paging_info: The paging information used in query parameters.
-
-    Raises:
-        AssertionError: If the response status code is not 200 or if the API response
-            does not match the expected response.
-    """
-
-    query_string: dict[str, Any] = {}
-
-    if group_id is not None:
-        query_string["groupId"] = group_id
-
-    if search is not None:
-        query_string["search"] = search
-
-    if paging_info is not None:
-        query_string["index"] = paging_info["index"]
-        query_string["pageLength"] = paging_info["page_length"]
-
-    response = client.get(
-        f"/{V1_ROOT}/{resource_route}/drafts",
-        query_string=query_string,
-        follow_redirects=True,
-    )
-    assert response.status_code == 200 and response.get_json()["data"] == expected
-
-
-def assert_creating_another_existing_draft_fails(
-    client: FlaskClient, resource_route: str, resource_id: int
-) -> None:
-    """Assert that registering another draft for the same resource fails
-
-    Args:
-        client: The Flask test client.
-        resource_route: The route for the resource type.
-        resource_id: The id of the resource to retrieve the draft for.
-
-    Raises:
-        AssertionError: If the response status code is not 400.
-    """
-    response = actions.create_existing_resource_draft(
-        client, resource_route=resource_route, resource_id=resource_id, payload={}
-    )
-    assert response.status_code == 400
-
-
 def assert_draft_response_contents_matches_expectations(
     response: dict[str, Any],
     expected_contents: dict[str, Any],
@@ -226,7 +121,6 @@ def assert_draft_response_contents_matches_expectations(
     Args:
         response: The actual response from the API.
         expected_contents: The expected response from the API.
-        existing_draft: If the draft is of an existing resource or not.
 
     Raises:
         AssertionError: If the API response does not match the expected response
@@ -277,101 +171,6 @@ def assert_draft_response_contents_matches_expectations(
     assert response["payload"] == expected_contents["payload"]
 
 
-def assert_existing_draft_is_not_found(
-    client: FlaskClient,
-    resource_route: str,
-    resource_id: int,
-) -> None:
-    """Assert that a draft of an existing resource is not found.
-
-    Args:
-        client: The Flask test client.
-        resource_route: The route for the resource type.
-        resource_id: The id of the resource to retrieve the draft for.
-
-    Raises:
-        AssertionError: If the response status code is not 404.
-    """
-    response = client.get(
-        f"/{V1_ROOT}/{resource_route}/{resource_id}/draft",
-        follow_redirects=True,
-    )
-    assert response.status_code == 404
-
-
-def assert_new_draft_is_not_found(
-    client: FlaskClient,
-    resource_route: str,
-    draft_id: int,
-) -> None:
-    """Assert that a draft of an existing resource is not found.
-
-    Args:
-        client: The Flask test client.
-        resource_route: The route for the resource type.
-        resource_id: The id of the resource to retrieve the draft for.
-
-    Raises:
-        AssertionError: If the response status code is not 404.
-    """
-    response = client.get(
-        f"/{V1_ROOT}/{resource_route}/drafts/{draft_id}",
-        follow_redirects=True,
-    )
-    assert response.status_code == 404
-
-
-def assert_retrieving_snapshots_works(
-    client: FlaskClient,
-    resource_route: str,
-    resource_id: int,
-    expected: dict[str, Any],
-) -> None:
-    """Assert that retrieving a queue by id works.
-
-    Args:
-        client: The Flask test client.
-        resource_route: The route for the resource type.
-        resource_id: The id of the resource to retrieve snapshots for.
-        expected: The expected response from the API.
-
-    Raises:
-        AssertionError: If the response status code is not 200 or if the API response
-            does not match the expected response.
-    """
-    response = client.get(
-        f"/{V1_ROOT}/{resource_route}/{resource_id}/snapshots", follow_redirects=True
-    )
-    assert response.status_code == 200 and response.get_json()["data"] == expected
-
-
-def assert_retrieving_snapshot_by_id_works(
-    client: FlaskClient,
-    resource_route: str,
-    resource_id: int,
-    snapshot_id: int,
-    expected: dict[str, Any],
-) -> None:
-    """Assert that retrieving a resource snapshot by id works.
-
-    Args:
-        client: The Flask test client.
-        resource_route: The route for the resource type.
-        resource_id: The id of the resource to retrieve a snapshot of.
-        snapshot_id: The id to the snapshot to retrieve.
-        expected: The expected response from the API.
-
-    Raises:
-        AssertionError: If the response status code is not 200 or if the API response
-            does not match the expected response.
-    """
-    response = client.get(
-        f"/{V1_ROOT}/{resource_route}/{resource_id}/snapshots/{snapshot_id}",
-        follow_redirects=True,
-    )
-    assert response.status_code == 200 and response.get_json() == expected
-
-
 def assert_tags_response_contents_matches_expectations(
     response: list[dict[str, Any]],
     expected_contents: list[int],
@@ -394,3 +193,175 @@ def assert_tags_response_contents_matches_expectations(
         assert isinstance(tag["url"], str)
 
     assert [tag["id"] for tag in response] == expected_contents
+
+
+def assert_retrieving_draft_by_resource_id_works(
+    drafts_client: ModifyResourceDraftsSubCollectionClient,
+    *resource_ids: str | int,
+    expected: dict[str, Any],
+) -> None:
+    """Assert that retrieving an existing resource draft by resource id works.
+
+    Args:
+        drafts_client: The DraftsSubEndpointClient client.
+        resource_id: The id of the resource to retrieve the draft for.
+        expected: The expected response from the API.
+
+    Raises:
+        AssertionError: If the response status code is not 200 or if the API response
+            does not match the expected response.
+    """
+    response = drafts_client.get_by_id(*resource_ids)
+    assert response.status_code == HTTPStatus.OK and response.json() == expected
+
+
+def assert_retrieving_draft_by_id_works(
+    drafts_client: NewResourceDraftsSubCollectionClient,
+    *resource_ids: str | int,
+    draft_id: int,
+    expected: dict[str, Any],
+) -> None:
+    """Assert that retrieving a draft by id works.
+
+    Args:
+        drafts_client: The DraftsSubEndpointClient client.
+        draft_id: The id of the draft to retrieve.
+        expected: The expected response from the API.
+
+    Raises:
+        AssertionError: If the response status code is not 200 or if the API response
+            does not match the expected response.
+    """
+    response = drafts_client.get_by_id(*resource_ids, draft_id=draft_id)
+    assert response.status_code == HTTPStatus.OK and response.json() == expected
+
+
+def assert_retrieving_drafts_works(
+    drafts_client: NewResourceDraftsSubCollectionClient,
+    *resource_ids: str | int,
+    expected: list[dict[str, Any]],
+    group_id: int | None = None,
+    paging_info: dict[str, Any] | None = None,
+) -> None:
+    """Assert that retrieving all drafts for a resource type works.
+
+    Args:
+        drafts_client: The DraftsSubEndpointClient client.
+        expected: The expected response from the API.
+        group_id: The group ID used in query parameters.
+        paging_info: The paging information used in query parameters.
+
+    Raises:
+        AssertionError: If the response status code is not 200 or if the API response
+            does not match the expected response.
+    """
+
+    query_string: dict[str, Any] = {}
+
+    if group_id is not None:
+        query_string["group_id"] = group_id
+
+    if paging_info is not None:
+        query_string["index"] = paging_info["index"]
+        query_string["page_length"] = paging_info["page_length"]
+
+    response = drafts_client.get(*resource_ids, **query_string)
+    assert response.status_code == HTTPStatus.OK and response.json()["data"] == expected
+
+
+def assert_creating_another_existing_draft_fails(
+    drafts_client: ModifyResourceDraftsSubCollectionClient,
+    *resource_ids: str | int,
+    payload: dict[str, Any],
+) -> None:
+    """Assert that registering another draft for the same resource fails
+
+    Args:
+        drafts_client: The DraftsSubEndpointClient client.
+        resource_id: The id of the resource to retrieve the draft for.
+        payload: A dictionary containing the draft fields.
+
+    Raises:
+        AssertionError: If the response status code is not 400.
+    """
+    response = drafts_client.create(
+        *resource_ids, **payload
+    )
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+
+
+def assert_existing_draft_is_not_found(
+    drafts_client: ModifyResourceDraftsSubCollectionClient,
+    *resource_ids: str | int,
+) -> None:
+    """Assert that a draft of an existing resource is not found.
+
+    Args:
+        drafts_client: The DraftsSubEndpointClient client.
+        resource_id: The id of the resource to retrieve the draft for.
+
+    Raises:
+        AssertionError: If the response status code is not 404.
+    """
+    response = drafts_client.get_by_id(*resource_ids)
+    assert response.status_code == HTTPStatus.NOT_FOUND
+
+
+def assert_new_draft_is_not_found(
+    drafts_client: NewResourceDraftsSubCollectionClient,
+    *resource_ids: str | int,
+    draft_id: int,
+) -> None:
+    """Assert that a draft of an existing resource is not found.
+
+    Args:
+        drafts_client: The DraftsSubEndpointClient client.
+        resource_id: The id of the resource to retrieve the draft for.
+
+    Raises:
+        AssertionError: If the response status code is not 404.
+    """
+    response = drafts_client.get_by_id(*resource_ids, draft_id=draft_id)
+    assert response.status_code == HTTPStatus.NOT_FOUND
+
+
+def assert_retrieving_snapshots_works(
+    snapshots_client: SnapshotsSubCollectionClient,
+    *resource_ids: int,
+    expected: dict[str, Any],
+) -> None:
+    """Assert that retrieving a snapshot by id works.
+
+    Args:
+        snapshots_client: The SnapshotsSubCollectionClient client.
+        resource_id: The id of the resource to retrieve snapshots for.
+        expected: The expected response from the API.
+
+    Raises:
+        AssertionError: If the response status code is not 200 or if the API response
+            does not match the expected response.
+    """
+    response = snapshots_client.get(*resource_ids)
+    assert response.status_code == HTTPStatus.OK and response.json()["data"] == expected
+
+
+def assert_retrieving_snapshot_by_id_works(
+    snapshots_client: SnapshotsSubCollectionClient,
+    *resource_ids: int,
+    snapshot_id: int,
+    expected: dict[str, Any],
+) -> None:
+    """Assert that retrieving a resource snapshot by id works.
+
+    Args:
+        snapshots_client: The SnapshotsSubCollectionClient client.
+        resource_id: The id of the resource to retrieve a snapshot of.
+        snapshot_id: The id to the snapshot to retrieve.
+        expected: The expected response from the API.
+
+    Raises:
+        AssertionError: If the response status code is not 200 or if the API response
+            does not match the expected response.
+    """
+    response = snapshots_client.get_by_id(*resource_ids, snapshot_id=snapshot_id)
+    assert response.status_code == HTTPStatus.OK and response.json() == expected

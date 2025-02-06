@@ -1,8 +1,25 @@
 <template>
-  <PageTitle 
-    :title="title"
-  />
-  <div :class="`row ${isMedium ? '' : 'q-mx-xl'} q-my-lg`">
+  <div class="row">
+    <div>
+      <PageTitle 
+        :title="title"
+      />
+    </div>
+    <q-chip
+      v-if="route.params.id !== 'new'"
+      style="margin-top: 28px;"
+      class="q-ml-lg"
+    >
+      <q-toggle
+        v-model="store.showRightDrawer"
+        left-label
+        label="View History"
+        color="orange"
+      />
+    </q-chip>
+  </div>
+
+  <div :class="`row q-my-lg`">
     <div :class="`${isMobile ? 'col-12' : 'col-5'} q-mr-xl`">
       <fieldset>
         <legend>Basic Info</legend>
@@ -15,6 +32,7 @@
               :rules="[requiredRule]"
               class="q-mb-sm q-mt-md"
               aria-required="true"
+              :disable="history"
             >
               <template v-slot:before>
                 <label :class="`field-label`">Name:</label>
@@ -31,6 +49,7 @@
               dense
               :rules="[requiredRule]"
               aria-required="true"
+              :disable="history"
             >
               <template v-slot:before>
                 <div class="field-label">Group:</div>
@@ -42,6 +61,7 @@
               v-model.trim="experiment.description"
               class="q-mb-sm q-mt-sm"
               type="textarea"
+              :disable="history"
             >
               <template v-slot:before>
                 <label :class="`field-label`">Description:</label>
@@ -51,17 +71,17 @@
         </div>
       </fieldset>
     </div>
-    <fieldset :class="`${isMobile ? 'col-12 q-mt-lg' : 'col'}`">
+    <fieldset :class="`${isMobile ? 'col-12 q-mt-lg' : 'col'}`" :disabled="history">
       <legend>Entrypoint</legend>
       <div class="q-ma-lg">
         <q-select
+          v-if="!history"
           outlined
           dense
           v-model="experiment.entrypoints"
           use-input
           use-chips
           multiple
-          emit-value
           map-options
           option-label="name"
           option-value="id"
@@ -69,53 +89,70 @@
           :options="entrypoints"
           @filter="getEntrypoints"
           class="q-mb-md"
+          :disable="history"
         >
           <template v-slot:before>
             <div class="field-label">Entrypoints:</div>
           </template>  
         </q-select>
 
-        <q-btn 
+        <q-btn
+          v-if="!history"
           color="primary"
           icon="add"
           label="Create new Entry Point"
           class="q-mt-lg"
           @click="router.push('/entrypoints/new')" 
         />
+
+        <div class="row items-center" v-if="history">
+          <q-icon
+            name="sym_o_info"
+            size="2.5em"
+            color="grey"
+            class="q-mr-sm"
+          />
+          <caption>Entrypoints are not part of Experiment snapshots</caption>
+        </div>
       </div>
     </fieldset>
   </div>
 
-  <div :class="`${isMobile ? '' : 'q-mx-xl'} float-right q-mb-lg`">
+  <div :class="`float-right`">
       <q-btn  
-        to="/experiments"
         color="negative" 
         label="Cancel"
         class="q-mr-lg"
-        @click="confirmLeave = true"
+        @click="confirmLeave = true; router.back()"
       />
       <q-btn  
         @click="submit()" 
         color="primary" 
         label="Submit Experiment"
+        :disable="history"
       />
     </div>
 
     <LeaveFormDialog 
       v-model="showLeaveDialog"
       type="experiment"
-      @leaveForm="confirmLeave = true; router.push(toPath)"
+      @leaveForm="leaveForm"
+    />
+    <ReturnToFormDialog
+      v-model="showReturnDialog"
+      @cancel="clearForm"
     />
 </template>
 
 <script setup>
-  import { ref, inject, computed } from 'vue'
+  import { ref, inject, computed, watch } from 'vue'
   import { useLoginStore } from '@/stores/LoginStore.ts'
   import { useRouter, useRoute, onBeforeRouteLeave } from 'vue-router'
   import * as api from '@/services/dataApi'
   import * as notify from '../notify'
   import PageTitle from '@/components/PageTitle.vue'
   import LeaveFormDialog from '@/dialogs/LeaveFormDialog.vue'
+  import ReturnToFormDialog from '@/dialogs/ReturnToFormDialog.vue'
 
   const route = useRoute()
   
@@ -137,12 +174,28 @@
     entrypoints: [],
   })
 
-  const isEmptyValues = computed(() => {
-    return Object.values(experiment.value).every((value) => 
-      (typeof value === 'string' && value === '') || 
-      (Array.isArray(value) && value.length === 0)
-    )
-  })
+  function clearForm() {
+    experiment.value = {
+      name: '',
+      group: '',
+      description: '',
+      entrypoints: [],
+    }
+    basicInfoForm.value.reset()
+    store.savedForms.experiment = null
+  }
+
+  async function checkIfStillValid() {
+    for(let index = store.savedForms.experiment.entrypoints.length - 1; index >= 0; index--) {
+      let id = store.savedForms.experiment.entrypoints[index].id
+      try {
+        const res =  await api.getItem('entrypoints', id)
+      } catch(err) {
+        await store.savedForms.experiment.entrypoints.splice(index, 1)
+        console.warn(err)
+      } 
+    }
+  }
 
   const basicInfoForm = ref(null)
 
@@ -163,10 +216,23 @@
   })
 
   const title = ref('')
+  const showReturnDialog = ref(false)
+
   getExperiment()
   async function getExperiment() {
     if(route.params.id === 'new') {
       title.value = 'Create Experiment'
+      if(store.savedForms?.experiment) {
+        showReturnDialog.value = true
+        await checkIfStillValid()
+        initialCopy.value = JSON.parse(JSON.stringify({
+          name: store.savedForms.experiment.name,
+          group: store.savedForms.experiment.group,
+          description: store.savedForms.experiment.description,
+          entrypoints: store.savedForms.experiment.entrypoints,
+        }))
+        experiment.value = store.savedForms.experiment
+      }
       return
     }
     try {
@@ -196,16 +262,17 @@
   }
 
   async function addorModifyExperiment() {
+    experiment.value.entrypoints.forEach((entrypoint, index, array) => {
+      if(typeof entrypoint === 'object') {
+        array[index] = entrypoint.id
+      }
+    })
     try {
       if(route.params.id === 'new') {
         await api.addItem('experiments', experiment.value)
+        store.savedForms.experiment = null
         notify.success(`Successfully created '${experiment.value.name}'`)
       } else {
-        experiment.value.entrypoints.forEach((entrypoint, index, array) => {
-          if(typeof entrypoint === 'object') {
-            array[index] = entrypoint.id
-          }
-        })
         await api.updateItem('experiments', route.params.id, {
         name: experiment.value.name,
         description: experiment.value.description,
@@ -213,11 +280,10 @@
       })
         notify.success(`Successfully updated '${experiment.value.name}'`)
       }
+      router.push('/experiments')
     } catch(err) {
       console.log('err = ', err)
       notify.error(err.response.data.message)
-    } finally {
-      router.push('/experiments')
     }
   }
 
@@ -240,17 +306,50 @@
 
   onBeforeRouteLeave((to, from, next) => {
     toPath.value = to.path
-    if(confirmLeave.value) {
+    if(confirmLeave.value || !valuesChanged.value || history.value) {
       next(true)
-    } else if(!isEmptyValues.value && valuesChanged.value) {
-      showLeaveDialog.value = true
+    } else if(route.params.id === 'new') {
+      leaveForm()
     } else {
-      next(true)
+      showLeaveDialog.value = true
     }
   })
 
   const showLeaveDialog = ref(false)
   const confirmLeave = ref(false)
   const toPath = ref()
+
+  const isEmptyValues = computed(() => {
+    return Object.values(experiment.value).every((value) => 
+      (typeof value === 'string' && value === '') || 
+      (Array.isArray(value) && value.length === 0)
+    )
+  })
+
+  function leaveForm() {
+    if(isEmptyValues.value) {
+      store.savedForms.experiment = null
+    } else if(route.params.id === 'new') {
+      store.savedForms.experiment = experiment.value
+    }
+    confirmLeave.value = true
+    router.push(toPath.value)
+  }
+
+  const history = computed(() => {
+    return store.showRightDrawer
+  })
+
+  watch(() => store.selectedSnapshot, (newVal) => {
+    if(newVal) {
+      experiment.value = {
+        name: newVal.name,
+        group: newVal.group,
+        description: newVal.description
+      }
+    } else {
+      getExperiment()
+    }
+  })
 
 </script>

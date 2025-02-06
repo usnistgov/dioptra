@@ -46,7 +46,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: setup python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5.2.0
+        uses: actions/setup-python@v5.3.0
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -67,7 +67,7 @@ jobs:
 
       - name: cache dependencies
         if: ${{ matrix.os != 'windows-latest' }}
-        uses: actions/cache@v4.0.2
+        uses: actions/cache@v4.2.0
         with:
           path: ${{ steps.pip-cache.outputs.dir }}
           key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml', '**/tox.ini', 'requirements-dev*.in') }}
@@ -76,7 +76,7 @@ jobs:
 
       - name: cache dependencies (Windows)
         if: ${{ matrix.os == 'windows-latest' }}
-        uses: actions/cache@v4.0.2
+        uses: actions/cache@v4.2.0
         with:
           path: ${{ steps.pip-cache-win.outputs.dir }}
           key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml', '**/tox.ini', 'requirements-dev*.in') }}
@@ -126,7 +126,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: setup python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5.2.0
+        uses: actions/setup-python@v5.3.0
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -140,7 +140,7 @@ jobs:
         run: echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
 
       - name: cache dependencies
-        uses: actions/cache@v4.0.2
+        uses: actions/cache@v4.2.0
         with:
           path: ${{ steps.pip-cache.outputs.dir }}
           key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml', '**/tox.ini', '**/requirements-dev*.in', '**/docker/pip-tools/*-requirements.in') }}
@@ -222,17 +222,24 @@ jobs:
       - name: install dos2unix tool
         run: sudo apt install -y dos2unix
 
-      - name: download all the compiled requirements files
+      - name: download all the compiled requirements files - x86-64
         uses: actions/download-artifact@v4
         with:
-          path: artifacts
+          pattern: py*
+          merge-multiple: true
+
+      - name: download all the compiled requirements files - aarch64
+        uses: actions/download-artifact@v4
+        with:
+          pattern: requirements-*
+          merge-multiple: true
 
       - name: standardize and consolidate files into venvs directory
         run: |
-          find artifacts -type f -name "*requirements*.txt" -exec chmod 0644 {} \;
-          find artifacts -type f -name "*requirements*.txt" -exec dos2unix {} \;
+          find . -type f -name "*requirements*.txt" -exec chmod 0644 {} \;
+          find . -type f -name "*requirements*.txt" -exec dos2unix {} \;
           mkdir venvs
-          mv artifacts/**/*.txt venvs
+          mv *.txt venvs
 
       - name: archive the consolidated requirements files
         uses: actions/upload-artifact@v4

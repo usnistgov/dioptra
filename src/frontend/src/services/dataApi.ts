@@ -155,6 +155,24 @@ export async function getData<T extends ItemType>(type: T, pagination: Paginatio
   return res
 }
 
+export async function getSnapshots<T extends ItemType>(type: T, id: number) {
+  const res =  await axios.get(`/api/${type}/${id}/snapshots`, {
+    params: {
+      pageLength: 100
+    }
+  })
+
+  if(res.data.next) {
+    let nextUrl = res.data.next.replace("/v1", "")
+    while (nextUrl) {
+      const response = await axios.get(nextUrl)
+      res.data.data.push(...response.data.data)
+      nextUrl = response.data.next ? response.data.next.replace("/v1", "") : null
+    }
+  }
+  return res
+}
+
 export async function getJobs(id: number, pagination: Pagination) {
   const res = await axios.get(`/api/experiments/${id}/jobs`, {
     params: {
@@ -239,8 +257,14 @@ export async function updateDraft<T extends ItemType>(type: T, draftId: string, 
   return await axios.put(`/api/${type}/drafts/${draftId}`, params)
 }
 
-export async function updateDraftLinkedtoQueue(queueId: number, name: string, description: string) {
-  return await axios.put(`/api/queues/${queueId}/draft`, { name, description })
+export async function updateDraftLinkedtoQueue(queueId: number, name: string, description: string, snapshotId: number) {
+  return await axios.put(`/api/queues/${queueId}/draft`, { 
+    resourceSnapshot: snapshotId,
+    resourceData: {
+      name, 
+      description,
+    }
+   })
 }
 
 export async function deleteItem<T extends ItemType>(type: T, id: number) {
@@ -313,6 +337,14 @@ export async function addPluginsToEntrypoint(id: string, plugins: number[]) {
 
 export async function removePluginFromEntrypoint(entrypointId: string, pluginId: number) {
   return await axios.delete(`/api/entrypoints/${entrypointId}/plugins/${pluginId}`)
+}
+
+export async function appendResource<T extends ItemType>(parentResourceType: T, parentResourceId: number, childResourceType: T, ids: number[]) {
+  return await axios.post(`/api/${parentResourceType}/${parentResourceId}/${childResourceType}`, {ids})
+}
+
+export async function removeResourceFromResource<T extends ItemType>(parentResourceType: T, parentResourceId: number, childResourceType: T, id: number) {
+  return await axios.delete(`/api/${parentResourceType}/${parentResourceId}/${childResourceType}/${id}`)
 }
 
 export async function getVersions(id: string,) {

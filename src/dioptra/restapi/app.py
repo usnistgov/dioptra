@@ -39,6 +39,7 @@ from dioptra.restapi.utils import setup_injection
 
 from .__version__ import __version__ as DIOPTRA_VERSION
 from .db import db
+from .patches import monkey_patch_flask_restx
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -65,6 +66,8 @@ def create_app(env: Optional[str] = None, injector: Optional[Injector] = None) -
     from .errors import register_error_handlers
     from .routes import register_routes
     from .v1.users.service import load_user as v1_load_user
+
+    monkey_patch_flask_restx()
 
     if env is None:
         env = os.getenv("DIOPTRA_RESTAPI_ENV", "test")

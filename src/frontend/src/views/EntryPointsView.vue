@@ -45,7 +45,7 @@
       </label>
     </template>
     <template #expandedSlot="{ row }">
-      <CodeEditor v-model="row.taskGraph" language="yaml" />
+      <CodeEditor v-model="row.taskGraph" language="yaml" :readOnly="true" />
     </template>
     <template #body-cell-plugins="props">
       <q-chip
@@ -64,20 +64,6 @@
       />
     </template>
   </TableComponent>
-
-  <q-btn 
-    class="fixedButton"
-    round
-    color="primary"
-    icon="add"
-    size="lg"
-    to="/entrypoints/new"
-  >
-    <span class="sr-only">Register new Entrypoint</span>
-    <q-tooltip>
-      Register new Entrypoint
-    </q-tooltip>
-  </q-btn>
 
   <InfoPopupDialog
     v-model="showTaskGraphDialog"

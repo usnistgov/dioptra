@@ -20,63 +20,16 @@ This module contains a set of tests that validate the CRUD operations and additi
 functionalities for the tag entity. The tests ensure that the tags can be
 registered, renamed, deleted, and queried as expected through the REST API.
 """
+from http import HTTPStatus
 from typing import Any
 
 import pytest
-from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
-from werkzeug.test import TestResponse
 
-from dioptra.restapi.routes import V1_ROOT, V1_TAGS_ROUTE
+from dioptra.client.base import DioptraResponseProtocol
+from dioptra.client.client import DioptraClient
 
-from ..lib import actions, helpers
-
-# -- Actions ---------------------------------------------------------------------------
-
-
-def modify_tag(
-    client: FlaskClient,
-    tag_id: int,
-    new_name: str,
-) -> TestResponse:
-    """Rename a tag using the API.
-
-    Args:
-        client: The Flask test client.
-        tag_id: The id of the tag to rename.
-        new_name: The new name to assign to the tag.
-
-    Returns:
-        The response from the API.
-    """
-    payload: dict[str, Any] = {"name": new_name}
-
-    return client.put(
-        f"/{V1_ROOT}/{V1_TAGS_ROUTE}/{tag_id}",
-        json=payload,
-        follow_redirects=True,
-    )
-
-
-def delete_tag(
-    client: FlaskClient,
-    tag_id: int,
-) -> TestResponse:
-    """Delete a tag using the API.
-
-    Args:
-        client: The Flask test client.
-        tag_id: The id of the tag to delete.
-
-    Returns:
-        The response from the API.
-    """
-
-    return client.delete(
-        f"/{V1_ROOT}/{V1_TAGS_ROUTE}/{tag_id}",
-        follow_redirects=True,
-    )
-
+from ..lib import helpers
 
 # -- Assertions ------------------------------------------------------------------------
 
@@ -119,14 +72,14 @@ def assert_tag_response_contents_matches_expectations(
 
 
 def assert_retrieving_tag_by_id_works(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     tag_id: int,
     expected: dict[str, Any],
 ) -> None:
     """Assert that retrieving a tag by id works.
 
     Args:
-        client: The Flask test client.
+        dioptra_client: The Dioptra client.
         tag_id: The id of the tag to retrieve.
         expected: The expected response from the API.
 
@@ -134,12 +87,12 @@ def assert_retrieving_tag_by_id_works(
         AssertionError: If the response status code is not 200 or if the API response
             does not match the expected response.
     """
-    response = client.get(f"/{V1_ROOT}/{V1_TAGS_ROUTE}/{tag_id}", follow_redirects=True)
-    assert response.status_code == 200 and response.get_json() == expected
+    response = dioptra_client.tags.get_by_id(tag_id)
+    assert response.status_code == HTTPStatus.OK and response.json() == expected
 
 
 def assert_retrieving_tags_works(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     expected: list[dict[str, Any]],
     group_id: int | None = None,
     search: str | None = None,
@@ -148,7 +101,7 @@ def assert_retrieving_tags_works(
     """Assert that retrieving all tags works.
 
     Args:
-        client: The Flask test client.
+        dioptra_client: The Dioptra client.
         expected: The expected response from the API.
         group_id: The group ID used in query parameters.
         search: The search string used in query parameters.
@@ -159,31 +112,30 @@ def assert_retrieving_tags_works(
             does not match the expected response.
     """
 
-    query_string: dict[str, Any] = {}
+    query_kwargs: dict[str, Any] = {}
 
     if group_id is not None:
-        query_string["groupId"] = group_id
+        query_kwargs["group_id"] = group_id
 
     if search is not None:
-        query_string["search"] = search
+        query_kwargs["search"] = search
 
     if paging_info is not None:
-        query_string["index"] = paging_info["index"]
-        query_string["pageLength"] = paging_info["page_length"]
+        query_kwargs["index"] = paging_info["index"]
+        query_kwargs["page_length"] = paging_info["page_length"]
 
-    response = client.get(
-        f"/{V1_ROOT}/{V1_TAGS_ROUTE}",
-        query_string=query_string,
-        follow_redirects=True,
-    )
-    assert response.status_code == 200 and response.get_json()["data"] == expected
+    response = dioptra_client.tags.get(**query_kwargs)
+    assert response.status_code == HTTPStatus.OK and response.json()["data"] == expected
 
 
 def assert_sorting_tag_works(
-    client: FlaskClient,
-    sortBy: str,
-    descending: bool,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     expected: list[str],
+    sort_by: str | None,
+    descending: bool | None,
+    group_id: int | None = None,
+    search: str | None = None,
+    paging_info: dict[str, Any] | None = None,
 ) -> None:
     """Assert that tags can be sorted by column ascending/descending.
 
@@ -197,46 +149,56 @@ def assert_sorting_tag_works(
             does not match the expected response.
     """
 
-    query_string: dict[str, Any] = {}
+    query_kwargs: dict[str, Any] = {}
 
-    query_string["sortBy"] = sortBy
-    query_string["descending"] = descending
+    if sort_by is not None:
+        query_kwargs["sort_by"] = sort_by
 
-    response = client.get(
-        f"/{V1_ROOT}/{V1_TAGS_ROUTE}",
-        query_string=query_string,
-        follow_redirects=True,
-    )
+    if descending is not None:
+        query_kwargs["descending"] = descending
 
-    response_data = response.get_json()
+    if group_id is not None:
+        query_kwargs["group_id"] = group_id
+
+    if search is not None:
+        query_kwargs["search"] = search
+
+    if paging_info is not None:
+        query_kwargs["index"] = paging_info["index"]
+        query_kwargs["page_length"] = paging_info["page_length"]
+
+    response = dioptra_client.tags.get(**query_kwargs)
+    response_data = response.json()
     tag_ids = [tag["id"] for tag in response_data["data"]]
 
-    assert response.status_code == 200 and tag_ids == expected
+    assert response.status_code == HTTPStatus.OK and tag_ids == expected
 
 
 def assert_registering_existing_tag_name_fails(
-    client: FlaskClient, name: str, group_id: int
+    dioptra_client: DioptraClient[DioptraResponseProtocol], name: str, group_id: int
 ) -> None:
     """Assert that registering a tag with an existing name fails.
 
     Args:
-        client: The Flask test client.
+        dioptra_client: The Dioptra client.
         name: The name to assign to the new tag.
 
     Raises:
         AssertionError: If the response status code is not 400.
     """
-    response = actions.register_tag(client, name=name, group_id=group_id)
-    assert response.status_code == 409
+    response = dioptra_client.tags.create(group_id=group_id, name=name)
+    assert response.status_code == HTTPStatus.CONFLICT
 
 
 def assert_tag_name_matches_expected_name(
-    client: FlaskClient, tag_id: int, expected_name: str
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    tag_id: int,
+    expected_name: str,
 ) -> None:
     """Assert that the name of a tag matches the expected name.
 
     Args:
-        client: The Flask test client.
+        dioptra_client: The Dioptra client.
         tag_id: The id of the tag to retrieve.
         expected_name: The expected name of the tag.
 
@@ -244,61 +206,54 @@ def assert_tag_name_matches_expected_name(
         AssertionError: If the response status code is not 200 or if the name of the
             tag does not match the expected name.
     """
-    response = client.get(
-        f"/{V1_ROOT}/{V1_TAGS_ROUTE}/{tag_id}",
-        follow_redirects=True,
+    response = dioptra_client.tags.get_by_id(tag_id)
+    assert (
+        response.status_code == HTTPStatus.OK
+        and response.json()["name"] == expected_name
     )
-    assert response.status_code == 200 and response.get_json()["name"] == expected_name
 
 
 def assert_tag_is_not_found(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     tag_id: int,
 ) -> None:
     """Assert that a tag is not found.
 
     Args:
-        client: The Flask test client.
+        dioptra_client: The Dioptra client.
         tag_id: The id of the tag to retrieve.
 
     Raises:
         AssertionError: If the response status code is not 404.
     """
-    response = client.get(
-        f"/{V1_ROOT}/{V1_TAGS_ROUTE}/{tag_id}",
-        follow_redirects=True,
-    )
-    assert response.status_code == 404
+    response = dioptra_client.tags.get_by_id(tag_id)
+    assert response.status_code == HTTPStatus.NOT_FOUND
 
 
 def assert_cannot_rename_tag_with_existing_name(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     tag_id: int,
     existing_name: str,
 ) -> None:
     """Assert that renaming a tag with an existing name fails.
 
     Args:
-        client: The Flask test client.
+        dioptra_client: The Dioptra client.
         tag_id: The id of the tag to rename.
         name: The name of an existing tag.
 
     Raises:
         AssertionError: If the response status code is not 400.
     """
-    response = modify_tag(
-        client=client,
-        tag_id=tag_id,
-        new_name=existing_name,
-    )
-    assert response.status_code == 409
+    response = dioptra_client.tags.modify_by_id(tag_id=tag_id, name=existing_name)
+    assert response.status_code == HTTPStatus.CONFLICT
 
 
 # -- Tests -----------------------------------------------------------------------------
 
 
 def test_create_tag(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
 ) -> None:
@@ -315,12 +270,11 @@ def test_create_tag(
     name = "tag"
     user_id = auth_account["default_group_id"]
     group_id = auth_account["default_group_id"]
-    tag_response = actions.register_tag(
-        client,
-        name=name,
+    tag_response = dioptra_client.tags.create(
         group_id=group_id,
+        name=name,
     )
-    tag_expected = tag_response.get_json()
+    tag_expected = tag_response.json()
 
     assert_tag_response_contents_matches_expectations(
         response=tag_expected,
@@ -331,12 +285,12 @@ def test_create_tag(
         },
     )
     assert_retrieving_tag_by_id_works(
-        client, tag_id=tag_expected["id"], expected=tag_expected
+        dioptra_client, tag_id=tag_expected["id"], expected=tag_expected
     )
 
 
 @pytest.mark.parametrize(
-    "sortBy, descending , expected",
+    "sort_by, descending , expected",
     [
         (None, None, ["tag1", "tag2", "tag3"]),
         ("name", True, ["tag2", "tag1", "tag3"]),
@@ -346,11 +300,11 @@ def test_create_tag(
     ],
 )
 def test_tag_sort(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_tags: dict[str, Any],
-    sortBy: str,
+    sort_by: str | None,
     descending: bool,
     expected: list[str],
 ) -> None:
@@ -366,11 +320,13 @@ def test_tag_sort(
     """
 
     expected_ids = [registered_tags[expected_name]["id"] for expected_name in expected]
-    assert_sorting_tag_works(client, sortBy, descending, expected=expected_ids)
+    assert_sorting_tag_works(
+        dioptra_client, sort_by=sort_by, descending=descending, expected=expected_ids
+    )
 
 
 def test_tag_search_query(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_tags: dict[str, Any],
@@ -390,14 +346,14 @@ def test_tag_search_query(
     tag_expected_list = [tag1_expected, tag2_expected]
 
     assert_retrieving_tags_works(
-        client,
+        dioptra_client,
         expected=tag_expected_list,
         search="name:*tag*",
     )
 
 
 def test_cannot_register_existing_tag_name(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_tags: dict[str, Any],
@@ -412,12 +368,12 @@ def test_cannot_register_existing_tag_name(
     existing_tag = registered_tags["tag1"]
 
     assert_registering_existing_tag_name_fails(
-        client, name=existing_tag["name"], group_id=existing_tag["group"]["id"]
+        dioptra_client, name=existing_tag["name"], group_id=existing_tag["group"]["id"]
     )
 
 
 def test_rename_tag(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_tags: dict[str, Any],
@@ -437,23 +393,19 @@ def test_rename_tag(
     tag_to_rename = registered_tags["tag1"]
     existing_tag = registered_tags["tag2"]
 
-    modify_tag(
-        client,
-        tag_id=tag_to_rename["id"],
-        new_name=updated_tag_name,
-    )
+    dioptra_client.tags.modify_by_id(tag_id=tag_to_rename["id"], name=updated_tag_name)
     assert_tag_name_matches_expected_name(
-        client, tag_id=tag_to_rename["id"], expected_name=updated_tag_name
+        dioptra_client, tag_id=tag_to_rename["id"], expected_name=updated_tag_name
     )
     assert_cannot_rename_tag_with_existing_name(
-        client,
+        dioptra_client,
         tag_id=tag_to_rename["id"],
         existing_name=existing_tag["name"],
     )
 
 
 def test_delete_tag_by_id(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_tags: dict[str, Any],
@@ -472,7 +424,7 @@ def test_delete_tag_by_id(
     tag_expected = registered_tags["tag1"]
 
     assert_retrieving_tag_by_id_works(
-        client, tag_id=tag_expected["id"], expected=tag_expected
+        dioptra_client, tag_id=tag_expected["id"], expected=tag_expected
     )
-    delete_tag(client, tag_id=tag_expected["id"])
-    assert_tag_is_not_found(client, tag_id=tag_expected["id"])
+    dioptra_client.tags.delete_by_id(tag_id=tag_expected["id"])
+    assert_tag_is_not_found(dioptra_client, tag_id=tag_expected["id"])

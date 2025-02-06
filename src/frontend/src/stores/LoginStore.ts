@@ -38,12 +38,21 @@ export const useLoginStore = defineStore('login', () => {
     { name: 'Mila', id: '20', read: true, write: false, shareRead: true, shareWrite: true, admin: false, owner: false }
   ])
   
+
+  const savedForms = ref({
+    jobs: {},
+    files: {},
+  })
+
+  const triggerPopup = ref(false)
   
+  const showRightDrawer = ref(false)
+  const selectedSnapshot = ref()
 
   // computed()'s are getters
 
   // function()'s are actions
   
 
-  return { loggedInUser, loggedInGroup, groups, users, };
+  return { loggedInUser, loggedInGroup, groups, users, savedForms, showRightDrawer, selectedSnapshot, triggerPopup };
 })
