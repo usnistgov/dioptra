@@ -15,13 +15,14 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from pathlib import Path
-from typing import ClassVar, Final, TypeVar
+from typing import ClassVar, Final, TypeVar, Any
 
 from .base import CollectionClient, IllegalArgumentError
 
 T = TypeVar("T")
 
 JOB_FILES_DOWNLOAD: Final[str] = "jobFilesDownload"
+ENTRYPOINT_VALIDATION: Final[str] = "entrypointValidate"
 
 
 class WorkflowsCollectionClient(CollectionClient[T]):
@@ -85,4 +86,20 @@ class WorkflowsCollectionClient(CollectionClient[T]):
 
         return self._session.download(
             self.url, JOB_FILES_DOWNLOAD, output_path=job_files_path, params=params
+        )
+    
+    def validate_entrypoint(
+        self,
+        task_graph: str,
+        plugins: list[int],
+        entrypoint_parameters: list[dict[str, Any]],
+    ):
+        payload = {
+            "taskGraph" : task_graph,
+            "plugins": plugins,
+            "parameters": entrypoint_parameters,
+        }
+
+        return self._session.post(
+            self.url, ENTRYPOINT_VALIDATION, json_=payload
         )

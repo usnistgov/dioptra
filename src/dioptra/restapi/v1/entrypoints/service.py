@@ -40,6 +40,9 @@ from dioptra.restapi.v1.groups.service import GroupIdService
 from dioptra.restapi.v1.plugins.service import PluginIdsService
 from dioptra.restapi.v1.queues.service import RESOURCE_TYPE as QUEUE_RESOURCE_TYPE
 from dioptra.restapi.v1.queues.service import QueueIdsService
+from dioptra.restapi.v1.shared.entrypoint_validate_service import (
+    EntrypointValidateService,
+)
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -66,6 +69,7 @@ class EntrypointService(object):
     def __init__(
         self,
         entrypoint_name_service: EntrypointNameService,
+        entrypoint_validate_service: EntrypointValidateService,
         plugin_ids_service: PluginIdsService,
         queue_ids_service: QueueIdsService,
         group_id_service: GroupIdService,
@@ -81,6 +85,7 @@ class EntrypointService(object):
             group_id_service: A GroupIdService object.
         """
         self._entrypoint_name_service = entrypoint_name_service
+        self._entrypoint_validate_service = entrypoint_validate_service
         self._plugin_ids_service = plugin_ids_service
         self._queue_ids_service = queue_ids_service
         self._group_id_service = group_id_service
@@ -112,6 +117,8 @@ class EntrypointService(object):
         Raises:
             EntityExistsError: If a entrypoint with the given name already exists.
         """
+        # from dioptra.restapi.v1.workflows.service import EntrypointValidateService
+
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         duplicate = self._entrypoint_name_service.get(name, group_id=group_id, log=log)
@@ -135,6 +142,12 @@ class EntrypointService(object):
             )
             for i, param in enumerate(parameters)
         ]
+
+        self._entrypoint_validate_service.validate(
+            task_graph=task_graph,
+            plugin_ids=plugin_ids,
+            entrypoint_parameters=parameters,
+        )
 
         new_entrypoint = models.EntryPoint(
             name=name,
@@ -311,6 +324,7 @@ class EntrypointIdService(object):
     def __init__(
         self,
         entrypoint_name_service: EntrypointNameService,
+        entrypoint_validate_service: EntrypointValidateService,
         queue_ids_service: QueueIdsService,
     ) -> None:
         """Initialize the entrypoint service.
@@ -322,6 +336,7 @@ class EntrypointIdService(object):
             queue_ids_service: A QueueIdsService object.
         """
         self._entrypoint_name_service = entrypoint_name_service
+        self._entrypoint_validate_service = entrypoint_validate_service
         self._queue_ids_service = queue_ids_service
 
     def get(
@@ -459,6 +474,13 @@ class EntrypointIdService(object):
             for i, param in enumerate(parameters)
         ]
 
+        plugin_ids = [entrypoint_plugin_file.plugin.resource_id for entrypoint_plugin_file in entrypoint.entry_point_plugin_files]
+        self._entrypoint_validate_service.validate(
+            task_graph=task_graph,
+            plugin_ids=plugin_ids,
+            entrypoint_parameters=parameters,
+        )
+
         new_entrypoint = models.EntryPoint(
             name=name,
             description=description,
@@ -537,6 +559,7 @@ class EntrypointIdPluginsService(object):
     def __init__(
         self,
         entrypoint_id_service: EntrypointIdService,
+        entrypoint_validate_service: EntrypointValidateService,
         plugin_ids_service: PluginIdsService,
         queue_ids_service: QueueIdsService,
     ) -> None:
@@ -550,6 +573,7 @@ class EntrypointIdPluginsService(object):
             queue_ids_service: A QueueIdsService object.
         """
         self._entrypoint_id_service = entrypoint_id_service
+        self._entrypoint_validate_service = entrypoint_validate_service
         self._plugin_ids_service = plugin_ids_service
         self._queue_ids_service = queue_ids_service
 
@@ -621,6 +645,23 @@ class EntrypointIdPluginsService(object):
             )
             for param in entrypoint.parameters
         ]
+
+        parameters = [
+            {
+                "name": param.name,
+                "default_value": param.default_value,
+                "parameter_type": param.parameter_type,
+                "parameter_number": param.parameter_number,
+            }
+            for param in entrypoint.parameters
+        ]
+        plugin_ids = [entrypoint_plugin_file.plugin.resource_id for entrypoint_plugin_file in entrypoint.entry_point_plugin_files]
+        self._entrypoint_validate_service.validate(
+            task_graph=entrypoint.task_graph,
+            plugin_ids=plugin_ids,
+            entrypoint_parameters=parameters,
+        )
+
         new_entrypoint = models.EntryPoint(
             name=entrypoint.name,
             description=entrypoint.description,
@@ -687,6 +728,7 @@ class EntrypointIdPluginsIdService(object):
     def __init__(
         self,
         entrypoint_id_service: EntrypointIdService,
+        entrypoint_validate_service: EntrypointValidateService,
         queue_ids_service: QueueIdsService,
     ) -> None:
         """Initialize the entrypoint service.
@@ -698,6 +740,7 @@ class EntrypointIdPluginsIdService(object):
             queue_ids_service: A QueueIdsService object.
         """
         self._entrypoint_id_service = entrypoint_id_service
+        self._entrypoint_validate_service = entrypoint_validate_service
         self._queue_ids_service = queue_ids_service
 
     def get(
@@ -792,6 +835,23 @@ class EntrypointIdPluginsIdService(object):
             )
             for param in entrypoint.parameters
         ]
+
+        parameters = [
+            {
+                "name": param.name,
+                "default_value": param.default_value,
+                "parameter_type": param.parameter_type,
+                "parameter_number": param.parameter_number,
+            }
+            for param in entrypoint.parameters
+        ]
+        plugin_ids = [entrypoint_plugin_file.plugin.resource_id for entrypoint_plugin_file in entrypoint.entry_point_plugin_files]
+        self._entrypoint_validate_service.validate(
+            task_graph=entrypoint.task_graph,
+            plugin_ids=plugin_ids,
+            entrypoint_parameters=parameters,
+        )
+
         new_entrypoint = models.EntryPoint(
             name=entrypoint.name,
             description=entrypoint.description,
