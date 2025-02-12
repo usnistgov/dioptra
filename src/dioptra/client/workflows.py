@@ -15,7 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from pathlib import Path
-from typing import ClassVar, Final, TypeVar, overload
+from typing import ClassVar, Final, TypeVar
 
 from .base import CollectionClient, IllegalArgumentError
 
