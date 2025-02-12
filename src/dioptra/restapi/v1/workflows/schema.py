@@ -84,9 +84,7 @@ class SignatureAnalysisSuggestedTypes(Schema):
 
     missing_type = fields.String(
         attribute="missing_type",
-        metadata=dict(
-            description="A suggestion for the name of the type"
-        ),
+        metadata=dict(description="A suggestion for the name of the type"),
     )
 
     annotation = fields.String(

@@ -88,17 +88,9 @@ class WorkflowsCollectionClient(CollectionClient[T]):
             self.url, JOB_FILES_DOWNLOAD, output_path=job_files_path, params=params
         )
 
-    @overload
-    def analyze_plugin_task_signatures(self, filename: str) -> T:
-        """Signature for using analyze_plugin_task_signatures to read from file"""
-        ...  # pragma: nocover
-
-    @overload
-    def analyze_plugin_task_signatures(self, fileContents: str) -> T:
-        """Signature for using analyze_plugin_task_signatures to read from a string"""
-        ...  # pragma: nocover
-
-    def analyze_plugin_task_signatures(self, filename=None, fileContents=None) -> T:
+    def analyze_plugin_task_signatures(
+        self, filename: str = "<string>", fileContents: str | None = None
+    ) -> T:
         """
         Requests signature analysis for the functions in an annotated python file.
 
@@ -110,8 +102,6 @@ class WorkflowsCollectionClient(CollectionClient[T]):
             The response from the Dioptra API.
 
         """
-
-        filename = filename if filename is not None else "<string>"
 
         if fileContents is None:
             with open(filename, "r+") as f:
