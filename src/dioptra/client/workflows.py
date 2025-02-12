@@ -15,13 +15,14 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from pathlib import Path
-from typing import ClassVar, Final, TypeVar
+from typing import ClassVar, Final, TypeVar, overload
 
 from .base import CollectionClient, IllegalArgumentError
 
 T = TypeVar("T")
 
 JOB_FILES_DOWNLOAD: Final[str] = "jobFilesDownload"
+SIGNATURE_ANALYSIS: Final[str] = "taskPluginSignatureAnalysis"
 
 
 class WorkflowsCollectionClient(CollectionClient[T]):
@@ -85,4 +86,45 @@ class WorkflowsCollectionClient(CollectionClient[T]):
 
         return self._session.download(
             self.url, JOB_FILES_DOWNLOAD, output_path=job_files_path, params=params
+        )
+    
+    @overload
+    def analyze_plugin_task_signatures(
+        self, filename: str
+    ) -> T:
+        """Signature for using analyze_plugin_task_signatures to read from file"""
+        ...  # pragma: nocover
+
+    @overload
+    def analyze_plugin_task_signatures(
+        self, fileContents: str
+    ) -> T:
+        """Signature for using analyze_plugin_task_signatures to read from a string"""
+        ...  # pragma: nocover
+    
+    def analyze_plugin_task_signatures(
+        self, filename=None, fileContents=None
+    ) -> T:
+        """
+        Requests signature analysis for the functions in an annotated python file.
+
+        Args:
+            fileContents: The contents of the python file.
+            filename: The name of the file.
+
+        Returns:
+            The response from the Dioptra API.
+
+        """
+
+        filename = filename if filename != None else "<string>"
+
+        if fileContents == None:
+            with open(filename, "r+") as f:
+                fileContents = f.read()
+        
+        return self._session.post(
+            self.url,
+            SIGNATURE_ANALYSIS,
+            json_={"filename": filename, "fileContents": fileContents},
         )

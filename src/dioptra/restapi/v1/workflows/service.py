@@ -15,10 +15,12 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform workflows endpoint operations."""
-from typing import IO, Final
+from typing import IO, Any, Final, List
 
 import structlog
 from structlog.stdlib import BoundLogger
+
+from dioptra.restapi.v1.lib.signature_analysis import get_plugin_signatures
 
 from .lib import views
 from .lib.package_job_files import package_job_files
@@ -65,3 +67,67 @@ class JobFilesDownloadService(object):
             file_type=file_type,
             logger=log,
         )
+
+
+class SignatureAnalysisService(object):
+    """The service methods for performing signature analysis on a file."""
+
+    def post(
+        self, filename: str, fileContents: str, **kwargs
+    ) -> dict[str, List[dict[str, Any]]]:
+        """Perform signature analysis on a file.
+
+        Args:
+            filename: The name of the file.
+            file_contents: The contents of the file.
+
+        Returns:
+            A dictionary containing the signature analysis.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.debug(
+            "Performing signature analysis",
+            filename=filename,
+            python_source=fileContents,
+        )
+
+        signatures = list(
+            get_plugin_signatures(
+                python_source=fileContents,
+                filepath=filename,
+            )
+        )
+
+        endpoint_analyses = []
+        for signature in signatures:
+            function_name = signature["name"]
+            function_inputs = signature["inputs"]
+            function_outputs = signature["outputs"]
+            inferences = signature["suggested_types"]
+            endpoint_analysis = {}
+
+            endpoint_analysis["name"] = function_name
+            endpoint_analysis["inputs"] = function_inputs
+            endpoint_analysis["outputs"] = function_outputs
+
+            # Compute the suggestions for the unknown types
+
+            missing_types = []
+
+            for inference in inferences:
+                suggested_type = inference[
+                    "suggestion"
+                ]  # replace this with resource id's for suggestions
+                original_annotation = inference[
+                    "type_annotation"
+                ]  # do a database lookup with this
+                missing_types += [
+                    {
+                        "missing_type": original_annotation,
+                        "proposed_type": suggested_type,
+                    }
+                ]
+
+            endpoint_analysis["missing_types"] = missing_types
+            endpoint_analyses += [endpoint_analysis]
+        return {"plugins": endpoint_analyses}
