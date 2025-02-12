@@ -80,13 +80,15 @@ class SignatureAnalysisSignatureOutputSchema(SignatureAnalysisSignatureParamSche
 
 class SignatureAnalysisSuggestedTypes(Schema):
     # this should be an integer or a list of integer resource ids on the next iteration
-    proposed_type = fields.String(
-        attribute="proposed_type",
-        metadata=dict(description="A suggestion for the name of the type"),
-    )
-
     missing_type = fields.String(
         attribute="missing_type",
+        metadata=dict(
+            description="A suggestion for the name of the type"
+        ),
+    )
+
+    annotation = fields.String(
+        attribute="annotation",
         metadata=dict(
             description="The annotation the suggestion is attempting to represent"
         ),

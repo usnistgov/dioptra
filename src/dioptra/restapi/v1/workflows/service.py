@@ -123,8 +123,8 @@ class SignatureAnalysisService(object):
                 ]  # do a database lookup with this
                 missing_types += [
                     {
-                        "missing_type": original_annotation,
-                        "proposed_type": suggested_type,
+                        "annotation": original_annotation,
+                        "missing_type": suggested_type,
                     }
                 ]
 
