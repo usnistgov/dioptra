@@ -79,7 +79,9 @@ class SignatureAnalysisSignatureOutputSchema(SignatureAnalysisSignatureParamSche
 
 
 class SignatureAnalysisSuggestedTypes(Schema):
-    # this should be an integer or a list of integer resource ids on the next iteration
+
+    # add proposed_type in next iteration
+
     missing_type = fields.String(
         attribute="missing_type",
         metadata=dict(
