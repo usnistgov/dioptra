@@ -111,9 +111,9 @@ class WorkflowsCollectionClient(CollectionClient[T]):
 
         """
 
-        filename = filename if filename != None else "<string>"
+        filename = filename if filename is not None else "<string>"
 
-        if fileContents == None:
+        if fileContents is None:
             with open(filename, "r+") as f:
                 fileContents = f.read()
 
