@@ -9,7 +9,6 @@
     @delete="showDeleteDialog = true"
     @request="getJobs"
     ref="tableRef"
-    :hideEditBtn="true"
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
     @create="router.push('/jobs/new')"
   >

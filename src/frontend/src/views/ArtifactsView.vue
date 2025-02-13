@@ -9,7 +9,6 @@
     @delete="showDeleteDialog = true"
     @request="getArtifacts"
     ref="tableRef"
-    :hideDeleteBtn="true"
     :hideCreateBtn="true"
   >
     <template #body-cell-group="props">

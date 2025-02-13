@@ -5,10 +5,7 @@
     v-model:selected="selected"
     :title="props.maxHeight ? '' : 'Snapshots'"
     :hideCreateBtn="true"
-    :hideDeleteBtn="true"
-    :hideEditBtn="true"
     :hideSearch="true"
-    :disableRadio="true"
     rowKey="snapshot"
     :showAll="true"
     :style="{ 

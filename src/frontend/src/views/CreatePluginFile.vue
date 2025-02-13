@@ -68,8 +68,6 @@
         ref="tableRef"
         :hideToggleDraft="true"
         :hideCreateBtn="true"
-        :hideEditBtn="true"
-        :hideDeleteBtn="true"
         :hideSearch="true"
         :disableSelect="true"
         rightCaption="*Click param to edit, or X to delete"
@@ -286,8 +284,6 @@
           @request="getPluginParameterTypes"
           :hideToggleDraft="true"
           :hideCreateBtn="true"
-          :hideEditBtn="true"
-          :hideDeleteBtn="true"
           :disableSelect="true"
           style="margin-top: 0"
         >

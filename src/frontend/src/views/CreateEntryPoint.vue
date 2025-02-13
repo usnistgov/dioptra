@@ -1,7 +1,18 @@
 <template>
-  <PageTitle 
-    :title="title"
-  />
+  <div class="row items-center justify-between">
+    <PageTitle 
+      :title="title"
+    />
+    <div>
+      <q-btn 
+        v-if="route.params.id !== 'new'"
+        color="negative" 
+        icon="sym_o_delete" 
+        label="Delete Entrypoint"
+        @click="showDeleteDialogEntrypoint = true; objectForDeletion = entryPoint"
+      />
+    </div>
+  </div>
   <div class="row q-my-lg">
     <div :class="`${isMobile ? 'col-12' : 'col-5'} q-mr-xl`" style="display: flex; flex-direction: column;">
       <fieldset>
@@ -73,8 +84,6 @@
           :rows="entryPoint.parameters"
           :columns="columns"
           :hideToggleDraft="true"
-          :hideEditBtn="true"
-          :hideDeleteBtn="true"
           :hideSearch="true"
           :disableSelect="true"
           :hideCreateBtn=true
@@ -94,7 +103,7 @@
               size="sm"
               color="negative"
               flat
-              @click="selectedParam = props.row; showDeleteDialog = true"
+              @click="selectedParam = props.row; showDeleteDialogParam = true"
             />
           </template>
         </TableComponent>
@@ -244,8 +253,6 @@
         :columns="taskColumns"
         title="Plugin Tasks"
         :hideToggleDraft="true"
-        :hideEditBtn="true"
-        :hideDeleteBtn="true"
         :hideSearch="true"
         :disableSelect="true"
         :hideCreateBtn=true
@@ -301,7 +308,14 @@
   </div>
 
   <DeleteDialog 
-    v-model="showDeleteDialog"
+    v-model="showDeleteDialogEntrypoint"
+    @submit="deleteEntrypoint()"
+    type="Entrypoint"
+    :name="entryPoint.name"
+    @click=""
+  />
+  <DeleteDialog 
+    v-model="showDeleteDialogParam"
     @submit="deleteParam()"
     type="Parameter"
     :name="selectedParam.name"
@@ -559,13 +573,14 @@
     }
   })
 
-  const showDeleteDialog = ref(false)
+  const showDeleteDialogEntrypoint = ref(false)
+  const showDeleteDialogParam = ref(false)
   const selectedParam = ref({})
   const selectedParamIndex = ref('')
 
   function deleteParam() {
     entryPoint.value.parameters = entryPoint.value.parameters.filter((param) => param.name !== selectedParam.value.name)
-    showDeleteDialog.value = false
+    showDeleteDialogParam.value = false
   }
 
   const showEditParamDialog = ref(false)
@@ -680,4 +695,17 @@
       console.warn(err)
     }
   }
+  const objectForDeletion = ref()
+
+  async function deleteEntrypoint() {
+    try {
+      await api.deleteItem('entrypoints', objectForDeletion.value.id)
+      notify.success(`Successfully deleted '${objectForDeletion.value.name}'`)
+      showDeleteDialogEntrypoint.value = false
+      router.push(`/entrypoints`)
+    } catch(err) {
+      notify.error(err.response.data.message);
+    }
+  }
+
 </script>

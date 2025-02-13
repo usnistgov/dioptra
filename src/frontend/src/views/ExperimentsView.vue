@@ -13,7 +13,7 @@
     @create="router.push('/experiments/new')"
   >
     <template #body-cell-name="props">
-      <RouterLink :to="`/experiments/${props.row.id}/jobs`">
+      <RouterLink :to="`/experiments/${props.row.id}/jobs`" @click.stop>
         {{ props.row.name.length < 18 ? props.row.name : props.row.name.replace(/(.{18})..+/, "$1…") }}
         <q-tooltip v-if="props.row.name.length > 18" max-width="30vw" style="overflow-wrap: break-word">
           {{ props.row.name }}
@@ -29,6 +29,26 @@
       >
         {{ entrypoint.name }}
       </q-chip>
+    </template>
+    <template #body-cell-edit="props">
+      <q-btn
+        round
+        color="primary"
+        icon="edit"
+        size="sm"
+      >
+
+      </q-btn>
+    </template>
+    <template #body-cell-delete="props">
+      <q-btn
+        round
+        color="negative"
+        icon="sym_o_delete"
+        size="sm"
+      >
+
+      </q-btn>
     </template>
   </TableComponent>
 
@@ -70,6 +90,8 @@
     { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true },
     { name: 'entrypoints', label: 'Entry Points', align: 'left', field: 'entrypoints', sortable: false },
     { name: 'tags', label: 'Tags', align: 'left', sortable: false },
+    { name: 'edit', label: 'Edit', align: 'left', sortable: false, headerStyle: 'width: 50px' },
+    { name: 'delete', label: 'Delete', align: 'left', sortable: false, headerStyle: 'width: 50px' },
   ]
 
   const selected = ref([])

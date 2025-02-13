@@ -30,16 +30,10 @@
       <q-tr 
         :class="`${getSelectedColor(props.selected)} cursor-pointer` " 
         :props="props"
-        @click="handleClick(props)"
+        @click="openResource(props)"
         style="padding-left: 50px;"
       >
         <q-td v-for="col in props.cols" :key="col.name" :props="props">
-          <q-radio 
-            v-model="radioSelected" 
-            :val="props.row[props.rowKey || 'id']"
-            v-if="col.name === 'radio'" 
-            @click="handleClick(props)"
-          />
           <slot v-bind="props" :name="`body-cell-${col.name}`">
             <div v-if="typeof(col.value) === 'boolean'" class="text-body1">
               {{ col.value ? '✅' : 	'❌'}}
@@ -113,23 +107,6 @@
         class="q-mr-lg" 
         @click="$emit('create')"
       />
-      <q-btn 
-        v-if="!hideEditBtn" 
-        color="secondary" 
-        icon="edit" 
-        label="Edit" 
-        class="q-mr-lg" 
-        @click="$emit('edit')"  
-        :disabled="!selected?.length" 
-      />
-      <q-btn 
-        v-if="!hideDeleteBtn" 
-        color="negative" 
-        icon="sym_o_delete" 
-        label="Delete" class="q-mr-lg"
-        @click="$emit('delete')" 
-        :disabled="!selected?.length" 
-      />
       <q-input 
         v-if="!hideSearch" 
         v-model="filter" 
@@ -174,14 +151,11 @@
   title: String,
   showExpand: Boolean,
   hideCreateBtn: Boolean,
-  hideEditBtn: Boolean,
-  hideDeleteBtn: Boolean,
   showToggleDraft: Boolean,
   hideSearch: Boolean,
   disableSelect: Boolean,
   rightCaption: String,
   showAll: Boolean,
-  disableRadio: Boolean,
   rowKey: {
     type: String,
     default: 'id'
@@ -198,9 +172,6 @@
 
   const finalColumns = computed(() => {
     let defaultColumns = [ ...props.columns ]
-    if(!props.disableSelect  && !props.disableRadio) {
-      defaultColumns.unshift({ name: 'radio', align: 'center', sortable: false, label: 'Select', headerStyle: 'width: 100px' })
-    }
     if(props.showExpand) {
       defaultColumns.push({ name: 'expand', align: 'center', sortable: false, label: 'Expand' })
     }
@@ -224,20 +195,14 @@
 
   const filter = ref('')
   const selected = defineModel('selected')
-  const radioSelected = ref('')
   //const showDrafts = ref(false)
   const showDrafts = defineModel('showDrafts')
 
-  function handleClick(tableProps) {
+  function openResource(tableProps) {
     if(props.disableSelect) return
-    // tableProps.selected = !tableProps.selected
     tableProps.selected = true
-    radioSelected.value = tableProps.row[props.rowKey]
+    emit('edit')
   }
-
-  watch(selected, (newVal) => {
-    if(newVal.length === 0) radioSelected.value = ''
-  })
 
   watch(() => props.rows, (newVal) => {
     // when viewing history, auto select first (latest) row
@@ -301,26 +266,26 @@
   }
 
   function keydown(event) {
-  // Ensure there are rows to navigate
-  if (!props.rows || props.rows.length === 0) return;
+  // exit if no rows or selection disabled
+  if(!props.rows || props.rows.length === 0) return
+  if(props.disableSelect) return
 
   // Get the current index of the selected row
   const currentIndex = props.rows.findIndex(row => row[props.rowKey] === selected.value[0]?.[props.rowKey])
-
-  if (event.key === 'ArrowUp') {
+  if(event.key === 'ArrowUp') {
     // Navigate to the previous row (if not at the first row)
-    if (currentIndex > 0) {
+    if(currentIndex > 0) {
       const prevRow = props.rows[currentIndex - 1]
       selected.value = [prevRow]
-      radioSelected.value = prevRow[props.rowKey]
     }
-  } else if (event.key === 'ArrowDown') {
+  } else if(event.key === 'ArrowDown') {
     // Navigate to the next row (if not at the last row)
     if (currentIndex < props.rows.length - 1) {
       const nextRow = props.rows[currentIndex + 1]
       selected.value = [nextRow]
-      radioSelected.value = nextRow[props.rowKey]
     }
+  } else if(event.key === 'Enter') {
+    emit('edit')
   }
 }
 

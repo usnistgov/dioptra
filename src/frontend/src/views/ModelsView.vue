@@ -26,8 +26,6 @@
         class="q-mx-md q-mb-lg"
         :title="`${row.name} Versions`"
         :disableSelect="true"
-        :hideEditBtn="true"
-        :hideDeleteBtn="true"
         :hideCreateBtn="true"
       >
         <template #body-cell-createdOn="props">

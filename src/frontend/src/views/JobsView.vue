@@ -8,7 +8,6 @@
     @request="getJobs"
     @delete="showDeleteDialog = true"
     ref="tableRef"
-    :hideEditBtn="true"
     :showExpand="true"
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
     @create="router.push(`/experiments/${route.params.id}/jobs/new`)"
@@ -18,6 +17,17 @@
     </template>
     <template #body-cell-queue="props">
       {{ props.row.queue.name }}
+    </template>
+    <template #body-cell-delete="props">
+      <q-btn
+        round
+        color="negative"
+        icon="sym_o_delete"
+        size="sm"
+        @click.stop="showDeleteDialog = true; objectForDeletion = props.row; console.log(objectForDeletion)"
+      >
+
+      </q-btn>
     </template>
     <template #expandedSlot="{ row }">
       <q-btn
@@ -41,7 +51,7 @@
     v-model="showDeleteDialog"
     @submit="deleteJob"
     type="Job"
-    :name="selected.length ? selected[0].description : ''"
+    :name="objectForDeletion?.description"
   />
 
   <ArtifactsDialog 
@@ -81,7 +91,8 @@
     { name: 'entrypoint', label: 'Entrypoint', align: 'left', field: 'entrypoint', sortable: false, },
     { name: 'queue', label: 'Queue', align: 'left', field: 'queue', sortable: false, },
     { name: 'status', label: 'Status', align: 'left', field: 'status', sortable: true },
-    { name: 'tags', label: 'Tags', align: 'left', field: 'tags', sortable: false },
+    { name: 'tags', label: 'Tags', align: 'left', field: 'tags', sortable: false, },
+    { name: 'delete', label: 'Delete', align: 'left', field: 'tags', sortable: false, },
   ]
 
   const artifactColumns = [
@@ -127,18 +138,17 @@
 
   async function deleteJob() {
     try {
-      if(Object.hasOwn(selected.value[0], 'hasDraft')) {
-        await api.deleteItem('jobs', selected.value[0].id)
-      } else {
-        // await api.deleteDraft('queues', selected.value[0].id)
-      }
-      notify.success(`Successfully deleted '${selected.value[0].description}'`)
+      await api.deleteItem('jobs', objectForDeletion.value.id)
+      notify.success(`Successfully deleted '${objectForDeletion.value.description}'`)
       showDeleteDialog.value = false
+      objectForDeletion.value = {}
       selected.value = []
       tableRef.value.refreshTable()
     } catch(err) {
       notify.error(err.response.data.message);
     }
   }
+
+  const objectForDeletion = ref()
 
 </script>
