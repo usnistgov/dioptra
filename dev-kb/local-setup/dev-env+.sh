@@ -1,0 +1,206 @@
+#!/opt/homebrew/bin/bash
+
+print_env_status(){
+  printf "\n\nDIOPTRA environment variables are set as follows:\n\n" 
+  env | sort | grep DIOPTRA
+  printf "\nUse 'env | sort', 'env | sort | grep DIOPTRA', or 'printenv' to view the rest of the environment variables\n\n"
+}
+
+print_main_help()
+{
+    src_path="${BASH_SOURCE[0]}"
+    exec_path="$0"
+    if [ "${src_path^^}" != "${exec_path^^}" ]; then
+      printf "Cx2[SOURCED]: [${src_path^^}] =?= [${exec_path^^}]\n"
+    else
+      printf "Cx1:[COMMANDED] [${src_path^^}] =?= [${exec_path^^}]\n"
+    fi
+    this_name=$(basename "$src_path")
+
+    printf "\nHow to use ${this_name} script:\n"
+
+    printf "\n\t1. Explicitly specify fully specified Src and Work directories and GitHub tag:\n"
+
+    printf "\n\t${this_name} [--tag|-t] <github_tag> [--work|-w] <work_dir> [--source|-s] <source_dir>\n"
+
+    printf "\n\t<github_tag>\t\t Branch-Name that takes values dev|main|<existing-git-branch>\n"
+    printf "\t<work_dir>\t\t Directory to use as working deployment\n" 
+    printf "\t<source_dir>\t\t Directory to use as the storage for source\n"
+
+    printf "\n\t Example: INITIALIZE ENVIRONMENT with environment settings used inline:\n"
+    printf "\t>source ./dev-env+.sh -t dev -w ~/di2run/dio-wrk -s ~/di2run/dio-src"
+
+
+    printf "\n\n\t2. Explicitly request use of the Default Dirs at current working directory and GitHub tag:\n"
+
+    printf "\n\t${this_name} [--env|-e] <environment-file>\n"
+    printf "\n\t<environment-file>\t File containing environment configuration\n\n"
+
+    printf "\n\t Example: INITIALIZE ENVIRONMENT with key-value-pairs environment file:\n"
+    printf "\t>source ./dev-env+.sh -e ./env-example1.cfg\n\n"
+}
+
+
+read_properties_from_file()
+{
+  file="$1"
+  echo "Reading config file: $file"
+
+  while IFS="=" read -r key value; do
+    case "${key^^}" in
+      "GIT_BRANCH"|"DIOPTRA_BRANCH") 
+        export DIOPTRA_BRANCH="$value"
+        ;;
+      "DIR_SOURCE"|"DIOPTRA_CODE") 
+        export DIOPTRA_CODE="$value"
+        ;;
+      "DIR_WORK"|"DIOPTRA_DEPLOY") 
+        export DIOPTRA_DEPLOY="$value"
+        ;;
+      \#*)
+        # printf "\nComment: [key:${key} value:${value}]\n"
+        ;;
+      *)
+        # printf "\nIgnoring Entry: [key:${key} value:${value}]\n"
+        ;;
+    esac
+    # printf "\nKey=$key;\tValue=$value"
+  done < "$file"
+  # printf "\n\n"
+}
+
+print_env_variables()
+{
+  printf "\nThe following Parameters were expected:\n"
+  printf "DIOPTRA_BRANCH=$DIOPTRA_BRANCH\n"
+  printf "DIOPTRA_DEPLOY=$DIOPTRA_DEPLOY\n"
+  printf "DIOPTRA_CODE=$DIOPTRA_CODE\n"
+  printf "DIOPTRA_ENV_FILE=$DIOPTRA_ENV_FILE\n"
+}
+########################################################################################
+######## Iterates through CLI parameters and sets them as environment variables ########
+######## In case the variable is file - the values form file set in environment ########
+read_cli_parameters()
+{
+
+  # Print all arguments, each as a separate word
+  echo "Arguments as separate words: $*"
+
+  # Print all arguments, each as a separate string (handles spaces correctly)
+  echo "Arguments as separate strings: $@"
+
+  # Print the number of arguments
+  echo "Number of arguments: $#"
+
+  # Print each argument with its index
+  for i in $(seq 0 $(($# - 1))); do
+    echo "Argument $i: ${!i}"
+  done
+
+
+  while [ $# -gt 0 ]; do
+    printf "\n $1 - $2"
+    case "$1" in
+      --tag|-t)
+        export DIOPTRA_BRANCH="${2}"
+        shift
+        ;;
+      --deploy|--dep|--work|--wrk|-d|-w)
+        export DIOPTRA_DEPLOY="${2}"
+        shift
+        ;;
+      --source|--src|-s)
+        export DIOPTRA_CODE="${2}"
+        shift
+        ;;
+      --environment|--env|-e)
+        export DIOPTRA_ENV_FILE="${2}"
+        read_properties_from_file $DIOPTRA_ENV_FILE
+        shift
+        break
+        ;;
+      *)
+        printf "Error: Incorrect Parameter [${1} ${2}]\n"
+        ### return 1
+        shift
+        ;;
+    esac
+    shift
+  done
+}
+
+if [ -n "${BASH_VERSION}" ]; then
+  printf "\nStarting script with BASH Version: ${BASH_VERSION}\n"
+else
+  printf "\n❌❌❌ BASH is required to run this script ❌❌❌\n"
+  return
+fi
+##################################################################################
+######## In case no parameters were provided tell how to use and bail out ########
+if [ $# -eq 0 ]; then
+  print_main_help  
+fi
+
+############################################
+### Run the main parameter-reading logic ###
+read_cli_parameters $@
+
+
+if [ -z "$DIOPTRA_BRANCH" ] || [ -z "$DIOPTRA_CODE" ] || [ -z "$DIOPTRA_DEPLOY" ]; then
+
+  printf "\n\n❌❌❌ !!!Failed to set up environment configuration!!! ❌❌❌\n\n"  
+  print_env_variables
+  echo "You can use 'env | sort' or 'printenv' command to view the rest of the environment variables"
+
+else
+  export DIOPTRA_VENV=.di-venv-${DIOPTRA_BRANCH}
+  ######## Auto-configuration of the OS-Hardware descriptor
+  case $(uname) in
+      'Linux')
+          case $(uname -m) in
+              'arm64')
+                  export DIOPTRA_PLATFORM=linux-arm64
+                  ;;
+              'x86_64')
+                  export DIOPTRA_PLATFORM=linux-amd64
+                  ;;
+              esac ;;
+      'Darwin')
+          case $(uname -m) in
+              'arm64')
+                  export DIOPTRA_PLATFORM=macos-arm64
+                  ;;
+              'x86_64')
+                  export DIOPTRA_PLATFORM=macos-amd64
+                  ;;
+              esac ;;
+      esac
+
+  alias frontend='cd ${DIOPTRA_CODE}/src/frontend'
+
+  ######## Setup REST-API Configuration
+  export DIOPTRA_RESTAPI_DEV_DATABASE_URI="sqlite:///${DIOPTRA_DEPLOY}/instance/dioptra-dev.db"
+  export DIOPTRA_RESTAPI_ENV=dev
+  export DIOPTRA_RESTAPI_VERSION=v1
+  ######## End-of REST-API Configuration
+
+  ######## Worker Configuration
+  ######## USer-Name and Password Setup
+  export DIOPTRA_WORKER_USERNAME="dioptra-worker"  # This must be a registered user in the Dioptra app
+  export DIOPTRA_WORKER_PASSWORD="password"        # Must match the username's password
+
+  export DIOPTRA_API="http://localhost:5000"       # This is the default API location when you run `flask run`
+  export RQ_REDIS_URI="redis://localhost:6379/0"   # This is the default URI when you run `redis-server`
+  export MLFLOW_S3_ENDPOINT_URL="http://localhost:35000"  # If you're running a MLflow Tracking server, update this to point at it. Otherwise, this is a placeholder.
+  #export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES   # Macs only, needed to make the RQ worker (i.e. the Dioptra Worker) work
+  ######## End-of Worker Configuration
+
+
+  printf "\n Working from the path "
+  pwd
+  printf "\n Script works with GitHub BRANCH:\t [$DIOPTRA_BRANCH]"
+  printf "\n Script clones GitHub repo into DIR:\t [$DIOPTRA_CODE]"
+  printf "\n Script deploys DIOPTRA into Work-DIR:\t [$DIOPTRA_DEPLOY]\n\n"
+
+  print_env_status
+fi
