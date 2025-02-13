@@ -5,10 +5,7 @@
     v-model:selected="selected"
     :title="props.maxHeight ? '' : 'Snapshots'"
     :hideCreateBtn="true"
-    :hideDeleteBtn="true"
-    :hideEditBtn="true"
     :hideSearch="true"
-    :disableRadio="true"
     rowKey="snapshot"
     :showAll="true"
     :style="{ 
@@ -16,6 +13,9 @@
       maxHeight: props.maxHeight ? props.maxHeight + 'px' : '',
       height: props.maxHeight ? '' : 'calc(100vh - 50px)'
     }"
+    :hideOpenBtn="true"
+    :hideDeleteBtn="true"
+    :disableUnselect="true"
   >
     <template #body-cell-timestamp="props">
       {{

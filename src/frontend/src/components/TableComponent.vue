@@ -30,16 +30,10 @@
       <q-tr 
         :class="`${getSelectedColor(props.selected)} cursor-pointer` " 
         :props="props"
-        @click="handleClick(props)"
+        @click="openResource(props)"
         style="padding-left: 50px;"
       >
         <q-td v-for="col in props.cols" :key="col.name" :props="props">
-          <q-radio 
-            v-model="radioSelected" 
-            :val="props.row[props.rowKey || 'id']"
-            v-if="col.name === 'radio'" 
-            @click="handleClick(props)"
-          />
           <slot v-bind="props" :name="`body-cell-${col.name}`">
             <div v-if="typeof(col.value) === 'boolean'" class="text-body1">
               {{ col.value ? '✅' : 	'❌'}}
@@ -86,14 +80,30 @@
               <!-- if value is an array, then render it with a custom slot -->
               {{ col.value }}
             </div>
+            <!-- <q-btn
+              v-if="col.name === 'open'"
+              round
+              color="primary"
+              icon="edit"
+              size="sm"
+              @click.stop="openResource(props)"
+            /> -->
+            <q-btn
+              v-if="col.name === 'delete'"
+              round
+              color="negative"
+              icon="sym_o_delete"
+              size="sm"
+              @click.stop="deleteResource(props)"
+            />
+            <q-btn 
+              v-if="col.name === 'expand'" 
+              size="md" flat dense round  
+              @click="props.expand = !props.expand" 
+              :icon="props.expand ? 'expand_less' : 'expand_more'" 
+              @click.stop="emitExpand(props.expand, props.row)"
+            />
           </slot>
-          <q-btn 
-            v-if="col.name === 'expand'" 
-            size="lg" flat dense round  
-            @click="props.expand = !props.expand" 
-            :icon="props.expand ? 'expand_less' : 'expand_more'" 
-            @click.stop="emitExpand(props.expand, props.row)"
-          />
         </q-td>
       </q-tr>
       <q-tr v-show="props.expand" :props="props">
@@ -112,23 +122,6 @@
         label="Create" 
         class="q-mr-lg" 
         @click="$emit('create')"
-      />
-      <q-btn 
-        v-if="!hideEditBtn" 
-        color="secondary" 
-        icon="edit" 
-        label="Edit" 
-        class="q-mr-lg" 
-        @click="$emit('edit')"  
-        :disabled="!selected?.length" 
-      />
-      <q-btn 
-        v-if="!hideDeleteBtn" 
-        color="negative" 
-        icon="sym_o_delete" 
-        label="Delete" class="q-mr-lg"
-        @click="$emit('delete')" 
-        :disabled="!selected?.length" 
       />
       <q-input 
         v-if="!hideSearch" 
@@ -174,14 +167,14 @@
   title: String,
   showExpand: Boolean,
   hideCreateBtn: Boolean,
-  hideEditBtn: Boolean,
-  hideDeleteBtn: Boolean,
   showToggleDraft: Boolean,
   hideSearch: Boolean,
   disableSelect: Boolean,
+  disableUnselect: Boolean,
+  hideOpenBtn: Boolean,
+  hideDeleteBtn: Boolean,
   rightCaption: String,
   showAll: Boolean,
-  disableRadio: Boolean,
   rowKey: {
     type: String,
     default: 'id'
@@ -198,11 +191,14 @@
 
   const finalColumns = computed(() => {
     let defaultColumns = [ ...props.columns ]
-    if(!props.disableSelect  && !props.disableRadio) {
-      defaultColumns.unshift({ name: 'radio', align: 'center', sortable: false, label: 'Select', headerStyle: 'width: 100px' })
+    // if(!props.hideOpenBtn) {
+    //   defaultColumns.push({ name: 'open', align: 'center', sortable: false, label: 'Open', headerStyle: 'width: 50px' })
+    // }
+    if(!props.hideDeleteBtn) {
+      defaultColumns.push({ name: 'delete', align: 'center', sortable: false, label: 'Delete', headerStyle: 'width: 50px' })
     }
     if(props.showExpand) {
-      defaultColumns.push({ name: 'expand', align: 'center', sortable: false, label: 'Expand' })
+      defaultColumns.push({ name: 'expand', align: 'center', sortable: false, label: 'Expand', headerStyle: 'width: 50px' })
     }
     if(showDrafts.value) {
       defaultColumns = defaultColumns.map(column => ({
@@ -224,20 +220,26 @@
 
   const filter = ref('')
   const selected = defineModel('selected')
-  const radioSelected = ref('')
   //const showDrafts = ref(false)
   const showDrafts = defineModel('showDrafts')
 
-  function handleClick(tableProps) {
+  function selectResource(tableProps) {
     if(props.disableSelect) return
-    // tableProps.selected = !tableProps.selected
-    tableProps.selected = true
-    radioSelected.value = tableProps.row[props.rowKey]
+    if(props.disableUnselect) tableProps.selected = true
+    else tableProps.selected = !tableProps.selected
   }
 
-  watch(selected, (newVal) => {
-    if(newVal.length === 0) radioSelected.value = ''
-  })
+  function openResource(tableProps) {
+    if(props.disableSelect) return
+    tableProps.selected = true
+    emit('edit')
+  }
+
+  function deleteResource(tableProps) {
+    tableProps.selected = true
+    if(props.disableSelect) return
+    emit('delete')
+  }
 
   watch(() => props.rows, (newVal) => {
     // when viewing history, auto select first (latest) row
@@ -301,26 +303,26 @@
   }
 
   function keydown(event) {
-  // Ensure there are rows to navigate
-  if (!props.rows || props.rows.length === 0) return;
+  // exit if no rows or selection disabled
+  if(!props.rows || props.rows.length === 0) return
+  if(props.disableSelect) return
 
   // Get the current index of the selected row
   const currentIndex = props.rows.findIndex(row => row[props.rowKey] === selected.value[0]?.[props.rowKey])
-
-  if (event.key === 'ArrowUp') {
+  if(event.key === 'ArrowUp') {
     // Navigate to the previous row (if not at the first row)
-    if (currentIndex > 0) {
+    if(currentIndex > 0) {
       const prevRow = props.rows[currentIndex - 1]
       selected.value = [prevRow]
-      radioSelected.value = prevRow[props.rowKey]
     }
-  } else if (event.key === 'ArrowDown') {
+  } else if(event.key === 'ArrowDown') {
     // Navigate to the next row (if not at the last row)
     if (currentIndex < props.rows.length - 1) {
       const nextRow = props.rows[currentIndex + 1]
       selected.value = [nextRow]
-      radioSelected.value = nextRow[props.rowKey]
     }
+  } else if(event.key === 'Enter') {
+    emit('edit')
   }
 }
 

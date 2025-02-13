@@ -1,22 +1,27 @@
 <template>
-  <div class="row">
-    <div>
-      <PageTitle 
-        :title="title"
-      />
+  <div class="row items-center justify-between">
+    <div class="row items-center">
+      <PageTitle :title="title" />
+      <q-chip
+        v-if="route.params.id !== 'new'"
+        class="q-ml-lg"
+      >
+        <q-toggle
+          v-model="store.showRightDrawer"
+          left-label
+          label="View History"
+          color="orange"
+        />
+      </q-chip>
     </div>
-    <q-chip
+    <q-btn 
       v-if="route.params.id !== 'new'"
-      style="margin-top: 28px;"
-      class="q-ml-lg"
-    >
-      <q-toggle
-        v-model="store.showRightDrawer"
-        left-label
-        label="View History"
-        color="orange"
-      />
-    </q-chip>
+      :color="history ? 'red-3' : 'negative'" 
+      icon="sym_o_delete" 
+      label="Delete Experiment" 
+      @click="showDeleteDialog = true"
+      :disable="history"
+    />
   </div>
 
   <div :class="`row q-my-lg`">
@@ -93,6 +98,17 @@
         >
           <template v-slot:before>
             <div class="field-label">Entrypoints:</div>
+          </template>
+          <template v-slot:selected>
+            <q-chip
+              v-for="(entrypoint, i) in experiment.entrypoints"
+              :key="entrypoint.id"
+              color="secondary"
+              :label="entrypoint.name"
+              class="text-white"
+              removable
+              @remove="experiment.entrypoints.splice(i, 1)"
+            />
           </template>  
         </q-select>
 
@@ -118,16 +134,17 @@
     </fieldset>
   </div>
 
-  <div :class="`float-right`">
-      <q-btn  
-        color="negative" 
+  <div class="float-right">
+      <q-btn
+        outline  
+        color="primary" 
         label="Cancel"
-        class="q-mr-lg"
+        class="q-mr-lg cancel-btn"
         @click="confirmLeave = true; router.back()"
       />
       <q-btn  
         @click="submit()" 
-        color="primary" 
+        :color="history ? 'blue-2' : 'primary'" 
         label="Submit Experiment"
         :disable="history"
       />
@@ -142,6 +159,12 @@
       v-model="showReturnDialog"
       @cancel="clearForm"
     />
+    <DeleteDialog
+      v-model="showDeleteDialog"
+      @submit="deleteExperiment"
+      type="Experiment"
+      :name="experiment.name"
+    />
 </template>
 
 <script setup>
@@ -153,6 +176,7 @@
   import PageTitle from '@/components/PageTitle.vue'
   import LeaveFormDialog from '@/dialogs/LeaveFormDialog.vue'
   import ReturnToFormDialog from '@/dialogs/ReturnToFormDialog.vue'
+  import DeleteDialog from '@/dialogs/DeleteDialog.vue'
 
   const route = useRoute()
   
@@ -351,5 +375,17 @@
       getExperiment()
     }
   })
+
+  const showDeleteDialog = ref(false)
+
+  async function deleteExperiment() {
+    try {
+      await api.deleteItem('experiments', experiment.value.id)
+      notify.success(`Successfully deleted '${experiment.value.name}'`)
+      router.push(`/experiments`)
+    } catch(err) {
+      notify.error(err.response.data.message);
+    }
+  }
 
 </script>

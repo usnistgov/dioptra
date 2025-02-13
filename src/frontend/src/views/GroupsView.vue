@@ -7,8 +7,6 @@
     @delete="showDeleteDialog = true"
     @edit="router.push('/groups/admin')"
     v-model:selected="selected"
-    :hideEditBtn="true"
-    :hideDeleteBtn="true"
     @request="getUserGroups"
     ref="tableRef"
     :hideCreateBtn="true"

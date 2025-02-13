@@ -1,7 +1,18 @@
 <template>
-  <PageTitle 
-    :title="title"
-  />
+  <div class="row items-center justify-between">
+    <PageTitle 
+      :title="title"
+    />
+    <div>
+      <q-btn 
+        v-if="route.params.id !== 'new'"
+        color="negative" 
+        icon="sym_o_delete" 
+        label="Delete Entrypoint"
+        @click="showDeleteDialogEntrypoint = true; objectForDeletion = entryPoint"
+      />
+    </div>
+  </div>
   <div class="row q-my-lg">
     <div :class="`${isMobile ? 'col-12' : 'col-5'} q-mr-xl`" style="display: flex; flex-direction: column;">
       <fieldset>
@@ -73,11 +84,11 @@
           :rows="entryPoint.parameters"
           :columns="columns"
           :hideToggleDraft="true"
-          :hideEditBtn="true"
-          :hideDeleteBtn="true"
           :hideSearch="true"
           :disableSelect="true"
           :hideCreateBtn=true
+          :hideOpenBtn="true"
+          :hideDeleteBtn="true"
         >
           <template #body-cell-actions="props">
             <q-btn 
@@ -94,7 +105,7 @@
               size="sm"
               color="negative"
               flat
-              @click="selectedParam = props.row; showDeleteDialog = true"
+              @click="selectedParam = props.row; showDeleteDialogParam = true"
             />
           </template>
         </TableComponent>
@@ -155,7 +166,6 @@
           use-input
           use-chips
           multiple
-
           map-options
           option-label="name"
           option-value="id"
@@ -187,7 +197,6 @@
           use-input
           use-chips
           multiple
-
           map-options
           option-label="name"
           option-value="id"
@@ -197,7 +206,17 @@
         >
           <template v-slot:before>
             <div class="field-label">Plugins:</div>
-          </template>  
+          </template>
+          <template v-slot:selected-item="scope">
+            <q-chip
+              :label="scope.opt.name"
+              removable
+              @remove="scope.removeAtIndex(scope.index)"
+              :tabindex="scope.tabindex"
+              color="secondary"
+              text-color="white"
+            />
+          </template>
         </q-select>
         <div class="row" v-if="route.params.id !== 'new' && entryPoint.plugins.length > 0">
           <label class="field-label q-pt-xs">Plugins:</label>
@@ -244,10 +263,10 @@
         :columns="taskColumns"
         title="Plugin Tasks"
         :hideToggleDraft="true"
-        :hideEditBtn="true"
-        :hideDeleteBtn="true"
         :hideSearch="true"
         :disableSelect="true"
+        :hideOpenBtn="true"
+        :hideDeleteBtn="true"
         :hideCreateBtn=true
       >
         <template #body-cell-inputParams="props">
@@ -287,10 +306,11 @@
   </div>
 
   <div class="float-right q-mb-lg">
-    <q-btn  
-      color="negative" 
+    <q-btn
+      outline
+      color="primary" 
       label="Cancel"
-      class="q-mr-lg"
+      class="q-mr-lg cancel-btn"
       @click="confirmLeave = true; router.back()"
     />
     <q-btn  
@@ -301,7 +321,14 @@
   </div>
 
   <DeleteDialog 
-    v-model="showDeleteDialog"
+    v-model="showDeleteDialogEntrypoint"
+    @submit="deleteEntrypoint()"
+    type="Entrypoint"
+    :name="entryPoint.name"
+    @click=""
+  />
+  <DeleteDialog 
+    v-model="showDeleteDialogParam"
     @submit="deleteParam()"
     type="Parameter"
     :name="selectedParam.name"
@@ -533,6 +560,7 @@
       if (route.params.id === 'new') {
         await api.addItem('entrypoints', entryPoint.value)
         store.savedForms.entryPoint = null
+        router.push('/entrypoints')
         notify.success(`Successfully created '${entryPoint.value.name}'`)
       } else {
         await api.updateItem('entrypoints', route.params.id, {
@@ -543,12 +571,11 @@
           queues: entryPoint.value.queues,
         })
         await api.addPluginsToEntrypoint(route.params.id, pluginsToUpdate.value)
+        router.push('/entrypoints')
         notify.success(`Successfully updated '${entryPoint.value.name}'`)
       }
     } catch(err) {
       notify.error(err.response.data.message)
-    } finally {
-      router.push('/entrypoints')
     }
   }
 
@@ -559,13 +586,14 @@
     }
   })
 
-  const showDeleteDialog = ref(false)
+  const showDeleteDialogEntrypoint = ref(false)
+  const showDeleteDialogParam = ref(false)
   const selectedParam = ref({})
   const selectedParamIndex = ref('')
 
   function deleteParam() {
     entryPoint.value.parameters = entryPoint.value.parameters.filter((param) => param.name !== selectedParam.value.name)
-    showDeleteDialog.value = false
+    showDeleteDialogParam.value = false
   }
 
   const showEditParamDialog = ref(false)
@@ -680,4 +708,17 @@
       console.warn(err)
     }
   }
+  const objectForDeletion = ref()
+
+  async function deleteEntrypoint() {
+    try {
+      await api.deleteItem('entrypoints', objectForDeletion.value.id)
+      notify.success(`Successfully deleted '${objectForDeletion.value.name}'`)
+      showDeleteDialogEntrypoint.value = false
+      router.push(`/entrypoints`)
+    } catch(err) {
+      notify.error(err.response.data.message);
+    }
+  }
+
 </script>

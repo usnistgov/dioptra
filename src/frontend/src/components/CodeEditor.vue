@@ -10,7 +10,7 @@
       :disabled="readOnly"
       @ready="handleReady"
       @update="highlightPlaceholder"
-      :style="{ 'min-height': '250px', 'max-height': '70vh',
+      :style="{ 'max-height': '70vh',
         'border': `${showError ? '2px solid red' : '2px solid black'}`
       }"
     />
@@ -177,3 +177,9 @@
     ]
   })
 </script>
+
+<style>
+  .cm-scroller { 
+    overflow: auto; min-height: 250px 
+  }
+</style>

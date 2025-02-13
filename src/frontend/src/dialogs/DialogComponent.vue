@@ -1,6 +1,6 @@
 <template>
   <q-dialog v-model="showDialog" aria-labelledby="modalTitle" :persistent="persistent">
-    <q-card flat :style="{ 'min-width': isMedium ? '50%' : '30%' }">
+    <q-card flat :style="{ 'min-width': isMobile ? '90%' : (isMedium ? '50%' : '30%') }">
       <q-form @submit="$emit('emitSubmit')">
         <q-card-section class="bg-primary text-white q-mb-md">
           <div class="text-h6 row justify-between">
@@ -28,8 +28,20 @@
             v-close-popup
           />
           <q-space />
-          <q-btn color="negative" class="text-white" label="Cancel" @click="$emit('emitCancel')" v-close-popup />
-          <q-btn color="primary" label="Confirm" type="submit" :disable="disableConfirm" />
+          <q-btn 
+            outline
+            color="primary cancel-btn" 
+            label="Cancel" 
+            @click="$emit('emitCancel')" 
+            v-close-popup 
+            class="q-mr-xs"
+          />
+          <q-btn 
+            color="primary"
+            label="Confirm"
+            type="submit"
+            :disable="disableConfirm"
+          />
         </q-card-actions>
       </q-form>
     </q-card>
@@ -45,5 +57,6 @@
   const history = defineModel('history')
 
   const isMedium = inject('isMedium')
+  const isMobile = inject('isMobile')
 
 </script>
