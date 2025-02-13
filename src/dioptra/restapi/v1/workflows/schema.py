@@ -82,13 +82,13 @@ class SignatureAnalysisSuggestedTypes(Schema):
 
     # add proposed_type in next iteration
 
-    missing_type = fields.String(
-        attribute="missing_type",
+    name = fields.String(
+        attribute="name",
         metadata=dict(description="A suggestion for the name of the type"),
     )
 
-    annotation = fields.String(
-        attribute="annotation",
+    description = fields.String(
+        attribute="description",
         metadata=dict(
             description="The annotation the suggestion is attempting to represent"
         ),

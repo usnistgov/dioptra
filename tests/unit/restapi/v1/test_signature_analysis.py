@@ -42,13 +42,13 @@ expected_outputs["sample_test_real_world.py"] = [
         ],
         "outputs": [{"name": "output", "type": "directoryiterator"}],
         "missing_types": [
-            {"missing_type": "list_str", "annotation": "List[str]"},
+            {"name": "list_str", "description": "List[str]"},
             {
-                "missing_type": "tuple_int_int_int",
-                "annotation": "Tuple[int, int, int]",
+                "name": "tuple_int_int_int",
+                "description": "Tuple[int, int, int]",
             },
-            {"missing_type": "optional_float", "annotation": "Optional[float]"},
-            {"missing_type": "directoryiterator", "annotation": "DirectoryIterator"},
+            {"name": "optional_float", "description": "Optional[float]"},
+            {"name": "directoryiterator", "description": "DirectoryIterator"},
         ],
     },
     {
@@ -64,14 +64,14 @@ expected_outputs["sample_test_real_world.py"] = [
         ],
         "outputs": [],
         "missing_types": [
-            {"missing_type": "directoryiterator", "annotation": "DirectoryIterator"},
+            {"name": "directoryiterator", "description": "DirectoryIterator"},
             {
-                "missing_type": "tuple_int_int_int",
-                "annotation": "Tuple[int, int, int]",
+                "name": "tuple_int_int_int",
+                "description": "Tuple[int, int, int]",
             },
             {
-                "missing_type": "list_dict_str_any",
-                "annotation": "List[Dict[str, Any]]",
+                "name": "list_dict_str_any",
+                "description": "List[Dict[str, Any]]",
             },
         ],
     },
@@ -91,11 +91,11 @@ expected_outputs["sample_test_real_world.py"] = [
         ],
         "outputs": [],
         "missing_types": [
-            {"missing_type": "str_none", "annotation": "str | None"},
-            {"missing_type": "int_none", "annotation": "int | None"},
+            {"name": "str_none", "description": "str | None"},
+            {"name": "int_none", "description": "int | None"},
             {
-                "missing_type": "optional_dict_str_any",
-                "annotation": "Optional[Dict[str, Any]]",
+                "name": "optional_dict_str_any",
+                "description": "Optional[Dict[str, Any]]",
             },
         ],
     },
@@ -111,12 +111,12 @@ expected_outputs["sample_test_real_world.py"] = [
         "outputs": [],
         "missing_types": [
             {
-                "missing_type": "list_dict_str_any",
-                "annotation": "List[Dict[str, Any]]",
+                "name": "list_dict_str_any",
+                "description": "List[Dict[str, Any]]",
             },
             {
-                "missing_type": "optional_dict_str_any",
-                "annotation": "Optional[Dict[str, Any]]",
+                "name": "optional_dict_str_any",
+                "description": "Optional[Dict[str, Any]]",
             },
         ],
     },
@@ -129,8 +129,8 @@ expected_outputs["sample_test_real_world.py"] = [
         "outputs": [],
         "missing_types": [
             {
-                "missing_type": "list_dict_str_any",
-                "annotation": "List[Dict[str, Any]]",
+                "name": "list_dict_str_any",
+                "description": "List[Dict[str, Any]]",
             }
         ],
     },
@@ -143,7 +143,7 @@ expected_outputs["sample_test_real_world.py"] = [
         ],
         "outputs": [],
         "missing_types": [
-            {"missing_type": "list_str_path", "annotation": "List[str | Path]"}
+            {"name": "list_str_path", "description": "List[str | Path]"}
         ],
     },
     {
@@ -154,8 +154,8 @@ expected_outputs["sample_test_real_world.py"] = [
         ],
         "outputs": [],
         "missing_types": [
-            {"missing_type": "list_int", "annotation": "List[int]"},
-            {"missing_type": "list_str_path", "annotation": "List[str | Path]"},
+            {"name": "list_int", "description": "List[int]"},
+            {"name": "list_str_path", "description": "List[str | Path]"},
         ],
     },
     {
@@ -173,14 +173,14 @@ expected_outputs["sample_test_real_world.py"] = [
         ],
         "outputs": [],
         "missing_types": [
-            {"missing_type": "union_str_path", "annotation": "Union[str, Path]"},
+            {"name": "union_str_path", "description": "Union[str, Path]"},
             {
-                "missing_type": "list_dict_str_str",
-                "annotation": "List[Dict[str, str]]",
+                "name": "list_dict_str_str",
+                "description": "List[Dict[str, str]]",
             },
             {
-                "missing_type": "union_int_float_str",
-                "annotation": "Union[int, float, str]",
+                "name": "union_int_float_str",
+                "description": "Union[int, float, str]",
             },
         ],
     },
@@ -202,8 +202,8 @@ expected_outputs["sample_test_real_world.py"] = [
         ],
         "outputs": [],
         "missing_types": [
-            {"missing_type": "union_str_path", "annotation": "Union[str, Path]"},
-            {"missing_type": "tuple", "annotation": "Tuple"},
+            {"name": "union_str_path", "description": "Union[str, Path]"},
+            {"name": "tuple", "description": "Tuple"},
         ],
     },
     {
@@ -223,11 +223,11 @@ expected_outputs["sample_test_real_world.py"] = [
         ],
         "outputs": [],
         "missing_types": [
-            {"missing_type": "union_str_path", "annotation": "Union[str, Path]"},
-            {"missing_type": "tuple", "annotation": "Tuple"},
+            {"name": "union_str_path", "description": "Union[str, Path]"},
+            {"name": "tuple", "description": "Tuple"},
             {
-                "missing_type": "list_dict_str_str",
-                "annotation": "List[Dict[str, str]]",
+                "name": "list_dict_str_str",
+                "description": "List[Dict[str, str]]",
             },
         ],
     },
@@ -250,14 +250,14 @@ expected_outputs["sample_test_real_world.py"] = [
         ],
         "outputs": [],
         "missing_types": [
-            {"missing_type": "np_ndarray", "annotation": "np.ndarray"},
+            {"name": "np_ndarray", "description": "np.ndarray"},
             {
-                "missing_type": "list_dict_str_str",
-                "annotation": "List[Dict[str, str]]",
+                "name": "list_dict_str_str",
+                "description": "List[Dict[str, str]]",
             },
             {
-                "missing_type": "dict_str_dict_str_any",
-                "annotation": "Dict[str, Dict[str, Any]]",
+                "name": "dict_str_dict_str_any",
+                "description": "Dict[str, Dict[str, Any]]",
             },
         ],
     },
@@ -278,18 +278,18 @@ expected_outputs["sample_test_real_world.py"] = [
         ],
         "outputs": [],
         "missing_types": [
-            {"missing_type": "union_str_path", "annotation": "Union[str, Path]"},
+            {"name": "union_str_path", "description": "Union[str, Path]"},
             {
-                "missing_type": "tuple_int_int_int",
-                "annotation": "Tuple[int, int, int]",
+                "name": "tuple_int_int_int",
+                "description": "Tuple[int, int, int]",
             },
             {
-                "missing_type": "list_dict_str_str",
-                "annotation": "List[Dict[str, str]]",
+                "name": "list_dict_str_str",
+                "description": "List[Dict[str, str]]",
             },
             {
-                "missing_type": "optional_dict_str_any",
-                "annotation": "Optional[Dict[str, Any]]",
+                "name": "optional_dict_str_any",
+                "description": "Optional[Dict[str, Any]]",
             },
         ],
     },
@@ -315,8 +315,8 @@ expected_outputs["sample_test_real_world.py"] = [
         ],
         "outputs": [],
         "missing_types": [
-            {"missing_type": "list_str", "annotation": "List[str]"},
-            {"missing_type": "directoryiterator", "annotation": "DirectoryIterator"},
+            {"name": "list_str", "description": "List[str]"},
+            {"name": "directoryiterator", "description": "DirectoryIterator"},
         ],
     },
 ]
@@ -337,8 +337,8 @@ expected_outputs["sample_test_complex_type.py"] = [
         ],
         "outputs": [{"name": "output", "type": "union_int_bool"}],
         "missing_types": [
-            {"missing_type": "optional_str", "annotation": "Optional[str]"},
-            {"missing_type": "union_int_bool", "annotation": "Union[int, bool]"},
+            {"name": "optional_str", "description": "Optional[str]"},
+            {"name": "union_int_bool", "description": "Union[int, bool]"},
         ],
     }
 ]
@@ -355,7 +355,7 @@ expected_outputs["sample_test_function_type.py"] = [
         ],
         "outputs": [{"name": "output", "type": "type1"}],
         "missing_types": [
-            {"missing_type": "type1", "annotation": "foo(2)"},
+            {"name": "type1", "description": "foo(2)"},
         ],
     }
 ]
@@ -381,7 +381,7 @@ expected_outputs["sample_test_optional.py"] = [
         ],
         "outputs": [],
         "missing_types": [
-            {"missing_type": "optional_str", "annotation": "Optional[str]"},
+            {"name": "optional_str", "description": "Optional[str]"},
         ],
     }
 ]
@@ -416,8 +416,8 @@ expected_outputs["sample_test_type_conflict.py"] = [
         ],
         "outputs": [{"name": "output", "type": "type2"}],
         "missing_types": [
-            {"missing_type": "type2", "annotation": "foo(2)"},
-            {"missing_type": "type1", "annotation": "Type1"},
+            {"name": "type2", "description": "foo(2)"},
+            {"name": "type1", "description": "Type1"},
         ],
     }
 ]
@@ -461,8 +461,8 @@ def assert_signature_analysis_response_matches_expectations(
         expected_contents["outputs"]
     )
     assert sort_by_name(response["inputs"]) == sort_by_name(expected_contents["inputs"])
-    assert sort_by_name(response["missing_types"], k="missing_type") == sort_by_name(
-        expected_contents["missing_types"], k="missing_type"
+    assert sort_by_name(response["missing_types"], k="name") == sort_by_name(
+        expected_contents["missing_types"], k="name"
     )
 
 
