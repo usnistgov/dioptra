@@ -26,19 +26,7 @@
       /> -->
     </template>
   </TableComponent>
-  <!-- <q-btn 
-    class="fixedButton"
-    round
-    color="primary"
-    icon="add"
-    size="lg"
-    @click="showAddEditDialog = true"
-  >
-    <span class="sr-only">Register a new Artifact</span>
-    <q-tooltip>
-      Register a new Artifact
-    </q-tooltip>
-  </q-btn> -->
+
   <ArtifactsDialog 
     v-model="showAddEditDialog"
     @addArtifact="addArtifact"

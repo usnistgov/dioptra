@@ -21,6 +21,7 @@ from .base import (
     CollectionClient,
     DioptraClientError,
     DioptraSession,
+    FieldNameCollisionError,
     FieldsValidationError,
     SubCollectionClient,
     SubCollectionUrlError,
@@ -33,9 +34,59 @@ class DraftFieldsValidationError(DioptraClientError):
     """Raised when one or more draft fields are invalid."""
 
 
+class ConvertFieldNamesToCamelCaseProtocol(Protocol):
+    def __call__(self, json_: dict[str, Any]) -> dict[str, Any]:
+        ...  # fmt: skip
+
+
 class ValidateDraftFieldsProtocol(Protocol):
     def __call__(self, json_: dict[str, Any]) -> dict[str, Any]:
         ...  # fmt: skip
+
+
+def make_field_names_to_camel_case_converter(
+    name_mapping: dict[str, str],
+) -> ConvertFieldNamesToCamelCaseProtocol:
+    """
+    Create a function that uses a dictionary to convert field names passed to the client
+    to camel case.
+
+    Args:
+        name_mapping: A dictionary that maps the draft field names to their camel case
+            equivalents.
+
+    Returns:
+        A function for converting the draft fields names to camel case.
+    """
+
+    def convert_field_names(json_: dict[str, Any]) -> dict[str, Any]:
+        """Convert the names of the provided draft fields to camel case.
+
+        Args:
+            json_: The draft fields to convert.
+
+        Returns:
+            The draft fields with names converted to camel case.
+        """
+        if not name_mapping:
+            return json_
+
+        converted_json_: dict[str, Any] = {}
+        conversions_seen: dict[str, str] = {}
+
+        for key, value in json_.items():
+            if (converted_key := name_mapping.get(key, key)) in conversions_seen:
+                raise FieldNameCollisionError(
+                    f"Camel case conversion failed (reason: duplicates "
+                    f"{conversions_seen[converted_key]} after conversion): {key}"
+                )
+
+            converted_json_[converted_key] = value
+            conversions_seen[converted_key] = key
+
+        return converted_json_
+
+    return convert_field_names
 
 
 def make_draft_fields_validator(
@@ -102,6 +153,7 @@ class NewResourceDraftsSubCollectionClient(Generic[T]):
         validate_fields_fn: ValidateDraftFieldsProtocol,
         root_collection: CollectionClient[T],
         parent_sub_collections: list[SubCollectionClient[T]] | None = None,
+        convert_field_names_fn: ConvertFieldNamesToCamelCaseProtocol | None = None,
     ) -> None:
         """Initialize the NewResourceDraftsSubCollectionClient instance.
 
@@ -121,6 +173,9 @@ class NewResourceDraftsSubCollectionClient(Generic[T]):
         self._root_collection = root_collection
         self._parent_sub_collections: list[SubCollectionClient[T]] = (
             parent_sub_collections or []
+        )
+        self._convert_field_names = (
+            convert_field_names_fn or make_field_names_to_camel_case_converter({})
         )
 
     def get(
@@ -198,8 +253,7 @@ class NewResourceDraftsSubCollectionClient(Generic[T]):
             DraftFieldsValidationError: If one or more draft fields are invalid or
                 missing.
         """
-
-        if "group" in kwargs:
+        if "group" in (kwargs := self._convert_field_names(kwargs)):
             raise FieldsValidationError(
                 "Invalid argument (reason: keyword is reserved): group"
             )
@@ -228,7 +282,7 @@ class NewResourceDraftsSubCollectionClient(Generic[T]):
             DraftFieldsValidationError: If one or more draft fields are invalid or
                 missing.
         """
-        if "draftId" in kwargs:
+        if "draftId" in (kwargs := self._convert_field_names(kwargs)):
             raise FieldsValidationError(
                 "Invalid argument (reason: keyword is reserved): draftId"
             )
@@ -322,6 +376,7 @@ class ModifyResourceDraftsSubCollectionClient(SubCollectionClient[T]):
         validate_fields_fn: ValidateDraftFieldsProtocol,
         root_collection: CollectionClient[T],
         parent_sub_collections: list[SubCollectionClient[T]] | None = None,
+        convert_field_names_fn: ConvertFieldNamesToCamelCaseProtocol | None = None,
     ) -> None:
         """Initialize the ModifyResourceDraftsSubCollectionClient instance.
 
@@ -342,6 +397,9 @@ class ModifyResourceDraftsSubCollectionClient(SubCollectionClient[T]):
             parent_sub_collections=parent_sub_collections,
         )
         self._validate_fields = validate_fields_fn
+        self._convert_field_names = (
+            convert_field_names_fn or make_field_names_to_camel_case_converter({})
+        )
 
     def get_by_id(self, *resource_ids: str | int) -> T:
         """Get a resource modification draft.
@@ -370,14 +428,17 @@ class ModifyResourceDraftsSubCollectionClient(SubCollectionClient[T]):
         """
         return self._session.post(
             self.build_sub_collection_url(*resource_ids),
-            json_=self._validate_fields(kwargs),
+            json_=self._validate_fields(self._convert_field_names(kwargs)),
         )
 
-    def modify(self, *resource_ids: str | int, **kwargs) -> T:
+    def modify(
+        self, *resource_ids: str | int, resource_snapshot_id: str | int, **kwargs
+    ) -> T:
         """Modify a resource modification draft.
 
         Args:
             *resource_ids: The parent resource ids that own the sub-collection.
+            resource_snapshot_id: The resource snapshot id the draft is based on.
             **kwargs: The draft fields to modify.
 
         Returns:
@@ -389,7 +450,12 @@ class ModifyResourceDraftsSubCollectionClient(SubCollectionClient[T]):
         """
         return self._session.put(
             self.build_sub_collection_url(*resource_ids),
-            json_=self._validate_fields(kwargs),
+            json_={
+                "resourceSnapshot": int(resource_snapshot_id),
+                "resourceData": self._validate_fields(
+                    self._convert_field_names(kwargs)
+                ),
+            },
         )
 
     def delete(self, *resource_ids: str | int) -> T:

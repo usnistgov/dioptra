@@ -41,7 +41,7 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 @pyplugs.register
 def get_performance_metric_list(
-    request: List[Dict[str, str]]
+    request: List[Dict[str, str]],
 ) -> List[Tuple[str, Callable[..., float]]]:
     """Gets multiple performance metric functions from the registry.
 

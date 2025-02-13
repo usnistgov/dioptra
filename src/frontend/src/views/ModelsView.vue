@@ -36,19 +36,7 @@
       </TableComponent>
     </template>
   </TableComponent>
-  <q-btn 
-    class="fixedButton"
-    round
-    color="primary"
-    icon="add"
-    size="lg"
-    @click="showAddEditDialog = true"
-  >
-    <span class="sr-only">Register a new Model</span>
-    <q-tooltip>
-      Register a new Model
-    </q-tooltip>
-  </q-btn>
+
   <ModelsDialog 
     v-model="showAddEditDialog"
     @addModel="addModel"
@@ -78,6 +66,9 @@ import * as api from '@/services/dataApi'
 import * as notify from '../notify'
 import PageTitle from '@/components/PageTitle.vue'
 import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
+import { useLoginStore } from '@/stores/LoginStore'
+
+const store = useLoginStore()
 
 const selected = ref([])
 const editing = ref(false)
@@ -174,5 +165,12 @@ function formatDate(dateString) {
   const options = { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: true }
   return new Date(dateString).toLocaleString('en-US', options)
 }
+
+watch(() => store.triggerPopup, (newVal) => {
+  if(newVal) {
+    showAddEditDialog.value = true
+    store.triggerPopup = false
+  }
+})
 
 </script>

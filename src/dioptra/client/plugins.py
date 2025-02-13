@@ -160,6 +160,7 @@ class PluginFilesSubCollectionClient(SubCollectionClient[T]):
             client.plugins.files.modify_resource_drafts.modify(
                 1,
                 2,
+                resource_snapshot_id=1,
                 filename="new_name.py",
                 contents="",
                 tasks=[],
@@ -465,7 +466,10 @@ class PluginsCollectionClient(CollectionClient[T]):
 
             # PUT /api/v1/plugins/1/draft
             client.plugins.modify_resource_drafts.modify(
-                1, name="new-name", description="new-description"
+                1,
+                resource_snapshot_id=1,
+                name="new-name",
+                description="new-description"
             )
 
             # POST /api/v1/plugins/1/draft

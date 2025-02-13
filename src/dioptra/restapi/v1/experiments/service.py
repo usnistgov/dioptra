@@ -37,7 +37,9 @@ from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.entrypoints.service import (
     RESOURCE_TYPE as ENTRYPOINT_RESOURCE_TYPE,
 )
-from dioptra.restapi.v1.entrypoints.service import EntrypointIdsService
+from dioptra.restapi.v1.entrypoints.service import (
+    EntrypointIdsService,
+)
 from dioptra.restapi.v1.groups.service import GroupIdService
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 

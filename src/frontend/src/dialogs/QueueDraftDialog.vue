@@ -107,7 +107,7 @@
 
   function emitAddOrEdit() {
     if(props.queueToDraft.hasDraft) {
-      emit('updateDraftLinkedToQueue', props.queueToDraft.id, name.value, description.value)
+      emit('updateDraftLinkedToQueue', props.queueToDraft.id, name.value, description.value, props.queueToDraft.snapshot)
     } else {
       emit('addQueue', name.value, description.value, props.queueToDraft.id)
     }

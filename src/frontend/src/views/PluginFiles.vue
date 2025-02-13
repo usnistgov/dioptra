@@ -16,19 +16,6 @@
       {{ props.row.tasks.length }}
     </template>
   </TableComponent>
-  <q-btn 
-    class="fixedButton"
-    round
-    color="primary"
-    icon="add"
-    size="lg"
-    :to="`/plugins/${route.params.id}/files/new`"
-  >
-    <span class="sr-only">Create New Plugin File</span>
-    <q-tooltip>
-      Create New Plugin File
-    </q-tooltip>
-  </q-btn>
 
   <DeleteDialog 
     v-model="showDeleteDialog"

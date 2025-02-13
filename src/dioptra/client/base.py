@@ -32,6 +32,10 @@ class DioptraClientError(Exception):
     """Base class for client errors"""
 
 
+class FieldNameCollisionError(DioptraClientError):
+    """Raised when two field names will collide after conversion to camel case."""
+
+
 class FieldsValidationError(DioptraClientError):
     """Raised when one or more fields are invalid."""
 

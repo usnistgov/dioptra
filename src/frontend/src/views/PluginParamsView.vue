@@ -17,19 +17,7 @@
       <div>{{ props.row.group.name }}</div>
     </template>
   </TableComponent>
-  <q-btn 
-    class="fixedButton"
-    round
-    color="primary"
-    icon="add"
-    size="lg"
-    @click="showAddDialog = true"
-  >
-    <span class="sr-only">Register a new Plugin Param Type</span>
-    <q-tooltip>
-      Register a new Plugin Param Type
-    </q-tooltip>
-  </q-btn>
+
   <PluginParamsDialog 
     v-model="showAddDialog"
     @addPluginParamType="addPluginParamType"
@@ -59,6 +47,9 @@
   import * as notify from '../notify'
   import PageTitle from '@/components/PageTitle.vue'
   import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
+  import { useLoginStore } from '@/stores/LoginStore'
+
+  const store = useLoginStore()
 
   const editPluginParamType = ref({})
 
@@ -135,5 +126,12 @@
   ]
 
   const tableRef = ref(null)
+
+  watch(() => store.triggerPopup, (newVal) => {
+    if(newVal) {
+      showAddDialog.value = true
+      store.triggerPopup = false
+    }
+  })
 
 </script>

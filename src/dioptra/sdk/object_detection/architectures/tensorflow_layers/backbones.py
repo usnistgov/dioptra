@@ -39,7 +39,9 @@ try:
     from tensorflow.keras.applications.efficientnet import (
         preprocess_input as efficient_net_preprocess_input,
     )
-    from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2
+    from tensorflow.keras.applications.mobilenet_v2 import (
+        MobileNetV2,
+    )
     from tensorflow.keras.applications.mobilenet_v2 import (
         preprocess_input as mobilenet_v2_preprocess_input,
     )

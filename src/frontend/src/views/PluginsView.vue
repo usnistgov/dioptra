@@ -38,19 +38,7 @@
       />
     </template>
   </TableComponent>
-  <q-btn 
-    class="fixedButton"
-    round
-    color="primary"
-    icon="add"
-    size="lg"
-    @click="showPluginDialog = true"
-  >
-    <span class="sr-only">Register a new Plugin</span>
-    <q-tooltip>
-      Register a new Plugin
-    </q-tooltip>
-  </q-btn>
+
   <PluginDialog 
     v-model="showPluginDialog"
     @addPlugin="addPlugin"
@@ -82,6 +70,9 @@
   import * as notify from '../notify'
   import PageTitle from '@/components/PageTitle.vue'
   import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
+  import { useLoginStore } from '@/stores/LoginStore.ts'
+
+  const store = useLoginStore()
 
   const router = useRouter()
 
@@ -90,6 +81,13 @@
   const showDeleteDialog = ref(false)
   const showTagsDialog = ref(false)
   const editObjTags = ref({})
+
+  watch(() => store.triggerPopup, (newVal) => {
+    if(newVal) {
+      showPluginDialog.value = true
+      store.triggerPopup = false
+    }
+  })
 
   const plugins = ref([])
 
