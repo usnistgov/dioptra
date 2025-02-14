@@ -151,7 +151,7 @@ export async function getData<T extends ItemType>(type: T, pagination: Paginatio
       Object.assign(obj, obj.payload)
     })
   }
-  console.log('getData = ', res)
+  console.log('getData = ', res.data.data)
   return res
 }
 

@@ -16,14 +16,6 @@
       <div>{{ props.row.group.name }}</div>
     </template>
     <template #expandedSlot="{ row }">
-      <!-- <BasicTable
-        :columns="fileColumns"
-        :rows="row?.versions || []"
-        :hideSearch="true"
-        :hideEditTable="true"
-        class="q-mx-md"
-        :title="`${row.name} Versions`"
-      /> -->
     </template>
   </TableComponent>
 
@@ -48,7 +40,6 @@
 
 <script setup>
 import TableComponent from '@/components/TableComponent.vue'
-import BasicTable from '@/components/BasicTable.vue'
 import ArtifactsDialog from '@/dialogs/ArtifactsDialog.vue'
 import DeleteDialog from '@/dialogs/DeleteDialog.vue'
 import { ref, watch } from 'vue'
