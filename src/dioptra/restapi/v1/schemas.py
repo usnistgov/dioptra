@@ -141,7 +141,6 @@ def generate_base_resource_ref_schema(
     }
 
     if keep_snapshot_id:
-        schema.pop("id")
         return Schema.from_dict(schema, name=f"{name}SnapshotRefBaseSchema")
     else:
         schema.pop("snapshotId")

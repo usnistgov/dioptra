@@ -25,7 +25,7 @@ from .resources import ResourceSnapshot
 
 if TYPE_CHECKING:
     from .jobs import EntryPointJob
-    from .plugins import Plugin, PluginFile
+    from .plugins import Plugin
     from .resources import Resource
 
 
@@ -55,7 +55,7 @@ class EntryPoint(ResourceSnapshot):
     entry_point_jobs: Mapped[list["EntryPointJob"]] = relationship(
         init=False, viewonly=True
     )
-    entry_point_plugin_files: Mapped[list["EntryPointPluginFile"]] = relationship(
+    entry_point_plugins: Mapped[list["EntryPointPlugin"]] = relationship(
         init=False, back_populates="entry_point"
     )
 
@@ -159,6 +159,6 @@ class EntryPointPlugin(db.Model):  # type: ignore[name-defined]
 
     # Relationships
     entry_point: Mapped["EntryPoint"] = relationship(
-        back_populates="entry_point_plugin_files", lazy="joined"
+        back_populates="entry_point_plugins", lazy="joined"
     )
     plugin: Mapped["Plugin"] = relationship(lazy="joined")

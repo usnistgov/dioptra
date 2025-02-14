@@ -62,23 +62,6 @@ class PluginSnapshotRefSchema(PluginSnapshotRefBaseSchema):  # type: ignore
     )
 
 
-PluginFileRefBaseSchema = generate_base_resource_ref_schema("PluginFile")
-
-
-class PluginFileRefSchema(PluginFileRefBaseSchema):  # type: ignore
-    """The reference schema for the data stored in a PluginFile."""
-
-    pluginId = fields.Int(
-        attribute="plugin_id",
-        data_key="plugin",
-        metadata=dict(description="ID for the Plugin resource this file belongs to."),
-    )
-    filename = fields.String(
-        attribute="filename",
-        metadata=dict(description="Filename of the PluginFile resource."),
-    )
-
-
 class PluginTaskParameterSchema(Schema):
     """The schema for the data stored in a PluginTaskParameter"""
 
@@ -165,6 +148,29 @@ class PluginTaskSchema(Schema):
         metadata=dict(
             description="List of output PluginTaskParameters in this PluginTask."
         ),
+    )
+
+
+PluginFileRefBaseSchema = generate_base_resource_ref_schema("PluginFile")
+
+
+class PluginFileRefSchema(PluginFileRefBaseSchema):  # type: ignore
+    """The reference schema for the data stored in a PluginFile."""
+
+    pluginId = fields.Int(
+        attribute="plugin_id",
+        data_key="plugin",
+        metadata=dict(description="ID for the Plugin resource this file belongs to."),
+    )
+    filename = fields.String(
+        attribute="filename",
+        metadata=dict(description="Filename of the PluginFile resource."),
+    )
+    tasks = fields.Nested(
+        PluginTaskSchema,
+        attribute="tasks",
+        metadata=dict(description="Tasks associated with the PluginFile resource."),
+        many=True,
     )
 
 

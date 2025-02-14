@@ -646,9 +646,9 @@ def registered_jobs(
 
     monkeypatch.setattr(rq_service, "RQQueue", mock_rq.MockRQQueue)
 
-    queue_id = registered_queues["queue1"]["snapshot"]
-    experiment_id = registered_experiments["experiment1"]["snapshot"]
-    entrypoint_id = registered_entrypoints["entrypoint1"]["snapshot"]
+    queue_id = registered_queues["queue1"]["id"]
+    experiment_id = registered_experiments["experiment1"]["id"]
+    entrypoint_id = registered_entrypoints["entrypoint1"]["id"]
     values = {
         registered_entrypoints["entrypoint1"]["parameters"][0]["name"]: "new_value",
     }

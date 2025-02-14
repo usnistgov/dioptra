@@ -226,52 +226,12 @@ class PluginService(object):
 
         plugins = db.session.scalars(latest_plugins_stmt).all()
 
-        # extract list of plugin ids
-        plugin_ids = [plugin.resource_id for plugin in plugins]
-
-        # Build CTE that retrieves all snapshot ids for the list of plugin files
-        # associated with retrieved plugins
-        parent_plugin = aliased(models.Plugin)
-        plugin_file_snapshot_ids_cte = (
-            select(models.PluginFile.resource_snapshot_id)
-            .join(
-                models.resource_dependencies_table,
-                models.PluginFile.resource_id
-                == models.resource_dependencies_table.c.child_resource_id,
-            )
-            .join(
-                parent_plugin,
-                parent_plugin.resource_id
-                == models.resource_dependencies_table.c.parent_resource_id,
-            )
-            .where(parent_plugin.resource_id.in_(plugin_ids))
-            .cte()
-        )
-
-        # get the latest plugin file snapshots associated with the retrieved plugins
-        latest_plugin_files_stmt = (
-            select(models.PluginFile)
-            .join(models.Resource)
-            .where(
-                models.PluginFile.resource_snapshot_id.in_(
-                    select(plugin_file_snapshot_ids_cte)
-                ),
-                models.Resource.latest_snapshot_id
-                == models.PluginFile.resource_snapshot_id,
-                models.Resource.is_deleted == False,  # noqa: E712
-            )
-        )
-        plugin_files = db.session.scalars(latest_plugin_files_stmt).unique().all()
-
-        # build a dictionary structure to re-associate plugins and plugin files
         plugins_dict: dict[int, utils.PluginWithFilesDict] = {
             plugin.resource_id: utils.PluginWithFilesDict(
-                plugin=plugin, plugin_files=[], has_draft=False
+                plugin=plugin, plugin_files=plugin.plugin_files, has_draft=False
             )
             for plugin in plugins
         }
-        for plugin_file in plugin_files:
-            plugins_dict[plugin_file.plugin_id]["plugin_files"].append(plugin_file)
 
         drafts_stmt = select(
             models.DraftResource.payload["resource_id"].as_string().cast(Integer)
@@ -348,18 +308,6 @@ class PluginIdService(object):
 
             return None
 
-        latest_plugin_files_stmt = (
-            select(models.PluginFile)
-            .join(models.Resource)
-            .where(
-                models.PluginFile.plugin_id == plugin_id,
-                models.Resource.is_deleted == False,  # noqa: E712
-                models.Resource.latest_snapshot_id
-                == models.PluginFile.resource_snapshot_id,
-            )
-        )
-        plugin_files = list(db.session.scalars(latest_plugin_files_stmt).unique().all())
-
         drafts_stmt = (
             select(models.DraftResource.draft_resource_id)
             .where(
@@ -373,7 +321,7 @@ class PluginIdService(object):
         has_draft = db.session.scalar(drafts_stmt)
 
         return utils.PluginWithFilesDict(
-            plugin=plugin, plugin_files=plugin_files, has_draft=has_draft
+            plugin=plugin, plugin_files=plugin.plugin_files, has_draft=has_draft
         )
 
     def modify(
@@ -434,6 +382,12 @@ class PluginIdService(object):
         )
         db.session.add(new_plugin)
 
+        for plugin_file in plugin_files:
+            plugin_plugin_file = models.PluginPluginFile(
+                plugin=new_plugin, plugin_file=plugin_file
+            )
+            db.session.add(plugin_plugin_file)
+
         if commit:
             db.session.commit()
             log.debug(
@@ -471,10 +425,36 @@ class PluginIdService(object):
             resource=plugin_resource,
         )
         db.session.add(deleted_resource_lock)
-        db.session.commit()
-        log.debug("Plugin deleted", plugin_id=plugin_id)
 
-        return {"status": "Success", "id": [plugin_id]}
+        plugin_file_resources = [
+            child
+            for child in plugin_resource.children
+            if child.resource_type == PLUGIN_FILE_RESOURCE_TYPE
+        ]
+        plugin_file_ids = [
+            plugin_file_resource.resource_id
+            for plugin_file_resource in plugin_file_resources
+        ]
+        for plugin_file_resource in plugin_file_resources:
+            deleted_resource_lock = models.ResourceLock(
+                resource_lock_type=resource_lock_types.DELETE,
+                resource=plugin_file_resource,
+            )
+            db.session.add(deleted_resource_lock)
+
+        db.session.commit()
+
+        log.debug(
+            "Plugin and associated files deleted",
+            plugin_id=plugin_id,
+            plugin_file_ids=plugin_file_ids,
+        )
+
+        return {
+            "status": "Success",
+            "plugin_id": plugin_id,
+            "file_ids": plugin_file_ids,
+        }
 
 
 class PluginIdsService(object):
@@ -746,6 +726,7 @@ class PluginIdFileService(object):
             utils.PluginWithFilesDict,
             self._plugin_id_service.get(plugin_id, error_if_not_found=True),
         )
+        plugin = plugin_dict["plugin"]
 
         # Validate that the proposed filename hasn't already been used in the plugin.
         duplicate = self._plugin_file_name_service.get(
@@ -759,11 +740,17 @@ class PluginIdFileService(object):
                 plugin_id=plugin_id,
             )
 
-        # The owner of the PluginFile resource must match the owner of the Plugin
-        # resource.
-        plugin = plugin_dict["plugin"]
+        # a new plugin file creates a new plugin snapshot
+        new_plugin = models.Plugin(
+            name=plugin.name,
+            description=plugin.description,
+            resource=plugin.resource,
+            creator=current_user,
+        )
+        db.session.add(new_plugin)
+
         resource = models.Resource(
-            resource_type=PLUGIN_FILE_RESOURCE_TYPE, owner=plugin.resource.owner
+            resource_type=PLUGIN_FILE_RESOURCE_TYPE, owner=new_plugin.resource.owner
         )
         new_plugin_file = models.PluginFile(
             filename=filename,
@@ -772,9 +759,11 @@ class PluginIdFileService(object):
             resource=resource,
             creator=current_user,
         )
-
-        new_plugin_file.parents.append(plugin.resource)
+        new_plugin_file.parents.append(new_plugin.resource)
         db.session.add(new_plugin_file)
+
+        new_plugin_files = plugin.plugin_files + [new_plugin_file]
+        _associate_plugin_with_plugin_files(new_plugin, new_plugin_files)
 
         _add_plugin_tasks(tasks, plugin_file=new_plugin_file, log=log)
 
@@ -1132,6 +1121,15 @@ class PluginIdFileIdService(object):
                     plugin_id=plugin_id,
                 )
 
+        # a modification to a plugin file creates a new plugin snapshot
+        new_plugin = models.Plugin(
+            name=plugin.name,
+            description=plugin.description,
+            resource=plugin.resource,
+            creator=current_user,
+        )
+        db.session.add(new_plugin)
+
         updated_plugin_file = models.PluginFile(
             filename=filename,
             contents=contents,
@@ -1140,6 +1138,12 @@ class PluginIdFileIdService(object):
             creator=current_user,
         )
         db.session.add(updated_plugin_file)
+
+        new_plugin_files = {
+            plugin_file.resource_id: plugin_file for plugin_file in plugin.plugin_files
+        }
+        new_plugin_files[updated_plugin_file.resource_id] = updated_plugin_file
+        _associate_plugin_with_plugin_files(new_plugin, list(new_plugin_files.values()))
 
         _add_plugin_tasks(tasks, plugin_file=updated_plugin_file, log=log)
 
@@ -1167,12 +1171,19 @@ class PluginIdFileIdService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        stmt = select(models.Resource).filter_by(
-            resource_id=plugin_id, resource_type=PLUGIN_RESOURCE_TYPE, is_deleted=False
+        plugin_stmt = (
+            select(models.Plugin)
+            .join(models.Resource)
+            .where(
+                models.Plugin.resource_id == plugin_id,
+                models.Resource.is_deleted == False,  # noqa: E712
+                models.Resource.latest_snapshot_id
+                == models.Plugin.resource_snapshot_id,
+            )
         )
+        plugin = db.session.scalar(plugin_stmt)
 
-        plugin_resource = db.session.scalar(stmt)
-        if plugin_resource is None:
+        if plugin is None:
             raise EntityDoesNotExistError(PLUGIN_RESOURCE_TYPE, plugin_id=plugin_id)
 
         plugin_file_stmt = (
@@ -1195,6 +1206,22 @@ class PluginIdFileIdService(object):
                 plugin_file_id=plugin_file_id,
             )
 
+        # a deletion of a plugin file creates a new plugin snapshot
+        new_plugin = models.Plugin(
+            name=plugin.name,
+            description=plugin.description,
+            resource=plugin.resource,
+            creator=current_user,
+        )
+        db.session.add(new_plugin)
+
+        new_plugin_files = [
+            plugin_file
+            for plugin_file in plugin.plugin_files
+            if plugin_file.resource_id != plugin_file_id
+        ]
+        _associate_plugin_with_plugin_files(new_plugin, new_plugin_files)
+
         plugin_file_id_to_return = plugin_file.resource_id  # to return to user
         db.session.add(
             models.ResourceLock(
@@ -1204,11 +1231,7 @@ class PluginIdFileIdService(object):
         )
         db.session.commit()
 
-        log.debug(
-            "Plugin file deleted",
-            plugin_id=plugin_id,
-        )
-
+        log.debug("Plugin file deleted", plugin_id=plugin_id)
         return {"status": "Success", "id": [plugin_file_id_to_return]}
 
 
@@ -1312,6 +1335,16 @@ def _get_referenced_parameter_types(
         )
 
     return {x.resource_id: x for x in parameter_types}
+
+
+def _associate_plugin_with_plugin_files(
+    plugin: models.Plugin, plugin_files: list[models.PluginFile]
+) -> None:
+    for plugin_file in plugin_files:
+        plugin_plugin_file = models.PluginPluginFile(
+            plugin=plugin, plugin_file=plugin_file
+        )
+        db.session.add(plugin_plugin_file)
 
 
 def _add_plugin_tasks(
