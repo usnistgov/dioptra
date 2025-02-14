@@ -72,9 +72,7 @@ class JobFilesDownloadService(object):
 class SignatureAnalysisService(object):
     """The service methods for performing signature analysis on a file."""
 
-    def post(
-        self, fileContents: str, **kwargs
-    ) -> dict[str, List[dict[str, Any]]]:
+    def post(self, fileContents: str, **kwargs) -> dict[str, List[dict[str, Any]]]:
         """Perform signature analysis on a file.
 
         Args:

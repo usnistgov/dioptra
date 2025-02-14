@@ -88,9 +88,7 @@ class WorkflowsCollectionClient(CollectionClient[T]):
             self.url, JOB_FILES_DOWNLOAD, output_path=job_files_path, params=params
         )
 
-    def analyze_plugin_task_signatures(
-        self, fileContents: str
-    ) -> T:
+    def analyze_plugin_task_signatures(self, fileContents: str) -> T:
         """
         Requests signature analysis for the functions in an annotated python file.
 

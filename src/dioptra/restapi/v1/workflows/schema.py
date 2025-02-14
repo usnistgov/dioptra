@@ -51,6 +51,7 @@ class SignatureAnalysisSchema(Schema):
         attribute="file_contents", metadata=dict(description="The contents of the file")
     )
 
+
 class SignatureAnalysisSignatureParamSchema(Schema):
     name = fields.String(
         attribute="name", metadata=dict(description="The name of the parameter")
