@@ -73,7 +73,7 @@ class SignatureAnalysisService(object):
     """The service methods for performing signature analysis on a file."""
 
     def post(
-        self, filename: str, fileContents: str, **kwargs
+        self, fileContents: str, **kwargs
     ) -> dict[str, List[dict[str, Any]]]:
         """Perform signature analysis on a file.
 
@@ -87,14 +87,12 @@ class SignatureAnalysisService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug(
             "Performing signature analysis",
-            filename=filename,
             python_source=fileContents,
         )
 
         signatures = list(
             get_plugin_signatures(
                 python_source=fileContents,
-                filepath=filename,
             )
         )
 

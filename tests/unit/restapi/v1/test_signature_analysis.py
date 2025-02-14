@@ -481,21 +481,16 @@ def assert_signature_analysis_file_load_and_contents(
     filename: str,
 ):
     location = Path("tests/unit/restapi/v1/signature_analysis") / filename
-    file_analysis = dioptra_client.workflows.analyze_plugin_task_signatures(
-        filename=str(location)
-    )
+
     with location.open("r") as f:
         contents = f.read()
+    
     contents_analysis = dioptra_client.workflows.analyze_plugin_task_signatures(
         fileContents=contents,
     )
 
-    assert file_analysis.status_code == HTTPStatus.OK
     assert contents_analysis.status_code == HTTPStatus.OK
 
-    assert_signature_analysis_responses_matches_expectations(
-        file_analysis.json()["plugins"], expected_contents=expected_outputs[filename]
-    )
     assert_signature_analysis_responses_matches_expectations(
         contents_analysis.json()["plugins"],
         expected_contents=expected_outputs[filename],

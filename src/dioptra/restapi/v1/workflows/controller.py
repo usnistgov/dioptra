@@ -113,6 +113,5 @@ class SignatureAnalysisEndpoint(Resource):
         )
         parsed_obj = request.parsed_obj
         return self._signature_analysis_service.post(
-            filename=parsed_obj["filename"],
             fileContents=parsed_obj["file_contents"],
         )

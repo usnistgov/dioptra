@@ -51,13 +51,6 @@ class SignatureAnalysisSchema(Schema):
         attribute="file_contents", metadata=dict(description="The contents of the file")
     )
 
-    filename = fields.String(
-        attribute="filename",
-        metadata=dict(description="The name of the file"),
-        default=STRING_DEFAULT,
-    )
-
-
 class SignatureAnalysisSignatureParamSchema(Schema):
     name = fields.String(
         attribute="name", metadata=dict(description="The name of the parameter")

@@ -89,7 +89,7 @@ class WorkflowsCollectionClient(CollectionClient[T]):
         )
 
     def analyze_plugin_task_signatures(
-        self, filename: str = "<string>", fileContents: str | None = None
+        self, fileContents: str
     ) -> T:
         """
         Requests signature analysis for the functions in an annotated python file.
@@ -103,12 +103,8 @@ class WorkflowsCollectionClient(CollectionClient[T]):
 
         """
 
-        if fileContents is None:
-            with open(filename, "r+") as f:
-                fileContents = f.read()
-
         return self._session.post(
             self.url,
             SIGNATURE_ANALYSIS,
-            json_={"filename": filename, "fileContents": fileContents},
+            json_={"fileContents": fileContents},
         )
