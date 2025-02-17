@@ -22,6 +22,7 @@ from .base import CollectionClient, IllegalArgumentError
 T = TypeVar("T")
 
 JOB_FILES_DOWNLOAD: Final[str] = "jobFilesDownload"
+SIGNATURE_ANALYSIS: Final[str] = "pluginTaskSignatureAnalysis"
 
 
 class WorkflowsCollectionClient(CollectionClient[T]):
@@ -85,4 +86,23 @@ class WorkflowsCollectionClient(CollectionClient[T]):
 
         return self._session.download(
             self.url, JOB_FILES_DOWNLOAD, output_path=job_files_path, params=params
+        )
+
+    def analyze_plugin_task_signatures(self, python_code: str) -> T:
+        """
+        Requests signature analysis for the functions in an annotated python file.
+
+        Args:
+            python_code: The contents of the python file.
+            filename: The name of the file.
+
+        Returns:
+            The response from the Dioptra API.
+
+        """
+
+        return self._session.post(
+            self.url,
+            SIGNATURE_ANALYSIS,
+            json_={"pythonCode": python_code},
         )

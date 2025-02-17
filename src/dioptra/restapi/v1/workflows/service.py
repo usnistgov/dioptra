@@ -15,10 +15,12 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform workflows endpoint operations."""
-from typing import IO, Final
+from typing import IO, Any, Final
 
 import structlog
 from structlog.stdlib import BoundLogger
+
+from dioptra.restapi.v1.shared.signature_analysis import get_plugin_signatures
 
 from .lib import views
 from .lib.package_job_files import package_job_files
@@ -65,3 +67,51 @@ class JobFilesDownloadService(object):
             file_type=file_type,
             logger=log,
         )
+
+
+class SignatureAnalysisService(object):
+    """The service methods for performing signature analysis on a file."""
+
+    def post(self, python_code: str, **kwargs) -> dict[str, list[dict[str, Any]]]:
+        """Perform signature analysis on a file.
+
+        Args:
+            filename: The name of the file.
+            python_code: The contents of the file.
+
+        Returns:
+            A dictionary containing the signature analysis.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.debug(
+            "Performing signature analysis",
+            python_source=python_code,
+        )
+        endpoint_analyses = [
+            _create_endpoint_analysis_dict(signature)
+            for signature in get_plugin_signatures(python_source=python_code)
+        ]
+        return {"tasks": endpoint_analyses}
+
+
+def _create_endpoint_analysis_dict(
+    signature: dict[str, Any],
+) -> dict[str, Any]:
+    """Create an endpoint analysis dictionary from a signature analysis.
+    Args:
+        signature: The signature analysis.
+    Returns:
+        The endpoint analysis dictionary.
+    """
+    return {
+        "name": signature["name"],
+        "inputs": signature["inputs"],
+        "outputs": signature["outputs"],
+        "missing_types": [
+            {
+                "description": suggested_type["type_annotation"],
+                "name": suggested_type["suggestion"],
+            }
+            for suggested_type in signature["suggested_types"]
+        ],
+    }

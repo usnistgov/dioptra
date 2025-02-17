@@ -19,14 +19,19 @@ import uuid
 
 import structlog
 from flask import request, send_file
-from flask_accepts import accepts
+from flask_accepts import accepts, responds
 from flask_login import login_required
 from flask_restx import Namespace, Resource
 from injector import inject
 from structlog.stdlib import BoundLogger
 
-from .schema import FileTypes, JobFilesDownloadQueryParametersSchema
-from .service import JobFilesDownloadService
+from .schema import (
+    FileTypes,
+    JobFilesDownloadQueryParametersSchema,
+    SignatureAnalysisOutputSchema,
+    SignatureAnalysisSchema,
+)
+from .service import JobFilesDownloadService, SignatureAnalysisService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -77,4 +82,36 @@ class JobFilesDownloadEndpoint(Resource):
             as_attachment=True,
             mimetype=mimetype[parsed_query_params["file_type"]],
             download_name=download_name[parsed_query_params["file_type"]],
+        )
+
+
+@api.route("/pluginTaskSignatureAnalysis")
+class SignatureAnalysisEndpoint(Resource):
+    @inject
+    def __init__(
+        self, signature_analysis_service: SignatureAnalysisService, *args, **kwargs
+    ) -> None:
+        """Initialize the workflow resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            signature_analysis_service: A SignatureAnalysisService object.
+        """
+        self._signature_analysis_service = signature_analysis_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    @accepts(schema=SignatureAnalysisSchema, api=api)
+    @responds(schema=SignatureAnalysisOutputSchema, api=api)
+    def post(self):
+        """Download a compressed file archive containing the files needed to execute a submitted job."""  # noqa: B950
+        log = LOGGER.new(  # noqa: F841
+            request_id=str(uuid.uuid4()),
+            resource="SignatureAnalysis",
+            request_type="POST",
+        )
+        parsed_obj = request.parsed_obj
+        return self._signature_analysis_service.post(
+            python_code=parsed_obj["python_code"],
         )

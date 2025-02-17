@@ -41,3 +41,84 @@ class JobFilesDownloadQueryParametersSchema(Schema):
         by_value=True,
         default=FileTypes.TAR_GZ.value,
     )
+
+
+class SignatureAnalysisSchema(Schema):
+
+    pythonCode = fields.String(
+        attribute="python_code",
+        metadata=dict(description="The contents of the python file"),
+    )
+
+
+class SignatureAnalysisSignatureParamSchema(Schema):
+    name = fields.String(
+        attribute="name", metadata=dict(description="The name of the parameter")
+    )
+    type = fields.String(
+        attribute="type", metadata=dict(description="The type of the parameter")
+    )
+
+
+class SignatureAnalysisSignatureInputSchema(SignatureAnalysisSignatureParamSchema):
+    required = fields.Boolean(
+        attribute="required",
+        metadata=dict(description="Whether this is a required parameter"),
+    )
+
+
+class SignatureAnalysisSignatureOutputSchema(SignatureAnalysisSignatureParamSchema):
+    pass
+
+
+class SignatureAnalysisSuggestedTypes(Schema):
+
+    # add proposed_type in next iteration
+
+    name = fields.String(
+        attribute="name",
+        metadata=dict(description="A suggestion for the name of the type"),
+    )
+
+    description = fields.String(
+        attribute="description",
+        metadata=dict(
+            description="The annotation the suggestion is attempting to represent"
+        ),
+    )
+
+
+class SignatureAnalysisSignatureSchema(Schema):
+    name = fields.String(
+        attribute="name", metadata=dict(description="The name of the function")
+    )
+    inputs = fields.Nested(
+        SignatureAnalysisSignatureInputSchema,
+        metadata=dict(description="A list of objects describing the input parameters."),
+        many=True,
+    )
+    outputs = fields.Nested(
+        SignatureAnalysisSignatureOutputSchema,
+        metadata=dict(
+            description="A list of objects describing the output parameters."
+        ),
+        many=True,
+    )
+    missing_types = fields.Nested(
+        SignatureAnalysisSuggestedTypes,
+        metadata=dict(
+            description="A list of missing types for non-primitives defined by the file"
+        ),
+        many=True,
+    )
+
+
+class SignatureAnalysisOutputSchema(Schema):
+    tasks = fields.Nested(
+        SignatureAnalysisSignatureSchema,
+        metadata=dict(
+            description="A list of signature analyses for the plugin tasks "
+            "provided in the input file"
+        ),
+        many=True,
+    )
