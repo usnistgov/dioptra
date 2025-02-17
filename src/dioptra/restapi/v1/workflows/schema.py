@@ -46,7 +46,8 @@ class JobFilesDownloadQueryParametersSchema(Schema):
 class SignatureAnalysisSchema(Schema):
 
     pythonCode = fields.String(
-        attribute="python_code", metadata=dict(description="The contents of the python file")
+        attribute="python_code",
+        metadata=dict(description="The contents of the python file"),
     )
 
 
@@ -68,6 +69,7 @@ class SignatureAnalysisSignatureInputSchema(SignatureAnalysisSignatureParamSchem
 
 class SignatureAnalysisSignatureOutputSchema(SignatureAnalysisSignatureParamSchema):
     pass
+
 
 class SignatureAnalysisSuggestedTypes(Schema):
 
