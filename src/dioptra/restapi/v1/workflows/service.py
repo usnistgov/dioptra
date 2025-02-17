@@ -87,43 +87,31 @@ class SignatureAnalysisService(object):
             "Performing signature analysis",
             python_source=python_code,
         )
+        endpoint_analyses = [
+            _create_endpoint_analysis_dict(signature)
+            for signature in get_plugin_signatures(python_source=python_code)
+        ]
+        return {"tasks": endpoint_analyses}
 
-        signatures = list(
-            get_plugin_signatures(
-                python_source=python_code,
-            )
-        )
 
-        endpoint_analyses = []
-        for signature in signatures:
-            function_name = signature["name"]
-            function_inputs = signature["inputs"]
-            function_outputs = signature["outputs"]
-            inferences = signature["suggested_types"]
-            endpoint_analysis = {}
-
-            endpoint_analysis["name"] = function_name
-            endpoint_analysis["inputs"] = function_inputs
-            endpoint_analysis["outputs"] = function_outputs
-
-            # Compute the suggestions for the unknown types
-
-            missing_types = []
-
-            for inference in inferences:
-                suggested_type = inference[
-                    "suggestion"
-                ]  # replace this with resource id's for suggestions
-                original_annotation = inference[
-                    "type_annotation"
-                ]  # do a database lookup with this
-                missing_types += [
-                    {
-                        "description": original_annotation,
-                        "name": suggested_type,
-                    }
-                ]
-
-            endpoint_analysis["missing_types"] = missing_types
-            endpoint_analyses += [endpoint_analysis]
-        return {"plugins": endpoint_analyses}
+def _create_endpoint_analysis_dict(
+    signature: dict[str, Any],
+) -> dict[str, Any]:
+    """Create an endpoint analysis dictionary from a signature analysis.
+    Args:
+        signature: The signature analysis.
+    Returns:
+        The endpoint analysis dictionary.
+    """
+    return {
+        "name": signature["name"],
+        "inputs": signature["inputs"],
+        "outputs": signature["outputs"],
+        "missing_types": [
+            {
+                "description": suggested_type["type_annotation"],
+                "name": suggested_type["suggestion"],
+            }
+            for suggested_type in signature["suggested_types"]
+        ],
+    }

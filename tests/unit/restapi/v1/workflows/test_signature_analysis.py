@@ -491,8 +491,10 @@ def assert_signature_analysis_file_load_and_contents(
 
     assert contents_analysis.status_code == HTTPStatus.OK
 
+
+    print(contents_analysis.json())
     assert_signature_analysis_responses_matches_expectations(
-        contents_analysis.json()["plugins"],
+        contents_analysis.json()["tasks"],
         expected_contents=expected_outputs[filename],
     )
 

@@ -114,10 +114,11 @@ class SignatureAnalysisSignatureSchema(Schema):
 
 
 class SignatureAnalysisOutputSchema(Schema):
-    plugins = fields.Nested(
+    tasks = fields.Nested(
         SignatureAnalysisSignatureSchema,
         metadata=dict(
-            description="A list of signature analyses for the plugins in the input file"
+            description="A list of signature analyses for the plugin tasks "
+            "provided in the input file"
         ),
         many=True,
     )
