@@ -480,13 +480,13 @@ def assert_signature_analysis_file_load_and_contents(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     filename: str,
 ):
-    location = Path("tests/unit/restapi/v1/signature_analysis") / filename
+    location = Path("tests/unit/restapi/v1/workflows/signature_analysis") / filename
 
     with location.open("r") as f:
         contents = f.read()
     
     contents_analysis = dioptra_client.workflows.analyze_plugin_task_signatures(
-        fileContents=contents,
+        python_code=contents,
     )
 
     assert contents_analysis.status_code == HTTPStatus.OK

@@ -19,8 +19,6 @@ from enum import Enum
 
 from marshmallow import Schema, fields
 
-STRING_DEFAULT = "<string>"
-
 
 class FileTypes(Enum):
     TAR_GZ = "tar_gz"
@@ -47,8 +45,8 @@ class JobFilesDownloadQueryParametersSchema(Schema):
 
 class SignatureAnalysisSchema(Schema):
 
-    fileContents = fields.String(
-        attribute="file_contents", metadata=dict(description="The contents of the file")
+    pythonCode = fields.String(
+        attribute="python_code", metadata=dict(description="The contents of the python file")
     )
 
 
@@ -69,8 +67,7 @@ class SignatureAnalysisSignatureInputSchema(SignatureAnalysisSignatureParamSchem
 
 
 class SignatureAnalysisSignatureOutputSchema(SignatureAnalysisSignatureParamSchema):
-    """No additional fields."""
-
+    pass
 
 class SignatureAnalysisSuggestedTypes(Schema):
 

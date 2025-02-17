@@ -22,7 +22,7 @@ from .base import CollectionClient, IllegalArgumentError
 T = TypeVar("T")
 
 JOB_FILES_DOWNLOAD: Final[str] = "jobFilesDownload"
-SIGNATURE_ANALYSIS: Final[str] = "taskPluginSignatureAnalysis"
+SIGNATURE_ANALYSIS: Final[str] = "pluginTaskSignatureAnalysis"
 
 
 class WorkflowsCollectionClient(CollectionClient[T]):
@@ -88,12 +88,12 @@ class WorkflowsCollectionClient(CollectionClient[T]):
             self.url, JOB_FILES_DOWNLOAD, output_path=job_files_path, params=params
         )
 
-    def analyze_plugin_task_signatures(self, fileContents: str) -> T:
+    def analyze_plugin_task_signatures(self, python_code: str) -> T:
         """
         Requests signature analysis for the functions in an annotated python file.
 
         Args:
-            fileContents: The contents of the python file.
+            python_code: The contents of the python file.
             filename: The name of the file.
 
         Returns:
@@ -104,5 +104,5 @@ class WorkflowsCollectionClient(CollectionClient[T]):
         return self._session.post(
             self.url,
             SIGNATURE_ANALYSIS,
-            json_={"fileContents": fileContents},
+            json_={"pythonCode": python_code},
         )

@@ -20,7 +20,7 @@ from typing import IO, Any, Final, List
 import structlog
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.v1.lib.signature_analysis import get_plugin_signatures
+from dioptra.restapi.v1.shared.signature_analysis import get_plugin_signatures
 
 from .lib import views
 from .lib.package_job_files import package_job_files
@@ -72,12 +72,12 @@ class JobFilesDownloadService(object):
 class SignatureAnalysisService(object):
     """The service methods for performing signature analysis on a file."""
 
-    def post(self, fileContents: str, **kwargs) -> dict[str, List[dict[str, Any]]]:
+    def post(self, python_code: str, **kwargs) -> dict[str, List[dict[str, Any]]]:
         """Perform signature analysis on a file.
 
         Args:
             filename: The name of the file.
-            file_contents: The contents of the file.
+            python_code: The contents of the file.
 
         Returns:
             A dictionary containing the signature analysis.
@@ -85,12 +85,12 @@ class SignatureAnalysisService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug(
             "Performing signature analysis",
-            python_source=fileContents,
+            python_source=python_code,
         )
 
         signatures = list(
             get_plugin_signatures(
-                python_source=fileContents,
+                python_source=python_code,
             )
         )
 

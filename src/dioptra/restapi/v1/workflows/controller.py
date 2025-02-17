@@ -85,7 +85,7 @@ class JobFilesDownloadEndpoint(Resource):
         )
 
 
-@api.route("/taskPluginSignatureAnalysis")
+@api.route("/pluginTaskSignatureAnalysis")
 class SignatureAnalysisEndpoint(Resource):
     @inject
     def __init__(
@@ -113,5 +113,5 @@ class SignatureAnalysisEndpoint(Resource):
         )
         parsed_obj = request.parsed_obj
         return self._signature_analysis_service.post(
-            fileContents=parsed_obj["file_contents"],
+            python_code=parsed_obj["python_code"],
         )
