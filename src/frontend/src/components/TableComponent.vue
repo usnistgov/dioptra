@@ -30,7 +30,7 @@
       <q-tr 
         :class="`${getSelectedColor(props.selected)} cursor-pointer` " 
         :props="props"
-        @click="openResource(props)"
+        @click="selectResource(props)"
         style="padding-left: 50px;"
       >
         <q-td v-for="col in props.cols" :key="col.name" :props="props">
@@ -80,14 +80,30 @@
               <!-- if value is an array, then render it with a custom slot -->
               {{ col.value }}
             </div>
+            <q-btn
+              v-if="col.name === 'open'"
+              round
+              color="primary"
+              icon="edit"
+              size="sm"
+              @click.stop="openResource(props)"
+            />
+            <q-btn
+              v-if="col.name === 'delete'"
+              round
+              color="negative"
+              icon="sym_o_delete"
+              size="sm"
+              @click.stop="deleteResource(props)"
+            />
+            <q-btn 
+              v-if="col.name === 'expand'" 
+              size="md" flat dense round  
+              @click="props.expand = !props.expand" 
+              :icon="props.expand ? 'expand_less' : 'expand_more'" 
+              @click.stop="emitExpand(props.expand, props.row)"
+            />
           </slot>
-          <q-btn 
-            v-if="col.name === 'expand'" 
-            size="lg" flat dense round  
-            @click="props.expand = !props.expand" 
-            :icon="props.expand ? 'expand_less' : 'expand_more'" 
-            @click.stop="emitExpand(props.expand, props.row)"
-          />
         </q-td>
       </q-tr>
       <q-tr v-show="props.expand" :props="props">
@@ -154,6 +170,8 @@
   showToggleDraft: Boolean,
   hideSearch: Boolean,
   disableSelect: Boolean,
+  disableOpen: Boolean,
+  disableDelete: Boolean,
   rightCaption: String,
   showAll: Boolean,
   rowKey: {
@@ -172,8 +190,14 @@
 
   const finalColumns = computed(() => {
     let defaultColumns = [ ...props.columns ]
+    if(!props.disableOpen) {
+      defaultColumns.push({ name: 'open', align: 'center', sortable: false, label: 'Open', headerStyle: 'width: 50px' })
+    }
+    if(!props.disableDelete) {
+      defaultColumns.push({ name: 'delete', align: 'center', sortable: false, label: 'Delete', headerStyle: 'width: 50px' })
+    }
     if(props.showExpand) {
-      defaultColumns.push({ name: 'expand', align: 'center', sortable: false, label: 'Expand' })
+      defaultColumns.push({ name: 'expand', align: 'center', sortable: false, label: 'Expand', headerStyle: 'width: 50px' })
     }
     if(showDrafts.value) {
       defaultColumns = defaultColumns.map(column => ({
@@ -198,10 +222,20 @@
   //const showDrafts = ref(false)
   const showDrafts = defineModel('showDrafts')
 
-  function openResource(tableProps) {
+  function selectResource(props) {
+    props.selected = true
+  }
+
+  function openResource(props) {
+    props.selected = true
     if(props.disableSelect) return
-    tableProps.selected = true
     emit('edit')
+  }
+
+  function deleteResource(props) {
+    props.selected = true
+    if(props.disableSelect) return
+    emit('delete')
   }
 
   watch(() => props.rows, (newVal) => {

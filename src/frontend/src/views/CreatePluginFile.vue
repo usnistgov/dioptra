@@ -70,6 +70,8 @@
         :hideCreateBtn="true"
         :hideSearch="true"
         :disableSelect="true"
+        :disable-open="true"
+        :disable-delete="true"
         rightCaption="*Click param to edit, or X to delete"
       >
         <template #body-cell-name="props">
@@ -286,6 +288,8 @@
           :hideCreateBtn="true"
           :disableSelect="true"
           style="margin-top: 0"
+          :disable-open="true"
+          :disable-delete="true"
         >
           <template #body-cell-view="props">
             <q-btn

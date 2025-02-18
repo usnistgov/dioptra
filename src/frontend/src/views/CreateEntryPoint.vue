@@ -87,6 +87,8 @@
           :hideSearch="true"
           :disableSelect="true"
           :hideCreateBtn=true
+          :disableOpen="true"
+          :disableDelete="true"
         >
           <template #body-cell-actions="props">
             <q-btn 
@@ -255,6 +257,8 @@
         :hideToggleDraft="true"
         :hideSearch="true"
         :disableSelect="true"
+        :disableOpen="true"
+        :disableDelete="true"
         :hideCreateBtn=true
       >
         <template #body-cell-inputParams="props">

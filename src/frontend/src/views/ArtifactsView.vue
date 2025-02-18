@@ -10,6 +10,7 @@
     @request="getArtifacts"
     ref="tableRef"
     :hideCreateBtn="true"
+    :disable-delete="true"
   >
     <template #body-cell-group="props">
       <div>{{ props.row.group.name }}</div>
@@ -28,7 +29,7 @@
     v-model="showDeleteDialog"
     @submit="deleteModel"
     type="Model"
-    :name="selected.length ? selected[0].name : ''"
+    :name="selected.length ? selected[0].description : ''"
   />
   <AssignTagsDialog 
     v-model="showTagsDialog"
@@ -97,7 +98,7 @@ async function addArtifact(name, group, description) {
 async function deleteModel() {
   try {
     await api.deleteItem('models', selected.value[0].id)
-    notify.success(`Successfully deleted '${selected.value[0].name}'`)
+    notify.success(`Successfully deleted '${selected.value[0].description}'`)
     showDeleteDialog.value = false
     selected.value = []
     tableRef.value.refreshTable()

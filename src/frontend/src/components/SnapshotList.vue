@@ -13,6 +13,8 @@
       maxHeight: props.maxHeight ? props.maxHeight + 'px' : '',
       height: props.maxHeight ? '' : 'calc(100vh - 50px)'
     }"
+    :disableOpen="true"
+    :disable-delete="true"
   >
     <template #body-cell-timestamp="props">
       {{

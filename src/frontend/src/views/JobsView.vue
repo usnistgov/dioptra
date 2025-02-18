@@ -11,23 +11,13 @@
     :showExpand="true"
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
     @create="router.push(`/experiments/${route.params.id}/jobs/new`)"
+    :disableOpen="true"
   >
     <template #body-cell-entrypoint="props">
       {{ props.row.entrypoint.name }}
     </template>
     <template #body-cell-queue="props">
       {{ props.row.queue.name }}
-    </template>
-    <template #body-cell-delete="props">
-      <q-btn
-        round
-        color="negative"
-        icon="sym_o_delete"
-        size="sm"
-        @click.stop="showDeleteDialog = true; objectForDeletion = props.row; console.log(objectForDeletion)"
-      >
-
-      </q-btn>
     </template>
     <template #expandedSlot="{ row }">
       <q-btn
@@ -51,7 +41,7 @@
     v-model="showDeleteDialog"
     @submit="deleteJob"
     type="Job"
-    :name="objectForDeletion?.description"
+    :name="selected.length ? selected[0].description : ''"
   />
 
   <ArtifactsDialog 
@@ -92,7 +82,6 @@
     { name: 'queue', label: 'Queue', align: 'left', field: 'queue', sortable: false, },
     { name: 'status', label: 'Status', align: 'left', field: 'status', sortable: true },
     { name: 'tags', label: 'Tags', align: 'left', field: 'tags', sortable: false, },
-    { name: 'delete', label: 'Delete', align: 'left', field: 'tags', sortable: false, },
   ]
 
   const artifactColumns = [
@@ -138,17 +127,14 @@
 
   async function deleteJob() {
     try {
-      await api.deleteItem('jobs', objectForDeletion.value.id)
-      notify.success(`Successfully deleted '${objectForDeletion.value.description}'`)
+      await api.deleteItem('jobs', selected.value[0].id)
+      notify.success(`Successfully deleted '${selected.value[0].description}'`)
       showDeleteDialog.value = false
-      objectForDeletion.value = {}
       selected.value = []
       tableRef.value.refreshTable()
     } catch(err) {
       notify.error(err.response.data.message);
     }
   }
-
-  const objectForDeletion = ref()
 
 </script>

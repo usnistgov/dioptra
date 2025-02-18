@@ -11,6 +11,7 @@
     ref="tableRef"
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
     @create="router.push('/jobs/new')"
+    :disableOpen="true"
   >
     <template #body-cell-experiment="props">
       {{ props.row.experiment.name }}

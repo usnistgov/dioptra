@@ -30,26 +30,6 @@
         {{ entrypoint.name }}
       </q-chip>
     </template>
-    <template #body-cell-edit="props">
-      <q-btn
-        round
-        color="primary"
-        icon="edit"
-        size="sm"
-      >
-
-      </q-btn>
-    </template>
-    <template #body-cell-delete="props">
-      <q-btn
-        round
-        color="negative"
-        icon="sym_o_delete"
-        size="sm"
-      >
-
-      </q-btn>
-    </template>
   </TableComponent>
 
   <DeleteDialog 
@@ -90,8 +70,6 @@
     { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true },
     { name: 'entrypoints', label: 'Entry Points', align: 'left', field: 'entrypoints', sortable: false },
     { name: 'tags', label: 'Tags', align: 'left', sortable: false },
-    { name: 'edit', label: 'Edit', align: 'left', sortable: false, headerStyle: 'width: 50px' },
-    { name: 'delete', label: 'Delete', align: 'left', sortable: false, headerStyle: 'width: 50px' },
   ]
 
   const selected = ref([])

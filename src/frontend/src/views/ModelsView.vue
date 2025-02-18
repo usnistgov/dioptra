@@ -27,6 +27,7 @@
         :title="`${row.name} Versions`"
         :disableSelect="true"
         :hideCreateBtn="true"
+        :disableOpen="true"
       >
         <template #body-cell-createdOn="props">
           <div>{{ formatDate(props.row.createdOn) }}</div>
