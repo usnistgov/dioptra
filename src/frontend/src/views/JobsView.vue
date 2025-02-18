@@ -11,7 +11,7 @@
     :showExpand="true"
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
     @create="router.push(`/experiments/${route.params.id}/jobs/new`)"
-    :disableOpen="true"
+    :hideOpenBtn="true"
   >
     <template #body-cell-entrypoint="props">
       {{ props.row.entrypoint.name }}

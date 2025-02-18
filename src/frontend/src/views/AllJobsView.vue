@@ -5,13 +5,12 @@
     :columns="columns"
     title="Jobs"
     v-model:selected="selected"
-    @edit="router.push(`/experiments/${selected[0].id}`)"
     @delete="showDeleteDialog = true"
     @request="getJobs"
     ref="tableRef"
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
     @create="router.push('/jobs/new')"
-    :disableOpen="true"
+    :hideOpenBtn="true"
   >
     <template #body-cell-experiment="props">
       {{ props.row.experiment.name }}

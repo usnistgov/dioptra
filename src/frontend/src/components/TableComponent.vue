@@ -30,7 +30,7 @@
       <q-tr 
         :class="`${getSelectedColor(props.selected)} cursor-pointer` " 
         :props="props"
-        @click="selectResource(props)"
+        @click="openResource(props)"
         style="padding-left: 50px;"
       >
         <q-td v-for="col in props.cols" :key="col.name" :props="props">
@@ -80,14 +80,14 @@
               <!-- if value is an array, then render it with a custom slot -->
               {{ col.value }}
             </div>
-            <q-btn
+            <!-- <q-btn
               v-if="col.name === 'open'"
               round
               color="primary"
               icon="edit"
               size="sm"
               @click.stop="openResource(props)"
-            />
+            /> -->
             <q-btn
               v-if="col.name === 'delete'"
               round
@@ -171,8 +171,8 @@
   hideSearch: Boolean,
   disableSelect: Boolean,
   disableUnselect: Boolean,
-  disableOpen: Boolean,
-  disableDelete: Boolean,
+  hideOpenBtn: Boolean,
+  hideDeleteBtn: Boolean,
   rightCaption: String,
   showAll: Boolean,
   rowKey: {
@@ -191,10 +191,10 @@
 
   const finalColumns = computed(() => {
     let defaultColumns = [ ...props.columns ]
-    if(!props.disableOpen) {
-      defaultColumns.push({ name: 'open', align: 'center', sortable: false, label: 'Open', headerStyle: 'width: 50px' })
-    }
-    if(!props.disableDelete) {
+    // if(!props.hideOpenBtn) {
+    //   defaultColumns.push({ name: 'open', align: 'center', sortable: false, label: 'Open', headerStyle: 'width: 50px' })
+    // }
+    if(!props.hideDeleteBtn) {
       defaultColumns.push({ name: 'delete', align: 'center', sortable: false, label: 'Delete', headerStyle: 'width: 50px' })
     }
     if(props.showExpand) {
@@ -230,8 +230,8 @@
   }
 
   function openResource(tableProps) {
-    tableProps.selected = true
     if(props.disableSelect) return
+    tableProps.selected = true
     emit('edit')
   }
 

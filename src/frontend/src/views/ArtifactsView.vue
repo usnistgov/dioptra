@@ -10,7 +10,7 @@
     @request="getArtifacts"
     ref="tableRef"
     :hideCreateBtn="true"
-    :disable-delete="true"
+    :hideDeleteBtn="true"
   >
     <template #body-cell-group="props">
       <div>{{ props.row.group.name }}</div>
