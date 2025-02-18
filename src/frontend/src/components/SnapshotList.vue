@@ -15,6 +15,7 @@
     }"
     :disableOpen="true"
     :disable-delete="true"
+    :disableUnselect="true"
   >
     <template #body-cell-timestamp="props">
       {{

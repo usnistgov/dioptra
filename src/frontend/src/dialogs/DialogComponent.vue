@@ -1,6 +1,6 @@
 <template>
   <q-dialog v-model="showDialog" aria-labelledby="modalTitle" :persistent="persistent">
-    <q-card flat :style="{ 'min-width': isMedium ? '50%' : '30%' }">
+    <q-card flat :style="{ 'min-width': isMobile ? '90%' : (isMedium ? '50%' : '30%') }">
       <q-form @submit="$emit('emitSubmit')">
         <q-card-section class="bg-primary text-white q-mb-md">
           <div class="text-h6 row justify-between">
@@ -45,5 +45,6 @@
   const history = defineModel('history')
 
   const isMedium = inject('isMedium')
+  const isMobile = inject('isMobile')
 
 </script>

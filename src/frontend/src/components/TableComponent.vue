@@ -170,6 +170,7 @@
   showToggleDraft: Boolean,
   hideSearch: Boolean,
   disableSelect: Boolean,
+  disableUnselect: Boolean,
   disableOpen: Boolean,
   disableDelete: Boolean,
   rightCaption: String,
@@ -222,18 +223,20 @@
   //const showDrafts = ref(false)
   const showDrafts = defineModel('showDrafts')
 
-  function selectResource(props) {
-    props.selected = true
+  function selectResource(tableProps) {
+    if(props.disableSelect) return
+    if(props.disableUnselect) tableProps.selected = true
+    else tableProps.selected = !tableProps.selected
   }
 
-  function openResource(props) {
-    props.selected = true
+  function openResource(tableProps) {
+    tableProps.selected = true
     if(props.disableSelect) return
     emit('edit')
   }
 
-  function deleteResource(props) {
-    props.selected = true
+  function deleteResource(tableProps) {
+    tableProps.selected = true
     if(props.disableSelect) return
     emit('delete')
   }
