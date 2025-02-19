@@ -816,6 +816,7 @@ def test_manage_existing_experiment_draft(
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_experiments: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
 ) -> None:
     """Test that a draft of an existing experiment can be created and managed by the
         user
@@ -840,8 +841,19 @@ def test_manage_existing_experiment_draft(
     description = "description"
 
     # test creation
-    draft = {"name": name, "description": description, "entrypoints": [1]}
-    draft_mod = {"name": new_name, "description": description, "entrypoints": [3, 2]}
+    draft = {
+        "name": name,
+        "description": description,
+        "entrypoints": [registered_entrypoints["entrypoint1"]["id"]],
+    }
+    draft_mod = {
+        "name": new_name,
+        "description": description,
+        "entrypoints": [
+            registered_entrypoints["entrypoint3"]["id"],
+            registered_entrypoints["entrypoint2"]["id"],
+        ],
+    }
 
     # Expected responses
     draft_expected = {
@@ -863,7 +875,9 @@ def test_manage_existing_experiment_draft(
 
     # Run routine: existing resource drafts tests
     routines.run_existing_resource_drafts_tests(
+        dioptra_client.experiments,
         dioptra_client.experiments.modify_resource_drafts,
+        dioptra_client.workflows,
         experiment["id"],
         draft=draft,
         draft_mod=draft_mod,
@@ -876,6 +890,7 @@ def test_manage_new_experiment_drafts(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
 ) -> None:
     """Test that drafts of experiment can be created and managed by the user
 
@@ -895,9 +910,16 @@ def test_manage_new_experiment_drafts(
         "draft1": {
             "name": "experiment1",
             "description": "my experiment",
-            "entrypoints": [3],
+            "entrypoints": [registered_entrypoints["entrypoint3"]["id"]],
         },
-        "draft2": {"name": "experiment2", "description": None, "entrypoints": [3, 4]},
+        "draft2": {
+            "name": "experiment2",
+            "description": None,
+            "entrypoints": [
+                registered_entrypoints["entrypoint2"]["id"],
+                registered_entrypoints["entrypoint1"]["id"],
+            ],
+        },
     }
     draft1_mod = {"name": "draft1", "description": "new description", "entrypoints": []}
 
@@ -920,7 +942,9 @@ def test_manage_new_experiment_drafts(
 
     # Run routine: existing resource drafts tests
     routines.run_new_resource_drafts_tests(
+        dioptra_client.experiments,
         dioptra_client.experiments.new_resource_drafts,
+        dioptra_client.workflows,
         drafts=drafts,
         draft1_mod=draft1_mod,
         draft1_expected=draft1_expected,
