@@ -1,12 +1,5 @@
 # Dioptra Examples and Demos
 
-> [!CAUTION]
-> **DEPRECATED**
->
-> All folders with the prefix `DEPRECATED-` are examples that are obsolete and will not
-> work with the v1.0.0 release of Dioptra. They are retained for reference only. Some
-> may be ported to work with v1.0.0 in the future.
-
 <!-- markdownlint-disable MD007 MD030 -->
 - [Creating a virtual environment](#creating-a-virtual-environment)
 - [Downloading Datasets](#downloading-datasets)
