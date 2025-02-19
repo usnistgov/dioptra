@@ -22,6 +22,7 @@ from typing import Any, Final, cast
 import structlog
 from flask_login import current_user
 from injector import inject
+from mlflow.exceptions import MlflowException
 from sqlalchemy import Integer, func, select
 from sqlalchemy.orm import aliased
 from structlog.stdlib import BoundLogger
@@ -31,6 +32,7 @@ from dioptra.restapi.errors import (
     BackendDatabaseError,
     EntityDoesNotExistError,
     EntityExistsError,
+    MLFlowError,
     SortParameterValidationError,
 )
 from dioptra.restapi.v1 import utils
@@ -82,7 +84,6 @@ class ModelService(object):
         name: str,
         description: str,
         group_id: int,
-        commit: bool = True,
         **kwargs,
     ) -> utils.ModelWithVersionDict:
         """Create a new model.
@@ -92,7 +93,6 @@ class ModelService(object):
                 unique.
             description: The description of the model.
             group_id: The group that will own the model.
-            commit: If True, commit the transaction. Defaults to True.
 
         Returns:
             The newly created model object.
@@ -100,6 +100,8 @@ class ModelService(object):
         Raises:
             EntityExistsError: If a model with the given name already exists.
         """
+        from mlflow.tracking import MlflowClient
+
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         duplicate = self._model_name_service.get(name, group_id=group_id, log=log)
@@ -118,16 +120,22 @@ class ModelService(object):
             resource=resource,
             creator=current_user,
         )
-
         db.session.add(ml_model)
 
-        if commit:
-            db.session.commit()
-            log.debug(
-                "Model registration successful",
-                model_id=ml_model.resource_id,
-                name=ml_model.name,
-            )
+        db.session.flush()
+
+        try:
+            client = MlflowClient()
+            client.create_registered_model(f"resource_{ml_model.resource_id:09d}")
+        except MlflowException as e:
+            raise MLFlowError(e.message) from e
+
+        db.session.commit()
+        log.debug(
+            "Model registration successful",
+            model_id=ml_model.resource_id,
+            name=ml_model.name,
+        )
 
         return utils.ModelWithVersionDict(
             ml_model=ml_model, version=None, has_draft=False
