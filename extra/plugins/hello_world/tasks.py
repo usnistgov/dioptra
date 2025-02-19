@@ -14,16 +14,28 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from . import views
-from .clone_git_repository import clone_git_repository
-from .export_plugin_files import export_plugin_files
-from .export_task_engine_yaml import export_task_engine_yaml
-from .package_job_files import package_job_files
+import structlog
+from dioptra import pyplugs
 
-__all__ = [
-    "views",
-    "clone_git_repository",
-    "export_plugin_files",
-    "export_task_engine_yaml",
-    "package_job_files",
-]
+LOGGER = structlog.get_logger()
+
+
+@pyplugs.register
+def hello(name: str) -> str:
+    message = f"Hello, {name}"
+    LOGGER.info(message)
+    return message
+
+
+@pyplugs.register
+def greet(greeting: str, name: str) -> str:
+    message = f"{greeting}, {name}"
+    LOGGER.info(message)
+    return message
+
+
+@pyplugs.register
+def shout(greeting: str) -> str:
+    loud_greeting = greeting.upper()
+    LOGGER.info(loud_greeting)
+    return loud_greeting

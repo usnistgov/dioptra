@@ -9,38 +9,40 @@ absl-py==2.1.0
     #   keras
     #   tensorboard
     #   tensorflow
-adversarial-robustness-toolbox==1.19.0
+adversarial-robustness-toolbox==1.18.2
     # via
     #   dioptra (pyproject.toml)
     #   heart-library
-alembic==1.14.0
+alembic==1.14.1
     # via
     #   dioptra (pyproject.toml)
     #   flask-migrate
     #   mlflow
-aniso8601==9.0.1
+aniso8601==10.0.0
     # via flask-restx
+annotated-types==0.7.0
+    # via pydantic
 astunparse==1.6.3
     # via tensorflow
 async-timeout==5.0.1
     # via dioptra (pyproject.toml)
-attrs==24.3.0
+attrs==25.1.0
     # via
     #   jsonschema
     #   referencing
 blinker==1.9.0
     # via flask
-boto3==1.35.95
+boto3==1.37.4
     # via dioptra (pyproject.toml)
-botocore==1.35.95
+botocore==1.37.4
     # via
     #   boto3
     #   s3transfer
-cachetools==5.5.0
+cachetools==5.5.2
     # via
     #   google-auth
     #   mlflow-skinny
-certifi==2024.12.14
+certifi==2025.1.31
     # via requests
 charset-normalizer==3.4.1
     # via requests
@@ -53,7 +55,7 @@ click==8.1.8
     #   mlflow-skinny
     #   prefect
     #   rq
-cloudpickle==3.1.0
+cloudpickle==3.1.1
     # via
     #   dask
     #   distributed
@@ -65,17 +67,17 @@ croniter==6.0.0
     # via prefect
 cycler==0.12.1
     # via matplotlib
-dask==2024.12.1
+dask==2025.2.0
     # via
     #   distributed
     #   prefect
-databricks-sdk==0.40.0
+databricks-sdk==0.44.1
     # via mlflow-skinny
-deprecated==1.2.15
+deprecated==1.2.18
     # via
     #   opentelemetry-api
     #   opentelemetry-semantic-conventions
-distributed==2024.12.1
+distributed==2025.2.0
     # via prefect
 docker==7.1.0
     # via
@@ -94,11 +96,11 @@ flask==3.1.0
     #   mlflow
 flask-accepts==1.0.1
     # via dioptra (pyproject.toml)
-flask-cors==5.0.0
+flask-cors==5.0.1
     # via dioptra (pyproject.toml)
 flask-login==0.6.3
     # via dioptra (pyproject.toml)
-flask-migrate==4.0.7
+flask-migrate==4.1.0
     # via dioptra (pyproject.toml)
 flask-restx==1.3.0
     # via
@@ -108,11 +110,11 @@ flask-sqlalchemy==3.1.1
     # via
     #   dioptra (pyproject.toml)
     #   flask-migrate
-flatbuffers==24.12.23
+flatbuffers==25.2.10
     # via tensorflow
-fonttools==4.55.3
+fonttools==4.56.0
     # via matplotlib
-fsspec==2024.12.0
+fsspec==2025.2.0
     # via dask
 gast==0.6.0
     # via tensorflow
@@ -120,13 +122,13 @@ gitdb==4.0.12
     # via gitpython
 gitpython==3.1.44
     # via mlflow-skinny
-google-auth==2.37.0
+google-auth==2.38.0
     # via databricks-sdk
 google-pasta==0.2.0
     # via tensorflow
 graphene==3.4.3
     # via mlflow
-graphql-core==3.2.5
+graphql-core==3.2.6
     # via
     #   graphene
     #   graphql-relay
@@ -134,21 +136,21 @@ graphql-relay==3.2.0
     # via graphene
 greenlet==3.1.1
     # via sqlalchemy
-grpcio==1.69.0
+grpcio==1.70.0
     # via
     #   tensorboard
     #   tensorflow
 gunicorn==23.0.0
     # via mlflow
-h5py==3.12.1
+h5py==3.13.0
     # via
     #   keras
     #   tensorflow
-heart-library==0.4.4
+heart-library==0.5.0
     # via dioptra (pyproject.toml)
 idna==3.10
     # via requests
-imageio==2.36.1
+imageio==2.37.0
     # via
     #   imgaug
     #   scikit-image
@@ -196,11 +198,11 @@ locket==1.0.0
     # via
     #   distributed
     #   partd
-maite==0.6.1
+maite==0.7.3
     # via
     #   dioptra (pyproject.toml)
     #   heart-library
-mako==1.3.8
+mako==1.3.9
     # via alembic
 markdown==3.7
     # via
@@ -213,7 +215,7 @@ markupsafe==3.0.2
     #   jinja2
     #   mako
     #   werkzeug
-marshmallow==3.24.2
+marshmallow==3.26.1
     # via
     #   dioptra (pyproject.toml)
     #   flask-accepts
@@ -221,7 +223,7 @@ marshmallow==3.24.2
     #   prefect
 marshmallow-oneofschema==3.1.1
     # via prefect
-matplotlib==3.10.0
+matplotlib==3.10.1
     # via
     #   dioptra (pyproject.toml)
     #   imgaug
@@ -233,9 +235,9 @@ ml-dtypes==0.3.2
     # via
     #   keras
     #   tensorflow
-mlflow==2.19.0
+mlflow==2.20.3
     # via dioptra (pyproject.toml)
-mlflow-skinny==2.19.0
+mlflow-skinny==2.20.3
     # via mlflow
 msgpack==1.1.0
     # via
@@ -249,7 +251,7 @@ namex==0.0.8
     # via keras
 networkx==3.4.2
     # via scikit-image
-nrtk==0.17.0
+nrtk==0.20.0
     # via dioptra (pyproject.toml)
 numpy==1.26.4
     # via
@@ -280,22 +282,22 @@ numpy==1.26.4
     #   tensorboard
     #   tensorflow
     #   tifffile
-opencv-python==4.10.0.84
+opencv-python==4.11.0.86
     # via
     #   dioptra (pyproject.toml)
     #   imgaug
-opentelemetry-api==1.29.0
+opentelemetry-api==1.30.0
     # via
     #   mlflow-skinny
     #   opentelemetry-sdk
     #   opentelemetry-semantic-conventions
-opentelemetry-sdk==1.29.0
+opentelemetry-sdk==1.30.0
     # via mlflow-skinny
-opentelemetry-semantic-conventions==0.50b0
+opentelemetry-semantic-conventions==0.51b0
     # via opentelemetry-sdk
 opt-einsum==3.4.0
     # via tensorflow
-optree==0.13.1
+optree==0.14.1
     # via keras
 packaging==24.2
     # via
@@ -326,21 +328,20 @@ pillow==11.1.0
     #   imageio
     #   imgaug
     #   matplotlib
-    #   nrtk
     #   scikit-image
     #   smqtk-image-io
 prefect==1.4.1
     # via dioptra (pyproject.toml)
-protobuf==4.25.5
+protobuf==4.25.6
     # via
     #   mlflow-skinny
     #   tensorboard
     #   tensorflow
-psutil==6.1.1
+psutil==7.0.0
     # via distributed
 psycopg2-binary==2.9.10
     # via dioptra (pyproject.toml)
-pyarrow==18.1.0
+pyarrow==19.0.1
     # via
     #   dioptra (pyproject.toml)
     #   mlflow
@@ -354,13 +355,17 @@ pycocotools==2.0.8
     # via
     #   dioptra (pyproject.toml)
     #   nrtk
+pydantic==2.10.6
+    # via mlflow-skinny
+pydantic-core==2.27.2
+    # via pydantic
 pygments==2.19.1
     # via rich
 pyparsing==3.2.1
     # via
     #   dioptra (pyproject.toml)
     #   matplotlib
-python-box==7.3.0
+python-box==7.3.2
     # via prefect
 python-dateutil==2.9.0.post0
     # via
@@ -377,7 +382,7 @@ python-json-logger==3.2.1
     # via dioptra (pyproject.toml)
 python-slugify==8.0.4
     # via prefect
-pytz==2024.2
+pytz==2025.1
     # via
     #   croniter
     #   flask-restx
@@ -394,7 +399,7 @@ redis==5.2.1
     # via
     #   dioptra (pyproject.toml)
     #   rq
-referencing==0.35.1
+referencing==0.36.2
     # via
     #   jsonschema
     #   jsonschema-specifications
@@ -414,7 +419,7 @@ rich==13.9.4
     # via
     #   dioptra (pyproject.toml)
     #   keras
-rpds-py==0.22.3
+rpds-py==0.23.1
     # via
     #   jsonschema
     #   referencing
@@ -422,19 +427,17 @@ rq==2.1.0
     # via dioptra (pyproject.toml)
 rsa==4.9
     # via google-auth
-s3transfer==0.10.4
+s3transfer==0.11.3
     # via boto3
-scikit-image==0.25.0
-    # via
-    #   imgaug
-    #   nrtk
-scikit-learn==1.6.0
+scikit-image==0.25.2
+    # via imgaug
+scikit-learn==1.6.1
     # via
     #   adversarial-robustness-toolbox
     #   dioptra (pyproject.toml)
     #   heart-library
     #   mlflow
-scipy==1.15.0
+scipy==1.15.2
     # via
     #   adversarial-robustness-toolbox
     #   dioptra (pyproject.toml)
@@ -442,9 +445,9 @@ scipy==1.15.0
     #   mlflow
     #   scikit-image
     #   scikit-learn
-shapely==2.0.6
+shapely==2.0.7
     # via imgaug
-simplejson==3.19.3
+simplejson==3.20.1
     # via dioptra (pyproject.toml)
 six==1.17.0
     # via
@@ -487,7 +490,7 @@ smqtk-image-io==0.17.1
     #   smqtk-detection
 sortedcontainers==2.4.0
     # via distributed
-sqlalchemy==2.0.36
+sqlalchemy==2.0.38
     # via
     #   alembic
     #   dioptra (pyproject.toml)
@@ -495,7 +498,7 @@ sqlalchemy==2.0.36
     #   mlflow
 sqlparse==0.5.3
     # via mlflow-skinny
-structlog==24.4.0
+structlog==25.1.0
     # via dioptra (pyproject.toml)
 tabulate==0.9.0
     # via prefect
@@ -517,12 +520,14 @@ text-unidecode==1.3
     # via python-slugify
 threadpoolctl==3.5.0
     # via scikit-learn
-tifffile==2024.12.12
+tifffile==2025.2.18
     # via scikit-image
 time-machine==2.16.0
     # via pendulum
 toml==0.10.2
     # via prefect
+tomli==2.2.1
+    # via dioptra (pyproject.toml)
 toolz==1.0.0
     # via
     #   dask
@@ -541,12 +546,16 @@ typing-extensions==4.12.2
     #   dioptra (pyproject.toml)
     #   graphene
     #   maite
+    #   mlflow-skinny
     #   nrtk
     #   opentelemetry-sdk
     #   optree
+    #   pydantic
+    #   pydantic-core
+    #   referencing
     #   sqlalchemy
     #   tensorflow
-tzdata==2024.2
+tzdata==2025.1
     # via
     #   pandas
     #   pendulum
@@ -562,12 +571,13 @@ werkzeug==3.1.3
     #   dioptra (pyproject.toml)
     #   flask
     #   flask-accepts
+    #   flask-cors
     #   flask-login
     #   flask-restx
     #   tensorboard
 wheel==0.45.1
     # via astunparse
-wrapt==1.17.0
+wrapt==1.17.2
     # via
     #   deprecated
     #   tensorflow

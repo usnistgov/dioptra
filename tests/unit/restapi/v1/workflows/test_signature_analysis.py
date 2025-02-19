@@ -142,9 +142,7 @@ expected_outputs["sample_test_real_world.py"] = [
             {"name": "extract_files", "type": "list_str_path", "required": False},
         ],
         "outputs": [],
-        "missing_types": [
-            {"name": "list_str_path", "description": "List[str | Path]"}
-        ],
+        "missing_types": [{"name": "list_str_path", "description": "List[str | Path]"}],
     },
     {
         "name": "load_artifacts",
@@ -480,19 +478,17 @@ def assert_signature_analysis_file_load_and_contents(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     filename: str,
 ):
-    location = Path("tests/unit/restapi/v1/workflows/signature_analysis") / filename
+    location = Path(__file__).absolute().parent / "signature_analysis" / filename
 
     with location.open("r") as f:
         contents = f.read()
-    
+
     contents_analysis = dioptra_client.workflows.analyze_plugin_task_signatures(
         python_code=contents,
     )
 
     assert contents_analysis.status_code == HTTPStatus.OK
 
-
-    print(contents_analysis.json())
     assert_signature_analysis_responses_matches_expectations(
         contents_analysis.json()["tasks"],
         expected_contents=expected_outputs[filename],

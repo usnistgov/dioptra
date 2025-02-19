@@ -25,8 +25,12 @@ from __future__ import annotations
 
 import datetime
 import functools
+import json
+import posixpath
+import re
 from collections import Counter
 from importlib.resources import as_file, files
+from pathlib import PurePosixPath, PureWindowsPath
 from typing import Any, Callable, List, Protocol, Type, cast
 
 from flask.views import View
@@ -43,6 +47,8 @@ from werkzeug.datastructures import FileStorage
 from dioptra.restapi.v1.shared.request_scope import set_request_scope_callbacks
 
 from .custom_schema_fields import FileUpload, MultiFileUpload
+
+DOTS_REGEX = re.compile(r"^\.\.\.+$")
 
 
 class ParametersSchema(TypedDict, total=False):
@@ -151,7 +157,7 @@ def create_parameters_schema(
         location = "files"
 
     parameters_schema = ParametersSchema(
-        name=cast(str, field.name),
+        name=cast(str, field.data_key or field.name),
         type=parameter_type,
         location=location,
         required=field.required,
@@ -204,6 +210,53 @@ def read_text_file(package: str, filename: str) -> str:
     traversable = files(package).joinpath(filename)
     with as_file(traversable) as fp:
         return fp.read_text()
+
+
+def read_json_file(package: str, filename: str) -> Any:
+    """Read a JSON file from a specified package into a dict.
+
+    Args:
+        package: The name of the Python package containing the text file. This should
+            be a string representing the package's import path, for example
+            "my_package.subpackage".
+        filename: The base name of the JSON file, including its extension. For
+            example, "data.json".
+
+    Returns:
+        A dictionary with the contents of the JSON file.
+    """
+    traversable = files(package).joinpath(filename)
+    with as_file(traversable) as fp:
+        return json.loads(fp.read_text())
+
+
+def verify_filename_is_safe(filename) -> None:
+    if PureWindowsPath(filename).as_posix() != str(PurePosixPath(filename)):  # noqa: B950; fmt: skip
+        raise ValueError(
+            "Invalid filename (reason: filename is a Windows path): {filename}"
+        )
+
+    if posixpath.normpath(filename) != filename:
+        raise ValueError(
+            f"Invalid filename (reason: filename is not normalized): {filename}"
+        )
+
+    if not PurePosixPath(filename).is_relative_to("."):
+        raise ValueError(
+            f"Invalid filename (reason: filename is not relative to ./): {filename}"
+        )
+
+    if PurePosixPath("..") in PurePosixPath(posixpath.normpath(filename)).parents:  # noqa: B950; fmt: skip
+        raise ValueError(
+            "Invalid filename (reason: filename is not a sub-directory of ./): "
+            f"{filename}"
+        )
+
+    if any([DOTS_REGEX.match(str(x)) for x in PurePosixPath(posixpath.normpath(filename)).parts]):  # noqa: B950; fmt: skip
+        raise ValueError(
+            "Invalid filename (reason: filename contains a sub-directory name that "
+            f"is all dots): {filename}"
+        )
 
 
 class _ClassBasedViewFunction(Protocol):
@@ -310,6 +363,7 @@ TYPE_MAP_MA_TO_REQPARSE = {
     ma.Decimal: float,
     ma.Dict: dict,
     ma.Email: str,
+    ma.Enum: str,
     FileUpload: FileStorage,
     MultiFileUpload: FileStorage,
     ma.Float: float,

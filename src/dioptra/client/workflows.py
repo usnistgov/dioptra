@@ -15,14 +15,19 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from pathlib import Path
-from typing import ClassVar, Final, TypeVar
+from typing import Any, ClassVar, Final, Literal, TypeVar
 
-from .base import CollectionClient, IllegalArgumentError
+from .base import (
+    CollectionClient,
+    DioptraFile,
+    IllegalArgumentError,
+)
 
 T = TypeVar("T")
 
 JOB_FILES_DOWNLOAD: Final[str] = "jobFilesDownload"
 SIGNATURE_ANALYSIS: Final[str] = "pluginTaskSignatureAnalysis"
+RESOURCE_IMPORT: Final[str] = "resourceImport"
 
 
 class WorkflowsCollectionClient(CollectionClient[T]):
@@ -105,4 +110,70 @@ class WorkflowsCollectionClient(CollectionClient[T]):
             self.url,
             SIGNATURE_ANALYSIS,
             json_={"pythonCode": python_code},
+        )
+
+    def import_resources(
+        self,
+        group_id: int,
+        source: str | DioptraFile | list[DioptraFile],
+        config_path: str | None = None,
+        resolve_name_conflicts_strategy: Literal["fail", "overwrite"] | None = None,
+    ):
+        """
+        Import resources from a archive file or git repository
+
+        Args:
+            group_id: The group to import resources into
+            source: The source to import from. Can be a str containing a git url, a
+                DioptraFile containing an archive file or a list[DioptraFile]
+                containing resource files.
+            config_path: The path to the toml configuration file in the import source.
+                If None, the API will use "dioptra.toml" as the default. Defaults to
+                None.
+            resolve_name_conflicts_strategy: The strategy for resolving name conflicts.
+                Either "fail" or "overwrite". If None, the API will use "fail" as the
+                default. Defaults to None.
+
+        Raises:
+            IllegalArgumentError: If more than one import source is provided or if no
+                import source is provided.
+        """
+        data: dict[str, Any] = {"group": str(group_id)}
+        files_: dict[str, DioptraFile | list[DioptraFile]] = {}
+
+        if not isinstance(source, (str, DioptraFile, list)):
+            raise IllegalArgumentError(
+                "Illegal type for source (reason: must be one of str, DioptraFile, "
+                f"or list[DioptraFile]): {type(source)}"
+            )
+
+        if isinstance(source, list):
+            if not all([isinstance(x, DioptraFile) for x in source]):
+                illegal_types = set(
+                    [type(x).__name__ for x in source if not isinstance(x, DioptraFile)]
+                )
+                raise IllegalArgumentError(
+                    "Illegal type for source (reason: list contains type(s) other "
+                    f"than DioptraFile): {', '.join(sorted(illegal_types))}"
+                )
+
+            data["sourceType"] = "upload_files"
+            files_["files"] = source
+
+        if isinstance(source, str):
+            data["sourceType"] = "git"
+            data["gitUrl"] = source
+
+        if isinstance(source, DioptraFile):
+            data["sourceType"] = "upload_archive"
+            files_["archiveFile"] = source
+
+        if config_path is not None:
+            data["configPath"] = config_path
+
+        if resolve_name_conflicts_strategy is not None:
+            data["resolveNameConflictsStrategy"] = resolve_name_conflicts_strategy
+
+        return self._session.post(
+            self.url, RESOURCE_IMPORT, data=data, files=files_ or None
         )
