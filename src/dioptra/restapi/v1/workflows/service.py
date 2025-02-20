@@ -18,6 +18,7 @@
 import json
 import os
 import tarfile
+import tomllib
 from collections import defaultdict
 from hashlib import sha256
 from io import BytesIO
@@ -27,7 +28,6 @@ from typing import IO, Any, Final, cast
 
 import jsonschema
 import structlog
-import toml
 from injector import inject
 from structlog.stdlib import BoundLogger
 from werkzeug.datastructures import FileStorage
@@ -269,7 +269,8 @@ class ResourceImportService(object):
                     raise GitError(f"Failed to clone repository: {git_url}") from e
 
             try:
-                config = toml.load(working_dir / config_path)
+                with open(working_dir / config_path, "rb") as f:
+                    config = tomllib.load(f)
             except Exception as e:
                 raise ImportFailedError(
                     f"Failed to load resource import config from {config_path}."

@@ -25,7 +25,7 @@ from tempfile import NamedTemporaryFile
 from typing import Any, cast
 
 import pytest
-import toml
+import tomllib
 import uuid
 from flask import Flask
 from flask.testing import FlaskClient
@@ -758,4 +758,6 @@ def resources_files() -> DioptraFile:
 @pytest.fixture
 def resources_import_config() -> dict[str, Any]:
     root_dir = Path(__file__).absolute().parent / "workflows" / "resource_import_files"
-    return toml.load(root_dir / "dioptra.toml")
+
+    with open(root_dir / "dioptra.toml", "rb") as f:
+        return tomllib.load(f)
