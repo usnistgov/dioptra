@@ -14,7 +14,7 @@ description = "A simple plugin used for testing and demonstration purposes."
   name = "greet"
   input_params = [
     { name = "greeting", type = "string", required = true },
-	  { name = "name", type = "string", required = true },
+    { name = "name", type = "string", required = true },
   ]
   output_params = [ { name = "greeting", type = "message" } ]
 
@@ -26,6 +26,7 @@ description = "A simple plugin used for testing and demonstration purposes."
 
 [[plugin_param_types]]
 name = "message"
+description = "A message produced by a plugin task"
 
 [[entrypoints]]
 path = "entrypoints/hello-world.yaml"

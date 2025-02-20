@@ -75,6 +75,7 @@ including a Plugin, PluginParameterType, and Entrypoint.
     # PluginParameterTypes are fully described in the TOML
     [[plugin_param_types]]
     name = "message"
+    description = "A message produced by a plugin task"
 
     # Entrypoints point to a task graph yaml and include metadata for registering them in Dioptra
     [[entrypoints]]
@@ -166,6 +167,7 @@ It is used to validate Dioptra TOML files in the resource import workflow.
                     "type": "object",
                     "properties": {
                         "name": { "type": "string" },
+                        "description": { "type": "string" },
                         "structure": { "type": "object" }
                     },
                     "required": [ "name" ],
