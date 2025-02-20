@@ -515,7 +515,6 @@ class ModelIdVersionsService(object):
         model_id: int,
         description: str,
         artifact_id: int,
-        commit: bool = True,
         **kwargs,
     ) -> utils.ModelWithVersionDict:
         """Create a new model version.
@@ -524,11 +523,12 @@ class ModelIdVersionsService(object):
             model_id: The unique id of the model.
             description: The description of the model version.
             artifact_id: The artifact for the model version.
-            commit: If True, commit the transaction. Defaults to True.
 
         Returns:
             The newly created model object.
         """
+        from mlflow.tracking import MlflowClient
+
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         ml_model_dict = cast(
@@ -558,14 +558,22 @@ class ModelIdVersionsService(object):
 
         ml_model.resource.children.append(new_version.resource)
         db.session.add(new_version)
+        db.session.flush()
 
-        if commit:
-            db.session.commit()
-            log.debug(
-                "Model registration successful",
-                model_id=ml_model.resource_id,
-                name=ml_model.name,
+        try:
+            client = MlflowClient()
+            client.create_model_version(
+                f"resource_{ml_model.resource_id:09d}", source=artifact.uri
             )
+        except MlflowException as e:
+            raise MLFlowError(e.message) from e
+
+        db.session.commit()
+        log.debug(
+            "Model registration successful",
+            model_id=ml_model.resource_id,
+            name=ml_model.name,
+        )
 
         return utils.ModelWithVersionDict(
             ml_model=ml_model,

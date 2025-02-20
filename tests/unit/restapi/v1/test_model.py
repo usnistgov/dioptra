@@ -289,10 +289,19 @@ def assert_retrieving_model_version_by_version_number_works(
         AssertionError: If the response status code is not 200 or if the API response
             does not match the expected response.
     """
+    from mlflow.tracking import MlflowClient
+
     response = dioptra_client.models.versions.get_by_id(
         model_id=model_id, version_number=version_number
     )
     assert response.status_code == HTTPStatus.OK and response.json() == expected
+
+    client = MlflowClient()
+    json_ = response.json()
+    name = f"resource_{json_['model']['id']:09d}"
+    model_version = client.get_model_version(name, version_number)
+    assert model_version.name == name
+    assert model_version.source == json_["artifact"]["artifactUri"]
 
 
 def assert_retrieving_model_versions_works(
@@ -302,7 +311,6 @@ def assert_retrieving_model_versions_works(
     search: str | None = None,
     paging_info: dict[str, Any] | None = None,
 ) -> None:
-    """"""
     query_string: dict[str, Any] = {}
 
     if search is not None:
