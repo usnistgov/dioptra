@@ -121,6 +121,18 @@ def test_resource_import_from_files(
 
     assert_imported_resources_match_expected(dioptra_client, resources_import_config)
 
+def test_resource_import_from_repo(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    resources_repo: str,
+    resources_import_config: dict[str, Any],
+):
+    group_id = auth_account["groups"][0]["id"]
+    dioptra_client.workflows.import_resources(group_id, source=resources_repo)
+
+    assert_imported_resources_match_expected(dioptra_client, resources_import_config)
+
 
 def test_resource_import_fails_from_name_clash(
     dioptra_client: DioptraClient[DioptraResponseProtocol],

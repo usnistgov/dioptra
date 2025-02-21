@@ -16,13 +16,16 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """Fixtures representing resources needed for test suites"""
 import os
+import shutil
+import subprocess
 import tarfile
 import textwrap
 from collections.abc import Iterator
 from http import HTTPStatus
 from pathlib import Path
-from tempfile import NamedTemporaryFile
+from tempfile import NamedTemporaryFile, TemporaryDirectory
 from typing import Any, cast
+
 
 import pytest
 import tomllib
@@ -747,6 +750,23 @@ def resources_tar_file() -> DioptraFile:
         yield select_one_or_more_files([f.name])[0]
 
         os.unlink(f.name)
+
+
+@pytest.fixture
+def resources_repo() -> str:
+    path = Path(__file__).absolute().parent / "workflows" / "resource_import_files"
+
+    git = shutil.which("git")
+
+    with TemporaryDirectory() as tmp_dir:
+        repo_dir = Path(tmp_dir) / "repo.git"
+        shutil.copytree(path, repo_dir)
+        with set_cwd(repo_dir):
+            subprocess.run([git, "init", "."])
+            subprocess.run([git, "add", "."])
+            subprocess.run([git, "commit", "-m."])
+
+            yield str(repo_dir)
 
 
 @pytest.fixture
