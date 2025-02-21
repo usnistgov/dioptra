@@ -4,6 +4,24 @@ from urllib.parse import urlparse
 
 
 def clone_git_repository(url: str, dir: Path) -> str:
+    """
+    Clones a git repository by calling the git command line tool as a subprocess. It
+    attempts to pull the minimal amount of data needed.
+
+    As an example, providing 'https://github.com/usnistgov/dioptra.git#dev;extras' as
+    the url would clone the dioptra repository and perform a sparse checkout of the dev
+    branch for the extras directory.
+
+    Args:
+        url: The url to the git repository. A branch can be specified as the url
+            fragment and paths for sparse checkout can be specified in a comma
+            separated list in the url params.
+        dir: The directory to clone the git repository into.
+
+    Returns:
+        The git commit hash of the cloned repository.
+    """
+
     parsed_url = urlparse(url)
     git_branch = parsed_url.fragment or None
     git_paths = parsed_url.params or None
