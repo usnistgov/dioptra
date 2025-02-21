@@ -16,10 +16,11 @@
     </div>
     <q-btn 
       v-if="route.params.id !== 'new'"
-      color="negative" 
+      :color="history ? 'red-3' : 'negative'" 
       icon="sym_o_delete" 
       label="Delete Experiment" 
       @click="showDeleteDialog = true"
+      :disable="history"
     />
   </div>
 
@@ -97,6 +98,17 @@
         >
           <template v-slot:before>
             <div class="field-label">Entrypoints:</div>
+          </template>
+          <template v-slot:selected>
+            <q-chip
+              v-for="(entrypoint, i) in experiment.entrypoints"
+              :key="entrypoint.id"
+              color="secondary"
+              :label="entrypoint.name"
+              class="text-white"
+              removable
+              @remove="experiment.entrypoints.splice(i, 1)"
+            />
           </template>  
         </q-select>
 
@@ -123,15 +135,16 @@
   </div>
 
   <div class="float-right">
-      <q-btn  
-        color="negative" 
+      <q-btn
+        outline  
+        color="primary" 
         label="Cancel"
-        class="q-mr-lg"
+        class="q-mr-lg cancel-btn"
         @click="confirmLeave = true; router.back()"
       />
       <q-btn  
         @click="submit()" 
-        color="primary" 
+        :color="history ? 'blue-2' : 'primary'" 
         label="Submit Experiment"
         :disable="history"
       />

@@ -28,8 +28,20 @@
             v-close-popup
           />
           <q-space />
-          <q-btn color="negative" class="text-white" label="Cancel" @click="$emit('emitCancel')" v-close-popup />
-          <q-btn color="primary" label="Confirm" type="submit" :disable="disableConfirm" />
+          <q-btn 
+            outline
+            color="primary cancel-btn" 
+            label="Cancel" 
+            @click="$emit('emitCancel')" 
+            v-close-popup 
+            class="q-mr-xs"
+          />
+          <q-btn 
+            color="primary"
+            label="Confirm"
+            type="submit"
+            :disable="disableConfirm"
+          />
         </q-card-actions>
       </q-form>
     </q-card>

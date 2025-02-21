@@ -166,7 +166,6 @@
           use-input
           use-chips
           multiple
-
           map-options
           option-label="name"
           option-value="id"
@@ -198,7 +197,6 @@
           use-input
           use-chips
           multiple
-
           map-options
           option-label="name"
           option-value="id"
@@ -208,7 +206,17 @@
         >
           <template v-slot:before>
             <div class="field-label">Plugins:</div>
-          </template>  
+          </template>
+          <template v-slot:selected-item="scope">
+            <q-chip
+              :label="scope.opt.name"
+              removable
+              @remove="scope.removeAtIndex(scope.index)"
+              :tabindex="scope.tabindex"
+              color="secondary"
+              text-color="white"
+            />
+          </template>
         </q-select>
         <div class="row" v-if="route.params.id !== 'new' && entryPoint.plugins.length > 0">
           <label class="field-label q-pt-xs">Plugins:</label>
@@ -298,10 +306,11 @@
   </div>
 
   <div class="float-right q-mb-lg">
-    <q-btn  
-      color="negative" 
+    <q-btn
+      outline
+      color="primary" 
       label="Cancel"
-      class="q-mr-lg"
+      class="q-mr-lg cancel-btn"
       @click="confirmLeave = true; router.back()"
     />
     <q-btn  
@@ -551,6 +560,7 @@
       if (route.params.id === 'new') {
         await api.addItem('entrypoints', entryPoint.value)
         store.savedForms.entryPoint = null
+        router.push('/entrypoints')
         notify.success(`Successfully created '${entryPoint.value.name}'`)
       } else {
         await api.updateItem('entrypoints', route.params.id, {
@@ -561,12 +571,11 @@
           queues: entryPoint.value.queues,
         })
         await api.addPluginsToEntrypoint(route.params.id, pluginsToUpdate.value)
+        router.push('/entrypoints')
         notify.success(`Successfully updated '${entryPoint.value.name}'`)
       }
     } catch(err) {
       notify.error(err.response.data.message)
-    } finally {
-      router.push('/entrypoints')
     }
   }
 

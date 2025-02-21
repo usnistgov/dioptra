@@ -132,3 +132,7 @@ h2 {
 legend {
   font-size: large;
 }
+
+.body--dark .cancel-btn {
+  color: #41a4f4 !important;
+}
