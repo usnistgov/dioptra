@@ -255,7 +255,7 @@ class ResourceImportService(object):
                 hash = str(sha256(bytes).hexdigest())
             elif source_type == ResourceImportSourceTypes.UPLOAD_FILES:
                 hashes = b""
-                for file in files:
+                for file in sorted(files, key=lambda x: Path(x.filename).resolve()):
                     Path(file.filename).parent.mkdir(parents=True, exist_ok=True)
                     bytes = file.stream.read()
                     with open(working_dir / file.filename, "wb") as f:
