@@ -20,21 +20,21 @@ from dioptra import pyplugs
 LOGGER = structlog.get_logger()
 
 
-@pyplugs.register()
+@pyplugs.register
 def hello(name: str) -> str:
     message = f"Hello, {name}"
     LOGGER.info(message)
     return message
 
 
-@pyplugs.register()
+@pyplugs.register
 def greet(greeting: str, name: str) -> str:
     message = f"{greeting}, {name}"
     LOGGER.info(message)
     return message
 
 
-@pyplugs.register()
+@pyplugs.register
 def shout(greeting: str) -> str:
     loud_greeting = greeting.upper()
     LOGGER.info(loud_greeting)
