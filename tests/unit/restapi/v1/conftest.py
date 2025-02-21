@@ -764,7 +764,9 @@ def resources_repo() -> str:
         with set_cwd(repo_dir):
             subprocess.run([git, "init", "."])
             subprocess.run([git, "add", "."])
-            subprocess.run([git, "commit", "-m."])
+            subprocess.run(
+                [git, "-c", "user.name=test", "-c", "user.email=test", "commit", "-m."]
+            )
 
             yield str(repo_dir)
 
