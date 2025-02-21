@@ -38,6 +38,7 @@ from dioptra.client import (
     select_files_in_directory,
     select_one_or_more_files,
 )
+from dioptra.sdk.utilities.paths import set_cwd
 
 from ..lib import actions, mock_rq
 
@@ -735,29 +736,29 @@ def registered_mlflowrun_incomplete(
 
 @pytest.fixture
 def resources_tar_file() -> DioptraFile:
-    os.chdir(Path(__file__).absolute().parent / "workflows" / "resource_import_files")
+    path = Path(__file__).absolute().parent / "workflows" / "resource_import_files"
+    with set_cwd(path):
+        with NamedTemporaryFile(suffix=".tar.gz", delete=False) as f:
+            with tarfile.open(fileobj=f, mode="w:gz") as tar:
+                tar.add("dioptra.toml")
+                tar.add("plugins", recursive=True)
+                tar.add(Path("entrypoints", "hello-world.yaml"))
 
-    with NamedTemporaryFile(suffix=".tar.gz", delete=False) as f:
-        with tarfile.open(fileobj=f, mode="w:gz") as tar:
-            tar.add("dioptra.toml")
-            tar.add("plugins", recursive=True)
-            tar.add(Path("entrypoints", "hello-world.yaml"))
+        yield select_one_or_more_files([f.name])[0]
 
-    yield select_one_or_more_files([f.name])[0]
-
-    os.unlink(f.name)
+        os.unlink(f.name)
 
 
 @pytest.fixture
 def resources_files() -> DioptraFile:
-    os.chdir(Path(__file__).absolute().parent / "workflows" / "resource_import_files")
-
-    return select_files_in_directory(".", recursive=True)
+    path = Path(__file__).absolute().parent / "workflows" / "resource_import_files"
+    with set_cwd(path):
+        return select_files_in_directory(".", recursive=True)
 
 
 @pytest.fixture
 def resources_import_config() -> dict[str, Any]:
-    root_dir = Path(__file__).absolute().parent / "workflows" / "resource_import_files"
-
-    with open(root_dir / "dioptra.toml", "rb") as f:
-        return tomllib.load(f)
+    path = Path(__file__).absolute().parent / "workflows" / "resource_import_files"
+    with set_cwd(path):
+        with open(path / "dioptra.toml", "rb") as f:
+            return tomllib.load(f)

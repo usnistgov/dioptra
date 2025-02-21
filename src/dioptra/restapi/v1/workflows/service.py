@@ -282,17 +282,16 @@ class ResourceImportService(object):
             jsonschema.validate(config, schema)
 
             # all resources are relative to the config file directory
-            os.chdir((working_dir / config_path).parent)
-
-            param_types = self._register_plugin_param_types(
-                group_id, config.get("plugin_param_types", []), overwrite, log=log
-            )
-            plugins = self._register_plugins(
-                group_id, config.get("plugins", []), param_types, overwrite, log=log
-            )
-            entrypoints = self._register_entrypoints(
-                group_id, config.get("entrypoints", []), plugins, overwrite, log=log
-            )
+            with set_cwd((working_dir / config_path).parent):
+                param_types = self._register_plugin_param_types(
+                    group_id, config.get("plugin_param_types", []), overwrite, log=log
+                )
+                plugins = self._register_plugins(
+                    group_id, config.get("plugins", []), param_types, overwrite, log=log
+                )
+                entrypoints = self._register_entrypoints(
+                    group_id, config.get("entrypoints", []), plugins, overwrite, log=log
+                )
 
         db.session.commit()
 
