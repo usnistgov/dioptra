@@ -21,6 +21,7 @@ functionalities for the queue entity. The tests ensure that the queues can be
 registered, renamed, deleted, and locked/unlocked as expected through the REST API.
 """
 
+from http import HTTPStatus
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import Any
@@ -41,20 +42,25 @@ def assert_imported_resources_match_expected(
     response = dioptra_client.plugins.get()
     response_plugins = set(plugin["name"] for plugin in response.json()["data"])
     expected_plugins = set(Path(plugin["path"]).stem for plugin in expected["plugins"])
-    assert response.status_code == 200 and response_plugins == expected_plugins
+    assert (
+        response.status_code == HTTPStatus.OK and response_plugins == expected_plugins
+    )
 
     response = dioptra_client.plugin_parameter_types.get()
     response_types = set(param["name"] for param in response.json()["data"])
     expected_types = set(param["name"] for param in expected["plugin_param_types"])
     assert (
-        response.status_code == 200
+        response.status_code == HTTPStatus.OK
         and response_types & expected_types == expected_types
     )
 
     response = dioptra_client.entrypoints.get()
     response_entrypoints = set(ep["name"] for ep in response.json()["data"])
     expected_entrypoints = set(ep["name"] for ep in expected["entrypoints"])
-    assert response.status_code == 200 and response_entrypoints == expected_entrypoints
+    assert (
+        response.status_code == HTTPStatus.OK
+        and response_entrypoints == expected_entrypoints
+    )
 
 
 def assert_resource_import_fails_due_to_name_clash(
@@ -69,7 +75,7 @@ def assert_resource_import_fails_due_to_name_clash(
         resolve_name_conflicts_strategy="fail",
     )
 
-    assert response.status_code == 409
+    assert response.status_code == HTTPStatus.CONFLICT
 
 
 def assert_resource_import_overwrite_works(
@@ -84,7 +90,7 @@ def assert_resource_import_overwrite_works(
         resolve_name_conflicts_strategy="overwrite",
     )
 
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
 
 
 # -- Tests -----------------------------------------------------------------------------
