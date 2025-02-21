@@ -21,6 +21,9 @@ functionalities for the queue entity. The tests ensure that the queues can be
 registered, renamed, deleted, and locked/unlocked as expected through the REST API.
 """
 
+import pytest
+import shutil
+
 from http import HTTPStatus
 from pathlib import Path
 from tempfile import NamedTemporaryFile
@@ -121,6 +124,8 @@ def test_resource_import_from_files(
 
     assert_imported_resources_match_expected(dioptra_client, resources_import_config)
 
+
+@pytest.mark.skipif(shutil.which("git") is None, reason="git was not found.")
 def test_resource_import_from_repo(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
