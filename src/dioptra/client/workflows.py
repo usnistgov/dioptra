@@ -15,12 +15,11 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from pathlib import Path
-from typing import Any, ClassVar, Final, Literal, TypeVar, overload
+from typing import Any, ClassVar, Final, Literal, TypeVar
 
 from .base import (
     CollectionClient,
     DioptraFile,
-    DioptraResponseProtocol,
     IllegalArgumentError,
 )
 

@@ -16,7 +16,6 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform workflows endpoint operations."""
 import json
-import os
 import tarfile
 import tomllib
 from collections import defaultdict
