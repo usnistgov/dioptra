@@ -113,90 +113,52 @@ class WorkflowsCollectionClient(CollectionClient[T]):
             json_={"pythonCode": python_code},
         )
 
-    @overload
     def import_resources(
         self,
-        git_url: str,
-        config_path: str | None = "dioptra.toml",
-        resolve_name_conflicts_strategy: Literal["fail", "overwrite"] | None = "fail",
-    ) -> DioptraResponseProtocol:
-        """Signature for using import_resource from git repo"""
-        ...  # pragma: nocover
-
-    @overload
-    def import_resources(
-        self,
-        archive_file: DioptraFile,
-        config_path: str | None = "dioptra.toml",
-        resolve_name_conflicts_strategy: Literal["fail", "overwrite"] | None = "fail",
-    ) -> DioptraResponseProtocol:
-        """Signature for using import_resource from archive file"""
-        ...  # pragma: nocover
-
-    @overload
-    def import_resources(
-        self,
-        files: list[DioptraFile],
-        config_path: str | None = "dioptra.toml",
-        resolve_name_conflicts_strategy: Literal["fail", "overwrite"] | None = "fail",
-    ) -> DioptraResponseProtocol:
-        """Signature for using import_resource from archive file"""
-        ...  # pragma: nocover
-
-    def import_resources(
-        self,
-        group_id,
-        git_url=None,
-        archive_file=None,
-        files=None,
-        config_path="dioptra.toml",
-        resolve_name_conflicts_strategy="fail",
+        group_id: int,
+        source: str | DioptraFile | list[DioptraFile],
+        config_path: str = "dioptra.toml",
+        resolve_name_conflicts_strategy: Literal["fail", "overwrite"] = "fail",
     ):
         """
         Import resources from a archive file or git repository
 
         Args:
             group_id: The group to import resources into
-            source_type: The source to import from
-            git_url: The url to the git repository if source_type is "git"
-            archive_file: The contents of the upload if source_type is "upload_archive"
-            files: The contents of the upload if source_type is "upload_files"
-            config_path: The path to the toml configuration file in the import source.
+            source: The source to import from. Can be a str containing a git url, a
+                DioptraFile containing an archive file or a list[DioptraFile]
+                containing resource files.  config_path: The path to the toml
+                configuration file in the import source.
             resolve_name_conflicts_strategy: The strategy for resolving name conflicts.
                 Either "fail" or "overwrite"
         Raises:
             IllegalArgumentError: If more than one import source is provided or if no
                 import source is provided.
         """
-
-        import_source_args = [git_url, archive_file, files]
-        num_provided_import_source_args = sum(
-            arg is not None for arg in import_source_args
-        )
-
-        if num_provided_import_source_args == 0:
-            raise IllegalArgumentError(
-                "One of (git_url, archive_file, or files) must be provided"
-            )
-        elif num_provided_import_source_args > 1:
-            raise IllegalArgumentError(
-                "Only one of (git_url, archive_file and files) can be provided"
-            )
-
         data: dict[str, Any] = {"group": str(group_id)}
         files_: dict[str, DioptraFile | list[DioptraFile]] = {}
 
-        if git_url is not None:
-            data["sourceType"] = "git"
-            data["gitUrl"] = git_url
+        if not isinstance(source, (str, DioptraFile, list)):
+            raise IllegalArgumentError(
+                "source must be one of (str, DioptraFile, or list[DioptraFile])"
+            )
 
-        if archive_file is not None:
-            data["sourceType"] = "upload_archive"
-            files_["archiveFile"] = archive_file
+        if isinstance(source, list):
+            if not all([isinstance(x, DioptraFile) for x in source]):
+                raise IllegalArgumentError(
+                    "source must be one of (str, DioptraFile, or list[DioptraFile])"
+                )
 
-        if files is not None:
             data["sourceType"] = "upload_files"
-            files_["files"] = files
+            files_["files"] = source
+
+        if isinstance(source, str):
+            data["sourceType"] = "git"
+            data["gitUrl"] = source
+
+        if isinstance(source, DioptraFile):
+            data["sourceType"] = "upload_archive"
+            files_["archiveFile"] = source
 
         if config_path is not None:
             data["configPath"] = config_path

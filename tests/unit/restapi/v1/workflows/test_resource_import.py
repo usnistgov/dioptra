@@ -65,7 +65,7 @@ def assert_resource_import_fails_due_to_name_clash(
     dioptra_client.plugins.create(group_id=group_id, name="hello_world")
     response = dioptra_client.workflows.import_resources(
         group_id=group_id,
-        archive_file=archive_file,
+        source=archive_file,
         resolve_name_conflicts_strategy="fail",
     )
 
@@ -80,7 +80,7 @@ def assert_resource_import_overwrite_works(
     dioptra_client.plugins.create(group_id=group_id, name="hello_world")
     response = dioptra_client.workflows.import_resources(
         group_id=group_id,
-        archive_file=archive_file,
+        source=archive_file,
         resolve_name_conflicts_strategy="overwrite",
     )
 
@@ -98,7 +98,7 @@ def test_resource_import_from_archive_file(
     resources_import_config: dict[str, Any],
 ):
     group_id = auth_account["groups"][0]["id"]
-    dioptra_client.workflows.import_resources(group_id, archive_file=resources_tar_file)
+    dioptra_client.workflows.import_resources(group_id, source=resources_tar_file)
 
     assert_imported_resources_match_expected(dioptra_client, resources_import_config)
 
@@ -111,7 +111,7 @@ def test_resource_import_from_files(
     resources_import_config: dict[str, Any],
 ):
     group_id = auth_account["groups"][0]["id"]
-    dioptra_client.workflows.import_resources(group_id, files=resources_files)
+    dioptra_client.workflows.import_resources(group_id, source=resources_files)
 
     assert_imported_resources_match_expected(dioptra_client, resources_import_config)
 
