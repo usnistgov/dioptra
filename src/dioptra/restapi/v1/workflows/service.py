@@ -70,6 +70,15 @@ DIOPTRA_RESOURCES_SCHEMA_PATH: Final[Path] = (
     Path(__file__).resolve().parent / "dioptra-resources.schema.json"
 )
 
+VALID_ENTRYPOINT_PARAM_TYPES: Final[set[str]] = {
+    "string",
+    "float",
+    "integer",
+    "boolean",
+    "list",
+    "mapping",
+}
+
 
 class JobFilesDownloadService(object):
     """The service methods for packaging job files for download."""
@@ -270,6 +279,16 @@ class ResourceImportService(object):
             try:
                 with open(working_dir / config_path, "rb") as f:
                     config = tomllib.load(f)
+            except tomllib.TOMLDecodeError as e:
+                raise ImportFailedError(
+                    f"Failed to load resource import config from {config_path}.",
+                    reason=f"Could not decode config: {e}",
+                ) from e
+            except FileNotFoundError as e:
+                raise ImportFailedError(
+                    f"Failed to load resource import config from {config_path}.",
+                    reason="File not found.",
+                ) from e
             except Exception as e:
                 raise ImportFailedError(
                     f"Failed to load resource import config from {config_path}."
@@ -474,8 +493,16 @@ class ResourceImportService(object):
                 contents = Path(entrypoint["path"]).read_text()
             except FileNotFoundError as e:
                 raise ImportFailedError(
-                    f"Failed to read plugin file from {entrypoint['path']}"
+                    f"Failed to read entrypoint file from {entrypoint['path']}"
                 ) from e
+
+            for param in entrypoint.get("params", []):
+                if param["type"] not in VALID_ENTRYPOINT_PARAM_TYPES:
+                    raise ImportFailedError(
+                        "Invalid entrypoint parameter type provided.",
+                        reason=f"Found '{param['type']}' but must be one of "
+                        f"{VALID_ENTRYPOINT_PARAM_TYPES}.",
+                    )
 
             params = [
                 {
@@ -525,25 +552,43 @@ class ResourceImportService(object):
 
         tasks = defaultdict(list)
         for task in tasks_config:
+            try:
+                input_params = [
+                    {
+                        "name": param["name"],
+                        "parameter_type_id": param_types[param["type"]].resource_id,
+                        "required": param.get("required", False),
+                    }
+                    for param in task["input_params"]
+                ]
+            except KeyError as e:
+                raise ImportFailedError(
+                    "Plugin task input parameter type not found.",
+                    reason=f"Parameter type named {e} not does not exist and "
+                    "is not defined in provided toml config.",
+                ) from e
+
+            try:
+                output_params = [
+                    {
+                        "name": param["name"],
+                        "parameter_type_id": param_types[param["type"]].resource_id,
+                    }
+                    for param in task["output_params"]
+                ]
+            except KeyError as e:
+                raise ImportFailedError(
+                    "Plugin task output parameter type not found.",
+                    reason=f"Parameter type named {e} not does not exist and "
+                    "is not defined in provided toml config.",
+                ) from e
+
             tasks[task["filename"]].append(
                 {
                     "name": task["name"],
                     "description": task.get("description", None),
-                    "input_params": [
-                        {
-                            "name": param["name"],
-                            "parameter_type_id": param_types[param["type"]].resource_id,
-                            "required": param.get("required", False),
-                        }
-                        for param in task["input_params"]
-                    ],
-                    "output_params": [
-                        {
-                            "name": param["name"],
-                            "parameter_type_id": param_types[param["type"]].resource_id,
-                        }
-                        for param in task["output_params"]
-                    ],
+                    "input_params": input_params,
+                    "output_params": output_params,
                 }
             )
         return tasks

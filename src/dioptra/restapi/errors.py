@@ -363,8 +363,9 @@ class GitError(DioptraError):
 class ImportFailedError(DioptraError):
     """Import failed Error."""
 
-    def __init__(self, message: str):
+    def __init__(self, message: str, reason: str = ""):
         super().__init__(message)
+        self._reason = reason
 
 
 def error_result(
@@ -490,10 +491,14 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
         log.debug(error.to_message())
         return error_result(error, http.HTTPStatus.INTERNAL_SERVER_ERROR, {})
 
-    @api.errorhandler(GitError)
+    @api.errorhandler(ImportFailedError)
     def handle_import_failed_error(error: ImportFailedError):
         log.debug(error.to_message())
-        return error_result(error, http.HTTPStatus.BAD_REQUEST, {})
+        return error_result(
+            error,
+            http.HTTPStatus.BAD_REQUEST,
+            {"reason": error._reason} if error._reason else {},
+        )
 
     @api.errorhandler(DioptraError)
     def handle_base_error(error: DioptraError):
