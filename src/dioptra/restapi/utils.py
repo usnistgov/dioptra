@@ -212,7 +212,7 @@ def read_text_file(package: str, filename: str) -> str:
         return fp.read_text()
 
 
-def read_json_file(package: str, filename: str) -> dict:
+def read_json_file(package: str, filename: str) -> Any:
     """Read a JSON file from a specified package into a dict.
 
     Args:

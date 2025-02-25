@@ -21,7 +21,7 @@ from hashlib import sha256
 from io import BytesIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import IO, Any, Final, cast
+from typing import IO, Any, Final
 
 import jsonschema
 import structlog
@@ -257,54 +257,13 @@ class ResourceImportService(object):
             working_dir = Path(tmp_dir)
 
             if source_type == ResourceImportSourceTypes.UPLOAD_ARCHIVE:
-                bytes = archive_file.stream.read()
-                try:
-                    self._io_file_service.safe_extract_archive(
-                        working_dir, archive_fileobj=BytesIO(bytes), preserve_paths=True
-                    )
-                except Exception as e:
-                    raise ImportFailedError("Failed to read uploaded tarfile") from e
-                hash = str(sha256(bytes).hexdigest())
+                hash: str = self._read_from_archive(archive_file, working_dir)
             elif source_type == ResourceImportSourceTypes.UPLOAD_FILES:
-                hashes = b""
-                for file in sorted(files, key=lambda x: Path(x.filename).resolve()):
-                    try:
-                        verify_filename_is_safe(file.filename)
-                    except ValueError as e:
-                        raise ImportFailedError(
-                            "Failed to read uploaded files", reason=str(e)
-                        ) from e
-                    Path(file.filename).parent.mkdir(parents=True, exist_ok=True)
-                    bytes = file.stream.read()
-                    with open(working_dir / file.filename, "wb") as f:
-                        f.write(bytes)
-                    hashes = hashes + sha256(bytes).digest()
-                hash = str(sha256(hashes).hexdigest())
-            else:
-                try:
-                    hash = clone_git_repository(cast(str, git_url), working_dir)
-                except Exception as e:
-                    raise GitError(f"Failed to clone repository: {git_url}") from e
+                hash = self._read_from_files(files, working_dir)
+            elif source_type == ResourceImportSourceTypes.GIT:
+                hash = self._read_from_git(git_url, working_dir)
 
-            try:
-                with open(working_dir / config_path, "rb") as f:
-                    config = tomllib.load(f)
-            except tomllib.TOMLDecodeError as e:
-                raise ImportFailedError(
-                    f"Failed to load resource import config from {config_path}.",
-                    reason=f"Could not decode config: {e}",
-                ) from e
-            except FileNotFoundError as e:
-                raise ImportFailedError(
-                    f"Failed to load resource import config from {config_path}.",
-                    reason="File not found.",
-                ) from e
-            except Exception as e:
-                raise ImportFailedError(
-                    f"Failed to load resource import config from {config_path}."
-                ) from e
-
-            jsonschema.validate(config, DIOPTRA_RESOURCES_SCHEMA)
+            config = self._load_config_file(working_dir / config_path)
 
             # all resources are relative to the config file directory
             with set_cwd((working_dir / config_path).parent):
@@ -337,6 +296,117 @@ class ResourceImportService(object):
                 },
             },
         }
+
+    def _read_from_archive(self, archive_file: FileStorage, destination: Path) -> str:
+        """
+        Reads resources from an archive file.
+
+        Args:
+            archive_file: A FileStorage object containing the uploaded archive.
+            destination: The path to extract the archive to.
+
+        Returns:
+            The hash of the uploaded file.
+
+        Raises:
+            ImportFailedError: If the archive cannot be read and unpacked for any reason
+        """
+
+        bytes = archive_file.stream.read()
+        try:
+            self._io_file_service.safe_extract_archive(
+                destination, archive_fileobj=BytesIO(bytes), preserve_paths=True
+            )
+        except Exception as e:
+            raise ImportFailedError("Failed to read uploaded tarfile") from e
+
+        return str(sha256(bytes).hexdigest())
+
+    def _read_from_files(self, files: list[FileStorage], destination: Path) -> str:
+        """
+        Reads resources from a multi-file upload.
+
+        Args:
+            files: A list of FileStorage objects containing the uploaded files.
+            destination: The path to save the files to.
+
+        Returns:
+            The hash of the uploaded files.
+
+        Raises:
+            ImportFailedError: If the archive cannot be read and unpacked for any reason
+        """
+
+        hashes = b""
+        for file in sorted(files, key=lambda x: Path(x.filename).resolve()):
+            try:
+                verify_filename_is_safe(file.filename)
+            except ValueError as e:
+                raise ImportFailedError(
+                    "Failed to read uploaded files", reason=str(e)
+                ) from e
+
+            Path(file.filename).parent.mkdir(parents=True, exist_ok=True)
+
+            bytes = file.stream.read()
+            with open(destination / file.filename, "wb") as f:
+                f.write(bytes)
+            hashes = hashes + sha256(bytes).digest()
+
+        return str(sha256(hashes).hexdigest())
+
+    def _read_from_git(self, git_url: str, destination: Path) -> str:
+        """
+        Reads resources from a git repo.
+
+        Args:
+            git_url: A url to the git repository
+            destination: The path to clone the repo to.
+
+        Returns:
+            The latest git commit hash.
+
+        Raises:
+            ImportFailedError: If the archive cannot be read and unpacked for any reason
+        """
+
+        try:
+            return clone_git_repository(git_url, destination)
+        except Exception as e:
+            raise GitError(f"Failed to clone repository: {git_url}") from e
+
+    def _load_config_file(self, config_path: Path) -> dict[str, Any]:
+        """
+        Loads and validates the dioptra toml config
+
+        Args:
+            config_path: The path to the config file
+
+        Returns:
+            A dictionary containing the configuration
+        """
+
+        try:
+            with open(config_path, "rb") as f:
+                config = tomllib.load(f)
+        except tomllib.TOMLDecodeError as e:
+            raise ImportFailedError(
+                f"Failed to load resource import config from {config_path}.",
+                reason=f"Could not decode config: {e}",
+            ) from e
+        except FileNotFoundError as e:
+            raise ImportFailedError(
+                f"Failed to load resource import config from {config_path}.",
+                reason="File not found.",
+            ) from e
+        except Exception as e:
+            raise ImportFailedError(
+                f"Failed to load resource import config from {config_path}."
+            ) from e
+
+        jsonschema.validate(config, DIOPTRA_RESOURCES_SCHEMA)
+
+        return config
 
     def _register_plugin_param_types(
         self,
