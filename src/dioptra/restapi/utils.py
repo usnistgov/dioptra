@@ -26,12 +26,12 @@ from __future__ import annotations
 import datetime
 import functools
 import json
-import re
 import posixpath
+import re
 from collections import Counter
 from importlib.resources import as_file, files
-from typing import Any, Callable, List, Protocol, Type, cast
 from pathlib import PurePosixPath, PureWindowsPath
+from typing import Any, Callable, List, Protocol, Type, cast
 
 from flask.views import View
 from flask_restx import Api, Namespace, Resource, inputs
