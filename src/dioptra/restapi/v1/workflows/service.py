@@ -15,8 +15,6 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform workflows endpoint operations."""
-import json
-import tarfile
 import tomllib
 from collections import defaultdict
 from hashlib import sha256
@@ -33,6 +31,7 @@ from werkzeug.datastructures import FileStorage
 
 from dioptra.restapi.db import db, models
 from dioptra.restapi.errors import GitError, ImportFailedError
+from dioptra.restapi.utils import read_json_file
 from dioptra.restapi.v1.entrypoints.service import (
     EntrypointIdService,
     EntrypointNameService,
@@ -67,8 +66,8 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 RESOURCE_TYPE: Final[str] = "workflow"
 
-DIOPTRA_RESOURCES_SCHEMA_PATH: Final[Path] = (
-    Path(__file__).resolve().parent / "dioptra-resources.schema.json"
+DIOPTRA_RESOURCES_SCHEMA: Final[dict] = read_json_file(
+    "dioptra.restapi.v1.workflows", "dioptra-resources.schema.json"
 )
 
 VALID_ENTRYPOINT_PARAM_TYPES: Final[set[str]] = {
@@ -299,10 +298,7 @@ class ResourceImportService(object):
                     f"Failed to load resource import config from {config_path}."
                 ) from e
 
-            # validate the config file
-            with open(DIOPTRA_RESOURCES_SCHEMA_PATH, "rb") as f:
-                schema = json.load(f)
-            jsonschema.validate(config, schema)
+            jsonschema.validate(config, DIOPTRA_RESOURCES_SCHEMA)
 
             # all resources are relative to the config file directory
             with set_cwd((working_dir / config_path).parent):

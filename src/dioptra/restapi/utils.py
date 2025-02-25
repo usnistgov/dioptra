@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import datetime
 import functools
+import json
 from collections import Counter
 from importlib.resources import as_file, files
 from typing import Any, Callable, List, Protocol, Type, cast
@@ -204,6 +205,24 @@ def read_text_file(package: str, filename: str) -> str:
     traversable = files(package).joinpath(filename)
     with as_file(traversable) as fp:
         return fp.read_text()
+
+
+def read_json_file(package: str, filename: str) -> dict:
+    """Read a JSON file from a specified package into a dict.
+
+    Args:
+        package: The name of the Python package containing the text file. This should
+            be a string representing the package's import path, for example
+            "my_package.subpackage".
+        filename: The base name of the JSON file, including its extension. For
+            example, "data.json".
+
+    Returns:
+        A dictionary with the contents of the JSON file.
+    """
+    traversable = files(package).joinpath(filename)
+    with as_file(traversable) as fp:
+        return json.loads(fp.read_text())
 
 
 class _ClassBasedViewFunction(Protocol):
