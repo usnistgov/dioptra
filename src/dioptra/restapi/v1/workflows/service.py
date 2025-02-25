@@ -50,6 +50,7 @@ from dioptra.restapi.v1.plugins.service import (
     PluginNameService,
     PluginService,
 )
+from dioptra.restapi.v1.shared.io_file_service import IOFileService
 from dioptra.restapi.v1.shared.signature_analysis import get_plugin_signatures
 from dioptra.sdk.utilities.paths import set_cwd
 
@@ -183,6 +184,7 @@ class ResourceImportService(object):
         entrypoint_service: EntrypointService,
         entrypoint_id_service: EntrypointIdService,
         entrypoint_name_service: EntrypointNameService,
+        io_file_service: IOFileService,
     ) -> None:
         """Initialize the resource import service.
 
@@ -201,6 +203,7 @@ class ResourceImportService(object):
             entrypoint_service: An EntrypointService object.
             entrypoint_id_service: An EntrypointIdService object.
             entrypoint_name_service: An EntrypointNameService object.
+            io_file_service: An IOFileService object.
         """
         self._plugin_service = plugin_service
         self._plugin_id_service = plugin_id_service
@@ -215,6 +218,7 @@ class ResourceImportService(object):
         self._entrypoint_service = entrypoint_service
         self._entrypoint_id_service = entrypoint_id_service
         self._entrypoint_name_service = entrypoint_name_service
+        self._io_file_service = io_file_service
 
     def import_resources(
         self,
@@ -256,8 +260,9 @@ class ResourceImportService(object):
             if source_type == ResourceImportSourceTypes.UPLOAD_ARCHIVE:
                 bytes = archive_file.stream.read()
                 try:
-                    with tarfile.open(fileobj=BytesIO(bytes), mode="r:*") as tar:
-                        tar.extractall(path=working_dir, filter="data")
+                    self._io_file_service.safe_extract_archive(
+                        working_dir, archive_fileobj=BytesIO(bytes), preserve_paths=True
+                    )
                 except Exception as e:
                     raise ImportFailedError("Failed to read uploaded tarfile") from e
                 hash = str(sha256(bytes).hexdigest())

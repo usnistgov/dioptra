@@ -161,7 +161,7 @@ class ResourceImportSchema(Schema):
     gitUrl = fields.String(
         attribute="git_url",
         metadata=dict(
-            description="The URL of the git repository containing resources to import."
+            description="The URL of the git repository containing resources to import. "
             "A git branch can optionally be specified by appending #BRANCH_NAME. "
             "Used when sourceType is 'git'."
         ),
@@ -172,7 +172,7 @@ class ResourceImportSchema(Schema):
         metadata=dict(
             type="file",
             format="binary",
-            description="The archive file containing resources to import (.tar.gz)."
+            description="The archive file containing resources to import (.tar.gz). "
             "Used when sourceType is 'upload_archive'.",
         ),
         required=False,
@@ -195,7 +195,10 @@ class ResourceImportSchema(Schema):
     resolveNameConflictsStrategy = fields.Enum(
         ResourceImportResolveNameConflictsStrategy,
         attribute="resolve_name_conflicts_strategy",
-        metadata=dict(description="Strategy for resolving resource name conflicts"),
+        metadata=dict(
+            description="Strategy for resolving resource name conflicts. "
+            "Available options are 'fail' or 'overwrite'"
+        ),
         by_value=True,
         load_default=ResourceImportResolveNameConflictsStrategy.FAIL.value,
     )
