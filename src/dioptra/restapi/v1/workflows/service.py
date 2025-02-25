@@ -31,7 +31,7 @@ from werkzeug.datastructures import FileStorage
 
 from dioptra.restapi.db import db, models
 from dioptra.restapi.errors import GitError, ImportFailedError
-from dioptra.restapi.utils import read_json_file
+from dioptra.restapi.utils import read_json_file, verify_filename_is_safe
 from dioptra.restapi.v1.entrypoints.service import (
     EntrypointIdService,
     EntrypointNameService,
@@ -268,6 +268,12 @@ class ResourceImportService(object):
             elif source_type == ResourceImportSourceTypes.UPLOAD_FILES:
                 hashes = b""
                 for file in sorted(files, key=lambda x: Path(x.filename).resolve()):
+                    try:
+                        verify_filename_is_safe(file.filename)
+                    except ValueError as e:
+                        raise ImportFailedError(
+                            "Failed to read uploaded files", reason=str(e)
+                        ) from e
                     Path(file.filename).parent.mkdir(parents=True, exist_ok=True)
                     bytes = file.stream.read()
                     with open(working_dir / file.filename, "wb") as f:

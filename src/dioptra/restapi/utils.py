@@ -26,9 +26,12 @@ from __future__ import annotations
 import datetime
 import functools
 import json
+import re
+import posixpath
 from collections import Counter
 from importlib.resources import as_file, files
 from typing import Any, Callable, List, Protocol, Type, cast
+from pathlib import PurePosixPath, PureWindowsPath
 
 from flask.views import View
 from flask_restx import Api, Namespace, Resource, inputs
@@ -44,6 +47,8 @@ from werkzeug.datastructures import FileStorage
 from dioptra.restapi.v1.shared.request_scope import set_request_scope_callbacks
 
 from .custom_schema_fields import FileUpload, MultiFileUpload
+
+DOTS_REGEX = re.compile(r"^\.\.\.+$")
 
 
 class ParametersSchema(TypedDict, total=False):
@@ -223,6 +228,35 @@ def read_json_file(package: str, filename: str) -> dict:
     traversable = files(package).joinpath(filename)
     with as_file(traversable) as fp:
         return json.loads(fp.read_text())
+
+
+def verify_filename_is_safe(filename) -> None:
+    if PureWindowsPath(filename).as_posix() != str(PurePosixPath(filename)):  # noqa: B950; fmt: skip
+        raise ValueError(
+            "Invalid filename (reason: filename is a Windows path): {filename}"
+        )
+
+    if posixpath.normpath(filename) != filename:
+        raise ValueError(
+            f"Invalid filename (reason: filename is not normalized): {filename}"
+        )
+
+    if not PurePosixPath(filename).is_relative_to("."):
+        raise ValueError(
+            f"Invalid filename (reason: filename is not relative to ./): {filename}"
+        )
+
+    if PurePosixPath("..") in PurePosixPath(posixpath.normpath(filename)).parents:  # noqa: B950; fmt: skip
+        raise ValueError(
+            "Invalid filename (reason: filename is not a sub-directory of ./): "
+            f"{filename}"
+        )
+
+    if any([DOTS_REGEX.match(str(x)) for x in PurePosixPath(posixpath.normpath(filename)).parts]):  # noqa: B950; fmt: skip
+        raise ValueError(
+            "Invalid filename (reason: filename contains a sub-directory name that "
+            f"is all dots): {filename}"
+        )
 
 
 class _ClassBasedViewFunction(Protocol):
