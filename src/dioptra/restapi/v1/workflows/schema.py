@@ -17,6 +17,7 @@
 """The schemas for serializing/deserializing Workflow resources."""
 from enum import Enum
 
+from flask import request
 from marshmallow import Schema, ValidationError, fields, validates_schema
 
 from dioptra.restapi.custom_schema_fields import FileUpload, MultiFileUpload
@@ -205,8 +206,39 @@ class ResourceImportSchema(Schema):
 
     @validates_schema
     def validate_source(self, data, **kwargs):
+        num_provided_sources = sum(
+            [
+                "git_url" in data,
+                "archiveFile" in request.files,
+                "files" in request.files,
+            ]
+        )
+        if num_provided_sources != 1:
+            raise ValidationError(
+                {
+                    "sourceType": "Must only provide exactly one of "
+                    "('gitUrl', 'archiveFile', 'files')."
+                }
+            )
+
         if (
             data["source_type"] == ResourceImportSourceTypes.GIT
             and "git_url" not in data
         ):
             raise ValidationError({"gitUrl": "field required when sourceType is 'git'"})
+
+        if (
+            data["source_type"] == ResourceImportSourceTypes.UPLOAD_ARCHIVE
+            and "archiveFile" not in request.files
+        ):
+            raise ValidationError(
+                {"archiveFile": "field required when sourceType is 'upload_archive'"}
+            )
+
+        if (
+            data["source_type"] == ResourceImportSourceTypes.UPLOAD_FILES
+            and "files" not in request.files
+        ):
+            raise ValidationError(
+                {"files": "field required when sourceType is 'upload_files'"}
+            )
