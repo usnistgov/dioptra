@@ -22,6 +22,8 @@ from typing import Any, Final, cast
 import structlog
 from flask_login import current_user
 from injector import inject
+from mlflow.exceptions import MlflowException
+from mlflow.tracking import MlflowClient
 from sqlalchemy import Integer, func, select
 from sqlalchemy.orm import aliased
 from structlog.stdlib import BoundLogger
@@ -31,6 +33,7 @@ from dioptra.restapi.errors import (
     BackendDatabaseError,
     EntityDoesNotExistError,
     EntityExistsError,
+    MLFlowError,
     SortParameterValidationError,
 )
 from dioptra.restapi.v1 import utils
@@ -65,6 +68,7 @@ class ModelService(object):
         self,
         model_name_service: ModelNameService,
         group_id_service: GroupIdService,
+        mlflow_client: MlflowClient,
     ) -> None:
         """Initialize the model service.
 
@@ -73,16 +77,17 @@ class ModelService(object):
         Args:
             model_name_service: A ModelNameService object.
             group_id_service: A GroupIdService object.
+            mlflow_client: An MlflowClient object,
         """
         self._model_name_service = model_name_service
         self._group_id_service = group_id_service
+        self._mlflow_client = mlflow_client
 
     def create(
         self,
         name: str,
         description: str,
         group_id: int,
-        commit: bool = True,
         **kwargs,
     ) -> utils.ModelWithVersionDict:
         """Create a new model.
@@ -92,7 +97,6 @@ class ModelService(object):
                 unique.
             description: The description of the model.
             group_id: The group that will own the model.
-            commit: If True, commit the transaction. Defaults to True.
 
         Returns:
             The newly created model object.
@@ -118,16 +122,32 @@ class ModelService(object):
             resource=resource,
             creator=current_user,
         )
-
         db.session.add(ml_model)
 
-        if commit:
+        db.session.flush()
+
+        mlflow_model_name = f"resource_{ml_model.resource_id:09d}"
+
+        try:
+            self._mlflow_client.create_registered_model(mlflow_model_name)
+        except MlflowException as e:
+            raise MLFlowError(e.message) from e
+
+        try:
             db.session.commit()
-            log.debug(
-                "Model registration successful",
-                model_id=ml_model.resource_id,
-                name=ml_model.name,
-            )
+        except Exception as e:
+            # if the commit fails, attempt to roll back mlflow changes
+            try:
+                self._mlflow_client.delete_registered_model(mlflow_model_name)
+            except MlflowException as mlflow_error:
+                raise MLFlowError(str(e)) from mlflow_error
+            raise e
+
+        log.debug(
+            "Model registration successful",
+            model_id=ml_model.resource_id,
+            name=ml_model.name,
+        )
 
         return utils.ModelWithVersionDict(
             ml_model=ml_model, version=None, has_draft=False
@@ -487,6 +507,7 @@ class ModelIdVersionsService(object):
         self,
         artifact_id_service: ArtifactIdService,
         model_id_service: ModelIdService,
+        mlflow_client: MlflowClient,
     ) -> None:
         """Initialize the model service.
 
@@ -495,16 +516,17 @@ class ModelIdVersionsService(object):
         Args:
             artifact_id_service: A ArtifactIdService object.
             model_id_service: A ModelIdService object.
+            mlflow_client: An MlflowClient object,
         """
         self._artifact_id_service = artifact_id_service
         self._model_id_service = model_id_service
+        self._mlflow_client = mlflow_client
 
     def create(
         self,
         model_id: int,
         description: str,
         artifact_id: int,
-        commit: bool = True,
         **kwargs,
     ) -> utils.ModelWithVersionDict:
         """Create a new model version.
@@ -513,7 +535,6 @@ class ModelIdVersionsService(object):
             model_id: The unique id of the model.
             description: The description of the model version.
             artifact_id: The artifact for the model version.
-            commit: If True, commit the transaction. Defaults to True.
 
         Returns:
             The newly created model object.
@@ -550,14 +571,23 @@ class ModelIdVersionsService(object):
 
         ml_model.resource.children.append(new_version.resource)
         db.session.add(new_version)
+        db.session.flush()
 
-        if commit:
-            db.session.commit()
-            log.debug(
-                "Model registration successful",
-                model_id=ml_model.resource_id,
-                name=ml_model.name,
+        mlflow_model_name = f"resource_{ml_model.resource_id:09d}"
+        try:
+            self._mlflow_client.create_model_version(
+                mlflow_model_name, source=artifact.uri
             )
+        except MlflowException as e:
+            raise MLFlowError(e.message) from e
+
+        db.session.commit()
+
+        log.debug(
+            "Model registration successful",
+            model_id=ml_model.resource_id,
+            name=ml_model.name,
+        )
 
         return utils.ModelWithVersionDict(
             ml_model=ml_model,

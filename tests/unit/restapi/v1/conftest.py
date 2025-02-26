@@ -26,6 +26,7 @@ from flask import Flask
 from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
 from injector import Injector
+from mlflow.tracking import MlflowClient
 from pytest import MonkeyPatch
 
 from ..lib import actions, mock_rq
@@ -720,3 +721,7 @@ def registered_mlflowrun_incomplete(
     )
 
     return responses
+
+@pytest.fixture
+def mlflow_client() -> MlflowClient:
+    return MlflowClient()
