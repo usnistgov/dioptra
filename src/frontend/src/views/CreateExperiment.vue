@@ -169,7 +169,7 @@
 
   let experiment = ref({
     name: '',
-    group: '',
+    group: store.loggedInGroup.id,
     description: '',
     entrypoints: [],
   })
@@ -201,7 +201,7 @@
 
   let initialCopy = ref({
     name: '',
-    group: '',
+    group: store.loggedInGroup.id,
     description: '',
     entrypoints: [],
   })

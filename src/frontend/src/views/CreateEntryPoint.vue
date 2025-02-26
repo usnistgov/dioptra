@@ -351,7 +351,7 @@
 
   let entryPoint = ref({
     name: '',
-    group: '',
+    group: store.loggedInGroup.id,
     description: '',
     parameters: [],
     taskGraph: '',
@@ -361,7 +361,7 @@
 
   const initialCopy = ref({
     name: '',
-    group: '',
+    group: store.loggedInGroup.id,
     description: '',
     parameters: [],
     taskGraph: '',

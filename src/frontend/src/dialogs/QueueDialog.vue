@@ -115,6 +115,9 @@
       description.value = ''
       history.value = false
     }
+    if (!group.value) {
+      group.value = store.loggedInGroup.id
+    }
   })
 
   function emitAddOrEdit() {

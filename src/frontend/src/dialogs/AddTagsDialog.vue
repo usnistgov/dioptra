@@ -75,6 +75,9 @@
       name.value = ''
       locked.value = true
     }
+    if (!group.value) {
+      group.value = store.loggedInGroup.id
+    }
   })
 
   function emitAddOrEdit() {

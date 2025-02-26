@@ -88,6 +88,9 @@
       name.value = ''
       description.value = ''
     }
+    if (!group.value) {
+      group.value = store.loggedInGroup.id
+    }
   })
 
   function emitAddOrEdit() {

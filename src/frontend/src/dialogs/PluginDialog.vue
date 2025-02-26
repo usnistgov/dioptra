@@ -116,6 +116,9 @@
       plugin.value.group = ''
       plugin.value.description = ''
     }
+    if (!plugin.value.group) {
+      plugin.value.group = store.loggedInGroup.id
+    }
   })
 
 </script>
