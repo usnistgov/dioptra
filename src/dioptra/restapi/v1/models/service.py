@@ -136,7 +136,16 @@ class ModelService(object):
         except MlflowException as e:
             raise MLFlowError(e.message) from e
 
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception as e:
+            # if the commit fails, attempt to roll back mlflow changes
+            try:
+                self._mlflow_client.delete_registered_model(mlflow_model_name)
+            except MlflowException as mlflow_error:
+                raise MLFlowError(str(e)) from mlflow_error
+            raise e
+
         log.debug(
             "Model registration successful",
             model_id=ml_model.resource_id,
