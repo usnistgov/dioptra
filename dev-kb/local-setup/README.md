@@ -8,23 +8,18 @@
 
 ```sh
 ### Optional "Environment Info"
-
-### It map to an environment variable DIOPTRA_CONFIG_NAME
-
-### If absent a digest of environment source params will be
-
-DIOPTRA_CONFIG_NAME="Dev-Dioptra for Tuning Unit-Tests"
+### Maps to an environment variable DIOPTRA_CONFIG_INFO verbatim
+### If absent a digest of environment SETTINGS will be 
+### generated IN  DIOPTRA_CONFIG_DETAILS
+DIOPTRA_CONFIG_NAME=Dev-Dioptra for Tuning Unit-Tests
 
 ### Env Variable for GitHub Branch
-
 DIOPTRA_GIT_BRANCH=dev
 
 ### Env Variable for Deployment Path
-
 DIOPTRA_DEPLOY_DIR=~/di/di-dep
 
 ### Env Variable for Source Path
-
 DIOPTRA_CODE_DIR=~/di/di-src
 ```
 
@@ -87,57 +82,46 @@ or
 env | sort | grep DIOPTRA
 ```
 
+#### d. [Optional] To review aggregated digest of the environment settings use the command below. The reason for using printf is the echo -e switch being inconsistent between shells.
+```sh
+printf "${DIOPTRA_CONFIG_DETAILS}"
+```
 
-## Now the environment variables in the terminal process that sourced the environment using dev-set.sh should be set for performing the automated actions for Dioptra development 
+#### Now, the environment variables in the terminal process that sourced the environment using dev-set.sh should be set for performing the automated actions for Dioptra development setup and utilization. 
 
-### 1. [OPTIONAL] If the project was not yet setup you can setup working and source directories (from ```DIOPTRA_DEPLOY_DIR``` and ```DIOPTRA_CODE_DIR```) initialized from the repository branch (defined by ```DIOPTRA_GIT_BRANCH```) if the config file was used.
-
-### Note: If you sourced the terminal environment using the  -t/--tag, 
-
-
-1. #### In the shell environment sourced in the steps 1 and 2 or only 2, run the setup script:
+### 2. [Optional] If the project was not yet setup you can setup working and source directories (from ```DIOPTRA_DEPLOY_DIR``` and ```DIOPTRA_CODE_DIR```) initialized from the repository branch (defined by ```DIOPTRA_GIT_BRANCH```) if the config file was used.
+#### a. Source-initialize **NEW TERMINAL** environment as described in step 1
+#### b. Run the setup script:
 
 ```sh
 ./stup.sh
 ```
   
 
-1. ## Start Flask
+### 3. Start Flask
+#### a. Source-initialize **NEW TERMINAL** environment as described in step 1
+#### b. In the initialized environment run Flask startup script
 
-2. ### Source-initialize environment as described in steps 1.i and 1.ii or only 1.ii
-
-3. ### In the initialized environment run Flask startup script
-
-```
-
+```sh
 ./run-flask.sh
-
 ```
 
   
 
-1. ## Start Redis
+### 4. Start Redis
+#### a. Source-initialize **NEW TERMINAL** environment as described in step 1
+#### b. In the initialized environment run Redis startup script
 
-2. ### Source-initialize environment as described in steps 1.i and 1.ii or only 1.ii
-
-3. ### In the initialized environment run REdis startup script
-
-```
-
+```sh
 ./run-redis.sh
-
 ```
 
   
 
-1. ## Start Worker
+### 5. Start Worker
+#### a. Source-initialize **NEW TERMINAL** environment as described in step 1
+#### b. In the initialized environment run Worker startup script
 
-2. ### Source-initialize environment as described in steps 1.i and 1.ii or only 1.ii
-
-3. ### In the initialized environment run Worker startup script
-
-```
-
+```sh
 ./run-worker.sh
-
 ```

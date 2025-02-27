@@ -35,20 +35,10 @@ print_main_help()
     \t>source ./dev-env+.sh -e ./env-example1.cfg\n\n"
 }
 
-set_display_env_name(){
+set_display_env_details(){
   ### Set a reminder variable to track where the environment originated from. 
-  printf "
-  DIOPTRA_CONFIG_INFO: $DIOPTRA_CONFIG_INFO
-  DIOPTRA_ENV_FILE: $DIOPTRA_ENV_FILE
-        \tfile: $DIOPTRA_ENV_FILE 
-        \tbranch-id:\t$DIOPTRA_BRANCH
-        \tcode-dir:\t$DIOPTRA_CODE
-        \tdeploy-dir:\t$DIOPTRA_DEPLOY
-  \n\n
-  "
   if [ -v "$DIOPTRA_CONFIG_INFO" ]; then 
-      export DIOPTRA_CONFIG_INFO="
-      $DIOPTRA_CONFIG_INFO
+      export DIOPTRA_CONFIG_DETAILS="
       Dioptra Environment was Built from:
       \tfile: $DIOPTRA_ENV_FILE 
       \tbranch-id:\t$DIOPTRA_BRANCH
@@ -57,15 +47,16 @@ set_display_env_name(){
       \n"
   else
       ### Config info was not supplied
-      export DIOPTRA_CONFIG_INFO="        
-      Dioptra Environment was Built for:
+      export DIOPTRA_CONFIG_DETAILS="        
+      Dioptra Environment was Built with:
+      \tenv-info:\t$DIOPTRA_CONFIG_INFO
       \tenv-file:\t$DIOPTRA_ENV_FILE 
       \tbranch-id:\t$DIOPTRA_BRANCH
       \tcode-dir:\t$DIOPTRA_CODE
       \tdeploy-dir:\t$DIOPTRA_DEPLOY
       \n"
   fi
-  printf "Environment Info:$DIOPTRA_CONFIG_INFO\n"
+  printf "To recall "Environment Info:" below use command: printf \"\${DIOPTRA_CONFIG_DETAILS}\"\nEnvironment Info:$DIOPTRA_CONFIG_DETAILS\n"
 }
 
 read_properties_from_file()
@@ -171,6 +162,7 @@ unset DIOPTRA_BRANCH
 unset DIOPTRA_CODE
 unset DIOPTRA_DEPLOY
 unset DIOPTRA_CONFIG_INFO
+unset DIOPTRA_CONFIG_DETAILS
 
 
 # if [ -n "${BASH_VERSION}" ]; then
@@ -252,7 +244,7 @@ else
   printf "\n Script assumes DIOPTRA deployed to Work-DIR:\t $DIOPTRA_DEPLOY\n\n"
 
   print_env_status
-  set_display_env_name
+  set_display_env_details
 fi
 
 
