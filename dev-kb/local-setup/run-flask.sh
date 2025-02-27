@@ -1,5 +1,7 @@
-#!/opt/homebrew/bin/bash
+#!/usr/bin/env bash
 
+echo "Your current BASH_VERSION is $BASH_VERSION"
+echo "which bash command points to $(which bash)"
 
 cd ${DIOPTRA_CODE}
 
