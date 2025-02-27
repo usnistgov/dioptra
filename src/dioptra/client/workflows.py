@@ -116,8 +116,8 @@ class WorkflowsCollectionClient(CollectionClient[T]):
         self,
         group_id: int,
         source: str | DioptraFile | list[DioptraFile],
-        config_path: str = "dioptra.toml",
-        resolve_name_conflicts_strategy: Literal["fail", "overwrite"] = "fail",
+        config_path: str | None = None,
+        resolve_name_conflicts_strategy: Literal["fail", "overwrite"] | None = None,
     ):
         """
         Import resources from a archive file or git repository
@@ -126,10 +126,11 @@ class WorkflowsCollectionClient(CollectionClient[T]):
             group_id: The group to import resources into
             source: The source to import from. Can be a str containing a git url, a
                 DioptraFile containing an archive file or a list[DioptraFile]
-                containing resource files.  config_path: The path to the toml
-                configuration file in the import source.
+                containing resource files.
+            config_path: The path to the toml configuration file in the import source.
+                Defaults to "dioptra.toml".
             resolve_name_conflicts_strategy: The strategy for resolving name conflicts.
-                Either "fail" or "overwrite"
+                Either "fail" or "overwrite". Defaults to "fail".
         Raises:
             IllegalArgumentError: If more than one import source is provided or if no
                 import source is provided.
