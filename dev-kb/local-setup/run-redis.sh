@@ -1,4 +1,4 @@
-#!/opt/homebrew/bin/bash
+#!/usr/bin/env bash
 
 cd ${DIOPTRA_DEPLOY}/instance
 redis-server

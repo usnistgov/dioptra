@@ -1,4 +1,4 @@
-#!/opt/homebrew/bin/bash
+#!/usr/bin/env bash
 
 # Get Dioptra code from Github
 if [ -a ${DIOPTRA_CODE} ] ; then

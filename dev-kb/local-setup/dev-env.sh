@@ -1,10 +1,10 @@
-#!/opt/homebrew/bin/bash
+#!/usr/bin/env bash
 
 ### !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ###
 #######################################################################
 ### Reset These values if you want to use these default directories ###
-export DIOPTRA_CODE=$HOME/run-dioptra/dioptra-src
-export DIOPTRA_DEPLOY=$HOME/run-dioptra/dioptra-dep
+export DIOPTRA_CODE="$(HOME)/run-dioptra/dioptra-src"
+export DIOPTRA_DEPLOY="$(HOME)/run-dioptra/dioptra-dep"
 export DIOPTRA_BRANCH=dev
 #######################################################################
 

@@ -1,4 +1,4 @@
-#!/opt/homebrew/bin/bash
+#!/usr/bin/env bash
 
 
 source ${DIOPTRA_CODE}/${DIOPTRA_VENV}/bin/activate
