@@ -388,7 +388,7 @@ class ResourceImportService(object):
 
         try:
             config = toml.load(config_path)
-        except toml.TOMLDecodeError as e:
+        except toml.TomlDecodeError as e:
             raise ImportFailedError(
                 f"Failed to load resource import config from {config_path}.",
                 reason=f"Could not decode config: {e}",
