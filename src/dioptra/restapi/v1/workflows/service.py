@@ -15,7 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform workflows endpoint operations."""
-import tomllib
+import toml
 from collections import defaultdict
 from hashlib import sha256
 from io import BytesIO
@@ -387,9 +387,8 @@ class ResourceImportService(object):
         """
 
         try:
-            with open(config_path, "rb") as f:
-                config = tomllib.load(f)
-        except tomllib.TOMLDecodeError as e:
+            config = toml.load(config_path)
+        except toml.TOMLDecodeError as e:
             raise ImportFailedError(
                 f"Failed to load resource import config from {config_path}.",
                 reason=f"Could not decode config: {e}",
