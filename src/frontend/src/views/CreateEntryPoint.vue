@@ -386,7 +386,7 @@
     plugins: []
   })
 
-  const initialCopy = ref({
+  const copyAtEditStart = ref({
     name: '',
     group: store.loggedInGroup.id,
     description: '',
@@ -396,9 +396,28 @@
     plugins: []
   })
 
-  const valuesChanged = computed(() => {
-    for (const key in initialCopy.value) {
-      if(JSON.stringify(initialCopy.value[key]) !== JSON.stringify(entryPoint.value[key])) {
+  const valuesChangedFromEditStart = computed(() => {
+    for (const key in copyAtEditStart.value) {
+      if(JSON.stringify(copyAtEditStart.value[key]) !== JSON.stringify(entryPoint.value[key])) {
+        return true
+      }
+    }
+    return false
+  })
+
+  const ORIGINAL_COPY = {
+    name: '',
+    group: store.loggedInGroup.id,
+    description: '',
+    parameters: [],
+    taskGraph: '',
+    queues: [],
+    plugins: []
+  }
+
+  const valuesChangedFromOriginal = computed(() => {
+    for (const key in ORIGINAL_COPY) {
+      if(JSON.stringify(ORIGINAL_COPY[key]) !== JSON.stringify(entryPoint.value[key])) {
         return true
       }
     }
@@ -477,14 +496,14 @@
         await checkIfStillValid('queues')
         await checkIfStillValid('plugins')
         entryPoint.value = store.savedForms.entryPoint
-        initialCopy.value = JSON.parse(JSON.stringify(store.savedForms.entryPoint))
+        copyAtEditStart.value = JSON.parse(JSON.stringify(store.savedForms.entryPoint))
       }
       return
     }
     try {
       const res = await api.getItem('entrypoints', route.params.id)
       entryPoint.value = res.data
-      initialCopy.value = JSON.parse(JSON.stringify(entryPoint.value))
+      copyAtEditStart.value = JSON.parse(JSON.stringify(entryPoint.value))
       title.value = `Edit ${res.data.name}`
       console.log('entryPoint = ', entryPoint.value)
     } catch(err) {
@@ -656,7 +675,7 @@
 
   onBeforeRouteLeave((to, from, next) => {
     toPath.value = to.path
-    if(confirmLeave.value || !valuesChanged.value) {
+    if(confirmLeave.value || !valuesChangedFromEditStart.value) {
       next(true)
     } else if(route.params.id === 'new') {
       leaveForm()
@@ -668,7 +687,7 @@
   function clearForm() {
     entryPoint.value = {
       name: '',
-      group: '',
+      group: store.loggedInGroup.id,
       description: '',
       parameters: [],
       taskGraph: '',
@@ -687,10 +706,10 @@
   })
 
   function leaveForm() {
-    if(isEmptyValues.value) {
-      store.savedForms.entryPoint = null
-    } else if(route.params.id === 'new') {
+    if(route.params.id === 'new' && valuesChangedFromEditStart.value && valuesChangedFromOriginal.value) {
       store.savedForms.entryPoint = entryPoint.value
+    } else {
+      store.savedForms.entryPoint = null
     }
     confirmLeave.value = true
     router.push(toPath.value)
