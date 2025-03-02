@@ -9,40 +9,35 @@
         {{editTag ? 'Edit Tag' : 'Register Tag'}}
       </label>
     </template>
-    <div class="row items-center">
-      <label class="col-3 q-mb-lg" id="tagName">
-        Tag Name:
-      </label>
-      <q-input 
-        class="col q-mb-xs" 
-        outlined 
-        dense 
-        v-model.trim="name"  
-        autofocus 
-        :rules="[requiredRule]" 
-        aria-labelledby="tagName"
-        aria-required="true"
-      />
-    </div>
-    <div class="row items-center q-mb-xs">
-      <label class="col-3 q-mb-lg" id="pluginGroup">
-        Group:
-      </label>
-      <q-select
-        class="col"
-        outlined 
-        v-model="group" 
-        :options="store.groups"
-        option-label="name"
-        option-value="id"
-        emit-value
-        map-options
-        dense
-        :rules="[requiredRule]"
-        aria-labelledby="pluginGroup"
-        aria-required="true"
-      />
-    </div>
+    <q-input 
+      class="q-mb-xs" 
+      outlined 
+      dense 
+      v-model.trim="name"  
+      autofocus 
+      :rules="[requiredRule]"
+      id="name"
+    >
+      <template #before>
+        <label for="name" class="field-label">Name:</label>
+      </template>
+    </q-input>
+    <q-select
+      outlined 
+      v-model="group" 
+      :options="store.groups"
+      option-label="name"
+      option-value="id"
+      emit-value
+      map-options
+      dense
+      :rules="[requiredRule]"
+      id="group"
+    >
+      <template #before>
+        <label for="group" class="field-label">Group:</label>
+      </template>
+    </q-select>
   </DialogComponent>
 </template>
 

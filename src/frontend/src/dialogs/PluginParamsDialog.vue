@@ -9,54 +9,48 @@
         Register Plugin Parameter Type
       </label>
     </template>
-    <div class="row items-center q-mb-xs">
-      <label class="col-3 q-mb-lg" id="pluginName">
-        Name:
-      </label>
-      <q-input 
-        class="col" 
-        outlined 
-        dense 
-        v-model="plugin.name" 
-        autofocus 
-        :rules="[requiredRule]" 
-        aria-labelledby="pluginName"
-        aria-required="true"
-      />
-    </div>
-    <div v-if="!editPluginParamType" class="row items-center q-mb-xs">
-      <label class="col-3 q-mb-lg" id="pluginGroup">
-        Group:
-      </label>
-      <q-select
-        class="col"
-        outlined 
-        v-model="plugin.group" 
-        :options="store.groups"
-        option-label="name"
-        option-value="id"
-        emit-value
-        map-options
-        dense
-        :rules="[requiredRule]"
-        aria-labelledby="pluginGroup"
-        aria-required="true"
-      />
-    </div>
-    <div class="row items-center">
-      <label class="col-3 " id="description">
-        Description:
-      </label>
-      <q-input
-      	class="col"
-        v-model="plugin.description"
-        outlined
-        type="textarea"
-        aria-labelledby="description"
-        autogrow
-        dense
-      />
-    </div>
+    <q-input 
+      outlined 
+      dense 
+      v-model="plugin.name" 
+      autofocus 
+      :rules="[requiredRule]"
+      id="name"
+      class="q-mb-xs"
+    >
+      <template #before>
+        <label for="name" class="field-label">Name:</label>
+      </template>
+    </q-input>
+    <q-select
+      v-if="!editPluginParamType"
+      outlined 
+      v-model="plugin.group" 
+      :options="store.groups"
+      option-label="name"
+      option-value="id"
+      emit-value
+      map-options
+      dense
+      :rules="[requiredRule]"
+      id="group"
+    >
+      <template #before>
+        <label for="group" class="field-label">Group:</label>
+      </template>
+    </q-select>
+    <q-input
+      v-model="plugin.description"
+      outlined
+      type="textarea"
+      autogrow
+      dense
+      id="description"
+    >
+      <template #before>
+        <label for="description" class="field-label">Description:</label>
+      </template>
+    </q-input>
     <q-file
       v-model="uploadedFile"
       label="Upload JSON structure"
@@ -76,7 +70,7 @@
       <CodeEditor 
         v-model="jsonString"
         language="yaml"
-        placeholder="Enter Plugin Parameter Type JSON structure..."
+        placeholder="Enter plugin param type JSON structure"
         style="width: 0; flex-grow: 1;"
         :showError="jsonError"
       />

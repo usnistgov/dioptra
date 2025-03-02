@@ -9,51 +9,47 @@
         {{ editPlugin ? 'Edit Plugin' : 'Register Plugin'}}
       </label>
     </template>
-    <div class="row items-center q-mb-xs">
-      <label class="col-3 q-mb-lg" id="pluginName">
-        Name:
-      </label>
-      <q-input 
-        class="col" 
-        outlined 
-        dense 
-        v-model="plugin.name" 
-        autofocus 
-        :rules="[requiredRule, pythonModuleNameRule]" 
-        aria-labelledby="pluginName"
-        aria-required="true"
-      />
-    </div>
-    <div class="row items-center q-mb-xs" v-if="!editPlugin">
-      <label class="col-3 q-mb-lg" id="pluginGroup">
-        Group:
-      </label>
-      <q-select
-        class="col"
-        outlined 
-        v-model="plugin.group" 
-        :options="store.groups"
-        option-label="name"
-        option-value="id"
-        emit-value
-        map-options
-        dense
-        :rules="[requiredRule]"
-        aria-labelledby="pluginGroup"
-        aria-required="true"
-      />
-    </div>
-    <div class="row items-center">
-      <label class="col-3 q-mb-lg" id="pluginGroup">
-        Description:
-      </label>
-      <q-input
-      	class="col"
-        v-model="plugin.description"
-        outlined
-        type="textarea"
-      />
-    </div>
+    <q-input
+      outlined 
+      dense 
+      v-model="plugin.name" 
+      autofocus 
+      :rules="[requiredRule, pythonModuleNameRule]" 
+      class="q-mb-xs"
+      id="pluginName"
+    >
+      <template #before>
+        <label for="pluginName" class="field-label">Name:</label>
+      </template>
+    </q-input>
+    <q-select
+      v-if="!editPlugin"
+      outlined 
+      v-model="plugin.group" 
+      :options="store.groups"
+      option-label="name"
+      option-value="id"
+      emit-value
+      map-options
+      dense
+      :rules="[requiredRule]"
+      id="pluginGroup"
+    >
+      <template #before>
+        <label for="pluginGroup" class="field-label">Group:</label>
+      </template>
+    </q-select>
+    <q-input
+      v-model="plugin.description"
+      outlined
+      type="textarea"
+      dense
+      id="pluginDescription"
+    >
+      <template #before>
+        <label for="pluginDescription" class="field-label">Description:</label>
+      </template>
+    </q-input>
   </DialogComponent>
 </template>
 
