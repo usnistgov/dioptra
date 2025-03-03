@@ -24,7 +24,7 @@ from typing import IO, Any, Final
 
 import jsonschema
 import structlog
-import toml
+import tomli as toml
 from injector import inject
 from structlog.stdlib import BoundLogger
 from werkzeug.datastructures import FileStorage
@@ -387,8 +387,9 @@ class ResourceImportService(object):
         """
 
         try:
-            config = toml.load(config_path)
-        except toml.TomlDecodeError as e:
+            with open(config_path, "rb") as f:
+                config = toml.load(f)
+        except toml.TOMLDecodeError as e:
             raise ImportFailedError(
                 f"Failed to load resource import config from {config_path}.",
                 reason=f"Could not decode config: {e}",
