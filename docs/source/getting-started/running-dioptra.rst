@@ -56,7 +56,7 @@ This will generate a setup that is appropriate for testing Dioptra on your perso
    # Create a virtual environment and install cruft and Jinja2
    python -m venv venv-deploy
    source venv-deploy/bin/activate
-   python -m pip install --upgrade pip cruft jinja2
+   python -m pip install --upgrade pip cruft jinja2 requests
 
 Next, run cruft to begin the deployment process. The following command will run cruft and use all of the default template values except for the `datasets_directory`. If you wish to configure the deployment in a different manner, see the :ref:`Applying the template <getting-started-running-dioptra-applying-the-template>` section for detailed description of the template values and how to configure them. 
 
