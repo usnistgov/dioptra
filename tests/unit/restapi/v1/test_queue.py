@@ -155,7 +155,11 @@ def assert_retrieving_queues_works(
         query_string["page_length"] = paging_info["page_length"]
 
     response = dioptra_client.queues.get(**query_string)
-    assert response.status_code == HTTPStatus.OK and response.json()["data"] == expected
+    # A sort order was not given in the request, so we must not assume a
+    # particular order in the response.
+    expected = sorted(expected, key=lambda d: d["id"])
+    resp_data = sorted(response.json()["data"], key=lambda d: d["id"])
+    assert response.status_code == HTTPStatus.OK and resp_data == expected
 
 
 def assert_sorting_queue_works(

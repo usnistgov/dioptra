@@ -42,20 +42,6 @@ from .lib.db import views as viewsdb
 
 
 @pytest.fixture
-def fake_data(faker: Faker) -> libdb.FakeData:
-    return libdb.FakeData(faker)
-
-
-@pytest.fixture
-def account(db: SQLAlchemy, fake_data: libdb.FakeData) -> libdb.FakeAccount:
-    new_account = fake_data.account()
-    db.session.add(new_account.user)
-    db.session.add(new_account.group)
-    db.session.commit()
-    return new_account
-
-
-@pytest.fixture
 def second_account(
     db: SQLAlchemy, account: libdb.FakeData, fake_data: libdb.FakeData
 ) -> libdb.FakeAccount:
