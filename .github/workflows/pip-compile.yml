@@ -16,9 +16,15 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 name: pip-compile runs
 
+#on:
+  #schedule:
+    #- cron: "10 1 * * *" # at 1:10am every day
 on:
-  schedule:
-    - cron: "10 1 * * *" # at 1:10am every day
+  push:
+    branches:
+      - "**"
+    tags:
+      - "*.*.*"
 
 jobs:
   pip-compile:
