@@ -32,10 +32,9 @@
           autofocus 
           :rules="[requiredRule]" 
           id="queueName"
-          aria-required="true"
         >
           <template #before>
-            <label for="queueName" class="field-label">Queue Name:</label>
+            <label for="queueName" class="field-label">Name:</label>
           </template>
         </q-input>
         <q-select
@@ -50,7 +49,6 @@
           dense
           :rules="[requiredRule]"
           id="pluginGroup"
-          aria-required="true"
         >
           <template #before>
             <label for="pluginGroup" class="field-label">Group:</label>
