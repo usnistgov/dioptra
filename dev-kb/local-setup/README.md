@@ -29,7 +29,7 @@ The configuration may be set-up through the use of a configuration file or direc
 
 Below is an example of a configuration file. This example can be saved into the root of the project directory (e.g. as ```env-dev.cfg```).
 
-```sh
+```conf
 ### Optional "Environment Info"
 ### Generated, if not explicitly provided
 DIOPTRA_CONFIG_NAME=Dev-Dioptra for Tuning Unit-Tests
