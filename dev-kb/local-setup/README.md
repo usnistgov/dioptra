@@ -14,8 +14,10 @@ pyenv versions
   3.11.2
   3.11.10 
 ```
+
 - PyEnv allows to set up local version for the directory you plan to use dioptra in with the following command:
 (The command will create .python-version at the very location where the command was ran)
+
 ```sh
 pyenv local 3.11.10
 ```
