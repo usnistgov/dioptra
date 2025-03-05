@@ -605,6 +605,7 @@ def build_entrypoint(entrypoint_dict: EntrypointDict) -> dict[str, Any]:
         "name": entrypoint.name,
         "description": entrypoint.description,
         "task_graph": entrypoint.task_graph,
+        "artifacts": entrypoint.artifacts,
         "user": build_user_ref(entrypoint.creator),
         "group": build_group_ref(entrypoint.resource.owner),
         "created_on": entrypoint.resource.created_on,

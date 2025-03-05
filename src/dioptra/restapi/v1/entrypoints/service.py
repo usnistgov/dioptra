@@ -90,6 +90,7 @@ class EntrypointService(object):
         name: str,
         description: str,
         task_graph: str,
+        artifacts: str,
         parameters: list[dict[str, Any]],
         plugin_ids: list[int],
         queue_ids: list[int],
@@ -140,6 +141,7 @@ class EntrypointService(object):
             name=name,
             description=description,
             task_graph=task_graph,
+            artifacts=artifacts,
             parameters=entrypoint_parameters,
             resource=resource,
             creator=current_user,
@@ -396,6 +398,7 @@ class EntrypointIdService(object):
         name: str,
         description: str,
         task_graph: str,
+        artifacts: str,
         parameters: list[dict[str, Any]],
         queue_ids: list[int],
         error_if_not_found: bool = False,
@@ -409,6 +412,7 @@ class EntrypointIdService(object):
             name: The new name of the entrypoint.
             description: The new description of the entrypoint.
             task_graph: The new task graph of the entrypoint.
+            artifacts: The new artifact definitions of the entrypoint.
             parameters: the new parameters of the entrypoint.
             error_if_not_found: If True, raise an error if the group is not found.
                 Defaults to False.
@@ -463,6 +467,7 @@ class EntrypointIdService(object):
             name=name,
             description=description,
             task_graph=task_graph,
+            artifacts=artifacts,
             parameters=entrypoint_parameters,
             resource=entrypoint.resource,
             creator=current_user,
@@ -625,6 +630,7 @@ class EntrypointIdPluginsService(object):
             name=entrypoint.name,
             description=entrypoint.description,
             task_graph=entrypoint.task_graph,
+            artifacts=entrypoint.artifacts,
             parameters=new_entrypoint_parameters,
             resource=entrypoint.resource,
             creator=current_user,
@@ -796,6 +802,7 @@ class EntrypointIdPluginsIdService(object):
             name=entrypoint.name,
             description=entrypoint.description,
             task_graph=entrypoint.task_graph,
+            artifacts=entrypoint.artifacts,
             parameters=entrypoint_parameters,
             resource=entrypoint.resource,
             creator=current_user,

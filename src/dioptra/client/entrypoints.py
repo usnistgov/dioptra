@@ -476,6 +476,7 @@ class EntrypointsCollectionClient(CollectionClient[T]):
         group_id: int,
         name: str,
         task_graph: str,
+        artifacts: str | None = None,
         description: str | None = None,
         parameters: list[dict[str, Any]] | None = None,
         queues: list[int] | None = None,
@@ -487,6 +488,8 @@ class EntrypointsCollectionClient(CollectionClient[T]):
             group_id: The id of the group that will own the entrypoint.
             name: The name of the new entrypoint.
             task_graph: The task graph for the new entrypoint as a YAML-formatted
+                string.
+            artifacts: The artifacts for the new entrypoint as a YAML-formatted
                 string.
             description: The description of the new entrypoint. Optional, defaults to
                 None.
@@ -505,6 +508,9 @@ class EntrypointsCollectionClient(CollectionClient[T]):
             "name": name,
             "taskGraph": task_graph,
         }
+
+        if artifacts is not None:
+            json_["artifacts"] = artifacts
 
         if description is not None:
             json_["description"] = description
@@ -525,6 +531,7 @@ class EntrypointsCollectionClient(CollectionClient[T]):
         entrypoint_id: str | int,
         name: str,
         task_graph: str,
+        artifacts: str | None,
         description: str | None,
         parameters: list[dict[str, Any]] | None,
         queues: list[int] | None,
@@ -547,6 +554,9 @@ class EntrypointsCollectionClient(CollectionClient[T]):
             The response from the Dioptra API.
         """
         json_: dict[str, Any] = {"name": name, "taskGraph": task_graph}
+
+        if artifacts is not None:
+            json_["artifacts"] = artifacts
 
         if description is not None:
             json_["description"] = description

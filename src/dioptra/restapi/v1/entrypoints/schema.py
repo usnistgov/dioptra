@@ -144,6 +144,10 @@ class EntrypointMutableFieldsSchema(Schema):
         metadata=dict(description="Task graph of the Entrypoint resource."),
         required=True,
     )
+    artifacts = fields.String(
+        attribute="artifacts",
+        metadata=dict(description="Artifact definitions of the Entrypoint resource."),
+    )
     parameters = fields.Nested(
         EntrypointParameterSchema,
         attribute="parameters",
