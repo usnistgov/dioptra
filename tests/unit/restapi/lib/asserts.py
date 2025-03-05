@@ -41,6 +41,15 @@ def assert_base_resource_contents_match_expectations(response: dict[str, Any]) -
     assert helpers.is_iso_format(response["lastModifiedOn"])
 
 
+def assert_resource_contents_match_expectations(
+    response: dict[str, Any], expected: dict[str, Any]
+) -> None:
+    for key, value in expected.items():
+        assert key in response
+        if isinstance(value, (int, float, bool, str)):
+            assert response[key] == value
+
+
 def assert_user_ref_contents_matches_expectations(
     user: dict[str, Any], expected_user_id: int
 ) -> None:
@@ -290,9 +299,7 @@ def assert_creating_another_existing_draft_fails(
     Raises:
         AssertionError: If the response status code is not 400.
     """
-    response = drafts_client.create(
-        *resource_ids, **payload
-    )
+    response = drafts_client.create(*resource_ids, **payload)
     assert response.status_code == HTTPStatus.BAD_REQUEST
 
 
