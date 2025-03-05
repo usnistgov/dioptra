@@ -39,6 +39,13 @@ DRAFT_FIELDS: Final[set[str]] = {
     "queues",
     "plugins",
 }
+MODIFY_DRAFT_FIELDS: Final[set[str]] = {
+    "name",
+    "description",
+    "taskGraph",
+    "parameters",
+    "queues",
+}
 FIELD_NAMES_TO_CAMEL_CASE: Final[dict[str, str]] = {
     "task_graph": "taskGraph",
 }
@@ -291,7 +298,7 @@ class EntrypointsCollectionClient(CollectionClient[T]):
         self._modify_resource_drafts = ModifyResourceDraftsSubCollectionClient[T](
             session=session,
             validate_fields_fn=make_draft_fields_validator(
-                draft_fields=DRAFT_FIELDS,
+                draft_fields=MODIFY_DRAFT_FIELDS,
                 resource_name=self.name,
             ),
             root_collection=self,

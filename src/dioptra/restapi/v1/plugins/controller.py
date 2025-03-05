@@ -317,11 +317,11 @@ class PluginIdFilesEndpoint(Resource):
         parsed_obj = request.parsed_obj  # type: ignore # noqa: F841
 
         plugin_file = self._plugin_id_file_service.create(
+            plugin_id=id,
             filename=parsed_obj["filename"],
             contents=parsed_obj["contents"],
             description=parsed_obj["description"],
             tasks=parsed_obj["tasks"],
-            plugin_id=id,
             log=log,
         )
         return utils.build_plugin_file(plugin_file)

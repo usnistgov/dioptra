@@ -1326,7 +1326,9 @@ def test_manage_existing_plugin_draft(
 
     # Run routine: existing resource drafts tests
     routines.run_existing_resource_drafts_tests(
+        dioptra_client.plugins,
         dioptra_client.plugins.modify_resource_drafts,
+        dioptra_client.workflows,
         plugin["id"],
         draft=draft,
         draft_mod=draft_mod,
@@ -1379,7 +1381,9 @@ def test_manage_new_plugin_drafts(
 
     # Run routine: new resource drafts tests
     routines.run_new_resource_drafts_tests(
+        dioptra_client.plugins,
         dioptra_client.plugins.new_resource_drafts,
+        dioptra_client.workflows,
         drafts=drafts,
         draft1_mod=draft1_mod,
         draft1_expected=draft1_expected,
@@ -1456,7 +1460,9 @@ def test_manage_existing_plugin_file_draft(
 
     # Run routine: existing resource drafts tests
     routines.run_existing_resource_drafts_tests(
+        dioptra_client.plugins.files,
         dioptra_client.plugins.files.modify_resource_drafts,
+        dioptra_client.workflows,
         plugin_id,
         plugin_file["id"],
         draft=draft,
@@ -1535,7 +1541,9 @@ def test_manage_new_plugin_file_drafts(
 
     # Run routine: new resource drafts tests
     routines.run_new_resource_drafts_tests(
+        dioptra_client.plugins.files,
         dioptra_client.plugins.files.new_resource_drafts,
+        dioptra_client.workflows,
         plugin_id,
         drafts=drafts,
         draft1_mod=draft1_mod,

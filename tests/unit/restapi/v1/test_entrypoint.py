@@ -885,7 +885,6 @@ def test_manage_existing_entrypoint_draft(
             "parameterType": "string",
         }
     ]
-    plugin_ids = [plugin["id"] for plugin in entrypoint["plugins"]]
     queue_ids = [queue["id"] for queue in entrypoint["queues"]]
 
     # test creation
@@ -894,7 +893,6 @@ def test_manage_existing_entrypoint_draft(
         "description": description,
         "task_graph": task_graph,
         "parameters": parameters,
-        "plugins": plugin_ids,
         "queues": queue_ids,
     }
     draft_mod = {
@@ -902,7 +900,6 @@ def test_manage_existing_entrypoint_draft(
         "description": description,
         "task_graph": task_graph,
         "parameters": parameters,
-        "plugins": plugin_ids,
         "queues": queue_ids,
     }
 
@@ -918,7 +915,6 @@ def test_manage_existing_entrypoint_draft(
             "description": description,
             "taskGraph": task_graph,
             "parameters": parameters,
-            "plugins": plugin_ids,
             "queues": queue_ids,
         },
     }
@@ -933,14 +929,15 @@ def test_manage_existing_entrypoint_draft(
             "description": description,
             "taskGraph": task_graph,
             "parameters": parameters,
-            "plugins": plugin_ids,
             "queues": queue_ids,
         },
     }
 
     # Run routine: existing resource drafts tests
     routines.run_existing_resource_drafts_tests(
+        dioptra_client.entrypoints,
         dioptra_client.entrypoints.modify_resource_drafts,
+        dioptra_client.workflows,
         entrypoint["id"],
         draft=draft,
         draft_mod=draft_mod,
@@ -953,6 +950,8 @@ def test_manage_new_entrypoint_drafts(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+    registered_plugins: dict[str, Any],
 ) -> None:
     """Test that drafts of entrypoint can be created and managed by the user
 
@@ -982,8 +981,11 @@ def test_manage_new_entrypoint_drafts(
             "description": "entrypoint",
             "task_graph": "graph",
             "parameters": [],
-            "queues": [1, 3],
-            "plugins": [2],
+            "queues": [
+                registered_queues["queue1"]["id"],
+                registered_queues["queue3"]["id"],
+            ],
+            "plugins": [registered_plugins["plugin2"]["id"]],
         },
     }
     draft1_mod = {
@@ -1016,8 +1018,11 @@ def test_manage_new_entrypoint_drafts(
             "description": "entrypoint",
             "taskGraph": "graph",
             "parameters": [],
-            "queues": [1, 3],
-            "plugins": [2],
+            "queues": [
+                registered_queues["queue1"]["id"],
+                registered_queues["queue3"]["id"],
+            ],
+            "plugins": [registered_plugins["plugin2"]["id"]],
         },
     }
     draft1_mod_expected = {
@@ -1035,7 +1040,9 @@ def test_manage_new_entrypoint_drafts(
 
     # Run routine: existing resource drafts tests
     routines.run_new_resource_drafts_tests(
+        dioptra_client.entrypoints,
         dioptra_client.entrypoints.new_resource_drafts,
+        dioptra_client.workflows,
         drafts=drafts,
         draft1_mod=draft1_mod,
         draft1_expected=draft1_expected,

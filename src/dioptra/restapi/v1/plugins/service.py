@@ -689,11 +689,11 @@ class PluginIdFileService(object):
 
     def create(
         self,
+        plugin_id: int,
         filename: str,
         contents: str,
         description: str | None,
         tasks: list[dict[str, Any]],
-        plugin_id: int,
         commit: bool = True,
         **kwargs,
     ) -> utils.PluginFileDict:
@@ -703,11 +703,11 @@ class PluginIdFileService(object):
         with the PluginFile. The creator will be the current user.
 
         Args:
+            plugin_id: The unique id of the plugin containing the plugin file.
             filename: The name of the plugin file.
             contents: The contents of the plugin file.
             description: The description of the plugin file.
             tasks: The tasks associated with the plugin file.
-            plugin_id: The unique id of the plugin containing the plugin file.
             commit: If True, commit the transaction. Defaults to True.
 
         Returns:

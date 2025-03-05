@@ -679,7 +679,9 @@ def test_manage_existing_model_draft(
 
     # Run routine: existing resource drafts tests
     routines.run_existing_resource_drafts_tests(
+        dioptra_client.models,
         dioptra_client.models.modify_resource_drafts,
+        dioptra_client.workflows,
         model["id"],
         draft=draft,
         draft_mod=draft_mod,
@@ -732,7 +734,9 @@ def test_manage_new_model_drafts(
 
     # Run routine: existing resource drafts tests
     routines.run_new_resource_drafts_tests(
-        dioptra_client.queues.new_resource_drafts,
+        dioptra_client.models,
+        dioptra_client.models.new_resource_drafts,
+        dioptra_client.workflows,
         drafts=drafts,
         draft1_mod=draft1_mod,
         draft1_expected=draft1_expected,

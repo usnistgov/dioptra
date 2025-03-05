@@ -16,19 +16,22 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from typing import Any
 
-from dioptra.client.base import DioptraResponseProtocol
+from dioptra.client.base import CollectionClient, DioptraResponseProtocol
 from dioptra.client.drafts import (
     ModifyResourceDraftsSubCollectionClient,
     NewResourceDraftsSubCollectionClient,
 )
 from dioptra.client.snapshots import SnapshotsSubCollectionClient
 from dioptra.client.tags import TagsSubCollectionClient
+from dioptra.client.workflows import WorkflowsCollectionClient
 
 from . import asserts
 
 
 def run_new_resource_drafts_tests(
-    client: NewResourceDraftsSubCollectionClient[DioptraResponseProtocol],
+    resource_client: CollectionClient[DioptraResponseProtocol],
+    draft_client: NewResourceDraftsSubCollectionClient[DioptraResponseProtocol],
+    workflow_client: WorkflowsCollectionClient[DioptraResponseProtocol],
     *resource_ids: str | int,
     drafts: dict[str, Any],
     draft1_mod: dict[str, Any],
@@ -38,39 +41,39 @@ def run_new_resource_drafts_tests(
     group_id: int | None = None,
 ) -> None:
     # Creation operation tests
-    draft1_response = client.create(
+    draft1_response = draft_client.create(
         *resource_ids, group_id=group_id, **drafts["draft1"]
     ).json()
     asserts.assert_draft_response_contents_matches_expectations(
         draft1_response, draft1_expected
     )
     asserts.assert_retrieving_draft_by_id_works(
-        client,
+        draft_client,
         *resource_ids,
         draft_id=draft1_response["id"],
         expected=draft1_response,
     )
 
-    draft2_response = client.create(
+    draft2_response = draft_client.create(
         *resource_ids, group_id=group_id, **drafts["draft2"]
     ).json()
     asserts.assert_draft_response_contents_matches_expectations(
         draft2_response, draft2_expected
     )
     asserts.assert_retrieving_draft_by_id_works(
-        client,
+        draft_client,
         *resource_ids,
         draft_id=draft2_response["id"],
         expected=draft2_response,
     )
     asserts.assert_retrieving_drafts_works(
-        client,
+        draft_client,
         *resource_ids,
         expected=[draft1_response, draft2_response],
     )
 
     # Modify operation tests
-    response = client.modify(
+    response = draft_client.modify(
         *resource_ids, draft_id=draft1_response["id"], **draft1_mod
     ).json()
     asserts.assert_draft_response_contents_matches_expectations(
@@ -78,14 +81,26 @@ def run_new_resource_drafts_tests(
     )
 
     # Delete operation tests
-    client.delete(*resource_ids, draft_id=draft1_response["id"])
+    draft_client.delete(*resource_ids, draft_id=draft1_response["id"])
     asserts.assert_new_draft_is_not_found(
-        client, *resource_ids, draft_id=draft1_response["id"]
+        draft_client, *resource_ids, draft_id=draft1_response["id"]
+    )
+
+    # Commit operation tests
+    commit_response = workflow_client.commit_draft(draft2_response["id"]).json()
+    asserts.assert_new_draft_is_not_found(
+        draft_client, *resource_ids, draft_id=draft2_response["id"]
+    )
+    resource_response = resource_client.get_by_id(*commit_response["id"]).json()
+    asserts.assert_resource_contents_match_expectations(
+        resource_response, draft2_expected["payload"]
     )
 
 
 def run_existing_resource_drafts_tests(
-    client: ModifyResourceDraftsSubCollectionClient[DioptraResponseProtocol],
+    resource_client: CollectionClient[DioptraResponseProtocol],
+    draft_client: ModifyResourceDraftsSubCollectionClient[DioptraResponseProtocol],
+    workflow_client: WorkflowsCollectionClient[DioptraResponseProtocol],
     *resource_ids: str | int,
     draft: dict[str, Any],
     draft_mod: dict[str, Any],
@@ -93,19 +108,19 @@ def run_existing_resource_drafts_tests(
     draft_mod_expected: dict[str, Any],
 ) -> None:
     # Creation operation tests
-    response = client.create(*resource_ids, **draft).json()
+    response = draft_client.create(*resource_ids, **draft).json()
     asserts.assert_draft_response_contents_matches_expectations(
         response, draft_expected
     )
     asserts.assert_retrieving_draft_by_resource_id_works(
-        client, *resource_ids, expected=response
+        draft_client, *resource_ids, expected=response
     )
     asserts.assert_creating_another_existing_draft_fails(
-        client, *resource_ids, payload=draft
+        draft_client, *resource_ids, payload=draft
     )
 
     # Modify operation tests
-    response = client.modify(
+    response = draft_client.modify(
         *resource_ids, resource_snapshot_id=response["resourceSnapshot"], **draft_mod
     ).json()
     asserts.assert_draft_response_contents_matches_expectations(
@@ -113,8 +128,28 @@ def run_existing_resource_drafts_tests(
     )
 
     # Delete operation tests
-    client.delete(*resource_ids)
-    asserts.assert_existing_draft_is_not_found(client, *resource_ids)
+    draft_client.delete(*resource_ids)
+    asserts.assert_existing_draft_is_not_found(draft_client, *resource_ids)
+
+    # Commit operation tests
+    # This sequence tests the case where a resource that has draft modifications is
+    # modified (i.e. a new snapshot is created) before the draft is committed. In this
+    # case, the commit should fail until the snapshot ID of the draft is updated to
+    # indicate that the user is aware of the changes.
+    draft_response = draft_client.create(*resource_ids, **draft).json()
+    resource_response = resource_client.modify_by_id(*resource_ids, **draft_mod).json()
+    commit_response = workflow_client.commit_draft(draft_response["id"]).json()
+    draft_response = draft_client.modify(
+        *resource_ids,
+        resource_snapshot_id=commit_response["detail"]["curr_snapshot_id"],
+        **draft,
+    ).json()
+    commit_response = workflow_client.commit_draft(draft_response["id"]).json()
+    asserts.assert_existing_draft_is_not_found(draft_client, *resource_ids)
+    resource_response = resource_client.get_by_id(*commit_response["id"]).json()
+    asserts.assert_resource_contents_match_expectations(
+        resource_response, draft_expected["payload"]
+    )
 
 
 def run_resource_snapshots_tests(

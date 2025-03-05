@@ -408,7 +408,7 @@ EntrypointDraftIdResource = generate_resource_drafts_id_endpoint(
 EntrypointIdDraftResource = generate_resource_id_draft_endpoint(
     api,
     resource_name=RESOURCE_TYPE,
-    request_schema=EntrypointDraftSchema(exclude=["groupId"]),
+    request_schema=EntrypointDraftSchema(exclude=["groupId", "pluginIds"]),
 )
 
 EntrypointSnapshotsResource = generate_resource_snapshots_endpoint(

@@ -28,6 +28,9 @@ from flask import request
 from flask_restx import Api
 from structlog.stdlib import BoundLogger
 
+from dioptra.restapi.db import models
+from dioptra.restapi.v1 import utils
+
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
@@ -204,6 +207,26 @@ class DraftAlreadyExistsError(DioptraError):
         super().__init__(f"A draft for a [{type}] with id: {id} already exists.")
         self.resource_type = type
         self.resource_id = id
+
+
+class DraftResourceModificationsCommitError(DioptraError):
+    """The draft modifications to a resource could not be committed"""
+
+    def __init__(
+        self,
+        resource_type: str,
+        resource_id: int,
+        draft: models.DraftResource,
+        base_snapshot: models.ResourceSnapshot,
+        curr_snapshot: models.ResourceSnapshot,
+    ):
+        super().__init__(
+            f"Draft modifications for a [{resource_type}] with id: {resource_id} "
+            "could not be commited."
+        )
+        self.draft = draft
+        self.base_snapshot = base_snapshot
+        self.curr_snapshot = curr_snapshot
 
 
 class InvalidDraftBaseResourceSnapshotError(DioptraError):
@@ -446,6 +469,26 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
     def handle_draft_already_exists(error: DraftAlreadyExistsError):
         log.debug(error.to_message())
         return error_result(error, http.HTTPStatus.BAD_REQUEST, {})
+
+    @api.errorhandler(DraftResourceModificationsCommitError)
+    def handle_draft_resource_modifications_commit_error(
+        error: DraftResourceModificationsCommitError,
+    ):
+        log.debug(error.to_message())
+
+        return error_result(
+            error,
+            http.HTTPStatus.BAD_REQUEST,
+            {
+                "reason": f"The {error.draft.resource_type} has been modified since "
+                "this draft was created.",
+                "draft": error.draft.payload["resource_data"],
+                "base_snapshot_id": error.base_snapshot.resource_snapshot_id,
+                "curr_snapshot_id": error.curr_snapshot.resource_snapshot_id,
+                "base_snapshot": utils.build_resource(error.base_snapshot),
+                "curr_snapshot": utils.build_resource(error.curr_snapshot),
+            },
+        )
 
     @api.errorhandler(InvalidDraftBaseResourceSnapshotError)
     def handle_invalid_draft_base_resource_snapshot(

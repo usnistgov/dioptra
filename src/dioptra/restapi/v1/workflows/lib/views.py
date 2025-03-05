@@ -19,7 +19,7 @@ from sqlalchemy import select
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
-from dioptra.restapi.errors import EntityDoesNotExistError
+from dioptra.restapi.errors import DioptraError, EntityDoesNotExistError
 from dioptra.restapi.v1.entrypoints.service import (
     RESOURCE_TYPE as ENTRYPOINT_RESOURCE_TYPE,
 )
@@ -170,3 +170,92 @@ def get_plugin_parameter_types(
         )
     )
     return list(db.session.scalars(plugin_parameter_types_stmt).all())
+
+
+def get_resource(
+    resource_id: int, logger: BoundLogger | None = None
+) -> models.Resource | None:
+    """Run a query to get a resource
+
+    Args:
+        resource_id: The identifier of the Resource
+        logger: A structlog logger object to use for logging. A new logger will be
+            created if None.
+
+    Returns:
+        The retrieved Resource ORM object
+    """
+    log = logger or LOGGER.new()  # noqa: F841
+
+    resource_stmt = select(models.Resource).where(
+        models.Resource.resource_id == resource_id,
+        models.Resource.is_deleted == False,  # noqa: E712
+    )
+    return db.session.scalar(resource_stmt)
+
+
+def get_resource_snapshot(
+    resource_type: str, snapshot_id: int, logger: BoundLogger | None = None
+) -> models.ResourceSnapshot:
+    """Run a query to get the latest snapshot for a resource
+
+    Args:
+        resource_type: The type of Resource.
+        snapshot_id: The ID of snapshot to retrieve
+        logger: A structlog logger object to use for logging. A new logger will be
+            created if None.
+
+    Returns:
+        The resource snapshot
+    """
+    log = logger or LOGGER.new()  # noqa: F841
+
+    snapshot_model = {
+        "artifact": models.Artifact,
+        "entry_point": models.EntryPoint,
+        "experiment": models.Experiment,
+        "ml_model": models.MlModel,
+        "plugin": models.Plugin,
+        "plugin_file": models.PluginFile,
+        "plugin_task_parameter_type": models.PluginTaskParameterType,
+        "queue": models.Queue,
+    }.get(resource_type, None)
+
+    if snapshot_model is None:
+        raise DioptraError(f"Invalid resource type: {resource_type}")
+
+    snapshot_stmt = (
+        select(snapshot_model)
+        .join(models.Resource)
+        .where(
+            snapshot_model.resource_snapshot_id == snapshot_id,
+            models.Resource.is_deleted == False,  # noqa: E712
+        )
+    )
+    snapshot = db.session.scalar(snapshot_stmt)
+
+    if snapshot is None:
+        raise EntityDoesNotExistError(resource_type, snapshot_id=snapshot_id)
+
+    return snapshot
+
+
+def get_draft_resource(
+    draft_id: int, logger: BoundLogger | None = None
+) -> models.DraftResource | None:
+    """Run a query to get the draft of a resource
+
+    Args:
+        draft_id: The identifier of the DraftResource
+        logger: A structlog logger object to use for logging. A new logger will be
+            created if None.
+
+    Returns:
+        The retrieved DraftResource ORM object
+    """
+    log = logger or LOGGER.new()  # noqa: F841
+
+    draft_stmt = select(models.DraftResource).where(
+        models.DraftResource.draft_resource_id == draft_id
+    )
+    return db.session.scalar(draft_stmt)
