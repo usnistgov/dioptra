@@ -28,7 +28,11 @@ sudo port install act
 ```sh
 curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/nektos/act/master/install.sh | sudo bash
 ```
+- [Important] When using curl setup make sure that the path to ACT is added to the global system PATH and the shell file is re-sourced
 
+
+---
+### [Important] ACT is utilizing Docker or Rancher containers. Before running ACT make sure that the appropriate daemon/application has been started
 ---
 ## <a id="act-verify"> To verify success of the ACT installation you can run any of the following commands</a>:
  - ### <a id="act-version">List current ACT version</a>:
