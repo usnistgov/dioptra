@@ -543,7 +543,7 @@ def upgrade():
         ),
         sa.Column("name", sa.Text(), nullable=False),
         sa.Column("task_graph", sa.Text(), nullable=False),
-        sa.Column("artifacts", sa.Text(), nullable=False),
+        sa.Column("artifacts", sa.Text()),
         sa.PrimaryKeyConstraint("resource_snapshot_id", name=op.f("pk_entry_points")),
     )
     with op.batch_alter_table("entry_points", schema=None) as batch_op:
