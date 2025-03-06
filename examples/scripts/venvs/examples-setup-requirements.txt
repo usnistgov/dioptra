@@ -12,3 +12,5 @@ Pillow>=9.2.0
 requests>=2.25,<3
 rich>=13.3.0
 universal_pathlib>=0.0.23
+matplotlib>=3.10.0
+-e file:../
