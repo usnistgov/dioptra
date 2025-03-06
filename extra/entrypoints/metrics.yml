@@ -1,0 +1,42 @@
+predictions:
+  load_artifacts_for_job:
+    job_id: $job_id
+    files: [$predictions_filename]
+
+dataset:
+  load_dataset:
+    ep_seed: $seed
+    testing_dir: $data_dir
+    subsets: [testing]
+    image_size: $image_size
+
+format_predictions:
+  load_predictions:
+    paths: $predictions
+    filename: $predictions_filename
+    format: $predictions_format
+    dataset: $dataset.testing
+    n_classes: $n_classes
+
+metrics:
+  prediction_metrics:
+    y_true: $format_predictions.y_true
+    y_pred: $format_predictions.y_pred
+    metrics_list:
+      - name: accuracy
+        func: accuracy
+      - name: roc_auc
+        func: roc_auc
+  dependencies:
+    - format_predictions
+
+save:
+  save_artifacts_and_models:
+    artifacts:
+      - type: dataframe
+        data_frame: $metrics
+        file_name: $metrics_filename
+        file_format: $metrics_format
+        file_format_kwargs:
+  dependencies:
+    - metrics
