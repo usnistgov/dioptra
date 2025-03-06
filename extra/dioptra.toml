@@ -494,6 +494,117 @@ name = "dataframe"
 description = "dataframe"
 
 
+[[plugin_param_types]]
+name = "list_str"
+description = "List[str]"
+structure = { list = "string" }
+
+[[plugin_param_types]]
+name = "tuple_int_int_int"
+description = "Tuple[int,int,int]"
+structure = { tuple = ["integer", "integer", "integer"] }
+
+[[plugin_param_types]]
+name = "num_null"
+description = "Optional[float]"
+structure = { union = ["number", "null"] }
+
+[[plugin_param_types]]
+name = "directory_iterator"
+description = "DirectoryIterator"
+
+[[plugin_param_types]]
+name = "name_parameters_mapping"
+description = "name_parameters_mapping"
+structure = { mapping = { name = "string", parameters = "mapping_str_str" } }
+
+[[plugin_param_types]]
+name = "name_parameters_callback_mapping"
+description = "name_parameters_callback_mapping"
+structure = { mapping = { name = "string", parameters = "mapping_str_any" } }
+
+[[plugin_param_types]]
+name = "metric_name_list"
+description = "metric_name_list"
+structure = { list = "name_parameters_mapping" }
+
+[[plugin_param_types]]
+name = "callback_list"
+description = "callback_list"
+structure = { list = "name_parameters_callback_mapping" }
+
+[[plugin_param_types]]
+name = "mapping_str_str"
+description = "Dict[str,any]"
+structure = { mapping = ["string", "string"] }
+
+[[plugin_param_types]]
+name = "mapping_str_any"
+description = "Dict[str,any]"
+structure = { mapping = ["string", "any"] }
+
+[[plugin_param_types]]
+name = "mapping_str_float"
+description = "Dict[str,float]"
+structure = { mapping = ["string", "number"] }
+
+[[plugin_param_types]]
+name = "null_mapping_str_any"
+description = "Optional[Dict[str,any]]"
+structure = { union = ["mapping_str_any", "null"] }
+
+[[plugin_param_types]]
+name = "list_mapping_str_any"
+description = "List[Dict[str,any]]"
+structure = { list = "mapping_str_any" }
+
+[[plugin_param_types]]
+name = "list_mapping_str_str"
+description = "List[Dict[str,str]]"
+structure = { list = "mapping_str_str" }
+
+[[plugin_param_types]]
+name = "path"
+description = "Path"
+
+[[plugin_param_types]]
+name = "str_path"
+description = "str|Path"
+structure = { union = ["string", "path"] }
+
+[[plugin_param_types]]
+name = "list_str_path"
+description = "List[str|Path]"
+structure = { list = "str_path" }
+
+[[plugin_param_types]]
+name = "list_int"
+description = "List[int]"
+structure = { list = "integer" }
+
+[[plugin_param_types]]
+name = "int_float_str"
+description = "Union[int, float, str]"
+structure = { union = ["integer", "number", "string"] }
+
+[[plugin_param_types]]
+name = "mapping_str_mapping_str_any"
+description = "Dict[str,Dict[str,any]]"
+structure = { mapping = ["string", "mapping_str_any"] }
+
+[[plugin_param_types]]
+name = "np.ndarray"
+description = "np.ndarray"
+
+[[plugin_param_types]]
+name = "model"
+description = "classifier"
+
+[[plugin_param_types]]
+name = "dataframe"
+description = "dataframe"
+
+
 [[entrypoints]]
 path = "entrypoints/hello-world.yaml"
 name = "Hello World"
