@@ -30,6 +30,7 @@ gen_patches:
     scale_max: $scale_max
     learning_rate: $learning_rate
     max_iter: $max_iter
+    patch_shape: $patch_shape
 
 save:
   save_artifacts_and_models:

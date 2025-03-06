@@ -92,7 +92,6 @@ def load_dataset(
         label_mode=label_mode,
         shuffle=shuffle
     )
-
     testing_dataset = None if "testing" not in subsets else create_image_dataset(
         data_dir=testing_dir,
         subset=None,
