@@ -1,5 +1,14 @@
 <template>
-  <PageTitle :title="title" />
+  <div class="row items-center justify-between">
+    <PageTitle :title="title" />
+    <q-btn 
+      v-if="route.params.fileId !== 'new'"
+      color="negative"
+      icon="sym_o_delete" 
+      label="Delete Plugin File" 
+      @click="showDeleteFileDialog = true"
+    />
+  </div>
   <div class="row q-my-lg">
     <fieldset :class="`${isMobile ? 'col-12 q-mb-lg' : 'col q-mr-md'}`">
       <legend>Basic Info</legend>
@@ -68,10 +77,10 @@
         ref="tableRef"
         :hideToggleDraft="true"
         :hideCreateBtn="true"
-        :hideEditBtn="true"
-        :hideDeleteBtn="true"
         :hideSearch="true"
         :disableSelect="true"
+        :hideOpenBtn="true"
+        :hideDeleteBtn="true"
         rightCaption="*Click param to edit, or X to delete"
       >
         <template #body-cell-name="props">
@@ -286,10 +295,10 @@
           @request="getPluginParameterTypes"
           :hideToggleDraft="true"
           :hideCreateBtn="true"
-          :hideEditBtn="true"
-          :hideDeleteBtn="true"
           :disableSelect="true"
           style="margin-top: 0"
+          :hideOpenBtn="true"
+          :hideDeleteBtn="true"
         >
           <template #body-cell-view="props">
             <q-btn
@@ -304,10 +313,11 @@
   </div>
 
   <div :class="`${isMobile ? '' : ''} float-right q-mb-lg`">
-    <q-btn  
-      color="negative" 
+    <q-btn
+      outline
+      color="primary" 
       label="Cancel"
-      class="q-mr-lg"
+      class="q-mr-lg cancel-btn"
       @click="confirmLeave = true; router.back()"
     />
     <q-btn  
@@ -332,6 +342,12 @@
       :readOnly="true"
     />
   </InfoPopupDialog>
+  <DeleteDialog 
+    v-model="showDeleteFileDialog"
+    @submit="deleteFile(); showDeleteFileDialog = false"
+    type="Plugin File"
+    :name="pluginFile.filename"
+  />
   <DeleteDialog 
     v-model="showDeleteDialog"
     @submit="pluginFile.tasks.splice(selectedTaskProps.rowIndex, 1); showDeleteDialog = false"
@@ -404,6 +420,7 @@
   const uploadedFile = ref(null)
 
   const selectedTaskProps = ref()
+  const showDeleteFileDialog = ref(false)
   const showDeleteDialog = ref(false)
   const showEditParamDialog = ref(false)
 
@@ -674,6 +691,16 @@
     }
     basicInfoForm.value.reset()
     store.savedForms.files[route.params.id] = null
+  }
+
+  async function deleteFile() {
+    try {
+      await api.deleteFile(route.params.id, route.params.fileId)
+      notify.success(`Successfully deleted '${pluginFile.value.filename}'`)
+      router.push(`/plugins/${route.params.id}/files`)
+    } catch(err) {
+      notify.error(err.response.data.message);
+    }
   }
 
 </script>

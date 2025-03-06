@@ -194,10 +194,11 @@
   </div>
 
   <div :class="`float-right q-mb-lg`">
-      <q-btn  
-        color="negative" 
+      <q-btn
+        outline
+        color="primary" 
         label="Cancel"
-        class="q-mr-lg"
+        class="q-mr-lg cancel-btn"
         @click="confirmLeave = true; router.back()"
       />
       <q-btn  

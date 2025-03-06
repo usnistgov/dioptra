@@ -8,10 +8,10 @@
     @request="getJobs"
     @delete="showDeleteDialog = true"
     ref="tableRef"
-    :hideEditBtn="true"
     :showExpand="true"
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
     @create="router.push(`/experiments/${route.params.id}/jobs/new`)"
+    :hideOpenBtn="true"
   >
     <template #body-cell-entrypoint="props">
       {{ props.row.entrypoint.name }}
@@ -81,7 +81,7 @@
     { name: 'entrypoint', label: 'Entrypoint', align: 'left', field: 'entrypoint', sortable: false, },
     { name: 'queue', label: 'Queue', align: 'left', field: 'queue', sortable: false, },
     { name: 'status', label: 'Status', align: 'left', field: 'status', sortable: true },
-    { name: 'tags', label: 'Tags', align: 'left', field: 'tags', sortable: false },
+    { name: 'tags', label: 'Tags', align: 'left', field: 'tags', sortable: false, },
   ]
 
   const artifactColumns = [
@@ -127,11 +127,7 @@
 
   async function deleteJob() {
     try {
-      if(Object.hasOwn(selected.value[0], 'hasDraft')) {
-        await api.deleteItem('jobs', selected.value[0].id)
-      } else {
-        // await api.deleteDraft('queues', selected.value[0].id)
-      }
+      await api.deleteItem('jobs', selected.value[0].id)
       notify.success(`Successfully deleted '${selected.value[0].description}'`)
       showDeleteDialog.value = false
       selected.value = []

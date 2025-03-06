@@ -51,6 +51,7 @@
         :hideDeleteBtn="true"
         :hideEditBtn="true"
         :disableSelect="true"
+        :hideOpenBtn="true"
         style="margin: 0px 5vw 2vh"
       >
         <template #body-cell-filename="props">
