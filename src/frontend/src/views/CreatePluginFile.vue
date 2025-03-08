@@ -465,7 +465,11 @@
   const contentsError = ref('')
 
   watch(() => pluginFile.value.contents, (newVal) => {
-    contentsError.value = newVal.length > 0 ? '' : 'This field is required'
+    if(clearFormExecuted.value) {
+      clearFormExecuted.value = false
+    } else {
+      contentsError.value = newVal.length > 0 ? '' : 'This field is required'
+    }
   })
 
   async function submit() {
@@ -665,6 +669,8 @@
     router.push(toPath.value)
   }
 
+  const clearFormExecuted = ref(false)
+
   function clearForm() {
     pluginFile.value = {
       filename: '',
@@ -673,6 +679,7 @@
       tasks: [],
     }
     basicInfoForm.value.reset()
+    clearFormExecuted.value = true
     store.savedForms.files[route.params.id] = null
   }
 
