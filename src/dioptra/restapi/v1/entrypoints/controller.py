@@ -48,6 +48,7 @@ from dioptra.restapi.v1.shared.tags.controller import (
 )
 
 from .schema import (
+    EntrypointArtifactHandlerMutableFieldsSchema,
     EntrypointDraftSchema,
     EntrypointGetQueryParameters,
     EntrypointMutableFieldsSchema,
@@ -59,6 +60,8 @@ from .schema import (
 from .service import (
     RESOURCE_TYPE,
     SEARCHABLE_FIELDS,
+    EntrypointIdArtifactHandlersIdService,
+    EntrypointIdArtifactHandlersService,
     EntrypointIdPluginsIdService,
     EntrypointIdPluginsService,
     EntrypointIdQueuesIdService,
@@ -142,6 +145,7 @@ class EntrypointEndpoint(Resource):
             artifacts=parsed_obj["artifacts"],
             parameters=parsed_obj["parameters"],
             plugin_ids=parsed_obj["plugin_ids"],
+            artifact_handler_ids=parsed_obj["artifact_handler_ids"],
             queue_ids=parsed_obj["queue_ids"],
             group_id=int(parsed_obj["group_id"]),
             log=log,
@@ -307,6 +311,113 @@ class EntrypointIdPluginsIdEndpoint(Resource):
             id=id,
         )
         return self._entrypoint_id_plugins_id_service.delete(id, pluginId, log=log)
+
+
+@api.route("/<int:id>/artifactHandlers")
+@api.param("id", "ID for the Entrypoint resource.")
+class EntrypointIdArtifactHandlersEndpoint(Resource):
+    @inject
+    def __init__(
+        self,
+        entrypoint_id_artifact_handlers_service: EntrypointIdArtifactHandlersService,
+        *args,
+        **kwargs,
+    ) -> None:
+        """Initialize the entrypoint resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            entrypoint_id_artifact_handlers_service: A
+                EntrypointIdArtifactHandlersService object.
+        """
+        self._entrypoint_id_artifact_handlers_service = (
+            entrypoint_id_artifact_handlers_service
+        )
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    @responds(schema=EntrypointPluginSchema(many=True), api=api)
+    def get(self, id: int):
+        """Retrieves the artifact handler snapshots for an entrypoint resource."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="Entrypoint", request_type="POST"
+        )
+        artifact_handlers = self._entrypoint_id_artifact_handlers_service.get(
+            id, log=log
+        )
+        return [
+            utils.build_entrypoint_plugin(artifact_handler)
+            for artifact_handler in artifact_handlers
+        ]
+
+    @login_required
+    @accepts(schema=EntrypointArtifactHandlerMutableFieldsSchema, api=api)
+    @responds(schema=EntrypointPluginSchema(many=True), api=api)
+    def post(self, id: int):
+        """Appends artifact handlers to an entrypoint resource."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="Entrypoint", request_type="POST"
+        )
+        parsed_obj = request.parsed_obj  # type: ignore
+        artifact_handlers = self._entrypoint_id_artifact_handlers_service.append(
+            id, artifact_handler_ids=parsed_obj["artifact_handler_ids"], log=log
+        )
+        return [
+            utils.build_entrypoint_plugin(artifact_handler)
+            for artifact_handler in artifact_handlers
+        ]
+
+
+@api.route("/<int:id>/artifactHandlers/<int:artifactHandlerId>")
+@api.param("id", "ID for the Entrypoint resource.")
+@api.param("artifactHandlerId", "ID for the Artifact Handler resource.")
+class EntrypointIdArtifactHandlerIdEndpoint(Resource):
+    @inject
+    def __init__(
+        self,
+        entrypoint_id_artifact_handler_id_service: EntrypointIdArtifactHandlersIdService,  # noqa: B950
+        *args,
+        **kwargs,
+    ) -> None:
+        """Initialize the entrypoint resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            entrypoint_id_artifact_handler_id_service:
+                A EntrypointIdArtifactHandlersIdService object.
+        """
+        self._entrypoint_id_artifact_handler_id_service = (
+            entrypoint_id_artifact_handler_id_service
+        )
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    @responds(schema=EntrypointPluginSchema, api=api)
+    def get(self, id: int, artifactHandlerId: int):
+        """Retrieves a artifact handler snapshot for an entrypoint resource."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="Entrypoint", request_type="POST"
+        )
+        artifact_handler = self._entrypoint_id_artifact_handler_id_service.get(
+            id, artifactHandlerId, log=log
+        )
+        return utils.build_entrypoint_plugin(artifact_handler)
+
+    @login_required
+    @responds(schema=IdStatusResponseSchema, api=api)
+    def delete(self, id: int, artifactHandlerId: int):
+        """Removes a artifact handler from an entrypoint by ID."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="Entrypoint",
+            request_type="DELETE",
+            id=id,
+        )
+        return self._entrypoint_id_artifact_handler_id_service.delete(
+            id, artifactHandlerId, log=log
+        )
 
 
 @api.route("/<int:id>/queues")

@@ -42,6 +42,107 @@ DRAFT_FIELDS: Final[set[str]] = {
 T = TypeVar("T")
 
 
+class EntrypointArtifactHandlersSubCollectionClient(SubCollectionClient[T]):
+    """The client for managing Dioptra's /entrypoints/{id}/artifactHandlers
+    sub-collection.
+
+    Attributes:
+        name: The name of the sub-collection.
+    """
+
+    name: ClassVar[str] = "artifactHandlers"
+
+    def __init__(
+        self,
+        session: DioptraSession[T],
+        root_collection: CollectionClient[T],
+        parent_sub_collections: list["SubCollectionClient[T]"] | None = None,
+    ) -> None:
+        """Initialize the EntrypointArtifactHandlersSubCollectionClient instance.
+
+        Args:
+            session: The Dioptra API session object.
+            root_collection: The client for the root collection that owns this
+                sub-collection.
+            parent_sub_collections: Unused in this client, must be None.
+        """
+        if parent_sub_collections is not None:
+            raise DioptraClientError(
+                "The parent_sub_collections argument must be None for this client."
+            )
+
+        super().__init__(
+            session=session,
+            root_collection=root_collection,
+            parent_sub_collections=parent_sub_collections,
+        )
+
+    def get(self, entrypoint_id: int | str) -> T:
+        """Get a list of artifact handlers added to the entrypoint.
+
+        Args:
+            entrypoint_id: The entrypoint id, an integer.
+
+        Returns:
+            The response from the Dioptra API.
+        """
+        return self._session.get(self.build_sub_collection_url(entrypoint_id))
+
+    def get_by_id(self, entrypoint_id: str | int, artifact_handler_id: str | int) -> T:
+        """Get the entrypoint plugin matching the provided id.
+
+        Args:
+            entrypoint_id: The entrypoint id, an integer.
+            plugin_id: The id for the plugin that will be removed.
+
+        Returns:
+            The response from the Dioptra API.
+        """
+        return self._session.get(
+            self.build_sub_collection_url(entrypoint_id), str(artifact_handler_id)
+        )
+
+    def create(
+        self,
+        entrypoint_id: str | int,
+        artifact_handler_ids: list[int],
+    ) -> T:
+        """Adds one or more artifact handlers to the entrypoint.
+
+        If a artifact handler id matches an artifact handler that is
+        already attached to the entrypoint, then the entrypoint will
+        update the artifact handler to the latest version.
+
+        Args:
+            entrypoint_id: The entrypoint id, an integer.
+            artifact_handler_ids: A list of artifact handler ids that
+                will be registered to the entrypoint.
+
+        Returns:
+            The response from the Dioptra API.
+        """
+        json_ = {"artifact_handlers": artifact_handler_ids}
+        return self._session.post(
+            self.build_sub_collection_url(entrypoint_id), json_=json_
+        )
+
+    def delete_by_id(
+        self, entrypoint_id: str | int, artifact_handler_id: str | int
+    ) -> T:
+        """Remove an artifact handler from the entrypoint.
+
+        Args:
+            entrypoint_id: The entrypoint id, an integer.
+            artifact_handler_id: The id for the artifact handler that will be removed.
+
+        Returns:
+            The response from the Dioptra API.
+        """
+        return self._session.delete(
+            self.build_sub_collection_url(entrypoint_id), str(artifact_handler_id)
+        )
+
+
 class EntrypointPluginsSubCollectionClient(SubCollectionClient[T]):
     """The client for managing Dioptra's /entrypoints/{id}/plugins sub-collection.
 
@@ -270,6 +371,9 @@ class EntrypointsCollectionClient(CollectionClient[T]):
         self._plugins = EntrypointPluginsSubCollectionClient[T](
             session=session, root_collection=self
         )
+        self._artifact_handlers = EntrypointArtifactHandlersSubCollectionClient[T](
+            session=session, root_collection=self
+        )
         self._queues = EntrypointQueuesSubCollectionClient[T](
             session=session, root_collection=self
         )
@@ -298,6 +402,11 @@ class EntrypointsCollectionClient(CollectionClient[T]):
     def plugins(self) -> EntrypointPluginsSubCollectionClient[T]:
         """The client for managing the plugins sub-collection."""
         return self._plugins
+
+    @property
+    def artifact_handlers(self) -> EntrypointArtifactHandlersSubCollectionClient[T]:
+        """The client for managing the artifact handlers sub-collection."""
+        return self._artifact_handlers
 
     @property
     def queues(self) -> EntrypointQueuesSubCollectionClient[T]:
@@ -481,6 +590,7 @@ class EntrypointsCollectionClient(CollectionClient[T]):
         parameters: list[dict[str, Any]] | None = None,
         queues: list[int] | None = None,
         plugins: list[int] | None = None,
+        artifact_handlers: list[int] | None = None,
     ) -> T:
         """Creates a entrypoint.
 
@@ -499,6 +609,8 @@ class EntrypointsCollectionClient(CollectionClient[T]):
                 defaults to None.
             plugins: A list of plugin ids to associate with the new entrypoint.
                 Optional, defaults to None.
+            artifact_handlers: A list of artifact handler ids to associate with the new
+                entrypoint. Optional, defaults to None.
 
         Returns:
             The response from the Dioptra API.
@@ -523,6 +635,9 @@ class EntrypointsCollectionClient(CollectionClient[T]):
 
         if plugins is not None:
             json_["plugins"] = plugins
+
+        if artifact_handlers is not None:
+            json_["artifact_handlers"] = artifact_handlers
 
         return self._session.post(self.url, json_=json_)
 

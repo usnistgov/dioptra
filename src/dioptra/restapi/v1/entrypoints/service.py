@@ -93,6 +93,7 @@ class EntrypointService(object):
         artifacts: str,
         parameters: list[dict[str, Any]],
         plugin_ids: list[int],
+        artifact_handler_ids: list[int],
         queue_ids: list[int],
         group_id: int,
         commit: bool = True,
@@ -124,6 +125,9 @@ class EntrypointService(object):
         group = self._group_id_service.get(group_id, error_if_not_found=True)
         queues = self._queue_ids_service.get(queue_ids, error_if_not_found=True)
         plugins = self._plugin_ids_service.get(plugin_ids, error_if_not_found=True)
+        artifact_handlers = self._plugin_ids_service.get(
+            artifact_handler_ids, error_if_not_found=True
+        )
 
         resource = models.Resource(resource_type=RESOURCE_TYPE, owner=group)
 
@@ -158,9 +162,28 @@ class EntrypointService(object):
         ]
         new_entrypoint.entry_point_plugin_files = entry_point_plugin_files
 
+        entry_point_artifact_handler_files = [
+            models.EntryPointPluginFile(
+                entry_point=new_entrypoint,
+                plugin=artifact_handler["plugin"],
+                plugin_file=plugin_file,
+            )
+            for artifact_handler in artifact_handlers
+            for plugin_file in artifact_handler["plugin_files"]
+        ]
+        new_entrypoint.entry_point_artifact_handler_files = (
+            entry_point_artifact_handler_files
+        )
+
         plugin_resources = [plugin["plugin"].resource for plugin in plugins]
+        artifact_handler_resources = [
+            artifact_handler["plugin"].resource
+            for artifact_handler in artifact_handlers
+        ]
         queue_resources = [queue.resource for queue in queues]
-        new_entrypoint.children.extend(plugin_resources + queue_resources)
+        new_entrypoint.children.extend(
+            plugin_resources + queue_resources + artifact_handler_resources
+        )
 
         db.session.add(new_entrypoint)
 
@@ -307,7 +330,8 @@ class EntrypointService(object):
 
 
 class EntrypointIdService(object):
-    """The service methods for creating and managing entrypoints by their unique id."""
+    """The service methods for creating and managing entrypoints by
+    their unique id."""
 
     @inject
     def __init__(
@@ -660,18 +684,43 @@ class EntrypointIdPluginsService(object):
             existing_entry_point_plugin_files + new_entry_point_plugin_files
         )
 
+        existing_entry_point_artifact_handler_files = [
+            models.EntryPointPluginFile(
+                entry_point=new_entrypoint,
+                plugin=entry_point_artifact_handler_file.plugin,
+                plugin_file=entry_point_artifact_handler_file.plugin_file,
+            )
+            for entry_point_artifact_handler_file in entrypoint.entry_point_artifact_handler_files  # noqa: B950
+        ]
+
+        new_entrypoint.entry_point_artifact_handler_files = (
+            existing_entry_point_artifact_handler_files  # noqa: B950
+        )
+        # artifact handlers stay the same, plugins are changing
+
         plugin_resources = list(
             {
                 plugin.plugin.resource_id: plugin.plugin.resource
                 for plugin in new_entrypoint.entry_point_plugin_files
             }.values()
         )
+
+        artifact_handler_resources = list(
+            {
+                artifact_handler.plugin.resource_id: artifact_handler.plugin.resource
+                for artifact_handler in new_entrypoint.entry_point_artifact_handler_files  # noqa: B950
+            }.values()
+        )
+
         queue_resources = [
             resource
             for resource in entrypoint.children
             if resource.resource_type == "queue"
         ]
-        new_entrypoint.children = plugin_resources + queue_resources
+
+        new_entrypoint.children = (
+            plugin_resources + queue_resources + artifact_handler_resources
+        )
 
         db.session.add(new_entrypoint)
 
@@ -798,6 +847,7 @@ class EntrypointIdPluginsIdService(object):
             )
             for param in entrypoint.parameters
         ]
+
         new_entrypoint = models.EntryPoint(
             name=entrypoint.name,
             description=entrypoint.description,
@@ -807,6 +857,16 @@ class EntrypointIdPluginsIdService(object):
             resource=entrypoint.resource,
             creator=current_user,
         )
+
+        new_entrypoint.entry_point_artifact_handler_files = [
+            models.EntryPointPluginFile(
+                entry_point=new_entrypoint,
+                plugin=entry_point_artifact_handler_file.plugin,
+                plugin_file=entry_point_artifact_handler_file.plugin_file,
+            )
+            for entry_point_artifact_handler_file in entrypoint.entry_point_artifact_handler_files  # noqa: B950
+        ]
+
         new_entrypoint.entry_point_plugin_files = [
             models.EntryPointPluginFile(
                 entry_point=new_entrypoint,
@@ -835,6 +895,364 @@ class EntrypointIdPluginsIdService(object):
             )
 
         return {"status": "Success", "id": [plugin_id]}
+
+
+class EntrypointIdArtifactHandlersService(object):
+    """The service methods for creating and managing entrypoints by their unique id."""
+
+    @inject
+    def __init__(
+        self,
+        entrypoint_id_service: EntrypointIdService,
+        plugin_ids_service: PluginIdsService,
+        queue_ids_service: QueueIdsService,
+    ) -> None:
+        """Initialize the entrypoint service.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            entrypoint_id_service: A EntrypointIdService object.
+            plugin_ids_service: A PluginIdsService object.
+            queue_ids_service: A QueueIdsService object.
+        """
+        self._entrypoint_id_service = entrypoint_id_service
+        self._plugin_ids_service = plugin_ids_service
+        self._queue_ids_service = queue_ids_service
+
+    def get(
+        self,
+        entrypoint_id: int,
+        **kwargs,
+    ) -> list[utils.PluginWithFilesDict]:
+        """Fetch the plugin snapshots for an entrypoint by its unique id.
+
+        Args:
+            entrypoint_id: The unique id of the entrypoint.
+
+        Returns:
+            The plugin snapshots for the entrypoint.
+
+        Raises:
+            EntityDoesNotExistError: If the entrypoint is not found.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.debug("Get entrypoint by id", entrypoint_id=entrypoint_id)
+
+        entrypoint = cast(
+            utils.EntrypointDict,
+            self._entrypoint_id_service.get(
+                entrypoint_id, error_if_not_found=True, log=log
+            ),
+        )
+
+        return _get_entrypoint_artifact_handler_snapshots(entrypoint["entry_point"])
+
+    def append(
+        self,
+        entrypoint_id: int,
+        artifact_handler_ids: list[int],
+        commit: bool = True,
+        **kwargs,
+    ) -> list[utils.PluginWithFilesDict]:
+        """Append plugins to an entrypoint.
+
+        Args:
+            entrypoint_id: The unique id of the entrypoint.
+            artifact_handler_ids: The handlers to be appended. If an artifact
+                handler is already attached to the entrypoint, it is synced to
+                the latest snapshot.
+            commit: If True, commit the transaction. Defaults to True.
+
+        Returns:
+            The updated entrypoint object.
+
+        Raises:
+            EntityDoesNotExistError: If the entrypoint is not found.
+            EntityExistsError: If the entrypoint name already exists.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+
+        entrypoint = cast(
+            utils.EntrypointDict,
+            self._entrypoint_id_service.get(
+                entrypoint_id, error_if_not_found=True, log=log
+            ),
+        )["entry_point"]
+
+        new_entrypoint_parameters = [
+            models.EntryPointParameter(
+                name=param.name,
+                default_value=param.default_value,
+                parameter_type=param.parameter_type,
+                parameter_number=param.parameter_number,
+            )
+            for param in entrypoint.parameters
+        ]
+        new_entrypoint = models.EntryPoint(
+            name=entrypoint.name,
+            description=entrypoint.description,
+            task_graph=entrypoint.task_graph,
+            artifacts=entrypoint.artifacts,
+            parameters=new_entrypoint_parameters,
+            resource=entrypoint.resource,
+            creator=current_user,
+        )
+
+        existing_entry_point_plugin_files = [
+            models.EntryPointPluginFile(
+                entry_point=new_entrypoint,
+                plugin=entry_point_plugin_file.plugin,
+                plugin_file=entry_point_plugin_file.plugin_file,
+            )
+            for entry_point_plugin_file in entrypoint.entry_point_plugin_files
+        ]
+
+        new_entrypoint.entry_point_plugin_files = (
+            existing_entry_point_plugin_files  # noqa: B950
+        )
+        # plugins stay the same, artifact handlers are changing
+
+        new_entry_point_artifact_handler_files = [
+            models.EntryPointPluginFile(
+                entry_point=new_entrypoint,
+                plugin=plugin["plugin"],
+                plugin_file=artifact_handler_file,
+            )
+            for plugin in self._plugin_ids_service.get(
+                artifact_handler_ids, error_if_not_found=True
+            )
+            for artifact_handler_file in plugin["plugin_files"]
+        ]
+
+        existing_entry_point_artifact_handler_files = [
+            models.EntryPointPluginFile(
+                entry_point=new_entrypoint,
+                plugin=entry_point_artifact_handler_file.plugin,
+                plugin_file=entry_point_artifact_handler_file.plugin_file,
+            )
+            for entry_point_artifact_handler_file in entrypoint.entry_point_artifact_handler_files  # noqa: B950
+            if entry_point_artifact_handler_file.plugin.resource_id
+            not in set(artifact_handler_ids)
+        ]
+
+        new_entrypoint.entry_point_artifact_handler_files = (
+            existing_entry_point_artifact_handler_files
+            + new_entry_point_artifact_handler_files
+        )
+
+        plugin_resources = list(
+            {
+                plugin.plugin.resource_id: plugin.plugin.resource
+                for plugin in new_entrypoint.entry_point_plugin_files
+            }.values()
+        )
+
+        artifact_handler_resources = list(
+            {
+                artifact_handler.plugin.resource_id: artifact_handler.plugin.resource
+                for artifact_handler in new_entrypoint.entry_point_artifact_handler_files  # noqa: B950
+            }.values()
+        )
+
+        queue_resources = [
+            resource
+            for resource in entrypoint.children
+            if resource.resource_type == "queue"
+        ]
+
+        new_entrypoint.children = (
+            plugin_resources + queue_resources + artifact_handler_resources
+        )
+
+        db.session.add(new_entrypoint)
+
+        if commit:
+            db.session.commit()
+            log.debug(
+                "Artifact Handlers appended to Entrypoint successfully",
+                entrypoint_id=entrypoint_id,
+                plugin_ids=artifact_handler_ids,
+            )
+
+        return _get_entrypoint_artifact_handler_snapshots(new_entrypoint)
+
+
+class EntrypointIdArtifactHandlersIdService(object):
+    """The service methods for creating and managing entrypoints by their unique id."""
+
+    @inject
+    def __init__(
+        self,
+        entrypoint_id_service: EntrypointIdService,
+        queue_ids_service: QueueIdsService,
+    ) -> None:
+        """Initialize the entrypoint service.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            entrypoint_id_service: A EntrypointIdService object.
+            queue_ids_service: A QueueIdsService object.
+        """
+        self._entrypoint_id_service = entrypoint_id_service
+        self._queue_ids_service = queue_ids_service
+
+    def get(
+        self,
+        entrypoint_id: int,
+        artifact_handler_id: int,
+        **kwargs,
+    ) -> utils.PluginWithFilesDict:
+        """Fetch the artifact handler snapshots for an entrypoint by its unique id.
+
+        Args:
+            entrypoint_id: The unique id of the entrypoint.
+
+        Returns:
+            The artifact handler snapshots for the entrypoint.
+
+        Raises:
+            EntityDoesNotExistError: If the entrypoint or artifact handler is not found.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.debug("Get entrypoint by id", entrypoint_id=entrypoint_id)
+
+        entrypoint = cast(
+            utils.EntrypointDict,
+            self._entrypoint_id_service.get(
+                entrypoint_id, error_if_not_found=True, log=log
+            ),
+        )["entry_point"]
+
+        artifact_handlers = {
+            entry_point_artifact_handler_file.plugin.resource_id: entry_point_artifact_handler_file.plugin  # noqa: B950
+            for entry_point_artifact_handler_file in entrypoint.entry_point_artifact_handler_files  # noqa: B950
+        }
+        if artifact_handler_id not in artifact_handlers:
+            raise EntityDoesNotExistError(
+                PLUGIN_RESOURCE_TYPE,
+                entrypoint_id=entrypoint_id,
+                artifact_handler_id=artifact_handler_id,
+            )
+
+        artifact_handler = utils.PluginWithFilesDict(
+            plugin=artifact_handlers[artifact_handler_id],
+            plugin_files=[],
+            has_draft=None,
+        )
+        for (
+            entry_point_artifact_handler_file
+        ) in entrypoint.entry_point_artifact_handler_files:
+            if (
+                entry_point_artifact_handler_file.plugin.resource_id
+                == artifact_handler_id
+            ):
+                artifact_handler["plugin_files"].append(
+                    entry_point_artifact_handler_file.plugin_file
+                )
+
+        return artifact_handler
+
+    def delete(
+        self,
+        entrypoint_id: int,
+        artifact_handler_id: int,
+        commit: bool = True,
+        **kwargs,
+    ) -> dict[str, Any]:
+        """Remove an artifact handler from an entrypoint.
+
+        Args:
+            entrypoint_id: The unique id of the entrypoint.
+            artifact_handler_id: The artifact handler to be removed.
+            commit: If True, commit the transaction. Defaults to True.
+
+        Returns:
+            A dictionary reporting the status of the request.
+
+        Raises:
+            EntityDoesNotExistError: If the entrypoint or artifacthandler is not found.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+
+        entrypoint = cast(
+            utils.EntrypointDict,
+            self._entrypoint_id_service.get(
+                entrypoint_id, error_if_not_found=True, log=log
+            ),
+        )["entry_point"]
+
+        artifact_handler_ids = set(
+            artifact_handler.plugin.resource_id
+            for artifact_handler in entrypoint.entry_point_artifact_handler_files
+        )
+        if artifact_handler_id not in artifact_handler_ids:
+            raise EntityDoesNotExistError(
+                PLUGIN_RESOURCE_TYPE,
+                entrypoint_id=entrypoint_id,
+                artifact_handler_id=artifact_handler_id,
+            )
+
+        # create a new snapshot with the plugin removed
+        entrypoint_parameters = [
+            models.EntryPointParameter(
+                name=param.name,
+                default_value=param.default_value,
+                parameter_type=param.parameter_type,
+                parameter_number=param.parameter_number,
+            )
+            for param in entrypoint.parameters
+        ]
+        new_entrypoint = models.EntryPoint(
+            name=entrypoint.name,
+            description=entrypoint.description,
+            task_graph=entrypoint.task_graph,
+            artifacts=entrypoint.artifacts,
+            entry_point_plugin_files=entrypoint.entry_point_plugin_files,
+            parameters=entrypoint_parameters,
+            resource=entrypoint.resource,
+            creator=current_user,
+        )
+
+        new_entrypoint.entry_point_plugin_files = [
+            models.EntryPointPluginFile(
+                entry_point=new_entrypoint,
+                plugin=entry_point_plugin_file.plugin,
+                plugin_file=entry_point_plugin_file.plugin_file,
+            )
+            for entry_point_plugin_file in entrypoint.entry_point_plugin_files
+        ]
+
+        new_entrypoint.entry_point_artifact_handler_files = [
+            models.EntryPointPluginFile(
+                entry_point=new_entrypoint,
+                plugin=entry_point_artifact_handler_file.plugin,
+                plugin_file=entry_point_artifact_handler_file.plugin_file,
+            )
+            for entry_point_artifact_handler_file in entrypoint.entry_point_artifact_handler_files  # noqa: B950
+            if entry_point_artifact_handler_file.plugin.resource_id
+            != artifact_handler_id
+        ]
+
+        # remove the plugin resource dependency association
+        new_entrypoint.children = [
+            resource
+            for resource in entrypoint.children
+            if resource.resource_id != artifact_handler_id
+        ]
+
+        db.session.add(new_entrypoint)
+
+        if commit:
+            db.session.commit()
+            log.debug(
+                "Artifact handler removed from entrypoint",
+                entrypoint_id=entrypoint_id,
+                artifact_handler_id=artifact_handler_id,
+            )
+
+        return {"status": "Success", "id": [artifact_handler_id]}
 
 
 class EntrypointIdsService(object):
@@ -1209,5 +1627,25 @@ def _get_entrypoint_plugin_snapshots(
     for entry_point_plugin_file in entrypoint.entry_point_plugin_files:
         resource_id = entry_point_plugin_file.plugin.resource_id
         plugin_file = entry_point_plugin_file.plugin_file
+        plugins_dict[resource_id]["plugin_files"].append(plugin_file)
+    return list(plugins_dict.values())
+
+
+def _get_entrypoint_artifact_handler_snapshots(
+    entrypoint: models.EntryPoint,
+) -> list[utils.PluginWithFilesDict]:
+    plugins_dict = {
+        entry_point_artifact_handler_file.plugin.resource_id: utils.PluginWithFilesDict(
+            plugin=entry_point_artifact_handler_file.plugin,
+            plugin_files=[],
+            has_draft=False,
+        )
+        for entry_point_artifact_handler_file in entrypoint.entry_point_artifact_handler_files  # noqa: B950
+    }
+    for (
+        entry_point_artifact_handler_file
+    ) in entrypoint.entry_point_artifact_handler_files:
+        resource_id = entry_point_artifact_handler_file.plugin.resource_id
+        plugin_file = entry_point_artifact_handler_file.plugin_file
         plugins_dict[resource_id]["plugin_files"].append(plugin_file)
     return list(plugins_dict.values())

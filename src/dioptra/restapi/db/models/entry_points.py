@@ -58,6 +58,9 @@ class EntryPoint(ResourceSnapshot):
     entry_point_plugin_files: Mapped[list["EntryPointPluginFile"]] = relationship(
         init=False, back_populates="entry_point"
     )
+    entry_point_artifact_handler_files: Mapped[list["EntryPointPluginFile"]] = (
+        relationship(init=False, back_populates="entry_point")
+    )
 
     # Additional settings
     __table_args__ = (  # type: ignore[assignment]

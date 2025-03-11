@@ -213,6 +213,16 @@ class SortParameterValidationError(DioptraError):
         super().__init__(f"The sort parameter, {column}, for {type} is not sortable.")
 
 
+class ArtifactPluginOverlapError(DioptraError):
+    """Overlap between Artifact Plugins and Task Plugins."""
+
+    def __init__(self, plugins: str, **kwargs):
+        super().__init__(
+            f"The artifact plugin(s) {plugins} are in the list of task plugins,"
+            " when they should be separate."
+        )
+
+
 class QueryParameterValidationError(DioptraError):
     """Input parameters failed validation."""
 
