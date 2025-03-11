@@ -180,7 +180,7 @@ jsonschema==4.23.0
     #   flask-restx
 jsonschema-specifications==2024.10.1
     # via jsonschema
-keras==3.6.0
+keras==3.9.0
     # via tensorflow
 kiwisolver==1.4.7
     # via matplotlib
