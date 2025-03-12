@@ -543,7 +543,6 @@ def upgrade():
         ),
         sa.Column("name", sa.Text(), nullable=False),
         sa.Column("task_graph", sa.Text(), nullable=False),
-        sa.Column("artifacts", sa.Text()),
         sa.PrimaryKeyConstraint("resource_snapshot_id", name=op.f("pk_entry_points")),
     )
     with op.batch_alter_table("entry_points", schema=None) as batch_op:
@@ -870,30 +869,6 @@ def upgrade():
             "plugin_resource_snapshot_id",
             "plugin_file_resource_snapshot_id",
             name=op.f("pk_entry_point_plugin_files"),
-        ),
-    )
-    op.create_table(
-        "entry_point_artifact_handler_files",
-        sa.Column(
-            "entry_point_resource_snapshot_id",
-            sa.BigInteger().with_variant(sa.Integer(), "sqlite"),
-            nullable=False,
-        ),
-        sa.Column(
-            "plugin_resource_snapshot_id",
-            sa.BigInteger().with_variant(sa.Integer(), "sqlite"),
-            nullable=False,
-        ),
-        sa.Column(
-            "plugin_file_resource_snapshot_id",
-            sa.BigInteger().with_variant(sa.Integer(), "sqlite"),
-            nullable=False,
-        ),
-        sa.PrimaryKeyConstraint(
-            "entry_point_resource_snapshot_id",
-            "plugin_resource_snapshot_id",
-            "plugin_file_resource_snapshot_id",
-            name=op.f("pk_entry_point_artifact_handler_files"),
         ),
     )
     op.create_table(
