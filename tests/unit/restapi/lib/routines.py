@@ -105,7 +105,9 @@ def run_existing_resource_drafts_tests(
     )
 
     # Modify operation tests
-    response = client.modify(*resource_ids, **draft_mod).json()
+    response = client.modify(
+        *resource_ids, resource_snapshot_id=response["resourceSnapshot"], **draft_mod
+    ).json()
     asserts.assert_draft_response_contents_matches_expectations(
         response, draft_mod_expected
     )

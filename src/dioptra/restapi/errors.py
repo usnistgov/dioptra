@@ -206,6 +206,20 @@ class DraftAlreadyExistsError(DioptraError):
         self.resource_id = id
 
 
+class InvalidDraftBaseResourceSnapshotError(DioptraError):
+    """The draft's base snapshot identifier is invalid."""
+
+    def __init__(
+        self,
+        message: str,
+        base_resource_snapshot_id: int,
+        provided_resource_snapshot_id: int,
+    ):
+        super().__init__(message)
+        self.base_resource_snapshot_id = base_resource_snapshot_id
+        self.provided_resource_snapshot_id = provided_resource_snapshot_id
+
+
 class SortParameterValidationError(DioptraError):
     """The sort parameters are not valid."""
 
@@ -359,6 +373,21 @@ class MLFlowError(DioptraError):
         super().__init__(message)
 
 
+class GitError(DioptraError):
+    """Git Error."""
+
+    def __init__(self, message: str):
+        super().__init__(message)
+
+
+class ImportFailedError(DioptraError):
+    """Import failed Error."""
+
+    def __init__(self, message: str, reason: str = ""):
+        super().__init__(message)
+        self._reason = reason
+
+
 def error_result(
     error: DioptraError, status: http.HTTPStatus, detail: dict[str, typing.Any]
 ) -> tuple[dict[str, typing.Any], int]:
@@ -438,6 +467,20 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
         log.debug(error.to_message())
         return error_result(error, http.HTTPStatus.BAD_REQUEST, {})
 
+    @api.errorhandler(InvalidDraftBaseResourceSnapshotError)
+    def handle_invalid_draft_base_resource_snapshot(
+        error: InvalidDraftBaseResourceSnapshotError,
+    ):
+        log.debug(error.to_message())
+        return error_result(
+            error,
+            http.HTTPStatus.BAD_REQUEST,
+            {
+                "base_resource_snapshot_id": error.base_resource_snapshot_id,
+                "provided_resource_snapshot_id": error.provided_resource_snapshot_id,
+            },
+        )
+
     @api.errorhandler(LockError)
     def handle_lock_error(error: LockError):
         log.debug(error.to_message())
@@ -462,6 +505,20 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
     def handle_mlflow_error(error: MLFlowError):
         log.debug(error.to_message())
         return error_result(error, http.HTTPStatus.INTERNAL_SERVER_ERROR, {})
+
+    @api.errorhandler(GitError)
+    def handle_git_error(error: GitError):
+        log.debug(error.to_message())
+        return error_result(error, http.HTTPStatus.INTERNAL_SERVER_ERROR, {})
+
+    @api.errorhandler(ImportFailedError)
+    def handle_import_failed_error(error: ImportFailedError):
+        log.debug(error.to_message())
+        return error_result(
+            error,
+            http.HTTPStatus.BAD_REQUEST,
+            {"reason": error._reason} if error._reason else {},
+        )
 
     @api.errorhandler(DioptraError)
     def handle_base_error(error: DioptraError):

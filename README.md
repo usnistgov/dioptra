@@ -2,7 +2,7 @@
 
 Dioptra is a software test platform for assessing the trustworthy characteristics of artificial intelligence (AI).
 Trustworthy AI is: valid and reliable, safe, secure and resilient, accountable and transparent, explainable and interpretable, privacy-enhanced, and fair - with harmful bias managed[^1].
-Dioptra supports the Measure function of the [NIST AI Risk Management Framework](https://nist.gov/itl/ai-risk-management-framework/) by providing functionality to assess, analyze, and track identified AI risks.
+Dioptra supports the Measure function of the [NIST AI Risk Management Framework](https://nist.gov/itl/ai-risk-management-framework/) by providing functionality to assess, analyze, and track identified AI potential benefits and negative consequences.
 
 Dioptra provides a REST API, which can be controlled via an intuitive web interface, a Python client, or any REST client library of the user's choice for designing, managing, executing, and tracking experiments.
 Details are available in the project documentation available at <https://pages.nist.gov/dioptra/>.

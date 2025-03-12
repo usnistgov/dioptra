@@ -159,6 +159,9 @@
       jsonString.value = ''
       uploadedFile.value = null
     }
+    if (!plugin.value.group) {
+      plugin.value.group = store.loggedInGroup.id
+    }
   })
 
   const uploadedFile = ref(null)

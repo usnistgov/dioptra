@@ -19,19 +19,6 @@
       </q-td>
     </template>
   </TableComponent>
-  <!-- <q-btn 
-    class="fixedButton"
-    round
-    color="primary"
-    icon="add"
-    size="lg"
-    to="/groups/admin"
-  >
-    <span class="sr-only">Create a new Group</span>
-    <q-tooltip>
-      Create a new Group
-    </q-tooltip>
-  </q-btn> -->
 </template>
 
 <script setup>

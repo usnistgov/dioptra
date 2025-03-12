@@ -77,6 +77,7 @@ dependencies = [
     "scipy>=1.4.1",
     "structlog>=20.2.0",
     "SQLAlchemy>=2",
+    "tomli>=2.2.0",
     "typing-extensions>=3.7.4.3",
     "werkzeug>=3.0.0",
 ]
@@ -169,9 +170,7 @@ dev = [
     "pydocstyle",
     "pytest-cookies",
     "pytest>=7",
-    "pytoml",
     "Sphinx>=4.5.0,<5",
-    "tomli",
     "tox>=4.4.0",
     "wheel",
 ]

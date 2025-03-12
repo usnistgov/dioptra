@@ -25,7 +25,7 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
 def export_plugin_files(
-    entry_point_plugin_files: list[models.EntryPointPluginFile],
+    entry_point_plugin_files: list[models.PluginPluginFile],
     plugins_base_dir: Path,
     logger: BoundLogger | None = None,
 ) -> list[Path]:

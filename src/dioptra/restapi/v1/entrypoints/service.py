@@ -153,19 +153,18 @@ class EntrypointService(object):
             creator=current_user,
         )
 
-        entry_point_plugin_files = [
-            models.EntryPointPluginFile(
+        entry_point_plugins = [
+            models.EntryPointPlugin(
                 entry_point=new_entrypoint,
                 plugin=plugin["plugin"],
-                plugin_file=plugin_file,
             )
             for plugin in plugins
-            for plugin_file in plugin["plugin_files"]
         ]
-        new_entrypoint.entry_point_plugin_files = entry_point_plugin_files
 
-        entry_point_artifact_handler_files = [
-            models.EntryPointArtifactHandlerFile(
+        new_entrypoint.entry_point_plugins = entry_point_plugins
+
+        entry_point_artifact_handlers = [
+            models.EntryPointArtifactHandler(
                 entry_point=new_entrypoint,
                 plugin=artifact_handler["plugin"],
                 plugin_file=plugin_file,
@@ -176,8 +175,8 @@ class EntrypointService(object):
 
         _ensure_no_plugin_handler_overlap(plugin_ids, artifact_handler_ids, True)
 
-        new_entrypoint.entry_point_artifact_handler_files = (
-            entry_point_artifact_handler_files
+        new_entrypoint.entry_point_artifact_handlers = (
+            entry_point_artifact_handlers
         )
 
         plugin_resources = [plugin["plugin"].resource for plugin in plugins]
@@ -501,34 +500,33 @@ class EntrypointIdService(object):
             resource=entrypoint.resource,
             creator=current_user,
         )
-        new_entrypoint.entry_point_plugin_files = [
-            models.EntryPointPluginFile(
+        new_entrypoint.entry_point_plugins = [
+            models.EntryPointPlugin(
                 entry_point=new_entrypoint,
-                plugin=entry_point_plugin_file.plugin,
-                plugin_file=entry_point_plugin_file.plugin_file,
+                plugin=entry_point_plugin.plugin,
             )
-            for entry_point_plugin_file in entrypoint.entry_point_plugin_files
+            for entry_point_plugin in entrypoint.entry_point_plugins
         ]
 
         plugin_resources = list(
             {
                 plugin.plugin.resource_id: plugin.plugin.resource
-                for plugin in new_entrypoint.entry_point_plugin_files
+                for plugin in new_entrypoint.entry_point_plugins
             }.values()
         )
-        new_entrypoint.entry_point_artifact_handler_files = [
-            models.EntryPointArtifactHandlerFile(
+        new_entrypoint.entry_point_artifact_handlers = [
+            models.EntryPointArtifactHandler(
                 entry_point=new_entrypoint,
                 plugin=entry_point_artifact_handler_file.plugin,
                 plugin_file=entry_point_artifact_handler_file.plugin_file,
             )
-            for entry_point_artifact_handler_file in entrypoint.entry_point_artifact_handler_files
+            for entry_point_artifact_handler_file in entrypoint.entry_point_artifact_handlers
         ]
 
         artifact_handler_resources = list(
             {
                 artifact_handler.plugin.resource_id: artifact_handler.plugin.resource
-                for artifact_handler in new_entrypoint.entry_point_artifact_handler_files
+                for artifact_handler in new_entrypoint.entry_point_artifact_handlers
             }.values()
         )
         queue_resources = [queue.resource for queue in queues]
@@ -680,41 +678,38 @@ class EntrypointIdPluginsService(object):
             creator=current_user,
         )
 
-        new_entry_point_plugin_files = [
-            models.EntryPointPluginFile(
+        new_entry_point_plugins = [
+            models.EntryPointPlugin(
                 entry_point=new_entrypoint,
                 plugin=plugin["plugin"],
-                plugin_file=plugin_file,
             )
             for plugin in self._plugin_ids_service.get(
                 plugin_ids, error_if_not_found=True
             )
-            for plugin_file in plugin["plugin_files"]
         ]
-        existing_entry_point_plugin_files = [
-            models.EntryPointPluginFile(
+        existing_entry_point_plugins = [
+            models.EntryPointPlugin(
                 entry_point=new_entrypoint,
-                plugin=entry_point_plugin_file.plugin,
-                plugin_file=entry_point_plugin_file.plugin_file,
+                plugin=entry_point_plugin.plugin,
             )
-            for entry_point_plugin_file in entrypoint.entry_point_plugin_files
-            if entry_point_plugin_file.plugin.resource_id not in set(plugin_ids)
+            for entry_point_plugin in entrypoint.entry_point_plugins
+            if entry_point_plugin.plugin.resource_id not in set(plugin_ids)
         ]
-        new_entrypoint.entry_point_plugin_files = (
-            existing_entry_point_plugin_files + new_entry_point_plugin_files
+        new_entrypoint.entry_point_plugins = (
+            existing_entry_point_plugins + new_entry_point_plugins
         )
 
-        existing_entry_point_artifact_handler_files = [
-            models.EntryPointArtifactHandlerFile(
+        existing_entry_point_artifact_handlers = [
+            models.EntryPointArtifactHandler(
                 entry_point=new_entrypoint,
                 plugin=entry_point_artifact_handler_file.plugin,
                 plugin_file=entry_point_artifact_handler_file.plugin_file,
             )
-            for entry_point_artifact_handler_file in entrypoint.entry_point_artifact_handler_files  # noqa: B950
+            for entry_point_artifact_handler_file in entrypoint.entry_point_artifact_handlers  # noqa: B950
         ]
 
-        new_entrypoint.entry_point_artifact_handler_files = (
-            existing_entry_point_artifact_handler_files  # noqa: B950
+        new_entrypoint.entry_point_artifact_handlers = (
+            existing_entry_point_artifact_handlers  # noqa: B950
         )
         # artifact handlers stay the same, plugins are changing
 
@@ -722,7 +717,7 @@ class EntrypointIdPluginsService(object):
             plugin_ids,
             [
                 plugin_file.plugin.resource_id
-                for plugin_file in existing_entry_point_artifact_handler_files
+                for plugin_file in existing_entry_point_artifact_handlers
             ],
             True,
         )
@@ -730,14 +725,14 @@ class EntrypointIdPluginsService(object):
         plugin_resources = list(
             {
                 plugin.plugin.resource_id: plugin.plugin.resource
-                for plugin in new_entrypoint.entry_point_plugin_files
+                for plugin in new_entrypoint.entry_point_plugins
             }.values()
         )
 
         artifact_handler_resources = list(
             {
                 artifact_handler.plugin.resource_id: artifact_handler.plugin.resource
-                for artifact_handler in new_entrypoint.entry_point_artifact_handler_files  # noqa: B950
+                for artifact_handler in new_entrypoint.entry_point_artifact_handlers  # noqa: B950
             }.values()
         )
 
@@ -811,23 +806,20 @@ class EntrypointIdPluginsIdService(object):
             ),
         )["entry_point"]
 
-        plugins = {
-            entry_point_plugin_file.plugin.resource_id: entry_point_plugin_file.plugin
-            for entry_point_plugin_file in entrypoint.entry_point_plugin_files
-        }
-        if plugin_id not in plugins:
+        plugin = [
+            entry_point_plugin.plugin
+            for entry_point_plugin in entrypoint.entry_point_plugins
+            if plugin_id == entry_point_plugin.plugin.resource_id
+        ]
+
+        if not plugin:
             raise EntityDoesNotExistError(
                 PLUGIN_RESOURCE_TYPE, entrypoint_id=entrypoint_id, plugin_id=plugin_id
             )
 
-        plugin = utils.PluginWithFilesDict(
-            plugin=plugins[plugin_id], plugin_files=[], has_draft=None
+        return utils.PluginWithFilesDict(
+            plugin=plugin[0], plugin_files=plugin[0].plugin_files, has_draft=None
         )
-        for entry_point_plugin_file in entrypoint.entry_point_plugin_files:
-            if entry_point_plugin_file.plugin.resource_id == plugin_id:
-                plugin["plugin_files"].append(entry_point_plugin_file.plugin_file)
-
-        return plugin
 
     def delete(
         self,
@@ -859,7 +851,7 @@ class EntrypointIdPluginsIdService(object):
         )["entry_point"]
 
         plugin_ids = set(
-            plugin.plugin.resource_id for plugin in entrypoint.entry_point_plugin_files
+            plugin.plugin.resource_id for plugin in entrypoint.entry_point_plugins
         )
         if plugin_id not in plugin_ids:
             raise EntityDoesNotExistError(
@@ -886,24 +878,22 @@ class EntrypointIdPluginsIdService(object):
             resource=entrypoint.resource,
             creator=current_user,
         )
-
-        new_entrypoint.entry_point_artifact_handler_files = [
-            models.EntryPointArtifactHandlerFile(
+        new_entrypoint.entry_point_artifact_handlers = [
+            models.EntryPointArtifactHandler(
                 entry_point=new_entrypoint,
                 plugin=entry_point_artifact_handler_file.plugin,
                 plugin_file=entry_point_artifact_handler_file.plugin_file,
             )
-            for entry_point_artifact_handler_file in entrypoint.entry_point_artifact_handler_files  # noqa: B950
+            for entry_point_artifact_handler_file in entrypoint.entry_point_artifact_handlers  # noqa: B950
         ]
 
-        new_entrypoint.entry_point_plugin_files = [
-            models.EntryPointPluginFile(
+        new_entrypoint.entry_point_plugins = [
+            models.EntryPointPlugin(
                 entry_point=new_entrypoint,
-                plugin=entry_point_plugin_file.plugin,
-                plugin_file=entry_point_plugin_file.plugin_file,
+                plugin=entry_point_plugin.plugin,
             )
-            for entry_point_plugin_file in entrypoint.entry_point_plugin_files
-            if entry_point_plugin_file.plugin.resource_id != plugin_id
+            for entry_point_plugin in entrypoint.entry_point_plugins
+            if entry_point_plugin.plugin.resource_id != plugin_id
         ]
 
         # remove the plugin resource dependency association
@@ -1028,22 +1018,22 @@ class EntrypointIdArtifactHandlersService(object):
             creator=current_user,
         )
 
-        existing_entry_point_plugin_files = [
-            models.EntryPointPluginFile(
+        existing_entry_point_plugins = [
+            models.EntryPointPlugin(
                 entry_point=new_entrypoint,
                 plugin=entry_point_plugin_file.plugin,
                 plugin_file=entry_point_plugin_file.plugin_file,
             )
-            for entry_point_plugin_file in entrypoint.entry_point_plugin_files
+            for entry_point_plugin_file in entrypoint.entry_point_plugins
         ]
 
-        new_entrypoint.entry_point_plugin_files = (
-            existing_entry_point_plugin_files  # noqa: B950
+        new_entrypoint.entry_point_plugins = (
+            existing_entry_point_plugins  # noqa: B950
         )
         # plugins stay the same, artifact handlers are changing
 
-        new_entry_point_artifact_handler_files = [
-            models.EntryPointArtifactHandlerFile(
+        new_entry_point_artifact_handlers = [
+            models.EntryPointArtifactHandler(
                 entry_point=new_entrypoint,
                 plugin=plugin["plugin"],
                 plugin_file=artifact_handler_file,
@@ -1054,26 +1044,26 @@ class EntrypointIdArtifactHandlersService(object):
             for artifact_handler_file in plugin["plugin_files"]
         ]
 
-        existing_entry_point_artifact_handler_files = [
-            models.EntryPointArtifactHandlerFile(
+        existing_entry_point_artifact_handlers = [
+            models.EntryPointArtifactHandler(
                 entry_point=new_entrypoint,
                 plugin=entry_point_artifact_handler_file.plugin,
                 plugin_file=entry_point_artifact_handler_file.plugin_file,
             )
-            for entry_point_artifact_handler_file in entrypoint.entry_point_artifact_handler_files  # noqa: B950
+            for entry_point_artifact_handler_file in entrypoint.entry_point_artifact_handlers  # noqa: B950
             if entry_point_artifact_handler_file.plugin.resource_id
             not in set(artifact_handler_ids)
         ]
 
-        new_entrypoint.entry_point_artifact_handler_files = (
-            existing_entry_point_artifact_handler_files
-            + new_entry_point_artifact_handler_files
+        new_entrypoint.entry_point_artifact_handlers = (
+            existing_entry_point_artifact_handlers
+            + new_entry_point_artifact_handlers
         )
 
         _ensure_no_plugin_handler_overlap(
             [
                 plugin_file.plugin.resource_id
-                for plugin_file in existing_entry_point_plugin_files
+                for plugin_file in existing_entry_point_plugins
             ],
             artifact_handler_ids,
             False,
@@ -1082,14 +1072,14 @@ class EntrypointIdArtifactHandlersService(object):
         plugin_resources = list(
             {
                 plugin.plugin.resource_id: plugin.plugin.resource
-                for plugin in new_entrypoint.entry_point_plugin_files
+                for plugin in new_entrypoint.entry_point_plugins
             }.values()
         )
 
         artifact_handler_resources = list(
             {
                 artifact_handler.plugin.resource_id: artifact_handler.plugin.resource
-                for artifact_handler in new_entrypoint.entry_point_artifact_handler_files  # noqa: B950
+                for artifact_handler in new_entrypoint.entry_point_artifact_handlers  # noqa: B950
             }.values()
         )
 
@@ -1165,7 +1155,7 @@ class EntrypointIdArtifactHandlersIdService(object):
 
         artifact_handlers = {
             entry_point_artifact_handler_file.plugin.resource_id: entry_point_artifact_handler_file.plugin  # noqa: B950
-            for entry_point_artifact_handler_file in entrypoint.entry_point_artifact_handler_files  # noqa: B950
+            for entry_point_artifact_handler_file in entrypoint.entry_point_artifact_handlers  # noqa: B950
         }
         if artifact_handler_id not in artifact_handlers:
             raise EntityDoesNotExistError(
@@ -1181,7 +1171,7 @@ class EntrypointIdArtifactHandlersIdService(object):
         )
         for (
             entry_point_artifact_handler_file
-        ) in entrypoint.entry_point_artifact_handler_files:
+        ) in entrypoint.entry_point_artifact_handlers:
             if (
                 entry_point_artifact_handler_file.plugin.resource_id
                 == artifact_handler_id
@@ -1223,7 +1213,7 @@ class EntrypointIdArtifactHandlersIdService(object):
 
         artifact_handler_ids = set(
             artifact_handler.plugin.resource_id
-            for artifact_handler in entrypoint.entry_point_artifact_handler_files
+            for artifact_handler in entrypoint.entry_point_artifact_handlers
         )
         if artifact_handler_id not in artifact_handler_ids:
             raise EntityDoesNotExistError(
@@ -1247,28 +1237,28 @@ class EntrypointIdArtifactHandlersIdService(object):
             description=entrypoint.description,
             task_graph=entrypoint.task_graph,
             artifacts=entrypoint.artifacts,
-            entry_point_plugin_files=entrypoint.entry_point_plugin_files,
+            entry_point_plugins=entrypoint.entry_point_plugins,
             parameters=entrypoint_parameters,
             resource=entrypoint.resource,
             creator=current_user,
         )
 
-        new_entrypoint.entry_point_plugin_files = [
-            models.EntryPointPluginFile(
+        new_entrypoint.entry_point_plugins = [
+            models.EntryPointPlugin(
                 entry_point=new_entrypoint,
                 plugin=entry_point_plugin_file.plugin,
                 plugin_file=entry_point_plugin_file.plugin_file,
             )
-            for entry_point_plugin_file in entrypoint.entry_point_plugin_files
+            for entry_point_plugin_file in entrypoint.entry_point_plugins
         ]
 
-        new_entrypoint.entry_point_artifact_handler_files = [
-            models.EntryPointArtifactHandlerFile(
+        new_entrypoint.entry_point_artifact_handlers = [
+            models.EntryPointArtifactHandler(
                 entry_point=new_entrypoint,
                 plugin=entry_point_artifact_handler_file.plugin,
                 plugin_file=entry_point_artifact_handler_file.plugin_file,
             )
-            for entry_point_artifact_handler_file in entrypoint.entry_point_artifact_handler_files  # noqa: B950
+            for entry_point_artifact_handler_file in entrypoint.entry_point_artifact_handlers  # noqa: B950
             if entry_point_artifact_handler_file.plugin.resource_id
             != artifact_handler_id
         ]
@@ -1656,39 +1646,31 @@ class EntrypointNameService(object):
 def _get_entrypoint_plugin_snapshots(
     entrypoint: models.EntryPoint,
 ) -> list[utils.PluginWithFilesDict]:
-    plugins_dict = {
-        entry_point_plugin_file.plugin.resource_id: utils.PluginWithFilesDict(
-            plugin=entry_point_plugin_file.plugin, plugin_files=[], has_draft=False
+    plugins = [
+        utils.PluginWithFilesDict(
+            plugin=entry_point_plugin.plugin,
+            plugin_files=entry_point_plugin.plugin.plugin_files,
+            has_draft=False,
         )
-        for entry_point_plugin_file in entrypoint.entry_point_plugin_files
-    }
-    for entry_point_plugin_file in entrypoint.entry_point_plugin_files:
-        resource_id = entry_point_plugin_file.plugin.resource_id
-        plugin_file = entry_point_plugin_file.plugin_file
-        plugins_dict[resource_id]["plugin_files"].append(plugin_file)
-    return list(plugins_dict.values())
+        for entry_point_plugin in entrypoint.entry_point_plugins
+    ]
 
+    return plugins
 
 def _get_entrypoint_artifact_handler_snapshots(
     entrypoint: models.EntryPoint,
 ) -> list[utils.PluginWithFilesDict]:
-    plugins_dict = {
-        entry_point_artifact_handler_file.plugin.resource_id: utils.PluginWithFilesDict(
-            plugin=entry_point_artifact_handler_file.plugin,
-            plugin_files=[],
+    artifact_handlers = [
+        utils.PluginWithFilesDict(
+            plugin=entry_point_artifact_handler.plugin,
+            plugin_files=entry_point_artifact_handler.plugin.plugin_files,
             has_draft=False,
         )
-        for entry_point_artifact_handler_file in entrypoint.entry_point_artifact_handler_files  # noqa: B950
-    }
-    for (
-        entry_point_artifact_handler_file
-    ) in entrypoint.entry_point_artifact_handler_files:
-        resource_id = entry_point_artifact_handler_file.plugin.resource_id
-        plugin_file = entry_point_artifact_handler_file.plugin_file
-        plugins_dict[resource_id]["plugin_files"].append(plugin_file)
-    return list(plugins_dict.values())
+        for entry_point_artifact_handler in entrypoint.entry_point_artifact_handlers
+    ]
 
-
+    return artifact_handlers
+    
 def _ensure_no_plugin_handler_overlap(
     plugins: list[int],
     artifact_handlers: list[int],

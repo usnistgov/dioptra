@@ -7,14 +7,16 @@
     :filter="filter"
     selection="single"
     v-model:selected="selected"
-    row-key="id"
-    :class="`q-mt-lg ${isMobile ? '' : '' }`"
+    :row-key="props.rowKey"
+    :class="'q-mt-lg'"
     flat
     bordered
     dense
     v-model:pagination="pagination"
     @request="onRequest"
-    :rows-per-page-options="[5,10,15,20,25,50,0]"
+    :tabindex="props.disableSelect ? '' : '0'"
+    @keydown="keydown"
+    :rows-per-page-options="props.showAll ? [0] : [5,10,15,20,25,50,0]"
   >
     <template v-slot:header="props">
       <q-tr :props="props">
@@ -29,11 +31,12 @@
         :class="`${getSelectedColor(props.selected)} cursor-pointer` " 
         :props="props"
         @click="handleClick(props)"
+        style="padding-left: 50px;"
       >
         <q-td v-for="col in props.cols" :key="col.name" :props="props">
           <q-radio 
             v-model="radioSelected" 
-            :val="props.row.id"
+            :val="props.row[props.rowKey || 'id']"
             v-if="col.name === 'radio'" 
             @click="handleClick(props)"
           />
@@ -165,19 +168,25 @@
   
   const isMobile = inject('isMobile')
 
-  const props = defineProps([
-    'columns', 
-    'rows', 
-    'title', 
-    'showExpand',
-    'hideCreateBtn',
-    'hideEditBtn', 
-    'hideDeleteBtn', 
-    'showToggleDraft', 
-    'hideSearch', 
-    'disableSelect', 
-    'rightCaption'
-  ])
+  const props = defineProps({
+  columns: Array,
+  rows: Array,
+  title: String,
+  showExpand: Boolean,
+  hideCreateBtn: Boolean,
+  hideEditBtn: Boolean,
+  hideDeleteBtn: Boolean,
+  showToggleDraft: Boolean,
+  hideSearch: Boolean,
+  disableSelect: Boolean,
+  rightCaption: String,
+  showAll: Boolean,
+  disableRadio: Boolean,
+  rowKey: {
+    type: String,
+    default: 'id'
+  },
+})
   const emit = defineEmits([
     'edit', 
     'delete', 
@@ -189,7 +198,7 @@
 
   const finalColumns = computed(() => {
     let defaultColumns = [ ...props.columns ]
-    if(!props.disableSelect) {
+    if(!props.disableSelect  && !props.disableRadio) {
       defaultColumns.unshift({ name: 'radio', align: 'center', sortable: false, label: 'Select', headerStyle: 'width: 100px' })
     }
     if(props.showExpand) {
@@ -221,13 +230,23 @@
 
   function handleClick(tableProps) {
     if(props.disableSelect) return
-    tableProps.selected = !tableProps.selected
-    radioSelected.value = tableProps.row.id
+    // tableProps.selected = !tableProps.selected
+    tableProps.selected = true
+    radioSelected.value = tableProps.row[props.rowKey]
   }
 
   watch(selected, (newVal) => {
     if(newVal.length === 0) radioSelected.value = ''
   })
+
+  watch(() => props.rows, (newVal) => {
+    // when viewing history, auto select first (latest) row
+    if (newVal.length > 0 && props.rowKey === 'snapshot') {
+      if (tableRef.value && newVal[0]) {
+        selected.value = [newVal[0]]
+      }
+    }
+  }, { deep: true })
 
   watch(showDrafts, (newVal, oldVal) => {
     if(newVal !== oldVal) selected.value = []
@@ -235,12 +254,12 @@
 
   function getSelectedColor(selected) {
     if(darkMode.value && selected) return 'bg-deep-purple-10'
-    else if(selected) return 'bg-blue-grey-1'
+    // else if(selected) return 'bg-blue-grey-1'
   }
 
   const pagination = ref({
     page: 1,
-    rowsPerPage: 15,
+    rowsPerPage: props.showAll ? 0 : 15,
     sortBy: '',
     descending: false,
   })
@@ -280,5 +299,29 @@
     const options = { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: true }
     return new Date(dateString).toLocaleString('en-US', options)
   }
+
+  function keydown(event) {
+  // Ensure there are rows to navigate
+  if (!props.rows || props.rows.length === 0) return;
+
+  // Get the current index of the selected row
+  const currentIndex = props.rows.findIndex(row => row[props.rowKey] === selected.value[0]?.[props.rowKey])
+
+  if (event.key === 'ArrowUp') {
+    // Navigate to the previous row (if not at the first row)
+    if (currentIndex > 0) {
+      const prevRow = props.rows[currentIndex - 1]
+      selected.value = [prevRow]
+      radioSelected.value = prevRow[props.rowKey]
+    }
+  } else if (event.key === 'ArrowDown') {
+    // Navigate to the next row (if not at the last row)
+    if (currentIndex < props.rows.length - 1) {
+      const nextRow = props.rows[currentIndex + 1]
+      selected.value = [nextRow]
+      radioSelected.value = nextRow[props.rowKey]
+    }
+  }
+}
 
 </script>

@@ -56,7 +56,6 @@ RESOURCE_TYPES: Final[list[dict[str, str]]] = [
     {"resource_type": "plugin_file"},
     {"resource_type": "plugin_task_parameter_type"},
     {"resource_type": "queue"},
-    {"resource_type": "resource_snapshot"},
     {"resource_type": "ml_model_version"},
 ]
 RESOURCE_DEPENDENCY_TYPES: Final[list[dict[str, str]]] = [

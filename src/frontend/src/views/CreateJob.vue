@@ -193,13 +193,12 @@
     </fieldset>
   </div>
 
-  <div :class="`${isMobile ? '' : 'q-mx-xl'} float-right q-mb-lg`">
+  <div :class="`float-right q-mb-lg`">
       <q-btn  
-        :to="expJobOrAllJobs === 'allJobs' ? `/jobs` : `/experiments/${route.params.id}/jobs`"
         color="negative" 
         label="Cancel"
         class="q-mr-lg"
-        @click="confirmLeave = true"
+        @click="confirmLeave = true; router.back()"
       />
       <q-btn  
         @click="submit()" 

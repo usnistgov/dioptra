@@ -21,7 +21,7 @@ from structlog.stdlib import BoundLogger
 from dioptra.restapi.db import db, models
 from dioptra.restapi.errors import EntityDoesNotExistError
 from dioptra.restapi.v1.entrypoints.service import (
-    RESOURCE_TYPE as ENTRYPONT_RESOURCE_TYPE,
+    RESOURCE_TYPE as ENTRYPOINT_RESOURCE_TYPE,
 )
 from dioptra.restapi.v1.experiments.service import (
     RESOURCE_TYPE as EXPERIMENT_RESOURCE_TYPE,
@@ -53,7 +53,7 @@ def get_entry_point(
     entry_point = db.session.scalar(entry_point_stmt)
 
     if entry_point is None:
-        raise EntityDoesNotExistError(ENTRYPONT_RESOURCE_TYPE, job_id=job_id)
+        raise EntityDoesNotExistError(ENTRYPOINT_RESOURCE_TYPE, job_id=job_id)
 
     return entry_point
 
@@ -86,7 +86,7 @@ def get_experiment(job_id: int, logger: BoundLogger | None = None) -> models.Exp
 
 def get_entry_point_plugin_files(
     job_id: int, logger: BoundLogger | None = None
-) -> list[models.EntryPointPluginFile]:
+) -> list[models.PluginPluginFile]:
     """Run a query to get the plugin files for an entrypoint.
 
     Args:
@@ -99,18 +99,25 @@ def get_entry_point_plugin_files(
     """
     log = logger or LOGGER.new()  # noqa: F841
 
-    entry_point_resource_snapshot_id_stmt = (
-        select(models.EntryPoint.resource_snapshot_id)
+    entry_point_resource_snapshot_stmt = (
+        select(models.EntryPoint)
         .join(models.EntryPointJob)
         .where(
             models.EntryPointJob.job_resource_id == job_id,
         )
     )
-    entry_point_plugin_files_stmt = select(models.EntryPointPluginFile).where(
-        models.EntryPointPluginFile.entry_point_resource_snapshot_id
-        == entry_point_resource_snapshot_id_stmt.scalar_subquery(),
-    )
-    return list(db.session.scalars(entry_point_plugin_files_stmt).unique().all())
+    entry_point = db.session.scalar(entry_point_resource_snapshot_stmt)
+
+    if entry_point is None:
+        raise EntityDoesNotExistError(ENTRYPOINT_RESOURCE_TYPE, job_id=job_id)
+
+    plugin_plugin_files = [
+        plugin_plugin_file
+        for entry_point_plugin in entry_point.entry_point_plugins
+        for plugin_plugin_file in entry_point_plugin.plugin.plugin_plugin_files
+    ]
+
+    return plugin_plugin_files
 
 
 def get_job_parameter_values(

@@ -19,8 +19,8 @@ from .entry_points import (
     EntryPoint,
     EntryPointParameter,
     EntryPointParameterValue,
-    EntryPointPluginFile,
-    EntryPointArtifactHandlerFile,
+    EntryPointPlugin,
+    EntryPointArtifactHandler,
     entry_point_parameter_types_table,
 )
 from .experiments import Experiment
@@ -45,6 +45,7 @@ from .ml_models import MlModel, MlModelVersion
 from .plugins import (
     Plugin,
     PluginFile,
+    PluginPluginFile,
     PluginTask,
     PluginTaskInputParameter,
     PluginTaskOutputParameter,
@@ -72,7 +73,7 @@ __all__ = [
     "EntryPointJob",
     "EntryPointParameter",
     "EntryPointParameterValue",
-    "EntryPointPluginFile",
+    "EntryPointPlugin",
     "Experiment",
     "ExperimentJob",
     "Group",
@@ -85,6 +86,7 @@ __all__ = [
     "MlModelVersion",
     "Plugin",
     "PluginFile",
+    "PluginPluginFile",
     "PluginTask",
     "PluginTaskInputParameter",
     "PluginTaskOutputParameter",

@@ -151,6 +151,7 @@ def build_experiment_snapshot_ref(experiment: models.Experiment) -> dict[str, An
         The ExperimentSnapshotRef dictionary.
     """
     return {
+        "id": experiment.resource_id,
         "snapshot_id": experiment.resource_snapshot_id,
         "name": experiment.name,
         "group": build_group_ref(experiment.resource.owner),
@@ -255,6 +256,8 @@ def build_entrypoint_plugin(plugin_with_files: PluginWithFilesDict) -> dict[str,
     return {
         "id": plugin.resource_id,
         "snapshot_id": plugin.resource_snapshot_id,
+        "latest_snapshot": plugin.resource.latest_snapshot_id
+        == plugin.resource_snapshot_id,
         "name": plugin.name,
         "url": build_url(
             f"{PLUGINS}/{plugin.resource_id}/snapshots/{plugin.resource_snapshot_id}"
@@ -268,6 +271,7 @@ def build_entrypoint_plugin(plugin_with_files: PluginWithFilesDict) -> dict[str,
                     f"{PLUGINS}/{plugin.resource_id}/{PLUGIN_FILES}/{plugin_file.resource_id}/"
                     f"snapshots/{plugin_file.resource_snapshot_id}"
                 ),
+                "tasks": [build_plugin_task(task) for task in plugin_file.tasks],
             }
             for plugin_file in plugin_files
         ],
@@ -284,6 +288,7 @@ def build_plugin_snapshot_ref(plugin: models.Plugin) -> dict[str, Any]:
         The PluginSnapshotRef dictionary.
     """
     return {
+        "id": plugin.resource_id,
         "snapshot_id": plugin.resource_snapshot_id,
         "name": plugin.name,
         "group": build_group_ref(plugin.resource.owner),
@@ -311,6 +316,7 @@ def build_plugin_file_ref(plugin_file: models.PluginFile) -> dict[str, Any]:
         "url": build_url(
             f"{PLUGINS}/{plugin_id}/{PLUGIN_FILES}/{plugin_file.resource_id}"
         ),
+        "tasks": [build_plugin_task(task) for task in plugin_file.tasks],
     }
 
 
@@ -341,6 +347,7 @@ def build_entrypoint_snapshot_ref(entrypoint: models.EntryPoint) -> dict[str, An
         The EntrypointSnapshotRef dictionary.
     """
     return {
+        "id": entrypoint.resource_id,
         "snapshot_id": entrypoint.resource_snapshot_id,
         "name": entrypoint.name,
         "group": build_group_ref(entrypoint.resource.owner),
@@ -395,6 +402,7 @@ def build_queue_snapshot_ref(queue: models.Queue) -> dict[str, Any]:
         The QueueSnapshotRef dictionary.
     """
     return {
+        "id": queue.resource_id,
         "snapshot_id": queue.resource_snapshot_id,
         "name": queue.name,
         "group": build_group_ref(queue.resource.owner),
@@ -587,17 +595,14 @@ def build_entrypoint(entrypoint_dict: EntrypointDict) -> dict[str, Any]:
     queues = entrypoint_dict.get("queues", None)
     has_draft = entrypoint_dict.get("has_draft", None)
 
-    plugins_dict = {
-        entry_point_plugin_file.plugin.resource_id: PluginWithFilesDict(
-            plugin=entry_point_plugin_file.plugin, plugin_files=[], has_draft=False
+    plugins = [
+        PluginWithFilesDict(
+            plugin=entry_point_plugin.plugin,
+            plugin_files=[file for file in entry_point_plugin.plugin.plugin_files],
+            has_draft=False,
         )
-        for entry_point_plugin_file in entrypoint.entry_point_plugin_files
-    }
-    for entry_point_plugin_file in entrypoint.entry_point_plugin_files:
-        resource_id = entry_point_plugin_file.plugin.resource_id
-        plugin_file = entry_point_plugin_file.plugin_file
-        plugins_dict[resource_id]["plugin_files"].append(plugin_file)
-    plugins = list(plugins_dict.values())
+        for entry_point_plugin in entrypoint.entry_point_plugins
+    ]
 
     artifact_handlers_dict = {
         entry_point_artifact_handler_file.plugin.resource_id: PluginWithFilesDict(

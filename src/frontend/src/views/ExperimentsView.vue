@@ -32,30 +32,6 @@
     </template>
   </TableComponent>
 
-  <q-btn 
-    class="fixedButton"
-    round
-    color="primary"
-    icon="add"
-    size="lg"
-  >
-    <span class="sr-only">Create a new Experiment</span>
-    <q-tooltip>
-      Create a new Experiment
-    </q-tooltip>
-    <q-menu anchor="top middle" self="bottom middle">
-      <q-list >
-        <q-item clickable to="/experiments/new">
-          <q-item-section>Create Experiment</q-item-section>
-        </q-item>
-        <q-separator />
-        <q-item clickable to="/entrypoints/new">
-          <q-item-section>Create Entry Point</q-item-section>
-        </q-item>
-      </q-list>
-    </q-menu>
-  </q-btn>
-
   <DeleteDialog 
     v-model="showDeleteDialog"
     @submit="deleteExperiment"

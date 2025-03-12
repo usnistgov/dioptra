@@ -79,37 +79,43 @@ def assert_base_resource_ref_contents_matches_expectations(
 def assert_queue_ref_contents_matches_expectations(
     queue: dict[str, Any],
     expected_queue_id: int,
+    expected_queue_snapshot_id: int,
     expected_group_id: int,
 ) -> None:
     assert isinstance(queue["name"], str)
     assert_base_resource_ref_contents_matches_expectations(
         resource=queue, expected_group_id=expected_group_id
     )
-    assert queue["snapshotId"] == expected_queue_id
+    assert queue["id"] == expected_queue_id
+    assert queue["snapshotId"] == expected_queue_snapshot_id
 
 
 def assert_experiment_ref_contents_matches_expectations(
     experiment: dict[str, Any],
     expected_experiment_id: int,
+    expected_experiment_snapshot_id: int,
     expected_group_id: int,
 ) -> None:
     assert isinstance(experiment["name"], str)
     assert_base_resource_ref_contents_matches_expectations(
         resource=experiment, expected_group_id=expected_group_id
     )
-    assert experiment["snapshotId"] == expected_experiment_id
+    assert experiment["id"] == expected_experiment_id
+    assert experiment["snapshotId"] == expected_experiment_snapshot_id
 
 
 def assert_entrypoint_ref_contents_matches_expectations(
     entrypoint: dict[str, Any],
     expected_entrypoint_id: int,
+    expected_entrypoint_snapshot_id: int,
     expected_group_id: int,
 ) -> None:
     assert isinstance(entrypoint["name"], str)
     assert_base_resource_ref_contents_matches_expectations(
         resource=entrypoint, expected_group_id=expected_group_id
     )
-    assert entrypoint["snapshotId"] == expected_entrypoint_id
+    assert entrypoint["id"] == expected_entrypoint_id
+    assert entrypoint["snapshotId"] == expected_entrypoint_snapshot_id
 
 
 def assert_draft_response_contents_matches_expectations(
@@ -121,7 +127,6 @@ def assert_draft_response_contents_matches_expectations(
     Args:
         response: The actual response from the API.
         expected_contents: The expected response from the API.
-        existing_draft: If the draft is of an existing resource or not.
 
     Raises:
         AssertionError: If the API response does not match the expected response

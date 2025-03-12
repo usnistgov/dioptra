@@ -16,29 +16,9 @@
       <div>{{ props.row.group.name }}</div>
     </template>
     <template #expandedSlot="{ row }">
-      <!-- <BasicTable
-        :columns="fileColumns"
-        :rows="row?.versions || []"
-        :hideSearch="true"
-        :hideEditTable="true"
-        class="q-mx-md"
-        :title="`${row.name} Versions`"
-      /> -->
     </template>
   </TableComponent>
-  <!-- <q-btn 
-    class="fixedButton"
-    round
-    color="primary"
-    icon="add"
-    size="lg"
-    @click="showAddEditDialog = true"
-  >
-    <span class="sr-only">Register a new Artifact</span>
-    <q-tooltip>
-      Register a new Artifact
-    </q-tooltip>
-  </q-btn> -->
+
   <ArtifactsDialog 
     v-model="showAddEditDialog"
     @addArtifact="addArtifact"
@@ -60,7 +40,6 @@
 
 <script setup>
 import TableComponent from '@/components/TableComponent.vue'
-import BasicTable from '@/components/BasicTable.vue'
 import ArtifactsDialog from '@/dialogs/ArtifactsDialog.vue'
 import DeleteDialog from '@/dialogs/DeleteDialog.vue'
 import { ref, watch } from 'vue'

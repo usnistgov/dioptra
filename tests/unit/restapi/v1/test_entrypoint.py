@@ -27,7 +27,7 @@ from typing import Any
 import pytest
 from flask_sqlalchemy import SQLAlchemy
 
-from dioptra.client.base import DioptraResponseProtocol
+from dioptra.client.base import DioptraResponseProtocol, FieldNameCollisionError
 from dioptra.client.client import DioptraClient
 
 from ..lib import helpers, routines
@@ -849,7 +849,7 @@ def test_manage_existing_entrypoint_draft(
     draft = {
         "name": name,
         "description": description,
-        "taskGraph": task_graph,
+        "task_graph": task_graph,
         "parameters": parameters,
         "plugins": plugin_ids,
         "queues": queue_ids,
@@ -857,7 +857,7 @@ def test_manage_existing_entrypoint_draft(
     draft_mod = {
         "name": new_name,
         "description": description,
-        "taskGraph": task_graph,
+        "task_graph": task_graph,
         "parameters": parameters,
         "plugins": plugin_ids,
         "queues": queue_ids,
@@ -870,7 +870,14 @@ def test_manage_existing_entrypoint_draft(
         "resource_id": entrypoint["id"],
         "resource_snapshot_id": entrypoint["snapshot"],
         "num_other_drafts": 0,
-        "payload": draft,
+        "payload": {
+            "name": name,
+            "description": description,
+            "taskGraph": task_graph,
+            "parameters": parameters,
+            "plugins": plugin_ids,
+            "queues": queue_ids,
+        },
     }
     draft_mod_expected = {
         "user_id": auth_account["id"],
@@ -878,7 +885,14 @@ def test_manage_existing_entrypoint_draft(
         "resource_id": entrypoint["id"],
         "resource_snapshot_id": entrypoint["snapshot"],
         "num_other_drafts": 0,
-        "payload": draft_mod,
+        "payload": {
+            "name": new_name,
+            "description": description,
+            "taskGraph": task_graph,
+            "parameters": parameters,
+            "plugins": plugin_ids,
+            "queues": queue_ids,
+        },
     }
 
     # Run routine: existing resource drafts tests
@@ -915,7 +929,7 @@ def test_manage_new_entrypoint_drafts(
         "draft1": {
             "name": "entrypoint1",
             "description": "new entrypoint",
-            "taskGraph": "graph",
+            "task_graph": "graph",
             "parameters": [],
             "plugins": [],
             "queues": [],
@@ -923,7 +937,7 @@ def test_manage_new_entrypoint_drafts(
         "draft2": {
             "name": "entrypoint2",
             "description": "entrypoint",
-            "taskGraph": "graph",
+            "task_graph": "graph",
             "parameters": [],
             "queues": [1, 3],
             "plugins": [2],
@@ -932,7 +946,7 @@ def test_manage_new_entrypoint_drafts(
     draft1_mod = {
         "name": "draft1",
         "description": "new description",
-        "taskGraph": "graph",
+        "task_graph": "graph",
         "parameters": [],
         "plugins": [],
         "queues": [],
@@ -942,17 +956,38 @@ def test_manage_new_entrypoint_drafts(
     draft1_expected = {
         "user_id": auth_account["id"],
         "group_id": group_id,
-        "payload": drafts["draft1"],
+        "payload": {
+            "name": "entrypoint1",
+            "description": "new entrypoint",
+            "taskGraph": "graph",
+            "parameters": [],
+            "plugins": [],
+            "queues": [],
+        },
     }
     draft2_expected = {
         "user_id": auth_account["id"],
         "group_id": group_id,
-        "payload": drafts["draft2"],
+        "payload": {
+            "name": "entrypoint2",
+            "description": "entrypoint",
+            "taskGraph": "graph",
+            "parameters": [],
+            "queues": [1, 3],
+            "plugins": [2],
+        },
     }
     draft1_mod_expected = {
         "user_id": auth_account["id"],
         "group_id": group_id,
-        "payload": draft1_mod,
+        "payload": {
+            "name": "draft1",
+            "description": "new description",
+            "taskGraph": "graph",
+            "parameters": [],
+            "plugins": [],
+            "queues": [],
+        },
     }
 
     # Run routine: existing resource drafts tests
@@ -965,6 +1000,71 @@ def test_manage_new_entrypoint_drafts(
         draft1_mod_expected=draft1_mod_expected,
         group_id=group_id,
     )
+
+
+def test_client_raises_error_on_field_name_collision(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+) -> None:
+    """
+    Test that the client errors out if both task_graph and taskGraph are passed as
+    keyword arguments to either the create and modify draft resource sub-collection
+    clients.
+
+    Given an authenticated user, this test validates the following sequence of actions:
+
+    - The user prepares a payload for either the create or modify draft resource
+      sub-collection client. The payload contains both task_graph an taskGraph as keys.
+    - The user submits a create new resource request using the payload, which raises
+      a FieldNameCollisionError.
+    - The user submits a modify resource draft request using the payload, which raises
+        a FieldNameCollisionError.
+    """
+    entrypoint = registered_entrypoints["entrypoint1"]
+    group_id = auth_account["groups"][0]["id"]
+    name = "draft"
+    description = "description"
+    task_graph = textwrap.dedent(
+        """# my entrypoint graph
+        graph:
+          message:
+            my_entrypoint: $name
+        """
+    )
+    parameters = [
+        {
+            "name": "my_entrypoint_param",
+            "defaultValue": "my_value",
+            "parameterType": "string",
+        }
+    ]
+    plugin_ids = [plugin["id"] for plugin in entrypoint["plugins"]]
+    queue_ids = [queue["id"] for queue in entrypoint["queues"]]
+
+    draft = {
+        "name": name,
+        "description": description,
+        "task_graph": task_graph,
+        "taskGraph": task_graph,
+        "parameters": parameters,
+        "plugins": plugin_ids,
+        "queues": queue_ids,
+    }
+
+    with pytest.raises(FieldNameCollisionError):
+        dioptra_client.entrypoints.new_resource_drafts.create(
+            group_id=group_id,
+            **draft,
+        )
+
+    with pytest.raises(FieldNameCollisionError):
+        dioptra_client.entrypoints.modify_resource_drafts.modify(
+            entrypoint["id"],
+            resource_snapshot_id=entrypoint["snapshot"],
+            **draft,
+        )
 
 
 def test_manage_entrypoint_snapshots(

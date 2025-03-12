@@ -33,7 +33,7 @@ from dioptra.restapi.v1.schemas import (
 )
 
 ALLOWED_PLUGIN_NAME_REGEX = re.compile(r"^([A-Z]|[A-Z_][A-Z0-9_]+)$", flags=re.IGNORECASE)  # noqa: B950; fmt: skip
-ALLOWED_PLUGIN_FILENAME_REGEX = re.compile(r"^([A-Za-z]|[A-Za-z_][A-Za-z0-9_]+)\.py$")
+ALLOWED_PLUGIN_FILENAME_REGEX = re.compile(r"^(?!.*/_)(?!_/)([a-zA-Z][a-zA-Z0-9_]*/)*[a-zA-Z_][a-zA-Z0-9_]*(?<!_)\.py$")  # noqa: B950; fmt: skip
 ALLOWED_PLUGIN_TASK_REGEX = re.compile(r"^([A-Z]|[A-Z_][A-Z0-9_]+)$", flags=re.IGNORECASE)  # noqa: B950; fmt: skip
 ALLOWED_PLUGIN_TASK_PARAMETER_REGEX = re.compile(r"^([A-Z]|[A-Z_][A-Z0-9_]+)$", flags=re.IGNORECASE)  # noqa: B950; fmt: skip
 
@@ -59,23 +59,6 @@ class PluginSnapshotRefSchema(PluginSnapshotRefBaseSchema):  # type: ignore
     name = fields.String(
         attribute="name",
         metadata=dict(description="Name of the Plugin resource."),
-    )
-
-
-PluginFileRefBaseSchema = generate_base_resource_ref_schema("PluginFile")
-
-
-class PluginFileRefSchema(PluginFileRefBaseSchema):  # type: ignore
-    """The reference schema for the data stored in a PluginFile."""
-
-    pluginId = fields.Int(
-        attribute="plugin_id",
-        data_key="plugin",
-        metadata=dict(description="ID for the Plugin resource this file belongs to."),
-    )
-    filename = fields.String(
-        attribute="filename",
-        metadata=dict(description="Filename of the PluginFile resource."),
     )
 
 
@@ -165,6 +148,29 @@ class PluginTaskSchema(Schema):
         metadata=dict(
             description="List of output PluginTaskParameters in this PluginTask."
         ),
+    )
+
+
+PluginFileRefBaseSchema = generate_base_resource_ref_schema("PluginFile")
+
+
+class PluginFileRefSchema(PluginFileRefBaseSchema):  # type: ignore
+    """The reference schema for the data stored in a PluginFile."""
+
+    pluginId = fields.Int(
+        attribute="plugin_id",
+        data_key="plugin",
+        metadata=dict(description="ID for the Plugin resource this file belongs to."),
+    )
+    filename = fields.String(
+        attribute="filename",
+        metadata=dict(description="Filename of the PluginFile resource."),
+    )
+    tasks = fields.Nested(
+        PluginTaskSchema,
+        attribute="tasks",
+        metadata=dict(description="Tasks associated with the PluginFile resource."),
+        many=True,
     )
 
 

@@ -17,6 +17,7 @@
 """The schemas for serializing/deserializing Entrypoint resources."""
 from marshmallow import Schema, fields, validate
 
+from dioptra.restapi.v1.plugins.schema import PluginTaskSchema
 from dioptra.restapi.v1.queues.schema import QueueRefSchema
 from dioptra.restapi.v1.schemas import (
     BasePageSchema,
@@ -49,6 +50,12 @@ class EntrypointPluginFileSchema(Schema):
         metadata=dict(description="URL for accessing the full PluginFile snapshot."),
         relative=True,
     )
+    tasks = fields.Nested(
+        PluginTaskSchema,
+        attribute="tasks",
+        metadata=dict(description="Tasks associated with the PluginFile resource."),
+        many=True,
+    )
 
 
 class EntrypointPluginSchema(Schema):
@@ -65,6 +72,10 @@ class EntrypointPluginSchema(Schema):
     snapshotId = fields.Integer(
         attribute="snapshot_id",
         metadata=dict(description="Snapshot ID for the Plugin resource."),
+    )
+    latestSnapshot = fields.Boolean(
+        attribute="latest_snapshot",
+        metadata=dict(description="Whether or not the Plugin is the latest version."),
     )
     url = fields.Url(
         attribute="url",

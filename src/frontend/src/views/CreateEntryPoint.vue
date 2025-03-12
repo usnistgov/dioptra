@@ -167,6 +167,16 @@
           <template v-slot:before>
             <div class="field-label">Queues:</div>
           </template>  
+          <template v-slot:selected-item="scope">
+            <q-chip
+              :label="scope.opt.name"
+              removable
+              @remove="scope.removeAtIndex(scope.index)"
+              :tabindex="scope.tabindex"
+              color="primary"
+              text-color="white"
+            />
+          </template>
         </q-select>
 
         <q-select
@@ -189,6 +199,44 @@
             <div class="field-label">Plugins:</div>
           </template>  
         </q-select>
+        <div class="row" v-if="route.params.id !== 'new' && entryPoint.plugins.length > 0">
+          <label class="field-label q-pt-xs">Plugins:</label>
+          <div 
+            class="col" 
+            style="border: 1px solid lightgray; border-radius: 4px; padding: 5px 8px; margin-left: 6px;"
+          >
+            <div
+              v-for="(plugin, i) in entryPoint.plugins"
+              :key="i"
+            >
+              <q-chip
+                :label="plugin.name"
+                color="secondary"
+                text-color="white"
+              >
+                <q-badge
+                  v-if="!plugin.latestSnapshot" 
+                  color="red" 
+                  label="outdated" 
+                  rounded
+                  class="q-ml-xs"
+                />
+              </q-chip>
+              <q-btn
+                v-if="!plugin.latestSnapshot"
+                round 
+                color="red" 
+                icon="sync"
+                size="sm"
+                @click="syncPlugin(plugin.id, i)"
+              >
+                <q-tooltip>
+                  Sync to latest version of plugin
+                </q-tooltip>
+              </q-btn>
+            </div>
+          </div>
+        </div>
       </div>
       
       <TableComponent
@@ -240,11 +288,10 @@
 
   <div class="float-right q-mb-lg">
     <q-btn  
-      to="/entrypoints"
       color="negative" 
       label="Cancel"
       class="q-mr-lg"
-      @click="confirmLeave = true"
+      @click="confirmLeave = true; router.back()"
     />
     <q-btn  
       @click="submit()" 
@@ -304,7 +351,7 @@
 
   let entryPoint = ref({
     name: '',
-    group: '',
+    group: store.loggedInGroup.id,
     description: '',
     parameters: [],
     taskGraph: '',
@@ -314,7 +361,7 @@
 
   const initialCopy = ref({
     name: '',
-    group: '',
+    group: store.loggedInGroup.id,
     description: '',
     parameters: [],
     taskGraph: '',
@@ -335,26 +382,16 @@
 
   watch(() => entryPoint.value.plugins, () => {
     tasks.value = []
-    entryPoint.value.plugins.forEach(async(plugin) => {
-      let pluginID = typeof plugin === 'object' ? plugin.id : plugin
-      try {
-        const res = await api.getFiles(pluginID, {
-          search: '',
-          rowsPerPage: 0, // get all
-          index: 0
+    entryPoint.value.plugins.forEach((plugin) => {
+      if(typeof plugin === 'number') return
+      const pluginName = plugin.name
+      plugin.files.forEach((file) => {
+        file.tasks.forEach((task) => {
+          tasks.value.push({ ...task, pluginName: pluginName })
         })
-        console.log('res = ', res)
-        res.data.data.forEach((file) => {
-          file.tasks.forEach((task) => {
-            task.pluginName = file.plugin.name
-            tasks.value.push(task)
-          })
-        })
-      } catch(err) {
-        console.warn(err)
-      }
+      })
     })
-  })
+  }, { deep: true })
 
   const parameter = reactive({
     name: '',
@@ -505,6 +542,7 @@
           parameters: entryPoint.value.parameters,
           queues: entryPoint.value.queues,
         })
+        await api.addPluginsToEntrypoint(route.params.id, pluginsToUpdate.value)
         notify.success(`Successfully updated '${entryPoint.value.name}'`)
       }
     } catch(err) {
@@ -628,5 +666,18 @@
     }
     confirmLeave.value = true
     router.push(toPath.value)
+  }
+
+  const pluginsToUpdate = ref([])
+
+  async function syncPlugin(pluginID, index) {
+    try {
+      const res = await api.getItem('plugins', pluginID)
+      console.log('res = ', res)
+      entryPoint.value.plugins.splice(index, 1, res.data)
+      pluginsToUpdate.value.push(pluginID)
+    } catch(err) {
+      console.warn(err)
+    }
   }
 </script>

@@ -1,0 +1,105 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://github.com/usnistgov/dioptra",
+	"title": "Dioptra Resource Schema",
+	"description": "A schema defining objects that can be imported into a Dioptra instance.",
+	"type": "object",
+	"properties": {
+		"plugins": {
+			"type": "array",
+			"description": "An array of Dioptra plugins",
+			"items": {
+				"type": "object",
+				"description": "A Dioptra plugin",
+				"properties": {
+					"path": { "type": "string" },
+					"description": { "type": "string" },
+					"tasks": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"filename": { "type": "string" },
+								"name": { "type": "string" },
+								"input_params": {
+									"type": "array",
+									"items": {
+										"type": "object",
+										"properties": {
+											"name": { "type": "string" },
+											"type": { "type": "string" },
+											"required": { "type": "boolean" }
+										},
+										"required": [ "name", "type" ],
+										"additionalProperties": false
+									}
+								},
+								"output_params": {
+									"type": "array",
+									"items": {
+										"type": "object",
+										"properties": {
+											"name": { "type": "string" },
+											"type": { "type": "string" }
+										},
+										"required": [ "name", "type" ],
+										"additionalProperties": false
+									}
+								}
+							},
+							"required": [ "filename", "name", "input_params", "output_params" ],
+							"additionalProperties": false
+						}
+					}
+				},
+				"required": [ "path" ],
+				"additionalProperties": false
+			}
+		},
+		"plugin_param_types": {
+			"type": "array",
+			"description": "An array of Dioptra plugin parameter types",
+			"items": {
+				"type": "object",
+				"properties": {
+					"name": { "type": "string" },
+					"description": { "type": "string" },
+					"structure": { "type": "object" }
+				},
+				"required": [ "name" ],
+				"additionalProperties": false
+			}
+		},
+		"entrypoints": {
+			"type": "array",
+			"description": "An array of Dioptra entrypoints",
+			"items": {
+				"type": "object",
+				"properties": {
+					"path": { "type": "string" },
+					"name": { "type": "string" },
+					"description": { "type": "string" },
+					"params": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"name": { "type": "string" },
+								"type": { "type": "string" },
+								"default_value": { "type": [ "string", "number", "boolean", "null" ] }
+							},
+							"required": [ "name", "type" ],
+							"additionalProperties": false
+						}
+					},
+					"plugins": {
+						"type": "array",
+						"items": { "type": "string" }
+					}
+				},
+				"required": [ "path" ],
+				"additionalProperties": false
+			}
+		}
+	}
+}

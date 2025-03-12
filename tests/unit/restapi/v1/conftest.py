@@ -15,18 +15,33 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """Fixtures representing resources needed for test suites"""
+import os
+import shutil
+import subprocess
+import tarfile
 import textwrap
 from collections.abc import Iterator
 from http import HTTPStatus
+from pathlib import Path
+from tempfile import NamedTemporaryFile, TemporaryDirectory
 from typing import Any, cast
 
+
 import pytest
+import tomli as toml
 import uuid
 from flask import Flask
 from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
 from injector import Injector
 from pytest import MonkeyPatch
+
+from dioptra.client import (
+    DioptraFile,
+    select_files_in_directory,
+    select_one_or_more_files,
+)
+from dioptra.sdk.utilities.paths import set_cwd
 
 from ..lib import actions, mock_rq
 
@@ -646,9 +661,9 @@ def registered_jobs(
 
     monkeypatch.setattr(rq_service, "RQQueue", mock_rq.MockRQQueue)
 
-    queue_id = registered_queues["queue1"]["snapshot"]
-    experiment_id = registered_experiments["experiment1"]["snapshot"]
-    entrypoint_id = registered_entrypoints["entrypoint1"]["snapshot"]
+    queue_id = registered_queues["queue1"]["id"]
+    experiment_id = registered_experiments["experiment1"]["id"]
+    entrypoint_id = registered_entrypoints["entrypoint1"]["id"]
     values = {
         registered_entrypoints["entrypoint1"]["parameters"][0]["name"]: "new_value",
     }
@@ -720,3 +735,52 @@ def registered_mlflowrun_incomplete(
     )
 
     return responses
+
+
+@pytest.fixture
+def resources_tar_file() -> DioptraFile:
+    path = Path(__file__).absolute().parent / "workflows" / "resource_import_files"
+    with set_cwd(path):
+        with NamedTemporaryFile(suffix=".tar.gz", delete=False) as f:
+            with tarfile.open(fileobj=f, mode="w:gz") as tar:
+                tar.add("dioptra.toml")
+                tar.add("plugins", recursive=True)
+                tar.add(Path("entrypoints", "hello-world.yaml"))
+
+        yield select_one_or_more_files([f.name])[0]
+
+        os.unlink(f.name)
+
+
+@pytest.fixture
+def resources_repo() -> str:
+    path = Path(__file__).absolute().parent / "workflows" / "resource_import_files"
+
+    git = shutil.which("git")
+
+    with TemporaryDirectory() as tmp_dir:
+        repo_dir = Path(tmp_dir) / "repo.git"
+        shutil.copytree(path, repo_dir)
+        with set_cwd(repo_dir):
+            subprocess.run([git, "init", "."])
+            subprocess.run([git, "add", "."])
+            subprocess.run(
+                [git, "-c", "user.name=test", "-c", "user.email=test", "commit", "-m."]
+            )
+
+            yield str(repo_dir)
+
+
+@pytest.fixture
+def resources_files() -> DioptraFile:
+    path = Path(__file__).absolute().parent / "workflows" / "resource_import_files"
+    with set_cwd(path):
+        return select_files_in_directory(".", recursive=True)
+
+
+@pytest.fixture
+def resources_import_config() -> dict[str, Any]:
+    path = Path(__file__).absolute().parent / "workflows" / "resource_import_files"
+    with set_cwd(path):
+        with open(path / "dioptra.toml", "rb") as f:
+            return toml.load(f)

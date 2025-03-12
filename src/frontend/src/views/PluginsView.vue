@@ -17,7 +17,21 @@
       <div>{{ props.row.group.name }}</div>
     </template>
     <template #body-cell-files="props">
-      <div>{{ props.row.files?.length }}</div>
+      <div>
+        {{ props.row.files?.length }}
+        <q-btn
+          round
+          icon="folder"
+          size="sm"
+          class="q-ml-sm"
+          color="primary"
+          @click="router.push(`/plugins/${props.row.id}/files`)" 
+        >
+          <q-tooltip>
+            Manage Plugin Files
+          </q-tooltip>
+        </q-btn>
+      </div>
     </template>
     <template #expandedSlot="{ row }">
       <q-btn 
@@ -27,30 +41,30 @@
         class="q-ma-md" 
         @click="router.push(`/plugins/${row.id}/files`)" 
       />
-      <BasicTable
+      <TableComponent
         :columns="fileColumns"
         :rows="row.files"
+        :title="`${row.name} Files`"
         :hideSearch="true"
         :hideEditTable="true"
-        id="fileTable"
-        class="q-mx-md"
-        :title="`${row.name} Files`"
-      />
+        :hideCreateBtn="true"
+        :hideDeleteBtn="true"
+        :hideEditBtn="true"
+        :disableSelect="true"
+        style="margin: 0px 5vw 2vh"
+      >
+        <template #body-cell-filename="props">
+          <RouterLink :to="`/plugins/${row.id}/files/${props.row.id}`">
+            {{ props.row.filename }}
+          </RouterLink>
+        </template>
+        <template #body-cell-tasks="props">
+          <div>{{ props.row.tasks?.length }}</div>
+        </template>
+      </TableComponent>
     </template>
   </TableComponent>
-  <q-btn 
-    class="fixedButton"
-    round
-    color="primary"
-    icon="add"
-    size="lg"
-    @click="showPluginDialog = true"
-  >
-    <span class="sr-only">Register a new Plugin</span>
-    <q-tooltip>
-      Register a new Plugin
-    </q-tooltip>
-  </q-btn>
+
   <PluginDialog 
     v-model="showPluginDialog"
     @addPlugin="addPlugin"
@@ -73,7 +87,6 @@
 
 <script setup>
   import TableComponent from '@/components/TableComponent.vue'
-  import BasicTable from '@/components/BasicTable.vue'
   import PluginDialog from '@/dialogs/PluginDialog.vue'
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'
   import { ref, watch } from 'vue'
@@ -82,6 +95,9 @@
   import * as notify from '../notify'
   import PageTitle from '@/components/PageTitle.vue'
   import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
+  import { useLoginStore } from '@/stores/LoginStore.ts'
+
+  const store = useLoginStore()
 
   const router = useRouter()
 
@@ -90,6 +106,13 @@
   const showDeleteDialog = ref(false)
   const showTagsDialog = ref(false)
   const editObjTags = ref({})
+
+  watch(() => store.triggerPopup, (newVal) => {
+    if(newVal) {
+      showPluginDialog.value = true
+      store.triggerPopup = false
+    }
+  })
 
   const plugins = ref([])
 

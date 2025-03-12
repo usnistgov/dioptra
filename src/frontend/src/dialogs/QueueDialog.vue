@@ -13,127 +13,83 @@
         {{editQueue ? 'Edit Queue' : 'Register Queue'}}
       </label>
     </template>
-    <div class="row no-wrap">
+    <div class="row">
       <!-- this is the form col -->
-      <div 
-        style="width: 500px;"
+      <div
+        :class="`${isExtraSmall ? 'col-12 q-mb-md' : 'col'}`"
         :style="{ 
           pointerEvents: history ? 'none' : 'auto', 
           opacity: history ? .65 : 1, 
           cursor: history ? 'not-allowed' : 'default' 
         }"
+        ref="formCol"
       >
-        <div class="row items-center">
-          <label class="col-3 q-mb-lg" id="queueName">
-            Queue Name:
-          </label>
-          <q-input 
-            class="col q-mb-xs" 
-            outlined 
-            dense 
-            v-model.trim="name"  
-            autofocus 
-            :rules="[requiredRule]" 
-            aria-labelledby="queueName"
-            aria-required="true"
-          />
-        </div>
-        <div class="row items-center q-mb-xs">
-          <label class="col-3 q-mb-lg" id="pluginGroup">
-            Group:
-          </label>
-          <q-select
-            class="col"
-            outlined 
-            v-model="group" 
-            :options="store.groups"
-            option-label="name"
-            option-value="id"
-            emit-value
-            map-options
-            dense
-            :rules="[requiredRule]"
-            aria-labelledby="pluginGroup"
-            aria-required="true"
-          />
-        </div>
-        <div class="row items-center">
-          <label class="col-3" id="description">
-            Description:
-          </label>
-          <q-input
-            class="col"
-            v-model.trim="description"
-            outlined
-            type="textarea"
-            aria-labelledby="description"
-          />
-        </div>
-        <!-- <q-inner-loading :showing="history" size="0px" /> -->
+        <q-input 
+          class="q-mb-xs" 
+          outlined 
+          dense 
+          v-model.trim="name"  
+          autofocus 
+          :rules="[requiredRule]" 
+          id="queueName"
+          aria-required="true"
+        >
+          <template #before>
+            <label for="queueName" class="field-label">Queue Name:</label>
+          </template>
+        </q-input>
+        <q-select
+          class="q-mb-xs"
+          outlined 
+          v-model="group" 
+          :options="store.groups"
+          option-label="name"
+          option-value="id"
+          emit-value
+          map-options
+          dense
+          :rules="[requiredRule]"
+          id="pluginGroup"
+          aria-required="true"
+        >
+          <template #before>
+            <label for="pluginGroup" class="field-label">Group:</label>
+          </template>
+        </q-select>
+        <q-input
+          v-model.trim="description"
+          outlined
+          type="textarea"
+          id="description"
+          dense
+        >
+          <template #before>
+            <label for="description" class="field-label">Description:</label>
+          </template>
+        </q-input>
       </div>
       <!-- this is the history col -->
-      <q-card 
-        v-if="history" 
-        style="width: 240px; max-height: 263px; overflow: auto;"
-        flat
-        bordered
-        class="q-ml-sm col"
-      >
-        <q-list bordered separator>
-          <q-item
-            v-for="(snapshot, i) in snapshots"
-            tag="label" 
-            v-ripple
-            dense
-            clickable
-            @click="loadSnapshot(snapshot, i)"
-            @keydown="keydown"
-            :class="`${getSelectedColor(selectedSnapshotIndex === i)} cursor-pointer` " 
-          >
-            <!-- <q-item-section avatar>
-              <q-radio
-                v-model="selectedSnapshot"
-                :val="snapshot"
-                @update:model-value="loadSnapshot(snapshot)"
-              />
-            </q-item-section> -->
-            <q-item-section>
-              <q-item-label>
-                {{
-                  new Intl.DateTimeFormat('en-US', { 
-                    year: '2-digit', 
-                    month: '2-digit', 
-                    day: '2-digit', 
-                    hour: 'numeric', 
-                    minute: 'numeric', 
-                    hour12: true 
-                  }).format(new Date(snapshot.snapshotCreatedOn))
-                }}
-                <q-chip
-                  v-if="snapshot.latestSnapshot"
-                  label="latest"
-                  size="md"
-                  dense
-                  color="orange"
-                  text-color="white"
-                />
-              </q-item-label>
-            </q-item-section>
-          </q-item>
-        </q-list>
-      </q-card>
+      <SnapshotList 
+        v-show="history"
+        :showDialogHistory="history"
+        type="queues"
+        :id="props.editQueue.id"
+        :maxHeight="formCol?.clientHeight"
+        :class="`${isExtraSmall ? 'col-12' : 'col-sm-auto q-ml-md'}`"
+      />
     </div>
   </DialogComponent>
 </template>
 
 <script setup>
-  import { ref, watch, computed } from 'vue'
+  import { ref, watch, inject } from 'vue'
   import DialogComponent from './DialogComponent.vue'
   import { useLoginStore } from '@/stores/LoginStore.ts'
-  import * as api from '@/services/dataApi'
-  import { useQuasar } from 'quasar'
+  import SnapshotList from '../components/SnapshotList.vue'
 
   const store = useLoginStore()
+
+  const isExtraSmall = inject('isExtraSmall')
 
   const props = defineProps(['editQueue'])
   const emit = defineEmits(['addQueue', 'updateQueue', 'saveDraft'])
@@ -148,13 +104,6 @@
   const group = ref('')
   const description = ref('')
 
-  function loadSnapshot(snapshot, index) {
-    selectedSnapshotIndex.value = index
-    name.value = snapshot.name
-    group.value = snapshot.group
-    description.value = snapshot.description
-  }
-
   watch(showDialog, (newVal) => {
     if(newVal) {
       name.value = props.editQueue.name
@@ -165,7 +114,9 @@
       name.value = ''
       description.value = ''
       history.value = false
-      snapshots.value = []
+    }
+    if (!group.value) {
+      group.value = store.loggedInGroup.id
     }
   })
 
@@ -189,57 +140,18 @@
 
   const history = ref(false)
 
-  const snapshots = ref([])
-  const selectedSnapshot = ref()
-  const selectedSnapshotIndex = ref()
-
-  async function getSnapshots() {
-    try {
-      const res = await api.getSnapshots('queues', props.editQueue.id)
-      snapshots.value = res.data.data.reverse()
-      selectedSnapshot.value = snapshots.value[0]
-      selectedSnapshotIndex.value = 0
-      loadSnapshot(snapshots.value[0], 0)
-    } catch(err) {
-      console.warn(err)
-    }
-  }
-
-  watch(history, (newVal) => {
+  watch(() => store.selectedSnapshot, (newVal) => {
     if(newVal) {
-      getSnapshots()
+      name.value = newVal.name
+      group.value = newVal.group
+      description.value = newVal.description
     } else {
-      selectedSnapshotIndex.value = 0
       name.value = props.editQueue.name
-      description.value = props.editQueue.description
       group.value = props.editQueue.group
+      description.value = props.editQueue.description
     }
   })
 
-  const $q = useQuasar()
-
-  const darkMode = computed(() => {
-    if($q.dark.mode === 'auto') {
-      return window.matchMedia('(prefers-color-scheme: dark)').matches
-    }
-    return $q.dark.mode
-  })
-
-  function getSelectedColor(selected) {
-    if(darkMode.value && selected) return 'bg-deep-purple-10'
-    else if(selected) return 'bg-blue-grey-2'
-  }
-
-  function keydown(event) {
-    if(event.key === 'ArrowUp' && selectedSnapshotIndex.value > 0) {
-      const newIndex = selectedSnapshotIndex.value - 1
-      loadSnapshot(snapshots.value[newIndex], newIndex)
-    }
-    else if(event.key === 'ArrowDown' && selectedSnapshotIndex.value < snapshots.value.length - 1) {
-      const newIndex = selectedSnapshotIndex.value + 1
-      loadSnapshot(snapshots.value[newIndex], newIndex)
-    }
-  }
-
+  const formCol = ref()
 
 </script>

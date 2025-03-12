@@ -118,7 +118,11 @@ class PluginParameterTypesCollectionClient(CollectionClient[T]):
 
             # PUT /api/v1/pluginParameterTypes/1/draft
             client.plugin_parameter_types.modify_resource_drafts.modify(
-                1, name="new-name", description="new-description", structure=None
+                1,
+                resource_snapshot_id=1,
+                name="new-name",
+                description="new-description",
+                structure=None
             )
 
             # POST /api/v1/pluginParameterTypes/1/draft
