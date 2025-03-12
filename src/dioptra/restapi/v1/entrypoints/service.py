@@ -28,9 +28,11 @@ from structlog.stdlib import BoundLogger
 from dioptra.restapi.db import db, models
 from dioptra.restapi.db.models.constants import resource_lock_types
 from dioptra.restapi.errors import (
+    ArtifactHandlerPluginOverlapError,
     BackendDatabaseError,
     EntityDoesNotExistError,
     EntityExistsError,
+    PluginArtifactHandlerOverlapError,
     QueryParameterNotUniqueError,
     SortParameterValidationError,
 )
@@ -171,6 +173,9 @@ class EntrypointService(object):
             for artifact_handler in artifact_handlers
             for plugin_file in artifact_handler["plugin_files"]
         ]
+
+        _ensure_no_plugin_handler_overlap(plugin_ids, artifact_handler_ids, True)
+
         new_entrypoint.entry_point_artifact_handler_files = (
             entry_point_artifact_handler_files
         )
@@ -698,6 +703,15 @@ class EntrypointIdPluginsService(object):
         )
         # artifact handlers stay the same, plugins are changing
 
+        _ensure_no_plugin_handler_overlap(
+            plugin_ids,
+            [
+                plugin_file.plugin.resource_id
+                for plugin_file in existing_entry_point_artifact_handler_files
+            ],
+            True,
+        )
+
         plugin_resources = list(
             {
                 plugin.plugin.resource_id: plugin.plugin.resource
@@ -1039,6 +1053,15 @@ class EntrypointIdArtifactHandlersService(object):
         new_entrypoint.entry_point_artifact_handler_files = (
             existing_entry_point_artifact_handler_files
             + new_entry_point_artifact_handler_files
+        )
+
+        _ensure_no_plugin_handler_overlap(
+            [
+                plugin_file.plugin.resource_id
+                for plugin_file in existing_entry_point_plugin_files
+            ],
+            artifact_handler_ids,
+            False,
         )
 
         plugin_resources = list(
@@ -1649,3 +1672,16 @@ def _get_entrypoint_artifact_handler_snapshots(
         plugin_file = entry_point_artifact_handler_file.plugin_file
         plugins_dict[resource_id]["plugin_files"].append(plugin_file)
     return list(plugins_dict.values())
+
+
+def _ensure_no_plugin_handler_overlap(
+    plugins: list[int],
+    artifact_handlers: list[int],
+    addingPlugins: bool = True,
+):
+    intersection = set(plugins).intersection(artifact_handlers)
+    if len(intersection) > 0:
+        if addingPlugins:
+            raise PluginArtifactHandlerOverlapError(str(intersection))
+        else:
+            raise ArtifactHandlerPluginOverlapError(str(intersection))
