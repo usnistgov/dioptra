@@ -20,6 +20,7 @@ from .entry_points import (
     EntryPointParameter,
     EntryPointParameterValue,
     EntryPointPluginFile,
+    EntryPointArtifactHandlerFile,
     entry_point_parameter_types_table,
 )
 from .experiments import Experiment

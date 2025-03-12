@@ -165,7 +165,7 @@ class EntrypointService(object):
         new_entrypoint.entry_point_plugin_files = entry_point_plugin_files
 
         entry_point_artifact_handler_files = [
-            models.EntryPointPluginFile(
+            models.EntryPointArtifactHandlerFile(
                 entry_point=new_entrypoint,
                 plugin=artifact_handler["plugin"],
                 plugin_file=plugin_file,
@@ -516,8 +516,23 @@ class EntrypointIdService(object):
                 for plugin in new_entrypoint.entry_point_plugin_files
             }.values()
         )
+        new_entrypoint.entry_point_artifact_handler_files = [
+            models.EntryPointArtifactHandlerFile(
+                entry_point=new_entrypoint,
+                plugin=entry_point_artifact_handler_file.plugin,
+                plugin_file=entry_point_artifact_handler_file.plugin_file,
+            )
+            for entry_point_artifact_handler_file in entrypoint.entry_point_artifact_handler_files
+        ]
+
+        artifact_handler_resources = list(
+            {
+                artifact_handler.plugin.resource_id: artifact_handler.plugin.resource
+                for artifact_handler in new_entrypoint.entry_point_artifact_handler_files
+            }.values()
+        )
         queue_resources = [queue.resource for queue in queues]
-        new_entrypoint.children = plugin_resources + queue_resources
+        new_entrypoint.children = plugin_resources + queue_resources + artifact_handler_resources
 
         db.session.add(new_entrypoint)
 
@@ -690,7 +705,7 @@ class EntrypointIdPluginsService(object):
         )
 
         existing_entry_point_artifact_handler_files = [
-            models.EntryPointPluginFile(
+            models.EntryPointArtifactHandlerFile(
                 entry_point=new_entrypoint,
                 plugin=entry_point_artifact_handler_file.plugin,
                 plugin_file=entry_point_artifact_handler_file.plugin_file,
@@ -873,7 +888,7 @@ class EntrypointIdPluginsIdService(object):
         )
 
         new_entrypoint.entry_point_artifact_handler_files = [
-            models.EntryPointPluginFile(
+            models.EntryPointArtifactHandlerFile(
                 entry_point=new_entrypoint,
                 plugin=entry_point_artifact_handler_file.plugin,
                 plugin_file=entry_point_artifact_handler_file.plugin_file,
@@ -1028,7 +1043,7 @@ class EntrypointIdArtifactHandlersService(object):
         # plugins stay the same, artifact handlers are changing
 
         new_entry_point_artifact_handler_files = [
-            models.EntryPointPluginFile(
+            models.EntryPointArtifactHandlerFile(
                 entry_point=new_entrypoint,
                 plugin=plugin["plugin"],
                 plugin_file=artifact_handler_file,
@@ -1040,7 +1055,7 @@ class EntrypointIdArtifactHandlersService(object):
         ]
 
         existing_entry_point_artifact_handler_files = [
-            models.EntryPointPluginFile(
+            models.EntryPointArtifactHandlerFile(
                 entry_point=new_entrypoint,
                 plugin=entry_point_artifact_handler_file.plugin,
                 plugin_file=entry_point_artifact_handler_file.plugin_file,
@@ -1248,7 +1263,7 @@ class EntrypointIdArtifactHandlersIdService(object):
         ]
 
         new_entrypoint.entry_point_artifact_handler_files = [
-            models.EntryPointPluginFile(
+            models.EntryPointArtifactHandlerFile(
                 entry_point=new_entrypoint,
                 plugin=entry_point_artifact_handler_file.plugin,
                 plugin_file=entry_point_artifact_handler_file.plugin_file,

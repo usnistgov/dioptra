@@ -873,6 +873,30 @@ def upgrade():
         ),
     )
     op.create_table(
+        "entry_point_artifact_handler_files",
+        sa.Column(
+            "entry_point_resource_snapshot_id",
+            sa.BigInteger().with_variant(sa.Integer(), "sqlite"),
+            nullable=False,
+        ),
+        sa.Column(
+            "plugin_resource_snapshot_id",
+            sa.BigInteger().with_variant(sa.Integer(), "sqlite"),
+            nullable=False,
+        ),
+        sa.Column(
+            "plugin_file_resource_snapshot_id",
+            sa.BigInteger().with_variant(sa.Integer(), "sqlite"),
+            nullable=False,
+        ),
+        sa.PrimaryKeyConstraint(
+            "entry_point_resource_snapshot_id",
+            "plugin_resource_snapshot_id",
+            "plugin_file_resource_snapshot_id",
+            name=op.f("pk_entry_point_artifact_handler_files"),
+        ),
+    )
+    op.create_table(
         "experiment_jobs",
         sa.Column(
             "experiment_resource_snapshot_id",
