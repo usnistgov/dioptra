@@ -518,7 +518,7 @@ class EntrypointIdService(object):
                 plugin=entry_point_artifact_handler_file.plugin,
                 plugin_file=entry_point_artifact_handler_file.plugin_file,
             )
-            for entry_point_artifact_handler_file in entrypoint.entry_point_artifact_handlers
+            for entry_point_artifact_handler_file in entrypoint.entry_point_artifact_handlers  # noqa: B950
         ]
 
         artifact_handler_resources = list(

@@ -607,7 +607,9 @@ def build_entrypoint(entrypoint_dict: EntrypointDict) -> dict[str, Any]:
     artifact_handlers = [
         PluginWithFilesDict(
             plugin=entry_point_artifact_handler.plugin,
-            plugin_files=[file for file in entry_point_artifact_handler.plugin.plugin_files],
+            plugin_files=[
+                file for file in entry_point_artifact_handler.plugin.plugin_files
+            ],
             has_draft=False,
         )
         for entry_point_artifact_handler in entrypoint.entry_point_artifact_handlers
