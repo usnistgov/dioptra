@@ -1338,3 +1338,124 @@ def test_delete_plugin_snapshot_by_id_for_entrypoint(
         entrypoint_id=entrypoint_id,
         expected=[],
     )
+#------------------------------------------------------------------------------
+
+def assert_registering_entrypoint_no_queues_fails(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    entry_point: dict[str, Any],
+    assert_message: str,
+) -> None:
+    """ Assert that registering entryPoint with empty queues, plugins and/or params is OK
+
+    Args:
+        dioptra_client (DioptraClient[DioptraResponseProtocol]): the restAPI client
+        entry_point (dict[str, Any]): Dict packed with stuffed data for creating entry-point
+        assert_message (str): Failed evaluation message for the assert to report
+    """
+    def assert_correct_emptiness(
+        entry_point: dict[str, Any], 
+        entity_name: str, 
+        entry_point_data: dict[str, Any]
+        ):
+        ### For empties - the empties are stored
+        if not entry_point[entity_name] and entity_name in entry_point_data:
+            assert not bool (entry_point_data[entity_name])
+        ### For non-empties - the non-empties match
+        if entry_point[entity_name] and entity_name in entry_point_data:
+            assert entry_point_data[entity_name] == entry_point[entity_name]
+    #--------------------------------------------------------------------------
+            
+    entrypoint_response = None
+    entrypoint_response = dioptra_client.entrypoints.create(
+        group_id = entry_point["group_id"],
+        name = entry_point["name"],
+        task_graph = entry_point["task_graph"],
+        description = entry_point["description"],
+        parameters = entry_point["parameters"],
+        queues = entry_point["queues"],
+        plugins = entry_point["plugins"],
+    )
+    assert (    entrypoint_response 
+            and entrypoint_response.status_code == HTTPStatus.OK 
+        ), assert_message    
+    ### Assert the return values match what was expected
+    entry_point_data = entrypoint_response.json()
+    assert_correct_emptiness(entry_point, "queues", entry_point_data)
+    assert_correct_emptiness(entry_point, "parameters", entry_point_data)
+    assert_correct_emptiness(entry_point, "plugins", entry_point_data)
+#------------------------------------------------------------------------------
+
+def test_create_entrypoint_with_empty_queues_plugins_params(
+        dioptra_client: DioptraClient[DioptraResponseProtocol],
+        db: SQLAlchemy,
+        auth_account: dict[str, Any],
+        # registered_entrypoints: dict[str, Any],
+        # registered_plugin_with_files: dict[str, Any],
+        # registered_queues: dict[str, Any],
+    ) -> None:
+    """ Verify that API can register entry-point with empty arrays for queues, plugins, and params
+
+    Args:
+        dioptra_client (DioptraClient[DioptraResponseProtocol]): _description_
+        db (SQLAlchemy): _description_
+        auth_account (dict[str, Any]): _description_
+        registered_entrypoints (dict[str, Any]): _description_
+        registered_plugin_with_files (dict[str, Any]): _description_
+        registered_queues (dict[str, Any]): _description_
+    """
+    user_id = auth_account["id"]
+    group_id = auth_account["groups"][0]["id"]
+    empty_entry_point = {
+            "user_id": user_id,
+            "group_id": group_id,
+            "name": "test_entrypoint_3Empties",
+            "description": "new test entrypoint #1 With 3 []s",
+            "task_graph": "graph:    message:    my_entrypoint: $name",
+            "parameters": [],
+            "plugins": [],
+            "queues": [],
+            "task_graph": textwrap.dedent(
+                f"""# my entrypoint graph
+                graph:
+                message:
+                    my_entrypoint:  "test_entrypoint_3Empties"
+                """
+                ),
+        }
+    assert_registering_entrypoint_no_queues_fails(
+        dioptra_client = dioptra_client,
+        entry_point = empty_entry_point,
+        assert_message = "Failed to create EntryPoint with 3 EMPTY entities: [queues=[], plugins=[], parameters=[]]"
+    )
+#------------------------------------------------------------------------------
+
+def test_create_entrypoint_with_none_queues_plugins_params(
+        dioptra_client: DioptraClient[DioptraResponseProtocol],
+        auth_account: dict[str, Any],
+    ) -> None:
+    """ """
+    user_id = auth_account["id"]
+    group_id = auth_account["groups"][0]["id"]
+    none_entry_point = {
+            "user_id": user_id,
+            "group_id": group_id,
+            "name": "test_entrypoint_3Nones",
+            "description": "new test entrypoint #2 With 3 Nones",
+            "task_graph": "graph:    message:    my_entrypoint: $name",
+            "parameters": [],
+            "plugins": [],
+            "queues": [],
+            "task_graph": textwrap.dedent(
+                f"""# my entrypoint graph
+                graph:
+                message:
+                    my_entrypoint:  "test_entrypoint_3Nones"
+                """
+                ),
+        }
+    assert_registering_entrypoint_no_queues_fails(
+        dioptra_client = dioptra_client,
+        entry_point = none_entry_point,
+        assert_message = "Failed to create EntryPoint with 3 None entities: [queues=None, plugins=None, parameters=None]"
+    )
+#------------------------------------------------------------------------------    
