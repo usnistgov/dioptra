@@ -161,7 +161,6 @@ class EntrypointMutableFieldsSchema(Schema):
         many=True,
         metadata=dict(description="List of parameters for the entrypoint."),
         load_default=list,  ### can be value [] or callable list !!! No brackets/parens
-
     )
     queueIds = fields.List(
         fields.Integer(),
