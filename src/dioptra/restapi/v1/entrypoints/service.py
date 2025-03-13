@@ -175,9 +175,7 @@ class EntrypointService(object):
 
         _ensure_no_plugin_handler_overlap(plugin_ids, artifact_handler_ids, True)
 
-        new_entrypoint.entry_point_artifact_handlers = (
-            entry_point_artifact_handlers
-        )
+        new_entrypoint.entry_point_artifact_handlers = entry_point_artifact_handlers
 
         plugin_resources = [plugin["plugin"].resource for plugin in plugins]
         artifact_handler_resources = [
@@ -530,7 +528,9 @@ class EntrypointIdService(object):
             }.values()
         )
         queue_resources = [queue.resource for queue in queues]
-        new_entrypoint.children = plugin_resources + queue_resources + artifact_handler_resources
+        new_entrypoint.children = (
+            plugin_resources + queue_resources + artifact_handler_resources
+        )
 
         db.session.add(new_entrypoint)
 
@@ -1027,9 +1027,7 @@ class EntrypointIdArtifactHandlersService(object):
             for entry_point_plugin_file in entrypoint.entry_point_plugins
         ]
 
-        new_entrypoint.entry_point_plugins = (
-            existing_entry_point_plugins  # noqa: B950
-        )
+        new_entrypoint.entry_point_plugins = existing_entry_point_plugins  # noqa: B950
         # plugins stay the same, artifact handlers are changing
 
         new_entry_point_artifact_handlers = [
@@ -1056,8 +1054,7 @@ class EntrypointIdArtifactHandlersService(object):
         ]
 
         new_entrypoint.entry_point_artifact_handlers = (
-            existing_entry_point_artifact_handlers
-            + new_entry_point_artifact_handlers
+            existing_entry_point_artifact_handlers + new_entry_point_artifact_handlers
         )
 
         _ensure_no_plugin_handler_overlap(
@@ -1657,6 +1654,7 @@ def _get_entrypoint_plugin_snapshots(
 
     return plugins
 
+
 def _get_entrypoint_artifact_handler_snapshots(
     entrypoint: models.EntryPoint,
 ) -> list[utils.PluginWithFilesDict]:
@@ -1670,7 +1668,8 @@ def _get_entrypoint_artifact_handler_snapshots(
     ]
 
     return artifact_handlers
-    
+
+
 def _ensure_no_plugin_handler_overlap(
     plugins: list[int],
     artifact_handlers: list[int],
