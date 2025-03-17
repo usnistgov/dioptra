@@ -44,8 +44,8 @@ const router = createRouter({
     },
     {
       path: '/jobs',
-      component: () => import('../views/AllJobsView.vue'),
-      name: 'jobs'
+      component: () => import('../views/JobsView.vue'),
+      name: 'allJobs'
     },
     {
       path: '/experiments/:id/jobs',

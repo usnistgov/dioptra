@@ -10,14 +10,30 @@
     ref="tableRef"
     :showExpand="true"
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
-    @create="router.push(`/experiments/${route.params.id}/jobs/new`)"
+    @create="pushToJobRoute"
     :hideOpenBtn="true"
   >
+    <template #body-cell-experiment="props">
+      {{ props.row.experiment.name }}
+    </template>
     <template #body-cell-entrypoint="props">
       {{ props.row.entrypoint.name }}
     </template>
     <template #body-cell-queue="props">
       {{ props.row.queue.name }}
+    </template>
+    <template #body-cell-status="props">
+      <q-chip
+        v-if="statusStyles[props.row.status]"
+        :label="props.row.status"
+        :icon-right="statusStyles[props.row.status].icon"
+        :color="statusStyles[props.row.status].color"
+        :text-color="statusStyles[props.row.status].textColor"
+        class="text-capitalize"
+        :ripple="false"
+        :style="statusStyles[props.row.status].style"
+      />
+
     </template>
     <template #expandedSlot="{ row }">
       <q-btn
@@ -41,7 +57,7 @@
     v-model="showDeleteDialog"
     @submit="deleteJob"
     type="Job"
-    :name="selected.length ? selected[0].description : ''"
+    :name="selected[0]?.description || `Job ID: ${selected[0]?.id}`"
   />
 
   <ArtifactsDialog 
@@ -84,6 +100,12 @@
     { name: 'tags', label: 'Tags', align: 'left', field: 'tags', sortable: false, },
   ]
 
+  if(route.name === 'allJobs') {
+    columns.splice(2, 0, 
+      { name: 'experiment', label: 'Experiment', align: 'left', field: 'experiment', sortable: false, }
+    )
+  }
+
   const artifactColumns = [
     { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true, },
     { name: 'uri', label: 'uri', align: 'left', field: 'uri', sortable: true, },
@@ -92,7 +114,13 @@
   const selected = ref([])
 
   const title = ref('')
-  getExperiment()
+
+  if(route.name === 'experimentJobs') {
+    getExperiment()
+  } else if(route.name === 'allJobs') {
+    title.value = 'Jobs'
+  }
+
   async function getExperiment() {
     try {
       const res = await api.getItem('experiments', route.params.id)
@@ -108,7 +136,12 @@
 
   async function getJobs(pagination, showDrafts) {
     try {
-      const res = await api.getJobs(route.params.id, pagination, showDrafts)
+      let res
+      if(route.name === 'experimentJobs') {
+        res = await api.getJobs(route.params.id, pagination, showDrafts)
+      } else if(route.name === 'allJobs') {
+        res = await api.getData('jobs', pagination, false)
+      }
       console.log('jobs res = ', res)
       jobs.value = res.data.data
       tableRef.value.updateTotalRows(res.data.totalNumResults)
@@ -136,5 +169,35 @@
       notify.error(err.response.data.message);
     }
   }
+
+  function pushToJobRoute() {
+    if(route.name === 'experimentJobs') {
+      router.push(`/experiments/${route.params.id}/jobs/new`)
+    } else if(route.name === 'allJobs') {
+      router.push('/jobs/new')
+    }
+  }
+
+  const statusStyles = {
+    finished: {
+      icon: "sym_o_check_circle",
+      color: "green-2",
+      textColor: "green-10",
+      style: "cursor: default;"
+    },
+    queued: {
+      icon: "sym_o_hourglass",
+      color: "yellow-2",
+      textColor: "grey-9",
+      style: "min-width: 99px; cursor: default;"
+    },
+    default: {
+      icon: "sym_o_error",
+      color: "red-2",
+      textColor: "grey-9",
+      style: "min-width: 99px; cursor: default;"
+    }
+  }
+
 
 </script>

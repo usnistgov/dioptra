@@ -14,16 +14,12 @@
         :class="isMobile ? 'q-ma-md' : 'q-ma-xl'" 
         :style="{ 'margin-top': isMobile ? '10px' : '25px', height: '100' }"
       >
-        <router-view />
+        <router-view :key="route.path" />
         <CreateButton v-if="addCreateButton" />
       </div>
     </q-page-container>
 
   </q-layout>
-
-  <!-- <main :class="isMobile ? 'q-ma-md' : 'q-ma-xl'" style="margin-top: 75px;">
-    <RouterView />
-  </main> -->
 </template>
 
 <script setup lang="ts">
@@ -74,7 +70,7 @@
     'plugins',
     'pluginFiles',
     'queues',
-    'jobs',
+    'allJobs',
     'pluginParams',
     'tags',
     'models',
