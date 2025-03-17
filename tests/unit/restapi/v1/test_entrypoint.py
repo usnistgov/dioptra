@@ -467,10 +467,10 @@ def assert_registering_entrypoint_with_no_queues_succeeds(
         entity_name: str, 
         entry_point_data: dict[str, Any]
         ):
-        ### For empties - the empties are stored
+        # For empties - the empties are stored
         if not entry_point[entity_name] and entity_name in entry_point_data:
             assert not bool (entry_point_data[entity_name])
-        ### For non-empties - the non-empties match
+        # For non-empties - the non-empties match
         if entry_point[entity_name] and entity_name in entry_point_data:
             assert entry_point_data[entity_name] == entry_point[entity_name]
             
@@ -487,7 +487,7 @@ def assert_registering_entrypoint_with_no_queues_succeeds(
     assert (    entrypoint_response 
             and entrypoint_response.status_code == HTTPStatus.OK 
         ), assert_message    
-    ### Assert the return values match what was expected
+    # Assert the return values match what was expected
     entry_point_data = entrypoint_response.json()
     assert_correct_emptiness(entry_point, "queues", entry_point_data)
     assert_correct_emptiness(entry_point, "parameters", entry_point_data)
