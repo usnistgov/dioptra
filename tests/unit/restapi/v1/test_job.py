@@ -20,6 +20,7 @@ This module contains a set of tests that validate the CRUD operations and additi
 functionalities for the job entity. The tests ensure that the queues can be
 registered, renamed, queried, and deleted as expected through the REST API.
 """
+import textwrap
 from http import HTTPStatus
 from typing import Any
 
@@ -431,6 +432,117 @@ def test_create_job(
     expected: The response from the calling get on the database should match
       the response of the actions.py::register_job()
     """
+    assert_retrieving_job_by_id_works(
+        dioptra_client, job_id=job_response["id"], expected=job_response
+    )
+
+
+def test_create_job_with_empty_values(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+    registered_experiments: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+    monkeypatch: MonkeyPatch,
+) -> None:
+    """ Test that new job can be create with EMPTY values using API
+
+    Args:
+        dioptra_client (DioptraClient[DioptraResponseProtocol]): _description_
+        auth_account (dict[str, Any]): _description_
+        registered_queues (dict[str, Any]): _description_
+        registered_experiments (dict[str, Any]): _description_
+        registered_entrypoints (dict[str, Any]): _description_
+        monkeypatch (MonkeyPatch): _description_
+    """    
+
+    ''' Test that jobs (!!! with no-params !!!) can be correctly registered and retrieved using the API.
+
+    General plan:
+    Given an authenticated user, registered queues, registered experiments, and
+    registered entrypoints, this test validates the following sequence of actions:
+
+    - The user registers an entry point with no queues, no plugins, and no params.
+    - The user registers a job.
+    - The response is valid and matches the expected values given the registration
+      request.
+    - The user is able to retrieve information about the job using the job id.
+    '''
+    # Begin with registering the entry-point with empty parameters, queues, and plugins 
+    import dioptra.restapi.v1.shared.rq_service as rq_service
+    monkeypatch.setattr(rq_service, "RQQueue", mock_rq.MockRQQueue)
+
+    entrypoint_name = "entrypoint_no_params"
+    description = "The new job."
+    queue_id = registered_queues["queue1"]["id"]
+    experiment_id = registered_experiments["experiment1"]["id"]
+    entrypoint_id = registered_entrypoints[entrypoint_name]["id"]
+    values = {}
+    timeout = "24h"
+   
+    '''
+    Register a Job
+    ==============
+
+    actions.py::register_job(*args: JobSchema)):
+      JobSchema:
+        From base resource schema:
+          - group_id: The ID of the group the job belongs to.
+        From job schema:
+          - description: The description of the job
+          - queue_id: The ID of queue the job is to run on.
+          - experiment_id: The ID of the experiment the job belongs to.
+          - entrypoint_id: The ID of the entrypoint that the job calls.
+          - values: The values the job supplies to the entrypoint
+          - timeout: The timeout value for the job to terminate if not completed by.
+    '''
+    job_response = dioptra_client.experiments.jobs.create(
+        experiment_id=experiment_id,
+        entrypoint_id=entrypoint_id,
+        queue_id=queue_id,
+        values=values,
+        timeout=timeout,
+        description=description,
+    ).json()
+
+    """
+    Validate the response matches the expected contents
+    ===================================================
+
+    response: The response from actions.py::register_job()
+    expected_contents: The raw data passed to actions.py::register_job() as *args
+      *Note: group_id is given as an arg for registration in the service layer
+    """
+    (queue_snapshot_id, 
+     queue_id) = (registered_queues["queue1"]["snapshot"], 
+                  registered_queues["queue1"]["id"])
+    
+    (experiment_snapshot_id, 
+     experiment_id, 
+     group_id) = (registered_experiments["experiment1"]["snapshot"], 
+                  registered_experiments["experiment1"]["id"], 
+                  registered_experiments["experiment1"]["group"]["id"])
+    
+    (entrypoint_snapshot_id, 
+     entrypoint_id)  = (registered_entrypoints[entrypoint_name]["snapshot"], 
+                        registered_entrypoints[entrypoint_name]["id"])
+
+    assert_job_response_contents_matches_expectations(
+        response=job_response,
+        expected_contents={
+            "description": description,
+            "timeout": timeout,
+            "values": values,
+            "user_id": auth_account["id"],
+            "group_id": group_id,
+            "queue_id": queue_id,
+            "experiment_id": experiment_id,
+            "entrypoint_id": entrypoint_id,
+            "queue_snapshot_id": queue_snapshot_id,
+            "experiment_snapshot_id": experiment_snapshot_id,
+            "entrypoint_snapshot_id": entrypoint_snapshot_id,
+        },
+    )
     assert_retrieving_job_by_id_works(
         dioptra_client, job_id=job_response["id"], expected=job_response
     )
