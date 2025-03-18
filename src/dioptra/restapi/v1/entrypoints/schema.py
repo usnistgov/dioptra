@@ -160,6 +160,7 @@ class EntrypointMutableFieldsSchema(Schema):
         attribute="parameters",
         many=True,
         metadata=dict(description="List of parameters for the entrypoint."),
+        load_default=list,
     )
     queueIds = fields.List(
         fields.Integer(),
@@ -167,6 +168,7 @@ class EntrypointMutableFieldsSchema(Schema):
         data_key="queues",
         metadata=dict(description="The queue for the entrypoint."),
         load_only=True,
+        load_default=list,
     )
 
 
@@ -177,6 +179,7 @@ class EntrypointPluginMutableFieldsSchema(Schema):
         data_key="plugins",
         metadata=dict(description="List of plugin files for the entrypoint."),
         load_only=True,
+        load_default=list,
     )
 
 
