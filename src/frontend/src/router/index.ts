@@ -10,27 +10,62 @@ const router = createRouter({
       name: 'home'
     },
     {
-      path: '/entrypoints',
-      component: () => import('../views/EntryPointsView.vue'),
-      name: 'entrypoints'
+      path: '/experiments',
+      children: [
+        {
+          path: '',
+          component: () => import('../views/ExperimentsView.vue'),
+          meta: { type: 'experiments' },
+          name: 'experiments',
+        },
+        {
+          path: '/experiments/:id',
+          component: () => import('../views/CreateExperiment.vue'),
+          meta: { type: 'experiments' }
+        },
+        {
+          path: '/experiments/:id/jobs',
+          component: () => import('../views/JobsView.vue'),
+          name: 'experimentJobs'
+        },
+        {
+          path: '/experiments/:id/jobs/:jobId',
+          component: () => import('../views/CreateJob.vue')
+        },
+      ]
     },
     {
-      path: '/entrypoints/:id',
-      component: () => import('../views/CreateEntryPoint.vue'),
+      path: '/entrypoints',
+      children: [
+        {
+          path: '',
+          component: () => import('../views/EntryPointsView.vue'),
+          name: 'entrypoints',
+        },
+        {
+          path: '/entrypoints/:id',
+          component: () => import('../views/CreateEntryPoint.vue'),
+        },
+      ]
     },
     {
       path: '/plugins',
-      component: () => import('../views/PluginsView.vue'),
-      name: 'plugins'
-    },
-    {
-      path: '/plugins/:id/files',
-      component: () => import('../views/PluginFiles.vue'),
-      name: 'pluginFiles'
-    },
-    {
-      path: '/plugins/:id/files/:fileId',
-      component: () => import('../views/CreatePluginFile.vue')
+      children: [
+        {
+          path: '',
+          component: () => import('../views/PluginsView.vue'),
+          name: 'plugins',
+        },
+        {
+          path: '/plugins/:id/files',
+          component: () => import('../views/PluginFiles.vue'),
+          name: 'pluginFiles'
+        },
+        {
+          path: '/plugins/:id/files/:fileId',
+          component: () => import('../views/CreatePluginFile.vue')
+        },
+      ]
     },
     {
       path: '/queues',
@@ -38,32 +73,18 @@ const router = createRouter({
       name: 'queues'
     },
     {
-      path: '/experiments',
-      component: () => import('../views/ExperimentsView.vue'),
-      name: 'experiments'
-    },
-    {
       path: '/jobs',
-      component: () => import('../views/JobsView.vue'),
-      name: 'allJobs'
-    },
-    {
-      path: '/experiments/:id/jobs',
-      component: () => import('../views/JobsView.vue'),
-      name: 'experimentJobs'
-    },
-    {
-      path: '/experiments/:id/jobs/:jobId',
-      component: () => import('../views/CreateJob.vue')
-    },
-    {
-      path: '/jobs/new',
-      component: () => import('../views/CreateJob.vue')
-    },
-    {
-      path: '/experiments/:id',
-      component: () => import('../views/CreateExperiment.vue'),
-      meta: { type: 'experiments' }
+      children: [
+        {
+          path: '',
+          component: () => import('../views/JobsView.vue'),
+          name: 'allJobs',
+        },
+        {
+          path: '/jobs/new',
+          component: () => import('../views/CreateJob.vue')
+        },
+      ]
     },
     {
       path: '/groups',
