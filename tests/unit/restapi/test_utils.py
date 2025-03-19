@@ -16,7 +16,97 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from __future__ import annotations
 
+from http import HTTPStatus
+from typing import Any
+
+from dioptra.client.base import DioptraResponseProtocol, SubCollectionClient
+from dioptra.client.client import DioptraClient
 from dioptra.restapi.utils import find_non_unique
+
+
+def assert_http_response_matches_expected(
+    response: DioptraResponseProtocol,
+    expected: list[dict[str, Any]],
+    sort_by: str | None,
+) -> None:
+    """Assert that the provided response and expected response match depending
+    on the provided sort_by criteria."""
+
+    if sort_by is None:
+        # A sort order was not given in the request, so we must not assume a
+        # particular order in the response.
+        contents_matches = match_normalized_json(response, expected)
+    else:
+        contents_matches = response.json()["data"] == expected
+    assert response.status_code == HTTPStatus.OK and contents_matches
+
+
+def assert_retrieving_resource_works(
+    dioptra_client: SubCollectionClient[DioptraResponseProtocol],
+    expected: list[dict[str, Any]],
+    group_id: int | None = None,
+    sort_by: str | None = None,
+    descending: bool | None = None,
+    search: str | None = None,
+    paging_info: dict[str, Any] | None = None,
+) -> None:
+    """Build the query string from the provided parameters"""
+    query_string: dict[str, Any] = {}
+
+    if sort_by is not None:
+        query_string["sort_by"] = sort_by
+
+    if descending is not None:
+        query_string["descending"] = descending
+
+    if group_id is not None:
+        query_string["group_id"] = group_id
+
+    if search is not None:
+        query_string["search"] = search
+
+    if paging_info is not None:
+        query_string["index"] = paging_info["index"]
+        query_string["page_length"] = paging_info["page_length"]
+
+    response = dioptra_client.get(**query_string)
+
+    assert_http_response_matches_expected(
+        response=response, expected=expected, sort_by=sort_by
+    )
+
+
+def match_normalized_json(
+    original_entity: DioptraResponseProtocol | list[dict[str, Any]],
+    expected_json_entity: DioptraResponseProtocol | list[dict[str, Any]],
+) -> bool:
+    """Compares, after it has transformed and normalized the response or json data
+
+    Args:
+        original_entity (DioptraResponseProtocol | list[dict[str, Any]]): Either response or Json of the response
+        expected_json_entity (DioptraResponseProtocol | list[dict[str, Any]]): Expected or a response-like object of the expected
+
+    Returns:
+        bool: True if both object are a match, False - otherwise
+    """
+
+    def sort_protocol(pre_json: DioptraResponseProtocol):
+        return sorted(pre_json.json()["data"], key=lambda d: d["id"])
+
+    def sort_json(json_entity: list[dict[str, Any]]):
+        return sorted(json_entity, key=lambda d: d["id"])
+
+    def sort_object(entity: DioptraResponseProtocol | list[dict[str, Any]]):
+        json_like_data = list(dict())
+        if isinstance(entity, list):
+            json_like_data = sort_json(entity)
+        else:
+            json_like_data = sort_protocol(entity)
+        return json_like_data
+
+    original_data = sort_object(original_entity)
+    expected_data = sort_object(expected_json_entity)
+    return original_data == expected_data
 
 
 def test_find_non_unique():

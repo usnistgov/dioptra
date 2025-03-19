@@ -20,21 +20,21 @@ import shutil
 import subprocess
 import tarfile
 import textwrap
+import uuid
 from collections.abc import Iterator
 from http import HTTPStatus
 from pathlib import Path
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from typing import Any, cast
 
-
 import pytest
 import tomli as toml
-import uuid
 from flask import Flask
 from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
 from injector import Injector
 from pytest import MonkeyPatch
+from freezegun import freeze_time
 
 from dioptra.client import (
     DioptraFile,
@@ -57,6 +57,7 @@ def app(dependency_modules: list[Any]) -> Iterator[Flask]:
 
 
 @pytest.fixture
+@freeze_time("Apr 1st, 2025", auto_tick_seconds=1)
 def registered_users(client: FlaskClient, db: SQLAlchemy) -> dict[str, Any]:
     password = "supersecurepassword"
     user1_response = actions.register_user(
@@ -488,6 +489,7 @@ def registered_groups(
 
 
 @pytest.fixture
+@freeze_time("Apr 2nd, 2025", auto_tick_seconds=1)
 def registered_plugin_parameter_types(
     client: FlaskClient, db: SQLAlchemy, auth_account: dict[str, Any]
 ) -> dict[str, Any]:
@@ -639,10 +641,21 @@ def registered_entrypoints(
         plugin_ids=plugin_ids,
         queue_ids=queue_ids,
     ).get_json()
+    entrypoint_no_params = actions.register_entrypoint(
+        client,
+        name="entrypoint_no_params",
+        description="No params Entry-Point.",
+        group_id=auth_account["groups"][0]["id"],
+        task_graph=task_graph,
+        parameters=[],
+        plugin_ids=plugin_ids,
+        queue_ids=queue_ids,
+    ).get_json()
     return {
         "entrypoint1": entrypoint1_response,
         "entrypoint2": entrypoint2_response,
         "entrypoint3": entrypoint3_response,
+        "entrypoint_no_params": entrypoint_no_params,
     }
 
 

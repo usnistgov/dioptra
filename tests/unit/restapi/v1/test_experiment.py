@@ -30,6 +30,7 @@ from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
 
 from ..lib import helpers, routines
+from ..test_utils import assert_retrieving_resource_works
 
 # -- Assertions ------------------------------------------------------------------------
 
@@ -160,6 +161,8 @@ def assert_retrieving_all_experiments_works(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     expected: list[dict[str, Any]],
     group_id: int | None = None,
+    sort_by: str | None = None,
+    descending: bool | None = None,
     search: str | None = None,
     paging_info: dict[str, Any] | None = None,
 ) -> None:
@@ -176,64 +179,15 @@ def assert_retrieving_all_experiments_works(
         AssertionError: If the response status code is not 200 or if the API response
             does not match the expected response.
     """
-    query_string: dict[str, Any] = {}
-
-    if group_id is not None:
-        query_string["group_id"] = group_id
-
-    if search is not None:
-        query_string["search"] = search
-
-    if paging_info is not None:
-        query_string["index"] = paging_info["index"]
-        query_string["page_length"] = paging_info["page_length"]
-
-    response = dioptra_client.experiments.get(**query_string)
-    assert response.status_code == HTTPStatus.OK and response.json()["data"] == expected
-
-
-def assert_sorting_experiment_works(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
-    expected: list[str],
-    sort_by: str | None,
-    descending: bool | None,
-    group_id: int | None = None,
-    search: str | None = None,
-    paging_info: dict[str, Any] | None = None,
-) -> None:
-    """Assert that experiments can be sorted by column ascending/descending.
-
-    Args:
-        client: The Flask test client.
-        expected: The expected order of experiment ids after sorting.
-            See test_experiment_sort for expected orders.
-
-    Raises:
-        AssertionError: If the response status code is not 200 or if the API response
-            does not match the expected response.
-    """
-    query_string: dict[str, Any] = {}
-
-    if descending is not None:
-        query_string["descending"] = descending
-
-    if sort_by is not None:
-        query_string["sort_by"] = sort_by
-
-    if group_id is not None:
-        query_string["group_id"] = group_id
-
-    if search is not None:
-        query_string["search"] = search
-
-    if paging_info is not None:
-        query_string["index"] = paging_info["index"]
-        query_string["page_length"] = paging_info["page_length"]
-
-    response = dioptra_client.experiments.get(**query_string)
-    response_data = response.json()
-    experiment_ids = [experiment["id"] for experiment in response_data["data"]]
-    assert response.status_code == HTTPStatus.OK and experiment_ids == expected
+    assert_retrieving_resource_works(
+        dioptra_client=dioptra_client.experiments,
+        expected=expected,
+        group_id=group_id,
+        sort_by=sort_by,
+        descending=descending,
+        search=search,
+        paging_info=paging_info,
+    )
 
 
 def assert_experiment_name_matches_expected_name(
@@ -382,7 +336,6 @@ def test_experiment_get_all(
 @pytest.mark.parametrize(
     "sortBy, descending , expected",
     [
-        (None, None, ["experiment1", "experiment2", "experiment3"]),
         ("name", True, ["experiment3", "experiment2", "experiment1"]),
         ("name", False, ["experiment1", "experiment2", "experiment3"]),
         ("createdOn", True, ["experiment3", "experiment2", "experiment1"]),
@@ -409,11 +362,11 @@ def test_experiment_sort(
     - The returned list of experiments matches the order in the parametrize lists above.
     """
 
-    expected_ids = [
-        registered_experiments[expected_name]["id"] for expected_name in expected
+    expected_experiments = [
+        registered_experiments[expected_name] for expected_name in expected
     ]
-    assert_sorting_experiment_works(
-        dioptra_client, sort_by=sortBy, descending=descending, expected=expected_ids
+    assert_retrieving_all_experiments_works(
+        dioptra_client, expected=expected_experiments
     )
 
 

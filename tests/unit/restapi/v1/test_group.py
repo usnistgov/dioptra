@@ -33,6 +33,7 @@ from dioptra.client.client import DioptraClient
 from dioptra.restapi.routes import V1_GROUPS_ROUTE, V1_ROOT
 
 from ..lib import actions, helpers
+from ..test_utils import assert_retrieving_resource_works
 
 # -- Actions ---------------------------------------------------------------------------
 
@@ -165,17 +166,12 @@ def assert_retrieving_groups_works(
             does not match the expected response.
     """
 
-    query_string: dict[str, Any] = {}
-
-    if search is not None:
-        query_string["search"] = search
-
-    if paging_info is not None:
-        query_string["index"] = paging_info["index"]
-        query_string["page_length"] = paging_info["page_length"]
-
-    response = dioptra_client.groups.get(**query_string)
-    assert response.status_code == HTTPStatus.OK and response.json()["data"] == expected
+    assert_retrieving_resource_works(
+        dioptra_client=dioptra_client.groups,
+        expected=expected,
+        search=search,
+        paging_info=paging_info,
+    )
 
 
 def assert_registering_existing_group_name_fails(
