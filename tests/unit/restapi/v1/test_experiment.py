@@ -189,7 +189,11 @@ def assert_retrieving_all_experiments_works(
         query_string["page_length"] = paging_info["page_length"]
 
     response = dioptra_client.experiments.get(**query_string)
-    assert response.status_code == HTTPStatus.OK and response.json()["data"] == expected
+    # A sort order was not given in the request, so we must not assume a
+    # particular order in the response.
+    expected = sorted(expected, key=lambda d: d["id"])
+    resp_data = sorted(response.json()["data"], key=lambda d: d["id"])
+    assert response.status_code == HTTPStatus.OK and resp_data == expected
 
 
 def assert_sorting_experiment_works(
@@ -212,6 +216,9 @@ def assert_sorting_experiment_works(
         AssertionError: If the response status code is not 200 or if the API response
             does not match the expected response.
     """
+
+    assert sort_by is not None, "Sort criteria not specified."
+
     query_string: dict[str, Any] = {}
 
     if descending is not None:
@@ -234,6 +241,48 @@ def assert_sorting_experiment_works(
     response_data = response.json()
     experiment_ids = [experiment["id"] for experiment in response_data["data"]]
     assert response.status_code == HTTPStatus.OK and experiment_ids == expected
+
+
+def assert_sorting_experiment_by_none_works(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    expected: set[str],
+    sort_by: str | None,
+    descending: bool | None,
+    group_id: int | None = None,
+    search: str | None = None,
+    paging_info: dict[str, Any] | None = None,
+) -> None:
+    """Assert that experiments can be retrieved properly when sorting isn't specified.
+
+    Args:
+        client: The Flask test client.
+        expected: The expected experiment ids.
+
+    Raises:
+        AssertionError: If the response status code is not 200 or if the API response
+            does not match the expected response.
+    """
+    assert sort_by is None, "Sort criteria is specified."
+
+    query_string: dict[str, Any] = {}
+
+    if descending is not None:
+        query_string["descending"] = descending
+
+    if group_id is not None:
+        query_string["group_id"] = group_id
+
+    if search is not None:
+        query_string["search"] = search
+
+    if paging_info is not None:
+        query_string["index"] = paging_info["index"]
+        query_string["page_length"] = paging_info["page_length"]
+
+    response = dioptra_client.experiments.get(**query_string)
+    response_data = response.json()
+    experiment_ids = [experiment["id"] for experiment in response_data["data"]]
+    assert response.status_code == HTTPStatus.OK and set(experiment_ids) == expected
 
 
 def assert_experiment_name_matches_expected_name(
@@ -382,7 +431,6 @@ def test_experiment_get_all(
 @pytest.mark.parametrize(
     "sortBy, descending , expected",
     [
-        (None, None, ["experiment1", "experiment2", "experiment3"]),
         ("name", True, ["experiment3", "experiment2", "experiment1"]),
         ("name", False, ["experiment1", "experiment2", "experiment3"]),
         ("createdOn", True, ["experiment3", "experiment2", "experiment1"]),
@@ -413,6 +461,41 @@ def test_experiment_sort(
         registered_experiments[expected_name]["id"] for expected_name in expected
     ]
     assert_sorting_experiment_works(
+        dioptra_client, sort_by=sortBy, descending=descending, expected=expected_ids
+    )
+
+
+@pytest.mark.parametrize(
+    "sortBy, descending , expected",
+    [
+        (None, None, ["experiment1", "experiment2", "experiment3"]),
+        (None, None, ["experiment3", "experiment2", "experiment1"]),
+    ],
+)
+def test_experiment_sort_by_none(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_experiments: dict[str, Any],
+    sortBy: str,
+    descending: bool,
+    expected: list[str],
+) -> None:
+    """Test that experiments can be retrieved when sorting is unspecified.
+
+    Given an authenticated user and registered experiments, this test validates the
+      following sequence of actions:
+
+    - A user registers three experiments: "experiment1", "experiment2", "experiment3".
+    - The user is able to retrieve a list of all registered experiments.
+    - The returned list of experiments matches regardless of the order in the
+        parametrize lists above.
+    """
+
+    expected_ids = set(
+        [registered_experiments[expected_name]["id"] for expected_name in expected]
+    )
+    assert_sorting_experiment_by_none_works(
         dioptra_client, sort_by=sortBy, descending=descending, expected=expected_ids
     )
 

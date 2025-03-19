@@ -180,7 +180,11 @@ def assert_retrieving_models_works(
         query_string["page_length"] = paging_info["page_length"]
 
     response = dioptra_client.models.get(**query_string)
-    assert response.status_code == HTTPStatus.OK and response.json()["data"] == expected
+    # A sort order was not given in the request, so we must not assume a
+    # particular order in the response.
+    expected = sorted(expected, key=lambda d: d["id"])
+    resp_data = sorted(response.json()["data"], key=lambda d: d["id"])
+    assert response.status_code == HTTPStatus.OK and resp_data == expected
 
 
 def assert_sorting_model_works(
@@ -204,6 +208,8 @@ def assert_sorting_model_works(
             does not match the expected response.
     """
 
+    assert sort_by is not None, "Sort criteria not specified."
+
     query_string: dict[str, Any] = {}
 
     if descending is not None:
@@ -226,6 +232,49 @@ def assert_sorting_model_works(
     response_data = response.json()
     model_ids = [model["id"] for model in response_data["data"]]
     assert response.status_code == HTTPStatus.OK and model_ids == expected
+
+
+def assert_sorting_model_by_none_works(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    expected: set[str],
+    sort_by: str | None,
+    descending: bool | None,
+    group_id: int | None = None,
+    search: str | None = None,
+    paging_info: dict[str, Any] | None = None,
+) -> None:
+    """Assert that models can be retrieved properly when sorting isn't specified.
+
+    Args:
+        client: The Flask test client.
+        expected: The expected model ids.
+
+    Raises:
+        AssertionError: If the response status code is not 200 or if the API response
+            does not match the expected response.
+    """
+
+    assert sort_by is None, "Sort criteria is specified."
+
+    query_string: dict[str, Any] = {}
+
+    if descending is not None:
+        query_string["descending"] = descending
+
+    if group_id is not None:
+        query_string["group_id"] = group_id
+
+    if search is not None:
+        query_string["search"] = search
+
+    if paging_info is not None:
+        query_string["index"] = paging_info["index"]
+        query_string["page_length"] = paging_info["page_length"]
+
+    response = dioptra_client.models.get(**query_string)
+    response_data = response.json()
+    model_ids = [model["id"] for model in response_data["data"]]
+    assert response.status_code == HTTPStatus.OK and set(model_ids) == expected
 
 
 def assert_registering_existing_model_name_fails(
@@ -439,7 +488,6 @@ def test_model_get_all(
 @pytest.mark.parametrize(
     "sort_by, descending , expected",
     [
-        (None, None, ["model1", "model2", "model3"]),
         ("name", True, ["model1", "model3", "model2"]),
         ("name", False, ["model2", "model3", "model1"]),
         ("createdOn", True, ["model3", "model2", "model1"]),
@@ -470,6 +518,41 @@ def test_model_sort(
         registered_models[expected_name]["id"] for expected_name in expected
     ]
     assert_sorting_model_works(
+        dioptra_client, sort_by=sort_by, descending=descending, expected=expected_ids
+    )
+
+
+@pytest.mark.parametrize(
+    "sort_by, descending , expected",
+    [
+        (None, None, ["model1", "model2", "model3"]),
+        (None, None, ["model3", "model2", "model1"]),
+    ],
+)
+def test_model_sort_by_none(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_models: dict[str, Any],
+    sort_by: str,
+    descending: bool,
+    expected: list[str],
+) -> None:
+    """Test that models can be retrieved when sorting is unspecified.
+
+    Given an authenticated user and registered models, this test validates the following
+    sequence of actions:
+
+    - A user registers three models, "my_tensorflow_model", "model2", "model3".
+    - The user is able to retrieve a list of all registered models.
+    - The returned list of models matches regardless of the order in the parametrize
+        lists above.
+    """
+
+    expected_ids = set(
+        [registered_models[expected_name]["id"] for expected_name in expected]
+    )
+    assert_sorting_model_by_none_works(
         dioptra_client, sort_by=sort_by, descending=descending, expected=expected_ids
     )
 
