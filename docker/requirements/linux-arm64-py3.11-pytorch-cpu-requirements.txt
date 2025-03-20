@@ -297,7 +297,7 @@ pillow==11.0.0
     #   scikit-image
     #   smqtk-image-io
     #   torchvision
-prefect==1.4.1
+prefect==3.0.3
     # via dioptra (pyproject.toml)
 protobuf==5.28.3
     # via
