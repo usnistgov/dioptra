@@ -494,7 +494,7 @@ def test_create_job_with_empty_values(
     registered_entrypoints: dict[str, Any],
     monkeypatch: MonkeyPatch,
 ) -> None:
-    """ Test that new job can be create with EMPTY values using API
+    """Test that new job can be create with EMPTY values using API
     Args:
         dioptra_client (DioptraClient[DioptraResponseProtocol]): _description_
         auth_account (dict[str, Any]): _description_
@@ -502,9 +502,9 @@ def test_create_job_with_empty_values(
         registered_experiments (dict[str, Any]): _description_
         registered_entrypoints (dict[str, Any]): _description_
         monkeypatch (MonkeyPatch): _description_
-    """    
+    """
 
-    ''' Test that jobs (!!! with no-params !!!) can be correctly registered and retrieved using the API.
+    """ Test that jobs (!!! with no-params !!!) can be correctly registered and retrieved using the API.
     General plan:
     Given an authenticated user, registered queues, registered experiments, and
     registered entrypoints, this test validates the following sequence of actions:
@@ -513,9 +513,10 @@ def test_create_job_with_empty_values(
     - The response is valid and matches the expected values given the registration
       request.
     - The user is able to retrieve information about the job using the job id.
-    '''
-    # Begin with registering the entry-point with empty parameters, queues, and plugins 
+    """
+    # Begin with registering the entry-point with empty parameters, queues, and plugins
     import dioptra.restapi.v1.shared.rq_service as rq_service
+
     monkeypatch.setattr(rq_service, "RQQueue", mock_rq.MockRQQueue)
 
     entrypoint_name = "entrypoint_no_params"
@@ -526,7 +527,7 @@ def test_create_job_with_empty_values(
     values = {}
     timeout = "24h"
 
-    '''
+    """
     Register a Job
     ==============
     actions.py::register_job(*args: JobSchema)):
@@ -540,7 +541,7 @@ def test_create_job_with_empty_values(
           - entrypoint_id: The ID of the entrypoint that the job calls.
           - values: The values the job supplies to the entrypoint
           - timeout: The timeout value for the job to terminate if not completed by.
-    '''
+    """
     job_response = dioptra_client.experiments.jobs.create(
         experiment_id=experiment_id,
         entrypoint_id=entrypoint_id,
@@ -557,19 +558,21 @@ def test_create_job_with_empty_values(
     expected_contents: The raw data passed to actions.py::register_job() as *args
       *Note: group_id is given as an arg for registration in the service layer
     """
-    (queue_snapshot_id, 
-     queue_id) = (registered_queues["queue1"]["snapshot"], 
-                  registered_queues["queue1"]["id"])
+    (queue_snapshot_id, queue_id) = (
+        registered_queues["queue1"]["snapshot"],
+        registered_queues["queue1"]["id"],
+    )
 
-    (experiment_snapshot_id, 
-     experiment_id, 
-     group_id) = (registered_experiments["experiment1"]["snapshot"], 
-                  registered_experiments["experiment1"]["id"], 
-                  registered_experiments["experiment1"]["group"]["id"])
+    (experiment_snapshot_id, experiment_id, group_id) = (
+        registered_experiments["experiment1"]["snapshot"],
+        registered_experiments["experiment1"]["id"],
+        registered_experiments["experiment1"]["group"]["id"],
+    )
 
-    (entrypoint_snapshot_id, 
-     entrypoint_id)  = (registered_entrypoints[entrypoint_name]["snapshot"], 
-                        registered_entrypoints[entrypoint_name]["id"])
+    (entrypoint_snapshot_id, entrypoint_id) = (
+        registered_entrypoints[entrypoint_name]["snapshot"],
+        registered_entrypoints[entrypoint_name]["id"],
+    )
 
     assert_job_response_contents_matches_expectations(
         response=job_response,

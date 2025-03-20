@@ -669,8 +669,16 @@ def test_entrypoint_get_all(
 @pytest.mark.parametrize(
     "sortBy, descending , expected",
     [
-        (None, None, ["entrypoint1", "entrypoint2", "entrypoint3", "entrypoint_no_params"]),
-        (None, None, ["entrypoint3", "entrypoint2", "entrypoint1", "entrypoint_no_params"]),
+        (
+            None,
+            None,
+            ["entrypoint1", "entrypoint2", "entrypoint3", "entrypoint_no_params"],
+        ),
+        (
+            None,
+            None,
+            ["entrypoint3", "entrypoint2", "entrypoint1", "entrypoint_no_params"],
+        ),
     ],
 )
 def test_entrypoint_sort_by_none(
@@ -707,10 +715,26 @@ def test_entrypoint_sort_by_none(
 @pytest.mark.parametrize(
     "sortBy, descending , expected",
     [
-        ("name", True, ["entrypoint2", "entrypoint3", "entrypoint1", "entrypoint_no_params"]),
-        ("name", False, ["entrypoint_no_params", "entrypoint1", "entrypoint3", "entrypoint2"]),
-        ("createdOn", True, ["entrypoint_no_params", "entrypoint3", "entrypoint2", "entrypoint1"]),
-        ("createdOn", False, ["entrypoint1", "entrypoint2", "entrypoint3", "entrypoint_no_params"]),
+        (
+            "name",
+            True,
+            ["entrypoint2", "entrypoint3", "entrypoint1", "entrypoint_no_params"],
+        ),
+        (
+            "name",
+            False,
+            ["entrypoint_no_params", "entrypoint1", "entrypoint3", "entrypoint2"],
+        ),
+        (
+            "createdOn",
+            True,
+            ["entrypoint_no_params", "entrypoint3", "entrypoint2", "entrypoint1"],
+        ),
+        (
+            "createdOn",
+            False,
+            ["entrypoint1", "entrypoint2", "entrypoint3", "entrypoint_no_params"],
+        ),
     ],
 )
 def test_entrypoint_sort(
@@ -871,7 +895,7 @@ def test_rename_entrypoint(
         modified_entrypoint,
         registered_entrypoints["entrypoint2"],
         registered_entrypoints["entrypoint3"],
-        registered_entrypoints["entrypoint_no_params"]
+        registered_entrypoints["entrypoint_no_params"],
     ]
     assert_retrieving_entrypoints_works(
         dioptra_client, expected=entrypoint_expected_list
