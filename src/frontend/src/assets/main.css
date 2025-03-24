@@ -38,6 +38,10 @@ p {
   font-size: 1.2em
 }
 
+.body--dark * {
+  font-weight: 500;
+}
+
 .body--dark a {
   color: #51bef4;
   font-weight: 500;
@@ -114,9 +118,11 @@ h1 {
 }
 
 h2 {
-  font-size: clamp(1rem, 5vw, 2rem) !important;
+  font-size: 22px !important;
   line-height: 1 !important;
-  margin-bottom: 0;
+  margin-bottom: 5px;
+  font-weight: 500 !important;
+  margin-top: 0;
 }
 
 .field-label {

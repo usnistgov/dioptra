@@ -12,6 +12,7 @@
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
     @create="pushToJobRoute"
     :hideOpenBtn="true"
+    @edit="router.push(`/jobs/${selected[0].id}`)"
   >
     <template #body-cell-experiment="props">
       {{ props.row.experiment.name }}
@@ -23,17 +24,7 @@
       {{ props.row.queue.name }}
     </template>
     <template #body-cell-status="props">
-      <q-chip
-        v-if="statusStyles[props.row.status]"
-        :label="props.row.status"
-        :icon-right="statusStyles[props.row.status].icon"
-        :color="statusStyles[props.row.status].color"
-        :text-color="statusStyles[props.row.status].textColor"
-        class="text-capitalize"
-        :ripple="false"
-        :style="statusStyles[props.row.status].style"
-      />
-
+      <JobStatus :status="props.row.status" />
     </template>
     <template #expandedSlot="{ row }">
       <q-btn
@@ -87,6 +78,7 @@
   import BasicTable from '@/components/BasicTable.vue'
   import ArtifactsDialog from '@/dialogs/ArtifactsDialog.vue'
   import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
+  import JobStatus from '@/components/JobStatus.vue'
 
   const route = useRoute()
   const router = useRouter()
@@ -177,27 +169,5 @@
       router.push('/jobs/new')
     }
   }
-
-  const statusStyles = {
-    finished: {
-      icon: "sym_o_check_circle",
-      color: "green-2",
-      textColor: "green-10",
-      style: "cursor: default;"
-    },
-    queued: {
-      icon: "sym_o_hourglass",
-      color: "yellow-2",
-      textColor: "grey-9",
-      style: "min-width: 99px; cursor: default;"
-    },
-    default: {
-      icon: "sym_o_error",
-      color: "red-2",
-      textColor: "grey-9",
-      style: "min-width: 99px; cursor: default;"
-    }
-  }
-
 
 </script>

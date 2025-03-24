@@ -196,6 +196,11 @@ export async function getJobs(id: number, pagination: Pagination) {
   return res
 }
 
+export async function getJobMetrics(id: number) {
+  return await axios.get(`/api/jobs/${id}/metrics`)
+
+}
+
 function urlEncode(string: string) {
   if(!string.trim()) return ''
   if(string.includes(':')) {
@@ -210,9 +215,9 @@ function urlEncode(string: string) {
 export async function getItem<T extends ItemType>(type: T, id: number, isDraft: boolean = false) {
   const res =  await axios.get(`/api/${type}/${id}${isDraft ? '/draft' : ''}`)
   if(isDraft && res.data) {
-    console.log('res = ', res)
     Object.assign(res.data, res.data.payload)
   }
+  console.log('res = ', res)
   return res
 }
 

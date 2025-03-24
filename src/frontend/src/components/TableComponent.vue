@@ -58,6 +58,7 @@
                 text-color="white"
                 clickable
                 @click.stop
+                class="q-my-none"
               >
                 {{ tag.name.length <= 18 ? tag.name : tag.name.replace(/(.{17})..+/, "$1…") }}
                 <q-tooltip v-if="tag.name.length > 18" max-width="30vw" style="overflow-wrap: break-word">
@@ -66,11 +67,12 @@
               </q-chip>
               <q-btn
                 round
-                size="sm"
+                size="xs"
                 icon="add"
                 @click.stop="$emit('editTags', props.row)"
                 color="grey-5"
                 text-color="black"
+                class="q-ml-xs"
               />
             </div>
             <div v-else-if="col.name === 'createdOn' || col.name === 'lastModifiedOn'">

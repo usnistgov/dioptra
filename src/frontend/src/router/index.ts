@@ -30,7 +30,8 @@ const router = createRouter({
         },
         {
           path: '/experiments/:id/jobs/:jobId',
-          component: () => import('../views/CreateJob.vue')
+          component: () => import('../views/CreateJob.vue'),
+          name: 'createExperimentJob'
         },
       ]
     },
@@ -63,7 +64,8 @@ const router = createRouter({
         },
         {
           path: '/plugins/:id/files/:fileId',
-          component: () => import('../views/CreatePluginFile.vue')
+          component: () => import('../views/CreatePluginFile.vue'),
+          name: 'pluginFile'
         },
       ]
     },
@@ -83,6 +85,10 @@ const router = createRouter({
         {
           path: '/jobs/new',
           component: () => import('../views/CreateJob.vue')
+        },
+        {
+          path: '/jobs/:id',
+          component: () => import('../views/JobDashboardView.vue')
         },
       ]
     },

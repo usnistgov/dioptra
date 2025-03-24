@@ -18,12 +18,12 @@
           class="text-capitalize"
         />
         <q-breadcrumbs-el
-          v-if="route.params.id && route.params.fileId"
+          v-if="route.name === 'pluginFile'"
           :label="`${objName} Files`"
           :to="`/plugins/${route.params.id}/files`"
         />
         <q-breadcrumbs-el
-          v-if="route.path === `/experiments/${route.params.id}/jobs/new`"
+          v-if="route.name === 'createExperimentJob'"
           :label="`${objName} jobs`"
           :to="`/experiments/${route.params.id}/jobs`"
         />
@@ -54,10 +54,10 @@
 
   const objName = ref('')
 
-  if(route.params.id && route.params.fileId) {
+  if(route.name === 'pluginFile') {
     getName('plugins')
   }
-  if(route.params.id && path.value.includes('jobs')) {
+  if(route.name === 'createExperimentJob') {
     getName('experiments')
   }
 
