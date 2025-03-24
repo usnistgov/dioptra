@@ -30,6 +30,7 @@ from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
 
 from ..lib import helpers, routines
+from ..test_utils import match_normalized_json
 
 # -- Assertions ------------------------------------------------------------------------
 
@@ -70,9 +71,7 @@ def assert_retrieving_plugin_parameter_types_works(
     response = dioptra_client.plugin_parameter_types.get(**query_string)
     # A sort order was not given in the request, so we must not assume a
     # particular order in the response.
-    expected = sorted(expected, key=lambda d: d["id"])
-    resp_data = sorted(response.json()["data"], key=lambda d: d["id"])
-    assert response.status_code == HTTPStatus.OK and resp_data == expected
+    assert response.status_code == HTTPStatus.OK and match_normalized_json(response, expected)
 
 
 def assert_sorting_plugin_parameter_type_works(

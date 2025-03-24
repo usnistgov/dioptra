@@ -16,7 +16,41 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from __future__ import annotations
 
+from typing import Any
+
+from dioptra.client.base import DioptraResponseProtocol
 from dioptra.restapi.utils import find_non_unique
+
+
+def match_normalized_json(
+        original_entity: DioptraResponseProtocol | list[dict[str, Any]], 
+        expected_json_entity: DioptraResponseProtocol | list[dict[str, Any]])-> bool:
+    """ Compares, after it has transformed and normalized the response or json data
+
+    Args:
+        original_entity (DioptraResponseProtocol | list[dict[str, Any]]): Either response or Json of the response
+        expected_json_entity (DioptraResponseProtocol | list[dict[str, Any]]): Expected or a response-like object of the expected
+
+    Returns:
+        bool: True if both object are a match, False - otherwise
+    """
+    def sort_protocol(pre_json: DioptraResponseProtocol):
+        return sorted(pre_json.json()["data"], key=lambda d: d["id"])
+
+    def sort_json(json_entity: list[dict[str, Any]]):
+        return sorted(json_entity, key=lambda d: d["id"])
+    
+    def sort_object(entity: DioptraResponseProtocol | list[dict[str, Any]]):
+        json_like_data = list(dict())
+        if isinstance(entity, list):
+            json_like_data = sort_json(entity)
+        else:
+            json_like_data = sort_protocol(entity)
+        return json_like_data
+
+    original_data = sort_object(original_entity)
+    expected_data = sort_object(expected_json_entity)
+    return original_data == expected_data
 
 
 def test_find_non_unique():
