@@ -30,7 +30,7 @@ class MockRQJob(object):
         self,
         id: str = "4520511d-678b-4966-953e-af2d0edcea32",
         queue: Optional[str] = None,
-        timeout: Optional[str] = None,
+        job_timeout: Optional[str] = None,
         cmd_kwargs: Optional[Dict[str, Any]] = None,
         depends_on: Optional[Union[str, MockRQJob]] = None,
     ) -> None:
@@ -38,12 +38,12 @@ class MockRQJob(object):
             "Mocking rq.job.Job instance",
             id=id,
             queue=queue,
-            timeout=timeout,
+            job_timeout=job_timeout,
             cmd_kwargs=cmd_kwargs,
             depends_on=depends_on,
         )
         self.queue = queue
-        self.timeout = timeout
+        self.job_timeout = job_timeout
         self.cmd_kwargs = cmd_kwargs
         self._id = id
         self._dependency_ids = None
@@ -98,11 +98,11 @@ class MockRQQueue(object):
         job_id = kwargs.get("job_id", str(uuid.uuid4()))
         cmd_kwargs = kwargs.get("kwargs")
         depends_on = kwargs.get("depends_on")
-        timeout = kwargs.get("timeout")
+        job_timeout = kwargs.get("job_timeout")
         return MockRQJob(
             id=job_id,
             queue=self.name,
-            timeout=timeout,
+            job_timeout=job_timeout,
             cmd_kwargs=cmd_kwargs,
             depends_on=depends_on,
         )
