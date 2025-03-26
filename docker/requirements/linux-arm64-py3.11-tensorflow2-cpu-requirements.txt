@@ -320,7 +320,7 @@ pillow==11.0.0
     #   nrtk
     #   scikit-image
     #   smqtk-image-io
-prefect==1.4.1
+prefect==2.20.17
     # via dioptra (pyproject.toml)
 protobuf==4.25.5
     # via
