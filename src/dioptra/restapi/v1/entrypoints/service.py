@@ -15,6 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform entrypoint endpoint operations."""
+
 from __future__ import annotations
 
 from typing import Any, Final, cast
@@ -474,7 +475,10 @@ class EntrypointIdService(object):
             for i, param in enumerate(parameters)
         ]
 
-        plugin_ids = [entrypoint_plugin_file.plugin.resource_id for entrypoint_plugin_file in entrypoint.entry_point_plugin_files]
+        plugin_ids = [
+            entrypoint_plugin_file.plugin.resource_id
+            for entrypoint_plugin_file in entrypoint.entry_point_plugin_files
+        ]
         self._entrypoint_validate_service.validate(
             task_graph=task_graph,
             plugin_ids=plugin_ids,
@@ -655,7 +659,10 @@ class EntrypointIdPluginsService(object):
             }
             for param in entrypoint.parameters
         ]
-        plugin_ids = [entrypoint_plugin_file.plugin.resource_id for entrypoint_plugin_file in entrypoint.entry_point_plugin_files]
+        plugin_ids = [
+            entrypoint_plugin_file.plugin.resource_id
+            for entrypoint_plugin_file in entrypoint.entry_point_plugin_files
+        ]
         self._entrypoint_validate_service.validate(
             task_graph=entrypoint.task_graph,
             plugin_ids=plugin_ids,
@@ -845,7 +852,10 @@ class EntrypointIdPluginsIdService(object):
             }
             for param in entrypoint.parameters
         ]
-        plugin_ids = [entrypoint_plugin_file.plugin.resource_id for entrypoint_plugin_file in entrypoint.entry_point_plugin_files]
+        plugin_ids = [
+            entrypoint_plugin_file.plugin.resource_id
+            for entrypoint_plugin_file in entrypoint.entry_point_plugin_files
+        ]
         self._entrypoint_validate_service.validate(
             task_graph=entrypoint.task_graph,
             plugin_ids=plugin_ids,
