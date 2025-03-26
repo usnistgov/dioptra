@@ -110,6 +110,18 @@ type UpdateParams = {
   },
 }
 
+type WorkflowParams = {
+	resourceImport: {
+		group: number,
+		sourceType: string,
+		gitUrl: string,
+		files: string[],
+		archiveFile: string,
+		configPath: string,
+		resolveNameConflictsStrategy: string
+	}
+}
+
 interface EntrypointParameters {
   name: string,
   defaultValue: string,
@@ -393,4 +405,8 @@ export async function deleteUser(password: string) {
   return await axios.delete(`/api/users/current`, {
     data: { password: password }
   })
+}
+
+export async function importResources(params: WorkflowParams['resourceImport']) {
+  return await axios.post(`/api/workflows/resourceImport`, params, { headers: { "Content-Type": "multipart/form-data" } } )
 }

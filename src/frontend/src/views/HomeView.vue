@@ -12,9 +12,20 @@
     </a>
   </p>
 
+  <br />
+  <div :class="`flex flex-center q-mt-xl ${isMobile ? '' : 'q-pt-xl' } `">
+	  <ImportResourcesForm />
+  </div>
 
 </template>
 
 <script setup>
+  import { useQuasar } from 'quasar'
+  import { computed } from 'vue'
+  import ImportResourcesForm from '../components/ImportResourcesForm.vue';
+  const $q = useQuasar()
 
+  const darkMode = computed(() => {
+    return $q.dark.mode
+  })
 </script>
