@@ -18,6 +18,7 @@
 
 .. |Api| replace:: :py:class:`flask_restx.Api`
 """
+
 from __future__ import annotations
 
 import http
@@ -30,6 +31,7 @@ from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
 from dioptra.restapi.v1 import utils
+from dioptra.task_engine.issues import ValidationIssue
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -287,7 +289,7 @@ class JobInvalidParameterNameError(DioptraError):
 
     def __init__(self):
         super().__init__(
-            "A provided job parameter name does not match any entrypoint " "parameters."
+            "A provided job parameter name does not match any entrypoint parameters."
         )
 
 
@@ -296,8 +298,7 @@ class JobMlflowRunAlreadySetError(DioptraError):
 
     def __init__(self):
         super().__init__(
-            "The requested job already has an mlflow run id set. It may "
-            "not be changed."
+            "The requested job already has an mlflow run id set. It may not be changed."
         )
 
 
@@ -345,6 +346,14 @@ class PluginParameterTypeMatchesBuiltinTypeError(DioptraError):
             "The requested plugin parameter type name matches a built-in "
             "type. Please select another and resubmit."
         )
+
+
+class EntrypointWorkflowYamlValidationError(DioptraError):
+    """The entrypoint worklfow yaml is invalid."""
+
+    def __init__(self, issues: list[ValidationIssue]):
+        super().__init__("The entrypoint worklfow yaml is invalid.")
+        self.issues = issues
 
 
 # User Errors
@@ -547,3 +556,23 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
     def handle_base_error(error: DioptraError):
         log.debug(error.to_message())
         return error_result(error, http.HTTPStatus.BAD_REQUEST, {})
+
+    @api.errorhandler(DioptraError)
+    def handle_entrypoint_workflow_yaml_validation_error(
+        error: EntrypointWorkflowYamlValidationError,
+    ):
+        log.debug(error.to_message())
+        return error_result(
+            error,
+            http.HTTPStatus.UNPROCESSABLE_ENTITY,
+            {
+                "issues": [
+                    {
+                        "type": str(issue.type),
+                        "severity": str(issue.severity),
+                        "message": issue.message,
+                    }
+                    for issue in error.args[0]
+                ]
+            },
+        )
