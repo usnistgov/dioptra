@@ -25,6 +25,7 @@ from .base import (
 
 T = TypeVar("T")
 
+ENTRYPOINT_VALIDATION: Final[str] = "entrypointValidate"
 JOB_FILES_DOWNLOAD: Final[str] = "jobFilesDownload"
 SIGNATURE_ANALYSIS: Final[str] = "pluginTaskSignatureAnalysis"
 RESOURCE_IMPORT: Final[str] = "resourceImport"
@@ -177,3 +178,17 @@ class WorkflowsCollectionClient(CollectionClient[T]):
         return self._session.post(
             self.url, RESOURCE_IMPORT, data=data, files=files_ or None
         )
+
+    def validate_entrypoint(
+        self,
+        task_graph: str,
+        plugins: list[int],
+        entrypoint_parameters: list[dict[str, Any]],
+    ):
+        payload = {
+            "taskGraph": task_graph,
+            "plugins": plugins,
+            "parameters": entrypoint_parameters,
+        }
+
+        return self._session.post(self.url, ENTRYPOINT_VALIDATION, json_=payload)
