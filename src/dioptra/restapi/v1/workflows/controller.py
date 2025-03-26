@@ -15,6 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The module defining the endpoints for Workflow resources."""
+
 import uuid
 
 import structlog
@@ -114,10 +115,12 @@ class EntrypointValidateEndpoint(Resource):
             request_id=str(uuid.uuid4()), resource="Workflows", request_type="POST"
         )
         parsed_obj = request.parsed_obj  # type: ignore
+        group_id = parsed_obj["group_id"]
         task_graph = parsed_obj["task_graph"]
         plugin_ids = parsed_obj["plugin_ids"]
         parameters = parsed_obj["parameters"]
         return self._entrypoint_validate_service.validate(
+            group_id=group_id,
             task_graph=task_graph,
             plugin_ids=plugin_ids,
             entrypoint_parameters=parameters,

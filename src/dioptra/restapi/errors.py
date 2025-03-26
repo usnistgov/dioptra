@@ -18,6 +18,7 @@
 
 .. |Api| replace:: :py:class:`flask_restx.Api`
 """
+
 from __future__ import annotations
 
 import http
@@ -326,7 +327,7 @@ class PluginParameterTypeMatchesBuiltinTypeError(DioptraError):
         )
 
 
-class EntrpointWorkflowYamlValidationError(DioptraError):
+class EntrypointWorkflowYamlValidationError(DioptraError):
     """The entrypoint worklfow yaml is invalid."""
 
     def __init__(self, issues: list[ValidationIssue]):
@@ -485,12 +486,23 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
     def handle_base_error(error: DioptraError):
         log.debug(error.to_message())
         return error_result(error, http.HTTPStatus.BAD_REQUEST, {})
-    
+
     @api.errorhandler(DioptraError)
-    def handle_entrypoint_workflow_yaml_validation_error(error: EntrpointWorkflowYamlValidationError):
+    def handle_entrypoint_workflow_yaml_validation_error(
+        error: EntrypointWorkflowYamlValidationError,
+    ):
         log.debug(error.to_message())
         return error_result(
-            error, 
-            http.HTTPStatus.UNPROCESSABLE_ENTITY, 
-            {"issues": [{"type": str(issue.type), "severity": str(issue.severity), "message": issue.message} for issue in error.args[0]]}
+            error,
+            http.HTTPStatus.UNPROCESSABLE_ENTITY,
+            {
+                "issues": [
+                    {
+                        "type": str(issue.type),
+                        "severity": str(issue.severity),
+                        "message": issue.message,
+                    }
+                    for issue in error.args[0]
+                ]
+            },
         )

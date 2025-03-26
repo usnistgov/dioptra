@@ -15,6 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The schemas for serializing/deserializing Workflow resources."""
+
 from enum import Enum
 
 from marshmallow import Schema, fields
@@ -48,6 +49,15 @@ class JobFilesDownloadQueryParametersSchema(Schema):
 class EntrypointWorkflowSchema(Schema):
     """The YAML that represents the Entrypoint Workflow."""
 
+    groupId = fields.Integer(
+        attribute="group_id",
+        data_key="group",
+        metadata=dict(
+            description="ID of the Group that will own the Entrypoint resource."
+        ),
+        load_only=True,
+        required=True,
+    )
     taskGraph = fields.String(
         attribute="task_graph",
         metadata=dict(description="Task graph of the Entrypoint resource."),

@@ -15,12 +15,15 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The shared server-side functions that perform entrypoint validatation operations."""
-from typing import Any, Final
+
+from typing import Any
 
 import structlog
 from injector import inject
+from sqlalchemy import select
 from structlog.stdlib import BoundLogger
 
+from dioptra.restapi.db import db, models
 from dioptra.restapi.errors import EntrypointWorkflowYamlValidationError
 from dioptra.restapi.v1.plugins.service import PluginIdsService
 from dioptra.restapi.v1.shared.build_task_engine_dict import build_task_engine_dict
@@ -47,9 +50,10 @@ class EntrypointValidateService(object):
         self._plugin_id_service = plugin_id_service
 
     def validate(
-        self, 
-        task_graph: str, 
-        plugin_ids: list[int], 
+        self,
+        group_id: int,
+        task_graph: str,
+        plugin_ids: list[int],
         entrypoint_parameters: list[dict[str, Any]],
         **kwargs,
     ) -> dict[str, Any]:
@@ -67,14 +71,22 @@ class EntrypointValidateService(object):
             EntrypointWorkflowYamlValidationError: If the entrypoint worklflow yaml is not valid.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
-        log.debug("Validate a entrypoint workflow", task_graph=task_graph, plugin_ids=plugin_ids, entrypoint_parameters=entrypoint_parameters)
+        log.debug(
+            "Validate a entrypoint workflow",
+            task_graph=task_graph,
+            plugin_ids=plugin_ids,
+            entrypoint_parameters=entrypoint_parameters,
+        )
 
-        parameters = {param['name']: param['default_value'] for param in entrypoint_parameters}
+        plugin_parameter_types_full = self._get_plugin_parameter_types(
+            group_id=group_id, logger=log
+        )
+        parameters = {
+            param["name"]: param["default_value"] for param in entrypoint_parameters
+        }
         plugins = self._plugin_id_service.get(plugin_ids)
         task_engine_dict = build_task_engine_dict(
-            plugins=plugins, 
-            parameters=parameters, 
-            task_graph=task_graph
+            plugins=plugins, parameters=parameters, task_graph=task_graph
         )
 
         issues = validate(task_engine_dict)
@@ -83,3 +95,30 @@ class EntrypointValidateService(object):
             return {"status": "Success", "valid": True}
         else:
             raise EntrypointWorkflowYamlValidationError(issues)
+    @staticmethod
+    def _get_plugin_parameter_types(
+        group_id: int, logger: BoundLogger | None = None
+    ) -> list[models.PluginTaskParameterType]:
+        """Run a query to get the plugin task parameter types for the job.
+
+        Args:
+            job_id: The ID of the job to get the plugin task parameter types for.
+            logger: A structlog logger object to use for logging. A new logger will be
+                created if None.
+
+        Returns:
+            The plugin files for the entrypoint.
+        """
+        log = logger or LOGGER.new()  # noqa: F841
+
+        plugin_parameter_types_stmt = (
+            select(models.PluginTaskParameterType)
+            .join(models.Resource)
+            .where(
+                models.Resource.is_deleted == False,  # noqa: E712
+                models.Resource.group_id == group_id,
+                models.Resource.latest_snapshot_id
+                == models.PluginTaskParameterType.resource_snapshot_id,
+            )
+        )
+        return list(db.session.scalars(plugin_parameter_types_stmt).all())

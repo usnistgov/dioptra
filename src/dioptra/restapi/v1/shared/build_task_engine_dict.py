@@ -6,6 +6,7 @@ import yaml
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
+from dioptra.restapi.v1 import utils
 from dioptra.task_engine.type_registry import BUILTIN_TYPES
 
 # from .type_coercions import (
@@ -33,7 +34,7 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
 def build_task_engine_dict(
-    plugins: list[Any],
+    plugins: list[utils.PluginWithFilesDict],
     parameters: dict[str, Any],
     task_graph: str,
 ) -> dict[str, Any]:
@@ -50,12 +51,12 @@ def build_task_engine_dict(
     tasks: dict[str, Any] = {}
     parameter_types: dict[str, Any] = {}
     for plugin in plugins:
-        for plugin_file in plugin['plugin_files']:
+        for plugin_file in plugin["plugin_files"]:
             for task in plugin_file.tasks:
                 input_parameters = task.input_parameters
                 output_parameters = task.output_parameters
                 tasks[task.plugin_task_name] = {
-                    "plugin": _build_plugin_field(plugin['plugin'], plugin_file, task),
+                    "plugin": _build_plugin_field(plugin["plugin"], plugin_file, task),
                 }
                 if input_parameters:
                     tasks[task.plugin_task_name]["inputs"] = _build_task_inputs(
