@@ -152,7 +152,7 @@ class BasePageSchema(Schema):
 
     index = fields.Integer(
         attribute="index",
-        metadata=dict(description="Index of the current page."),
+        metadata=dict(description="Starting index of the current page."),
     )
     isComplete = fields.Boolean(
         attribute="is_complete",
@@ -184,7 +184,7 @@ class PagingQueryParametersSchema(Schema):
 
     index = fields.Integer(
         attribute="index",
-        metadata=dict(description="Index of the current page."),
+        metadata=dict(description="Starting index of the current page."),
         load_default=0,
     )
     pageLength = fields.Integer(

@@ -1035,7 +1035,7 @@ def build_paging_envelope(
         data: The list of ORM objects to wrap in the paging envelope.
         query: The optional search query string.
         draft_type: The type of drafts to return.
-        index: The index of the current page.
+        index: The starting index of the current page.
         length: The number of results to return per page.
         total_num_elements: The total number of elements in the collection.
         sort_by: The name of the column to sort.
@@ -1106,7 +1106,7 @@ def build_paging_url(
         resource_type: The prefix of the route to paginate, forms the URL path.
         search: The optional search query string.
         draft_type: The type of drafts to return.
-        index: The index of the current page.
+        index: The starting index of the current page.
         length: The number of results to return per page.
 
     Returns:
