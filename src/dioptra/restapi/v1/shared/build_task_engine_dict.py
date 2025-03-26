@@ -9,28 +9,7 @@ from dioptra.restapi.db import models
 from dioptra.restapi.v1 import utils
 from dioptra.task_engine.type_registry import BUILTIN_TYPES
 
-# from .type_coercions import (
-#     BOOLEAN_PARAM_TYPE,
-#     FLOAT_PARAM_TYPE,
-#     INTEGER_PARAM_TYPE,
-#     STRING_PARAM_TYPE,
-#     coerce_to_type,
-# )
-
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
-
-# EXPLICIT_GLOBAL_TYPES: Final[set[str]] = {
-#     STRING_PARAM_TYPE,
-#     BOOLEAN_PARAM_TYPE,
-#     INTEGER_PARAM_TYPE,
-#     FLOAT_PARAM_TYPE,
-# }
-# YAML_FILE_ENCODING: Final[str] = "utf-8"
-# YAML_EXPORT_SETTINGS: Final[dict[str, Any]] = {
-#     "indent": 2,
-#     "sort_keys": False,
-#     "encoding": YAML_FILE_ENCODING,
-# }
 
 
 def build_task_engine_dict(

@@ -118,8 +118,6 @@ class EntrypointService(object):
         Raises:
             EntityExistsError: If a entrypoint with the given name already exists.
         """
-        # from dioptra.restapi.v1.workflows.service import EntrypointValidateService
-
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         duplicate = self._entrypoint_name_service.get(name, group_id=group_id, log=log)
