@@ -125,8 +125,10 @@ def assert_retrieving_queue_by_id_works(
 def assert_retrieving_queues_works(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     expected: list[dict[str, Any]],
-    group_id: int | None = None,
+    sort_by: str | None = None,
+    descending: bool | None = None,
     search: str | None = None,
+    group_id: int | None = None,
     paging_info: dict[str, Any] | None = None,
 ) -> None:
     """Assert that retrieving all queues works.
@@ -145,93 +147,9 @@ def assert_retrieving_queues_works(
 
     query_string: dict[str, Any] = {}
 
-    if group_id is not None:
-        query_string["group_id"] = group_id
-
-    if search is not None:
-        query_string["search"] = search
-
-    if paging_info is not None:
-        query_string["index"] = paging_info["index"]
-        query_string["page_length"] = paging_info["page_length"]
-
-    response = dioptra_client.queues.get(**query_string)
-    # A sort order was not given in the request, so we must not assume a
-    # particular order in the response.
-    assert response.status_code == HTTPStatus.OK and match_normalized_json(response, expected)
-
-
-def assert_sorting_queue_works(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
-    expected: list[str],
-    sort_by: str | None,
-    descending: bool | None,
-    group_id: int | None = None,
-    search: str | None = None,
-    paging_info: dict[str, Any] | None = None,
-) -> None:
-    """Assert that queues can be sorted by column ascending/descending.
-
-    Args:
-        client: The Flask test client.
-        expected: The expected order of queue ids after sorting.
-            See test_queue_sort for expected orders.
-
-    Raises:
-        AssertionError: If the response status code is not 200 or if the API response
-            does not match the expected response.
-    """
-
-    assert sort_by is not None, "Sort criteria not specified."
-
-    query_string: dict[str, Any] = {}
-
-    if descending is not None:
-        query_string["descending"] = descending
-
     if sort_by is not None:
         query_string["sort_by"] = sort_by
 
-    if group_id is not None:
-        query_string["group_id"] = group_id
-
-    if search is not None:
-        query_string["search"] = search
-
-    if paging_info is not None:
-        query_string["index"] = paging_info["index"]
-        query_string["page_length"] = paging_info["page_length"]
-
-    response = dioptra_client.queues.get(**query_string)
-    response_data = response.json()
-    queue_ids = [queue["id"] for queue in response_data["data"]]
-    assert response.status_code == HTTPStatus.OK and queue_ids == expected
-
-
-def assert_sorting_queue_by_none_works(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
-    expected: set[str],
-    sort_by: str | None,
-    descending: bool | None,
-    group_id: int | None = None,
-    search: str | None = None,
-    paging_info: dict[str, Any] | None = None,
-) -> None:
-    """Assert that queues can be retrieved properly when sorting isn't specified.
-
-    Args:
-        client: The Flask test client.
-        expected: The expected queue ids.
-
-    Raises:
-        AssertionError: If the response status code is not 200 or if the API response
-            does not match the expected response.
-    """
-
-    assert sort_by is None, "Sort criteria is specified."
-
-    query_string: dict[str, Any] = {}
-
     if descending is not None:
         query_string["descending"] = descending
 
@@ -246,9 +164,14 @@ def assert_sorting_queue_by_none_works(
         query_string["page_length"] = paging_info["page_length"]
 
     response = dioptra_client.queues.get(**query_string)
-    response_data = response.json()
-    queue_ids = [queue["id"] for queue in response_data["data"]]
-    assert response.status_code == HTTPStatus.OK and set(queue_ids) == expected
+
+    if sort_by is None:
+        # A sort order was not given in the request, so we must not assume a
+        # particular order in the response.
+        contents_matches = match_normalized_json(response, expected)
+    else:
+        contents_matches = response.json()["data"] == expected
+    assert response.status_code == HTTPStatus.OK and contents_matches
 
 
 def assert_registering_existing_queue_name_fails(
@@ -441,11 +364,9 @@ def test_queue_sort(
     - The returned list of queues matches the order in the parametrize lists above.
     """
 
-    expected_ids = [
-        registered_queues[expected_name]["id"] for expected_name in expected
-    ]
-    assert_sorting_queue_works(
-        dioptra_client, sort_by=sort_by, descending=descending, expected=expected_ids
+    expected_queues = [registered_queues[expected_name] for expected_name in expected]
+    assert_retrieving_queues_works(
+        dioptra_client, sort_by=sort_by, descending=descending, expected=expected_queues
     )
 
 
@@ -476,11 +397,11 @@ def test_queue_sort_by_none(
         parametrize lists above.
     """
 
-    expected_ids = set(
-        [registered_queues[expected_name]["id"] for expected_name in expected]
+    expected_queues = list(
+        [registered_queues[expected_name] for expected_name in expected]
     )
-    assert_sorting_queue_by_none_works(
-        dioptra_client, sort_by=sort_by, descending=descending, expected=expected_ids
+    assert_retrieving_queues_works(
+        dioptra_client, sort_by=sort_by, descending=descending, expected=expected_queues
     )
 
 
