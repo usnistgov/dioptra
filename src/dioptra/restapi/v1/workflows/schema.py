@@ -15,12 +15,14 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The schemas for serializing/deserializing Workflow resources."""
+
 from enum import Enum
 
 from flask import request
 from marshmallow import Schema, ValidationError, fields, validates_schema
 
 from dioptra.restapi.custom_schema_fields import FileUpload, MultiFileUpload
+from dioptra.restapi.v1.entrypoints.schema import EntrypointParameterSchema
 
 
 class FileTypes(Enum):
@@ -47,7 +49,6 @@ class JobFilesDownloadQueryParametersSchema(Schema):
 
 
 class SignatureAnalysisSchema(Schema):
-
     pythonCode = fields.String(
         attribute="python_code",
         metadata=dict(description="The contents of the python file"),
@@ -75,7 +76,6 @@ class SignatureAnalysisSignatureOutputSchema(SignatureAnalysisSignatureParamSche
 
 
 class SignatureAnalysisSuggestedTypes(Schema):
-
     # add proposed_type in next iteration
 
     name = fields.String(
@@ -242,3 +242,35 @@ class ResourceImportSchema(Schema):
             raise ValidationError(
                 {"files": "field required when sourceType is 'upload_files'"}
             )
+
+
+class EntrypointWorkflowSchema(Schema):
+    """The YAML that represents the Entrypoint Workflow."""
+
+    groupId = fields.Integer(
+        attribute="group_id",
+        data_key="group",
+        metadata=dict(
+            description="ID of the Group that will own the Entrypoint resource."
+        ),
+        load_only=True,
+        required=True,
+    )
+    taskGraph = fields.String(
+        attribute="task_graph",
+        metadata=dict(description="Task graph of the Entrypoint resource."),
+        required=True,
+    )
+    pluginIds = fields.List(
+        fields.Integer(),
+        attribute="plugin_ids",
+        data_key="plugins",
+        metadata=dict(description="List of plugin files for the entrypoint."),
+        load_only=True,
+    )
+    parameters = fields.Nested(
+        EntrypointParameterSchema,
+        attribute="parameters",
+        many=True,
+        metadata=dict(description="List of parameters for the entrypoint."),
+    )
