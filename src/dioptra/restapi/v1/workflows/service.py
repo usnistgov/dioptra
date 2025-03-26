@@ -15,6 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform workflows endpoint operations."""
+
 from collections import defaultdict
 from hashlib import sha256
 from io import BytesIO
@@ -55,6 +56,9 @@ from dioptra.restapi.v1.plugins.service import (
     PluginNameService,
     PluginService,
 )
+from dioptra.restapi.v1.shared.entrypoint_validate_service import (
+    EntrypointValidateService,
+)
 from dioptra.restapi.v1.shared.io_file_service import IOFileService
 from dioptra.restapi.v1.shared.resource_service import (
     ResourceIdService,
@@ -67,6 +71,7 @@ from .lib import views
 from .lib.clone_git_repository import clone_git_repository
 from .lib.package_job_files import package_job_files
 from .schema import (
+    EntrypointWorkflowSchema,
     FileTypes,
     ResourceImportResolveNameConflictsStrategy,
     ResourceImportSourceTypes,
@@ -789,3 +794,40 @@ class DraftCommitService(object):
         if draft.payload["base_resource_id"] is not None:
             resource_ids = [draft.payload["base_resource_id"]] + resource_ids
         return {"status": "Success", "id": resource_ids}
+
+
+@api.route("/entrypointValidate")
+class EntrypointValidateEndpoint(Resource):
+    """Wrapper endpoint to expose shared entrypoint validation service."""
+
+    @inject
+    def __init__(
+        self, entrypoint_validate_service: EntrypointValidateService, *args, **kwargs
+    ) -> None:
+        """Initialize the workflow resource.
+        All arguments are provided via dependency injection.
+        Args:
+            entrypoint_validate_service: A EntrypointValidateService object.
+        """
+        self._entrypoint_validate_service = entrypoint_validate_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    @accepts(schema=EntrypointWorkflowSchema, api=api)
+    def post(self):
+        """Validates the workflow for a entrypoint."""  # noqa: B950
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="Workflows", request_type="POST"
+        )
+        parsed_obj = request.parsed_obj  # type: ignore
+        group_id = parsed_obj["group_id"]
+        task_graph = parsed_obj["task_graph"]
+        plugin_ids = parsed_obj["plugin_ids"]
+        parameters = parsed_obj["parameters"]
+        return self._entrypoint_validate_service.validate(
+            group_id=group_id,
+            task_graph=task_graph,
+            plugin_ids=plugin_ids,
+            entrypoint_parameters=parameters,
+            log=log,
+        )
