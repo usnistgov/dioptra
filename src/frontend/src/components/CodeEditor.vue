@@ -14,12 +14,14 @@
         'border': `${showError ? '2px solid red' : '2px solid black'}`
       }"
     />
-    <caption
-      :class="{ invisible: showError?.length === 0 || showError === undefined ? true : false }"
-      class="row text-caption q-ml-md text-negative" 
+    <div
+      :class="{ visibility: showError ? 'hidden' : '' }"
+      class="row text-caption q-ml-md text-negative"
+      role="alert"
+      style="min-height: 20px;" 
     >
-      {{ showError || '...' }}
-    </caption>
+      {{ showError }}
+    </div>
   </div>
 </template>
 

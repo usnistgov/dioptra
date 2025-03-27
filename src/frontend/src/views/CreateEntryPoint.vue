@@ -599,9 +599,13 @@
   }
 
   watch(() => entryPoint.value.taskGraph, (newVal) => {
-    taskGraphError.value = newVal.length > 0 ? '' : 'This field is required'
-    if(taskGraphPlaceholderError.value) {
-      taskGraphError.value = taskGraphPlaceholderError.value
+    if(clearFormExecuted.value) {
+      clearFormExecuted.value = false
+    } else {
+      taskGraphError.value = newVal.length > 0 ? '' : 'This field is required'
+      if(taskGraphPlaceholderError.value) {
+        taskGraphError.value = taskGraphPlaceholderError.value
+      }
     }
   })
 
@@ -684,6 +688,8 @@
     }
   })
 
+  const clearFormExecuted= ref(false)
+
   function clearForm() {
     entryPoint.value = {
       name: '',
@@ -695,6 +701,7 @@
       plugins: []
     }
     basicInfoForm.value.reset()
+    clearFormExecuted.value = true
     store.savedForms.entryPoint = null
   }
 
