@@ -115,7 +115,7 @@ type WorkflowParams = {
 		group: number,
 		sourceType: string,
 		gitUrl: string,
-		files: string[],
+		files: string,
 		archiveFile: string,
 		configPath: string,
 		resolveNameConflictsStrategy: string

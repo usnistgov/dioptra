@@ -6,24 +6,25 @@
     learning experiments.
   </p>
   <p>
+    To get started, consider importing the example entrypoints and plugins distributed with Dioptra <a href="#" @click="showImportDialog = true">here</a>.
+  </p>
+  <p>
     For reference and instructions, you can view our docs here: <br>
     <a href="https://pages.nist.gov/dioptra/" target="_blank">
       https://pages.nist.gov/dioptra/
     </a>
   </p>
 
-  <br />
-  <div :class="`flex flex-center q-mt-xl ${isMobile ? '' : 'q-pt-xl' } `">
-	  <ImportResourcesForm />
-  </div>
-
+  <ImportResourcesDialog v-model="showImportDialog" />
 </template>
 
 <script setup>
   import { useQuasar } from 'quasar'
   import { computed } from 'vue'
-  import ImportResourcesForm from '../components/ImportResourcesForm.vue';
   const $q = useQuasar()
+
+  import ImportResourcesDialog from '../dialogs/ImportResourcesDialog.vue';
+  const showImportDialog = defineModel()
 
   const darkMode = computed(() => {
     return $q.dark.mode

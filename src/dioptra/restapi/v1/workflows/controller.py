@@ -162,7 +162,7 @@ class ResourceImport(Resource):
             source_type=parsed_form["source_type"],
             git_url=parsed_form.get("git_url", None),
             archive_file=request.files.get("archiveFile", None),
-            files=request.files.getlist("files", None),
+            files=request.files.getlist("files") + request.files.getlist("files[]"),
             config_path=parsed_form["config_path"],
             resolve_name_conflicts_strategy=parsed_form[
                 "resolve_name_conflicts_strategy"
