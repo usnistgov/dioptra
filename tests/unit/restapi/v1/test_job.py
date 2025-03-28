@@ -31,7 +31,7 @@ from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
 
 from ..lib import asserts, helpers, mock_mlflow, mock_rq, routines
-
+from ..test_utils import match_normalized_json
 # -- Assertions ------------------------------------------------------------------------
 
 
@@ -169,7 +169,9 @@ def assert_retrieving_jobs_works(
         query_string["page_length"] = paging_info["page_length"]
 
     response = dioptra_client.jobs.get(**query_string)
-    assert response.status_code == HTTPStatus.OK and response.json()["data"] == expected
+    # A sort order was not given in the request, so we must not assume a
+    # particular order in the response.
+    assert response.status_code == HTTPStatus.OK and match_normalized_json(response, expected)
 
 
 def assert_sorting_job_works(
@@ -192,6 +194,9 @@ def assert_sorting_job_works(
         AssertionError: If the response status code is not 200 or if the API response
             does not match the expected response.
     """
+
+    assert sort_by is not None, "Sort criteria not specified."
+
     query_string: dict[str, Any] = {}
 
     if descending is not None:
@@ -214,6 +219,49 @@ def assert_sorting_job_works(
     response_data = response.json()
     job_ids = [job["id"] for job in response_data["data"]]
     assert response.status_code == HTTPStatus.OK and job_ids == expected
+
+
+def assert_sorting_job_by_none_works(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    expected: set[str],
+    sort_by: str | None,
+    descending: bool | None,
+    group_id: int | None = None,
+    search: str | None = None,
+    paging_info: dict[str, Any] | None = None,
+) -> None:
+    """Assert that jobs can be retrieved properly when sorting isn't specified.
+
+    Args:
+        client: The Flask test client.
+        expected: The expected job ids.
+
+    Raises:
+        AssertionError: If the response status code is not 200 or if the API response
+            does not match the expected response.
+    """
+
+    assert sort_by is None, "Sort criteria is specified."
+
+    query_string: dict[str, Any] = {}
+
+    if descending is not None:
+        query_string["descending"] = descending
+
+    if group_id is not None:
+        query_string["group_id"] = group_id
+
+    if search is not None:
+        query_string["search"] = search
+
+    if paging_info is not None:
+        query_string["index"] = paging_info["index"]
+        query_string["page_length"] = paging_info["page_length"]
+
+    response = dioptra_client.jobs.get(**query_string)
+    response_data = response.json()
+    job_ids = [job["id"] for job in response_data["data"]]
+    assert response.status_code == HTTPStatus.OK and set(job_ids) == expected
 
 
 def assert_job_is_not_found(
@@ -436,6 +484,115 @@ def test_create_job(
     )
 
 
+def test_create_job_with_empty_values(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+    registered_experiments: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+    monkeypatch: MonkeyPatch,
+) -> None:
+    """Test that new job can be create with EMPTY values using API
+    Args:
+        dioptra_client (DioptraClient[DioptraResponseProtocol]): _description_
+        auth_account (dict[str, Any]): _description_
+        registered_queues (dict[str, Any]): _description_
+        registered_experiments (dict[str, Any]): _description_
+        registered_entrypoints (dict[str, Any]): _description_
+        monkeypatch (MonkeyPatch): _description_
+    """
+
+    """ Test that jobs (!!! with no-params !!!) can be correctly registered and retrieved using the API.
+    General plan:
+    Given an authenticated user, registered queues, registered experiments, and
+    registered entrypoints, this test validates the following sequence of actions:
+    - The user registers an entry point with no queues, no plugins, and no params.
+    - The user registers a job.
+    - The response is valid and matches the expected values given the registration
+      request.
+    - The user is able to retrieve information about the job using the job id.
+    """
+    # Begin with registering the entry-point with empty parameters, queues, and plugins
+    import dioptra.restapi.v1.shared.rq_service as rq_service
+
+    monkeypatch.setattr(rq_service, "RQQueue", mock_rq.MockRQQueue)
+
+    entrypoint_name = "entrypoint_no_params"
+    description = "The new job."
+    queue_id = registered_queues["queue1"]["id"]
+    experiment_id = registered_experiments["experiment1"]["id"]
+    entrypoint_id = registered_entrypoints[entrypoint_name]["id"]
+    values = {}
+    timeout = "24h"
+
+    """
+    Register a Job
+    ==============
+    actions.py::register_job(*args: JobSchema)):
+      JobSchema:
+        From base resource schema:
+          - group_id: The ID of the group the job belongs to.
+        From job schema:
+          - description: The description of the job
+          - queue_id: The ID of queue the job is to run on.
+          - experiment_id: The ID of the experiment the job belongs to.
+          - entrypoint_id: The ID of the entrypoint that the job calls.
+          - values: The values the job supplies to the entrypoint
+          - timeout: The timeout value for the job to terminate if not completed by.
+    """
+    job_response = dioptra_client.experiments.jobs.create(
+        experiment_id=experiment_id,
+        entrypoint_id=entrypoint_id,
+        queue_id=queue_id,
+        values=values,
+        timeout=timeout,
+        description=description,
+    ).json()
+
+    """
+    Validate the response matches the expected contents
+    ===================================================
+    response: The response from actions.py::register_job()
+    expected_contents: The raw data passed to actions.py::register_job() as *args
+      *Note: group_id is given as an arg for registration in the service layer
+    """
+    (queue_snapshot_id, queue_id) = (
+        registered_queues["queue1"]["snapshot"],
+        registered_queues["queue1"]["id"],
+    )
+
+    (experiment_snapshot_id, experiment_id, group_id) = (
+        registered_experiments["experiment1"]["snapshot"],
+        registered_experiments["experiment1"]["id"],
+        registered_experiments["experiment1"]["group"]["id"],
+    )
+
+    (entrypoint_snapshot_id, entrypoint_id) = (
+        registered_entrypoints[entrypoint_name]["snapshot"],
+        registered_entrypoints[entrypoint_name]["id"],
+    )
+
+    assert_job_response_contents_matches_expectations(
+        response=job_response,
+        expected_contents={
+            "description": description,
+            "timeout": timeout,
+            "values": values,
+            "user_id": auth_account["id"],
+            "group_id": group_id,
+            "queue_id": queue_id,
+            "experiment_id": experiment_id,
+            "entrypoint_id": entrypoint_id,
+            "queue_snapshot_id": queue_snapshot_id,
+            "experiment_snapshot_id": experiment_snapshot_id,
+            "entrypoint_snapshot_id": entrypoint_snapshot_id,
+        },
+    )
+    assert_retrieving_job_by_id_works(
+        dioptra_client, job_id=job_response["id"], expected=job_response
+    )
+
+
 def test_mlflowrun(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
@@ -604,7 +761,6 @@ def test_job_get_all(
 @pytest.mark.parametrize(
     "sortBy, descending , expected",
     [
-        (None, None, ["job1", "job2", "job3"]),
         ("description", True, ["job2", "job1", "job3"]),
         ("description", False, ["job3", "job1", "job2"]),
         ("createdOn", True, ["job3", "job2", "job1"]),
@@ -636,6 +792,44 @@ def test_job_sort(
 
     expected_ids = [registered_jobs[expected_name]["id"] for expected_name in expected]
     assert_sorting_job_works(
+        dioptra_client, sort_by=sortBy, descending=descending, expected=expected_ids
+    )
+
+
+@pytest.mark.parametrize(
+    "sortBy, descending , expected",
+    [
+        (None, None, ["job1", "job2", "job3"]),
+        (None, None, ["job3", "job2", "job1"]),
+    ],
+)
+def test_job_sort_by_none(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_jobs: dict[str, Any],
+    sortBy: str,
+    descending: bool,
+    expected: list[str],
+) -> None:
+    """Test that jobs can be retrieved when sorting is unspecified.
+
+    Given an authenticated user and registered jobs, this test validates the following
+    sequence of actions:
+
+    - A user registers three jobs descriptions:
+      "The first job.",
+      "The second job.",
+      "Not retrieved.".
+    - The user is able to retrieve a list of all registered jobs.
+    - The returned list of jobs matches regardless of the order in the parametrize
+        lists above.
+    """
+
+    expected_ids = set(
+        [registered_jobs[expected_name]["id"] for expected_name in expected]
+    )
+    assert_sorting_job_by_none_works(
         dioptra_client, sort_by=sortBy, descending=descending, expected=expected_ids
     )
 

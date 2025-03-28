@@ -202,6 +202,7 @@ class JobSchema(JobBaseSchema):  # type: ignore
                 "A dictionary of keyword arguments to pass to the Job's Entrypoint."
             ),
         ),
+        load_default=dict,
     )
     timeout = fields.String(
         attribute="timeout",
