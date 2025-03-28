@@ -78,6 +78,15 @@
           />
         </template>
       </KeyValueTable>
+      <div style="padding: 10px;">
+        <q-btn
+            color="light-blue" 
+            icon="update" 
+            label="Re-Run Job" 
+            class="q-mr-lg" 
+            @click="reRunJob"
+          />
+      </div>
     </div>
     <div class="col">
       <h2>Parameters</h2>
@@ -227,6 +236,12 @@ async function deleteJob() {
   }
 }
 
+async function reRunJob() {
+    router.push({
+        path: '/jobs/new',
+        state: { oldJobId: route.params.id, oldExperimentId: job.value.experiment.id } 
+      })
+  }
 
 </script>
 
