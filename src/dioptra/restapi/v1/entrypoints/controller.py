@@ -21,7 +21,7 @@ import uuid
 from typing import cast
 
 import structlog
-from flask import request
+from flask import request, send_file
 from flask_accepts import accepts, responds
 from flask_login import login_required
 from flask_restx import Namespace, Resource
@@ -31,8 +31,13 @@ from structlog.stdlib import BoundLogger
 from dioptra.restapi.db import models
 from dioptra.restapi.routes import V1_ENTRYPOINTS_ROUTE
 from dioptra.restapi.v1 import utils
+from dioptra.restapi.v1.filetypes import FileTypes, entrypoint_pluginfiles_to_bundle
 from dioptra.restapi.v1.queues.schema import QueueRefSchema
-from dioptra.restapi.v1.schemas import IdListSchema, IdStatusResponseSchema
+from dioptra.restapi.v1.schemas import (
+    FileDownloadParametersSchema,
+    IdListSchema,
+    IdStatusResponseSchema,
+)
 from dioptra.restapi.v1.shared.drafts.controller import (
     generate_resource_drafts_endpoint,
     generate_resource_drafts_id_endpoint,
@@ -95,7 +100,7 @@ class EntrypointEndpoint(Resource):
             request_id=str(uuid.uuid4()), resource="Entrypoint", request_type="GET"
         )
 
-        parsed_query_params = request.parsed_query_params  # noqa: F841
+        parsed_query_params = request.parsed_query_params  # type: ignore # noqa: F841
         group_id = parsed_query_params["group_id"]
         search_string = parsed_query_params["search"]
         page_index = parsed_query_params["index"]
@@ -134,7 +139,7 @@ class EntrypointEndpoint(Resource):
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="Entrypoint", request_type="POST"
         )
-        parsed_obj = request.parsed_obj  # noqa: F841
+        parsed_obj = request.parsed_obj  # type: ignore # noqa: F841
         entrypoint = self._entrypoint_service.create(
             name=parsed_obj["name"],
             description=parsed_obj["description"],
@@ -261,6 +266,54 @@ class EntrypointIdPluginsEndpoint(Resource):
             id, plugin_ids=parsed_obj["plugin_ids"], log=log
         )
         return [utils.build_entrypoint_plugin(plugin) for plugin in plugins]
+
+
+@api.route("/<int:id>/snapshots/<int:snapshotId>/plugins/bundle")
+@api.param("id", "ID for the Entrypoint resource.")
+@api.param("snapshotId", "Snapshot ID for the Entrypoint resource.")
+class EntryPointSnapshotPluginBundleEndpoint(Resource):
+    @inject
+    def __init__(
+        self, plugin_id_file_service: EntrypointIdPluginsService, *args, **kwargs
+    ) -> None:
+        """Initialize the plugin file resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            plugin_service: A PluginService object.
+        """
+        self._plugin_id_file_service = plugin_id_file_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    @accepts(query_params_schema=FileDownloadParametersSchema, api=api)
+    def get(self, id: int, snapshotId: int):
+        """Returns a file bundle containing all of the PluginFile resources for an
+        EntryPoint Snapshot resource.
+        """
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="EntrypointSnapshotPluginsBundle",
+            request_type="GET",
+            id=id,
+        )
+
+        parsed_query_params = request.parsed_query_params  # type: ignore # noqa: F841
+
+        file_type = cast(FileTypes, parsed_query_params["file_type"])
+
+        plugin_files = self._plugin_id_file_service.get_plugin_files(
+            resource_snapshot_id=snapshotId,
+            log=log,
+        )
+        file = file_type.package(entrypoint_pluginfiles_to_bundle(plugin_files))
+        return send_file(
+            path_or_file=file,
+            as_attachment=True,
+            mimetype=file_type.mimetype,
+            download_name=f"plugins_bundle{file_type.suffix}",
+        )
 
 
 @api.route("/<int:id>/plugins/<int:pluginId>")

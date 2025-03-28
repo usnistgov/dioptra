@@ -21,6 +21,13 @@
                 "$ref": "#/$defs/graph_step"
             },
             "minProperties": 1
+        },
+        "artifacts": {
+            "type": "object",
+            "additionalProperties": {
+                "$ref": "#/$defs/artifact"
+            },
+            "minProperties": 0
         }
     },
     "required": ["tasks", "graph"],
@@ -389,5 +396,43 @@
                 }
             ]
         }
+    },
+    "artifact": {
+        "title": "Artifact",
+        "type": "object",
+        "properties": {
+            "contents": {
+                "title": "The input source for an artifact",
+                "type": "string"
+            },
+            "handler": {
+                "$ref": "#/$defs/artifact_handler"
+            },
+            "type": {
+                "$comment": "The file type information for the artifact.",
+                "type": "string",
+                "enum": ["jpg", "model", "pdf", "yaml", "md", "html", "json", "other"]
+            }
+        },
+        "required": ["contents", "handler", "type"],
+        "additionalProperties": false
+    },
+    "artifact_handler": {
+        "title": "The logic for handling the serialization and deserialization of an artifact",
+        "type": "object",
+        "properties": {
+            "name": {
+                "title": "The name of the artifact handler",
+                "type": "string"
+            },
+            "args": {
+                "$comment": "Place holder for arguments for the handlers. Built-up by the code.",
+                "type": "object",
+                "properties": null,
+                "additionalProperties": false
+            }
+        },
+        "required": ["name"],
+        "additionalProperties": false
     }
 }
