@@ -270,6 +270,8 @@
     return (/^\d+[hms]$/.test(val)) || "Value must be an integer followed by 'h', 'm', or 's'";
   }
 
+  getJob()
+
   const job = ref({
     description: '',
     timeout: '24h',
@@ -389,6 +391,23 @@
     }
   }
 
+  async function getJob(){
+    try {
+      const res = await api.getItem('jobs', history.state.oldJobId)
+      console.log('jobs res = ', res)
+      // Set all of job.value except for experiment since it is retrieved
+      // in onMounted()
+      job.value = res.data
+      const {experiment, ...copy} = res.data
+      job.value = copy
+
+    } catch(err) {
+      console.log('err = ', err)
+      notify.error(err.response.data.message)
+    } 
+  }
+
+
   const showDeleteDialog = ref(false)
   const selectedParam = ref({})
   const selectedParamIndex = ref('')
@@ -437,6 +456,7 @@
 
   const allowableQueueIds = computed(() => {
     if(!job.value.entrypoint) return []
+    if(!job.value.experiment.queues) return []
     return job.value.entrypoint.queues.map((q) => q.id)
   })
 
@@ -468,7 +488,8 @@
 
   const allowableEntrypointIds = computed(() => {
     if(!job.value.experiment) return []
-    return job.value.experiment.entrypoints.map((ep) => ep.id)
+    if(!job.value.experiment.entrypoint) return []
+    return job.value.experiment?.entrypoints.map((ep) => ep.id)
   }) 
 
   watch(() => allowableEntrypointIds.value, (newVal) => {
@@ -508,6 +529,7 @@
   }
 
   async function getExperiment(id) {
+    console.log('id = ' + id)
     if(!id) return
     try {
       const res = await api.getItem('experiments', id)
@@ -530,7 +552,11 @@
   }
 
   onMounted(async () => {
-    if(Object.hasOwn(route.params, 'id')) {
+    if(history.state.oldJobId && history.state.oldExperimentId) {
+      console.log('history.state.oldExperimentId ' + history.state.oldExperimentId)
+      await getExperiment(history.state.oldExperimentId)
+    }
+    else if(Object.hasOwn(route.params, 'id')) {
       await getExperiment(route.params.id)
     } else {
       await getExperiments()
