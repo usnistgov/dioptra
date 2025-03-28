@@ -155,6 +155,10 @@ class EntrypointMutableFieldsSchema(Schema):
         metadata=dict(description="Task graph of the Entrypoint resource."),
         required=True,
     )
+    artifacts = fields.String(
+        attribute="artifacts",
+        metadata=dict(description="Artifact definitions of the Entrypoint resource."),
+    )
     parameters = fields.Nested(
         EntrypointParameterSchema,
         attribute="parameters",
@@ -183,10 +187,21 @@ class EntrypointPluginMutableFieldsSchema(Schema):
     )
 
 
+class EntrypointArtifactHandlerMutableFieldsSchema(Schema):
+    artifactHandlerIds = fields.List(
+        fields.Integer(),
+        attribute="artifact_handler_ids",
+        data_key="artifact_handlers",
+        metadata=dict(description="List of artifact_handler files for the entrypoint."),
+        load_only=True,
+    )
+
+
 EntrypointBaseSchema = generate_base_resource_schema("Entrypoint", snapshot=True)
 
 
 class EntrypointSchema(
+    EntrypointArtifactHandlerMutableFieldsSchema,
     EntrypointPluginMutableFieldsSchema,
     EntrypointMutableFieldsSchema,
     EntrypointBaseSchema,  # type: ignore
@@ -200,6 +215,13 @@ class EntrypointSchema(
         metadata=dict(description="List of plugins for the entrypoint."),
         dump_only=True,
     )
+    artifact_handlers = fields.Nested(
+        EntrypointPluginSchema,
+        attribute="artifact_handlers",
+        many=True,
+        metadata=dict(description="List of artifact handlers for the entrypoint."),
+        dump_only=True,
+    )
     queues = fields.Nested(
         QueueRefSchema,
         attribute="queues",
@@ -210,6 +232,7 @@ class EntrypointSchema(
 
 
 class EntrypointDraftSchema(
+    EntrypointArtifactHandlerMutableFieldsSchema,
     EntrypointPluginMutableFieldsSchema,
     EntrypointMutableFieldsSchema,
     EntrypointBaseSchema,  # type: ignore
@@ -222,6 +245,14 @@ class EntrypointDraftSchema(
         data_key="plugins",
         metadata=dict(description="List of plugin files for the entrypoint."),
     )
+
+    artifactHandlerIds = fields.List(
+        fields.Integer(),
+        attribute="artifact_handler_ids",
+        data_key="artifact_handlers",
+        metadata=dict(description="List of artifact handler files for the entrypoint."),
+    )
+
     queueIds = fields.List(
         fields.Integer(),
         attribute="queue_ids",
