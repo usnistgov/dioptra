@@ -3,7 +3,7 @@ import axios from 'axios'
 export const API_VERSION = 'v1'
 
 axios.interceptors.request.use(function (config) {
-  if (config.url) {
+  if (config.url && !config.url.includes(`/api/${API_VERSION}/`)) {
     config.url = config.url.replace('/api/', `/api/${API_VERSION}/`)
   }
   return config
