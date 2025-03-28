@@ -22,6 +22,13 @@ from marshmallow import Schema
 
 from dioptra.restapi.db import models
 from dioptra.restapi.routes import V1_ROOT
+from dioptra.restapi.v1.artifacts.schema import ArtifactSchema
+from dioptra.restapi.v1.entrypoints.schema import EntrypointSchema
+from dioptra.restapi.v1.experiments.schema import ExperimentSchema
+from dioptra.restapi.v1.models.schema import ModelSchema
+from dioptra.restapi.v1.plugin_parameter_types.schema import PluginParameterTypeSchema
+from dioptra.restapi.v1.plugins.schema import PluginFileSchema, PluginSchema
+from dioptra.restapi.v1.queues.schema import QueueSchema
 
 ARTIFACTS: Final[str] = "artifacts"
 ENTRYPOINTS: Final[str] = "entrypoints"
@@ -531,6 +538,40 @@ def build_group(group: models.Group) -> dict[str, Any]:
     }
 
 
+def build_resource(resource_snapshot: models.ResourceSnapshot) -> dict[str, Any]:
+    """Build a Resource response dictionary.
+    Args:
+        resource_snapshot: The resource snapshot ORM object to convert into a Resource
+            response dictionary.
+    Returns:
+        The Resource response dictionary.
+    """
+
+    build_fn = {
+        "artifact": build_artifact,
+        "entry_point": build_entrypoint,
+        "experiment": build_experiment,
+        "ml_model": build_model,
+        "plugin": build_plugin,
+        "plugin_file": build_plugin_file,
+        "plugin_task_parameter_type": build_plugin_parameter_type,
+        "queue": build_queue,
+    }.get(resource_snapshot.resource_type)
+
+    schema = {
+        "artifact": ArtifactSchema(),
+        "entry_point": EntrypointSchema(),
+        "experiment": ExperimentSchema(),
+        "ml_model": ModelSchema(),
+        "plugin": PluginSchema(),
+        "plugin_file": PluginFileSchema(),
+        "plugin_task_parameter_type": PluginParameterTypeSchema(),
+        "queue": QueueSchema(),
+    }.get(resource_snapshot.resource_type)
+
+    return schema.dump(build_fn({resource_snapshot.resource_type: resource_snapshot}))  # type: ignore
+
+
 def build_experiment(experiment_dict: ExperimentDict) -> dict[str, Any]:
     """Build an Experiment response dictionary.
 
@@ -944,7 +985,7 @@ def build_plugin_parameter_type(
         The Plugin Parameter Type response dictionary.
     """
     plugin_parameter_type = plugin_parameter_type_dict["plugin_task_parameter_type"]
-    has_draft = plugin_parameter_type_dict["has_draft"]
+    has_draft = plugin_parameter_type_dict.get("has_draft", None)
 
     data = {
         "id": plugin_parameter_type.resource_id,

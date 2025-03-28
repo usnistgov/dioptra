@@ -785,7 +785,9 @@ def test_manage_existing_plugin_parameter_type_draft(
 
     # Run routine: existing resource drafts tests
     routines.run_existing_resource_drafts_tests(
+        dioptra_client.plugin_parameter_types,
         dioptra_client.plugin_parameter_types.modify_resource_drafts,
+        dioptra_client.workflows,
         plugin_param_type["id"],
         draft=draft,
         draft_mod=draft_mod,
@@ -844,7 +846,9 @@ def test_manage_new_plugin_parameter_type_drafts(
 
     # Run routine: new resource drafts tests
     routines.run_new_resource_drafts_tests(
+        dioptra_client.plugin_parameter_types,
         dioptra_client.plugin_parameter_types.new_resource_drafts,
+        dioptra_client.workflows,
         drafts=drafts,
         draft1_mod=draft1_mod,
         draft1_expected=draft1_expected,
