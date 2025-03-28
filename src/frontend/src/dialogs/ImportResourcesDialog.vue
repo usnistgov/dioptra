@@ -32,8 +32,8 @@
             v-model="archiveFile"
             outlined
             v-if="sourceType === 'upload_archive'"
-            accept='.tar,.gz,.zip'
-            label="Archive File Upload (.tar/.tar.gz/.zip)"
+            accept='.tar,.gz'
+            label="Archive File Upload (.tar/.tar.gz)"
           />
           <q-file
             v-model="files"
