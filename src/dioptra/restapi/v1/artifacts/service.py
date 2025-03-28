@@ -124,10 +124,7 @@ class ArtifactService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        job_dict = cast(
-            utils.JobDict,
-            self._job_id_service.get(job_id, error_if_not_found=True, log=log),
-        )
+        job_dict = self._job_id_service.get(job_id, log=log)
         job = job_dict["job"]
         job_artifacts = job_dict["artifacts"]
         mlflow_run_id = str(

@@ -16,11 +16,14 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 import collections
 import itertools
+import json
 import logging
 from collections.abc import Iterable, Mapping, MutableMapping, Sequence
+from pathlib import Path
 from typing import Any, Union
 
 import dioptra.pyplugs
+from dioptra.handlers.artifact import ArtifactHandlerInterface
 from dioptra.sdk.exceptions.task_engine import (
     IllegalOutputReferenceError,
     IllegalPluginNameError,
@@ -46,59 +49,100 @@ def _get_logger() -> logging.Logger:
     return logging.getLogger(__name__)
 
 
-def _resolve_reference(
-    reference: str,
-    global_parameters: Mapping[str, Any],
-    step_outputs: Mapping[str, Mapping[str, Any]],
-) -> Any:
-    """
-    Resolve a reference to a task output or global parameter.
+class EngineContext:
+    def __init__(
+        self,
+        experiment_desc: Mapping[str, Any],
+        global_parameters: MutableMapping[str, Any],
+    ):
+        log = _get_logger()
 
-    Args:
-        reference: The reference to resolve, without the "$" prefix
-        global_parameters: The global parameters in use for this run, as a
-            mapping from parameter name to value
-        step_outputs: The step outputs we have thus far.  This is a nested
-            mapping: step name => output name => output value.
+        self.global_parameters = global_parameters
+        self.global_parameter_spec = experiment_desc.get("parameters", {})
 
-    Returns:
-        The referenced value
-    """
+        # TODO: need to a dictionary with key of handler_name,
+        # and value is a dict with class and plugin-id keys and values
+        self.handlers = {}
 
-    if "." in reference:
-        # Must be an <step>.<output> formatted reference
-        step_name, output_name = reference.split(".", 1)
+        _resolve_global_parameters(self.global_parameter_spec, self.global_parameters)
 
-        step_output = step_outputs.get(step_name)
-        if not step_output:
-            raise StepNotFoundError(step_name)
+        if log.isEnabledFor(logging.DEBUG):
+            props_values = "\n  ".join(
+                param_name + ": " + str(param_value)
+                for param_name, param_value in global_parameters.items()
+            )
+            log.debug("Global parameters:\n  %s", props_values)
 
-        if output_name not in step_output:
-            raise OutputNotFoundError(step_name, output_name)
+        self.step_outputs: MutableMapping[str, MutableMapping[str, Any]] = (
+            collections.defaultdict(dict)
+        )
 
-        value = step_output[output_name]
+    def register_outputs(
+        self,
+        step_name: str,
+        output_defs: Union[Mapping[str, str], Sequence[Mapping[str, str]]],
+        output: Any,
+    ):
+        log = _get_logger()
 
-    else:
-        # A bare name may refer to either a global parameter or the only
-        # output of a step.  Let's assume prior validation ensured the same
-        # name does not occur in both places.
-        if reference in global_parameters:
-            value = global_parameters[reference]
-        elif reference in step_outputs:
-            outputs = step_outputs[reference]
-            if len(outputs) != 1:
-                raise IllegalOutputReferenceError(reference)
-            value = next(iter(outputs.values()))
+        _update_output_map(self.step_outputs, step_name, output_defs, output)
+        log.debug("Output(s): %s", str(self.step_outputs[step_name]))
+
+    def resolve_reference(self, reference: str) -> Any:
+        """
+        Resolve a reference to a task output or global parameter.
+
+        Args:
+            reference: The reference to resolve, without the "$" prefix
+            global_parameters: The global parameters in use for this run, as a
+                mapping from parameter name to value
+            step_outputs: The step outputs we have thus far.  This is a nested
+                mapping: step name => output name => output value.
+
+        Returns:
+            The referenced value
+        """
+
+        if "." in reference:
+            # Must be an <step>.<output> formatted reference
+            step_name, output_name = reference.split(".", 1)
+
+            step_output = self.step_outputs.get(step_name)
+            if not step_output:
+                raise StepNotFoundError(step_name)
+
+            if output_name not in step_output:
+                raise OutputNotFoundError(step_name, output_name)
+
+            value = step_output[output_name]
+
         else:
-            raise UnresolvableReferenceError(reference)
+            # A bare name may refer to either a global parameter or the only
+            # output of a step.  Let's assume prior validation ensured the same
+            # name does not occur in both places.
+            if reference in self.global_parameters:
+                value = self.global_parameters[reference]
+            elif reference in self.step_outputs:
+                outputs = self.step_outputs[reference]
+                if len(outputs) != 1:
+                    raise IllegalOutputReferenceError(reference)
+                value = next(iter(outputs.values()))
+            else:
+                raise UnresolvableReferenceError(reference)
 
-    return value
+        return value
+
+    def find_handler(self, handle_name: str) -> tuple[ArtifactHandlerInterface, int]:
+        handler = self.handlers[handle_name]
+        # names should have already been vetted
+        assert handler is not None
+
+        return (handler["class"], handler["id"])
 
 
 def _resolve_task_parameter_value(
     arg_spec: Any,
-    global_parameters: Mapping[str, Any],
-    step_outputs: Mapping[str, Mapping[str, Any]],
+    context: EngineContext,
 ) -> Any:
     """
     Resolve a specification for one argument of a task invocation, to the
@@ -117,9 +161,7 @@ def _resolve_task_parameter_value(
 
     if isinstance(arg_spec, str):
         if util.is_reference(arg_spec):
-            arg_value = _resolve_reference(
-                arg_spec[1:], global_parameters, step_outputs
-            )
+            arg_value = context.resolve_reference(arg_spec[1:])
 
         elif arg_spec.startswith("$$"):
             # "escaped" dollar sign: replace only the initial "$$" with "$"
@@ -130,14 +172,13 @@ def _resolve_task_parameter_value(
 
     elif isinstance(arg_spec, dict):
         arg_value = {
-            key: _resolve_task_parameter_value(value, global_parameters, step_outputs)
+            key: _resolve_task_parameter_value(value, context)
             for key, value in arg_spec.items()
         }
 
     elif isinstance(arg_spec, list):
         arg_value = [
-            _resolve_task_parameter_value(sub_val, global_parameters, step_outputs)
-            for sub_val in arg_spec
+            _resolve_task_parameter_value(sub_val, context) for sub_val in arg_spec
         ]
 
     else:
@@ -148,8 +189,7 @@ def _resolve_task_parameter_value(
 
 def _positional_specs_to_args(
     arg_specs: Iterable[Any],
-    global_parameters: Mapping[str, Any],
-    step_outputs: Mapping[str, Mapping[str, Any]],
+    context: EngineContext,
 ) -> list[Any]:
     """
     Resolve a positional parameter style invocation specification to a list
@@ -167,8 +207,7 @@ def _positional_specs_to_args(
     """
 
     arg_values = [
-        _resolve_task_parameter_value(arg_spec, global_parameters, step_outputs)
-        for arg_spec in arg_specs
+        _resolve_task_parameter_value(arg_spec, context) for arg_spec in arg_specs
     ]
 
     return arg_values
@@ -176,8 +215,7 @@ def _positional_specs_to_args(
 
 def _kwarg_specs_to_kwargs(
     kwarg_specs: Mapping[str, Any],
-    global_parameters: Mapping[str, Any],
-    step_outputs: Mapping[str, Mapping[str, Any]],
+    context: EngineContext,
 ) -> dict[str, Any]:
     """
     Resolve a keyword arg style invocation specification to a mapping of actual
@@ -195,9 +233,7 @@ def _kwarg_specs_to_kwargs(
         task invocation
     """
     kwarg_values = {
-        kwarg_name: _resolve_task_parameter_value(
-            kwarg_value, global_parameters, step_outputs
-        )
+        kwarg_name: _resolve_task_parameter_value(kwarg_value, context)
         for kwarg_name, kwarg_value in kwarg_specs.items()
     }
 
@@ -206,8 +242,7 @@ def _kwarg_specs_to_kwargs(
 
 def _get_invocation_args(
     step: Mapping[str, Any],
-    global_parameters: Mapping[str, Any],
-    step_outputs: Mapping[str, Mapping[str, Any]],
+    context: EngineContext,
 ) -> tuple[list[Any], dict[str, Any]]:
     """
     Resolve a task invocation specification to all of the positional and
@@ -237,11 +272,9 @@ def _get_invocation_args(
 
     # Assume for now that validation has completed successfully, so we always
     # have a correct step definition with arg specs?
-    arg_values = _positional_specs_to_args(
-        pos_arg_specs, global_parameters, step_outputs
-    )
+    arg_values = _positional_specs_to_args(pos_arg_specs, context)
 
-    kwarg_values = _kwarg_specs_to_kwargs(kwarg_specs, global_parameters, step_outputs)
+    kwarg_values = _kwarg_specs_to_kwargs(kwarg_specs, context)
 
     return arg_values, kwarg_values
 
@@ -397,10 +430,7 @@ def _get_pyplugs_coords(task_plugin: str) -> list[str]:
 
 
 def _run_step(
-    step: Mapping[str, Any],
-    task_plugin_id: str,
-    global_parameters: Mapping[str, Any],
-    step_outputs: Mapping[str, Mapping[str, Any]],
+    step: Mapping[str, Any], task_plugin_id: str, context: EngineContext
 ) -> Any:
     """
     Run one step of a task graph.
@@ -420,9 +450,7 @@ def _run_step(
 
     log = _get_logger()
 
-    arg_values, kwarg_values = _get_invocation_args(
-        step, global_parameters, step_outputs
-    )
+    arg_values, kwarg_values = _get_invocation_args(step, context)
 
     if arg_values:
         log.debug("args: %s", arg_values)
@@ -436,6 +464,35 @@ def _run_step(
     )
 
     return output
+
+
+def _handle_artifacts(
+    artifacts: dict,
+    context: EngineContext,
+) -> list[dict]:
+    result: list[dict] = []
+    for name, artifact in artifacts.items():
+        contents = _resolve_task_parameter_value(artifact["contents"], context)
+        handle_name = artifact["handler"]["name"]
+        # need to search through plug-ins to find the correct handler based on name
+        handler, id = context.find_handler(handle_name)
+        args = {}
+        if "args" in artifact["handler"]:
+            args = artifact["handler"]["args"]
+
+        path = handler.serialize(Path.cwd(), name, contents, **args)
+
+        result.append(
+            {
+                "name": name,
+                "handler_id": id,
+                "handle_name": handle_name,
+                "type": artifact["type"],
+                "path": path.as_posix(),
+            }
+        )
+
+    return result
 
 
 def run_experiment(
@@ -453,22 +510,12 @@ def run_experiment(
 
     log = _get_logger()
 
-    global_parameter_spec = experiment_desc.get("parameters", {})
     tasks = experiment_desc["tasks"]
     graph = experiment_desc["graph"]
+    # artifacts could be None
+    artifacts = experiment_desc.get("artifacts")
 
-    _resolve_global_parameters(global_parameter_spec, global_parameters)
-
-    if log.isEnabledFor(logging.DEBUG):
-        props_values = "\n  ".join(
-            param_name + ": " + str(param_value)
-            for param_name, param_value in global_parameters.items()
-        )
-        log.debug("Global parameters:\n  %s", props_values)
-
-    step_outputs: MutableMapping[str, MutableMapping[str, Any]] = (
-        collections.defaultdict(dict)
-    )
+    context = EngineContext(experiment_desc.get("parameters", {}), global_parameters)
 
     step_order = util.get_sorted_steps(graph)
 
@@ -490,12 +537,11 @@ def run_experiment(
 
             task_plugin_id = task_def["plugin"]
 
-            output = _run_step(step, task_plugin_id, global_parameters, step_outputs)
+            output = _run_step(step, task_plugin_id, context)
 
             output_defs = task_def.get("outputs")
             if output_defs:
-                _update_output_map(step_outputs, step_name, output_defs, output)
-                log.debug("Output(s): %s", str(step_outputs[step_name]))
+                context.register_outputs(step_name, output_defs, output)
 
             # else: should I warn if there was an output from the task but no
             # output_names were given?
@@ -505,3 +551,13 @@ def run_experiment(
             if not e.context_step_name:
                 e.context_step_name = step_name
             raise
+
+    # handle artifacts
+    if artifacts is not None:
+        artifacts_result = _handle_artifacts(artifacts, context)
+
+        # output the artifacts.json file
+        with open(".dioptra/artifacts.json", "w") as file:
+            json.dump(artifacts_result, file)
+
+        log.debug("Saved artifacts.json file")

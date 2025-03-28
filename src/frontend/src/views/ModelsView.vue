@@ -26,9 +26,8 @@
         class="q-mx-md q-mb-lg"
         :title="`${row.name} Versions`"
         :disableSelect="true"
-        :hideEditBtn="true"
-        :hideDeleteBtn="true"
         :hideCreateBtn="true"
+        :hideOpenBtn="true"
       >
         <template #body-cell-createdOn="props">
           <div>{{ formatDate(props.row.createdOn) }}</div>

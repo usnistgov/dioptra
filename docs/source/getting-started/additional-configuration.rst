@@ -22,7 +22,7 @@ Additional Configuration
 
 .. include:: /_glossary_note.rst
 
-In order to begin using Dioptra, a few additional setup steps are required - mainly creating user accounts and creating a queue. 
+In order to begin using Dioptra, a few additional setup steps are required - mainly creating user accounts and creating a queue. Optionally, it is also possible to import resources into a deployment to get started with pre-built examples.
 
 Register Accounts
 _________________
@@ -47,3 +47,19 @@ From the top menu, navigate to the Queues page and then click "Create". For the 
 
 .. image:: /images/frontend-guide/queue-create.png
    :width: 700
+
+
+Import Resources
+________________
+
+It is possible to import resources (including Plugins, Entrypoints, and PluginParameterTypes) into a Dioptra instance. This is a convenient way to get started with pre-built examples.
+
+A python script is provided in the deployment directory. To import the resources from the `extra` directory from the `main` branch of the Dioptra repository, simple run:
+
+.. code:: sh
+
+  python import_resources.py --git-url https://github.com/usnistgov/dioptra --git-branch main
+
+You will be prompted for the additional username and password you created in a previous step. The `--help` flag can be passed to display the help dialog.
+
+See the :ref:`Resource Import Reference <reference-resource-import-reference>` section for more details on importing resources.

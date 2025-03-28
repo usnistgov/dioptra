@@ -401,9 +401,8 @@ class JobIdService(object):
     def get(
         self,
         job_id: int,
-        error_if_not_found: bool = False,
         **kwargs,
-    ) -> utils.JobDict | None:
+    ) -> utils.JobDict:
         """Fetch a job by its unique id.
 
         Args:
@@ -433,10 +432,7 @@ class JobIdService(object):
         job = db.session.scalars(stmt).first()
 
         if job is None:
-            if error_if_not_found:
-                raise EntityDoesNotExistError(RESOURCE_TYPE, job_id=job_id)
-
-            return None
+            raise EntityDoesNotExistError(RESOURCE_TYPE, job_id=job_id)
 
         artifacts_stmt = (
             select(models.Artifact)
@@ -482,6 +478,84 @@ class JobIdService(object):
         log.debug("Job deleted", job_id=job_id)
 
         return {"status": "Success", "id": [job_id]}
+
+    def get_plugin_parameter_types(
+        self, job_id: int, **kwargs
+    ) -> list[models.PluginTaskParameterType]:
+        """Run a query to get the plugin task parameter types for the job.
+
+        Args:
+            job_id: The ID of the job to get the plugin task parameter types for.
+            logger: A structlog logger object to use for logging. A new logger will be
+                created if None.
+
+        Returns:
+            The plugin files for the Job's entrypoint.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
+
+        group_id_stmt = select(models.Resource.group_id).where(
+            models.Resource.resource_id == job_id
+        )
+        plugin_parameter_types_stmt = (
+            select(models.PluginTaskParameterType)
+            .join(models.Resource)
+            .where(
+                models.Resource.is_deleted == False,  # noqa: E712
+                models.Resource.group_id == group_id_stmt.scalar_subquery(),
+                models.Resource.latest_snapshot_id
+                == models.PluginTaskParameterType.resource_snapshot_id,
+            )
+        )
+        return list(db.session.scalars(plugin_parameter_types_stmt).all())
+
+    def get_parameter_values(
+        self, job_id: int, **kwargs
+    ) -> list[models.EntryPointParameterValue]:
+        """Run a query to get the parameter values for the job.
+
+        Args:
+            job_id: The ID of the job to get the parameter values for.
+            logger: A structlog logger object to use for logging. A new logger will be
+                created if None.
+
+        Returns:
+            The parameter values for the job.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
+
+        entry_point_param_values_stmt = select(models.EntryPointParameterValue).where(
+            models.EntryPointParameterValue.job_resource_id == job_id,
+        )
+        return list(db.session.scalars(entry_point_param_values_stmt).unique().all())
+
+    def get_entry_point_plugin_files(
+        self, job_id: int, **kwargs
+    ) -> list[models.EntryPointPluginFile]:
+        """Run a query to get the plugin files for an entrypoint.
+
+        Args:
+            job_id: The ID of the job to get the plugin files for.
+            logger: A structlog logger object to use for logging. A new logger will be
+                created if None.
+
+        Returns:
+            The plugin files for the entrypoint connected to the Job.
+        """
+        log = kwargs.get("log", LOGGER.new())  # noqa: F841
+
+        entry_point_resource_snapshot_id_stmt = (
+            select(models.EntryPoint.resource_snapshot_id)
+            .join(models.EntryPointJob)
+            .where(
+                models.EntryPointJob.job_resource_id == job_id,
+            )
+        )
+        entry_point_plugin_files_stmt = select(models.EntryPointPluginFile).where(
+            models.EntryPointPluginFile.entry_point_resource_snapshot_id
+            == entry_point_resource_snapshot_id_stmt.scalar_subquery(),
+        )
+        return list(db.session.scalars(entry_point_plugin_files_stmt).unique().all())
 
 
 class JobIdStatusService(object):
@@ -921,14 +995,7 @@ class ExperimentJobIdService(object):
                 RESOURCE_TYPE, job_id=job_id, experiment_id=experiment_id
             )
 
-        return cast(
-            utils.JobDict,
-            self._job_id_service.get(
-                job_id=job_id,
-                error_if_not_found=True,
-                log=log,
-            ),
-        )
+        return self._job_id_service.get(job_id=job_id, log=log)
 
     def delete(self, experiment_id: int, job_id: int, **kwargs) -> dict[str, Any]:
         """Delete a job.
@@ -1185,10 +1252,7 @@ class JobIdMlflowrunService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get job status by id", job_id=job_id)
 
-        job_dict = cast(
-            utils.JobDict,
-            self._job_id_service.get(job_id, error_if_not_found=True, log=log),
-        )
+        job_dict = self._job_id_service.get(job_id, log=log)
         job = job_dict["job"]
 
         mlflow_run_id = (
@@ -1219,10 +1283,7 @@ class JobIdMlflowrunService(object):
             "Set the job's mlflow run id", job_id=job_id, mlflow_run_id=mlflow_run_id
         )
 
-        job_dict = cast(
-            utils.JobDict,
-            self._job_id_service.get(job_id, error_if_not_found=True, log=log),
-        )
+        job_dict = self._job_id_service.get(job_id, log=log)
         job = job_dict["job"]
 
         if job.mlflow_run is not None:

@@ -20,6 +20,8 @@ import enum
 
 from marshmallow import Schema, fields
 
+from .filetypes import FileTypes
+
 
 def generate_base_resource_schema(name: str, snapshot: bool) -> type[Schema]:
     """Generates the base schema for a Resource."""
@@ -152,7 +154,7 @@ class BasePageSchema(Schema):
 
     index = fields.Integer(
         attribute="index",
-        metadata=dict(description="Index of the current page."),
+        metadata=dict(description="Starting index of the current page."),
     )
     isComplete = fields.Boolean(
         attribute="is_complete",
@@ -184,7 +186,7 @@ class PagingQueryParametersSchema(Schema):
 
     index = fields.Integer(
         attribute="index",
-        metadata=dict(description="Index of the current page."),
+        metadata=dict(description="Starting index of the current page."),
         load_default=0,
     )
     pageLength = fields.Integer(
@@ -302,4 +304,18 @@ class ResourceUrlsPageSchema(BasePageSchema):
         fields.String(),
         many=True,
         metadata=dict(description="List of Resource URLs in the current page."),
+    )
+
+
+class FileDownloadParametersSchema(Schema):
+    """The query parameters for download of a file."""
+
+    fileType = fields.Enum(
+        FileTypes,
+        attribute="file_type",
+        metadata=dict(
+            description="The type of file to download: tar_gz or zip.",
+        ),
+        by_value=True,
+        default=FileTypes.TAR_GZ.value,
     )

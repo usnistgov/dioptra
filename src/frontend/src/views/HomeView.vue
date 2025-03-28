@@ -16,12 +16,5 @@
 </template>
 
 <script setup>
-  import { useQuasar } from 'quasar'
-  import { computed } from 'vue'
-  const $q = useQuasar()
-
-  const darkMode = computed(() => {
-    return $q.dark.mode
-  })
 
 </script>

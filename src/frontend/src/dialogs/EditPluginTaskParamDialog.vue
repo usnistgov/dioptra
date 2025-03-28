@@ -9,46 +9,41 @@
         {{ props.editParam ? `Edit Param '${editParam.name}'` : 'Create Param' }}
       </label>
     </template>
-    <div class="row items-center">
-      <label class="col-3 q-mb-lg" id="paramName">
-        Param Name:
-      </label>
-      <q-input
-        v-model.trim="name"
-        :rules="[requiredRule]"
-        dense
-        outlined
-        class="col q-mr-sm"
-        aria-labelledby="paramName"
-        aria-required="true"
-      />
-    </div>
-    <div class="row items-center q-mb-xs">
-      <label class="col-3 q-mb-lg" id="paramType">
-        Param Type:
-      </label>
-        <q-select 
-          v-model="parameterType"
-          emit-value
-          option-value="id"
-          option-label="name"
-          map-options
-          label="Param Type"
-          :options="pluginParameterTypes"
-          class="col q-mr-sm"
-          outlined
-          dense
-          :rules="[requiredRule]"
-          aria-labelledby="paramType"
-          aria-required="true"
-        />
-    </div>
+    <q-input
+      v-model.trim="name"
+      :rules="[requiredRule]"
+      dense
+      outlined
+      id="name"
+      class="q-mb-xs"
+    >
+      <template #before>
+        <label for="name" class="field-label">Name:</label>
+      </template>
+    </q-input>
+    <q-select 
+      v-model="parameterType"
+      emit-value
+      option-value="id"
+      option-label="name"
+      map-options
+      :options="pluginParameterTypes"
+      outlined
+      dense
+      :rules="[requiredRule]"
+      id="type"
+    >
+      <template #before>
+        <label for="type" class="field-label">Type:</label>
+      </template>
+    </q-select>
     <div v-if="paramType === 'inputParams'" class="row items-center">
-      <label class="col-3" id="paramType">
+      <label class="col-3" for="required">
         Required:
       </label>
       <q-checkbox
         v-model="required"
+        id="required"
       />
     </div>
   </DialogComponent>

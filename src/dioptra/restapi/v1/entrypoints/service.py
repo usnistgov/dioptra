@@ -625,6 +625,29 @@ class EntrypointIdPluginsService(object):
 
         return _get_entrypoint_plugin_snapshots(entrypoint["entry_point"])
 
+    # TODO: can this function use a generalized return type?
+    def get_plugin_files(
+        self,
+        resource_snapshot_id: int,
+        **kwargs,
+    ) -> list[models.EntryPointPluginFile]:
+        """Run a query to get the plugin files for an entrypoint.
+
+        Args:
+            entrypoint_id: The Snapshot ID of the entrypoint to get the plugin files for.
+
+        Returns:
+            The plugin files for the entrypoint.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.debug("get plugin files", resource_snapshot_id=resource_snapshot_id)
+
+        entry_point_plugin_files_stmt = select(models.EntryPointPluginFile).where(
+            models.EntryPointPluginFile.entry_point_resource_snapshot_id
+            == resource_snapshot_id,
+        )
+        return list(db.session.scalars(entry_point_plugin_files_stmt).unique().all())
+
     def append(
         self,
         entrypoint_id: int,
