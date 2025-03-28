@@ -163,6 +163,7 @@ def test_exists(plugin_package):
     assert pyplugs.exists(plugin_package, "plugin_parts") is True
     assert pyplugs.exists(plugin_package, "no_plugins") is False
     assert pyplugs.exists(plugin_package, "non_existent") is False
+    assert pyplugs.exists(plugin_package, "plugin_class") is True
 
 
 def test_exists_on_non_existing_package():
@@ -175,6 +176,17 @@ def test_call_existing_plugin(plugin_package):
     """Test that calling a test-plugin works, and returns a string"""
     plugin_name = pyplugs.names(plugin_package)[0]
     return_value = pyplugs.call(plugin_package, plugin_name)
+    assert isinstance(return_value, str)
+
+
+def test_call_class_plugin(plugin_package):
+    """Test that calling a class test-plugin works, and returns a string"""
+    info = pyplugs.info(plugin_package, "plugin_class", "AnotherPluginClass")
+    plugin_class = info.func
+    return_value = plugin_class.a_class_method()
+    assert isinstance(return_value, str)
+
+    return_value = plugin_class.another_class_method()
     assert isinstance(return_value, str)
 
 

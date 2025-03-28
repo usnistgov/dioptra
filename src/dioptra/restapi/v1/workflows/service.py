@@ -57,10 +57,10 @@ from .lib import views
 from .lib.clone_git_repository import clone_git_repository
 from .lib.package_job_files import package_job_files
 from .schema import (
-    FileTypes,
     ResourceImportResolveNameConflictsStrategy,
     ResourceImportSourceTypes,
 )
+from ..filetypes import FileTypes
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 

@@ -15,7 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from pathlib import Path
-from typing import Any, Final, cast
+from typing import Any, Final, TextIO, cast
 
 import structlog
 import yaml
@@ -40,11 +40,10 @@ EXPLICIT_GLOBAL_TYPES: Final[set[str]] = {
     INTEGER_PARAM_TYPE,
     FLOAT_PARAM_TYPE,
 }
-YAML_FILE_ENCODING: Final[str] = "utf-8"
 YAML_EXPORT_SETTINGS: Final[dict[str, Any]] = {
     "indent": 2,
     "sort_keys": False,
-    "encoding": YAML_FILE_ENCODING,
+    "encoding": "utf-8",
 }
 
 
@@ -52,9 +51,9 @@ def export_task_engine_yaml(
     entrypoint: models.EntryPoint,
     plugin_plugin_files: list[models.PluginPluginFile],
     plugin_parameter_types: list[models.PluginTaskParameterType],
-    base_dir: Path,
+    output: TextIO,
     logger: BoundLogger | None = None,
-) -> Path:
+) -> None:
     """Export an entrypoint's task engine YAML file to a specified directory.
 
     Args:
@@ -62,25 +61,17 @@ def export_task_engine_yaml(
         plugin_plugin_files: The entrypoint's plugin files.
         plugin_parameter_types: The latest snapshots of the plugin parameter types
             accessible to the entrypoint.
-        base_dir: The directory to export the task engine YAML file to.
+        output: The TextIO Stream to export the task engine YAML file to.
         logger: A structlog logger object to use for logging. A new logger will be
             created if None.
-
-    Returns:
-        The path to the exported task engine YAML file.
     """
     log = logger or LOGGER.new()  # noqa: F841
-    task_yaml_path = Path(base_dir, entrypoint.name).with_suffix(".yml")
     task_engine_dict = build_task_engine_dict(
         entrypoint=entrypoint,
         plugin_plugin_files=plugin_plugin_files,
         plugin_parameter_types=plugin_parameter_types,
     )
-
-    with task_yaml_path.open("wt", encoding=YAML_FILE_ENCODING) as f:
-        yaml.safe_dump(task_engine_dict, f, **YAML_EXPORT_SETTINGS)
-
-    return task_yaml_path
+    yaml.safe_dump(task_engine_dict, output, **YAML_EXPORT_SETTINGS)
 
 
 def build_task_engine_dict(
@@ -108,11 +99,13 @@ def build_task_engine_dict(
     )
     parameters = extract_parameters(entrypoint)
     graph = extract_graph(entrypoint)
+    artifacts = extract_artifacts(entrypoint)
     return {
         "types": parameter_types,
         "parameters": parameters,
         "tasks": tasks,
         "graph": graph,
+        "artifacts": artifacts,
     }
 
 
@@ -234,7 +227,32 @@ def extract_graph(
         A dictionary representation of the entrypoint's task graph.
     """
     log = logger or LOGGER.new()  # noqa: F841
-    return cast(dict[str, Any], yaml.safe_load(entrypoint.task_graph))
+    full_yaml = yaml.safe_load(entrypoint.task_graph)
+    # remove the artifacts node
+    full_yaml.pop("artifacts", None)
+    return cast(dict[str, Any], full_yaml)
+
+
+def extract_artifacts(
+    entrypoint: models.EntryPoint,
+    logger: BoundLogger | None = None,
+) -> dict[str, Any]:
+    """Extract the task artifacts from an entrypoint.
+
+    Args:
+        entrypoint: The entrypoint containing the task artifacts.
+        logger: A structlog logger object to use for logging. A new logger will be
+            created if None.
+
+    Returns:
+        A dictionary representation of the entrypoint's task artifacts.
+    """
+    log = logger or LOGGER.new()  # noqa: F841
+    full_yaml = yaml.safe_load(entrypoint.task_graph)
+    # only need the artifacts node
+    return cast(
+        dict[str, Any], full_yaml["artifacts"] if "artifacts" in full_yaml else {}
+    )
 
 
 def _build_plugin_field(

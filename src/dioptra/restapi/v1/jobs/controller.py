@@ -18,11 +18,10 @@
 from __future__ import annotations
 
 import uuid
-from typing import cast
 from urllib.parse import unquote
 
 import structlog
-from flask import request
+from flask import request, jsonify
 from flask_accepts import accepts, responds
 from flask_login import login_required
 from flask_restx import Namespace, Resource
@@ -40,6 +39,12 @@ from dioptra.restapi.v1.shared.snapshots.controller import (
 from dioptra.restapi.v1.shared.tags.controller import (
     generate_resource_tags_endpoint,
     generate_resource_tags_id_endpoint,
+)
+from dioptra.restapi.v1.workflows.lib.export_job_parameters import (
+    build_job_parameters_dict,
+)
+from dioptra.restapi.v1.workflows.lib.export_task_engine_yaml import (
+    build_task_engine_dict,
 )
 
 from .schema import (
@@ -91,7 +96,7 @@ class JobEndpoint(Resource):
             request_id=str(uuid.uuid4()), resource="Job", request_type="GET"
         )
         log.debug("Request received")
-        parsed_query_params = request.parsed_query_params  # noqa: F841
+        parsed_query_params = request.parsed_query_params  # type: ignore # noqa: F841
 
         group_id = parsed_query_params["group_id"]
         search_string = unquote(parsed_query_params["search"])
@@ -146,11 +151,7 @@ class JobIdEndpoint(Resource):
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="Job", request_type="GET", id=id
         )
-        job = cast(
-            models.Job,
-            self._job_id_service.get(id, error_if_not_found=True, log=log),
-        )
-        return utils.build_job(job)
+        return utils.build_job(self._job_id_service.get(id, log=log))
 
     @login_required
     @responds(schema=IdStatusResponseSchema, api=api)
@@ -160,6 +161,63 @@ class JobIdEndpoint(Resource):
             request_id=str(uuid.uuid4()), resource="Job", request_type="DELETE", id=id
         )
         return self._job_id_service.delete(job_id=id, log=log)
+
+
+@api.route("/<int:id>/parameters")
+@api.param("id", "ID for the Job resource.")
+class JobIdParametersEndpoint(Resource):
+    @inject
+    def __init__(self, job_id_service: JobIdService, *args, **kwargs) -> None:
+        """Initialize the jobs resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            job_id_service: A JobIdService object.
+        """
+        self._job_id_service = job_id_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    def get(self, id: int):
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="Job", request_type="GET", id=id
+        )
+        return build_job_parameters_dict(
+            job_param_values=self._job_id_service.get_parameter_values(id),
+            logger=log,
+        )
+
+
+@api.route("/<int:id>/config")
+@api.param("id", "ID for the Job resource.")
+class JobIdConfigEndpoint(Resource):
+    @inject
+    def __init__(self, job_id_service: JobIdService, *args, **kwargs) -> None:
+        """Initialize the jobs resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            job_id_service: A JobIdService object.
+        """
+        self._job_id_service = job_id_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    def get(self, id: int):
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="Job", request_type="GET", id=id
+        )
+        job_dict = self._job_id_service.get(id, log=log)
+        return build_task_engine_dict(
+            entrypoint=job_dict.get("job").entry_point_job.entry_point,
+            entry_point_plugin_files=self._job_id_service.get_entry_point_plugin_files(
+                id
+            ),
+            plugin_parameter_types=self._job_id_service.get_plugin_parameter_types(id),
+            logger=log,
+        )
 
 
 @api.route("/<int:id>/status")

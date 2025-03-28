@@ -24,11 +24,11 @@ from flask_login import login_required
 from flask_restx import Namespace, Resource
 from injector import inject
 from structlog.stdlib import BoundLogger
+from typing import cast
 
 from dioptra.restapi.utils import as_api_parser, as_parameters_schema_list
 
 from .schema import (
-    FileTypes,
     JobFilesDownloadQueryParametersSchema,
     ResourceImportSchema,
     SignatureAnalysisOutputSchema,
@@ -39,6 +39,7 @@ from .service import (
     ResourceImportService,
     SignatureAnalysisService,
 )
+from ..filetypes import FileTypes
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -70,25 +71,18 @@ class JobFilesDownloadEndpoint(Resource):
             resource="JobFilesDownload",
             request_type="GET",
         )
-        mimetype = {
-            FileTypes.TAR_GZ: "application/gzip",
-            FileTypes.ZIP: "application/zip",
-        }
-        download_name = {
-            FileTypes.TAR_GZ: "job_files.tar.gz",
-            FileTypes.ZIP: "job_files.zip",
-        }
-        parsed_query_params = request.parsed_query_params  # noqa: F841
+        parsed_query_params = request.parsed_query_params  # type: ignore # noqa: F841
+        file_type = cast(FileTypes, parsed_query_params["file_type"])
         job_files_download_package = self._job_files_download_service.get(
             job_id=parsed_query_params["job_id"],
-            file_type=parsed_query_params["file_type"],
+            file_type=file_type,
             log=log,
         )
         return send_file(
             path_or_file=job_files_download_package.name,
             as_attachment=True,
-            mimetype=mimetype[parsed_query_params["file_type"]],
-            download_name=download_name[parsed_query_params["file_type"]],
+            mimetype=file_type.mimetype,
+            download_name="job_files" + file_type.suffix,
         )
 
 
