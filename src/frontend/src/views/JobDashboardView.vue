@@ -107,6 +107,7 @@
       <q-btn
         v-if="metricsData.length === 0"
         label="Add example Metrics"
+        color="primary"
         class="q-mt-lg"
         @click="addExampleMetrics"
       />
@@ -149,6 +150,8 @@
       <q-btn
         label="Add Data"
         @click="addData(i)"
+        color="primary"
+        class="q-mt-sm"
       />
     </div>
     <div class="row items-center q-mt-lg" v-if="filteredMetrics.length === 0">

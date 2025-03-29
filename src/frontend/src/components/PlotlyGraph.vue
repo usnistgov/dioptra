@@ -1,12 +1,12 @@
 <template>
   <div
     ref="chart"
-    style="
-      height: 400px; 
-      border: 1px solid #d1d9e1;
-      border-radius: 8px; 
-      overflow: hidden
-    "
+    :style="{
+      height: '400px',
+      border: `1px solid ${$q.dark.isActive ? '#ffffff47' : '#d1d9e1'}`,
+      borderRadius: '8px',
+      overflow: 'hidden'
+    }"
   >
   </div>
 </template>
