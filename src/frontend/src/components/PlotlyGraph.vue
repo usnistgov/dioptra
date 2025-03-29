@@ -12,7 +12,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, computed } from 'vue'
+import { ref, onMounted, watch, computed, nextTick } from 'vue'
 import Plotly from 'plotly.js-dist-min'
 import { useQuasar } from 'quasar'
 
@@ -20,11 +20,13 @@ const $q = useQuasar()
 
 const props = defineProps({
   data: Array,
-  title: String
+  title: String,
+  graphClass: String
 })
 
 /*
-  The data prop is an array of objects
+  Plotly expects this data format
+  TODO: include type
   data = [{
     x: [1999, 2000, 2001, 2002],
     y: [10, 15, 13, 17],
@@ -67,12 +69,18 @@ onMounted(() => {
 })
 
 watch(() => props.data, (newVal) => {
-  console.log('data changed:', newVal)
   const copy = JSON.parse(JSON.stringify(newVal))
     Plotly.react(chart.value, copy, layout.value, { responsive: true })
   },
   { deep: true }
 )
+
+watch(() => props.graphClass, () => {
+  // allow DOM to apply new class layout before resizing
+  nextTick(() => {
+    Plotly.Plots.resize(chart.value)
+  })
+})
 
 watch(() => $q.dark.isActive, () => {
   Plotly.purge(chart.value)

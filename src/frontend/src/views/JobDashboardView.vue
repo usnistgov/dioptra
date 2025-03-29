@@ -113,29 +113,56 @@
     </div>
   </div>
   <div v-if="tab === 'model metrics'" class="row q-col-gutter-x-lg q-col-gutter-y-lg">
+    <div class="col-12">
+      <div class="row items-center">
+        <q-input 
+          v-model="filter" 
+          debounce="300" 
+          dense 
+          placeholder="Search metric charts" 
+          outlined
+          class="col-grow"
+        >
+          <template #prepend>
+            <q-icon name="search" />
+          </template>
+        </q-input>
+        <q-btn
+          label="Refresh"
+          color="primary"
+          icon="refresh"
+          class="q-ml-lg"
+          @click="loadAllMetricHistories"
+        />
+      </div>
+    </div>
     <div
       :class="graphClass" 
-      v-for="(metric, i) in metricsData"
+      v-for="(metric, i) in filteredMetrics"
       :key="i"
     >
       <PlotlyGraph
         :data="metric.data"
         :title="metric.name"
+        :graphClass="graphClass"
       />
       <q-btn
         label="Add Data"
         @click="addData(i)"
       />
     </div>
-    <div class="row items-center q-mt-lg" v-if="metricsData.length === 0">
+    <div class="row items-center q-mt-lg" v-if="filteredMetrics.length === 0">
       <q-icon
         name="sym_o_info"
         size="2.5em"
         color="grey"
         class="q-mr-sm"
       />
-      <caption>No metrics found for job id: {{ route.params.id }}</caption>
+      <caption>No metrics found</caption>
     </div>
+  </div>
+  <div v-else>
+    TBD
   </div>
 
   <div style="display: flex; justify-content: flex-end; margin-top: 2rem;">
@@ -163,7 +190,7 @@
 </template>
 
 <script setup>
-import { ref, computed, inject } from 'vue'
+import { ref, computed, inject, watch } from 'vue'
 import PageTitle from '@/components/PageTitle.vue'
 import * as api from '@/services/dataApi'
 import { useRoute, useRouter } from 'vue-router'
@@ -198,14 +225,32 @@ async function getJob() {
   }
 }
 
+const metricNames = computed(() => {
+  return metrics.value.map(metric => metric.name)
+})
+
+watch(tab, async (newVal) => {
+  if (newVal === 'model metrics') {
+    await loadAllMetricHistories()
+  }
+})
+
+
+async function loadAllMetricHistories() {
+  metricsData.value = []
+  await getJobMetrics()
+  const promises = metricNames.value.map(name =>
+    getJobMetricHistory(route.params.id, name)
+  )
+  const results = await Promise.all(promises)
+  metricsData.value = results
+}
+
+
 async function getJobMetrics() {
   try {
     const res = await api.getJobMetrics(route.params.id)
-    metrics.value = res.data
-    let metricNames = res.data.map(metric => metric.name)    
-    metricNames.forEach((name) => {
-      getJobMetricHistory(route.params.id, name)
-    })
+    metrics.value = res.data 
   } catch(err) {
     console.log(err)
   }
@@ -214,25 +259,34 @@ async function getJobMetrics() {
 const metricsData = ref([])
 
 async function getJobMetricHistory(id, name) {
-  metricsData.value = []
   const res = await api.getJobMetricHistory(id, name)
-  let metric = { 
-    name: name,
+  
+  return {
+    name,
     type: 'scatter',
     data: [
       {
         x: res.data.data.map(obj => obj.step),
         y: res.data.data.map(obj => obj.value)
-      },
+      }
     ]
   }
-  metricsData.value.push(metric)
-  console.log(`${name} history = `, res)
 }
 
+
+const filter = ref('')
+
+const filteredMetrics = computed(() => {
+  if (!filter.value) return metricsData.value
+  return metricsData.value.filter(metric =>
+    metric.name.toLowerCase().includes(filter.value.toLowerCase())
+  )
+})
+
+
 const graphClass = computed(() => {
-  if(metricsData.value.length <= 1 || isMobile.value) return 'col-12'
-  else if(metricsData.value.length === 2 || isMedium.value) return 'col-6'
+  if(filteredMetrics.value.length <= 1 || isMobile.value) return 'col-12'
+  else if(filteredMetrics.value.length === 2 || isMedium.value) return 'col-6'
   return 'col-4'
 })
 
@@ -311,13 +365,4 @@ async function deleteJob() {
   }
 }
 
-
 </script>
-
-<style scopped>
-
-  /* .col {
-    border: 1px solid red;
-  } */
-
-</style>
