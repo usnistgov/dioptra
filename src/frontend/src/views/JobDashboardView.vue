@@ -104,10 +104,38 @@
         :hideDeleteBtn="true"
         style="margin-top: 0px;"
       />
+      <q-btn
+        v-if="metricsData.length === 0"
+        label="Add example Metrics"
+        class="q-mt-lg"
+        @click="addExampleMetrics"
+      />
     </div>
   </div>
-  <div v-else>
-    TBD
+  <div v-if="tab === 'model metrics'" class="row q-col-gutter-x-lg q-col-gutter-y-lg">
+    <div
+      :class="graphClass" 
+      v-for="(metric, i) in metricsData"
+      :key="i"
+    >
+      <PlotlyGraph
+        :data="metric.data"
+        :title="metric.name"
+      />
+      <q-btn
+        label="Add Data"
+        @click="addData(i)"
+      />
+    </div>
+    <div class="row items-center q-mt-lg" v-if="metricsData.length === 0">
+      <q-icon
+        name="sym_o_info"
+        size="2.5em"
+        color="grey"
+        class="q-mr-sm"
+      />
+      <caption>No metrics found for job id: {{ route.params.id }}</caption>
+    </div>
   </div>
 
   <div style="display: flex; justify-content: flex-end; margin-top: 2rem;">
@@ -145,14 +173,14 @@ import JobStatus from '@/components/JobStatus.vue'
 import TableComponent from '@/components/TableComponent.vue'
 import DeleteDialog from '@/dialogs/DeleteDialog.vue'
 import * as notify from '../notify'
+import PlotlyGraph from '@/components/PlotlyGraph.vue'
 
 const route = useRoute()
 const router = useRouter()
-console.log('route = ', route)
-console.log('router = ', router)
 
 const tab = ref('overview')
 const isMedium = inject('isMedium')
+const isMobile = inject('isMobile')
 
 const job = ref()
 const showTagsDialog = ref(false)
@@ -174,11 +202,67 @@ async function getJobMetrics() {
   try {
     const res = await api.getJobMetrics(route.params.id)
     metrics.value = res.data
-    
+    let metricNames = res.data.map(metric => metric.name)    
+    metricNames.forEach((name) => {
+      getJobMetricHistory(route.params.id, name)
+    })
   } catch(err) {
     console.log(err)
   }
 }
+
+const metricsData = ref([])
+
+async function getJobMetricHistory(id, name) {
+  metricsData.value = []
+  const res = await api.getJobMetricHistory(id, name)
+  let metric = { 
+    name: name,
+    type: 'scatter',
+    data: [
+      {
+        x: res.data.data.map(obj => obj.step),
+        y: res.data.data.map(obj => obj.value)
+      },
+    ]
+  }
+  metricsData.value.push(metric)
+  console.log(`${name} history = `, res)
+}
+
+const graphClass = computed(() => {
+  if(metricsData.value.length <= 1 || isMobile.value) return 'col-12'
+  else if(metricsData.value.length === 2 || isMedium.value) return 'col-6'
+  return 'col-4'
+})
+
+async function addExampleMetrics() {
+  try {
+    for (let i = 0; i < 10; i++) {
+      const accuracy = 1 / (1 + Math.exp(-i))
+      const loss = Math.exp(-i)
+      const sineWave = Math.sin(i)
+
+      await api.addJobMetric(route.params.id, 'accuracy', accuracy, i)
+      await api.addJobMetric(route.params.id, 'loss', loss, i)
+      await api.addJobMetric(route.params.id, 'sine_wave', sineWave, i)
+    }
+    getJobMetrics()
+  } catch(err) {
+    console.log(err)
+  }
+}
+
+function addData(index) {
+  const yVals = metricsData.value[index].data[0].y
+  const max = Math.max(...yVals)
+  const min = Math.min(...yVals)
+
+  const randomBetweenMinMax = Math.random() * (max - min) + min
+  metricsData.value[index].data[0].x.push(yVals.length)
+  metricsData.value[index].data[0].y.push(randomBetweenMinMax)
+}
+
 
 function formatDate(dateString) {
   const options = { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: true }

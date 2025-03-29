@@ -28,6 +28,11 @@ const statusStyles = {
       textColor: "grey-9",
       style: "min-width: 99px;"
     },
+    started: {
+      icon: "sym_o_play_circle",
+      color: "blue-5",
+      textColor: 'white',
+    },
     failed: {
       icon: "sym_o_error",
       color: "red-2",

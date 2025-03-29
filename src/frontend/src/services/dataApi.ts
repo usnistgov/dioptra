@@ -173,6 +173,32 @@ export async function getSnapshots<T extends ItemType>(type: T, id: number) {
   return res
 }
 
+export async function addJobMetric(id: string, name: string, value: number, step: number) {
+  const res = await axios.post(`/api/jobs/${id}/metrics`, {
+    name,
+    value,
+    step,
+  })
+}
+
+export async function getJobMetricHistory(id: string, name: string) {
+  const res = await axios.get(`/api/jobs/${id}/metrics/${name}/snapshots`, {
+    params: {
+      pageLength: 100
+    }
+  })
+  // always GET ALL job metrics
+  if(res.data.next) {
+    let nextUrl = res.data.next.replace("/v1", "")
+    while (nextUrl) {
+      const response = await axios.get(nextUrl)
+      res.data.data.push(...response.data.data)
+      nextUrl = response.data.next ? response.data.next.replace("/v1", "") : null
+    }
+  }
+  return res
+}
+
 export async function getJobs(id: number, pagination: Pagination) {
   const res = await axios.get(`/api/experiments/${id}/jobs`, {
     params: {
