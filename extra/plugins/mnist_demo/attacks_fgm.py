@@ -67,7 +67,7 @@ except ImportError:  # pragma: nocover
 
 try:
     from tensorflow.keras.preprocessing.image import ImageDataGenerator, save_img
-
+    import tensorflow as tf
 except ImportError:  # pragma: nocover
     LOGGER.warn(
         "Unable to import one or more optional packages, functionality may be reduced",
@@ -79,7 +79,7 @@ except ImportError:  # pragma: nocover
 @require_package("art", exc_type=ARTDependencyError)
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
 def fgm(
-    data_flow: Any,
+    data_flow: Dataset,
     adv_data_dir: Union[str, Path],
     keras_classifier: TensorFlowV2Classifier,
     distance_metrics_list: Optional[List[Tuple[str, Callable[..., np.ndarray]]]] = None,
@@ -136,6 +136,7 @@ def fgm(
     .. |flow_from_directory| replace:: :py:meth:`tf.keras.preprocessing.image\\
        .ImageDataGenerator.flow_from_directory`
     """
+    tf.experimental.numpy.experimental_enable_numpy_behavior()
     distance_metrics_list = distance_metrics_list or []
     adv_data_dir = Path(adv_data_dir)
 
@@ -147,23 +148,16 @@ def fgm(
         minimal=minimal,
         norm=norm,
     )
+    print(data_flow.file_paths)
 
-    num_images = data_flow.n
-    img_filenames = [Path(x) for x in data_flow.filenames]
+    img_filenames = [Path(x) for x in data_flow.file_paths]
 
     distance_metrics_: Dict[str, List[List[float]]] = {"image": [], "label": []}
     for metric_name, _ in distance_metrics_list:
         distance_metrics_[metric_name] = []
 
-    LOGGER.info(
-        "Generate adversarial images",
-        attack="fgm",
-        num_batches=num_images // batch_size,
-    )
 
     for batch_num, (x, y) in enumerate(data_flow):
-        if batch_num >= num_images // batch_size:
-            break
 
         clean_filenames = img_filenames[
             batch_num * batch_size : (batch_num + 1) * batch_size  # noqa: E203
@@ -176,7 +170,7 @@ def fgm(
         )
 
         y_int = np.argmax(y, axis=1)
-        adv_batch = attack.generate(x=x)
+        adv_batch = attack.generate(x=x.numpy())
 
         _save_adv_batch(adv_batch, adv_data_dir, y_int, clean_filenames)
 
@@ -275,6 +269,7 @@ def _log_distance_metrics(distance_metrics_: Dict[str, List[List[float]]]) -> No
         distance_metrics_: A dictionary used to record the values of the distance
             metrics computed for the clean/adversarial image pairs.
     """
+    tf.experimental.numpy.experimental_enable_numpy_behavior()
     distance_metrics_ = distance_metrics_.copy()
     del distance_metrics_["image"]
     del distance_metrics_["label"]

@@ -9,6 +9,7 @@ dataset:
     testing_dir: $data_dir
     subsets: [testing]
     image_size: $image_size
+    batch_size: $batch_size
 
 model:
   load_model:
