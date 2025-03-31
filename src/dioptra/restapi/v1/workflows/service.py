@@ -516,7 +516,13 @@ class ResourceImportService(object):
                     contents = plugin_file_path.read_text()
                 except FileNotFoundError as e:
                     raise ImportFailedError(
-                        f"Failed to read plugin file from {plugin_file_path}"
+                        f"Failed to read plugin file from {plugin_file_path}",
+                        reason="File not found.",
+                    ) from e
+                except Exception as e:
+                    raise ImportFailedError(
+                        f"Failed to read plugin file from {plugin_file_path}",
+                        reason=str(e),
                     ) from e
 
                 self._plugin_id_file_service.create(
@@ -570,7 +576,13 @@ class ResourceImportService(object):
                 contents = Path(entrypoint["path"]).read_text()
             except FileNotFoundError as e:
                 raise ImportFailedError(
-                    f"Failed to read entrypoint file from {entrypoint['path']}"
+                    f"Failed to read entrypoint file from {entrypoint['path']}",
+                    reason="File not found.",
+                ) from e
+            except Exception as e:
+                raise ImportFailedError(
+                    f"Failed to read entrypoint file from {entrypoint['path']}",
+                    reason=str(e),
                 ) from e
 
             for param in entrypoint.get("params", []):
