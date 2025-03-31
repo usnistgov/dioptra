@@ -137,6 +137,7 @@ def fgm(
     .. |flow_from_directory| replace:: :py:meth:`tf.keras.preprocessing.image\\
        .ImageDataGenerator.flow_from_directory`
     """
+    tf.experimental.numpy.experimental_enable_numpy_behavior()
     distance_metrics_list = distance_metrics_list or []
     adv_data_dir = Path(adv_data_dir)
 
@@ -148,6 +149,7 @@ def fgm(
         minimal=minimal,
         norm=norm,
     )
+    print(data_flow.file_paths)
 
     img_filenames = [Path(x) for x in data_flow.file_paths]
 
