@@ -49,6 +49,7 @@ from dioptra.restapi.v1.plugin_parameter_types.service import (
     PluginParameterTypeNameService,
     PluginParameterTypeService,
 )
+from dioptra.restapi.v1.plugins.schema import ALLOWED_PLUGIN_FILENAME_REGEX
 from dioptra.restapi.v1.plugins.service import (
     PluginIdFileService,
     PluginIdService,
@@ -526,13 +527,24 @@ class ResourceImportService(object):
             db.session.flush()
 
             tasks = self._build_tasks(plugin.get("tasks", []), param_types)
-            for plugin_file_path in Path(plugin["path"]).rglob("*.py"):
+            for plugin_file_path in Path(plugin["path"]).rglob("[!.]*.py"):
                 filename = str(plugin_file_path.relative_to(plugin["path"]))
+                if not ALLOWED_PLUGIN_FILENAME_REGEX.fullmatch(filename):
+                    raise ImportFailedError(
+                        f"Failed to read plugin file from {filename}",
+                        reason="File is not a valid python filename.",
+                    )
                 try:
                     contents = plugin_file_path.read_text()
                 except FileNotFoundError as e:
                     raise ImportFailedError(
-                        f"Failed to read plugin file from {plugin_file_path}"
+                        f"Failed to read plugin file from {plugin_file_path}",
+                        reason="File not found.",
+                    ) from e
+                except Exception as e:
+                    raise ImportFailedError(
+                        f"Failed to read plugin file from {plugin_file_path}",
+                        reason=str(e),
                     ) from e
 
                 self._plugin_id_file_service.create(
@@ -586,7 +598,13 @@ class ResourceImportService(object):
                 contents = Path(entrypoint["path"]).read_text()
             except FileNotFoundError as e:
                 raise ImportFailedError(
-                    f"Failed to read entrypoint file from {entrypoint['path']}"
+                    f"Failed to read entrypoint file from {entrypoint['path']}",
+                    reason="File not found.",
+                ) from e
+            except Exception as e:
+                raise ImportFailedError(
+                    f"Failed to read entrypoint file from {entrypoint['path']}",
+                    reason=str(e),
                 ) from e
 
             for param in entrypoint.get("params", []):
