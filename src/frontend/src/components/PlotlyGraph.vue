@@ -26,7 +26,6 @@ const props = defineProps({
 
 /*
   Plotly expects this data format
-  TODO: include type
   data = [{
     x: [1999, 2000, 2001, 2002],
     y: [10, 15, 13, 17],
@@ -59,6 +58,39 @@ const layout = computed(() => {
       zerolinecolor: isDark ? '#666' : '#aaa'
     },
     margin: { t: 50, r: 30, l: 50 },
+    // unable to changed active bg color of selected
+    // https://github.com/plotly/plotly.js/issues/1428
+    updatemenus: [
+      {
+        buttons: [
+          {
+            label: 'Line',
+            method: 'restyle',
+            args: [{ type: 'scatter', mode: 'lines+markers' }]
+          },
+          {
+            label: 'Bar',
+            method: 'restyle',
+            args: ['type', 'bar']
+          },
+          {
+            label: 'Scatter',
+            method: 'restyle',
+            args: [{ type: 'scatter', mode: 'markers' }]
+          },
+        ],
+        direction: 'down',
+        showactive: true,
+        x: .2, // shift horizontally
+        xanchor: 'left',
+        y: 1.25, // space above plot
+        bgcolor: isDark ? '#2a2a2a' : '',
+        bordercolor: isDark ? '#555' : '#ccc',
+        font: {
+          color: isDark ? '#e0e0e0' : '#000000'
+        },
+      }
+    ]
   }
 })
 
@@ -69,8 +101,9 @@ onMounted(() => {
 })
 
 watch(() => props.data, (newVal) => {
-  const copy = JSON.parse(JSON.stringify(newVal))
-    Plotly.react(chart.value, copy, layout.value, { responsive: true })
+    const x = newVal.map(trace => trace.x)
+    const y = newVal.map(trace => trace.y)
+    Plotly.update(chart.value, { x, y })
   },
   { deep: true }
 )
@@ -83,22 +116,22 @@ watch(() => props.graphClass, () => {
 })
 
 watch(() => $q.dark.isActive, () => {
-  Plotly.purge(chart.value)
-  const copy = JSON.parse(JSON.stringify(props.data))
-  Plotly.react(chart.value, copy, layout.value, { responsive: true })
+  const isDark = $q.dark.isActive
+
+  const layoutUpdate = {
+    'paper_bgcolor': isDark ? '#121212' : '#ffffff',
+    'plot_bgcolor': isDark ? '#121212' : '#ffffff',
+    'font.color': isDark ? '#e0e0e0' : '#000000',
+    'xaxis.gridcolor': isDark ? '#444' : '#ccc',
+    'xaxis.zerolinecolor': isDark ? '#666' : '#aaa',
+    'yaxis.gridcolor': isDark ? '#444' : '#ccc',
+    'yaxis.zerolinecolor': isDark ? '#666' : '#aaa',
+    'updatemenus[0].bgcolor': isDark ? '#2a2a2a' : '',
+    'updatemenus[0].bordercolor': isDark ? '#555' : '#ccc',
+    'updatemenus[0].font.color': isDark ? '#e0e0e0' : '#000000'
+  }
+
+  Plotly.relayout(chart.value, layoutUpdate)
 })
 
 </script>
-
-<style scopped>
-body.body--dark .js-plotly-plot .modebar-btn {
-  color: #e0e0e0 !important;
-  fill: #e0e0e0 !important;
-}
-
-body.body--dark .js-plotly-plot .modebar-btn:hover {
-  background-color: rgba(255, 255, 255, 0.1) !important;
-  color: #fff !important;
-  fill: #fff !important;
-}
-</style>

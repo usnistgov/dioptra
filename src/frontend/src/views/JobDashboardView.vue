@@ -105,7 +105,7 @@
         style="margin-top: 0px;"
       />
       <q-btn
-        v-if="metricsData.length === 0"
+        v-if="metrics.length === 0"
         label="Add example Metrics"
         color="primary"
         class="q-mt-lg"
@@ -123,6 +123,7 @@
           placeholder="Search metric charts" 
           outlined
           class="col-grow"
+          clearable
         >
           <template #prepend>
             <q-icon name="search" />
@@ -163,9 +164,6 @@
       />
       <caption>No metrics found</caption>
     </div>
-  </div>
-  <div v-else>
-    TBD
   </div>
 
   <div style="display: flex; justify-content: flex-end; margin-top: 2rem;">
