@@ -61,6 +61,8 @@ def get_uris_for_artifacts(artifact_ids):
 
 def post_metrics(metric_name, metric_value, job_id=None, metric_step=None):
     dioptra_client = get_logged_in_session()
+    if not type(metric_value) == float:
+        metric_value = -1
     if job_id == None:
         job_id = os.environ["__JOB_ID"]
     return dioptra_client.jobs.append_metric_by_id(

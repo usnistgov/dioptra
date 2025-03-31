@@ -40,9 +40,11 @@ from dioptra.sdk.utilities.decorators import require_package
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 try:
-    from tensorflow.keras.preprocessing.image import (
-        DirectoryIterator,
-        ImageDataGenerator,
+    from tensorflow.keras.utils import (
+        image_dataset_from_directory
+    )
+    from tensorflow.data import (
+        Dataset
     )
 
 except ImportError:  # pragma: nocover
@@ -59,12 +61,11 @@ def create_image_dataset(
     subset: Optional[str],
     image_size: Tuple[int, int, int],
     seed: int,
-    rescale: float = 1.0 / 255,
     validation_split: Optional[float] = 0.2,
     batch_size: int = 32,
     label_mode: str = "categorical",
     shuffle: bool = True,
-) -> DirectoryIterator:
+) -> Dataset:
     """Yields an iterator for generating batches of real-time augmented image data.
 
     Args:
@@ -103,26 +104,30 @@ def create_image_dataset(
     )
     target_size: Tuple[int, int] = image_size[:2]
 
-    data_generator: ImageDataGenerator = ImageDataGenerator(
-        rescale=rescale,
+    return image_dataset_from_directory(
+        data_dir,
+        labels="inferred",
+        label_mode=label_mode,
+        color_mode=color_mode,
+        batch_size=batch_size,
+        image_size=target_size,
+        shuffle=shuffle,
+        seed=seed,
         validation_split=validation_split,
+        subset=subset,
+        interpolation="bilinear",
+        follow_links=False,
+        crop_to_aspect_ratio=False,
+        pad_to_aspect_ratio=False,
+        data_format="channels_last",
+        verbose=True,
     )
 
-    return data_generator.flow_from_directory(
-        directory=data_dir,
-        target_size=target_size,
-        color_mode=color_mode,
-        class_mode=label_mode,
-        batch_size=batch_size,
-        seed=seed,
-        subset=subset,
-        shuffle=shuffle
-    )
 
 
 @pyplugs.register
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
-def get_n_classes_from_directory_iterator(ds: DirectoryIterator) -> int:
+def get_n_classes_from_directory_iterator(ds: Dataset) -> int:
     """Returns the number of unique labels found by the |directory_iterator|.
 
     Args:
@@ -131,18 +136,18 @@ def get_n_classes_from_directory_iterator(ds: DirectoryIterator) -> int:
     Returns:
         The number of unique labels in the dataset.
     """
-    return len(ds.class_indices)
+    return len(ds.class_names)
 
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
 def predictions_to_df(
     predictions: np.ndarray,
-    dataset: DirectoryIterator = None,
+    dataset: Dataset = None,
     show_actual: bool = False,
     show_target: bool = False,
 ):
     n_classes = get_n_classes_from_directory_iterator(dataset)
 
-
+    
     df = pd.DataFrame(predictions)
     df.columns = [f'prob_{n}' for n in range(n_classes)] # note: applicable to classification only
 
@@ -150,16 +155,16 @@ def predictions_to_df(
         y_pred = np.argmax(predictions, axis=1)
         df.insert(0, 'actual', y_pred)
     if (show_target):
-        y_true = dataset.classes
+        y_true = np.argmax(np.concatenate([y.index for x, y in dataset], axis=0).astype(np.int32) , axis=1)
         df.insert(0, 'target', y_true)
 
-    df.insert(0, 'id', dataset.filepaths)
+    df.insert(0, 'id', dataset.file_paths)
 
     return df
 
 def df_to_predictions(
     df: pd.DataFrame,
-    dataset: DirectoryIterator = None,
+    dataset: Dataset = None,
     n_classes: int = -1,
 ):
     n_classes = get_n_classes_from_directory_iterator(dataset) if dataset is not None else n_classes # get classes from dataset
@@ -168,12 +173,13 @@ def df_to_predictions(
     if (set(['actual','target']).issubset(df.columns)):
         y_pred = df['actual'].to_numpy()
         y_true = df['target'].to_numpy()
+        y_true = np.eye(n_classes)[y_true]
     else:
         y_pred = np.argmax(df[[f'prob_{n}' for n in range(n_classes)]].to_numpy(), axis=1)
-        y_true = dataset.classes
-    
+        y_true = np.concatenate([y for x, y in dataset], axis=0).astype(np.int32) 
+        y_true = y_true
+   
     # generate one hot encoding
     y_pred = np.eye(n_classes)[y_pred]
-    y_true = np.eye(n_classes)[y_true] 
 
     return y_true, y_pred

@@ -565,6 +565,7 @@ params = [
   { name = "record_actual_class", type = "boolean", default_value = "False" },
   { name = "record_target_class", type = "boolean", default_value = "False" },
   { name = "format", type = "string", default_value = "csv" },
+  { name = "batch_size", type = "integer", default_value = "4"},
   { name = "seed", type = "integer", default_value = "-1" },
 ]
 plugins = [ "mnist_demo" ]
