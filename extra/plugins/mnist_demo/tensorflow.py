@@ -104,7 +104,7 @@ def evaluate_metrics_tensorflow(classifier, dataset) -> Dict[str, float]:
 @pyplugs.register
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
 def predict_tensorflow(classifier, dataset) -> Dict[str, float]:
-    result = classifier.predict(dataset, verbose=0)
+    result = classifier.predict(dataset)
     return result
 
 @pyplugs.register

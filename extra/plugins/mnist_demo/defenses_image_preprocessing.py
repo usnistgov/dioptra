@@ -19,8 +19,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Tuple, Union, Any
 
-from.restapi import post_metrics
-
+from .restapi import post_metrics
+from .data_tensorflow import get_n_classes_from_directory_iterator
 import numpy as np
 import pandas as pd
 import scipy.stats
@@ -48,8 +48,8 @@ except ImportError:  # pragma: nocover
 
 
 try:
-    from tensorflow.keras.preprocessing.image import ImageDataGenerator, save_img
-
+    from tensorflow.keras.preprocessing.image import save_img
+    import tensorflow as tf
 except ImportError:  # pragma: nocover
     LOGGER.warn(
         "Unable to import one or more optional packages, functionality may be reduced",
@@ -75,6 +75,7 @@ def create_defended_dataset(
     def_type: str = "spatial_smoothing",
     defense_kwargs: Optional[Dict[str, Any]] = None,
 ) -> pd.DataFrame:
+    tf.experimental.numpy.experimental_enable_numpy_behavior()
     distance_metrics_list = distance_metrics_list or []
     clip_values: Tuple[float, float] = (0, 255) if image_size[2] == 3 else (0, 1.0)
     def_data_dir = Path(def_data_dir)
@@ -85,23 +86,15 @@ def create_defended_dataset(
         defense_kwargs=defense_kwargs,
     )
 
-    num_images = data_flow.n
-    img_filenames = [Path(x) for x in data_flow.filenames]
-    class_names_list = sorted(data_flow.class_indices, key=data_flow.class_indices.get)
+    img_filenames = [Path(x) for x in data_flow.file_paths]
+    class_names_list = sorted(data_flow.class_names)
 
     distance_metrics_: Dict[str, List[List[float]]] = {"image": [], "label": []}
     for metric_name, _ in distance_metrics_list:
         distance_metrics_[metric_name] = []
 
-    LOGGER.info(
-        "Generate defended images",
-        defense=def_type,
-        num_batches=num_images // batch_size,
-    )
 
     for batch_num, (x, y) in enumerate(data_flow):
-        if batch_num >= num_images // batch_size:
-            break
 
         clean_filenames = img_filenames[
             batch_num * batch_size : (batch_num + 1) * batch_size  # noqa: E203
@@ -114,7 +107,7 @@ def create_defended_dataset(
         )
 
         y_int = np.argmax(y, axis=1)
-        adv_batch_defend, _ = defense(x)
+        adv_batch_defend, _ = defense(x.numpy())
 
         _save_def_batch(
             adv_batch_defend, def_data_dir, y_int, clean_filenames, class_names_list

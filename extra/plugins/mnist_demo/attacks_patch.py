@@ -25,6 +25,7 @@ import scipy.stats
 import structlog
 from prefect import task
 from .restapi import post_metrics
+from .data_tensorflow import get_n_classes_from_directory_iterator
 from structlog.stdlib import BoundLogger
 
 from dioptra import pyplugs
@@ -45,7 +46,8 @@ except ImportError:  # pragma: nocover
 
 
 try:
-    from tensorflow.keras.preprocessing.image import ImageDataGenerator, save_img
+    from tensorflow.keras.preprocessing.image import save_img
+    import tensorflow as tf
 
 except ImportError:  # pragma: nocover
     LOGGER.warn(
@@ -70,7 +72,7 @@ def create_adversarial_patches(
     learning_rate: float,
     max_iter: int,
     patch_shape: Tuple,
-) -> pd.DataFrame:
+):
     adv_data_dir = Path(adv_data_dir)
     batch_size = num_patch_samples
 
@@ -90,7 +92,7 @@ def create_adversarial_patches(
     patch_list = []
     mask_list = []
     id_list = []
-    n_classes = len(data_flow.class_indices)
+    n_classes = get_n_classes_from_directory_iterator(data_flow)
 
     LOGGER.info(
         "Generate adversarial patches",
@@ -117,8 +119,6 @@ def create_adversarial_patches(
     _save_adv_patch(patch_list, mask_list, id_list, num_patch, adv_data_dir)
     LOGGER.info("Adversarial patch generation complete", attack="patch")
 
-    return
-
 
 @pyplugs.register
 @require_package("art", exc_type=ARTDependencyError)
@@ -136,6 +136,7 @@ def create_adversarial_patch_dataset(
     scale_min: float = 0.1,
     scale_max: float = 1.0,
 ) -> pd.DataFrame:
+    tf.experimental.numpy.experimental_enable_numpy_behavior()
     distance_metrics_list = distance_metrics_list or []
     adv_data_dir = Path(adv_data_dir)
 
@@ -150,25 +151,16 @@ def create_adversarial_patch_dataset(
         #patch_shape=patch_shape,
     )
 
-    num_images = data_flow.n
-    img_filenames = [Path(x) for x in data_flow.filenames]
-    class_names_list = sorted(data_flow.class_indices, key=data_flow.class_indices.get)
+    img_filenames = [Path(x) for x in data_flow.file_paths]
+    class_names_list = sorted(data_flow.class_names)
 
     distance_metrics_: Dict[str, List[List[float]]] = {"image": [], "label": []}
     for metric_name, _ in distance_metrics_list:
         distance_metrics_[metric_name] = []
 
-    LOGGER.info(
-        "Generate adversarial images",
-        attack="patch",
-        num_batches=num_images // batch_size,
-    )
-
     converted_patch_list = list(patch_list)
     # Apply patch over test set.
     for batch_num, (x, y) in enumerate(data_flow):
-        if batch_num >= num_images // batch_size:
-            break
         LOGGER.info(
             "Generate adversarial image batch",
             attack="patch",
@@ -178,9 +170,9 @@ def create_adversarial_patch_dataset(
         patch = converted_patch_list[patch_index]
         y_int = np.argmax(y, axis=1)
         if patch_scale > 0:
-            adv_batch = attack.apply_patch(x, scale=patch_scale, patch_external=patch)
+            adv_batch = attack.apply_patch(x.numpy(), scale=patch_scale, patch_external=patch)
         else:
-            adv_batch = attack.apply_patch(x, patch_external=patch)
+            adv_batch = attack.apply_patch(x.numpy(), patch_external=patch)
 
         clean_filenames = img_filenames[
             batch_num * batch_size : (batch_num + 1) * batch_size
