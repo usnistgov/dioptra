@@ -510,7 +510,7 @@ class ResourceImportService(object):
             db.session.flush()
 
             tasks = self._build_tasks(plugin.get("tasks", []), param_types)
-            for plugin_file_path in Path(plugin["path"]).rglob("*.py"):
+            for plugin_file_path in Path(plugin["path"]).rglob("[!.]*.py"):
                 filename = str(plugin_file_path.relative_to(plugin["path"]))
                 try:
                     contents = plugin_file_path.read_text()
