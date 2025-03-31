@@ -141,7 +141,7 @@
     <div
       :class="graphClass" 
       v-for="(metric, i) in filteredMetrics"
-      :key="i"
+      :key="metric.name"
     >
       <PlotlyGraph
         :data="metric.data"
@@ -150,7 +150,7 @@
       />
       <q-btn
         label="Add Data"
-        @click="addData(i)"
+        @click="addData(metric.name)"
         color="primary"
         class="q-mt-sm"
       />
@@ -308,7 +308,8 @@ async function addExampleMetrics() {
   }
 }
 
-function addData(index) {
+function addData(name) {
+  const index = metricsData.value.findIndex((metric) => metric.name === name)
   const yVals = metricsData.value[index].data[0].y
   const max = Math.max(...yVals)
   const min = Math.min(...yVals)
