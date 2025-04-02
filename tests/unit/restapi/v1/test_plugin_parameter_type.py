@@ -30,7 +30,7 @@ from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
 
 from ..lib import helpers, routines
-from ..test_utils import match_normalized_json
+from ..test_utils import assert_retrieving_resource_works
 
 # -- Assertions ------------------------------------------------------------------------
 
@@ -39,6 +39,8 @@ def assert_retrieving_plugin_parameter_types_works(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     expected: list[dict[str, Any]],
     group_id: int | None = None,
+    sort_by: str | None = None,
+    descending: bool | None = None,
     search: str | None = None,
     paging_info: dict[str, Any] | None = None,
 ) -> None:
@@ -56,128 +58,15 @@ def assert_retrieving_plugin_parameter_types_works(
             does not match the expected response.
     """
 
-    query_string: dict[str, Any] = {}
-
-    if group_id is not None:
-        query_string["group_id"] = group_id
-
-    if search is not None:
-        query_string["search"] = search
-
-    if paging_info is not None:
-        query_string["index"] = paging_info["index"]
-        query_string["page_length"] = paging_info["page_length"]
-
-    response = dioptra_client.plugin_parameter_types.get(**query_string)
-    # A sort order was not given in the request, so we must not assume a
-    # particular order in the response.
-    assert response.status_code == HTTPStatus.OK and match_normalized_json(response, expected)
-
-
-def assert_sorting_plugin_parameter_type_works(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
-    expected: list[str],
-    sort_by: str | None,
-    descending: bool | None,
-    group_id: int | None = None,
-    search: str | None = None,
-    paging_info: dict[str, Any] | None = None,
-) -> None:
-    """Assert that plugin parameter types can be sorted by column ascending/descending.
-
-    Args:
-        client: The Flask test client.
-        expected: The expected order of type ids after sorting.
-          See test_plugin_parameter_type_sort for expected orders.
-
-    Raises:
-        AssertionError: If the response status code is not 200 or if the API response
-            does not match the expected response.
-    """
-
-    assert sort_by is not None, "Sort criteria not specified."
-
-    query_string: dict[str, Any] = {}
-
-    if descending is not None:
-        query_string["descending"] = descending
-
-    if sort_by is not None:
-        query_string["sort_by"] = sort_by
-
-    if group_id is not None:
-        query_string["group_id"] = group_id
-
-    if search is not None:
-        query_string["search"] = search
-
-    if paging_info is not None:
-        query_string["index"] = paging_info["index"]
-        query_string["page_length"] = paging_info["page_length"]
-
-    response = dioptra_client.plugin_parameter_types.get(**query_string)
-    response_data = response.json()
-    # remove plugin param types created by default before testing
-    names_to_remove = ["any", "string", "integer", "number", "boolean", "null"]
-    filtered_data = [
-        item for item in response_data["data"] if item["name"] not in names_to_remove
-    ]
-
-    param_ids = [param["id"] for param in filtered_data]
-
-    assert response.status_code == HTTPStatus.OK and param_ids == expected
-
-
-def assert_sorting_plugin_parameter_type_by_none_works(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
-    expected: set[str],
-    sort_by: str | None,
-    descending: bool | None,
-    group_id: int | None = None,
-    search: str | None = None,
-    paging_info: dict[str, Any] | None = None,
-) -> None:
-    """Assert that plugin parameter types can be retrieved properly when sorting
-        isn't specified.
-
-    Args:
-        client: The Flask test client.
-        expected: The expected type ids.
-          See test_plugin_parameter_type_sort for expected orders.
-
-    Raises:
-        AssertionError: If the response status code is not 200 or if the API response
-            does not match the expected response.
-    """
-
-    assert sort_by is None, "Sort criteria is specified."
-
-    query_string: dict[str, Any] = {}
-
-    if descending is not None:
-        query_string["descending"] = descending
-
-    if group_id is not None:
-        query_string["group_id"] = group_id
-
-    if search is not None:
-        query_string["search"] = search
-
-    if paging_info is not None:
-        query_string["index"] = paging_info["index"]
-        query_string["page_length"] = paging_info["page_length"]
-
-    response = dioptra_client.plugin_parameter_types.get(**query_string)
-    response_data = response.json()
-    # remove plugin param types created by default before testing
-    names_to_remove = ["any", "string", "integer", "number", "boolean", "null"]
-    filtered_data = [
-        item for item in response_data["data"] if item["name"] not in names_to_remove
-    ]
-
-    param_ids = [param["id"] for param in filtered_data]
-
-    assert response.status_code == HTTPStatus.OK and set(param_ids) == expected
+    assert_retrieving_resource_works(
+        dioptra_client=dioptra_client.plugin_parameter_types,
+        expected=expected,
+        group_id=group_id,
+        sort_by=sort_by,
+        descending=descending,
+        search=search,
+        paging_info=paging_info,
+    )
 
 
 def assert_retrieving_plugin_parameter_type_by_id_works(
@@ -458,22 +347,62 @@ def test_get_all_plugin_parameter_types(
         (
             "name",
             True,
-            ["plugin_param_type2", "plugin_param_type3", "plugin_param_type1"],
+            [
+                "string",
+                "number",
+                "null",
+                "plugin_param_type2",
+                "plugin_param_type3",
+                "integer",
+                "plugin_param_type1",
+                "boolean",
+                "any",
+            ],
         ),
         (
             "name",
             False,
-            ["plugin_param_type1", "plugin_param_type3", "plugin_param_type2"],
+            [
+                "any",
+                "boolean",
+                "plugin_param_type1",
+                "integer",
+                "plugin_param_type3",
+                "plugin_param_type2",
+                "null",
+                "number",
+                "string",
+            ],
         ),
         (
             "createdOn",
             True,
-            ["plugin_param_type3", "plugin_param_type2", "plugin_param_type1"],
+            [
+                "plugin_param_type3",
+                "plugin_param_type2",
+                "plugin_param_type1",
+                "null",
+                "boolean",
+                "number",
+                "integer",
+                "string",
+                "any",
+            ],
         ),
         (
             "createdOn",
             False,
-            ["plugin_param_type1", "plugin_param_type2", "plugin_param_type3"],
+            [
+                "any",
+                "string",
+                "integer",
+                "number",
+                "boolean",
+                "null",
+                "plugin_param_type1",
+                "plugin_param_type2",
+                "plugin_param_type3",
+            ],
         ),
     ],
 )
@@ -498,58 +427,14 @@ def test_plugin_parameter_type_sort(
       above.
     """
 
-    expected_ids = [
-        registered_plugin_parameter_types[expected_name]["id"]
-        for expected_name in expected
+    expected_plugin_parameter_types = [
+        registered_plugin_parameter_types[expected_name] for expected_name in expected
     ]
-    assert_sorting_plugin_parameter_type_works(
-        dioptra_client, sort_by=sort_by, descending=descending, expected=expected_ids
-    )
-
-
-@pytest.mark.parametrize(
-    "sort_by, descending , expected",
-    [
-        (
-            None,
-            None,
-            ["plugin_param_type1", "plugin_param_type2", "plugin_param_type3"],
-        ),
-        (
-            None,
-            None,
-            ["plugin_param_type3", "plugin_param_type2", "plugin_param_type1"],
-        ),
-    ],
-)
-def test_plugin_parameter_type_sort_by_none(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
-    auth_account: dict[str, Any],
-    registered_plugin_parameter_types: dict[str, Any],
-    sort_by: str | None,
-    descending: bool,
-    expected: list[str],
-) -> None:
-    """Test that plugin param types can be retrieved when sorting is unspecified.
-
-    Given an authenticated user and registered types, this test validates the following
-    sequence of actions:
-
-    - A user registers three types, "image_shape", "model_output", "model".
-    - The user is able to retrieve a list of all registered types.
-    - The returned list of plugin param types matches regardless of the order in the
-        parametrize lists above.
-    """
-
-    expected_ids = set(
-        [
-            registered_plugin_parameter_types[expected_name]["id"]
-            for expected_name in expected
-        ]
-    )
-    assert_sorting_plugin_parameter_type_by_none_works(
-        dioptra_client, sort_by=sort_by, descending=descending, expected=expected_ids
+    assert_retrieving_plugin_parameter_types_works(
+        dioptra_client,
+        sort_by=sort_by,
+        descending=descending,
+        expected=expected_plugin_parameter_types,
     )
 
 
