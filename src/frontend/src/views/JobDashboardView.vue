@@ -106,8 +106,54 @@
       />
     </div>
   </div>
-  <div v-else>
-    TBD
+  <div v-if="tab === 'model metrics'" class="row q-col-gutter-x-lg q-col-gutter-y-lg">
+    <div class="col-12">
+      <div class="row items-center">
+        <q-input 
+          v-model="filter" 
+          debounce="300" 
+          dense 
+          placeholder="Search metric charts" 
+          outlined
+          class="col-grow"
+          clearable
+        >
+          <template #prepend>
+            <q-icon name="search" />
+          </template>
+        </q-input>
+        <q-btn
+          label="Refresh"
+          color="primary"
+          icon="refresh"
+          class="q-ml-lg"
+          @click="loadAllMetricHistories"
+        />
+      </div>
+    </div>
+    <div
+      :class="graphClass" 
+      v-for="(metric, i) in filteredMetrics"
+      :key="metric.name"
+    >
+      <PlotlyGraph
+        :data="metric.data"
+        :title="metric.name"
+        :graphClass="graphClass"
+      />
+    </div>
+    <div
+      v-if="filteredMetrics.length === 0" 
+      class="row items-center q-mt-lg" 
+    >
+      <q-icon
+        name="sym_o_info"
+        size="2.5em"
+        color="grey-7"
+        class="q-mr-sm"
+      />
+      <div style="opacity: 0.7">No metrics found</div>
+    </div>
   </div>
 
   <div style="display: flex; justify-content: flex-end; margin-top: 2rem;">
@@ -135,7 +181,7 @@
 </template>
 
 <script setup>
-import { ref, computed, inject } from 'vue'
+import { ref, computed, inject, watch } from 'vue'
 import PageTitle from '@/components/PageTitle.vue'
 import * as api from '@/services/dataApi'
 import { useRoute, useRouter } from 'vue-router'
@@ -145,14 +191,14 @@ import JobStatus from '@/components/JobStatus.vue'
 import TableComponent from '@/components/TableComponent.vue'
 import DeleteDialog from '@/dialogs/DeleteDialog.vue'
 import * as notify from '../notify'
+import PlotlyGraph from '@/components/PlotlyGraph.vue'
 
 const route = useRoute()
 const router = useRouter()
-console.log('route = ', route)
-console.log('router = ', router)
 
 const tab = ref('overview')
 const isMedium = inject('isMedium')
+const isMobile = inject('isMobile')
 
 const job = ref()
 const showTagsDialog = ref(false)
@@ -170,15 +216,66 @@ async function getJob() {
   }
 }
 
+const metricNames = computed(() => {
+  return metrics.value.map(metric => metric.name)
+})
+
+watch(tab, async (newVal) => {
+  if (newVal === 'model metrics') {
+    await loadAllMetricHistories()
+  }
+})
+
+async function loadAllMetricHistories() {
+  metricsData.value = []
+  await getJobMetrics()
+  const promises = metricNames.value.map(name =>
+    getJobMetricHistory(route.params.id, name)
+  )
+  const results = await Promise.all(promises)
+  metricsData.value = results
+}
+
 async function getJobMetrics() {
   try {
     const res = await api.getJobMetrics(route.params.id)
     metrics.value = res.data
-    
   } catch(err) {
     console.log(err)
   }
 }
+
+const metricsData = ref([])
+
+async function getJobMetricHistory(id, name) {
+  const res = await api.getJobMetricHistory(id, name)
+  
+  return {
+    name,
+    type: 'scatter',
+    data: [
+      {
+        x: res.data.data.map(obj => obj.step),
+        y: res.data.data.map(obj => obj.value)
+      }
+    ]
+  }
+}
+
+const filter = ref('')
+
+const filteredMetrics = computed(() => {
+  if (!filter.value) return metricsData.value
+  return metricsData.value.filter(metric =>
+    metric.name.toLowerCase().includes(filter.value.toLowerCase())
+  )
+})
+
+const graphClass = computed(() => {
+  if(filteredMetrics.value.length <= 1 || isMobile.value) return 'col-12'
+  else if(filteredMetrics.value.length === 2 || isMedium.value) return 'col-6'
+  return 'col-4'
+})
 
 function formatDate(dateString) {
   const options = { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: true }
@@ -227,13 +324,4 @@ async function deleteJob() {
   }
 }
 
-
 </script>
-
-<style scopped>
-
-  /* .col {
-    border: 1px solid red;
-  } */
-
-</style>
