@@ -15,9 +15,10 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The schemas for serializing/deserializing Job resources."""
+import math
 import re
 
-from marshmallow import Schema, fields, validate
+from marshmallow import Schema, fields, validate, post_dump
 
 from dioptra.restapi.v1.artifacts.schema import ArtifactRefSchema
 from dioptra.restapi.v1.schemas import (
@@ -84,6 +85,12 @@ class MetricsSchema(Schema):
         required=False,
         load_default=0,
     )
+
+    @post_dump
+    def convert_nan(self, item, many, **kwargs):
+        if math.isnan(item["value"]):
+            item["value"] = "nan"
+        return item
 
 
 class MetricsSnapshotSchema(Schema):

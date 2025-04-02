@@ -26,12 +26,13 @@ from __future__ import annotations
 import datetime
 import functools
 import json
+import math
 import posixpath
 import re
 from collections import Counter
 from importlib.resources import as_file, files
 from pathlib import PurePosixPath, PureWindowsPath
-from typing import Any, Callable, List, Protocol, Type, cast
+from typing import Any, Callable, List, Literal, Protocol, Type, cast
 
 from flask.views import View
 from flask_restx import Api, Namespace, Resource, inputs
@@ -228,6 +229,18 @@ def read_json_file(package: str, filename: str) -> Any:
     traversable = files(package).joinpath(filename)
     with as_file(traversable) as fp:
         return json.loads(fp.read_text())
+
+
+def convert_nan(value: float) -> float | Literal["nan"]:
+    """Converts nan float values to strings so that they are JSON serializable.
+
+    Args:
+        value: The float value to convert
+
+    Returns:
+        The value "nan" if the float is nan, otherwise the value
+    """
+    return str(value) if math.isnan(value) else value
 
 
 def verify_filename_is_safe(filename) -> None:
