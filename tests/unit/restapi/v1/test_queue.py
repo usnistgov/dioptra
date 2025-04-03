@@ -30,6 +30,7 @@ from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
 
 from ..lib import helpers, routines
+from ..test_utils import assert_retrieving_resource_works
 
 # -- Assertions ------------------------------------------------------------------------
 
@@ -124,8 +125,10 @@ def assert_retrieving_queue_by_id_works(
 def assert_retrieving_queues_works(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     expected: list[dict[str, Any]],
-    group_id: int | None = None,
+    sort_by: str | None = None,
+    descending: bool | None = None,
     search: str | None = None,
+    group_id: int | None = None,
     paging_info: dict[str, Any] | None = None,
 ) -> None:
     """Assert that retrieving all queues works.
@@ -142,65 +145,15 @@ def assert_retrieving_queues_works(
             does not match the expected response.
     """
 
-    query_string: dict[str, Any] = {}
-
-    if group_id is not None:
-        query_string["group_id"] = group_id
-
-    if search is not None:
-        query_string["search"] = search
-
-    if paging_info is not None:
-        query_string["index"] = paging_info["index"]
-        query_string["page_length"] = paging_info["page_length"]
-
-    response = dioptra_client.queues.get(**query_string)
-    assert response.status_code == HTTPStatus.OK and response.json()["data"] == expected
-
-
-def assert_sorting_queue_works(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
-    expected: list[str],
-    sort_by: str | None,
-    descending: bool | None,
-    group_id: int | None = None,
-    search: str | None = None,
-    paging_info: dict[str, Any] | None = None,
-) -> None:
-    """Assert that queues can be sorted by column ascending/descending.
-
-    Args:
-        client: The Flask test client.
-        expected: The expected order of queue ids after sorting.
-            See test_queue_sort for expected orders.
-
-    Raises:
-        AssertionError: If the response status code is not 200 or if the API response
-            does not match the expected response.
-    """
-
-    query_string: dict[str, Any] = {}
-
-    if descending is not None:
-        query_string["descending"] = descending
-
-    if sort_by is not None:
-        query_string["sort_by"] = sort_by
-
-    if group_id is not None:
-        query_string["group_id"] = group_id
-
-    if search is not None:
-        query_string["search"] = search
-
-    if paging_info is not None:
-        query_string["index"] = paging_info["index"]
-        query_string["page_length"] = paging_info["page_length"]
-
-    response = dioptra_client.queues.get(**query_string)
-    response_data = response.json()
-    queue_ids = [queue["id"] for queue in response_data["data"]]
-    assert response.status_code == HTTPStatus.OK and queue_ids == expected
+    assert_retrieving_resource_works(
+        dioptra_client=dioptra_client.queues,
+        expected=expected,
+        group_id=group_id,
+        sort_by=sort_by,
+        descending=descending,
+        search=search,
+        paging_info=paging_info,
+    )
 
 
 def assert_registering_existing_queue_name_fails(
@@ -367,7 +320,6 @@ def test_queue_get_all(
 @pytest.mark.parametrize(
     "sort_by,descending,expected",
     [
-        (None, None, ["queue1", "queue2", "queue3"]),
         ("name", True, ["queue2", "queue1", "queue3"]),
         ("name", False, ["queue3", "queue1", "queue2"]),
         ("createdOn", True, ["queue3", "queue2", "queue1"]),
@@ -394,11 +346,9 @@ def test_queue_sort(
     - The returned list of queues matches the order in the parametrize lists above.
     """
 
-    expected_ids = [
-        registered_queues[expected_name]["id"] for expected_name in expected
-    ]
-    assert_sorting_queue_works(
-        dioptra_client, sort_by=sort_by, descending=descending, expected=expected_ids
+    expected_queues = [registered_queues[expected_name] for expected_name in expected]
+    assert_retrieving_queues_works(
+        dioptra_client, sort_by=sort_by, descending=descending, expected=expected_queues
     )
 
 

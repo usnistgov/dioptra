@@ -64,9 +64,9 @@ def register_entrypoint(
     description: str,
     group_id: int,
     task_graph: str,
-    parameters: list[dict[str, Any]],
-    plugin_ids: list[int],
-    queue_ids: list[int],
+    parameters: list[dict[str, Any]] | None,
+    plugin_ids: list[int] | None,
+    queue_ids: list[int] | None,
 ) -> TestResponse:
     """Register an entrypoint using the API.
 
@@ -768,6 +768,7 @@ def remove_tag(
         f"/{V1_ROOT}/{resource_route}/{resource_id}/tags/{tag_id}",
         follow_redirects=True,
     )
+
 
 def post_metrics(
     client: FlaskClient, job_id: int, metric_name: str, metric_value: float

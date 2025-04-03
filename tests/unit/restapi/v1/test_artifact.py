@@ -30,6 +30,7 @@ from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
 
 from ..lib import helpers
+from ..test_utils import assert_retrieving_resource_works
 
 # -- Assertions ------------------------------------------------------------------------
 
@@ -127,6 +128,8 @@ def assert_retrieving_artifacts_works(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     expected: list[dict[str, Any]],
     group_id: int | None = None,
+    sort_by: str | None = None,
+    descending: bool | None = None,
     search: str | None = None,
     paging_info: dict[str, Any] | None = None,
 ) -> None:
@@ -143,66 +146,16 @@ def assert_retrieving_artifacts_works(
         AssertionError: If the response status code is not 200 or if the API response
             does not match the expected response.
     """
-    query_string: dict[str, Any] = {}
 
-    if group_id is not None:
-        query_string["group_id"] = group_id
-
-    if search is not None:
-        query_string["search"] = search
-
-    if paging_info is not None:
-        query_string["index"] = paging_info["index"]
-        query_string["page_length"] = paging_info["page_length"]
-
-    response = dioptra_client.artifacts.get(**query_string)
-    response_data = response.json()["data"]
-    assert response.status_code == HTTPStatus.OK and response_data == expected
-
-
-def assert_sorting_artifact_works(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
-    expected: list[str],
-    sort_by: str | None,
-    descending: bool | None,
-    group_id: int | None = None,
-    search: str | None = None,
-    paging_info: dict[str, Any] | None = None,
-) -> None:
-    """Assert that artifacts can be sorted by column ascending/descending.
-
-    Args:
-        client: The Flask test client.
-        expected: The expected order of artifacts ids after sorting.
-            See test_artifact_sort for expected orders.
-
-    Raises:
-        AssertionError: If the response status code is not 200 or if the API response
-            does not match the expected response.
-    """
-
-    query_string: dict[str, Any] = {}
-
-    if descending is not None:
-        query_string["descending"] = descending
-
-    if sort_by is not None:
-        query_string["sort_by"] = sort_by
-
-    if group_id is not None:
-        query_string["group_id"] = group_id
-
-    if search is not None:
-        query_string["search"] = search
-
-    if paging_info is not None:
-        query_string["index"] = paging_info["index"]
-        query_string["page_length"] = paging_info["page_length"]
-
-    response = dioptra_client.artifacts.get(**query_string)
-    response_data = response.json()
-    artifact_ids = [artifact["id"] for artifact in response_data["data"]]
-    assert response.status_code == HTTPStatus.OK and artifact_ids == expected
+    assert_retrieving_resource_works(
+        dioptra_client=dioptra_client.artifacts,
+        expected=expected,
+        group_id=group_id,
+        sort_by=sort_by,
+        descending=descending,
+        search=search,
+        paging_info=paging_info,
+    )
 
 
 def assert_registering_existing_artifact_uri_fails(
@@ -292,9 +245,8 @@ def test_artifacts_get_all(
 
 
 @pytest.mark.parametrize(
-    "sortBy, descending , expected",
+    "sort_by, descending , expected",
     [
-        (None, None, ["artifact1", "artifact2", "artifact3", "artifact4"]),
         ("description", True, ["artifact2", "artifact1", "artifact4", "artifact3"]),
         ("description", False, ["artifact3", "artifact4", "artifact1", "artifact2"]),
         ("createdOn", True, ["artifact4", "artifact3", "artifact2", "artifact1"]),
@@ -306,7 +258,7 @@ def test_artifact_sort(
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_artifacts: dict[str, Any],
-    sortBy: str,
+    sort_by: str,
     descending: bool,
     expected: list[str],
 ) -> None:
@@ -315,7 +267,7 @@ def test_artifact_sort(
     Given an authenticated user and registered artifacts, this test validates the
     following sequence of actions:
 
-    - A user registers three artifacts with these descriptions:
+    - A user registers four artifacts with these descriptions:
         "Model artifact.",
         "Trained conv net model artifact.",
         "Another model",
@@ -324,11 +276,11 @@ def test_artifact_sort(
     - The returned list of artifacts matches the order in the parametrize lists above.
     """
 
-    expected_ids = [
-        registered_artifacts[expected_name]["id"] for expected_name in expected
+    expected_queues = [
+        registered_artifacts[expected_name] for expected_name in expected
     ]
-    assert_sorting_artifact_works(
-        dioptra_client, sort_by=sortBy, descending=descending, expected=expected_ids
+    assert_retrieving_artifacts_works(
+        dioptra_client, sort_by=sort_by, descending=descending, expected=expected_queues
     )
 
 
