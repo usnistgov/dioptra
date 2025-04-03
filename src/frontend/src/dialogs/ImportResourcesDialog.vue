@@ -136,7 +136,7 @@
     const importWaitNotification = notify.wait('Importing resources...');
     try {
       const res = await api.importResources(params);
-      notify.success(`Import from ${gitUrl.value} successful.`);
+      notify.success('Import successful.');
     } catch(err) {
       notify.error(err.response.data.message);
     }
