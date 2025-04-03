@@ -414,7 +414,13 @@ class ResourceImportService(object):
                 f"Failed to load resource import config from {config_path}."
             ) from e
 
-        jsonschema.validate(config, DIOPTRA_RESOURCES_SCHEMA)
+        try:
+            jsonschema.validate(config, DIOPTRA_RESOURCES_SCHEMA)
+        except jsonschema.ValidationError as e:
+            raise ImportFailedError(
+                f"Failed to validate config file from {config_path}.",
+                reason=str(e),
+            ) from e
 
         return config
 
