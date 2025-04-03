@@ -97,7 +97,7 @@
 						"items": { "type": "string" }
 					}
 				},
-				"required": [ "path" ],
+				"required": [ "path", "name" ],
 				"additionalProperties": false
 			}
 		}

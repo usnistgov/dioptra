@@ -210,7 +210,7 @@ class ResourceImportSchema(Schema):
             [
                 "git_url" in data,
                 "archiveFile" in request.files,
-                "files" in request.files,
+                "files" in request.files or "files[]" in request.files,
             ]
         )
         if num_provided_sources != 1:
@@ -235,9 +235,8 @@ class ResourceImportSchema(Schema):
                 {"archiveFile": "field required when sourceType is 'upload_archive'"}
             )
 
-        if (
-            data["source_type"] == ResourceImportSourceTypes.UPLOAD_FILES
-            and "files" not in request.files
+        if data["source_type"] == ResourceImportSourceTypes.UPLOAD_FILES and (
+            "files" not in request.files and "files[]" not in request.files
         ):
             raise ValidationError(
                 {"files": "field required when sourceType is 'upload_files'"}
