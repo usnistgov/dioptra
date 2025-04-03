@@ -72,9 +72,11 @@ class MetricsSchema(Schema):
 
     value = fields.Float(
         attribute="value",
+        allow_nan=True,
         metadata=dict(description="The value of the metric."),
         required=True,
     )
+
     step = fields.Integer(
         attribute="step",
         metadata=dict(description="The step value for the metric."),

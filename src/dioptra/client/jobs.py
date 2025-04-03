@@ -14,6 +14,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+from math import isnan
 from typing import Any, ClassVar, Final, TypeVar
 
 from .base import CollectionClient, DioptraSession
@@ -237,7 +238,7 @@ class JobsCollectionClient(CollectionClient[T]):
         """
         json_ = {
             "name": metric_name,
-            "value": metric_value,
+            "value": metric_value if not isnan(metric_value) else "nan",
         }
 
         if metric_step is not None:

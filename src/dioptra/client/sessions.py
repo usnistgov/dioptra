@@ -34,6 +34,7 @@ from .base import (
     IllegalArgumentError,
     JSONDecodeError,
     StatusCodeError,
+    is_simple_json,
 )
 
 LOGGER = logging.getLogger(__name__)
@@ -97,7 +98,7 @@ def wrap_request_method(
     return wrapper
 
 
-def convert_response_to_dict(response: DioptraResponseProtocol) -> dict[str, Any]:
+def convert_response_to_dict(response: DioptraResponseProtocol) -> dict[str, Any] | list[dict[str, Any]]:
     """Convert a response object to a JSON-like Python dictionary.
 
     Args:
@@ -121,7 +122,10 @@ def convert_response_to_dict(response: DioptraResponseProtocol) -> dict[str, Any
         raise StatusCodeError(f"Error code returned: {response.status_code}")
 
     try:
-        response_dict = response.json()
+        if is_simple_json():
+            response_dict = response.json(allow_nan=True)
+        else:
+            response_dict = response.json()
 
     except requests.JSONDecodeError as err:
         LOGGER.debug(
@@ -204,7 +208,6 @@ def to_multipart_encoder(
                     ) from err
 
     return MultipartEncoder(merged)
-
 
 class BaseDioptraRequestsSession(DioptraSession[T], ABC, Generic[T]):
     """
@@ -330,7 +333,8 @@ class BaseDioptraRequestsSession(DioptraSession[T], ABC, Generic[T]):
             method_kwargs["data"] = merged_data
             method_kwargs["headers"] = {"Content-Type": merged_data.content_type}
 
-        return method(url, **method_kwargs)
+        response = method(url, **method_kwargs)
+        return response
 
     def download(
         self,

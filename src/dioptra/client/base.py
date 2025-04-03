@@ -92,7 +92,7 @@ class DioptraResponseProtocol(Protocol):
         """The response body as a string."""
         ...  # fmt: skip
 
-    def json(self) -> dict[str, Any]:
+    def json(self, allow_nan=True) -> dict[str, Any] | list[dict[str, Any]]:
         """Return the response body as a JSON-like Python dictionary.
 
         Returns:
@@ -100,6 +100,12 @@ class DioptraResponseProtocol(Protocol):
         """
         ...  # fmt: skip
 
+def is_simple_json():
+    try:
+        import simplejson
+        return True
+    except:
+        return False
 
 @dataclass
 class DioptraFile(object):

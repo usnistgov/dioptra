@@ -21,6 +21,7 @@ functionalities for the job entity. The tests ensure that the queues can be
 registered, renamed, queried, and deleted as expected through the REST API.
 """
 from http import HTTPStatus
+from math import isnan
 from typing import Any
 
 import pytest
@@ -580,6 +581,19 @@ def test_metrics(
             {"name": "accuracy", "value": 4.1},
             {"name": "accuracy", "value": 4.0},
         ],
+    )
+
+    metric_response = dioptra_client.jobs.append_metric_by_id(  # noqa: F841
+        job_id=job1_id, metric_name="nan_metric", metric_value=float("nan")
+    )
+
+    response = dioptra_client.jobs.get_metrics_by_id(job_id=job1_id).json()
+    assert all(
+        [
+            isnan(metric["value"])
+            for metric in response
+            if metric["name"] == "nan_metric"
+        ]
     )
 
 
