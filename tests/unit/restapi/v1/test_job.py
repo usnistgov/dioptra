@@ -31,7 +31,8 @@ from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
 
 from ..lib import asserts, helpers, mock_mlflow, mock_rq, routines
-from ..test_utils import match_normalized_json
+from ..test_utils import assert_retrieving_resource_works
+
 # -- Assertions ------------------------------------------------------------------------
 
 
@@ -140,6 +141,8 @@ def assert_retrieving_jobs_works(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     expected: list[dict[str, Any]],
     group_id: int | None = None,
+    sort_by: str | None = None,
+    descending: bool | None = None,
     search: str | None = None,
     paging_info: dict[str, Any] | None = None,
 ) -> None:
@@ -156,112 +159,15 @@ def assert_retrieving_jobs_works(
         AssertionError: If the response status code is not 200 or if the API response
             does not match the expected response.
     """
-    query_string: dict[str, Any] = {}
-
-    if group_id is not None:
-        query_string["group_id"] = group_id
-
-    if search is not None:
-        query_string["search"] = search
-
-    if paging_info is not None:
-        query_string["index"] = paging_info["index"]
-        query_string["page_length"] = paging_info["page_length"]
-
-    response = dioptra_client.jobs.get(**query_string)
-    # A sort order was not given in the request, so we must not assume a
-    # particular order in the response.
-    assert response.status_code == HTTPStatus.OK and match_normalized_json(response, expected)
-
-
-def assert_sorting_job_works(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
-    expected: list[str],
-    sort_by: str | None,
-    descending: bool | None,
-    group_id: int | None = None,
-    search: str | None = None,
-    paging_info: dict[str, Any] | None = None,
-) -> None:
-    """Assert that jobs can be sorted by column ascending/descending.
-
-    Args:
-        client: The Flask test client.
-        expected: The expected order of job ids after sorting.
-            See test_job_sort for expected orders.
-
-    Raises:
-        AssertionError: If the response status code is not 200 or if the API response
-            does not match the expected response.
-    """
-
-    assert sort_by is not None, "Sort criteria not specified."
-
-    query_string: dict[str, Any] = {}
-
-    if descending is not None:
-        query_string["descending"] = descending
-
-    if sort_by is not None:
-        query_string["sort_by"] = sort_by
-
-    if group_id is not None:
-        query_string["group_id"] = group_id
-
-    if search is not None:
-        query_string["search"] = search
-
-    if paging_info is not None:
-        query_string["index"] = paging_info["index"]
-        query_string["page_length"] = paging_info["page_length"]
-
-    response = dioptra_client.jobs.get(**query_string)
-    response_data = response.json()
-    job_ids = [job["id"] for job in response_data["data"]]
-    assert response.status_code == HTTPStatus.OK and job_ids == expected
-
-
-def assert_sorting_job_by_none_works(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
-    expected: set[str],
-    sort_by: str | None,
-    descending: bool | None,
-    group_id: int | None = None,
-    search: str | None = None,
-    paging_info: dict[str, Any] | None = None,
-) -> None:
-    """Assert that jobs can be retrieved properly when sorting isn't specified.
-
-    Args:
-        client: The Flask test client.
-        expected: The expected job ids.
-
-    Raises:
-        AssertionError: If the response status code is not 200 or if the API response
-            does not match the expected response.
-    """
-
-    assert sort_by is None, "Sort criteria is specified."
-
-    query_string: dict[str, Any] = {}
-
-    if descending is not None:
-        query_string["descending"] = descending
-
-    if group_id is not None:
-        query_string["group_id"] = group_id
-
-    if search is not None:
-        query_string["search"] = search
-
-    if paging_info is not None:
-        query_string["index"] = paging_info["index"]
-        query_string["page_length"] = paging_info["page_length"]
-
-    response = dioptra_client.jobs.get(**query_string)
-    response_data = response.json()
-    job_ids = [job["id"] for job in response_data["data"]]
-    assert response.status_code == HTTPStatus.OK and set(job_ids) == expected
+    assert_retrieving_resource_works(
+        dioptra_client=dioptra_client.jobs,
+        expected=expected,
+        group_id=group_id,
+        sort_by=sort_by,
+        descending=descending,
+        search=search,
+        paging_info=paging_info,
+    )
 
 
 def assert_job_is_not_found(
@@ -790,47 +696,9 @@ def test_job_sort(
     - The returned list of jobs matches the order in the parametrize lists above.
     """
 
-    expected_ids = [registered_jobs[expected_name]["id"] for expected_name in expected]
-    assert_sorting_job_works(
-        dioptra_client, sort_by=sortBy, descending=descending, expected=expected_ids
-    )
-
-
-@pytest.mark.parametrize(
-    "sortBy, descending , expected",
-    [
-        (None, None, ["job1", "job2", "job3"]),
-        (None, None, ["job3", "job2", "job1"]),
-    ],
-)
-def test_job_sort_by_none(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
-    auth_account: dict[str, Any],
-    registered_jobs: dict[str, Any],
-    sortBy: str,
-    descending: bool,
-    expected: list[str],
-) -> None:
-    """Test that jobs can be retrieved when sorting is unspecified.
-
-    Given an authenticated user and registered jobs, this test validates the following
-    sequence of actions:
-
-    - A user registers three jobs descriptions:
-      "The first job.",
-      "The second job.",
-      "Not retrieved.".
-    - The user is able to retrieve a list of all registered jobs.
-    - The returned list of jobs matches regardless of the order in the parametrize
-        lists above.
-    """
-
-    expected_ids = set(
-        [registered_jobs[expected_name]["id"] for expected_name in expected]
-    )
-    assert_sorting_job_by_none_works(
-        dioptra_client, sort_by=sortBy, descending=descending, expected=expected_ids
+    expected_jobs = [registered_jobs[expected_name] for expected_name in expected]
+    assert_retrieving_jobs_works(
+        dioptra_client, sort_by=sortBy, descending=descending, expected=expected_jobs
     )
 
 

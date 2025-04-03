@@ -32,7 +32,7 @@ from dioptra.client.client import DioptraClient
 from dioptra.restapi.routes import V1_PLUGIN_PARAMETER_TYPES_ROUTE, V1_ROOT
 
 from ..lib import helpers, routines
-from ..test_utils import match_normalized_json
+from ..test_utils import assert_retrieving_resource_works, match_normalized_json
 
 # -- Assertions Plugins ----------------------------------------------------------------
 
@@ -135,6 +135,8 @@ def assert_retrieving_plugin_by_id_works(
 def assert_retrieving_plugins_works(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     expected: list[dict[str, Any]],
+    sort_by: str | None = None,
+    descending: bool | None = None,
     group_id: int | None = None,
     search: str | None = None,
     paging_info: dict[str, Any] | None = None,
@@ -153,111 +155,15 @@ def assert_retrieving_plugins_works(
             does not match the expected response.
     """
 
-    query_string: dict[str, Any] = {}
-
-    query_string["group_id"] = group_id
-
-    if search is not None:
-        query_string["search"] = search
-
-    if paging_info is not None:
-        query_string["index"] = paging_info["index"]
-        query_string["page_length"] = paging_info["page_length"]
-
-    response = dioptra_client.plugins.get(**query_string)
-    # A sort order was not given in the request, so we must not assume a
-    # particular order in the response.
-    assert response.status_code == HTTPStatus.OK and match_normalized_json(response, expected)
-
-
-def assert_sorting_plugin_works(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
-    expected: list[str],
-    sort_by: str | None,
-    descending: bool | None,
-    group_id: int | None = None,
-    search: str | None = None,
-    paging_info: dict[str, Any] | None = None,
-) -> None:
-    """Assert that plugins can be sorted by column ascending/descending.
-
-    Args:
-        client: The Flask test client.
-        expected: The expected order of plugins ids after sorting.
-            See test_plugin_sort for expected orders.
-
-    Raises:
-        AssertionError: If the response status code is not 200 or if the API response
-            does not match the expected response.
-    """
-
-    assert sort_by is not None, "Sort criteria not specified."
-
-    query_string: dict[str, Any] = {}
-
-    if descending is not None:
-        query_string["descending"] = descending
-
-    if sort_by is not None:
-        query_string["sort_by"] = sort_by
-
-    if group_id is not None:
-        query_string["group_id"] = group_id
-
-    if search is not None:
-        query_string["search"] = search
-
-    if paging_info is not None:
-        query_string["index"] = paging_info["index"]
-        query_string["page_length"] = paging_info["page_length"]
-
-    response = dioptra_client.plugins.get(**query_string)
-    response_data = response.json()
-    plugin_ids = [plugin["id"] for plugin in response_data["data"]]
-    assert response.status_code == HTTPStatus.OK and plugin_ids == expected
-
-
-def assert_sorting_plugin_by_none_works(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
-    expected: set[str],
-    sort_by: str | None,
-    descending: bool | None,
-    group_id: int | None = None,
-    search: str | None = None,
-    paging_info: dict[str, Any] | None = None,
-) -> None:
-    """Assert that plugins can be retrieved properly when sorting isn't specified.
-
-    Args:
-        client: The Flask test client.
-        expected: The expected plugins ids.
-
-    Raises:
-        AssertionError: If the response status code is not 200 or if the API response
-            does not match the expected response.
-    """
-
-    assert sort_by is None, "Sort criteria is specified."
-
-    query_string: dict[str, Any] = {}
-
-    if descending is not None:
-        query_string["descending"] = descending
-
-    if group_id is not None:
-        query_string["group_id"] = group_id
-
-    if search is not None:
-        query_string["search"] = search
-
-    if paging_info is not None:
-        query_string["index"] = paging_info["index"]
-        query_string["page_length"] = paging_info["page_length"]
-
-    response = dioptra_client.plugins.get(**query_string)
-    response_data = response.json()
-    plugin_ids = [plugin["id"] for plugin in response_data["data"]]
-    assert response.status_code == HTTPStatus.OK and set(plugin_ids) == expected
+    assert_retrieving_resource_works(
+        dioptra_client=dioptra_client.plugins,
+        expected=expected,
+        group_id=group_id,
+        sort_by=sort_by,
+        descending=descending,
+        search=search,
+        paging_info=paging_info,
+    )
 
 
 def assert_registering_existing_plugin_name_fails(
@@ -457,6 +363,8 @@ def assert_retrieving_plugin_files_works(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     expected: list[dict[str, Any]],
     plugin_id: int,
+    sort_by: str | None = None,
+    descending: bool | None = None,
     paging_info: dict[str, Any] | None = None,
 ) -> None:
     """Assert that retrieving all plugin files works.
@@ -476,6 +384,12 @@ def assert_retrieving_plugin_files_works(
 
     query_string: dict[str, Any] = {}
 
+    if sort_by is not None:
+        query_string["sort_by"] = sort_by
+
+    if descending is not None:
+        query_string["descending"] = descending
+
     if paging_info is not None:
         query_string["index"] = paging_info["index"]
         query_string["page_length"] = paging_info["page_length"]
@@ -483,99 +397,9 @@ def assert_retrieving_plugin_files_works(
     response = dioptra_client.plugins.files.get(plugin_id=plugin_id, **query_string)
     # A sort order was not given in the request, so we must not assume a
     # particular order in the response.
-    assert response.status_code == HTTPStatus.OK and match_normalized_json(response, expected)
-
-
-def assert_sorting_plugin_file_works(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
-    expected: list[str],
-    plugin_id: str | int,
-    sort_by: str | None,
-    descending: bool | None,
-    group_id: int | None = None,
-    search: str | None = None,
-    paging_info: dict[str, Any] | None = None,
-) -> None:
-    """Assert that plugin files can be sorted by column ascending/descending.
-
-    Args:
-        client: The Flask test client.
-        expected: The expected order of plugins ids after sorting.
-            See test_plugin_file_sort for expected orders.
-
-    Raises:
-        AssertionError: If the response status code is not 200 or if the API response
-            does not match the expected response.
-    """
-
-    assert sort_by is not None, "Sort criteria is not specified."
-
-    query_string: dict[str, Any] = {}
-
-    if descending is not None:
-        query_string["descending"] = descending
-
-    if sort_by is not None:
-        query_string["sort_by"] = sort_by
-
-    if group_id is not None:
-        query_string["group_id"] = group_id
-
-    if search is not None:
-        query_string["search"] = search
-
-    if paging_info is not None:
-        query_string["index"] = paging_info["index"]
-        query_string["page_length"] = paging_info["page_length"]
-
-    response = dioptra_client.plugins.files.get(plugin_id=plugin_id, **query_string)
-    response_data = response.json()
-    plugin_ids = [file["id"] for file in response_data["data"]]
-    assert response.status_code == HTTPStatus.OK and plugin_ids == expected
-
-
-def assert_sorting_plugin_file_by_none_works(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
-    expected: set[str],
-    plugin_id: str | int,
-    sort_by: str | None,
-    descending: bool | None,
-    group_id: int | None = None,
-    search: str | None = None,
-    paging_info: dict[str, Any] | None = None,
-) -> None:
-    """Assert that plugin files can be retrieved properly when sorting isn't specified.
-
-    Args:
-        client: The Flask test client.
-        expected: The expected plugins ids.
-
-    Raises:
-        AssertionError: If the response status code is not 200 or if the API response
-            does not match the expected response.
-    """
-
-    assert sort_by is None, "Sort criteria is specified."
-
-    query_string: dict[str, Any] = {}
-
-    if descending is not None:
-        query_string["descending"] = descending
-
-    if group_id is not None:
-        query_string["group_id"] = group_id
-
-    if search is not None:
-        query_string["search"] = search
-
-    if paging_info is not None:
-        query_string["index"] = paging_info["index"]
-        query_string["page_length"] = paging_info["page_length"]
-
-    response = dioptra_client.plugins.files.get(plugin_id=plugin_id, **query_string)
-    response_data = response.json()
-    plugin_ids = [file["id"] for file in response_data["data"]]
-    assert response.status_code == HTTPStatus.OK and set(plugin_ids) == expected
+    assert response.status_code == HTTPStatus.OK and match_normalized_json(
+        response, expected
+    )
 
 
 def assert_registering_existing_plugin_filename_fails(
@@ -815,52 +639,12 @@ def test_plugin_sort(
     - The returned list of plugins matches the order in the parametrize lists above.
     """
 
-    expected_ids = [
-        registered_plugins[expected_name]["id"] for expected_name in expected
-    ]
-    assert_sorting_plugin_works(
+    expected_plugins = [registered_plugins[expected_name] for expected_name in expected]
+    assert_retrieving_plugins_works(
         dioptra_client=dioptra_client,
         sort_by=sort_by,
         descending=descending,
-        expected=expected_ids,
-    )
-
-
-@pytest.mark.parametrize(
-    "sort_by, descending , expected",
-    [
-        (None, None, ["plugin1", "plugin2", "plugin3"]),
-        (None, None, ["plugin3", "plugin2", "plugin1"]),
-    ],
-)
-def test_plugin_sort_by_none(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
-    auth_account: dict[str, Any],
-    registered_plugins: dict[str, Any],
-    sort_by: str,
-    descending: bool,
-    expected: list[str],
-) -> None:
-    """Test that plugins can be retrieved when sorting is unspecified.
-
-    Given an authenticated user and registered plugins, this test validates the
-    following sequence of actions:
-
-    - A user registers three plugins, "plugin_one", "plugin_two", "plugin_three".
-    - The user is able to retrieve a list of all registered plugins.
-    - The returned list of plugins matches regardless of the order in the parametrize
-        lists above.
-    """
-
-    expected_ids = set(
-        [registered_plugins[expected_name]["id"] for expected_name in expected]
-    )
-    assert_sorting_plugin_by_none_works(
-        dioptra_client=dioptra_client,
-        sort_by=sort_by,
-        descending=descending,
-        expected=expected_ids,
+        expected=expected_plugins,
     )
 
 
@@ -1270,57 +1054,12 @@ def test_plugin_file_sort(
       above.
     """
 
-    expected_ids = [
-        registered_plugin_with_files[expected_name]["id"] for expected_name in expected
+    expected_plugin_files = [
+        registered_plugin_with_files[expected_name] for expected_name in expected
     ]
-    assert_sorting_plugin_file_works(
+    assert_retrieving_plugin_files_works(
         dioptra_client,
-        expected=expected_ids,
-        plugin_id=registered_plugin_with_files["plugin"]["id"],
-        sort_by=sort_by,
-        descending=descending,
-    )
-
-
-@pytest.mark.parametrize(
-    "sort_by, descending , expected",
-    [
-        (None, None, ["plugin_file1", "plugin_file2", "plugin_file3"]),
-        (None, None, ["plugin_file3", "plugin_file2", "plugin_file1"]),
-    ],
-)
-def test_plugin_file_sort_by_none(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
-    auth_account: dict[str, Any],
-    registered_plugin_with_files: dict[str, Any],
-    sort_by: str,
-    descending: bool,
-    expected: list[str],
-) -> None:
-    """Test that plugin files can be retrieved when sorting is unspecified.
-
-    Given an authenticated user and registered plugin files, this test validates the
-    following sequence of actions:
-
-    - A user registers three plugin files:
-      "plugin_file_one.py",
-      "plugin_file_two.py",
-      "plugin_file_three.py".
-    - The user is able to retrieve a list of all registered plugins files.
-    - The returned list of plugin files matches regardless of the order in the
-      parametrize lists above.
-    """
-
-    expected_ids = set(
-        [
-            registered_plugin_with_files[expected_name]["id"]
-            for expected_name in expected
-        ]
-    )
-    assert_sorting_plugin_file_by_none_works(
-        dioptra_client,
-        expected=expected_ids,
+        expected=expected_plugin_files,
         plugin_id=registered_plugin_with_files["plugin"]["id"],
         sort_by=sort_by,
         descending=descending,

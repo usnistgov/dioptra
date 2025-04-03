@@ -31,7 +31,7 @@ from dioptra.client.base import DioptraResponseProtocol, FieldNameCollisionError
 from dioptra.client.client import DioptraClient
 
 from ..lib import helpers, routines
-from ..test_utils import match_normalized_json
+from ..test_utils import assert_retrieving_resource_works
 
 # -- Assertions ------------------------------------------------------------------------
 
@@ -158,6 +158,8 @@ def assert_retrieving_entrypoints_works(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     expected: list[dict[str, Any]],
     group_id: int | None = None,
+    sort_by: str | None = None,
+    descending: bool | None = None,
     search: str | None = None,
     paging_info: dict[str, Any] | None = None,
 ) -> None:
@@ -175,111 +177,15 @@ def assert_retrieving_entrypoints_works(
             does not match the expected response.
     """
 
-    query_string: dict[str, Any] = {}
-
-    if group_id is not None:
-        query_string["group_id"] = group_id
-
-    if search is not None:
-        query_string["search"] = search
-
-    if paging_info is not None:
-        query_string["index"] = paging_info["index"]
-        query_string["page_length"] = paging_info["page_length"]
-
-    response = dioptra_client.entrypoints.get(**query_string)
-    # A sort order was not given in the request, so we must not assume a
-    # particular order in the response.
-    assert response.status_code == HTTPStatus.OK and match_normalized_json(response, expected)
-
-
-def assert_sorting_entrypoint_works(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
-    expected: list[str],
-    sort_by: str | None,
-    descending: bool | None,
-    group_id: int | None = None,
-    search: str | None = None,
-    paging_info: dict[str, Any] | None = None,
-) -> None:
-    """Assert that entrypoints can be sorted by column ascending/descending.
-
-    Args:
-        client: The Flask test client.
-        expected: The expected order of entrypoints ids after sorting.
-            See test_entrypoint_sort for expected orders.
-
-    Raises:
-        AssertionError: If the response status code is not 200 or if the API response
-            does not match the expected response.
-    """
-
-    assert sort_by is not None, "Sort criteria not specified."
-
-    query_string: dict[str, Any] = {}
-
-    if descending is not None:
-        query_string["descending"] = descending
-
-    if sort_by is not None:
-        query_string["sort_by"] = sort_by
-
-    if group_id is not None:
-        query_string["group_id"] = group_id
-
-    if search is not None:
-        query_string["search"] = search
-
-    if paging_info is not None:
-        query_string["index"] = paging_info["index"]
-        query_string["page_length"] = paging_info["page_length"]
-
-    response = dioptra_client.entrypoints.get(**query_string)
-    response_data = response.json()
-    entrypoint_ids = [entrypoint["id"] for entrypoint in response_data["data"]]
-    assert response.status_code == HTTPStatus.OK and entrypoint_ids == expected
-
-
-def assert_sorting_entrypoint_by_none_works(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
-    expected: set[str],
-    sort_by: str | None,
-    descending: bool | None,
-    group_id: int | None = None,
-    search: str | None = None,
-    paging_info: dict[str, Any] | None = None,
-) -> None:
-    """Assert that entrypoints can be retrieved properly when sorting isn't specified.
-
-    Args:
-        client: The Flask test client.
-        expected: The expected entrypoint ids.
-
-    Raises:
-        AssertionError: If the response status code is not 200 or if the API response
-            does not match the expected response.
-    """
-    assert sort_by is None, "Sort criteria is specified."
-
-    query_string: dict[str, Any] = {}
-
-    if descending is not None:
-        query_string["descending"] = descending
-
-    if group_id is not None:
-        query_string["group_id"] = group_id
-
-    if search is not None:
-        query_string["search"] = search
-
-    if paging_info is not None:
-        query_string["index"] = paging_info["index"]
-        query_string["page_length"] = paging_info["page_length"]
-
-    response = dioptra_client.entrypoints.get(**query_string)
-    response_data = response.json()
-    entrypoint_ids = [entrypoint["id"] for entrypoint in response_data["data"]]
-    assert response.status_code == HTTPStatus.OK and set(entrypoint_ids) == expected
+    assert_retrieving_resource_works(
+        dioptra_client=dioptra_client.entrypoints,
+        expected=expected,
+        group_id=group_id,
+        sort_by=sort_by,
+        descending=descending,
+        search=search,
+        paging_info=paging_info,
+    )
 
 
 def assert_registering_existing_entrypoint_name_fails(
@@ -503,43 +409,43 @@ def assert_registering_entrypoint_with_no_queues_succeeds(
     entry_point: dict[str, Any],
     assert_message: str,
 ) -> None:
-    """ Assert that registering entryPoint with empty queues, plugins and/or params is OK
+    """Assert that registering entryPoint with empty queues, plugins and/or params is OK
 
     Args:
         dioptra_client (DioptraClient[DioptraResponseProtocol]): the restAPI client
         entry_point (dict[str, Any]): Dict packed with stuffed data for creating entry-point
         assert_message (str): Failed evaluation message for the assert to report
     """
+
     def assert_correct_emptiness(
-        entry_point: dict[str, Any], 
-        entity_name: str, 
-        entry_point_data: dict[str, Any]
-        ):
+        entry_point: dict[str, Any], entity_name: str, entry_point_data: dict[str, Any]
+    ):
         # For empties - the empties are stored
         if not entry_point[entity_name] and entity_name in entry_point_data:
-            assert not bool (entry_point_data[entity_name])
+            assert not bool(entry_point_data[entity_name])
         # For non-empties - the non-empties match
         if entry_point[entity_name] and entity_name in entry_point_data:
             assert entry_point_data[entity_name] == entry_point[entity_name]
-            
+
     entrypoint_response = None
     entrypoint_response = dioptra_client.entrypoints.create(
-        group_id = entry_point["group_id"],
-        name = entry_point["name"],
-        task_graph = entry_point["task_graph"],
-        description = entry_point["description"],
-        parameters = entry_point["parameters"],
-        queues = entry_point["queues"],
-        plugins = entry_point["plugins"],
+        group_id=entry_point["group_id"],
+        name=entry_point["name"],
+        task_graph=entry_point["task_graph"],
+        description=entry_point["description"],
+        parameters=entry_point["parameters"],
+        queues=entry_point["queues"],
+        plugins=entry_point["plugins"],
     )
-    assert (    entrypoint_response 
-            and entrypoint_response.status_code == HTTPStatus.OK 
-        ), assert_message    
+    assert (
+        entrypoint_response and entrypoint_response.status_code == HTTPStatus.OK
+    ), assert_message
     # Assert the return values match what was expected
     entry_point_data = entrypoint_response.json()
     assert_correct_emptiness(entry_point, "queues", entry_point_data)
     assert_correct_emptiness(entry_point, "parameters", entry_point_data)
     assert_correct_emptiness(entry_point, "plugins", entry_point_data)
+
 
 # -- Tests -----------------------------------------------------------------------------
 
@@ -669,52 +575,6 @@ def test_entrypoint_get_all(
     "sortBy, descending , expected",
     [
         (
-            None,
-            None,
-            ["entrypoint1", "entrypoint2", "entrypoint3", "entrypoint_no_params"],
-        ),
-        (
-            None,
-            None,
-            ["entrypoint3", "entrypoint2", "entrypoint1", "entrypoint_no_params"],
-        ),
-    ],
-)
-def test_entrypoint_sort_by_none(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
-    auth_account: dict[str, Any],
-    registered_entrypoints: dict[str, Any],
-    sortBy: str,
-    descending: bool,
-    expected: list[str],
-) -> None:
-    """Test that entrypoints can be retrieved when sorting is unspecified.
-
-    Given an authenticated user and registered entrypoints, this test validates the
-    following sequence of actions:
-
-    - A user registers three entrypoints:
-      "entrypoint_one",
-      "entrypoint_two",
-      "entrypoint_three".
-    - The user is able to retrieve a list of all registered entrypoints.
-    - The returned list of entrypoints matches regardless of the order in the
-        parametrize lists above.
-    """
-
-    expected_ids = set(
-        [registered_entrypoints[expected_name]["id"] for expected_name in expected]
-    )
-    assert_sorting_entrypoint_by_none_works(
-        dioptra_client, sort_by=sortBy, descending=descending, expected=expected_ids
-    )
-
-
-@pytest.mark.parametrize(
-    "sortBy, descending , expected",
-    [
-        (
             "name",
             True,
             ["entrypoint2", "entrypoint3", "entrypoint1", "entrypoint_no_params"],
@@ -759,11 +619,14 @@ def test_entrypoint_sort(
     - The returned list of entrypoints matches the order in the parametrize lists above.
     """
 
-    expected_ids = [
-        registered_entrypoints[expected_name]["id"] for expected_name in expected
+    expected_entrypoints = [
+        registered_entrypoints[expected_name] for expected_name in expected
     ]
-    assert_sorting_entrypoint_works(
-        dioptra_client, sort_by=sortBy, descending=descending, expected=expected_ids
+    assert_retrieving_entrypoints_works(
+        dioptra_client,
+        sort_by=sortBy,
+        descending=descending,
+        expected=expected_entrypoints,
     )
 
 
@@ -1494,71 +1357,72 @@ def test_delete_plugin_snapshot_by_id_for_entrypoint(
 
 
 def test_create_entrypoint_with_empty_queues_plugins_params(
-        dioptra_client: DioptraClient[DioptraResponseProtocol],
-        auth_account: dict[str, Any],
-    ) -> None:
-    """ Verify that API can register entry-point with empty arrays for queues, plugins, and params
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+) -> None:
+    """Verify that API can register entry-point with empty arrays for queues, plugins, and params
 
     Args:
         dioptra_client (DioptraClient[DioptraResponseProtocol]): Client
         auth_account (dict[str, Any]): Account
-    """    
+    """
     user_id = auth_account["id"]
     group_id = auth_account["groups"][0]["id"]
     empty_entry_point = {
-            "user_id": user_id,
-            "group_id": group_id,
-            "name": "test_entrypoint_3Empties",
-            "description": "new test entrypoint #1 With 3 []s",
-            "task_graph": "graph:    message:    my_entrypoint: $name",
-            "parameters": [],
-            "plugins": [],
-            "queues": [],
-            "task_graph": textwrap.dedent(
-                f"""# my entrypoint graph
+        "user_id": user_id,
+        "group_id": group_id,
+        "name": "test_entrypoint_3Empties",
+        "description": "new test entrypoint #1 With 3 []s",
+        "task_graph": "graph:    message:    my_entrypoint: $name",
+        "parameters": [],
+        "plugins": [],
+        "queues": [],
+        "task_graph": textwrap.dedent(
+            f"""# my entrypoint graph
                 graph:
                 message:
                     my_entrypoint:  "test_entrypoint_3Empties"
                 """
-                ),
-        }
+        ),
+    }
     assert_registering_entrypoint_with_no_queues_succeeds(
-        dioptra_client = dioptra_client,
-        entry_point = empty_entry_point,
-        assert_message = "Failed to create EntryPoint with 3 EMPTY entities: [queues=[], plugins=[], parameters=[]]"
+        dioptra_client=dioptra_client,
+        entry_point=empty_entry_point,
+        assert_message="Failed to create EntryPoint with 3 EMPTY entities: [queues=[], plugins=[], parameters=[]]",
     )
 
+
 def test_create_entrypoint_with_none_queues_plugins_params(
-        dioptra_client: DioptraClient[DioptraResponseProtocol],
-        auth_account: dict[str, Any],
-    ) -> None:
-    """  Tests that queues, plugins and parameters can be None-s
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+) -> None:
+    """Tests that queues, plugins and parameters can be None-s
 
     Args:
         dioptra_client (DioptraClient[DioptraResponseProtocol]): Client
         auth_account (dict[str, Any]): Account
-    """    
+    """
     user_id = auth_account["id"]
     group_id = auth_account["groups"][0]["id"]
     none_entry_point = {
-            "user_id": user_id,
-            "group_id": group_id,
-            "name": "test_entrypoint_3Nones",
-            "description": "new test entrypoint #2 With 3 Nones",
-            "task_graph": "graph:    message:    my_entrypoint: $name",
-            "parameters": None,
-            "plugins":  None,
-            "queues":  None,
-            "task_graph": textwrap.dedent(
-                f"""# my entrypoint graph
+        "user_id": user_id,
+        "group_id": group_id,
+        "name": "test_entrypoint_3Nones",
+        "description": "new test entrypoint #2 With 3 Nones",
+        "task_graph": "graph:    message:    my_entrypoint: $name",
+        "parameters": None,
+        "plugins": None,
+        "queues": None,
+        "task_graph": textwrap.dedent(
+            f"""# my entrypoint graph
                 graph:
                 message:
                     my_entrypoint:  "test_entrypoint_3Nones"
                 """
-                ),
-        }
+        ),
+    }
     assert_registering_entrypoint_with_no_queues_succeeds(
-        dioptra_client = dioptra_client,
-        entry_point = none_entry_point,
-        assert_message = "Failed to create EntryPoint with 3 None entities: [queues=None, plugins=None, parameters=None]"
+        dioptra_client=dioptra_client,
+        entry_point=none_entry_point,
+        assert_message="Failed to create EntryPoint with 3 None entities: [queues=None, plugins=None, parameters=None]",
     )

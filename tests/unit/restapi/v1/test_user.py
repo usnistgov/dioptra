@@ -29,6 +29,7 @@ from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
 
 from ..lib import helpers
+from ..test_utils import assert_retrieving_resource_works
 
 # -- Assertions ----------------------------------------------------------------
 
@@ -157,17 +158,12 @@ def assert_retrieving_users_works(
         AssertionError: If the response status code is not 200 or if the API response
             does not match the expected response.
     """
-    query_string: dict[str, Any] = {}
-
-    if search is not None:
-        query_string["search"] = search
-
-    if paging_info is not None:
-        query_string["index"] = paging_info["index"]
-        query_string["pageLength"] = paging_info["page_length"]
-
-    response = dioptra_client.users.get(**query_string)
-    assert response.status_code == HTTPStatus.OK and response.json()["data"] == expected
+    assert_retrieving_resource_works(
+        dioptra_client=dioptra_client.users,
+        expected=expected,
+        search=search,
+        paging_info=paging_info,
+    )
 
 
 def assert_registering_existing_username_fails(
