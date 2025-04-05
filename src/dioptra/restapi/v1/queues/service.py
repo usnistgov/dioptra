@@ -139,7 +139,7 @@ class QueueService(object):
         queues, total_num_queues = self._uow.queue_repo.get_by_filters_paged(
             group_id,
             search_struct,
-            page_index * page_length,
+            page_index,
             page_length,
             sort_by_string,
             descending,

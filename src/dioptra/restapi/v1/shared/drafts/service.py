@@ -101,7 +101,7 @@ class ResourceDraftsService(object):
             current_user,
             group_id,
             base_resource_id,
-            page_index * page_length,
+            page_index,
             page_length,
         )
 

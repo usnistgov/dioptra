@@ -169,7 +169,7 @@ class UserService(object):
 
         search_struct = parse_search_text(search_string)
         users, total_num_users = self._uow.user_repo.get_by_filters_paged(
-            search_struct, page_index * page_length, page_length
+            search_struct, page_index, page_length
         )
 
         return list(users), total_num_users

@@ -128,7 +128,7 @@ class GroupService(object):
 
         search_struct = parse_search_text(search_string)
         groups, total_num_groups = self._uow.group_repo.get_by_filters_paged(
-            search_struct, page_index * page_length, page_length
+            search_struct, page_index, page_length
         )
 
         return list(groups), total_num_groups
