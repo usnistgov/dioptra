@@ -172,7 +172,7 @@ class ExperimentService(object):
             self._uow.experiment_repo.get_by_filters_paged(
                 group_id,
                 search_struct,
-                page_index * page_length,
+                page_index,
                 page_length,
                 sort_by_string,
                 descending,
