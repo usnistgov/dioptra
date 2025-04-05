@@ -445,11 +445,15 @@ class ResourceIdDraftService(object):
                 provided_resource_snapshot_id=payload["resource_snapshot_id"],
             )
 
-        self._uow.drafts_repo.update(
-            draft,
-            payload["resource_data"],
-            payload["resource_snapshot_id"],
-        )
+        try:
+            self._uow.drafts_repo.update(
+                draft,
+                payload["resource_data"],
+                payload["resource_snapshot_id"],
+            )
+        except Exception:
+            self._uow.rollback()
+            raise
 
         if commit:
             self._uow.commit()
