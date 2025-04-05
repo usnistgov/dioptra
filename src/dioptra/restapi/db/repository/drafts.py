@@ -426,8 +426,8 @@ class DraftsRepository:
                 for unlimited length
 
         Returns:
-            A 2-tuple including a page of Group objects, and a count of the
-            total number of groups matching the criteria
+            A 2-tuple including a page of DraftResource objects, and a count
+            of the total number of drafts matching the criteria
 
         Raises:
             EntityDoesNotExistError: if the given user does not exist, or if
