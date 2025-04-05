@@ -19,31 +19,15 @@ The queue repository: data operations related to queues
 """
 
 from collections.abc import Iterable, Sequence
-from typing import Any, Final
+from typing import Any, Final, overload
 
 import sqlalchemy as sa
 
+import dioptra.restapi.db.repository.utils as utils
 from dioptra.restapi.db.models import Group, Queue, Resource, Tag
-from dioptra.restapi.db.repository.utils import (
-    CompatibleSession,
-    DeletionPolicy,
-    S,
-    apply_resource_deletion_policy,
-    assert_group_exists,
-    assert_resource_does_not_exist,
-    assert_resource_exists,
-    assert_snapshot_does_not_exist,
-    assert_user_exists,
-    assert_user_in_group,
-    construct_sql_query_filters,
-    delete_resource,
-    get_group_id,
-    get_resource_id,
-)
 from dioptra.restapi.errors import (
     EntityExistsError,
     MismatchedResourceTypeError,
-    SortParameterValidationError,
 )
 
 
@@ -63,7 +47,7 @@ class QueueRepository:
         "description": "description",
     }
 
-    def __init__(self, session: CompatibleSession[S]):
+    def __init__(self, session: utils.CompatibleSession[utils.S]):
         self.session = session
 
     def create(self, queue: Queue) -> None:
@@ -94,16 +78,10 @@ class QueueRepository:
         #   owns the resource.  I think this will become more complicated when
         #   we implement shares and permissions.
 
-        assert_resource_does_not_exist(self.session, queue, DeletionPolicy.ANY)
-        assert_snapshot_does_not_exist(self.session, queue)
-        assert_user_exists(self.session, queue.creator, DeletionPolicy.NOT_DELETED)
-        assert_group_exists(
-            self.session, queue.resource.owner, DeletionPolicy.NOT_DELETED
-        )
-        assert_user_in_group(self.session, queue.creator, queue.resource.owner)
+        utils.assert_can_create_resource(self.session, queue)
 
         check_name = self.get_by_name(
-            queue.name, queue.resource.owner, DeletionPolicy.ANY
+            queue.name, queue.resource.owner, utils.DeletionPolicy.ANY
         )
         if check_name:
             raise EntityExistsError(
@@ -115,6 +93,9 @@ class QueueRepository:
 
         if queue.resource.resource_type != "queue":
             raise MismatchedResourceTypeError("queue", queue.resource.resource_type)
+
+        if queue.resource_type != "queue":
+            raise MismatchedResourceTypeError("queue", queue.resource_type)
 
         self.session.add(queue)
 
@@ -146,13 +127,13 @@ class QueueRepository:
         #   owns the resource.  I think this will become more complicated when
         #   we implement shares and permissions.
 
-        assert_resource_exists(self.session, queue, DeletionPolicy.NOT_DELETED)
-        assert_snapshot_does_not_exist(self.session, queue)
-        assert_user_exists(self.session, queue.creator, DeletionPolicy.NOT_DELETED)
-        assert_user_in_group(self.session, queue.creator, queue.resource.owner)
+        utils.assert_can_create_snapshot(self.session, queue)
 
         if queue.resource.resource_type != "queue":
             raise MismatchedResourceTypeError("queue", queue.resource.resource_type)
+
+        if queue.resource_type != "queue":
+            raise MismatchedResourceTypeError("queue", queue.resource_type)
 
         # In case the name is changing in this snapshot, ensure uniqueness with
         # respect to the owning group.  We must allow repeated queue names
@@ -160,7 +141,7 @@ class QueueRepository:
         # snapshots), so the requirement only applies with respect to other
         # queue resources in the same group.  So reusing get_by_name() would
         # not work here.
-        queue_id = get_resource_id(queue)
+        queue_id = utils.get_resource_id(queue)
         sub_stmt = (
             sa.select(Queue.resource_id)
             .join(Resource)
@@ -199,12 +180,26 @@ class QueueRepository:
             EntityDoesNotExistError: if the queue does not exist
         """
 
-        delete_resource(self.session, queue)
+        utils.delete_resource(self.session, queue)
+
+    @overload
+    def get(  # noqa: E704
+        self,
+        resource_ids: int,
+        deletion_policy: utils.DeletionPolicy,
+    ) -> Queue | None: ...
+
+    @overload
+    def get(  # noqa: E704
+        self,
+        resource_ids: Iterable[int],
+        deletion_policy: utils.DeletionPolicy,
+    ) -> Sequence[Queue]: ...
 
     def get(
         self,
         resource_ids: int | Iterable[int],
-        deletion_policy: DeletionPolicy = DeletionPolicy.NOT_DELETED,
+        deletion_policy: utils.DeletionPolicy = utils.DeletionPolicy.NOT_DELETED,
     ) -> Queue | Sequence[Queue] | None:
         """
         Get the latest snapshot of the given queue resource.
@@ -218,36 +213,14 @@ class QueueRepository:
             A Queue/list of Queue objects, or None/empty list if none were
             found with the given ID(s)
         """
-
-        if isinstance(resource_ids, int):
-            resource_id_check = Queue.resource_id == resource_ids
-        else:
-            resource_id_check = Queue.resource_id.in_(resource_ids)
-
-        # Extra join with Resource is important: the query produces incorrect
-        # results without it!
-        stmt = (
-            sa.select(Queue)
-            .join(Resource)
-            .where(
-                resource_id_check,
-                Queue.resource_snapshot_id == Resource.latest_snapshot_id,
-            )
+        return utils.get_latest_snapshots(
+            self.session, Queue, resource_ids, deletion_policy
         )
-        stmt = apply_resource_deletion_policy(stmt, deletion_policy)
-
-        queues: Queue | Sequence[Queue] | None
-        if isinstance(resource_ids, int):
-            queues = self.session.scalar(stmt)
-        else:
-            queues = self.session.scalars(stmt).all()
-
-        return queues
 
     def get_snapshot(
         self,
         snapshot_id: int,
-        deletion_policy: DeletionPolicy = DeletionPolicy.NOT_DELETED,
+        deletion_policy: utils.DeletionPolicy = utils.DeletionPolicy.NOT_DELETED,
     ) -> Queue | None:
         """
         Get a given queue snapshot.
@@ -261,7 +234,7 @@ class QueueRepository:
             A Queue object, or None if one was not found with the given ID
         """
         stmt = sa.select(Queue).where(Queue.resource_snapshot_id == snapshot_id)
-        stmt = apply_resource_deletion_policy(stmt, deletion_policy)
+        stmt = utils.apply_resource_deletion_policy(stmt, deletion_policy)
 
         queue = self.session.scalar(stmt)
         return queue
@@ -270,7 +243,7 @@ class QueueRepository:
         self,
         name: str,
         group: Group | int,
-        deletion_policy: DeletionPolicy = DeletionPolicy.NOT_DELETED,
+        deletion_policy: utils.DeletionPolicy = utils.DeletionPolicy.NOT_DELETED,
     ) -> Queue | None:
         """
         Get a queue by name.  This returns the latest version (snapshot) of
@@ -291,9 +264,9 @@ class QueueRepository:
             EntityDeletedError: if the given group is deleted
         """
 
-        assert_group_exists(self.session, group, DeletionPolicy.NOT_DELETED)
+        utils.assert_group_exists(self.session, group, utils.DeletionPolicy.NOT_DELETED)
 
-        group_id = get_group_id(group)
+        group_id = utils.get_group_id(group)
 
         stmt = (
             sa.select(Queue)
@@ -305,7 +278,7 @@ class QueueRepository:
             )
         )
 
-        stmt = apply_resource_deletion_policy(stmt, deletion_policy)
+        stmt = utils.apply_resource_deletion_policy(stmt, deletion_policy)
 
         queue = self.session.scalar(stmt)
 
@@ -319,7 +292,7 @@ class QueueRepository:
         page_length: int,
         sort_by: str | None,
         descending: bool,
-        deletion_policy: DeletionPolicy = DeletionPolicy.NOT_DELETED,
+        deletion_policy: utils.DeletionPolicy = utils.DeletionPolicy.NOT_DELETED,
     ) -> tuple[Sequence[Queue], int]:
         """
         Get some queues according to search criteria.
@@ -348,67 +321,17 @@ class QueueRepository:
             EntityDoesNotExistError: if the given group does not exist
             EntityDeletedError: if the given group is deleted
         """
-        sql_filter = construct_sql_query_filters(filters, self.SEARCHABLE_FIELDS)
-        if sort_by:
-            if sort_by in self.SORTABLE_FIELDS:
-                sort_by = self.SORTABLE_FIELDS[sort_by]
-            else:
-                raise SortParameterValidationError("queue", sort_by)
-        group_id = None if group is None else get_group_id(group)
 
-        if group_id is not None:
-            assert_group_exists(self.session, group_id, DeletionPolicy.NOT_DELETED)
-
-        count_stmt = (
-            sa.select(sa.func.count())
-            .select_from(Queue)
-            .join(Resource)
-            .where(Queue.resource_snapshot_id == Resource.latest_snapshot_id)
+        return utils.get_by_filters_paged(
+            self.session,
+            Queue,
+            self.SORTABLE_FIELDS,
+            self.SEARCHABLE_FIELDS,
+            group,
+            filters,
+            page_start,
+            page_length,
+            sort_by,
+            descending,
+            deletion_policy,
         )
-
-        if group_id is not None:
-            count_stmt = count_stmt.where(Resource.group_id == group_id)
-
-        if sql_filter is not None:
-            count_stmt = count_stmt.where(sql_filter)
-
-        count_stmt = apply_resource_deletion_policy(count_stmt, deletion_policy)
-        current_count = self.session.scalar(count_stmt)
-
-        # For mypy: a "SELECT count(*)..." query should never return NULL.
-        assert current_count is not None
-
-        queues: Sequence[Queue]
-        if current_count == 0:
-            queues = []
-        else:
-            page_stmt = (
-                sa.select(Queue)
-                .join(Resource)
-                .where(Queue.resource_snapshot_id == Resource.latest_snapshot_id)
-            )
-
-            if group_id is not None:
-                page_stmt = page_stmt.where(Resource.group_id == group_id)
-
-            if sql_filter is not None:
-                page_stmt = page_stmt.where(sql_filter)
-
-            page_stmt = apply_resource_deletion_policy(page_stmt, deletion_policy)
-
-            if sort_by:
-                sort_criteria = getattr(Queue, sort_by)
-                if descending:
-                    sort_criteria = sort_criteria.desc()
-            else:
-                # *must* enforce a sort order for consistent paging
-                sort_criteria = Queue.resource_snapshot_id
-            page_stmt = page_stmt.order_by(sort_criteria)
-
-            page_stmt = page_stmt.offset(page_start)
-            if page_length > 0:
-                page_stmt = page_stmt.limit(page_length)
-
-            queues = self.session.scalars(page_stmt).all()
-
-        return queues, current_count

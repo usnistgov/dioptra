@@ -40,9 +40,11 @@ from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
 from dioptra.restapi.db import db as restapi_db
 from dioptra.restapi.db.repository.drafts import DraftsRepository
+from dioptra.restapi.db.repository.experiments import ExperimentRepository
 from dioptra.restapi.db.repository.groups import GroupRepository
 from dioptra.restapi.db.repository.queues import QueueRepository
 from dioptra.restapi.db.repository.users import UserRepository
+from dioptra.restapi.db.repository.utils import DeletionPolicy
 from dioptra.restapi.db.unit_of_work import UnitOfWork
 from dioptra.restapi.v1.shared.request_scope import request
 
@@ -248,6 +250,19 @@ def account(db: SQLAlchemy, fake_data: libdb.FakeData) -> libdb.FakeAccount:
     return new_account
 
 
+@pytest.fixture(
+    params=list(DeletionPolicy),
+    ids=[dp.name.lower() for dp in DeletionPolicy],
+)
+def deletion_policy(request):
+    """
+    A simple parameterized fixture that makes it easy to combine all deletion
+    policy values with other things in a parameterized unit test.  This just
+    produces the DeletionPolicy enum values.
+    """
+    return request.param
+
+
 @pytest.fixture
 def group_repo(db: SQLAlchemy) -> GroupRepository:
     repo = GroupRepository(db.session)
@@ -272,6 +287,13 @@ def queue_repo(db: SQLAlchemy) -> QueueRepository:
 @pytest.fixture
 def drafts_repo(db: SQLAlchemy) -> DraftsRepository:
     repo = DraftsRepository(db.session)
+
+    return repo
+
+
+@pytest.fixture
+def experiment_repo(db: SQLAlchemy) -> ExperimentRepository:
+    repo = ExperimentRepository(db.session)
 
     return repo
 
