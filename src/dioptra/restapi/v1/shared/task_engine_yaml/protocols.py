@@ -14,6 +14,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+from collections.abc import Sequence
 from typing import Any, Protocol
 
 
@@ -24,37 +25,62 @@ class EntryPointParameterProtocol(Protocol):
 
 
 class EntryPointProtocol(Protocol):
-    task_graph: str
-    parameters: list[EntryPointParameterProtocol]
+    @property
+    def task_graph(self) -> str:  # fmt: skip
+        ...
+
+    @property
+    def parameters(self) -> Sequence[EntryPointParameterProtocol]:  # fmt: skip
+        ...
 
 
 class PluginTaskParameterTypeProtocol(Protocol):
-    name: str
-    structure: dict[str, Any] | None
+    @property
+    def name(self) -> str:  # fmt: skip
+        ...
+
+    @property
+    def structure(self) -> dict[str, Any] | None:  # fmt: skip
+        ...
 
 
 class PluginTaskInputParameterProtocol(Protocol):
     parameter_number: int
     name: str
     required: bool
-    parameter_type: PluginTaskParameterTypeProtocol
+
+    @property
+    def parameter_type(self) -> PluginTaskParameterTypeProtocol:  # fmt: skip
+        ...
 
 
 class PluginTaskOutputParameterProtocol(Protocol):
     parameter_number: int
     name: str
-    parameter_type: PluginTaskParameterTypeProtocol
+
+    @property
+    def parameter_type(self) -> PluginTaskParameterTypeProtocol:  # fmt: skip
+        ...
 
 
 class PluginTaskProtocol(Protocol):
     plugin_task_name: str
-    input_parameters: list[PluginTaskInputParameterProtocol]
-    output_parameters: list[PluginTaskOutputParameterProtocol]
+
+    @property
+    def input_parameters(self) -> Sequence[PluginTaskInputParameterProtocol]:  # noqa: B950; fmt: skip
+        ...
+
+    @property
+    def output_parameters(self) -> Sequence[PluginTaskOutputParameterProtocol]:  # noqa: B950; fmt: skip
+        ...
 
 
 class PluginFileProtocol(Protocol):
     filename: str
-    tasks: list[PluginTaskProtocol]
+
+    @property
+    def tasks(self) -> Sequence[PluginTaskProtocol]:  # fmt: skip
+        ...
 
 
 class PluginProtocol(Protocol):
@@ -62,5 +88,10 @@ class PluginProtocol(Protocol):
 
 
 class PluginPluginFileProtocol(Protocol):
-    plugin: PluginProtocol
-    plugin_file: PluginFileProtocol
+    @property
+    def plugin(self) -> PluginProtocol:  # fmt: skip
+        ...
+
+    @property
+    def plugin_file(self) -> PluginFileProtocol:  # fmt: skip
+        ...

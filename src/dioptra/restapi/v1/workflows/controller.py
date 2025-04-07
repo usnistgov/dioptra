@@ -33,12 +33,12 @@ from dioptra.restapi.v1.shared.entrypoint_validate_service import (
 )
 
 from .schema import (
-    EntrypointWorkflowSchema,
     FileTypes,
     JobFilesDownloadQueryParametersSchema,
     ResourceImportSchema,
     SignatureAnalysisOutputSchema,
     SignatureAnalysisSchema,
+    ValidateEntrypointSchema,
 )
 from .service import (
     DraftCommitService,
@@ -205,30 +205,32 @@ class DraftCommitEndpoint(Resource):
         return self._draft_commit_service.commit_draft(draft_id=id, log=log)
 
 
-@api.route("/entrypointValidate")
-class EntrypointValidateEndpoint(Resource):
-    """Wrapper endpoint to expose shared entrypoint validation service."""
-
+@api.route("/validateEntrypoint")
+class ValidateEntrypointEndpoint(Resource):
     @inject
     def __init__(
         self, entrypoint_validate_service: EntrypointValidateService, *args, **kwargs
     ) -> None:
         """Initialize the workflow resource.
+
         All arguments are provided via dependency injection.
+
         Args:
-            entrypoint_validate_service: A EntrypointValidateService object.
+            entrypoint_validate_service: An EntrypointValidateService object.
         """
         self._entrypoint_validate_service = entrypoint_validate_service
         super().__init__(*args, **kwargs)
 
     @login_required
-    @accepts(schema=EntrypointWorkflowSchema, api=api)
+    @accepts(schema=ValidateEntrypointSchema, api=api)
     def post(self):
-        """Validates the workflow for a entrypoint."""  # noqa: B950
+        """Validates the proposed inputs for an entrypoint."""  # noqa: B950
         log = LOGGER.new(
-            request_id=str(uuid.uuid4()), resource="Workflows", request_type="POST"
+            request_id=str(uuid.uuid4()),
+            resource="ValidateEntrypoint",
+            request_type="POST",
         )
-        parsed_obj = request.parsed_obj  # type: ignore
+        parsed_obj = request.parsed_obj  # pyright: ignore
         group_id = parsed_obj["group_id"]
         task_graph = parsed_obj["task_graph"]
         plugin_ids = parsed_obj["plugin_ids"]

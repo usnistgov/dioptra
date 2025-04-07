@@ -244,33 +244,38 @@ class ResourceImportSchema(Schema):
             )
 
 
-class EntrypointWorkflowSchema(Schema):
-    """The YAML that represents the Entrypoint Workflow."""
+class ValidateEntrypointSchema(Schema):
+    """The proposed inputs for an Entrypoint resource to be validated."""
 
     groupId = fields.Integer(
         attribute="group_id",
         data_key="group",
         metadata=dict(
-            description="ID of the Group that will own the Entrypoint resource."
+            description="ID of the Group validating the Entrypoint resource."
         ),
         load_only=True,
         required=True,
     )
     taskGraph = fields.String(
         attribute="task_graph",
-        metadata=dict(description="Task graph of the Entrypoint resource."),
+        metadata=dict(description="Proposed task graph for the Entrypoint resource."),
         required=True,
     )
     pluginIds = fields.List(
         fields.Integer(),
         attribute="plugin_ids",
         data_key="plugins",
-        metadata=dict(description="List of plugin files for the entrypoint."),
+        metadata=dict(
+            description=(
+                "A list of IDs for the Plugins that will be attached to the "
+                "Entrypoint resource."
+            )
+        ),
         load_only=True,
     )
     parameters = fields.Nested(
         EntrypointParameterSchema,
         attribute="parameters",
         many=True,
-        metadata=dict(description="List of parameters for the entrypoint."),
+        metadata=dict(description="Proposed parameters for the Entrypoint resource."),
     )
