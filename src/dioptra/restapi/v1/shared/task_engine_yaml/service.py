@@ -21,7 +21,6 @@ import structlog
 import yaml
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.db import models
 from dioptra.restapi.v1.workflows.lib.type_coercions import (
     BOOLEAN_PARAM_TYPE,
     FLOAT_PARAM_TYPE,
@@ -30,6 +29,8 @@ from dioptra.restapi.v1.workflows.lib.type_coercions import (
     coerce_to_type,
 )
 from dioptra.task_engine.type_registry import BUILTIN_TYPES
+
+from . import protocols
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -48,9 +49,9 @@ YAML_STRING_DUMP_SETTINGS: Final[dict[str, Any]] = {
 class TaskEngineYamlService(object):
     def build_dict(
         self,
-        entrypoint: models.EntryPoint,
-        plugin_plugin_files: list[models.PluginPluginFile],
-        plugin_parameter_types: list[models.PluginTaskParameterType],
+        entrypoint: protocols.EntryPointProtocol,
+        plugin_plugin_files: list[protocols.PluginPluginFileProtocol],
+        plugin_parameter_types: list[protocols.PluginTaskParameterTypeProtocol],
         logger: BoundLogger | None = None,
     ) -> dict[str, Any]:
         """Build a dictionary representation of a task engine YAML file.
@@ -81,9 +82,9 @@ class TaskEngineYamlService(object):
 
     def build_yaml(
         self,
-        entrypoint: models.EntryPoint,
-        plugin_plugin_files: list[models.PluginPluginFile],
-        plugin_parameter_types: list[models.PluginTaskParameterType],
+        entrypoint: protocols.EntryPointProtocol,
+        plugin_plugin_files: list[protocols.PluginPluginFileProtocol],
+        plugin_parameter_types: list[protocols.PluginTaskParameterTypeProtocol],
         logger: BoundLogger | None = None,
     ) -> str:
         """Export an entrypoint's task engine YAML file to a specified directory.
@@ -110,7 +111,7 @@ class TaskEngineYamlService(object):
 
     def extract_parameters(
         self,
-        entrypoint: models.EntryPoint,
+        entrypoint: protocols.EntryPointProtocol,
         logger: BoundLogger | None = None,
     ) -> dict[str, Any]:
         """Extract the parameters from an entrypoint.
@@ -144,8 +145,8 @@ class TaskEngineYamlService(object):
 
     def extract_tasks(
         self,
-        plugin_plugin_files: list[models.PluginPluginFile],
-        plugin_parameter_types: list[models.PluginTaskParameterType],
+        plugin_plugin_files: list[protocols.PluginPluginFileProtocol],
+        plugin_parameter_types: list[protocols.PluginTaskParameterTypeProtocol],
         logger: BoundLogger | None = None,
     ) -> tuple[dict[str, Any], dict[str, Any]]:
         """
@@ -219,7 +220,7 @@ class TaskEngineYamlService(object):
 
     def extract_graph(
         self,
-        entrypoint: models.EntryPoint,
+        entrypoint: protocols.EntryPointProtocol,
         logger: BoundLogger | None = None,
     ) -> dict[str, Any]:
         """Extract the task graph from an entrypoint.
@@ -237,9 +238,9 @@ class TaskEngineYamlService(object):
 
     def build_plugin_field(
         self,
-        plugin: models.Plugin,
-        plugin_file: models.PluginFile,
-        task: models.PluginTask,
+        plugin: protocols.PluginProtocol,
+        plugin_file: protocols.PluginFileProtocol,
+        task: protocols.PluginTaskProtocol,
     ) -> str:
         if plugin_file.filename == "__init__.py":
             # Omit filename from plugin import path if it is an __init__.py file.
@@ -252,7 +253,7 @@ class TaskEngineYamlService(object):
 
     def build_task_inputs(
         self,
-        input_parameters: list[models.PluginTaskInputParameter],
+        input_parameters: list[protocols.PluginTaskInputParameterProtocol],
     ) -> list[dict[str, Any]]:
         return [
             {
@@ -265,7 +266,7 @@ class TaskEngineYamlService(object):
 
     def build_task_outputs(
         self,
-        output_parameters: list[models.PluginTaskOutputParameter],
+        output_parameters: list[protocols.PluginTaskOutputParameterProtocol],
     ) -> list[dict[str, Any]] | dict[str, Any]:
         if len(output_parameters) == 1:
             return {output_parameters[0].name: output_parameters[0].parameter_type.name}
