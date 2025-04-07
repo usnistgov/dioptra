@@ -14,6 +14,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any, Final, cast
 
@@ -28,7 +29,9 @@ from dioptra.restapi.v1.workflows.lib.type_coercions import (
     STRING_PARAM_TYPE,
     coerce_to_type,
 )
+from dioptra.task_engine.issues import ValidationIssue
 from dioptra.task_engine.type_registry import BUILTIN_TYPES
+from dioptra.task_engine.validation import validate as validate_task_engine_dict
 
 from . import protocols
 
@@ -49,18 +52,18 @@ YAML_STRING_DUMP_SETTINGS: Final[dict[str, Any]] = {
 class TaskEngineYamlService(object):
     def build_dict(
         self,
-        entrypoint: protocols.EntryPointProtocol,
-        plugin_plugin_files: list[protocols.PluginPluginFileProtocol],
-        plugin_parameter_types: list[protocols.PluginTaskParameterTypeProtocol],
+        entry_point: protocols.EntryPointProtocol,
+        plugin_plugin_files: Sequence[protocols.PluginPluginFileProtocol],
+        plugin_parameter_types: Sequence[protocols.PluginTaskParameterTypeProtocol],
         logger: BoundLogger | None = None,
     ) -> dict[str, Any]:
         """Build a dictionary representation of a task engine YAML file.
 
         Args:
-            entrypoint: The entrypoint to export.
-            plugin_plugin_files: The entrypoint's plugin files.
+            entry_point: The entry point to export.
+            plugin_plugin_files: The entry point's plugin files.
             plugin_parameter_types: The latest snapshots of the plugin parameter types
-                accessible to the entrypoint.
+                accessible to the entry point.
             logger: A structlog logger object to use for logging. A new logger will be
                 created if None.
 
@@ -71,8 +74,8 @@ class TaskEngineYamlService(object):
         tasks, parameter_types = self.extract_tasks(
             plugin_plugin_files, plugin_parameter_types=plugin_parameter_types
         )
-        parameters = self.extract_parameters(entrypoint)
-        graph = self.extract_graph(entrypoint)
+        parameters = self.extract_parameters(entry_point)
+        graph = self.extract_graph(entry_point)
         return {
             "types": parameter_types,
             "parameters": parameters,
@@ -82,18 +85,18 @@ class TaskEngineYamlService(object):
 
     def build_yaml(
         self,
-        entrypoint: protocols.EntryPointProtocol,
-        plugin_plugin_files: list[protocols.PluginPluginFileProtocol],
-        plugin_parameter_types: list[protocols.PluginTaskParameterTypeProtocol],
+        entry_point: protocols.EntryPointProtocol,
+        plugin_plugin_files: Sequence[protocols.PluginPluginFileProtocol],
+        plugin_parameter_types: Sequence[protocols.PluginTaskParameterTypeProtocol],
         logger: BoundLogger | None = None,
     ) -> str:
-        """Export an entrypoint's task engine YAML file to a specified directory.
+        """Export an entry point's task engine YAML file to a specified directory.
 
         Args:
-            entrypoint: The entrypoint to export.
-            plugin_plugin_files: The entrypoint's plugin files.
+            entry_point: The entry point to export.
+            plugin_plugin_files: The entry point's plugin files.
             plugin_parameter_types: The latest snapshots of the plugin parameter types
-                accessible to the entrypoint.
+                accessible to the entry point.
             logger: A structlog logger object to use for logging. A new logger will be
                 created if None.
 
@@ -102,31 +105,43 @@ class TaskEngineYamlService(object):
         """
         log = logger or LOGGER.new()  # noqa: F841
         task_engine_dict = self.build_dict(
-            entrypoint=entrypoint,
+            entry_point=entry_point,
             plugin_plugin_files=plugin_plugin_files,
             plugin_parameter_types=plugin_parameter_types,
             logger=log,
         )
         return cast(str, yaml.safe_dump(task_engine_dict, **YAML_STRING_DUMP_SETTINGS))
 
-    def extract_parameters(
-        self,
-        entrypoint: protocols.EntryPointProtocol,
-        logger: BoundLogger | None = None,
-    ) -> dict[str, Any]:
-        """Extract the parameters from an entrypoint.
+    def validate(self, task_engine_dict: dict[str, Any]) -> list[ValidationIssue]:
+        """Validate the given task engine dictionary.
 
         Args:
-            entrypoint: The entrypoint to extract parameters from.
+            task_engine_dict: A dictionary representation of the task engine YAML.
+
+        Returns:
+            A list of ValidationIssue objects. The list will be empty if the task engine
+            dictionary is valid.
+        """
+        return validate_task_engine_dict(task_engine_dict)
+
+    def extract_parameters(
+        self,
+        entry_point: protocols.EntryPointProtocol,
+        logger: BoundLogger | None = None,
+    ) -> dict[str, Any]:
+        """Extract the parameters from an entry point.
+
+        Args:
+            entry_point: The entry point to extract parameters from.
             logger: A structlog logger object to use for logging. A new logger will be
                 created if None.
 
         Returns:
-            A dictionary of the entrypoint's parameters.
+            A dictionary of the entry point's parameters.
         """
         log = logger or LOGGER.new()  # noqa: F841
         parameters: dict[str, Any] = {}
-        for param in entrypoint.parameters:
+        for param in entry_point.parameters:
             default_value = param.default_value
             parameters[param.name] = {
                 "default": coerce_to_type(
@@ -145,17 +160,17 @@ class TaskEngineYamlService(object):
 
     def extract_tasks(
         self,
-        plugin_plugin_files: list[protocols.PluginPluginFileProtocol],
-        plugin_parameter_types: list[protocols.PluginTaskParameterTypeProtocol],
+        plugin_plugin_files: Sequence[protocols.PluginPluginFileProtocol],
+        plugin_parameter_types: Sequence[protocols.PluginTaskParameterTypeProtocol],
         logger: BoundLogger | None = None,
     ) -> tuple[dict[str, Any], dict[str, Any]]:
         """
-        Extract the plugin tasks and parameter types from the entrypoint plugin files.
+        Extract the plugin tasks and parameter types from the entry point plugin files.
 
         Args:
-            plugin_plugin_files: The entrypoint's plugin files.
+            plugin_plugin_files: The entry point's plugin files.
             plugin_parameter_types: The latest snapshots of the plugin parameter types
-                accessible to the entrypoint.
+                accessible to the entry point.
             logger: A structlog logger object to use for logging. A new logger will be
                 created if None.
 
@@ -203,10 +218,10 @@ class TaskEngineYamlService(object):
                 # are only used indirectly, such as when defining a structured parameter
                 # type. This is a "hack" because the objects in `plugin_parameter_types`
                 # are the latest available snapshots, not the snapshots that were
-                # associated with the plugins when the entrypoint was saved/updated.
+                # associated with the plugins when the entry point was saved/updated.
                 # This is in contrast with the parameter types accumulated in the
-                # previous for loop block, which are linked to the entrypoint and job by
-                # their snapshot id instead of the resource id. This difference means
+                # previous for loop block, which are linked to the entry point and job
+                # by their snapshot id instead of the resource id. This difference means
                 # that the task engine YAML files are not 100% reproducible, as any
                 # changes to an "indirect" plugin parameter type will be immediately
                 # reflected in subsequent download requests made to the job files
@@ -220,21 +235,21 @@ class TaskEngineYamlService(object):
 
     def extract_graph(
         self,
-        entrypoint: protocols.EntryPointProtocol,
+        entry_point: protocols.EntryPointProtocol,
         logger: BoundLogger | None = None,
     ) -> dict[str, Any]:
-        """Extract the task graph from an entrypoint.
+        """Extract the task graph from an entry point.
 
         Args:
-            entrypoint: The entrypoint containing the task graph.
+            entry_point: The entry point containing the task graph.
             logger: A structlog logger object to use for logging. A new logger will be
                 created if None.
 
         Returns:
-            A dictionary representation of the entrypoint's task graph.
+            A dictionary representation of the entry point's task graph.
         """
         log = logger or LOGGER.new()  # noqa: F841
-        return cast(dict[str, Any], yaml.safe_load(entrypoint.task_graph))
+        return cast(dict[str, Any], yaml.safe_load(entry_point.task_graph))
 
     def build_plugin_field(
         self,
@@ -253,7 +268,7 @@ class TaskEngineYamlService(object):
 
     def build_task_inputs(
         self,
-        input_parameters: list[protocols.PluginTaskInputParameterProtocol],
+        input_parameters: Sequence[protocols.PluginTaskInputParameterProtocol],
     ) -> list[dict[str, Any]]:
         return [
             {
@@ -266,7 +281,7 @@ class TaskEngineYamlService(object):
 
     def build_task_outputs(
         self,
-        output_parameters: list[protocols.PluginTaskOutputParameterProtocol],
+        output_parameters: Sequence[protocols.PluginTaskOutputParameterProtocol],
     ) -> list[dict[str, Any]] | dict[str, Any]:
         if len(output_parameters) == 1:
             return {output_parameters[0].name: output_parameters[0].parameter_type.name}

@@ -348,11 +348,11 @@ class PluginParameterTypeMatchesBuiltinTypeError(DioptraError):
         )
 
 
-class EntrypointWorkflowYamlValidationError(DioptraError):
-    """The entrypoint worklfow yaml is invalid."""
+class EntrypointValidationError(DioptraError):
+    """The proposed inputs for the entrypoint are invalid."""
 
     def __init__(self, issues: list[ValidationIssue]):
-        super().__init__("The entrypoint worklfow yaml is invalid.")
+        super().__init__("The proposed inputs for the entrypoint are invalid.")
         self.issues = issues
 
 
@@ -557,9 +557,9 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
         log.debug(error.to_message())
         return error_result(error, http.HTTPStatus.BAD_REQUEST, {})
 
-    @api.errorhandler(DioptraError)
+    @api.errorhandler(EntrypointValidationError)
     def handle_entrypoint_workflow_yaml_validation_error(
-        error: EntrypointWorkflowYamlValidationError,
+        error: EntrypointValidationError,
     ):
         log.debug(error.to_message())
         return error_result(
@@ -572,7 +572,7 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
                         "severity": str(issue.severity),
                         "message": issue.message,
                     }
-                    for issue in error.args[0]
+                    for issue in error.issues
                 ]
             },
         )
