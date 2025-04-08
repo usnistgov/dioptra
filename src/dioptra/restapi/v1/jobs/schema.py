@@ -110,6 +110,11 @@ class MetricsSnapshotSchema(Schema):
         attribute="timestamp",
         metadata=dict(description="The timestamp of the metric in milliseconds."),
     )
+    @post_dump
+    def convert_nan(self, item, many, **kwargs):
+        if math.isnan(item["value"]):
+            item["value"] = "nan"
+        return item
 
 
 class MetricsSnapshotPageSchema(BasePageSchema):

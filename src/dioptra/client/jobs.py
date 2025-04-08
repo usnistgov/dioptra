@@ -216,7 +216,7 @@ class JobsCollectionClient(CollectionClient[T]):
         Returns:
             The response from the Dioptra API.
         """
-        return self._session.get(self.url, str(job_id), METRICS)
+        return metrics_wrapper(self._session.get(self.url, str(job_id), METRICS), json_list_value_caster)
 
     def append_metric_by_id(
         self,
@@ -244,7 +244,7 @@ class JobsCollectionClient(CollectionClient[T]):
         if metric_step is not None:
             json_["step"] = metric_step
 
-        return self._session.post(self.url, str(job_id), METRICS, json_=json_)
+        return metrics_wrapper(self._session.post(self.url, str(job_id), METRICS, json_=json_), json_value_caster)
 
     def get_metrics_snapshots_by_id(
         self,
@@ -268,6 +268,38 @@ class JobsCollectionClient(CollectionClient[T]):
             "index": index,
             "pageLength": page_length,
         }
-        return self._session.get(
+
+        return metrics_wrapper(self._session.get(
             self.url, str(job_id), METRICS, metric_name, SNAPSHOTS, params=params
-        )
+        ), json_data_list_value_caster)
+    
+
+def metrics_wrapper(response: T, caster) -> T:
+    try:
+        response = caster(response)
+    except:
+        response.json = metrics_patcher(response.json, caster)
+    return response 
+
+def metrics_patcher(original_func, caster):
+    def new_json(**kwargs):
+        json_val = original_func(**kwargs)
+        json_val = caster(json_val)
+        return json_val
+    return new_json
+
+def json_experiment_caster(response):
+    for job in response['data']:
+        job['metrics'] = json_list_value_caster(job['metrics'])
+    return response
+
+def json_data_list_value_caster(response):
+    response['data'] = json_list_value_caster(response['data'])
+    return response
+
+def json_list_value_caster(metric_lst):
+    return [json_value_caster(metric) for metric in metric_lst]
+
+def json_value_caster(json):
+    json['value'] = float(json['value'])
+    return json

@@ -29,6 +29,7 @@ from .drafts import (
 )
 from .snapshots import SnapshotsSubCollectionClient
 from .tags import TagsSubCollectionClient
+from .jobs import metrics_wrapper, json_experiment_caster
 
 ARTIFACTS: Final[str] = "artifacts"
 METRICS: Final[str] = "metrics"
@@ -749,4 +750,4 @@ class ExperimentsCollectionClient(CollectionClient[T]):
         if search is not None:
             params["search"] = search
 
-        return self._session.get(self.url, str(experiment_id), METRICS, params=params)
+        return metrics_wrapper(self._session.get(self.url, str(experiment_id), METRICS, params=params), json_experiment_caster)
