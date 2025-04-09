@@ -47,7 +47,7 @@ class EntryPoint(ResourceSnapshot):
     resource_id: Mapped[bigint] = mapped_column(init=False, nullable=False, index=True)
     name: Mapped[text_] = mapped_column(nullable=False, index=True)
     task_graph: Mapped[text_] = mapped_column(nullable=False)
-
+    artifacts: Mapped[text_] = mapped_column(nullable=False)
     # Relationships
     parameters: Mapped[list["EntryPointParameter"]] = relationship(
         back_populates="entry_point"
@@ -57,6 +57,9 @@ class EntryPoint(ResourceSnapshot):
     )
     entry_point_plugins: Mapped[list["EntryPointPlugin"]] = relationship(
         init=False, back_populates="entry_point"
+    )
+    entry_point_artifact_handlers: Mapped[list["EntryPointArtifactHandler"]] = (
+        relationship(init=False, back_populates="entry_point")
     )
 
     # Additional settings
@@ -160,5 +163,23 @@ class EntryPointPlugin(db.Model):  # type: ignore[name-defined]
     # Relationships
     entry_point: Mapped["EntryPoint"] = relationship(
         back_populates="entry_point_plugins", lazy="joined"
+    )
+    plugin: Mapped["Plugin"] = relationship(lazy="joined")
+
+
+class EntryPointArtifactHandler(db.Model):  # type: ignore[name-defined]
+    __tablename__ = "entry_point_artifact_handlers"
+
+    # Database fields
+    entry_point_resource_snapshot_id: Mapped[intpk] = mapped_column(
+        ForeignKey("entry_points.resource_snapshot_id"), init=False
+    )
+    plugin_resource_snapshot_id: Mapped[intpk] = mapped_column(
+        ForeignKey("plugins.resource_snapshot_id"), init=False
+    )
+
+    # Relationships
+    entry_point: Mapped["EntryPoint"] = relationship(
+        back_populates="entry_point_artifact_handlers", lazy="joined"
     )
     plugin: Mapped["Plugin"] = relationship(lazy="joined")
