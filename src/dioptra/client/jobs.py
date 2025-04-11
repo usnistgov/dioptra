@@ -17,7 +17,7 @@
 from math import isnan
 from typing import Any, ClassVar, Final, TypeVar
 
-from .base import CollectionClient, DioptraSession
+from .base import CollectionClient, DioptraSession, is_simple_json
 from .snapshots import SnapshotsSubCollectionClient
 from .tags import TagsSubCollectionClient
 
@@ -216,7 +216,7 @@ class JobsCollectionClient(CollectionClient[T]):
         Returns:
             The response from the Dioptra API.
         """
-        return self._session.get(self.url, str(job_id), METRICS)
+        return metrics_wrapper(self._session.get(self.url, str(job_id), METRICS))
 
     def append_metric_by_id(
         self,
@@ -244,7 +244,7 @@ class JobsCollectionClient(CollectionClient[T]):
         if metric_step is not None:
             json_["step"] = metric_step
 
-        return self._session.post(self.url, str(job_id), METRICS, json_=json_)
+        return metrics_wrapper(self._session.post(self.url, str(job_id), METRICS, json_=json_))
 
     def get_metrics_snapshots_by_id(
         self,
@@ -268,6 +268,22 @@ class JobsCollectionClient(CollectionClient[T]):
             "index": index,
             "pageLength": page_length,
         }
-        return self._session.get(
+        return metrics_wrapper(self._session.get(
             self.url, str(job_id), METRICS, metric_name, SNAPSHOTS, params=params
-        )
+        ))
+
+def metrics_wrapper(response: T) -> T:
+    try:
+        response.json = metrics_patcher(response.json)
+    except:
+        pass
+    return response 
+
+def metrics_patcher(original_func):
+    def new_json(**kwargs):
+        if is_simple_json():
+            kwargs['allow_nan'] = True
+        json_val = original_func(**kwargs)
+        return json_val
+    return new_json
+
