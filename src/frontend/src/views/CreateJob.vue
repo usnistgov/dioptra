@@ -529,14 +529,39 @@
     }
   }
 
+  async function getResource(type, id) {
+    try {
+      const res = await api.getItem(type, id)
+      return res.data
+    } catch(err) {
+      console.log(err)
+    }
+  }
+
   onMounted(async () => {
+    if(history.state.oldJobId) {
+      const oldJob = await getResource('jobs', history.state.oldJobId)
+      console.log('oldJob = ', oldJob)
+      await getExperiment(oldJob.experiment.id)
+      if(allowableEntrypointIds.value.includes(oldJob.entrypoint.id)) {
+        await getEntrypoint(oldJob.entrypoint.id)
+      } else {
+        notify.error(`${oldJob.entrypoint.name} is no longer linked to ${oldJob.experiment.name}`)
+      }
+      if(allowableQueueIds.value.includes(oldJob.queue.id)) {
+        job.value.queue = await getResource('queues', oldJob.queue.id)
+      } else {
+        notify.error(`${oldJob.queue.name} is no longer linked to ${oldJob.entrypoint.name}`)
+      }
+      job.value.description = oldJob.description
+    }
     if(Object.hasOwn(route.params, 'id')) {
       await getExperiment(route.params.id)
     } else {
       await getExperiments()
     }
 
-    if(store.savedForms.jobs[expJobOrAllJobs.value]) {
+    if(store.savedForms.jobs[expJobOrAllJobs.value] && !history.state.oldJobId) {
       job.value = store.savedForms.jobs[expJobOrAllJobs.value]
       // check if saved values are still valid
       // load latest version of each resource
