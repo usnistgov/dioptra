@@ -30,34 +30,6 @@ from flask_sqlalchemy import SQLAlchemy
 from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
 
-# -- Actions ---------------------------------------------------------------------------
-
-
-def validate_entrypoint_workflow(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
-    task_graph: str,
-    plugin_ids: list[int],
-    entrypoint_parameters: list[dict[str, Any]],
-) -> DioptraResponseProtocol:
-    """POST method for the validate entrypoint workflow yaml.
-
-    Args:
-        dioptra_client (DioptraClient): The Dioptra client.
-        task_graph (str): The task graph of the entrypoint yaml.
-        plugin_ids (list[int]): The ids of plugins defined in the task graph.
-        entrypoint_parameters (list[dict[str, Any]]): The parmeters defined in the task graph.
-
-    Returns:
-        TestResponse: The response from the api.
-    """
-
-    return dioptra_client.workflows.validate_entrypoint(
-        task_graph=task_graph,
-        plugins=plugin_ids,
-        entrypoint_parameters=entrypoint_parameters,
-    )
-
-
 # -- Assertions ------------------------------------------------------------------------
 
 
