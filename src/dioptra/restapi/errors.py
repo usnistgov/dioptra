@@ -552,11 +552,6 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
             {"reason": error._reason} if error._reason else {},
         )
 
-    @api.errorhandler(DioptraError)
-    def handle_base_error(error: DioptraError):
-        log.debug(error.to_message())
-        return error_result(error, http.HTTPStatus.BAD_REQUEST, {})
-
     @api.errorhandler(EntrypointValidationError)
     def handle_entrypoint_workflow_yaml_validation_error(
         error: EntrypointValidationError,
@@ -576,3 +571,8 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
                 ]
             },
         )
+
+    @api.errorhandler(DioptraError)
+    def handle_base_error(error: DioptraError):
+        log.debug(error.to_message())
+        return error_result(error, http.HTTPStatus.BAD_REQUEST, {})
