@@ -26,22 +26,18 @@ class EntryPointParameterProtocol(Protocol):
 
 class EntryPointProtocol(Protocol):
     @property
-    def task_graph(self) -> str:  # fmt: skip
-        ...
+    def task_graph(self) -> str: ...  # noqa: E704
 
     @property
-    def parameters(self) -> Sequence[EntryPointParameterProtocol]:  # fmt: skip
-        ...
+    def parameters(self) -> Sequence[EntryPointParameterProtocol]: ...  # noqa: E704
 
 
 class PluginTaskParameterTypeProtocol(Protocol):
     @property
-    def name(self) -> str:  # fmt: skip
-        ...
+    def name(self) -> str: ...  # noqa: E704
 
     @property
-    def structure(self) -> dict[str, Any] | None:  # fmt: skip
-        ...
+    def structure(self) -> dict[str, Any] | None: ...  # noqa: E704
 
 
 class PluginTaskInputParameterProtocol(Protocol):
@@ -50,8 +46,7 @@ class PluginTaskInputParameterProtocol(Protocol):
     required: bool
 
     @property
-    def parameter_type(self) -> PluginTaskParameterTypeProtocol:  # fmt: skip
-        ...
+    def parameter_type(self) -> PluginTaskParameterTypeProtocol: ...  # noqa: E704
 
 
 class PluginTaskOutputParameterProtocol(Protocol):
@@ -59,28 +54,28 @@ class PluginTaskOutputParameterProtocol(Protocol):
     name: str
 
     @property
-    def parameter_type(self) -> PluginTaskParameterTypeProtocol:  # fmt: skip
-        ...
+    def parameter_type(self) -> PluginTaskParameterTypeProtocol: ...  # noqa: E704
 
 
 class PluginTaskProtocol(Protocol):
     plugin_task_name: str
 
     @property
-    def input_parameters(self) -> Sequence[PluginTaskInputParameterProtocol]:  # noqa: B950; fmt: skip
-        ...
+    def input_parameters(  # noqa: E704
+        self,
+    ) -> Sequence[PluginTaskInputParameterProtocol]: ...
 
     @property
-    def output_parameters(self) -> Sequence[PluginTaskOutputParameterProtocol]:  # noqa: B950; fmt: skip
-        ...
+    def output_parameters(  # noqa: E704
+        self,
+    ) -> Sequence[PluginTaskOutputParameterProtocol]: ...
 
 
 class PluginFileProtocol(Protocol):
     filename: str
 
     @property
-    def tasks(self) -> Sequence[PluginTaskProtocol]:  # fmt: skip
-        ...
+    def tasks(self) -> Sequence[PluginTaskProtocol]: ...  # noqa: E704
 
 
 class PluginProtocol(Protocol):
@@ -89,9 +84,7 @@ class PluginProtocol(Protocol):
 
 class PluginPluginFileProtocol(Protocol):
     @property
-    def plugin(self) -> PluginProtocol:  # fmt: skip
-        ...
+    def plugin(self) -> PluginProtocol: ...  # noqa: E704
 
     @property
-    def plugin_file(self) -> PluginFileProtocol:  # fmt: skip
-        ...
+    def plugin_file(self) -> PluginFileProtocol: ...  # noqa: E704
