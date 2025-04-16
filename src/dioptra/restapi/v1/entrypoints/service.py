@@ -328,6 +328,7 @@ class EntrypointIdService(object):
         self,
         entrypoint_id: int,
         error_if_not_found: bool = False,
+        entrypoint_snapshot_id: int | None = None,
         **kwargs,
     ) -> utils.EntrypointDict | None:
         """Fetch a entrypoint by its unique id.
@@ -346,23 +347,36 @@ class EntrypointIdService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get entrypoint by id", entrypoint_id=entrypoint_id)
-
-        stmt = (
-            select(models.EntryPoint)
-            .join(models.Resource)
-            .where(
-                models.EntryPoint.resource_id == entrypoint_id,
-                models.EntryPoint.resource_snapshot_id
-                == models.Resource.latest_snapshot_id,
-                models.Resource.is_deleted == False,  # noqa: E712
+        if entrypoint_snapshot_id is None:
+            stmt = (
+                select(models.EntryPoint)
+                .join(models.Resource)
+                .where(
+                    models.EntryPoint.resource_id == entrypoint_id,
+                    models.EntryPoint.resource_snapshot_id
+                    == models.Resource.latest_snapshot_id,
+                    models.Resource.is_deleted == False,  # noqa: E712
+                )
             )
-        )
+        # Get a specific snapshot if entrypoint_snapshot_id is specified
+        else:
+            stmt = (
+                select(models.EntryPoint)
+                .join(models.Resource)
+                .where(
+                    models.EntryPoint.resource_id == entrypoint_id,
+                    models.EntryPoint.resource_snapshot_id == entrypoint_snapshot_id,
+                    models.Resource.is_deleted == False,  # noqa: E712
+                )
+            )
         entrypoint = db.session.scalars(stmt).first()
 
         if entrypoint is None:
             if error_if_not_found:
                 raise EntityDoesNotExistError(
-                    RESOURCE_TYPE, entrypoint_id=entrypoint_id
+                    RESOURCE_TYPE,
+                    entrypoint_id=entrypoint_id,
+                    resource_snapshot_id=entrypoint_snapshot_id,
                 )
 
             return None

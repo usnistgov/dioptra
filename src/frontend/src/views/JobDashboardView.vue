@@ -1,169 +1,178 @@
 <template>
-  <div class="row items-center justify-between">
-    <PageTitle :title="`Job ${$route.params.id} Dashboard`" />
-    <q-btn 
-      color="negative" 
-      icon="sym_o_delete" 
-      label="Delete Job" 
-      @click="showDeleteDialog = true"
-    />
-  </div>
-  <div class="q-my-lg">
-    <q-tabs
-        v-model="tab"
-        indicator-color="primary"
-        dense
-        no-caps
-        align="left"
-      >
-        <q-tab name="overview" label="Overview" />
-        <q-tab name="model metrics" label="Model metrics" />
-        <q-tab name="system metrics" label="System metrics" />
-        <q-tab name="artifacts" label="Artifacts" />
-      </q-tabs>
-      <q-separator />
-  </div>
-
-  <div 
-    v-if="tab === 'overview'"
-    class="row q-gutter-lg"
-  >
-    <div class="col" :class="`${isMedium ? 'col-12' : 'col'}`">
-      <h2>Details</h2>
-      <KeyValueTable :rows="overviewRows">
-        <template #tags="{ tags = [] }">
-          <div style="margin-top: -5px; margin-bottom: -5px;">
-            <q-chip
-              v-for="(tag, i) in tags"
-              :key="i"
-              color="primary" 
-              text-color="white"
-              class="q-my-none"
-            >
-              {{ tag.name.length <= 18 ? tag.name : tag.name.replace(/(.{17})..+/, "$1…") }}
-              <q-tooltip v-if="tag.name.length > 18" max-width="30vw" style="overflow-wrap: break-word">
-                {{ tag.name }}
-              </q-tooltip>
-            </q-chip>
-            <q-btn
-              round
-              size="xs"
-              icon="add"
-              @click="showTagsDialog = true"
-              color="grey-5"
-              text-color="black"
-              class="q-ml-xs"
-            />
-          </div>
-        </template>
-        <template #experiment="{ name = '', id, snapshotId }">
-          <RouterLink :to="`/experiments/${id}?snapshotId=${snapshotId}`">
-            {{ name.length < 18 ? name : name.replace(/(.{18})..+/, "$1…") }}
-            <q-tooltip v-if="name.length > 18" max-width="30vw" style="overflow-wrap: break-word">
-              {{ name }}
-            </q-tooltip>
-          </RouterLink>
-        </template>
-        <template #entrypoint="{ name = '', id, snapshotId }">
-          <RouterLink :to="`/entrypoints/${id}?snapshotId=${snapshotId}`">
-            {{ name.length < 18 ? name : name.replace(/(.{18})..+/, "$1…") }}
-            <q-tooltip v-if="name.length > 18" max-width="30vw" style="overflow-wrap: break-word">
-              {{ name }}
-            </q-tooltip>
-          </RouterLink>
-        </template>
-        <template #status="{ status = '' }">
-          <JobStatus
-            :status="status"
-          />
-        </template>
-      </KeyValueTable>
-    </div>
-    <div class="col">
-      <h2>Parameters</h2>
-      <TableComponent
-        :columns="parametersColumns"
-        :rows="paramRows"
-        @request="getJob"
-        v-model:selected="selectedParam"
-        rowKey="parameter"
-        :hideCreateBtn="true"
-        :hideDeleteBtn="true"
-        style="margin-top: 0px;"
+  <div class="column" style="min-height: calc(100vh - 100px);">
+    <div class="row items-center justify-between">
+      <PageTitle :title="`Job ${$route.params.id} Dashboard`" />
+      <q-btn 
+        color="negative" 
+        icon="sym_o_delete" 
+        label="Delete Job" 
+        @click="showDeleteDialog = true"
       />
     </div>
-    <div class="col">
-      <h2>Metrics</h2>
-      <TableComponent
-        :columns="metricColumns"
-        :rows="metrics"
-        @request="getJobMetrics"
-        v-model:selected="selectedMetric"
-        rowKey="name"
-        :hideCreateBtn="true"
-        :hideDeleteBtn="true"
-        style="margin-top: 0px;"
-      />
-    </div>
-  </div>
-  <div v-if="tab === 'model metrics'" class="row q-col-gutter-x-lg q-col-gutter-y-lg">
-    <div class="col-12">
-      <div class="row items-center">
-        <q-input 
-          v-model="filter" 
-          debounce="300" 
-          dense 
-          placeholder="Search metric charts" 
-          outlined
-          class="col-grow"
-          clearable
+    <div class="q-my-lg">
+      <q-tabs
+          v-model="tab"
+          indicator-color="primary"
+          dense
+          no-caps
+          align="left"
         >
-          <template #prepend>
-            <q-icon name="search" />
+          <q-tab name="overview" label="Overview" />
+          <q-tab name="model metrics" label="Model metrics" />
+          <q-tab name="system metrics" label="System metrics" />
+          <q-tab name="artifacts" label="Artifacts" />
+        </q-tabs>
+        <q-separator />
+    </div>
+    <div 
+      v-if="tab === 'overview'"
+      class="row q-gutter-lg"
+    >
+      <div class="col" :class="`${isMedium ? 'col-12' : 'col'}`">
+        <h2>Details</h2>
+        <KeyValueTable :rows="overviewRows">
+          <template #tags="{ tags = [] }">
+            <div style="margin-top: -5px; margin-bottom: -5px;">
+              <q-chip
+                v-for="(tag, i) in tags"
+                :key="i"
+                color="primary" 
+                text-color="white"
+                class="q-my-none"
+              >
+                {{ tag.name.length <= 18 ? tag.name : tag.name.replace(/(.{17})..+/, "$1…") }}
+                <q-tooltip v-if="tag.name.length > 18" max-width="30vw" style="overflow-wrap: break-word">
+                  {{ tag.name }}
+                </q-tooltip>
+              </q-chip>
+              <q-btn
+                round
+                size="xs"
+                icon="add"
+                @click="showTagsDialog = true"
+                color="grey-5"
+                text-color="black"
+                class="q-ml-xs"
+              />
+            </div>
           </template>
-        </q-input>
+          <template #experiment="{ name = '', id, snapshotId }">
+            <RouterLink :to="`/experiments/${id}?snapshotId=${snapshotId}`">
+              {{ name.length < 18 ? name : name.replace(/(.{18})..+/, "$1…") }}
+              <q-tooltip v-if="name.length > 18" max-width="30vw" style="overflow-wrap: break-word">
+                {{ name }}
+              </q-tooltip>
+            </RouterLink>
+          </template>
+          <template #entrypoint="{ name = '', id, snapshotId }">
+            <RouterLink :to="`/entrypoints/${id}?snapshotId=${snapshotId}`">
+              {{ name.length < 18 ? name : name.replace(/(.{18})..+/, "$1…") }}
+              <q-tooltip v-if="name.length > 18" max-width="30vw" style="overflow-wrap: break-word">
+                {{ name }}
+              </q-tooltip>
+            </RouterLink>
+          </template>
+          <template #status="{ status = '' }">
+            <JobStatus
+              :status="status"
+            />
+          </template>
+        </KeyValueTable>
         <q-btn
-          label="Refresh"
-          color="primary"
-          icon="refresh"
-          class="q-ml-lg"
-          @click="loadAllMetricHistories"
+          color="light-blue" 
+          icon="update" 
+          label="Re-Run Job" 
+          class="q-mt-lg" 
+          @click="reRunJob()"
+        />
+      </div>
+      <div class="col">
+        <h2>Parameters</h2>
+        <TableComponent
+          :columns="parametersColumns"
+          :rows="paramRows"
+          @request="getJob"
+          v-model:selected="selectedParam"
+          rowKey="parameter"
+          :hideCreateBtn="true"
+          :hideDeleteBtn="true"
+          style="margin-top: 0px;"
+        />
+      </div>
+      <div class="col">
+        <h2>Metrics</h2>
+        <TableComponent
+          :columns="metricColumns"
+          :rows="metrics"
+          @request="getJobMetrics"
+          v-model:selected="selectedMetric"
+          rowKey="name"
+          :hideCreateBtn="true"
+          :hideDeleteBtn="true"
+          style="margin-top: 0px;"
         />
       </div>
     </div>
-    <div
-      :class="graphClass" 
-      v-for="(metric, i) in filteredMetrics"
-      :key="metric.name"
-    >
-      <PlotlyGraph
-        :data="metric.data"
-        :title="metric.name"
-        :graphClass="graphClass"
-      />
+    <div v-if="tab === 'model metrics'" class="row q-col-gutter-x-lg q-col-gutter-y-lg">
+      <div class="col-12">
+        <div class="row items-center">
+          <q-input 
+            v-model="filter" 
+            debounce="300" 
+            dense 
+            placeholder="Search metric charts" 
+            outlined
+            class="col-grow"
+            clearable
+          >
+            <template #prepend>
+              <q-icon name="search" />
+            </template>
+          </q-input>
+          <q-btn
+            label="Refresh"
+            color="primary"
+            icon="refresh"
+            class="q-ml-lg"
+            @click="loadAllMetricHistories"
+          />
+        </div>
+      </div>
+      <div
+        :class="graphClass" 
+        v-for="(metric, i) in filteredMetrics"
+        :key="metric.name"
+      >
+        <PlotlyGraph
+          :data="metric.data"
+          :title="metric.name"
+          :graphClass="graphClass"
+        />
+      </div>
+      <div
+        v-if="filteredMetrics.length === 0" 
+        class="row items-center q-mt-lg" 
+      >
+        <q-icon
+          name="sym_o_info"
+          size="2.5em"
+          color="grey-7"
+          class="q-mr-sm"
+        />
+        <div style="opacity: 0.7">No metrics found</div>
+      </div>
     </div>
-    <div
-      v-if="filteredMetrics.length === 0" 
-      class="row items-center q-mt-lg" 
-    >
-      <q-icon
-        name="sym_o_info"
-        size="2.5em"
-        color="grey-7"
-        class="q-mr-sm"
-      />
-      <div style="opacity: 0.7">No metrics found</div>
-    </div>
-  </div>
 
-  <div style="display: flex; justify-content: flex-end; margin-top: 2rem;">
-    <q-btn
-      outline  
-      label="Return to Jobs"
-      @click="router.back()"
-      class="cancel-btn"
-      color="primary"
-    />
+    <q-space />
+    <div class="row justify-end">
+      <q-btn
+        outline  
+        label="Return to Jobs"
+        @click="router.back()"
+        class="cancel-btn"
+        color="primary"
+      />
+    </div>
   </div>
 
   <AssignTagsDialog 
@@ -326,6 +335,13 @@ async function deleteJob() {
   } catch(err) {
     notify.error(err.response.data.message);
   }
+}
+
+function reRunJob() {
+  router.push({
+    path: '/jobs/new',
+    state: { oldJobId: route.params.id, jobSnapshotId: job.value.snapshot } 
+  })
 }
 
 </script>
