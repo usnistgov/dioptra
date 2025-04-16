@@ -15,21 +15,21 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """Fixtures representing resources needed for test suites"""
+
 import os
 import shutil
 import subprocess
 import tarfile
 import textwrap
+import uuid
 from collections.abc import Iterator
 from http import HTTPStatus
 from pathlib import Path
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from typing import Any, cast
 
-
 import pytest
 import tomli as toml
-import uuid
 from flask import Flask
 from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
@@ -502,14 +502,14 @@ def registered_plugin_parameter_types(
         client,
         name="image_shape",
         group_id=auth_account["groups"][0]["id"],
-        structure={"list": ["integer"]},
+        structure={"list": "integer"},
         description="The dimensions of an image",
     ).get_json()
     plugin_param_type2_response = actions.register_plugin_parameter_type(
         client,
         name="model_output",
         group_id=auth_account["groups"][0]["id"],
-        structure=dict({"list": ["float"]}),
+        structure=dict({"list": "number"}),
         description="The softmax scores from a model",
     ).get_json()
     plugin_param_type3_response = actions.register_plugin_parameter_type(
