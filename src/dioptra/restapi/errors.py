@@ -31,7 +31,6 @@ from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
 from dioptra.restapi.v1 import utils
-from dioptra.task_engine.issues import ValidationIssue
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -348,14 +347,6 @@ class PluginParameterTypeMatchesBuiltinTypeError(DioptraError):
         )
 
 
-class EntrypointValidationError(DioptraError):
-    """The proposed inputs for the entrypoint are invalid."""
-
-    def __init__(self, issues: list[ValidationIssue]):
-        super().__init__("The proposed inputs for the entrypoint are invalid.")
-        self.issues = issues
-
-
 # User Errors
 class NoCurrentUserError(DioptraError):
     """There is no currently logged-in user."""
@@ -550,26 +541,6 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
             error,
             http.HTTPStatus.BAD_REQUEST,
             {"reason": error._reason} if error._reason else {},
-        )
-
-    @api.errorhandler(EntrypointValidationError)
-    def handle_entrypoint_workflow_yaml_validation_error(
-        error: EntrypointValidationError,
-    ):
-        log.debug(error.to_message())
-        return error_result(
-            error,
-            http.HTTPStatus.UNPROCESSABLE_ENTITY,
-            {
-                "issues": [
-                    {
-                        "type": str(issue.type),
-                        "severity": str(issue.severity),
-                        "message": issue.message,
-                    }
-                    for issue in error.issues
-                ]
-            },
         )
 
     @api.errorhandler(DioptraError)

@@ -36,7 +36,6 @@ from dioptra.restapi.errors import (
     DraftDoesNotExistError,
     DraftResourceModificationsCommitError,
     EntityDoesNotExistError,
-    EntrypointValidationError,
     GitError,
     ImportFailedError,
 )
@@ -909,6 +908,6 @@ class ValidateEntrypointService(object):
         )
 
         if issues:
-            raise EntrypointValidationError(issues)
+            return {"schema_valid": False, "schema_issues": issues}
 
-        return {"status": "Success", "valid": True}
+        return {"schema_valid": True, "schema_issues": []}
