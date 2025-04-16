@@ -511,7 +511,6 @@
     if(!id) return
     try {
       const res = await api.getItem('experiments', id)
-      console.log('getExperiment = ', res.data)
       job.value.experiment = res.data
     } catch(err) {
       console.warn(err)
@@ -522,7 +521,6 @@
     if(!id) return
     try {
       const res = await api.getItem('entrypoints', id)
-      console.log('entrypoint = ', res.data)
       job.value.entrypoint = res.data
     } catch(err) {
       console.warn(err)
@@ -534,24 +532,23 @@
       const res = await api.getItem(type, id)
       return res.data
     } catch(err) {
-      console.log(err)
+      console.warn(err)
     }
   }
 
   onMounted(async () => {
     if(history.state.oldJobId) {
       const oldJob = await getResource('jobs', history.state.oldJobId)
-      console.log('oldJob = ', oldJob)
       await getExperiment(oldJob.experiment.id)
       if(allowableEntrypointIds.value.includes(oldJob.entrypoint.id)) {
         await getEntrypoint(oldJob.entrypoint.id)
       } else {
-        notify.error(`${oldJob.entrypoint.name} is no longer linked to ${oldJob.experiment.name}`)
+        notify.error(`Entrypoint ${oldJob.entrypoint.name} is no longer linked to experiment ${oldJob.experiment.name}`)
       }
       if(allowableQueueIds.value.includes(oldJob.queue.id)) {
         job.value.queue = await getResource('queues', oldJob.queue.id)
       } else {
-        notify.error(`${oldJob.queue.name} is no longer linked to ${oldJob.entrypoint.name}`)
+        notify.error(`Queue ${oldJob.queue.name} is no longer linked to entrypoint ${oldJob.entrypoint.name}`)
       }
       job.value.description = oldJob.description
     }
