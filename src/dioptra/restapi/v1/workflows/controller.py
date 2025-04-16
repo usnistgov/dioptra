@@ -35,7 +35,8 @@ from .schema import (
     ResourceImportSchema,
     SignatureAnalysisOutputSchema,
     SignatureAnalysisSchema,
-    ValidateEntrypointSchema,
+    ValidateEntrypointRequestSchema,
+    ValidateEntrypointResponseSchema,
 )
 from .service import (
     DraftCommitService,
@@ -220,7 +221,8 @@ class ValidateEntrypointEndpoint(Resource):
         super().__init__(*args, **kwargs)
 
     @login_required
-    @accepts(schema=ValidateEntrypointSchema, api=api)
+    @accepts(schema=ValidateEntrypointRequestSchema, api=api)
+    @responds(schema=ValidateEntrypointResponseSchema, api=api)
     def post(self):
         """Validates the proposed inputs for an entrypoint."""  # noqa: B950
         log = LOGGER.new(

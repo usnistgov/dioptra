@@ -19,10 +19,11 @@
 from enum import Enum
 
 from flask import request
-from marshmallow import Schema, ValidationError, fields, validates_schema
+from marshmallow import Schema, ValidationError, fields, pre_dump, validates_schema
 
 from dioptra.restapi.custom_schema_fields import FileUpload, MultiFileUpload
 from dioptra.restapi.v1.entrypoints.schema import EntrypointParameterSchema
+from dioptra.task_engine.issues import ValidationIssue
 
 
 class FileTypes(Enum):
@@ -244,7 +245,7 @@ class ResourceImportSchema(Schema):
             )
 
 
-class ValidateEntrypointSchema(Schema):
+class ValidateEntrypointRequestSchema(Schema):
     """The proposed inputs for an Entrypoint resource to be validated."""
 
     groupId = fields.Integer(
@@ -253,7 +254,6 @@ class ValidateEntrypointSchema(Schema):
         metadata=dict(
             description="ID of the Group validating the Entrypoint resource."
         ),
-        load_only=True,
         required=True,
     )
     taskGraph = fields.String(
@@ -271,11 +271,62 @@ class ValidateEntrypointSchema(Schema):
                 "Entrypoint resource."
             )
         ),
-        load_only=True,
     )
     parameters = fields.Nested(
         EntrypointParameterSchema,
         attribute="parameters",
         many=True,
         metadata=dict(description="Proposed parameters for the Entrypoint resource."),
+    )
+
+
+class ValidateEntrypointIssueSchema(Schema):
+    """The response for the validateEntrypoint endpoint."""
+
+    type_ = fields.String(
+        attribute="type",
+        data_key="type",
+        metadata=dict(description="The validation issue type."),
+    )
+    severity = fields.String(
+        attribute="severity",
+        metadata=dict(description="The severity of the validation issue."),
+    )
+    message = fields.String(
+        attribute="message",
+        metadata=dict(description="A message describing the validation issue."),
+    )
+
+    @pre_dump
+    def stringify_enums(self, data, **kwargs):
+        if isinstance(data, ValidationIssue):
+            return {
+                "type": data.type.name,
+                "severity": data.severity.name,
+                "message": data.message,
+            }
+
+        return data
+
+
+class ValidateEntrypointResponseSchema(Schema):
+    """The response for the validateEntrypoint endpoint."""
+
+    schemaValid = fields.Bool(
+        attribute="schema_valid",
+        metadata=dict(
+            description=(
+                "Indicates whether the proposed inputs for the Entrypoint resource "
+                "are valid. If False, the schemaIssues field will contain a list of "
+                "validation issues."
+            ),
+        ),
+    )
+    schemaIssues = fields.Nested(
+        ValidateEntrypointIssueSchema,
+        attribute="schema_issues",
+        metadata=dict(
+            description="A list of validation issues detected in the schema."
+        ),
+        many=True,
     )
