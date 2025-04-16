@@ -20,6 +20,7 @@ This module contains a set of tests that validate the CRUD operations and additi
 functionalities for the entrypoint entity. The tests ensure that the entrypoints can be
 registered, renamed, deleted, and locked/unlocked as expected through the REST API.
 """
+
 import textwrap
 from http import HTTPStatus
 from typing import Any
@@ -28,7 +29,6 @@ from flask_sqlalchemy import SQLAlchemy
 
 from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
-from dioptra.restapi.routes import V1_ROOT, V1_WORKFLOWS_ROUTE
 
 # -- Actions ---------------------------------------------------------------------------
 
@@ -54,7 +54,7 @@ def validate_entrypoint_workflow(
     return dioptra_client.workflows.validate_entrypoint(
         task_graph=task_graph,
         plugins=plugin_ids,
-        entrypoint_parameters=entrypoint_parameters
+        entrypoint_parameters=entrypoint_parameters,
     )
 
 
@@ -63,10 +63,11 @@ def validate_entrypoint_workflow(
 
 def assert_entrypoint_workflow_is_valid(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
+    group_id: int,
     task_graph: str,
-    plugin_ids: list[int],
+    plugins: list[int],
     entrypoint_parameters: list[dict[str, Any]],
- ) -> None:
+) -> None:
     """Asserts that the entrypoint workflow yaml is valid.
 
     Args:
@@ -75,19 +76,20 @@ def assert_entrypoint_workflow_is_valid(
         plugin_ids (list[int]): The ids of plugins defined in the task graph.
         entrypoint_parameters (list[dict[str, Any]]): The parmeters defined in the task graph.
     """
-    response = validate_entrypoint_workflow(
-        dioptra_client,
+    response = dioptra_client.workflows.validate_entrypoint(
+        group_id=group_id,
         task_graph=task_graph,
-        plugin_ids=plugin_ids,
+        plugins=plugins,
         entrypoint_parameters=entrypoint_parameters,
     )
-    assert response.status_code == HTTPStatus.OK and response.json()['valid'] == True
+    assert response.status_code == HTTPStatus.OK and response.json()["valid"]
 
 
 def assert_entrypoint_workflow_has_errors(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
+    group_id: int,
     task_graph: str,
-    plugin_ids: list[int],
+    plugins: list[int],
     entrypoint_parameters: list[dict[str, Any]],
 ) -> None:
     """Asserts that the entrypoint workflow yaml is invalid.
@@ -98,13 +100,18 @@ def assert_entrypoint_workflow_has_errors(
         plugin_ids (list[int]): The ids of plugins defined in the task graph.
         entrypoint_parameters (list[dict[str, Any]]): The parmeters defined in the task graph.
     """
-    response = validate_entrypoint_workflow(
-        dioptra_client,
+    response = dioptra_client.workflows.validate_entrypoint(
+        group_id=group_id,
         task_graph=task_graph,
-        plugin_ids=plugin_ids,
+        plugins=plugins,
         entrypoint_parameters=entrypoint_parameters,
     )
-    assert response.status_code == 422
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY and response.json()[
+        "message"
+    ] == (
+        f"{HTTPStatus.UNPROCESSABLE_ENTITY.phrase} - The proposed inputs for the "
+        "entrypoint are invalid."
+    )
 
 
 # -- Tests -----------------------------------------------------------------------------
@@ -119,7 +126,7 @@ def test_entrypoint_workflow_validation(
 
     Args:
         dioptra_client (DioptraClient): The Dioptra client.
-        db (SQLAlchemy): The entity database. 
+        db (SQLAlchemy): The entity database.
         auth_account (dict[str, Any]): The default authorized user account.
     """
     plugin_response = dioptra_client.plugins.create(
@@ -130,7 +137,7 @@ def test_entrypoint_workflow_validation(
 
     plugin_file_contents = textwrap.dedent(
         """"from dioptra import pyplugs
-        
+
         @pyplugs.register
         def hello_world(name: str) -> str:
             return f'Hello, {name}!'"
@@ -156,12 +163,12 @@ def test_entrypoint_workflow_validation(
         },
     ]
 
-    plugin_file_response = dioptra_client.plugins.files.create(
+    _ = dioptra_client.plugins.files.create(
         plugin_id=plugin_response["id"],
         filename="tasks.py",
         description="The task plugin file for hello world.",
         contents=plugin_file_contents,
-        tasks = plugin_file_tasks,
+        tasks=plugin_file_tasks,
     ).json()
 
     task_graph = textwrap.dedent(
@@ -172,18 +179,19 @@ def test_entrypoint_workflow_validation(
         """
     )
 
-    plugin_ids = [plugin_response["id"]]
+    plugins = [plugin_response["id"]]
     entrypoint_parameters = [
         {
-            "name" : "name",
+            "name": "name",
             "defaultValue": "User",
             "parameterType": "string",
         },
     ]
     assert_entrypoint_workflow_is_valid(
         dioptra_client,
+        group_id=auth_account["default_group_id"],
         task_graph=task_graph,
-        plugin_ids=plugin_ids,
+        plugins=plugins,
         entrypoint_parameters=entrypoint_parameters,
     )
 
@@ -197,7 +205,7 @@ def test_entrypoint_workflow_validation_has_error(
 
     Args:
         dioptra_client (DioptraClient): The Dioptra client.
-        db (SQLAlchemy): The entity database. 
+        db (SQLAlchemy): The entity database.
         auth_account (dict[str, Any]): The default authorized user account.
     """
     plugin_response = dioptra_client.plugins.create(
@@ -208,7 +216,7 @@ def test_entrypoint_workflow_validation_has_error(
 
     plugin_file_contents = textwrap.dedent(
         """"from dioptra import pyplugs
-        
+
         @pyplugs.register
         def hello_world(name: str) -> str:
             return f'Hello, {name}!'"
@@ -234,12 +242,12 @@ def test_entrypoint_workflow_validation_has_error(
         },
     ]
 
-    plugin_file_response = dioptra_client.plugins.files.create(
+    _ = dioptra_client.plugins.files.create(
         plugin_id=plugin_response["id"],
         filename="tasks.py",
         description="The task plugin file for hello world.",
         contents=plugin_file_contents,
-        tasks = plugin_file_tasks,
+        tasks=plugin_file_tasks,
     ).json()
 
     task_graph = textwrap.dedent(
@@ -248,20 +256,21 @@ def test_entrypoint_workflow_validation_has_error(
           hello_wrld:
             name: $name
         """
-    ) # task graph is wrong, hello_wrld is not the task plugin
+    )  # task graph is wrong, hello_wrld is not the task plugin
 
-    plugin_ids = [plugin_response["id"]]
-    
+    plugins = [plugin_response["id"]]
+
     entrypoint_parameters = [
         {
-            "name" : "name",
+            "name": "name",
             "defaultValue": "User",
             "parameterType": "string",
         },
     ]
     assert_entrypoint_workflow_has_errors(
         dioptra_client,
+        group_id=auth_account["default_group_id"],
         task_graph=task_graph,
-        plugin_ids=plugin_ids,
+        plugins=plugins,
         entrypoint_parameters=entrypoint_parameters,
     )
