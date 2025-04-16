@@ -5,15 +5,29 @@
     :columns="fileColumns"
     title="Plugin Files"
     v-model:selected="selected"
-    @edit="router.push(`/plugins/${route.params.id}/files/${selected[0].id}`)"
+    @edit="loadFormPage()"
     @delete="showDeleteDialog = true"
     @request="getFiles"
     ref="tableRef"
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
     @create="router.push(`/plugins/${route.params.id}/files/new`)"
+    :showToggleDraft="true"
+    v-model:showDrafts="showDrafts"
   >
     <template #body-cell-tasks="props">
       {{ props.row.tasks.length }}
+    </template>
+    <template #body-cell-hasDraft="props">
+      <q-btn
+        round
+        size="sm"
+        :icon="props.row.hasDraft ? 'edit' : 'add'"
+        :color="props.row.hasDraft ? 'primary' : 'grey-5'"
+        @click.stop="router.push(
+          `/plugins/${route.params.id}/files/${props.row.id}/${props.row.hasDraft ? 
+          'resourceDraft' : 'newResourceDraft'}`
+        )"
+      />
     </template>
   </TableComponent>
 
@@ -55,6 +69,7 @@
   const fileColumns = [
     { name: 'filename', label: 'Filename', align: 'left', field: 'filename', sortable: true, },
     { name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true },
+    { name: 'hasDraft', label: 'Resource Draft', align: 'left', field: 'hasDraft', sortable: false },
     { name: 'tasks', label: 'Tasks', align: 'left', field: 'tasks', sortable: false, },
     { name: 'tags', label: 'Tags', align: 'left', field: 'tags', sortable: false },
   ]
@@ -74,9 +89,9 @@
   }
 
 
-  async function getFiles(pagination) {
+  async function getFiles(pagination, showDrafts) {
     try {
-      const res = await api.getFiles(route.params.id, pagination)
+      const res = await api.getFiles(route.params.id, pagination, showDrafts)
       console.log('getFiles = ', res)
       files.value = res.data.data
       tableRef.value.updateTotalRows(res.data.totalNumResults)
@@ -87,13 +102,29 @@
 
   async function deleteFile() {
     try {
-      await api.deleteFile(route.params.id, selected.value[0].id)
+      if(Object.hasOwn(selected.value[0], 'hasDraft')) {
+        await api.deleteFile(route.params.id, selected.value[0].id)
+      } else if(!showDrafts.value && !Object.hasOwn(selected.value[0], 'hasDraft')) {
+        await api.deleteFile(route.params.id, selected.value[0].id, 'resourceDraft')
+      } else if(showDrafts.value) {
+        await api.deleteFile(route.params.id, selected.value[0].id, 'draft')
+      }
       notify.success(`Successfully deleted '${selected.value[0].filename}'`)
       showDeleteDialog.value = false
       selected.value = []
       tableRef.value.refreshTable()
     } catch(err) {
       notify.error(err.response.data.message);
+    }
+  }
+
+  const showDrafts = ref(false)
+
+  function loadFormPage() {
+    if(showDrafts.value) {
+      router.push(`/plugins/${route.params.id}/files/${selected.value[0].id}/draft`)
+    } else {
+      router.push(`/plugins/${route.params.id}/files/${selected.value[0].id}`)
     }
   }
   

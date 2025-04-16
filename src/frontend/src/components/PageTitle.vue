@@ -18,7 +18,7 @@
           class="text-capitalize"
         />
         <q-breadcrumbs-el
-          v-if="route.name === 'pluginFile'"
+          v-if="route.name === 'pluginFile' || route.name === 'pluginFileDraft'"
           :label="`${objName} Files`"
           :to="`/plugins/${route.params.id}/files`"
         />
@@ -54,7 +54,7 @@
 
   const objName = ref('')
 
-  if(route.name === 'pluginFile') {
+  if(route.name === 'pluginFile' ||route.name === 'pluginFileDraft') {
     getName('plugins')
   }
   if(route.name === 'createExperimentJob') {

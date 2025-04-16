@@ -67,6 +67,11 @@ const router = createRouter({
           component: () => import('../views/CreatePluginFile.vue'),
           name: 'pluginFile'
         },
+        {
+          path: '/plugins/:id/files/:fileId/:draftType',
+          component: () => import('../views/CreatePluginFile.vue'),
+          name: 'pluginFileDraft'
+        },
       ]
     },
     {

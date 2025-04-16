@@ -2,7 +2,7 @@
   <div class="row items-center justify-between">
     <PageTitle :title="title" />
     <q-btn 
-      v-if="route.params.fileId !== 'new'"
+      v-if="route.params.fileId !== 'new' && route.params.draftType !== 'newResourceDraft'"
       color="negative"
       icon="sym_o_delete" 
       label="Delete Plugin File" 
@@ -312,20 +312,32 @@
     </fieldset>
   </div>
 
-  <div :class="`${isMobile ? '' : ''} float-right q-mb-lg`">
+  <div class="row justify-between">
+    <!--       :style="{ visibility: route.params.fileId === 'new' ? 'visible' : 'hidden' }" -->
     <q-btn
-      outline
-      color="primary" 
-      label="Cancel"
-      class="q-mr-lg cancel-btn"
-      @click="confirmLeave = true; router.back()"
+      label="Save As Draft"
+      color="orange-5"
+      @click="submitDraft('newDraft')"
+      :style="{ 
+        visibility: route.params.draftType ? 'hidden' : 'visible' 
+      }"
     />
-    <q-btn  
-      @click="submit()" 
-      color="primary" 
-      label="Save File"
-      type="submit"
-    />
+    <div>
+      <q-btn
+        outline
+        color="primary" 
+        label="Cancel"
+        class="q-mr-lg cancel-btn"
+        @click="confirmLeave = true; router.back()"
+      />
+      <q-btn  
+        @click="triggerSubmit()"  
+        color="primary" 
+        :label="!route.params.draftType ? 'Save File' : 
+          route.params.draftType === 'draft' ? 'Save File Draft' : 'Save File Resource Draft'"
+        type="submit"
+      />
+    </div>
   </div>
 
   <InfoPopupDialog
@@ -443,8 +455,33 @@
       }
       return
     }
+    if(route.params.draftType === 'newResourceDraft') {
+      let parentPluginName
+      try {
+        const res = await api.getFile(route.params.id, route.params.fileId)
+        parentPluginName = res.data.filename
+        pluginFile.value = {
+          filename: res.data.filename,
+          contents: res.data.contents,
+          tasks: res.data.tasks,
+          description: res.data.description
+        }
+        initialCopy.value = JSON.parse(JSON.stringify(pluginFile.value))
+      } catch(err) {
+        console.log(err)
+      }
+      title.value = `Create ${parentPluginName} Resource Draft`
+      return
+    }
     try {
-      const res = await api.getFile(route.params.id, route.params.fileId)
+      let res
+      if(route.params.draftType === 'draft') {
+        res = await api.getFile(route.params.id, route.params.fileId, 'draft')
+      } else if(route.params.draftType === 'resourceDraft') {
+        res = await api.getFile(route.params.id, route.params.fileId, 'resourceDraft')
+      } else {
+        res = await api.getFile(route.params.id, route.params.fileId)
+      }
       console.log('getFile = ', res)
       pluginFile.value = {
         filename: res.data.filename,
@@ -453,6 +490,7 @@
         description: res.data.description
       }
       title.value = `Edit ${res.data.filename}`
+      console.log('plugin tasks not containing pluginParamType?', pluginFile.value)
       pluginFile.value.tasks.forEach((task) => {
         [...task.inputParams, ...task.outputParams].forEach((param) => {
           param.parameterType = param.parameterType.id
@@ -461,6 +499,7 @@
       initialCopy.value = JSON.parse(JSON.stringify(pluginFile.value))
     } catch(err) {
       notify.error(err.response.data.message)
+      console.log('err = ', err)
     } 
   })
 
@@ -489,36 +528,70 @@
     }
   })
 
-  async function submit() {
-    basicInfoForm.value.validate().then(success => {
-      contentsError.value = pluginFile.value.contents?.length > 0 ? '' : 'This field is required'
-      if (success && contentsError.value === '') {
-        addOrModifyFile()
-      }
-      else {
-        // error
-      }
-    })
+  function triggerSubmit() {
+      //   @click="!route.params.draftType ? submit() : 
+      // route.params.draftType === 'draft' ? submitDraft('draft') : submitDraft('newResourceDraft')"
+    if(!route.params.draftType) {
+      submit()
+    } else {
+      submitDraft(route.params.draftType)
+    }
   }
 
-  async function addOrModifyFile() {
+  async function submit() {
+    const isValid = await basicInfoForm.value.validate()
+    contentsError.value = pluginFile.value.contents?.length > 0 ? '' : 'This field is required'
+    if (!isValid || contentsError.value !== '') return
+
     try {
       let res
-      if(route.params.fileId === 'new') {
+      if (route.params.fileId === 'new') {
         res = await api.addFile(route.params.id, pluginFile.value)
       } else {
         res = await api.updateFile(route.params.id, route.params.fileId, pluginFile.value)
       }
+
       store.savedForms.files[route.params.id] = null
       notify.success(`Successfully ${route.params.fileId === 'new' ? 'created' : 'updated'} '${res.data.filename}'`)
       confirmLeave.value = true
       router.push(`/plugins/${route.params.id}/files`)
-    } catch(err) {
-      notify.error(err.response.data.message)
-    } 
+    } catch (err) {
+      notify.error(err.response?.data?.message || 'An error occurred')
+    }
   }
 
+  async function submitDraft(type) {
+    const isValid = await basicInfoForm.value.validate()
+    contentsError.value = pluginFile.value.contents?.length > 0 ? '' : 'This field is required'
+    if (!isValid || contentsError.value !== '') return
+    console.log('type = ', type)
+    try {
+      let res
+      if(type === 'newDraft') {
+        // create new draft
+        res = await api.addFile(route.params.id, pluginFile.value, 'draft')
+        notify.success(`Successfully created draft '${res.data.payload.filename}'`)
+      } else if(type === 'newResourceDraft') {
+        // create new resource draft
+        res = await api.addFile(route.params.id, pluginFile.value, 'resourceDraft', route.params.fileId)
+        notify.success(`Successfully created resource draft '${res.data.payload.filename}'`)
+      } else if(route.params.draftType === 'draft') {
+        // update draft
+        res = await api.updateFile(route.params.id, route.params.fileId, pluginFile.value, 'draft')
+        notify.success(`Successfully updated draft '${res.data.payload.filename}'`)
+      } else if(type === 'resourceDraft') {
+        // update resource draft
+        console.log('updating file......')
+        res = await api.updateFile(route.params.id,route.params.fileId, pluginFile.value, 'resourceDraft')
+        notify.success(`Successfully updated resource draft '${res.data.payload.filename}'`)
+      }
+      router.push(`/plugins/${route.params.id}/files`)
+    } catch(err) {
+      console.log('err = ', err)
+      notify.error(err.response?.data?.message || 'An error occurred')
+    }
 
+  }
 
   function processFile() {
     const file = uploadedFile.value
@@ -702,7 +775,13 @@
 
   async function deleteFile() {
     try {
-      await api.deleteFile(route.params.id, route.params.fileId)
+      if(!route.params.draftType) {
+        await api.deleteFile(route.params.id, route.params.fileId)
+      } else if(route.params.draftType === 'draft') {
+        await api.deleteFile(route.params.id, route.params.fileId, true)
+      } else if(route.params.draftType === 'resourceDraft') {
+        await api.deleteFile(route.params.id, route.params.fileId, 'resourceDraft')
+      }
       notify.success(`Successfully deleted '${pluginFile.value.filename}'`)
       router.push(`/plugins/${route.params.id}/files`)
     } catch(err) {

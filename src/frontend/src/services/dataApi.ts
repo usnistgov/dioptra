@@ -243,7 +243,7 @@ export async function getItem<T extends ItemType>(type: T, id: number, isDraft: 
   if(isDraft && res.data) {
     Object.assign(res.data, res.data.payload)
   }
-  console.log('res = ', res)
+  console.log(`getItem ${type}`, res)
   return res
 }
 
@@ -306,14 +306,15 @@ export async function deleteDraft<T extends ItemType>(type: T, draftId: number) 
   return await axios.delete(`/api/${type}/drafts/${draftId}`)
 }
 
-export async function getFiles(id: number, pagination: Pagination) {
-  const res =  await axios.get(`/api/plugins/${id}/files`, {
+export async function getFiles(id: number, pagination: Pagination, showDrafts: boolean = false) {
+  const res =  await axios.get(`/api/plugins/${id}/files${showDrafts ? '/drafts/' : ''}`, {
     params: {
       index: pagination.index,
       pageLength: pagination.rowsPerPage === 0 ? 100 : pagination.rowsPerPage,  // 0 means GET ALL
       search: urlEncode(pagination.search),
       sortBy: pagination.sortBy,
       descending: pagination.descending,
+      draftType: showDrafts ? 'new' : '',
     }
   })
 
@@ -326,24 +327,67 @@ export async function getFiles(id: number, pagination: Pagination) {
       nextUrl = response.data.next ? response.data.next.replace("/v1", "") : null
     }
   }
+  if(showDrafts && res.data.data) {
+    res.data.data.forEach((obj: any) => {
+      Object.assign(obj, obj.payload)
+    })
+  }
   return res
 }
 
-export async function getFile(pluginID: string, fileID: string) {
-  return await axios.get(`/api/plugins/${pluginID}/files/${fileID}`)
+export async function getFile(pluginID: string, fileID: string, draftType: string = '') {
+  let url = ''
+  if(!draftType) {
+    url = `/api/plugins/${pluginID}/files/${fileID}`
+  } else if (draftType === 'draft') {
+    url = `/api/plugins/${pluginID}/files/drafts/${fileID}`
+  } else if (draftType === 'resourceDraft') {
+    url = `/api/plugins/${pluginID}/files/${fileID}/draft`
+  }
+  const res =  await axios.get(url)
+  if (draftType === 'draft' || draftType === 'resourceDraft') {
+    Object.assign(res.data, res.data.payload)
+  }
+  console.log('get draft res = ', res)
+  return res
 }
 
-export async function addFile(id: number, params: CreateParams['files']){
-  return await axios.post(`/api/plugins/${id}/files`, params)
+export async function addFile(id: number, params: CreateParams['files'], draftType: string = '', fileId: string = ''){
+  let url = ''
+  if(!draftType) {
+    url = `/api/plugins/${id}/files`
+  } else if(draftType === 'draft') {
+    url = `/api/plugins/${id}/files/drafts/`
+  } else if(draftType === 'resourceDraft') {
+    url = `/api/plugins/${id}/files/${fileId}/draft`
+  }
+  return await axios.post(url, params)
 }
 
-export async function updateFile(id: number, fileID: string, params: CreateParams['files']){
-  console.log('updateFile params = ', params)
-  return await axios.put(`/api/plugins/${id}/files/${fileID}`, params)
+export async function updateFile(id: number, fileID: string, params: CreateParams['files'], draftType: string = ''){
+  let url = ''
+  if(!draftType) {
+    url = `/api/plugins/${id}/files/${fileID}`
+    console.log('draftType = ', draftType)
+    console.log('url = ', url)
+  } else if(draftType === 'draft') {
+    url = `/api/plugins/${id}/files/drafts/${fileID}`
+  } else if(draftType === 'resourceType') {
+    url = `/api/plugins/${id}/files/${fileID}/draft`
+  }
+  return await axios.put(url, params)
 }
 
-export async function deleteFile(pluginID: string, fileID: string) {
-  return await axios.delete(`/api/plugins/${pluginID}/files/${fileID}`)
+export async function deleteFile(pluginID: string, fileID: string, draftType: string = '') {
+  let url = ''
+  if(!draftType) {
+    url = `/api/plugins/${pluginID}/files/${fileID}`
+  } else if(draftType === 'draft') {
+    url = `/api/plugins/${pluginID}/files/drafts/${fileID}`
+  } else if(draftType === 'resourceDraft') {
+    url = `/api/plugins/${pluginID}/files/${fileID}/draft`
+  }
+  return await axios.delete(url)
 }
 
 export async function updateTags<T extends ItemType>(type: T, id: number, tagIDs: Array<number>, fileId?: number) {
