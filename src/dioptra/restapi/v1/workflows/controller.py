@@ -28,9 +28,6 @@ from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.utils import as_api_parser, as_parameters_schema_list
 from dioptra.restapi.v1.schemas import IdStatusResponseSchema
-from dioptra.restapi.v1.shared.entrypoint_validate_service import (
-    EntrypointValidateService,
-)
 
 from .schema import (
     FileTypes,
@@ -45,6 +42,7 @@ from .service import (
     JobFilesDownloadService,
     ResourceImportService,
     SignatureAnalysisService,
+    ValidateEntrypointService,
 )
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -209,7 +207,7 @@ class DraftCommitEndpoint(Resource):
 class ValidateEntrypointEndpoint(Resource):
     @inject
     def __init__(
-        self, entrypoint_validate_service: EntrypointValidateService, *args, **kwargs
+        self, validate_entrypoint_service: ValidateEntrypointService, *args, **kwargs
     ) -> None:
         """Initialize the workflow resource.
 
@@ -218,7 +216,7 @@ class ValidateEntrypointEndpoint(Resource):
         Args:
             entrypoint_validate_service: An EntrypointValidateService object.
         """
-        self._entrypoint_validate_service = entrypoint_validate_service
+        self._validate_entrypoint_service = validate_entrypoint_service
         super().__init__(*args, **kwargs)
 
     @login_required
@@ -235,7 +233,7 @@ class ValidateEntrypointEndpoint(Resource):
         task_graph = parsed_obj["task_graph"]
         plugin_ids = parsed_obj["plugin_ids"]
         parameters = parsed_obj["parameters"]
-        return self._entrypoint_validate_service.validate(
+        return self._validate_entrypoint_service.validate(
             group_id=group_id,
             task_graph=task_graph,
             plugin_ids=plugin_ids,
