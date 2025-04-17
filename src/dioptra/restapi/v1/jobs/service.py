@@ -17,6 +17,7 @@
 """The server-side functions that perform job endpoint operations."""
 from __future__ import annotations
 
+from math import isnan
 from typing import Any, Final, cast
 from uuid import UUID
 
@@ -57,7 +58,6 @@ from dioptra.restapi.v1.queues.service import RESOURCE_TYPE as QUEUE_RESOURCE_TY
 from dioptra.restapi.v1.queues.service import QueueIdService
 from dioptra.restapi.v1.shared.rq_service import RQServiceV1
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
-from math import isnan
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 

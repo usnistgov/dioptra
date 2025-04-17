@@ -19,8 +19,8 @@ from typing import Any, ClassVar, Final, TypeVar, cast
 
 from .base import (
     CollectionClient,
+    DioptraNoneToNanResponse,
     DioptraSession,
-    DioptraNoneToNanProtocol,
 )
 from .snapshots import SnapshotsSubCollectionClient
 from .tags import TagsSubCollectionClient
@@ -289,7 +289,7 @@ def metrics_wrapper(response: T, caster) -> T:
     try:
         response = caster(response)
     except TypeError:
-        response = cast(T, DioptraNoneToNanProtocol(response, caster))
+        response = cast(T, DioptraNoneToNanResponse(response, caster))
     return response
 
 

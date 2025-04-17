@@ -101,7 +101,7 @@ class DioptraResponseProtocol(Protocol):
         ...  # fmt: skip
 
 
-class DioptraNoneToNanProtocol(object):
+class DioptraNoneToNanResponse(object):
     """
     A wrapper for the requests Response which converts JSON Nones to
     NaNs for the metrics client functions

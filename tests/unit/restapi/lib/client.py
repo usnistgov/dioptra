@@ -67,7 +67,7 @@ class DioptraTestResponse(object):
         """The response body as a string."""
         return self._test_response.text
 
-    def json(self) -> dict[str, Any] | list[dict[str, Any]]:
+    def json(self) -> dict[str, Any]:
         """Return the response body as a JSON-like Python dictionary.
 
         Returns:
