@@ -923,6 +923,12 @@ def test_register_plugin_file(
         (r"package/sub_package/module.py", HTTPStatus.OK),
         (r"a/b/c/d/e/f/g/h/i/j/k/l/m/n/o/p.py", HTTPStatus.OK),  # Many nested directories # noqa: B950 # fmt: skip
         (r"_underscore_start.py", HTTPStatus.OK),
+        (r"underscore_end_.py", HTTPStatus.OK),
+        (r"_underscore_start_end_.py", HTTPStatus.OK),
+        (r"__dunder_start.py", HTTPStatus.OK),
+        (r"dunder_end__.py", HTTPStatus.OK),
+        (r"__dunder_start_end__.py", HTTPStatus.OK),
+
         # Invalid paths
         (r"hello world.py", HTTPStatus.BAD_REQUEST),        # Space in filename
         (r"3ight/hello.py", HTTPStatus.BAD_REQUEST),        # Directory starting with a number # noqa: B950
@@ -934,7 +940,6 @@ def test_register_plugin_file(
         (r"/hello.py", HTTPStatus.BAD_REQUEST),             # Starts with a slash
         (r"hello..py", HTTPStatus.BAD_REQUEST),             # Double dot in extension
         (r"hello.py.py", HTTPStatus.BAD_REQUEST),           # Double .py extension
-        (r"hello_.py", HTTPStatus.BAD_REQUEST),             # Ends with underscore before extension # noqa: B950
         (r"_/hello.py", HTTPStatus.BAD_REQUEST),            # Single underscore directory name # noqa: B950
         (r"hello/_.py", HTTPStatus.BAD_REQUEST),            # Single underscore filename
         (r"hello/_file.py", HTTPStatus.BAD_REQUEST),        # Underscore start in nested file # noqa: B950
