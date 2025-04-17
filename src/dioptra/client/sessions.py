@@ -205,6 +205,7 @@ def to_multipart_encoder(
 
     return MultipartEncoder(merged)
 
+
 class BaseDioptraRequestsSession(DioptraSession[T], ABC, Generic[T]):
     """
     The interface for communicating with the Dioptra API using the requests library.
