@@ -15,8 +15,9 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from math import isnan
-from requests import Response
 from typing import Any, ClassVar, Final, TypeVar, cast
+
+from requests import Response
 
 from .base import (
     CollectionClient,

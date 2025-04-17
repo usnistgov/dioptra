@@ -21,8 +21,9 @@ from dataclasses import dataclass
 from io import BufferedReader
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from posixpath import join as urljoin
-from requests import Response
 from typing import Any, Callable, ClassVar, Generic, Protocol, TypeVar, cast
+
+from requests import Response
 
 T = TypeVar("T")
 
@@ -108,7 +109,9 @@ class DioptraNoneToNanResponse(object):
     NaNs for the metrics client functions
     """
 
-    def __init__(self, response: Response, caster: Callable[..., dict[str, Any]]) -> None:
+    def __init__(
+        self, response: Response, caster: Callable[..., dict[str, Any]]
+    ) -> None:
         """Initialize the DioptraTestResponse instance.
 
         Args:
