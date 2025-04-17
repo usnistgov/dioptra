@@ -33,8 +33,7 @@ from .base import (
     DioptraSession,
     IllegalArgumentError,
     JSONDecodeError,
-    StatusCodeError,
-    is_simple_json,
+    StatusCodeError
 )
 
 LOGGER = logging.getLogger(__name__)
@@ -122,10 +121,7 @@ def convert_response_to_dict(response: DioptraResponseProtocol) -> dict[str, Any
         raise StatusCodeError(f"Error code returned: {response.status_code}")
 
     try:
-        if is_simple_json():
-            response_dict = response.json(allow_nan=True)
-        else:
-            response_dict = response.json()
+        response_dict = response.json()
 
     except requests.JSONDecodeError as err:
         LOGGER.debug(

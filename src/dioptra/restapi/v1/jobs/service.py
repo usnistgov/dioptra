@@ -57,6 +57,7 @@ from dioptra.restapi.v1.queues.service import RESOURCE_TYPE as QUEUE_RESOURCE_TY
 from dioptra.restapi.v1.queues.service import QueueIdService
 from dioptra.restapi.v1.shared.rq_service import RQServiceV1
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
+from math import isnan
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -578,7 +579,7 @@ class JobIdMetricsService(object):
             try:
                 run = client.get_run(run_id.hex)
                 metrics = [
-                    {"name": metric, "value": run.data.metrics[metric]}
+                    {"name": metric, "value": run.data.metrics[metric] if not isnan(run.data.metrics[metric]) else None }
                     for metric in run.data.metrics.keys()
                 ]
             except MlflowException:
@@ -630,7 +631,7 @@ class JobIdMetricsService(object):
                 client.log_metric(
                     run_id.hex,
                     key=metric_name,
-                    value=metric_value,
+                    value=float('nan') if metric_value == None else metric_value,
                     step=metric_step,
                 )
             except MlflowException as e:
@@ -702,7 +703,7 @@ class JobIdMetricsSnapshotsService(object):
         metrics_page = [
             {
                 "name": metric.key,
-                "value": metric.value,
+                "value": metric.value if not isnan(metric.value) else None,
                 "step": metric.step,
                 "timestamp": metric.timestamp,
             }
@@ -710,7 +711,7 @@ class JobIdMetricsSnapshotsService(object):
                 page_index * page_length : (page_index + 1) * page_length
             ]
         ]
-
+        print(metrics_page)
         return metrics_page, len(history)
 
 
