@@ -15,6 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from math import isnan
+from requests import Response
 from typing import Any, ClassVar, Final, TypeVar, cast
 
 from .base import (
@@ -289,7 +290,7 @@ def metrics_wrapper(response: T, caster) -> T:
     try:
         response = caster(response)
     except TypeError:
-        response = cast(T, DioptraNoneToNanResponse(response, caster))
+        response = cast(T, DioptraNoneToNanResponse(cast(Response, response), caster))
     return response
 
 
