@@ -579,7 +579,14 @@ class JobIdMetricsService(object):
             try:
                 run = client.get_run(run_id.hex)
                 metrics = [
-                    {"name": metric, "value": run.data.metrics[metric] if not isnan(run.data.metrics[metric]) else None }
+                    {
+                        "name": metric,
+                        "value": (
+                            run.data.metrics[metric]
+                            if not isnan(run.data.metrics[metric])
+                            else None
+                        ),
+                    }
                     for metric in run.data.metrics.keys()
                 ]
             except MlflowException:
@@ -631,7 +638,7 @@ class JobIdMetricsService(object):
                 client.log_metric(
                     run_id.hex,
                     key=metric_name,
-                    value=float('nan') if metric_value == None else metric_value,
+                    value=metric_value if metric_value is not None else float("nan"),
                     step=metric_step,
                 )
             except MlflowException as e:
@@ -711,7 +718,6 @@ class JobIdMetricsSnapshotsService(object):
                 page_index * page_length : (page_index + 1) * page_length
             ]
         ]
-        print(metrics_page)
         return metrics_page, len(history)
 
 

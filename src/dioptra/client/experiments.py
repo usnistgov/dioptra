@@ -750,4 +750,7 @@ class ExperimentsCollectionClient(CollectionClient[T]):
         if search is not None:
             params["search"] = search
 
-        return metrics_wrapper(self._session.get(self.url, str(experiment_id), METRICS, params=params), json_experiment_caster)
+        return metrics_wrapper(
+            self._session.get(self.url, str(experiment_id), METRICS, params=params),
+            json_experiment_caster,
+        )

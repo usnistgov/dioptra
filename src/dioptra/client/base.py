@@ -100,6 +100,7 @@ class DioptraResponseProtocol(Protocol):
         """
         ...  # fmt: skip
 
+
 class DioptraNoneToNanProtocol(object):
     """
     A wrapper for the requests Response which converts JSON Nones to
@@ -136,8 +137,6 @@ class DioptraNoneToNanProtocol(object):
         Returns:
             The response body as a dictionary.
         """
-        outp = self._response.json()
-        print(outp)
         return self._caster(cast(dict[str, Any], self._response.json()))
 
 

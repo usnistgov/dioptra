@@ -33,7 +33,7 @@ from .base import (
     DioptraSession,
     IllegalArgumentError,
     JSONDecodeError,
-    StatusCodeError
+    StatusCodeError,
 )
 
 LOGGER = logging.getLogger(__name__)
@@ -97,7 +97,9 @@ def wrap_request_method(
     return wrapper
 
 
-def convert_response_to_dict(response: DioptraResponseProtocol) -> dict[str, Any] | list[dict[str, Any]]:
+def convert_response_to_dict(
+    response: DioptraResponseProtocol,
+) -> dict[str, Any] | list[dict[str, Any]]:
     """Convert a response object to a JSON-like Python dictionary.
 
     Args:
@@ -204,6 +206,7 @@ def to_multipart_encoder(
                     ) from err
 
     return MultipartEncoder(merged)
+
 
 class BaseDioptraRequestsSession(DioptraSession[T], ABC, Generic[T]):
     """
