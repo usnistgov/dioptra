@@ -511,7 +511,6 @@
     if(!id) return
     try {
       const res = await api.getItem('experiments', id)
-      console.log('getExperiment = ', res.data)
       job.value.experiment = res.data
     } catch(err) {
       console.warn(err)
@@ -522,21 +521,44 @@
     if(!id) return
     try {
       const res = await api.getItem('entrypoints', id)
-      console.log('entrypoint = ', res.data)
       job.value.entrypoint = res.data
     } catch(err) {
       console.warn(err)
     }
   }
 
+  async function getResource(type, id) {
+    try {
+      const res = await api.getItem(type, id)
+      return res.data
+    } catch(err) {
+      console.warn(err)
+    }
+  }
+
   onMounted(async () => {
+    if(history.state.oldJobId) {
+      const oldJob = await getResource('jobs', history.state.oldJobId)
+      await getExperiment(oldJob.experiment.id)
+      if(allowableEntrypointIds.value.includes(oldJob.entrypoint.id)) {
+        await getEntrypoint(oldJob.entrypoint.id)
+      } else {
+        notify.error(`Entrypoint ${oldJob.entrypoint.name} is no longer linked to experiment ${oldJob.experiment.name}`)
+      }
+      if(allowableQueueIds.value.includes(oldJob.queue.id)) {
+        job.value.queue = await getResource('queues', oldJob.queue.id)
+      } else {
+        notify.error(`Queue ${oldJob.queue.name} is no longer linked to entrypoint ${oldJob.entrypoint.name}`)
+      }
+      job.value.description = oldJob.description
+    }
     if(Object.hasOwn(route.params, 'id')) {
       await getExperiment(route.params.id)
     } else {
       await getExperiments()
     }
 
-    if(store.savedForms.jobs[expJobOrAllJobs.value]) {
+    if(store.savedForms.jobs[expJobOrAllJobs.value] && !history.state.oldJobId) {
       job.value = store.savedForms.jobs[expJobOrAllJobs.value]
       // check if saved values are still valid
       // load latest version of each resource
