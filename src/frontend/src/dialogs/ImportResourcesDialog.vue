@@ -142,7 +142,13 @@
     const importWaitNotification = notify.wait('Importing resources...');
     try {
       const res = await api.importResources(params);
-      notify.success('Import successful.');
+      if (sourceType.value == "git") {
+        notify.success(`Import from git repository '${gitUrl.value}' successful.`);
+      } else if (sourceType.value == "upload_archive") {
+        notify.success(`Import from archive file '${archiveFile.value.name}' successful.`);
+      } else if (sourceType.value == "upload_files") {
+        notify.success(`Import from directory successful.`);
+      }
     } catch(err) {
       notify.error(err.response.data.message);
     }
