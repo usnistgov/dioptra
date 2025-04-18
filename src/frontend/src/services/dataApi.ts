@@ -43,7 +43,9 @@ type CreateParams = {
     filename: string,
     contents: string,
     description: string,
-    tasks: []
+    tasks: [],
+    resourceSnapshot?: number,
+    resourceData?: object
   },
   entrypoints: {
     name: string,
@@ -348,7 +350,7 @@ export async function getFile(pluginID: string, fileID: string, draftType: strin
   if (draftType === 'draft' || draftType === 'resourceDraft') {
     Object.assign(res.data, res.data.payload)
   }
-  console.log('get draft res = ', res)
+  console.log('getFile = ', res)
   return res
 }
 
@@ -366,16 +368,24 @@ export async function addFile(id: number, params: CreateParams['files'], draftTy
 
 export async function updateFile(id: number, fileID: string, params: CreateParams['files'], draftType: string = ''){
   let url = ''
+  let resourceDraftParams
   if(!draftType) {
     url = `/api/plugins/${id}/files/${fileID}`
     console.log('draftType = ', draftType)
     console.log('url = ', url)
   } else if(draftType === 'draft') {
     url = `/api/plugins/${id}/files/drafts/${fileID}`
-  } else if(draftType === 'resourceType') {
+  } else if(draftType === 'resourceDraft') {
     url = `/api/plugins/${id}/files/${fileID}/draft`
+    const { resourceSnapshot, ...rest } = params
+    resourceDraftParams = {
+      resourceSnapshot: resourceSnapshot,
+      resourceData: {
+        ...rest
+      }
+    }
   }
-  return await axios.put(url, params)
+  return await axios.put(url, draftType === 'resourceDraft' ? resourceDraftParams : params)
 }
 
 export async function deleteFile(pluginID: string, fileID: string, draftType: string = '') {

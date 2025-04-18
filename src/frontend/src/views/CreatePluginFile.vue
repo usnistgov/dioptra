@@ -482,12 +482,12 @@
       } else {
         res = await api.getFile(route.params.id, route.params.fileId)
       }
-      console.log('getFile = ', res)
       pluginFile.value = {
         filename: res.data.filename,
         contents: res.data.contents,
         tasks: res.data.tasks,
-        description: res.data.description
+        description: res.data.description,
+        ...(res.data.resourceSnapshot && { resourceSnapshot: res.data.resourceSnapshot })
       }
       title.value = `Edit ${res.data.filename}`
       console.log('plugin tasks not containing pluginParamType?', pluginFile.value)
@@ -533,8 +533,10 @@
       // route.params.draftType === 'draft' ? submitDraft('draft') : submitDraft('newResourceDraft')"
     if(!route.params.draftType) {
       submit()
-    } else {
+    } else if(route.params.draftType === 'draft') {
       submitDraft(route.params.draftType)
+    } else {
+      submitResourceDraft()
     }
   }
 
@@ -560,37 +562,54 @@
     }
   }
 
+  async function submitResourceDraft() {
+    const isValid = await basicInfoForm.value.validate()
+    contentsError.value = pluginFile.value.contents?.length > 0 ? '' : 'This field is required'
+    if (!isValid || contentsError.value !== '') return
+
+    try {
+      let res
+      if(route.params.draftType === 'newResourceDraft') {
+        // create new resource draft
+        res = await api.addFile(route.params.id, pluginFile.value, 'resourceDraft', route.params.fileId)
+        notify.success(`Successfully created resource draft '${res.data.payload.filename}'`)
+      } else if(route.params.draftType === 'resourceDraft') {
+        // update resource draft
+        console.log('pluginFile = ', pluginFile.value)
+        res = await api.updateFile(route.params.id, route.params.fileId, pluginFile.value, 'resourceDraft')
+        notify.success(`Successfully updated resource draft '${res.data.payload.filename}'`)
+      }
+      confirmLeave.value = true
+      router.push(`/plugins/${route.params.id}/files`)
+    } catch(err) {
+      notify.error(err.response?.data?.message || 'An error occurred')
+    }
+  }
+
   async function submitDraft(type) {
     const isValid = await basicInfoForm.value.validate()
     contentsError.value = pluginFile.value.contents?.length > 0 ? '' : 'This field is required'
     if (!isValid || contentsError.value !== '') return
-    console.log('type = ', type)
     try {
       let res
       if(type === 'newDraft') {
         // create new draft
         res = await api.addFile(route.params.id, pluginFile.value, 'draft')
         notify.success(`Successfully created draft '${res.data.payload.filename}'`)
-      } else if(type === 'newResourceDraft') {
-        // create new resource draft
-        res = await api.addFile(route.params.id, pluginFile.value, 'resourceDraft', route.params.fileId)
-        notify.success(`Successfully created resource draft '${res.data.payload.filename}'`)
       } else if(route.params.draftType === 'draft') {
         // update draft
         res = await api.updateFile(route.params.id, route.params.fileId, pluginFile.value, 'draft')
         notify.success(`Successfully updated draft '${res.data.payload.filename}'`)
-      } else if(type === 'resourceDraft') {
-        // update resource draft
-        console.log('updating file......')
-        res = await api.updateFile(route.params.id,route.params.fileId, pluginFile.value, 'resourceDraft')
-        notify.success(`Successfully updated resource draft '${res.data.payload.filename}'`)
       }
-      router.push(`/plugins/${route.params.id}/files`)
+      confirmLeave.value = true
+      router.push({
+        path: `/plugins/${route.params.id}/files`,
+        state: { showDrafts: true } 
+      })
     } catch(err) {
       console.log('err = ', err)
       notify.error(err.response?.data?.message || 'An error occurred')
     }
-
   }
 
   function processFile() {
@@ -778,12 +797,15 @@
       if(!route.params.draftType) {
         await api.deleteFile(route.params.id, route.params.fileId)
       } else if(route.params.draftType === 'draft') {
-        await api.deleteFile(route.params.id, route.params.fileId, true)
+        await api.deleteFile(route.params.id, route.params.fileId, 'draft')
       } else if(route.params.draftType === 'resourceDraft') {
         await api.deleteFile(route.params.id, route.params.fileId, 'resourceDraft')
       }
       notify.success(`Successfully deleted '${pluginFile.value.filename}'`)
-      router.push(`/plugins/${route.params.id}/files`)
+      router.push({
+        path: `/plugins/${route.params.id}/files`,
+        ...(route.params.draftType === 'draft' && { state: { showDrafts: true } })
+      })
     } catch(err) {
       notify.error(err.response.data.message);
     }

@@ -2,7 +2,7 @@
   <PageTitle :title="`${title} Files`" />
   <TableComponent 
     :rows="files"
-    :columns="fileColumns"
+    :columns="showDrafts ? draftColumns : fileColumns"
     title="Plugin Files"
     v-model:selected="selected"
     @edit="loadFormPage()"
@@ -49,7 +49,7 @@
 <script setup>
   import TableComponent from '@/components/TableComponent.vue'
   import { useRoute, useRouter } from 'vue-router'
-  import { ref, computed } from 'vue'
+  import { ref, onMounted } from 'vue'
   import * as api from '@/services/dataApi'
   import * as notify from '../notify'
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'
@@ -66,12 +66,25 @@
 
   const tableRef = ref(null)
 
+  onMounted(() => {
+    if(history.state.showDrafts) {
+      showDrafts.value = true
+      history.state.showDrafts = false
+    }
+  })
+
   const fileColumns = [
     { name: 'filename', label: 'Filename', align: 'left', field: 'filename', sortable: true, },
     { name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true },
     { name: 'hasDraft', label: 'Resource Draft', align: 'left', field: 'hasDraft', sortable: false },
     { name: 'tasks', label: 'Tasks', align: 'left', field: 'tasks', sortable: false, },
     { name: 'tags', label: 'Tags', align: 'left', field: 'tags', sortable: false },
+  ]
+
+  const draftColumns = [
+    { name: 'filename', label: 'Filename', align: 'left', field: 'filename', sortable: true, },
+    { name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true },
+    { name: 'tasks', label: 'Tasks', align: 'left', field: 'tasks', sortable: false, },
   ]
 
   const files = ref([])
