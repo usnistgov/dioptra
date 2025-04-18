@@ -37,10 +37,10 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 def package_job_files(
     job_id: int,
     experiment: models.Experiment,
-    entry_point: models.EntryPoint,
+    entry_point_name: str,
+    task_engine_yaml: str,
     entry_point_plugin_files: list[models.PluginPluginFile],
     job_parameter_values: list[models.EntryPointParameterValue],
-    plugin_parameter_types: list[models.PluginTaskParameterType],
     file_type: FileTypes,
     logger: BoundLogger | None = None,
 ) -> IO[bytes]:
@@ -49,11 +49,9 @@ def package_job_files(
     Args:
         job_id: The ID of the job to package the files for.
         experiment: The experiment the job is associated with.
-        entry_point: The job's entrypoint.
+        entry_point_name: The name of the job's entry point.
         entry_point_plugin_files: The job's entrypoint plugin files.
         job_parameter_values: The job's assigned parameter values.
-        plugin_parameter_types: The latest snapshots of the plugin parameter types
-            accessible to the job.
         file_type: The type of file to package the job files into.
         logger: A structlog logger object to use for logging. A new logger will be
             created if None.
@@ -73,9 +71,8 @@ def package_job_files(
             logger=log,
         )
         task_engine_yaml_path = export_task_engine_yaml(
-            entrypoint=entry_point,
-            plugin_plugin_files=entry_point_plugin_files,
-            plugin_parameter_types=plugin_parameter_types,
+            entry_point_name=entry_point_name,
+            task_engine_yaml=task_engine_yaml,
             base_dir=base_dir,
             logger=log,
         )

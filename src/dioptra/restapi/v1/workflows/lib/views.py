@@ -120,6 +120,30 @@ def get_entry_point_plugin_files(
     return plugin_plugin_files
 
 
+def get_plugin_plugin_files_from_plugin_ids(
+    plugin_ids: list[int], logger: BoundLogger | None = None
+) -> list[models.PluginPluginFile]:
+    log = logger or LOGGER.new()  # noqa: F841
+
+    latest_plugins_stmt = (
+        select(models.Plugin)
+        .join(models.Resource)
+        .where(
+            models.Plugin.resource_id.in_(tuple(plugin_ids)),
+            models.Resource.is_deleted == False,  # noqa: E712
+            models.Resource.latest_snapshot_id == models.Plugin.resource_snapshot_id,
+        )
+    )
+    plugins = db.session.scalars(latest_plugins_stmt).all()
+    plugin_plugin_files = [
+        plugin_plugin_file
+        for plugin in plugins
+        for plugin_plugin_file in plugin.plugin_plugin_files
+    ]
+
+    return plugin_plugin_files
+
+
 def get_job_parameter_values(
     job_id: int, logger: BoundLogger | None = None
 ) -> list[models.EntryPointParameterValue]:
@@ -142,6 +166,76 @@ def get_job_parameter_values(
 
 
 def get_plugin_parameter_types(
+    job_id: int | None = None,
+    group_id: int | None = None,
+    logger: BoundLogger | None = None,
+) -> list[models.PluginTaskParameterType]:
+    """Run a query to get the plugin task parameter types.
+
+    This function retrieves the plugin task parameter types for a job or group. It
+    requires either a job ID or a group ID to be provided, but not both.
+
+    Args:
+        job_id: The ID of the job to get the plugin task parameter types for.
+            Must be provided if group_id is None. Defaults to None.
+        group_id: The ID of the group to get the plugin task parameter types for.
+            Must be provided if job_id is None. Defaults to None.
+        logger: A structlog logger object to use for logging. A new logger will be
+            created if None.
+
+    Returns:
+        The plugin task parameter types for the entrypoint.
+
+    Raises:
+        DioptraError: If both job_id and group_id are provided, or if both are None.
+    """
+    log = logger or LOGGER.new()  # noqa: F841
+
+    if job_id is not None and group_id is not None:
+        raise DioptraError(
+            "Either a job or group identifier must be provided, not both"
+        )
+
+    if job_id:
+        return _get_plugin_parameter_types_for_job_id(job_id=job_id, logger=log)
+
+    if group_id:
+        return _get_plugin_parameter_types_for_group_id(group_id=group_id, logger=log)
+
+    raise DioptraError(
+        "A job or group identifier must be provided, both cannot be None"
+    )
+
+
+def _get_plugin_parameter_types_for_group_id(
+    group_id: int, logger: BoundLogger | None = None
+) -> list[models.PluginTaskParameterType]:
+    """Run a query to get the plugin task parameter types for the group.
+
+    Args:
+        group_id: The ID of the group to get the plugin task parameter types for.
+        logger: A structlog logger object to use for logging. A new logger will be
+            created if None.
+
+    Returns:
+        The plugin files for the entrypoint.
+    """
+    log = logger or LOGGER.new()  # noqa: F841
+
+    plugin_parameter_types_stmt = (
+        select(models.PluginTaskParameterType)
+        .join(models.Resource)
+        .where(
+            models.Resource.is_deleted == False,  # noqa: E712
+            models.Resource.group_id == group_id,
+            models.Resource.latest_snapshot_id
+            == models.PluginTaskParameterType.resource_snapshot_id,
+        )
+    )
+    return list(db.session.scalars(plugin_parameter_types_stmt).all())
+
+
+def _get_plugin_parameter_types_for_job_id(
     job_id: int, logger: BoundLogger | None = None
 ) -> list[models.PluginTaskParameterType]:
     """Run a query to get the plugin task parameter types for the job.
