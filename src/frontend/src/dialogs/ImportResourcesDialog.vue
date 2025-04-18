@@ -103,23 +103,30 @@
   const isMobile = inject('isMobile')
   const isExtraSmall = inject('isExtraSmall')
 
+  const gitUrlDefault = 'https://github.com/usnistgov/dioptra.git#main'
+  const configPathDefault = 'extra/dioptra.toml'
+  const overwriteDefault = false
+
   const sourceTypeOptions = [
     {slot: 'git', value: 'git'},
     {slot: 'upload_archive', value: 'upload_archive'},
 	  {slot: 'upload_files', value: 'upload_files'},
   ];
   const sourceType = ref(sourceTypeOptions[0].value);
-  const gitUrl = ref('https://github.com/usnistgov/dioptra.git#main');
+  const gitUrl = ref(gitUrlDefault);
   const archiveFile = ref(null);
   const files = ref(null);
   const group = ref(store.loggedInGroup.id)
-  const configPath = ref('extra/dioptra.toml');
-  const overwrite = ref(false)
+  const configPath = ref(configPathDefault);
+  const overwrite = ref(overwriteDefault)
 
   watch(showDialog, (newVal) => {
     if (!group.value) {
       group.value = store.loggedInGroup.id
     }
+    gitUrl.value = gitUrlDefault
+    configPath.value = configPathDefault
+    overwrite.value = overwriteDefault
   })
 
   async function submit() {
