@@ -101,6 +101,22 @@
         Toggle Light/Dark Mode
       </q-tooltip>
     </q-icon> 
+    <q-icon
+      name="upload"
+      size="sm"
+      @click="showImportDialog = true"
+      @keyup.enter="showImportDialog = true"
+      v-if="store.loggedInUser"
+      class="q-mr-md"
+      style="cursor: pointer"
+      tabindex="0"
+      role="button"
+      aria-hidden="false"
+    >
+      <q-tooltip>
+        Import resources
+      </q-tooltip>
+    </q-icon>
     <q-separator vertical inset color="white" />
     <q-tabs shrink no-caps class="header q-ml-sm">
       <q-route-tab 
@@ -132,6 +148,7 @@
       </div>
     </q-tabs>
   </q-toolbar>
+  <ImportResourcesDialog v-model="showImportDialog" />
 </template>
 
 <script setup>
@@ -140,6 +157,9 @@
   import { useRouter, START_LOCATION } from 'vue-router'
   import { useLoginStore } from '@/stores/LoginStore'
   import * as api from '@/services/dataApi'
+
+  import ImportResourcesDialog from '../dialogs/ImportResourcesDialog.vue';
+  const showImportDialog = defineModel()
 
   const router = useRouter()
 
@@ -185,6 +205,5 @@
       store.loggedInUser = ''
     }
   }
-
 
 </script>
