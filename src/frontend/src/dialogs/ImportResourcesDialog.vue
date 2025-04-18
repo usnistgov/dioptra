@@ -127,6 +127,8 @@
     gitUrl.value = gitUrlDefault
     configPath.value = configPathDefault
     overwrite.value = overwriteDefault
+    archiveFile.value = null
+    files.value = null
   })
 
   async function submit() {
