@@ -94,7 +94,6 @@
   import * as api from '@/services/dataApi';
   import { useLoginStore } from '@/stores/LoginStore.ts';
   import * as notify from '../notify';
-  import DialogComponent from '../dialogs/DialogComponent.vue'
 
   const store = useLoginStore()
 
