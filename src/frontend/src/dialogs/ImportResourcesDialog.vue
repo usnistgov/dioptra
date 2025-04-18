@@ -149,6 +149,7 @@
       } else if (sourceType.value == "upload_files") {
         notify.success(`Import from directory successful.`);
       }
+      showDialog.value = false;
     } catch(err) {
       notify.error(err.response.data.message);
     }
