@@ -787,13 +787,12 @@ Run the following to prevent the deployment from restarting on reboot (systemd o
 
    systemctl disable dioptra
 
+
 Rerunning the Deployment Script
 -------------------------------
 
-When making configuration changes and attempting to rerun ``init-deployment.sh``, the script may freeze while configuring the minio container. This can happen when a previous deployment instance has been left in an inconsistent state by removing and recreating the deployment folder. To remedy this situation, remove the minio data volume with the following command:
+When making configuration changes and attempting to rerun ``init-deployment.sh``, the script may freeze while trying to reconfigure the minio container. It is likely that the container is still functioning properly, and this portion of the setup can be skipped by running  ``init-deployment.sh`` with the ``--skip-minio-setup`` option:
 
 .. code:: sh
 
-   docker volume rm dioptra-deployment_minio-data
-
-Then, rerun the ``init-deployment.sh`` script. This will recreate the data volume and continue with the deployment process.
+   ./init-deployment.sh --skip-minio-setup
