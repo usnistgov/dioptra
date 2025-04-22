@@ -22,7 +22,7 @@ start-mlflow.sh --help
 start-mlflow.sh -h
 ```
 
-## Attention! 
+## Attention!
 - If you start the MLFlow in the Dioptra deployment directory, the directory `--artifacts-destination` (or the default value for it: `mlflow/runs`) will be created at the working directory. 
 
 - Script will create the `--artifacts-destination` path if the path doesn't exist, but the value following `sqlite://` in the `--backend-store-uri` must match the beginning value of the `--artifacts-destination` by default.
