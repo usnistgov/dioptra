@@ -7,7 +7,7 @@ chmod +x start-mlflow.sh
 ```
 
 - If started without parameters (listed below) the `start-mlflow.sh` script assumes the following default values:
-  - --port: `3500`
+  - --port: `35000`
   - --host: `127.0.0.1`
   - --artifacts-destination: `mlflow/runs` ( path)
   - --backend-store-uri: `sqlite:///mlflow/mlflow.sqlite` (which will point to the local mlflow/mlflow.sqlite file)
