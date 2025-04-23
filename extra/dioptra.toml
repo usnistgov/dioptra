@@ -367,6 +367,7 @@ params = [
   { name = "image_size", type = "list", default_value = "[28, 28, 1]" },
   { name = "validation_split", type = "float", default_value = "0.2" },
   { name = "batch_size", type = "integer", default_value = "50" },
+  { name = "rescale", type = "float", default_value = "0.00392156862" },
   { name = "model_architecture", type = "string", default_value = "le_net" },
   { name = "epochs", type = "integer", default_value = "30" },
   { name = "register_model_name", type = "string", default_value = "mnist_classifier" }
@@ -387,6 +388,7 @@ params = [
   { name = "model_version", type = "integer", default_value = "-1" },
   { name = "clip_values", type = "list", default_value = "[0, 1]" },
   { name = "batch_size", type = "integer", default_value = "50" },
+  { name = "rescale", type = "float", default_value = "0.00392156862" },
   { name = "eps", type = "float", default_value = "0.3" },
   { name = "eps_step", type = "float", default_value = "0.1" },
   { name = "minimal", type = "boolean", default_value = "false" },
@@ -417,6 +419,7 @@ params = [
   { name = "max_iter", type = "integer", default_value = "500" },
   { name = "patch_shape", type = "list", default_value = "[2, 2, 1]" },
   { name = "batch_size", type = "integer", default_value = "10" },
+  { name = "rescale", type = "float", default_value = "0.00392156862" },
 ]
 plugins = [ "mnist_demo" ]
 
@@ -442,6 +445,7 @@ params = [
   { name = "patch_scale", type = "float", default_value = "0.4" },
   { name = "patch_shape", type = "list", default_value = "[2, 2, 1]" },
   { name = "batch_size", type = "integer", default_value = "10" },
+  { name = "rescale", type = "float", default_value = "0.00392156862" },
 ]
 plugins = [ "mnist_demo" ]
 
@@ -462,6 +466,7 @@ params = [
   { name = "format", type = "string", default_value = "csv" },
   { name = "batch_size", type = "integer", default_value = "4"},
   { name = "seed", type = "integer", default_value = "-1" },
+  { name = "rescale", type = "float", default_value = "0.00392156862" },
 ]
 plugins = [ "mnist_demo" ]
 
@@ -479,6 +484,7 @@ params = [
   { name = "metrics_format", type = "string", default_value = "csv" },
   { name = "n_classes", type = "integer", default_value = "10" },
   { name = "seed", type = "integer", default_value = "-1" },
+  { name = "rescale", type = "float", default_value = "0.00392156862" },
 ]
 plugins = [ "mnist_demo" ]
 
@@ -501,7 +507,8 @@ params = [
   { name = "batch_size", type = "integer", default_value = "10" },
   { name = "seed", type = "integer", default_value = "-1" },
   { name = "def_type", type = "string", default_value = "spatial_smothing" },
-  { name = "defense_kwargs", type = "mapping", default_value = "{}"}
+  { name = "defense_kwargs", type = "mapping", default_value = "{}"},
+  { name = "rescale", type = "float", default_value = "0.00392156862" },
 ]
 plugins = [ "mnist_demo" ]
 
