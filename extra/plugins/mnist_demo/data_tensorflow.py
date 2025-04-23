@@ -40,6 +40,7 @@ from dioptra.sdk.utilities.decorators import require_package
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 try:
+    import tensorflow as tf
     from tensorflow.keras.utils import (
         image_dataset_from_directory
     )
@@ -123,6 +124,42 @@ def create_image_dataset(
         verbose=True,
     )
 
+def dataset_transforms(    
+    dataset: Dataset, 
+    rescale_value: float, 
+    label_mode: bool,
+    batch_size: int,
+):
+    if (dataset is not None):
+        class_names = dataset.class_names
+        file_paths = dataset.file_paths
+
+        dataset = apply_rescaling(dataset, rescale_value, label_mode)
+
+        # dataset = dataset.batch(batch_size).prefetch(tf.data.AUTOTUNE)
+
+        dataset.class_names = class_names
+        dataset.file_paths = file_paths
+
+    return dataset
+
+
+
+def apply_rescaling(
+    dataset: Dataset, 
+    rescale_value: float, 
+    label_mode: bool,
+) -> Dataset:
+    if label_mode:
+        return dataset.map(            
+            lambda x, y: (x * rescale_value, y),
+            num_parallel_calls=tf.data.AUTOTUNE,
+        )
+    else:
+        return dataset.map(
+            lambda x: x * rescale_value,
+            num_parallel_calls=tf.data.AUTOTUNE
+        )
 
 
 @pyplugs.register

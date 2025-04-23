@@ -6,8 +6,9 @@ dataset:
     subsets: [training, validation, testing]
     image_size: $image_size
     validation_split: $validation_split
+    rescale: $rescale
     batch_size: $batch_size      
-
+    shuffle: True
 model:
   create_model:
     dataset: $dataset.training

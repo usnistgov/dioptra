@@ -5,6 +5,8 @@ dataset:
     subsets: [testing]
     image_size: $image_size
     batch_size: $batch_size
+    rescale: $rescale
+    shuffle: False
 
 model:
   load_model:
