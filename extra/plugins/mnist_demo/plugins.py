@@ -34,7 +34,7 @@ from .artifacts_mlflow import upload_directory_as_tarball_artifact, upload_data_
 from .artifacts_utils import make_directories, extract_tarfile
 from .attacks_fgm import fgm
 from .attacks_patch import create_adversarial_patches, create_adversarial_patch_dataset
-from .data_tensorflow import get_n_classes_from_directory_iterator, create_image_dataset, predictions_to_df, df_to_predictions
+from .data_tensorflow import dataset_transforms, get_n_classes_from_directory_iterator, create_image_dataset, predictions_to_df, df_to_predictions
 from .defenses_image_preprocessing import create_defended_dataset
 from .estimators_keras_classifiers import init_classifier
 from .metrics_distance import get_distance_metric_list
@@ -55,11 +55,12 @@ def load_dataset(
     training_dir: str = "/dioptra/data/Mnist/training",
     testing_dir: str = "/dioptra/data/Mnist/testing",
     subsets: List[str] = ['testing'],
-    image_size: Tuple[int, int, int] = [28, 28, 1],
+    image_size: Tuple[int, int, int] = (28, 28, 1),
     validation_split: Optional[float] = 0.2,
+    rescale = 1/255.,
     batch_size: int = 32,
     label_mode: str = "categorical",
-    shuffle: bool = False
+    shuffle: bool = True
 ) -> DirectoryIterator:
     seed, rng = init_rng(ep_seed)
     global_seed = draw_random_integer(rng)
@@ -90,6 +91,7 @@ def load_dataset(
         label_mode=label_mode,
         shuffle=shuffle
     )
+
     testing_dataset = None if "testing" not in subsets else create_image_dataset(
         data_dir=testing_dir,
         subset=None,
@@ -100,6 +102,13 @@ def load_dataset(
         label_mode=label_mode,
         shuffle=shuffle
     )
+
+    labels = label_mode is not None
+    
+    training_dataset = dataset_transforms(training_dataset, rescale, labels, batch_size)
+    validation_dataset = dataset_transforms(validation_dataset, rescale, labels, batch_size)
+    testing_dataset = dataset_transforms(testing_dataset, rescale, labels, batch_size)
+
     return training_dataset, validation_dataset, testing_dataset
 
 @pyplugs.register
@@ -229,7 +238,7 @@ def attack_fgm(
     )
     return fgm_dataset
 
-@pyplugs.register()
+@pyplugs.register
 def attack_patch(
     data_flow: Any,
     adv_data_dir: Union[str, Path],
@@ -261,7 +270,7 @@ def attack_patch(
         patch_shape=patch_shape,
     )
 
-@pyplugs.register()
+@pyplugs.register
 def augment_patch(
     data_flow: Any,
     adv_data_dir: Union[str, Path],

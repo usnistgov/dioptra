@@ -66,7 +66,7 @@ except ImportError:  # pragma: nocover
 
 
 try:
-    from tensorflow.keras.preprocessing.image import ImageDataGenerator, save_img
+    from tensorflow.keras.preprocessing.image import save_img
     import tensorflow as tf
 except ImportError:  # pragma: nocover
     LOGGER.warn(
@@ -136,7 +136,6 @@ def fgm(
     .. |flow_from_directory| replace:: :py:meth:`tf.keras.preprocessing.image\\
        .ImageDataGenerator.flow_from_directory`
     """
-    tf.experimental.numpy.experimental_enable_numpy_behavior()
     distance_metrics_list = distance_metrics_list or []
     adv_data_dir = Path(adv_data_dir)
 
@@ -148,7 +147,6 @@ def fgm(
         minimal=minimal,
         norm=norm,
     )
-    print(data_flow.file_paths)
 
     img_filenames = [Path(x) for x in data_flow.file_paths]
 
@@ -171,13 +169,12 @@ def fgm(
 
         y_int = np.argmax(y, axis=1)
         adv_batch = attack.generate(x=x.numpy())
-
         _save_adv_batch(adv_batch, adv_data_dir, y_int, clean_filenames)
 
         _evaluate_distance_metrics(
             clean_filenames=clean_filenames,
             distance_metrics_=distance_metrics_,
-            clean_batch=x,
+            clean_batch=x.numpy(),
             adv_batch=adv_batch,
             distance_metrics_list=distance_metrics_list,
         )
@@ -215,7 +212,7 @@ def _save_adv_batch(adv_batch, adv_data_dir, y, clean_filenames) -> None:
         adv_data_dir: The directory to use when saving the generated adversarial images.
         y: An array containing the target labels of the original images.
         clean_filenames: A list containing the filenames of the original images.
-    """
+    """ 
     for batch_image_num, adv_image in enumerate(adv_batch):
         adv_image_path = (
             adv_data_dir
