@@ -9,6 +9,10 @@ dataset:
     testing_dir: $data_dir
     subsets: [testing]
     image_size: $image_size
+    shuffle: False
+    rescale: $rescale
+  dependencies:
+    - predictions
 
 format_predictions:
   load_predictions:

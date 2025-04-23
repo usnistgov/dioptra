@@ -5,6 +5,7 @@ dataset:
     subsets: [testing]
     image_size: $image_size
     batch_size: $batch_size
+    rescale: $rescale
 
 model:
   load_model:
