@@ -25,7 +25,6 @@ from structlog.stdlib import BoundLogger
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 active_runs: dict[str, list[MockMlflowMetric]] = {}
-registered_models: dict[str, MockMlflowRegisteredModel] = {}
 
 
 class MockMlflowClient(object):
@@ -33,12 +32,6 @@ class MockMlflowClient(object):
         LOGGER.info(
             "Mocking mlflow.tracking.MlflowClient instance",
         )
-
-    def create_registered_model(
-        self, name: str, tags: dict | None = None, descrption: str | None = None
-    ) -> MockMlflowRegisteredModel:
-        LOGGER.info("Mocking MlflowClient.create_registered_model() function")
-        registered_models[name] = MockMlflowRegisteredModel(name)
 
     def get_run(self, id: str) -> MockMlflowRun:
         # Note: In Mlflow, this function would usually throw an MlflowException
@@ -90,19 +83,6 @@ class MockMlflowClient(object):
 
     def get_metric_history(self, run_id: str, key: str):
         return [metric for metric in active_runs[run_id] if metric.key == key]
-
-
-class MockMlflowRegisteredModel(object):
-    def __init__(self, name: str):
-        LOGGER.info("Mocking mlflow.entities.model_registry.RegisteredModel class")
-        self._name = name
-
-    @property
-    def name(self) -> dict:
-        LOGGER.info(
-            "Mocking mlflow.entities.model_registry.RegisteredModel.name property"
-        )
-        return self._mame
 
 
 class MockMlflowRun(object):
