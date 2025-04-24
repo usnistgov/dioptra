@@ -16,9 +16,7 @@ chmod +x start-mlflow.sh
 - User can review the default values using the following command:
 ```sh
 start-mlflow.sh --help
-
 # or
-
 start-mlflow.sh -h
 ```
 
