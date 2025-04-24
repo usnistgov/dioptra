@@ -33,6 +33,7 @@ from flask import Flask
 from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
 from injector import Injector
+from mlflow.tracking import MlflowClient
 from pytest import MonkeyPatch
 from freezegun import freeze_time
 
@@ -797,3 +798,8 @@ def resources_import_config() -> dict[str, Any]:
     with set_cwd(path):
         with open(path / "dioptra.toml", "rb") as f:
             return toml.load(f)
+
+
+@pytest.fixture
+def mlflow_client() -> MlflowClient:
+    return MlflowClient()
