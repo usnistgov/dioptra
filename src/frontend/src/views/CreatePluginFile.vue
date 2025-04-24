@@ -313,15 +313,22 @@
   </div>
 
   <div class="row justify-between">
-    <!--       :style="{ visibility: route.params.fileId === 'new' ? 'visible' : 'hidden' }" -->
     <q-btn
+      v-if="!route.params.draftType"
       label="Save As Draft"
       color="orange-5"
       @click="submitDraft('newDraft')"
       :style="{ 
-        visibility: route.params.draftType ? 'hidden' : 'visible' 
+        visibility: !route.params.draftType ? 'visible' : 'hidden' 
       }"
     />
+    <q-btn
+      v-else-if="route.params.draftType === 'draft' || route.params.draftType === 'resourceDraft'"
+      label="Convert to Resource"
+      color="orange-5"
+      @click="convertToResource()"
+    />
+    <q-space />
     <div>
       <q-btn
         outline
@@ -490,7 +497,6 @@
         ...(res.data.resourceSnapshot && { resourceSnapshot: res.data.resourceSnapshot })
       }
       title.value = `Edit ${res.data.filename}`
-      console.log('plugin tasks not containing pluginParamType?', pluginFile.value)
       pluginFile.value.tasks.forEach((task) => {
         [...task.inputParams, ...task.outputParams].forEach((param) => {
           param.parameterType = param.parameterType.id
@@ -591,6 +597,15 @@
     contentsError.value = pluginFile.value.contents?.length > 0 ? '' : 'This field is required'
     if (!isValid || contentsError.value !== '') return
     try {
+      // if parameterType needs to be string instead of int
+      pluginFile.value.tasks.forEach(task => {
+        task.inputParams.forEach(param => {
+          param.parameterType = String(param.parameterType)
+        })
+        task.outputParams.forEach(param => {
+          param.parameterType = String(param.parameterType)
+        })
+      })
       let res
       if(type === 'newDraft') {
         // create new draft
@@ -807,7 +822,17 @@
         ...(route.params.draftType === 'draft' && { state: { showDrafts: true } })
       })
     } catch(err) {
-      notify.error(err.response.data.message);
+      notify.error(err.response.data.message)
+    }
+  }
+
+  async function convertToResource() {
+    try {
+      await api.draftCommit(route.params.fileId)
+      notify.success(`Successfully converted draft '${pluginFile.value.filename}'`)
+      router.push(`/plugins/${route.params.id}/files`)
+    } catch(err) {
+      notify.error(err.response.data.message)
     }
   }
 

@@ -354,6 +354,10 @@ export async function getFile(pluginID: string, fileID: string, draftType: strin
   return res
 }
 
+export async function draftCommit(draftId: string) {
+  return await axios.post(`/api/workflows/draftCommit/${draftId}`)
+}
+
 export async function addFile(id: number, params: CreateParams['files'], draftType: string = '', fileId: string = ''){
   let url = ''
   if(!draftType) {
