@@ -336,7 +336,7 @@ async function deleteJob() {
 function reRunJob() {
   router.push({
     path: '/jobs/new',
-    state: { oldJobId: route.params.id } 
+    state: { oldJobId: route.params.id, jobSnapshotId: job.value.snapshot } 
   })
 }
 

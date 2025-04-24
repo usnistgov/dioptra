@@ -270,6 +270,8 @@
     return (/^\d+[hms]$/.test(val)) || "Value must be an integer followed by 'h', 'm', or 's'";
   }
 
+  const oldJob = ref()
+
   const job = ref({
     description: '',
     timeout: '24h',
@@ -302,7 +304,7 @@
       newVal.parameters.forEach((param) => {
         parameters.value.push({
           name: param.name,
-          value: param.defaultValue,
+          value: (history.state.oldJobId) ? oldJob.value.values[param.name] : param.defaultValue,
           type: param.parameterType
         })
       })
@@ -538,19 +540,19 @@
 
   onMounted(async () => {
     if(history.state.oldJobId) {
-      const oldJob = await getResource('jobs', history.state.oldJobId)
-      await getExperiment(oldJob.experiment.id)
-      if(allowableEntrypointIds.value.includes(oldJob.entrypoint.id)) {
-        await getEntrypoint(oldJob.entrypoint.id)
+      oldJob.value = (await(api.getSnapshot('jobs', history.state.oldJobId, history.state.jobSnapshotId))).data
+      await getExperiment(oldJob.value.experiment.id)
+      if(allowableEntrypointIds.value.includes(oldJob.value.entrypoint.id)) {
+        await getEntrypoint(oldJob.value.entrypoint.id)
       } else {
-        notify.error(`Entrypoint ${oldJob.entrypoint.name} is no longer linked to experiment ${oldJob.experiment.name}`)
+        notify.error(`Entrypoint ${oldJob.value.entrypoint.name} is no longer linked to experiment ${oldJob.value.experiment.name}`)
       }
-      if(allowableQueueIds.value.includes(oldJob.queue.id)) {
-        job.value.queue = await getResource('queues', oldJob.queue.id)
+      if(allowableQueueIds.value.includes(oldJob.value.queue.id)) {
+        job.value.queue = await getResource('queues', oldJob.value.queue.id)
       } else {
-        notify.error(`Queue ${oldJob.queue.name} is no longer linked to entrypoint ${oldJob.entrypoint.name}`)
+        notify.error(`Queue ${oldJob.value.queue.name} is no longer linked to entrypoint ${oldJob.value.entrypoint.name}`)
       }
-      job.value.description = oldJob.description
+      job.value.description = oldJob.value.description
     }
     if(Object.hasOwn(route.params, 'id')) {
       await getExperiment(route.params.id)
