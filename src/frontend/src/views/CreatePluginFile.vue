@@ -486,6 +486,7 @@
         res = await api.getFile(route.params.id, route.params.fileId, 'draft')
       } else if(route.params.draftType === 'resourceDraft') {
         res = await api.getFile(route.params.id, route.params.fileId, 'resourceDraft')
+        resourceDraftId.value = res.data.id
       } else {
         res = await api.getFile(route.params.id, route.params.fileId)
       }
@@ -826,9 +827,12 @@
     }
   }
 
+  const resourceDraftId = ref('')
+
   async function convertToResource() {
     try {
-      await api.draftCommit(route.params.fileId)
+      let id = route.params.draftType === 'resourceDraft' ? resourceDraftId.value : route.params.fileId
+      await api.draftCommit(id)
       notify.success(`Successfully converted draft '${pluginFile.value.filename}'`)
       router.push(`/plugins/${route.params.id}/files`)
     } catch(err) {
