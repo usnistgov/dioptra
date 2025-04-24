@@ -25,11 +25,13 @@ from typing import Any
 
 import pytest
 from flask_sqlalchemy import SQLAlchemy
+from pytest import MonkeyPatch
 
 from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
 
 from ..lib import asserts, helpers, routines
+from ..lib import asserts, helpers, mock_mlflow, routines
 from ..test_utils import assert_retrieving_resource_works
 
 # -- Assertions ------------------------------------------------------------------------
@@ -344,8 +346,20 @@ def test_create_model(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
+    monkeypatch: MonkeyPatch,
 ) -> None:
-    """"""
+    # import mlflow.exceptions
+    # import mlflow.tracking
+
+    # monkeypatch.setattr(mlflow.tracking, "MlflowClient", mock_mlflow.MockMlflowClient)
+    # monkeypatch.setattr(
+    # mlflow.exceptions, "MlflowException", mock_mlflow.MockMlflowException
+    # )
+
+    from mlflow.tracking import MlflowClient
+
+    client = MlflowClient()
+
     name = "my_model"
     description = "The first model."
     user_id = auth_account["id"]
@@ -368,6 +382,9 @@ def test_create_model(
     assert_retrieving_model_by_id_works(
         dioptra_client, model_id=model_expected["id"], expected=model_expected
     )
+
+    name = f"resource_{model_expected['id']:09d}"
+    assert client.get_registered_model(name).name == name
 
 
 def test_model_get_all(
