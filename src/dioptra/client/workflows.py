@@ -23,15 +23,15 @@ from .base import (
     IllegalArgumentError,
 )
 
-T = TypeVar("T")
-
+T1 = TypeVar("T1")
+T2 = TypeVar("T2")
 JOB_FILES_DOWNLOAD: Final[str] = "jobFilesDownload"
 SIGNATURE_ANALYSIS: Final[str] = "pluginTaskSignatureAnalysis"
 RESOURCE_IMPORT: Final[str] = "resourceImport"
 DRAFT_COMMIT: Final[str] = "draftCommit"
 
 
-class WorkflowsCollectionClient(CollectionClient[T]):
+class WorkflowsCollectionClient(CollectionClient[T1, T2]):
     """The client for managing Dioptra's /workflows collection.
 
     Attributes:
@@ -94,7 +94,7 @@ class WorkflowsCollectionClient(CollectionClient[T]):
             self.url, JOB_FILES_DOWNLOAD, output_path=job_files_path, params=params
         )
 
-    def analyze_plugin_task_signatures(self, python_code: str) -> T:
+    def analyze_plugin_task_signatures(self, python_code: str) -> T1:
         """
         Requests signature analysis for the functions in an annotated python file.
 
@@ -182,7 +182,7 @@ class WorkflowsCollectionClient(CollectionClient[T]):
     def commit_draft(
         self,
         draft_id: str | int,
-    ) -> T:
+    ) -> T1:
         """
         Commit a draft as a new resource snapshot.
 

@@ -27,7 +27,8 @@ from .base import (
     SubCollectionUrlError,
 )
 
-T = TypeVar("T")
+T1 = TypeVar("T1")
+T2 = TypeVar("T2")
 
 
 class DraftFieldsValidationError(DioptraClientError):
@@ -138,7 +139,7 @@ def make_draft_fields_validator(
     return validate_draft_fields
 
 
-class NewResourceDraftsSubCollectionClient(Generic[T]):
+class NewResourceDraftsSubCollectionClient(Generic[T1, T2]):
     """The client for managing a new resource drafts sub-collection.
 
     Attributes:
@@ -149,10 +150,10 @@ class NewResourceDraftsSubCollectionClient(Generic[T]):
 
     def __init__(
         self,
-        session: DioptraSession[T],
+        session: DioptraSession[T1, T2],
         validate_fields_fn: ValidateDraftFieldsProtocol,
-        root_collection: CollectionClient[T],
-        parent_sub_collections: list[SubCollectionClient[T]] | None = None,
+        root_collection: CollectionClient[T1, T2],
+        parent_sub_collections: list[SubCollectionClient[T1, T2]] | None = None,
         convert_field_names_fn: ConvertFieldNamesToCamelCaseProtocol | None = None,
     ) -> None:
         """Initialize the NewResourceDraftsSubCollectionClient instance.
@@ -171,7 +172,7 @@ class NewResourceDraftsSubCollectionClient(Generic[T]):
         self._session = session
         self._validate_fields = validate_fields_fn
         self._root_collection = root_collection
-        self._parent_sub_collections: list[SubCollectionClient[T]] = (
+        self._parent_sub_collections: list[SubCollectionClient[T1, T2]] = (
             parent_sub_collections or []
         )
         self._convert_field_names = (
@@ -185,7 +186,7 @@ class NewResourceDraftsSubCollectionClient(Generic[T]):
         group_id: int | None = None,
         index: int = 0,
         page_length: int = 10,
-    ) -> T:
+    ) -> T1:
         """Get the list of new resource drafts.
 
         Args:
@@ -217,7 +218,7 @@ class NewResourceDraftsSubCollectionClient(Generic[T]):
             self.build_sub_collection_url(*resource_ids), params=params
         )
 
-    def get_by_id(self, *resource_ids: str | int, draft_id: int) -> T:
+    def get_by_id(self, *resource_ids: str | int, draft_id: int) -> T1:
         """Get a new resource draft by its id.
 
         Args:
@@ -234,7 +235,7 @@ class NewResourceDraftsSubCollectionClient(Generic[T]):
 
     def create(
         self, *resource_ids: str | int, group_id: int | None = None, **kwargs
-    ) -> T:
+    ) -> T1:
         """Create a new resource draft.
 
         Args:
@@ -265,7 +266,7 @@ class NewResourceDraftsSubCollectionClient(Generic[T]):
             self.build_sub_collection_url(*resource_ids), json_=data
         )
 
-    def modify(self, *resource_ids: str | int, draft_id: int, **kwargs) -> T:
+    def modify(self, *resource_ids: str | int, draft_id: int, **kwargs) -> T1:
         """Modify the new resource draft matching the provided id.
 
         Args:
@@ -293,7 +294,7 @@ class NewResourceDraftsSubCollectionClient(Generic[T]):
             json_=self._validate_fields(kwargs),
         )
 
-    def delete(self, *resource_ids: str | int, draft_id: int) -> T:
+    def delete(self, *resource_ids: str | int, draft_id: int) -> T1:
         """Delete the new resource draft matching the provided id.
 
         Args:
@@ -361,7 +362,7 @@ class NewResourceDraftsSubCollectionClient(Generic[T]):
             )
 
 
-class ModifyResourceDraftsSubCollectionClient(SubCollectionClient[T]):
+class ModifyResourceDraftsSubCollectionClient(SubCollectionClient[T1, T2]):
     """The client for managing a resource modification drafts sub-collection.
 
     Attributes:
@@ -372,10 +373,10 @@ class ModifyResourceDraftsSubCollectionClient(SubCollectionClient[T]):
 
     def __init__(
         self,
-        session: DioptraSession[T],
+        session: DioptraSession[T1, T2],
         validate_fields_fn: ValidateDraftFieldsProtocol,
-        root_collection: CollectionClient[T],
-        parent_sub_collections: list[SubCollectionClient[T]] | None = None,
+        root_collection: CollectionClient[T1, T2],
+        parent_sub_collections: list[SubCollectionClient[T1, T2]] | None = None,
         convert_field_names_fn: ConvertFieldNamesToCamelCaseProtocol | None = None,
     ) -> None:
         """Initialize the ModifyResourceDraftsSubCollectionClient instance.
@@ -401,7 +402,7 @@ class ModifyResourceDraftsSubCollectionClient(SubCollectionClient[T]):
             convert_field_names_fn or make_field_names_to_camel_case_converter({})
         )
 
-    def get_by_id(self, *resource_ids: str | int) -> T:
+    def get_by_id(self, *resource_ids: str | int) -> T1:
         """Get a resource modification draft.
 
         Args:
@@ -412,7 +413,7 @@ class ModifyResourceDraftsSubCollectionClient(SubCollectionClient[T]):
         """
         return self._session.get(self.build_sub_collection_url(*resource_ids))
 
-    def create(self, *resource_ids: str | int, **kwargs) -> T:
+    def create(self, *resource_ids: str | int, **kwargs) -> T1:
         """Create a resource modification draft.
 
         Args:
@@ -433,7 +434,7 @@ class ModifyResourceDraftsSubCollectionClient(SubCollectionClient[T]):
 
     def modify(
         self, *resource_ids: str | int, resource_snapshot_id: str | int, **kwargs
-    ) -> T:
+    ) -> T1:
         """Modify a resource modification draft.
 
         Args:
@@ -458,7 +459,7 @@ class ModifyResourceDraftsSubCollectionClient(SubCollectionClient[T]):
             },
         )
 
-    def delete(self, *resource_ids: str | int) -> T:
+    def delete(self, *resource_ids: str | int) -> T1:
         """Delete a resource modification draft.
 
         Args:

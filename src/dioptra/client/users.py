@@ -18,10 +18,11 @@ from typing import Any, ClassVar, TypeVar
 
 from .base import CollectionClient
 
-T = TypeVar("T")
+T1 = TypeVar("T1")
+T2 = TypeVar("T2")
 
 
-class UsersCollectionClient(CollectionClient[T]):
+class UsersCollectionClient(CollectionClient[T1, T2]):
     """The client for interacting with the Dioptra API's /users collection.
 
     Attributes:
@@ -32,7 +33,7 @@ class UsersCollectionClient(CollectionClient[T]):
 
     def get(
         self, index: int = 0, page_length: int = 10, search: str | None = None
-    ) -> T:
+    ) -> T1:
         """Get a list of Dioptra users.
 
         Args:
@@ -58,7 +59,7 @@ class UsersCollectionClient(CollectionClient[T]):
             params=params,
         )
 
-    def create(self, username: str, email: str, password: str) -> T:
+    def create(self, username: str, email: str, password: str) -> T1:
         """Creates a Dioptra user.
 
         Args:
@@ -80,7 +81,7 @@ class UsersCollectionClient(CollectionClient[T]):
             },
         )
 
-    def get_by_id(self, user_id: str | int) -> T:
+    def get_by_id(self, user_id: str | int) -> T1:
         """Get the user matching the provided id.
 
         Args:
@@ -93,7 +94,7 @@ class UsersCollectionClient(CollectionClient[T]):
 
     def change_password_by_id(
         self, user_id: str | int, old_password: str, new_password: str
-    ) -> T:
+    ) -> T1:
         """Change the password of the user matching the provided id.
 
         This primary use case for using this over `change_current_user_password` is if
@@ -119,7 +120,7 @@ class UsersCollectionClient(CollectionClient[T]):
             },
         )
 
-    def get_current(self) -> T:
+    def get_current(self) -> T1:
         """Get details about the currently logged-in user.
 
         Returns:
@@ -127,7 +128,7 @@ class UsersCollectionClient(CollectionClient[T]):
         """
         return self._session.get(self.url, "current")
 
-    def delete_current_user(self, password: str) -> T:
+    def delete_current_user(self, password: str) -> T1:
         """Delete the currently logged-in user.
 
         Args:
@@ -139,7 +140,7 @@ class UsersCollectionClient(CollectionClient[T]):
         """
         return self._session.delete(self.url, "current", json_={"password": password})
 
-    def modify_current_user(self, username: str, email: str) -> T:
+    def modify_current_user(self, username: str, email: str) -> T1:
         """Modify details about the currently logged-in user.
 
         Args:
@@ -155,7 +156,7 @@ class UsersCollectionClient(CollectionClient[T]):
             json_={"username": username, "email": email},
         )
 
-    def change_current_user_password(self, old_password: str, new_password: str) -> T:
+    def change_current_user_password(self, old_password: str, new_password: str) -> T1:
         """Change the currently logged-in user's password.
 
         Args:

@@ -40,7 +40,8 @@ LOGGER = logging.getLogger(__name__)
 
 DIOPTRA_API_VERSION: Final[str] = "v1"
 
-T = TypeVar("T")
+T1 = TypeVar("T1")
+T2 = TypeVar("T2")
 
 RequestsFileDataStructureType: TypeAlias = (
     tuple[str, BufferedReader] | tuple[str, BufferedReader, str]
@@ -98,6 +99,16 @@ def wrap_request_method(
 
 
 def convert_response_to_dict(response: DioptraResponseProtocol) -> dict[str, Any]:
+    return cast(dict[str, Any], convert_response_to_json_like(response))
+
+
+def convert_response_to_list(response: DioptraResponseProtocol) -> list[dict[str, Any]]:
+    return cast(list[dict[str, Any]], convert_response_to_json_like(response))
+
+
+def convert_response_to_json_like(
+    response: DioptraResponseProtocol,
+) -> dict[str, Any] | list[dict[str, Any]]:
     """Convert a response object to a JSON-like Python dictionary.
 
     Args:
@@ -206,7 +217,7 @@ def to_multipart_encoder(
     return MultipartEncoder(merged)
 
 
-class BaseDioptraRequestsSession(DioptraSession[T], ABC, Generic[T]):
+class BaseDioptraRequestsSession(DioptraSession[T1, T2], ABC, Generic[T1, T2]):
     """
     The interface for communicating with the Dioptra API using the requests library.
 
@@ -396,7 +407,24 @@ class BaseDioptraRequestsSession(DioptraSession[T], ABC, Generic[T]):
         return output_path
 
     @abstractmethod
-    def get(self, endpoint: str, *parts, params: dict[str, Any] | None = None) -> T:
+    def get(self, endpoint: str, *parts, params: dict[str, Any] | None = None) -> T1:
+        """Make a GET request to the API.
+
+        Args:
+            endpoint: The base URL of the API endpoint.
+            *parts: Additional parts to append to the base URL.
+            params: The query parameters to include in the request. Optional, defaults
+                to None.
+
+        Returns:
+            The response from the API.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_list(
+        self, endpoint: str, *parts, params: dict[str, Any] | None = None
+    ) -> T2:
         """Make a GET request to the API.
 
         Args:
@@ -417,7 +445,7 @@ class BaseDioptraRequestsSession(DioptraSession[T], ABC, Generic[T]):
         *parts,
         params: dict[str, Any] | None = None,
         json_: dict[str, Any] | None = None,
-    ) -> T:
+    ) -> T1:
         """Make a PATCH request to the API.
 
         Args:
@@ -441,7 +469,7 @@ class BaseDioptraRequestsSession(DioptraSession[T], ABC, Generic[T]):
         json_: dict[str, Any] | None = None,
         data: dict[str, Any] | None = None,
         files: dict[str, DioptraFile | list[DioptraFile]] | None = None,
-    ) -> T:
+    ) -> T1:
         """Make a POST request to the API.
 
         Args:
@@ -467,7 +495,7 @@ class BaseDioptraRequestsSession(DioptraSession[T], ABC, Generic[T]):
         *parts,
         params: dict[str, Any] | None = None,
         json_: dict[str, Any] | None = None,
-    ) -> T:
+    ) -> T1:
         """Make a DELETE request to the API.
 
         Args:
@@ -489,7 +517,7 @@ class BaseDioptraRequestsSession(DioptraSession[T], ABC, Generic[T]):
         *parts,
         params: dict[str, Any] | None = None,
         json_: dict[str, Any] | None = None,
-    ) -> T:
+    ) -> T1:
         """Make a PUT request to the API.
 
         Args:
@@ -523,7 +551,9 @@ class BaseDioptraRequestsSession(DioptraSession[T], ABC, Generic[T]):
         return self._session
 
 
-class DioptraRequestsSession(BaseDioptraRequestsSession[DioptraResponseProtocol]):
+class DioptraRequestsSession(
+    BaseDioptraRequestsSession[DioptraResponseProtocol, DioptraResponseProtocol]
+):
     """
     The interface for communicating with the Dioptra API using the requests library.
 
@@ -534,6 +564,29 @@ class DioptraRequestsSession(BaseDioptraRequestsSession[DioptraResponseProtocol]
         DOWNLOAD_CHUNK_SIZE: The number of bytes to read into memory per chunk when
             downloading a file from the API.
     """
+
+    def get_list(
+        self, endpoint: str, *parts, params: dict[str, Any] | None = None
+    ) -> DioptraResponseProtocol:
+        """Make a GET request to the API.
+
+        The response will be a requests Response object, which follows the
+        DioptraResponseProtocol interface.
+
+        Args:
+            endpoint: The base URL of the API endpoint.
+            *parts: Additional parts to append to the base URL.
+            params: The query parameters to include in the request. Optional, defaults
+                to None.
+
+        Returns:
+            A requests Response object.
+
+        Raises:
+            APIConnectionError: If the connection to the REST API fails.
+            DioptraClientError: If an unsupported method is requested.
+        """
+        return self._get(endpoint, *parts, params=params)
 
     def get(
         self, endpoint: str, *parts, params: dict[str, Any] | None = None
@@ -679,7 +732,9 @@ class DioptraRequestsSession(BaseDioptraRequestsSession[DioptraResponseProtocol]
         return self._put(endpoint, *parts, params=params, json_=json_)
 
 
-class DioptraRequestsSessionJson(BaseDioptraRequestsSession[dict[str, Any]]):
+class DioptraRequestsSessionJson(
+    BaseDioptraRequestsSession[dict[str, Any], list[dict[str, Any]]]
+):
     """
     The interface for communicating with the Dioptra API using the requests library.
 
@@ -714,6 +769,30 @@ class DioptraRequestsSessionJson(BaseDioptraRequestsSession[dict[str, Any]]):
             StatusCodeError: If the response status code is not in the 2xx range.
         """
         return convert_response_to_dict(self._get(endpoint, *parts, params=params))
+
+    def get_list(
+        self, endpoint: str, *parts, params: dict[str, Any] | None = None
+    ) -> list[dict[str, Any]]:
+        """Make a GET request to the API.
+
+        The response will be a JSON-like Python dictionary.
+
+        Args:
+            endpoint: The base URL of the API endpoint.
+            *parts: Additional parts to append to the base URL.
+            params: The query parameters to include in the request. Optional, defaults
+                to None.
+
+        Returns:
+            A Python dictionary containing the response data.
+
+        Raises:
+            APIConnectionError: If the connection to the REST API fails.
+            DioptraClientError: If an unsupported method is requested.
+            JSONDecodeError: If the response data cannot be parsed as JSON.
+            StatusCodeError: If the response status code is not in the 2xx range.
+        """
+        return convert_response_to_list(self._get(endpoint, *parts, params=params))
 
     def patch(
         self,

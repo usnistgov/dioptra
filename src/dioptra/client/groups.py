@@ -18,10 +18,11 @@ from typing import Any, ClassVar, TypeVar
 
 from .base import CollectionClient, DioptraSession
 
-T = TypeVar("T")
+T1 = TypeVar("T1")
+T2 = TypeVar("T2")
 
 
-class GroupsCollectionClient(CollectionClient[T]):
+class GroupsCollectionClient(CollectionClient[T1, T2]):
     """The client for managing Dioptra's /groups collection.
 
     Attributes:
@@ -30,7 +31,7 @@ class GroupsCollectionClient(CollectionClient[T]):
 
     name: ClassVar[str] = "groups"
 
-    def __init__(self, session: DioptraSession[T]) -> None:
+    def __init__(self, session: DioptraSession[T1, T2]) -> None:
         """Initialize the GroupsCollectionClient instance.
 
         Args:
@@ -43,7 +44,7 @@ class GroupsCollectionClient(CollectionClient[T]):
         index: int = 0,
         page_length: int = 10,
         search: str | None = None,
-    ) -> T:
+    ) -> T1:
         """Get a list of groups.
 
         Args:
@@ -69,7 +70,7 @@ class GroupsCollectionClient(CollectionClient[T]):
             params=params,
         )
 
-    def get_by_id(self, group_id: str | int) -> T:
+    def get_by_id(self, group_id: str | int) -> T1:
         """Get the group matching the provided id.
 
         Args:

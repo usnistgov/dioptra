@@ -36,95 +36,98 @@ from .workflows import WorkflowsCollectionClient
 DIOPTRA_V1_ROOT: Final[str] = "api/v1"
 ENV_DIOPTRA_API: Final[str] = "DIOPTRA_API"
 
-T = TypeVar("T")
+T1 = TypeVar("T1")
+T2 = TypeVar("T2")
 
 
-class DioptraClient(Generic[T]):
+class DioptraClient(Generic[T1, T2]):
     """The Dioptra API client."""
 
-    def __init__(self, session: DioptraSession[T]) -> None:
+    def __init__(self, session: DioptraSession[T1, T2]) -> None:
         """Initialize the DioptraClient instance.
 
         Args:
             session: The Dioptra API session object.
         """
         self._session = session
-        self._users = UsersCollectionClient[T](session)
-        self._auth = AuthCollectionClient[T](session)
-        self._queues = QueuesCollectionClient[T](session)
-        self._tags = TagsCollectionClient[T](session)
-        self._groups = GroupsCollectionClient[T](session)
-        self._plugins = PluginsCollectionClient[T](session)
-        self._plugin_parameter_types = PluginParameterTypesCollectionClient[T](session)
-        self._experiments = ExperimentsCollectionClient[T](session)
-        self._jobs = JobsCollectionClient[T](session)
-        self._entrypoints = EntrypointsCollectionClient[T](session)
-        self._models = ModelsCollectionClient[T](session)
-        self._artifacts = ArtifactsCollectionClient[T](session)
-        self._workflows = WorkflowsCollectionClient[T](session)
+        self._users = UsersCollectionClient[T1, T2](session)
+        self._auth = AuthCollectionClient[T1, T2](session)
+        self._queues = QueuesCollectionClient[T1, T2](session)
+        self._tags = TagsCollectionClient[T1, T2](session)
+        self._groups = GroupsCollectionClient[T1, T2](session)
+        self._plugins = PluginsCollectionClient[T1, T2](session)
+        self._plugin_parameter_types = PluginParameterTypesCollectionClient[T1, T2](
+            session
+        )
+        self._experiments = ExperimentsCollectionClient[T1, T2](session)
+        self._jobs = JobsCollectionClient[T1, T2](session)
+        self._entrypoints = EntrypointsCollectionClient[T1, T2](session)
+        self._models = ModelsCollectionClient[T1, T2](session)
+        self._artifacts = ArtifactsCollectionClient[T1, T2](session)
+        self._workflows = WorkflowsCollectionClient[T1, T2](session)
 
     @property
-    def users(self) -> UsersCollectionClient[T]:
+    def users(self) -> UsersCollectionClient[T1, T2]:
         """The client for managing Dioptra's /users collection."""
         return self._users
 
     @property
-    def auth(self) -> AuthCollectionClient[T]:
+    def auth(self) -> AuthCollectionClient[T1, T2]:
         """The client for managing Dioptra's /auth collection."""
         return self._auth
 
     @property
-    def queues(self) -> QueuesCollectionClient[T]:
+    def queues(self) -> QueuesCollectionClient[T1, T2]:
         """The client for managing Dioptra's /queues collection."""
         return self._queues
 
     @property
-    def tags(self) -> TagsCollectionClient[T]:
+    def tags(self) -> TagsCollectionClient[T1, T2]:
         """The client for managing Dioptra's /tags collection."""
         return self._tags
 
     @property
-    def groups(self) -> GroupsCollectionClient[T]:
+    def groups(self) -> GroupsCollectionClient[T1, T2]:
         """The client for managing Dioptra's /groups collection."""
         return self._groups
 
     @property
-    def plugins(self) -> PluginsCollectionClient[T]:
+    def plugins(self) -> PluginsCollectionClient[T1, T2]:
         """The client for managing Dioptra's /plugins collection."""
         return self._plugins
 
     @property
-    def plugin_parameter_types(self) -> PluginParameterTypesCollectionClient[T]:
+    def plugin_parameter_types(self) -> PluginParameterTypesCollectionClient[T1, T2]:
         """The client for managing Dioptra's /pluginParameterTypes collection."""
         return self._plugin_parameter_types
 
     @property
-    def experiments(self) -> ExperimentsCollectionClient[T]:
+    def experiments(self) -> ExperimentsCollectionClient[T1, T2]:
         """The client for managing Dioptra's /experiments collection."""
         return self._experiments
 
     @property
-    def jobs(self) -> JobsCollectionClient[T]:
+    def jobs(self) -> JobsCollectionClient[T1, T2]:
         """The client for managing Dioptra's /jobs collection."""
         return self._jobs
 
     @property
-    def entrypoints(self) -> EntrypointsCollectionClient[T]:
+    def entrypoints(self) -> EntrypointsCollectionClient[T1, T2]:
         """The client for managing Dioptra's /entrypoints collection."""
         return self._entrypoints
 
     @property
-    def models(self) -> ModelsCollectionClient[T]:
+    def models(self) -> ModelsCollectionClient[T1, T2]:
         """The client for managing Dioptra's /models collection."""
         return self._models
 
     @property
-    def artifacts(self) -> ArtifactsCollectionClient[T]:
+    def artifacts(self) -> ArtifactsCollectionClient[T1, T2]:
         """The client for managing Dioptra's /artifacts collection."""
         return self._artifacts
 
     @property
-    def workflows(self) -> WorkflowsCollectionClient[T]:
+    def workflows(self) -> WorkflowsCollectionClient[T1, T2]:
         """The client for managing Dioptra's /workflows collection."""
         return self._workflows
 
@@ -135,7 +138,7 @@ class DioptraClient(Generic[T]):
 
 def connect_response_dioptra_client(
     address: str | None = None,
-) -> DioptraClient[DioptraResponseProtocol]:
+) -> DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol]:
     """Connect a client to the Dioptra API that returns response objects.
 
     This client always returns a response object regardless of the response status code.
@@ -157,14 +160,14 @@ def connect_response_dioptra_client(
     """
     from .sessions import DioptraRequestsSession
 
-    return DioptraClient[DioptraResponseProtocol](
+    return DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol](
         session=DioptraRequestsSession(_build_api_address(address))
     )
 
 
 def connect_json_dioptra_client(
     address: str | None = None,
-) -> DioptraClient[dict[str, Any]]:
+) -> DioptraClient[dict[str, Any], list[dict[str, Any]]]:
     """Connect a client to the Dioptra API that returns JSON-like Python dictionaries.
 
     In contrast to the client that returns response objects, this client will raise an
@@ -185,7 +188,7 @@ def connect_json_dioptra_client(
     """
     from .sessions import DioptraRequestsSessionJson
 
-    return DioptraClient[dict[str, Any]](
+    return DioptraClient[dict[str, Any], list[dict[str, Any]]](
         session=DioptraRequestsSessionJson(_build_api_address(address))
     )
 

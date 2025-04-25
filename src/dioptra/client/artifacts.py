@@ -19,10 +19,11 @@ from typing import Any, ClassVar, TypeVar
 from .base import CollectionClient, DioptraSession
 from .snapshots import SnapshotsSubCollectionClient
 
-T = TypeVar("T")
+T1 = TypeVar("T1")
+T2 = TypeVar("T2")
 
 
-class ArtifactsCollectionClient(CollectionClient[T]):
+class ArtifactsCollectionClient(CollectionClient[T1, T2]):
     """The client for managing Dioptra's /artifacts collection.
 
     Attributes:
@@ -31,19 +32,19 @@ class ArtifactsCollectionClient(CollectionClient[T]):
 
     name: ClassVar[str] = "artifacts"
 
-    def __init__(self, session: DioptraSession[T]) -> None:
+    def __init__(self, session: DioptraSession[T1, T2]) -> None:
         """Initialize the ArtifactsCollectionClient instance.
 
         Args:
             session: The Dioptra API session object.
         """
         super().__init__(session)
-        self._snapshots = SnapshotsSubCollectionClient[T](
+        self._snapshots = SnapshotsSubCollectionClient[T1, T2](
             session=session, root_collection=self
         )
 
     @property
-    def snapshots(self) -> SnapshotsSubCollectionClient[T]:
+    def snapshots(self) -> SnapshotsSubCollectionClient[T1, T2]:
         """The client for retrieving artifact resource snapshots.
 
         Each client method in the sub-collection accepts an arbitrary number of
@@ -68,7 +69,7 @@ class ArtifactsCollectionClient(CollectionClient[T]):
         sort_by: str | None = None,
         descending: bool | None = None,
         search: str | None = None,
-    ) -> T:
+    ) -> T1:
         """Get a list of artifacts.
 
         Args:
@@ -109,7 +110,7 @@ class ArtifactsCollectionClient(CollectionClient[T]):
             params=params,
         )
 
-    def get_by_id(self, artifact_id: str | int) -> T:
+    def get_by_id(self, artifact_id: str | int) -> T1:
         """Get the artifact matching the provided id.
 
         Args:
@@ -122,7 +123,7 @@ class ArtifactsCollectionClient(CollectionClient[T]):
 
     def create(
         self, group_id: int, job_id: str | int, uri: str, description: str | None = None
-    ) -> T:
+    ) -> T1:
         """Creates an artifact.
 
         Args:
@@ -146,7 +147,7 @@ class ArtifactsCollectionClient(CollectionClient[T]):
 
         return self._session.post(self.url, json_=json_)
 
-    def modify_by_id(self, artifact_id: str | int, description: str | None) -> T:
+    def modify_by_id(self, artifact_id: str | int, description: str | None) -> T1:
         """Modify the artifact matching the provided id.
 
         Args:

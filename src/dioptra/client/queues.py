@@ -27,10 +27,11 @@ from .tags import TagsSubCollectionClient
 
 DRAFT_FIELDS: Final[set[str]] = {"name", "description"}
 
-T = TypeVar("T")
+T1 = TypeVar("T1")
+T2 = TypeVar("T2")
 
 
-class QueuesCollectionClient(CollectionClient[T]):
+class QueuesCollectionClient(CollectionClient[T1, T2]):
     """The client for managing Dioptra's /queues collection.
 
     Attributes:
@@ -39,14 +40,14 @@ class QueuesCollectionClient(CollectionClient[T]):
 
     name: ClassVar[str] = "queues"
 
-    def __init__(self, session: DioptraSession[T]) -> None:
+    def __init__(self, session: DioptraSession[T1, T2]) -> None:
         """Initialize the QueuesCollectionClient instance.
 
         Args:
             session: The Dioptra API session object.
         """
         super().__init__(session)
-        self._new_resource_drafts = NewResourceDraftsSubCollectionClient[T](
+        self._new_resource_drafts = NewResourceDraftsSubCollectionClient[T1, T2](
             session=session,
             validate_fields_fn=make_draft_fields_validator(
                 draft_fields=DRAFT_FIELDS,
@@ -54,7 +55,7 @@ class QueuesCollectionClient(CollectionClient[T]):
             ),
             root_collection=self,
         )
-        self._modify_resource_drafts = ModifyResourceDraftsSubCollectionClient[T](
+        self._modify_resource_drafts = ModifyResourceDraftsSubCollectionClient[T1, T2](
             session=session,
             validate_fields_fn=make_draft_fields_validator(
                 draft_fields=DRAFT_FIELDS,
@@ -62,13 +63,15 @@ class QueuesCollectionClient(CollectionClient[T]):
             ),
             root_collection=self,
         )
-        self._snapshots = SnapshotsSubCollectionClient[T](
+        self._snapshots = SnapshotsSubCollectionClient[T1, T2](
             session=session, root_collection=self
         )
-        self._tags = TagsSubCollectionClient[T](session=session, root_collection=self)
+        self._tags = TagsSubCollectionClient[T1, T2](
+            session=session, root_collection=self
+        )
 
     @property
-    def new_resource_drafts(self) -> NewResourceDraftsSubCollectionClient[T]:
+    def new_resource_drafts(self) -> NewResourceDraftsSubCollectionClient[T1, T2]:
         """The client for managing the new queue drafts sub-collection.
 
         Each client method in the sub-collection accepts an arbitrary number of
@@ -99,7 +102,7 @@ class QueuesCollectionClient(CollectionClient[T]):
         return self._new_resource_drafts
 
     @property
-    def modify_resource_drafts(self) -> ModifyResourceDraftsSubCollectionClient[T]:
+    def modify_resource_drafts(self) -> ModifyResourceDraftsSubCollectionClient[T1, T2]:
         """The client for managing the queue modification drafts sub-collection.
 
         Each client method in the sub-collection accepts an arbitrary number of
@@ -130,7 +133,7 @@ class QueuesCollectionClient(CollectionClient[T]):
         return self._modify_resource_drafts
 
     @property
-    def snapshots(self) -> SnapshotsSubCollectionClient[T]:
+    def snapshots(self) -> SnapshotsSubCollectionClient[T1, T2]:
         """The client for retrieving queue resource snapshots.
 
         Each client method in the sub-collection accepts an arbitrary number of
@@ -148,7 +151,7 @@ class QueuesCollectionClient(CollectionClient[T]):
         return self._snapshots
 
     @property
-    def tags(self) -> TagsSubCollectionClient[T]:
+    def tags(self) -> TagsSubCollectionClient[T1, T2]:
         """
         The client for managing the tags sub-collection owned by the /queues collection.
 
@@ -183,7 +186,7 @@ class QueuesCollectionClient(CollectionClient[T]):
         sort_by: str | None = None,
         descending: bool | None = None,
         search: str | None = None,
-    ) -> T:
+    ) -> T1:
         """Get a list of queues.
 
         Args:
@@ -224,7 +227,7 @@ class QueuesCollectionClient(CollectionClient[T]):
             params=params,
         )
 
-    def get_by_id(self, queue_id: str | int) -> T:
+    def get_by_id(self, queue_id: str | int) -> T1:
         """Get the queue matching the provided id.
 
         Args:
@@ -235,7 +238,7 @@ class QueuesCollectionClient(CollectionClient[T]):
         """
         return self._session.get(self.url, str(queue_id))
 
-    def create(self, group_id: int, name: str, description: str | None = None) -> T:
+    def create(self, group_id: int, name: str, description: str | None = None) -> T1:
         """Creates a queue.
 
         Args:
@@ -258,7 +261,7 @@ class QueuesCollectionClient(CollectionClient[T]):
 
     def modify_by_id(
         self, queue_id: str | int, name: str, description: str | None
-    ) -> T:
+    ) -> T1:
         """Modify the queue matching the provided id.
 
         Args:
@@ -277,7 +280,7 @@ class QueuesCollectionClient(CollectionClient[T]):
 
         return self._session.put(self.url, str(queue_id), json_=json_)
 
-    def delete_by_id(self, queue_id: str | int) -> T:
+    def delete_by_id(self, queue_id: str | int) -> T1:
         """Delete the queue matching the provided id.
 
         Args:
