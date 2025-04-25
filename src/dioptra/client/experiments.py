@@ -75,7 +75,7 @@ class ExperimentEntrypointsSubCollectionClient(SubCollectionClient[T1, T2]):
             parent_sub_collections=parent_sub_collections,
         )
 
-    def get(self, experiment_id: int | str) -> T1:
+    def get(self, experiment_id: int | str) -> T2:
         """Get a list of entrypoints added to the experiment.
 
         Args:
@@ -84,7 +84,7 @@ class ExperimentEntrypointsSubCollectionClient(SubCollectionClient[T1, T2]):
         Returns:
             The response from the Dioptra API.
         """
-        return self._session.get(self.build_sub_collection_url(experiment_id))
+        return self._session.get_list(self.build_sub_collection_url(experiment_id))
 
     def create(
         self,

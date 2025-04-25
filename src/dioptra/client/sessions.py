@@ -132,7 +132,7 @@ def convert_response_to_json_like(
         raise StatusCodeError(f"Error code returned: {response.status_code}")
 
     try:
-        response_dict = response.json()
+        response_dict = convert_response_to_dict(response)
 
     except requests.JSONDecodeError as err:
         LOGGER.debug(
