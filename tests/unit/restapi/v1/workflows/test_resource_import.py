@@ -33,6 +33,8 @@ from flask_sqlalchemy import SQLAlchemy
 from dioptra.client import DioptraClient, DioptraFile
 from dioptra.client.base import DioptraResponseProtocol
 
+from ...lib import helpers
+
 # -- Assertions ------------------------------------------------------------------------
 
 
