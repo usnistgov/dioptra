@@ -431,4 +431,3 @@ node_modules/
 !tests/**/lib
 !src/**/tags
 !src/**/lib
-/examples/dioptra-venv
