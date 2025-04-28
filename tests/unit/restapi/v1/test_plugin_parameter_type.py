@@ -540,7 +540,9 @@ def test_create_plugin_parameter_type(
         name=name,
         description=description,
     )
-    plugin_param_type1_expected = helpers.convert_response_to_dict(plugin_param_type1_response)
+    plugin_param_type1_expected = helpers.convert_response_to_dict(
+        plugin_param_type1_response
+    )
     assert_plugin_parameter_type_content_matches_expectations(
         response=plugin_param_type1_expected,
         expected_contents={

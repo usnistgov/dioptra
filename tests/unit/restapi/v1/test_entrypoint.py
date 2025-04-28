@@ -348,7 +348,9 @@ def assert_retrieving_all_queues_for_entrypoint_works(
     response = dioptra_client.entrypoints.queues.get(entrypoint_id)
     assert (
         response.status_code == HTTPStatus.OK
-        and [queue_ref["id"] for queue_ref in helpers.convert_response_to_list(response)]
+        and [
+            queue_ref["id"] for queue_ref in helpers.convert_response_to_list(response)
+        ]
         == expected
     )
 
@@ -364,7 +366,9 @@ def assert_append_queues_to_entrypoint_works(
     )
     assert (
         response.status_code == HTTPStatus.OK
-        and [queue_ref["id"] for queue_ref in helpers.convert_response_to_list(response)]
+        and [
+            queue_ref["id"] for queue_ref in helpers.convert_response_to_list(response)
+        ]
         == expected
     )
 

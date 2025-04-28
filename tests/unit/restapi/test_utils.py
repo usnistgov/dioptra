@@ -25,9 +25,10 @@ from dioptra.client.base import (
     JSONDecodeError,
     SubCollectionClient,
 )
-
 from dioptra.restapi.utils import find_non_unique
+
 from .lib import helpers
+
 
 def assert_http_response_matches_expected(
     response: DioptraResponseProtocol,
@@ -42,7 +43,9 @@ def assert_http_response_matches_expected(
         # particular order in the response.
         contents_matches = match_normalized_json(response, expected)
     else:
-        contents_matches = helpers.convert_response_to_dict(response)["data"] == expected
+        contents_matches = (
+            helpers.convert_response_to_dict(response)["data"] == expected
+        )
     assert response.status_code == HTTPStatus.OK and contents_matches
 
 
@@ -99,7 +102,9 @@ def match_normalized_json(
     """
 
     def sort_protocol(pre_json: DioptraResponseProtocol):
-        return sorted(helpers.convert_response_to_dict(pre_json)["data"], key=lambda d: d["id"])
+        return sorted(
+            helpers.convert_response_to_dict(pre_json)["data"], key=lambda d: d["id"]
+        )
 
     def sort_json(json_entity: list[dict[str, Any]]):
         return sorted(json_entity, key=lambda d: d["id"])
@@ -160,5 +165,3 @@ def test_find_non_unique():
         )
         == 2
     )
-
-

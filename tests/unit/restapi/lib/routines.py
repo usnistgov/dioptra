@@ -128,7 +128,9 @@ def run_existing_resource_drafts_tests(
     draft_mod_expected: dict[str, Any],
 ) -> None:
     # Creation operation tests
-    response = helpers.convert_response_to_dict(draft_client.create(*resource_ids, **draft))
+    response = helpers.convert_response_to_dict(
+        draft_client.create(*resource_ids, **draft)
+    )
     asserts.assert_draft_response_contents_matches_expectations(
         response, draft_expected
     )

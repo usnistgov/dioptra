@@ -154,5 +154,5 @@ def convert_response_to_json_like(
         JSONDecodeError: If the response data cannot be parsed as JSON.
     """
     response_dict = response.json()
-    
+
     return response_dict

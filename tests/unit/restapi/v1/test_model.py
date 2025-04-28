@@ -342,7 +342,8 @@ def assert_model_version_description_matches_expected_description(
     )
     assert (
         response.status_code == HTTPStatus.OK
-        and helpers.convert_response_to_dict(response)["description"] == expected_description
+        and helpers.convert_response_to_dict(response)["description"]
+        == expected_description
     )
 
 

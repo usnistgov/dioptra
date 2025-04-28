@@ -212,7 +212,8 @@ def assert_job_mlflowrun_matches_expectations(
     response = dioptra_client.jobs.get_mlflow_run_id(job_id=job_id)
     assert (
         response.status_code == HTTPStatus.OK
-        and uuid.UUID(helpers.convert_response_to_dict(response)["mlflowRunId"]).hex == expected
+        and uuid.UUID(helpers.convert_response_to_dict(response)["mlflowRunId"]).hex
+        == expected
     )
 
 
@@ -226,7 +227,8 @@ def assert_job_mlflowrun_already_set(
     )
     assert (
         response.status_code == HTTPStatus.BAD_REQUEST
-        and helpers.convert_response_to_dict(response)["error"] == "JobMlflowRunAlreadySetError"
+        and helpers.convert_response_to_dict(response)["error"]
+        == "JobMlflowRunAlreadySetError"
     )
 
 
@@ -870,7 +872,9 @@ def test_manage_job_snapshots(
         job_id=job_id,
         status="started",
     )
-    modified_job = helpers.convert_response_to_dict(dioptra_client.jobs.get_by_id(job_id))
+    modified_job = helpers.convert_response_to_dict(
+        dioptra_client.jobs.get_by_id(job_id)
+    )
 
     # Run routine: resource snapshots tests
     routines.run_resource_snapshots_tests(

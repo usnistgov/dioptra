@@ -22,10 +22,10 @@ from dioptra.client.drafts import (
     ModifyResourceDraftsSubCollectionClient,
     NewResourceDraftsSubCollectionClient,
 )
-
 from dioptra.client.snapshots import SnapshotsSubCollectionClient
 
 from . import helpers
+
 
 def assert_base_resource_contents_match_expectations(response: dict[str, Any]) -> None:
     assert isinstance(response["id"], int)
