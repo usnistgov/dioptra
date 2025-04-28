@@ -22,6 +22,7 @@ from flask_sqlalchemy import SQLAlchemy
 
 from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
+
 from ...lib import helpers
 
 expected_outputs = {}
