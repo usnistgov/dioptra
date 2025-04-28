@@ -50,10 +50,11 @@ FIELD_NAMES_TO_CAMEL_CASE: Final[dict[str, str]] = {
     "task_graph": "taskGraph",
 }
 
-T = TypeVar("T")
+T1 = TypeVar("T1")
+T2 = TypeVar("T2")
 
 
-class EntrypointPluginsSubCollectionClient(SubCollectionClient[T]):
+class EntrypointPluginsSubCollectionClient(SubCollectionClient[T1, T2]):
     """The client for managing Dioptra's /entrypoints/{id}/plugins sub-collection.
 
     Attributes:
@@ -64,9 +65,9 @@ class EntrypointPluginsSubCollectionClient(SubCollectionClient[T]):
 
     def __init__(
         self,
-        session: DioptraSession[T],
-        root_collection: CollectionClient[T],
-        parent_sub_collections: list["SubCollectionClient[T]"] | None = None,
+        session: DioptraSession[T1, T2],
+        root_collection: CollectionClient[T1, T2],
+        parent_sub_collections: list["SubCollectionClient[T1, T2]"] | None = None,
     ) -> None:
         """Initialize the EntrypointPluginsSubCollectionClient instance.
 
@@ -87,7 +88,7 @@ class EntrypointPluginsSubCollectionClient(SubCollectionClient[T]):
             parent_sub_collections=parent_sub_collections,
         )
 
-    def get(self, entrypoint_id: int | str) -> T:
+    def get(self, entrypoint_id: int | str) -> T2:
         """Get a list of plugins added to the entrypoint.
 
         Args:
@@ -96,9 +97,9 @@ class EntrypointPluginsSubCollectionClient(SubCollectionClient[T]):
         Returns:
             The response from the Dioptra API.
         """
-        return self._session.get(self.build_sub_collection_url(entrypoint_id))
+        return self._session.get_list(self.build_sub_collection_url(entrypoint_id))
 
-    def get_by_id(self, entrypoint_id: str | int, plugin_id: str | int) -> T:
+    def get_by_id(self, entrypoint_id: str | int, plugin_id: str | int) -> T1:
         """Get the entrypoint plugin matching the provided id.
 
         Args:
@@ -116,7 +117,7 @@ class EntrypointPluginsSubCollectionClient(SubCollectionClient[T]):
         self,
         entrypoint_id: str | int,
         plugin_ids: list[int],
-    ) -> T:
+    ) -> T2:
         """Adds one or more plugins to the entrypoint.
 
         If a plugin id matches an plugin that is already attached to the entrypoint,
@@ -130,11 +131,11 @@ class EntrypointPluginsSubCollectionClient(SubCollectionClient[T]):
             The response from the Dioptra API.
         """
         json_ = {"plugins": plugin_ids}
-        return self._session.post(
+        return self._session.post_list(
             self.build_sub_collection_url(entrypoint_id), json_=json_
         )
 
-    def delete_by_id(self, entrypoint_id: str | int, plugin_id: str | int) -> T:
+    def delete_by_id(self, entrypoint_id: str | int, plugin_id: str | int) -> T1:
         """Remove a plugin from the entrypoint.
 
         Args:
@@ -149,7 +150,7 @@ class EntrypointPluginsSubCollectionClient(SubCollectionClient[T]):
         )
 
 
-class EntrypointQueuesSubCollectionClient(SubCollectionClient[T]):
+class EntrypointQueuesSubCollectionClient(SubCollectionClient[T1, T2]):
     """The client for managing Dioptra's /entrypoints/{id}/queues sub-collection.
 
     Attributes:
@@ -160,9 +161,9 @@ class EntrypointQueuesSubCollectionClient(SubCollectionClient[T]):
 
     def __init__(
         self,
-        session: DioptraSession[T],
-        root_collection: CollectionClient[T],
-        parent_sub_collections: list["SubCollectionClient[T]"] | None = None,
+        session: DioptraSession[T1, T2],
+        root_collection: CollectionClient[T1, T2],
+        parent_sub_collections: list["SubCollectionClient[T1, T2]"] | None = None,
     ) -> None:
         """Initialize the EntrypointQueuesSubCollectionClient instance.
 
@@ -183,7 +184,7 @@ class EntrypointQueuesSubCollectionClient(SubCollectionClient[T]):
             parent_sub_collections=parent_sub_collections,
         )
 
-    def get(self, entrypoint_id: int | str) -> T:
+    def get(self, entrypoint_id: int | str) -> T2:
         """Get a list of queues added to the entrypoint.
 
         Args:
@@ -192,13 +193,13 @@ class EntrypointQueuesSubCollectionClient(SubCollectionClient[T]):
         Returns:
             The response from the Dioptra API.
         """
-        return self._session.get(self.build_sub_collection_url(entrypoint_id))
+        return self._session.get_list(self.build_sub_collection_url(entrypoint_id))
 
     def create(
         self,
         entrypoint_id: str | int,
         queue_ids: list[int],
-    ) -> T:
+    ) -> T2:
         """Adds one or more queues to the entrypoint.
 
         Args:
@@ -209,11 +210,11 @@ class EntrypointQueuesSubCollectionClient(SubCollectionClient[T]):
             The response from the Dioptra API.
         """
         json_ = {"ids": queue_ids}
-        return self._session.post(
+        return self._session.post_list(
             self.build_sub_collection_url(entrypoint_id), json_=json_
         )
 
-    def delete(self, entrypoint_id: str | int) -> T:
+    def delete(self, entrypoint_id: str | int) -> T1:
         """Remove all queues from the entrypoint.
 
         Args:
@@ -228,7 +229,7 @@ class EntrypointQueuesSubCollectionClient(SubCollectionClient[T]):
         self,
         entrypoint_id: str | int,
         queue_ids: list[int],
-    ) -> T:
+    ) -> T2:
         """Replaces the entrypoint's full list of queues.
 
         If an empty list is provided, then all queues will be removed from the
@@ -243,11 +244,11 @@ class EntrypointQueuesSubCollectionClient(SubCollectionClient[T]):
             The response from the Dioptra API.
         """
         json_ = {"ids": queue_ids}
-        return self._session.put(
+        return self._session.put_list(
             self.build_sub_collection_url(entrypoint_id), json_=json_
         )
 
-    def delete_by_id(self, entrypoint_id: str | int, queue_id: str | int) -> T:
+    def delete_by_id(self, entrypoint_id: str | int, queue_id: str | int) -> T1:
         """Remove a queue from the entrypoint.
 
         Args:
@@ -262,7 +263,7 @@ class EntrypointQueuesSubCollectionClient(SubCollectionClient[T]):
         )
 
 
-class EntrypointsCollectionClient(CollectionClient[T]):
+class EntrypointsCollectionClient(CollectionClient[T1, T2]):
     """The client for managing Dioptra's /entrypoints collection.
 
     Attributes:
@@ -271,20 +272,20 @@ class EntrypointsCollectionClient(CollectionClient[T]):
 
     name: ClassVar[str] = "entrypoints"
 
-    def __init__(self, session: DioptraSession[T]) -> None:
+    def __init__(self, session: DioptraSession[T1, T2]) -> None:
         """Initialize the EntrypointsCollectionClient instance.
 
         Args:
             session: The Dioptra API session object.
         """
         super().__init__(session)
-        self._plugins = EntrypointPluginsSubCollectionClient[T](
+        self._plugins = EntrypointPluginsSubCollectionClient[T1, T2](
             session=session, root_collection=self
         )
-        self._queues = EntrypointQueuesSubCollectionClient[T](
+        self._queues = EntrypointQueuesSubCollectionClient[T1, T2](
             session=session, root_collection=self
         )
-        self._new_resource_drafts = NewResourceDraftsSubCollectionClient[T](
+        self._new_resource_drafts = NewResourceDraftsSubCollectionClient[T1, T2](
             session=session,
             validate_fields_fn=make_draft_fields_validator(
                 draft_fields=DRAFT_FIELDS,
@@ -295,7 +296,7 @@ class EntrypointsCollectionClient(CollectionClient[T]):
                 name_mapping=FIELD_NAMES_TO_CAMEL_CASE
             ),
         )
-        self._modify_resource_drafts = ModifyResourceDraftsSubCollectionClient[T](
+        self._modify_resource_drafts = ModifyResourceDraftsSubCollectionClient[T1, T2](
             session=session,
             validate_fields_fn=make_draft_fields_validator(
                 draft_fields=MODIFY_DRAFT_FIELDS,
@@ -306,23 +307,25 @@ class EntrypointsCollectionClient(CollectionClient[T]):
                 name_mapping=FIELD_NAMES_TO_CAMEL_CASE
             ),
         )
-        self._snapshots = SnapshotsSubCollectionClient[T](
+        self._snapshots = SnapshotsSubCollectionClient[T1, T2](
             session=session, root_collection=self
         )
-        self._tags = TagsSubCollectionClient[T](session=session, root_collection=self)
+        self._tags = TagsSubCollectionClient[T1, T2](
+            session=session, root_collection=self
+        )
 
     @property
-    def plugins(self) -> EntrypointPluginsSubCollectionClient[T]:
+    def plugins(self) -> EntrypointPluginsSubCollectionClient[T1, T2]:
         """The client for managing the plugins sub-collection."""
         return self._plugins
 
     @property
-    def queues(self) -> EntrypointQueuesSubCollectionClient[T]:
+    def queues(self) -> EntrypointQueuesSubCollectionClient[T1, T2]:
         """The client for managing the queues sub-collection."""
         return self._queues
 
     @property
-    def new_resource_drafts(self) -> NewResourceDraftsSubCollectionClient[T]:
+    def new_resource_drafts(self) -> NewResourceDraftsSubCollectionClient[T1, T2]:
         """The client for managing the new entrypoint drafts sub-collection.
 
         Each client method in the sub-collection accepts an arbitrary number of
@@ -353,7 +356,7 @@ class EntrypointsCollectionClient(CollectionClient[T]):
         return self._new_resource_drafts
 
     @property
-    def modify_resource_drafts(self) -> ModifyResourceDraftsSubCollectionClient[T]:
+    def modify_resource_drafts(self) -> ModifyResourceDraftsSubCollectionClient[T1, T2]:
         """The client for managing the entrypoint modification drafts sub-collection.
 
         Each client method in the sub-collection accepts an arbitrary number of
@@ -384,7 +387,7 @@ class EntrypointsCollectionClient(CollectionClient[T]):
         return self._modify_resource_drafts
 
     @property
-    def snapshots(self) -> SnapshotsSubCollectionClient[T]:
+    def snapshots(self) -> SnapshotsSubCollectionClient[T1, T2]:
         """The client for retrieving entrypoint resource snapshots.
 
         Each client method in the sub-collection accepts an arbitrary number of
@@ -402,7 +405,7 @@ class EntrypointsCollectionClient(CollectionClient[T]):
         return self._snapshots
 
     @property
-    def tags(self) -> TagsSubCollectionClient[T]:
+    def tags(self) -> TagsSubCollectionClient[T1, T2]:
         """
         The client for managing the tags sub-collection owned by the /entrypoints
         collection.
@@ -438,7 +441,7 @@ class EntrypointsCollectionClient(CollectionClient[T]):
         sort_by: str | None = None,
         descending: bool | None = None,
         search: str | None = None,
-    ) -> T:
+    ) -> T1:
         """Get a list of entrypoints.
 
         Args:
@@ -480,7 +483,7 @@ class EntrypointsCollectionClient(CollectionClient[T]):
             params=params,
         )
 
-    def get_by_id(self, entrypoint_id: str | int) -> T:
+    def get_by_id(self, entrypoint_id: str | int) -> T1:
         """Get the entrypoint matching the provided id.
 
         Args:
@@ -500,7 +503,7 @@ class EntrypointsCollectionClient(CollectionClient[T]):
         parameters: list[dict[str, Any]] | None = None,
         queues: list[int] | None = None,
         plugins: list[int] | None = None,
-    ) -> T:
+    ) -> T1:
         """Creates a entrypoint.
 
         Args:
@@ -548,7 +551,7 @@ class EntrypointsCollectionClient(CollectionClient[T]):
         description: str | None,
         parameters: list[dict[str, Any]] | None,
         queues: list[int] | None,
-    ) -> T:
+    ) -> T1:
         """Modify the entrypoint matching the provided id.
 
         Args:
@@ -579,7 +582,7 @@ class EntrypointsCollectionClient(CollectionClient[T]):
 
         return self._session.put(self.url, str(entrypoint_id), json_=json_)
 
-    def delete_by_id(self, entrypoint_id: str | int) -> T:
+    def delete_by_id(self, entrypoint_id: str | int) -> T1:
         """Delete the entrypoint matching the provided id.
 
         Args:

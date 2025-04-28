@@ -36,7 +36,7 @@ from ..test_utils import assert_retrieving_resource_works
 
 
 def assert_retrieving_plugin_parameter_types_works(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     expected: list[dict[str, Any]],
     group_id: int | None = None,
     sort_by: str | None = None,
@@ -70,7 +70,7 @@ def assert_retrieving_plugin_parameter_types_works(
 
 
 def assert_retrieving_plugin_parameter_type_by_id_works(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     id: int,
     expected: dict[str, Any],
 ) -> None:
@@ -86,11 +86,16 @@ def assert_retrieving_plugin_parameter_type_by_id_works(
             does not match the expected response.
     """
     response = dioptra_client.plugin_parameter_types.get_by_id(id)
-    assert response.status_code == HTTPStatus.OK and response.json() == expected
+    assert (
+        response.status_code == HTTPStatus.OK
+        and helpers.convert_response_to_dict(response) == expected
+    )
 
 
 def assert_plugin_parameter_type_name_matches_expected_name(
-    dioptra_client: DioptraClient[DioptraResponseProtocol], id: int, expected_name: str
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
+    id: int,
+    expected_name: str,
 ) -> None:
     """Assert that the name of a plugin parameter type matches the expected name.
 
@@ -106,12 +111,12 @@ def assert_plugin_parameter_type_name_matches_expected_name(
     response = dioptra_client.plugin_parameter_types.get_by_id(id)
     assert (
         response.status_code == HTTPStatus.OK
-        and response.json()["name"] == expected_name
+        and helpers.convert_response_to_dict(response)["name"] == expected_name
     )
 
 
 def assert_deleting_plugin_parameter_type_by_id_works(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     id: int,
     expected: dict[str, Any],
 ) -> None:
@@ -127,11 +132,15 @@ def assert_deleting_plugin_parameter_type_by_id_works(
             does not match the expected response.
     """
     response = dioptra_client.plugin_parameter_types.delete_by_id(id)
-    assert response.status_code == HTTPStatus.OK and response.json() == expected
+    assert (
+        response.status_code == HTTPStatus.OK
+        and helpers.convert_response_to_dict(response) == expected
+    )
 
 
 def assert_plugin_parameter_type_is_not_found(
-    dioptra_client: DioptraClient[DioptraResponseProtocol], id: int
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
+    id: int,
 ) -> None:
     """Assert that a plugin parameter type is not found.
 
@@ -147,7 +156,7 @@ def assert_plugin_parameter_type_is_not_found(
 
 
 def assert_cannot_rename_invalid_plugin_parameter_type(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     id: int,
     json_payload: dict[str, Any],
 ) -> None:
@@ -169,7 +178,8 @@ def assert_cannot_rename_invalid_plugin_parameter_type(
 
 
 def assert_cannot_create_invalid_plugin_parameter_type(
-    dioptra_client: DioptraClient[DioptraResponseProtocol], json_payload: dict[str, Any]
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
+    json_payload: dict[str, Any],
 ) -> None:
     """Assert that attempting to create a Plugin Parameter Type with invalid
     parameters using the API fails.
@@ -186,7 +196,9 @@ def assert_cannot_create_invalid_plugin_parameter_type(
 
 
 def assert_cannot_create_existing_plugin_parameter_type(
-    dioptra_client: DioptraClient[DioptraResponseProtocol], name: str, group_id: int
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
+    name: str,
+    group_id: int,
 ) -> None:
     """Assert that attempting to create a Plugin Parameter Type with an existing
     name using the API fails.
@@ -206,11 +218,11 @@ def assert_cannot_create_existing_plugin_parameter_type(
 
 
 def assert_cannot_rename_plugin_parameter_type_to_existing_name(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     id: int,
     existing_name: str,
-    new_structure: dict[str, Any],
-    new_description: str,
+    new_structure: dict[str, Any] | None,
+    new_description: str | None,
 ) -> None:
     """Assert that attempting to rename a Plugin Parameter Type to an existing
     name using the API fails.
@@ -234,7 +246,8 @@ def assert_cannot_rename_plugin_parameter_type_to_existing_name(
 
 
 def assert_cannot_delete_invalid_plugin_parameter_type(
-    dioptra_client: DioptraClient[DioptraResponseProtocol], id: Any
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
+    id: Any,
 ) -> None:
     """Assert that attempting to delete a Plugin Parameter Type with invalid
     parameters using the API fails.
@@ -316,7 +329,7 @@ def assert_plugin_parameter_type_content_matches_expectations(
 
 
 def test_get_all_plugin_parameter_types(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_parameter_types: dict[str, Any],
@@ -407,7 +420,7 @@ def test_get_all_plugin_parameter_types(
     ],
 )
 def test_plugin_parameter_type_sort(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_parameter_types: dict[str, Any],
@@ -439,7 +452,7 @@ def test_plugin_parameter_type_sort(
 
 
 def test_plugin_parameter_type_search_query(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_parameter_types: dict[str, Any],
@@ -474,7 +487,7 @@ def test_plugin_parameter_type_search_query(
 
 
 def test_plugin_parameter_type_group_query(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_parameter_types: dict[str, Any],
@@ -498,7 +511,7 @@ def test_plugin_parameter_type_group_query(
 
 
 def test_create_plugin_parameter_type(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
 ) -> None:
@@ -527,7 +540,9 @@ def test_create_plugin_parameter_type(
         name=name,
         description=description,
     )
-    plugin_param_type1_expected = plugin_param_type1_response.json()
+    plugin_param_type1_expected = helpers.convert_response_to_dict(
+        plugin_param_type1_response
+    )
     assert_plugin_parameter_type_content_matches_expectations(
         response=plugin_param_type1_expected,
         expected_contents={
@@ -555,7 +570,7 @@ def test_create_plugin_parameter_type(
 
 
 def test_get_plugin_parameter_type(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_parameter_types: dict[str, Any],
@@ -586,7 +601,7 @@ def test_get_plugin_parameter_type(
 
 
 def test_delete_plugin_parameter_type(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_parameter_types: dict[str, Any],
@@ -617,7 +632,7 @@ def test_delete_plugin_parameter_type(
 
 
 def test_modify_plugin_parameter_type(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_parameter_types: dict[str, Any],
@@ -682,7 +697,7 @@ def test_modify_plugin_parameter_type(
 
 
 def test_cannot_create_existing_plugin_parameter_type(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_parameter_types: dict[str, Any],
@@ -704,7 +719,7 @@ def test_cannot_create_existing_plugin_parameter_type(
 
 
 def test_cannot_retrieve_nonexistent_plugin_parameter_type(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
 ) -> None:
@@ -718,7 +733,7 @@ def test_cannot_retrieve_nonexistent_plugin_parameter_type(
 
 
 def test_manage_existing_plugin_parameter_type_draft(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_parameter_types: dict[str, Any],
@@ -780,7 +795,7 @@ def test_manage_existing_plugin_parameter_type_draft(
 
 
 def test_manage_new_plugin_parameter_type_drafts(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
 ) -> None:
@@ -842,7 +857,7 @@ def test_manage_new_plugin_parameter_type_drafts(
 
 
 def test_manage_plugin_parameter_type_snapshots(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_parameter_types: dict[str, Any],
@@ -864,12 +879,14 @@ def test_manage_plugin_parameter_type_snapshots(
     plugin_param_type_to_rename = registered_plugin_parameter_types[
         "plugin_param_type1"
     ]
-    modified_plugin_param_type = dioptra_client.plugin_parameter_types.modify_by_id(
-        plugin_parameter_type_id=plugin_param_type_to_rename["id"],
-        name=plugin_param_type_to_rename["name"] + "modified",
-        description=plugin_param_type_to_rename["description"],
-        structure=plugin_param_type_to_rename["structure"],
-    ).json()
+    modified_plugin_param_type = helpers.convert_response_to_dict(
+        dioptra_client.plugin_parameter_types.modify_by_id(
+            plugin_parameter_type_id=plugin_param_type_to_rename["id"],
+            name=plugin_param_type_to_rename["name"] + "modified",
+            description=plugin_param_type_to_rename["description"],
+            structure=plugin_param_type_to_rename["structure"],
+        )
+    )
 
     # Run routine: resource snapshots tests
     routines.run_resource_snapshots_tests(
@@ -880,7 +897,7 @@ def test_manage_plugin_parameter_type_snapshots(
 
 
 def test_tag_plugin_parameter_type(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_parameter_types: dict[str, Any],

@@ -18,10 +18,11 @@ from typing import ClassVar, TypeVar
 
 from .base import CollectionClient
 
-T = TypeVar("T")
+T1 = TypeVar("T1")
+T2 = TypeVar("T2")
 
 
-class AuthCollectionClient(CollectionClient[T]):
+class AuthCollectionClient(CollectionClient[T1, T2]):
     """The client for managing Dioptra's /auth collection.
 
     Attributes:
@@ -30,7 +31,7 @@ class AuthCollectionClient(CollectionClient[T]):
 
     name: ClassVar[str] = "auth"
 
-    def login(self, username: str, password: str) -> T:
+    def login(self, username: str, password: str) -> T1:
         """Send a login request to the Dioptra API.
 
         Args:
@@ -46,7 +47,7 @@ class AuthCollectionClient(CollectionClient[T]):
             json_={"username": username, "password": password},
         )
 
-    def logout(self, everywhere: bool = False) -> T:
+    def logout(self, everywhere: bool = False) -> T1:
         """Send a logout request to the Dioptra API.
 
         Args:

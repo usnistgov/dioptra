@@ -23,10 +23,11 @@ from .base import SubCollectionClient
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
-T = TypeVar("T")
+T1 = TypeVar("T1")
+T2 = TypeVar("T2")
 
 
-class SnapshotsSubCollectionClient(SubCollectionClient[T]):
+class SnapshotsSubCollectionClient(SubCollectionClient[T1, T2]):
     """The client for managing a snapshots sub-collection.
 
     Attributes:
@@ -41,7 +42,7 @@ class SnapshotsSubCollectionClient(SubCollectionClient[T]):
         index: int = 0,
         page_length: int = 10,
         search: str | None = None,
-    ) -> T:
+    ) -> T1:
         """Get the list of snapshots for a given resource.
 
         Args:
@@ -72,7 +73,7 @@ class SnapshotsSubCollectionClient(SubCollectionClient[T]):
         self,
         *resource_ids: str | int,
         snapshot_id: int,
-    ) -> T:
+    ) -> T1:
         """Get a snapshot by its id for a specific resource.
 
         Args:

@@ -25,10 +25,11 @@ MLFLOW_RUN: Final[str] = "mlflowRun"
 SNAPSHOTS: Final[str] = "snapshots"
 STATUS: Final[str] = "status"
 
-T = TypeVar("T")
+T1 = TypeVar("T1")
+T2 = TypeVar("T2")
 
 
-class JobsCollectionClient(CollectionClient[T]):
+class JobsCollectionClient(CollectionClient[T1, T2]):
     """The client for managing Dioptra's /jobs collection.
 
     Attributes:
@@ -37,20 +38,22 @@ class JobsCollectionClient(CollectionClient[T]):
 
     name: ClassVar[str] = "jobs"
 
-    def __init__(self, session: DioptraSession[T]) -> None:
+    def __init__(self, session: DioptraSession[T1, T2]) -> None:
         """Initialize the JobsCollectionClient instance.
 
         Args:
             session: The Dioptra API session object.
         """
         super().__init__(session)
-        self._snapshots = SnapshotsSubCollectionClient[T](
+        self._snapshots = SnapshotsSubCollectionClient[T1, T2](
             session=session, root_collection=self
         )
-        self._tags = TagsSubCollectionClient[T](session=session, root_collection=self)
+        self._tags = TagsSubCollectionClient[T1, T2](
+            session=session, root_collection=self
+        )
 
     @property
-    def snapshots(self) -> SnapshotsSubCollectionClient[T]:
+    def snapshots(self) -> SnapshotsSubCollectionClient[T1, T2]:
         """The client for retrieving job resource snapshots.
 
         Each client method in the sub-collection accepts an arbitrary number of
@@ -68,7 +71,7 @@ class JobsCollectionClient(CollectionClient[T]):
         return self._snapshots
 
     @property
-    def tags(self) -> TagsSubCollectionClient[T]:
+    def tags(self) -> TagsSubCollectionClient[T1, T2]:
         """
         The client for managing the tags sub-collection owned by the /jobs
         collection.
@@ -104,7 +107,7 @@ class JobsCollectionClient(CollectionClient[T]):
         sort_by: str | None = None,
         descending: bool | None = None,
         search: str | None = None,
-    ) -> T:
+    ) -> T1:
         """Get a list of jobs.
 
         Args:
@@ -146,7 +149,7 @@ class JobsCollectionClient(CollectionClient[T]):
             params=params,
         )
 
-    def get_by_id(self, job_id: str | int) -> T:
+    def get_by_id(self, job_id: str | int) -> T1:
         """Get the job matching the provided id.
 
         Args:
@@ -157,7 +160,7 @@ class JobsCollectionClient(CollectionClient[T]):
         """
         return self._session.get(self.url, str(job_id))
 
-    def delete_by_id(self, job_id: str | int) -> T:
+    def delete_by_id(self, job_id: str | int) -> T1:
         """Delete the job matching the provided id.
 
         Args:
@@ -168,7 +171,7 @@ class JobsCollectionClient(CollectionClient[T]):
         """
         return self._session.delete(self.url, str(job_id))
 
-    def get_mlflow_run_id(self, job_id: str | int) -> T:
+    def get_mlflow_run_id(self, job_id: str | int) -> T1:
         """Gets the MLflow run id for a job.
 
         Args:
@@ -179,7 +182,7 @@ class JobsCollectionClient(CollectionClient[T]):
         """
         return self._session.get(self.url, str(job_id), MLFLOW_RUN)
 
-    def set_mlflow_run_id(self, job_id: str | int, mlflow_run_id: str) -> T:
+    def set_mlflow_run_id(self, job_id: str | int, mlflow_run_id: str) -> T1:
         """Sets the MLflow run id for a job.
 
         Args:
@@ -195,7 +198,7 @@ class JobsCollectionClient(CollectionClient[T]):
 
         return self._session.post(self.url, str(job_id), MLFLOW_RUN, json_=json_)
 
-    def get_status(self, job_id: str | int) -> T:
+    def get_status(self, job_id: str | int) -> T1:
         """Gets the status for a job.
 
         Args:
@@ -206,7 +209,7 @@ class JobsCollectionClient(CollectionClient[T]):
         """
         return self._session.get(self.url, str(job_id), STATUS)
 
-    def get_metrics_by_id(self, job_id: str | int) -> T:
+    def get_metrics_by_id(self, job_id: str | int) -> T2:
         """Gets all the latest metrics for a job.
 
         Args:
@@ -215,7 +218,7 @@ class JobsCollectionClient(CollectionClient[T]):
         Returns:
             The response from the Dioptra API.
         """
-        return self._session.get(self.url, str(job_id), METRICS)
+        return self._session.get_list(self.url, str(job_id), METRICS)
 
     def append_metric_by_id(
         self,
@@ -223,7 +226,7 @@ class JobsCollectionClient(CollectionClient[T]):
         metric_name: str,
         metric_value: float,
         metric_step: int | None = None,
-    ) -> T:
+    ) -> T1:
         """Posts a new metric to a job.
 
         Args:
@@ -251,7 +254,7 @@ class JobsCollectionClient(CollectionClient[T]):
         metric_name: str | int,
         index: int = 0,
         page_length: int = 10,
-    ) -> T:
+    ) -> T1:
         """Gets the metric history for a job with a specific metric name.
 
         Args:

@@ -19,6 +19,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
+import mlflow
 import numpy as np
 import pandas as pd
 import scipy.stats
@@ -26,7 +27,6 @@ import structlog
 from structlog.stdlib import BoundLogger
 from tensorflow.keras.preprocessing.image import DirectoryIterator
 
-import mlflow
 from dioptra import pyplugs
 
 from .artifacts_mlflow import (

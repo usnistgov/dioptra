@@ -23,8 +23,8 @@ from pathlib import Path, PurePosixPath, PureWindowsPath
 from posixpath import join as urljoin
 from typing import Any, ClassVar, Generic, Protocol, TypeVar
 
-T = TypeVar("T")
-
+T1 = TypeVar("T1")
+T2 = TypeVar("T2")
 DOTS_REGEX = re.compile(r"^\.\.\.+$")
 
 
@@ -92,7 +92,7 @@ class DioptraResponseProtocol(Protocol):
         """The response body as a string."""
         ...  # fmt: skip
 
-    def json(self) -> dict[str, Any]:
+    def json(self) -> dict[str, Any] | list[dict[str, Any]]:
         """Return the response body as a JSON-like Python dictionary.
 
         Returns:
@@ -147,7 +147,7 @@ class DioptraFile(object):
             )
 
 
-class DioptraSession(ABC, Generic[T]):
+class DioptraSession(ABC, Generic[T1, T2]):
     """The interface for communicating with the Dioptra API."""
 
     @property
@@ -198,7 +198,24 @@ class DioptraSession(ABC, Generic[T]):
         raise NotImplementedError
 
     @abstractmethod
-    def get(self, endpoint: str, *parts, params: dict[str, Any] | None = None) -> T:
+    def get(self, endpoint: str, *parts, params: dict[str, Any] | None = None) -> T1:
+        """Make a GET request to the API.
+
+        Args:
+            endpoint: The base URL of the API endpoint.
+            *parts: Additional parts to append to the base URL.
+            params: The query parameters to include in the request. Optional, defaults
+                to None.
+
+        Returns:
+            The response from the API.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_list(
+        self, endpoint: str, *parts, params: dict[str, Any] | None = None
+    ) -> T2:
         """Make a GET request to the API.
 
         Args:
@@ -219,7 +236,7 @@ class DioptraSession(ABC, Generic[T]):
         *parts,
         params: dict[str, Any] | None = None,
         json_: dict[str, Any] | None = None,
-    ) -> T:
+    ) -> T1:
         """Make a PATCH request to the API.
 
         Args:
@@ -243,7 +260,35 @@ class DioptraSession(ABC, Generic[T]):
         json_: dict[str, Any] | None = None,
         data: dict[str, Any] | None = None,
         files: dict[str, DioptraFile | list[DioptraFile]] | None = None,
-    ) -> T:
+    ) -> T1:
+        """Make a POST request to the API.
+
+        Args:
+            endpoint: The base URL of the API endpoint.
+            *parts: Additional parts to append to the base URL.
+            params: The query parameters to include in the request. Optional, defaults
+                to None.
+            json_: The JSON data to include in the request. Optional, defaults to None.
+            data: A dictionary to send in the body of the request as part of a
+                multipart form. Optional, defaults to None.
+            files: Dictionary of "name": DioptraFile or lists of DioptraFile pairs to be
+                uploaded. Optional, defaults to None.
+
+        Returns:
+            The response from the API.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def post_list(
+        self,
+        endpoint: str,
+        *parts,
+        params: dict[str, Any] | None = None,
+        json_: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+        files: dict[str, DioptraFile | list[DioptraFile]] | None = None,
+    ) -> T2:
         """Make a POST request to the API.
 
         Args:
@@ -269,7 +314,7 @@ class DioptraSession(ABC, Generic[T]):
         *parts,
         params: dict[str, Any] | None = None,
         json_: dict[str, Any] | None = None,
-    ) -> T:
+    ) -> T1:
         """Make a DELETE request to the API.
 
         Args:
@@ -291,7 +336,29 @@ class DioptraSession(ABC, Generic[T]):
         *parts,
         params: dict[str, Any] | None = None,
         json_: dict[str, Any] | None = None,
-    ) -> T:
+    ) -> T1:
+        """Make a PUT request to the API.
+
+        Args:
+            endpoint: The base URL of the API endpoint.
+            *parts: Additional parts to append to the base URL.
+            params: The query parameters to include in the request. Optional, defaults
+                to None.
+            json_: The JSON data to include in the request. Optional, defaults to None.
+
+        Returns:
+            The response from the API.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def put_list(
+        self,
+        endpoint: str,
+        *parts,
+        params: dict[str, Any] | None = None,
+        json_: dict[str, Any] | None = None,
+    ) -> T2:
         """Make a PUT request to the API.
 
         Args:
@@ -476,7 +543,7 @@ class DioptraSession(ABC, Generic[T]):
         return urljoin(base, *parts)
 
 
-class CollectionClient(Generic[T]):
+class CollectionClient(Generic[T1, T2]):
     """The interface for an API collection client.
 
     Attributes:
@@ -485,7 +552,7 @@ class CollectionClient(Generic[T]):
 
     name: ClassVar[str]
 
-    def __init__(self, session: DioptraSession[T]) -> None:
+    def __init__(self, session: DioptraSession[T1, T2]) -> None:
         """Initialize the CollectionClient instance.
 
         Args:
@@ -499,7 +566,7 @@ class CollectionClient(Generic[T]):
         return self._session.build_url(self._session.url, self.name)
 
 
-class SubCollectionClient(Generic[T]):
+class SubCollectionClient(Generic[T1, T2]):
     """The interface for an API sub-collection client.
 
     Attributes:
@@ -510,9 +577,9 @@ class SubCollectionClient(Generic[T]):
 
     def __init__(
         self,
-        session: DioptraSession[T],
-        root_collection: CollectionClient[T],
-        parent_sub_collections: list["SubCollectionClient[T]"] | None = None,
+        session: DioptraSession[T1, T2],
+        root_collection: CollectionClient[T1, T2],
+        parent_sub_collections: list["SubCollectionClient[T1, T2]"] | None = None,
     ) -> None:
         """Initialize the SubCollectionClient instance.
 
@@ -528,7 +595,7 @@ class SubCollectionClient(Generic[T]):
         """
         self._session = session
         self._root_collection = root_collection
-        self._parent_sub_collections: list["SubCollectionClient[T]"] = (
+        self._parent_sub_collections: list["SubCollectionClient[T1, T2]"] = (
             parent_sub_collections or []
         )
 

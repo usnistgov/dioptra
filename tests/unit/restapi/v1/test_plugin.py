@@ -113,7 +113,7 @@ def assert_plugin_response_contents_matches_expectations(
 
 
 def assert_retrieving_plugin_by_id_works(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     plugin_id: int,
     expected: dict[str, Any],
 ) -> None:
@@ -129,11 +129,14 @@ def assert_retrieving_plugin_by_id_works(
             does not match the expected response.
     """
     response = dioptra_client.plugins.get_by_id(plugin_id)
-    assert response.status_code == HTTPStatus.OK and response.json() == expected
+    assert (
+        response.status_code == HTTPStatus.OK
+        and helpers.convert_response_to_dict(response) == expected
+    )
 
 
 def assert_retrieving_plugins_works(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     expected: list[dict[str, Any]],
     sort_by: str | None = None,
     descending: bool | None = None,
@@ -167,7 +170,9 @@ def assert_retrieving_plugins_works(
 
 
 def assert_registering_existing_plugin_name_fails(
-    dioptra_client: DioptraClient[DioptraResponseProtocol], name: str, group_id: int
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
+    name: str,
+    group_id: int,
 ) -> None:
     """Assert that registering a plugin with an existing name fails.
 
@@ -185,7 +190,7 @@ def assert_registering_existing_plugin_name_fails(
 
 
 def assert_plugin_name_matches_expected_name(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     plugin_id: int,
     expected_name: str,
 ) -> None:
@@ -203,12 +208,12 @@ def assert_plugin_name_matches_expected_name(
     response = dioptra_client.plugins.get_by_id(plugin_id)
     assert (
         response.status_code == HTTPStatus.OK
-        and response.json()["name"] == expected_name
+        and helpers.convert_response_to_dict(response)["name"] == expected_name
     )
 
 
 def assert_plugin_is_not_found(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     plugin_id: int,
 ) -> None:
     """Assert that a plugin is not found.
@@ -225,7 +230,7 @@ def assert_plugin_is_not_found(
 
 
 def assert_cannot_rename_plugin_with_existing_name(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     plugin_id: int,
     existing_name: str,
     existing_description: str,
@@ -336,7 +341,7 @@ def assert_plugin_file_response_contents_matches_expectations(
 
 
 def assert_retrieving_plugin_file_by_id_works(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     plugin_id: int,
     plugin_file_id: int,
     expected: dict[str, Any],
@@ -356,11 +361,14 @@ def assert_retrieving_plugin_file_by_id_works(
     response = dioptra_client.plugins.files.get_by_id(
         plugin_id=plugin_id, plugin_file_id=plugin_file_id
     )
-    assert response.status_code == HTTPStatus.OK and response.json() == expected
+    assert (
+        response.status_code == HTTPStatus.OK
+        and helpers.convert_response_to_dict(response) == expected
+    )
 
 
 def assert_retrieving_plugin_files_works(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     expected: list[dict[str, Any]],
     plugin_id: int,
     sort_by: str | None = None,
@@ -403,7 +411,7 @@ def assert_retrieving_plugin_files_works(
 
 
 def assert_registering_existing_plugin_filename_fails(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     plugin_id: int,
     existing_filename: str,
     contents: str,
@@ -431,7 +439,7 @@ def assert_registering_existing_plugin_filename_fails(
 
 
 def assert_plugin_filename_matches_expected_name(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     plugin_id: int,
     plugin_file_id: int,
     expected_name: str,
@@ -453,12 +461,12 @@ def assert_plugin_filename_matches_expected_name(
     )
     assert (
         response.status_code == HTTPStatus.OK
-        and response.json()["filename"] == expected_name
+        and helpers.convert_response_to_dict(response)["filename"] == expected_name
     )
 
 
 def assert_cannot_rename_plugin_file_with_existing_name(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     plugin_id: int,
     plugin_file_id: int,
     existing_name: str,
@@ -489,7 +497,7 @@ def assert_cannot_rename_plugin_file_with_existing_name(
 
 
 def assert_plugin_file_is_not_found(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     plugin_id: int,
     plugin_file_id: int,
 ) -> None:
@@ -557,7 +565,7 @@ def assert_plugin_task_response_contents_matches_expectations(
 
 
 def test_create_plugin(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
 ) -> None:
@@ -576,7 +584,7 @@ def test_create_plugin(
     plugin_response = dioptra_client.plugins.create(
         group_id=group_id, name=name, description=description
     )
-    plugin_expected = plugin_response.json()
+    plugin_expected = helpers.convert_response_to_dict(plugin_response)
     assert_plugin_response_contents_matches_expectations(
         response=plugin_expected,
         expected_contents={
@@ -592,7 +600,7 @@ def test_create_plugin(
 
 
 def test_plugin_get_all(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugins: dict[str, Any],
@@ -620,7 +628,7 @@ def test_plugin_get_all(
     ],
 )
 def test_plugin_sort(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugins: dict[str, Any],
@@ -649,7 +657,7 @@ def test_plugin_sort(
 
 
 def test_plugin_search_query(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugins: dict[str, Any],
@@ -672,7 +680,7 @@ def test_plugin_search_query(
 
 
 def test_plugin_group_query(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugins: dict[str, Any],
@@ -695,7 +703,7 @@ def test_plugin_group_query(
 
 
 def test_cannot_register_existing_plugin_name(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugins: dict[str, Any],
@@ -717,7 +725,7 @@ def test_cannot_register_existing_plugin_name(
 
 
 def test_rename_plugin(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugins: dict[str, Any],
@@ -775,7 +783,7 @@ def test_rename_plugin(
 
 
 def test_delete_plugin_by_id(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugins: dict[str, Any],
@@ -798,7 +806,7 @@ def test_delete_plugin_by_id(
 
 
 def test_register_plugin_file(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugins: dict[str, Any],
@@ -891,7 +899,7 @@ def test_register_plugin_file(
         contents=contents,
         tasks=tasks,
     )
-    plugin_file_expected = plugin_file_response.json()
+    plugin_file_expected = helpers.convert_response_to_dict(plugin_file_response)
 
     assert_plugin_file_response_contents_matches_expectations(
         response=plugin_file_expected,
@@ -965,7 +973,7 @@ def test_register_plugin_file(
     ],
 )
 def test_plugin_file_filename_regex(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugins: dict[str, Any],
@@ -993,7 +1001,7 @@ def test_plugin_file_filename_regex(
 
 
 def test_plugin_file_get_all(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_with_files: dict[str, Any],
@@ -1036,7 +1044,7 @@ def test_plugin_file_get_all(
     ],
 )
 def test_plugin_file_sort(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_with_files: dict[str, Any],
@@ -1072,7 +1080,7 @@ def test_plugin_file_sort(
 
 
 def test_plugin_file_delete_all(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_with_files: dict[str, Any],
@@ -1097,7 +1105,7 @@ def test_plugin_file_delete_all(
 
 
 def test_cannot_register_existing_plugin_filename(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_with_files: dict[str, Any],
@@ -1123,7 +1131,7 @@ def test_cannot_register_existing_plugin_filename(
 
 
 def test_rename_plugin_file(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_with_files: dict[str, Any],
@@ -1170,7 +1178,7 @@ def test_rename_plugin_file(
 
 
 def test_delete_plugin_file_by_id(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_with_files: dict[str, Any],
@@ -1202,7 +1210,7 @@ def test_delete_plugin_file_by_id(
 
 
 def test_manage_existing_plugin_draft(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugins: dict[str, Any],
@@ -1260,7 +1268,7 @@ def test_manage_existing_plugin_draft(
 
 
 def test_manage_new_plugin_drafts(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
 ) -> None:
@@ -1316,7 +1324,7 @@ def test_manage_new_plugin_drafts(
 
 
 def test_manage_existing_plugin_file_draft(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_with_files: dict[str, Any],
@@ -1395,7 +1403,7 @@ def test_manage_existing_plugin_file_draft(
 
 
 def test_manage_new_plugin_file_drafts(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugins: dict[str, Any],
@@ -1476,7 +1484,7 @@ def test_manage_new_plugin_file_drafts(
 
 
 def test_manage_plugin_snapshots(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugins: dict[str, Any],
@@ -1495,11 +1503,13 @@ def test_manage_plugin_snapshots(
       response
     """
     plugin_to_rename = registered_plugins["plugin1"]
-    modified_plugin = dioptra_client.plugins.modify_by_id(
-        plugin_id=plugin_to_rename["id"],
-        name=plugin_to_rename["name"] + "modified",
-        description=plugin_to_rename["description"],
-    ).json()
+    modified_plugin = helpers.convert_response_to_dict(
+        dioptra_client.plugins.modify_by_id(
+            plugin_id=plugin_to_rename["id"],
+            name=plugin_to_rename["name"] + "modified",
+            description=plugin_to_rename["description"],
+        )
+    )
 
     # Run routine: resource snapshots tests
     routines.run_resource_snapshots_tests(
@@ -1511,7 +1521,7 @@ def test_manage_plugin_snapshots(
 
 
 def test_manage_plugin_file_snapshots(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_with_files: dict[str, Any],
@@ -1540,14 +1550,16 @@ def test_manage_plugin_file_snapshots(
         """
     )
 
-    modified_plugin_file = dioptra_client.plugins.files.modify_by_id(
-        plugin_id=plugin_id,
-        plugin_file_id=plugin_file_to_rename["id"],
-        filename="modified_" + plugin_file_to_rename["filename"],
-        contents=contents,
-        tasks=[],
-        description=plugin_file_to_rename["description"],
-    ).json()
+    modified_plugin_file = helpers.convert_response_to_dict(
+        dioptra_client.plugins.files.modify_by_id(
+            plugin_id=plugin_id,
+            plugin_file_id=plugin_file_to_rename["id"],
+            filename="modified_" + plugin_file_to_rename["filename"],
+            contents=contents,
+            tasks=[],
+            description=plugin_file_to_rename["description"],
+        )
+    )
 
     # Run routine: resource snapshots tests
     routines.run_resource_snapshots_tests(
@@ -1560,7 +1572,7 @@ def test_manage_plugin_file_snapshots(
 
 
 def test_tag_plugin(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugins: dict[str, Any],
@@ -1584,7 +1596,7 @@ def test_tag_plugin(
 
 
 def test_tag_plugin_file(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_with_files: dict[str, Any],

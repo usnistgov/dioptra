@@ -37,10 +37,11 @@ STATUS: Final[str] = "status"
 
 DRAFT_FIELDS: Final[set[str]] = {"name", "description", "entrypoints"}
 
-T = TypeVar("T")
+T1 = TypeVar("T1")
+T2 = TypeVar("T2")
 
 
-class ExperimentEntrypointsSubCollectionClient(SubCollectionClient[T]):
+class ExperimentEntrypointsSubCollectionClient(SubCollectionClient[T1, T2]):
     """The client for managing Dioptra's /experiments/{id}/entrypoints sub-collection.
 
     Attributes:
@@ -51,9 +52,9 @@ class ExperimentEntrypointsSubCollectionClient(SubCollectionClient[T]):
 
     def __init__(
         self,
-        session: DioptraSession[T],
-        root_collection: CollectionClient[T],
-        parent_sub_collections: list["SubCollectionClient[T]"] | None = None,
+        session: DioptraSession[T1, T2],
+        root_collection: CollectionClient[T1, T2],
+        parent_sub_collections: list["SubCollectionClient[T1, T2]"] | None = None,
     ) -> None:
         """Initialize the ExperimentEntrypointsSubCollectionClient instance.
 
@@ -74,7 +75,7 @@ class ExperimentEntrypointsSubCollectionClient(SubCollectionClient[T]):
             parent_sub_collections=parent_sub_collections,
         )
 
-    def get(self, experiment_id: int | str) -> T:
+    def get(self, experiment_id: int | str) -> T2:
         """Get a list of entrypoints added to the experiment.
 
         Args:
@@ -83,13 +84,13 @@ class ExperimentEntrypointsSubCollectionClient(SubCollectionClient[T]):
         Returns:
             The response from the Dioptra API.
         """
-        return self._session.get(self.build_sub_collection_url(experiment_id))
+        return self._session.get_list(self.build_sub_collection_url(experiment_id))
 
     def create(
         self,
         experiment_id: str | int,
         entrypoint_ids: list[int],
-    ) -> T:
+    ) -> T2:
         """Adds one or more entrypoints to the experiment.
 
         If an entrypoint id matches an entrypoint that is already attached to the
@@ -105,11 +106,11 @@ class ExperimentEntrypointsSubCollectionClient(SubCollectionClient[T]):
             The response from the Dioptra API.
         """
         json_ = {"ids": entrypoint_ids}
-        return self._session.post(
+        return self._session.post_list(
             self.build_sub_collection_url(experiment_id), json_=json_
         )
 
-    def delete(self, experiment_id: str | int) -> T:
+    def delete(self, experiment_id: str | int) -> T1:
         """Remove all entrypoints from the experiment.
 
         Args:
@@ -124,7 +125,7 @@ class ExperimentEntrypointsSubCollectionClient(SubCollectionClient[T]):
         self,
         experiment_id: str | int,
         entrypoint_ids: list[int],
-    ) -> T:
+    ) -> T2:
         """Replaces the experiment's full list of entrypoints.
 
         If an entrypoint id matches an entrypoint that is already attached to the
@@ -141,11 +142,11 @@ class ExperimentEntrypointsSubCollectionClient(SubCollectionClient[T]):
             The response from the Dioptra API.
         """
         json_ = {"ids": entrypoint_ids}
-        return self._session.put(
+        return self._session.put_list(
             self.build_sub_collection_url(experiment_id), json_=json_
         )
 
-    def delete_by_id(self, experiment_id: str | int, entrypoint_id: str | int) -> T:
+    def delete_by_id(self, experiment_id: str | int, entrypoint_id: str | int) -> T1:
         """Remove an entrypoint from the experiment.
 
         Args:
@@ -160,7 +161,7 @@ class ExperimentEntrypointsSubCollectionClient(SubCollectionClient[T]):
         )
 
 
-class ExperimentJobsSubCollectionClient(SubCollectionClient[T]):
+class ExperimentJobsSubCollectionClient(SubCollectionClient[T1, T2]):
     """The client for managing Dioptra's /experiments/{id}/jobs sub-collection.
 
     Attributes:
@@ -171,9 +172,9 @@ class ExperimentJobsSubCollectionClient(SubCollectionClient[T]):
 
     def __init__(
         self,
-        session: DioptraSession[T],
-        root_collection: CollectionClient[T],
-        parent_sub_collections: list["SubCollectionClient[T]"] | None = None,
+        session: DioptraSession[T1, T2],
+        root_collection: CollectionClient[T1, T2],
+        parent_sub_collections: list["SubCollectionClient[T1, T2]"] | None = None,
     ) -> None:
         """Initialize the ExperimentJobsSubCollectionClient instance.
 
@@ -202,7 +203,7 @@ class ExperimentJobsSubCollectionClient(SubCollectionClient[T]):
         sort_by: str | None = None,
         descending: bool | None = None,
         search: str | None = None,
-    ) -> T:
+    ) -> T1:
         """Get an experiment's jobs.
 
         Args:
@@ -238,7 +239,7 @@ class ExperimentJobsSubCollectionClient(SubCollectionClient[T]):
             self.build_sub_collection_url(experiment_id), params=params
         )
 
-    def get_by_id(self, experiment_id: str | int, job_id: str | int) -> T:
+    def get_by_id(self, experiment_id: str | int, job_id: str | int) -> T1:
         """Get a specific job from an experiment.
 
         Args:
@@ -261,7 +262,7 @@ class ExperimentJobsSubCollectionClient(SubCollectionClient[T]):
         values: dict[str, Any] | None = None,
         timeout: str | None = None,
         description: str | None = None,
-    ) -> T:
+    ) -> T1:
         """Creates a job for an experiment.
 
         Args:
@@ -293,7 +294,7 @@ class ExperimentJobsSubCollectionClient(SubCollectionClient[T]):
             self.build_sub_collection_url(experiment_id), json_=json_
         )
 
-    def delete_by_id(self, experiment_id: str | int, job_id: str | int) -> T:
+    def delete_by_id(self, experiment_id: str | int, job_id: str | int) -> T1:
         """Delete a job from the experiment.
 
         Args:
@@ -313,7 +314,7 @@ class ExperimentJobsSubCollectionClient(SubCollectionClient[T]):
         job_id: str | int,
         uri: str,
         description: str | None = None,
-    ) -> T:
+    ) -> T1:
         """Creates a job artifact for an experiment.
 
         Args:
@@ -338,7 +339,7 @@ class ExperimentJobsSubCollectionClient(SubCollectionClient[T]):
             json_=json_,
         )
 
-    def get_mlflow_run_id(self, experiment_id: str | int, job_id: str | int) -> T:
+    def get_mlflow_run_id(self, experiment_id: str | int, job_id: str | int) -> T1:
         """Gets the MLflow run id for an experiment's job.
 
         Args:
@@ -354,7 +355,7 @@ class ExperimentJobsSubCollectionClient(SubCollectionClient[T]):
 
     def set_mlflow_run_id(
         self, experiment_id: str | int, job_id: str | int, mlflow_run_id: str
-    ) -> T:
+    ) -> T1:
         """Sets the MLflow run id for an experiment's job.
 
         Args:
@@ -375,7 +376,7 @@ class ExperimentJobsSubCollectionClient(SubCollectionClient[T]):
             json_=json_,
         )
 
-    def get_status(self, experiment_id: str | int, job_id: str | int) -> T:
+    def get_status(self, experiment_id: str | int, job_id: str | int) -> T1:
         """Gets the status for an experiment's job.
 
         Args:
@@ -389,7 +390,9 @@ class ExperimentJobsSubCollectionClient(SubCollectionClient[T]):
             self.build_sub_collection_url(experiment_id), str(job_id), STATUS
         )
 
-    def set_status(self, experiment_id: str | int, job_id: str | int, status: str) -> T:
+    def set_status(
+        self, experiment_id: str | int, job_id: str | int, status: str
+    ) -> T1:
         """Sets the status for an experiment's job.
 
         Args:
@@ -410,7 +413,7 @@ class ExperimentJobsSubCollectionClient(SubCollectionClient[T]):
         )
 
 
-class ExperimentsCollectionClient(CollectionClient[T]):
+class ExperimentsCollectionClient(CollectionClient[T1, T2]):
     """The client for managing Dioptra's /experiments collection.
 
     Attributes:
@@ -419,20 +422,20 @@ class ExperimentsCollectionClient(CollectionClient[T]):
 
     name: ClassVar[str] = "experiments"
 
-    def __init__(self, session: DioptraSession[T]) -> None:
+    def __init__(self, session: DioptraSession[T1, T2]) -> None:
         """Initialize the ExperimentsCollectionClient instance.
 
         Args:
             session: The Dioptra API session object.
         """
         super().__init__(session)
-        self._entrypoints = ExperimentEntrypointsSubCollectionClient[T](
+        self._entrypoints = ExperimentEntrypointsSubCollectionClient[T1, T2](
             session=session, root_collection=self
         )
-        self._jobs = ExperimentJobsSubCollectionClient[T](
+        self._jobs = ExperimentJobsSubCollectionClient[T1, T2](
             session=session, root_collection=self
         )
-        self._new_resource_drafts = NewResourceDraftsSubCollectionClient[T](
+        self._new_resource_drafts = NewResourceDraftsSubCollectionClient[T1, T2](
             session=session,
             validate_fields_fn=make_draft_fields_validator(
                 draft_fields=DRAFT_FIELDS,
@@ -440,7 +443,7 @@ class ExperimentsCollectionClient(CollectionClient[T]):
             ),
             root_collection=self,
         )
-        self._modify_resource_drafts = ModifyResourceDraftsSubCollectionClient[T](
+        self._modify_resource_drafts = ModifyResourceDraftsSubCollectionClient[T1, T2](
             session=session,
             validate_fields_fn=make_draft_fields_validator(
                 draft_fields=DRAFT_FIELDS,
@@ -448,23 +451,25 @@ class ExperimentsCollectionClient(CollectionClient[T]):
             ),
             root_collection=self,
         )
-        self._snapshots = SnapshotsSubCollectionClient[T](
+        self._snapshots = SnapshotsSubCollectionClient[T1, T2](
             session=session, root_collection=self
         )
-        self._tags = TagsSubCollectionClient[T](session=session, root_collection=self)
+        self._tags = TagsSubCollectionClient[T1, T2](
+            session=session, root_collection=self
+        )
 
     @property
-    def entrypoints(self) -> ExperimentEntrypointsSubCollectionClient[T]:
+    def entrypoints(self) -> ExperimentEntrypointsSubCollectionClient[T1, T2]:
         """The client for managing the entrypoints sub-collection."""
         return self._entrypoints
 
     @property
-    def jobs(self) -> ExperimentJobsSubCollectionClient[T]:
+    def jobs(self) -> ExperimentJobsSubCollectionClient[T1, T2]:
         """The client for managing the jobs sub-collection."""
         return self._jobs
 
     @property
-    def new_resource_drafts(self) -> NewResourceDraftsSubCollectionClient[T]:
+    def new_resource_drafts(self) -> NewResourceDraftsSubCollectionClient[T1, T2]:
         """The client for managing the new experiment drafts sub-collection.
 
         Each client method in the sub-collection accepts an arbitrary number of
@@ -495,7 +500,7 @@ class ExperimentsCollectionClient(CollectionClient[T]):
         return self._new_resource_drafts
 
     @property
-    def modify_resource_drafts(self) -> ModifyResourceDraftsSubCollectionClient[T]:
+    def modify_resource_drafts(self) -> ModifyResourceDraftsSubCollectionClient[T1, T2]:
         """The client for managing the experiment modification drafts sub-collection.
 
         Each client method in the sub-collection accepts an arbitrary number of
@@ -526,7 +531,7 @@ class ExperimentsCollectionClient(CollectionClient[T]):
         return self._modify_resource_drafts
 
     @property
-    def snapshots(self) -> SnapshotsSubCollectionClient[T]:
+    def snapshots(self) -> SnapshotsSubCollectionClient[T1, T2]:
         """The client for retrieving experiment resource snapshots.
 
         Each client method in the sub-collection accepts an arbitrary number of
@@ -544,7 +549,7 @@ class ExperimentsCollectionClient(CollectionClient[T]):
         return self._snapshots
 
     @property
-    def tags(self) -> TagsSubCollectionClient[T]:
+    def tags(self) -> TagsSubCollectionClient[T1, T2]:
         """
         The client for managing the tags sub-collection owned by the /experiments
         collection.
@@ -580,7 +585,7 @@ class ExperimentsCollectionClient(CollectionClient[T]):
         sort_by: str | None = None,
         descending: bool | None = None,
         search: str | None = None,
-    ) -> T:
+    ) -> T1:
         """Get a list of experiments.
 
         Args:
@@ -622,7 +627,7 @@ class ExperimentsCollectionClient(CollectionClient[T]):
             params=params,
         )
 
-    def get_by_id(self, experiment_id: str | int) -> T:
+    def get_by_id(self, experiment_id: str | int) -> T1:
         """Get the experiment matching the provided id.
 
         Args:
@@ -639,7 +644,7 @@ class ExperimentsCollectionClient(CollectionClient[T]):
         name: str,
         description: str | None = None,
         entrypoints: list[int] | None = None,
-    ) -> T:
+    ) -> T1:
         """Creates an experiment.
 
         Args:
@@ -672,7 +677,7 @@ class ExperimentsCollectionClient(CollectionClient[T]):
         name: str,
         description: str | None,
         entrypoints: list[int] | None,
-    ) -> T:
+    ) -> T1:
         """Modify the experiment matching the provided id.
 
         Args:
@@ -696,7 +701,7 @@ class ExperimentsCollectionClient(CollectionClient[T]):
 
         return self._session.put(self.url, str(experiment_id), json_=json_)
 
-    def delete_by_id(self, experiment_id: str | int) -> T:
+    def delete_by_id(self, experiment_id: str | int) -> T1:
         """Delete the experiment matching the provided id.
 
         Args:
@@ -715,7 +720,7 @@ class ExperimentsCollectionClient(CollectionClient[T]):
         sort_by: str | None = None,
         descending: bool | None = None,
         search: str | None = None,
-    ) -> T:
+    ) -> T1:
         """Get the metrics for the jobs in this experiment.
 
         Args:

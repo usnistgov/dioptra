@@ -207,7 +207,9 @@ def prepare_data_and_files(
     return merged
 
 
-class DioptraFlaskClientSession(DioptraSession[DioptraResponseProtocol]):
+class DioptraFlaskClientSession(
+    DioptraSession[DioptraResponseProtocol, DioptraResponseProtocol]
+):
     """
     The interface for communicating with the Dioptra API using the FlaskClient.
     """
@@ -401,6 +403,25 @@ class DioptraFlaskClientSession(DioptraSession[DioptraResponseProtocol]):
         """
         return self._get(endpoint, *parts, params=params)
 
+    def get_list(
+        self, endpoint: str, *parts, params: dict[str, Any] | None = None
+    ) -> DioptraResponseProtocol:
+        """Make a GET request to the API.
+
+        The response will be a DioptraTestResponse object, which follows the
+        DioptraResponseProtocol interface.
+
+        Args:
+            endpoint: The base URL of the API endpoint.
+            *parts: Additional parts to append to the base URL.
+            params: The query parameters to include in the request. Optional, defaults
+                to None.
+
+        Returns:
+            A DioptraTestResponse object.
+        """
+        return self._get(endpoint, *parts, params=params)
+
     def patch(
         self,
         endpoint: str,
@@ -457,6 +478,38 @@ class DioptraFlaskClientSession(DioptraSession[DioptraResponseProtocol]):
             endpoint, *parts, params=params, json_=json_, data=data, files=files
         )
 
+    def post_list(
+        self,
+        endpoint: str,
+        *parts,
+        params: dict[str, Any] | None = None,
+        json_: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+        files: dict[str, DioptraFile | list[DioptraFile]] | None = None,
+    ) -> DioptraResponseProtocol:
+        """Make a POST request to the API.
+
+        The response will be a DioptraTestResponse object, which follows the
+        DioptraResponseProtocol interface.
+
+        Args:
+            endpoint: The base URL of the API endpoint.
+            *parts: Additional parts to append to the base URL.
+            params: The query parameters to include in the request. Optional, defaults
+                to None.
+            json_: The JSON data to include in the request. Optional, defaults to None.
+            data: A dictionary to send in the body of the request as part of a
+                multipart form. Optional, defaults to None.
+            files: Dictionary of "name": DioptraFile or lists of DioptraFile pairs to be
+                uploaded. Optional, defaults to None.
+
+        Returns:
+            A DioptraTestResponse object.
+        """
+        return self._post(
+            endpoint, *parts, params=params, json_=json_, data=data, files=files
+        )
+
     def delete(
         self,
         endpoint: str,
@@ -482,6 +535,30 @@ class DioptraFlaskClientSession(DioptraSession[DioptraResponseProtocol]):
         return self._delete(endpoint, *parts, params=params, json_=json_)
 
     def put(
+        self,
+        endpoint: str,
+        *parts,
+        params: dict[str, Any] | None = None,
+        json_: dict[str, Any] | None = None,
+    ) -> DioptraResponseProtocol:
+        """Make a PUT request to the API.
+
+        The response will be a DioptraTestResponse object, which follows the
+        DioptraResponseProtocol interface.
+
+        Args:
+            endpoint: The base URL of the API endpoint.
+            *parts: Additional parts to append to the base URL.
+            params: The query parameters to include in the request. Optional, defaults
+                to None.
+            json_: The JSON data to include in the request. Optional, defaults to None.
+
+        Returns:
+            A DioptraTestResponse object.
+        """
+        return self._put(endpoint, *parts, params=params, json_=json_)
+
+    def put_list(
         self,
         endpoint: str,
         *parts,

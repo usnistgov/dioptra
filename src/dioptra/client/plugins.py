@@ -38,10 +38,11 @@ PLUGIN_FILES_DRAFT_FIELDS: Final[set[str]] = {
     "description",
 }
 
-T = TypeVar("T")
+T1 = TypeVar("T1")
+T2 = TypeVar("T2")
 
 
-class PluginFilesSubCollectionClient(SubCollectionClient[T]):
+class PluginFilesSubCollectionClient(SubCollectionClient[T1, T2]):
     """The client for managing Dioptra's /plugins collection.
 
     Attributes:
@@ -52,9 +53,9 @@ class PluginFilesSubCollectionClient(SubCollectionClient[T]):
 
     def __init__(
         self,
-        session: DioptraSession[T],
-        root_collection: CollectionClient[T],
-        parent_sub_collections: list["SubCollectionClient[T]"] | None = None,
+        session: DioptraSession[T1, T2],
+        root_collection: CollectionClient[T1, T2],
+        parent_sub_collections: list["SubCollectionClient[T1, T2]"] | None = None,
     ) -> None:
         """Initialize the PluginFilesSubCollectionClient instance.
 
@@ -74,7 +75,7 @@ class PluginFilesSubCollectionClient(SubCollectionClient[T]):
             root_collection=root_collection,
             parent_sub_collections=parent_sub_collections,
         )
-        self._new_resource_drafts = NewResourceDraftsSubCollectionClient[T](
+        self._new_resource_drafts = NewResourceDraftsSubCollectionClient[T1, T2](
             session=session,
             validate_fields_fn=make_draft_fields_validator(
                 draft_fields=PLUGIN_FILES_DRAFT_FIELDS,
@@ -83,7 +84,7 @@ class PluginFilesSubCollectionClient(SubCollectionClient[T]):
             root_collection=root_collection,
             parent_sub_collections=[self],
         )
-        self._modify_resource_drafts = ModifyResourceDraftsSubCollectionClient[T](
+        self._modify_resource_drafts = ModifyResourceDraftsSubCollectionClient[T1, T2](
             session=session,
             validate_fields_fn=make_draft_fields_validator(
                 draft_fields=PLUGIN_FILES_DRAFT_FIELDS,
@@ -92,19 +93,19 @@ class PluginFilesSubCollectionClient(SubCollectionClient[T]):
             root_collection=root_collection,
             parent_sub_collections=[self],
         )
-        self._snapshots = SnapshotsSubCollectionClient[T](
+        self._snapshots = SnapshotsSubCollectionClient[T1, T2](
             session=session,
             root_collection=root_collection,
             parent_sub_collections=[self],
         )
-        self._tags = TagsSubCollectionClient[T](
+        self._tags = TagsSubCollectionClient[T1, T2](
             session=session,
             root_collection=root_collection,
             parent_sub_collections=[self],
         )
 
     @property
-    def new_resource_drafts(self) -> NewResourceDraftsSubCollectionClient[T]:
+    def new_resource_drafts(self) -> NewResourceDraftsSubCollectionClient[T1, T2]:
         """The client for managing the new plugin file drafts sub-collection.
 
         Each client method in the sub-collection accepts an arbitrary number of
@@ -144,7 +145,7 @@ class PluginFilesSubCollectionClient(SubCollectionClient[T]):
         return self._new_resource_drafts
 
     @property
-    def modify_resource_drafts(self) -> ModifyResourceDraftsSubCollectionClient[T]:
+    def modify_resource_drafts(self) -> ModifyResourceDraftsSubCollectionClient[T1, T2]:
         """The client for managing the plugin file modification drafts sub-collection.
 
         Each client method in the sub-collection accepts an arbitrary number of
@@ -183,7 +184,7 @@ class PluginFilesSubCollectionClient(SubCollectionClient[T]):
         return self._modify_resource_drafts
 
     @property
-    def snapshots(self) -> SnapshotsSubCollectionClient[T]:
+    def snapshots(self) -> SnapshotsSubCollectionClient[T1, T2]:
         """The client for retrieving plugin file resource snapshots.
 
         Each client method in the sub-collection accepts an arbitrary number of
@@ -201,7 +202,7 @@ class PluginFilesSubCollectionClient(SubCollectionClient[T]):
         return self._snapshots
 
     @property
-    def tags(self) -> TagsSubCollectionClient[T]:
+    def tags(self) -> TagsSubCollectionClient[T1, T2]:
         """The client for managing the plugin file tags sub-collection.
 
         Each client method in the sub-collection accepts an arbitrary number of
@@ -235,7 +236,7 @@ class PluginFilesSubCollectionClient(SubCollectionClient[T]):
         sort_by: str | None = None,
         descending: bool | None = None,
         search: str | None = None,
-    ) -> T:
+    ) -> T1:
         """Get a list of plugin files for a specific plugin.
 
         Args:
@@ -272,7 +273,7 @@ class PluginFilesSubCollectionClient(SubCollectionClient[T]):
             params=params,
         )
 
-    def get_by_id(self, plugin_id: str | int, plugin_file_id: str | int) -> T:
+    def get_by_id(self, plugin_id: str | int, plugin_file_id: str | int) -> T1:
         """Get the plugin file matching the provided ids.
 
         Args:
@@ -294,7 +295,7 @@ class PluginFilesSubCollectionClient(SubCollectionClient[T]):
         contents: str,
         tasks: list[dict[str, Any]],
         description: str | None = None,
-    ) -> T:
+    ) -> T1:
         """Creates a plugin file.
 
         Args:
@@ -324,7 +325,7 @@ class PluginFilesSubCollectionClient(SubCollectionClient[T]):
         contents: str,
         tasks: list[dict[str, Any]],
         description: str | None = None,
-    ) -> T:
+    ) -> T1:
         """Modify a plugin file matching the provided ids.
 
         Args:
@@ -349,7 +350,7 @@ class PluginFilesSubCollectionClient(SubCollectionClient[T]):
             self.build_sub_collection_url(plugin_id), str(plugin_file_id), json_=json_
         )
 
-    def delete_by_id(self, plugin_id: str | int, plugin_file_id: str | int) -> T:
+    def delete_by_id(self, plugin_id: str | int, plugin_file_id: str | int) -> T1:
         """Delete a plugin file.
 
         Args:
@@ -363,7 +364,7 @@ class PluginFilesSubCollectionClient(SubCollectionClient[T]):
             self.build_sub_collection_url(plugin_id), str(plugin_file_id)
         )
 
-    def delete_all(self, plugin_id: str | int) -> T:
+    def delete_all(self, plugin_id: str | int) -> T1:
         """Delete all plugin files owned by the plugin matching the provided id.
 
         Args:
@@ -375,7 +376,7 @@ class PluginFilesSubCollectionClient(SubCollectionClient[T]):
         return self._session.delete(self.build_sub_collection_url(plugin_id))
 
 
-class PluginsCollectionClient(CollectionClient[T]):
+class PluginsCollectionClient(CollectionClient[T1, T2]):
     """The client for managing Dioptra's /plugins collection.
 
     Attributes:
@@ -384,17 +385,17 @@ class PluginsCollectionClient(CollectionClient[T]):
 
     name: ClassVar[str] = "plugins"
 
-    def __init__(self, session: DioptraSession[T]) -> None:
+    def __init__(self, session: DioptraSession[T1, T2]) -> None:
         """Initialize the PluginsCollectionClient instance.
 
         Args:
             session: The Dioptra API session object.
         """
         super().__init__(session)
-        self._files = PluginFilesSubCollectionClient[T](
+        self._files = PluginFilesSubCollectionClient[T1, T2](
             session=session, root_collection=self
         )
-        self._new_resource_drafts = NewResourceDraftsSubCollectionClient[T](
+        self._new_resource_drafts = NewResourceDraftsSubCollectionClient[T1, T2](
             session=session,
             validate_fields_fn=make_draft_fields_validator(
                 draft_fields=PLUGINS_DRAFT_FIELDS,
@@ -402,7 +403,7 @@ class PluginsCollectionClient(CollectionClient[T]):
             ),
             root_collection=self,
         )
-        self._modify_resource_drafts = ModifyResourceDraftsSubCollectionClient[T](
+        self._modify_resource_drafts = ModifyResourceDraftsSubCollectionClient[T1, T2](
             session=session,
             validate_fields_fn=make_draft_fields_validator(
                 draft_fields=PLUGINS_DRAFT_FIELDS,
@@ -410,18 +411,20 @@ class PluginsCollectionClient(CollectionClient[T]):
             ),
             root_collection=self,
         )
-        self._snapshots = SnapshotsSubCollectionClient[T](
+        self._snapshots = SnapshotsSubCollectionClient[T1, T2](
             session=session, root_collection=self
         )
-        self._tags = TagsSubCollectionClient[T](session=session, root_collection=self)
+        self._tags = TagsSubCollectionClient[T1, T2](
+            session=session, root_collection=self
+        )
 
     @property
-    def files(self) -> PluginFilesSubCollectionClient[T]:
+    def files(self) -> PluginFilesSubCollectionClient[T1, T2]:
         """The client for managing the plugin files sub-collection."""
         return self._files
 
     @property
-    def new_resource_drafts(self) -> NewResourceDraftsSubCollectionClient[T]:
+    def new_resource_drafts(self) -> NewResourceDraftsSubCollectionClient[T1, T2]:
         """The client for managing the new plugin drafts sub-collection.
 
         Each client method in the sub-collection accepts an arbitrary number of
@@ -452,7 +455,7 @@ class PluginsCollectionClient(CollectionClient[T]):
         return self._new_resource_drafts
 
     @property
-    def modify_resource_drafts(self) -> ModifyResourceDraftsSubCollectionClient[T]:
+    def modify_resource_drafts(self) -> ModifyResourceDraftsSubCollectionClient[T1, T2]:
         """The client for managing the plugin modification drafts sub-collection.
 
         Each client method in the sub-collection accepts an arbitrary number of
@@ -483,7 +486,7 @@ class PluginsCollectionClient(CollectionClient[T]):
         return self._modify_resource_drafts
 
     @property
-    def snapshots(self) -> SnapshotsSubCollectionClient[T]:
+    def snapshots(self) -> SnapshotsSubCollectionClient[T1, T2]:
         """The client for retrieving plugin resource snapshots.
 
         Each client method in the sub-collection accepts an arbitrary number of
@@ -501,7 +504,7 @@ class PluginsCollectionClient(CollectionClient[T]):
         return self._snapshots
 
     @property
-    def tags(self) -> TagsSubCollectionClient[T]:
+    def tags(self) -> TagsSubCollectionClient[T1, T2]:
         """The client for managing the plugin tags sub-collection.
 
         Each client method in the sub-collection accepts an arbitrary number of
@@ -535,7 +538,7 @@ class PluginsCollectionClient(CollectionClient[T]):
         sort_by: str | None = None,
         descending: bool | None = None,
         search: str | None = None,
-    ) -> T:
+    ) -> T1:
         """Get a list of plugins.
 
         Args:
@@ -576,7 +579,7 @@ class PluginsCollectionClient(CollectionClient[T]):
             params=params,
         )
 
-    def get_by_id(self, plugin_id: str | int) -> T:
+    def get_by_id(self, plugin_id: str | int) -> T1:
         """Get the plugin matching the provided id.
 
         Args:
@@ -587,7 +590,7 @@ class PluginsCollectionClient(CollectionClient[T]):
         """
         return self._session.get(self.url, str(plugin_id))
 
-    def create(self, group_id: int, name: str, description: str | None = None) -> T:
+    def create(self, group_id: int, name: str, description: str | None = None) -> T1:
         """Creates a plugin.
 
         Args:
@@ -610,7 +613,7 @@ class PluginsCollectionClient(CollectionClient[T]):
 
     def modify_by_id(
         self, plugin_id: str | int, name: str, description: str | None
-    ) -> T:
+    ) -> T1:
         """Modify the plugin matching the provided id.
 
         Args:
@@ -629,7 +632,7 @@ class PluginsCollectionClient(CollectionClient[T]):
 
         return self._session.put(self.url, str(plugin_id), json_=json_)
 
-    def delete_by_id(self, plugin_id: str | int) -> T:
+    def delete_by_id(self, plugin_id: str | int) -> T1:
         """Delete the plugin matching the provided id.
 
         Args:

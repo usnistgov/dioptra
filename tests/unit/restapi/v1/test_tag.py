@@ -73,7 +73,7 @@ def assert_tag_response_contents_matches_expectations(
 
 
 def assert_retrieving_tag_by_id_works(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     tag_id: int,
     expected: dict[str, Any],
 ) -> None:
@@ -89,11 +89,14 @@ def assert_retrieving_tag_by_id_works(
             does not match the expected response.
     """
     response = dioptra_client.tags.get_by_id(tag_id)
-    assert response.status_code == HTTPStatus.OK and response.json() == expected
+    assert (
+        response.status_code == HTTPStatus.OK
+        and helpers.convert_response_to_dict(response) == expected
+    )
 
 
 def assert_retrieving_tags_works(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     expected: list[dict[str, Any]],
     group_id: int | None = None,
     sort_by: str | None = None,
@@ -127,7 +130,9 @@ def assert_retrieving_tags_works(
 
 
 def assert_registering_existing_tag_name_fails(
-    dioptra_client: DioptraClient[DioptraResponseProtocol], name: str, group_id: int
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
+    name: str,
+    group_id: int,
 ) -> None:
     """Assert that registering a tag with an existing name fails.
 
@@ -143,7 +148,7 @@ def assert_registering_existing_tag_name_fails(
 
 
 def assert_tag_name_matches_expected_name(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     tag_id: int,
     expected_name: str,
 ) -> None:
@@ -161,12 +166,12 @@ def assert_tag_name_matches_expected_name(
     response = dioptra_client.tags.get_by_id(tag_id)
     assert (
         response.status_code == HTTPStatus.OK
-        and response.json()["name"] == expected_name
+        and helpers.convert_response_to_dict(response)["name"] == expected_name
     )
 
 
 def assert_tag_is_not_found(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     tag_id: int,
 ) -> None:
     """Assert that a tag is not found.
@@ -183,7 +188,7 @@ def assert_tag_is_not_found(
 
 
 def assert_cannot_rename_tag_with_existing_name(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     tag_id: int,
     existing_name: str,
 ) -> None:
@@ -205,7 +210,7 @@ def assert_cannot_rename_tag_with_existing_name(
 
 
 def test_create_tag(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
 ) -> None:
@@ -226,7 +231,7 @@ def test_create_tag(
         group_id=group_id,
         name=name,
     )
-    tag_expected = tag_response.json()
+    tag_expected = helpers.convert_response_to_dict(tag_response)
 
     assert_tag_response_contents_matches_expectations(
         response=tag_expected,
@@ -251,7 +256,7 @@ def test_create_tag(
     ],
 )
 def test_tag_sort(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_tags: dict[str, Any],
@@ -277,7 +282,7 @@ def test_tag_sort(
 
 
 def test_tag_search_query(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_tags: dict[str, Any],
@@ -304,7 +309,7 @@ def test_tag_search_query(
 
 
 def test_cannot_register_existing_tag_name(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_tags: dict[str, Any],
@@ -324,7 +329,7 @@ def test_cannot_register_existing_tag_name(
 
 
 def test_rename_tag(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_tags: dict[str, Any],
@@ -356,7 +361,7 @@ def test_rename_tag(
 
 
 def test_delete_tag_by_id(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_tags: dict[str, Any],

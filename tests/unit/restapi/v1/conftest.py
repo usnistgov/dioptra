@@ -32,9 +32,9 @@ import tomli as toml
 from flask import Flask
 from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
+from freezegun import freeze_time
 from injector import Injector
 from pytest import MonkeyPatch
-from freezegun import freeze_time
 
 from dioptra.client import (
     DioptraFile,

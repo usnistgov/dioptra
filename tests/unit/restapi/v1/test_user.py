@@ -95,7 +95,7 @@ def assert_user_response_contents_matches_expectations(
 
 
 def assert_retrieving_user_by_id_works(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     user_id: int,
     expected: dict[str, Any],
 ) -> None:
@@ -111,11 +111,14 @@ def assert_retrieving_user_by_id_works(
             does not match the expected response.
     """
     response = dioptra_client.users.get_by_id(user_id)
-    assert response.status_code == HTTPStatus.OK and response.json() == expected
+    assert (
+        response.status_code == HTTPStatus.OK
+        and helpers.convert_response_to_dict(response) == expected
+    )
 
 
 def assert_retrieving_current_user_works(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     expected: dict[str, Any],
 ) -> None:
     """Assert that retrieving the current user works.
@@ -131,7 +134,9 @@ def assert_retrieving_current_user_works(
     response = dioptra_client.users.get_current()
     to_ignore = ["lastLoginOn", "lastModifiedOn"]
     response_info_filtered = {
-        k: v for k, v in response.json().items() if k not in to_ignore
+        k: v
+        for k, v in helpers.convert_response_to_dict(response).items()
+        if k not in to_ignore
     }
     expected_filtered = {k: v for k, v in expected.items() if k not in to_ignore}
     assert (
@@ -141,7 +146,7 @@ def assert_retrieving_current_user_works(
 
 
 def assert_retrieving_users_works(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     expected: list[dict[str, Any]],
     search: str | None = None,
     paging_info: dict[str, int] | None = None,
@@ -167,7 +172,7 @@ def assert_retrieving_users_works(
 
 
 def assert_registering_existing_username_fails(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     existing_username: str,
     non_existing_email: str,
 ) -> None:
@@ -188,7 +193,7 @@ def assert_registering_existing_username_fails(
 
 
 def assert_registering_existing_email_fails(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     non_existing_username: str,
     existing_email: str,
 ) -> None:
@@ -209,7 +214,7 @@ def assert_registering_existing_email_fails(
 
 
 def assert_user_username_matches_expected_name(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     user_id: int,
     expected_name: str,
 ) -> None:
@@ -227,12 +232,13 @@ def assert_user_username_matches_expected_name(
     response = dioptra_client.users.get_by_id(user_id)
     assert (
         response.status_code == HTTPStatus.OK
-        and response.json()["name"] == expected_name
+        and helpers.convert_response_to_dict(response)["name"] == expected_name
     )
 
 
 def assert_current_user_username_matches_expected_name(
-    dioptra_client: DioptraClient[DioptraResponseProtocol], expected_name: str
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
+    expected_name: str,
 ) -> None:
     """Assert that the name of the current user matches the expected name.
 
@@ -247,12 +253,12 @@ def assert_current_user_username_matches_expected_name(
     response = dioptra_client.users.get_current()
     assert (
         response.status_code == HTTPStatus.OK
-        and response.json()["name"] == expected_name
+        and helpers.convert_response_to_dict(response)["name"] == expected_name
     )
 
 
 def assert_user_is_not_found(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     user_id: int,
 ) -> None:
     """Assert that a user is not found.
@@ -269,7 +275,7 @@ def assert_user_is_not_found(
 
 
 def assert_cannot_rename_user_with_existing_username(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     existing_username: str,
 ) -> None:
     """Assert that renaming a user with an existing username fails.
@@ -289,7 +295,7 @@ def assert_cannot_rename_user_with_existing_username(
 
 
 def assert_cannot_rename_user_with_existing_email(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     existing_email: str,
 ) -> None:
     """Assert that changing a user email with an existing email fails.
@@ -309,7 +315,7 @@ def assert_cannot_rename_user_with_existing_email(
 
 
 def assert_login_works(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     username: str,
     password: str,
 ):
@@ -327,7 +333,7 @@ def assert_login_works(
 
 
 def assert_user_does_not_exist(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     username: str,
     password: str,
 ):
@@ -346,7 +352,7 @@ def assert_user_does_not_exist(
 
 
 def assert_login_is_unauthorized(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     username: str,
     password: str,
 ):
@@ -365,7 +371,7 @@ def assert_login_is_unauthorized(
 
 
 def assert_new_password_cannot_be_existing(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     password: str,
     user_id: str | None = None,
 ):
@@ -396,7 +402,7 @@ def assert_new_password_cannot_be_existing(
 
 
 def test_create_user(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
 ) -> None:
     """Test that we can create a user and its response is expected.
@@ -416,7 +422,9 @@ def test_create_user(
     password = "supersecurepassword"
 
     # Posting a user returns CurrentUserSchema.
-    user_response = dioptra_client.users.create(username, email, password).json()
+    user_response = helpers.convert_response_to_dict(
+        dioptra_client.users.create(username, email, password)
+    )
     assert_user_response_contents_matches_expectations(
         response=user_response,
         expected_contents={
@@ -439,7 +447,7 @@ def test_create_user(
 
 
 def test_user_get_all(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_users: dict[str, Any],
@@ -461,7 +469,7 @@ def test_user_get_all(
 
 
 def test_user_search_query(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_users: dict[str, Any],
@@ -497,7 +505,7 @@ def test_user_search_query(
 
 
 def test_cannot_register_existing_username(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     registered_users: dict[str, Any],
 ) -> None:
@@ -519,7 +527,7 @@ def test_cannot_register_existing_username(
 
 
 def test_cannot_register_existing_email(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     registered_users: dict[str, Any],
 ) -> None:
@@ -541,7 +549,7 @@ def test_cannot_register_existing_email(
 
 
 def test_rename_current_user(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
 ) -> None:
@@ -554,15 +562,17 @@ def test_rename_current_user(
     that reflects the updated username.
     """
     new_username = "new_name"
-    user = dioptra_client.users.modify_current_user(
-        username=new_username,
-        email=auth_account["email"],
-    ).json()
+    user = helpers.convert_response_to_dict(
+        dioptra_client.users.modify_current_user(
+            username=new_username,
+            email=auth_account["email"],
+        )
+    )
     assert_retrieving_current_user_works(dioptra_client, expected=user)
 
 
 def test_user_authorization_failure(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     registered_users: dict[str, Any],
 ) -> None:
@@ -579,7 +589,7 @@ def test_user_authorization_failure(
 
 
 def test_delete_current_user(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
 ) -> None:
@@ -597,7 +607,7 @@ def test_delete_current_user(
 
 
 def test_change_current_user_password(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
 ):
@@ -616,7 +626,7 @@ def test_change_current_user_password(
 
 
 def test_change_user_password(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_users: dict[str, Any],
@@ -637,7 +647,7 @@ def test_change_user_password(
 
 
 def test_new_password_cannot_be_existing(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
 ):

@@ -18,10 +18,11 @@ from typing import Any, ClassVar, TypeVar
 
 from .base import CollectionClient, SubCollectionClient
 
-T = TypeVar("T")
+T1 = TypeVar("T1")
+T2 = TypeVar("T2")
 
 
-class TagsCollectionClient(CollectionClient[T]):
+class TagsCollectionClient(CollectionClient[T1, T2]):
     """The client for interacting with the Dioptra API's /tags collection.
 
     Attributes:
@@ -38,7 +39,7 @@ class TagsCollectionClient(CollectionClient[T]):
         sort_by: str | None = None,
         descending: bool | None = None,
         search: str | None = None,
-    ) -> T:
+    ) -> T1:
         """Get a list of tags.
 
         Args:
@@ -79,7 +80,7 @@ class TagsCollectionClient(CollectionClient[T]):
             params=params,
         )
 
-    def get_by_id(self, tag_id: str | int) -> T:
+    def get_by_id(self, tag_id: str | int) -> T1:
         """Get the tag matching the provided id.
 
         Args:
@@ -90,7 +91,7 @@ class TagsCollectionClient(CollectionClient[T]):
         """
         return self._session.get(self.url, str(tag_id))
 
-    def create(self, group_id: int, name: str) -> T:
+    def create(self, group_id: int, name: str) -> T1:
         """Creates a tag.
 
         Args:
@@ -107,7 +108,7 @@ class TagsCollectionClient(CollectionClient[T]):
 
         return self._session.post(self.url, json_=json_)
 
-    def modify_by_id(self, tag_id: str | int, name: str) -> T:
+    def modify_by_id(self, tag_id: str | int, name: str) -> T1:
         """Modify the tag matching the provided id.
 
         Args:
@@ -121,7 +122,7 @@ class TagsCollectionClient(CollectionClient[T]):
 
         return self._session.put(self.url, str(tag_id), json_=json_)
 
-    def delete_by_id(self, tag_id: str | int) -> T:
+    def delete_by_id(self, tag_id: str | int) -> T1:
         """Delete the tag matching the provided id.
 
         Args:
@@ -138,7 +139,7 @@ class TagsCollectionClient(CollectionClient[T]):
         resource_type: str | None = None,
         index: int = 0,
         page_length: int = 10,
-    ) -> T:
+    ) -> T1:
         """Get a list of resources labeled with a tag.
 
         Args:
@@ -167,7 +168,7 @@ class TagsCollectionClient(CollectionClient[T]):
         )
 
 
-class TagsSubCollectionClient(SubCollectionClient[T]):
+class TagsSubCollectionClient(SubCollectionClient[T1, T2]):
     """The client for managing a tags sub-collection.
 
     Attributes:
@@ -176,7 +177,7 @@ class TagsSubCollectionClient(SubCollectionClient[T]):
 
     name: ClassVar[str] = "tags"
 
-    def get(self, *resource_ids: str | int) -> T:
+    def get(self, *resource_ids: str | int) -> T2:
         """Get a list of tags.
 
         Args:
@@ -185,13 +186,13 @@ class TagsSubCollectionClient(SubCollectionClient[T]):
         Returns:
             The response from the Dioptra API.
         """
-        return self._session.get(self.build_sub_collection_url(*resource_ids))
+        return self._session.get_list(self.build_sub_collection_url(*resource_ids))
 
     def modify(
         self,
         *resource_ids: str | int,
         ids: list[int],
-    ) -> T:
+    ) -> T2:
         """Change the list of tags associated with an endpoint resource.
 
         This method overwrites the existing list of tags associated with an endpoint
@@ -205,7 +206,7 @@ class TagsSubCollectionClient(SubCollectionClient[T]):
         Returns:
             The response from the Dioptra API.
         """
-        return self._session.put(
+        return self._session.put_list(
             self.build_sub_collection_url(*resource_ids),
             json_={"ids": ids},
         )
@@ -214,7 +215,7 @@ class TagsSubCollectionClient(SubCollectionClient[T]):
         self,
         *resource_ids: str | int,
         ids: list[int],
-    ) -> T:
+    ) -> T2:
         """Append one or more tags to an endpoint resource.
 
         Tag ids that have already been appended to the endpoint resource will be
@@ -227,7 +228,7 @@ class TagsSubCollectionClient(SubCollectionClient[T]):
         Returns:
             The response from the Dioptra API.
         """
-        return self._session.post(
+        return self._session.post_list(
             self.build_sub_collection_url(*resource_ids),
             json_={"ids": ids},
         )
@@ -236,7 +237,7 @@ class TagsSubCollectionClient(SubCollectionClient[T]):
         self,
         *resource_ids: str | int,
         tag_id: int,
-    ) -> T:
+    ) -> T1:
         """Remove a tag from an endpoint resource.
 
         Args:
@@ -253,7 +254,7 @@ class TagsSubCollectionClient(SubCollectionClient[T]):
     def remove_all(
         self,
         *resource_ids: str | int,
-    ) -> T:
+    ) -> T1:
         """Remove all tags from an endpoint resource.
 
         This method will remove all tags from the endpoint resource and cannot be

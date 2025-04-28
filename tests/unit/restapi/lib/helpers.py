@@ -22,6 +22,8 @@ API endpoints.
 import datetime
 from typing import Any
 
+from dioptra.client.base import DioptraResponseProtocol, JSONDecodeError
+
 
 def is_iso_format(date_string: str) -> bool:
     try:
@@ -114,3 +116,43 @@ def assert_entrypoint_ref_contents_matches_expectations(
         expected_contents=expected_contents,
     )
     assert response["entrypoint"]["id"] == expected_contents["entrypoint_id"]
+
+
+def convert_response_to_dict(response: DioptraResponseProtocol) -> dict[str, Any]:
+    response_json_like = convert_response_to_json_like(response)
+    if not isinstance(response_json_like, dict):
+        raise JSONDecodeError(
+            "Invalid type (reason: JSON-like response is not a dict): "
+            f"{type(response_json_like)}"
+        )
+    return response_json_like
+
+
+def convert_response_to_list(response: DioptraResponseProtocol) -> list[dict[str, Any]]:
+    response_json_like = convert_response_to_json_like(response)
+    if not isinstance(response_json_like, list):
+        raise JSONDecodeError(
+            "Invalid type (reason: JSON-like response is not a list): "
+            f"{type(response_json_like)}"
+        )
+    return response_json_like
+
+
+def convert_response_to_json_like(
+    response: DioptraResponseProtocol,
+) -> dict[str, Any] | list[dict[str, Any]]:
+    """Convert a response object to a JSON-like Python dictionary.
+
+    Args:
+        response: A response object that follows the DioptraResponseProtocol interface.
+
+    Returns:
+        A Python dictionary containing the response data.
+
+    Raises:
+        StatusCodeError: If the response status code is not in the 2xx range.
+        JSONDecodeError: If the response data cannot be parsed as JSON.
+    """
+    response_dict = response.json()
+
+    return response_dict

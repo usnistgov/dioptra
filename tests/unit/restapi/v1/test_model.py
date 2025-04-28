@@ -128,7 +128,7 @@ def assert_model_version_response_contents_matches_expectations(
 
 
 def assert_retrieving_model_by_id_works(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     model_id: int,
     expected: dict[str, Any],
 ) -> None:
@@ -144,11 +144,14 @@ def assert_retrieving_model_by_id_works(
             does not match the expected response.
     """
     response = dioptra_client.models.get_by_id(model_id)
-    assert response.status_code == HTTPStatus.OK and response.json() == expected
+    assert (
+        response.status_code == HTTPStatus.OK
+        and helpers.convert_response_to_dict(response) == expected
+    )
 
 
 def assert_retrieving_models_works(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     expected: list[dict[str, Any]],
     group_id: int | None = None,
     sort_by: str | None = None,
@@ -182,7 +185,7 @@ def assert_retrieving_models_works(
 
 
 def assert_registering_existing_model_name_fails(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     name: str,
     group_id: int,
 ) -> None:
@@ -202,7 +205,7 @@ def assert_registering_existing_model_name_fails(
 
 
 def assert_model_name_matches_expected_name(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     model_id: int,
     expected_name: str,
 ) -> None:
@@ -220,12 +223,12 @@ def assert_model_name_matches_expected_name(
     response = dioptra_client.models.get_by_id(model_id)
     assert (
         response.status_code == HTTPStatus.OK
-        and response.json()["name"] == expected_name
+        and helpers.convert_response_to_dict(response)["name"] == expected_name
     )
 
 
 def assert_model_is_not_found(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     model_id: int,
 ) -> None:
     """Assert that a model is not found.
@@ -242,7 +245,7 @@ def assert_model_is_not_found(
 
 
 def assert_cannot_rename_model_with_existing_name(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     model_id: int,
     existing_name: str,
     existing_description: str,
@@ -266,7 +269,7 @@ def assert_cannot_rename_model_with_existing_name(
 
 
 def assert_retrieving_model_version_by_version_number_works(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     model_id: int,
     version_number: int,
     expected: dict[str, Any],
@@ -286,13 +289,16 @@ def assert_retrieving_model_version_by_version_number_works(
     response = dioptra_client.models.versions.get_by_id(
         model_id=model_id, version_number=version_number
     )
-    assert response.status_code == HTTPStatus.OK and response.json() == expected
+    assert (
+        response.status_code == HTTPStatus.OK
+        and helpers.convert_response_to_dict(response) == expected
+    )
 
 
 def assert_retrieving_model_versions_works(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     model_id: int,
-    expected: dict[str, Any],
+    expected: list[dict[str, Any]],
     search: str | None = None,
     paging_info: dict[str, Any] | None = None,
 ) -> None:
@@ -307,11 +313,14 @@ def assert_retrieving_model_versions_works(
         query_string["page_length"] = paging_info["page_length"]
 
     response = dioptra_client.models.versions.get(model_id=model_id, **query_string)
-    assert response.status_code == HTTPStatus.OK and response.json()["data"] == expected
+    assert (
+        response.status_code == HTTPStatus.OK
+        and helpers.convert_response_to_dict(response)["data"] == expected
+    )
 
 
 def assert_model_version_description_matches_expected_description(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     model_id: int,
     version_number: int,
     expected_description: str,
@@ -333,7 +342,8 @@ def assert_model_version_description_matches_expected_description(
     )
     assert (
         response.status_code == HTTPStatus.OK
-        and response.json()["description"] == expected_description
+        and helpers.convert_response_to_dict(response)["description"]
+        == expected_description
     )
 
 
@@ -341,7 +351,7 @@ def assert_model_version_description_matches_expected_description(
 
 
 def test_create_model(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
 ) -> None:
@@ -353,7 +363,7 @@ def test_create_model(
     model_response = dioptra_client.models.create(
         group_id=group_id, name=name, description=description
     )
-    model_expected = model_response.json()
+    model_expected = helpers.convert_response_to_dict(model_response)
     assert_model_response_contents_matches_expectations(
         response=model_expected,
         expected_contents={
@@ -371,7 +381,7 @@ def test_create_model(
 
 
 def test_model_get_all(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
@@ -399,7 +409,7 @@ def test_model_get_all(
     ],
 )
 def test_model_sort(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
@@ -425,7 +435,7 @@ def test_model_sort(
 
 
 def test_model_search_query(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
@@ -455,7 +465,7 @@ def test_model_search_query(
 
 
 def test_model_group_query(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
@@ -478,7 +488,7 @@ def test_model_group_query(
 
 
 def test_cannot_register_existing_model_name(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
@@ -501,7 +511,7 @@ def test_cannot_register_existing_model_name(
 
 
 def test_rename_model(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
@@ -558,7 +568,7 @@ def test_rename_model(
 
 
 def test_delete_model_by_id(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
@@ -579,7 +589,7 @@ def test_delete_model_by_id(
 
 
 def test_manage_existing_model_draft(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
@@ -641,7 +651,7 @@ def test_manage_existing_model_draft(
 
 
 def test_manage_new_model_drafts(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
 ) -> None:
@@ -697,7 +707,7 @@ def test_manage_new_model_drafts(
 
 
 def test_manage_model_snapshots(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
@@ -717,11 +727,13 @@ def test_manage_model_snapshots(
       response
     """
     model_to_rename = registered_models["model1"]
-    modified_model = dioptra_client.models.modify_by_id(
-        model_id=model_to_rename["id"],
-        name=model_to_rename["name"] + "modified",
-        description=model_to_rename["description"],
-    ).json()
+    modified_model = helpers.convert_response_to_dict(
+        dioptra_client.models.modify_by_id(
+            model_id=model_to_rename["id"],
+            name=model_to_rename["name"] + "modified",
+            description=model_to_rename["description"],
+        )
+    )
     modified_model["latestVersion"] = None
     modified_model["versions"] = []
 
@@ -734,7 +746,7 @@ def test_manage_model_snapshots(
 
 
 def test_tag_model(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
@@ -773,7 +785,7 @@ def test_tag_model(
 
 
 def test_create_model_version(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
@@ -793,9 +805,11 @@ def test_create_model_version(
     model_id = registered_models["model1"]["id"]
     artifact_id = registered_artifacts["artifact1"]["id"]
     description = "The model version."
-    model_version_response = dioptra_client.models.versions.create(
-        model_id=model_id, artifact_id=artifact_id, description=description
-    ).json()
+    model_version_response = helpers.convert_response_to_dict(
+        dioptra_client.models.versions.create(
+            model_id=model_id, artifact_id=artifact_id, description=description
+        )
+    )
 
     assert_model_version_response_contents_matches_expectations(
         response=model_version_response,
@@ -815,7 +829,7 @@ def test_create_model_version(
 
 
 def test_model_versions_get_all(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
@@ -837,7 +851,7 @@ def test_model_versions_get_all(
 
 
 def test_model_version_search_query(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
@@ -860,6 +874,7 @@ def test_model_version_search_query(
         expected=model_version_expected_list,
         search="description:*version*",
     )
+
     model_id = registered_models["model2"]["id"]
     model_version_expected_list = list(registered_model_versions.values())[1:-3]
     assert_retrieving_model_versions_works(
@@ -881,7 +896,7 @@ def test_model_version_search_query(
 
 
 def test_modify_model_version(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],

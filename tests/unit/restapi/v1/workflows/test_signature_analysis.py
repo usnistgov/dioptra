@@ -23,6 +23,8 @@ from flask_sqlalchemy import SQLAlchemy
 from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
 
+from ...lib import helpers
+
 expected_outputs = {}
 
 expected_outputs["sample_test_real_world.py"] = [
@@ -475,7 +477,7 @@ def assert_signature_analysis_responses_matches_expectations(
 
 
 def assert_signature_analysis_file_load_and_contents(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     filename: str,
 ):
     location = Path(__file__).absolute().parent / "signature_analysis" / filename
@@ -490,7 +492,7 @@ def assert_signature_analysis_file_load_and_contents(
     assert contents_analysis.status_code == HTTPStatus.OK
 
     assert_signature_analysis_responses_matches_expectations(
-        contents_analysis.json()["tasks"],
+        helpers.convert_response_to_dict(contents_analysis)["tasks"],
         expected_contents=expected_outputs[filename],
     )
 
@@ -499,7 +501,7 @@ def assert_signature_analysis_file_load_and_contents(
 
 
 def test_signature_analysis(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
 ) -> None:

@@ -19,9 +19,15 @@ from __future__ import annotations
 from http import HTTPStatus
 from typing import Any
 
-from dioptra.client.base import DioptraResponseProtocol, SubCollectionClient
-from dioptra.client.client import DioptraClient
+from dioptra.client.base import (
+    CollectionClient,
+    DioptraResponseProtocol,
+    JSONDecodeError,
+    SubCollectionClient,
+)
 from dioptra.restapi.utils import find_non_unique
+
+from .lib import helpers
 
 
 def assert_http_response_matches_expected(
@@ -37,12 +43,17 @@ def assert_http_response_matches_expected(
         # particular order in the response.
         contents_matches = match_normalized_json(response, expected)
     else:
-        contents_matches = response.json()["data"] == expected
+        contents_matches = (
+            helpers.convert_response_to_dict(response)["data"] == expected
+        )
     assert response.status_code == HTTPStatus.OK and contents_matches
 
 
 def assert_retrieving_resource_works(
-    dioptra_client: SubCollectionClient[DioptraResponseProtocol],
+    dioptra_client: (
+        SubCollectionClient[DioptraResponseProtocol, DioptraResponseProtocol]
+        | CollectionClient[DioptraResponseProtocol, DioptraResponseProtocol]
+    ),
     expected: list[dict[str, Any]],
     group_id: int | None = None,
     sort_by: str | None = None,
@@ -69,7 +80,7 @@ def assert_retrieving_resource_works(
         query_string["index"] = paging_info["index"]
         query_string["page_length"] = paging_info["page_length"]
 
-    response = dioptra_client.get(**query_string)
+    response = dioptra_client.get(**query_string)  # type: ignore
 
     assert_http_response_matches_expected(
         response=response, expected=expected, sort_by=sort_by
@@ -91,7 +102,9 @@ def match_normalized_json(
     """
 
     def sort_protocol(pre_json: DioptraResponseProtocol):
-        return sorted(pre_json.json()["data"], key=lambda d: d["id"])
+        return sorted(
+            helpers.convert_response_to_dict(pre_json)["data"], key=lambda d: d["id"]
+        )
 
     def sort_json(json_entity: list[dict[str, Any]]):
         return sorted(json_entity, key=lambda d: d["id"])
