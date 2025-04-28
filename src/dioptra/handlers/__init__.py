@@ -14,37 +14,3 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-import structlog
-from structlog.stdlib import BoundLogger
-
-from dioptra.restapi.db import models
-
-from .type_coercions import GlobalParameterType, coerce_to_type
-
-LOGGER: BoundLogger = structlog.stdlib.get_logger()
-
-
-def build_job_parameters_dict(
-    job_param_values: list[models.EntryPointParameterValue],
-    logger: BoundLogger | None = None,
-) -> dict[str, GlobalParameterType]:
-    """Builds a dict of a job's parameters coerce types as appropriate.
-
-    Args:
-        job_param_values: the list of EntryPointParameterValues.
-        logger: A structlog logger object to use for logging. A new logger will be
-            created if None.
-
-    Returns:
-        The a dict of the names of the parameters mapped to their type.
-    """
-    log = logger or LOGGER.new()  # noqa: F841
-
-    job_parameters: dict[str, GlobalParameterType] = {}
-    for param_value in job_param_values:
-        value = coerce_to_type(
-            x=param_value.value,
-            type_name=param_value.parameter.parameter_type,
-        )
-        job_parameters[param_value.parameter.name] = value
-    return job_parameters

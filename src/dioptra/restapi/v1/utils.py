@@ -645,12 +645,24 @@ def build_entrypoint(entrypoint_dict: EntrypointDict) -> dict[str, Any]:
         for entry_point_plugin in entrypoint.entry_point_plugins
     ]
 
+    artifact_handlers = [
+        PluginWithFilesDict(
+            plugin=entry_point_artifact_handler.plugin,
+            plugin_files=[
+                file for file in entry_point_artifact_handler.plugin.plugin_files
+            ],
+            has_draft=False,
+        )
+        for entry_point_artifact_handler in entrypoint.entry_point_artifact_handlers
+    ]
+
     data = {
         "id": entrypoint.resource_id,
         "snapshot_id": entrypoint.resource_snapshot_id,
         "name": entrypoint.name,
         "description": entrypoint.description,
         "task_graph": entrypoint.task_graph,
+        "artifacts": entrypoint.artifacts,
         "user": build_user_ref(entrypoint.creator),
         "group": build_group_ref(entrypoint.resource.owner),
         "created_on": entrypoint.resource.created_on,
@@ -668,6 +680,10 @@ def build_entrypoint(entrypoint_dict: EntrypointDict) -> dict[str, Any]:
             for param in entrypoint.parameters
         ],
         "plugins": [build_entrypoint_plugin(plugin) for plugin in plugins],
+        "artifact_handlers": [
+            build_entrypoint_plugin(artifact_handler)
+            for artifact_handler in artifact_handlers
+        ],
     }
 
     if queues is not None:

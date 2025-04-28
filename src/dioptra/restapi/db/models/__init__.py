@@ -17,6 +17,7 @@
 from .artifacts import Artifact
 from .entry_points import (
     EntryPoint,
+    EntryPointArtifactHandler,
     EntryPointParameter,
     EntryPointParameterValue,
     EntryPointPlugin,
@@ -71,6 +72,7 @@ __all__ = [
     "EntryPoint",
     "EntryPointJob",
     "EntryPointParameter",
+    "EntryPointArtifactHandler",
     "EntryPointParameterValue",
     "EntryPointPlugin",
     "Experiment",
