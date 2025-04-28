@@ -16,7 +16,11 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from typing import Any
 
-from dioptra.client.base import CollectionClient, DioptraResponseProtocol
+from dioptra.client.base import (
+    CollectionClient,
+    DioptraResponseProtocol,
+    SubCollectionClient,
+)
 from dioptra.client.drafts import (
     ModifyResourceDraftsSubCollectionClient,
     NewResourceDraftsSubCollectionClient,
@@ -25,13 +29,20 @@ from dioptra.client.snapshots import SnapshotsSubCollectionClient
 from dioptra.client.tags import TagsSubCollectionClient
 from dioptra.client.workflows import WorkflowsCollectionClient
 
-from . import asserts
+from . import asserts, helpers
 
 
 def run_new_resource_drafts_tests(
-    resource_client: CollectionClient[DioptraResponseProtocol],
-    draft_client: NewResourceDraftsSubCollectionClient[DioptraResponseProtocol],
-    workflow_client: WorkflowsCollectionClient[DioptraResponseProtocol],
+    resource_client: (
+        CollectionClient[DioptraResponseProtocol, DioptraResponseProtocol]
+        | SubCollectionClient[DioptraResponseProtocol, DioptraResponseProtocol]
+    ),
+    draft_client: NewResourceDraftsSubCollectionClient[
+        DioptraResponseProtocol, DioptraResponseProtocol
+    ],
+    workflow_client: WorkflowsCollectionClient[
+        DioptraResponseProtocol, DioptraResponseProtocol
+    ],
     *resource_ids: str | int,
     drafts: dict[str, Any],
     draft1_mod: dict[str, Any],
@@ -41,9 +52,9 @@ def run_new_resource_drafts_tests(
     group_id: int | None = None,
 ) -> None:
     # Creation operation tests
-    draft1_response = draft_client.create(
-        *resource_ids, group_id=group_id, **drafts["draft1"]
-    ).json()
+    draft1_response = helpers.convert_response_to_dict(
+        draft_client.create(*resource_ids, group_id=group_id, **drafts["draft1"])
+    )
     asserts.assert_draft_response_contents_matches_expectations(
         draft1_response, draft1_expected
     )
@@ -54,9 +65,9 @@ def run_new_resource_drafts_tests(
         expected=draft1_response,
     )
 
-    draft2_response = draft_client.create(
-        *resource_ids, group_id=group_id, **drafts["draft2"]
-    ).json()
+    draft2_response = helpers.convert_response_to_dict(
+        draft_client.create(*resource_ids, group_id=group_id, **drafts["draft2"])
+    )
     asserts.assert_draft_response_contents_matches_expectations(
         draft2_response, draft2_expected
     )
@@ -73,9 +84,9 @@ def run_new_resource_drafts_tests(
     )
 
     # Modify operation tests
-    response = draft_client.modify(
-        *resource_ids, draft_id=draft1_response["id"], **draft1_mod
-    ).json()
+    response = helpers.convert_response_to_dict(
+        draft_client.modify(*resource_ids, draft_id=draft1_response["id"], **draft1_mod)
+    )
     asserts.assert_draft_response_contents_matches_expectations(
         response, draft1_mod_expected
     )
@@ -87,20 +98,29 @@ def run_new_resource_drafts_tests(
     )
 
     # Commit operation tests
-    commit_response = workflow_client.commit_draft(draft2_response["id"]).json()
+    commit_response = helpers.convert_response_to_dict(
+        workflow_client.commit_draft(draft2_response["id"])
+    )
     asserts.assert_new_draft_is_not_found(
         draft_client, *resource_ids, draft_id=draft2_response["id"]
     )
-    resource_response = resource_client.get_by_id(*commit_response["id"]).json()
+    resource_response = helpers.convert_response_to_dict(resource_client.get_by_id(*commit_response["id"]))  # type: ignore
     asserts.assert_resource_contents_match_expectations(
         resource_response, draft2_expected["payload"]
     )
 
 
 def run_existing_resource_drafts_tests(
-    resource_client: CollectionClient[DioptraResponseProtocol],
-    draft_client: ModifyResourceDraftsSubCollectionClient[DioptraResponseProtocol],
-    workflow_client: WorkflowsCollectionClient[DioptraResponseProtocol],
+    resource_client: (
+        CollectionClient[DioptraResponseProtocol, DioptraResponseProtocol]
+        | SubCollectionClient[DioptraResponseProtocol, DioptraResponseProtocol]
+    ),
+    draft_client: ModifyResourceDraftsSubCollectionClient[
+        DioptraResponseProtocol, DioptraResponseProtocol
+    ],
+    workflow_client: WorkflowsCollectionClient[
+        DioptraResponseProtocol, DioptraResponseProtocol
+    ],
     *resource_ids: str | int,
     draft: dict[str, Any],
     draft_mod: dict[str, Any],
@@ -108,7 +128,7 @@ def run_existing_resource_drafts_tests(
     draft_mod_expected: dict[str, Any],
 ) -> None:
     # Creation operation tests
-    response = draft_client.create(*resource_ids, **draft).json()
+    response = helpers.convert_response_to_dict(draft_client.create(*resource_ids, **draft))
     asserts.assert_draft_response_contents_matches_expectations(
         response, draft_expected
     )
@@ -120,9 +140,13 @@ def run_existing_resource_drafts_tests(
     )
 
     # Modify operation tests
-    response = draft_client.modify(
-        *resource_ids, resource_snapshot_id=response["resourceSnapshot"], **draft_mod
-    ).json()
+    response = helpers.convert_response_to_dict(
+        draft_client.modify(
+            *resource_ids,
+            resource_snapshot_id=response["resourceSnapshot"],
+            **draft_mod,
+        )
+    )
     asserts.assert_draft_response_contents_matches_expectations(
         response, draft_mod_expected
     )
@@ -136,24 +160,34 @@ def run_existing_resource_drafts_tests(
     # modified (i.e. a new snapshot is created) before the draft is committed. In this
     # case, the commit should fail until the snapshot ID of the draft is updated to
     # indicate that the user is aware of the changes.
-    draft_response = draft_client.create(*resource_ids, **draft).json()
-    resource_response = resource_client.modify_by_id(*resource_ids, **draft_mod).json()
-    commit_response = workflow_client.commit_draft(draft_response["id"]).json()
-    draft_response = draft_client.modify(
-        *resource_ids,
-        resource_snapshot_id=commit_response["detail"]["curr_snapshot_id"],
-        **draft,
-    ).json()
-    commit_response = workflow_client.commit_draft(draft_response["id"]).json()
+    draft_response = helpers.convert_response_to_dict(
+        draft_client.create(*resource_ids, **draft)
+    )
+    resource_response = helpers.convert_response_to_dict(resource_client.modify_by_id(*resource_ids, **draft_mod))  # type: ignore
+    commit_response = helpers.convert_response_to_dict(
+        workflow_client.commit_draft(draft_response["id"])
+    )
+    draft_response = helpers.convert_response_to_dict(
+        draft_client.modify(
+            *resource_ids,
+            resource_snapshot_id=commit_response["detail"]["curr_snapshot_id"],
+            **draft,
+        )
+    )
+    commit_response = helpers.convert_response_to_dict(
+        workflow_client.commit_draft(draft_response["id"])
+    )
     asserts.assert_existing_draft_is_not_found(draft_client, *resource_ids)
-    resource_response = resource_client.get_by_id(*commit_response["id"]).json()
+    resource_response = helpers.convert_response_to_dict(resource_client.get_by_id(*commit_response["id"]))  # type: ignore
     asserts.assert_resource_contents_match_expectations(
         resource_response, draft_expected["payload"]
     )
 
 
 def run_resource_snapshots_tests(
-    client: SnapshotsSubCollectionClient[DioptraResponseProtocol],
+    client: SnapshotsSubCollectionClient[
+        DioptraResponseProtocol, DioptraResponseProtocol
+    ],
     *resource_ids: str | int,
     resource_to_rename: dict[str, Any],
     modified_resource: dict[str, Any],
@@ -202,34 +236,36 @@ def run_resource_snapshots_tests(
 
 
 def run_resource_tag_tests(
-    client: TagsSubCollectionClient[DioptraResponseProtocol],
+    client: TagsSubCollectionClient[DioptraResponseProtocol, DioptraResponseProtocol],
     *resource_ids: str | int,
     tag_ids: list[int],
 ) -> None:
     # Append operation tests
     response = client.append(*resource_ids, ids=[tag_ids[0], tag_ids[1]])
     asserts.assert_tags_response_contents_matches_expectations(
-        response.json(), [tag_ids[0], tag_ids[1]]
+        helpers.convert_response_to_list(response), [tag_ids[0], tag_ids[1]]
     )
     response = client.append(*resource_ids, ids=[tag_ids[1], tag_ids[2]])
     asserts.assert_tags_response_contents_matches_expectations(
-        response.json(), [tag_ids[0], tag_ids[1], tag_ids[2]]
+        helpers.convert_response_to_list(response), [tag_ids[0], tag_ids[1], tag_ids[2]]
     )
 
     # Remove operation tests
     client.remove(*resource_ids, tag_id=tag_ids[1])
     response = client.get(*resource_ids)
     asserts.assert_tags_response_contents_matches_expectations(
-        response.json(), [tag_ids[0], tag_ids[2]]
+        helpers.convert_response_to_list(response), [tag_ids[0], tag_ids[2]]
     )
 
     # Modify operation tests
     response = client.modify(*resource_ids, ids=[tag_ids[1], tag_ids[2]])
     asserts.assert_tags_response_contents_matches_expectations(
-        response.json(), [tag_ids[1], tag_ids[2]]
+        helpers.convert_response_to_list(response), [tag_ids[1], tag_ids[2]]
     )
 
     # Delete operation tests
     client.remove_all(*resource_ids)
     response = client.get(*resource_ids)
-    asserts.assert_tags_response_contents_matches_expectations(response.json(), [])
+    asserts.assert_tags_response_contents_matches_expectations(
+        helpers.convert_response_to_list(response), []
+    )

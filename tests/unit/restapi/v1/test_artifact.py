@@ -104,7 +104,7 @@ def assert_artifact_response_contents_matches_expectations(
 
 
 def assert_retrieving_artifact_by_id_works(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     artifact_id: int,
     expected: dict[str, Any],
 ) -> None:
@@ -120,12 +120,12 @@ def assert_retrieving_artifact_by_id_works(
             does not match the expected response.
     """
     response = dioptra_client.artifacts.get_by_id(artifact_id)
-    response_data = response.json()
+    response_data = helpers.convert_response_to_dict(response)
     assert response.status_code == HTTPStatus.OK and response_data == expected
 
 
 def assert_retrieving_artifacts_works(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     expected: list[dict[str, Any]],
     group_id: int | None = None,
     sort_by: str | None = None,
@@ -159,7 +159,7 @@ def assert_retrieving_artifacts_works(
 
 
 def assert_registering_existing_artifact_uri_fails(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     uri: str,
     group_id: int,
     job_id: int,
@@ -183,7 +183,7 @@ def assert_registering_existing_artifact_uri_fails(
 
 
 def test_create_artifact(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
@@ -205,7 +205,7 @@ def test_create_artifact(
         group_id=group_id, job_id=job_id, uri=uri, description=description
     )
 
-    artifact_expected = artifact_response.json()
+    artifact_expected = helpers.convert_response_to_dict(artifact_response)
 
     assert_artifact_response_contents_matches_expectations(
         response=artifact_expected,
@@ -222,7 +222,7 @@ def test_create_artifact(
 
 
 def test_artifacts_get_all(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_artifacts: dict[str, Any],
@@ -254,7 +254,7 @@ def test_artifacts_get_all(
     ],
 )
 def test_artifact_sort(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_artifacts: dict[str, Any],
@@ -285,7 +285,7 @@ def test_artifact_sort(
 
 
 def test_artifact_search_query(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_artifacts: dict[str, Any],
@@ -308,7 +308,7 @@ def test_artifact_search_query(
 
 
 def test_artifact_group_query(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_artifacts: dict[str, Any],
@@ -332,7 +332,7 @@ def test_artifact_group_query(
 
 
 def test_cannot_register_existing_artifact_uri(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_artifacts: dict[str, Any],

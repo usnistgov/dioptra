@@ -99,11 +99,23 @@ def wrap_request_method(
 
 
 def convert_response_to_dict(response: DioptraResponseProtocol) -> dict[str, Any]:
-    return cast(dict[str, Any], convert_response_to_json_like(response))
+    response_json_like = convert_response_to_json_like(response)
+    if not isinstance(response_json_like, dict):
+        raise JSONDecodeError(
+            "Invalid type (reason: JSON-like response is not a dict): "
+            f"{type(response_json_like)}"
+        )
+    return response_json_like
 
 
 def convert_response_to_list(response: DioptraResponseProtocol) -> list[dict[str, Any]]:
-    return cast(list[dict[str, Any]], convert_response_to_json_like(response))
+    response_json_like = convert_response_to_json_like(response)
+    if not isinstance(response_json_like, list):
+        raise JSONDecodeError(
+            "Invalid type (reason: JSON-like response is not a list): "
+            f"{type(response_json_like)}"
+        )
+    return response_json_like
 
 
 def convert_response_to_json_like(
@@ -132,7 +144,7 @@ def convert_response_to_json_like(
         raise StatusCodeError(f"Error code returned: {response.status_code}")
 
     try:
-        response_dict = convert_response_to_dict(response)
+        response_dict = response.json()
 
     except requests.JSONDecodeError as err:
         LOGGER.debug(
@@ -489,6 +501,34 @@ class BaseDioptraRequestsSession(DioptraSession[T1, T2], ABC, Generic[T1, T2]):
         raise NotImplementedError
 
     @abstractmethod
+    def post_list(
+        self,
+        endpoint: str,
+        *parts,
+        params: dict[str, Any] | None = None,
+        json_: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+        files: dict[str, DioptraFile | list[DioptraFile]] | None = None,
+    ) -> T2:
+        """Make a POST request to the API.
+
+        Args:
+            endpoint: The base URL of the API endpoint.
+            *parts: Additional parts to append to the base URL.
+            params: The query parameters to include in the request. Optional, defaults
+                to None.
+            json_: The JSON data to include in the request. Optional, defaults to None.
+            data: A dictionary to send in the body of the request as part of a
+                multipart form. Optional, defaults to None.
+            files: Dictionary of "name": DioptraFile or lists of DioptraFile pairs to be
+                uploaded. Optional, defaults to None.
+
+        Returns:
+            The response from the API.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     def delete(
         self,
         endpoint: str,
@@ -518,6 +558,28 @@ class BaseDioptraRequestsSession(DioptraSession[T1, T2], ABC, Generic[T1, T2]):
         params: dict[str, Any] | None = None,
         json_: dict[str, Any] | None = None,
     ) -> T1:
+        """Make a PUT request to the API.
+
+        Args:
+            endpoint: The base URL of the API endpoint.
+            *parts: Additional parts to append to the base URL.
+            params: The query parameters to include in the request. Optional, defaults
+                to None.
+            json_: The JSON data to include in the request. Optional, defaults to None.
+
+        Returns:
+            The response from the API.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def put_list(
+        self,
+        endpoint: str,
+        *parts,
+        params: dict[str, Any] | None = None,
+        json_: dict[str, Any] | None = None,
+    ) -> T2:
         """Make a PUT request to the API.
 
         Args:
@@ -675,6 +737,42 @@ class DioptraRequestsSession(
             endpoint, *parts, params=params, json_=json_, data=data, files=files
         )
 
+    def post_list(
+        self,
+        endpoint: str,
+        *parts,
+        params: dict[str, Any] | None = None,
+        json_: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+        files: dict[str, DioptraFile | list[DioptraFile]] | None = None,
+    ) -> DioptraResponseProtocol:
+        """Make a POST request to the API.
+
+        The response will be a requests Response object, which follows the
+        DioptraResponseProtocol interface.
+
+        Args:
+            endpoint: The base URL of the API endpoint.
+            *parts: Additional parts to append to the base URL.
+            params: The query parameters to include in the request. Optional, defaults
+                to None.
+            json_: The JSON data to include in the request. Optional, defaults to None.
+            data: A dictionary to send in the body of the request as part of a
+                multipart form. Optional, defaults to None.
+            files: Dictionary of "name": DioptraFile or lists of DioptraFile pairs to be
+                uploaded. Optional, defaults to None.
+
+        Returns:
+            A requests Response object.
+
+        Raises:
+            APIConnectionError: If the connection to the REST API fails.
+            DioptraClientError: If an unsupported method is requested.
+        """
+        return self._post(
+            endpoint, *parts, params=params, json_=json_, data=data, files=files
+        )
+
     def delete(
         self,
         endpoint: str,
@@ -704,6 +802,34 @@ class DioptraRequestsSession(
         return self._delete(endpoint, *parts, params=params, json_=json_)
 
     def put(
+        self,
+        endpoint: str,
+        *parts,
+        params: dict[str, Any] | None = None,
+        json_: dict[str, Any] | None = None,
+    ) -> DioptraResponseProtocol:
+        """Make a PUT request to the API.
+
+        The response will be a requests Response object, which follows the
+        DioptraResponseProtocol interface.
+
+        Args:
+            endpoint: The base URL of the API endpoint.
+            *parts: Additional parts to append to the base URL.
+            params: The query parameters to include in the request. Optional, defaults
+                to None.
+            json_: The JSON data to include in the request. Optional, defaults to None.
+
+        Returns:
+            A requests Response object.
+
+        Raises:
+            APIConnectionError: If the connection to the REST API fails.
+            DioptraClientError: If an unsupported method is requested.
+        """
+        return self._put(endpoint, *parts, params=params, json_=json_)
+
+    def put_list(
         self,
         endpoint: str,
         *parts,
@@ -864,6 +990,45 @@ class DioptraRequestsSessionJson(
             )
         )
 
+    def post_list(
+        self,
+        endpoint: str,
+        *parts,
+        params: dict[str, Any] | None = None,
+        json_: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+        files: dict[str, DioptraFile | list[DioptraFile]] | None = None,
+    ) -> list[dict[str, Any]]:
+        """Make a POST request to the API.
+
+        The response will be a JSON-like Python dictionary.
+
+        Args:
+            endpoint: The base URL of the API endpoint.
+            *parts: Additional parts to append to the base URL.
+            params: The query parameters to include in the request. Optional, defaults
+                to None.
+            json_: The JSON data to include in the request. Optional, defaults to None.
+            data: A dictionary to send in the body of the request as part of a
+                multipart form. Optional, defaults to None.
+            files: Dictionary of "name": DioptraFile or lists of DioptraFile pairs to be
+                uploaded. Optional, defaults to None.
+
+        Returns:
+            A Python dictionary containing the response data.
+
+        Raises:
+            APIConnectionError: If the connection to the REST API fails.
+            DioptraClientError: If an unsupported method is requested.
+            JSONDecodeError: If the response data cannot be parsed as JSON.
+            StatusCodeError: If the response status code is not in the 2xx range.
+        """
+        return convert_response_to_list(
+            self._post(
+                endpoint, *parts, params=params, json_=json_, data=data, files=files
+            )
+        )
+
     def delete(
         self,
         endpoint: str,
@@ -923,5 +1088,36 @@ class DioptraRequestsSessionJson(
             StatusCodeError: If the response status code is not in the 2xx range.
         """
         return convert_response_to_dict(
+            self._put(endpoint, *parts, params=params, json_=json_)
+        )
+
+    def put_list(
+        self,
+        endpoint: str,
+        *parts,
+        params: dict[str, Any] | None = None,
+        json_: dict[str, Any] | None = None,
+    ) -> list[dict[str, Any]]:
+        """Make a PUT request to the API.
+
+        The response will be a JSON-like Python dictionary.
+
+        Args:
+            endpoint: The base URL of the API endpoint.
+            *parts: Additional parts to append to the base URL.
+            params: The query parameters to include in the request. Optional, defaults
+                to None.
+            json_: The JSON data to include in the request. Optional, defaults to None.
+
+        Returns:
+            A Python dictionary containing the response data.
+
+        Raises:
+            APIConnectionError: If the connection to the REST API fails.
+            DioptraClientError: If an unsupported method is requested.
+            JSONDecodeError: If the response data cannot be parsed as JSON.
+            StatusCodeError: If the response status code is not in the 2xx range.
+        """
+        return convert_response_to_list(
             self._put(endpoint, *parts, params=params, json_=json_)
         )

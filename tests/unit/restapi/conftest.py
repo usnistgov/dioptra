@@ -144,8 +144,12 @@ def client(app: Flask) -> FlaskClient:
 
 
 @pytest.fixture
-def dioptra_client(client: FlaskClient) -> DioptraClient[DioptraResponseProtocol]:
-    return DioptraClient[DioptraResponseProtocol](DioptraFlaskClientSession(client))
+def dioptra_client(
+    client: FlaskClient,
+) -> DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol]:
+    return DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol](
+        DioptraFlaskClientSession(client)
+    )
 
 
 @pytest.fixture

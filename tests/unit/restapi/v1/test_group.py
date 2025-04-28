@@ -128,7 +128,7 @@ def assert_group_response_contents_matches_expectations(
 
 
 def assert_retrieving_group_by_id_works(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     group_id: int,
     expected: dict[str, Any],
 ) -> None:
@@ -144,11 +144,14 @@ def assert_retrieving_group_by_id_works(
             does not match the expected response.
     """
     response = dioptra_client.groups.get_by_id(group_id)
-    assert response.status_code == HTTPStatus.OK and response.json() == expected
+    assert (
+        response.status_code == HTTPStatus.OK
+        and helpers.convert_response_to_dict(response) == expected
+    )
 
 
 def assert_retrieving_groups_works(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     expected: list[dict[str, Any]],
     search: str | None = None,
     paging_info: dict[str, Any] | None = None,
@@ -191,7 +194,7 @@ def assert_registering_existing_group_name_fails(
 
 
 def assert_group_name_matches_expected_name(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     group_id: int,
     expected_name: str,
 ) -> None:
@@ -209,7 +212,7 @@ def assert_group_name_matches_expected_name(
     response = dioptra_client.groups.get_by_id(group_id)
     assert (
         response.status_code == HTTPStatus.OK
-        and response.json()["name"] == expected_name
+        and helpers.convert_response_to_dict(response)["name"] == expected_name
     )
 
 
@@ -242,7 +245,7 @@ def assert_cannot_rename_group_with_existing_name(
 @pytest.mark.v1_test
 def test_create_group(
     client: FlaskClient,
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
 ) -> None:
@@ -274,7 +277,7 @@ def test_create_group(
 
 
 def test_group_get_all(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_groups: dict[str, Any],
@@ -292,7 +295,7 @@ def test_group_get_all(
 
 
 def test_group_search_query(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_groups: dict[str, Any],
@@ -341,7 +344,7 @@ def test_cannot_register_existing_group_name(
 @pytest.mark.v1_test
 def test_rename_group(
     client: FlaskClient,
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_groups: dict[str, Any],

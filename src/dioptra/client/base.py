@@ -280,6 +280,34 @@ class DioptraSession(ABC, Generic[T1, T2]):
         raise NotImplementedError
 
     @abstractmethod
+    def post_list(
+        self,
+        endpoint: str,
+        *parts,
+        params: dict[str, Any] | None = None,
+        json_: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+        files: dict[str, DioptraFile | list[DioptraFile]] | None = None,
+    ) -> T2:
+        """Make a POST request to the API.
+
+        Args:
+            endpoint: The base URL of the API endpoint.
+            *parts: Additional parts to append to the base URL.
+            params: The query parameters to include in the request. Optional, defaults
+                to None.
+            json_: The JSON data to include in the request. Optional, defaults to None.
+            data: A dictionary to send in the body of the request as part of a
+                multipart form. Optional, defaults to None.
+            files: Dictionary of "name": DioptraFile or lists of DioptraFile pairs to be
+                uploaded. Optional, defaults to None.
+
+        Returns:
+            The response from the API.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     def delete(
         self,
         endpoint: str,
@@ -309,6 +337,28 @@ class DioptraSession(ABC, Generic[T1, T2]):
         params: dict[str, Any] | None = None,
         json_: dict[str, Any] | None = None,
     ) -> T1:
+        """Make a PUT request to the API.
+
+        Args:
+            endpoint: The base URL of the API endpoint.
+            *parts: Additional parts to append to the base URL.
+            params: The query parameters to include in the request. Optional, defaults
+                to None.
+            json_: The JSON data to include in the request. Optional, defaults to None.
+
+        Returns:
+            The response from the API.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def put_list(
+        self,
+        endpoint: str,
+        *parts,
+        params: dict[str, Any] | None = None,
+        json_: dict[str, Any] | None = None,
+    ) -> T2:
         """Make a PUT request to the API.
 
         Args:

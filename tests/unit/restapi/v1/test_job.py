@@ -118,7 +118,7 @@ def assert_job_response_contents_matches_expectations(
 
 
 def assert_retrieving_job_by_id_works(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     job_id: int,
     expected: dict[str, Any],
 ) -> None:
@@ -134,11 +134,14 @@ def assert_retrieving_job_by_id_works(
             does not match the expected response.
     """
     response = dioptra_client.jobs.get_by_id(job_id)
-    assert response.status_code == HTTPStatus.OK and response.json() == expected
+    assert (
+        response.status_code == HTTPStatus.OK
+        and helpers.convert_response_to_dict(response) == expected
+    )
 
 
 def assert_retrieving_jobs_works(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     expected: list[dict[str, Any]],
     group_id: int | None = None,
     sort_by: str | None = None,
@@ -171,7 +174,7 @@ def assert_retrieving_jobs_works(
 
 
 def assert_job_is_not_found(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     job_id: int,
 ) -> None:
     """Assert that a job is not found.
@@ -188,28 +191,33 @@ def assert_job_is_not_found(
 
 
 def assert_job_status_matches_expectations(
-    dioptra_client: DioptraClient[DioptraResponseProtocol], job_id: int, expected: str
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
+    job_id: int,
+    expected: str,
 ) -> None:
     response = dioptra_client.jobs.get_status(job_id)
     assert (
-        response.status_code == HTTPStatus.OK and response.json()["status"] == expected
+        response.status_code == HTTPStatus.OK
+        and helpers.convert_response_to_dict(response)["status"] == expected
     )
 
 
 def assert_job_mlflowrun_matches_expectations(
-    dioptra_client: DioptraClient[DioptraResponseProtocol], job_id: int, expected: str
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
+    job_id: int,
+    expected: str,
 ) -> None:
     import uuid
 
     response = dioptra_client.jobs.get_mlflow_run_id(job_id=job_id)
     assert (
         response.status_code == HTTPStatus.OK
-        and uuid.UUID(response.json()["mlflowRunId"]).hex == expected
+        and uuid.UUID(helpers.convert_response_to_dict(response)["mlflowRunId"]).hex == expected
     )
 
 
 def assert_job_mlflowrun_already_set(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     job_id: int,
     mlflow_run_id: str,
 ) -> None:
@@ -218,12 +226,12 @@ def assert_job_mlflowrun_already_set(
     )
     assert (
         response.status_code == HTTPStatus.BAD_REQUEST
-        and response.json()["error"] == "JobMlflowRunAlreadySetError"
+        and helpers.convert_response_to_dict(response)["error"] == "JobMlflowRunAlreadySetError"
     )
 
 
 def assert_job_metrics_validation_error(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     job_id: int,
     metric_name: str,
     metric_value: float,
@@ -235,25 +243,31 @@ def assert_job_metrics_validation_error(
 
 
 def assert_job_metrics_matches_expectations(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     job_id: int,
     expected: list[dict[str, Any]],
 ) -> None:
     response = dioptra_client.jobs.get_metrics_by_id(job_id=job_id)
-    assert response.status_code == HTTPStatus.OK and response.json() == expected
+    assert (
+        response.status_code == HTTPStatus.OK
+        and helpers.convert_response_to_list(response) == expected
+    )
 
 
 def assert_experiment_metrics_matches_expectations(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     experiment_id: int,
     expected: list[dict[str, Any]],
 ) -> None:
     response = dioptra_client.experiments.get_metrics_by_id(experiment_id=experiment_id)
-    assert response.status_code == HTTPStatus.OK and response.json()["data"] == expected
+    assert (
+        response.status_code == HTTPStatus.OK
+        and helpers.convert_response_to_dict(response)["data"] == expected
+    )
 
 
 def assert_job_metrics_snapshots_matches_expectations(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     job_id: int,
     metric_name: str,
     expected: list[dict[str, Any]],
@@ -263,7 +277,7 @@ def assert_job_metrics_snapshots_matches_expectations(
     )
     assert response.status_code == HTTPStatus.OK
 
-    history = response.json()["data"]
+    history = helpers.convert_response_to_dict(response)["data"]
 
     assert all(
         [
@@ -283,7 +297,7 @@ def assert_job_metrics_snapshots_matches_expectations(
 
 
 def test_create_job(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_queues: dict[str, Any],
@@ -332,14 +346,16 @@ def test_create_job(
     }
     timeout = "24h"
 
-    job_response = dioptra_client.experiments.jobs.create(
-        experiment_id=experiment_id,
-        entrypoint_id=entrypoint_id,
-        queue_id=queue_id,
-        values=values,
-        timeout=timeout,
-        description=description,
-    ).json()
+    job_response = helpers.convert_response_to_dict(
+        dioptra_client.experiments.jobs.create(
+            experiment_id=experiment_id,
+            entrypoint_id=entrypoint_id,
+            queue_id=queue_id,
+            values=values,
+            timeout=timeout,
+            description=description,
+        )
+    )
 
     """
     Validate the response matches the expected contents
@@ -391,7 +407,7 @@ def test_create_job(
 
 
 def test_create_job_with_empty_values(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_queues: dict[str, Any],
     registered_experiments: dict[str, Any],
@@ -400,7 +416,8 @@ def test_create_job_with_empty_values(
 ) -> None:
     """Test that new job can be create with EMPTY values using API
     Args:
-        dioptra_client (DioptraClient[DioptraResponseProtocol]): _description_
+        dioptra_client (DioptraClient[DioptraResponseProtocol,
+            DioptraResponseProtocol]): _description_
         auth_account (dict[str, Any]): _description_
         registered_queues (dict[str, Any]): _description_
         registered_experiments (dict[str, Any]): _description_
@@ -428,7 +445,7 @@ def test_create_job_with_empty_values(
     queue_id = registered_queues["queue1"]["id"]
     experiment_id = registered_experiments["experiment1"]["id"]
     entrypoint_id = registered_entrypoints[entrypoint_name]["id"]
-    values = {}
+    values: dict[str, Any] = {}
     timeout = "24h"
 
     """
@@ -446,14 +463,16 @@ def test_create_job_with_empty_values(
           - values: The values the job supplies to the entrypoint
           - timeout: The timeout value for the job to terminate if not completed by.
     """
-    job_response = dioptra_client.experiments.jobs.create(
-        experiment_id=experiment_id,
-        entrypoint_id=entrypoint_id,
-        queue_id=queue_id,
-        values=values,
-        timeout=timeout,
-        description=description,
-    ).json()
+    job_response = helpers.convert_response_to_dict(
+        dioptra_client.experiments.jobs.create(
+            experiment_id=experiment_id,
+            entrypoint_id=entrypoint_id,
+            queue_id=queue_id,
+            values=values,
+            timeout=timeout,
+            description=description,
+        )
+    )
 
     """
     Validate the response matches the expected contents
@@ -500,7 +519,7 @@ def test_create_job_with_empty_values(
 
 
 def test_mlflowrun(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
@@ -526,7 +545,7 @@ def test_mlflowrun(
 
 
 def test_metrics(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
@@ -557,29 +576,37 @@ def test_metrics(
         dioptra_client, job_id=job1_id, expected=[{"name": "accuracy", "value": 4.0}]
     )
 
-    metric_response = dioptra_client.jobs.append_metric_by_id(  # noqa: F841
-        job_id=job1_id,
-        metric_name="accuracy",
-        metric_value=4.1,
-    ).json()
+    metric_response = helpers.convert_response_to_dict(
+        dioptra_client.jobs.append_metric_by_id(  # noqa: F841
+            job_id=job1_id,
+            metric_name="accuracy",
+            metric_value=4.1,
+        )
+    )
 
-    metric_response = dioptra_client.jobs.append_metric_by_id(  # noqa: F841
-        job_id=job1_id,
-        metric_name="accuracy",
-        metric_value=4.2,
-    ).json()
+    metric_response = helpers.convert_response_to_dict(
+        dioptra_client.jobs.append_metric_by_id(  # noqa: F841
+            job_id=job1_id,
+            metric_name="accuracy",
+            metric_value=4.2,
+        )
+    )
 
-    metric_response = dioptra_client.jobs.append_metric_by_id(  # noqa: F841
-        job_id=job1_id,
-        metric_name="roc_auc",
-        metric_value=0.99,
-    ).json()
+    metric_response = helpers.convert_response_to_dict(
+        dioptra_client.jobs.append_metric_by_id(  # noqa: F841
+            job_id=job1_id,
+            metric_name="roc_auc",
+            metric_value=0.99,
+        )
+    )
 
-    metric_response = dioptra_client.jobs.append_metric_by_id(  # noqa: F841
-        job_id=job2_id,
-        metric_name="job_2_metric",
-        metric_value=0.11,
-    ).json()
+    metric_response = helpers.convert_response_to_dict(
+        dioptra_client.jobs.append_metric_by_id(  # noqa: F841
+            job_id=job2_id,
+            metric_name="job_2_metric",
+            metric_value=0.11,
+        )
+    )
 
     assert_job_metrics_matches_expectations(
         dioptra_client,
@@ -647,7 +674,7 @@ def test_metrics(
 
 
 def test_job_get_all(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
@@ -674,7 +701,7 @@ def test_job_get_all(
     ],
 )
 def test_job_sort(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
@@ -703,7 +730,7 @@ def test_job_sort(
 
 
 def test_job_search_query(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
@@ -728,7 +755,7 @@ def test_job_search_query(
 
 
 def test_job_group_query(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
@@ -751,7 +778,7 @@ def test_job_group_query(
 
 
 def test_delete_job(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
@@ -771,7 +798,7 @@ def test_delete_job(
 
 
 def test_job_get_status(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
@@ -792,7 +819,7 @@ def test_job_get_status(
 
 
 def test_modify_job_status(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
@@ -818,7 +845,7 @@ def test_modify_job_status(
 
 
 def test_manage_job_snapshots(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
@@ -843,7 +870,7 @@ def test_manage_job_snapshots(
         job_id=job_id,
         status="started",
     )
-    modified_job = dioptra_client.jobs.get_by_id(job_id).json()
+    modified_job = helpers.convert_response_to_dict(dioptra_client.jobs.get_by_id(job_id))
 
     # Run routine: resource snapshots tests
     routines.run_resource_snapshots_tests(
@@ -855,7 +882,7 @@ def test_manage_job_snapshots(
 
 
 def test_tag_job(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],

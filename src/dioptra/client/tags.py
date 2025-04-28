@@ -192,7 +192,7 @@ class TagsSubCollectionClient(SubCollectionClient[T1, T2]):
         self,
         *resource_ids: str | int,
         ids: list[int],
-    ) -> T1:
+    ) -> T2:
         """Change the list of tags associated with an endpoint resource.
 
         This method overwrites the existing list of tags associated with an endpoint
@@ -206,7 +206,7 @@ class TagsSubCollectionClient(SubCollectionClient[T1, T2]):
         Returns:
             The response from the Dioptra API.
         """
-        return self._session.put(
+        return self._session.put_list(
             self.build_sub_collection_url(*resource_ids),
             json_={"ids": ids},
         )
@@ -215,7 +215,7 @@ class TagsSubCollectionClient(SubCollectionClient[T1, T2]):
         self,
         *resource_ids: str | int,
         ids: list[int],
-    ) -> T1:
+    ) -> T2:
         """Append one or more tags to an endpoint resource.
 
         Tag ids that have already been appended to the endpoint resource will be
@@ -228,7 +228,7 @@ class TagsSubCollectionClient(SubCollectionClient[T1, T2]):
         Returns:
             The response from the Dioptra API.
         """
-        return self._session.post(
+        return self._session.post_list(
             self.build_sub_collection_url(*resource_ids),
             json_={"ids": ids},
         )

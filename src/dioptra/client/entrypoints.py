@@ -88,7 +88,7 @@ class EntrypointPluginsSubCollectionClient(SubCollectionClient[T1, T2]):
             parent_sub_collections=parent_sub_collections,
         )
 
-    def get(self, entrypoint_id: int | str) -> T1:
+    def get(self, entrypoint_id: int | str) -> T2:
         """Get a list of plugins added to the entrypoint.
 
         Args:
@@ -97,7 +97,7 @@ class EntrypointPluginsSubCollectionClient(SubCollectionClient[T1, T2]):
         Returns:
             The response from the Dioptra API.
         """
-        return self._session.get(self.build_sub_collection_url(entrypoint_id))
+        return self._session.get_list(self.build_sub_collection_url(entrypoint_id))
 
     def get_by_id(self, entrypoint_id: str | int, plugin_id: str | int) -> T1:
         """Get the entrypoint plugin matching the provided id.
@@ -117,7 +117,7 @@ class EntrypointPluginsSubCollectionClient(SubCollectionClient[T1, T2]):
         self,
         entrypoint_id: str | int,
         plugin_ids: list[int],
-    ) -> T1:
+    ) -> T2:
         """Adds one or more plugins to the entrypoint.
 
         If a plugin id matches an plugin that is already attached to the entrypoint,
@@ -131,7 +131,7 @@ class EntrypointPluginsSubCollectionClient(SubCollectionClient[T1, T2]):
             The response from the Dioptra API.
         """
         json_ = {"plugins": plugin_ids}
-        return self._session.post(
+        return self._session.post_list(
             self.build_sub_collection_url(entrypoint_id), json_=json_
         )
 
@@ -199,7 +199,7 @@ class EntrypointQueuesSubCollectionClient(SubCollectionClient[T1, T2]):
         self,
         entrypoint_id: str | int,
         queue_ids: list[int],
-    ) -> T1:
+    ) -> T2:
         """Adds one or more queues to the entrypoint.
 
         Args:
@@ -210,7 +210,7 @@ class EntrypointQueuesSubCollectionClient(SubCollectionClient[T1, T2]):
             The response from the Dioptra API.
         """
         json_ = {"ids": queue_ids}
-        return self._session.post(
+        return self._session.post_list(
             self.build_sub_collection_url(entrypoint_id), json_=json_
         )
 
@@ -229,7 +229,7 @@ class EntrypointQueuesSubCollectionClient(SubCollectionClient[T1, T2]):
         self,
         entrypoint_id: str | int,
         queue_ids: list[int],
-    ) -> T1:
+    ) -> T2:
         """Replaces the entrypoint's full list of queues.
 
         If an empty list is provided, then all queues will be removed from the
@@ -244,7 +244,7 @@ class EntrypointQueuesSubCollectionClient(SubCollectionClient[T1, T2]):
             The response from the Dioptra API.
         """
         json_ = {"ids": queue_ids}
-        return self._session.put(
+        return self._session.put_list(
             self.build_sub_collection_url(entrypoint_id), json_=json_
         )
 

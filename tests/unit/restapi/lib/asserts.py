@@ -22,10 +22,10 @@ from dioptra.client.drafts import (
     ModifyResourceDraftsSubCollectionClient,
     NewResourceDraftsSubCollectionClient,
 )
+
 from dioptra.client.snapshots import SnapshotsSubCollectionClient
 
 from . import helpers
-
 
 def assert_base_resource_contents_match_expectations(response: dict[str, Any]) -> None:
     assert isinstance(response["id"], int)
@@ -227,7 +227,10 @@ def assert_retrieving_draft_by_resource_id_works(
             does not match the expected response.
     """
     response = drafts_client.get_by_id(*resource_ids)
-    assert response.status_code == HTTPStatus.OK and response.json() == expected
+    assert (
+        response.status_code == HTTPStatus.OK
+        and helpers.convert_response_to_dict(response) == expected
+    )
 
 
 def assert_retrieving_draft_by_id_works(
@@ -248,7 +251,10 @@ def assert_retrieving_draft_by_id_works(
             does not match the expected response.
     """
     response = drafts_client.get_by_id(*resource_ids, draft_id=draft_id)
-    assert response.status_code == HTTPStatus.OK and response.json() == expected
+    assert (
+        response.status_code == HTTPStatus.OK
+        and helpers.convert_response_to_dict(response) == expected
+    )
 
 
 def assert_retrieving_drafts_works(
@@ -281,7 +287,10 @@ def assert_retrieving_drafts_works(
         query_string["page_length"] = paging_info["page_length"]
 
     response = drafts_client.get(*resource_ids, **query_string)
-    assert response.status_code == HTTPStatus.OK and response.json()["data"] == expected
+    assert (
+        response.status_code == HTTPStatus.OK
+        and helpers.convert_response_to_dict(response)["data"] == expected
+    )
 
 
 def assert_creating_another_existing_draft_fails(
@@ -340,8 +349,8 @@ def assert_new_draft_is_not_found(
 
 def assert_retrieving_snapshots_works(
     snapshots_client: SnapshotsSubCollectionClient,
-    *resource_ids: int,
-    expected: dict[str, Any],
+    *resource_ids: str | int,
+    expected: list[dict[str, Any]],
 ) -> None:
     """Assert that retrieving a snapshot by id works.
 
@@ -355,12 +364,15 @@ def assert_retrieving_snapshots_works(
             does not match the expected response.
     """
     response = snapshots_client.get(*resource_ids)
-    assert response.status_code == HTTPStatus.OK and response.json()["data"] == expected
+    assert (
+        response.status_code == HTTPStatus.OK
+        and helpers.convert_response_to_dict(response)["data"] == expected
+    )
 
 
 def assert_retrieving_snapshot_by_id_works(
     snapshots_client: SnapshotsSubCollectionClient,
-    *resource_ids: int,
+    *resource_ids: str | int,
     snapshot_id: int,
     expected: dict[str, Any],
 ) -> None:
@@ -377,4 +389,7 @@ def assert_retrieving_snapshot_by_id_works(
             does not match the expected response.
     """
     response = snapshots_client.get_by_id(*resource_ids, snapshot_id=snapshot_id)
-    assert response.status_code == HTTPStatus.OK and response.json() == expected
+    assert (
+        response.status_code == HTTPStatus.OK
+        and helpers.convert_response_to_dict(response) == expected
+    )

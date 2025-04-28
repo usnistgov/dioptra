@@ -21,36 +21,38 @@ functionalities for the queue entity. The tests ensure that the queues can be
 registered, renamed, deleted, and locked/unlocked as expected through the REST API.
 """
 
-import pytest
 import shutil
-
 from http import HTTPStatus
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import Any
 
+import pytest
 from flask_sqlalchemy import SQLAlchemy
 
 from dioptra.client import DioptraClient, DioptraFile
 from dioptra.client.base import DioptraResponseProtocol
 
-
 # -- Assertions ------------------------------------------------------------------------
 
 
 def assert_imported_resources_match_expected(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     expected: dict[str, Any],
 ):
     response = dioptra_client.plugins.get()
-    response_plugins = set(plugin["name"] for plugin in response.json()["data"])
+    response_plugins = set(
+        plugin["name"] for plugin in helpers.convert_response_to_dict(response)["data"]
+    )
     expected_plugins = set(Path(plugin["path"]).stem for plugin in expected["plugins"])
     assert (
         response.status_code == HTTPStatus.OK and response_plugins == expected_plugins
     )
 
     response = dioptra_client.plugin_parameter_types.get()
-    response_types = set(param["name"] for param in response.json()["data"])
+    response_types = set(
+        param["name"] for param in helpers.convert_response_to_dict(response)["data"]
+    )
     expected_types = set(param["name"] for param in expected["plugin_param_types"])
     assert (
         response.status_code == HTTPStatus.OK
@@ -58,7 +60,9 @@ def assert_imported_resources_match_expected(
     )
 
     response = dioptra_client.entrypoints.get()
-    response_entrypoints = set(ep["name"] for ep in response.json()["data"])
+    response_entrypoints = set(
+        ep["name"] for ep in helpers.convert_response_to_dict(response)["data"]
+    )
     expected_entrypoints = set(ep["name"] for ep in expected["entrypoints"])
     assert (
         response.status_code == HTTPStatus.OK
@@ -67,7 +71,7 @@ def assert_imported_resources_match_expected(
 
 
 def assert_resource_import_fails_due_to_name_clash(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     group_id: int,
     archive_file: DioptraFile,
 ):
@@ -82,7 +86,7 @@ def assert_resource_import_fails_due_to_name_clash(
 
 
 def assert_resource_import_overwrite_works(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     group_id: int,
     archive_file: DioptraFile,
 ):
@@ -100,7 +104,7 @@ def assert_resource_import_overwrite_works(
 
 
 def test_resource_import_from_archive_file(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     resources_tar_file: DioptraFile,
@@ -113,7 +117,7 @@ def test_resource_import_from_archive_file(
 
 
 def test_resource_import_from_files(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     resources_files: list[DioptraFile],
@@ -127,7 +131,7 @@ def test_resource_import_from_files(
 
 @pytest.mark.skipif(shutil.which("git") is None, reason="git was not found.")
 def test_resource_import_from_repo(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     resources_repo: str,
@@ -140,7 +144,7 @@ def test_resource_import_from_repo(
 
 
 def test_resource_import_fails_from_name_clash(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     resources_tar_file: NamedTemporaryFile,
@@ -153,7 +157,7 @@ def test_resource_import_fails_from_name_clash(
 
 
 def test_resource_import_overwrite(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     resources_tar_file: NamedTemporaryFile,

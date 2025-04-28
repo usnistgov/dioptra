@@ -90,7 +90,7 @@ class ExperimentEntrypointsSubCollectionClient(SubCollectionClient[T1, T2]):
         self,
         experiment_id: str | int,
         entrypoint_ids: list[int],
-    ) -> T1:
+    ) -> T2:
         """Adds one or more entrypoints to the experiment.
 
         If an entrypoint id matches an entrypoint that is already attached to the
@@ -106,7 +106,7 @@ class ExperimentEntrypointsSubCollectionClient(SubCollectionClient[T1, T2]):
             The response from the Dioptra API.
         """
         json_ = {"ids": entrypoint_ids}
-        return self._session.post(
+        return self._session.post_list(
             self.build_sub_collection_url(experiment_id), json_=json_
         )
 
@@ -125,7 +125,7 @@ class ExperimentEntrypointsSubCollectionClient(SubCollectionClient[T1, T2]):
         self,
         experiment_id: str | int,
         entrypoint_ids: list[int],
-    ) -> T1:
+    ) -> T2:
         """Replaces the experiment's full list of entrypoints.
 
         If an entrypoint id matches an entrypoint that is already attached to the
@@ -142,7 +142,7 @@ class ExperimentEntrypointsSubCollectionClient(SubCollectionClient[T1, T2]):
             The response from the Dioptra API.
         """
         json_ = {"ids": entrypoint_ids}
-        return self._session.put(
+        return self._session.put_list(
             self.build_sub_collection_url(experiment_id), json_=json_
         )
 

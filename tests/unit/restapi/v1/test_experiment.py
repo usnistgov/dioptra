@@ -111,7 +111,7 @@ def assert_experiment_response_contents_matches_expectations(
 
 
 def assert_retrieving_experiment_by_id_works(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     experiment_id: int,
     expected: dict[str, Any],
 ) -> None:
@@ -127,13 +127,16 @@ def assert_retrieving_experiment_by_id_works(
             does not match the expected response.
     """
     response = dioptra_client.experiments.get_by_id(experiment_id)
-    assert response.status_code == HTTPStatus.OK and response.json() == expected
+    assert (
+        response.status_code == HTTPStatus.OK
+        and helpers.convert_response_to_dict(response) == expected
+    )
 
 
 def assert_experiment_entrypoints_matches_expected_entrypoints(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     experiment_id: int,
-    expected_entrypoints: dict[str, Any],
+    expected_entrypoints: list[int],
 ) -> None:
     """Assert that an experiment's associated entrypoints can be updated for an
     experiment with specified id.
@@ -149,7 +152,8 @@ def assert_experiment_entrypoints_matches_expected_entrypoints(
     """
     response = dioptra_client.experiments.get_by_id(experiment_id)
     response_entrypoints = [
-        entrypoint["id"] for entrypoint in response.json()["entrypoints"]
+        entrypoint["id"]
+        for entrypoint in helpers.convert_response_to_dict(response)["entrypoints"]
     ]
     assert (
         response.status_code == HTTPStatus.OK
@@ -158,7 +162,7 @@ def assert_experiment_entrypoints_matches_expected_entrypoints(
 
 
 def assert_retrieving_all_experiments_works(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     expected: list[dict[str, Any]],
     group_id: int | None = None,
     sort_by: str | None = None,
@@ -191,7 +195,7 @@ def assert_retrieving_all_experiments_works(
 
 
 def assert_experiment_name_matches_expected_name(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     experiment_id: int,
     expected_name: str,
 ) -> None:
@@ -209,12 +213,12 @@ def assert_experiment_name_matches_expected_name(
     response = dioptra_client.experiments.get_by_id(experiment_id)
     assert (
         response.status_code == HTTPStatus.OK
-        and response.json()["name"] == expected_name
+        and helpers.convert_response_to_dict(response)["name"] == expected_name
     )
 
 
 def assert_experiment_is_not_found(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     experiment_id: int,
 ) -> None:
     """Assert that an experiment is not found.
@@ -231,19 +235,23 @@ def assert_experiment_is_not_found(
 
 
 def assert_retrieving_all_entrypoints_for_experiment_works(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     experiment_id: int,
     expected: list[int],
 ) -> None:
     response = dioptra_client.experiments.entrypoints.get(experiment_id)
     assert (
         response.status_code == HTTPStatus.OK
-        and [entrypoint_ref["id"] for entrypoint_ref in response.json()] == expected
+        and [
+            entrypoint_ref["id"]
+            for entrypoint_ref in helpers.convert_response_to_list(response)
+        ]
+        == expected
     )
 
 
 def assert_append_entrypoints_to_experiment_works(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     experiment_id: int,
     entrypoint_ids: list[int],
     expected: list[int],
@@ -254,7 +262,11 @@ def assert_append_entrypoints_to_experiment_works(
     )
     assert (
         response.status_code == HTTPStatus.OK
-        and [entrypoint_ref["id"] for entrypoint_ref in response.json()] == expected
+        and [
+            entrypoint_ref["id"]
+            for entrypoint_ref in helpers.convert_response_to_list(response)
+        ]
+        == expected
     )
 
 
@@ -262,7 +274,7 @@ def assert_append_entrypoints_to_experiment_works(
 
 
 def test_create_experiment(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
 ) -> None:
@@ -286,7 +298,7 @@ def test_create_experiment(
         name=name,
         description=description,
     )
-    experiment1_expected = experiment1_response.json()
+    experiment1_expected = helpers.convert_response_to_dict(experiment1_response)
     assert_experiment_response_contents_matches_expectations(
         response=experiment1_expected,
         expected_contents={
@@ -304,7 +316,7 @@ def test_create_experiment(
 
 
 def test_experiment_get_all(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_experiments: dict[str, Any],
@@ -343,7 +355,7 @@ def test_experiment_get_all(
     ],
 )
 def test_experiment_sort(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_experiments: dict[str, Any],
@@ -371,7 +383,7 @@ def test_experiment_sort(
 
 
 def test_experiment_search_query(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_experiments: dict[str, Any],
@@ -414,7 +426,7 @@ def test_experiment_search_query(
 
 
 def test_experiment_group_query(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_experiments: dict[str, Any],
@@ -446,7 +458,7 @@ def test_experiment_group_query(
 
 
 def test_experiment_get_by_id(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_experiments: dict[str, Any],
@@ -469,7 +481,7 @@ def test_experiment_get_by_id(
 
 
 def test_rename_experiment(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_experiments: dict[str, Any],
@@ -500,7 +512,7 @@ def test_rename_experiment(
 
 
 def test_delete_experiment_by_id(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_experiments: dict[str, Any],
@@ -522,7 +534,7 @@ def test_delete_experiment_by_id(
 
 
 def test_experiment_get_entrypoints(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
@@ -547,7 +559,7 @@ def test_experiment_get_entrypoints(
         description=description,
         entrypoints=entrypoints,
     )
-    experiment_json = registration_response.json()
+    experiment_json = helpers.convert_response_to_dict(registration_response)
     experiment_id = experiment_json["id"]
 
     assert_experiment_response_contents_matches_expectations(
@@ -578,7 +590,7 @@ def test_experiment_get_entrypoints(
 #     ],
 # )
 def test_experiment_add_entrypoints(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     initial_entrypoints: list[int],
@@ -606,7 +618,7 @@ def test_experiment_add_entrypoints(
         description=description,
         entrypoints=initial_entrypoints,
     )
-    experiment1_json = experiment1_response.json()
+    experiment1_json = helpers.convert_response_to_dict(experiment1_response)
     experiment_id = experiment1_json["id"]
     assert_experiment_response_contents_matches_expectations(
         response=experiment1_json,
@@ -642,7 +654,7 @@ def test_experiment_add_entrypoints(
 #     ],
 # )
 def test_experiment_modify_entrypoints(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     initial_entrypoints: list[int],
@@ -670,7 +682,7 @@ def test_experiment_modify_entrypoints(
         description=description,
         entrypoints=initial_entrypoints,
     )
-    experiment1_json = experiment1_response.json()
+    experiment1_json = helpers.convert_response_to_dict(experiment1_response)
     experiment_id = experiment1_json["id"]
     assert_experiment_response_contents_matches_expectations(
         response=experiment1_json,
@@ -706,7 +718,7 @@ def test_experiment_modify_entrypoints(
 #     ]
 # )
 def test_experiment_remove_entrypoints(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     initial_entrypoints: list[int],
@@ -733,7 +745,7 @@ def test_experiment_remove_entrypoints(
         description=description,
         entrypoints=initial_entrypoints,
     )
-    experiment1_json = experiment1_response.json()
+    experiment1_json = helpers.convert_response_to_dict(experiment1_response)
     experiment_id = experiment1_json["id"]
     assert_experiment_response_contents_matches_expectations(
         response=experiment1_json,
@@ -765,7 +777,7 @@ def test_experiment_remove_entrypoints(
 
 
 def test_manage_existing_experiment_draft(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_experiments: dict[str, Any],
@@ -840,7 +852,7 @@ def test_manage_existing_experiment_draft(
 
 
 def test_manage_new_experiment_drafts(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
@@ -908,7 +920,7 @@ def test_manage_new_experiment_drafts(
 
 
 def test_manage_experiment_snapshots(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_experiments: dict[str, Any],
@@ -927,12 +939,14 @@ def test_manage_experiment_snapshots(
       response
     """
     experiment_to_rename = registered_experiments["experiment1"]
-    modified_experiment = dioptra_client.experiments.modify_by_id(
-        experiment_id=experiment_to_rename["id"],
-        name=experiment_to_rename["name"] + "modified",
-        description=experiment_to_rename["description"],
-        entrypoints=[],
-    ).json()
+    modified_experiment = helpers.convert_response_to_dict(
+        dioptra_client.experiments.modify_by_id(
+            experiment_id=experiment_to_rename["id"],
+            name=experiment_to_rename["name"] + "modified",
+            description=experiment_to_rename["description"],
+            entrypoints=[],
+        )
+    )
 
     # Run routine: resource snapshots tests
     routines.run_resource_snapshots_tests(
@@ -944,7 +958,7 @@ def test_manage_experiment_snapshots(
 
 
 def test_tag_experiment(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_experiments: dict[str, Any],
@@ -968,7 +982,7 @@ def test_tag_experiment(
 
 
 def test_get_all_entrypoints_for_experiment(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
@@ -991,7 +1005,7 @@ def test_get_all_entrypoints_for_experiment(
 
 
 def test_append_entrypoints_to_experiment(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
@@ -1019,7 +1033,7 @@ def test_append_entrypoints_to_experiment(
 
 
 def test_modify_entrypoints_for_experiments(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
@@ -1046,7 +1060,7 @@ def test_modify_entrypoints_for_experiments(
 
 
 def test_delete_all_entrypoints_for_experiment(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_experiments: dict[str, Any],
@@ -1065,7 +1079,7 @@ def test_delete_all_entrypoints_for_experiment(
 
 
 def test_delete_entrypoints_by_id_for_experiment(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    dioptra_client: DioptraClient[DioptraResponseProtocol, DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
