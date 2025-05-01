@@ -18,6 +18,7 @@
 
 .. |Api| replace:: :py:class:`flask_restx.Api`
 """
+
 from __future__ import annotations
 
 import http
@@ -287,7 +288,7 @@ class JobInvalidParameterNameError(DioptraError):
 
     def __init__(self):
         super().__init__(
-            "A provided job parameter name does not match any entrypoint " "parameters."
+            "A provided job parameter name does not match any entrypoint parameters."
         )
 
 
@@ -296,8 +297,7 @@ class JobMlflowRunAlreadySetError(DioptraError):
 
     def __init__(self):
         super().__init__(
-            "The requested job already has an mlflow run id set. It may "
-            "not be changed."
+            "The requested job already has an mlflow run id set. It may not be changed."
         )
 
 
