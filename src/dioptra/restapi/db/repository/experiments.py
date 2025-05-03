@@ -21,19 +21,12 @@ The experiments repository: data operations related to experiments
 from collections.abc import Iterable, Sequence
 from typing import Any, Final, overload
 
-import sqlalchemy as sa
-
 import dioptra.restapi.db.repository.utils as utils
 from dioptra.restapi.db.models import (
     EntryPoint,
     Experiment,
     Group,
-    Resource,
     Tag,
-)
-from dioptra.restapi.errors import (
-    EntityExistsError,
-    MismatchedResourceTypeError,
 )
 
 
@@ -75,29 +68,11 @@ class ExperimentRepository:
                 are deleted
             UserNotInGroupError: if the experiment creator is not a member of
                 the group who will own the resource
-            MismatchedResourceTypeError: if the resource type is not
-                "experiment"
+            MismatchedResourceTypeError: if the snapshot or resource's type is
+                not "experiment"
         """
-        utils.assert_can_create_resource(self.session, experiment)
-
-        check_name = self.get_by_name(
-            experiment.name, experiment.resource.owner, utils.DeletionPolicy.ANY
-        )
-        if check_name:
-            raise EntityExistsError(
-                "experiment",
-                check_name.resource_id,
-                name=experiment.name,
-                group_id=experiment.resource.owner.group_id,
-            )
-
-        if experiment.resource.resource_type != "experiment":
-            raise MismatchedResourceTypeError(
-                "experiment", experiment.resource.resource_type
-            )
-
-        if experiment.resource_type != "experiment":
-            raise MismatchedResourceTypeError("experiment", experiment.resource_type)
+        utils.assert_can_create_resource(self.session, experiment, "experiment")
+        utils.assert_resource_name_available(self.session, experiment)
 
         self.session.add(experiment)
 
@@ -119,46 +94,11 @@ class ExperimentRepository:
                 some are deleted
             UserNotInGroupError: if the snapshot creator user is not a member
                 of the group who owns the experiment
-            MismatchedResourceTypeError: if the snapshot's resource's type is
+            MismatchedResourceTypeError: if the snapshot or resource's type is
                 not "experiment"
         """
-        utils.assert_can_create_snapshot(self.session, experiment)
-
-        if experiment.resource.resource_type != "experiment":
-            raise MismatchedResourceTypeError(
-                "experiment", experiment.resource.resource_type
-            )
-
-        if experiment.resource_type != "experiment":
-            raise MismatchedResourceTypeError("experiment", experiment.resource_type)
-
-        # In case the name is changing in this snapshot, ensure uniqueness with
-        # respect to the owning group.  We must allow repeated experiment names
-        # within the same resource (e.g. if the name does not change across
-        # snapshots), so the requirement only applies with respect to other
-        # experiment resources in the same group.  So reusing get_by_name()
-        # would not work here.
-        experiment_id = utils.get_resource_id(experiment)
-        sub_stmt = (
-            sa.select(Experiment.resource_id)
-            .join(Resource)
-            .where(
-                Experiment.name == experiment.name,
-                # Dunno why mypy has trouble with this expression... could
-                # also add a cast, but what to cast it to?
-                Resource.owner == experiment.resource.owner,  # type: ignore
-                Experiment.resource_id != experiment_id,
-            )
-        )
-
-        existing_id = self.session.scalar(sub_stmt)
-        if existing_id:
-            raise EntityExistsError(
-                "experiment",
-                existing_id,
-                name=experiment.name,
-                group_id=experiment.resource.owner.group_id,
-            )
+        utils.assert_can_create_snapshot(self.session, experiment, "experiment")
+        utils.assert_snapshot_name_available(self.session, experiment)
 
         # Assume that the new snapshot's created_on timestamp is later than the
         # current latest timestamp?
@@ -224,25 +164,9 @@ class ExperimentRepository:
             EntityDoesNotExistError: if the given group does not exist
             EntityDeletedError: if the given group is deleted
         """
-        utils.assert_group_exists(self.session, group, utils.DeletionPolicy.NOT_DELETED)
-
-        group_id = utils.get_group_id(group)
-
-        stmt = (
-            sa.select(Experiment)
-            .join(Resource)
-            .where(
-                Experiment.resource_snapshot_id == Resource.latest_snapshot_id,
-                Resource.group_id == group_id,
-                Experiment.name == name,
-            )
+        return utils.get_snapshot_by_name(
+            self.session, Experiment, name, group, deletion_policy
         )
-
-        stmt = utils.apply_resource_deletion_policy(stmt, deletion_policy)
-
-        experiment = self.session.scalar(stmt)
-
-        return experiment
 
     def get_children(
         self,

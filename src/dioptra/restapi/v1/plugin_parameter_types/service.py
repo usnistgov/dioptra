@@ -20,42 +20,22 @@ from typing import Any, Final
 import structlog
 from flask_login import current_user
 from injector import inject
-from sqlalchemy import Integer, func, select
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.db import db, models
-from dioptra.restapi.db.models.constants import resource_lock_types
+import dioptra.restapi.db.repository.utils as repoutils
+from dioptra.restapi.db import models
+from dioptra.restapi.db.unit_of_work import UnitOfWork
 from dioptra.restapi.errors import (
-    BackendDatabaseError,
     EntityDoesNotExistError,
-    EntityExistsError,
     PluginParameterTypeMatchesBuiltinTypeError,
-    ReadOnlyLockError,
-    SortParameterValidationError,
 )
 from dioptra.restapi.v1 import utils
-from dioptra.restapi.v1.groups.service import GroupIdService
-from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
+from dioptra.restapi.v1.shared.search_parser import parse_search_text
 from dioptra.task_engine.type_registry import BUILTIN_TYPES
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 RESOURCE_TYPE: Final[str] = "plugin_task_parameter_type"
-SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
-    "name": lambda x: models.PluginTaskParameterType.name.like(x, escape="/"),
-    "description": lambda x: models.PluginTaskParameterType.description.like(
-        x, escape="/"
-    ),
-    "tag": lambda x: models.PluginTaskParameterType.tags.any(
-        models.Tag.name.like(x, escape="/")
-    ),
-}
-SORTABLE_FIELDS: Final[dict[str, Any]] = {
-    "name": models.PluginTaskParameterType.name,
-    "createdOn": models.PluginTaskParameterType.created_on,
-    "lastModifiedOn": models.Resource.last_modified_on,
-    "description": models.PluginTaskParameterType.description,
-}
 
 
 class PluginParameterTypeService(object):
@@ -63,21 +43,15 @@ class PluginParameterTypeService(object):
     by their unique id."""
 
     @inject
-    def __init__(
-        self,
-        plugin_parameter_type_name_service: "PluginParameterTypeNameService",
-        group_id_service: GroupIdService,
-    ) -> None:
+    def __init__(self, uow: UnitOfWork) -> None:
         """Initialize the plugin parameter type service.
 
         All arguments are provided via dependency injection.
 
         Args:
-            plugin_parameter_type_name_service: A PluginParameterTypeNameService object.
-            group_id_service: A GroupIdService object.
+            uow: A UnitOfWork instance
         """
-        self._plugin_parameter_type_name_service = plugin_parameter_type_name_service
-        self._group_id_service = group_id_service
+        self._uow = uow
 
     def create(
         self,
@@ -119,15 +93,9 @@ class PluginParameterTypeService(object):
             )
             raise PluginParameterTypeMatchesBuiltinTypeError
 
-        duplicate = self._plugin_parameter_type_name_service.get(
-            name, group_id=group_id, log=log
-        )
-        if duplicate is not None:
-            raise EntityExistsError(
-                RESOURCE_TYPE, duplicate.resource_id, name=name, group_id=group_id
-            )
-
-        group = self._group_id_service.get(group_id, error_if_not_found=True)
+        group = self._uow.group_repo.get(group_id, repoutils.DeletionPolicy.NOT_DELETED)
+        if not group:
+            raise EntityDoesNotExistError("group", group_id=group_id)
 
         resource = models.Resource(resource_type=RESOURCE_TYPE, owner=group)
         new_plugin_parameter_type = models.PluginTaskParameterType(
@@ -137,10 +105,15 @@ class PluginParameterTypeService(object):
             resource=resource,
             creator=current_user,
         )
-        db.session.add(new_plugin_parameter_type)
+
+        try:
+            self._uow.type_repo.create(new_plugin_parameter_type)
+        except Exception:
+            self._uow.rollback()
+            raise
 
         if commit:
-            db.session.commit()
+            self._uow.commit()
             log.debug(
                 "Plugin Parameter Type registration successful",
                 plugin_parameter_type_id=new_plugin_parameter_type.resource_id,
@@ -185,94 +158,36 @@ class PluginParameterTypeService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get full list of plugin parameter types")
 
-        filters = list()
+        search_struct = parse_search_text(search_string)
 
-        if group_id is not None:
-            filters.append(models.Resource.group_id == group_id)
-
-        if search_string:
-            filters.append(
-                construct_sql_query_filters(search_string, SEARCHABLE_FIELDS)
-            )
-
-        stmt = (
-            select(func.count(models.PluginTaskParameterType.resource_id))
-            .join(models.Resource)
-            .where(
-                *filters,
-                models.Resource.is_deleted == False,  # noqa: E712
-                models.Resource.latest_snapshot_id
-                == models.PluginTaskParameterType.resource_snapshot_id,
-            )
-        )
-        total_num_plugin_parameter_types = db.session.scalars(stmt).first()
-
-        if total_num_plugin_parameter_types is None:
-            log.error(
-                "The database query returned a None when counting the number of "
-                "groups when it should return a number.",
-                sql=str(stmt),
-            )
-            raise BackendDatabaseError
-
-        if total_num_plugin_parameter_types == 0:
-            return [], total_num_plugin_parameter_types
-
-        plugin_parameter_types_stmt = (
-            select(models.PluginTaskParameterType)
-            .join(models.Resource)
-            .where(
-                *filters,
-                models.Resource.is_deleted == False,  # noqa: E712
-                models.Resource.latest_snapshot_id
-                == models.PluginTaskParameterType.resource_snapshot_id,
-            )
-            .offset(page_index)
-            .limit(page_length)
+        types, total_num_types = self._uow.type_repo.get_by_filters_paged(
+            group_id,
+            search_struct,
+            page_index,
+            page_length,
+            sort_by_string,
+            descending,
+            repoutils.DeletionPolicy.NOT_DELETED,
         )
 
-        if sort_by_string and sort_by_string in SORTABLE_FIELDS:
-            sort_column = SORTABLE_FIELDS[sort_by_string]
-            if descending:
-                sort_column = sort_column.desc()
-            else:
-                sort_column = sort_column.asc()
-            plugin_parameter_types_stmt = plugin_parameter_types_stmt.order_by(
-                sort_column
-            )
-        elif sort_by_string and sort_by_string not in SORTABLE_FIELDS:
-            raise SortParameterValidationError(RESOURCE_TYPE, sort_by_string)
-
-        plugin_parameter_types = list(
-            db.session.scalars(plugin_parameter_types_stmt).all()
-        )
-
-        drafts_stmt = select(
-            models.DraftResource.payload["resource_id"].as_string().cast(Integer)
-        ).where(
-            models.DraftResource.payload["resource_id"]
-            .as_string()
-            .cast(Integer)
-            .in_(
-                tuple(
-                    plugin_parameter_type.resource_id
-                    for plugin_parameter_type in plugin_parameter_types
-                )
-            ),
-            models.DraftResource.user_id == current_user.user_id,
-        )
         plugin_parameter_types_dict: dict[int, utils.PluginParameterTypeDict] = {
             plugin_parameter_type.resource_id: utils.PluginParameterTypeDict(
                 plugin_task_parameter_type=plugin_parameter_type, has_draft=False
             )
-            for plugin_parameter_type in plugin_parameter_types
+            for plugin_parameter_type in types
         }
-        for resource_id in db.session.scalars(drafts_stmt):
+
+        resource_ids_with_drafts = self._uow.drafts_repo.has_draft_modifications(
+            types,
+            current_user,
+        )
+
+        for resource_id in resource_ids_with_drafts:
             plugin_parameter_types_dict[resource_id]["has_draft"] = True
 
         return (
             list(plugin_parameter_types_dict.values()),
-            total_num_plugin_parameter_types,
+            total_num_types,
         )
 
 
@@ -281,18 +196,15 @@ class PluginParameterTypeIdService(object):
     by their unique id."""
 
     @inject
-    def __init__(
-        self,
-        plugin_parameter_type_name_service: "PluginParameterTypeNameService",
-    ) -> None:
+    def __init__(self, uow: UnitOfWork) -> None:
         """Initialize the plugin parameter type service.
 
         All arguments are provided via dependency injection.
 
         Args:
-            plugin_parameter_type_name_service: A PluginParameterTypeNameService object.
+            uow: A UnitOfWork instance
         """
-        self._plugin_parameter_type_name_service = plugin_parameter_type_name_service
+        self._uow = uow
 
     def get(
         self,
@@ -321,17 +233,9 @@ class PluginParameterTypeIdService(object):
             plugin_parameter_type_id=plugin_parameter_type_id,
         )
 
-        stmt = (
-            select(models.PluginTaskParameterType)
-            .join(models.Resource)
-            .where(
-                models.PluginTaskParameterType.resource_id == plugin_parameter_type_id,
-                models.PluginTaskParameterType.resource_snapshot_id
-                == models.Resource.latest_snapshot_id,
-                models.Resource.is_deleted == False,  # noqa: E712
-            )
+        plugin_parameter_type = self._uow.type_repo.get(
+            plugin_parameter_type_id, repoutils.DeletionPolicy.NOT_DELETED
         )
-        plugin_parameter_type = db.session.scalars(stmt).first()
 
         if plugin_parameter_type is None:
             if error_if_not_found:
@@ -341,17 +245,9 @@ class PluginParameterTypeIdService(object):
 
             return None
 
-        drafts_stmt = (
-            select(models.DraftResource.draft_resource_id)
-            .where(
-                models.DraftResource.payload["resource_id"].as_string().cast(Integer)
-                == plugin_parameter_type.resource_id,
-                models.DraftResource.user_id == current_user.user_id,
-            )
-            .exists()
-            .select()
+        has_draft = self._uow.drafts_repo.has_draft_modification(
+            plugin_parameter_type, current_user
         )
-        has_draft = db.session.scalar(drafts_stmt)
 
         return utils.PluginParameterTypeDict(
             plugin_task_parameter_type=plugin_parameter_type, has_draft=has_draft
@@ -399,14 +295,6 @@ class PluginParameterTypeIdService(object):
             return None
 
         plugin_parameter_type = plugin_parameter_type_dict["plugin_task_parameter_type"]
-        group_id = plugin_parameter_type.resource.group_id
-
-        if plugin_parameter_type.resource.is_readonly:
-            raise ReadOnlyLockError(
-                RESOURCE_TYPE,
-                plugin_parameter_type_id=plugin_parameter_type_id,
-                name=plugin_parameter_type.name,
-            )
 
         if name.strip().lower() in BUILTIN_TYPES:
             log.debug(
@@ -416,15 +304,6 @@ class PluginParameterTypeIdService(object):
             )
             raise PluginParameterTypeMatchesBuiltinTypeError
 
-        if name != plugin_parameter_type.name:
-            duplicate = self._plugin_parameter_type_name_service.get(
-                name, group_id=group_id, log=log
-            )
-            if duplicate is not None:
-                raise EntityExistsError(
-                    RESOURCE_TYPE, duplicate.resource_id, name=name, group_id=group_id
-                )
-
         new_plugin_parameter_type = models.PluginTaskParameterType(
             name=name,
             structure=structure,
@@ -432,10 +311,15 @@ class PluginParameterTypeIdService(object):
             resource=plugin_parameter_type.resource,
             creator=current_user,
         )
-        db.session.add(new_plugin_parameter_type)
+
+        try:
+            self._uow.type_repo.create_snapshot(new_plugin_parameter_type)
+        except Exception:
+            self._uow.rollback()
+            raise
 
         if commit:
-            db.session.commit()
+            self._uow.commit()
             log.debug(
                 "Plugin Parameter Type modification successful",
                 plugin_parameter_type_id=plugin_parameter_type_id,
@@ -458,30 +342,9 @@ class PluginParameterTypeIdService(object):
             A dictionary reporting the status of the request.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
+        with self._uow:
+            self._uow.type_repo.delete(plugin_parameter_type_id)
 
-        stmt = select(models.Resource).filter_by(
-            resource_id=plugin_parameter_type_id,
-            resource_type=RESOURCE_TYPE,
-            is_deleted=False,
-        )
-        plugin_parameter_type_resource = db.session.scalars(stmt).first()
-
-        if plugin_parameter_type_resource is None:
-            raise EntityDoesNotExistError(
-                RESOURCE_TYPE, plugin_parameter_type_id=plugin_parameter_type_id
-            )
-
-        if plugin_parameter_type_resource.is_readonly:
-            raise ReadOnlyLockError(
-                RESOURCE_TYPE, plugin_parameter_type_id=plugin_parameter_type_id
-            )
-
-        deleted_resource_lock = models.ResourceLock(
-            resource_lock_type=resource_lock_types.DELETE,
-            resource=plugin_parameter_type_resource,
-        )
-        db.session.add(deleted_resource_lock)
-        db.session.commit()
         log.debug(
             "Plugin Parameter Type deleted",
             plugin_parameter_type_id=plugin_parameter_type_id,
@@ -493,78 +356,19 @@ class PluginParameterTypeIdService(object):
         }
 
 
-class PluginParameterTypeNameService(object):
-    """The service methods for managing plugin parameter types by their name."""
-
-    def get(
-        self,
-        name: str,
-        group_id: int,
-        error_if_not_found: bool = False,
-        **kwargs,
-    ) -> models.PluginTaskParameterType | None:
-        """Fetch a plugin parameter type by its name.
-
-        Args:
-            name: The name of the plugin parameter type.
-            group_id: The the group id of the plugin parameter type.
-            error_if_not_found: If True, raise an error if the plugin parameter
-                type is not found. Defaults to False.
-
-        Returns:
-            The plugin parameter type object if found, otherwise None.
-
-        Raises:
-            EntityDoesNotExistError: If the plugin parameter type
-                is not found and `error_if_not_found` is True.
-        """
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
-        log.debug(
-            "Get plugin parameter type by name",
-            plugin_parameter_type_name=name,
-            group_id=group_id,
-        )
-
-        stmt = (
-            select(models.PluginTaskParameterType)
-            .join(models.Resource)
-            .where(
-                models.PluginTaskParameterType.name == name,
-                models.Resource.group_id == group_id,
-                models.Resource.is_deleted == False,  # noqa: E712
-                models.Resource.latest_snapshot_id
-                == models.PluginTaskParameterType.resource_snapshot_id,
-            )
-        )
-        plugin_parameter_type = db.session.scalars(stmt).first()
-
-        if plugin_parameter_type is None:
-            if error_if_not_found:
-                raise EntityDoesNotExistError(
-                    RESOURCE_TYPE, name=name, group_id=group_id
-                )
-
-            return None
-
-        return plugin_parameter_type
-
-
 class BuiltinPluginParameterTypeService(object):
     """The service methods for registering the built-in plugin parameter types"""
 
     @inject
-    def __init__(
-        self,
-        group_id_service: GroupIdService,
-    ) -> None:
+    def __init__(self, uow: UnitOfWork) -> None:
         """Initialize the builtin plugin parameter type service.
 
         All arguments are provided via dependency injection.
 
         Args:
-            group_id_service: A GroupIdService object.
+            uow: A UnitOfWork instance
         """
-        self._group_id_service = group_id_service
+        self._uow = uow
 
     def get(
         self,
@@ -636,28 +440,17 @@ class BuiltinPluginParameterTypeService(object):
             A list of the newly registered built-in plugin parameter types.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
-        builtin_types = list(BUILTIN_TYPES.keys())
-        new_builtin_parameter_types: list[models.PluginTaskParameterType] = []
-        for builtin_type in builtin_types:
-            resource = models.Resource(resource_type=RESOURCE_TYPE, owner=group)
-            new_plugin_parameter_type = models.PluginTaskParameterType(
-                name=builtin_type,
-                structure=None,
-                description=None,
-                resource=resource,
-                creator=user,
+
+        try:
+            new_builtin_parameter_types = self._uow.type_repo.create_builtins(
+                group, user
             )
-            db.session.add(new_plugin_parameter_type)
-            db.session.add(
-                models.ResourceLock(
-                    resource_lock_type=resource_lock_types.READONLY,
-                    resource=resource,
-                )
-            )
-            new_builtin_parameter_types.append(new_plugin_parameter_type)
+        except Exception:
+            self._uow.rollback()
+            raise
 
         if commit:
-            db.session.commit()
+            self._uow.commit()
             log.debug(
                 "Built-in Plugin Parameter Types registration successful",
                 builtin_parameter_type_ids=[

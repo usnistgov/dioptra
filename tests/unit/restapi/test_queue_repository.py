@@ -20,7 +20,6 @@ import pytest
 
 import dioptra.restapi.db.models as m
 from dioptra.restapi.db.models.constants import resource_lock_types
-from dioptra.restapi.db.repository.utils import DeletionPolicy
 from dioptra.restapi.errors import (
     EntityDeletedError,
     EntityDoesNotExistError,
@@ -28,6 +27,7 @@ from dioptra.restapi.errors import (
     MismatchedResourceTypeError,
     UserNotInGroupError,
 )
+import tests.unit.restapi.lib.helpers as helpers
 
 
 @pytest.fixture
@@ -137,227 +137,6 @@ def test_queue_create_wrong_resource_type(queue_repo, account, db, fake_data):
 
     with pytest.raises(MismatchedResourceTypeError):
         queue_repo.create(queue)
-
-
-def test_queue_get_by_name(queue_repo, account, db, fake_data):
-    queue = fake_data.queue(account.user, account.group)
-    db.session.add(queue)
-    db.session.commit()
-
-    check_queue = queue_repo.get_by_name(queue.name, account.group, DeletionPolicy.ANY)
-    assert check_queue == queue
-
-    check_queue = queue_repo.get_by_name(
-        queue.name, account.group, DeletionPolicy.NOT_DELETED
-    )
-    assert check_queue == queue
-
-    check_queue = queue_repo.get_by_name(
-        queue.name, account.group, DeletionPolicy.DELETED
-    )
-    assert not check_queue
-
-    # Add another queue owned by another group with the same name; ensure
-    # get_by_name() using the same name but different group, yields the other
-    # queue.
-    account2 = fake_data.account()
-    db.session.add(account2.group)
-    db.session.commit()
-
-    queue2 = fake_data.queue(account2.user, account2.group)
-    queue2.name = queue.name
-    db.session.add(queue2)
-    db.session.commit()
-
-    check_queue = queue_repo.get_by_name(
-        queue.name, account2.group, DeletionPolicy.NOT_DELETED
-    )
-    assert check_queue == queue2
-    assert check_queue != queue
-
-
-def test_queue_get_by_name_deleted(queue_repo, account, db, fake_data):
-    queue = fake_data.queue(account.user, account.group)
-    db.session.add(queue)
-    db.session.commit()
-
-    queue_lock = m.ResourceLock(resource_lock_types.DELETE, queue.resource)
-    db.session.add(queue_lock)
-    db.session.commit()
-
-    check_queue = queue_repo.get_by_name(queue.name, account.group, DeletionPolicy.ANY)
-    assert check_queue == queue
-
-    check_queue = queue_repo.get_by_name(
-        queue.name, account.group, DeletionPolicy.NOT_DELETED
-    )
-    assert not check_queue
-
-    check_queue = queue_repo.get_by_name(
-        queue.name, account.group, DeletionPolicy.DELETED
-    )
-    assert check_queue == queue
-
-
-def test_queue_get_by_name_not_exist(queue_repo, account, db, fake_data):
-    check_queue = queue_repo.get_by_name("foo", account.group, DeletionPolicy.ANY)
-    assert not check_queue
-
-    check_queue = queue_repo.get_by_name(
-        "foo", account.group, DeletionPolicy.NOT_DELETED
-    )
-    assert not check_queue
-
-    check_queue = queue_repo.get_by_name("foo", account.group, DeletionPolicy.DELETED)
-    assert not check_queue
-
-    # Try getting an existing queue via the wrong group
-    queue = fake_data.queue(account.user, account.group)
-    queue_repo.create(queue)
-    db.session.commit()
-
-    account2 = fake_data.account()
-    db.session.add(account2.group)
-    db.session.commit()
-
-    check_queue = queue_repo.get_by_name(queue.name, account2.group, DeletionPolicy.ANY)
-    assert not check_queue
-
-    check_queue = queue_repo.get_by_name(
-        queue.name, account2.group, DeletionPolicy.NOT_DELETED
-    )
-    assert not check_queue
-
-    check_queue = queue_repo.get_by_name(
-        queue.name, account2.group, DeletionPolicy.DELETED
-    )
-    assert not check_queue
-
-
-def test_queue_get_by_name_multi_version(queue_repo, account, db, fake_data):
-    queuesnap1 = fake_data.queue(account.user, account.group)
-    # We can't rely on auto-timestamping here; the instances are created too
-    # quickly and can coincidentally get identical timestamps.
-    queuesnap1.created_on = datetime.datetime.fromisoformat(
-        "1992-07-22T12:17:31.410801Z"
-    )
-
-    queuesnap2 = m.Queue(
-        queuesnap1.description, queuesnap1.resource, queuesnap1.creator, queuesnap1.name
-    )
-    queuesnap2.created_on = datetime.datetime.fromisoformat(
-        "1998-10-23T20:39:53.132405Z"
-    )
-
-    db.session.add_all([queuesnap1, queuesnap2])
-    db.session.commit()
-
-    # Should only get the latest version
-    queue = queue_repo.get_by_name(
-        queuesnap1.name, account.group, DeletionPolicy.NOT_DELETED
-    )
-
-    assert queue == queuesnap2
-
-
-def test_queue_get_by_name_old_name(queue_repo, account, db):
-    # Ensure getting a queue by an old name doesn't return an old queue
-    # snapshot.
-    queue_res = m.Resource("queue", account.group)
-    queue = m.Queue("desc", queue_res, account.user, "name1")
-    queue_repo.create(queue)
-    db.session.commit()
-
-    queue_name2 = m.Queue("desc", queue_res, account.user, "name2")
-    queue_repo.create_snapshot(queue_name2)
-    db.session.commit()
-
-    check_queue = queue_repo.get_by_name(
-        "name1", account.group, DeletionPolicy.NOT_DELETED
-    )
-    assert not check_queue
-
-    check_queue = queue_repo.get_by_name(
-        "name2", account.group, DeletionPolicy.NOT_DELETED
-    )
-    assert check_queue == queue_name2
-
-    check_queue = queue_repo.get_by_name("name1", account.group, DeletionPolicy.DELETED)
-    assert not check_queue
-
-    check_queue = queue_repo.get_by_name("name2", account.group, DeletionPolicy.DELETED)
-    assert not check_queue
-
-    check_queue = queue_repo.get_by_name("name1", account.group, DeletionPolicy.ANY)
-    assert not check_queue
-
-    check_queue = queue_repo.get_by_name("name2", account.group, DeletionPolicy.ANY)
-    assert check_queue == queue_name2
-
-
-def test_queue_get_by_name_old_name_deleted(queue_repo, account, db):
-    # Ensure getting a queue by an old name doesn't return an old queue
-    # snapshot (deleted version).
-    queue_res = m.Resource("queue", account.group)
-    queue = m.Queue("desc", queue_res, account.user, "name1")
-    queue_repo.create(queue)
-    db.session.commit()
-
-    queue_name2 = m.Queue("desc", queue_res, account.user, "name2")
-    queue_repo.create_snapshot(queue_name2)
-    db.session.commit()
-
-    queue_repo.delete(queue_name2)
-    db.session.commit()
-
-    check_queue = queue_repo.get_by_name(
-        "name1", account.group, DeletionPolicy.NOT_DELETED
-    )
-    assert not check_queue
-
-    check_queue = queue_repo.get_by_name(
-        "name2", account.group, DeletionPolicy.NOT_DELETED
-    )
-    assert not check_queue
-
-    check_queue = queue_repo.get_by_name("name1", account.group, DeletionPolicy.DELETED)
-    assert not check_queue
-
-    check_queue = queue_repo.get_by_name("name2", account.group, DeletionPolicy.DELETED)
-    assert check_queue == queue_name2
-
-    check_queue = queue_repo.get_by_name("name1", account.group, DeletionPolicy.ANY)
-    assert not check_queue
-
-    check_queue = queue_repo.get_by_name("name2", account.group, DeletionPolicy.ANY)
-    assert check_queue == queue_name2
-
-
-def test_queue_get_by_name_old_name_not_exist(queue_repo, account, db):
-    # Ensure getting a queue by an old name doesn't return an old queue
-    # snapshot (does not exist version).
-
-    check_queue = queue_repo.get_by_name(
-        "name1", account.group, DeletionPolicy.NOT_DELETED
-    )
-    assert not check_queue
-
-    check_queue = queue_repo.get_by_name(
-        "name2", account.group, DeletionPolicy.NOT_DELETED
-    )
-    assert not check_queue
-
-    check_queue = queue_repo.get_by_name("name1", account.group, DeletionPolicy.DELETED)
-    assert not check_queue
-
-    check_queue = queue_repo.get_by_name("name2", account.group, DeletionPolicy.DELETED)
-    assert not check_queue
-
-    check_queue = queue_repo.get_by_name("name1", account.group, DeletionPolicy.ANY)
-    assert not check_queue
-
-    check_queue = queue_repo.get_by_name("name2", account.group, DeletionPolicy.ANY)
-    assert not check_queue
 
 
 def test_queue_create_snapshot(queue_repo, account, db, fake_data):
@@ -497,3 +276,64 @@ def test_queue_delete_not_exist(queue_repo, account, fake_data):
 
     with pytest.raises(EntityDoesNotExistError):
         queue_repo.delete(queue)
+
+
+def test_queue_get_by_name_exists(
+    db, fake_data, account, queue_repo, deletion_policy
+):
+    queue1 = fake_data.queue(account.user, account.group)
+    queue2 = m.Queue(queue1.description, queue1.resource, queue1.creator, queue1.name)
+
+    if queue1.created_on == queue2.created_on:
+        queue2.created_on = queue2.created_on + datetime.timedelta(hours=1)
+
+    db.session.add_all((queue1, queue2))
+    db.session.commit()
+
+    snap = queue_repo.get_by_name(queue1.name, queue1.resource.owner, deletion_policy)
+
+    expected_snaps = helpers.find_expected_snaps_for_deletion_policy(
+        [queue2], deletion_policy
+    )
+    expected_snap = expected_snaps[0] if expected_snaps else None
+
+    assert snap == expected_snap
+
+
+def test_queue_get_by_name_deleted(
+    db, fake_data, account, queue_repo, deletion_policy
+):
+    queue1 = fake_data.queue(account.user, account.group)
+    queue2 = m.Queue(queue1.description, queue1.resource, queue1.creator, queue1.name)
+
+    if queue1.created_on == queue2.created_on:
+        queue2.created_on = queue2.created_on + datetime.timedelta(hours=1)
+
+    lock = m.ResourceLock(resource_lock_types.DELETE, queue1.resource)
+
+    db.session.add_all((queue1, queue2, lock))
+    db.session.commit()
+
+    snap = queue_repo.get_by_name(queue1.name, queue1.resource.owner, deletion_policy)
+
+    expected_snaps = helpers.find_expected_snaps_for_deletion_policy(
+        [queue2], deletion_policy
+    )
+    expected_snap = expected_snaps[0] if expected_snaps else None
+
+    assert snap == expected_snap
+
+
+def test_queue_get_by_name_not_exist(
+    db, fake_data, account, queue_repo, deletion_policy
+):
+    queue1 = fake_data.queue(account.user, account.group)
+
+    snap = queue_repo.get_by_name(queue1.name, queue1.resource.owner, deletion_policy)
+
+    expected_snaps = helpers.find_expected_snaps_for_deletion_policy(
+        [queue1], deletion_policy
+    )
+    expected_snap = expected_snaps[0] if expected_snaps else None
+
+    assert snap == expected_snap

@@ -43,8 +43,9 @@ from dioptra.restapi.db.repository.drafts import DraftsRepository
 from dioptra.restapi.db.repository.experiments import ExperimentRepository
 from dioptra.restapi.db.repository.groups import GroupRepository
 from dioptra.restapi.db.repository.queues import QueueRepository
+from dioptra.restapi.db.repository.types import TypeRepository
 from dioptra.restapi.db.repository.users import UserRepository
-from dioptra.restapi.db.repository.utils import DeletionPolicy
+from dioptra.restapi.db.repository.utils import DeletionPolicy, ExistenceResult
 from dioptra.restapi.db.unit_of_work import UnitOfWork
 from dioptra.restapi.v1.shared.request_scope import request
 
@@ -263,6 +264,19 @@ def deletion_policy(request):
     return request.param
 
 
+@pytest.fixture(
+    params=list(ExistenceResult),
+    ids=[e.name.lower() for e in ExistenceResult]
+)
+def existence_status(request):
+    """
+    A simple parameterized fixture that makes it easy to combine all status
+    values (ExistenceResult's) with other things in a parameterized unit test.
+    This just produces the ExistenceResult enum values.
+    """
+    return request.param
+
+
 @pytest.fixture
 def group_repo(db: SQLAlchemy) -> GroupRepository:
     repo = GroupRepository(db.session)
@@ -294,6 +308,13 @@ def drafts_repo(db: SQLAlchemy) -> DraftsRepository:
 @pytest.fixture
 def experiment_repo(db: SQLAlchemy) -> ExperimentRepository:
     repo = ExperimentRepository(db.session)
+
+    return repo
+
+
+@pytest.fixture
+def type_repo(db: SQLAlchemy) -> TypeRepository:
+    repo = TypeRepository(db.session)
 
     return repo
 
