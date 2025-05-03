@@ -167,11 +167,11 @@ class LockError(DioptraError):
 class ReadOnlyLockError(LockError):
     """The type has a read-only lock and cannot be modified."""
 
-    def __init__(self, type: str, **kwargs: typing.Any):
+    def __init__(self, type: str | None = None, **kwargs: typing.Any):
         super().__init__(
             "".join(
                 [
-                    f"The {type} type",
+                    f"The {type or 'resource'} type",
                     *add_attribute_values(**kwargs),
                     " has a read-only lock and cannot be modified.",
                 ]

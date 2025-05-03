@@ -23,12 +23,16 @@ import pytest
 import dioptra.restapi.db.models as models
 import dioptra.restapi.db.repository.utils as utils
 import tests.unit.restapi.lib.helpers as helpers
-from dioptra.restapi.db.models.constants import resource_lock_types
+from dioptra.restapi.db.models.constants import group_lock_types, resource_lock_types
 from dioptra.restapi.db.repository.queues import QueueRepository
 from dioptra.restapi.errors import (
+    DraftAlreadyExistsError,
+    DraftDoesNotExistError,
     EntityDeletedError,
     EntityDoesNotExistError,
     EntityExistsError,
+    MismatchedResourceTypeError,
+    ReadOnlyLockError,
     SearchParseError,
     SortParameterValidationError,
 )
@@ -43,6 +47,29 @@ _STATUS_COMBOS = list(
 _STATUS_COMBO_IDS = [
     "-".join(status.name.lower() for status in combo) for combo in _STATUS_COMBOS
 ]
+
+
+@pytest.fixture
+def resource_status(existence_status, db, account, fake_data):
+    """
+    This fixture produces a resource according to each ExistenceResult value,
+    e.g. exists, deleted, not-exists.  Each produced value is a
+    (snapshot, status) 2-tuple, giving the resource created and corresponding
+    status value.
+    """
+
+    queue = fake_data.queue(account.user, account.group)
+
+    if existence_status is not utils.ExistenceResult.DOES_NOT_EXIST:
+        db.session.add(queue)
+
+        if existence_status is utils.ExistenceResult.DELETED:
+            lock = models.ResourceLock(resource_lock_types.DELETE, queue.resource)
+            db.session.add(lock)
+
+        db.session.commit()
+
+    return queue, existence_status
 
 
 @pytest.fixture(
@@ -603,135 +630,102 @@ def test_resource_children_exist(db, fake_data, account):
     assert child_status == expected
 
 
-def test_assert_resource_exists(db, fake_data, account):
+def test_resource_modifiable_modifiable(db, fake_data, account):
     queue = fake_data.queue(account.user, account.group)
     db.session.add(queue)
     db.session.commit()
 
-    utils.assert_resource_exists(db.session, queue, utils.DeletionPolicy.NOT_DELETED)
-    utils.assert_resource_exists(db.session, queue, utils.DeletionPolicy.ANY)
+    assert utils.resource_modifiable(db.session, queue.resource)
+    assert utils.resource_modifiable(db.session, queue)
+    assert utils.resource_modifiable(db.session, queue.resource_id)
+    assert utils.resource_modifiable(db.session, 999999)
 
-    with pytest.raises(EntityExistsError):
-        utils.assert_resource_exists(db.session, queue, utils.DeletionPolicy.DELETED)
 
-
-def test_assert_resource_exists_not_exists(db, fake_data, account):
+def test_resource_modifiable_readonly(db, fake_data, account):
     queue = fake_data.queue(account.user, account.group)
+    lock = models.ResourceLock(resource_lock_types.READONLY, queue.resource)
+    db.session.add_all((queue, lock))
+    db.session.commit()
 
+    assert not utils.resource_modifiable(db.session, queue.resource)
+    assert not utils.resource_modifiable(db.session, queue)
+    assert not utils.resource_modifiable(db.session, queue.resource_id)
+
+
+def test_assert_resource_exists(db, resource_status, deletion_policy):
+
+    snap, status = resource_status
+
+    exc = helpers.expected_exception_for_combined_status([status], deletion_policy)
+
+    if exc:
+        with pytest.raises(exc):
+            utils.assert_resource_exists(db.session, snap, deletion_policy)
+
+        # Try with just an ID
+        if snap.resource_id is not None:
+            with pytest.raises(exc):
+                utils.assert_resource_exists(
+                    db.session, snap.resource_id, deletion_policy
+                )
+
+    else:
+        utils.assert_resource_exists(db.session, snap, deletion_policy)
+
+        # Try with just an ID
+        if snap.resource_id is not None:
+            utils.assert_resource_exists(db.session, snap.resource_id, deletion_policy)
+
+
+def test_assert_resource_exists_bad_id(db):
     with pytest.raises(EntityDoesNotExistError):
         utils.assert_resource_exists(
-            db.session, queue, utils.DeletionPolicy.NOT_DELETED
+            db.session, 999999, utils.DeletionPolicy.NOT_DELETED
         )
 
     with pytest.raises(EntityDoesNotExistError):
-        utils.assert_resource_exists(db.session, queue, utils.DeletionPolicy.ANY)
+        utils.assert_resource_exists(db.session, 999999, utils.DeletionPolicy.ANY)
 
     with pytest.raises(EntityDoesNotExistError):
-        utils.assert_resource_exists(db.session, queue, utils.DeletionPolicy.DELETED)
-
-    # Also try with bad ID
-    queue.resource_snapshot_id = 999999
-
-    with pytest.raises(EntityDoesNotExistError):
-        utils.assert_resource_exists(
-            db.session, queue, utils.DeletionPolicy.NOT_DELETED
-        )
-
-    with pytest.raises(EntityDoesNotExistError):
-        utils.assert_resource_exists(db.session, queue, utils.DeletionPolicy.ANY)
-
-    with pytest.raises(EntityDoesNotExistError):
-        utils.assert_resource_exists(db.session, queue, utils.DeletionPolicy.DELETED)
+        utils.assert_resource_exists(db.session, 999999, utils.DeletionPolicy.DELETED)
 
 
-def test_assert_resource_exists_deleted(db, fake_data, account):
-    queue = fake_data.queue(account.user, account.group)
-    db.session.add(queue)
-    db.session.commit()
+def test_assert_resource_does_not_exist(db, resource_status, deletion_policy):
+    snap, status = resource_status
 
-    lock = models.ResourceLock("delete", queue.resource)
-    db.session.add(lock)
-    db.session.commit()
+    exc = helpers.expected_exception_for_not_exists(status, deletion_policy)
 
-    with pytest.raises(EntityDeletedError):
-        utils.assert_resource_exists(
-            db.session, queue, utils.DeletionPolicy.NOT_DELETED
-        )
+    if exc:
+        with pytest.raises(exc):
+            utils.assert_resource_does_not_exist(db.session, snap, deletion_policy)
 
-    utils.assert_resource_exists(db.session, queue, utils.DeletionPolicy.ANY)
+        if snap.resource_id is not None:
+            # Try with just an ID
+            with pytest.raises(exc):
+                utils.assert_resource_does_not_exist(
+                    db.session, snap.resource_id, deletion_policy
+                )
 
-    utils.assert_resource_exists(db.session, queue, utils.DeletionPolicy.DELETED)
+    else:
+        utils.assert_resource_does_not_exist(db.session, snap, deletion_policy)
+
+        if snap.resource_id is not None:
+            # Try with just an ID
+            utils.assert_resource_does_not_exist(
+                db.session, snap.resource_id, deletion_policy
+            )
 
 
-def test_assert_resource_does_not_exist_resource_exists(db, fake_data, account):
-    queue = fake_data.queue(account.user, account.group)
-    db.session.add(queue)
-    db.session.commit()
-
-    with pytest.raises(EntityExistsError):
-        utils.assert_resource_does_not_exist(
-            db.session, queue, utils.DeletionPolicy.NOT_DELETED
-        )
-
-    with pytest.raises(EntityExistsError):
-        utils.assert_resource_does_not_exist(
-            db.session, queue, utils.DeletionPolicy.ANY
-        )
-
+def test_assert_resource_does_not_exist_bad_id(db):
     utils.assert_resource_does_not_exist(
-        db.session, queue, utils.DeletionPolicy.DELETED
+        db.session, 999999, utils.DeletionPolicy.NOT_DELETED
     )
 
-
-def test_assert_resource_does_not_exist_resource_not_exists(db, fake_data, account):
-    queue = fake_data.queue(account.user, account.group)
+    utils.assert_resource_does_not_exist(db.session, 999999, utils.DeletionPolicy.ANY)
 
     utils.assert_resource_does_not_exist(
-        db.session, queue, utils.DeletionPolicy.NOT_DELETED
+        db.session, 999999, utils.DeletionPolicy.DELETED
     )
-
-    utils.assert_resource_does_not_exist(db.session, queue, utils.DeletionPolicy.ANY)
-
-    utils.assert_resource_does_not_exist(
-        db.session, queue, utils.DeletionPolicy.DELETED
-    )
-
-    # Also try with bad ID
-    queue.resource_snapshot_id = 999999
-
-    utils.assert_resource_does_not_exist(
-        db.session, queue, utils.DeletionPolicy.NOT_DELETED
-    )
-
-    utils.assert_resource_does_not_exist(db.session, queue, utils.DeletionPolicy.ANY)
-
-    utils.assert_resource_does_not_exist(
-        db.session, queue, utils.DeletionPolicy.DELETED
-    )
-
-
-def test_assert_resource_does_not_exist_resource_deleted(db, fake_data, account):
-    queue = fake_data.queue(account.user, account.group)
-    db.session.add(queue)
-    db.session.commit()
-
-    lock = models.ResourceLock("delete", queue.resource)
-    db.session.add(lock)
-    db.session.commit()
-
-    utils.assert_resource_does_not_exist(
-        db.session, queue, utils.DeletionPolicy.NOT_DELETED
-    )
-
-    with pytest.raises(EntityDeletedError):
-        utils.assert_resource_does_not_exist(
-            db.session, queue, utils.DeletionPolicy.ANY
-        )
-
-    with pytest.raises(EntityDeletedError):
-        utils.assert_resource_does_not_exist(
-            db.session, queue, utils.DeletionPolicy.DELETED
-        )
 
 
 def test_assert_resources_exist(db, resource_status_combo, deletion_policy):
@@ -751,6 +745,58 @@ def test_assert_resources_exist(db, resource_status_combo, deletion_policy):
         utils.assert_resources_exist(db.session, snaps, deletion_policy)
 
 
+def test_assert_resources_exist_non_sized(db, resource_status_combo, deletion_policy):
+    snaps, statuses = resource_status_combo
+
+    # This is iterable, but not len-able (i.e. not "sized")
+    snaps_nonsized = (snap for snap in snaps)
+
+    # resources_exist() produces no results for these does-not-exist objects
+    # since they have no ID.  And since snaps_nonsized isn't len-able, their
+    # presence can't be inferred that way either.  So they will basically be
+    # ignored.  So we expect exceptions on that basis.
+    statuses_except_not_exists = [
+        s for s in statuses if s is not utils.ExistenceResult.DOES_NOT_EXIST
+    ]
+
+    exc = helpers.expected_exception_for_combined_status(
+        statuses_except_not_exists,
+        deletion_policy,
+    )
+
+    if exc:
+        with pytest.raises(exc):
+            utils.assert_resources_exist(db.session, snaps_nonsized, deletion_policy)
+
+    else:
+        # exc is None, therefore this should not throw
+        utils.assert_resources_exist(db.session, snaps_nonsized, deletion_policy)
+
+
+def test_assert_resources_exist_via_ids(db, resource_status_combo, deletion_policy):
+    snaps, statuses = resource_status_combo
+
+    # Do the check via IDs, and use "999999" as a stand-in for non-existent
+    # resources.
+    snap_ids = [
+        snap.resource_id or 999999
+        for snap in snaps
+    ]
+
+    exc = helpers.expected_exception_for_combined_status(
+        statuses,
+        deletion_policy,
+    )
+
+    if exc:
+        with pytest.raises(exc):
+            utils.assert_resources_exist(db.session, snap_ids, deletion_policy)
+
+    else:
+        # exc is None, therefore this should not throw
+        utils.assert_resources_exist(db.session, snap_ids, deletion_policy)
+
+
 def test_assert_resource_children_exist(db, resource_parent_combo, deletion_policy):
     parent_snap, _, statuses = resource_parent_combo
 
@@ -768,6 +814,121 @@ def test_assert_resource_children_exist(db, resource_parent_combo, deletion_poli
     else:
         # exc is None, therefore this should not throw
         utils.assert_resource_children_exist(db.session, parent_snap, deletion_policy)
+
+
+def test_assert_resource_children_exist_via_parent_id(
+    db, resource_parent_combo, deletion_policy
+):
+    parent_snap, _, statuses = resource_parent_combo
+
+    # When given a parent ID, resource_children_exist() can't consult a
+    # "children" attribute to get the children, it has to query the database.
+    # Obviously, it will not find non-existent children that way.  Therefore,
+    # they will be effectively ignored.  So we expect exceptions on that basis.
+    statuses_except_not_exists = [
+        s for s in statuses if s is not utils.ExistenceResult.DOES_NOT_EXIST
+    ]
+
+    exc = helpers.expected_exception_for_combined_status(
+        statuses_except_not_exists,
+        deletion_policy,
+    )
+
+    if exc:
+        with pytest.raises(exc):
+            utils.assert_resource_children_exist(
+                db.session, parent_snap.resource_id, deletion_policy
+            )
+
+    else:
+        # exc is None, therefore this should not throw
+        utils.assert_resource_children_exist(
+            db.session, parent_snap.resource_id, deletion_policy
+        )
+
+
+def test_assert_resource_modifiable_modifiable(db, fake_data, account):
+    queue = fake_data.queue(account.user, account.group)
+
+    utils.assert_resource_modifiable(db.session, queue)
+    utils.assert_resource_modifiable(db.session, queue.resource)
+    utils.assert_resource_modifiable(db.session, 999999)
+
+    db.session.add(queue)
+    db.session.commit()
+    utils.assert_resource_modifiable(db.session, queue)
+    utils.assert_resource_modifiable(db.session, queue.resource)
+    utils.assert_resource_modifiable(db.session, queue.resource_id)
+
+
+def test_assert_resource_modifiable_readonly(db, fake_data, account):
+    queue = fake_data.queue(account.user, account.group)
+    lock = models.ResourceLock(resource_lock_types.READONLY, queue.resource)
+    db.session.add_all((queue, lock))
+    db.session.commit()
+
+    with pytest.raises(ReadOnlyLockError):
+        utils.assert_resource_modifiable(db.session, queue)
+
+    with pytest.raises(ReadOnlyLockError):
+        utils.assert_resource_modifiable(db.session, queue.resource)
+
+    with pytest.raises(ReadOnlyLockError):
+        utils.assert_resource_modifiable(db.session, queue.resource_id)
+
+
+@pytest.mark.parametrize(
+    "resource_type, should_error",
+    [
+        ("job", True),
+        ("queue", False),
+    ],
+)
+def test_assert_resource_type_resource(db, account, resource_type, should_error):
+    resource = models.Resource(resource_type=resource_type, owner=account.group)
+
+    if should_error:
+        with pytest.raises(MismatchedResourceTypeError):
+            utils.assert_resource_type(db.session, resource, "queue")
+    else:
+        utils.assert_resource_type(db.session, resource, "queue")
+
+
+@pytest.mark.parametrize(
+    "resource_type, snap_type, should_error",
+    [
+        ("queue", "queue", False),
+        ("queue", "job", True),
+        ("job", "queue", True),
+        ("job", "job", True),
+    ],
+)
+def test_assert_resource_type_snapshot(
+    db, account, resource_type, snap_type, should_error
+):
+    resource = models.Resource(resource_type=resource_type, owner=account.group)
+    snap = models.Queue("description", resource, account.user, "queue1")
+    snap.resource_type = snap_type
+
+    if should_error:
+        with pytest.raises(MismatchedResourceTypeError):
+            utils.assert_resource_type(db.session, snap, "queue")
+    else:
+        utils.assert_resource_type(db.session, snap, "queue")
+
+
+def test_assert_resource_type_id(db, fake_data, account):
+    queue = fake_data.queue(account.user, account.group)
+    db.session.add(queue)
+    db.session.commit()
+
+    utils.assert_resource_type(db.session, queue.resource_id, "queue")
+
+    with pytest.raises(MismatchedResourceTypeError):
+        utils.assert_resource_type(db.session, queue.resource_id, "job")
+
+    with pytest.raises(EntityDoesNotExistError):
+        utils.assert_resource_type(db.session, 999999, "queue")
 
 
 def test_snapshot_exists(db, fake_data, account):
@@ -833,6 +994,52 @@ def test_assert_snapshot_does_not_exist_not_exists(db, fake_data, account):
     utils.assert_snapshot_does_not_exist(db.session, 999999)
 
 
+def test_draft_exists(db, account):
+    draft = models.DraftResource("queue", {}, account.group, account.user)
+    db.session.add(draft)
+    db.session.commit()
+
+    assert utils.draft_exists(db.session, draft)
+    assert utils.draft_exists(db.session, draft.draft_resource_id)
+    assert not utils.draft_exists(db.session, 999999)
+
+    draft_not_saved = models.DraftResource("queue", {}, account.group, account.user)
+    assert not utils.draft_exists(db.session, draft_not_saved)
+
+
+def test_assert_draft_exists(db, account):
+    draft = models.DraftResource("queue", {}, account.group, account.user)
+    db.session.add(draft)
+    db.session.commit()
+
+    utils.assert_draft_exists(db.session, draft)
+    utils.assert_draft_exists(db.session, draft.draft_resource_id)
+
+    with pytest.raises(DraftDoesNotExistError):
+        utils.assert_draft_exists(db.session, 999999)
+
+    draft_not_saved = models.DraftResource("queue", {}, account.group, account.user)
+    with pytest.raises(DraftDoesNotExistError):
+        utils.assert_draft_exists(db.session, draft_not_saved)
+
+
+def test_assert_draft_does_not_exist(db, account):
+    draft = models.DraftResource("queue", {}, account.group, account.user)
+    db.session.add(draft)
+    db.session.commit()
+
+    with pytest.raises(DraftAlreadyExistsError):
+        utils.assert_draft_does_not_exist(db.session, draft)
+
+    with pytest.raises(DraftAlreadyExistsError):
+        utils.assert_draft_does_not_exist(db.session, draft.draft_resource_id)
+
+    utils.assert_draft_does_not_exist(db.session, 999999)
+
+    draft_not_saved = models.DraftResource("queue", {}, account.group, account.user)
+    utils.assert_draft_does_not_exist(db.session, draft_not_saved)
+
+
 def test_delete_resource(db, account, fake_data):
     queue = fake_data.queue(account.user, account.group)
     db.session.add(queue)
@@ -854,6 +1061,33 @@ def test_delete_resource_not_exists(db, account, fake_data):
 
     with pytest.raises(EntityDoesNotExistError):
         utils.delete_resource(db.session, queue)
+
+
+def test_assert_resource_name_available(db, account, fake_data, queue_filter_setup):
+    queue = fake_data.queue(account.user, account.group)
+    queue.name = "Elfreda"  # already taken
+
+    with pytest.raises(EntityExistsError):
+        utils.assert_resource_name_available(db.session, queue)
+
+    queue.name = "UnusedName"
+    utils.assert_resource_name_available(db.session, queue)
+
+
+def test_assert_snapshot_name_available(db, queue_filter_setup):
+    elfreda = next(q for q in queue_filter_setup if q.name == "Elfreda")
+
+    # "Zelda" already taken by a different resource
+    elfreda_new = models.Queue("a queue", elfreda.resource, elfreda.creator, "Zelda")
+    with pytest.raises(EntityExistsError):
+        utils.assert_snapshot_name_available(db.session, elfreda_new)
+
+    elfreda_new.name = "UnusedName"
+    utils.assert_snapshot_name_available(db.session, elfreda_new)
+
+    # Also ok to leave the name the same
+    elfreda_new.name = "Elfreda"
+    utils.assert_snapshot_name_available(db.session, elfreda_new)
 
 
 def test_get_latest_snapshots(db, resource_status_combo, deletion_policy):
@@ -941,6 +1175,310 @@ def test_get_latest_child_snapshots_parent_deleted(
             models.Queue,
             exp,
             deletion_policy,
+        )
+
+
+def test_get_snapshot_by_name(account, db, fake_data):
+    queue = fake_data.queue(account.user, account.group)
+    db.session.add(queue)
+    db.session.commit()
+
+    check_queue = utils.get_snapshot_by_name(
+        db.session, models.Queue, queue.name, account.group, utils.DeletionPolicy.ANY
+    )
+    assert check_queue == queue
+
+    check_queue = utils.get_snapshot_by_name(
+        db.session,
+        models.Queue,
+        queue.name,
+        account.group,
+        utils.DeletionPolicy.NOT_DELETED,
+    )
+    assert check_queue == queue
+
+    check_queue = utils.get_snapshot_by_name(
+        db.session,
+        models.Queue,
+        queue.name,
+        account.group,
+        utils.DeletionPolicy.DELETED,
+    )
+    assert not check_queue
+
+    # Add another queue owned by another group with the same name; ensure
+    # get_by_name() using the same name but different group, yields the other
+    # queue.
+    account2 = fake_data.account()
+    db.session.add(account2.group)
+    db.session.commit()
+
+    queue2 = fake_data.queue(account2.user, account2.group)
+    queue2.name = queue.name
+    db.session.add(queue2)
+    db.session.commit()
+
+    check_queue = utils.get_snapshot_by_name(
+        db.session,
+        models.Queue,
+        queue.name,
+        account2.group,
+        utils.DeletionPolicy.NOT_DELETED,
+    )
+    assert check_queue == queue2
+    assert check_queue != queue
+
+
+def test_get_snapshot_by_name_deleted(account, db, fake_data):
+    queue = fake_data.queue(account.user, account.group)
+    db.session.add(queue)
+    db.session.commit()
+
+    queue_lock = models.ResourceLock(resource_lock_types.DELETE, queue.resource)
+    db.session.add(queue_lock)
+    db.session.commit()
+
+    check_queue = utils.get_snapshot_by_name(
+        db.session, models.Queue, queue.name, account.group, utils.DeletionPolicy.ANY
+    )
+    assert check_queue == queue
+
+    check_queue = utils.get_snapshot_by_name(
+        db.session,
+        models.Queue,
+        queue.name,
+        account.group,
+        utils.DeletionPolicy.NOT_DELETED,
+    )
+    assert not check_queue
+
+    check_queue = utils.get_snapshot_by_name(
+        db.session,
+        models.Queue,
+        queue.name,
+        account.group,
+        utils.DeletionPolicy.DELETED,
+    )
+    assert check_queue == queue
+
+
+def test_get_snapshot_by_name_not_exist(account, db, fake_data):
+    check_queue = utils.get_snapshot_by_name(
+        db.session, models.Queue, "foo", account.group, utils.DeletionPolicy.ANY
+    )
+    assert not check_queue
+
+    check_queue = utils.get_snapshot_by_name(
+        db.session, models.Queue, "foo", account.group, utils.DeletionPolicy.NOT_DELETED
+    )
+    assert not check_queue
+
+    check_queue = utils.get_snapshot_by_name(
+        db.session, models.Queue, "foo", account.group, utils.DeletionPolicy.DELETED
+    )
+    assert not check_queue
+
+    # Try getting an existing queue via the wrong group
+    queue = fake_data.queue(account.user, account.group)
+    db.session.add(queue)
+    db.session.commit()
+
+    account2 = fake_data.account()
+    db.session.add(account2.group)
+    db.session.commit()
+
+    check_queue = utils.get_snapshot_by_name(
+        db.session, models.Queue, queue.name, account2.group, utils.DeletionPolicy.ANY
+    )
+    assert not check_queue
+
+    check_queue = utils.get_snapshot_by_name(
+        db.session,
+        models.Queue,
+        queue.name,
+        account2.group,
+        utils.DeletionPolicy.NOT_DELETED,
+    )
+    assert not check_queue
+
+    check_queue = utils.get_snapshot_by_name(
+        db.session,
+        models.Queue,
+        queue.name,
+        account2.group,
+        utils.DeletionPolicy.DELETED,
+    )
+    assert not check_queue
+
+
+def test_get_snapshot_by_name_multi_version(account, db, fake_data):
+    queuesnap1 = fake_data.queue(account.user, account.group)
+    # We can't rely on auto-timestamping here; the instances are created too
+    # quickly and can coincidentally get identical timestamps.
+    queuesnap1.created_on = datetime.datetime.fromisoformat(
+        "1992-07-22T12:17:31.410801Z"
+    )
+
+    queuesnap2 = models.Queue(
+        queuesnap1.description, queuesnap1.resource, queuesnap1.creator, queuesnap1.name
+    )
+    queuesnap2.created_on = datetime.datetime.fromisoformat(
+        "1998-10-23T20:39:53.132405Z"
+    )
+
+    db.session.add_all([queuesnap1, queuesnap2])
+    db.session.commit()
+
+    # Should only get the latest version
+    queue = utils.get_snapshot_by_name(
+        db.session,
+        models.Queue,
+        queuesnap1.name,
+        account.group,
+        utils.DeletionPolicy.NOT_DELETED,
+    )
+
+    assert queue == queuesnap2
+
+
+def test_get_snapshot_by_name_old_name(account, db):
+    # Ensure getting a queue by an old name doesn't return an old queue
+    # snapshot.
+    queue_res = models.Resource("queue", account.group)
+    queue = models.Queue("desc", queue_res, account.user, "name1")
+    db.session.add(queue)
+    db.session.commit()
+
+    queue_name2 = models.Queue("desc", queue_res, account.user, "name2")
+    db.session.add(queue_name2)
+    db.session.commit()
+
+    check_queue = utils.get_snapshot_by_name(
+        db.session,
+        models.Queue,
+        "name1",
+        account.group,
+        utils.DeletionPolicy.NOT_DELETED,
+    )
+    assert not check_queue
+
+    check_queue = utils.get_snapshot_by_name(
+        db.session,
+        models.Queue,
+        "name2",
+        account.group,
+        utils.DeletionPolicy.NOT_DELETED,
+    )
+    assert check_queue == queue_name2
+
+    check_queue = utils.get_snapshot_by_name(
+        db.session, models.Queue, "name1", account.group, utils.DeletionPolicy.DELETED
+    )
+    assert not check_queue
+
+    check_queue = utils.get_snapshot_by_name(
+        db.session, models.Queue, "name2", account.group, utils.DeletionPolicy.DELETED
+    )
+    assert not check_queue
+
+    check_queue = utils.get_snapshot_by_name(
+        db.session, models.Queue, "name1", account.group, utils.DeletionPolicy.ANY
+    )
+    assert not check_queue
+
+    check_queue = utils.get_snapshot_by_name(
+        db.session, models.Queue, "name2", account.group, utils.DeletionPolicy.ANY
+    )
+    assert check_queue == queue_name2
+
+
+def test_get_snapshot_by_name_old_name_deleted(account, db):
+    # Ensure getting a queue by an old name doesn't return an old queue
+    # snapshot (deleted version).
+    queue_res = models.Resource("queue", account.group)
+    queue = models.Queue("desc", queue_res, account.user, "name1")
+    db.session.add(queue)
+    db.session.commit()
+
+    queue_name2 = models.Queue("desc", queue_res, account.user, "name2")
+    db.session.add(queue_name2)
+    db.session.commit()
+
+    lock = models.ResourceLock(resource_lock_types.DELETE, queue_res)
+    db.session.add(lock)
+    db.session.commit()
+
+    check_queue = utils.get_snapshot_by_name(
+        db.session,
+        models.Queue,
+        "name1",
+        account.group,
+        utils.DeletionPolicy.NOT_DELETED,
+    )
+    assert not check_queue
+
+    check_queue = utils.get_snapshot_by_name(
+        db.session,
+        models.Queue,
+        "name2",
+        account.group,
+        utils.DeletionPolicy.NOT_DELETED,
+    )
+    assert not check_queue
+
+    check_queue = utils.get_snapshot_by_name(
+        db.session, models.Queue, "name1", account.group, utils.DeletionPolicy.DELETED
+    )
+    assert not check_queue
+
+    check_queue = utils.get_snapshot_by_name(
+        db.session, models.Queue, "name2", account.group, utils.DeletionPolicy.DELETED
+    )
+    assert check_queue == queue_name2
+
+    check_queue = utils.get_snapshot_by_name(
+        db.session, models.Queue, "name1", account.group, utils.DeletionPolicy.ANY
+    )
+    assert not check_queue
+
+    check_queue = utils.get_snapshot_by_name(
+        db.session, models.Queue, "name2", account.group, utils.DeletionPolicy.ANY
+    )
+    assert check_queue == queue_name2
+
+
+def test_get_snapshot_by_name_group_not_exists(db, fake_data, account):
+
+    queue = fake_data.queue(account.user, account.group)
+    db.session.add(queue)
+    db.session.commit()
+
+    group2 = models.Group("group2", account.user)
+
+    with pytest.raises(EntityDoesNotExistError):
+        utils.get_snapshot_by_name(
+            db.session, models.Queue, queue.name, group2, utils.DeletionPolicy.ANY
+        )
+
+    with pytest.raises(EntityDoesNotExistError):
+        utils.get_snapshot_by_name(
+            db.session, models.Queue, queue.name, 999999, utils.DeletionPolicy.ANY
+        )
+
+
+def test_get_snapshot_by_name_group_deleted(db, fake_data, account):
+    queue = fake_data.queue(account.user, account.group)
+    lock = models.GroupLock(group_lock_types.DELETE, account.group)
+    db.session.add_all((queue, lock))
+    db.session.commit()
+
+    with pytest.raises(EntityDeletedError):
+        utils.get_snapshot_by_name(
+            db.session,
+            models.Queue,
+            queue.name,
+            account.group,
+            utils.DeletionPolicy.ANY,
         )
 
 

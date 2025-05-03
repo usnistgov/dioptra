@@ -156,6 +156,42 @@ def expected_exception_for_combined_status(
     return exc
 
 
+def expected_exception_for_not_exists(
+    status: utils.ExistenceResult, policy: utils.DeletionPolicy,
+) -> Type[errors.DioptraError] | None:
+    """
+    Compute what the expected exception would be for a non-existence check,
+    given a status (ExistenceResult enum value) and a DeletionPolicy
+    value.  This needs to be kept sync'd with the utils code which actually
+    raises the exceptions.  If no exception would be thrown, None is returned.
+
+    Args:
+        status: An ExistenceResult enum value
+        policy: A DeletionPolicy enum value
+
+    Returns:
+        None or one of the exception classes EntityDoesNotExistError,
+        EntityDeletedError, EntityExistsError.
+    """
+
+    exc = None
+    if policy is utils.DeletionPolicy.NOT_DELETED:
+        if status is utils.ExistenceResult.EXISTS:
+            exc = errors.EntityExistsError
+
+    elif policy is utils.DeletionPolicy.DELETED:
+        if status is utils.ExistenceResult.DELETED:
+            exc = errors.EntityDeletedError
+
+    else:  # policy is DeletionPolicy.ANY
+        if status is utils.ExistenceResult.EXISTS:
+            exc = errors.EntityExistsError
+        elif status is utils.ExistenceResult.DELETED:
+            exc = errors.EntityDeletedError
+
+    return exc
+
+
 def find_expected_snaps_for_deletion_policy(
     snaps: Iterable[ResourceSnapshot],
     deletion_policy: utils.DeletionPolicy

@@ -46,6 +46,8 @@ from dioptra.restapi.errors import (
     EntityDeletedError,
     EntityDoesNotExistError,
     EntityExistsError,
+    MismatchedResourceTypeError,
+    ReadOnlyLockError,
     SearchParseError,
     SortParameterValidationError,
     UserNotInGroupError,
@@ -440,6 +442,41 @@ def resource_children_exist(
     return child_status
 
 
+def resource_modifiable(
+    session: CompatibleSession[S], resource: Resource | ResourceSnapshot | int
+) -> bool:
+    """
+    Check for a read-only lock on the given resource.  If there is no lock,
+    the resource is modifiable.  If the resource does not exist, then there
+    will be no lock, and this function will return True.
+
+    Args:
+        session: An SQLAlchemy session
+        resource: A resource, snapshot (something with a .resource_id
+            attribute we can use to identify a resource), or resource_id
+            integer primary key value
+
+    Returns:
+        True if the resource is modifiable or doesn't exist; False if the
+        resource exists and has a read-only lock.
+    """
+
+    resource_id = get_resource_id(resource)
+
+    if resource_id is None:
+        modifiable = True
+    else:
+        stmt: sa.Select = sa.select(sa.literal_column("1")).where(
+            ResourceLock.resource_id == resource_id,
+            ResourceLock.resource_lock_type == resource_lock_types.READONLY,
+        )
+        exists_stmt = sa.select(stmt.exists())
+
+        modifiable = not session.scalar(exists_stmt)
+
+    return modifiable
+
+
 def snapshot_exists(
     session: CompatibleSession[S], snapshot: ResourceSnapshot | int
 ) -> bool:
@@ -490,7 +527,7 @@ def draft_exists(session: CompatibleSession[S], draft: DraftResource | int) -> b
             value
 
     Returns:
-        True if the snapshot exists; False if not
+        True if the draft exists; False if not
     """
     draft_id = get_draft_id(draft)
 
@@ -704,6 +741,78 @@ def assert_resource_children_exist(
         num_children = None
 
     _assert_exists_multi(deletion_policy, child_status, num_children)
+
+
+def assert_resource_modifiable(
+    session: CompatibleSession[S],
+    resource: Resource | ResourceSnapshot | int,
+) -> None:
+    """
+    Check for a read-only lock on the given resource.  If there is no lock,
+    the resource is modifiable.  If the resource does not exist, then there
+    will be no lock, and this function will treat it as modifiable and not
+    throw.
+
+    Args:
+        session: An SQLAlchemy session
+        resource: A resource, snapshot (something with a .resource_id
+            attribute we can use to identify a resource), or resource_id
+            integer primary key value
+
+    Raises:
+        ReadOnlyLockError: if the resource exists and has a read-only lock
+    """
+
+    modifiable = resource_modifiable(session, resource)
+
+    if isinstance(resource, (Resource, ResourceSnapshot)):
+        resource_type = resource.resource_type
+    else:
+        resource_type = None
+
+    if not modifiable:
+        raise ReadOnlyLockError(resource_type, resource_id=get_resource_id(resource))
+
+
+def assert_resource_type(
+    session: CompatibleSession[S],
+    resource: Resource | ResourceSnapshot | int,
+    resource_type: str,
+) -> None:
+    """
+    Check the resource type of the given resource or snapshot.  If a snapshot
+    is given, the resource type is checked on both the snapshot and its
+    resource, separately.
+
+    Args:
+        session: An SQLAlchemy session
+        resource: A resource, snapshot (something with a .resource_id
+            attribute we can use to identify a resource), or resource_id
+            integer primary key value
+        resource_type: A resource type
+
+    Raises:
+        EntityDoesNotExistError: if a resource_id is given which doesn't
+            resolve to a resource
+        MismatchedResourceTypeError: if the resource and/or snapshot has the
+            wrong resource_type
+    """
+
+    if isinstance(resource, int):
+        resource_obj = session.get(Resource, resource)
+        if not resource_obj:
+            raise EntityDoesNotExistError(None, resource_id=resource)
+        resource = resource_obj
+
+    if isinstance(resource, (Resource, ResourceSnapshot)):
+        if resource.resource_type != resource_type:
+            raise MismatchedResourceTypeError(resource_type, resource.resource_type)
+
+    if isinstance(resource, ResourceSnapshot):
+        if resource.resource.resource_type != resource_type:
+            raise MismatchedResourceTypeError(
+                resource_type, resource.resource.resource_type
+            )
 
 
 def assert_snapshot_exists(
@@ -940,7 +1049,9 @@ def assert_draft_does_not_exist(
         raise DraftAlreadyExistsError(resource_type, draft_id)
 
 
-def assert_can_create_resource(session: CompatibleSession[S], snap: ResourceSnapshot):
+def assert_can_create_resource(
+    session: CompatibleSession[S], snap: ResourceSnapshot, resource_type: str
+):
     """
     Check whether the given snapshot+resource may be created.  There may also
     be other resource-type-specific criteria; this function tests general
@@ -949,6 +1060,9 @@ def assert_can_create_resource(session: CompatibleSession[S], snap: ResourceSnap
     Args:
         session: An SQLAlchemy session
         snap: The snapshot+resource to create
+        resource_type: the resource_type value for the type of resource being
+            created.  Used to verify type settings on the snapshot and resource
+            objects.
 
     Raises:
         EntityExistsError: if the resource or snapshot already exists
@@ -958,6 +1072,8 @@ def assert_can_create_resource(session: CompatibleSession[S], snap: ResourceSnap
             is deleted, or if all child resources exist but some are deleted
         UserNotInGroupError: if the snapshot creator is not a member of the
             group who will own the resource
+        MismatchedResourceTypeError: if the snapshot or resource's type doesn't
+            match resource_type
     """
     assert_resource_does_not_exist(session, snap, DeletionPolicy.ANY)
     assert_snapshot_does_not_exist(session, snap)
@@ -965,13 +1081,16 @@ def assert_can_create_resource(session: CompatibleSession[S], snap: ResourceSnap
     assert_group_exists(session, snap.resource.owner, DeletionPolicy.NOT_DELETED)
     assert_user_in_group(session, snap.creator, snap.resource.owner)
     assert_resource_children_exist(session, snap, DeletionPolicy.NOT_DELETED)
+    assert_resource_type(session, snap, resource_type)
 
     # TODO: should check if the children are already parented to a different
     # different resource?  What's the cardinality of parent/child
     # relationships?
 
 
-def assert_can_create_snapshot(session: CompatibleSession[S], snap: ResourceSnapshot):
+def assert_can_create_snapshot(
+    session: CompatibleSession[S], snap: ResourceSnapshot, resource_type: str
+):
     """
     Check whether the given snapshot may be created, of an existing resource.
     There may also be other resource-type-specific criteria; this function
@@ -980,6 +1099,9 @@ def assert_can_create_snapshot(session: CompatibleSession[S], snap: ResourceSnap
     Args:
         session: An SQLAlchemy session
         snap: A ResourceSnapshot object with the desired snapshot settings
+        resource_type: the resource_type value for the type of resource being
+            created.  Used to verify type settings on the snapshot and resource
+            objects.
 
     Raises:
         EntityExistsError: if the snapshot already exists
@@ -987,14 +1109,19 @@ def assert_can_create_snapshot(session: CompatibleSession[S], snap: ResourceSnap
             user does not exist, or if any child resource does not exist
         EntityDeletedError: if the resource is deleted, snapshot creator user
             is deleted, or if all child resources exist but some are deleted
+        ReadOnlyLockError: if the resource exists and has a read-only lock
         UserNotInGroupError: if the snapshot creator user is not a member
             of the group who owns the resource
+        MismatchedResourceTypeError: if the snapshot or resource's type doesn't
+            match resource_type
     """
     assert_resource_exists(session, snap, DeletionPolicy.NOT_DELETED)
     assert_snapshot_does_not_exist(session, snap)
+    assert_resource_modifiable(session, snap)
     assert_user_exists(session, snap.creator, DeletionPolicy.NOT_DELETED)
     assert_user_in_group(session, snap.creator, snap.resource.owner)
     assert_resource_children_exist(session, snap, DeletionPolicy.NOT_DELETED)
+    assert_resource_type(session, snap, resource_type)
 
     # TODO: should check if the children are already parented to a different
     # different resource?  What's the cardinality of parent/child
@@ -1237,6 +1364,102 @@ def check_user_collision(session: CompatibleSession[S], user: User) -> None:
         raise EntityExistsError("User", user_id, email_address=user.email_address)
 
 
+def assert_resource_name_available(
+    session: CompatibleSession[S],
+    snap: ResourceSnapshot,
+) -> None:
+    """
+    Check for a name collision when creating a new resource.
+
+    Many resource types have names, and a common requirement is that when a
+    resource is being created, its name is not the same as that of another
+    resource in the same group.  This function factors out that common check.
+
+    Snap must have an attribute named "name" which contains its name, and its
+    type must have a class attribute named "name" which represents the name
+    column of its table.
+
+    Args:
+        session: An SQLAlchemy session
+        snap: A new snapshot of a new resource, with a name
+
+    Raises:
+        EntityExistsError: if the given snap's name is the same as another
+            snapshot in the same group
+    """
+    resource_type_class = type(snap)
+
+    stmt = (
+        sa.select(resource_type_class.resource_id)
+        .join(Resource)
+        .where(
+            resource_type_class.name == snap.name,
+            resource_type_class.resource_snapshot_id == Resource.latest_snapshot_id,
+            # Dunno why mypy has trouble with this expression...
+            Resource.owner == snap.resource.owner,  # type: ignore
+        )
+    )
+
+    existing_id = session.scalar(stmt)
+    if existing_id:
+        raise EntityExistsError(
+            None,
+            existing_id,
+            name=snap.name,
+            group_id=snap.resource.owner.group_id,
+        )
+
+
+def assert_snapshot_name_available(
+    session: CompatibleSession[S],
+    snap: ResourceSnapshot,
+) -> None:
+    """
+    Check for a name collision when creating a new snapshot.
+
+    Many resource types have names, and a common requirement is that when a
+    name is being changed, the new name is not the same as that of a
+    different resource in the same group.  This function factors out that
+    common check.
+
+    Snap must have an attribute named "name" which contains its name, and its
+    type must have a class attribute named "name" which represents the name
+    column of its table.
+
+    Args:
+        session: An SQLAlchemy session
+        snap: A new snapshot of an existing resource, with a name
+
+    Raises:
+        EntityExistsError: if the given snap's name is the same as another
+            snapshot in the same group
+
+    """
+
+    resource_type_class = type(snap)
+
+    stmt = (
+        sa.select(resource_type_class.resource_id)
+        .join(Resource)
+        .where(
+            resource_type_class.name == snap.name,
+            resource_type_class.resource_snapshot_id == Resource.latest_snapshot_id,
+            # Dunno why mypy has trouble with this expression...
+            Resource.owner == snap.resource.owner,  # type: ignore
+            resource_type_class.resource_id != snap.resource_id,
+        )
+    )
+
+    existing_id = session.scalar(stmt)
+    if existing_id:
+        raise EntityExistsError(
+            None,
+            existing_id,
+            name=snap.name,
+            group_id=snap.resource.group_id,
+        )
+
+
 def apply_resource_deletion_policy(
     stmt: sa.Select, deletion_policy: DeletionPolicy
 ) -> sa.Select:
@@ -1394,6 +1617,55 @@ def get_latest_child_snapshots(
     )
 
     return child_snaps
+
+
+def get_snapshot_by_name(
+    session: CompatibleSession[S],
+    snap_class: typing.Type[ResourceT],
+    name: str,
+    group: Group | int,
+    deletion_policy: DeletionPolicy,
+) -> ResourceT | None:
+    """
+    Get the latest snapshot of a resource, by name.
+
+    snap_class must have an attribute named "name" which maps to the name
+    column of its table.
+
+    Args:
+        session: An SQLAlchemy session
+        snap_class: A ResourceSnapshot subclass, which represents which type
+            of resource to get, with a "name" attribute
+        name: The name to search for
+        group: A group/group ID, to disambiguate same-named resources across
+            groups
+        deletion_policy: Whether to look at deleted resources, non-deleted
+            resources, or all resources
+
+    Returns:
+        A resource snapshot, or None if one was not found with the given name
+
+    Raises:
+        EntityDoesNotExistError: if the given group does not exist
+        EntityDeletedError: if the given group is deleted
+    """
+    assert_group_exists(session, group, DeletionPolicy.NOT_DELETED)
+    group_id = get_group_id(group)
+
+    stmt = (
+        sa.select(snap_class)
+        .join(Resource)
+        .where(
+            snap_class.resource_snapshot_id == Resource.latest_snapshot_id,
+            Resource.group_id == group_id,
+            snap_class.name == name,
+        )
+    )
+
+    stmt = apply_resource_deletion_policy(stmt, deletion_policy)
+    resource = session.scalar(stmt)
+
+    return resource
 
 
 def set_resource_children(
@@ -1572,6 +1844,8 @@ def delete_resource(
 
     Raises:
         EntityDoesNotExistError: if the resource does not exist
+        ReadOnlyLockError: if the resource exists, is not deleted, and has a
+            read-only lock
     """
 
     exists_result = resource_exists(session, resource)
@@ -1582,6 +1856,8 @@ def delete_resource(
         raise EntityDoesNotExistError(resource_type, resource_id=resource_id)
 
     elif exists_result is ExistenceResult.EXISTS:
+
+        assert_resource_modifiable(session, resource)
 
         # here, we really need the Resource object; ResourceLock's constructor
         # is just designed that way.

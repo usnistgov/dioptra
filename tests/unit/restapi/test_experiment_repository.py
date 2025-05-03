@@ -442,15 +442,6 @@ def test_experiment_create_snapshot_name_collision(
         experiment_repo.create_snapshot(exp2_snap2)
 
 
-# def test_experiment_create_snapshot_wrong_resource_type(...):
-#
-#     Couldn't make this work: changed resource_type on a snapshot gets
-#     mysteriously reverted back to the correct value by SQLAlchemy, preventing
-#     the test from failing like it's supposed to.  Changed resource_type on a
-#     resource gets autoflushed, causing a DB integrity violation and an
-#     exception before the normal resource_type check can be done.
-
-
 def test_experiment_get_by_name_exists(
     db, fake_data, account, experiment_repo, deletion_policy
 ):

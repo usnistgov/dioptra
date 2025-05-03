@@ -21,14 +21,8 @@ The queue repository: data operations related to queues
 from collections.abc import Iterable, Sequence
 from typing import Any, Final, overload
 
-import sqlalchemy as sa
-
 import dioptra.restapi.db.repository.utils as utils
-from dioptra.restapi.db.models import Group, Queue, Resource, Tag
-from dioptra.restapi.errors import (
-    EntityExistsError,
-    MismatchedResourceTypeError,
-)
+from dioptra.restapi.db.models import Group, Queue, Tag
 
 
 class QueueRepository:
@@ -68,7 +62,8 @@ class QueueRepository:
                 is deleted
             UserNotInGroupError: if the user creator is not a member of the
                 group who will own the resource
-            MismatchedResourceTypeError: if the resource type is not "queue"
+            MismatchedResourceTypeError: if the snapshot or resource's type is
+                not "queue"
         """
 
         # Consistency rules:
@@ -78,24 +73,8 @@ class QueueRepository:
         #   owns the resource.  I think this will become more complicated when
         #   we implement shares and permissions.
 
-        utils.assert_can_create_resource(self.session, queue)
-
-        check_name = self.get_by_name(
-            queue.name, queue.resource.owner, utils.DeletionPolicy.ANY
-        )
-        if check_name:
-            raise EntityExistsError(
-                "queue",
-                check_name.resource_id,
-                name=queue.name,
-                group_id=queue.resource.owner.group_id,
-            )
-
-        if queue.resource.resource_type != "queue":
-            raise MismatchedResourceTypeError("queue", queue.resource.resource_type)
-
-        if queue.resource_type != "queue":
-            raise MismatchedResourceTypeError("queue", queue.resource_type)
+        utils.assert_can_create_resource(self.session, queue, "queue")
+        utils.assert_resource_name_available(self.session, queue)
 
         self.session.add(queue)
 
@@ -116,7 +95,7 @@ class QueueRepository:
                 deleted
             UserNotInGroupError: if the snapshot creator user is not a member
                 of the group who owns the queue
-            MismatchedResourceTypeError: if the snapshot's resource's type is
+            MismatchedResourceTypeError: if the snapshot or resource's type is
                 not "queue"
         """
         # Consistency rules:
@@ -127,41 +106,8 @@ class QueueRepository:
         #   owns the resource.  I think this will become more complicated when
         #   we implement shares and permissions.
 
-        utils.assert_can_create_snapshot(self.session, queue)
-
-        if queue.resource.resource_type != "queue":
-            raise MismatchedResourceTypeError("queue", queue.resource.resource_type)
-
-        if queue.resource_type != "queue":
-            raise MismatchedResourceTypeError("queue", queue.resource_type)
-
-        # In case the name is changing in this snapshot, ensure uniqueness with
-        # respect to the owning group.  We must allow repeated queue names
-        # within the same resource (e.g. if the name does not change across
-        # snapshots), so the requirement only applies with respect to other
-        # queue resources in the same group.  So reusing get_by_name() would
-        # not work here.
-        queue_id = utils.get_resource_id(queue)
-        sub_stmt = (
-            sa.select(Queue.resource_id)
-            .join(Resource)
-            .where(
-                Queue.name == queue.name,
-                # Dunno why mypy has trouble with this expression... could
-                # also add a cast, but what to cast it to?
-                Resource.owner == queue.resource.owner,  # type: ignore
-                Queue.resource_id != queue_id,
-            )
-        )
-
-        existing_id = self.session.scalar(sub_stmt)
-        if existing_id:
-            raise EntityExistsError(
-                "queue",
-                existing_id,
-                name=queue.name,
-                group_id=queue.resource.owner.group_id,
-            )
+        utils.assert_can_create_snapshot(self.session, queue, "queue")
+        utils.assert_snapshot_name_available(self.session, queue)
 
         # Assume that the new snapshot's created_on timestamp is later than the
         # current latest timestamp?
@@ -217,28 +163,6 @@ class QueueRepository:
             self.session, Queue, resource_ids, deletion_policy
         )
 
-    def get_snapshot(
-        self,
-        snapshot_id: int,
-        deletion_policy: utils.DeletionPolicy = utils.DeletionPolicy.NOT_DELETED,
-    ) -> Queue | None:
-        """
-        Get a given queue snapshot.
-
-        Args:
-            snapshot_id: The ID of a queue snapshot
-            deletion_policy: Whether to look at deleted queues, non-deleted
-                queues, or all queues
-
-        Returns:
-            A Queue object, or None if one was not found with the given ID
-        """
-        stmt = sa.select(Queue).where(Queue.resource_snapshot_id == snapshot_id)
-        stmt = utils.apply_resource_deletion_policy(stmt, deletion_policy)
-
-        queue = self.session.scalar(stmt)
-        return queue
-
     def get_by_name(
         self,
         name: str,
@@ -263,26 +187,9 @@ class QueueRepository:
             EntityDoesNotExistError: if the given group does not exist
             EntityDeletedError: if the given group is deleted
         """
-
-        utils.assert_group_exists(self.session, group, utils.DeletionPolicy.NOT_DELETED)
-
-        group_id = utils.get_group_id(group)
-
-        stmt = (
-            sa.select(Queue)
-            .join(Resource)
-            .where(
-                Queue.resource_snapshot_id == Resource.latest_snapshot_id,
-                Resource.group_id == group_id,
-                Queue.name == name,
-            )
+        return utils.get_snapshot_by_name(
+            self.session, Queue, name, group, deletion_policy
         )
-
-        stmt = utils.apply_resource_deletion_policy(stmt, deletion_policy)
-
-        queue = self.session.scalar(stmt)
-
-        return queue
 
     def get_by_filters_paged(
         self,
