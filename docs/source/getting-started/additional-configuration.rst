@@ -22,18 +22,12 @@ Additional Configuration
 
 .. include:: /_glossary_note.rst
 
-In order to begin using Dioptra, a few additional setup steps are required - mainly creating user accounts and creating a queue. Optionally, it is also possible to import resources into a deployment to get started with pre-built examples.
+In order to begin using Dioptra, a few additional setup steps are required - mainly creating a user account and creating a queue. Optionally, it is also possible to import resources into a deployment to get started with pre-built examples.
 
 Register Accounts
 _________________
 
-Dioptra is designed to be run in a multi-user environment, therefore accounts are needed even when running locally. First, retrieve the credentials to create the Dioptra worker account so that the worker containers can access the REST API and run jobs. In the Dioptra deployment folder, there is an `.env` file, that is often hidden. Inside, find the two variables: `DIOPTRA_WORKER_USERNAME` and `DIOPTRA_WORKER_PASSWORD`. Open a web browser to `http://localhost/register`. Enter the values into the form to create a Dioptra worker account. Add an email address.
-
-.. image:: /images/frontend-guide/register-worker.png
-   :width: 400
-   :alt: Register Dioptra worker
-
-After creating the dioptra-worker user, click "Signup" and register a separate user account. Then, log in to that second user account.
+Dioptra is designed to be run in a multi-user environment, therefore accounts are needed even when running locally. The Dioptra worker account is created automatically during the deployment process using the `.env` file credentials located in the Dioptra deployment folder. To create a user account, first open a web browser to `http://localhost/register`. Enter the desired credentials and click "Register". Then, log in to that user account.
 
 .. image:: /images/frontend-guide/register-user.png
    :width: 400
