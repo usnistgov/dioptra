@@ -45,6 +45,7 @@ INIT_PYTORCHCPU_SSL_SERVICE="pytorchcpu-ssl"
 INIT_RESTAPI_SERVICE="restapi"
 INIT_RESTAPI_SSL_SERVICE="restapi-ssl"
 INIT_TFCPU_SSL_SERVICE="tfcpu-ssl"
+INIT_WORKER_ACCOUNT_SERVICE="init-dioptra-worker"
 
 DEFAULT_ARG_BRANCH="main"
 DEFAULT_ARG_ENABLE_NGINX_SSL="off"
@@ -374,6 +375,22 @@ start_minio_service() {
 }
 
 ###########################################################################################
+# Starts the restapi service as a background process
+#
+# Globals:
+#   DOCKER_COMPOSE_INIT_YML
+#   INIT_RESTAPI_SERVICE
+# Arguments:
+#   None
+# Returns:
+#   None
+###########################################################################################
+
+start_restapi_service() {
+  docker_compose -f "${DOCKER_COMPOSE_INIT_YML}" up -d "${INIT_RESTAPI_SERVICE}"
+}
+
+###########################################################################################
 # Enable/disable SSL for the Postgres database
 #
 # Globals:
@@ -449,6 +466,7 @@ init_scripts() {
     "/scripts-src/init-frontend.sh"
     "/scripts-src/init-minio.sh"
     "/scripts-src/init-named-volumes.m4"
+    "/scripts-src/init-worker-account.sh"
     "/scripts-src/manage-postgres-ssl.m4"
     "/scripts-src/set-permissions.m4"
   )
@@ -558,6 +576,32 @@ init_minio() {
 }
 
 ###########################################################################################
+# Register the Dioptra worker user account
+#
+# Globals:
+#   DOCKER_COMPOSE_INIT_YML
+#   INIT_RESTAPI_SERVICE
+#   INIT_WORKER_ACCOUNT_SERVICE
+# Arguments:
+#   None
+# Returns:
+#   None
+###########################################################################################
+
+init_worker_account() {
+  local args=(
+    "/scripts/init-worker-account.sh"
+  )
+
+  wait_for_services "${INIT_RESTAPI_SERVICE}:5000"
+
+  docker_compose -f "${DOCKER_COMPOSE_INIT_YML}" run \
+    --rm \
+    "${INIT_WORKER_ACCOUNT_SERVICE}" \
+    "${args[@]}"
+}
+
+###########################################################################################
 # Wrapper for the generate_docker_templates.py and generate_password_templates.py utility
 # scripts
 #
@@ -621,6 +665,8 @@ main() {
   init_frontend
   start_db_service
   manage_postgres_ssl
+  start_restapi_service
+  init_worker_account
   stop_services
 }
 
