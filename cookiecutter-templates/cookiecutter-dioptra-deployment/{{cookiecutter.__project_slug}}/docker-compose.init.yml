@@ -81,6 +81,19 @@ services:
       - "restapi-ca-certificates:/usr/local/share/ca-certificates:rw"
       - "restapi-etc-ssl:/etc/ssl:rw"
 
+  init-dioptra-worker:
+    image: {{ container_image(cookiecutter.__containers.restapi) }}
+    hostname: {{ cookiecutter.__project_slug }}-init-dioptra-worker
+    environment:
+      DIOPTRA_WORKER_USERNAME: "${DIOPTRA_WORKER_USERNAME}"
+      DIOPTRA_WORKER_PASSWORD: "${DIOPTRA_WORKER_PASSWORD}"
+    entrypoint:
+      - "/bin/bash"
+    networks:
+      - dioptra
+    volumes:
+      - "init-scripts:/scripts:ro"
+
   mc:
     image: {{ container_image(cookiecutter.__containers.mc) }}
     hostname: {{ cookiecutter.__project_slug }}-mc
