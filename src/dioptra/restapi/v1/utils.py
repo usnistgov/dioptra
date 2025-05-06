@@ -585,6 +585,7 @@ def build_experiment(experiment_dict: ExperimentDict) -> dict[str, Any]:
     experiment = experiment_dict["experiment"]
     entrypoints = experiment_dict.get("entrypoints", None)
     has_draft = experiment_dict.get("has_draft", None)
+    resource_deleted = experiment_dict.get("resource_deleted", None)
 
     data = {
         "id": experiment.resource_id,
@@ -608,6 +609,9 @@ def build_experiment(experiment_dict: ExperimentDict) -> dict[str, Any]:
 
     if has_draft is not None:
         data["has_draft"] = has_draft
+
+    if resource_deleted is not None:
+        data["resource_deleted"] = resource_deleted
 
     return data
 
@@ -635,6 +639,7 @@ def build_entrypoint(entrypoint_dict: EntrypointDict) -> dict[str, Any]:
     entrypoint = entrypoint_dict["entry_point"]
     queues = entrypoint_dict.get("queues", None)
     has_draft = entrypoint_dict.get("has_draft", None)
+    resource_deleted = entrypoint_dict.get("resource_deleted", None)
 
     plugins = [
         PluginWithFilesDict(
@@ -676,6 +681,9 @@ def build_entrypoint(entrypoint_dict: EntrypointDict) -> dict[str, Any]:
     if has_draft is not None:
         data["has_draft"] = has_draft
 
+    if resource_deleted is not None:
+        data["resource_deleted"] = resource_deleted
+
     return data
 
 
@@ -705,6 +713,7 @@ def build_job(job_dict: JobDict) -> dict[str, Any]:
     job = job_dict["job"]
     artifacts = job_dict.get("artifacts", None)
     has_draft = job_dict.get("has_draft", None)
+    resource_deleted = job_dict.get("resource_deleted", None)
 
     data = {
         "id": job.resource_id,
@@ -734,6 +743,9 @@ def build_job(job_dict: JobDict) -> dict[str, Any]:
     if has_draft is not None:
         data["has_draft"] = has_draft
 
+    if resource_deleted is not None:
+        data["resource_deleted"] = resource_deleted
+
     return data
 
 
@@ -749,6 +761,7 @@ def build_model(model_dict: ModelWithVersionDict) -> dict[str, Any]:
     model = model_dict["ml_model"]
     version = model_dict.get("version", None)
     has_draft = model_dict.get("has_draft", None)
+    resource_deleted = model_dict.get("resource_deleted", None)
 
     latest_version = build_model_version(model_dict) if version is not None else None
     latest_version_number = version.version_number if version is not None else 0
@@ -785,6 +798,9 @@ def build_model(model_dict: ModelWithVersionDict) -> dict[str, Any]:
     if has_draft is not None:
         data["has_draft"] = has_draft
 
+    if resource_deleted is not None:
+        data["resource_deleted"] = resource_deleted
+
     return data
 
 
@@ -812,6 +828,7 @@ def build_model_version(model_dict: ModelWithVersionDict) -> dict[str, Any]:
 def build_artifact(artifact_dict: ArtifactDict) -> dict[str, Any]:
     artifact = artifact_dict["artifact"]
     has_draft = artifact_dict.get("has_draft")
+    resource_deleted = artifact_dict.get("resource_deleted", None)
 
     data = {
         "id": artifact.resource_id,
@@ -831,6 +848,9 @@ def build_artifact(artifact_dict: ArtifactDict) -> dict[str, Any]:
     if has_draft is not None:
         data["has_draft"] = has_draft
 
+    if resource_deleted is not None:
+        data["resource_deleted"] = resource_deleted
+
     return data
 
 
@@ -845,6 +865,7 @@ def build_queue(queue_dict: QueueDict) -> dict[str, Any]:
     """
     queue = queue_dict["queue"]
     has_draft = queue_dict.get("has_draft", None)
+    resource_deleted = queue_dict.get("resource_deleted", None)
 
     data = {
         "id": queue.resource_id,
@@ -864,6 +885,9 @@ def build_queue(queue_dict: QueueDict) -> dict[str, Any]:
     if has_draft is not None:
         data["has_draft"] = has_draft
 
+    if resource_deleted is not None:
+        data["resource_deleted"] = resource_deleted
+
     return data
 
 
@@ -879,6 +903,7 @@ def build_plugin(plugin_with_files: PluginWithFilesDict) -> dict[str, Any]:
     plugin = plugin_with_files["plugin"]
     plugin_files = plugin_with_files.get("plugin_files", None)
     has_draft = plugin_with_files.get("has_draft", None)
+    resource_deleted = plugin_with_files.get("resource_deleted", None)
 
     data = {
         "id": plugin.resource_id,
@@ -903,6 +928,9 @@ def build_plugin(plugin_with_files: PluginWithFilesDict) -> dict[str, Any]:
     if has_draft is not None:
         data["has_draft"] = has_draft
 
+    if resource_deleted is not None:
+        data["resource_deleted"] = resource_deleted
+
     return data
 
 
@@ -910,6 +938,7 @@ def build_plugin_file(plugin_file_with_plugin: PluginFileDict) -> dict[str, Any]
     plugin_file = plugin_file_with_plugin["plugin_file"]
     plugin = plugin_file_with_plugin.get("plugin", None)
     has_draft = plugin_file_with_plugin.get("has_draft", None)
+    resource_deleted = plugin_file_with_plugin.get("resource_deleted", None)
 
     data = {
         "id": plugin_file.resource_id,
@@ -933,6 +962,10 @@ def build_plugin_file(plugin_file_with_plugin: PluginFileDict) -> dict[str, Any]
 
     if has_draft is not None:
         data["has_draft"] = has_draft
+
+    if resource_deleted is not None:
+        data["resource_deleted"] = resource_deleted
+
 
     return data
 
@@ -986,6 +1019,7 @@ def build_plugin_parameter_type(
     """
     plugin_parameter_type = plugin_parameter_type_dict["plugin_task_parameter_type"]
     has_draft = plugin_parameter_type_dict.get("has_draft", None)
+    resource_deleted = plugin_parameter_type_dict.get("resource_deleted", None)
 
     data = {
         "id": plugin_parameter_type.resource_id,
@@ -1005,6 +1039,9 @@ def build_plugin_parameter_type(
 
     if has_draft is not None:
         data["has_draft"] = has_draft
+
+    if resource_deleted is not None:
+        data["resource_deleted"] = resource_deleted
 
     return data
 

@@ -102,7 +102,11 @@ def generate_base_resource_schema(name: str, snapshot: bool) -> type[Schema]:
             many=True,
             dump_only=True,
         ),
-    }
+        "resourceDeleted": fields.Boolean(
+            attribute="resource_deleted",
+            metadata=dict(description=f"Whether the full {name} resource has been deleted."),
+        )
+  }
 
     if not snapshot:
         schema.pop("snapshotId")
