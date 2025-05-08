@@ -25,14 +25,14 @@ print_main_help()
     \t\t<work_dir>\t\t Directory to use as working deployment
     \t\t<source_dir>\t\t Directory to use as the storage for source
     \n\tExample: INITIALIZE ENVIRONMENT with environment settings used inline:
-    \t>source ./dev-env+.sh -t dev -w ~/di2run/dio-wrk -s ~/di2run/dio-src"
+    \t>source ./${this_name} -t dev -w ~/di2run/dio-wrk -s ~/di2run/dio-src"
 
 
     printf "\n\n\t2. Explicitly request use of the Default Dirs at current working directory and GitHub tag:
-    \n\t>source ${this_name} [--env|-e] <environment-file>
+    \n\t>source ./${this_name} [--env|-e] <environment-file>
     \n\t\t<environment-file>\t File containing environment configuration
     \n\tExample: INITIALIZE ENVIRONMENT with key-value-pairs environment file:
-    \t>source ./dev-env+.sh -e ./env-example1.cfg\n\n"
+    \t>source ./${this_name} -e ./env-example1.cfg\n\n"
 }
 
 set_display_env_details(){
@@ -65,7 +65,7 @@ read_properties_from_file()
   echo "Reading environment from config file: $file"
 
   while IFS="=" read -r key value; do
-    case "${key^^}" in
+    case "${key}" in
       "DIOPTRA_GIT_BRANCH") 
         export DIOPTRA_BRANCH="$value"
         ;;
@@ -80,7 +80,9 @@ read_properties_from_file()
       "DIOPTRA_CONFIG_INFO")
         export DIOPTRA_CONFIG_INFO="$value"
         ;;
-      \#*)
+      "DIOPTRA_ENV_NAME")
+        export DIOPTRA_ENV_NAME="$value"
+        ;;      \#*)
         ### printf "\nComment: [key:${key} value:${value}]\n"
         ;;
       *)
@@ -122,7 +124,6 @@ read_cli_parameters()
   #   echo "Argument $i: ${!i}"
   # done
 
-
   while [ $# -gt 0 ]; do
     printf "\n $1 - $2"
     case "$1" in
@@ -140,7 +141,8 @@ read_cli_parameters()
         ;;
       --environment|--env|-e)
         export DIOPTRA_ENV_FILE="${2}"
-        read_properties_from_file $DIOPTRA_ENV_FILE
+        echo "Reading ${DIOPTRA_ENV_FILE@Q} file"
+        read_properties_from_file "${DIOPTRA_ENV_FILE}"
         shift
         break
         ;;
@@ -194,7 +196,11 @@ if [ -z "$DIOPTRA_BRANCH" ] || [ -z "$DIOPTRA_CODE" ] || [ -z "$DIOPTRA_DEPLOY" 
   echo "Then you can use 'env | sort' or 'printenv' command to view the rest of the environment variables"
 
 else
-  export DIOPTRA_VENV=.di-venv-${DIOPTRA_BRANCH}
+  if [ -z "$DIOPTRA_ENV_NAME" ]; then
+    export DIOPTRA_VENV=.di-venv-${DIOPTRA_BRANCH}
+  else
+    export DIOPTRA_VENV=${DIOPTRA_ENV_NAME}
+  fi
   ######## Auto-configuration of the OS-Hardware descriptor
   case $(uname) in
       'Linux')
