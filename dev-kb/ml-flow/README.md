@@ -1,6 +1,8 @@
 ## [MLFlow](https://mlflow.org/docs/latest/) is an open source platform for Machine Learning(ML)
 This Knowledge Base document describes how to utilize MLFlow with Dioptra locally
 
+Prior to running this script you will need an activate [virtual environment](../../DEVELOPER.md#setting-up-the-python-virtual-environment) for Dioptra to insure that the mlflow module is available.
+
 - To use the `start-mlflow.sh` script (after obtaining the script from the source-control), please remember to make sure that the script has executable attribute, otherwise add the flag to the script:
 ```sh
 chmod +x start-mlflow.sh
