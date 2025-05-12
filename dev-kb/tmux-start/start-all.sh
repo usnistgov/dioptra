@@ -116,7 +116,7 @@ read_init_parameters()
 ###########################################################################################
 setup_tmux(){
     # Allow to tag the panes in the window to make clear what's running where
-    tmux set pane-border-status top # alternatively can be set to [bottom], but [top] looks more intuitive
+    tmux set pane-border-status bottom # alternatively can be set to [bottom], but [top] looks more intuitive
     tmux set pane-border-format "┤ #{pane_index}. #{pane_title} ├" # Format the panel
     tmux set-option mouse on  # Activate on-mouse pane flipping in addition to "Ctrl+B and Arrows"
     # Show the environment variables visible to tmux (info-value)
@@ -172,7 +172,13 @@ decide_dioptra_environment(){
         export DIOPTRA_ML_FLOW="${DIOPTRA_CODE}/dev-kb/ml-flow"
         export DIOPTRA_LOCAL="${DIOPTRA_CODE}/dev-kb/local-setup"
     fi
+    dir="$(realpath ${DIOPTRA_CODE})"
+    echo "DIR=${dir}"
 
+    ml_dir="${dir}/mlflow-${DIOPTRA_BRANCH}"
+    export DIOPTRA_MLF_ART="${ml_dir}/art"
+    export DIOPTRA_MLF_SQL="sqlite:///${ml_dir}/mlflow-${DIOPTRA_BRANCH}.sqlite" 
+    echo "DIOPTRA_MLF_ART=${DIOPTRA_MLF_ART} DIOPTRA_MLF_SQL=${DIOPTRA_MLF_SQL}"
     # Useful code chunks for debugging in case new functionality needs to be added 
     # echo "!!!!!!!!!!!!!!!!!!!!!!!!!!"
     # echo "MLF = ${DIOPTRA_ML_FLOW@Q}"
@@ -252,7 +258,8 @@ if ! [ -z "${DIOPTRA_CONF_FILE}" ] && ! [ -z "${DIOPTRA_CONF_REAL_PATH}" ] ; the
     # 4. Split out, set up, and name MLFlow pane
     tmux split-window -h -l 50% -t 3
     tmux select-pane -t 4 -T 'MLFlow'
-    tmux send-keys "${DIOPTRA_ML_FLOW}/run-mlflow-server.sh --port 35000" 'C-m'
+    tmux send-keys "source ${DIOPTRA_CODE}/${DIOPTRA_VENV}/bin/activate" 'C-m'
+    tmux send-keys "${DIOPTRA_ML_FLOW}/start-mlflow.sh --artifacts-destination ${DIOPTRA_MLF_ART} --backend-store-uri ${DIOPTRA_MLF_SQL} --port 35000" 'C-m'
 
     tmux -2 attach-session -t di-all
 else
