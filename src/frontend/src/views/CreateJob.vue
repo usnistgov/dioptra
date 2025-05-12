@@ -435,7 +435,8 @@
       queue: job.value.queue.id,
       entrypoint: job.value.entrypoint.id,
       values: computedValue.value,
-      timeout: job.value.timeout
+      timeout: job.value.timeout,
+      entrypointSnapshotId: (history.state.oldJobId && !updateEntrypoint.value) ? oldEntrypoint.value.snapshot : job.value.entrypoint.snapshot
     }  
     try {
       await api.addJob(job.value.experiment.id, payload)
