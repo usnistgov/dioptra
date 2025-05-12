@@ -216,10 +216,10 @@ class JobService(object):
         entrypoint_dict = cast(
             utils.EntrypointDict,
             self._entrypoint_id_service.get(
-                entrypoint_id, 
-                error_if_not_found=True, 
-                entrypoint_snapshot_id=entrypoint_snapshot_id, 
-                log=log
+                entrypoint_id,
+                error_if_not_found=True,
+                entrypoint_snapshot_id=entrypoint_snapshot_id,
+                log=log,
             ),
         )
         entrypoint = entrypoint_dict["entry_point"]

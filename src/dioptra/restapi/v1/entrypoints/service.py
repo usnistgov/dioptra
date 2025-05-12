@@ -364,8 +364,7 @@ class EntrypointIdService(object):
                 .join(models.Resource)
                 .where(
                     models.EntryPoint.resource_id == entrypoint_id,
-                    models.EntryPoint.resource_snapshot_id
-                    == entrypoint_snapshot_id,
+                    models.EntryPoint.resource_snapshot_id == entrypoint_snapshot_id,
                     models.Resource.is_deleted == False,  # noqa: E712
                 )
             )
@@ -374,8 +373,9 @@ class EntrypointIdService(object):
         if entrypoint is None:
             if error_if_not_found:
                 raise EntityDoesNotExistError(
-                    RESOURCE_TYPE, entrypoint_id=entrypoint_id,
-                    resource_snapshot_id=entrypoint_snapshot_id
+                    RESOURCE_TYPE,
+                    entrypoint_id=entrypoint_id,
+                    resource_snapshot_id=entrypoint_snapshot_id,
                 )
 
             return None
