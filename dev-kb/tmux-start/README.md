@@ -17,12 +17,16 @@
 ```
 <your-starting-path>/dev-kb/tmux-start/start-all.sh -e <path-to-env-file>/env-dev.cfg
 ```
+For example if you are in the Dioptra's code-directory and your environment config is one lever higher to not confuse git the command may look like the following:
+```
+./dev-kb/tmux-start/start-all.sh -e ../my-dev-env.cfg
+```
 
 ## How to `stop` and `terminate` your running `tmux` server
-### To terminate your current tmux  session-panels and quit `tmux` you can use either key combination or a command from one of the terminal panels of `tmux`:
+### To terminate your current tmux  session-panels and quit `tmux` you can use either key-combination or a terminal command from any of the `tmux` terminal panels:
 ### Terminate servers running:
 - The script configures `tmux` to respond to mouse/touch-pad click selection of the panels and it mostly works 
-- [Optional] If mouse acts out you can navigate between `tmux` panels you can use keyboard shortcuts of `Ctrl+B` + `←`|`↑`|`→`|`↓` 
+- [Optional] If mouse/touch-pad acts out you can navigate between `tmux` panels using keyboard. The shortcuts of `Ctrl+B` + `←`|`↑`|`→`|`↓` (arrow buttons) allow you to select active panels almost intuitively.
 - Once in tmux-pane with running server the `Ctrl+C` combination terminates the running server process. Once you see your regular terminal prompt indicates that the server process has terminated.
 - Once all the panes have the server processes stopped - follow the Exit `tmux` steps.
 
@@ -38,20 +42,23 @@ ___
 ## Observed Issues: 
 ___
 
-### Occasionally (has been observed on Mac M2 with MacOS 15) in the described setup Redis server doesn't fully stop as a response to the stop command `Ctrl+C` in `tmux` panel as it should.
+### Occasionally (has been observed on Mac M2 with MacOS 15) in the described setup Redis and/or MLFlow servers don't fully stop on issuance of the stop command `Ctrl+C` in `tmux` panel as they should.
 
-- In the case on MacOS 14+ the port (6379 for Redis) is occupied by zombie process you need to [list processes](https://dev.to/osalumense/how-to-kill-a-process-occupying-a-port-on-windows-macos-and-linux-gj8) using the occupied port number `:6379` 
+- In the case on MacOS 14+ the ports 6379 (for Redis) and or 35000 (for MLFLow) are occupied by "zombi- process" you need to [list processes](https://dev.to/osalumense/how-to-kill-a-process-occupying-a-port-on-windows-macos-and-linux-gj8) using the occupied port numbers `:6379` and/or `:35000`
 ```sh
 sudo lsof -i -P | grep LISTEN | grep :6379
 ```
-
+and /or
+```sh
+sudo lsof -i -P | grep LISTEN | grep :35000
+```
 - The output of the command looks similar to the following:
 ```
 redis-ser 12345           user    6u  IPv4 0xdcbae8c9a20e5b54      0t0    TCP *:6379 (LISTEN)
 redis-ser 12345           user    7u  IPv6 0xdcbab5c0705ff728      0t0    TCP *:6379 (LISTEN)
 ```
 
-- The process holding the port can be killed with the following command, where the `12345` is the process ID extracted in the output of the above command:
+- The process holding the port can be killed with the following command, where the `12345` (the second column value) is the process ID extracted in the output of the above command:
 ```sh
 sudo kill -9 12345
 ``` 
