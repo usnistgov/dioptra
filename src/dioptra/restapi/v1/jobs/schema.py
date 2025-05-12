@@ -229,6 +229,19 @@ class JobSchema(JobBaseSchema):  # type: ignore
     )
 
 
+class JobEntrypointSnapshotSchema(JobSchema):
+    """The schema for the entrypoint snapshot id stored in a Job resource."""
+
+    entrypointSnapshotId = fields.Integer(
+        attribute="entrypoint_snapshot_id",
+        metadata=dict(
+            description="An integer identifying a specific registered "
+            "entrypoint snapshot."
+        ),
+        required=False,
+    )
+
+
 class JobPageSchema(BasePageSchema):
     """The paged schema for the data stored in a Job resource."""
 

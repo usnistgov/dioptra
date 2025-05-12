@@ -36,6 +36,7 @@ from dioptra.restapi.v1.entrypoints.schema import EntrypointRefSchema
 from dioptra.restapi.v1.jobs.schema import (
     ExperimentJobGetQueryParameters,
     ExperimentJobsMetricsSchema,
+    JobEntrypointSnapshotSchema,
     JobMlflowRunSchema,
     JobPageSchema,
     JobSchema,
@@ -296,8 +297,8 @@ class ExperimentIdJobEndpoint(Resource):
         )
 
     @login_required
-    @accepts(schema=JobSchema(exclude=["groupId"]), api=api)
-    @responds(schema=JobSchema, api=api)
+    @accepts(schema=JobEntrypointSnapshotSchema(exclude=["groupId"]), api=api)
+    @responds(schema=JobEntrypointSnapshotSchema, api=api)
     def post(self, id: int):
         """Creates a Job resource under the specified Experiment."""
         log = LOGGER.new(
@@ -314,6 +315,7 @@ class ExperimentIdJobEndpoint(Resource):
             values=parsed_obj["values"],
             description=parsed_obj["description"],
             timeout=parsed_obj["timeout"],
+            entrypoint_snapshot_id=parsed_obj["entrypoint_snapshot_id"],
             log=log,
         )
         return utils.build_job(job)
