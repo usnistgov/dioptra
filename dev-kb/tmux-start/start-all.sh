@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
 
+###########################################################################################
+### Prints usage information for the script 
+###
+###  Globals: None
+###  Arguments: None
+###  Returns:
+###    Message in terminal
+###########################################################################################
 
 print_main_help()
 {
@@ -267,10 +275,3 @@ else
     echo "!!! The input parameter --environment|--env|-e was not properly provided !!!"
     print_main_help
 fi
-
-
-
-
-
-
-
