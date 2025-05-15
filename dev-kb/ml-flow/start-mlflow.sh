@@ -42,6 +42,7 @@ _arg_upgrade_db="${DEFAULT_ARG_UPGRADE_DB}"
 print_help() {
   src_path="${BASH_SOURCE[0]}"
   this_name=$(basename "$src_path")
+
   cat <<-HELPMESSAGE
 		Start a MLflow Tracking server for local development.
 
@@ -49,9 +50,7 @@ print_help() {
 		options must exist before starting this script. If using the default choices, then you
 		need to create a "mlflow" folder in your current working directory, e.g. \`mkdir mlflow\`.
 
-		Usage: "${this_name}" [--host <arg>] [--port <arg>]
-		                            [--artifacts-destination <arg>] [--backend-store-uri <arg>]
-		                            [-h|--help]
+		Usage: "${this_name}" [--host <arg>] [--port <arg>] [--artifacts-destination <arg>] [--backend-store-uri <arg>] [-h|--help]
 		        --host: Tag to give to built image (default: '${DEFAULT_ARG_HOST}')
 		        --port: Tag to give to built image (default: '${DEFAULT_ARG_PORT}')
 		        --artifacts-destination: The URI to use for storing MLflow run artifacts.
