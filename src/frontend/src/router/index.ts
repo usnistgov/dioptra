@@ -46,6 +46,7 @@ const router = createRouter({
         {
           path: '/entrypoints/:id',
           component: () => import('../views/CreateEntryPoint.vue'),
+          meta: { type: 'entrypoints' }
         },
       ]
     },
