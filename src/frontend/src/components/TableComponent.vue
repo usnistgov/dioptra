@@ -243,15 +243,6 @@
     emit('delete')
   }
 
-  watch(() => props.rows, (newVal) => {
-    // when viewing history, auto select first (latest) row
-    if (newVal.length > 0 && props.rowKey === 'snapshot') {
-      if (tableRef.value && newVal[0]) {
-        selected.value = [newVal[0]]
-      }
-    }
-  }, { deep: true })
-
   watch(showDrafts, (newVal, oldVal) => {
     if(newVal !== oldVal) selected.value = []
   })

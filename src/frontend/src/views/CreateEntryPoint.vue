@@ -1,15 +1,29 @@
 <template>
   <div class="row items-center justify-between">
-    <PageTitle 
-      :title="title"
-    />
+    <div class="row items-center">
+      <PageTitle 
+        :title="title"
+      />
+      <q-chip
+        v-if="route.params.id !== 'new'"
+        class="q-ml-lg"
+      >
+        <q-toggle
+          v-model="store.showRightDrawer"
+          left-label
+          label="View History"
+          color="orange"
+        />
+      </q-chip>
+    </div>
     <div>
       <q-btn 
         v-if="route.params.id !== 'new'"
-        color="negative" 
+        :color="history ? 'red-3' : 'negative'" 
         icon="sym_o_delete" 
         label="Delete Entrypoint"
         @click="showDeleteDialogEntrypoint = true; objectForDeletion = entryPoint"
+        :disable="history"
       />
     </div>
   </div>
@@ -26,6 +40,7 @@
               :rules="[requiredRule]"
               class="q-mb-sm q-mt-md"
               aria-required="true"
+              :disable="history"
             >
               <template v-slot:before>
                 <label :class="`field-label`">Name:</label>
@@ -42,6 +57,7 @@
               dense
               :rules="[requiredRule]"
               aria-required="true"
+              :disable="history"
             >
               <template v-slot:before>
                 <div class="field-label">Group:</div>
@@ -54,6 +70,7 @@
               class="q-mb-sm q-mt-sm"
               type="textarea"
               autogrow
+              :disable="history"
             >
               <template v-slot:before>
                 <label :class="`field-label`">Description:</label>
@@ -74,6 +91,8 @@
           placeholder="# task graph yaml file"
           :showError="taskGraphError"
           :autocompletions="autocompletions"
+          :readOnly="history"
+          :style="history ? 'cursor: not-allowed; opacity: 0.9;' : ''"
         />
         <q-btn
           label="Validate Inputs"
@@ -84,7 +103,7 @@
     </div>
     <fieldset :class="`${isMobile ? 'col-12 q-mt-lg' : 'col'}`">
       <legend>Parameters</legend>
-      <div class="q-px-xl">
+      <div class="q-px-xl" :style="history ? 'cursor: not-allowed;' : ''">
         <TableComponent
           :rows="entryPoint.parameters"
           :columns="columns"
@@ -94,6 +113,7 @@
           :hideCreateBtn=true
           :hideOpenBtn="true"
           :hideDeleteBtn="true"
+          :style="history ? 'pointer-events: none; opacity: 0.5;' : ''"
         >
           <template #body-cell-actions="props">
             <q-btn 
@@ -115,12 +135,13 @@
           </template>
         </TableComponent>
         <q-card
+          v-if="!history"
           flat
           bordered
-          class="q-px-lg q-my-lg"
+          class="q-px-lg q-mt-lg"
         >
           <q-card-section class="q-px-none">
-            <label class="text-body1">Add Parameter</label>
+            <label class="text-body1" :style="history ? 'opacity: 0.5;' : ''">Add Parameter</label>
           </q-card-section>
           <q-form ref="paramForm" greedy @submit.prevent="addParam">
             <q-input 
@@ -165,6 +186,7 @@
         </q-card>
 
         <q-select
+          v-if="!history"
           outlined
           dense
           v-model="entryPoint.queues"
@@ -177,7 +199,8 @@
           input-debounce="100"
           :options="queues"
           @filter="getQueues"
-          class="q-mb-md"
+          class="q-mt-lg q-mb-md"
+          :disable="history"
         >
           <template v-slot:before>
             <div class="field-label">Queues:</div>
@@ -193,7 +216,22 @@
             />
           </template>
         </q-select>
-
+        <div v-else class="row items-center q-mt-lg q-mb-md">
+          <label class="field-label">Queues:</label>
+          <div 
+            class="col" 
+            style="border: 1px solid lightgray; border-radius: 4px; padding: 10px 8px; margin-left: 6px;"
+            :style="history ? 'opacity: 0.5; pointer-events: none;' : ''"
+          >
+            <q-icon
+              name="sym_o_info"
+              size="2em"
+              color="grey"
+              class="q-mr-sm"
+            />
+            Queues are not yet avaiable in Entrypoint snapshots
+          </div>
+        </div>
         <q-select
           v-if="route.params.id === 'new'"
           outlined
@@ -223,11 +261,15 @@
             />
           </template>
         </q-select>
-        <div class="row" v-if="route.params.id !== 'new' && entryPoint.plugins.length > 0">
-          <label class="field-label q-pt-xs">Plugins:</label>
+        <div 
+          class="row items-center" 
+          v-if="route.params.id !== 'new' && entryPoint.plugins.length > 0"
+        >
+          <label class="field-label">Plugins:</label>
           <div 
             class="col" 
             style="border: 1px solid lightgray; border-radius: 4px; padding: 5px 8px; margin-left: 6px;"
+            :style="history ? 'opacity: 0.5; pointer-events: none;' : ''"
           >
             <div
               v-for="(plugin, i) in entryPoint.plugins"
@@ -273,6 +315,7 @@
         :hideOpenBtn="true"
         :hideDeleteBtn="true"
         :hideCreateBtn=true
+        :style="history ? 'opacity: 0.5; pointer-events: none;' : ''"
       >
         <template #body-cell-inputParams="props">
           <q-chip
@@ -320,8 +363,9 @@
     />
     <q-btn  
       @click="submit()" 
-      color="primary" 
+      :color="history ? 'blue-2' : 'primary'" 
       label="Submit EntryPoint"
+      :disable="history"
     />
   </div>
 
@@ -370,7 +414,7 @@
 </template>
 
 <script setup>
-  import { ref, inject, reactive, watch, computed } from 'vue'
+  import { ref, inject, reactive, watch, computed, onMounted } from 'vue'
   import { useLoginStore } from '@/stores/LoginStore.ts'
   import { useRouter, onBeforeRouteLeave } from 'vue-router'
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'
@@ -392,6 +436,10 @@
   const store = useLoginStore()
 
   const isMobile = inject('isMobile')
+
+  const history = computed(() => {
+    return store.showRightDrawer
+  })
 
   function requiredRule(val) {
     return (!!val) || "This field is required"
@@ -415,6 +463,31 @@
     taskGraph: '',
     queues: [],
     plugins: []
+  })
+
+  onMounted(() => {
+    if(route.query.snapshotId && !store.showRightDrawer) {
+      store.showRightDrawer = true
+    } else {
+      getEntrypoint()
+    }
+  })
+
+  watch(() => store.selectedSnapshot, (ep) => {
+    if(ep) {
+      entryPoint.value = {
+        name: ep.name,
+        group: ep.group.id,
+        description: ep.description,
+        parameters: ep.parameters,
+        taskGraph: ep.taskGraph,
+        queues: ep.queues,
+        plugins: ep.plugins
+      }
+      title.value = `View ${entryPoint.value.name}`
+    } else {
+      getEntrypoint()
+    }
   })
 
   const valuesChangedFromEditStart = computed(() => {
@@ -610,7 +683,10 @@
           parameters: entryPoint.value.parameters,
           queues: entryPoint.value.queues,
         })
-        await api.addPluginsToEntrypoint(route.params.id, pluginsToUpdate.value)
+        console.log('pluginsToUpdate = ', pluginsToUpdate.value)
+        if(pluginsToUpdate.value.length > 0) {
+          await api.addPluginsToEntrypoint(route.params.id, pluginsToUpdate.value)
+        }
         router.push('/entrypoints')
         notify.success(`Successfully updated '${entryPoint.value.name}'`)
       }
@@ -700,7 +776,7 @@
 
   onBeforeRouteLeave((to, from, next) => {
     toPath.value = to.path
-    if(confirmLeave.value || !valuesChangedFromEditStart.value) {
+    if(confirmLeave.value || !valuesChangedFromEditStart.value || history.value) {
       next(true)
     } else if(route.params.id === 'new') {
       leaveForm()
