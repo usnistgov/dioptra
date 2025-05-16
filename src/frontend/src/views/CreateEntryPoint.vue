@@ -181,6 +181,7 @@
         </q-card>
 
         <q-select
+          v-if="!history"
           outlined
           dense
           v-model="entryPoint.queues"
@@ -210,7 +211,22 @@
             />
           </template>
         </q-select>
-
+        <div v-else class="row items-center q-mt-lg q-mb-md">
+          <label class="field-label">Queues:</label>
+          <div 
+            class="col" 
+            style="border: 1px solid lightgray; border-radius: 4px; padding: 10px 8px; margin-left: 6px;"
+            :style="history ? 'opacity: 0.5; pointer-events: none;' : ''"
+          >
+            <q-icon
+              name="sym_o_info"
+              size="2em"
+              color="grey"
+              class="q-mr-sm"
+            />
+            Queues are not yet avaiable in Entrypoint snapshots
+          </div>
+        </div>
         <q-select
           v-if="route.params.id === 'new'"
           outlined
@@ -241,10 +257,10 @@
           </template>
         </q-select>
         <div 
-          class="row" 
+          class="row items-center" 
           v-if="route.params.id !== 'new' && entryPoint.plugins.length > 0"
         >
-          <label class="field-label q-pt-xs">Plugins:</label>
+          <label class="field-label">Plugins:</label>
           <div 
             class="col" 
             style="border: 1px solid lightgray; border-radius: 4px; padding: 5px 8px; margin-left: 6px;"

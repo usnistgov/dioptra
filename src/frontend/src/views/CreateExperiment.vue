@@ -128,7 +128,7 @@
             color="grey"
             class="q-mr-sm"
           />
-          <div>Entrypoints are not part of Experiment snapshots</div>
+          <div>Entrypoints are not yet available in Experiment snapshots</div>
         </div>
       </div>
     </fieldset>
