@@ -42,15 +42,16 @@
 
 <script setup>
 import { useLoginStore } from '@/stores/LoginStore'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import TableComponent from '@/components/TableComponent.vue'
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import * as api from '@/services/dataApi'
 
 const props = defineProps(['showDialogHistory', 'type', 'id', 'maxHeight'])
 
 const store = useLoginStore()
 const route = useRoute()
+const router = useRouter()
 
 const snapshots = ref([])
 const selected = ref([])
@@ -59,6 +60,18 @@ async function getSnapshots() {
   try {
     const res = await api.getSnapshots(route.meta.type, route.params.id)
     snapshots.value = res.data.data.reverse()
+    if(res.data.data.length > 0) {
+      if(route.query.snapshotId) {
+        // if snapshotId is provided in url, auto select it
+        let index = res.data.data.findIndex(
+          obj => obj.snapshot === Number(route.query.snapshotId)
+        )
+        selected.value = [snapshots.value[index]]
+      } else {
+        // else auto select the latest snapshot
+        selected.value = [snapshots.value[0]]
+      }
+    }
     console.log('snapshots = ', snapshots.value)
   } catch(err) {
     console.warn(err)
@@ -69,17 +82,22 @@ async function getDialogSnapshots() {
   try {
     const res = await api.getSnapshots(props.type, props.id)
     snapshots.value = res.data.data.reverse()
+    if(res.data.data.length > 0) {
+      // when viewing history, auto select first (latest) row
+      selected.value = [snapshots.value[0]]
+    }
     console.log('snapshots = ', snapshots.value)
   } catch(err) {
     console.warn(err)
   }
 }
 
-watch(() => store.showRightDrawer, (history) => {
-  if(history) {
+watch(() => store.showRightDrawer, (drawerOpen) => {
+  if(drawerOpen) {
     getSnapshots()
   } else {
     store.selectedSnapshot = null
+    history.replaceState({}, null, route.path)
   }
 })
 
@@ -94,6 +112,11 @@ watch(() => props.showDialogHistory, (history) => {
 watch(selected, (newVal) => {
   if(newVal.length > 0) {
     store.selectedSnapshot = newVal[0]
+    history.replaceState(
+      {},
+      null,
+      route.path + '?snapshotId=' + encodeURIComponent(selected.value[0].snapshot)
+    )
   }
 })
 
