@@ -25,6 +25,7 @@ from .base import (
 
 T = TypeVar("T")
 
+VALIDATE_ENTRYPOINT: Final[str] = "validateEntrypoint"
 JOB_FILES_DOWNLOAD: Final[str] = "jobFilesDownload"
 SIGNATURE_ANALYSIS: Final[str] = "pluginTaskSignatureAnalysis"
 RESOURCE_IMPORT: Final[str] = "resourceImport"
@@ -197,3 +198,32 @@ class WorkflowsCollectionClient(CollectionClient[T]):
         """
 
         return self._session.post(self.url, DRAFT_COMMIT, str(draft_id))
+
+    def validate_entrypoint(
+        self,
+        group_id: int,
+        task_graph: str,
+        plugin_snapshots: list[int],
+        entrypoint_parameters: list[dict[str, Any]],
+    ) -> T:
+        """Validate a set of proposed inputs for an entrypoint resource.
+
+        Args:
+            group_id: The ID of the group validating the entrypoint resource.
+            task_graph: The proposed task graph for the entrypoint resource.
+            plugin_snapshots: A list of identifiers for the plugin snapshots that will
+                be attached to the Entrypoint resource.
+            entrypoint_parameters: The proposed list of parameters for the entrypoint
+                resource.
+
+        Returns:
+            The response from the Dioptra API.
+        """
+        json_ = {
+            "group": group_id,
+            "taskGraph": task_graph,
+            "pluginSnapshots": plugin_snapshots,
+            "parameters": entrypoint_parameters,
+        }
+
+        return self._session.post(self.url, VALIDATE_ENTRYPOINT, json_=json_)
