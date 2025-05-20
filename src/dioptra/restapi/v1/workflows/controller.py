@@ -15,6 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The module defining the endpoints for Workflow resources."""
+
 import uuid
 
 import structlog
@@ -34,12 +35,15 @@ from .schema import (
     ResourceImportSchema,
     SignatureAnalysisOutputSchema,
     SignatureAnalysisSchema,
+    ValidateEntrypointRequestSchema,
+    ValidateEntrypointResponseSchema,
 )
 from .service import (
     DraftCommitService,
     JobFilesDownloadService,
     ResourceImportService,
     SignatureAnalysisService,
+    ValidateEntrypointService,
 )
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -198,3 +202,43 @@ class DraftCommitEndpoint(Resource):
             request_id=str(uuid.uuid4()), resource="DraftCommit", request_type="POST"
         )  # noqa: F841
         return self._draft_commit_service.commit_draft(draft_id=id, log=log)
+
+
+@api.route("/validateEntrypoint")
+class ValidateEntrypointEndpoint(Resource):
+    @inject
+    def __init__(
+        self, validate_entrypoint_service: ValidateEntrypointService, *args, **kwargs
+    ) -> None:
+        """Initialize the workflow resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            entrypoint_validate_service: An EntrypointValidateService object.
+        """
+        self._validate_entrypoint_service = validate_entrypoint_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    @accepts(schema=ValidateEntrypointRequestSchema, api=api)
+    @responds(schema=ValidateEntrypointResponseSchema, api=api)
+    def post(self):
+        """Validates the proposed inputs for an entrypoint."""  # noqa: B950
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="ValidateEntrypoint",
+            request_type="POST",
+        )
+        parsed_obj = request.parsed_obj  # pyright: ignore
+        group_id = parsed_obj["group_id"]
+        task_graph = parsed_obj["task_graph"]
+        plugin_snapshot_ids = parsed_obj["plugin_snapshot_ids"]
+        parameters = parsed_obj["parameters"]
+        return self._validate_entrypoint_service.validate(
+            group_id=group_id,
+            task_graph=task_graph,
+            plugin_snapshot_ids=plugin_snapshot_ids,
+            entrypoint_parameters=parameters,
+            log=log,
+        )

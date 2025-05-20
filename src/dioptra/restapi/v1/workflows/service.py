@@ -15,7 +15,9 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform workflows endpoint operations."""
+
 from collections import defaultdict
+from dataclasses import dataclass
 from hashlib import sha256
 from io import BytesIO
 from pathlib import Path
@@ -62,6 +64,7 @@ from dioptra.restapi.v1.shared.resource_service import (
     ResourceService,
 )
 from dioptra.restapi.v1.shared.signature_analysis import get_plugin_signatures
+from dioptra.restapi.v1.shared.task_engine_yaml.service import TaskEngineYamlService
 from dioptra.sdk.utilities.paths import set_cwd
 
 from .lib import views
@@ -94,6 +97,20 @@ VALID_ENTRYPOINT_PARAM_TYPES: Final[set[str]] = {
 class JobFilesDownloadService(object):
     """The service methods for packaging job files for download."""
 
+    @inject
+    def __init__(
+        self,
+        task_engine_yaml_service: TaskEngineYamlService,
+    ) -> None:
+        """Initialize the job files download service.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            task_engine_yaml_service: A TaskEngineYamlService object.
+        """
+        self._task_engine_yaml_service = task_engine_yaml_service
+
     def get(self, job_id: int, file_type: FileTypes, **kwargs) -> IO[bytes]:
         """Get the files needed to run a job and package them for download.
 
@@ -117,13 +134,21 @@ class JobFilesDownloadService(object):
         plugin_parameter_types = views.get_plugin_parameter_types(
             job_id=job_id, logger=log
         )
+
+        task_engine_yaml = self._task_engine_yaml_service.build_yaml(
+            entry_point=entry_point,  # pyright: ignore
+            plugin_plugin_files=entry_point_plugin_files,  # pyright: ignore
+            plugin_parameter_types=plugin_parameter_types,  # pyright: ignore
+            logger=log,
+        )
+
         return package_job_files(
             job_id=job_id,
             experiment=experiment,
-            entry_point=entry_point,
+            entry_point_name=entry_point.name,
+            task_engine_yaml=task_engine_yaml,
             entry_point_plugin_files=entry_point_plugin_files,
             job_parameter_values=job_parameter_values,
-            plugin_parameter_types=plugin_parameter_types,
             file_type=file_type,
             logger=log,
         )
@@ -813,3 +838,102 @@ class DraftCommitService(object):
         if draft.payload["base_resource_id"] is not None:
             resource_ids = [draft.payload["base_resource_id"]] + resource_ids
         return {"status": "Success", "id": resource_ids}
+
+
+@dataclass
+class EntryPointParameterDataAdapter(object):
+    parameter_type: str
+    name: str
+    default_value: str | None
+
+
+@dataclass
+class EntryPointDataAdapter(object):
+    task_graph: str
+    parameters: list[EntryPointParameterDataAdapter]
+
+
+class ValidateEntrypointService(object):
+    """The service for validating the inputs to an entrypoint resource."""
+
+    @inject
+    def __init__(
+        self,
+        task_engine_yaml_service: TaskEngineYamlService,
+    ) -> None:
+        """Initialize the entrypoint service.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            task_engine_yaml_service: A TaskEngineYamlService object.
+        """
+        self._task_engine_yaml_service = task_engine_yaml_service
+
+    def validate(
+        self,
+        group_id: int,
+        task_graph: str,
+        plugin_snapshot_ids: list[int],
+        entrypoint_parameters: list[dict[str, Any]],
+        **kwargs,
+    ) -> dict[str, Any]:
+        """Validate the proposed inputs to an entrypoint resource.
+
+        Args:
+            group_id: The ID of the group validating the entrypoint resource.
+            task_graph: The proposed task graph for the entrypoint resource.
+            plugin_snapshot_ids: A list of identifiers for the plugin snapshots that
+                will be attached to the Entrypoint resource.
+            entrypoint_parameters: The proposed list of parameters for the entrypoint
+                resource.
+
+        Returns:
+            A dictionary containing the validation result. The dictionary contains two
+            keys:
+                - "schema_valid": A boolean indicating whether the schema is valid.
+                - "schema_issues": A list of issues found in the schema, if any.
+
+        Raises:
+            DioptraError: If two or more plugin_snapshot_ids point at the same
+                resource_id.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.debug(
+            "Validating input for an entrypoint resource",
+            task_graph=task_graph,
+            plugin_ids=plugin_snapshot_ids,
+            entrypoint_parameters=entrypoint_parameters,
+        )
+
+        entrypoint = EntryPointDataAdapter(
+            task_graph=task_graph,
+            parameters=[
+                EntryPointParameterDataAdapter(
+                    parameter_type=param["parameter_type"],
+                    name=param["name"],
+                    default_value=param["default_value"],
+                )
+                for param in entrypoint_parameters
+            ],
+        )
+        plugin_plugin_files = views.get_plugin_plugin_files_from_plugin_snapshot_ids(
+            plugin_snapshot_ids=plugin_snapshot_ids, logger=log
+        )
+        plugin_parameter_types = views.get_plugin_parameter_types(
+            group_id=group_id, logger=log
+        )
+        task_engine_dict = self._task_engine_yaml_service.build_dict(
+            entry_point=entrypoint,
+            plugin_plugin_files=plugin_plugin_files,  # pyright: ignore
+            plugin_parameter_types=plugin_parameter_types,  # pyright: ignore
+            logger=log,
+        )
+        issues = self._task_engine_yaml_service.validate(
+            task_engine_dict=task_engine_dict
+        )
+
+        if issues:
+            return {"schema_valid": False, "schema_issues": issues}
+
+        return {"schema_valid": True, "schema_issues": []}
