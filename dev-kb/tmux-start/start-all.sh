@@ -210,14 +210,14 @@ decide_dioptra_environment(){
 ###########################################################################################
 BASH_MAJOR="${BASH_VERSINFO:-0}"
 if [ "${BASH_MAJOR}" -lt 5 ]; then
-  echo "❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌"
+  echo "❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌" >&2
   echo "❌❌❌  Your BASH version if not 5 and higher as required." >&2
   echo "❌❌❌  Your current BASH Version is ${BASH_VERSION}." >&2
-  echo "❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌"
+  echo "❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌" >&2
   exit -1
 fi
-read_init_parameters $@
 
+read_init_parameters $@
 # Section below is helpful for debugging
 #
 # echo "DCF = $DIOPTRA_CONF_FILE"

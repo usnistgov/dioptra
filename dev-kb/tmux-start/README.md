@@ -31,7 +31,7 @@ For example if you are in the Dioptra's code-directory and your environment conf
 - Once all the panes have the server processes stopped - follow the Exit `tmux` steps.
 
 ### Exit tmux session:
-- The easiest option is to type `tmux kill-session` command in any of the tmux panels
+- The easiest option is to type `tmux kill-server` command in any of the tmux panels
 - [Optional] CLI command `tmux kill-session -t di-all`, which can be launched from any of the `tmux` terminal emulator panels. Note, that the CLI command doesn't ask any questions and just quits `tmux`.
 - [Optional] Key combination `Ctrl + B` + `&` (mnemonics `Control-Board-End`). Then answer `Y` or `y` to the question `kill-window bash? (y/n)` asked in the bottom of the `tmux` multiplexer window
 
