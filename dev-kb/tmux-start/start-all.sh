@@ -91,7 +91,7 @@ read_init_parameters()
 {
   while [ $# -gt 0 ]; do
     echo
-    echo "Input Parameters: Key: ${1@Q}; Value: ${2@Q};"
+    echo "Input Parameters: Key: ${1}; Value: ${2};"
     echo
     case "$1" in
       --environment|--env|-e)
@@ -198,7 +198,7 @@ decide_dioptra_environment(){
 
     # Initialize the original environment for DIOPTRA 
     source "${DIOPTRA_LOCAL}/dev-set.sh" -e "${DIOPTRA_CONF_FILE}"
-    sh "${DIOPTRA_LOCAL}/setup.sh"
+    # sh "${DIOPTRA_LOCAL}/setup.sh"
 }
 
 ###########################################################################################
@@ -234,11 +234,11 @@ read_init_parameters $@
 if ! [ -z "${DIOPTRA_CONF_FILE}" ] && ! [ -z "${DIOPTRA_CONF_REAL_PATH}" ] ; then
 
     if ! [ -e "${DIOPTRA_CONF_REAL_PATH}" ]; then
-        echo "File ${DIOPTRA_CONF_REAL_PATH@Q} doesn't exist"
+        echo "File ${DIOPTRA_CONF_REAL_PATH} doesn't exist"
         exit -1
     fi
     if ! [ -f "${DIOPTRA_CONF_REAL_PATH}" ] ; then
-        echo "${DIOPTRA_CONF_REAL_PATH@Q} isn't a file"
+        echo "${DIOPTRA_CONF_REAL_PATH} isn't a file"
         exit -1
     fi
 
