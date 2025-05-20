@@ -2,4 +2,4 @@
 
 
 cd "${DIOPTRA_CODE}/src/frontend"
-npm run "${DIOPTRA_BRANCH}"
+npm run dev

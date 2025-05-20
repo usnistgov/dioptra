@@ -208,16 +208,28 @@ decide_dioptra_environment(){
 ### 
 ###########################################################################################
 ###########################################################################################
+BASH_MAJOR="${BASH_VERSINFO:-0}"
+if [ "${BASH_MAJOR}" -lt 5 ]; then
+  echo "❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌"
+  echo "❌❌❌  Your BASH version if not 5 and higher as required." >&2
+  echo "❌❌❌  Your current BASH Version is ${BASH_VERSION}." >&2
+  echo "❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌"
+  exit -1
+fi
 read_init_parameters $@
-echo "DCF = $DIOPTRA_CONF_FILE"
-echo "DCRP = $DIOPTRA_CONF_REAL_PATH"
-echo
+
+# Section below is helpful for debugging
+#
+# echo "DCF = $DIOPTRA_CONF_FILE"
+# echo "DCRP = $DIOPTRA_CONF_REAL_PATH"
+# echo
 # test -z "${DIOPTRA_CONF_FILE}"
 # echo "TEST-non-empty: $? ${DIOPTRA_CONF_FILE@Q}"
 # test -e "${DIOPTRA_CONF_FILE@Q}"
 # echo "TEST-exists: $?  ${DIOPTRA_CONF_FILE@Q}"
 # test -f "${DIOPTRA_CONF_FILE@Q}" 
 # echo "TEST-file: $?  ${DIOPTRA_CONF_FILE@Q}" 
+#
 
 if ! [ -z "${DIOPTRA_CONF_FILE}" ] && ! [ -z "${DIOPTRA_CONF_REAL_PATH}" ] ; then
 
