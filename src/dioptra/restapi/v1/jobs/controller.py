@@ -44,6 +44,8 @@ from dioptra.restapi.v1.shared.tags.controller import (
 
 from .schema import (
     JobGetQueryParameters,
+    JobLogRecordsSchema,
+    JobLogSearchParameters,
     JobMlflowRunSchema,
     JobPageSchema,
     JobSchema,
@@ -60,6 +62,7 @@ from .service import (
     JobIdMlflowrunService,
     JobIdService,
     JobIdStatusService,
+    JobLogService,
     JobService,
 )
 
@@ -360,6 +363,36 @@ class JobIdMetricsSnapshotsEndpoint(Resource):
             sort_by=None,
             descending=None,
         )
+
+
+@api.route("/<int:id>/log")
+@api.param("id", "ID for the Job resource.")
+class JobIdLogEndpoint(Resource):
+    @inject
+    def __init__(self, job_log_service: JobLogService, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._job_log_service = job_log_service
+
+    @login_required
+    @accepts(query_params_schema=JobLogSearchParameters, api=api)
+    @responds(schema=JobLogRecordsSchema, api=api)
+    def get(self, id: int):
+        index = request.parsed_query_params["index"]  # type: ignore
+        page_length = request.parsed_query_params["page_length"]  # type: ignore
+
+        records = self._job_log_service.get_logs(id, index, page_length)
+
+        return {"records": records}
+
+    @login_required
+    @accepts(schema=JobLogRecordsSchema, api=api)
+    @responds(schema=JobLogRecordsSchema, api=api)
+    def post(self, id: int):
+        records = request.parsed_obj["records"]  # type: ignore
+
+        self._job_log_service.add_logs(id, records)
+
+        return request.parsed_obj  # type: ignore
 
 
 JobSnapshotsResource = generate_resource_snapshots_endpoint(

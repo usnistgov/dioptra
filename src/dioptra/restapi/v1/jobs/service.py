@@ -18,6 +18,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from typing import Any, Final, cast
 from uuid import UUID
 
@@ -58,6 +59,8 @@ from dioptra.restapi.v1.queues.service import RESOURCE_TYPE as QUEUE_RESOURCE_TY
 from dioptra.restapi.v1.queues.service import QueueIdService
 from dioptra.restapi.v1.shared.rq_service import RQServiceV1
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
+
+from .schema import JobLogSeverity
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -1302,3 +1305,86 @@ class ExperimentMetricsService(object):
             for job_id in job_ids
         ]
         return metrics_for_jobs, num_jobs
+
+
+class JobLogService(object):
+    @inject
+    def __init__(self, job_id_service: JobIdService):
+        self._job_id_service = job_id_service
+
+    def add_logs(self, job_resource_id: int, records: Iterable[dict[str, Any]]) -> None:
+        """
+        Add the given log records to the database.
+
+        Args:
+            job_resource_id: The resource ID of a job
+            records: An iterable of dicts, where each dict complies with the
+                JobLogRecordSchema marshmallow schema (after loading).
+        """
+        job_dict = self._job_id_service.get(job_resource_id, error_if_not_found=True)
+        # can't be None since error_if_not_found is True: the .get() call would
+        # error instead of returning None.
+        assert job_dict is not None
+
+        job = job_dict["job"]
+
+        for record in records:
+            job_log = models.JobLog(
+                record["severity"].name,
+                record.get("step_name"),
+                record["timestamp"],
+                record["message"],
+                job.resource,
+            )
+            db.session.add(job_log)
+
+        db.session.commit()
+
+    def get_logs(
+        self,
+        job_resource_id: int,
+        index: int | None,
+        page_length: int | None,
+    ) -> list[dict[str, Any]]:
+        """
+        Get log records from the database, for the given job.
+
+        Args:
+            job_resource_id: The resource ID of a job
+            index: Zero-based index of the first log record to return;
+                None means start with the first
+            page_length: The number of records to return; None means return all
+                remaining records.
+
+        Returns:
+            The records.
+        """
+
+        stmt = (
+            select(models.JobLog)
+            .where(models.JobLog.job_resource_id == job_resource_id)
+            .order_by(models.JobLog.id)
+        )
+
+        if index is not None:
+            stmt = stmt.offset(index)
+
+        if page_length is not None and page_length >= 0:
+            stmt = stmt.limit(page_length)
+
+        log_objs = db.session.scalars(stmt)
+
+        records = []
+        for log_obj in log_objs:
+            record = {
+                "severity": JobLogSeverity[log_obj.severity],
+                "timestamp": log_obj.timestamp,
+                "message": log_obj.message,
+            }
+
+            if log_obj.step_name is not None:
+                record["step_name"] = log_obj.step_name
+
+            records.append(record)
+
+        return records
