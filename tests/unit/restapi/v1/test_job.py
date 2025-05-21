@@ -20,6 +20,7 @@ This module contains a set of tests that validate the CRUD operations and additi
 functionalities for the job entity. The tests ensure that the queues can be
 registered, renamed, queried, and deleted as expected through the REST API.
 """
+import datetime
 from http import HTTPStatus
 from typing import Any
 
@@ -888,3 +889,103 @@ def test_tag_job(
         job["id"],
         tag_ids=tag_ids,
     )
+
+
+def test_add_logs(dioptra_client, auth_account, registered_jobs):
+
+    log_records = [
+        {
+            "severity": "DEBUG",
+            "stepName": "step1",
+            "message": "Log message 1",
+        },
+        {
+            # stepName is optional
+            # "stepName": "step2",
+            "severity": "INFO",
+            "message": "Log message 2",
+        },
+        {
+            "severity": "WARNING",
+            "stepName": "step3",
+            "timestamp": "1984-05-21T15:23:52.123456-05:00",
+            "message": "Log message 3",
+        }
+    ]
+
+    job = registered_jobs["job1"]
+    job_resource_id = job["id"]
+
+    resp = dioptra_client.jobs.append_logs_by_id(
+        job_resource_id, log_records
+    )
+
+    assert resp.status_code == HTTPStatus.OK
+    returned_logs = resp.json()["records"]
+
+    # The timestamps on the first two returned records are unpredictable (the
+    # server set them), so just ensure they are there.  Then delete them, so we
+    # can do a predictable comparison.
+    assert "timestamp" in returned_logs[0]
+    assert "timestamp" in returned_logs[1]
+
+    del returned_logs[0]["timestamp"]
+    del returned_logs[1]["timestamp"]
+
+    # The timestamp on the third log will have changed to UTC.  Switch it
+    # over manually in the input, to produce expected output.
+    log_records[2]["timestamp"] = datetime.datetime.fromisoformat(
+        log_records[2]["timestamp"]
+    ).astimezone(datetime.UTC).isoformat()
+
+    assert returned_logs == log_records
+
+
+def test_get_logs(client, dioptra_client, auth_account, registered_jobs):
+
+    log_records = {
+        "records": [
+            {
+                "severity": "DEBUG",
+                "stepName": "step1",
+                "message": "Log message 1",
+            },
+            {
+                # stepName is optional
+                # "stepName": "step2",
+                "severity": "INFO",
+                "message": "Log message 2",
+            },
+            {
+                "severity": "WARNING",
+                "stepName": "step3",
+                "timestamp": "1984-05-21T15:23:52.123456-05:00",
+                "message": "Log message 3",
+            }
+        ]
+    }
+
+    job = registered_jobs["job1"]
+    job_resource_id = job["id"]
+
+    client.post(f"/api/v1/jobs/{job_resource_id}/log", json=log_records)
+    resp = dioptra_client.jobs.get_logs_by_id(job_resource_id)
+    returned_logs = resp.json()["records"]
+
+    # The timestamps on the first two returned records are unpredictable (the
+    # server set them), so just ensure they are there.  Then delete them, so we
+    # can do a predictable comparison.
+    assert "timestamp" in returned_logs[0]
+    assert "timestamp" in returned_logs[1]
+
+    del returned_logs[0]["timestamp"]
+    del returned_logs[1]["timestamp"]
+
+    log_records = log_records["records"]
+    # The timestamp on the third log will have changed to UTC.  Switch it
+    # over manually in the input, to produce expected output.
+    log_records[2]["timestamp"] = datetime.datetime.fromisoformat(
+        log_records[2]["timestamp"]
+    ).astimezone(datetime.UTC).isoformat()
+
+    assert returned_logs == log_records
