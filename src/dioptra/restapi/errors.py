@@ -373,6 +373,22 @@ class PluginParameterTypeMatchesBuiltinTypeError(DioptraError):
         )
 
 
+class InconsistentBuiltinPluginParameterTypesError(DioptraError):
+    """
+    The built-in plugin parameter types registered in the database is not consistent
+    with expectations.
+    """
+
+    def __init__(self, missing_names: set[str], extra_names: set[str]):
+        super().__init__(
+            "The built-in plugin parameter types registered in the database is not "
+            "consistent with expectations. A database migration may be necessary. "
+            "Please contact the system administrator."
+        )
+        self.missing_names = missing_names
+        self.extra_names = extra_names
+
+
 # User Errors
 class NoCurrentUserError(DioptraError):
     """There is no currently logged-in user."""
@@ -691,6 +707,20 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
     def handle_lock_error(error: LockError):
         log.debug(error.to_message())
         return error_result(error, http.HTTPStatus.FORBIDDEN, {})
+
+    @api.errorhandler(InconsistentBuiltinPluginParameterTypesError)
+    def handle_inconsistent_builtin_plugin_parameter_types_error(
+        error: InconsistentBuiltinPluginParameterTypesError,
+    ):
+        log.debug(error.to_message())
+        return error_result(
+            error,
+            http.HTTPStatus.INTERNAL_SERVER_ERROR,
+            {
+                "missing_names": sorted(list(error.missing_names)),
+                "extra_names": sorted(list(error.extra_names)),
+            },
+        )
 
     @api.errorhandler(NoCurrentUserError)
     def handle_no_current_user_error(error: NoCurrentUserError):

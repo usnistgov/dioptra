@@ -535,7 +535,6 @@ def draft_exists(session: CompatibleSession[S], draft: DraftResource | int) -> b
     if draft_id is None:
         exists = False
     else:
-
         sub_stmt: sa.Select = (
             sa.select(sa.literal_column("1"))
             .select_from(DraftResource)
@@ -1216,7 +1215,6 @@ def _assert_exists_multi(
     # of the same type.
 
     if expected_number is not None and len(existence_result) < expected_number:
-
         # Got some objects with null IDs; treat as not exist.  Can't identify
         # the relevant children with numeric IDs, so just use None.
         raise EntityDoesNotExistError(
@@ -1668,6 +1666,56 @@ def get_snapshot_by_name(
     return resource
 
 
+def get_snapshots_by_names(
+    session: CompatibleSession[S],
+    snap_class: typing.Type[ResourceT],
+    names: Sequence[str],
+    group: Group | int,
+    deletion_policy: DeletionPolicy,
+) -> Sequence[ResourceT]:
+    """
+    Get the latest snapshots of a list of resources, by their names.
+
+    snap_class must have an attribute named "name" which maps to the name
+    column of its table.
+
+    Args:
+        session: An SQLAlchemy session
+        snap_class: A ResourceSnapshot subclass, which represents which type
+            of resource to get, with a "name" attribute
+        name: A sequence of names to search for
+        group: A group/group ID, to disambiguate same-named resources across
+            groups
+        deletion_policy: Whether to look at deleted resources, non-deleted
+            resources, or all resources
+
+    Returns:
+        A list of snapshots or an empty list if none were found with the given
+        names
+
+    Raises:
+        EntityDoesNotExistError: if the given group does not exist
+        EntityDeletedError: if the given group is deleted
+    """
+    assert_group_exists(session, group, DeletionPolicy.NOT_DELETED)
+    group_id = get_group_id(group)
+
+    stmt = (
+        sa.select(snap_class)
+        .join(Resource)
+        .where(
+            snap_class.resource_snapshot_id == Resource.latest_snapshot_id,
+            Resource.group_id == group_id,
+            snap_class.name.in_(list(names)),  # ensure in_ gets a list
+        )
+    )
+
+    stmt = apply_resource_deletion_policy(stmt, deletion_policy)
+    resource = session.scalars(stmt).all()
+
+    return resource
+
+
 def set_resource_children(
     session: CompatibleSession[S],
     child_class: typing.Type[ResourceT],
@@ -1856,7 +1904,6 @@ def delete_resource(
         raise EntityDoesNotExistError(resource_type, resource_id=resource_id)
 
     elif exists_result is ExistenceResult.EXISTS:
-
         assert_resource_modifiable(session, resource)
 
         # here, we really need the Resource object; ResourceLock's constructor

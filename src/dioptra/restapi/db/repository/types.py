@@ -31,11 +31,11 @@ from dioptra.restapi.db.models import (
     User,
 )
 from dioptra.restapi.db.models.constants import resource_lock_types
+from dioptra.restapi.errors import InconsistentBuiltinPluginParameterTypesError
 from dioptra.task_engine.type_registry import BUILTIN_TYPES
 
 
 class TypeRepository:
-
     SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
         "name": lambda x: PluginTaskParameterType.name.like(x, escape="/"),
         "description": lambda x: PluginTaskParameterType.description.like(
@@ -290,3 +290,48 @@ class TypeRepository:
             self.session.add(lock)
 
         return types
+
+    def get_builtins(
+        self,
+        group: Group | int,
+        deletion_policy: utils.DeletionPolicy = utils.DeletionPolicy.NOT_DELETED,
+    ) -> Sequence[PluginTaskParameterType]:
+        """
+        Get the list of predefined types. This returns the latest version
+        (snapshot) of the predefined types.
+
+        Args:
+            group: A group/group ID, to disambiguate same-named types across
+                groups
+            deletion_policy: Whether to look at deleted types, non-deleted
+                types, or all types
+
+        Returns:
+            A sequence of the predefined PluginTaskParameterType objects.
+
+        Raises:
+            EntityDoesNotExistError: if the given group does not exist
+            EntityDeletedError: if the given group is deleted
+            InconsistentBuiltinPluginParameterTypesError: if the number of
+                builtin types in the database does not match the number of
+                builtin types declared in the code.
+        """
+        builtin_types_names = list(BUILTIN_TYPES.keys())
+        builtin_types = utils.get_snapshots_by_names(
+            self.session,
+            PluginTaskParameterType,
+            builtin_types_names,
+            group,
+            deletion_policy,
+        )
+
+        if len(builtin_types_names) != len(builtin_types):
+            retrieved_names = {param_type.name for param_type in builtin_types}
+            missing_names = set(builtin_types_names) - retrieved_names
+            extra_names = retrieved_names - set(builtin_types_names)
+            raise InconsistentBuiltinPluginParameterTypesError(
+                missing_names=missing_names,
+                extra_names=extra_names,
+            )
+
+        return builtin_types
