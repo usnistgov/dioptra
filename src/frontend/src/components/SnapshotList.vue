@@ -18,24 +18,26 @@
     :disableUnselect="true"
   >
     <template #body-cell-timestamp="props">
-      {{
-        new Intl.DateTimeFormat('en-US', { 
-          year: '2-digit', 
-          month: '2-digit', 
-          day: '2-digit', 
-          hour: 'numeric', 
-          minute: 'numeric', 
-          hour12: true 
-        }).format(new Date(props.row.snapshotCreatedOn))
-      }}
-      <q-chip
-        v-if="props.row.latestSnapshot"
-        label="latest"
-        size="md"
-        dense
-        color="orange"
-        text-color="white"
-      />
+      <div :data-snapshot-id="props.row.snapshot">
+        {{
+          new Intl.DateTimeFormat('en-US', { 
+            year: '2-digit', 
+            month: '2-digit', 
+            day: '2-digit', 
+            hour: 'numeric', 
+            minute: 'numeric', 
+            hour12: true 
+          }).format(new Date(props.row.snapshotCreatedOn))
+        }}
+        <q-chip
+          v-if="props.row.latestSnapshot"
+          label="latest"
+          size="md"
+          dense
+          color="orange"
+          text-color="white"
+        />
+      </div>
     </template>
   </TableComponent>
 </template>
@@ -44,7 +46,7 @@
 import { useLoginStore } from '@/stores/LoginStore'
 import { useRoute, useRouter } from 'vue-router'
 import TableComponent from '@/components/TableComponent.vue'
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, nextTick } from 'vue'
 import * as api from '@/services/dataApi'
 
 const props = defineProps(['showDialogHistory', 'type', 'id', 'maxHeight'])
@@ -67,6 +69,12 @@ async function getSnapshots() {
           obj => obj.snapshot === Number(route.query.snapshotId)
         )
         selected.value = [snapshots.value[index]]
+        // scroll to selected snapshot if needed
+        await nextTick()
+        const el = document.querySelector(
+          `[data-snapshot-id="${route.query.snapshotId}"]`
+        )
+        el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
       } else {
         // else auto select the latest snapshot
         selected.value = [snapshots.value[0]]
