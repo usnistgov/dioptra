@@ -18,7 +18,7 @@ mkdir -p ${DIOPTRA_DEPLOY}
 
 # set-up python environment
 if [ -a ${DIOPTRA_VENV} ] ; then
-    echo "${$DIOPTRA_VENV} directory already exists. Skipping environment creation."
+    echo "${DIOPTRA_VENV} directory already exists. Skipping environment creation."
 else
     python3 -m venv ${DIOPTRA_VENV}
     source ${DIOPTRA_VENV}/bin/activate
