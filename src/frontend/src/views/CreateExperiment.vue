@@ -128,7 +128,7 @@
             color="grey"
             class="q-mr-sm"
           />
-          <div>Entrypoints are not part of Experiment snapshots</div>
+          <div>Entrypoints are not yet available in Experiment snapshots</div>
         </div>
       </div>
     </fieldset>
@@ -168,7 +168,7 @@
 </template>
 
 <script setup>
-  import { ref, inject, computed, watch } from 'vue'
+  import { ref, inject, computed, watch, onMounted } from 'vue'
   import { useLoginStore } from '@/stores/LoginStore.ts'
   import { useRouter, useRoute, onBeforeRouteLeave } from 'vue-router'
   import * as api from '@/services/dataApi'
@@ -258,7 +258,14 @@
   const title = ref('')
   const showReturnDialog = ref(false)
 
-  getExperiment()
+  onMounted(() => {
+    if(route.query.snapshotId && !store.showRightDrawer) {
+      store.showRightDrawer = true
+    } else {
+      getExperiment()
+    }
+  })
+
   async function getExperiment() {
     if(route.params.id === 'new') {
       title.value = 'Create Experiment'
@@ -380,6 +387,7 @@
         group: newVal.group,
         description: newVal.description
       }
+      title.value = `View ${experiment.value.name}`
     } else {
       getExperiment()
     }
