@@ -17,6 +17,7 @@
 """The server-side functions that perform job endpoint operations."""
 from __future__ import annotations
 
+from math import isnan
 from typing import Any, Final, cast
 from uuid import UUID
 
@@ -578,7 +579,14 @@ class JobIdMetricsService(object):
             try:
                 run = client.get_run(run_id.hex)
                 metrics = [
-                    {"name": metric, "value": run.data.metrics[metric]}
+                    {
+                        "name": metric,
+                        "value": (
+                            run.data.metrics[metric]
+                            if not isnan(run.data.metrics[metric])
+                            else None
+                        ),
+                    }
                     for metric in run.data.metrics.keys()
                 ]
             except MlflowException:
@@ -630,7 +638,7 @@ class JobIdMetricsService(object):
                 client.log_metric(
                     run_id.hex,
                     key=metric_name,
-                    value=metric_value,
+                    value=metric_value if metric_value is not None else float("nan"),
                     step=metric_step,
                 )
             except MlflowException as e:
@@ -702,7 +710,7 @@ class JobIdMetricsSnapshotsService(object):
         metrics_page = [
             {
                 "name": metric.key,
-                "value": metric.value,
+                "value": metric.value if not isnan(metric.value) else None,
                 "step": metric.step,
                 "timestamp": metric.timestamp,
             }
@@ -710,7 +718,6 @@ class JobIdMetricsSnapshotsService(object):
                 page_index * page_length : (page_index + 1) * page_length
             ]
         ]
-
         return metrics_page, len(history)
 
 
