@@ -548,7 +548,7 @@ toolz==1.0.0
     #   dask
     #   distributed
     #   partd
-tornado==6.4.1
+tornado==6.5.1
     # via distributed
 tqdm==4.66.6
     # via
