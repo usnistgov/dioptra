@@ -20,6 +20,8 @@ from typing import Any, Final, cast
 
 import structlog
 import yaml
+from yaml.parser import ParserError
+from yaml.scanner import ScannerError
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.v1.workflows.lib.type_coercions import (
@@ -249,7 +251,10 @@ class TaskEngineYamlService(object):
             A dictionary representation of the entry point's task graph.
         """
         log = logger or LOGGER.new()  # noqa: F841
-        return cast(dict[str, Any], yaml.safe_load(entry_point.task_graph))
+        try:
+            return cast(dict[str, Any], yaml.safe_load(entry_point.task_graph))
+        except (ParserError, ScannerError) as e:
+            raise ValueError(f"Invalid YAML syntax: {e}") from e
 
     def build_plugin_field(
         self,

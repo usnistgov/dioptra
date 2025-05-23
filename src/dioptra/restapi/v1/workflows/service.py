@@ -23,6 +23,7 @@ from io import BytesIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import IO, Any, Final, cast
+from dioptra.task_engine.issues import IssueSeverity, IssueType, ValidationIssue
 
 import jsonschema
 import structlog
@@ -923,12 +924,25 @@ class ValidateEntrypointService(object):
         plugin_parameter_types = views.get_plugin_parameter_types(
             group_id=group_id, logger=log
         )
-        task_engine_dict = self._task_engine_yaml_service.build_dict(
-            entry_point=entrypoint,
-            plugin_plugin_files=plugin_plugin_files,  # pyright: ignore
-            plugin_parameter_types=plugin_parameter_types,  # pyright: ignore
-            logger=log,
-        )
+        try:
+            task_engine_dict = self._task_engine_yaml_service.build_dict(
+                entry_point=entrypoint,
+                plugin_plugin_files=plugin_plugin_files,  # pyright: ignore
+                plugin_parameter_types=plugin_parameter_types,  # pyright: ignore
+                logger=log,
+            )
+        except ValueError as e:
+            return {
+                "schema_valid": False,
+                "schema_issues": [
+                    ValidationIssue(
+                        type_=IssueType.SYNTAX,
+                        severity=IssueSeverity.ERROR,
+                        message=str(e),
+                    )
+                ],
+            }
+
         issues = self._task_engine_yaml_service.validate(
             task_engine_dict=task_engine_dict
         )
