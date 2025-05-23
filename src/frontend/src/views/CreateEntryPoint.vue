@@ -779,10 +779,13 @@
         pluginSnapshots: entryPoint.value.plugins.map(plugin => plugin.snapshotId),
         parameters: entryPoint.value.parameters
       })
-      if(res?.data?.schemaValid) {
+      if(res?.data?.schemaValid && !taskGraphPlaceholderError.value) {
         notify.success(`Entrypoint inputs are valid!`)
-      } else if(!res?.data?.schemaValid && res?.data?.schemaIssues.length > 0) {
+      } else if(res?.data?.schemaIssues.length > 0 || taskGraphPlaceholderError.value) {
         inputErrors.value = res.data.schemaIssues
+        if(taskGraphPlaceholderError.value) {
+          inputErrors.value.push({message: taskGraphPlaceholderError.value})
+        }
         displayErrorDialog.value = true
       }
     } catch(err) {
