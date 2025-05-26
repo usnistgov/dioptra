@@ -786,3 +786,13 @@ Run the following to prevent the deployment from restarting on reboot (systemd o
 .. code:: sh
 
    systemctl disable dioptra
+
+
+Rerunning the Deployment Script
+-------------------------------
+
+When making configuration changes and attempting to rerun ``init-deployment.sh``, the script may freeze while trying to reconfigure the minio container. It is likely that the container is still functioning properly, and this portion of the setup can be skipped by running  ``init-deployment.sh`` with the ``--skip-minio-setup`` option:
+
+.. code:: sh
+
+   ./init-deployment.sh --skip-minio-setup
