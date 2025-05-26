@@ -25,6 +25,7 @@ from typing import Any
 
 import pytest
 from flask_sqlalchemy import SQLAlchemy
+from mlflow.tracking import MlflowClient
 
 from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
@@ -129,6 +130,7 @@ def assert_model_version_response_contents_matches_expectations(
 
 def assert_retrieving_model_by_id_works(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
+    mlflow_client: MlflowClient,
     model_id: int,
     expected: dict[str, Any],
 ) -> None:
@@ -145,6 +147,9 @@ def assert_retrieving_model_by_id_works(
     """
     response = dioptra_client.models.get_by_id(model_id)
     assert response.status_code == HTTPStatus.OK and response.json() == expected
+
+    name = f"resource_{response.json()['id']:09d}"
+    assert mlflow_client.get_registered_model(name).name == name
 
 
 def assert_retrieving_models_works(
@@ -267,6 +272,7 @@ def assert_cannot_rename_model_with_existing_name(
 
 def assert_retrieving_model_version_by_version_number_works(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
+    mlflow_client: MlflowClient,
     model_id: int,
     version_number: int,
     expected: dict[str, Any],
@@ -288,6 +294,12 @@ def assert_retrieving_model_version_by_version_number_works(
     )
     assert response.status_code == HTTPStatus.OK and response.json() == expected
 
+    json_ = response.json()
+    name = f"resource_{json_['model']['id']:09d}"
+    model_version = mlflow_client.get_model_version(name, version_number)
+    assert model_version.name == name
+    assert model_version.source == json_["artifact"]["artifactUri"]
+
 
 def assert_retrieving_model_versions_works(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
@@ -296,7 +308,6 @@ def assert_retrieving_model_versions_works(
     search: str | None = None,
     paging_info: dict[str, Any] | None = None,
 ) -> None:
-    """"""
     query_string: dict[str, Any] = {}
 
     if search is not None:
@@ -342,10 +353,10 @@ def assert_model_version_description_matches_expected_description(
 
 def test_create_model(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
+    mlflow_client: MlflowClient,
     db: SQLAlchemy,
     auth_account: dict[str, Any],
 ) -> None:
-    """"""
     name = "my_model"
     description = "The first model."
     user_id = auth_account["id"]
@@ -366,7 +377,10 @@ def test_create_model(
         },
     )
     assert_retrieving_model_by_id_works(
-        dioptra_client, model_id=model_expected["id"], expected=model_expected
+        dioptra_client=dioptra_client,
+        mlflow_client=mlflow_client,
+        model_id=model_expected["id"],
+        expected=model_expected,
     )
 
 
@@ -774,6 +788,7 @@ def test_tag_model(
 
 def test_create_model_version(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
+    mlflow_client: MlflowClient,
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
@@ -807,7 +822,8 @@ def test_create_model_version(
     )
 
     assert_retrieving_model_version_by_version_number_works(
-        dioptra_client,
+        dioptra_client=dioptra_client,
+        mlflow_client=mlflow_client,
         model_id=model_id,
         version_number=model_version_response["versionNumber"],
         expected=model_version_response,
