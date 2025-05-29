@@ -19,7 +19,7 @@
 from __future__ import annotations
 
 from types import FunctionType
-from typing import Callable, Dict, List, Tuple, Union
+from typing import Callable
 
 import structlog
 from structlog.stdlib import BoundLogger
@@ -55,8 +55,8 @@ except ImportError:  # pragma: nocover
 def init_classifier(
     model_architecture: str,
     optimizer: Optimizer,
-    metrics: List[Union[Metric, FunctionType]],
-    input_shape: Tuple[int, int, int],
+    metrics: list[Metric | FunctionType],
+    input_shape: tuple[int, int, int],
     n_classes: int,
     loss: str = "categorical_crossentropy",
 ) -> Sequential:
@@ -103,7 +103,7 @@ def init_classifier(
     return classifier
 
 
-def shallow_net(input_shape: Tuple[int, int, int], n_classes: int) -> Sequential:
+def shallow_net(input_shape: tuple[int, int, int], n_classes: int) -> Sequential:
     """Builds an untrained shallow neural network architecture for Tensorflow/Keras.
 
     Args:
@@ -132,7 +132,7 @@ def shallow_net(input_shape: Tuple[int, int, int], n_classes: int) -> Sequential
     return model
 
 
-def le_net(input_shape: Tuple[int, int, int], n_classes: int) -> Sequential:
+def le_net(input_shape: tuple[int, int, int], n_classes: int) -> Sequential:
     """Builds an untrained LeNet-5 neural network architecture for Tensorflow/Keras.
 
     Args:
@@ -170,7 +170,7 @@ def le_net(input_shape: Tuple[int, int, int], n_classes: int) -> Sequential:
     return model
 
 
-def alex_net(input_shape: Tuple[int, int, int], n_classes: int) -> Sequential:
+def alex_net(input_shape: tuple[int, int, int], n_classes: int) -> Sequential:
     """Builds an untrained AlexNet neural network architecture for Tensorflow/Keras.
 
     Args:
@@ -225,6 +225,6 @@ def alex_net(input_shape: Tuple[int, int, int], n_classes: int) -> Sequential:
     return model
 
 
-KERAS_CLASSIFIERS_REGISTRY: Dict[
-    str, Callable[[Tuple[int, int, int], int], Sequential]
+KERAS_CLASSIFIERS_REGISTRY: dict[
+    str, Callable[[tuple[int, int, int], int], Sequential]
 ] = dict(shallow_net=shallow_net, le_net=le_net, alex_net=alex_net)

@@ -23,7 +23,7 @@ import tarfile
 import uuid
 from pathlib import Path
 from tarfile import TarFile
-from typing import Any, List, Union
+from typing import Any
 
 import structlog
 from structlog.stdlib import BoundLogger
@@ -33,7 +33,7 @@ from dioptra import pyplugs
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
-def is_within_directory(directory: Union[str, Path], target: Union[str, Path]) -> bool:
+def is_within_directory(directory: str | Path, target: str | Path) -> bool:
     abs_directory = os.path.abspath(directory)
     abs_target = os.path.abspath(target)
 
@@ -42,7 +42,7 @@ def is_within_directory(directory: Union[str, Path], target: Union[str, Path]) -
     return prefix == abs_directory
 
 
-def safe_extract(tar: TarFile, path: Union[str, Path] = ".") -> None:
+def safe_extract(tar: TarFile, path: str | Path = ".") -> None:
     for member in tar.getmembers():
         member_path = os.path.join(path, member.name)
         if not is_within_directory(path, member_path):
@@ -53,7 +53,7 @@ def safe_extract(tar: TarFile, path: Union[str, Path] = ".") -> None:
 
 @pyplugs.register
 def extract_tarfile(
-    filepath: Union[str, Path],
+    filepath: str | Path,
     tarball_read_mode: str = "r:gz",
     output_dir: Any = None,
 ) -> None:
@@ -72,12 +72,12 @@ def extract_tarfile(
     output_dir = Path(output_dir) if output_dir is not None else Path.cwd()
 
     filepath = Path(filepath)
-    with tarfile.open(filepath, tarball_read_mode) as f:
+    with tarfile.open(filepath, tarball_read_mode) as f: # type: ignore
         safe_extract(f, path=output_dir)
 
 
 @pyplugs.register
-def make_directories(dirs: List[Union[str, Path]]) -> None:
+def make_directories(dirs: list[str | Path]) -> None:
     """Creates directories if they do not exist.
 
     Args:
@@ -92,7 +92,7 @@ def make_directories(dirs: List[Union[str, Path]]) -> None:
 
 @pyplugs.register
 def extract_tarfile_in_unique_subdir(
-    filepath: Union[str, Path],
+    filepath: str | Path,
     tarball_read_mode: str = "r:gz",
 ) -> Path:
     """Extracts a tarball archive into a unique subdirectory of the
@@ -112,6 +112,6 @@ def extract_tarfile_in_unique_subdir(
     output_dir.mkdir(mode=0o700, parents=True, exist_ok=True)
 
     filepath = Path(filepath)
-    with tarfile.open(filepath, tarball_read_mode) as f:
+    with tarfile.open(filepath, tarball_read_mode) as f: # type: ignore
         safe_extract(f, path=output_dir)
     return output_dir

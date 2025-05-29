@@ -15,12 +15,13 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 import os
+from typing import Any
 
 import structlog
 from structlog.stdlib import BoundLogger
 
 from dioptra import pyplugs
-from dioptra.client import connect_json_dioptra_client
+from dioptra.client import connect_json_dioptra_client, DioptraClient
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -48,18 +49,27 @@ def get_uri_for_model(model_name, model_version=-1):
     return uri
 
 
-def get_uris_for_job(job_id):
+def get_uris_for_job(
+    job_id: str | int
+) -> list[str]:
     dioptra_client = get_logged_in_session()
     job = dioptra_client.jobs.get_by_id(job_id)
     return [artifact["artifactUri"] for artifact in job["artifacts"]]
 
 
-def get_uris_for_artifacts(artifact_ids):
+def get_uris_for_artifacts(
+    artifact_ids: list[int]
+) -> list[dict[str, Any]]:
     dioptra_client = get_logged_in_session()
     return [dioptra_client.artifacts.get_by_id(artifact_id=aid) for aid in artifact_ids]
 
 
-def post_metrics(metric_name, metric_value, job_id=None, metric_step=None):
+def post_metrics(
+    metric_name: str,
+    metric_value: float,
+    job_id: str|int|None = None,
+    metric_step: int|None = None
+) -> dict[str, Any]:
     import math
     dioptra_client = get_logged_in_session()
     if math.isnan(metric_value):
@@ -74,7 +84,7 @@ def post_metrics(metric_name, metric_value, job_id=None, metric_step=None):
     )
 
 
-def get_logged_in_session():
+def get_logged_in_session() -> DioptraClient[dict[str, Any]]:
     url = os.environ["DIOPTRA_API"]
     dioptra_client = connect_json_dioptra_client(url)
     dioptra_client.auth.login(
@@ -84,7 +94,11 @@ def get_logged_in_session():
     return dioptra_client
 
 
-def upload_model_to_restapi(name, source_uri, job_id):
+def upload_model_to_restapi(
+    name: str, 
+    source_uri: str, 
+    job_id: str | int,
+):
     version = 0
     model_id = 0
 
@@ -120,7 +134,10 @@ def upload_model_to_restapi(name, source_uri, job_id):
     LOGGER.info("model created", response=model_version)
 
 
-def upload_artifact_to_restapi(source_uri, job_id):
+def upload_artifact_to_restapi(
+    source_uri: str,
+    job_id: str | int,
+):
     dioptra_client = get_logged_in_session()
     artifact = dioptra_client.artifacts.create(
         group_id=1,

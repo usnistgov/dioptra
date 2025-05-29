@@ -29,7 +29,6 @@ apply_patches:
     adv_data_dir: $adv_data_dir
     patch_dir: $patch_dir
     model: $model
-    patch_shape: $patch_shape
     distance_metrics:
       - name: l_infinity_norm
         func: l_inf_norm
