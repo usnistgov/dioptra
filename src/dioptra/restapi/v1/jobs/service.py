@@ -1366,6 +1366,8 @@ class JobLogService(object):
             .where(models.JobLog.job_resource_id == job_resource_id)
         )
         total_count = db.session.scalar(count_stmt)
+        # "select count(*) ..." can't produce None
+        assert total_count is not None
 
         page_stmt = (
             select(models.JobLog)
