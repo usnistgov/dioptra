@@ -23,7 +23,6 @@ from io import BytesIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import IO, Any, Final, cast
-from dioptra.task_engine.issues import IssueSeverity, IssueType, ValidationIssue
 
 import jsonschema
 import structlog
@@ -67,6 +66,7 @@ from dioptra.restapi.v1.shared.resource_service import (
 from dioptra.restapi.v1.shared.signature_analysis import get_plugin_signatures
 from dioptra.restapi.v1.shared.task_engine_yaml.service import TaskEngineYamlService
 from dioptra.sdk.utilities.paths import set_cwd
+from dioptra.task_engine.issues import IssueSeverity, IssueType, ValidationIssue
 
 from .lib import views
 from .lib.clone_git_repository import clone_git_repository

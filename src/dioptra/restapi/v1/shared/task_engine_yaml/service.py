@@ -20,9 +20,9 @@ from typing import Any, Final, cast
 
 import structlog
 import yaml
+from structlog.stdlib import BoundLogger
 from yaml.parser import ParserError
 from yaml.scanner import ScannerError
-from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.v1.workflows.lib.type_coercions import (
     BOOLEAN_PARAM_TYPE,
