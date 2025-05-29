@@ -105,29 +105,29 @@ description = "A collection of plugins for training an MNIST classifier and runn
     { name = "testing_dir", type = "string", required = false },
     { name = "subsets", type = "list_str", required = false },
     { name = "image_size", type = "tuple_int_int_int", required = false },
+    { name = "validation_split", type = "null_num", required = false },
     { name = "rescale", type = "number", required = false },
-    { name = "validation_split", type = "num_null", required = false },
     { name = "batch_size", type = "integer", required = false },
     { name = "label_mode", type = "string", required = false },
     { name = "shuffle", type = "boolean", required = false }
   ]
   output_params = [ 
-    { name = "training", type = "directory_iterator" },
-    { name = "validation", type = "directory_iterator" },
-    { name = "testing", type = "directory_iterator" }
+    { name = "training", type = "dataset" },
+    { name = "validation", type = "dataset" },
+    { name = "testing", type = "dataset" }
   ]
 
   [[plugins.tasks]]
   filename = "plugins.py"
   name = "create_model"
   input_params = [ 
-    { name = "dataset", type = "directory_iterator", required = false},
+    { name = "dataset", type = "dataset", required = false},
     { name = "model_architecture", type = "string", required = false },
     { name = "input_shape", type = "tuple_int_int_int", required = false },
     { name = "loss", type = "string", required = false },
     { name = "learning_rate", type = "number", required = false },
     { name = "optimizer", type = "string", required = false },
-    { name = "metrics_list", type = "metric_name_list", required = false },
+    { name = "metrics_list", type = "null_metric_name_list", required = false },
   ]
   output_params = [ { name = "output", type = "model" } ]
 
@@ -135,11 +135,11 @@ description = "A collection of plugins for training an MNIST classifier and runn
   filename = "plugins.py"
   name = "load_model"
   input_params = [ 
-    { name = "model_name", type = "string", required = false},
-    { name = "model_version", type = "integer", required = false },
+    { name = "model_name", type = "null_str", required = false},
+    { name = "model_version", type = "null_int", required = false },
     { name = "imagenet_preprocessing", type = "boolean", required = false },
     { name = "art", type = "boolean", required = false },
-    { name = "image_size", type = "any", required = false },
+    { name = "image_size", type = "tuple_int_int_int", required = false },
     { name = "classifier_kwargs", type = "null_mapping_str_any", required = false },
   ]
   output_params = [ { name = "output", type = "model" } ]
@@ -148,10 +148,10 @@ description = "A collection of plugins for training an MNIST classifier and runn
   filename = "plugins.py"
   name = "train"
   input_params = [ 
-    { name = "estimator", type = "any", required = true},
-    { name = "x", type = "any", required = false },
+    { name = "estimator", type = "model", required = true},
+    { name = "x", type = "dataset", required = false },
     { name = "y", type = "any", required = false },
-    { name = "callbacks_list", type = "callback_list", required = false },
+    { name = "callbacks_list", type = "null_callback_list", required = false },
     { name = "fit_kwargs", type = "null_mapping_str_any", required = false },
   ]
   output_params = [ { name = "output", type = "model" } ]
@@ -160,8 +160,8 @@ description = "A collection of plugins for training an MNIST classifier and runn
   filename = "plugins.py"
   name = "save_artifacts_and_models"
   input_params = [ 
-    { name = "artifacts", type = "any", required = false},
-    { name = "models", type = "any", required = false },
+    { name = "artifacts", type = "null_list_mapping_str_any", required = false},
+    { name = "models", type = "null_list_mapping_str_str_model", required = false },
   ]
   output_params = [ ]
 
@@ -170,8 +170,8 @@ description = "A collection of plugins for training an MNIST classifier and runn
   name = "load_artifacts_for_job"
   input_params = [ 
     { name = "job_id", type = "string", required = true},
-    { name = "files", type = "list_str_path", required = false },
-    { name = "extract_files", type = "list_str_path", required = false },
+    { name = "files", type = "null_list_str", required = false },
+    { name = "extract_files", type = "null_list_str", required = false },
   ]
   output_params = [ { name = "output", type = "list_str" } ]
 
@@ -179,8 +179,8 @@ description = "A collection of plugins for training an MNIST classifier and runn
   filename = "plugins.py"
   name = "load_artifacts"
   input_params = [ 
-    { name = "artifact_ids", type = "list_int", required = false},
-    { name = "extract_files", type = "list_str_path", required = false },
+    { name = "artifact_ids", type = "null_list_int", required = false},
+    { name = "extract_files", type = "null_list_str", required = false },
   ]
   output_params = [ ]
 
@@ -188,7 +188,7 @@ description = "A collection of plugins for training an MNIST classifier and runn
   filename = "plugins.py"
   name = "attack_fgm"
   input_params = [ 
-    { name = "dataset", type = "directory_iterator", required = true},
+    { name = "dataset", type = "dataset", required = true},
     { name = "adv_data_dir", type = "str_path", required = true },
     { name = "classifier", type = "model", required = true },
     { name = "distance_metrics", type = "list_mapping_str_str", required = false },
@@ -204,7 +204,7 @@ description = "A collection of plugins for training an MNIST classifier and runn
   filename = "plugins.py"
   name = "attack_patch"
   input_params = [ 
-    { name = "data_flow", type = "directory_iterator", required = true},
+    { name = "data_flow", type = "dataset", required = true},
     { name = "adv_data_dir", type = "str_path", required = true },
     { name = "model", type = "model", required = true },
     { name = "patch_target", type = "integer", required = true },
@@ -215,7 +215,6 @@ description = "A collection of plugins for training an MNIST classifier and runn
     { name = "scale_max", type = "number", required = true },
     { name = "learning_rate", type = "number", required = true },
     { name = "max_iter", type = "integer", required = true },
-    { name = "patch_shape", type = "any", required = true },
   ]
   output_params = [ ]
 
@@ -223,11 +222,10 @@ description = "A collection of plugins for training an MNIST classifier and runn
   filename = "plugins.py"
   name = "augment_patch"
   input_params = [ 
-    { name = "data_flow", type = "directory_iterator", required = true},
+    { name = "data_flow", type = "dataset", required = true},
     { name = "adv_data_dir", type = "str_path", required = true },
     { name = "patch_dir", type = "str_path", required = true },
     { name = "model", type = "model", required = true },
-    { name = "patch_shape", type = "any", required = true },
     { name = "distance_metrics", type = "list_mapping_str_str", required = true },
     { name = "batch_size", type = "integer", required = true },
     { name = "patch_scale", type = "number", required = true },
@@ -242,7 +240,7 @@ description = "A collection of plugins for training an MNIST classifier and runn
   name = "model_metrics"
   input_params = [ 
     { name = "classifier", type = "model", required = true},
-    { name = "dataset", type = "directory_iterator", required = true },
+    { name = "dataset", type = "dataset", required = true },
   ]
   output_params = [ { name = "output", type = "mapping_str_float" } ]
 
@@ -250,8 +248,8 @@ description = "A collection of plugins for training an MNIST classifier and runn
   filename = "plugins.py"
   name = "prediction_metrics"
   input_params = [ 
-    { name = "y_true", type = "np.ndarray", required = true},
-    { name = "y_pred", type = "np.ndarray", required = true},
+    { name = "y_true", type = "null_np.ndarray", required = true},
+    { name = "y_pred", type = "null_np.ndarray", required = true},
     { name = "metrics_list", type = "list_mapping_str_str", required = true},
     { name = "func_kwargs", type = "mapping_str_mapping_str_any", required = false},
   ]
@@ -261,7 +259,7 @@ description = "A collection of plugins for training an MNIST classifier and runn
   filename = "plugins.py"
   name = "augment_data"
   input_params = [ 
-    { name = "dataset", type = "any", required = true},
+    { name = "dataset", type = "dataset", required = true},
     { name = "def_data_dir", type = "str_path", required = true},
     { name = "image_size", type = "tuple_int_int_int", required = true},
     { name = "distance_metrics", type = "list_mapping_str_str", required = true},
@@ -269,14 +267,14 @@ description = "A collection of plugins for training an MNIST classifier and runn
     { name = "def_type", type = "string", required = false},
     { name = "defense_kwargs", type = "null_mapping_str_any", required = false},
   ]
-  output_params = [ { name = "output", type = "directory_iterator" } ]
+  output_params = [ { name = "output", type = "dataset" } ]
 
   [[plugins.tasks]]
   filename = "plugins.py"
   name = "predict"
   input_params = [ 
     { name = "classifier", type = "model", required = true},
-    { name = "dataset", type = "directory_iterator", required = true},
+    { name = "dataset", type = "dataset", required = true},
     { name = "show_actual", type = "boolean", required = false},
     { name = "show_target", type = "boolean", required = false},
   ]
@@ -289,12 +287,12 @@ description = "A collection of plugins for training an MNIST classifier and runn
     { name = "paths", type = "list_str", required = true},
     { name = "filename", type = "string", required = true},
     { name = "format", type = "string", required = false},
-    { name = "dataset", type = "directory_iterator", required = false},
+    { name = "dataset", type = "null_dataset", required = false},
     { name = "n_classes", type = "integer", required = false},
   ]
   output_params = [ 
-    { name = "y_true", type = "np.ndarray" }, 
-    { name = "y_pred", type = "np.ndarray" }
+    { name = "y_true", type = "null_np.ndarray" }, 
+    { name = "y_pred", type = "null_np.ndarray" }
   ]
 
 [[plugin_param_types]]
@@ -319,22 +317,37 @@ description = "A dataframe."
 
 [[plugin_param_types]]
 name = "list_str"
-description = "List[str]"
+description = "list[str]"
 structure = { list = "string" }
 
 [[plugin_param_types]]
 name = "tuple_int_int_int"
-description = "Tuple[int,int,int]"
+description = "tuple[int,int,int]"
 structure = { tuple = ["integer", "integer", "integer"] }
 
 [[plugin_param_types]]
-name = "num_null"
-description = "Optional[float]"
+name = "null_num"
+description = "float | None"
 structure = { union = ["number", "null"] }
 
 [[plugin_param_types]]
-name = "directory_iterator"
-description = "DirectoryIterator"
+name = "null_str"
+description = "str | None"
+structure = { union = ["string", "null"] }
+
+[[plugin_param_types]]
+name = "null_int"
+description = "int | None"
+structure = { union = ["integer", "null"] }
+
+[[plugin_param_types]]
+name = "null_dataset"
+description = "Dataset | None"
+structure = { union = ["dataset", "null"] }
+
+[[plugin_param_types]]
+name = "dataset"
+description = "Dataset"
 
 [[plugin_param_types]]
 name = "name_parameters_mapping"
@@ -352,38 +365,76 @@ description = "metric_name_list"
 structure = { list = "name_parameters_mapping" }
 
 [[plugin_param_types]]
+name = "null_metric_name_list"
+description = "null_metric_name_list"
+structure = { union = ["metric_name_list", "null"] }
+
+
+[[plugin_param_types]]
 name = "callback_list"
 description = "callback_list"
 structure = { list = "name_parameters_callback_mapping" }
 
 [[plugin_param_types]]
+name = "null_callback_list"
+description = "null_callback_list"
+structure = { union = ["callback_list", "null"] }
+
+
+[[plugin_param_types]]
 name = "mapping_str_str"
-description = "Dict[str,any]"
+description = "dict[str,str]"
 structure = { mapping = ["string", "string"] }
 
 [[plugin_param_types]]
 name = "mapping_str_any"
-description = "Dict[str,any]"
+description = "dict[str,any]"
 structure = { mapping = ["string", "any"] }
 
 [[plugin_param_types]]
 name = "mapping_str_float"
-description = "Dict[str,float]"
+description = "dict[str,float]"
 structure = { mapping = ["string", "number"] }
 
 [[plugin_param_types]]
+name = "str_model"
+description = "str | Model"
+structure = { union = ["string", "model"] }
+
+[[plugin_param_types]]
+name = "mapping_str_str_model"
+description = "dict[str, str|Model]"
+structure = { mapping = ["string", "str_model"] }
+
+[[plugin_param_types]]
 name = "null_mapping_str_any"
-description = "Optional[Dict[str,any]]"
+description = "dict[str,any] | None"
 structure = { union = ["mapping_str_any", "null"] }
 
 [[plugin_param_types]]
+name = "list_mapping_str_str_model"
+description = "list[dict[str, str|Model]]"
+structure = { list = "mapping_str_str_model" }
+
+[[plugin_param_types]]
+name = "null_list_mapping_str_str_model"
+description = "list[dict[str, str|Model]] | None"
+structure = { union = ["list_mapping_str_str_model", "null"] }
+
+
+[[plugin_param_types]]
 name = "list_mapping_str_any"
-description = "List[Dict[str,any]]"
+description = "list[dict[str, Any]]"
 structure = { list = "mapping_str_any" }
 
 [[plugin_param_types]]
+name = "null_list_mapping_str_any"
+description = "list[dict[str, Any]] | None"
+structure = { union = ["list_mapping_str_any", "null"] }
+
+[[plugin_param_types]]
 name = "list_mapping_str_str"
-description = "List[Dict[str,str]]"
+description = "list[dict[str,str]]"
 structure = { list = "mapping_str_str" }
 
 [[plugin_param_types]]
@@ -397,27 +448,42 @@ structure = { union = ["string", "path"] }
 
 [[plugin_param_types]]
 name = "list_str_path"
-description = "List[str|Path]"
+description = "list[str|Path]"
 structure = { list = "str_path" }
 
 [[plugin_param_types]]
+name = "null_list_str"
+description = "list[str] | None"
+structure = {  union = ["list_str", "null"] }
+
+[[plugin_param_types]]
+name = "null_list_int"
+description = "list[int] | None"
+structure = {  union = ["list_int", "null"] }
+
+[[plugin_param_types]]
 name = "list_int"
-description = "List[int]"
+description = "list[int]"
 structure = { list = "integer" }
 
 [[plugin_param_types]]
 name = "int_float_str"
-description = "Union[int, float, str]"
+description = "int | float | str"
 structure = { union = ["integer", "number", "string"] }
 
 [[plugin_param_types]]
 name = "mapping_str_mapping_str_any"
-description = "Dict[str,Dict[str,any]]"
+description = "dict[str,dict[str,any]]"
 structure = { mapping = ["string", "mapping_str_any"] }
 
 [[plugin_param_types]]
 name = "np.ndarray"
 description = "np.ndarray"
+
+[[plugin_param_types]]
+name = "null_np.ndarray"
+description = "np.ndarray | None"
+structure = { union = ["np.ndarray", "null"] }
 
 [[plugin_param_types]]
 name = "model"
@@ -616,4 +682,3 @@ params = [
   { name = "rescale", type = "float", default_value = "0.00392156862" },
 ]
 plugins = [ "mnist_demo" ]
-

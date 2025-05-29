@@ -22,13 +22,12 @@ entry point run.
 
 import tarfile
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional, Union, List
+from typing import Any, Callable
 
 import mlflow
 import os
 import pandas as pd
 import structlog
-from mlflow.tracking import MlflowClient
 from structlog.stdlib import BoundLogger
 
 from dioptra import pyplugs
@@ -42,9 +41,10 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 @pyplugs.register
 def download_all_artifacts(
-    uris: List[str], destinations: List[str]
-) -> List[str]:
-    download_paths = []
+    uris: list[str], 
+    destinations: list[str]
+) -> list[str]:
+    download_paths: list[str] = []
     for uri in uris:
         for dest in destinations:
             if uri.endswith(dest):
@@ -55,7 +55,7 @@ def download_all_artifacts(
                     "Artifact downloaded from MLFlow run",
                     artifact_path=download_path
                 )
-                download_paths += [download_path]
+                download_paths.append(download_path)
     return download_paths
 
 
@@ -64,8 +64,8 @@ def upload_data_frame_artifact(
     data_frame: pd.DataFrame,
     file_name: str,
     file_format: str,
-    file_format_kwargs: Optional[Dict[str, Any]] = None,
-    working_dir: Optional[Union[str, Path]] = None,
+    file_format_kwargs: dict[str, Any] | None = None,
+    working_dir: str | Path | None = None,
 ) -> None:
     """Uploads a :py:class:`~pandas.DataFrame` as an artifact of the active MLFlow run.
 
@@ -101,8 +101,8 @@ def upload_data_frame_artifact(
     """
 
     def to_format(
-        data_frame: pd.DataFrame, format: str, output_dir: Union[str, Path]
-    ) -> Dict[str, Any]:
+        data_frame: pd.DataFrame, format: str, output_dir: str|Path
+    ) -> dict[str, Any]:
         filepath: Path = Path(output_dir) / Path(file_name).name
         format_funcs = {
             "csv": {
@@ -135,7 +135,7 @@ def upload_data_frame_artifact(
             },
         }
 
-        func: Optional[Dict[str, Any]] = format_funcs.get(format)
+        func: dict[str, Any] | None = format_funcs.get(format)
 
         if func is None:
             raise UnsupportedDataFrameFileFormatError(
@@ -151,7 +151,7 @@ def upload_data_frame_artifact(
         working_dir = Path.cwd()
 
     working_dir = Path(working_dir)
-    format_dict: Dict[str, Any] = to_format(
+    format_dict: dict[str, Any] = to_format(
         data_frame=data_frame, format=file_format, output_dir=working_dir
     )
 
@@ -170,11 +170,12 @@ def upload_data_frame_artifact(
 def download_df(
     filename: str,
     format: str = 'csv',
-    file_format_kwargs: Optional[Dict[str, Any]] = None,
-):
+    file_format_kwargs: dict[str, Any] | None = None,
+) -> pd.DataFrame:
+    file_format_kwargs = file_format_kwargs if file_format_kwargs is not None else {}
     def from_format(
         format: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         format_funcs = {
             "csv": {
                 "func": pd.read_csv,
@@ -199,7 +200,7 @@ def download_df(
             },
         }
 
-        func: Optional[Dict[str, Any]] = format_funcs.get(format)
+        func: dict[str, Any] | None = format_funcs.get(format)
 
         if func is None:
             raise UnsupportedDataFrameFileFormatError(
@@ -207,18 +208,18 @@ def download_df(
             )
         
         return func
-    format_dict: Dict[str, Any] = from_format(format=format)
-    df_from_format_func: Callable[..., None] = format_dict["func"]
-    df = df_from_format_func(filename, **file_format_kwargs)
+    format_dict: dict[str, Any] = from_format(format=format)
+    df_from_format_func: Callable[..., Any] = format_dict["func"]
+    df: pd.DataFrame = df_from_format_func(filename, **file_format_kwargs)
     return df
 
 
 @pyplugs.register
 def upload_directory_as_tarball_artifact(
-    source_dir: Union[str, Path],
+    source_dir: str | Path,
     tarball_filename: str,
     tarball_write_mode: str = "w:gz",
-    working_dir: Optional[Union[str, Path]] = None,
+    working_dir: str | Path | None = None,
 ) -> None:
     """Archives a directory and uploads it as an artifact of the active MLFlow run.
 
@@ -241,7 +242,7 @@ def upload_directory_as_tarball_artifact(
     working_dir = Path(working_dir)
     tarball_path = working_dir / tarball_filename
 
-    with tarfile.open(tarball_path, tarball_write_mode) as f:
+    with tarfile.open(tarball_path, tarball_write_mode) as f:  # type: ignore
         f.add(source_dir, arcname=source_dir.name)
 
     LOGGER.info(
@@ -254,7 +255,7 @@ def upload_directory_as_tarball_artifact(
 
 
 @pyplugs.register
-def upload_file_as_artifact(artifact_path: Union[str, Path]) -> None:
+def upload_file_as_artifact(artifact_path: str | Path) -> None:
     """Uploads a file as an artifact of the active MLFlow run.
 
     Args:

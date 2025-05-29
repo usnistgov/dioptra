@@ -19,7 +19,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
 
 import mlflow
 import os
@@ -34,7 +33,7 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
 @pyplugs.register
-def add_model_to_registry(name: str, model_dir: str) -> Optional[ModelVersion]:
+def add_model_to_registry(name: str, model_dir: str) -> ModelVersion | None:
     """Registers a trained model logged during the current run to the MLFlow registry.
 
     Args:
@@ -53,6 +52,9 @@ def add_model_to_registry(name: str, model_dir: str) -> Optional[ModelVersion]:
         return None
 
     active_run = mlflow.active_run()
+
+    if (active_run is None):
+        return None
 
     run_id: str = active_run.info.run_id
     artifact_uri: str = active_run.info.artifact_uri

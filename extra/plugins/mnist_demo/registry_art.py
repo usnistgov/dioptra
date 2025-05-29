@@ -22,7 +22,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 import numpy as np
 import structlog
@@ -64,7 +64,7 @@ def load_wrapped_tensorflow_keras_classifier(
     artifact_uri: str,
     imagenet_preprocessing: bool = False,
     image_size: Any = None,
-    classifier_kwargs: Optional[Dict[str, Any]] = None,
+    classifier_kwargs: dict[str, Any] | None = None,
 ) -> TensorFlowV2Classifier:
     """Loads and wraps a registered Keras classifier for compatibility with the |ART|.
 

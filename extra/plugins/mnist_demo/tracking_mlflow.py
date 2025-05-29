@@ -18,8 +18,6 @@
 
 from __future__ import annotations
 
-from typing import Dict
-
 import mlflow
 from .restapi import post_metrics
 import structlog
@@ -42,7 +40,7 @@ except ImportError:  # pragma: nocover
 
 
 @pyplugs.register
-def log_metrics(metrics: Dict[str, float]) -> None:
+def log_metrics(metrics: dict[str, float]) -> None:
     """Logs metrics to the MLFlow Tracking service for the current run.
 
     Args:
@@ -62,7 +60,7 @@ def log_metrics(metrics: Dict[str, float]) -> None:
 
 
 @pyplugs.register
-def log_parameters(parameters: Dict[str, float]) -> None:
+def log_parameters(parameters: dict[str, float]) -> None:
     """Logs parameters to the MLFlow Tracking service for the current run.
 
     Parameters can only be set once per run.

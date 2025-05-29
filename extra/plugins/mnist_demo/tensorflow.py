@@ -17,11 +17,12 @@
 from __future__ import annotations
 
 from types import FunctionType
-from typing import Any, Dict, List, Union, Optional
+from typing import Any
 
 import datetime
 import structlog
 import tensorflow as tf
+import numpy as np
 
 from structlog.stdlib import BoundLogger
 
@@ -37,6 +38,8 @@ try:
     from tensorflow.keras.callbacks import Callback
     from tensorflow.keras.metrics import Metric
     from tensorflow.keras.optimizers import Optimizer
+    from tensorflow.keras.models import Model
+    from tensorflow.data import Dataset
 
 except ImportError:  # pragma: nocover
     LOGGER.warn(
@@ -60,10 +63,10 @@ def init_tensorflow(seed: int) -> None:
 
 @pyplugs.register
 def fit_tensorflow(
-    estimator: Any,
-    x: Any = None,
+    estimator: Model,
+    x: Dataset = None,
     y: Any = None,
-    fit_kwargs: Optional[Dict[str, Any]] = None,
+    fit_kwargs: dict[str, Any] | None = None,
 ) -> Any:
     fit_kwargs = fit_kwargs or {}
     time_start: datetime.datetime = datetime.datetime.now()
@@ -97,14 +100,17 @@ def fit_tensorflow(
 
 @pyplugs.register
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
-def evaluate_metrics_tensorflow(classifier, dataset) -> Dict[str, float]:
-    result = classifier.evaluate(dataset, verbose=0, return_dict=True)
+def evaluate_metrics_tensorflow(
+    classifier: Model,
+    dataset: Dataset
+) -> dict[str, float]:
+    result: dict[str, float] = classifier.evaluate(dataset, verbose=0, return_dict=True)
     return result
 
 @pyplugs.register
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
-def predict_tensorflow(classifier, dataset) -> Dict[str, float]:
-    result = classifier.predict(dataset)
+def predict_tensorflow(classifier, dataset) -> np.ndarray:
+    result: np.ndarray = classifier.predict(dataset)
     return result
 
 @pyplugs.register
@@ -115,7 +121,7 @@ def get_optimizer(optimizer: str, learning_rate: float) -> Optimizer:
 
 @pyplugs.register
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
-def get_model_callbacks(callbacks_list: List[Dict[str, Any]]) -> List[Callback]:
+def get_model_callbacks(callbacks_list: list[dict[str, Any]]) -> list[Callback]:
     return [
         import_keras.get_callback(callback["name"])(**callback.get("parameters", {}))
         for callback in callbacks_list
@@ -125,12 +131,12 @@ def get_model_callbacks(callbacks_list: List[Dict[str, Any]]) -> List[Callback]:
 @pyplugs.register
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
 def get_performance_metrics(
-    metrics_list: List[Dict[str, Any]]
-) -> List[Union[Metric, FunctionType]]:
-    performance_metrics: List[Metric] = []
+    metrics_list: list[dict[str, Any]]
+) -> list[Metric | FunctionType]:
+    performance_metrics: list[Metric] = []
 
     for metric in metrics_list:
-        new_metric: Union[Metric, FunctionType] = import_keras.get_metric(
+        new_metric: Metric | FunctionType = import_keras.get_metric(
             metric["name"]
         )
         performance_metrics.append(
