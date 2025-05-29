@@ -38,7 +38,7 @@ References:
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Tuple, Union
+from typing import Callable
 
 import numpy as np
 import pandas as pd
@@ -66,6 +66,7 @@ except ImportError:  # pragma: nocover
 
 
 try:
+    from tensorflow.data import Dataset
     from tensorflow.keras.preprocessing.image import save_img
     import tensorflow as tf
 except ImportError:  # pragma: nocover
@@ -80,14 +81,14 @@ except ImportError:  # pragma: nocover
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
 def fgm(
     data_flow: Dataset,
-    adv_data_dir: Union[str, Path],
+    adv_data_dir: str | Path,
     keras_classifier: TensorFlowV2Classifier,
-    distance_metrics_list: Optional[List[Tuple[str, Callable[..., np.ndarray]]]] = None,
+    distance_metrics_list: list[tuple[str, Callable[..., np.ndarray]]] | None= None,
     batch_size: int = 32,
     eps: float = 0.3,
     eps_step: float = 0.1,
     minimal: bool = False,
-    norm: Union[int, float, str] = np.inf,
+    norm: int | float | str = np.inf,
 ) -> pd.DataFrame:
     """Generates an adversarial dataset using the Fast Gradient Method attack.
 
@@ -150,7 +151,7 @@ def fgm(
 
     img_filenames = [Path(x) for x in data_flow.file_paths]
 
-    distance_metrics_: Dict[str, List[List[float]]] = {"image": [], "label": []}
+    distance_metrics_: dict[str, list[list[float]]] = {"image": [], "label": []}
     for metric_name, _ in distance_metrics_list:
         distance_metrics_[metric_name] = []
 
@@ -248,7 +249,7 @@ def _evaluate_distance_metrics(
         distance_metrics_[metric_name].extend(metric(clean_batch, adv_batch))
 
 
-def _log_distance_metrics(distance_metrics_: Dict[str, List[List[float]]]) -> None:
+def _log_distance_metrics(distance_metrics_: dict[str, list[list[float]]]) -> None:
     """Logs the distance metrics summary statistics to the MLFlow Tracking service.
 
     The following summary statistics are calculated and logged to the MLFlow Tracking

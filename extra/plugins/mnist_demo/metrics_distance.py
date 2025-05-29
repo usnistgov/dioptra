@@ -23,7 +23,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable
 
 import numpy as np
 import structlog
@@ -40,8 +40,8 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 @pyplugs.register
 def get_distance_metric_list(
-    request: List[Dict[str, str]]
-) -> List[Tuple[str, Callable[..., np.ndarray]]]:
+    request: list[dict[str, str]]
+) -> list[tuple[str, Callable[..., np.ndarray]]]:
     """Gets multiple distance metric functions from the registry.
 
     The following metrics are available in the registry,
@@ -65,10 +65,10 @@ def get_distance_metric_list(
         from the `name` key of `request`, and the second element is the callable metric
         function.
     """
-    distance_metrics_list: List[Tuple[str, Callable[..., np.ndarray]]] = []
+    distance_metrics_list: list[tuple[str, Callable[..., np.ndarray]]] = []
 
     for metric in request:
-        metric_callable: Optional[Callable[..., np.ndarray]] = (
+        metric_callable: Callable[..., np.ndarray] | None = (
             DISTANCE_METRICS_REGISTRY.get(metric["func"])
         )
 
@@ -106,7 +106,7 @@ def get_distance_metric(func: str) -> Callable[..., np.ndarray]:
     Returns:
         A callable distance metric function.
     """
-    metric_callable: Optional[Callable[..., np.ndarray]] = (
+    metric_callable: Callable[..., np.ndarray] | None = (
         DISTANCE_METRICS_REGISTRY.get(func)
     )
 
@@ -296,7 +296,7 @@ def _normalize_batch(X: np.ndarray, order: int) -> np.ndarray:
     return normalized_batch
 
 
-DISTANCE_METRICS_REGISTRY: Dict[str, Callable[..., Any]] = dict(
+DISTANCE_METRICS_REGISTRY: dict[str, Callable[..., Any]] = dict(
     l_inf_norm=l_inf_norm,
     l_1_norm=l_1_norm,
     l_2_norm=l_2_norm,

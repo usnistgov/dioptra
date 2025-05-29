@@ -18,7 +18,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable
 
 import numpy as np
 import structlog
@@ -41,8 +41,8 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 @pyplugs.register
 def get_performance_metric_list(
-    request: List[Dict[str, str]]
-) -> List[Tuple[str, Callable[..., float]]]:
+    request: list[dict[str, str]]
+) -> list[tuple[str, Callable[..., float]]]:
     """Gets multiple performance metric functions from the registry.
 
     The following metrics are available in the registry,
@@ -66,10 +66,10 @@ def get_performance_metric_list(
         from the `name` key of `request`, and the second element is the callable metric
         function.
     """
-    performance_metrics_list: List[Tuple[str, Callable[..., float]]] = []
+    performance_metrics_list: list[tuple[str, Callable[..., float]]] = []
 
     for metric in request:
-        metric_callable: Optional[Callable[..., float]] = (
+        metric_callable: Callable[..., float] | None = (
             PERFORMANCE_METRICS_REGISTRY.get(metric["func"])
         )
 
@@ -108,7 +108,7 @@ def get_performance_metric(func: str) -> Callable[..., float]:
     Returns:
         A callable performance metric function.
     """
-    metric_callable: Optional[Callable[..., float]] = PERFORMANCE_METRICS_REGISTRY.get(
+    metric_callable: Callable[..., float] | None = PERFORMANCE_METRICS_REGISTRY.get(
         func
     )
 
@@ -269,7 +269,7 @@ def recall(y_true, y_pred, **kwargs) -> float:
     return metric
 
 
-PERFORMANCE_METRICS_REGISTRY: Dict[str, Callable[..., Any]] = dict(
+PERFORMANCE_METRICS_REGISTRY: dict[str, Callable[..., Any]] = dict(
     accuracy=accuracy,
     roc_auc=roc_auc,
     categorical_accuracy=categorical_accuracy,
@@ -280,7 +280,7 @@ PERFORMANCE_METRICS_REGISTRY: Dict[str, Callable[..., Any]] = dict(
 )
 
 @pyplugs.register
-def evaluate_metrics_generic(y_true, y_pred, metrics, func_kwargs) -> Dict[str, float]:
+def evaluate_metrics_generic(y_true, y_pred, metrics, func_kwargs) -> dict[str, float]:
     names = []
     result = []
     for metric in metrics:

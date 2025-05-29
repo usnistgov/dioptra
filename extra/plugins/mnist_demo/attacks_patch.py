@@ -17,13 +17,12 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Tuple, Union, Any
+from typing import Callable, Any
 
 import numpy as np
 import pandas as pd
 import scipy.stats
 import structlog
-from prefect import task
 from .restapi import post_metrics
 from .data_tensorflow import get_n_classes_from_directory_iterator
 from structlog.stdlib import BoundLogger
@@ -61,7 +60,7 @@ except ImportError:  # pragma: nocover
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
 def create_adversarial_patches(
     data_flow: Any,
-    adv_data_dir: Union[str, Path],
+    adv_data_dir: str | Path,
     keras_classifier: TensorFlowV2Classifier,
     patch_target: int,
     num_patch: int,
@@ -71,7 +70,6 @@ def create_adversarial_patches(
     scale_max: float,
     learning_rate: float,
     max_iter: int,
-    patch_shape: Tuple,
 ):
     adv_data_dir = Path(adv_data_dir)
     batch_size = num_patch_samples
@@ -84,14 +82,13 @@ def create_adversarial_patches(
         scale_max=scale_max,
         learning_rate=learning_rate,
         max_iter=max_iter,
-        #patch_shape=patch_shape,
     )
 
     # Start by generating adversarial patches.
     target_index = patch_target
-    patch_list = []
-    mask_list = []
-    id_list = []
+    patch_list: list[np.ndarray] = []
+    mask_list: list[np.ndarray] = []
+    id_list: list[int] = []
     n_classes = get_n_classes_from_directory_iterator(data_flow)
 
     LOGGER.info(
@@ -125,11 +122,10 @@ def create_adversarial_patches(
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
 def create_adversarial_patch_dataset(
     data_flow: Any,
-    adv_data_dir: Union[str, Path],
+    adv_data_dir: str | Path,
     patch_dir: str,
     keras_classifier: TensorFlowV2Classifier,
-    patch_shape: Tuple,
-    distance_metrics_list: Optional[List[Tuple[str, Callable[..., np.ndarray]]]] = None,
+    distance_metrics_list: list[tuple[str, Callable[..., np.ndarray]]] | None = None,
     batch_size: int = 32,
     patch_scale: float = 0.4,
     rotation_max: float = 22.5,
@@ -148,13 +144,12 @@ def create_adversarial_patch_dataset(
         rotation_max=rotation_max,
         scale_min=scale_min,
         scale_max=scale_max,
-        #patch_shape=patch_shape,
     )
 
     img_filenames = [Path(x) for x in data_flow.file_paths]
     class_names_list = sorted(data_flow.class_names)
 
-    distance_metrics_: Dict[str, List[List[float]]] = {"image": [], "label": []}
+    distance_metrics_: dict[str, list[list[float]]] = {"image": [], "label": []}
     for metric_name, _ in distance_metrics_list:
         distance_metrics_[metric_name] = []
 
@@ -172,7 +167,7 @@ def create_adversarial_patch_dataset(
         if patch_scale > 0:
             adv_batch = attack.apply_patch(x.numpy(), scale=patch_scale, patch_external=patch)
         else:
-            adv_batch = attack.apply_patch(x.numpy(), patch_external=patch)
+            adv_batch = attack.apply_patch(x.numpy(), scale=patch_scale, patch_external=patch)
 
         clean_filenames = img_filenames[
             batch_num * batch_size : (batch_num + 1) * batch_size
@@ -204,18 +199,24 @@ def _init_patch(
     return attack
 
 
-def _save_adv_patch(patch_list, mask_list, id_list, num_patch, adv_patch_dir):
-    patch_list = np.array(patch_list)
-    mask_list = np.array(mask_list)
-    id_list = np.array(id_list)
+def _save_adv_patch(
+    patch_list: list[np.ndarray], 
+    mask_list: list[np.ndarray], 
+    id_list: list[int], 
+    num_patch: int, 
+    adv_patch_dir: Path
+) -> None:
+    patch_array = np.array(patch_list)
+    mask_array = np.array(mask_list)
+    id_array = np.array(id_list)
 
-    np.save(str(adv_patch_dir) + "/patch_list", patch_list)
-    np.save(str(adv_patch_dir) + "/patch_mask_list", mask_list)
-    np.save(str(adv_patch_dir) + "/patch_id_list", id_list)
+    np.save(str(adv_patch_dir) + "/patch_list", patch_array)
+    np.save(str(adv_patch_dir) + "/patch_mask_list", mask_array)
+    np.save(str(adv_patch_dir) + "/patch_id_list", id_array)
 
     for patch_id in range(num_patch):
-        patch = patch_list[patch_id]
-        mask = mask_list[patch_id]
+        patch = patch_array[patch_id]
+        mask = mask_array[patch_id]
 
         # Combine patch with mask.
         masked_patch = patch * mask
@@ -256,7 +257,7 @@ def _evaluate_distance_metrics(
         distance_metrics_[metric_name].extend(metric(clean_batch, adv_batch))
 
 
-def _log_distance_metrics(distance_metrics_: Dict[str, List[List[float]]]) -> None:
+def _log_distance_metrics(distance_metrics_: dict[str, list[list[float]]]) -> None:
     distance_metrics_ = distance_metrics_.copy()
     del distance_metrics_["image"]
     del distance_metrics_["label"]
