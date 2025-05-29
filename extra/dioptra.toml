@@ -496,22 +496,37 @@ description = "dataframe"
 
 [[plugin_param_types]]
 name = "list_str"
-description = "List[str]"
+description = "list[str]"
 structure = { list = "string" }
 
 [[plugin_param_types]]
 name = "tuple_int_int_int"
-description = "Tuple[int,int,int]"
+description = "tuple[int,int,int]"
 structure = { tuple = ["integer", "integer", "integer"] }
 
 [[plugin_param_types]]
-name = "num_null"
-description = "Optional[float]"
+name = "null_num"
+description = "float | None"
 structure = { union = ["number", "null"] }
 
 [[plugin_param_types]]
-name = "directory_iterator"
-description = "DirectoryIterator"
+name = "null_str"
+description = "str | None"
+structure = { union = ["string", "null"] }
+
+[[plugin_param_types]]
+name = "null_int"
+description = "int | None"
+structure = { union = ["integer", "null"] }
+
+[[plugin_param_types]]
+name = "null_dataset"
+description = "Dataset | None"
+structure = { union = ["dataset", "null"] }
+
+[[plugin_param_types]]
+name = "dataset"
+description = "Dataset"
 
 [[plugin_param_types]]
 name = "name_parameters_mapping"
@@ -529,38 +544,76 @@ description = "metric_name_list"
 structure = { list = "name_parameters_mapping" }
 
 [[plugin_param_types]]
+name = "null_metric_name_list"
+description = "null_metric_name_list"
+structure = { union = ["metric_name_list", "null"] }
+
+
+[[plugin_param_types]]
 name = "callback_list"
 description = "callback_list"
 structure = { list = "name_parameters_callback_mapping" }
 
 [[plugin_param_types]]
+name = "null_callback_list"
+description = "null_callback_list"
+structure = { union = ["callback_list", "null"] }
+
+
+[[plugin_param_types]]
 name = "mapping_str_str"
-description = "Dict[str,any]"
+description = "dict[str,str]"
 structure = { mapping = ["string", "string"] }
 
 [[plugin_param_types]]
 name = "mapping_str_any"
-description = "Dict[str,any]"
+description = "dict[str,any]"
 structure = { mapping = ["string", "any"] }
 
 [[plugin_param_types]]
 name = "mapping_str_float"
-description = "Dict[str,float]"
+description = "dict[str,float]"
 structure = { mapping = ["string", "number"] }
 
 [[plugin_param_types]]
+name = "str_model"
+description = "str | Model"
+structure = { union = ["string", "model"] }
+
+[[plugin_param_types]]
+name = "mapping_str_str_model"
+description = "dict[str, str|Model]"
+structure = { mapping = ["string", "str_model"] }
+
+[[plugin_param_types]]
 name = "null_mapping_str_any"
-description = "Optional[Dict[str,any]]"
+description = "dict[str,any] | None"
 structure = { union = ["mapping_str_any", "null"] }
 
 [[plugin_param_types]]
+name = "list_mapping_str_str_model"
+description = "list[dict[str, str|Model]]"
+structure = { list = "mapping_str_str_model" }
+
+[[plugin_param_types]]
+name = "null_list_mapping_str_str_model"
+description = "list[dict[str, str|Model]] | None"
+structure = { union = ["list_mapping_str_str_model", "null"] }
+
+
+[[plugin_param_types]]
 name = "list_mapping_str_any"
-description = "List[Dict[str,any]]"
+description = "list[dict[str, Any]]"
 structure = { list = "mapping_str_any" }
 
 [[plugin_param_types]]
+name = "null_list_mapping_str_any"
+description = "list[dict[str, Any]] | None"
+structure = { union = ["list_mapping_str_any", "null"] }
+
+[[plugin_param_types]]
 name = "list_mapping_str_str"
-description = "List[Dict[str,str]]"
+description = "list[dict[str,str]]"
 structure = { list = "mapping_str_str" }
 
 [[plugin_param_types]]
@@ -574,27 +627,42 @@ structure = { union = ["string", "path"] }
 
 [[plugin_param_types]]
 name = "list_str_path"
-description = "List[str|Path]"
+description = "list[str|Path]"
 structure = { list = "str_path" }
 
 [[plugin_param_types]]
+name = "null_list_str"
+description = "list[str] | None"
+structure = {  union = ["list_str", "null"] }
+
+[[plugin_param_types]]
+name = "null_list_int"
+description = "list[int] | None"
+structure = {  union = ["list_int", "null"] }
+
+[[plugin_param_types]]
 name = "list_int"
-description = "List[int]"
+description = "list[int]"
 structure = { list = "integer" }
 
 [[plugin_param_types]]
 name = "int_float_str"
-description = "Union[int, float, str]"
+description = "int | float | str"
 structure = { union = ["integer", "number", "string"] }
 
 [[plugin_param_types]]
 name = "mapping_str_mapping_str_any"
-description = "Dict[str,Dict[str,any]]"
+description = "dict[str,dict[str,any]]"
 structure = { mapping = ["string", "mapping_str_any"] }
 
 [[plugin_param_types]]
 name = "np.ndarray"
 description = "np.ndarray"
+
+[[plugin_param_types]]
+name = "null_np.ndarray"
+description = "np.ndarray | None"
+structure = { union = ["np.ndarray", "null"] }
 
 [[plugin_param_types]]
 name = "model"
