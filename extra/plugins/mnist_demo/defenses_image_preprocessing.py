@@ -17,7 +17,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Tuple, Union, Any
+from typing import Callable, Any
 
 from .restapi import post_metrics
 from .data_tensorflow import get_n_classes_from_directory_iterator
@@ -68,16 +68,16 @@ DEFENSE_LIST = {
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
 def create_defended_dataset(
     data_flow: Any,
-    def_data_dir: Union[str, Path],
-    image_size: Tuple[int, int, int],
-    distance_metrics_list: Optional[List[Tuple[str, Callable[..., np.ndarray]]]] = None,
+    def_data_dir: str | Path,
+    image_size: tuple[int, int, int],
+    distance_metrics_list: list[tuple[str, Callable[..., np.ndarray]]] | None = None,
     batch_size: int = 32,
     def_type: str = "spatial_smoothing",
-    defense_kwargs: Optional[Dict[str, Any]] = None,
+    defense_kwargs: dict[str, Any] | None = None,
 ) -> pd.DataFrame:
     tf.experimental.numpy.experimental_enable_numpy_behavior()
     distance_metrics_list = distance_metrics_list or []
-    clip_values: Tuple[float, float] = (0, 255) if image_size[2] == 3 else (0, 1.0)
+    clip_values: tuple[float, float] = (0, 255) if image_size[2] == 3 else (0, 1.0)
     def_data_dir = Path(def_data_dir)
     defense_kwargs = {} if defense_kwargs is None else defense_kwargs
     defense = _init_defense(
@@ -89,7 +89,7 @@ def create_defended_dataset(
     img_filenames = [Path(x) for x in data_flow.file_paths]
     class_names_list = sorted(data_flow.class_names)
 
-    distance_metrics_: Dict[str, List[List[float]]] = {"image": [], "label": []}
+    distance_metrics_: dict[str, list[list[float]]] = {"image": [], "label": []}
     for metric_name, _ in distance_metrics_list:
         distance_metrics_[metric_name] = []
 
@@ -126,7 +126,11 @@ def create_defended_dataset(
     return pd.DataFrame(distance_metrics_)
 
 
-def _init_defense(clip_values, def_type, defense_kwargs):
+def _init_defense(
+    clip_values: tuple[float, float],
+    def_type: str,
+    defense_kwargs: dict[str, Any]
+):
     defense = DEFENSE_LIST[def_type](
         clip_values=clip_values,
         **defense_kwargs,
@@ -161,7 +165,7 @@ def _evaluate_distance_metrics(
         distance_metrics_[metric_name].extend(metric(clean_batch, adv_batch))
 
 
-def _log_distance_metrics(distance_metrics_: Dict[str, List[List[float]]]) -> None:
+def _log_distance_metrics(distance_metrics_: dict[str, list[list[float]]]) -> None:
     distance_metrics_ = distance_metrics_.copy()
     del distance_metrics_["image"]
     del distance_metrics_["label"]

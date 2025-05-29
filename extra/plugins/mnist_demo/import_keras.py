@@ -18,7 +18,6 @@ from __future__ import annotations
 
 import importlib
 from types import FunctionType, ModuleType
-from typing import Union
 
 import structlog
 from structlog.stdlib import BoundLogger
@@ -52,7 +51,7 @@ def get_callback(callback_name: str) -> Callback:
 
 
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
-def get_metric(metric_name: str) -> Union[Metric, FunctionType]:
+def get_metric(metric_name: str) -> Metric | FunctionType:
     keras_metrics: ModuleType = importlib.import_module(KERAS_METRICS)
     metric: Metric = getattr(keras_metrics, metric_name)
     return metric

@@ -18,8 +18,6 @@
 
 from __future__ import annotations
 
-from typing import Optional
-
 import mlflow
 import structlog
 from mlflow.entities import Run as MlflowRun
@@ -46,7 +44,7 @@ except ImportError:  # pragma: nocover
 @pyplugs.register
 def add_model_to_registry(
     active_run: MlflowRun, name: str, model_dir: str
-) -> Optional[ModelVersion]:
+) -> ModelVersion | None:
     """Registers a trained model logged during the current run to the MLFlow registry.
 
     Args:

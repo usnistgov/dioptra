@@ -24,9 +24,6 @@
 
 from __future__ import annotations
 
-from typing import Optional, Tuple
-
-from typing import Any
 import structlog
 import pandas as pd
 import numpy as np
@@ -59,10 +56,10 @@ except ImportError:  # pragma: nocover
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
 def create_image_dataset(
     data_dir: str,
-    subset: Optional[str],
-    image_size: Tuple[int, int, int],
+    subset: str | None,
+    image_size: tuple[int, int, int],
     seed: int,
-    validation_split: Optional[float] = 0.2,
+    validation_split: float | None = 0.2,
     batch_size: int = 32,
     label_mode: str = "categorical",
     shuffle: bool = True,
@@ -103,7 +100,7 @@ def create_image_dataset(
     color_mode: str = (
         "rgb" if image_size[2] == 3 else "rgba" if image_size[2] == 4 else "grayscale"
     )
-    target_size: Tuple[int, int] = image_size[:2]
+    target_size: tuple[int, int] = image_size[:2]
 
     return image_dataset_from_directory(
         data_dir,
@@ -128,8 +125,7 @@ def dataset_transforms(
     dataset: Dataset, 
     rescale_value: float, 
     label_mode: bool,
-    batch_size: int,
-):
+) -> Dataset:
     if (dataset is not None):
         class_names = dataset.class_names
         file_paths = dataset.file_paths
@@ -181,7 +177,7 @@ def predictions_to_df(
     dataset: Dataset = None,
     show_actual: bool = False,
     show_target: bool = False,
-):
+) -> pd.DataFrame:
     n_classes = get_n_classes_from_directory_iterator(dataset)
 
     
@@ -201,17 +197,20 @@ def predictions_to_df(
 
 def df_to_predictions(
     df: pd.DataFrame,
-    dataset: Dataset = None,
+    dataset: Dataset | None = None,
     n_classes: int = -1,
-):
+) -> tuple[np.ndarray|None, np.ndarray|None]:
     n_classes = get_n_classes_from_directory_iterator(dataset) if dataset is not None else n_classes # get classes from dataset
     n_classes = df.columns.str.startswith('prob_').sum() if n_classes < 0 else n_classes # count classes manually
+
+    y_true = None
+    y_pred = None
 
     if (set(['actual','target']).issubset(df.columns)):
         y_pred = df['actual'].to_numpy()
         y_true = df['target'].to_numpy()
         y_true = np.eye(n_classes)[y_true]
-    else:
+    elif dataset is not None:
         y_pred = np.argmax(df[[f'prob_{n}' for n in range(n_classes)]].to_numpy(), axis=1)
         y_true = np.concatenate([y for x, y in dataset], axis=0).astype(np.int32) 
         y_true = y_true

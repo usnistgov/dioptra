@@ -18,8 +18,6 @@
 
 from __future__ import annotations
 
-from typing import Optional, Tuple, Union
-
 import numpy as np
 import structlog
 from numpy.random._generator import Generator as RNGenerator
@@ -60,7 +58,7 @@ def draw_random_integers(
     rng: RNGenerator,
     low: int = 0,
     high: int = 2**31 - 1,
-    size: Optional[Union[int, Tuple[int, ...]]] = None,
+    size: int | tuple[int, ...] | None = None,
 ) -> np.ndarray:
     """Returns random integers from `low` (inclusive) to `high` (exclusive).
 
@@ -91,7 +89,7 @@ def draw_random_integers(
 
 @pyplugs.register
 @pyplugs.task_nout(2)
-def init_rng(seed: int = -1) -> Tuple[int, RNGenerator]:
+def init_rng(seed: int = -1) -> tuple[int, RNGenerator]:
     """Constructs a new random number generator.
 
     Args:
