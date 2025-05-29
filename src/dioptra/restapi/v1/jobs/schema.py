@@ -318,17 +318,32 @@ class JobLogRecordSchema(Schema):
 
 class JobLogRecordsSchema(Schema):
     """
-    A list of logging records.
+    A list of logging records.  Used for upload.
     """
 
-    records = fields.List(
-        fields.Nested(JobLogRecordSchema),
+    records = fields.Nested(
+        JobLogRecordSchema,
+        many=True,
         validate=validate.Length(min=1),
         required=True,
     )
 
 
-class JobLogSearchParameters(PagingQueryParametersSchema):
+class JobLogRecordsPageSchema(BasePageSchema):
+    """
+    A page of logging records with detailed paging information.  Used for
+    download.
+    """
+
+    data = fields.Nested(
+        JobLogRecordSchema,
+        many=True,
+        validate=validate.Length(min=1),
+        required=True,
+    )
+
+
+class JobLogGetQueryParameters(PagingQueryParametersSchema):
     """
     The query parameters for the GET method of the /jobs/{id}/log endpoint.
     """
