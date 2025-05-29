@@ -970,7 +970,8 @@ def test_get_logs(client, dioptra_client, auth_account, registered_jobs):
 
     client.post(f"/api/v1/jobs/{job_resource_id}/log", json=log_records)
     resp = dioptra_client.jobs.get_logs_by_id(job_resource_id)
-    returned_logs = resp.json()["records"]
+    returned_page = resp.json()
+    returned_logs = returned_page["data"]
 
     # The timestamps on the first two returned records are unpredictable (the
     # server set them), so just ensure they are there.  Then delete them, so we
@@ -988,4 +989,10 @@ def test_get_logs(client, dioptra_client, auth_account, registered_jobs):
         log_records[2]["timestamp"]
     ).astimezone(datetime.UTC).isoformat()
 
-    assert returned_logs == log_records
+    assert returned_page == {
+        "index": 0,
+        "isComplete": True,
+        "totalNumResults": 3,
+        "first": f"/api/v1/jobs/{job_resource_id}/log?index=0&pageLength=10",
+        "data": log_records
+    }

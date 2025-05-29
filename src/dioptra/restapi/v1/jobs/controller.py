@@ -44,8 +44,9 @@ from dioptra.restapi.v1.shared.tags.controller import (
 
 from .schema import (
     JobGetQueryParameters,
+    JobLogGetQueryParameters,
+    JobLogRecordsPageSchema,
     JobLogRecordsSchema,
-    JobLogSearchParameters,
     JobMlflowRunSchema,
     JobPageSchema,
     JobSchema,
@@ -374,15 +375,27 @@ class JobIdLogEndpoint(Resource):
         self._job_log_service = job_log_service
 
     @login_required
-    @accepts(query_params_schema=JobLogSearchParameters, api=api)
-    @responds(schema=JobLogRecordsSchema, api=api)
+    @accepts(query_params_schema=JobLogGetQueryParameters, api=api)
+    @responds(schema=JobLogRecordsPageSchema, api=api)
     def get(self, id: int):
         index = request.parsed_query_params["index"]  # type: ignore
         page_length = request.parsed_query_params["page_length"]  # type: ignore
 
-        records = self._job_log_service.get_logs(id, index, page_length)
+        records, total = self._job_log_service.get_logs(id, index, page_length)
 
-        return {"records": records}
+        page = utils.build_paging_envelope(
+            f"{V1_JOBS_ROUTE}/{id}/log",
+            build_fn=lambda x: x,
+            data=records,
+            group_id=None,
+            query=None,
+            draft_type=None,
+            index=index,
+            length=page_length,
+            total_num_elements=total,
+        )
+
+        return page
 
     @login_required
     @accepts(schema=JobLogRecordsSchema, api=api)

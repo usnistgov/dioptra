@@ -1348,36 +1348,39 @@ class JobLogService(object):
     def get_logs(
         self,
         job_resource_id: int,
-        index: int | None,
-        page_length: int | None,
-    ) -> list[dict[str, Any]]:
+        index: int,
+        page_length: int,
+    ) -> tuple[list[dict[str, Any]], int]:
         """
         Get log records from the database, for the given job.
 
         Args:
             job_resource_id: The resource ID of a job
-            index: Zero-based index of the first log record to return;
-                None means start with the first
-            page_length: The number of records to return; None means return all
-                remaining records.
+            index: Zero-based index of the first log record to return
+            page_length: The number of records to return
 
         Returns:
-            The records.
+            A 2-tuple including (1) The list of records comprising this page,
+            each complying with JobLogRecordSchema, and (2) the total number of
+            records across all pages.
         """
 
-        stmt = (
+        count_stmt = (
+            select(func.count())
+            .select_from(models.JobLog)
+            .where(models.JobLog.job_resource_id == job_resource_id)
+        )
+        total_count = db.session.scalar(count_stmt)
+
+        page_stmt = (
             select(models.JobLog)
             .where(models.JobLog.job_resource_id == job_resource_id)
             .order_by(models.JobLog.id)
+            .offset(index)
+            .limit(page_length)
         )
 
-        if index is not None:
-            stmt = stmt.offset(index)
-
-        if page_length is not None and page_length >= 0:
-            stmt = stmt.limit(page_length)
-
-        log_objs = db.session.scalars(stmt)
+        log_objs = db.session.scalars(page_stmt)
 
         records = []
         for log_obj in log_objs:
@@ -1392,4 +1395,4 @@ class JobLogService(object):
 
             records.append(record)
 
-        return records
+        return records, total_count
