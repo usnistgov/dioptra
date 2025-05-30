@@ -212,7 +212,11 @@ def _get_one_of_alternative_names(
                 [], full_schema, alternative_schema
             )
 
-            name = alternative_schema.get("title")
+            if isinstance(alternative_schema, dict):
+                name = alternative_schema.get("title")
+            else:
+                name = None
+
             if not name:
                 name = "Alternative #" + str(idx + 1)
 
