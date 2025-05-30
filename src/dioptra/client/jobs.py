@@ -325,6 +325,6 @@ class JobsCollectionClient(CollectionClient[T]):
             The response from the Dioptra API.
         """
 
-        json_ = {"records": list(logs)}
+        json_ = {"data": list(logs)}
 
         return self._session.post(self.url, str(job_id), LOG, json_=json_)

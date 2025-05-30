@@ -321,7 +321,7 @@ class JobLogRecordsSchema(Schema):
     A list of logging records.  Used for upload.
     """
 
-    records = fields.Nested(
+    data = fields.Nested(
         JobLogRecordSchema,
         many=True,
         validate=validate.Length(min=1),
