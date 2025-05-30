@@ -67,6 +67,13 @@ RESOURCE_DEPENDENCY_TYPES: Final[list[dict[str, str]]] = [
     {"parent_resource_type": "job", "child_resource_type": "job"},
     {"parent_resource_type": "ml_model", "child_resource_type": "ml_model_version"},
 ]
+JOB_LOG_SEVERITY_LEVELS: Final[list[dict[str, str]]] = [
+    {"severity": "DEBUG"},
+    {"severity": "INFO"},
+    {"severity": "WARNING"},
+    {"severity": "ERROR"},
+    {"severity": "CRITICAL"},
+]
 
 
 def setup_ontology(session: Session) -> None:
@@ -87,6 +94,7 @@ def setup_ontology(session: Session) -> None:
         insert(models.resource_dependency_types_table).values(
             RESOURCE_DEPENDENCY_TYPES
         ),
+        insert(models.job_log_severity_table).values(JOB_LOG_SEVERITY_LEVELS)
     ]
 
     for stmt in stmts:
