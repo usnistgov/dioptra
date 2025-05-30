@@ -401,7 +401,7 @@ class JobIdLogEndpoint(Resource):
     @accepts(schema=JobLogRecordsSchema, api=api)
     @responds(schema=JobLogRecordsSchema, api=api)
     def post(self, id: int):
-        records = request.parsed_obj["records"]  # type: ignore
+        records = request.parsed_obj["data"]  # type: ignore
 
         self._job_log_service.add_logs(id, records)
 
