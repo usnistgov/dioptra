@@ -38,6 +38,7 @@ from dioptra.restapi.errors import (
     EntityDoesNotExistError,
     GitError,
     ImportFailedError,
+    InvalidYamlError,
 )
 from dioptra.restapi.utils import read_json_file, verify_filename_is_safe
 from dioptra.restapi.v1.entrypoints.service import (
@@ -931,7 +932,7 @@ class ValidateEntrypointService(object):
                 plugin_parameter_types=plugin_parameter_types,  # pyright: ignore
                 logger=log,
             )
-        except ValueError as e:
+        except InvalidYamlError as e:
             return {
                 "schema_valid": False,
                 "schema_issues": [
