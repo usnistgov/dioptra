@@ -68,7 +68,7 @@ description = "A collection of plugins for training an MNIST classifier and runn
   name = "load_model"
   input_params = [ 
     { name = "model_name", type = "null_str", required = false},
-    { name = "model_version", type = "null_int", required = false },
+    { name = "model_version", type = "integer", required = false },
     { name = "imagenet_preprocessing", type = "boolean", required = false },
     { name = "art", type = "boolean", required = false },
     { name = "image_size", type = "tuple_int_int_int", required = false },
@@ -156,7 +156,7 @@ description = "A collection of plugins for training an MNIST classifier and runn
   input_params = [ 
     { name = "data_flow", type = "dataset", required = true},
     { name = "adv_data_dir", type = "str_path", required = true },
-    { name = "patch_dir", type = "str_path", required = true },
+    { name = "patch_dir", type = "string", required = true },
     { name = "model", type = "model", required = true },
     { name = "distance_metrics", type = "list_mapping_str_str", required = true },
     { name = "batch_size", type = "integer", required = true },
