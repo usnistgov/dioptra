@@ -61,8 +61,8 @@ Example usage:
     two additional characters.
 
 
-Quotation Marks ``""``
---------------------
+Quoted Search Terms ``""``
+--------------------------
 
 Search terms quoted with ``"`` can contain spaces and other characters.
 
@@ -71,8 +71,8 @@ Example usage:
     match ``search "this", and 'that'``
 
 
-Commas ``,``
-----------
+Combining Search Terms ``,``
+----------------------------
 
 Search terms can be combined using commas.
 
