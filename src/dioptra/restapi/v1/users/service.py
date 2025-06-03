@@ -31,10 +31,10 @@ from dioptra.restapi.db import db, models
 from dioptra.restapi.db.models.constants import user_lock_types
 from dioptra.restapi.errors import (
     BackendDatabaseError,
-    EntityDoesNotExistError,
     EntityExistsError,
     NoCurrentUserError,
     QueryParameterValidationError,
+    UserDoesNotExistError,
     UserPasswordChangeError,
     UserPasswordError,
 )
@@ -235,7 +235,7 @@ class UserService(object):
             The user object if found, otherwise None.
 
         Raises:
-            EntityDoesNotExistError: If the user is not found and `error_if_not_found`
+            UserDoesNotExistError: If the user is not found and `error_if_not_found`
                 is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -248,10 +248,8 @@ class UserService(object):
 
         if user is None:
             if error_if_not_found:
-                raise EntityDoesNotExistError("User", email_address=email_address)
-
+                raise UserDoesNotExistError(email_address=email_address)
             return None
-
         return user
 
     def _create_or_get_default_group(
@@ -314,7 +312,7 @@ class UserIdService(object):
             The user object if found, otherwise None.
 
         Raises:
-            EntityDoesNotExistError: If the user is not found and `error_if_not_found`
+            UserDoesNotExistError: If the user is not found and `error_if_not_found`
                 is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -325,7 +323,7 @@ class UserIdService(object):
 
         if user is None:
             if error_if_not_found:
-                raise EntityDoesNotExistError("User", user_id=user_id)
+                raise UserDoesNotExistError(user_id=user_id)
 
             return None
 
@@ -522,7 +520,7 @@ class UserNameService(object):
             The user object if found, otherwise None.
 
         Raises:
-            EntityDoesNotExistError: If the user is not found and `error_if_not_found`
+            UserDoesNotExistError: If the user is not found and `error_if_not_found`
                 is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -533,7 +531,7 @@ class UserNameService(object):
 
         if user is None:
             if error_if_not_found:
-                raise EntityDoesNotExistError("User", username=username)
+                raise UserDoesNotExistError(username=username)
 
             return None
 
