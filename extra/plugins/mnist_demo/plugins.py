@@ -130,7 +130,7 @@ def create_model(
 @pyplugs.register
 def load_model(
     model_name: str | None = None,
-    model_version: int | None = None,
+    model_version: int = -1,
     imagenet_preprocessing: bool = False,
     art: bool = False,
     image_size: tuple[int,int,int] | None = None,
@@ -152,6 +152,8 @@ def train(
     fit_kwargs: dict[str, Any] | None = None
 ) -> Model:
     fit_kwargs = {} if fit_kwargs is None else fit_kwargs
+    callbacks_list = [] if callbacks_list is None else callbacks_list
+
     callbacks = get_model_callbacks(callbacks_list)
     fit_kwargs['callbacks'] = callbacks
     fit_tensorflow(estimator=estimator, x=x, y=y, fit_kwargs=fit_kwargs)
@@ -276,7 +278,7 @@ def attack_patch(
 def augment_patch(
     data_flow: Dataset,
     adv_data_dir: str | Path,
-    patch_dir: str | Path,
+    patch_dir: str,
     model: Model,
     distance_metrics: list[dict[str, str]],
     batch_size: int = 32,
