@@ -342,7 +342,7 @@ def assert_user_does_not_exist(
         AssertionError: If the response status code is not 404.
     """
     response = dioptra_client.auth.login(username, password)
-    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response.status_code == HTTPStatus.UNAUTHORIZED
 
 
 def assert_login_is_unauthorized(

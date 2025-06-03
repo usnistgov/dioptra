@@ -348,6 +348,21 @@ class PluginParameterTypeMatchesBuiltinTypeError(DioptraError):
 
 
 # User Errors
+class UserDoesNotExistError(DioptraError):
+    """The entered username does not exist."""
+
+    def __init__(self, **kwargs: typing.Any):
+        super().__init__(
+            "".join(
+                [
+                    "The user",
+                    *add_attribute_values(**kwargs),
+                    " is not available.",
+                ]
+            )
+        )
+
+
 class NoCurrentUserError(DioptraError):
     """There is no currently logged-in user."""
 
@@ -508,6 +523,11 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
     def handle_lock_error(error: LockError):
         log.debug(error.to_message())
         return error_result(error, http.HTTPStatus.FORBIDDEN, {})
+
+    @api.errorhandler(UserDoesNotExistError)
+    def handle_user_does_not_exist_error(error: UserDoesNotExistError):
+        log.debug(error.to_message())
+        return error_result(error, http.HTTPStatus.UNAUTHORIZED, {})
 
     @api.errorhandler(NoCurrentUserError)
     def handle_no_current_user_error(error: NoCurrentUserError):
