@@ -36,8 +36,8 @@ Features
 ========
 
 
-Wildcard
---------
+Wildcard ``*``
+------------
 
 The ``*`` character can be used as a wildcard to represent an arbitrary number of characters.
 
@@ -47,6 +47,9 @@ Example usage:
 Note that escaping the character, such as in ``search_term_\*`` will result in a search of all
 text fields that exactly match ``search_term_*``.
 
+
+Wildcard ``?``
+------------
 
 The ``?`` character can be used as a wildcard to represent a single character.
 
@@ -58,8 +61,8 @@ Example usage:
     two additional characters.
 
 
-Quotation Marks
----------------
+Quotation Marks ``""``
+--------------------
 
 Search terms quoted with ``"`` can contain spaces and other characters.
 
@@ -68,8 +71,8 @@ Example usage:
     match ``search "this", and 'that'``
 
 
-Commas
-------
+Commas ``,``
+----------
 
 Search terms can be combined using commas.
 
@@ -78,8 +81,8 @@ Example usage:
     match either ``search_term_1``, start with ``search_terms_`` or match ``search_term_3``.
 
 
-Searching by Field Name
------------------------
+Searching by Field Name ``field:``
+--------------------------------
 
 The name of a field, for example ``tag``, ``name``, ``description``, etc. can be used to search
 for resources. 
@@ -102,8 +105,8 @@ Example usage:
     * ``tag:"this is a tag with spaces"`` - will search the tags of resources of this type for text which
     exactly matches ``this is a tag with spaces``
 
-Escaped Characters
-------------------
+Escaped Characters ``\``
+----------------------
 
 The ``\`` character can be used to escape characters mentioned above that should be ignored by the query language.
 
