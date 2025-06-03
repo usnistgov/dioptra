@@ -27,7 +27,10 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
 @pyplugs.register
-def get_uri_for_model(model_name, model_version=-1):
+def get_uri_for_model(
+    model_name: str,
+    model_version: int = -1
+):
     dioptra_client = get_logged_in_session()
     models = dioptra_client.models.get(search=model_name, page_length=500)
     selected_model = None
@@ -59,9 +62,9 @@ def get_uris_for_job(
 
 def get_uris_for_artifacts(
     artifact_ids: list[int]
-) -> list[dict[str, Any]]:
+) -> list[str]:
     dioptra_client = get_logged_in_session()
-    return [dioptra_client.artifacts.get_by_id(artifact_id=aid) for aid in artifact_ids]
+    return [dioptra_client.artifacts.get_by_id(artifact_id=aid)['uri'] for aid in artifact_ids]
 
 
 def post_metrics(
