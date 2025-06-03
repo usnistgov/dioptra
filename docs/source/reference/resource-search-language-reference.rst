@@ -42,7 +42,7 @@ Wildcard
 The ``*`` character can be used as a wildcard to represent an arbitrary number of characters.
 
 Example usage:
-    ``search_term_*`` - will search for all text fields that start with ``search_term_``
+    * ``search_term_*`` - will search for all text fields that start with ``search_term_``
     
 Note that escaping the character, such as in ``search_term_\*`` will result in a search of all
 text fields that exactly match ``search_term_*``.
@@ -65,7 +65,7 @@ Search terms quoted with ``"`` can contain spaces and other characters.
 
 Example usage:
     * ``"search \"this\", and 'that'"`` - will search for all text fields that exactly
-    match ``search \"this\", and 'that'``
+    match ``search "this", and 'that'``
 
 
 Commas
@@ -109,5 +109,5 @@ The ``\`` character can be used to escape characters mentioned above that should
 
 Example usage: 
     * ``tag:\*`` - will search the tags of resources of this type for text which exactly matches ``*``
-    
+
     * ``tag\:`` - will search the tags of resources of this type for text which exactly matches ``tag:``
