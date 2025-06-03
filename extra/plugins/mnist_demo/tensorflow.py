@@ -131,9 +131,10 @@ def get_model_callbacks(callbacks_list: list[dict[str, Any]]) -> list[Callback]:
 @pyplugs.register
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
 def get_performance_metrics(
-    metrics_list: list[dict[str, Any]]
+    metrics_list: list[dict[str, Any]] | None
 ) -> list[Metric | FunctionType]:
     performance_metrics: list[Metric] = []
+    metrics_list = metrics_list if metrics_list is not None else []
 
     for metric in metrics_list:
         new_metric: Metric | FunctionType = import_keras.get_metric(
