@@ -36,7 +36,7 @@ Features
 ========
 
 
-wildcard
+Wildcard
 --------
 
 The ``*`` character can be used as a wildcard to represent an arbitrary number of characters.
@@ -53,6 +53,7 @@ The ``?`` character can be used as a wildcard to represent a single character.
 Example usage:
     * ``search_term_?`` - will search for all text fields that start with ``search_term_`` and only
     have one additional character.
+
     * ``search_term_??`` - will search for all text fields that start with ``search_term_`` and have 
     two additional characters.
 
@@ -63,7 +64,7 @@ Quotation Marks
 Search terms quoted with ``"`` can contain spaces and other characters.
 
 Example usage:
-    ``"search \"this\", and 'that'"`` - will search for all text fields that exactly
+    * ``"search \"this\", and 'that'"`` - will search for all text fields that exactly
     match ``search \"this\", and 'that'``
 
 
@@ -73,7 +74,7 @@ Commas
 Search terms can be combined using commas.
 
 Example usage:
-    ``search_term_1, search_terms_*, "search_term_3"`` - will search for all text fields that
+    * ``search_term_1, search_terms_*, "search_term_3"`` - will search for all text fields that
     match either ``search_term_1``, start with ``search_terms_`` or match ``search_term_3``.
 
 
@@ -88,12 +89,16 @@ Note that quotation marks should be used to include spaces in a single search te
 Example usage:
     * ``tag:my_search_tag`` - will search the tags of resources of this type for text which exactly matches
     ``my_search_tag``
+
     * ``name:experiment_1`` - will search the names of resources of this type for text that exactly matches
     ``experiment_1``
+
     * ``description:*LLM*`` - will search the descriptions of resources of this type for text containing
     ``LLM``
+
     * ``tag:tag1,tag:tag2`` - will search the tags of resources of this type for text which exactly matches
     ``tag1`` or ``tag2``
+
     * ``tag:"this is a tag with spaces"`` - will search the tags of resources of this type for text which
     exactly matches ``this is a tag with spaces``
 
@@ -104,4 +109,5 @@ The ``\`` character can be used to escape characters mentioned above that should
 
 Example usage: 
     * ``tag:\*`` - will search the tags of resources of this type for text which exactly matches ``*``
+    
     * ``tag\:`` - will search the tags of resources of this type for text which exactly matches ``tag:``
