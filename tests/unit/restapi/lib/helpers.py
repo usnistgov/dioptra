@@ -20,7 +20,10 @@ This module contains shared functionality used across test suites for each of th
 API endpoints.
 """
 import datetime
-from typing import Any
+from typing import Any, Container, Iterable, Type
+import dioptra.restapi.db.repository.utils as utils
+import dioptra.restapi.errors as errors
+from dioptra.restapi.db.models import ResourceSnapshot
 
 
 def is_iso_format(date_string: str) -> bool:
@@ -114,3 +117,109 @@ def assert_entrypoint_ref_contents_matches_expectations(
         expected_contents=expected_contents,
     )
     assert response["entrypoint"]["id"] == expected_contents["entrypoint_id"]
+
+
+def expected_exception_for_combined_status(
+    statuses: Container[utils.ExistenceResult] | Iterable[utils.ExistenceResult],
+    policy: utils.DeletionPolicy,
+) -> Type[errors.DioptraError] | None:
+    """
+    Compute what the expected exception would be for an existence check, given
+    a set of statuses (ExistenceResult enum values) and a DeletionPolicy value.
+    This needs to be kept sync'd with the utils code which actually raises the
+    exceptions.  If no exception would be thrown, None is returned.
+
+    Args:
+        statuses: A container/iterable of ExistenceResult enum values
+        policy: A DeletionPolicy enum value
+
+    Returns:
+        None or one of the exception classes EntityDoesNotExistError,
+        EntityDeletedError, EntityExistsError.
+    """
+
+    if utils.ExistenceResult.DOES_NOT_EXIST in statuses:
+        exc = errors.EntityDoesNotExistError
+    elif (
+        policy is utils.DeletionPolicy.NOT_DELETED
+        and utils.ExistenceResult.DELETED in statuses
+    ):
+        exc = errors.EntityDeletedError
+    elif (
+        policy is utils.DeletionPolicy.DELETED
+        and utils.ExistenceResult.EXISTS in statuses
+    ):
+        exc = errors.EntityExistsError
+    else:
+        exc = None
+
+    return exc
+
+
+def expected_exception_for_not_exists(
+    status: utils.ExistenceResult, policy: utils.DeletionPolicy,
+) -> Type[errors.DioptraError] | None:
+    """
+    Compute what the expected exception would be for a non-existence check,
+    given a status (ExistenceResult enum value) and a DeletionPolicy
+    value.  This needs to be kept sync'd with the utils code which actually
+    raises the exceptions.  If no exception would be thrown, None is returned.
+
+    Args:
+        status: An ExistenceResult enum value
+        policy: A DeletionPolicy enum value
+
+    Returns:
+        None or one of the exception classes EntityDoesNotExistError,
+        EntityDeletedError, EntityExistsError.
+    """
+
+    exc = None
+    if policy is utils.DeletionPolicy.NOT_DELETED:
+        if status is utils.ExistenceResult.EXISTS:
+            exc = errors.EntityExistsError
+
+    elif policy is utils.DeletionPolicy.DELETED:
+        if status is utils.ExistenceResult.DELETED:
+            exc = errors.EntityDeletedError
+
+    else:  # policy is DeletionPolicy.ANY
+        if status is utils.ExistenceResult.EXISTS:
+            exc = errors.EntityExistsError
+        elif status is utils.ExistenceResult.DELETED:
+            exc = errors.EntityDeletedError
+
+    return exc
+
+
+def find_expected_snaps_for_deletion_policy(
+    snaps: Iterable[ResourceSnapshot],
+    deletion_policy: utils.DeletionPolicy
+) -> list[ResourceSnapshot]:
+    """
+    This function determines which snaps match up with a given deletion policy,
+    which can determine the expected result of a unit test.  Snaps of
+    non-existent resources (those with null IDs) are always filtered out.
+    """
+
+    if deletion_policy is utils.DeletionPolicy.NOT_DELETED:
+        expected_snaps = [
+            snap for snap in snaps
+            if snap.resource.resource_id is not None
+            and not snap.resource.is_deleted
+        ]
+
+    elif deletion_policy is utils.DeletionPolicy.DELETED:
+        expected_snaps = [
+            snap for snap in snaps
+            if snap.resource.resource_id is not None
+            and snap.resource.is_deleted
+        ]
+
+    else:  # DeletionPolicy.ANY
+        expected_snaps = [
+            snap for snap in snaps
+            if snap.resource.resource_id is not None
+        ]
+
+    return expected_snaps

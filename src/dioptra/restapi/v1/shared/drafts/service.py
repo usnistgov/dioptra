@@ -23,18 +23,18 @@ from typing import Any, cast
 import structlog
 from flask_login import current_user
 from injector import inject
-from sqlalchemy import Integer, func, select
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.db import db, models
+from dioptra.restapi.db import models
+from dioptra.restapi.db.repository.drafts import DraftType
+from dioptra.restapi.db.repository.utils import DeletionPolicy
+from dioptra.restapi.db.unit_of_work import UnitOfWork
 from dioptra.restapi.errors import (
-    BackendDatabaseError,
-    DraftAlreadyExistsError,
     DraftDoesNotExistError,
     EntityDoesNotExistError,
     InvalidDraftBaseResourceSnapshotError,
+    MalformedDraftResourceError,
 )
-from dioptra.restapi.v1.groups.service import GroupIdService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -46,7 +46,7 @@ class ResourceDraftsService(object):
     def __init__(
         self,
         resource_type: str,
-        group_id_service: GroupIdService,
+        uow: UnitOfWork,
     ) -> None:
         """Initialize the draft service.
 
@@ -56,7 +56,7 @@ class ResourceDraftsService(object):
             group_id_service: A GroupIdService object.
         """
         self._resource_type = resource_type
-        self._group_id_service = group_id_service
+        self._uow = uow
 
     def get(
         self,
@@ -86,59 +86,24 @@ class ResourceDraftsService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get full list of drafts")
 
-        filters = list()
-
-        if group_id is not None:
-            filters.append(models.DraftResource.group_id == group_id)
-
-        if base_resource_id is not None:
-            filters.append(
-                models.DraftResource.payload["base_resource_id"]
-                .as_string()
-                .cast(Integer)
-                == base_resource_id
-            )
-
         if draft_type == "existing":
-            filters.append(
-                models.DraftResource.payload["resource_id"].as_string()
-                != None  # noqa: E711
-            )
+            draft_type_enum = DraftType.MODIFICATION
         elif draft_type == "new":
-            filters.append(
-                models.DraftResource.payload["resource_id"].as_string()
-                == None  # noqa: E711
-            )
+            draft_type_enum = DraftType.RESOURCE
+        else:
+            draft_type_enum = DraftType.ANY
 
-        stmt = select(func.count(models.DraftResource.draft_resource_id)).where(
-            *filters,
-            models.DraftResource.resource_type == self._resource_type,
-            models.DraftResource.user_id == current_user.user_id,
+        drafts, total_num_drafts = self._uow.drafts_repo.get_by_filters_paged(
+            draft_type_enum,
+            self._resource_type,
+            # probably should not reference a flask detail like this from
+            # a service.
+            current_user,
+            group_id,
+            base_resource_id,
+            page_index,
+            page_length,
         )
-        total_num_drafts = db.session.scalars(stmt).first()
-
-        if total_num_drafts is None:
-            log.error(
-                "The database query returned a None when counting the number of "
-                "groups when it should return a number.",
-                sql=str(stmt),
-            )
-            raise BackendDatabaseError
-
-        if total_num_drafts == 0:
-            return [], total_num_drafts
-
-        stmt = (
-            select(models.DraftResource)
-            .filter(  # type: ignore
-                *filters,
-                models.DraftResource.resource_type == self._resource_type,
-                models.DraftResource.user_id == current_user.user_id,
-            )
-            .offset(page_index)
-            .limit(page_length)
-        )
-        drafts = db.session.scalars(stmt).all()
 
         return drafts, total_num_drafts
 
@@ -149,36 +114,28 @@ class ResourceDraftsService(object):
         commit: bool = True,
         **kwargs,
     ) -> models.DraftResource:
-        """Create a new draft.
+        log: BoundLogger = kwargs.get("log") or LOGGER.new()
 
-        Args:
-            payload: The contents of the draft.
-            commit: If True, commit the transaction. Defaults to True.
+        # apparently group_id should not be in the payload
+        group_id: int | None = payload.pop("group_id", None)
 
-        Returns:
-            The newly created draft object.
-
-        Raises:
-            EntityDoesNotExistError: If the group with the provided ID does not exist.
-        """
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
-
-        group_id = payload.pop("group_id", None)
-
+        # Really need objects here, not IDs, to create the DraftResource
         if base_resource_id is None:
-            group = self._group_id_service.get(group_id, error_if_not_found=True)
+            if group_id is None:
+                raise MalformedDraftResourceError()
+            owner = self._uow.group_repo.get(group_id, DeletionPolicy.ANY)
+            if not owner:
+                raise EntityDoesNotExistError("group", group_id=group_id)
         else:
-            stmt = select(models.Resource).filter_by(
-                resource_id=base_resource_id, is_deleted=False
+            base_resource = self._uow.drafts_repo.get_resource(
+                base_resource_id, DeletionPolicy.ANY
             )
-            resource = db.session.scalar(stmt)
-            if resource is None:
-                raise EntityDoesNotExistError(
-                    self._resource_type, resource_id=base_resource_id
-                )
-            group = resource.owner
+            if not base_resource:
+                raise EntityDoesNotExistError(None, resource_id=base_resource_id)
 
-        draft_payload = {
+            owner = base_resource.owner
+
+        toplevel_data = {
             "resource_data": payload,
             "resource_id": None,
             "resource_snapshot_id": None,
@@ -186,16 +143,24 @@ class ResourceDraftsService(object):
         }
 
         draft = models.DraftResource(
-            resource_type=self._resource_type,
-            target_owner=group,
-            payload=draft_payload,
-            creator=current_user,
+            self._resource_type,
+            toplevel_data,
+            owner,
+            # probably should not reference a flask detail like this from
+            # a service.
+            current_user,
         )
-        db.session.add(draft)
+
+        try:
+            self._uow.drafts_repo.create_draft_resource(draft)
+        except Exception:
+            self._uow.rollback()
+            raise
 
         if commit:
-            db.session.commit()
-            log.debug("Draft creation successful", resource_id=draft.draft_resource_id)
+            self._uow.commit()
+
+        log.debug("Draft creation successful", resource_id=draft.draft_resource_id)
 
         return draft
 
@@ -207,17 +172,18 @@ class ResourceDraftsIdService(object):
     def __init__(
         self,
         resource_type: str,
-        group_id_service: GroupIdService,
+        uow: UnitOfWork,
     ) -> None:
         """Initialize the draft service.
 
         All arguments are provided via dependency injection.
 
         Args:
-            group_id_service: A GroupIdService object.
+            resource_type: A resource type
+            uow: A UnitOfWork object
         """
         self._resource_type = resource_type
-        self._group_id_service = group_id_service
+        self._uow = uow
 
     def get(
         self,
@@ -228,7 +194,7 @@ class ResourceDraftsIdService(object):
         """Fetch a draft by its unique id.
 
         Args:
-            resource_id: The unique id of the resource.
+            draft_id: The unique id of the resource.
             error_if_not_found: If True, raise an error if the resource is not found.
                 Defaults to False.
 
@@ -242,18 +208,16 @@ class ResourceDraftsIdService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get draft by id", draft_id=draft_id)
 
-        stmt = select(models.DraftResource).filter(
-            models.DraftResource.resource_type == self._resource_type,
-            models.DraftResource.draft_resource_id == draft_id,
-            models.DraftResource.user_id == current_user.user_id,
+        draft = self._uow.drafts_repo.get(
+            # probably should not reference a flask detail like this from
+            # a service.
+            draft_id,
+            self._resource_type,
+            current_user,
         )
-        draft = db.session.scalars(stmt).first()
 
-        if draft is None:
-            if error_if_not_found:
-                raise DraftDoesNotExistError(draft_resource_id=draft_id)
-
-            return None
+        if draft is None and error_if_not_found:
+            raise DraftDoesNotExistError(draft_resource_id=draft_id)
 
         return draft
 
@@ -289,11 +253,12 @@ class ResourceDraftsIdService(object):
             return None
 
         current_timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
+        # TODO: sanity check the payload?
         draft.payload["resource_data"] = payload
         draft.last_modified_on = current_timestamp
 
         if commit:
-            db.session.commit()
+            self._uow.commit()
             log.debug("Draft modification successful", draft_resource_id=draft_id)
 
         return draft
@@ -309,9 +274,8 @@ class ResourceDraftsIdService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        draft = self.get(draft_id, error_if_not_found=True, log=log)
-        db.session.delete(draft)
-        db.session.commit()
+        with self._uow:
+            self._uow.drafts_repo.delete(draft_id)
         log.debug("Draft deleted", draft_resource_id=draft_id)
 
         return {"status": "Success", "id": [draft_id]}
@@ -320,8 +284,10 @@ class ResourceDraftsIdService(object):
 class ResourceIdDraftService(object):
     """The service methods for managing the draft for an existing resource."""
 
-    def __init__(self, resource_type: str):
+    @inject
+    def __init__(self, resource_type: str, uow: UnitOfWork):
         self._resource_type = resource_type
+        self._uow = uow
 
     def get(
         self,
@@ -348,33 +314,20 @@ class ResourceIdDraftService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get draft by resource id", resource_id=resource_id)
 
-        stmt = select(func.count(models.DraftResource.draft_resource_id)).where(
-            models.DraftResource.payload["resource_id"].as_string().cast(Integer)
-            == resource_id,
-            models.DraftResource.user_id != current_user.user_id,
+        draft = self._uow.drafts_repo.get_draft_modification_by_user(
+            # probably should not reference a flask detail like this from
+            # a service.
+            current_user,
+            resource_id,
         )
-        num_other_drafts = db.session.scalars(stmt).first()
 
-        if num_other_drafts is None:
-            log.error(
-                "The database query returned a None when counting the number of "
-                "groups when it should return a number.",
-                sql=str(stmt),
-            )
-            raise BackendDatabaseError
+        if draft is None and error_if_not_found:
+            raise DraftDoesNotExistError(resource_id=resource_id)
 
-        stmt = select(models.DraftResource).filter(  # type: ignore
-            models.DraftResource.payload["resource_id"].as_string().cast(Integer)
-            == resource_id,
-            models.DraftResource.user_id == current_user.user_id,
+        num_other_drafts = self._uow.drafts_repo.get_num_draft_modifications(
+            resource_id,
+            current_user,
         )
-        draft = cast(models.DraftResource, db.session.scalars(stmt).first())
-
-        if draft is None:
-            if error_if_not_found:
-                raise DraftDoesNotExistError(resource_id=resource_id)
-
-            return None, num_other_drafts
 
         return draft, num_other_drafts
 
@@ -401,17 +354,20 @@ class ResourceIdDraftService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        stmt = select(models.Resource).filter_by(
-            resource_id=resource_id, resource_type=self._resource_type, is_deleted=False
+        resource = self._uow.drafts_repo.get_resource(
+            resource_id,
+            DeletionPolicy.ANY,
         )
-        resource = db.session.scalars(stmt).first()
 
-        if resource is None:
+        if resource is None or resource.resource_type != self._resource_type:
             raise EntityDoesNotExistError(self._resource_type, resource_id=resource_id)
 
-        existing_draft, num_other_drafts = self.get(resource_id, log=log)
-        if existing_draft:
-            raise DraftAlreadyExistsError(self._resource_type, resource_id)
+        num_other_drafts = self._uow.drafts_repo.get_num_draft_modifications(
+            # probably should not reference a flask detail like this from
+            # a service.
+            resource,
+            current_user,
+        )
 
         draft_payload = {
             "resource_data": payload,
@@ -426,10 +382,15 @@ class ResourceIdDraftService(object):
             payload=draft_payload,
             creator=current_user,
         )
-        db.session.add(draft)
+
+        try:
+            self._uow.drafts_repo.create_draft_modification(draft)
+        except Exception:
+            self._uow.rollback()
+            raise
 
         if commit:
-            db.session.commit()
+            self._uow.commit()
             log.debug("Draft creation successful", resource_id=draft.draft_resource_id)
 
         return draft, num_other_drafts
@@ -475,30 +436,18 @@ class ResourceIdDraftService(object):
                 provided_resource_snapshot_id=payload["resource_snapshot_id"],
             )
 
-        snapshot_exists_stmt = (
-            select(models.ResourceSnapshot)
-            .where(
-                models.ResourceSnapshot.resource_snapshot_id
-                == payload["resource_snapshot_id"]
-                and models.ResourceSnapshot.resource_type == draft.resource_type
+        try:
+            self._uow.drafts_repo.update(
+                draft,
+                payload["resource_data"],
+                payload["resource_snapshot_id"],
             )
-            .exists()
-            .select()
-        )
-        snapshot_exists = db.session.scalar(snapshot_exists_stmt)
-        if not snapshot_exists:
-            raise EntityDoesNotExistError(
-                draft.resource_type,
-                resource_snapshot_id=payload["resource_snapshot_id"],
-            )
-
-        current_timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
-        draft.payload["resource_snapshot_id"] = payload["resource_snapshot_id"]
-        draft.payload["resource_data"] = payload["resource_data"]
-        draft.last_modified_on = current_timestamp
+        except Exception:
+            self._uow.rollback()
+            raise
 
         if commit:
-            db.session.commit()
+            self._uow.commit()
             log.debug("Draft modification successful", resource_id=resource_id)
 
         return draft, num_other_drafts
@@ -519,8 +468,9 @@ class ResourceIdDraftService(object):
             self.get(resource_id, error_if_not_found=True, log=log),
         )
         draft_id = draft.draft_resource_id
-        db.session.delete(draft)
-        db.session.commit()
+        with self._uow:
+            self._uow.drafts_repo.delete(draft)
+
         log.debug("Draft deleted", resource_id=resource_id)
 
         return {"status": "Success", "id": [draft_id]}

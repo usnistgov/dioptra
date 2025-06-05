@@ -17,61 +17,39 @@
 """The server-side functions that perform queue endpoint operations."""
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import Any, Final
 
 import structlog
 from flask_login import current_user
 from injector import inject
-from sqlalchemy import Integer, func, select
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.db import db, models
-from dioptra.restapi.db.models.constants import resource_lock_types
-from dioptra.restapi.errors import (
-    BackendDatabaseError,
-    EntityDoesNotExistError,
-    EntityExistsError,
-    SortParameterValidationError,
-)
+from dioptra.restapi.db import models
+from dioptra.restapi.db.repository.utils import DeletionPolicy
+from dioptra.restapi.db.unit_of_work import UnitOfWork
+from dioptra.restapi.errors import EntityDoesNotExistError
 from dioptra.restapi.v1 import utils
-from dioptra.restapi.v1.groups.service import GroupIdService
-from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
+from dioptra.restapi.v1.shared.search_parser import parse_search_text
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 RESOURCE_TYPE: Final[str] = "queue"
-SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
-    "name": lambda x: models.Queue.name.like(x, escape="/"),
-    "description": lambda x: models.Queue.description.like(x, escape="/"),
-    "tag": lambda x: models.Queue.tags.any(models.Tag.name.like(x, escape="/")),
-}
-SORTABLE_FIELDS: Final[dict[str, Any]] = {
-    "name": models.Queue.name,
-    "createdOn": models.Queue.created_on,
-    "lastModifiedOn": models.Resource.last_modified_on,
-    "description": models.Queue.description,
-}
 
 
 class QueueService(object):
     """The service methods for registering and managing queues by their unique id."""
 
     @inject
-    def __init__(
-        self,
-        queue_name_service: QueueNameService,
-        group_id_service: GroupIdService,
-    ) -> None:
+    def __init__(self, uow: UnitOfWork) -> None:
         """Initialize the queue service.
 
         All arguments are provided via dependency injection.
 
         Args:
-            queue_name_service: A QueueNameService object.
-            group_id_service: A GroupIdService object.
+            uow: A UnitOfWork instance
         """
-        self._queue_name_service = queue_name_service
-        self._group_id_service = group_id_service
+        self._uow = uow
 
     def create(
         self,
@@ -99,27 +77,28 @@ class QueueService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        duplicate = self._queue_name_service.get(name, group_id=group_id, log=log)
-        if duplicate is not None:
-            raise EntityExistsError(
-                RESOURCE_TYPE, duplicate.resource_id, name=name, group_id=group_id
-            )
-
-        group = self._group_id_service.get(group_id, error_if_not_found=True)
+        group = self._uow.group_repo.get(group_id, DeletionPolicy.NOT_DELETED)
+        if not group:
+            raise EntityDoesNotExistError("group", group_id=group_id)
 
         resource = models.Resource(resource_type=RESOURCE_TYPE, owner=group)
         new_queue = models.Queue(
             name=name, description=description, resource=resource, creator=current_user
         )
-        db.session.add(new_queue)
+
+        try:
+            self._uow.queue_repo.create(new_queue)
+        except Exception:
+            self._uow.rollback()
+            raise
 
         if commit:
-            db.session.commit()
-            log.debug(
-                "Queue registration successful",
-                queue_id=new_queue.resource_id,
-                name=new_queue.name,
-            )
+            self._uow.commit()
+        log.debug(
+            "Queue registration successful",
+            queue_id=new_queue.resource_id,
+            name=new_queue.name,
+        )
 
         return utils.QueueDict(queue=new_queue, has_draft=False)
 
@@ -155,76 +134,28 @@ class QueueService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get full list of queues")
 
-        filters = list()
+        search_struct = parse_search_text(search_string)
 
-        if group_id is not None:
-            filters.append(models.Resource.group_id == group_id)
-
-        if search_string:
-            filters.append(
-                construct_sql_query_filters(search_string, SEARCHABLE_FIELDS)
-            )
-
-        stmt = (
-            select(func.count(models.Queue.resource_id))
-            .join(models.Resource)
-            .where(
-                *filters,
-                models.Resource.is_deleted == False,  # noqa: E712
-                models.Resource.latest_snapshot_id == models.Queue.resource_snapshot_id,
-            )
-        )
-        total_num_queues = db.session.scalars(stmt).first()
-
-        if total_num_queues is None:
-            log.error(
-                "The database query returned a None when counting the number of "
-                "queues when it should return a number.",
-                sql=str(stmt),
-            )
-            raise BackendDatabaseError
-
-        if total_num_queues == 0:
-            return [], total_num_queues
-
-        queues_stmt = (
-            select(models.Queue)
-            .join(models.Resource)
-            .where(
-                *filters,
-                models.Resource.is_deleted == False,  # noqa: E712
-                models.Resource.latest_snapshot_id == models.Queue.resource_snapshot_id,
-            )
-            .offset(page_index)
-            .limit(page_length)
+        queues, total_num_queues = self._uow.queue_repo.get_by_filters_paged(
+            group_id,
+            search_struct,
+            page_index,
+            page_length,
+            sort_by_string,
+            descending,
+            DeletionPolicy.NOT_DELETED,
         )
 
-        if sort_by_string and sort_by_string in SORTABLE_FIELDS:
-            sort_column = SORTABLE_FIELDS[sort_by_string]
-            if descending:
-                sort_column = sort_column.desc()
-            else:
-                sort_column = sort_column.asc()
-            queues_stmt = queues_stmt.order_by(sort_column)
-        elif sort_by_string and sort_by_string not in SORTABLE_FIELDS:
-            raise SortParameterValidationError(RESOURCE_TYPE, sort_by_string)
-
-        queues = list(db.session.scalars(queues_stmt).all())
-
-        drafts_stmt = select(
-            models.DraftResource.payload["resource_id"].as_string().cast(Integer)
-        ).where(
-            models.DraftResource.payload["resource_id"]
-            .as_string()
-            .cast(Integer)
-            .in_(tuple(queue.resource_id for queue in queues)),
-            models.DraftResource.user_id == current_user.user_id,
-        )
         queues_dict: dict[int, utils.QueueDict] = {
             queue.resource_id: utils.QueueDict(queue=queue, has_draft=False)
             for queue in queues
         }
-        for resource_id in db.session.scalars(drafts_stmt):
+
+        resource_ids_with_drafts = self._uow.drafts_repo.has_draft_modifications(
+            queues,
+            current_user,
+        )
+        for resource_id in resource_ids_with_drafts:
             queues_dict[resource_id]["has_draft"] = True
 
         return list(queues_dict.values()), total_num_queues
@@ -234,15 +165,15 @@ class QueueIdService(object):
     """The service methods for registering and managing queues by their unique id."""
 
     @inject
-    def __init__(self, queue_name_service: QueueNameService) -> None:
+    def __init__(self, uow: UnitOfWork) -> None:
         """Initialize the queue service.
 
         All arguments are provided via dependency injection.
 
         Args:
-            queue_name_service: A QueueNameService object.
+            uow: A UnitOfWork instance
         """
-        self._queue_name_service = queue_name_service
+        self._uow = uow
 
     def get(
         self,
@@ -261,40 +192,35 @@ class QueueIdService(object):
             The queue object if found, otherwise None.
 
         Raises:
-            EntityDoesNotExistError: If the queue is not found and `error_if_not_found`
+            ResourceNotFoundError: If the queue is not found and `error_if_not_found`
+                is True.
+            ResourceDeletedError: If the queue is deleted and `error_if_not_found`
                 is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get queue by id", queue_id=queue_id)
 
-        stmt = (
-            select(models.Queue)
-            .join(models.Resource)
-            .where(
-                models.Queue.resource_id == queue_id,
-                models.Queue.resource_snapshot_id == models.Resource.latest_snapshot_id,
-                models.Resource.is_deleted == False,  # noqa: E712
-            )
-        )
-        queue = db.session.scalars(stmt).first()
+        queue = self._uow.queue_repo.get(queue_id, DeletionPolicy.ANY)
+        # For mypy: if we ask for a single queue ID, we get at most a single
+        # Queue back.
+        assert queue is None or isinstance(queue, models.Queue)
 
-        if queue is None:
+        if not queue:
             if error_if_not_found:
-                raise EntityDoesNotExistError(RESOURCE_TYPE, queue_id=queue_id)
+                raise EntityDoesNotExistError("queue", resource_id=queue_id)
+            else:
+                return None
+        elif queue.resource.is_deleted:
+            if error_if_not_found:
+                # treat "deleted" as if "not found"?
+                raise EntityDoesNotExistError("queue", resource_id=queue_id)
+            else:
+                return None
 
-            return None
-
-        drafts_stmt = (
-            select(models.DraftResource.draft_resource_id)
-            .where(
-                models.DraftResource.payload["resource_id"].as_string().cast(Integer)
-                == queue.resource_id,
-                models.DraftResource.user_id == current_user.user_id,
-            )
-            .exists()
-            .select()
+        has_draft = self._uow.drafts_repo.has_draft_modification(
+            queue,
+            current_user,
         )
-        has_draft = db.session.scalar(drafts_stmt)
 
         return utils.QueueDict(queue=queue, has_draft=has_draft)
 
@@ -321,25 +247,30 @@ class QueueIdService(object):
             The updated queue object.
 
         Raises:
-            EntityDoesNotExistError: If the queue is not found and `error_if_not_found`
+            ResourceNotFoundError: If the queue is not found and `error_if_not_found`
+                is True.
+            ResourceDeletedError: If the queue is deleted and `error_if_not_found`
                 is True.
             EntityExistsError: If the queue name already exists.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        queue_dict = self.get(queue_id, error_if_not_found=error_if_not_found, log=log)
+        queue = self._uow.queue_repo.get(queue_id, DeletionPolicy.ANY)
+        # For mypy: if we ask for a single queue ID, we get at most a single
+        # Queue back.
+        assert queue is None or isinstance(queue, models.Queue)
 
-        if queue_dict is None:
-            return None
-
-        queue = queue_dict["queue"]
-        group_id = queue.resource.group_id
-        if name != queue.name:
-            duplicate = self._queue_name_service.get(name, group_id=group_id, log=log)
-            if duplicate is not None:
-                raise EntityExistsError(
-                    RESOURCE_TYPE, duplicate.resource_id, name=name, group_id=group_id
-                )
+        if not queue:
+            if error_if_not_found:
+                raise EntityDoesNotExistError("queue", resource_id=queue_id)
+            else:
+                return None
+        elif queue.resource.is_deleted:
+            if error_if_not_found:
+                # treat "deleted" as if "not found"?
+                raise EntityDoesNotExistError("queue", resource_id=queue_id)
+            else:
+                return None
 
         new_queue = models.Queue(
             name=name,
@@ -347,16 +278,21 @@ class QueueIdService(object):
             resource=queue.resource,
             creator=current_user,
         )
-        db.session.add(new_queue)
+        try:
+            self._uow.queue_repo.create_snapshot(new_queue)
+        except Exception:
+            self._uow.rollback()
+            raise
 
         if commit:
-            db.session.commit()
-            log.debug(
-                "Queue modification successful",
-                queue_id=queue_id,
-                name=name,
-                description=description,
-            )
+            self._uow.commit()
+
+        log.debug(
+            "Queue modification successful",
+            queue_id=queue_id,
+            name=name,
+            description=description,
+        )
 
         return utils.QueueDict(queue=new_queue, has_draft=False)
 
@@ -370,24 +306,14 @@ class QueueIdService(object):
             A dictionary reporting the status of the request.
 
         Raises:
-            EntityDoesNotExistError: If the queue is not found.
+            ResourceNotFoundError: If the queue is not found.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        stmt = select(models.Resource).filter_by(
-            resource_id=queue_id, resource_type=RESOURCE_TYPE, is_deleted=False
-        )
-        queue_resource = db.session.scalars(stmt).first()
+        with self._uow:
+            # No-op if already deleted
+            self._uow.queue_repo.delete(queue_id)
 
-        if queue_resource is None:
-            raise EntityDoesNotExistError(RESOURCE_TYPE, queue_id=queue_id)
-
-        deleted_resource_lock = models.ResourceLock(
-            resource_lock_type=resource_lock_types.DELETE,
-            resource=queue_resource,
-        )
-        db.session.add(deleted_resource_lock)
-        db.session.commit()
         log.debug("Queue deleted", queue_id=queue_id)
 
         return {"status": "Success", "queue_id": queue_id}
@@ -395,6 +321,17 @@ class QueueIdService(object):
 
 class QueueIdsService(object):
     """The service methods for retrieving queues from a list of ids."""
+
+    @inject
+    def __init__(self, uow: UnitOfWork):
+        """Initialize the queue IDs service.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            uow: A UnitOfWork instance
+        """
+        self._uow = uow
 
     def get(
         self,
@@ -406,43 +343,49 @@ class QueueIdsService(object):
 
         Args:
             queue_ids: The unique ids of the queues.
-            error_if_not_found: If True, raise an error if the queue is not found.
+            error_if_not_found: If True, raise an error if any queues are not found.
                 Defaults to False.
 
         Returns:
-            The queue object if found, otherwise None.
+            The queue objects if found, otherwise None.
 
         Raises:
-            EntityDoesNotExistError: If the queue is not found and `error_if_not_found`
+            ResourceNotFoundError: If any queues are not found and `error_if_not_found`
                 is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get queue by id", queue_ids=queue_ids)
 
-        stmt = (
-            select(models.Queue)
-            .join(models.Resource)
-            .where(
-                models.Queue.resource_id.in_(tuple(queue_ids)),
-                models.Queue.resource_snapshot_id == models.Resource.latest_snapshot_id,
-                models.Resource.is_deleted == False,  # noqa: E712
-            )
-        )
-        queues = list(db.session.scalars(stmt).all())
+        # More complex situation here where some queues could be deleted and
+        # some may not exist at all.  For now, just treat both as not existing.
+        queues = self._uow.queue_repo.get(queue_ids, DeletionPolicy.NOT_DELETED)
+        # For mypy: if we request a list of IDs, we get a Sequence of Queues
+        # back.
+        assert isinstance(queues, Sequence)
 
         if len(queues) != len(queue_ids) and error_if_not_found:
             queue_ids_missing = set(queue_ids) - set(
                 queue.resource_id for queue in queues
             )
-            raise EntityDoesNotExistError(
-                RESOURCE_TYPE, queue_ids=list(queue_ids_missing)
-            )
+            log.debug("Queue not found", queue_ids=list(queue_ids_missing))
+            raise EntityDoesNotExistError("queue", resource_ids=queue_ids_missing)
 
-        return queues
+        return list(queues)
 
 
 class QueueNameService(object):
     """The service methods for managing queues by their name."""
+
+    @inject
+    def __init__(self, uow: UnitOfWork):
+        """Initialize the queue name service.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            uow: A UnitOfWork instance
+        """
+        self._uow = uow
 
     def get(
         self,
@@ -455,7 +398,7 @@ class QueueNameService(object):
 
         Args:
             name: The name of the queue.
-            group_id: The the group id of the queue.
+            group_id: The group id of the queue.
             error_if_not_found: If True, raise an error if the queue is not found.
                 Defaults to False.
 
@@ -469,17 +412,9 @@ class QueueNameService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get queue by name", queue_name=name, group_id=group_id)
 
-        stmt = (
-            select(models.Queue)
-            .join(models.Resource)
-            .where(
-                models.Queue.name == name,
-                models.Resource.group_id == group_id,
-                models.Resource.is_deleted == False,  # noqa: E712
-                models.Resource.latest_snapshot_id == models.Queue.resource_snapshot_id,
-            )
+        queue = self._uow.queue_repo.get_by_name(
+            name, group_id, DeletionPolicy.NOT_DELETED
         )
-        queue = db.session.scalars(stmt).first()
 
         if queue is None:
             if error_if_not_found:
