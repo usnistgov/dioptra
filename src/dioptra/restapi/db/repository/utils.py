@@ -17,7 +17,7 @@
 import enum
 import itertools
 import typing
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence, Set
 
 import sqlalchemy as sa
 import sqlalchemy.sql.expression as sae
@@ -91,6 +91,15 @@ class DeletionPolicy(enum.Enum):
     NOT_DELETED = enum.auto()
     # Deleted items only
     DELETED = enum.auto()
+
+
+class ResourceLockType(enum.Enum):
+    """
+    Types of resource lock
+    """
+
+    DELETED = resource_lock_types.DELETE
+    READONLY = resource_lock_types.READONLY
 
 
 def get_user_id(user: User | int) -> int | None:
@@ -459,6 +468,9 @@ def resource_modifiable(
     Returns:
         True if the resource is modifiable or doesn't exist; False if the
         resource exists and has a read-only lock.
+
+    See Also:
+        - :py:func:`get_resource_lock_types`
     """
 
     resource_id = get_resource_id(resource)
@@ -1567,6 +1579,39 @@ def get_latest_snapshots(
     return snaps
 
 
+def get_one_latest_snapshot(
+    session: CompatibleSession[S],
+    snap_class: typing.Type[ResourceT],
+    resource: int | Resource | ResourceSnapshot,
+    deletion_policy: DeletionPolicy,
+) -> ResourceT:
+    """
+    Get the latest snapshot of the given resource; require that exactly one is
+    found, or raise an exception.
+
+    Args:
+        session: An SQLAlchemy session
+        snap_class: A ResourceSnapshot subclass, which represents the type
+            of resource to get
+        resource: A resource, resource snapshot, or integer resource ID,
+            for which to obtain the latest snapshot
+        deletion_policy: Whether to look at deleted resources, non-deleted
+            resources, or all resources
+
+    Returns:
+        A snapshot
+
+    Raises:
+        EntityDoesNotExistError: if the resource was not found
+    """
+    latest = get_latest_snapshots(session, snap_class, resource, deletion_policy)
+
+    if not latest:
+        raise EntityDoesNotExistError(resource_id=get_resource_id(resource))
+
+    return latest
+
+
 def get_latest_child_snapshots(
     session: CompatibleSession[S],
     child_class: typing.Type[ResourceT],
@@ -1617,64 +1662,61 @@ def get_latest_child_snapshots(
     return child_snaps
 
 
-def get_snapshot_by_name(
+# The type ignore below is necessary because it seems to be impossible to
+# express the correct types in the overloads below.  Mypy treats "str" as
+# compatible with "Iterable[str]".  Technically that's not wrong, since you can
+# iterate through a string and get strings (all length-1, the individual
+# characters).  But the implementation special cases str as:
+#
+#     if isinstance(name, str):
+#         ...  # first overload
+#     else:
+#         ...  # second overload
+#
+# So what I really need to be able to express are two cases: (1) str and
+# (2) Iterable[str] *but not str itself!*  I think there is no way to write a
+# type annotation with a negative clause which excludes a special case.  So
+# mypy gives the error that the overloads "overlap with incompatible return
+# types".  It also says: "Flipping the order of overloads will fix this error",
+# and it did make the error go away, but also causes mypy to misunderstand
+# function calls (match them to the wrong overload).  So it's really just
+# trading one mypy error for another.
+#
+# It seems the only thing you can do for now is use the overload order below,
+# and turn the overload-overlap error off.
+#
+# See also:
+# https://github.com/python/typing/issues/256
+# https://github.com/python/mypy/issues/11001
+@typing.overload
+def get_snapshot_by_name(  # type: ignore[overload-overlap]  # noqa: E704
     session: CompatibleSession[S],
     snap_class: typing.Type[ResourceT],
     name: str,
     group: Group | int,
     deletion_policy: DeletionPolicy,
-) -> ResourceT | None:
-    """
-    Get the latest snapshot of a resource, by name.
-
-    snap_class must have an attribute named "name" which maps to the name
-    column of its table.
-
-    Args:
-        session: An SQLAlchemy session
-        snap_class: A ResourceSnapshot subclass, which represents which type
-            of resource to get, with a "name" attribute
-        name: The name to search for
-        group: A group/group ID, to disambiguate same-named resources across
-            groups
-        deletion_policy: Whether to look at deleted resources, non-deleted
-            resources, or all resources
-
-    Returns:
-        A resource snapshot, or None if one was not found with the given name
-
-    Raises:
-        EntityDoesNotExistError: if the given group does not exist
-        EntityDeletedError: if the given group is deleted
-    """
-    assert_group_exists(session, group, DeletionPolicy.NOT_DELETED)
-    group_id = get_group_id(group)
-
-    stmt = (
-        sa.select(snap_class)
-        .join(Resource)
-        .where(
-            snap_class.resource_snapshot_id == Resource.latest_snapshot_id,
-            Resource.group_id == group_id,
-            snap_class.name == name,
-        )
-    )
-
-    stmt = apply_resource_deletion_policy(stmt, deletion_policy)
-    resource = session.scalar(stmt)
-
-    return resource
+) -> ResourceT | None: ...
 
 
-def get_snapshots_by_names(
+@typing.overload
+def get_snapshot_by_name(  # noqa: E704
     session: CompatibleSession[S],
     snap_class: typing.Type[ResourceT],
-    names: Sequence[str],
+    name: Iterable[str],
     group: Group | int,
     deletion_policy: DeletionPolicy,
-) -> Sequence[ResourceT]:
+) -> Sequence[ResourceT]: ...
+
+
+def get_snapshot_by_name(
+    session: CompatibleSession[S],
+    snap_class: typing.Type[ResourceT],
+    name: str | Iterable[str],
+    group: Group | int,
+    deletion_policy: DeletionPolicy,
+) -> ResourceT | Sequence[ResourceT] | None:
     """
-    Get the latest snapshots of a list of resources, by their names.
+    Get the latest snapshot(s) of resource(s), by name(s).
 
     snap_class must have an attribute named "name" which maps to the name
     column of its table.
@@ -1683,15 +1725,18 @@ def get_snapshots_by_names(
         session: An SQLAlchemy session
         snap_class: A ResourceSnapshot subclass, which represents which type
             of resource to get, with a "name" attribute
-        name: A sequence of names to search for
+        name: The name(s) to search for as a single string or iterable of
+            strings
         group: A group/group ID, to disambiguate same-named resources across
             groups
         deletion_policy: Whether to look at deleted resources, non-deleted
             resources, or all resources
 
     Returns:
-        A list of snapshots or an empty list if none were found with the given
-        names
+        If a single name is passed, a resource snapshot is returned, or None
+        if one was not found with the given name.  If an iterable of names is
+        passed, a sequence of snapshots is returned, which will be empty if
+        none were found.
 
     Raises:
         EntityDoesNotExistError: if the given group does not exist
@@ -1700,18 +1745,28 @@ def get_snapshots_by_names(
     assert_group_exists(session, group, DeletionPolicy.NOT_DELETED)
     group_id = get_group_id(group)
 
+    if isinstance(name, str):
+        name_check = snap_class.name == name
+    else:
+        name_check = snap_class.name.in_(name)
+
     stmt = (
         sa.select(snap_class)
         .join(Resource)
         .where(
             snap_class.resource_snapshot_id == Resource.latest_snapshot_id,
             Resource.group_id == group_id,
-            snap_class.name.in_(list(names)),  # ensure in_ gets a list
+            name_check,
         )
     )
 
     stmt = apply_resource_deletion_policy(stmt, deletion_policy)
-    resource = session.scalars(stmt).all()
+
+    resource: ResourceT | Sequence[ResourceT] | None
+    if isinstance(name, str):
+        resource = session.scalar(stmt)
+    else:
+        resource = session.scalars(stmt).all()
 
     return resource
 
@@ -1883,7 +1938,8 @@ def delete_resource(
 ) -> None:
     """
     Common routine for deleting a resource.  No-op if the resource is already
-    deleted.
+    deleted.  This function differs from add_resource_lock_types() in that this
+    function requires that the given resource exists.
 
     Args:
         session: An SQLAlchemy session
@@ -1894,6 +1950,9 @@ def delete_resource(
         EntityDoesNotExistError: if the resource does not exist
         ReadOnlyLockError: if the resource exists, is not deleted, and has a
             read-only lock
+
+    See Also:
+        - :py:func:`add_resource_lock_types`
     """
 
     exists_result = resource_exists(session, resource)
@@ -1904,21 +1963,125 @@ def delete_resource(
         raise EntityDoesNotExistError(resource_type, resource_id=resource_id)
 
     elif exists_result is ExistenceResult.EXISTS:
-        assert_resource_modifiable(session, resource)
+        add_resource_lock_types(session, resource, {ResourceLockType.DELETED})
 
-        # here, we really need the Resource object; ResourceLock's constructor
-        # is just designed that way.
+    # else: exists_result is DELETED; nothing to do.
+
+
+def get_resource_lock_types(
+    session: CompatibleSession[S],
+    resource: Resource | ResourceSnapshot | int,
+) -> set[ResourceLockType]:
+    """
+    Get the types of locks set on the given resource.  This does not return
+    the actual lock objects, just their types as ResourceLockType enum values.
+    For use cases targeting the read-only lock specifically, see also
+    resource_modifiable()/assert_resource_modifiable().  Those functions only
+    check for the existence of the lock but don't return it, so they can be
+    more efficient.
+
+    Args:
+        session: An SQLAlchemy session
+        resource: A resource, snapshot, or resource_id integer primary key
+            value
+
+    Returns:
+        A set of ResourceLockType values.  The set will be empty if the
+        resource doesn't exist.
+
+    See Also:
+        - :py:func:`resource_modifiable`
+        - :py:func:`assert_resource_modifiable`
+    """
+    lock_types = set()
+
+    resource_id = get_resource_id(resource)
+    if resource_id is not None:
+        stmt = sa.select(ResourceLock).where(ResourceLock.resource_id == resource_id)
+
+        locks = session.scalars(stmt)
+        for lock in locks:
+            lock_types.add(ResourceLockType(lock.resource_lock_type))
+
+    return lock_types
+
+
+def add_resource_lock_types(
+    session: CompatibleSession[S],
+    resource: Resource | ResourceSnapshot | int,
+    lock_types: Set[ResourceLockType],
+) -> None:
+    """
+    Add ResourceLock objects of the given types, for the given resource.
+    This function does not require the resource to exist, if it is given as a
+    Resource or ResourceSnapshot object.  This is so locks can be added to
+    resources as part of their creation, within the same transaction.  If
+    resource is given as an integer resource ID, and the ID does not resolve to
+    a resource, an exception is raised.
+
+    If any of the given lock types already exist on the resource, they are
+    skipped and don't produce an error.
+
+    This function doesn't prohibit adding a delete lock to a non-existent
+    resource (i.e. bringing a resource into existence in an already-deleted
+    state), although that may not be useful.
+
+    Args:
+        session: An SQLAlchemy session
+        resource: A resource, snapshot, or resource_id integer primary key
+            value
+        lock_types: The lock types to add
+
+    Raises:
+        EntityDeletedError: if a lock would be added to a deleted resource
+        EntityDoesNotExistError: if resource was given as an int which didn't
+            resolve to a resource
+        ReadOnlyLockError: if lock would be added to a non-deleted readonly
+            resource
+
+    See Also:
+        - :py:func:`delete_resource`
+    """
+
+    if isinstance(resource, (Resource, ResourceSnapshot)):
+        resource_type = resource.resource_type
+    else:
+        resource_type = None
+
+    resource_id = get_resource_id(resource)
+
+    existing_lock_types = get_resource_lock_types(session, resource)
+    types_to_add = lock_types - existing_lock_types
+
+    if ResourceLockType.DELETED in existing_lock_types:
+        # resource_id can't be None if the resource is deleted; it must exist
+        # in the db with a delete lock
+        assert resource_id is not None
+        if types_to_add:
+            raise EntityDeletedError(
+                resource_type, resource_id, resource_id=resource_id
+            )
+
+    if ResourceLockType.READONLY in existing_lock_types:
+        if types_to_add:
+            raise ReadOnlyLockError(resource_type, resource_id=resource_id)
+
+    else:
+
+        # here, we really need the Resource object; ResourceLock's
+        # constructor is just designed that way.
         if isinstance(resource, int):
             resource_obj = session.get(Resource, resource)
+            if not resource_obj:
+                raise EntityDoesNotExistError(resource_type, resource_id=resource)
         elif isinstance(resource, ResourceSnapshot):
             resource_obj = resource.resource
         else:
             resource_obj = resource
 
-        lock = ResourceLock(resource_lock_types.DELETE, resource_obj)
-        session.add(lock)
-
-    # else: exists_result is DELETED; nothing to do.
+        for lock_type in types_to_add:
+            lock = ResourceLock(lock_type.value, resource_obj)
+            session.add(lock)
 
 
 def get_by_filters_paged(

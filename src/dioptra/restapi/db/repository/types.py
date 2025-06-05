@@ -18,21 +18,15 @@
 The type repository: data operations related to types
 """
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Sequence, Set
 from typing import Any, Final, overload
 
 import dioptra.restapi.db.repository.utils as utils
 from dioptra.restapi.db.models import (
     Group,
     PluginTaskParameterType,
-    Resource,
-    ResourceLock,
     Tag,
-    User,
 )
-from dioptra.restapi.db.models.constants import resource_lock_types
-from dioptra.restapi.errors import InconsistentBuiltinPluginParameterTypesError
-from dioptra.task_engine.type_registry import BUILTIN_TYPES
 
 
 class TypeRepository:
@@ -54,13 +48,18 @@ class TypeRepository:
     def __init__(self, session: utils.CompatibleSession[utils.S]):
         self.session = session
 
-    def create(self, type_: PluginTaskParameterType) -> None:
+    def create(
+        self,
+        type_: PluginTaskParameterType,
+        locks: Set[utils.ResourceLockType] = frozenset(),
+    ) -> None:
         """
         Create a new type resource.  This creates both the resource and the
         initial snapshot.
 
         Args:
             type_: The type to create
+            locks: The locks to add to the type, if any
 
         Raises:
             EntityExistsError: if the type resource or snapshot already exists,
@@ -81,6 +80,7 @@ class TypeRepository:
         utils.assert_resource_name_available(self.session, type_)
 
         self.session.add(type_)
+        utils.add_resource_lock_types(self.session, type_, locks)
 
     def create_snapshot(self, type_: PluginTaskParameterType) -> None:
         """
@@ -147,25 +147,68 @@ class TypeRepository:
             self.session, PluginTaskParameterType, resource_ids, deletion_policy
         )
 
-    def get_by_name(
+    def get_one(
+        self,
+        resource_id: int,
+        deletion_policy: utils.DeletionPolicy,
+    ) -> PluginTaskParameterType:
+        """
+        Get the latest snapshot of the given type resource; require that
+        exactly one is found, or raise an exception.
+
+        Args:
+            resource_id: A resource ID
+            deletion_policy: Whether to look at deleted types, non-deleted
+                types, or all types
+
+        Returns:
+            A PluginTaskParameterType object
+
+        Raises:
+            EntityDoesNotExistError: if the resource is not found
+        """
+        return utils.get_one_latest_snapshot(
+            self.session, PluginTaskParameterType, resource_id, deletion_policy
+        )
+
+    @overload
+    def get_by_name(  # type: ignore[overload-overlap]  # noqa: E704
         self,
         name: str,
         group: Group | int,
         deletion_policy: utils.DeletionPolicy = utils.DeletionPolicy.NOT_DELETED,
-    ) -> PluginTaskParameterType | None:
+    ) -> PluginTaskParameterType | None: ...
+
+    @overload
+    def get_by_name(  # noqa: E704
+        self,
+        name: Iterable[str],
+        group: Group | int,
+        deletion_policy: utils.DeletionPolicy = utils.DeletionPolicy.NOT_DELETED,
+    ) -> Sequence[PluginTaskParameterType]: ...
+
+    def get_by_name(
+        self,
+        name: str | Iterable[str],
+        group: Group | int,
+        deletion_policy: utils.DeletionPolicy = utils.DeletionPolicy.NOT_DELETED,
+    ) -> PluginTaskParameterType | Sequence[PluginTaskParameterType] | None:
         """
-        Get a type by name.  This returns the latest version (snapshot) of
-        the type.
+        Get type(s) by name(s).  This returns the latest version(s)
+        (snapshots) of the type.
 
         Args:
-            name: A type name
+            name: A type name or names
             group: A group/group ID, to disambiguate same-named types across
                 groups
             deletion_policy: Whether to look at deleted types, non-deleted
                 types, or all types
 
         Returns:
-            A type, or None if one was not found
+            If a single name is passed, a type is returned, or None if one was
+            not found with the given name.  If an iterable of names is passed,
+            a sequence of snapshots is returned, which will be empty if none
+            were found.
 
         Raises:
             EntityDoesNotExistError: if the given group does not exist
@@ -239,99 +282,3 @@ class TypeRepository:
             EntityDoesNotExistError: if the type does not exist
         """
         utils.delete_resource(self.session, type_)
-
-    def create_builtins(
-        self, owner: Group, creator: User
-    ) -> list[PluginTaskParameterType]:
-        """
-        Create a predefined set of types in the given group, created by the
-        given user.  These types will be set to read-only.
-
-        Args:
-            owner: The group who will own the type resources
-            creator: The user who will be the creator of the snapshots
-
-        Returns:
-            A list of PluginTaskParameterType objects which were created
-
-        Raises:
-            EntityExistsError: if a type resource or snapshot already exists,
-                or a type name collides with another type in the same group
-            EntityDoesNotExistError: if the owner or user creator does not
-                exist
-            EntityDeletedError: if a type, its creator, or its group owner is
-                deleted
-            UserNotInGroupError: if the user creator is not a member of the
-                group who will own the resource
-            MismatchedResourceTypeError: if the resource type is not
-                "plugin_task_parameter_type" (set automatically, so this
-                exception should not occur)
-        """
-
-        types = []
-        for builtin_type_name in BUILTIN_TYPES:
-            resource = Resource("plugin_task_parameter_type", owner)
-
-            type_ = PluginTaskParameterType(
-                None,
-                resource,
-                creator,
-                builtin_type_name,
-                None,
-            )
-
-            self.create(type_)
-            types.append(type_)
-
-            lock = ResourceLock(
-                resource_lock_type=resource_lock_types.READONLY,
-                resource=resource,
-            )
-            self.session.add(lock)
-
-        return types
-
-    def get_builtins(
-        self,
-        group: Group | int,
-        deletion_policy: utils.DeletionPolicy = utils.DeletionPolicy.NOT_DELETED,
-    ) -> Sequence[PluginTaskParameterType]:
-        """
-        Get the list of predefined types. This returns the latest version
-        (snapshot) of the predefined types.
-
-        Args:
-            group: A group/group ID, to disambiguate same-named types across
-                groups
-            deletion_policy: Whether to look at deleted types, non-deleted
-                types, or all types
-
-        Returns:
-            A sequence of the predefined PluginTaskParameterType objects.
-
-        Raises:
-            EntityDoesNotExistError: if the given group does not exist
-            EntityDeletedError: if the given group is deleted
-            InconsistentBuiltinPluginParameterTypesError: if the number of
-                builtin types in the database does not match the number of
-                builtin types declared in the code.
-        """
-        builtin_types_names = list(BUILTIN_TYPES.keys())
-        builtin_types = utils.get_snapshots_by_names(
-            self.session,
-            PluginTaskParameterType,
-            builtin_types_names,
-            group,
-            deletion_policy,
-        )
-
-        if len(builtin_types_names) != len(builtin_types):
-            retrieved_names = {param_type.name for param_type in builtin_types}
-            missing_names = set(builtin_types_names) - retrieved_names
-            extra_names = retrieved_names - set(builtin_types_names)
-            raise InconsistentBuiltinPluginParameterTypesError(
-                missing_names=missing_names,
-                extra_names=extra_names,
-            )
-
-        return builtin_types

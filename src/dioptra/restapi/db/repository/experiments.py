@@ -140,6 +140,30 @@ class ExperimentRepository:
             self.session, Experiment, resource_ids, deletion_policy
         )
 
+    def get_one(
+        self,
+        resource_id: int,
+        deletion_policy: utils.DeletionPolicy,
+    ) -> Experiment:
+        """
+        Get the latest snapshot of the given experiment resource; require that
+        exactly one is found, or raise an exception.
+
+        Args:
+            resource_id: A resource ID
+            deletion_policy: Whether to look at deleted experiments, non-deleted
+                experiments, or all experiments
+
+        Returns:
+            An Experiment object
+
+        Raises:
+            EntityDoesNotExistError: if the resource is not found
+        """
+        return utils.get_one_latest_snapshot(
+            self.session, Experiment, resource_id, deletion_policy
+        )
+
     def get_by_name(
         self,
         name: str,

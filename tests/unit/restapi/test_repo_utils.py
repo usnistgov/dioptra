@@ -1063,6 +1063,155 @@ def test_delete_resource_not_exists(db, account, fake_data):
         utils.delete_resource(db.session, queue)
 
 
+def test_get_resource_lock_types(db, account, fake_data):
+    queue = fake_data.queue(account.user, account.group)
+    delete_lock = models.ResourceLock(resource_lock_types.DELETE, queue.resource)
+    readonly_lock = models.ResourceLock(resource_lock_types.READONLY, queue.resource)
+
+    db.session.add_all((queue, delete_lock, readonly_lock))
+    db.session.commit()
+
+    lock_types = utils.get_resource_lock_types(db.session, queue)
+    assert lock_types == {
+        utils.ResourceLockType.READONLY,
+        utils.ResourceLockType.DELETED,
+    }
+
+    lock_types = utils.get_resource_lock_types(db.session, queue.resource)
+    assert lock_types == {
+        utils.ResourceLockType.READONLY,
+        utils.ResourceLockType.DELETED,
+    }
+
+    lock_types = utils.get_resource_lock_types(db.session, queue.resource_id)
+    assert lock_types == {
+        utils.ResourceLockType.READONLY,
+        utils.ResourceLockType.DELETED,
+    }
+
+    lock_types = utils.get_resource_lock_types(db.session, 999999)
+    assert not lock_types
+
+
+def test_add_resource_lock_types_resource_not_exist(db, account, fake_data):
+    queue = fake_data.queue(account.user, account.group)
+
+    # Ok to add locks to a non-existent resource, if an object is passed
+    utils.add_resource_lock_types(
+        db.session,
+        queue,
+        {utils.ResourceLockType.READONLY, utils.ResourceLockType.DELETED},
+    )
+
+    assert len(queue.resource.locks) == 2
+    assert any(
+        lock.resource_lock_type == resource_lock_types.DELETE
+        for lock in queue.resource.locks
+    )
+    assert any(
+        lock.resource_lock_type == resource_lock_types.READONLY
+        for lock in queue.resource.locks
+    )
+    # important since we didn't commit the above changes
+    db.session.rollback()
+
+    # using non-existent resource ID will cause an error
+    with pytest.raises(EntityDoesNotExistError):
+        utils.add_resource_lock_types(
+            db.session,
+            999999,
+            {utils.ResourceLockType.READONLY, utils.ResourceLockType.DELETED},
+        )
+
+
+def test_add_resource_lock_types_resource_exists(db, account, fake_data):
+    queue = fake_data.queue(account.user, account.group)
+    db.session.add(queue)
+    db.session.commit()
+
+    utils.add_resource_lock_types(
+        db.session,
+        queue,
+        {utils.ResourceLockType.READONLY, utils.ResourceLockType.DELETED},
+    )
+    db.session.commit()
+
+    assert queue.resource.is_readonly
+    assert queue.resource.is_deleted
+
+    # add a lock the resource already has; should be ok (even though it is
+    # deleted), since we're not actually making any changes
+    utils.add_resource_lock_types(db.session, queue, {utils.ResourceLockType.READONLY})
+    db.session.commit()
+
+    assert queue.resource.is_readonly
+    assert queue.resource.is_deleted
+
+    # add no locks; should not change anything
+    utils.add_resource_lock_types(
+        db.session,
+        queue,
+        set(),
+    )
+    db.session.commit()
+
+    assert queue.resource.is_readonly
+    assert queue.resource.is_deleted
+
+
+def test_add_resource_lock_types_resource_deleted(db, account, fake_data):
+    queue = fake_data.queue(account.user, account.group)
+    lock = models.ResourceLock(resource_lock_types.DELETE, queue.resource)
+    db.session.add_all((queue, lock))
+    db.session.commit()
+
+    # deleting a deleted resource is ok
+    utils.add_resource_lock_types(db.session, queue, {utils.ResourceLockType.DELETED})
+    db.session.commit()
+
+    assert queue.resource.is_deleted
+    assert not queue.resource.is_readonly
+
+    # other locks on deleted resources are not ok
+    with pytest.raises(EntityDeletedError):
+        utils.add_resource_lock_types(
+            db.session, queue, {utils.ResourceLockType.READONLY}
+        )
+
+    # adding no locks is ok
+    utils.add_resource_lock_types(db.session, queue, set())
+    db.session.commit()
+
+    assert queue.resource.is_deleted
+    assert not queue.resource.is_readonly
+
+
+def test_add_resource_lock_types_resource_readonly(db, account, fake_data):
+    queue = fake_data.queue(account.user, account.group)
+    lock = models.ResourceLock(resource_lock_types.READONLY, queue.resource)
+    db.session.add_all((queue, lock))
+    db.session.commit()
+
+    # deleting a readonly resource is not ok
+    with pytest.raises(ReadOnlyLockError):
+        utils.add_resource_lock_types(
+            db.session, queue, {utils.ResourceLockType.DELETED}
+        )
+
+    # adding readonly to a readonly resource is ok
+    utils.add_resource_lock_types(db.session, queue, {utils.ResourceLockType.READONLY})
+
+    assert not queue.resource.is_deleted
+    assert queue.resource.is_readonly
+
+    # adding no locks is ok
+    utils.add_resource_lock_types(db.session, queue, set())
+    db.session.commit()
+
+    assert not queue.resource.is_deleted
+    assert queue.resource.is_readonly
+
+
 def test_assert_resource_name_available(db, account, fake_data, queue_filter_setup):
     queue = fake_data.queue(account.user, account.group)
     queue.name = "Elfreda"  # already taken
@@ -1124,6 +1273,34 @@ def test_get_latest_snapshots(db, resource_status_combo, deletion_policy):
         assert latest_snap == expected_latest_snap
 
 
+def test_get_one_latest_snapshot(db, resource_status, deletion_policy):
+
+    snap, _ = resource_status
+
+    expected_latest_snaps = helpers.find_expected_snaps_for_deletion_policy(
+        (snap,), deletion_policy
+    )
+
+    if expected_latest_snaps:
+        latest_snap = utils.get_one_latest_snapshot(
+            db.session,
+            type(snap),
+            snap.resource_id,
+            deletion_policy
+        )
+
+        assert latest_snap == expected_latest_snaps[0]
+
+    else:
+        with pytest.raises(EntityDoesNotExistError):
+            utils.get_one_latest_snapshot(
+                db.session,
+                type(snap),
+                snap,
+                deletion_policy
+            )
+
+
 def test_get_latest_child_snapshots(db, resource_parent_combo, deletion_policy):
 
     parent, child_snaps, _ = resource_parent_combo
@@ -1178,55 +1355,84 @@ def test_get_latest_child_snapshots_parent_deleted(
         )
 
 
-def test_get_snapshot_by_name(account, db, fake_data):
-    queue = fake_data.queue(account.user, account.group)
-    db.session.add(queue)
-    db.session.commit()
+def test_get_snapshot_by_name(db, account, resource_status_combo, deletion_policy):
+    snaps, _ = resource_status_combo
 
-    check_queue = utils.get_snapshot_by_name(
-        db.session, models.Queue, queue.name, account.group, utils.DeletionPolicy.ANY
+    if len(snaps) == 0:
+        # Doesn't really matter which class we use for an empty combo
+        snap_class = models.Queue
+    else:
+        snap_class = type(snaps[0])
+
+    expected_latest_snaps = helpers.find_expected_snaps_for_deletion_policy(
+        snaps, deletion_policy
     )
-    assert check_queue == queue
 
-    check_queue = utils.get_snapshot_by_name(
+    all_snap_names = [snap.name for snap in snaps]
+    all_snap_names.append("doesnt exist")  # add a garbage name too
+
+    latest_snaps = utils.get_snapshot_by_name(
         db.session,
-        models.Queue,
-        queue.name,
+        snap_class,
+        all_snap_names,
         account.group,
-        utils.DeletionPolicy.NOT_DELETED,
+        deletion_policy
     )
-    assert check_queue == queue
 
-    check_queue = utils.get_snapshot_by_name(
-        db.session,
-        models.Queue,
-        queue.name,
-        account.group,
-        utils.DeletionPolicy.DELETED,
-    )
-    assert not check_queue
+    assert _same_snapshots(expected_latest_snaps, latest_snaps)
 
-    # Add another queue owned by another group with the same name; ensure
-    # get_by_name() using the same name but different group, yields the other
-    # queue.
+    # Also try passing a single, for length-1 combos
+    if len(snaps) == 1:
+        if len(expected_latest_snaps) > 0:
+            expected_latest_snap = expected_latest_snaps[0]
+        else:
+            expected_latest_snap = None
+
+        latest_snap = utils.get_snapshot_by_name(
+            db.session,
+            snap_class,
+            snaps[0].name,
+            account.group,
+            deletion_policy
+        )
+
+        assert latest_snap == expected_latest_snap
+
+
+def test_get_snapshot_by_name_dupe_name(db, account, fake_data):
+    # Make two resources with the same name in two groups.  Ensure
+    # we get the right resource from each group.
     account2 = fake_data.account()
     db.session.add(account2.group)
     db.session.commit()
 
+    queue1 = fake_data.queue(account.user, account.group)
     queue2 = fake_data.queue(account2.user, account2.group)
-    queue2.name = queue.name
-    db.session.add(queue2)
+    queue2.name = queue1.name
+    db.session.add_all((queue1, queue2))
     db.session.commit()
 
     check_queue = utils.get_snapshot_by_name(
         db.session,
         models.Queue,
-        queue.name,
+        queue1.name,
+        account.group,
+        utils.DeletionPolicy.NOT_DELETED,
+    )
+
+    assert check_queue == queue1
+    assert check_queue != queue2
+
+    check_queue = utils.get_snapshot_by_name(
+        db.session,
+        models.Queue,
+        queue2.name,
         account2.group,
         utils.DeletionPolicy.NOT_DELETED,
     )
+
     assert check_queue == queue2
-    assert check_queue != queue
+    assert check_queue != queue1
 
 
 def test_get_snapshot_by_name_deleted(account, db, fake_data):

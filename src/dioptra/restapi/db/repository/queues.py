@@ -163,6 +163,30 @@ class QueueRepository:
             self.session, Queue, resource_ids, deletion_policy
         )
 
+    def get_one(
+        self,
+        resource_id: int,
+        deletion_policy: utils.DeletionPolicy,
+    ) -> Queue:
+        """
+        Get the latest snapshot of the given queue resource; require that
+        exactly one is found, or raise an exception.
+
+        Args:
+            resource_id: A resource ID
+            deletion_policy: Whether to look at deleted queues, non-deleted
+                queues, or all queues
+
+        Returns:
+            A Queue object
+
+        Raises:
+            EntityDoesNotExistError: if the resource is not found
+        """
+        return utils.get_one_latest_snapshot(
+            self.session, Queue, resource_id, deletion_policy
+        )
+
     def get_by_name(
         self,
         name: str,

@@ -28,6 +28,7 @@ from dioptra.restapi.db import models
 from dioptra.restapi.db.unit_of_work import UnitOfWork
 from dioptra.restapi.errors import (
     EntityDoesNotExistError,
+    InconsistentBuiltinPluginParameterTypesError,
     PluginParameterTypeMatchesBuiltinTypeError,
 )
 from dioptra.restapi.v1 import utils
@@ -439,7 +440,7 @@ class BuiltinPluginParameterTypeService(object):
         """Fetch a list of builtin plugin parameter types.
 
         Args:
-            group_id: The the group id of the plugin parameter type.
+            group_id: The group id of the plugin parameter type.
             error_if_not_found: Deprecated, does not control anything. Kept for
                 backwards compatibility purposes.
 
@@ -461,10 +462,22 @@ class BuiltinPluginParameterTypeService(object):
             group_id=group_id,
         )
 
-        plugin_parameter_types = self._uow.type_repo.get_builtins(
-            group_id, repoutils.DeletionPolicy.NOT_DELETED
+        builtin_types = self._uow.type_repo.get_by_name(
+            BUILTIN_TYPES,
+            group_id,
+            repoutils.DeletionPolicy.NOT_DELETED,
         )
-        return list(plugin_parameter_types)
+
+        if len(BUILTIN_TYPES) != len(builtin_types):
+            retrieved_names = {param_type.name for param_type in builtin_types}
+            missing_names = BUILTIN_TYPES.keys() - retrieved_names
+            extra_names = retrieved_names - BUILTIN_TYPES.keys()
+            raise InconsistentBuiltinPluginParameterTypesError(
+                missing_names=missing_names,
+                extra_names=extra_names,
+            )
+
+        return list(builtin_types)
 
     def create_all(
         self,
@@ -486,13 +499,24 @@ class BuiltinPluginParameterTypeService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        try:
-            new_builtin_parameter_types = self._uow.type_repo.create_builtins(
-                group, user
+        new_builtin_parameter_types = []
+        for builtin_type_name in BUILTIN_TYPES:
+
+            type_ = models.PluginTaskParameterType(
+                None,
+                models.Resource("plugin_task_parameter_type", group),
+                user,
+                builtin_type_name,
+                None,
             )
-        except Exception:
-            self._uow.rollback()
-            raise
+
+            try:
+                self._uow.type_repo.create(type_, {repoutils.ResourceLockType.READONLY})
+            except Exception:
+                self._uow.rollback()
+                raise
+
+            new_builtin_parameter_types.append(type_)
 
         if commit:
             self._uow.commit()
