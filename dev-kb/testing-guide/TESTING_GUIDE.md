@@ -50,7 +50,7 @@ PyTest allows for the creation of fixtures to address any pre-conditions or vari
 
 ## Running the Test
 
-Tests can be using the following command:
+Tests can be run using the following command:
 
 ```sh
 python -m tox run -e py311-pytest-cov
