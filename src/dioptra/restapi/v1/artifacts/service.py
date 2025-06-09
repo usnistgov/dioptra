@@ -15,6 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform artifact endpoint operations."""
+
 from __future__ import annotations
 
 from typing import Any, Final, cast
@@ -273,11 +274,8 @@ class JobArtifactService(object):
     ) -> utils.ArtifactDict:
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        job_dict = cast(
-            utils.JobDict,
-            self._experiment_job_id_service.get(
-                experiment_id, job_id, error_if_not_found=True, log=log
-            ),
+        job_dict = self._experiment_job_id_service.get(
+            experiment_id, job_id, error_if_not_found=True, log=log
         )
         job = job_dict["job"]
 

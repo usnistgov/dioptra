@@ -53,7 +53,7 @@ class PascalVOCAnnotationData(AnnotationData):
     ) -> Tuple[list[list[float]], list[int]]:
         # Load and parse the file
         filepath = filepath.decode() if isinstance(filepath, bytes) else str(filepath)
-        tree: ElementTree.ElementTree = ElementTree.parse(filepath)
+        tree = ElementTree.parse(filepath)
 
         # Get the root of the document
         root = tree.getroot()
@@ -61,8 +61,8 @@ class PascalVOCAnnotationData(AnnotationData):
         classes: List[int] = list()
 
         # Get width and height of an image
-        width_element: ElementTree.Element | None = root.find(".//size/width")
-        height_element: ElementTree.Element | None = root.find(".//size/height")
+        width_element = root.find(".//size/width")
+        height_element = root.find(".//size/height")
         width: int = (
             int(cast(str, width_element.text)) if width_element is not None else -1
         )

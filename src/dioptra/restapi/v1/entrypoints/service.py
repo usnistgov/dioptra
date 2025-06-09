@@ -15,6 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform entrypoint endpoint operations."""
+
 from __future__ import annotations
 
 from typing import Any, Final, cast
@@ -88,7 +89,7 @@ class EntrypointService(object):
     def create(
         self,
         name: str,
-        description: str,
+        description: str | None,
         task_graph: str,
         parameters: list[dict[str, Any]],
         plugin_ids: list[int],
