@@ -67,6 +67,7 @@ Email us: dioptra@nist.gov
 
    reference/task-engine-reference
    reference/resource-import-reference
+   reference/resource-search-language-reference
    reference/api-reference-restapi
 .. reference/api-reference-sdk
    reference/api-reference-client
