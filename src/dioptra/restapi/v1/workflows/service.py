@@ -39,6 +39,7 @@ from dioptra.restapi.errors import (
     EntityDoesNotExistError,
     GitError,
     ImportFailedError,
+    InvalidYamlError,
 )
 from dioptra.restapi.utils import read_json_file, verify_filename_is_safe
 from dioptra.restapi.v1.entrypoints.service import (
@@ -67,6 +68,7 @@ from dioptra.restapi.v1.shared.resource_service import (
 from dioptra.restapi.v1.shared.signature_analysis import get_plugin_signatures
 from dioptra.restapi.v1.shared.task_engine_yaml.service import TaskEngineYamlService
 from dioptra.sdk.utilities.paths import set_cwd
+from dioptra.task_engine.issues import IssueSeverity, IssueType, ValidationIssue
 
 from .lib import views
 from .lib.clone_git_repository import clone_git_repository
@@ -935,12 +937,25 @@ class ValidateEntrypointService(object):
         plugin_parameter_types = views.get_plugin_parameter_types(
             group_id=group_id, logger=log
         )
-        task_engine_dict = self._task_engine_yaml_service.build_dict(
-            entry_point=entrypoint,
-            plugin_plugin_files=plugin_plugin_files,  # pyright: ignore
-            plugin_parameter_types=plugin_parameter_types,  # pyright: ignore
-            logger=log,
-        )
+        try:
+            task_engine_dict = self._task_engine_yaml_service.build_dict(
+                entry_point=entrypoint,
+                plugin_plugin_files=plugin_plugin_files,  # pyright: ignore
+                plugin_parameter_types=plugin_parameter_types,  # pyright: ignore
+                logger=log,
+            )
+        except InvalidYamlError as e:
+            return {
+                "schema_valid": False,
+                "schema_issues": [
+                    ValidationIssue(
+                        type_=IssueType.SYNTAX,
+                        severity=IssueSeverity.ERROR,
+                        message=str(e),
+                    )
+                ],
+            }
+
         issues = self._task_engine_yaml_service.validate(
             task_engine_dict=task_engine_dict
         )
