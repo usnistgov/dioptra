@@ -15,6 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform plugin parameter type endpoint operations."""
+
 from typing import Any, Final
 
 import structlog
@@ -82,8 +83,8 @@ class PluginParameterTypeService(object):
     def create(
         self,
         name: str,
-        structure: dict[str, Any],
-        description: str,
+        structure: dict[str, Any] | None,
+        description: str | None,
         group_id: int,
         commit: bool = True,
         **kwargs,

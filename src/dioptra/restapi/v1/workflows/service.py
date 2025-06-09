@@ -33,6 +33,7 @@ from werkzeug.datastructures import FileStorage
 
 from dioptra.restapi.db import db, models
 from dioptra.restapi.errors import (
+    DioptraError,
     DraftDoesNotExistError,
     DraftResourceModificationsCommitError,
     EntityDoesNotExistError,
@@ -373,8 +374,16 @@ class ResourceImportService(object):
             ImportFailedError: If the archive cannot be read and unpacked for any reason
         """
 
+        def _sort_by_filename(x: FileStorage) -> Path:
+            if (filename := x.filename) is None:
+                raise DioptraError(
+                    f"Malformed multi-file upload, filename not found: {x.name}"
+                )
+
+            return Path(filename).resolve()
+
         hash = sha256()
-        for file in sorted(files, key=lambda x: Path(x.filename).resolve()):
+        for file in sorted(files, key=_sort_by_filename):
             try:
                 verify_filename_is_safe(file.filename)
             except ValueError as e:
@@ -382,6 +391,9 @@ class ResourceImportService(object):
                     "Failed to read uploaded files", reason=str(e)
                 ) from e
 
+            # The _sort_by_filename sorting key already checks whether filename is None,
+            # so here we can just assert that it's not None to make mypy happy.
+            assert file.filename is not None
             Path(file.filename).parent.mkdir(parents=True, exist_ok=True)
 
             bytes = file.stream.read()

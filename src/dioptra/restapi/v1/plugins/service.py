@@ -15,6 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform plugin endpoint operations."""
+
 from __future__ import annotations
 
 import itertools
@@ -85,7 +86,12 @@ class PluginService(object):
         self._group_id_service = group_id_service
 
     def create(
-        self, name: str, description: str, group_id: int, commit: bool = True, **kwargs
+        self,
+        name: str,
+        description: str | None,
+        group_id: int,
+        commit: bool = True,
+        **kwargs,
     ) -> utils.PluginWithFilesDict:
         """Create a new plugin.
 
