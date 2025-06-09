@@ -347,6 +347,13 @@ class PluginParameterTypeMatchesBuiltinTypeError(DioptraError):
         )
 
 
+class InvalidYamlError(DioptraError):
+    """Raised when the provided YAML is invalid and fails to parse."""
+
+    def __init__(self, message: str):
+        super().__init__(message)
+
+
 # User Errors
 class UserDoesNotExistError(DioptraError):
     """The entered username does not exist."""

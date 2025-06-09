@@ -75,6 +75,11 @@
           :showError="taskGraphError"
           :autocompletions="autocompletions"
         />
+        <q-btn
+          label="Validate Inputs"
+          color="primary"
+          @click="validateInputs()"
+        />
       </fieldset>
     </div>
     <fieldset :class="`${isMobile ? 'col-12 q-mt-lg' : 'col'}`">
@@ -347,6 +352,21 @@
     v-model="showReturnDialog"
     @cancel="clearForm"
   />
+  <InfoPopupDialog
+    v-model="displayErrorDialog"
+  >
+    <template #title>
+      <label id="modalTitle">
+        Entrypoint Input Errors
+      </label>
+    </template>
+    Errors found: {{ inputErrors.length }}
+    <ul>
+      <li v-for="error in inputErrors">
+        {{ error.message }}
+      </li>
+    </ul>
+  </InfoPopupDialog>
 </template>
 
 <script setup>
@@ -363,6 +383,7 @@
   import TableComponent from '@/components/TableComponent.vue'
   import LeaveFormDialog from '@/dialogs/LeaveFormDialog.vue'
   import ReturnToFormDialog from '@/dialogs/ReturnToFormDialog.vue'
+  import InfoPopupDialog from '@/dialogs/InfoPopupDialog.vue'
 
   const route = useRoute()
   
@@ -744,6 +765,31 @@
       router.push(`/entrypoints`)
     } catch(err) {
       notify.error(err.response.data.message);
+    }
+  }
+
+  const inputErrors = ref([])
+  const displayErrorDialog = ref(false)
+
+  async function validateInputs() {
+    try {
+      const res = await api.validateEntrypoint({
+        group: entryPoint.value.group.id || entryPoint.value.group,
+        taskGraph: entryPoint.value.taskGraph,
+        pluginSnapshots: entryPoint.value.plugins.map(plugin => plugin.snapshotId || plugin.snapshot),
+        parameters: entryPoint.value.parameters
+      })
+      if(res?.data?.schemaValid && !taskGraphPlaceholderError.value) {
+        notify.success(`Entrypoint inputs are valid!`)
+      } else if(res?.data?.schemaIssues.length > 0 || taskGraphPlaceholderError.value) {
+        inputErrors.value = res.data.schemaIssues
+        if(taskGraphPlaceholderError.value) {
+          inputErrors.value.push({message: taskGraphPlaceholderError.value})
+        }
+        displayErrorDialog.value = true
+      }
+    } catch(err) {
+      console.warn(err)
     }
   }
 
