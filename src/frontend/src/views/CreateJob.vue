@@ -190,7 +190,7 @@
           :inlineEditFields="['value']"
         />
         <q-btn
-          v-if="!updateEntrypoint && job.entrypoint.id === oldEntrypoint?.id && 
+          v-if="!updateEntrypoint && job.entrypoint?.id === oldEntrypoint?.id && 
           oldEntrypoint?.snapshot !== latestEntrypoint?.snapshot"
           square 
           color="red"
@@ -205,7 +205,7 @@
           </q-tooltip>
         </q-btn>
         <q-btn
-          v-if="updateEntrypoint && job.entrypoint.id === oldEntrypoint?.id && 
+          v-if="updateEntrypoint && job.entrypoint?.id === oldEntrypoint?.id && 
           job.entrypoint.snapshot === latestEntrypoint?.snapshot"
           square 
           color="red"
