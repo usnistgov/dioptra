@@ -19,20 +19,17 @@
     pyenv local 3.11.10
     ```
 
-  - N.B.: Check `pyenv local --help` to understand precendence order used by pyenv
+  - N.B.: Check `pyenv local --help` to understand precedence order used by pyenv
 
 ## 1. Set-up DIOPTRA environment in your terminal
 <a name="step1"></a>
 The configuration may be set-up through the use of a configuration file or directly on the command-line.
 
-### a. Configuration File
+### a. Configuration File <a name="config-file"></a>
 
 Below is an example of a configuration file. This example can be saved into the root of the project directory (e.g. as ```env-dev.cfg```).
 
 ```conf
-### Optional "Environment Info"
-### Generated, if not explicitly provided
-DIOPTRA_CONFIG_NAME=Dev-Dioptra for Tuning Unit-Tests
 
 ### Env Variable for GitHub Branch
 DIOPTRA_GIT_BRANCH=dev
@@ -42,6 +39,15 @@ DIOPTRA_DEPLOY_DIR=~/di/di-dep
 
 ### The source code location
 DIOPTRA_CODE_DIR=~/di/di-src
+
+### [OPTIONAL-ENTRY] Environment Info
+### Auto-Generated from ENV, if not explicitly provided
+DIOPTRA_CONFIG_INFO=Dev-Dioptra for Tuning Unit-Tests
+
+### [OPTIONAL-ENTRY] Python virtual environment to use
+### Auto-Generated in the form
+### Provide this value if you want to use preferred or already existing name of the Python virtual environment
+DIOPTRA_ENV_NAME=.env-dev
 ```
 [Learn more about config files ...](#learn-more-config)
 
@@ -111,17 +117,26 @@ The `setup.sh` script will setup working and source directories using the config
   ./run-worker.sh
   ```
 
+## 6. Start Front-End
+  1. Initialize **NEW TERMINAL** environment as described in [Step 1](#step1)
+  2. Run the Front-End startup script:
+  ```sh
+  ./run-front.sh
+  ```
+
+
 ## Extended Notes
 
 ### <a id="learn-more-config"></a>More on How to Compose Config Files:
 
-**Note:** The key names are **case-insensitive**. Branch name key values are not restricted to any particular capitalization of the ```DIOPTRA_GIT_BRANCH``` or ```Dioptra_Git_Branch```.
+**Note:** The key names are **case-sensitive**.
 
-**Note:** The configuration file currently has the following four coniguration parameter names:
-- DIOPTRA_CONFIG_NAME
+**Note:** The configuration file currently has the following four configuration parameter names:
 - DIOPTRA_GIT_BRANCH
 - DIOPTRA_DEPLOY_DIR
 - DIOPTRA_CODE_DIR
+- DIOPTRA_CONFIG_INFO [OPTIONAL]
+- DIOPTRA_ENV_NAME [OPTIONAL]
 
 See the [example]#a-configuration-file) above for usage. DIOPTRA_CONFIG_NAME is optional and will be composed (in case it is not provided) by the script using the mandatory keys. 
 
