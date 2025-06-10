@@ -56,16 +56,16 @@
             />
           </div>
         </template>
-        <template #experiment="{ name = '', id }">
-          <RouterLink :to="`/experiments/${id}`">
+        <template #experiment="{ name = '', id, snapshotId }">
+          <RouterLink :to="`/experiments/${id}?snapshotId=${snapshotId}`">
             {{ name.length < 18 ? name : name.replace(/(.{18})..+/, "$1…") }}
             <q-tooltip v-if="name.length > 18" max-width="30vw" style="overflow-wrap: break-word">
               {{ name }}
             </q-tooltip>
           </RouterLink>
         </template>
-        <template #entrypoint="{ name = '', id }">
-          <RouterLink :to="`/entrypoints/${id}`">
+        <template #entrypoint="{ name = '', id, snapshotId }">
+          <RouterLink :to="`/entrypoints/${id}?snapshotId=${snapshotId}`">
             {{ name.length < 18 ? name : name.replace(/(.{18})..+/, "$1…") }}
             <q-tooltip v-if="name.length > 18" max-width="30vw" style="overflow-wrap: break-word">
               {{ name }}
@@ -288,8 +288,12 @@ const overviewRows = computed(() => [
   { label: 'Status', slot: 'status', props: { status: job.value?.status} },
   { label: 'Created On', value: formatDate(job.value?.createdOn) },
   { label: 'Created by', value: job.value?.user.username },
-  { label: 'Experiment', slot: 'experiment', props: { name: job.value?.experiment.name, id: job.value?.experiment.id } },
-  { label: 'Entrypoint', slot: 'entrypoint', props: { name: job.value?.entrypoint.name, id: job.value?.entrypoint.id } },
+  { label: 'Experiment', slot: 'experiment', 
+    props: { name: job.value?.experiment.name, id: job.value?.experiment.id, snapshotId: job.value?.experiment.snapshotId }
+  },
+  { label: 'Entrypoint', slot: 'entrypoint',
+    props: { name: job.value?.entrypoint.name, id: job.value?.entrypoint.id, snapshotId: job.value?.entrypoint.snapshotId }
+  },
   { label: 'Queue', value: job.value?.queue.name },
   { label: 'Timeout', value: job.value?.timeout },
   { label: 'Tags', slot: 'tags', props: { tags: job.value?.tags }  },
