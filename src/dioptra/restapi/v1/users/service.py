@@ -15,6 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform user endpoint operations."""
+
 from __future__ import annotations
 
 import datetime
@@ -24,26 +25,24 @@ from typing import Any, Final, cast
 import structlog
 from flask_login import current_user
 from injector import inject
-from sqlalchemy import func, select
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.db import db, models
-from dioptra.restapi.db.models.constants import user_lock_types
+from dioptra.restapi.db import models
+from dioptra.restapi.db.repository.utils import DeletionPolicy
+from dioptra.restapi.db.unit_of_work import UnitOfWork
 from dioptra.restapi.errors import (
-    BackendDatabaseError,
-    EntityExistsError,
     NoCurrentUserError,
     QueryParameterValidationError,
     UserDoesNotExistError,
     UserPasswordChangeError,
     UserPasswordError,
 )
-from dioptra.restapi.v1.groups.service import GroupMemberService, GroupNameService
+from dioptra.restapi.v1.groups.service import GroupMemberService
 from dioptra.restapi.v1.plugin_parameter_types.service import (
     BuiltinPluginParameterTypeService,
 )
 from dioptra.restapi.v1.shared.password_service import PasswordService
-from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
+from dioptra.restapi.v1.shared.search_parser import parse_search_text
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -55,10 +54,6 @@ DEFAULT_GROUP_PERMISSIONS: Final[dict[str, Any]] = {
     "share_write": False,
 }
 DAYS_TO_EXPIRE_PASSWORD_DEFAULT: Final[int] = 365
-SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
-    "username": lambda x: models.User.username.like(x, escape="/"),
-    "email": lambda x: models.User.email_address.like(x, escape="/"),
-}
 
 
 class UserService(object):
@@ -68,10 +63,9 @@ class UserService(object):
     def __init__(
         self,
         user_password_service: UserPasswordService,
-        user_name_service: UserNameService,
-        group_name_service: GroupNameService,
         group_member_service: GroupMemberService,
         builtin_plugin_parameter_type_service: BuiltinPluginParameterTypeService,
+        uow: UnitOfWork,
     ) -> None:
         """Initialize the user service.
 
@@ -79,19 +73,17 @@ class UserService(object):
 
         Args:
             user_password_service: A UserPasswordService object.
-            user_name_service: A UserNameService object.
-            group_name_service: A GroupNameService object.
             group_member_service: A GroupMemberService object.
             builtin_plugin_parameter_type_service: A BuiltinPluginParameterTypeService
                 object.
+            uow: A UnitOfWork instance
         """
         self._user_password_service = user_password_service
-        self._user_name_service = user_name_service
-        self._group_name_service = group_name_service
         self._group_member_service = group_member_service
         self._builtin_plugin_parameter_type_service = (
             builtin_plugin_parameter_type_service
         )
+        self._uow = uow
 
     def create(
         self,
@@ -128,16 +120,6 @@ class UserService(object):
                 "password", "equivalence", password="***", confirmation="***"
             )
 
-        duplicate = self._user_name_service.get(username, log=log)
-        if duplicate is not None:
-            raise EntityExistsError("User", duplicate.user_id, username=username)
-
-        duplicate = self._get_user_by_email(email_address, log=log)
-        if duplicate is not None:
-            raise EntityExistsError(
-                "User", duplicate.user_id, email_address=email_address
-            )
-
         hashed_password = self._user_password_service.hash(password, log=log)
         new_user: models.User = models.User(
             username=username, password=hashed_password, email_address=email_address
@@ -147,19 +129,15 @@ class UserService(object):
             user=new_user,
             log=log,
         )
-        self._group_member_service.create(
-            default_group,
-            user=new_user,
-            permissions=DEFAULT_GROUP_PERMISSIONS,
-            commit=False,
-            log=log,
-        )
-
-        db.session.add(new_user)
-        db.session.add(default_group)
+        # If this user was created at the same time as the group, i.e. as the
+        # creator/initial member, we need not create the user separately.
+        if new_user != default_group.creator:
+            self._uow.user_repo.create(
+                new_user, default_group, **DEFAULT_GROUP_PERMISSIONS
+            )
 
         if commit:
-            db.session.commit()
+            self._uow.commit()
             log.debug("User registration successful", user_id=new_user.user_id)
 
         return new_user
@@ -176,7 +154,7 @@ class UserService(object):
 
         Args:
             search_string: A search string used to filter results.
-            page_index: The index of the first user to be returned.
+            page_index: The index of the first page to be returned.
             page_length: The maximum number of users to be returned.
 
         Returns:
@@ -190,67 +168,12 @@ class UserService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get list of users")
 
-        search_filters = construct_sql_query_filters(search_string, SEARCHABLE_FIELDS)
-
-        stmt = (
-            select(func.count(models.User.user_id))
-            .filter_by(is_deleted=False)
-            .filter(search_filters)
+        search_struct = parse_search_text(search_string)
+        users, total_num_users = self._uow.user_repo.get_by_filters_paged(
+            search_struct, page_index, page_length
         )
-        total_num_users = db.session.scalars(stmt).first()
 
-        if total_num_users is None:
-            log.error(
-                "The database query returned a None when counting the number of "
-                "users when it should return a number.",
-                sql=str(stmt),
-            )
-            raise BackendDatabaseError
-
-        if total_num_users == 0:
-            return cast(list[models.User], []), total_num_users
-
-        stmt = (
-            select(models.User)  # type: ignore
-            .filter_by(is_deleted=False)
-            .filter(search_filters)
-            .offset(page_index)
-            .limit(page_length)
-        )
-        users = cast(list[models.User], db.session.scalars(stmt).all())
-
-        return users, total_num_users
-
-    def _get_user_by_email(
-        self, email_address: str, error_if_not_found: bool = False, **kwargs
-    ) -> models.User | None:
-        """Lookup a user by email address.
-
-        Args:
-            email_address: The email address of the user.
-            error_if_not_found: If True, raise an error if the user is not found.
-                Defaults to False.
-
-        Returns:
-            The user object if found, otherwise None.
-
-        Raises:
-            UserDoesNotExistError: If the user is not found and `error_if_not_found`
-                is True.
-        """
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
-        log.debug("Lookup user account by email", email_address=email_address)
-
-        stmt = select(models.User).filter_by(
-            email_address=email_address, is_deleted=False
-        )
-        user: models.User | None = db.session.scalars(stmt).first()
-
-        if user is None:
-            if error_if_not_found:
-                raise UserDoesNotExistError(email_address=email_address)
-            return None
-        return user
+        return list(users), total_num_users
 
     def _create_or_get_default_group(
         self,
@@ -266,14 +189,12 @@ class UserService(object):
         Returns:
             The group object if found, otherwise None.
         """
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
-
-        if (
-            group := self._group_name_service.get(DEFAULT_GROUP_NAME, log=log)
-        ) is not None:
+        if (group := self._uow.group_repo.get_by_name(DEFAULT_GROUP_NAME)) is not None:
             return group
 
         default_group = models.Group(name=DEFAULT_GROUP_NAME, creator=user)
+        with self._uow:
+            self._uow.group_repo.create(default_group)
         # Register the built-in plugin parameter types when creating a new group.
         self._builtin_plugin_parameter_type_service.create_all(
             user=user, group=default_group, commit=False
@@ -286,8 +207,7 @@ class UserIdService(object):
 
     @inject
     def __init__(
-        self,
-        user_password_service: UserPasswordService,
+        self, user_password_service: UserPasswordService, uow: UnitOfWork
     ) -> None:
         """Initialize the current user service.
 
@@ -295,8 +215,10 @@ class UserIdService(object):
 
         Args:
             user_password_service: A UserPasswordService object.
+            uow: A UnitOfWork instance
         """
         self._user_password_service = user_password_service
+        self._uow = uow
 
     def get(
         self, user_id: int, error_if_not_found: bool = False, **kwargs
@@ -318,8 +240,7 @@ class UserIdService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Lookup user account by unique id", user_id=user_id)
 
-        stmt = select(models.User).filter_by(user_id=user_id, is_deleted=False)
-        user = db.session.scalars(stmt).first()
+        user = self._uow.user_repo.get(user_id, DeletionPolicy.NOT_DELETED)
 
         if user is None:
             if error_if_not_found:
@@ -372,6 +293,7 @@ class UserCurrentService(object):
         self,
         user_id_service: UserIdService,
         user_password_service: UserPasswordService,
+        uow: UnitOfWork,
     ) -> None:
         """Initialize the current user service.
 
@@ -380,9 +302,11 @@ class UserCurrentService(object):
         Args:
             user_id_service: A UserIdService object.
             user_password_service: A UserPasswordService object.
+            uow: A UnitOfWork instance
         """
         self._user_id_service = user_id_service
         self._user_password_service = user_password_service
+        self._uow = uow
 
     def get(self, **kwargs) -> models.User:
         """Fetch information about the current user.
@@ -422,7 +346,7 @@ class UserCurrentService(object):
         current_user.last_modified_on = current_timestamp
 
         if commit:
-            db.session.commit()
+            self._uow.commit()
 
         return cast(models.User, current_user)
 
@@ -449,12 +373,9 @@ class UserCurrentService(object):
         user_id = current_user.user_id
         username = current_user.username
 
-        deleted_user_lock = models.UserLock(
-            user_lock_type=user_lock_types.DELETE,
-            user=current_user,
-        )
-        db.session.add(deleted_user_lock)
-        db.session.commit()
+        with self._uow:
+            self._uow.user_repo.delete(current_user)
+
         log.debug("User account deleted", user_id=user_id, username=username)
 
         return {"status": "Success", "id": [user_id]}
@@ -489,55 +410,6 @@ class UserCurrentService(object):
         )
 
 
-class UserNameService(object):
-    """The service methods used to register and manage user accounts by username."""
-
-    @inject
-    def __init__(
-        self,
-        user_password_service: UserPasswordService,
-    ) -> None:
-        """Initialize the user name service.
-
-        All arguments are provided via dependency injection.
-
-        Args:
-            user_password_service: A UserPasswordService object.
-        """
-        self._user_password_service = user_password_service
-
-    def get(
-        self, username: str, error_if_not_found: bool = False, **kwargs
-    ) -> models.User | None:
-        """Fetch a user by its username.
-
-        Args:
-            username: The username of the user.
-            error_if_not_found: If True, raise an error if the user is not found.
-                Defaults to False.
-
-        Returns:
-            The user object if found, otherwise None.
-
-        Raises:
-            UserDoesNotExistError: If the user is not found and `error_if_not_found`
-                is True.
-        """
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
-        log.debug("Lookup user account by unique username", username=username)
-
-        stmt = select(models.User).filter_by(username=username, is_deleted=False)
-        user = db.session.scalars(stmt).first()
-
-        if user is None:
-            if error_if_not_found:
-                raise UserDoesNotExistError(username=username)
-
-            return None
-
-        return user
-
-
 class UserPasswordService(object):
     """The service methods used to manage user passwords."""
 
@@ -545,6 +417,7 @@ class UserPasswordService(object):
     def __init__(
         self,
         password_service: PasswordService,
+        uow: UnitOfWork,
     ) -> None:
         """Initialize the user password service.
 
@@ -552,8 +425,10 @@ class UserPasswordService(object):
 
         Args:
             password_service: A PasswordService object.
+            uow: A UnitOfWork instance
         """
         self._password_service = password_service
+        self._uow = uow
 
     def authenticate(
         self,
@@ -648,7 +523,7 @@ class UserPasswordService(object):
         )
 
         if commit:
-            db.session.commit()
+            self._uow.commit()
 
         return {"status": "Password Change Success", "username": user.username}
 
@@ -679,7 +554,8 @@ def load_user(user_id: str) -> models.User | None:
     Returns:
         A user object if the user is found, otherwise None.
     """
-    stmt = select(models.User).filter_by(
-        alternative_id=uuid.UUID(user_id), is_deleted=False
-    )
-    return db.session.scalars(stmt).first()
+    # Should injection be used for UnitOfWork here?
+    uow = UnitOfWork()
+    user = uow.user_repo.get_by_alternative_id(uuid.UUID(user_id))
+
+    return user

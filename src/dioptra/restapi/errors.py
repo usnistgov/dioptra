@@ -115,13 +115,39 @@ class EntityExistsError(DioptraError):
         kwargs: the attribute value pairs used to request the entity
     """
 
-    def __init__(self, entity_type: str, existing_id: int, **kwargs: typing.Any):
+    def __init__(self, entity_type: str | None, existing_id: int, **kwargs: typing.Any):
         super().__init__(
             "".join(
                 [
-                    f"The {entity_type}",
+                    "The ",
+                    "entity" if entity_type is None else entity_type,
                     *add_attribute_values(**kwargs),
                     " is not available.",
+                ]
+            )
+        )
+        self.entity_type = entity_type
+        self.entity_attributes = kwargs
+        self.existing_id = existing_id
+
+
+class EntityDeletedError(DioptraError):
+    """
+    The requested entity has been deleted.
+    Args:
+        entity_type: the entity type name (e.g. "group" or "queue")
+        existing_id: the id of the deleted entity
+        kwargs: the attribute value pairs used to request the entity
+    """
+
+    def __init__(self, entity_type: str | None, existing_id: int, **kwargs: typing.Any):
+        super().__init__(
+            "".join(
+                [
+                    "The ",
+                    "entity" if entity_type is None else entity_type,
+                    *add_attribute_values(**kwargs),
+                    " is deleted.",
                 ]
             )
         )
@@ -145,11 +171,11 @@ class LockError(DioptraError):
 class ReadOnlyLockError(LockError):
     """The type has a read-only lock and cannot be modified."""
 
-    def __init__(self, type: str, **kwargs: typing.Any):
+    def __init__(self, type: str | None = None, **kwargs: typing.Any):
         super().__init__(
             "".join(
                 [
-                    f"The {type} type",
+                    f"The {type or 'resource'} type",
                     *add_attribute_values(**kwargs),
                     " has a read-only lock and cannot be modified.",
                 ]
@@ -347,6 +373,22 @@ class PluginParameterTypeMatchesBuiltinTypeError(DioptraError):
         )
 
 
+class InconsistentBuiltinPluginParameterTypesError(DioptraError):
+    """
+    The built-in plugin parameter types registered in the database is not consistent
+    with expectations.
+    """
+
+    def __init__(self, missing_names: set[str], extra_names: set[str]):
+        super().__init__(
+            "The built-in plugin parameter types registered in the database is not "
+            "consistent with expectations. A database migration may be necessary. "
+            "Please contact the system administrator."
+        )
+        self.missing_names = missing_names
+        self.extra_names = extra_names
+
+
 class InvalidYamlError(DioptraError):
     """Raised when the provided YAML is invalid and fails to parse."""
 
@@ -411,6 +453,163 @@ class ImportFailedError(DioptraError):
     def __init__(self, message: str, reason: str = ""):
         super().__init__(message)
         self._reason = reason
+
+
+class UserNotInGroupError(DioptraError):
+    """A given user is not in a given group."""
+
+    def __init__(self, user_id: int, group_id: int) -> None:
+        msg = f"User {user_id} is not in group {group_id}"
+        super().__init__(msg)
+
+        self.user_id = user_id
+        self.group_id = group_id
+
+
+class GroupNeedsAUserError(DioptraError):
+    """A group must have at least one user; it can't be empty."""
+
+    def __init__(self, user_id: int, group_id: int) -> None:
+        msg = (
+            f"Can't remove user {user_id} from group {group_id}: "
+            "group would have no users"
+        )
+        super().__init__(msg)
+
+        self.user_id = user_id
+        self.group_id = group_id
+
+
+class UserNeedsAGroupError(DioptraError):
+    """A user must be in at least one group; it can't be groupless."""
+
+    def __init__(self, user_id: int, group_id: int) -> None:
+        msg = (
+            f"Can't remove user {user_id} from group {group_id}: "
+            "user would have no groups"
+        )
+        super().__init__(msg)
+
+        self.user_id = user_id
+        self.group_id = group_id
+
+
+class GroupNeedsAManagerError(DioptraError):
+    """A group must have at least one manager."""
+
+    def __init__(self, user_id: int, group_id: int) -> None:
+        msg = (
+            f"Can't remove manager {user_id} from group {group_id}: "
+            "group would have no managers"
+        )
+        super().__init__(msg)
+
+        self.user_id = user_id
+        self.group_id = group_id
+
+
+class UserIsManagerError(DioptraError):
+    """User can't be removed from a group because he is a group manager."""
+
+    def __init__(self, user_id: int, group_id: int) -> None:
+        msg = (
+            f"Can't remove manager {user_id} from group {group_id}: "
+            "user is a group manager"
+        )
+        super().__init__(msg)
+
+        self.user_id = user_id
+        self.group_id = group_id
+
+
+class MismatchedResourceTypeError(DioptraError):
+    """A snapshot was associated with a resource of the wrong type"""
+
+    def __init__(self, expected_type: str, found_type: str) -> None:
+        msg = f"Expected resource type {expected_type!r}: {found_type}"
+        super().__init__(msg)
+
+        self.expected_type = expected_type
+        self.found_type = found_type
+
+
+class MalformedDraftResourceError(DioptraError):
+    """A draft resource payload was malformed"""
+
+    def __init__(self) -> None:
+        msg = (
+            'A non-nested draft resource payload must have a "group_id"'
+            " property which indicates which group will own the resulting"
+            " resource."
+        )
+        super().__init__(msg)
+
+
+class DraftTargetOwnerMismatch(DioptraError):
+    """
+    A draft modification's target_owner doesn't match the owner of the resource
+    being modified.
+    """
+
+    def __init__(self, target_owner_id: int, resource_owner_id: int) -> None:
+        msg = (
+            "Draft modification target_owner/resource owner mismatch:"
+            f" {target_owner_id}, {resource_owner_id}"
+        )
+        super().__init__(msg)
+
+        self.draft_owner_id = target_owner_id
+        self.resource_owner_id = resource_owner_id
+
+
+class DraftBaseInvalidError(DioptraError):
+    """
+    A draft has a base_resource_id referring to a type of resource which is not
+    valid as a parent type of the draft resource type.
+    """
+
+    def __init__(
+        self, base_resource_id: int, parent_type: str, child_type: str
+    ) -> None:
+        msg = (
+            f"Invalid draft base resource ID: resource type {parent_type!r}"
+            f" is not a valid parent of resource type {child_type!r}:"
+            f" {base_resource_id}"
+        )
+        super().__init__(msg)
+
+        self.base_resource_id = base_resource_id
+        self.parent_type = parent_type
+        self.child_type = child_type
+
+
+class DraftSnapshotIdInvalidError(DioptraError):
+    """
+    A draft modification's resource snapshot ID does not represent a snapshot
+    of the resource represented by the draft's resource ID.
+    """
+
+    def __init__(self, resource_id: int, resource_snapshot_id: int):
+        msg = (
+            f"Resource snapshot {resource_snapshot_id} is not a snapshot"
+            f" of resource {resource_id}"
+        )
+        super().__init__(msg)
+
+        self.resource_id = resource_id
+        self.resource_snapshot_id = resource_snapshot_id
+
+
+class DraftModificationRequiredError(DioptraError):
+    """
+    A draft modification was required, but a draft resource was given.
+    """
+
+    def __init__(self, draft_resource_id: int):
+        msg = f"Must be a draft modification: {draft_resource_id}"
+        super().__init__(msg)
+
+        self.draft_resource_id = draft_resource_id
 
 
 def error_result(
@@ -530,6 +729,20 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
     def handle_lock_error(error: LockError):
         log.debug(error.to_message())
         return error_result(error, http.HTTPStatus.FORBIDDEN, {})
+
+    @api.errorhandler(InconsistentBuiltinPluginParameterTypesError)
+    def handle_inconsistent_builtin_plugin_parameter_types_error(
+        error: InconsistentBuiltinPluginParameterTypesError,
+    ):
+        log.debug(error.to_message())
+        return error_result(
+            error,
+            http.HTTPStatus.INTERNAL_SERVER_ERROR,
+            {
+                "missing_names": sorted(list(error.missing_names)),
+                "extra_names": sorted(list(error.extra_names)),
+            },
+        )
 
     @api.errorhandler(UserDoesNotExistError)
     def handle_user_does_not_exist_error(error: UserDoesNotExistError):
