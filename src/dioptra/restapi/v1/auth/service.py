@@ -15,19 +15,22 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform auth endpoint operations."""
+
 from __future__ import annotations
 
 import datetime
 import uuid
-from typing import Any, cast
+from typing import Any
 
 import structlog
 from flask_login import current_user, login_user, logout_user
 from injector import inject
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.db import db, models
-from dioptra.restapi.v1.users.service import UserNameService, UserPasswordService
+from dioptra.restapi.db.repository.utils import DeletionPolicy
+from dioptra.restapi.db.unit_of_work import UnitOfWork
+from dioptra.restapi.errors import UserDoesNotExistError
+from dioptra.restapi.v1.users.service import UserPasswordService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -37,20 +40,17 @@ class AuthService(object):
 
     @inject
     def __init__(
-        self,
-        user_name_service: UserNameService,
-        user_password_service: UserPasswordService,
+        self, user_password_service: UserPasswordService, uow: UnitOfWork
     ) -> None:
         """Initialize the authentication service.
 
         All arguments are provided via dependency injection.
 
         Args:
-            user_name_service: A UserNameService object.
             user_password_service: A UserPasswordService object.
         """
-        self._user_name_service = user_name_service
         self._user_password_service = user_password_service
+        self._uow = uow
 
     def login(
         self,
@@ -66,14 +66,16 @@ class AuthService(object):
 
         Returns:
             A dictionary containing the login success message.
+
+        Raises:
+            UserDoesNotExistError: If the user is not found.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
-        user = cast(
-            models.User,
-            self._user_name_service.get(
-                username=username, error_if_not_found=True, log=log
-            ),
-        )
+
+        user = self._uow.user_repo.get_by_name(username, DeletionPolicy.NOT_DELETED)
+        if not user:
+            raise UserDoesNotExistError(username=username)
+
         self._user_password_service.authenticate(
             password=password,
             user_password=str(user.password),
@@ -82,8 +84,8 @@ class AuthService(object):
             log=log,
         )
         login_user(user, remember=True)
-        user.last_login_on = datetime.datetime.now(tz=datetime.timezone.utc)
-        db.session.commit()
+        with self._uow:
+            user.last_login_on = datetime.datetime.now(tz=datetime.timezone.utc)
         log.debug("Login successful", user_id=user.user_id)
         return {"status": "Login successful", "username": username}
 
@@ -102,8 +104,8 @@ class AuthService(object):
         username = current_user.username
 
         if everywhere:
-            current_user.alternative_id = uuid.uuid4()
-            db.session.commit()
+            with self._uow:
+                current_user.alternative_id = uuid.uuid4()
 
         logout_user()
         log.debug("Logout successful", user_id=user_id, everywhere=everywhere)

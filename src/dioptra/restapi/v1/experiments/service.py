@@ -15,48 +15,31 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform experiment endpoint operations."""
+
 from __future__ import annotations
 
-from typing import Any, Final, cast
+from typing import Any, Final
 
 import structlog
 from flask_login import current_user
 from injector import inject
-from sqlalchemy import Integer, func, select
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.db import db, models
-from dioptra.restapi.db.models.constants import resource_lock_types
+from dioptra.restapi.db import models
+from dioptra.restapi.db.repository.utils import DeletionPolicy
+from dioptra.restapi.db.unit_of_work import UnitOfWork
 from dioptra.restapi.errors import (
-    BackendDatabaseError,
     EntityDoesNotExistError,
-    EntityExistsError,
-    SortParameterValidationError,
 )
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.entrypoints.service import (
-    RESOURCE_TYPE as ENTRYPOINT_RESOURCE_TYPE,
-)
-from dioptra.restapi.v1.entrypoints.service import (
     EntrypointIdsService,
 )
-from dioptra.restapi.v1.groups.service import GroupIdService
-from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
+from dioptra.restapi.v1.shared.search_parser import parse_search_text
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 RESOURCE_TYPE: Final[str] = "experiment"
-SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
-    "name": lambda x: models.Experiment.name.like(x, escape="/"),
-    "description": lambda x: models.Experiment.description.like(x, escape="/"),
-    "tag": lambda x: models.Experiment.tags.any(models.Tag.name.like(x, escape="/")),
-}
-SORTABLE_FIELDS: Final[dict[str, Any]] = {
-    "name": models.Experiment.name,
-    "createdOn": models.Experiment.created_on,
-    "lastModifiedOn": models.Resource.last_modified_on,
-    "description": models.Experiment.description,
-}
 
 
 class ExperimentService(object):
@@ -67,8 +50,7 @@ class ExperimentService(object):
     def __init__(
         self,
         entrypoint_ids_service: EntrypointIdsService,
-        experiment_name_service: ExperimentNameService,
-        group_id_service: GroupIdService,
+        uow: UnitOfWork,
     ) -> None:
         """Initialize the experiment service.
 
@@ -76,12 +58,10 @@ class ExperimentService(object):
 
         Args:
             entrypoint_ids_service: An EntrypointIdsService object.
-            experiment_name_service: An ExperimentNameService object.
-            group_id_service: A GroupIdService object.
+            uow: A UnitOfWork instance
         """
         self._entrypoint_ids_service = entrypoint_ids_service
-        self._experiment_name_service = experiment_name_service
-        self._group_id_service = group_id_service
+        self._uow = uow
 
     def create(
         self,
@@ -111,13 +91,18 @@ class ExperimentService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        duplicate = self._experiment_name_service.get(name, group_id=group_id, log=log)
-        if duplicate is not None:
-            raise EntityExistsError(
-                RESOURCE_TYPE, duplicate.resource_id, name=name, group_id=group_id
-            )
+        owner = self._uow.group_repo.get(group_id, DeletionPolicy.NOT_DELETED)
+        if not owner:
+            raise EntityDoesNotExistError("group", group_id=group_id)
 
-        group = self._group_id_service.get(group_id, error_if_not_found=True)
+        resource = models.Resource(RESOURCE_TYPE, owner)
+        new_experiment = models.Experiment(
+            description,
+            resource,
+            current_user,
+            name,
+        )
+
         entrypoints = (
             self._entrypoint_ids_service.get(
                 entrypoint_ids, error_if_not_found=True, log=log
@@ -125,21 +110,18 @@ class ExperimentService(object):
             if entrypoint_ids is not None
             else []
         )
-
-        resource = models.Resource(resource_type="experiment", owner=group)
-        new_experiment = models.Experiment(
-            name=name,
-            description=description,
-            resource=resource,
-            creator=current_user,
-        )
         new_experiment.children.extend(
             entrypoint.resource for entrypoint in entrypoints
         )
-        db.session.add(new_experiment)
+
+        try:
+            self._uow.experiment_repo.create(new_experiment)
+        except Exception:
+            self._uow.rollback()
+            raise
 
         if commit:
-            db.session.commit()
+            self._uow.commit()
             log.debug(
                 "Experiment registration successful",
                 experiment_id=new_experiment.resource_id,
@@ -185,99 +167,42 @@ class ExperimentService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get full list of experiments")
 
-        filters = list()
+        search_struct = parse_search_text(search_string)
 
-        if group_id is not None:
-            filters.append(models.Resource.group_id == group_id)
-
-        if search_string:
-            filters.append(
-                construct_sql_query_filters(search_string, SEARCHABLE_FIELDS)
-            )
-
-        stmt = (
-            select(func.count(models.Experiment.resource_id))
-            .join(models.Resource)
-            .where(
-                *filters,
-                models.Resource.is_deleted == False,  # noqa: E712
-                models.Resource.latest_snapshot_id
-                == models.Experiment.resource_snapshot_id,
+        experiments, total_num_experiments = (
+            self._uow.experiment_repo.get_by_filters_paged(
+                group_id,
+                search_struct,
+                page_index,
+                page_length,
+                sort_by_string,
+                descending,
+                DeletionPolicy.NOT_DELETED,
             )
         )
-        total_num_experiments = db.session.scalars(stmt).first()
 
-        if total_num_experiments is None:
-            log.error(
-                "The database query returned a None when counting the number of "
-                "experiments when it should return a number.",
-                sql=str(stmt),
-            )
-            raise BackendDatabaseError
-
-        if total_num_experiments == 0:
-            return cast(list[utils.ExperimentDict], []), total_num_experiments
-
-        experiments_stmt = (
-            select(models.Experiment)
-            .join(models.Resource)
-            .where(
-                *filters,
-                models.Resource.is_deleted == False,  # noqa: E712
-                models.Resource.latest_snapshot_id
-                == models.Experiment.resource_snapshot_id,
-            )
-            .offset(page_index)
-            .limit(page_length)
-        )
-
-        if sort_by_string and sort_by_string in SORTABLE_FIELDS:
-            sort_column = SORTABLE_FIELDS[sort_by_string]
-            if descending:
-                sort_column = sort_column.desc()
-            else:
-                sort_column = sort_column.asc()
-            experiments_stmt = experiments_stmt.order_by(sort_column)
-        elif sort_by_string and sort_by_string not in SORTABLE_FIELDS:
-            raise SortParameterValidationError(RESOURCE_TYPE, sort_by_string)
-
-        experiments = list(db.session.scalars(experiments_stmt).all())
-
-        entrypoint_ids = {
-            resource.resource_id: experiment.resource_id
-            for experiment in experiments
-            for resource in experiment.children
-            if resource.resource_type == "entry_point" and not resource.is_deleted
-        }
-        entrypoints = self._entrypoint_ids_service.get(
-            list(entrypoint_ids.keys()), error_if_not_found=True, log=log
-        )
-        entrypoints_dict = {
-            entrypoint.resource_id: entrypoint for entrypoint in entrypoints
-        }
-
-        drafts_stmt = select(
-            models.DraftResource.payload["resource_id"].as_string().cast(Integer)
-        ).where(
-            models.DraftResource.payload["resource_id"]
-            .as_string()
-            .cast(Integer)
-            .in_(tuple(experiment.resource_id for experiment in experiments)),
-            models.DraftResource.user_id == current_user.user_id,
-        )
         experiments_dict: dict[int, utils.ExperimentDict] = {
             experiment.resource_id: utils.ExperimentDict(
-                experiment=experiment, entrypoints=[], queue=None, has_draft=False
+                experiment=experiment,
+                # TypedDict requires a list specifically
+                entrypoints=list(
+                    self._uow.experiment_repo.get_entrypoints(
+                        experiment,
+                        DeletionPolicy.NOT_DELETED,
+                    )
+                ),
+                queue=None,
+                has_draft=False,
             )
             for experiment in experiments
         }
-        for resource_id in db.session.scalars(drafts_stmt):
+
+        resource_ids_with_drafts = self._uow.drafts_repo.has_draft_modifications(
+            experiments,
+            current_user,
+        )
+        for resource_id in resource_ids_with_drafts:
             experiments_dict[resource_id]["has_draft"] = True
-        for experiment_dict in experiments_dict.values():
-            for resource in experiment_dict["experiment"].children:
-                if resource.resource_type == "entry_point" and not resource.is_deleted:
-                    entrypoint = entrypoints_dict[resource.resource_id]
-                    experiment_dict["entrypoints"].append(entrypoint)
 
         return list(experiments_dict.values()), total_num_experiments
 
@@ -291,7 +216,7 @@ class ExperimentIdService(object):
     def __init__(
         self,
         entrypoint_ids_service: EntrypointIdsService,
-        experiment_name_service: ExperimentNameService,
+        uow: UnitOfWork,
     ) -> None:
         """Initialize the experiment service.
 
@@ -299,10 +224,10 @@ class ExperimentIdService(object):
 
         Args:
             entrypoint_ids_service: An EntrypointIdsService object.
-            experiment_name_service: An ExperimentNameService object.
+            uow: A UnitOfWork instance
         """
         self._entrypoint_ids_service = entrypoint_ids_service
-        self._experiment_name_service = experiment_name_service
+        self._uow = uow
 
     def get(
         self,
@@ -327,17 +252,10 @@ class ExperimentIdService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get experiment by id", experiment_id=experiment_id)
 
-        stmt = (
-            select(models.Experiment)
-            .join(models.Resource)
-            .where(
-                models.Experiment.resource_id == experiment_id,
-                models.Experiment.resource_snapshot_id
-                == models.Resource.latest_snapshot_id,
-                models.Resource.is_deleted == False,  # noqa: E712
-            )
+        experiment = self._uow.experiment_repo.get(
+            experiment_id,
+            DeletionPolicy.NOT_DELETED,
         )
-        experiment = db.session.scalars(stmt).first()
 
         if experiment is None:
             if error_if_not_found:
@@ -347,30 +265,20 @@ class ExperimentIdService(object):
 
             return None
 
-        entrypoint_ids = [
-            resource.resource_id
-            for resource in experiment.children
-            if resource.resource_type == "entry_point" and not resource.is_deleted
-        ]
-        entrypoints = self._entrypoint_ids_service.get(
-            entrypoint_ids, error_if_not_found=True, log=log
+        entrypoints = self._uow.experiment_repo.get_entrypoints(
+            experiment,
+            DeletionPolicy.NOT_DELETED,
         )
 
-        drafts_stmt = (
-            select(models.DraftResource.draft_resource_id)
-            .where(
-                models.DraftResource.payload["resource_id"].as_string().cast(Integer)
-                == experiment.resource_id,
-                models.DraftResource.user_id == current_user.user_id,
-            )
-            .exists()
-            .select()
+        has_draft = self._uow.drafts_repo.has_draft_modification(
+            experiment,
+            current_user,
         )
-        has_draft = db.session.scalar(drafts_stmt)
 
         return utils.ExperimentDict(
             experiment=experiment,
-            entrypoints=entrypoints,
+            # TypedDict requires a list specifically
+            entrypoints=list(entrypoints),
             queue=None,
             has_draft=has_draft,
         )
@@ -406,23 +314,22 @@ class ExperimentIdService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        experiment_dict = self.get(
-            experiment_id, error_if_not_found=error_if_not_found, log=log
+        experiment = self._uow.experiment_repo.get(
+            experiment_id,
+            DeletionPolicy.ANY,
         )
 
-        if experiment_dict is None:
-            return None
-
-        experiment = experiment_dict["experiment"]
-        group_id = experiment.resource.group_id
-        if name != experiment.name:
-            duplicate = self._experiment_name_service.get(
-                name, group_id=group_id, log=log
-            )
-            if duplicate is not None:
-                raise EntityExistsError(
-                    RESOURCE_TYPE, duplicate.resource_id, name=name, group_id=group_id
-                )
+        if not experiment:
+            if error_if_not_found:
+                raise EntityDoesNotExistError("experiment", resource_id=experiment_id)
+            else:
+                return None
+        elif experiment.resource.is_deleted:
+            if error_if_not_found:
+                # treat "deleted" as if "not found"?
+                raise EntityDoesNotExistError("experiment", resource_id=experiment_id)
+            else:
+                return None
 
         entrypoints = self._entrypoint_ids_service.get(
             entrypoint_ids, error_if_not_found=True, log=log
@@ -435,15 +342,21 @@ class ExperimentIdService(object):
             creator=current_user,
         )
         new_experiment.children = [entrypoint.resource for entrypoint in entrypoints]
-        db.session.add(new_experiment)
+
+        try:
+            self._uow.experiment_repo.create_snapshot(new_experiment)
+        except Exception:
+            self._uow.rollback()
+            raise
 
         if commit:
-            db.session.commit()
-            log.debug(
-                "Experiment modification successful",
-                experiment_id=experiment_id,
-                name=name,
-            )
+            self._uow.commit()
+
+        log.debug(
+            "Experiment modification successful",
+            experiment_id=experiment_id,
+            name=name,
+        )
 
         return utils.ExperimentDict(
             experiment=new_experiment,
@@ -463,20 +376,8 @@ class ExperimentIdService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        stmt = select(models.Resource).filter_by(
-            resource_id=experiment_id, resource_type=RESOURCE_TYPE, is_deleted=False
-        )
-        experiment_resource = db.session.scalars(stmt).first()
-
-        if experiment_resource is None:
-            raise EntityDoesNotExistError(RESOURCE_TYPE, experiment_id=experiment_id)
-
-        deleted_resource_lock = models.ResourceLock(
-            resource_lock_type=resource_lock_types.DELETE,
-            resource=experiment_resource,
-        )
-        db.session.add(deleted_resource_lock)
-        db.session.commit()
+        with self._uow:
+            self._uow.experiment_repo.delete(experiment_id)
         log.debug("Experiment deleted", experiment_id=experiment_id)
 
         return {"status": "Success", "id": [experiment_id]}
@@ -488,19 +389,16 @@ class ExperimentIdEntrypointsService(object):
     @inject
     def __init__(
         self,
-        experiment_id_service: ExperimentIdService,
-        entrypoint_ids_service: EntrypointIdsService,
+        uow: UnitOfWork,
     ) -> None:
         """Initialize the experiment service.
 
         All arguments are provided via dependency injection.
 
         Args:
-            experiment_id_service: A ExperimentIdService object.
-            entrypoint_ids_service: A EntrypointIdsService object.
+            uow: A UnitOfWork instance
         """
-        self._experiment_id_service = experiment_id_service
-        self._entrypoint_ids_service = entrypoint_ids_service
+        self._uow = uow
 
     def get(
         self,
@@ -527,13 +425,12 @@ class ExperimentIdEntrypointsService(object):
             resource_id=experiment_id,
         )
 
-        experiment_dict = cast(
-            utils.ExperimentDict,
-            self._experiment_id_service.get(
-                experiment_id, error_if_not_found=True, log=log
-            ),
+        return list(
+            self._uow.experiment_repo.get_entrypoints(
+                experiment_id,
+                DeletionPolicy.NOT_DELETED,
+            )
         )
-        return experiment_dict["entrypoints"]
 
     def append(
         self,
@@ -566,42 +463,20 @@ class ExperimentIdEntrypointsService(object):
             resource_id=experiment_id,
         )
 
-        experiment_dict = cast(
-            utils.ExperimentDict,
-            self._experiment_id_service.get(
-                experiment_id, error_if_not_found=True, log=log
-            ),
-        )
-        experiment = experiment_dict["experiment"]
-        entrypoints = experiment_dict["entrypoints"]
-
-        existing_entrypoint_ids = set(
-            resource.resource_id for resource in experiment.children
-        )
-        new_entrypoint_ids = set(entrypoint_ids) - existing_entrypoint_ids
-        new_entrypoints = self._entrypoint_ids_service.get(
-            list(new_entrypoint_ids), error_if_not_found=True, log=log
-        )
-        if error_if_not_found and len(new_entrypoints) != len(new_entrypoint_ids):
-            found_entrypoint_ids = set(
-                entrypoint.resource_id for entrypoint in new_entrypoints
+        try:
+            all_children = self._uow.experiment_repo.add_entrypoints(
+                experiment_id,
+                entrypoint_ids,
             )
-            missing_entrypoint_ids = new_entrypoint_ids - found_entrypoint_ids
-            raise EntityDoesNotExistError(
-                ENTRYPOINT_RESOURCE_TYPE, entrypoint_ids=list(missing_entrypoint_ids)
-            )
-
-        experiment.children.extend(
-            [entrypoint.resource for entrypoint in new_entrypoints]
-        )
+        except Exception:
+            self._uow.rollback()
+            raise
 
         if commit:
-            db.session.commit()
-            log.debug(
-                "Entrypoints appended successfully", entrypoint_ids=entrypoint_ids
-            )
+            self._uow.commit()
 
-        return entrypoints + new_entrypoints
+        log.debug("Entrypoints appended successfully", entrypoint_ids=entrypoint_ids)
+        return all_children
 
     def modify(
         self,
@@ -630,28 +505,23 @@ class ExperimentIdEntrypointsService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        experiment_dict = cast(
-            utils.ExperimentDict,
-            self._experiment_id_service.get(
-                experiment_id, error_if_not_found=True, log=log
-            ),
-        )
-        experiment = experiment_dict["experiment"]
-
-        entrypoints = self._entrypoint_ids_service.get(
-            entrypoint_ids, error_if_not_found=True, log=log
-        )
-
-        experiment.children = [entrypoint.resource for entrypoint in entrypoints]
+        try:
+            entrypoints = self._uow.experiment_repo.set_entrypoints(
+                experiment_id,
+                entrypoint_ids,
+            )
+        except Exception:
+            self._uow.rollback()
+            raise
 
         if commit:
-            db.session.commit()
+            self._uow.commit()
             log.debug(
                 "Experiment entrypoints updated successfully",
                 entrypoint_ids=entrypoint_ids,
             )
 
-        return entrypoints
+        return list(entrypoints)
 
     def delete(self, experiment_id: int, **kwargs) -> dict[str, Any]:
         """Remove entrypoints from an experiment.
@@ -664,20 +534,17 @@ class ExperimentIdEntrypointsService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        experiment_dict = cast(
-            utils.ExperimentDict,
-            self._experiment_id_service.get(
-                experiment_id, error_if_not_found=True, log=log
-            ),
+        experiment = self._uow.experiment_repo.get(
+            experiment_id, DeletionPolicy.NOT_DELETED
         )
-        experiment = experiment_dict["experiment"]
-        experiment.children = []
+        if not experiment:
+            raise EntityDoesNotExistError("experiment", resource_id=experiment_id)
 
-        entrypoint_ids = [
-            entrypoint.resource_id for entrypoint in experiment_dict["entrypoints"]
-        ]
+        entrypoint_ids = [child.resource_id for child in experiment.children]
 
-        db.session.commit()
+        with self._uow:
+            experiment.children = []
+
         log.debug(
             "Entrypoints removed from experiment",
             experiment_id=experiment_id,
@@ -693,16 +560,16 @@ class ExperimentIdEntrypointsIdService(object):
     @inject
     def __init__(
         self,
-        experiment_id_service: ExperimentIdService,
+        uow: UnitOfWork,
     ) -> None:
         """Initialize the experiment service.
 
         All arguments are provided via dependency injection.
 
         Args:
-            experiment_id_service: A ExperimentIdService object.
+            uow: A UnitOfWork instance
         """
-        self._experiment_id_service = experiment_id_service
+        self._uow = uow
 
     def delete(self, experiment_id: int, entrypoint_id, **kwargs) -> dict[str, Any]:
         """Remove a entrypoint from an experiment.
@@ -716,30 +583,9 @@ class ExperimentIdEntrypointsIdService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        experiment_dict = cast(
-            utils.ExperimentDict,
-            self._experiment_id_service.get(
-                experiment_id, error_if_not_found=True, log=log
-            ),
-        )
-        experiment = experiment_dict["experiment"]
+        with self._uow:
+            self._uow.experiment_repo.unlink_entrypoint(experiment_id, entrypoint_id)
 
-        entrypoint_resources = {
-            resource.resource_id: resource for resource in experiment.children
-        }
-
-        removed_entrypoint = entrypoint_resources.pop(entrypoint_id, None)
-
-        if removed_entrypoint is None:
-            raise EntityDoesNotExistError(
-                ENTRYPOINT_RESOURCE_TYPE,
-                experiment_id=experiment_id,
-                entrypoint_id=entrypoint_id,
-            )
-
-        experiment.children = list(entrypoint_resources.values())
-
-        db.session.commit()
         log.debug(
             "Entrypoint removed",
             experiment_id=experiment_id,
@@ -747,55 +593,3 @@ class ExperimentIdEntrypointsIdService(object):
         )
 
         return {"status": "Success", "id": [entrypoint_id]}
-
-
-class ExperimentNameService(object):
-    """The service methods for managing experiments by their name."""
-
-    def get(
-        self,
-        name: str,
-        group_id: int,
-        error_if_not_found: bool = False,
-        **kwargs,
-    ) -> models.Experiment | None:
-        """Fetch an experiment by its name.
-
-        Args:
-            name: The name of the experiment.
-            group_id: The group id of the experiment.
-            error_if_not_found: If True, raise an error if the experiment is not found.
-                Defaults to False.
-
-        Returns:
-            The experiment object if found, otherwise None.
-
-        Raises:
-            EntityDoesNotExistError: If the experiment is not found and
-                `error_if_not_found` is True.
-        """
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
-        log.debug("Get experiment by name", experiment_name=name, group_id=group_id)
-
-        stmt = (
-            select(models.Experiment)
-            .join(models.Resource)
-            .where(
-                models.Experiment.name == name,
-                models.Resource.group_id == group_id,
-                models.Resource.is_deleted == False,  # noqa: E712
-                models.Resource.latest_snapshot_id
-                == models.Experiment.resource_snapshot_id,
-            )
-        )
-        experiment = db.session.scalars(stmt).first()
-
-        if experiment is None:
-            if error_if_not_found:
-                raise EntityDoesNotExistError(
-                    RESOURCE_TYPE, experiment_name=name, group_id=group_id
-                )
-
-            return None
-
-        return experiment

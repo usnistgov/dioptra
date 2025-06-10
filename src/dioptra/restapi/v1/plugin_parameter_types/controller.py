@@ -27,6 +27,7 @@ from injector import inject
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
+from dioptra.restapi.db.repository.types import TypeRepository
 from dioptra.restapi.routes import V1_PLUGIN_PARAMETER_TYPES_ROUTE
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.schemas import IdStatusResponseSchema
@@ -52,7 +53,6 @@ from .schema import (
 )
 from .service import (
     RESOURCE_TYPE,
-    SEARCHABLE_FIELDS,
     PluginParameterTypeIdService,
     PluginParameterTypeService,
 )
@@ -249,7 +249,7 @@ PluginParameterTypeSnapshotsResource = generate_resource_snapshots_endpoint(
     resource_model=models.PluginTaskParameterType,
     resource_name=RESOURCE_TYPE,
     route_prefix=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
-    searchable_fields=SEARCHABLE_FIELDS,
+    searchable_fields=TypeRepository.SEARCHABLE_FIELDS,
     page_schema=PluginParameterTypePageSchema,
     build_fn=utils.build_plugin_parameter_type,
 )
