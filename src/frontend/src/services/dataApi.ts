@@ -185,6 +185,11 @@ export async function getSnapshots<T extends ItemType>(type: T, id: number) {
   return res
 }
 
+export async function getSnapshot<T extends ItemType>(type: T, id: number, snapshotId: number) {
+  return await axios.get(`/api/${type}/${id}/snapshots/${snapshotId}`)
+
+}
+
 export async function addJobMetric(id: string, name: string, value: number, step: number) {
   const res = await axios.post(`/api/jobs/${id}/metrics`, {
     name,
