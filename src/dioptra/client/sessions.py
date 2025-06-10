@@ -118,7 +118,7 @@ def convert_response_to_dict(response: DioptraResponseProtocol) -> dict[str, Any
             response.request.url,
             response.text,
         )
-        raise StatusCodeError(f"Error code returned: {response.status_code}")
+        raise StatusCodeError(response.status_code, response.text)
 
     try:
         response_dict = response.json()
@@ -387,7 +387,7 @@ class BaseDioptraRequestsSession(DioptraSession[T], ABC, Generic[T]):
                 response.request.url,
                 response.text,
             )
-            raise StatusCodeError(f"Error code returned: {response.status_code}")
+            raise StatusCodeError(response.status_code, response.text)
 
         with output_path.open(mode="wb") as f:
             for chunk in response.iter_content(chunk_size=self.DOWNLOAD_CHUNK_SIZE):
