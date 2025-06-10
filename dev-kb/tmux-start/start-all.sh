@@ -44,17 +44,17 @@ print_main_help()
 ###########################################################################################
 read_properties_from_file()
 {
-  file="$1"
-  echo "Reading environment from config file: $file"
-
-  while IFS="=" read -r key value; do
+  echo "Reading environment from config file: ${1}"
+  file=`grep -v '^#\|^\s*$' ${1} | sed 's/\r//'`
+  
+  while IFS="=" read -r key value ; do
     case "${key}" in
       "DIOPTRA_GIT_BRANCH") 
         export DIOPTRA_BRANCH="$value"
         ;;
       "DIOPTRA_CODE_DIR") 
         ### Expand ~/ path just in-case it wasn't fully resolved
-        export DIOPTRA_CODE="${value/#\~/$HOME}" 
+        export DIOPTRA_CODE="${value/#\~/$HOME}"
         ;;
       "DIOPTRA_DEPLOY_DIR") 
         ### Expand ~/ path just in-case it wasn't fully resolved
@@ -65,7 +65,8 @@ read_properties_from_file()
         ;;
       "DIOPTRA_ENV_NAME")
         export DIOPTRA_ENV_NAME="$value"
-        ;;      \#*)
+        ;;
+      \#*)
         ### printf "\nComment: [key:${key} value:${value}]\n"
         ;;
       *)
@@ -73,7 +74,7 @@ read_properties_from_file()
         ;;
     esac
     # printf "\nKey=$key;\tValue=$value"
-  done < "$file"
+  done < <(printf '%s\n' "$file")
   # printf "\n\n"
 }
 
@@ -162,7 +163,7 @@ decide_dioptra_environment(){
         echo "==============================================="
         echo "Configured to run in ALL-LOCAL-MODE"
         echo "==============================================="
-        echo "Running from path: ${SCRIPT_SOURCE}/"
+        echo "Running from path: ${SCRIPT_SOURCE}"
         echo "==============================================="
         export DIOPTRA_ML_FLOW="."
         export DIOPTRA_LOCAL="."
@@ -171,7 +172,7 @@ decide_dioptra_environment(){
         echo "==============================================="
         echo "Configured to run in DEFAULT-MODE"
         echo "==============================================="
-        echo "Running from path: ${SCRIPT_SOURCE}/"
+        echo "Running from path: ${SCRIPT_SOURCE}"
         echo "Using the following script Locations:"
         echo "  ${DIOPTRA_CODE}/dev-kb/tmux-start/*.sh"
         echo "  ${DIOPTRA_CODE}/dev-kb/local-setup/*.sh"
@@ -244,6 +245,17 @@ if ! [ -z "${DIOPTRA_CONF_FILE}" ] && ! [ -z "${DIOPTRA_CONF_REAL_PATH}" ] ; the
 
     read_properties_from_file "${DIOPTRA_CONF_REAL_PATH}"
     decide_dioptra_environment
+
+    # check to make sure all scripts are available
+    if ! [ -d  ${DIOPTRA_CODE} ]; then
+        echo "[${DIOPTRA_CODE}]"
+        echo "DIOPTRA_CODE [] environment variable does not point to a directory"
+        exit -1
+    fi
+    if ! [ -d  ${DIOPTRA_LOCAL} ]; then
+        echo "DIOPTRA_LOCAL [${DIOPTRA_LOCAL}] environment variable does not point to a directory"
+        exit -1
+    fi
 
     ### TODO: remove the SET-ENV debugging statement below
     # exit 0

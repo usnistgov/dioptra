@@ -6,11 +6,10 @@ set -eo pipefail ${DEBUG:+-x}
 ###########################################################################################
 # Global parameters
 ###########################################################################################
-
 SCRIPT_CMDNAME="${0##*/}"
-SCRIPT_DIRPATH="$(realpath ${0%%/*})"
+SCRIPT_DIRPATH="$(dirname ${0})"
 LOGNAME="MLflow Tracking Server (Dev)"
-
+echo "SCRIPT_DIRPATH is [${SCRIPT_DIRPATH}]"
 MLFLOW_COMMAND="mlflow"
 
 DEFAULT_ARG_HOST="127.0.0.1"

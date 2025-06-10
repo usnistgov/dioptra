@@ -59,9 +59,25 @@ set_display_env_details(){
   printf "To recall "Environment Info:" below use command: printf \"\${DIOPTRA_CONFIG_DETAILS}\"\nEnvironment Info:$DIOPTRA_CONFIG_DETAILS\n"
 }
 
+###########################################################################################
+### Read and initialize the script's input parameter
+###
+###  Globals:
+###     Sets following environment variables 
+###     (if they exist in the environment file):
+###         DIOPTRA_BRANCH
+###         DIOPTRA_CODE
+###         DIOPTRA_DEPLOY
+###         DIOPTRA_CONFIG_INFO
+###         DIOPTRA_ENV_NAME
+###  Arguments:
+###    Environment config-file
+###  Returns:
+###    Changes to the global environment-variables
+###########################################################################################
 read_properties_from_file()
 {
-  file="$1"
+  file=`grep -v '^#\|^\s*$' ${1} | sed 's/\r//'`
   echo "Reading environment from config file: $file"
 
   while IFS="=" read -r key value; do
@@ -82,7 +98,8 @@ read_properties_from_file()
         ;;
       "DIOPTRA_ENV_NAME")
         export DIOPTRA_ENV_NAME="$value"
-        ;;      \#*)
+        ;;
+      \#*)
         ### printf "\nComment: [key:${key} value:${value}]\n"
         ;;
       *)
@@ -90,7 +107,7 @@ read_properties_from_file()
         ;;
     esac
     # printf "\nKey=$key;\tValue=$value"
-  done < "$file"
+  done < <(printf '%s\n' "$file")
   # printf "\n\n"
 }
 
