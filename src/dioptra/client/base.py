@@ -14,6 +14,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+import json
 import posixpath
 import re
 from abc import ABC, abstractmethod
@@ -46,6 +47,21 @@ class APIConnectionError(DioptraClientError):
 
 class StatusCodeError(DioptraClientError):
     """Class for status code errors"""
+
+    def __init__(self, status_code: int, message: str):
+        self.status_code = status_code
+        try:
+            # assume the message is unformatted json, then re-format
+            self.message = json.dumps(json.loads(message), indent=4)
+        except Exception:
+            # any errors just use the message unchanged
+            self.message = message
+
+    def __str__(self):
+        return (
+            f"Error code returned: {self.status_code}\nError message returned: \n"
+            f"{self.message}"
+        )
 
 
 class JSONDecodeError(DioptraClientError):

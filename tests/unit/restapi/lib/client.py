@@ -375,7 +375,7 @@ class DioptraFlaskClientSession(DioptraSession[DioptraResponseProtocol]):
                 response.request.url,
                 response.text,
             )
-            raise StatusCodeError(f"Error code returned: {response.status_code}")
+            raise StatusCodeError(response.status_code, response.text)
 
         with output_path.open(mode="wb") as f:
             f.write(response.get_data(as_text=False))
