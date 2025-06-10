@@ -49,12 +49,14 @@ INIT_TFCPU_SSL_SERVICE="tfcpu-ssl"
 DEFAULT_ARG_BRANCH="main"
 DEFAULT_ARG_ENABLE_NGINX_SSL="off"
 DEFAULT_ARG_ENABLE_POSTGRES_SSL="off"
+DEFAULT_ARG_SKIP_MINIO_SETUP="off"
 DEFAULT_ARG_PYTHON="$(command -v ${SCRIPT_DIRPATH}/.venv/bin/python 2&>/dev/null && echo "${SCRIPT_DIRPATH}/.venv/bin/python" || echo "python")"
 DEFAULT_ARG_WORKER_SSL_SERVICE="tfcpu"
 
 _arg_branch="${DEFAULT_ARG_BRANCH}"
 _arg_enable_nginx_ssl="${DEFAULT_ARG_ENABLE_NGINX_SSL}"
 _arg_enable_postgres_ssl="${DEFAULT_ARG_ENABLE_POSTGRES_SSL}"
+_arg_skip_minio_setup="${DEFAULT_ARG_SKIP_MINIO_SETUP}"
 _arg_python="${DEFAULT_ARG_PYTHON}"
 _arg_worker_ssl_service="${DEFAULT_ARG_WORKER_SSL_SERVICE}"
 
@@ -65,6 +67,7 @@ _arg_worker_ssl_service="${DEFAULT_ARG_WORKER_SSL_SERVICE}"
 #   DEFAULT_ARG_BRANCH
 #   DEFAULT_ARG_PYTHON
 #   DEFAULT_ARG_WORKER_SSL_SERVICE
+# . DEFAULT_ARG_SKIP_MINIO_SETUP
 #   SCRIPT_CMDNAME
 # Arguments:
 #   Error messages to log, a string
@@ -77,11 +80,13 @@ print_help() {
 		Utility that prepares the deployment initialization scripts.
 
 		Usage: init-deployment.sh [--enable-nginx-ssl] [--enable-postgres-ssl]
-		                          [--branch <arg>]
+		                          [--skip-minio-setup] [--branch <arg>]
 		                          [--worker-ssl-service [tfcpu|pytorchcpu]] [-h|--help]
 		        --enable-nginx-ssl: Enable the SSL-enabled configuration settings for nginx image
 		        --enable-postgres-ssl: Enable the SSL-enabled configuration settings for postgres
 		                               image
+		        --skip-minio-setup: Skip minio service setup. Useful when making configuration
+		                            changes after initial deployment
 		        --branch: The Dioptra GitHub branch to use when syncing the built-in task plugins
 		                  and the frontend files (default: '${DEFAULT_ARG_BRANCH}')
 		        --python: Command for invoking the Python interpreter. Must be Python 3.11 or
@@ -207,6 +212,10 @@ parse_args() {
         ;;
       --enable-postgres-ssl)
         _arg_enable_postgres_ssl="on"
+        shift 1
+        ;;
+      --skip-minio-setup)
+        _arg_skip_minio_setup="on"
         shift 1
         ;;
       --branch)
@@ -550,6 +559,10 @@ init_minio() {
   local args=(
     "/scripts/init-minio.sh"
   )
+
+  if [[ "${_arg_skip_minio_setup}" == "on" ]]; then
+    return 0
+  fi
 
   docker_compose -f "${DOCKER_COMPOSE_INIT_YML}" run \
     --rm \
