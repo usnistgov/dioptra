@@ -35,41 +35,6 @@ from .restapi import post_metrics
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
-def get_n_classes_from_directory_iterator(ds: Dataset) -> int:
-    """Returns the number of unique labels found by the |directory_iterator|.
-
-    Args:
-        ds: A |directory_iterator| object.
-
-    Returns:
-        The number of unique labels in the dataset.
-    """
-    return len(ds.class_names)
-
-def predictions_to_df(
-    predictions: np.ndarray,
-    dataset: Dataset = None,
-    show_actual: bool = False,
-    show_target: bool = False,
-) -> pd.DataFrame:
-    n_classes = get_n_classes_from_directory_iterator(dataset)
-
-    
-    df = pd.DataFrame(predictions)
-    df.columns = [f'prob_{n}' for n in range(n_classes)] # note: applicable to classification only
-
-    if (show_actual):
-        y_pred = np.argmax(predictions, axis=1)
-        df.insert(0, 'actual', y_pred)
-    if (show_target):
-        y_true = np.argmax(np.concatenate([y.index for x, y in dataset], axis=0).astype(np.int32) , axis=1)
-        df.insert(0, 'target', y_true)
-
-    df.insert(0, 'id', dataset.file_paths)
-
-    return df
-
-
 @pyplugs.register
 def clean (
     classifier: Model,
@@ -78,9 +43,10 @@ def clean (
     relabel_confidence: float = 0.10
 ) -> tuple[np.ndarray, pd.DataFrame]:
     
-    # later on found https://cleanlab.ai/blog/cleanlab-2.3
+    # later on found https://cleanlab.ai/blog/cleanlab-2.3 which might solve of the 
+    # below class manipulations
     # https://docs.cleanlab.ai/stable/cleanlab/models/keras.html
-    # i didnt spend too long on this but this was *not* a one line change
+    # i didnt spend too long on this but despite the claims, this was *not* a one line change
 
     class SKLearnClassifierPredictProba(SKLearnClassifier):
         def predict_proba(self, x, **kwargs):
@@ -118,7 +84,7 @@ def clean (
     )
     post_metrics(metric_name="cleanlab_label_errors", metric_value=float(len(label_issues)))
     
-    #this output looks a bit wrong
+    #TODO this output looks a bit wrong? figure out why
     xval = dict()
     for index in label_issues:
         xval[dataset.file_paths[index]] = pred_probs[index]
