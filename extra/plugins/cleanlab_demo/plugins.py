@@ -46,7 +46,6 @@ def clean (
     # later on found https://cleanlab.ai/blog/cleanlab-2.3 which might solve of the 
     # below class manipulations
     # https://docs.cleanlab.ai/stable/cleanlab/models/keras.html
-    # i didnt spend too long on this but despite the claims, this was *not* a one line change
 
     class SKLearnClassifierPredictProba(SKLearnClassifier):
         def predict_proba(self, x, **kwargs):
