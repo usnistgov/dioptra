@@ -38,6 +38,7 @@ try:
         Dropout,
         Flatten,
         MaxPooling2D,
+        Reshape,
     )
     from tensorflow.keras.metrics import Metric
     from tensorflow.keras.models import Sequential
@@ -169,6 +170,46 @@ def le_net(input_shape: tuple[int, int, int], n_classes: int) -> Sequential:
 
     return model
 
+def le_transform_net(input_shape: tuple[int, int, int], n_classes: int) -> Sequential:
+    """Builds an untrained LeNet-5 neural network architecture for Tensorflow/Keras.
+
+    Args:
+        input_shape: A shape tuple of integers, not including the batch size, specifying
+            the dimensions of the image data. The shape tuple for all classifiers in the
+            architecture registry follows the convention `(height, width, channels)`.
+        n_classes: The number of target labels in the dataset.
+
+    Returns:
+        A :py:class:`~tf.keras.Sequential` object.
+
+    See Also:
+        - :py:class:`tf.keras.Sequential`
+    """
+    model = Sequential()
+
+    #transform layer from (784,1) to (28, 28, 1)
+    model.add(Reshape(tuple([28, 28, 1]), input_shape=input_shape))
+
+    # first convolutional layer:
+    model.add(
+        Conv2D(32, kernel_size=(3, 3), activation="relu")
+    )
+
+    # second conv layer, with pooling and dropout:
+    model.add(Conv2D(64, kernel_size=(3, 3), activation="relu"))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Dropout(0.25))
+    model.add(Flatten())
+
+    # dense hidden layer, with dropout:
+    model.add(Dense(128, activation="relu"))
+    model.add(Dropout(0.5))
+
+    # output layer:
+    model.add(Dense(n_classes, activation="softmax"))
+
+    return model
+
 
 def alex_net(input_shape: tuple[int, int, int], n_classes: int) -> Sequential:
     """Builds an untrained AlexNet neural network architecture for Tensorflow/Keras.
@@ -227,4 +268,4 @@ def alex_net(input_shape: tuple[int, int, int], n_classes: int) -> Sequential:
 
 KERAS_CLASSIFIERS_REGISTRY: dict[
     str, Callable[[tuple[int, int, int], int], Sequential]
-] = dict(shallow_net=shallow_net, le_net=le_net, alex_net=alex_net)
+] = dict(shallow_net=shallow_net, le_net=le_net, le_transform_net=le_transform_net, alex_net=alex_net)

@@ -58,7 +58,7 @@ def init_tensorflow(seed: int) -> None:
     Args:
         seed: The seed to use for Tensorflow's random number generator.
     """
-    tf.random.set_seed(seed)
+    tf.keras.utils.set_random_seed(seed)
 
 
 @pyplugs.register

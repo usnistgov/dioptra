@@ -1,0 +1,50 @@
+dataset:
+  load_dataset:
+    ep_seed: $seed
+    training_dir: $training_dir
+    testing_dir: $testing_dir
+    subsets: [training, validation, testing]
+    image_size: $image_size
+    validation_split: $validation_split
+    rescale: $rescale
+    batch_size: $batch_size      
+    shuffle: True
+
+model:
+  create_model:
+    dataset: $dataset.training
+    model_architecture: $model_architecture
+    input_shape: $model_input_size
+    learning_rate: $learning_rate
+    optimizer: $optimizer_name
+    metrics_list:
+      - name: CategoricalAccuracy
+        parameters: { name: accuracy }
+      - name: Precision
+        parameters: { name: precision }
+      - name: Recall
+        parameters: { name: recall }
+      - name: AUC
+        parameters: { name: auc }
+  dependencies:
+    - dataset
+
+cleanlab:
+  clean:
+    classifier: $model
+    dataset: $dataset.training
+    delete_confidence: $delete_confidence
+    relabel_confidence: $relabel_confidence
+  dependencies:
+    - model
+
+save:
+  save_artifacts_and_models:
+    artifacts:
+      - type: dataframe
+        data_frame: $cleanlab.issuefiles_crossval
+        file_name: $filename
+        file_format: $format
+        file_format_kwargs:
+  dependencies:
+    - cleanlab
