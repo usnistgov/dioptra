@@ -124,7 +124,7 @@ pandas==2.2.3
     # via mlflow
 pillow==11.0.0
     # via matplotlib
-protobuf==5.28.3
+protobuf==4.25.8
     # via mlflow-skinny
 psycopg2-binary==2.9.10
     # via -r docker/pip-tools/mlflow-tracking-requirements.in

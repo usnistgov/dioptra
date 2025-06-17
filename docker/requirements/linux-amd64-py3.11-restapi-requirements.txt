@@ -146,7 +146,7 @@ passlib==1.7.4
     # via dioptra (pyproject.toml)
 pillow==11.0.0
     # via -r docker/pip-tools/restapi-requirements.in
-protobuf==5.28.3
+protobuf==4.25.8
     # via mlflow-skinny
 psycopg2-binary==2.9.10
     # via -r docker/pip-tools/restapi-requirements.in

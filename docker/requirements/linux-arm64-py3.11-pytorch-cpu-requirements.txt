@@ -299,7 +299,7 @@ pillow==11.0.0
     #   torchvision
 prefect==1.4.1
     # via dioptra (pyproject.toml)
-protobuf==5.28.3
+protobuf==4.25.8
     # via
     #   mlflow-skinny
     #   tensorboard
