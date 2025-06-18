@@ -22,7 +22,7 @@ from hashlib import sha256
 from io import BytesIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import IO, Any, Final, cast
+from typing import IO, Any, Callable, Final, Generator, cast
 
 import jsonschema
 import structlog
@@ -32,6 +32,7 @@ from structlog.stdlib import BoundLogger
 from werkzeug.datastructures import FileStorage
 
 from dioptra.restapi.db import db, models
+from dioptra.restapi.db.models.plugins import PluginTaskParameterType
 from dioptra.restapi.errors import (
     DioptraError,
     DraftDoesNotExistError,
@@ -67,6 +68,7 @@ from dioptra.restapi.v1.shared.resource_service import (
 )
 from dioptra.restapi.v1.shared.signature_analysis import get_plugin_signatures
 from dioptra.restapi.v1.shared.task_engine_yaml.service import TaskEngineYamlService
+from dioptra.restapi.v1.utils import PluginParameterTypeDict
 from dioptra.sdk.utilities.paths import set_cwd
 from dioptra.task_engine.issues import IssueSeverity, IssueType, ValidationIssue
 
@@ -160,7 +162,23 @@ class JobFilesDownloadService(object):
 class SignatureAnalysisService(object):
     """The service methods for performing signature analysis on a file."""
 
-    def post(self, python_code: str, **kwargs) -> dict[str, list[dict[str, Any]]]:
+    @inject
+    def __init__(
+        self,
+        plugin_parameter_type_service: PluginParameterTypeService,
+    ) -> None:
+        """Initialize the job files download service.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            plugin_parameter_type_service: A PluginParameterTypeService object.
+        """
+        self._plugin_parameter_type_service = plugin_parameter_type_service
+
+    def post(
+        self, group_id: int, python_code: str, **kwargs
+    ) -> dict[str, list[dict[str, Any]]]:
         """Perform signature analysis on a file.
 
         Args:
@@ -171,19 +189,24 @@ class SignatureAnalysisService(object):
             A dictionary containing the signature analysis.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
-        log.debug(
+        log.info(
             "Performing signature analysis",
             python_source=python_code,
         )
         endpoint_analyses = [
-            _create_endpoint_analysis_dict(signature)
+            _create_endpoint_analysis_dict(
+                group_id, signature, self._plugin_parameter_type_service, log
+            )
             for signature in get_plugin_signatures(python_source=python_code)
         ]
         return {"tasks": endpoint_analyses}
 
 
 def _create_endpoint_analysis_dict(
+    group_id: int,
     signature: dict[str, Any],
+    plugin_parameter_type_service: PluginParameterTypeService,
+    log: BoundLogger,
 ) -> dict[str, Any]:
     """Create an endpoint analysis dictionary from a signature analysis.
     Args:
@@ -199,10 +222,199 @@ def _create_endpoint_analysis_dict(
             {
                 "description": suggested_type["type_annotation"],
                 "name": suggested_type["suggestion"],
+                "proposed_types": match_name_and_structure(
+                    suggested_type["suggestion"],
+                    suggested_type["structure"],
+                    group_id=group_id,
+                    plugin_parameter_type_service=plugin_parameter_type_service,
+                    log=log,
+                ),
             }
             for suggested_type in signature["suggested_types"]
         ],
     }
+
+
+def match_name_and_structure(
+    type_name_suggestion: str,
+    type_name_structure: dict | None,
+    group_id: int,
+    plugin_parameter_type_service: PluginParameterTypeService,
+    log: BoundLogger,
+):
+    expanded_a, ids_a = _expand_string_or_dict(
+        type_name_suggestion, group_id, plugin_parameter_type_service, log=log
+    )
+    expanded_b, ids_b = _expand_string_or_dict(
+        type_name_structure, group_id, plugin_parameter_type_service, log=log
+    )
+    log.debug(f"Expanded type from RESTAPI: {expanded_a}")
+    log.debug(f"Expanded type derived from annotation: {expanded_b}")
+
+    if expanded_a == expanded_b:
+        return ids_a
+    return []
+
+
+def _get_registered_type_expanded_structure(
+    type_name_suggestion: str,
+    group_id: int,
+    plugin_parameter_type_service: PluginParameterTypeService,
+    log: BoundLogger,
+) -> tuple[dict[str, Any] | None, list[int]]:
+    """This function looks up the fully expanded type structure given
+    a parameter
+    """
+
+    expanded_structure = None
+    type_ids = []
+
+    log.debug(f"Looking up type for {type_name_suggestion} in RESTAPI.")
+
+    # using our GET query language to ensure that we get an exact match
+    # on the type name. there should be one result because type
+    # names are unique within a group.
+
+    for types, _num_types in _get_all_from_paged_service(
+        plugin_parameter_type_service.get,
+        group_id=group_id,
+        search_string=f'"{type_name_suggestion}"',
+        sort_by_string="name",
+        descending=True,
+    ):
+        found_type: PluginParameterTypeDict
+        for found_type in types:
+            if found_type["plugin_task_parameter_type"].name == type_name_suggestion:
+                log.debug(
+                    f"Structure associated with type "
+                    f"{type_name_suggestion} in RESTAPI: "
+                    f"{found_type['plugin_task_parameter_type'].structure}"
+                )
+
+                if isinstance(found_type["plugin_task_parameter_type"].structure, dict):
+                    expanded_structure = _expand_structure(
+                        structure=found_type["plugin_task_parameter_type"].structure,
+                        group_id=group_id,
+                        plugin_parameter_type_service=plugin_parameter_type_service,
+                        log=log,
+                    )
+                    type_ids.append(
+                        found_type["plugin_task_parameter_type"].resource_id
+                    )
+
+    return expanded_structure, type_ids
+
+
+def _get_all_from_paged_service(
+    fn: Callable[..., tuple[list[Any],int]],
+    per_page: int = 10,
+    **kwargs
+) -> Generator[tuple[list[Any],int]]:
+    current_page = 0
+    max_pages = 1
+
+    while current_page < max_pages:
+        things, num_things = fn(
+            page_index=current_page * per_page, page_length=per_page, **kwargs
+        )
+
+        current_page += 1
+        max_pages = num_things // per_page + 1
+
+        yield things, num_things
+
+
+def _expand_structure(
+    structure: dict[str, Any],
+    group_id: int,
+    plugin_parameter_type_service: PluginParameterTypeService,
+    log: BoundLogger,
+) -> :
+    """Takes a dictionary structure, and looks up all the named types
+       in it and expands if they have a non-null type structure.
+    """
+    expanded = {}
+    log.debug(f"Request to expand structure: {structure}")
+    for key in structure:
+        types = structure[key]
+
+        new_value = None
+
+        if key == "union" or key == "tuple":
+            log.debug(f"Calling expand on union/tuple: {types}")
+
+            new_value = [
+                _expand_string_or_dict(
+                    t,
+                    group_id=group_id,
+                    plugin_parameter_type_service=plugin_parameter_type_service,
+                    log=log,
+                )[0]
+                for t in types
+            ]
+
+        if key == "mapping":
+            mapping_key_type = types[0]
+            mapping_value_type = types[1]
+            log.debug(f"Calling expand on mapping: {mapping_value_type}")
+
+            mapping_value_type, ids = _expand_string_or_dict(
+                mapping_value_type,
+                group_id=group_id,
+                plugin_parameter_type_service=plugin_parameter_type_service,
+                log=log,
+            )
+            new_value = [mapping_key_type, mapping_value_type]
+
+        if key == "list":
+            # types should just be a string here
+            list_of = types
+            log.debug(f"Calling expand on list: {list_of}")
+
+            new_value, ids = _expand_string_or_dict( 
+                list_of,
+                group_id=group_id,
+                plugin_parameter_type_service=plugin_parameter_type_service,
+                log=log,
+            )
+
+        log.debug(f"Added to dictionary - {key}:{new_value}")
+        expanded[key] = new_value
+
+    log.debug(f"Finished expanding structure - {expanded}")
+    return expanded
+
+
+def _expand_string_or_dict(
+    to_expand: str | dict | None,
+    group_id: int,
+    plugin_parameter_type_service: PluginParameterTypeService,
+    log: BoundLogger,
+) -> tuple[str | dict | None, list[int]]:
+
+    if to_expand is None:
+        return None, []
+
+    log.debug(f"Expanding a string or dictionary: {to_expand}")
+
+    if isinstance(to_expand, dict):
+        return (
+            _expand_structure(
+                structure=to_expand,
+                group_id=group_id,
+                plugin_parameter_type_service=plugin_parameter_type_service,
+                log=log,
+            ),
+            [],
+        )
+    elif isinstance(to_expand, str):
+        lookup_structure, ids = _get_registered_type_expanded_structure(
+            type_name_suggestion=to_expand,
+            group_id=group_id,
+            plugin_parameter_type_service=plugin_parameter_type_service,
+            log=log,
+        )
+        return (to_expand, ids) if lookup_structure is None else (lookup_structure, ids)
 
 
 class ResourceImportService(object):
