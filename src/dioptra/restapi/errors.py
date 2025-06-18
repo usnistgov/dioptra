@@ -396,6 +396,13 @@ class InvalidYamlError(DioptraError):
         super().__init__(message)
 
 
+class InvalidPythonError(DioptraError):
+    """Raised when the provided python code is invalid and fails to parse."""
+
+    def __init__(self, message: str):
+        super().__init__(message)
+
+
 # User Errors
 class UserDoesNotExistError(DioptraError):
     """The entered username does not exist."""
