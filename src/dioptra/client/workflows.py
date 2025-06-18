@@ -95,13 +95,13 @@ class WorkflowsCollectionClient(CollectionClient[T]):
             self.url, JOB_FILES_DOWNLOAD, output_path=job_files_path, params=params
         )
 
-    def analyze_plugin_task_signatures(self, python_code: str) -> T:
+    def analyze_plugin_task_signatures(self, group_id: int, python_code: str) -> T:
         """
         Requests signature analysis for the functions in an annotated python file.
 
         Args:
+            group_id: The group of the current user.
             python_code: The contents of the python file.
-            filename: The name of the file.
 
         Returns:
             The response from the Dioptra API.
@@ -111,7 +111,7 @@ class WorkflowsCollectionClient(CollectionClient[T]):
         return self._session.post(
             self.url,
             SIGNATURE_ANALYSIS,
-            json_={"pythonCode": python_code},
+            json_={"group": group_id, "pythonCode": python_code},
         )
 
     def import_resources(

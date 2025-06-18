@@ -50,6 +50,15 @@ class JobFilesDownloadQueryParametersSchema(Schema):
 
 
 class SignatureAnalysisSchema(Schema):
+    groupId = fields.Integer(
+        attribute="group_id",
+        data_key="group",
+        metadata=dict(
+            description="ID of the Group that will own the imported resources."
+        ),
+        required=True,
+    )
+
     pythonCode = fields.String(
         attribute="python_code",
         metadata=dict(description="The contents of the python file"),
@@ -77,7 +86,6 @@ class SignatureAnalysisSignatureOutputSchema(SignatureAnalysisSignatureParamSche
 
 
 class SignatureAnalysisSuggestedTypes(Schema):
-    # add proposed_type in next iteration
 
     name = fields.String(
         attribute="name",
@@ -88,6 +96,15 @@ class SignatureAnalysisSuggestedTypes(Schema):
         attribute="description",
         metadata=dict(
             description="The annotation the suggestion is attempting to represent"
+        ),
+    )
+
+    # making this a list now to make issue 693 easier. not actually needed yet.
+    proposed_types = fields.List(
+        fields.Integer(),
+        attribute="proposed_types",
+        metadata=dict(
+            description="A proposed matching type which has already been registered."
         ),
     )
 

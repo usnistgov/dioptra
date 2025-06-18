@@ -126,6 +126,7 @@ class SignatureAnalysisEndpoint(Resource):
         )
         parsed_obj = request.parsed_obj
         return self._signature_analysis_service.post(
+            group_id=parsed_obj["group_id"],
             python_code=parsed_obj["python_code"],
         )
 
