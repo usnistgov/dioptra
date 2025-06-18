@@ -5,7 +5,7 @@
     :columns="finalColumns"
     :title="title"
     :filter="filter"
-    selection="single"
+    :selection="selection"
     v-model:selected="selected"
     :row-key="props.rowKey"
     :class="'q-mt-lg'"
@@ -28,12 +28,11 @@
     <template v-slot:body="props">
       <!-- props.row[field] - field needs to be unique ID, pass this in as a prop, or just use id -->
       <q-tr 
-        :class="`${getSelectedColor(props.selected)} cursor-pointer` " 
+        :class="`${getSelectedColor(props.selected)} cursor-pointer ${highlightRow(props)} ${disableRow(props)}` " 
         :props="props"
-        @click="openResource(props)"
-        style="padding-left: 50px;"
+        @click="openResource(props); selectResource(props)"
       >
-        <q-td v-for="col in props.cols" :key="col.name" :props="props">
+        <q-td v-for="col in props.cols" :key="col.name" :props="props" :style="props.expand ? {'border-bottom': 'none'} : {}">
           <slot v-bind="props" :name="`body-cell-${col.name}`">
             <div v-if="typeof(col.value) === 'boolean'" class="text-body1">
               {{ col.value ? '✅' : 	'❌'}}
@@ -101,17 +100,16 @@
             <q-btn 
               v-if="col.name === 'expand'" 
               size="md" flat dense round  
-              @click="props.expand = !props.expand" 
+              @click.stop="props.expand = !props.expand" 
               :icon="props.expand ? 'expand_less' : 'expand_more'" 
-              @click.stop="emitExpand(props.expand, props.row)"
             />
           </slot>
         </q-td>
       </q-tr>
-      <q-tr v-show="props.expand" :props="props">
+      <q-tr v-show="props.expand" :props="props" :class="`${highlightRow(props)}`" style="pointer-events: none;">
         <q-td colspan="100%">
           <!-- <div class="text-left ">Additional info for {{ props.row.name }}.</div> -->
-          <slot name="expandedSlot" :row="props.row" />
+          <slot name="expandedSlot" :row="props.row" :rowProps="props" />
         </q-td>
       </q-tr>
     </template>
@@ -172,11 +170,16 @@
   showToggleDraft: Boolean,
   hideSearch: Boolean,
   disableSelect: Boolean,
-  disableUnselect: Boolean,
   hideOpenBtn: Boolean,
   hideDeleteBtn: Boolean,
   rightCaption: String,
   showAll: Boolean,
+  highlightRow: Boolean,
+  selection: String,
+  disabledRowKeys: {
+    type: Array,
+    default: []
+  },
   rowKey: {
     type: String,
     default: 'id'
@@ -190,6 +193,12 @@
     'editTags', 
     'create'
   ])
+
+  const selection =  computed(() => {
+    if(props.disableSelect) return 'none'
+    if(props.selection === 'multiple') return 'multiple'
+    return 'single'
+  })
 
   const finalColumns = computed(() => {
     let defaultColumns = [ ...props.columns ]
@@ -226,13 +235,12 @@
   const showDrafts = defineModel('showDrafts')
 
   function selectResource(tableProps) {
-    if(props.disableSelect) return
-    if(props.disableUnselect) tableProps.selected = true
+    if(props.disableSelect || props.selection !== 'multiple') return
     else tableProps.selected = !tableProps.selected
   }
 
   function openResource(tableProps) {
-    if(props.disableSelect) return
+    if(props.disableSelect || props.selection === 'multiple') return
     tableProps.selected = true
     emit('edit')
   }
@@ -284,12 +292,6 @@
     pagination.value.rowsNumber = totalRows
   }
 
-  function emitExpand(expanded, row) {
-    if(expanded) {
-      emit('expand', row)
-    }
-  }
-
   function formatDate(dateString) {
     const options = { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: true }
     return new Date(dateString).toLocaleString('en-US', options)
@@ -319,4 +321,30 @@
   }
 }
 
+function highlightRow(rowProps) {
+  if(props.disabledRowKeys.includes(rowProps.row[props.rowKey])) return
+  if(!props.highlightRow) return
+  if(!rowProps.expand) return
+  if(darkMode.value) {
+    return 'bg-yellow-8 text-black'
+  } else {
+    return 'bg-yellow-8'
+  }
+}
+
+function disableRow(rowProps) {
+  if(props.disabledRowKeys.includes(rowProps.row[props.rowKey])) {
+    return 'disabled-row'
+  }
+}
+
 </script>
+
+<style scoped>
+
+  .disabled-row {
+    pointer-events: none;
+    opacity: 0.5;
+  }
+
+</style>

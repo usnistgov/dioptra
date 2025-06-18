@@ -15,7 +15,6 @@
     }"
     :hideOpenBtn="true"
     :hideDeleteBtn="true"
-    :disableUnselect="true"
   >
     <template #body-cell-timestamp="props">
       <div :data-snapshot-id="props.row.snapshot">
