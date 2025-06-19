@@ -157,7 +157,12 @@ class ExperimentRepository:
             An Experiment object
 
         Raises:
-            EntityDoesNotExistError: if the resource is not found
+            EntityDoesNotExistError: if the experiment does not exist in the
+                database (deleted or not)
+            EntityExistsError: if the experiment exists and is not deleted, but
+                policy was to find a deleted experiment
+            EntityDeletedError: if the experiment is deleted, but policy was to
+                find a non-deleted experiment
         """
         return utils.get_one_latest_snapshot(
             self.session, Experiment, resource_id, deletion_policy

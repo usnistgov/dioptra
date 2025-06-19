@@ -16,7 +16,7 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 import pytest
 
-from dioptra.restapi.db.models import Group, GroupManager, GroupMember, User
+from dioptra.restapi.db.models import Group, GroupMember, User
 from dioptra.restapi.db.repository.utils import DeletionPolicy
 from dioptra.restapi.errors import (
     EntityDeletedError,
@@ -188,6 +188,44 @@ def test_group_get_not_exist(group_repo, account):
 
     group = group_repo.get(999999, DeletionPolicy.ANY)
     assert not group
+
+
+def test_group_get_one(group_repo, account):
+
+    group = group_repo.get_one(account.group.group_id, DeletionPolicy.NOT_DELETED)
+    assert group == account.group
+
+    with pytest.raises(EntityExistsError):
+        group_repo.get_one(account.group.group_id, DeletionPolicy.DELETED)
+
+    group = group_repo.get_one(account.group.group_id, DeletionPolicy.ANY)
+    assert group == account.group
+
+
+def test_group_get_one_deleted(group_repo, account, db):
+    group_repo.delete(account.group)
+    db.session.commit()
+
+    with pytest.raises(EntityDeletedError):
+        group_repo.get_one(account.group.group_id, DeletionPolicy.NOT_DELETED)
+
+    group = group_repo.get_one(account.group.group_id, DeletionPolicy.DELETED)
+    assert group == account.group
+
+    group = group_repo.get_one(account.group.group_id, DeletionPolicy.ANY)
+    assert group == account.group
+
+
+def test_group_get_one_not_exist(group_repo):
+
+    with pytest.raises(EntityDoesNotExistError):
+        group_repo.get_one(999999, DeletionPolicy.NOT_DELETED)
+
+    with pytest.raises(EntityDoesNotExistError):
+        group_repo.get_one(999999, DeletionPolicy.DELETED)
+
+    with pytest.raises(EntityDoesNotExistError):
+        group_repo.get_one(999999, DeletionPolicy.ANY)
 
 
 def test_group_get_by_name(group_repo, account):

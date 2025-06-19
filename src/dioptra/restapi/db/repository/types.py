@@ -165,7 +165,12 @@ class TypeRepository:
             A PluginTaskParameterType object
 
         Raises:
-            EntityDoesNotExistError: if the resource is not found
+            EntityDoesNotExistError: if the type does not exist in the database
+                (deleted or not)
+            EntityExistsError: if the type exists and is not deleted, but
+                policy was to find a deleted type
+            EntityDeletedError: if the type is deleted, but policy was to find
+                a non-deleted type
         """
         return utils.get_one_latest_snapshot(
             self.session, PluginTaskParameterType, resource_id, deletion_policy

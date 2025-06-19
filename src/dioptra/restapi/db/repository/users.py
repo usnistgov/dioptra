@@ -30,6 +30,7 @@ from dioptra.restapi.db.repository.utils import (
     DeletionPolicy,
     ExistenceResult,
     S,
+    assert_exists,
     assert_group_exists,
     assert_user_does_not_exist,
     assert_user_exists,
@@ -146,6 +147,45 @@ class UserRepository:
 
         user = self.session.scalar(stmt)
 
+        return user
+
+    def get_one(
+        self, user_id: int, deletion_policy: DeletionPolicy = DeletionPolicy.NOT_DELETED
+    ) -> User:
+        """
+        Get the unique user according to its ID.  Analogous to .get(), but
+        raises exceptions instead of returning None.
+
+        Args:
+            user_id: A user ID
+            deletion_policy: Whether to look at deleted users, non-deleted
+                users, or all users
+
+        Returns:
+            A user.
+
+        Raises:
+            EntityDoesNotExistError: if the user ID does not resolve to a user
+            EntityDeletedError: if deletion policy is NOT_DELETED but the user
+                is deleted
+            EntityExistsError: if deletion policy is DELETED but the user
+                exists and is not deleted
+        """
+
+        user = self.session.get(User, user_id)
+
+        if not user:
+            existence_result = ExistenceResult.DOES_NOT_EXIST
+        elif user.is_deleted:
+            existence_result = ExistenceResult.DELETED
+        else:
+            existence_result = ExistenceResult.EXISTS
+
+        assert_exists(deletion_policy, existence_result, "user", user_id)
+
+        # The above assert_exists() function would have raised an exception,
+        # so user can't be none here.
+        assert user is not None
         return user
 
     def get_by_name(

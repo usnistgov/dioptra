@@ -181,7 +181,12 @@ class QueueRepository:
             A Queue object
 
         Raises:
-            EntityDoesNotExistError: if the resource is not found
+            EntityDoesNotExistError: if the queue does not exist in the
+                database (deleted or not)
+            EntityExistsError: if the queue exists and is not deleted, but
+                policy was to find a deleted queue
+            EntityDeletedError: if the queue is deleted, but policy was to find
+                a non-deleted queue
         """
         return utils.get_one_latest_snapshot(
             self.session, Queue, resource_id, deletion_policy

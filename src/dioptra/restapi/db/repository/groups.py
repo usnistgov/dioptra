@@ -29,6 +29,7 @@ from dioptra.restapi.db.repository.utils import (
     DeletionPolicy,
     ExistenceResult,
     S,
+    assert_exists,
     assert_group_does_not_exist,
     assert_group_exists,
     assert_user_exists,
@@ -176,6 +177,48 @@ class GroupRepository:
 
         group = self.session.scalar(stmt)
 
+        return group
+
+    def get_one(
+        self,
+        group_id: int,
+        deletion_policy: DeletionPolicy = DeletionPolicy.NOT_DELETED,
+    ) -> Group:
+        """
+        Get a group according to its ID.  Analogous to .get(), but raises
+        exceptions instead of returning None.
+
+        Args:
+            group_id: The ID of a group
+            deletion_policy: Whether to look at deleted groups, non-deleted
+                groups, or all groups
+
+        Returns:
+            A group.
+
+        Raises:
+            EntityDoesNotExistError: if the group ID does not resolve to a
+                group
+            EntityDeletedError: if deletion policy is NOT_DELETED but the group
+                is deleted
+            EntityExistsError: if deletion policy is DELETED but the group
+                exists and is not deleted
+        """
+
+        group = self.session.get(Group, group_id)
+
+        if not group:
+            existence_result = ExistenceResult.DOES_NOT_EXIST
+        elif group.is_deleted:
+            existence_result = ExistenceResult.DELETED
+        else:
+            existence_result = ExistenceResult.EXISTS
+
+        assert_exists(deletion_policy, existence_result, "group", group_id)
+
+        # The above assert_exists() function would have raised an exception,
+        # so group can't be none here.
+        assert group is not None
         return group
 
     def get_by_name(
