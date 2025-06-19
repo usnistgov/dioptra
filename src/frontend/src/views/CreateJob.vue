@@ -189,6 +189,36 @@
           @delete="(param) => {selectedParam = param; showDeleteDialog = true}"
           :inlineEditFields="['value']"
         />
+        <q-btn
+          v-if="!updateEntrypoint && job.entrypoint?.id === oldEntrypoint?.id && 
+          oldEntrypoint?.snapshot !== latestEntrypoint?.snapshot"
+          square 
+          color="red"
+          label="Update Values" 
+          icon="sync"
+          size="sm"
+          @click.stop="syncJobParams()"
+          class="q-mr-md"
+        >
+          <q-tooltip>
+            Sync to latest version of entrypoint parameters and values.
+          </q-tooltip>
+        </q-btn>
+        <q-btn
+          v-if="updateEntrypoint && job.entrypoint?.id === oldEntrypoint?.id && 
+          job.entrypoint.snapshot === latestEntrypoint?.snapshot"
+          square 
+          color="red"
+          label="Revert Values" 
+          icon="sync"
+          size="sm"
+          @click.stop="revertJobParams()"
+          class="q-mr-md"
+        >
+          <q-tooltip>
+            Revert to original job's entrypoint parameters and values.
+          </q-tooltip>
+        </q-btn>
       </div>
     </fieldset>
   </div>
@@ -270,6 +300,11 @@
     return (/^\d+[hms]$/.test(val)) || "Value must be an integer followed by 'h', 'm', or 's'";
   }
 
+  const oldJob = ref()
+  const oldEntrypoint = ref()
+  const updateEntrypoint = ref(false)
+  const latestEntrypoint = ref()
+
   const job = ref({
     description: '',
     timeout: '24h',
@@ -300,11 +335,36 @@
     parameters.value = []
     if(Array.isArray(newVal?.parameters)) {
       newVal.parameters.forEach((param) => {
-        parameters.value.push({
-          name: param.name,
-          value: param.defaultValue,
-          type: param.parameterType
-        })
+        // if re-running a job
+        if(history.state.oldJobId) {
+          // if entrypoint parameters are being synced or 
+          // a different entrypoint is chosen
+          if(updateEntrypoint.value || oldJob.value.entrypoint.id !== newVal.id){
+            parameters.value.push({
+              name: param.name,
+              value: param.defaultValue,
+              type: param.parameterType
+            })
+          }
+          else {
+            // only add parameters that exist in the original job
+            if (oldJob.value.values[param.name]) {
+              parameters.value.push({
+                name: param.name,
+                value: (history.state.oldJobId) ? oldJob.value.values[param.name] : param.defaultValue,
+                type: param.parameterType
+              })
+            }
+          }
+        }
+        // if creating a new job
+        else {
+          parameters.value.push({
+              name: param.name,
+              value: param.defaultValue,
+              type: param.parameterType
+          })
+        }
       })
     }
   })
@@ -375,7 +435,8 @@
       queue: job.value.queue.id,
       entrypoint: job.value.entrypoint.id,
       values: computedValue.value,
-      timeout: job.value.timeout
+      timeout: job.value.timeout,
+      entrypointSnapshot: (history.state.oldJobId && !updateEntrypoint.value) ? oldEntrypoint.value.snapshot : job.value.entrypoint.snapshot
     }  
     try {
       await api.addJob(job.value.experiment.id, payload)
@@ -511,7 +572,6 @@
     if(!id) return
     try {
       const res = await api.getItem('experiments', id)
-      console.log('getExperiment = ', res.data)
       job.value.experiment = res.data
     } catch(err) {
       console.warn(err)
@@ -522,21 +582,54 @@
     if(!id) return
     try {
       const res = await api.getItem('entrypoints', id)
-      console.log('entrypoint = ', res.data)
       job.value.entrypoint = res.data
+
+      // display the old job's values when re-running a job
+      if(history.state.oldJobId && !updateEntrypoint.value) {
+        job.value.entrypoint.parameters = oldEntrypoint.value.parameters
+        job.value.values = oldJob.value.values
+      }
+    } catch(err) {
+      console.warn(err)
+    }
+  }
+
+  async function getResource(type, id) {
+    try {
+      const res = await api.getItem(type, id)
+      return res.data
     } catch(err) {
       console.warn(err)
     }
   }
 
   onMounted(async () => {
+    // if re-running a job
+    if(history.state.oldJobId) {
+      oldJob.value = (await(api.getSnapshot('jobs', history.state.oldJobId, history.state.jobSnapshotId))).data
+      oldEntrypoint.value = (await api.getSnapshot("entrypoints", oldJob.value.entrypoint.id, oldJob.value.entrypoint.snapshotId)).data
+      latestEntrypoint.value = await getResource("entrypoints", oldJob.value.entrypoint.id)
+      await getExperiment(oldJob.value.experiment.id)
+      
+      if(allowableEntrypointIds.value.includes(oldJob.value.entrypoint.id)) {
+        await getEntrypoint(oldJob.value.entrypoint.id)
+      } else {
+        notify.error(`Entrypoint ${oldJob.value.entrypoint.name} is no longer linked to experiment ${oldJob.value.experiment.name}`)
+      }
+      if(allowableQueueIds.value.includes(oldJob.value.queue.id)) {
+        job.value.queue = await getResource('queues', oldJob.value.queue.id)
+      } else {
+        notify.error(`Queue ${oldJob.value.queue.name} is no longer linked to entrypoint ${oldJob.value.entrypoint.name}`)
+      }
+      job.value.description = oldJob.value.description
+    }
     if(Object.hasOwn(route.params, 'id')) {
       await getExperiment(route.params.id)
     } else {
       await getExperiments()
     }
 
-    if(store.savedForms.jobs[expJobOrAllJobs.value]) {
+    if(store.savedForms.jobs[expJobOrAllJobs.value] && !history.state.oldJobId) {
       job.value = store.savedForms.jobs[expJobOrAllJobs.value]
       // check if saved values are still valid
       // load latest version of each resource
@@ -626,6 +719,26 @@
 
   const entrypointField = ref()
   const queueField = ref()
+
+  async function syncJobParams() {
+    try {
+      updateEntrypoint.value = true
+      await getEntrypoint(oldJob.value.entrypoint.id)
+      notify.success(`Successfully updated to use the latest entrypoint parameters and values`)
+    } catch(err) {
+      console.warn(err)
+    }
+  }
+  
+  async function revertJobParams() {
+    try {
+      updateEntrypoint.value = false
+      await getEntrypoint(oldJob.value.entrypoint.id)
+      notify.success(`Successfully updated to use the original job parameters and values`)
+    } catch(err) {
+      console.warn(err)
+    }
+  }
 
 </script>
 

@@ -327,6 +327,7 @@ class EntrypointIdService(object):
     def get(
         self,
         entrypoint_id: int,
+        entrypoint_snapshot_id: int | None = None,
         error_if_not_found: bool = False,
         **kwargs,
     ) -> utils.EntrypointDict | None:
@@ -334,6 +335,8 @@ class EntrypointIdService(object):
 
         Args:
             entrypoint_id: The unique id of the entrypoint.
+            entrypoint_snapshot_id: The id for one of the snapshots associated with the
+                entrypoint_id. If None, the latest snapshot is used. Defaults to None.
             error_if_not_found: If True, raise an error if the entrypoint is not found.
                 Defaults to False.
 
@@ -341,19 +344,23 @@ class EntrypointIdService(object):
             The entrypoint object if found, otherwise None.
 
         Raises:
-            EntityDoesNotExistError: If the entrypoint is not found and
-            `error_if_not_found` is True.
+            EntityDoesNotExistError: If `error_if_not_found` is True and the entrypoint
+                snapshot cannot be found.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get entrypoint by id", entrypoint_id=entrypoint_id)
-
+        # Get a specific snapshot if entrypoint_snapshot_id is specified
+        snapshot_id = (
+            entrypoint_snapshot_id
+            if entrypoint_snapshot_id is not None
+            else models.Resource.latest_snapshot_id
+        )
         stmt = (
             select(models.EntryPoint)
             .join(models.Resource)
             .where(
                 models.EntryPoint.resource_id == entrypoint_id,
-                models.EntryPoint.resource_snapshot_id
-                == models.Resource.latest_snapshot_id,
+                models.EntryPoint.resource_snapshot_id == snapshot_id,
                 models.Resource.is_deleted == False,  # noqa: E712
             )
         )
@@ -362,7 +369,9 @@ class EntrypointIdService(object):
         if entrypoint is None:
             if error_if_not_found:
                 raise EntityDoesNotExistError(
-                    RESOURCE_TYPE, entrypoint_id=entrypoint_id
+                    RESOURCE_TYPE,
+                    entrypoint_id=entrypoint_id,
+                    entrypoint_snapshot_id=entrypoint_snapshot_id,
                 )
 
             return None
