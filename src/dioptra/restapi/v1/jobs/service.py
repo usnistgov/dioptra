@@ -120,6 +120,7 @@ class JobService(object):
         values: dict[str, str],
         description: str,
         timeout: str,
+        entrypoint_snapshot_id: int | None = None,
         **kwargs,
     ) -> utils.JobDict:
         """Create a new job.
@@ -152,7 +153,6 @@ class JobService(object):
             ),
         )
         experiment = experiment_dict["experiment"]
-
         # Validate that the provided entrypoint_id is registered to the experiment
         parent_experiment = aliased(models.Experiment)
         experiment_entry_point_ids_stmt = (
@@ -217,7 +217,10 @@ class JobService(object):
         entrypoint_dict = cast(
             utils.EntrypointDict,
             self._entrypoint_id_service.get(
-                entrypoint_id, error_if_not_found=True, log=log
+                entrypoint_id,
+                error_if_not_found=True,
+                entrypoint_snapshot_id=entrypoint_snapshot_id,
+                log=log,
             ),
         )
         entrypoint = entrypoint_dict["entry_point"]
@@ -742,6 +745,7 @@ class ExperimentJobService(object):
         values: dict[str, str],
         description: str,
         timeout: str,
+        entrypoint_snapshot_id: int | None = None,
         **kwargs,
     ) -> utils.JobDict:
         """Create a new job within an experiment.
@@ -766,6 +770,7 @@ class ExperimentJobService(object):
             values=values,
             description=description,
             timeout=timeout,
+            entrypoint_snapshot_id=entrypoint_snapshot_id,
             log=log,
         )
 
