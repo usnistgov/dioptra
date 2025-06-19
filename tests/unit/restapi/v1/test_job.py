@@ -20,6 +20,7 @@ This module contains a set of tests that validate the CRUD operations and additi
 functionalities for the job entity. The tests ensure that the queues can be
 registered, renamed, queried, and deleted as expected through the REST API.
 """
+
 from http import HTTPStatus
 from typing import Any
 
@@ -496,6 +497,123 @@ def test_create_job_with_empty_values(
     )
     assert_retrieving_job_by_id_works(
         dioptra_client, job_id=job_response["id"], expected=job_response
+    )
+
+
+def test_create_job_using_entrypoint_snapshot_id(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+    registered_experiments: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+    monkeypatch: MonkeyPatch,
+) -> None:
+    """Test creation of jobs using an entrypoint snapshot id.
+
+    Given an authenticated user, registered queues, registered experiments, and
+    registered entrypoints, this test validates the following sequence of actions:
+
+    - The user modifies an existing entrypoint, which creates a new snapshot.
+    - The user then submits three job creation requests, one that omits the entrypoint
+      snapshot id, one that uses the latest entrypoint snapshot id (equivalent to
+      omitting the ID), and one that uses the old entrypoint snapshot id.
+    - The response is valid and the entrypoint snapshot ID in the response matches the
+      one provided in the request.
+    - The user then attempts to create a job using an entrypoint snapshot ID that
+      corresponds to an experiment snapshot ID, which will not exist.
+    - The response returns a 404 EntityDoesNotExist error.
+    """
+    # Inline import necessary to prevent circular import
+    import dioptra.restapi.v1.shared.rq_service as rq_service
+
+    monkeypatch.setattr(rq_service, "RQQueue", mock_rq.MockRQQueue)
+
+    # Parameters for creating a job
+    queue_id = registered_queues["queue1"]["id"]
+    experiment_id = registered_experiments["experiment1"]["id"]
+    entrypoint_id = registered_entrypoints["entrypoint1"]["id"]
+    old_entrypoint_snapshot_id = registered_entrypoints["entrypoint1"]["snapshot"]
+
+    # Parameters for modifying the entrypoint
+    updated_entrypoint_name = "new_entrypoint_name"
+    queue_ids = [
+        queue["id"] for queue in registered_entrypoints["entrypoint1"]["queues"]
+    ]
+
+    # Modify the entrypoint by changing its name, which creates a new snapshot
+    modified_entrypoint = dioptra_client.entrypoints.modify_by_id(
+        entrypoint_id=entrypoint_id,
+        name=updated_entrypoint_name,
+        task_graph=registered_entrypoints["entrypoint1"]["taskGraph"],
+        description=registered_entrypoints["entrypoint1"]["description"],
+        parameters=registered_entrypoints["entrypoint1"]["parameters"],
+        queues=queue_ids,
+    ).json()
+    new_entrypoint_snapshot_id = modified_entrypoint["snapshot"]
+
+    # Validate as a sanity check that the new entrypoint snapshot ID is greater
+    # than the old entrypoint snapshot ID.
+    assert old_entrypoint_snapshot_id < new_entrypoint_snapshot_id
+
+    # Create a job 3 different ways:
+    #
+    # 1. Omit the entrypoint snapshot ID (default to using the latest entrypoint
+    #    snapshot)
+    # 2. Use the latest entrypoint snapshot ID (equivalent to omitting the ID)
+    # 3. Use the old entrypoint snapshot ID (job will run using the previous version of
+    #    the entrypoint)
+    job_latest_entrypoint_response = dioptra_client.experiments.jobs.create(
+        experiment_id=experiment_id,
+        entrypoint_id=entrypoint_id,
+        queue_id=queue_id,
+    ).json()
+    job_old_entrypoint_response = dioptra_client.experiments.jobs.create(
+        experiment_id=experiment_id,
+        entrypoint_id=entrypoint_id,
+        queue_id=queue_id,
+        entrypoint_snapshot_id=old_entrypoint_snapshot_id,
+    ).json()
+    job_new_entrypoint_response = dioptra_client.experiments.jobs.create(
+        experiment_id=experiment_id,
+        entrypoint_id=entrypoint_id,
+        queue_id=queue_id,
+        entrypoint_snapshot_id=new_entrypoint_snapshot_id,
+    ).json()
+
+    # Validate that the entrypoint snapshot IDs in the responses match the ones
+    # provided in the requests
+    assert (
+        job_latest_entrypoint_response["entrypoint"]["snapshotId"]
+        == new_entrypoint_snapshot_id
+    )
+    assert (
+        job_old_entrypoint_response["entrypoint"]["snapshotId"]
+        == old_entrypoint_snapshot_id
+    )
+    assert (
+        job_new_entrypoint_response["entrypoint"]["snapshotId"]
+        == new_entrypoint_snapshot_id
+    )
+
+    # Create a job using an entrypoint snapshot ID that corresponds to an experiment
+    # snapshot ID, which doesn't match with the entrypoint resource ID and hence does
+    # not exist.
+    experiment_snapshot_id = registered_experiments["experiment1"]["snapshot"]
+    job_erroneous_entrypoint_snapshot_response = dioptra_client.experiments.jobs.create(
+        experiment_id=experiment_id,
+        entrypoint_id=entrypoint_id,
+        queue_id=queue_id,
+        entrypoint_snapshot_id=experiment_snapshot_id,
+    )
+
+    # Validate that the response returns a 404 EntityDoesNotExist error
+    assert (
+        job_erroneous_entrypoint_snapshot_response.status_code == HTTPStatus.NOT_FOUND
+    )
+    assert (
+        "EntityDoesNotExist"
+        in job_erroneous_entrypoint_snapshot_response.json()["error"]
     )
 
 

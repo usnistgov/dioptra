@@ -15,6 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The schemas for serializing/deserializing Job resources."""
+
 import re
 
 from marshmallow import Schema, fields, validate
@@ -226,6 +227,26 @@ class JobSchema(JobBaseSchema):  # type: ignore
         many=True,
         metadata=dict(description="Artifacts created by the Job resource."),
         dump_only=True,
+    )
+
+
+class JobCreateRequestSchema(JobSchema):
+    """The schema for creating a Job resource."""
+
+    entrypointSnapshotId = fields.Integer(
+        attribute="entrypoint_snapshot_id",
+        data_key="entrypointSnapshot",
+        allow_none=True,
+        metadata=dict(
+            description=(
+                "An integer identifying a snapshot ID associated with the entrypoint. "
+                "If specified, the snapshotted version of the entrypoint will be used "
+                "to run the job. If not specified, the job will default to using the "
+                "latest version of the entrypoint."
+            )
+        ),
+        required=False,
+        load_default=None,
     )
 
 

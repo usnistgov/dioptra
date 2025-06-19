@@ -258,6 +258,7 @@ class ExperimentJobsSubCollectionClient(SubCollectionClient[T]):
         experiment_id: str | int,
         entrypoint_id: int,
         queue_id: int,
+        entrypoint_snapshot_id: int | None = None,
         values: dict[str, Any] | None = None,
         timeout: str | None = None,
         description: str | None = None,
@@ -268,6 +269,10 @@ class ExperimentJobsSubCollectionClient(SubCollectionClient[T]):
             experiment_id: The experiment id, an integer.
             entrypoint_id: The id for the entrypoint that the job will run.
             queue_id: The id for the queue that will execute the job.
+            entrypoint_snapshot_id: The id for a snapshot associated with the
+                entrypoint. If specified, the snapshotted version of the entrypoint will
+                be used to run the job. If not specified, the job will use the latest
+                version of the entrypoint. Defaults to None.
             values: A dictionary of keyword arguments to pass to the entrypoint that
                 parameterize the job.
             timeout: The maximum alloted time for a job before it times out and is
@@ -279,6 +284,9 @@ class ExperimentJobsSubCollectionClient(SubCollectionClient[T]):
             The response from the Dioptra API.
         """
         json_: dict[str, Any] = {"entrypoint": entrypoint_id, "queue": queue_id}
+
+        if entrypoint_snapshot_id is not None:
+            json_["entrypointSnapshot"] = entrypoint_snapshot_id
 
         if values is not None:
             json_["values"] = values
