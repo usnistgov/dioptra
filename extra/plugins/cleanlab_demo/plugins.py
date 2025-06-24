@@ -60,12 +60,15 @@ def clean (
         data.extend(x_prime)
         y_prime = [np.argmax(ys) for ys in y]
         labels.extend(y_prime)
-    print("ARRAY", np.array(data).shape)
+    # print("ARRAY", np.array(data).shape)
+
+    data = np.array(data)
+    labels = np.array(labels)
 
     pred_probs = cross_val_predict(
         model,
-        np.array(data),
-        np.array(labels),
+        data,
+        labels,
         cv=5,
         method="predict_proba",
     )
@@ -83,7 +86,6 @@ def clean (
     )
     post_metrics(metric_name="cleanlab_label_errors", metric_value=float(len(label_issues)))
     
-    #TODO this output looks a bit wrong? figure out why
     xval = dict()
     for index in label_issues:
         xval[dataset.file_paths[index]] = pred_probs[index]

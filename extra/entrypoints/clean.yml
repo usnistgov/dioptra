@@ -2,17 +2,16 @@ dataset:
   load_dataset:
     ep_seed: $seed
     training_dir: $training_dir
-    testing_dir: $testing_dir
-    subsets: [training, validation, testing]
+    testing_dir: $training_dir
+    subsets: ['testing']
     image_size: $image_size
-    validation_split: $validation_split
     rescale: $rescale
     batch_size: $batch_size      
-    shuffle: True
+    shuffle: False
 
 model:
   create_model:
-    dataset: $dataset.training
+    dataset: $dataset.testing
     model_architecture: $model_architecture
     input_shape: $model_input_size
     learning_rate: $learning_rate
@@ -32,7 +31,7 @@ model:
 cleanlab:
   clean:
     classifier: $model
-    dataset: $dataset.training
+    dataset: $dataset.testing
     delete_confidence: $delete_confidence
     relabel_confidence: $relabel_confidence
   dependencies:
