@@ -836,6 +836,18 @@ def test_drafts_get(db, drafts_repo, draft_stuff):
     assert found_draft.draft_resource_id == draft.draft_resource_id
 
 
+def test_drafts_get_one(drafts_repo, draft_stuff):
+    draft = draft_stuff["draft_resources"][0]
+
+    found_draft = drafts_repo.get_one(draft.draft_resource_id)
+    assert draft == found_draft
+
+
+def test_drafts_get_one_not_exist(drafts_repo):
+    with pytest.raises(e.DraftDoesNotExistError):
+        drafts_repo.get_one(999999)
+
+
 def test_drafts_get_user_not_exist(db, drafts_repo, draft_stuff):
 
     draft = draft_stuff["draft_mods"][0]

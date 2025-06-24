@@ -20,7 +20,11 @@ import pytest
 
 from dioptra.restapi.db.models import Group, GroupMember, User
 from dioptra.restapi.db.repository.utils import DeletionPolicy, assert_user_exists
-from dioptra.restapi.errors import EntityDoesNotExistError, EntityExistsError
+from dioptra.restapi.errors import (
+    EntityDeletedError,
+    EntityDoesNotExistError,
+    EntityExistsError,
+)
 
 
 def test_user_create(user_repo, account, db):
@@ -117,6 +121,46 @@ def test_user_get_not_exist(user_repo, account):
 
     user = user_repo.get(999999, DeletionPolicy.ANY)
     assert not user
+
+
+def test_user_get_one(user_repo, account):
+    user = user_repo.get_one(account.user.user_id, DeletionPolicy.NOT_DELETED)
+    assert user == account.user
+
+    with pytest.raises(EntityExistsError):
+        user_repo.get_one(account.user.user_id, DeletionPolicy.DELETED)
+
+    user = user_repo.get_one(account.user.user_id, DeletionPolicy.ANY)
+    assert user == account.user
+
+
+def test_user_get_one_deleted(user_repo, account, db):
+    # Deletes the only user; may break in the future if that violates a
+    # consistency rule.  We might have to create more users, so we can delete
+    # one.
+    user_repo.delete(account.user)
+    db.session.commit()
+
+    with pytest.raises(EntityDeletedError):
+        user_repo.get_one(account.user.user_id, DeletionPolicy.NOT_DELETED)
+
+    user = user_repo.get_one(account.user.user_id, DeletionPolicy.DELETED)
+    assert user == account.user
+
+    user = user_repo.get_one(account.user.user_id, DeletionPolicy.ANY)
+    assert user == account.user
+
+
+def test_user_get_one_not_exist(user_repo):
+
+    with pytest.raises(EntityDoesNotExistError):
+        user_repo.get_one(999999, DeletionPolicy.NOT_DELETED)
+
+    with pytest.raises(EntityDoesNotExistError):
+        user_repo.get_one(999999, DeletionPolicy.DELETED)
+
+    with pytest.raises(EntityDoesNotExistError):
+        user_repo.get_one(999999, DeletionPolicy.ANY)
 
 
 def test_user_get_by_name(user_repo, account):

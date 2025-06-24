@@ -1275,13 +1275,25 @@ def test_get_latest_snapshots(db, resource_status_combo, deletion_policy):
 
 def test_get_one_latest_snapshot(db, resource_status, deletion_policy):
 
-    snap, _ = resource_status
+    snap, status = resource_status
 
-    expected_latest_snaps = helpers.find_expected_snaps_for_deletion_policy(
-        (snap,), deletion_policy
+    exc = helpers.expected_exception_for_combined_status(
+        (status,), deletion_policy
     )
 
-    if expected_latest_snaps:
+    if exc:
+        with pytest.raises(exc):
+            utils.get_one_latest_snapshot(
+                db.session,
+                type(snap),
+                snap,
+                deletion_policy
+            )
+    else:
+        expected_latest_snaps = helpers.find_expected_snaps_for_deletion_policy(
+            (snap,), deletion_policy
+        )
+
         latest_snap = utils.get_one_latest_snapshot(
             db.session,
             type(snap),
@@ -1290,15 +1302,6 @@ def test_get_one_latest_snapshot(db, resource_status, deletion_policy):
         )
 
         assert latest_snap == expected_latest_snaps[0]
-
-    else:
-        with pytest.raises(EntityDoesNotExistError):
-            utils.get_one_latest_snapshot(
-                db.session,
-                type(snap),
-                snap,
-                deletion_policy
-            )
 
 
 def test_get_latest_child_snapshots(db, resource_parent_combo, deletion_policy):

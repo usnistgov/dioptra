@@ -283,6 +283,41 @@ class DraftsRepository:
 
         return draft
 
+    def get_one(
+        self,
+        draft_id: int,
+        resource_type: str | None = None,
+        creator: User | int | None = None,
+    ) -> DraftResource:
+        """
+        Get a draft (either kind) by ID.  Analogous to .get(), but raises
+        an exception instead of returning None.
+
+        Args:
+            draft_id: The ID of a draft
+            resource_type: A resource type, used to pretend an existing draft
+                doesn't exist if it's for the wrong type of resource; None to
+                not filter by resource type
+            creator: A User object or user_id integer primary key value, used
+                to pretend an existing draft doesn't exist if it was created
+                by the wrong user; None to not filter by user creator
+
+        Returns:
+            A DraftResource object
+
+        Raises:
+            EntityDoesNotExistError: if a creator user is given but it does not
+                exist
+            EntityDeletedError: if a creator user is given but it is deleted
+            DraftDoesNotExistError: if the draft is not found
+        """
+
+        draft = self.get(draft_id, resource_type, creator)
+        if not draft:
+            raise DraftDoesNotExistError(draft_resource_id=draft_id)
+
+        return draft
+
     def get_resource(
         self,
         resource_id: int,
@@ -586,7 +621,7 @@ class DraftsRepository:
             draft: An existing or ID of an existing DraftResource
 
         Raises:
-            EntityDoesNotExistError: if the draft does not exist
+            DraftDoesNotExistError: if the draft does not exist
         """
 
         if draft_exists(self._session, draft):
