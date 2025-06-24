@@ -593,7 +593,7 @@ def assert_user_exists(
 
     user_id = get_user_id(user)
 
-    _assert_exists(deletion_policy, existence_result, "user", user_id, user_id=user_id)
+    assert_exists(deletion_policy, existence_result, "user", user_id, user_id=user_id)
 
 
 def assert_group_exists(
@@ -627,7 +627,7 @@ def assert_group_exists(
 
     group_id = get_group_id(group)
 
-    _assert_exists(
+    assert_exists(
         deletion_policy,
         existence_result,
         "group",
@@ -675,7 +675,7 @@ def assert_resource_exists(
     else:
         resource_type = resource.resource_type
 
-    _assert_exists(
+    assert_exists(
         deletion_policy,
         existence_result,
         resource_type,
@@ -1139,7 +1139,7 @@ def assert_can_create_snapshot(
     # relationships?
 
 
-def _assert_exists(
+def assert_exists(
     deletion_policy: DeletionPolicy,
     existence_result: ExistenceResult,
     obj_type: str | None,
@@ -1602,13 +1602,44 @@ def get_one_latest_snapshot(
         A snapshot
 
     Raises:
-        EntityDoesNotExistError: if the resource was not found
+        EntityDoesNotExistError: if the resource does not exist in the database
+            (deleted or not)
+        EntityExistsError: if the resource exists and is not deleted, but
+            policy was to find a deleted resource
+        EntityDeletedError: if the resource is deleted, but policy was to find
+            a non-deleted resource
     """
-    latest = get_latest_snapshots(session, snap_class, resource, deletion_policy)
 
-    if not latest:
-        raise EntityDoesNotExistError(resource_id=get_resource_id(resource))
+    # ignore deletion_policy here and get whatever is in the DB.  We need it
+    # to determine its status, to figure out which exception we need to throw
+    # (if any).
+    latest = get_latest_snapshots(session, snap_class, resource, DeletionPolicy.ANY)
 
+    if latest is None:
+        existence_result = ExistenceResult.DOES_NOT_EXIST
+    elif latest.resource.is_deleted:
+        existence_result = ExistenceResult.DELETED
+    else:
+        existence_result = ExistenceResult.EXISTS
+
+    resource_id: int | None
+    if latest:
+        resource_type = latest.resource_type
+        resource_id = latest.resource_id
+    elif isinstance(resource, (Resource, ResourceSnapshot)):
+        resource_type = resource.resource_type
+        resource_id = get_resource_id(resource)
+    else:  # resource is an int
+        resource_type = None
+        resource_id = resource
+
+    # Here, we combine the passed-in deletion policy with existence, to
+    # determine the exception.
+    assert_exists(deletion_policy, existence_result, resource_type, resource_id)
+
+    # The above assert_exists() function would have raised an exception, so
+    # latest can't be None here.
+    assert latest is not None
     return latest
 
 
