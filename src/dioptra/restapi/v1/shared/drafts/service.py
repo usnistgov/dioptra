@@ -123,9 +123,7 @@ class ResourceDraftsService(object):
         if base_resource_id is None:
             if group_id is None:
                 raise MalformedDraftResourceError()
-            owner = self._uow.group_repo.get(group_id, DeletionPolicy.ANY)
-            if not owner:
-                raise EntityDoesNotExistError("group", group_id=group_id)
+            owner = self._uow.group_repo.get_one(group_id, DeletionPolicy.ANY)
         else:
             base_resource = self._uow.drafts_repo.get_resource(
                 base_resource_id, DeletionPolicy.ANY
