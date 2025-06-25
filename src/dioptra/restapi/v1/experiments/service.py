@@ -91,9 +91,7 @@ class ExperimentService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        owner = self._uow.group_repo.get(group_id, DeletionPolicy.NOT_DELETED)
-        if not owner:
-            raise EntityDoesNotExistError("group", group_id=group_id)
+        owner = self._uow.group_repo.get_one(group_id, DeletionPolicy.NOT_DELETED)
 
         resource = models.Resource(RESOURCE_TYPE, owner)
         new_experiment = models.Experiment(
@@ -534,11 +532,10 @@ class ExperimentIdEntrypointsService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        experiment = self._uow.experiment_repo.get(
-            experiment_id, DeletionPolicy.NOT_DELETED
+        experiment = self._uow.experiment_repo.get_one(
+            experiment_id,
+            DeletionPolicy.NOT_DELETED,
         )
-        if not experiment:
-            raise EntityDoesNotExistError("experiment", resource_id=experiment_id)
 
         entrypoint_ids = [child.resource_id for child in experiment.children]
 
