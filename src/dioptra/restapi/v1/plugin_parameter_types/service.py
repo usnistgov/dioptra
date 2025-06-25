@@ -95,9 +95,9 @@ class PluginParameterTypeService(object):
             )
             raise PluginParameterTypeMatchesBuiltinTypeError
 
-        group = self._uow.group_repo.get(group_id, repoutils.DeletionPolicy.NOT_DELETED)
-        if not group:
-            raise EntityDoesNotExistError("group", group_id=group_id)
+        group = self._uow.group_repo.get_one(
+            group_id, repoutils.DeletionPolicy.NOT_DELETED
+        )
 
         resource = models.Resource(resource_type=RESOURCE_TYPE, owner=group)
         new_plugin_parameter_type = models.PluginTaskParameterType(

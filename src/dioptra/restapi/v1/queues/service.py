@@ -17,7 +17,6 @@
 """The server-side functions that perform queue endpoint operations."""
 from __future__ import annotations
 
-from collections.abc import Sequence
 from typing import Any, Final
 
 import structlog
@@ -77,9 +76,7 @@ class QueueService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        group = self._uow.group_repo.get(group_id, DeletionPolicy.NOT_DELETED)
-        if not group:
-            raise EntityDoesNotExistError("group", group_id=group_id)
+        group = self._uow.group_repo.get_one(group_id, DeletionPolicy.NOT_DELETED)
 
         resource = models.Resource(resource_type=RESOURCE_TYPE, owner=group)
         new_queue = models.Queue(
@@ -201,9 +198,6 @@ class QueueIdService(object):
         log.debug("Get queue by id", queue_id=queue_id)
 
         queue = self._uow.queue_repo.get(queue_id, DeletionPolicy.ANY)
-        # For mypy: if we ask for a single queue ID, we get at most a single
-        # Queue back.
-        assert queue is None or isinstance(queue, models.Queue)
 
         if not queue:
             if error_if_not_found:
@@ -256,9 +250,6 @@ class QueueIdService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         queue = self._uow.queue_repo.get(queue_id, DeletionPolicy.ANY)
-        # For mypy: if we ask for a single queue ID, we get at most a single
-        # Queue back.
-        assert queue is None or isinstance(queue, models.Queue)
 
         if not queue:
             if error_if_not_found:
@@ -359,9 +350,6 @@ class QueueIdsService(object):
         # More complex situation here where some queues could be deleted and
         # some may not exist at all.  For now, just treat both as not existing.
         queues = self._uow.queue_repo.get(queue_ids, DeletionPolicy.NOT_DELETED)
-        # For mypy: if we request a list of IDs, we get a Sequence of Queues
-        # back.
-        assert isinstance(queues, Sequence)
 
         if len(queues) != len(queue_ids) and error_if_not_found:
             queue_ids_missing = set(queue_ids) - set(

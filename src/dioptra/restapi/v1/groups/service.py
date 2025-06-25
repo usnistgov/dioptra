@@ -242,10 +242,7 @@ class GroupIdService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Delete group", group_id=group_id)
 
-        group = self._uow.group_repo.get(group_id, DeletionPolicy.NOT_DELETED)
-
-        if group is None:
-            raise EntityDoesNotExistError(GROUP_TYPE, group_id=group_id)
+        group = self._uow.group_repo.get_one(group_id, DeletionPolicy.NOT_DELETED)
 
         with self._uow:
             self._uow.group_repo.delete(group)
