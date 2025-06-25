@@ -84,17 +84,17 @@
   const router = useRouter()
 
   const columns = [
-    { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true, },
-    { name: 'id', label: 'Job ID', align: 'left', field: 'id', sortable: false, },
-    { name: 'entrypoint', label: 'Entrypoint', align: 'left', field: 'entrypoint', sortable: false, },
-    { name: 'queue', label: 'Queue', align: 'left', field: 'queue', sortable: false, },
+    { name: 'id', label: 'Job ID', align: 'left', field: 'id', sortable: true, },
+    { name: 'entrypoint', label: 'Entrypoint', align: 'left', field: 'entrypoint', sortable: true, },
+    { name: 'queue', label: 'Queue', align: 'left', field: 'queue', sortable: true, },
+    { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true, style: 'width: 275px',},
     { name: 'status', label: 'Status', align: 'left', field: 'status', sortable: true },
     { name: 'tags', label: 'Tags', align: 'left', field: 'tags', sortable: false, },
   ]
 
   if(route.name === 'allJobs') {
     columns.splice(2, 0, 
-      { name: 'experiment', label: 'Experiment', align: 'left', field: 'experiment', sortable: false, }
+      { name: 'experiment', label: 'Experiment', align: 'left', field: 'experiment', sortable: true, }
     )
   }
 
@@ -127,6 +127,11 @@
   const tableRef = ref(null)
 
   async function getJobs(pagination, showDrafts) {
+    // default sort by id descending
+    if(!pagination.sortBy) {
+      pagination.sortBy = 'id'
+      pagination.descending = true
+    }
     try {
       let res
       if(route.name === 'experimentJobs') {

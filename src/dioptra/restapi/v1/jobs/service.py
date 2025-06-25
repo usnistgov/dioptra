@@ -69,10 +69,14 @@ SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
     "tag": lambda x: models.Job.tags.any(models.Tag.name.like(x, escape="/")),
 }
 SORTABLE_FIELDS: Final[dict[str, Any]] = {
+    "id": models.Resource.resource_id,
     "description": models.Job.description,
     "createdOn": models.Job.created_on,
     "lastModifiedOn": models.Resource.last_modified_on,
     "status": models.Job.status,
+    "experiment": models.Experiment.name,
+    "entrypoint": models.EntryPoint.name,
+    "queue": models.Queue.name,
 }
 JOB_STATUS_TRANSITIONS: Final[dict[str, Any]] = {
     "queued": {"started", "deferred"},
@@ -354,6 +358,12 @@ class JobService(object):
         jobs_stmt = (
             select(models.Job)
             .join(models.Resource)
+            .join(models.Job.experiment_job)
+            .join(models.ExperimentJob.experiment)
+            .join(models.Job.entry_point_job)
+            .join(models.EntryPointJob.entry_point)
+            .join(models.Job.queue_job)
+            .join(models.QueueJob.queue)
             .where(
                 *filters,
                 models.Resource.is_deleted == False,  # noqa: E712
@@ -847,6 +857,10 @@ class ExperimentJobService(object):
         jobs_stmt = (
             select(models.Job)
             .join(models.Resource)
+            .join(models.Job.entry_point_job)
+            .join(models.EntryPointJob.entry_point)
+            .join(models.Job.queue_job)
+            .join(models.QueueJob.queue)
             .where(
                 *filters,
                 models.Job.resource_id.in_(select(cte_job_ids)),
