@@ -171,6 +171,26 @@ def test_type_create_name_collision(account, type_repo, point_type):
         type_repo.create(type_)
 
 
+def test_type_create_name_reuse(db, account, type_repo, point_type):
+
+    lock = models.ResourceLock(resource_lock_types.DELETE, point_type.resource)
+    db.session.add(lock)
+    db.session.commit()
+
+    # Once a resource is deleted, creating a new resource with that name is allowed.
+    res = models.Resource("plugin_task_parameter_type", account.group)
+    type_ = models.PluginTaskParameterType(
+        "a type", res, account.user, "point", {"some": "structure"}
+    )
+    type_repo.create(type_)
+    db.session.commit()
+
+    check_type = db.session.get(
+        models.PluginTaskParameterType, type_.resource_snapshot_id
+    )
+    assert check_type == type_
+
+
 def test_type_create_snapshot_exists(db, fake_data, account, type_repo):
     type_ = fake_data.plugin_task_parameter_type(
         account.user, account.group, "test_type"

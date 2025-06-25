@@ -86,7 +86,11 @@ def assert_resource_import_overwrite_works(
     group_id: int,
     archive_file: DioptraFile,
 ):
+    dioptra_client.entrypoints.create(
+        group_id=group_id, name="Hello World", task_graph=""
+    )
     dioptra_client.plugins.create(group_id=group_id, name="hello_world")
+    dioptra_client.plugin_parameter_types.create(group_id=group_id, name="message")
     response = dioptra_client.workflows.import_resources(
         group_id=group_id,
         source=archive_file,
