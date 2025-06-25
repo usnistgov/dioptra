@@ -131,6 +131,25 @@ def test_queue_create_name_collision(queue_repo, account, db, fake_data):
         queue_repo.create(queue2)
 
 
+def test_queue_create_name_reuse(queue_repo, account, db, fake_data):
+    queue1 = fake_data.queue(account.user, account.group)
+    queue_repo.create(queue1)
+    db.session.commit()
+
+    lock = m.ResourceLock(resource_lock_types.DELETE, queue1.resource)
+    db.session.add(lock)
+    db.session.commit()
+
+    # Once a resource is deleted, creating a new resource with that name is allowed.
+    queue2 = fake_data.queue(account.user, account.group)
+    queue2.name = queue1.name
+    queue_repo.create(queue2)
+    db.session.commit()
+
+    check_queue = db.session.get(m.Queue, queue2.resource_snapshot_id)
+    assert check_queue == queue2
+
+
 def test_queue_create_wrong_resource_type(queue_repo, account, db, fake_data):
     experiment_resource = m.Resource("experiment", account.group)
     queue = m.Queue("description", experiment_resource, account.user, "name")
@@ -278,9 +297,7 @@ def test_queue_delete_not_exist(queue_repo, account, fake_data):
         queue_repo.delete(queue)
 
 
-def test_queue_get_by_name_exists(
-    db, fake_data, account, queue_repo, deletion_policy
-):
+def test_queue_get_by_name_exists(db, fake_data, account, queue_repo, deletion_policy):
     queue1 = fake_data.queue(account.user, account.group)
     queue2 = m.Queue(queue1.description, queue1.resource, queue1.creator, queue1.name)
 
@@ -300,9 +317,7 @@ def test_queue_get_by_name_exists(
     assert snap == expected_snap
 
 
-def test_queue_get_by_name_deleted(
-    db, fake_data, account, queue_repo, deletion_policy
-):
+def test_queue_get_by_name_deleted(db, fake_data, account, queue_repo, deletion_policy):
     queue1 = fake_data.queue(account.user, account.group)
     queue2 = m.Queue(queue1.description, queue1.resource, queue1.creator, queue1.name)
 

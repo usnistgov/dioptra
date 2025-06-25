@@ -294,6 +294,25 @@ def test_experiment_create_name_collision(db, fake_data, account, experiment_rep
         experiment_repo.create(exp2)
 
 
+def test_experiment_create_name_reuse(db, fake_data, account, experiment_repo):
+    experiment = fake_data.experiment(account.user, account.group)
+    experiment_repo.create(experiment)
+    db.session.commit()
+
+    lock = models.ResourceLock(resource_lock_types.DELETE, experiment.resource)
+    db.session.add(lock)
+    db.session.commit()
+
+    # Once a resource is deleted, creating a new resource with that name is allowed.
+    exp2 = fake_data.experiment(account.user, account.group)
+    exp2.name = experiment.name
+    experiment_repo.create(exp2)
+    db.session.commit()
+
+    check_exp = db.session.get(models.Experiment, exp2.resource_snapshot_id)
+    assert check_exp == exp2
+
+
 def test_experiment_create_wrong_resource_type(fake_data, account, experiment_repo):
     experiment = fake_data.experiment(account.user, account.group)
     experiment.resource_type = "queue"
