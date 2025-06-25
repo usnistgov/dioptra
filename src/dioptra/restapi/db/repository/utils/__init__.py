@@ -14,3 +14,18 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+
+# F401: unused symbols: this module exists to collect symbols together; it does
+#     not use them.  This is not an error.
+# F403: flake8 doesn't like star imports.  Since we're just collecting symbols
+#    together, I think it's nicer to have shorter __all__'s in the child
+#    modules near where the symbols are defined, and star-import them here,
+#    instead of having long verbose imports here for lots of symbols, and an
+#    even longer __all__ which separately lists them all out!  When a symbol is
+#    added to a child, only the child module need be updated.  Instead of
+#    having to remember to also update the parent module to import and export
+#    the new symbol.
+from .checks import *  # noqa: F401,F403
+from .common import *  # noqa: F401,F403
+from .resources import *  # noqa: F401,F403
+from .search import *  # noqa: F401,F403
