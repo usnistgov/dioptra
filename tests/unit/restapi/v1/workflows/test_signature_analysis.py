@@ -24,9 +24,7 @@ from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
 
 
-def _get_expected_outputs(
-    registered_types: dict[str, Any]
-) -> dict[str, Any]:
+def _get_expected_outputs(registered_types: dict[str, Any]) -> dict[str, Any]:
 
     list_dict_str_str = registered_types["plugin_param_type4"]["id"]
     tuple_int_int_int = registered_types["plugin_param_type5"]["id"]
@@ -583,7 +581,7 @@ def assert_signature_analysis_response_matches_expectations(
     assert isinstance(response["missing_types"], list)
     assert isinstance(response["inputs"], list)
 
-    def sort_by_name(lst: list[dict[str,Any]], k="name") -> list:
+    def sort_by_name(lst: list[dict[str, Any]], k="name") -> list:
         return sorted(lst, key=lambda x: x[k])
 
     assert sort_by_name(response["outputs"]) == sort_by_name(

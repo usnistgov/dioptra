@@ -809,8 +809,7 @@ def _build_type_dictionary_from_AST(  # noqa: C901
 
 
 def resolve_structure(
-    structure: dict | list | None | str,
-    potential_name: str | None
+    structure: dict | list | None | str, potential_name: str | None
 ) -> dict[str, Any] | list | None | str:
     if structure is None and potential_name is not None:
         return potential_name
