@@ -33,9 +33,9 @@ import tomli as toml
 from flask import Flask
 from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
+from freezegun import freeze_time
 from injector import Injector
 from pytest import MonkeyPatch
-from freezegun import freeze_time
 
 from dioptra.client import (
     DioptraFile,
@@ -522,11 +522,52 @@ def registered_plugin_parameter_types(
         structure=dict(),
         description="Opaque type for an ml model",
     ).get_json()
+    plugin_param_type4_response = actions.register_plugin_parameter_type(
+        client,
+        name="list_dict_str_str",
+        group_id=auth_account["groups"][0]["id"],
+        structure=dict({"list": "dict_str_str"}),
+        description="list[dict[str,str]]",
+    ).get_json()
+    plugin_param_type5_response = actions.register_plugin_parameter_type(
+        client,
+        name="tuple_int_int_int",
+        group_id=auth_account["groups"][0]["id"],
+        structure=dict({"tuple": ["integer", "integer", "integer"]}),
+        description="tuple[int,int,int]",
+    ).get_json()
+    plugin_param_type6_response = actions.register_plugin_parameter_type(
+        client,
+        name="str_none",
+        group_id=auth_account["groups"][0]["id"],
+        structure=dict({"union": ["string", "null"]}),
+        description="str | None",
+    ).get_json()
+    plugin_param_type7_response = actions.register_plugin_parameter_type(
+        client,
+        name="dict_str_str",
+        group_id=auth_account["groups"][0]["id"],
+        structure=dict({"mapping": ["string", "string"]}),
+        description="dict[str,str]",
+    ).get_json()
+    plugin_param_type8_response = actions.register_plugin_parameter_type(
+        client,
+        name="dataset",
+        group_id=auth_account["groups"][0]["id"],
+        structure=dict(),
+        description="Dataset",
+    ).get_json()
+
     return {
         **built_in_types_dict,
         "plugin_param_type1": plugin_param_type1_response,
         "plugin_param_type2": plugin_param_type2_response,
         "plugin_param_type3": plugin_param_type3_response,
+        "plugin_param_type4": plugin_param_type4_response,
+        "plugin_param_type5": plugin_param_type5_response,
+        "plugin_param_type6": plugin_param_type6_response,
+        "plugin_param_type7": plugin_param_type7_response,
+        "plugin_param_type8": plugin_param_type8_response,
     }
 
 
