@@ -32,7 +32,6 @@ from structlog.stdlib import BoundLogger
 from werkzeug.datastructures import FileStorage
 
 from dioptra.restapi.db import db, models
-from dioptra.restapi.db.models.plugins import PluginTaskParameterType
 from dioptra.restapi.errors import (
     DioptraError,
     DraftDoesNotExistError,
@@ -242,9 +241,11 @@ def match_name_and_structure(
     plugin_parameter_type_service: PluginParameterTypeService,
     log: BoundLogger,
 ):
+    log.debug(f"Matching name for expanded_a: {type_name_suggestion}")
     expanded_a, ids_a = _expand_string_or_dict(
         type_name_suggestion, group_id, plugin_parameter_type_service, log=log
     )
+    log.debug(f"Matching structure for expanded_b: {type_name_structure}")
     expanded_b, ids_b = _expand_string_or_dict(
         type_name_structure, group_id, plugin_parameter_type_service, log=log
     )
@@ -301,15 +302,18 @@ def _get_registered_type_expanded_structure(
                     type_ids.append(
                         found_type["plugin_task_parameter_type"].resource_id
                     )
+                if found_type["plugin_task_parameter_type"].structure is None:
+                    expanded_structure = None
+                    type_ids.append(
+                        found_type["plugin_task_parameter_type"].resource_id
+                    )
 
     return expanded_structure, type_ids
 
 
 def _get_all_from_paged_service(
-    fn: Callable[..., tuple[list[Any],int]],
-    per_page: int = 10,
-    **kwargs
-) -> Generator[tuple[list[Any],int]]:
+    fn: Callable[..., tuple[list[Any], int]], per_page: int = 10, **kwargs
+) -> Generator[tuple[list[Any], int], None, None]:
     current_page = 0
     max_pages = 1
 
@@ -329,16 +333,16 @@ def _expand_structure(
     group_id: int,
     plugin_parameter_type_service: PluginParameterTypeService,
     log: BoundLogger,
-) -> :
+) -> dict[str, Any]:
     """Takes a dictionary structure, and looks up all the named types
-       in it and expands if they have a non-null type structure.
+    in it and expands if they have a non-null type structure.
     """
     expanded = {}
     log.debug(f"Request to expand structure: {structure}")
     for key in structure:
         types = structure[key]
 
-        new_value = None
+        new_value: list | dict | str | None = None
 
         if key == "union" or key == "tuple":
             log.debug(f"Calling expand on union/tuple: {types}")
@@ -371,7 +375,7 @@ def _expand_structure(
             list_of = types
             log.debug(f"Calling expand on list: {list_of}")
 
-            new_value, ids = _expand_string_or_dict( 
+            new_value, ids = _expand_string_or_dict(
                 list_of,
                 group_id=group_id,
                 plugin_parameter_type_service=plugin_parameter_type_service,
@@ -390,7 +394,7 @@ def _expand_string_or_dict(
     group_id: int,
     plugin_parameter_type_service: PluginParameterTypeService,
     log: BoundLogger,
-) -> tuple[str | dict | None, list[int]]:
+) -> tuple[str | dict | None | list, list[int]]:
 
     if to_expand is None:
         return None, []
@@ -414,7 +418,7 @@ def _expand_string_or_dict(
             plugin_parameter_type_service=plugin_parameter_type_service,
             log=log,
         )
-        return (to_expand, ids) if lookup_structure is None else (lookup_structure, ids)
+        return lookup_structure, ids
 
 
 class ResourceImportService(object):

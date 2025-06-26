@@ -315,7 +315,7 @@ def attack_patch(
 
 @pyplugs.register()
 def augment_patch(
-    data_flow: Any,
+    data_flow: Dataset,
     adv_data_dir: Union[str, Path],
     patch_dir: Union[str, Path],
     model: Any,

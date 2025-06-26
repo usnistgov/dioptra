@@ -364,6 +364,7 @@ def _derive_type_name_from_annotation(annotation_ast: ast_module.AST) -> Optiona
 
     # A name, e.g. int
     elif isinstance(annotation_ast, ast_module.Name):
+        LOGGER.debug(f"_derive:{annotation_ast.id}")
         type_name_suggestion = annotation_ast.id
 
     # A string literal, e.g. "foo".  Can be used in Python code to defer
@@ -647,6 +648,7 @@ def _complete_function_signature_via_generation(
                     {
                         "suggestion": type_name_suggestion,
                         "type_annotation": unparsed_ann,
+                        "structure": None,  # adding None since we're not parsing
                     }
                 )
 
@@ -672,6 +674,7 @@ def _complete_function_signature_via_generation(
                     {
                         "suggestion": type_name_suggestion,
                         "type_annotation": unparsed_ann,
+                        "structure": None,  # adding None since we're not parsing
                     }
                 )
 
@@ -753,28 +756,30 @@ def get_plugin_signatures_from_file(
     return get_plugin_signatures(python_source, filepath)
 
 
-def _build_type_dictionary_from_AST(
-    annotation: ast_module.AST, 
-    top_level: bool = True
-):
-    structure = None
+def _build_type_dictionary_from_AST(  # noqa: C901
+    annotation: ast_module.AST, top_level: bool = True
+) -> str | dict[str, Any] | None | list:
+
+    structure : dict[str,Any] | list | str | None = None
     potential_name = None
     if isinstance(annotation, ast_module.Subscript):
         substructure = _build_type_dictionary_from_AST(
             annotation.slice, top_level=False
         )
         LOGGER.debug(f"Substructure generated from slice: {substructure}")
-
-        if annotation.value.id in ["List", "list"]:
-            structure = {"list": substructure}
-        if annotation.value.id in ["Union"]:
-            structure = {"union": substructure}
-        if annotation.value.id in ["Optional"]:
-            structure = {"union": [substructure, "null"]}
-        if annotation.value.id in ["Dict", "dict"]:
-            structure = {"mapping": substructure}
-        if annotation.value.id in ["Tuple", "tuple"]:
-            structure = {"tuple": substructure}
+        if substructure is None:
+            substructure = "null"
+        if isinstance(annotation.value, ast_module.Name):
+            if annotation.value.id in ["List", "list"]:
+                structure = {"list": substructure}
+            if annotation.value.id in ["Union"]:
+                structure = {"union": substructure}
+            if annotation.value.id in ["Optional"]:
+                structure = {"union": [substructure, "null"]}
+            if annotation.value.id in ["Dict", "dict"]:
+                structure = {"mapping": substructure}
+            if annotation.value.id in ["Tuple", "tuple"]:
+                structure = {"tuple": substructure}
     elif isinstance(annotation, ast_module.Tuple):
         structure = [
             _build_type_dictionary_from_AST(m, top_level=False) for m in annotation.elts
@@ -792,12 +797,21 @@ def _build_type_dictionary_from_AST(
             return None  # only keep the name if part of another structure
         else:
             potential_name = _derive_type_name_from_annotation(annotation)
+    elif _is_constant(annotation, None):
+        if not top_level:
+            return "null"
+        else:
+            return None
 
-    structure = resolve_structure(structure, potential_name)
-    return structure
+    LOGGER.debug(f"_build: {annotation}, {structure}, {potential_name}")
+
+    return resolve_structure(structure, potential_name)
 
 
-def resolve_structure(structure, potential_name):
+def resolve_structure(
+    structure: dict | list | None | str, 
+    potential_name: str | None
+) -> dict[str, Any] | list | None | str:
     if structure is None and potential_name is not None:
         return potential_name
 
