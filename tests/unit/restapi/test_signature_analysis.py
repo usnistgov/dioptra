@@ -236,7 +236,7 @@ def the_plugin(arg1: SomeType) -> SomeType:
             "inputs": [{"name": "arg1", "required": True, "type": "sometype"}],
             "outputs": [{"name": "output", "type": "sometype"}],
             "suggested_types": [
-                {"suggestion": "sometype", "type_annotation": "SomeType"}
+                {"suggestion": "sometype", "type_annotation": "SomeType", "structure": None}
             ],
         }
     ]
@@ -258,8 +258,8 @@ def the_plugin(arg1: Optional[str]) -> Union[int, bool]:
             "inputs": [{"name": "arg1", "required": True, "type": "optional_str"}],
             "outputs": [{"name": "output", "type": "union_int_bool"}],
             "suggested_types": [
-                {"suggestion": "optional_str", "type_annotation": "Optional[str]"},
-                {"suggestion": "union_int_bool", "type_annotation": "Union[int, bool]"},
+                {"suggestion": "optional_str", "type_annotation": "Optional[str]", "structure": {"union": ["string", "null"]}},
+                {"suggestion": "union_int_bool", "type_annotation": "Union[int, bool]", "structure": {"union": ["integer", "boolean"]}},
             ],
         }
     ]
@@ -281,7 +281,7 @@ def plugin_func(arg1: foo(2)) -> foo(2):
             "name": "plugin_func",
             "inputs": [{"name": "arg1", "required": True, "type": "type1"}],
             "outputs": [{"name": "output", "type": "type1"}],
-            "suggested_types": [{"suggestion": "type1", "type_annotation": "foo(2)"}],
+            "suggested_types": [{"suggestion": "type1", "type_annotation": "foo(2)", "structure": None}],
         }
     ]
 
@@ -308,8 +308,8 @@ def plugin_func(arg1: foo(2), arg2: Type1) -> foo(2):
             ],
             "outputs": [{"name": "output", "type": "type2"}],
             "suggested_types": [
-                {"suggestion": "type1", "type_annotation": "Type1"},
-                {"suggestion": "type2", "type_annotation": "foo(2)"},
+                {"suggestion": "type1", "type_annotation": "Type1", "structure": None},
+                {"suggestion": "type2", "type_annotation": "foo(2)", "structure": None},
             ],
         }
     ]
@@ -334,7 +334,7 @@ def do_things(arg1: Optional[str], arg2: int = 123):
             ],
             "outputs": [],
             "suggested_types": [
-                {"suggestion": "optional_str", "type_annotation": "Optional[str]"}
+                {"suggestion": "optional_str", "type_annotation": "Optional[str]", "structure": {"union": ["string", "null"]}}
             ],
         }
     ]

@@ -58,6 +58,11 @@ def assert_retrieving_plugin_parameter_types_works(
             does not match the expected response.
     """
 
+    if paging_info is None:
+        paging_info = {}
+        paging_info["index"] = 0
+        paging_info["page_length"] = len(expected)
+
     assert_retrieving_resource_works(
         dioptra_client=dioptra_client.plugin_parameter_types,
         expected=expected,
@@ -348,13 +353,18 @@ def test_get_all_plugin_parameter_types(
             "name",
             True,
             [
+                "plugin_param_type5", # tuple_int_int_int
                 "string",
+                "plugin_param_type6", # str_none
                 "number",
                 "null",
-                "plugin_param_type2",
-                "plugin_param_type3",
+                "plugin_param_type2", # model_output
+                "plugin_param_type3", # model
+                "plugin_param_type4", # list_dict_str_str
                 "integer",
-                "plugin_param_type1",
+                "plugin_param_type1", # image_shape
+                "plugin_param_type7", # dict_str_str
+                "plugin_param_type8", # dataset
                 "boolean",
                 "any",
             ],
@@ -365,19 +375,29 @@ def test_get_all_plugin_parameter_types(
             [
                 "any",
                 "boolean",
-                "plugin_param_type1",
+                "plugin_param_type8", # dataset
+                "plugin_param_type7", # dict_str_str
+                "plugin_param_type1", # image_shape
                 "integer",
-                "plugin_param_type3",
-                "plugin_param_type2",
+                "plugin_param_type4", # list_dict_str_str
+                "plugin_param_type3", # model
+                "plugin_param_type2", # model_output
                 "null",
                 "number",
+                "plugin_param_type6", # str_none
                 "string",
+                "plugin_param_type5", # tuple_int_int_int
             ],
         ),
         (
             "createdOn",
             True,
             [
+                "plugin_param_type8", 
+                "plugin_param_type7",
+                "plugin_param_type6",
+                "plugin_param_type5",
+                "plugin_param_type4",
                 "plugin_param_type3",
                 "plugin_param_type2",
                 "plugin_param_type1",
@@ -402,6 +422,11 @@ def test_get_all_plugin_parameter_types(
                 "plugin_param_type1",
                 "plugin_param_type2",
                 "plugin_param_type3",
+                "plugin_param_type4",
+                "plugin_param_type5",
+                "plugin_param_type6",
+                "plugin_param_type7",
+                "plugin_param_type8",
             ],
         ),
     ],

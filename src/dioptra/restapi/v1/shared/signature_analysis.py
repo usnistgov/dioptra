@@ -567,7 +567,6 @@ def _get_function_signature_via_derivation(
             {
                 "name": "output",
                 "type": type_name_suggestion,  # might be None
-                "structure": type_structure_suggestion,
             }
         )
 
