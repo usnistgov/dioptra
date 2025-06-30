@@ -24,6 +24,9 @@ import sys
 from pathlib import Path
 from typing import Any, Container, Iterator, Optional, Union
 
+import structlog
+from structlog.stdlib import BoundLogger
+
 from dioptra.task_engine import type_registry
 
 _PYTHON_TO_DIOPTRA_TYPE_NAME = {
@@ -33,6 +36,8 @@ _PYTHON_TO_DIOPTRA_TYPE_NAME = {
     "bool": "boolean",
     "None": "null",
 }
+
+LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
 def _is_constant(ast: ast_module.AST, value: Any) -> bool:
@@ -359,6 +364,7 @@ def _derive_type_name_from_annotation(annotation_ast: ast_module.AST) -> Optiona
 
     # A name, e.g. int
     elif isinstance(annotation_ast, ast_module.Name):
+        LOGGER.debug(f"_derive:{annotation_ast.id}")
         type_name_suggestion = annotation_ast.id
 
     # A string literal, e.g. "foo".  Can be used in Python code to defer
@@ -518,8 +524,10 @@ def _get_function_signature_via_derivation(
     for arg, arg_default in _func_args_defaults(func):
         if arg.annotation:
             type_name_suggestion = _derive_type_name_from_annotation(arg.annotation)
+            type_structure_suggestion = _build_type_dictionary_from_AST(arg.annotation)
         else:
             type_name_suggestion = None
+            type_structure_suggestion = None
 
         inputs.append(
             {
@@ -543,6 +551,7 @@ def _get_function_signature_via_derivation(
                 {
                     "suggestion": type_name_suggestion,
                     "type_annotation": ast_module.unparse(arg.annotation),
+                    "structure": type_structure_suggestion,
                 }
             )
 
@@ -552,9 +561,13 @@ def _get_function_signature_via_derivation(
     # skip the output.  None means the plugin produces no output.
     if func.returns and not _is_constant(func.returns, None):
         type_name_suggestion = _derive_type_name_from_annotation(func.returns)
+        type_structure_suggestion = _build_type_dictionary_from_AST(func.returns)
 
         outputs.append(
-            {"name": "output", "type": type_name_suggestion}  # might be None
+            {
+                "name": "output",
+                "type": type_name_suggestion,  # might be None
+            }
         )
 
         if (
@@ -566,6 +579,7 @@ def _get_function_signature_via_derivation(
                 {
                     "suggestion": type_name_suggestion,
                     "type_annotation": ast_module.unparse(func.returns),
+                    "structure": type_structure_suggestion,
                 }
             )
 
@@ -633,6 +647,7 @@ def _complete_function_signature_via_generation(
                     {
                         "suggestion": type_name_suggestion,
                         "type_annotation": unparsed_ann,
+                        "structure": None,  # adding None since we're not parsing
                     }
                 )
 
@@ -658,6 +673,7 @@ def _complete_function_signature_via_generation(
                     {
                         "suggestion": type_name_suggestion,
                         "type_annotation": unparsed_ann,
+                        "structure": None,  # adding None since we're not parsing
                     }
                 )
 
@@ -737,3 +753,68 @@ def get_plugin_signatures_from_file(
     python_source = filepath.read_text(encoding=encoding)
 
     return get_plugin_signatures(python_source, filepath)
+
+
+def _build_type_dictionary_from_AST(  # noqa: C901
+    annotation: ast_module.AST, top_level: bool = True
+) -> str | dict[str, Any] | None | list:
+
+    structure: dict[str, Any] | list | str | None = None
+    potential_name = None
+    if isinstance(annotation, ast_module.Subscript):
+        substructure = _build_type_dictionary_from_AST(
+            annotation.slice, top_level=False
+        )
+        LOGGER.debug(f"Substructure generated from slice: {substructure}")
+        if substructure is None:
+            substructure = "null"
+        if isinstance(annotation.value, ast_module.Name):
+            if annotation.value.id in ["List", "list"]:
+                structure = {"list": substructure}
+            if annotation.value.id in ["Union"]:
+                structure = {"union": substructure}
+            if annotation.value.id in ["Optional"]:
+                structure = {"union": [substructure, "null"]}
+            if annotation.value.id in ["Dict", "dict"]:
+                structure = {"mapping": substructure}
+            if annotation.value.id in ["Tuple", "tuple"]:
+                structure = {"tuple": substructure}
+    elif isinstance(annotation, ast_module.Tuple):
+        structure = [
+            _build_type_dictionary_from_AST(m, top_level=False) for m in annotation.elts
+        ]
+    elif isinstance(annotation, ast_module.BinOp):
+        if isinstance(annotation.op, ast_module.BitOr):
+            structure = {
+                "union": [
+                    _build_type_dictionary_from_AST(annotation.left, top_level=False),
+                    _build_type_dictionary_from_AST(annotation.right, top_level=False),
+                ]
+            }
+    elif isinstance(annotation, ast_module.Name):
+        if top_level:
+            return None  # only keep the name if part of another structure
+        else:
+            potential_name = _derive_type_name_from_annotation(annotation)
+    elif _is_constant(annotation, None):
+        if not top_level:
+            return "null"
+        else:
+            return None
+
+    LOGGER.debug(f"_build: {annotation}, {structure}, {potential_name}")
+
+    return resolve_structure(structure, potential_name)
+
+
+def resolve_structure(
+    structure: dict | list | None | str, potential_name: str | None
+) -> dict[str, Any] | list | None | str:
+    if structure is None and potential_name is not None:
+        return potential_name
+
+    # if we ever want to suggest structures, we can query restapi
+    # here to make them more brief (potentially replace substructures
+    # with already registered structures)
+
+    return structure
