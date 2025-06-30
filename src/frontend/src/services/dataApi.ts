@@ -141,7 +141,7 @@ export async function getData<T extends ItemType>(type: T, pagination: Paginatio
     params: {
       index: pagination.index,
       pageLength: pagination.rowsPerPage === 0 ? 100 : pagination.rowsPerPage,  // 0 means GET ALL
-      search: urlEncode(pagination.search),
+      search: processSearch(pagination.search),
       draftType: showDrafts ? 'new' : '',
       sortBy: pagination.sortBy,
       descending: pagination.descending,
@@ -221,7 +221,7 @@ export async function getJobs(id: number, pagination: Pagination) {
     params: {
       index: pagination.index,
       pageLength: pagination.rowsPerPage === 0 ? 100 : pagination.rowsPerPage,  // 0 means GET ALL
-      search: urlEncode(pagination.search),
+      search: processSearch(pagination.search),
       sortBy: pagination.sortBy,
       descending: pagination.descending,
     }
@@ -244,16 +244,33 @@ export async function getJobMetrics(id: number) {
 
 }
 
-function urlEncode(string: string) {
-  if(!string.trim()) return ''
-  if(string.includes(':')) {
-    const words = string.split(':')
-    console.log('words = ', words)
-    return `${words[0]}:"${words[1]}"`
-  } else {
-    return `"${string}"`
+function processSearch(string: string) {
+  // Trim trailing spaces for evaluation
+  const trimmed = string.trimEnd()
+
+  // If ends with colon and second to last char is not escaped or a colon
+  if (
+    trimmed.length > 1 &&
+    trimmed.endsWith(':') &&
+    trimmed[trimmed.length - 2] !== '\\' &&
+    trimmed[trimmed.length - 2] !== ':'
+  ) {
+    return ''
   }
+
+  // If ends with comma and second to last char is not a comma
+  if (
+    trimmed.length > 1 &&
+    trimmed.endsWith(',') &&
+    trimmed[trimmed.length - 2] !== '\\' &&
+    trimmed[trimmed.length - 2] !== ','
+  ) {
+    return trimmed.slice(0, -1)
+  }
+
+  return string
 }
+
 
 export async function getItem<T extends ItemType>(type: T, id: number, isDraft: boolean = false) {
   const res =  await axios.get(`/api/${type}/${id}${isDraft ? '/draft' : ''}`)
@@ -328,7 +345,7 @@ export async function getFiles(id: number, pagination: Pagination) {
     params: {
       index: pagination.index,
       pageLength: pagination.rowsPerPage === 0 ? 100 : pagination.rowsPerPage,  // 0 means GET ALL
-      search: urlEncode(pagination.search),
+      search: processSearch(pagination.search),
       sortBy: pagination.sortBy,
       descending: pagination.descending,
     }
