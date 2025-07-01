@@ -235,7 +235,7 @@ class JobService(object):
         )
         if len(invalid_job_params) > 0:
             log.debug("Invalid parameter names", parameters=list(invalid_job_params))
-            raise JobInvalidParameterNameError
+            raise JobInvalidParameterNameError(list(invalid_job_params))
 
         # Create the new Job resource and record the assigned entrypoint parameter
         # values

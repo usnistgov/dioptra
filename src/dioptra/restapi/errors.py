@@ -312,9 +312,10 @@ class JobInvalidStatusTransitionError(DioptraError):
 class JobInvalidParameterNameError(DioptraError):
     """The requested job parameter name is invalid."""
 
-    def __init__(self):
+    def __init__(self, names: list[str]):
         super().__init__(
-            "A provided job parameter name does not match any entrypoint parameters."
+            f"One or more provided job parameter names do not match any declared "
+            f"entrypoint parameters: {names}"
         )
 
 
