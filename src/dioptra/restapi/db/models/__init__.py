@@ -49,6 +49,7 @@ from .plugins import (
     PluginTaskInputParameter,
     PluginTaskOutputParameter,
     PluginTaskParameterType,
+    PluginTaskParameterTypeDependency,
 )
 from .queues import Queue
 from .resources import (
@@ -90,6 +91,7 @@ __all__ = [
     "PluginTaskInputParameter",
     "PluginTaskOutputParameter",
     "PluginTaskParameterType",
+    "PluginTaskParameterTypeDependency",
     "Queue",
     "QueueJob",
     "Resource",

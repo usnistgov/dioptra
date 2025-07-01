@@ -161,6 +161,12 @@ class PluginTaskParameterType(ResourceSnapshot):
     structure: Mapped[optionaljson_] = mapped_column(nullable=True)
 
     # Relationships
+    dependent_types: Mapped[list["PluginTaskParameterTypeDependency"]] = relationship(
+        primaryjoin="PluginTaskParameterType.resource_snapshot_id=="
+        "PluginTaskParameterTypeDependency.plugin_task_parameter_type_snapshot_id",
+        init=False,
+        back_populates="plugin_task_parameter_type",
+    )
     input_parameters: Mapped[list["PluginTaskInputParameter"]] = relationship(
         init=False, back_populates="parameter_type"
     )
@@ -179,6 +185,33 @@ class PluginTaskParameterType(ResourceSnapshot):
             ],
         ),
     )
+    __mapper_args__ = {
+        "polymorphic_identity": "plugin_task_parameter_type",
+    }
+
+
+class PluginTaskParameterTypeDependency(db.Model):  # type: ignore[name-defined]
+    __tablename__ = "plugin_task_parameter_type_dependencies"
+
+    # Database fields
+    plugin_task_parameter_type_snapshot_id: Mapped[intpk] = mapped_column(
+        ForeignKey("plugin_task_parameter_types.resource_snapshot_id"), init=False
+    )
+    dependent_plugin_task_parameter_type_snapshot_id: Mapped[intpk] = mapped_column(
+        ForeignKey("plugin_task_parameter_types.resource_snapshot_id"), init=False
+    )
+
+    # Relationships
+    plugin_task_parameter_type: Mapped["PluginTaskParameterType"] = relationship(
+        foreign_keys=[plugin_task_parameter_type_snapshot_id], lazy="joined"
+    )
+    dependent_plugin_task_parameter_type: Mapped["PluginTaskParameterType"] = (
+        relationship(
+            foreign_keys=[dependent_plugin_task_parameter_type_snapshot_id],
+            lazy="joined",
+        )
+    )
+
     __mapper_args__ = {
         "polymorphic_identity": "plugin_task_parameter_type",
     }

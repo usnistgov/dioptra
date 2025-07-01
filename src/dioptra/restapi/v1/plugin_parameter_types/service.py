@@ -108,6 +108,29 @@ class PluginParameterTypeService(object):
             creator=current_user,
         )
 
+        # break this out into a function somewhere.
+        dependent_plugin_parameter_type_names = _get_dependent_type_names(structure)
+        dependent_plugin_parameter_types = self._uow.type_repo.get_by_name(
+            dependent_plugin_parameter_type_names,
+            group_id,
+            repoutils.DeletionPolicy.NOT_DELETED,
+        )
+        if len(dependent_plugin_parameter_type_names) != len(
+            dependent_plugin_parameter_types
+        ):
+            raise EntityDoesNotExistError(
+                RESOURCE_TYPE,
+                name=name,
+                group_id=new_plugin_parameter_type.resource.group_id,
+            )
+        new_plugin_parameter_type.dependent_types = [
+            models.PluginTaskParameterTypeDependency(
+                new_plugin_parameter_type,
+                dependent_plugin_parameter_type,
+            )
+            for dependent_plugin_parameter_type in dependent_plugin_parameter_types
+        ]
+
         try:
             self._uow.type_repo.create(new_plugin_parameter_type)
         except Exception:
@@ -250,6 +273,13 @@ class PluginParameterTypeIdService(object):
         has_draft = self._uow.drafts_repo.has_draft_modification(
             plugin_parameter_type, current_user
         )
+        log.info(
+            "dependent types",
+            types=[
+                t.dependent_plugin_task_parameter_type.name
+                for t in plugin_parameter_type.dependent_types
+            ],
+        )
 
         return utils.PluginParameterTypeDict(
             plugin_task_parameter_type=plugin_parameter_type, has_draft=has_draft
@@ -313,6 +343,28 @@ class PluginParameterTypeIdService(object):
             resource=plugin_parameter_type.resource,
             creator=current_user,
         )
+
+        dependent_plugin_parameter_type_names = _get_dependent_type_names(structure)
+        dependent_plugin_parameter_types = self._uow.type_repo.get_by_name(
+            dependent_plugin_parameter_type_names,
+            new_plugin_parameter_type.resource.group_id,
+            repoutils.DeletionPolicy.NOT_DELETED,
+        )
+        if len(dependent_plugin_parameter_type_names) != len(
+            dependent_plugin_parameter_types
+        ):
+            raise EntityDoesNotExistError(
+                RESOURCE_TYPE,
+                name=name,
+                group_id=new_plugin_parameter_type.resource.group_id,
+            )
+        new_plugin_parameter_type.dependent_types = [
+            models.PluginTaskParameterTypeDependency(
+                new_plugin_parameter_type,
+                dependent_plugin_parameter_type,
+            )
+            for dependent_plugin_parameter_type in dependent_plugin_parameter_types
+        ]
 
         try:
             self._uow.type_repo.create_snapshot(new_plugin_parameter_type)
@@ -533,3 +585,49 @@ class BuiltinPluginParameterTypeService(object):
             )
             for new_builtin_parameter_type in new_builtin_parameter_types
         ]
+
+
+def validate_type_structure(structure: dict[str, Any] | None):
+    """ """
+
+    builtin_types = set("any", "string", "integer", "number", "boolean", "null")
+    valid_structure_types = set("list", "union", "mapping", "tuple")
+
+    def recurse(structure: dict[str, Any], found_type_names: list[str]):
+        if len(structure) != 1:
+            raise Exception
+
+        structure_type, structure_value = next(iter(structure.items()))
+
+        if structure_type not in valid_structure_types:
+            raise Exception
+
+    if strucuture is None:
+        return None
+
+    if isinstance(structure, dict):
+        found_type_names = []
+        recurse(structure, found_type_names)
+    else:
+        raise Exception
+
+
+def _get_dependent_type_names(
+    structure: None | dict[str, Any],
+) -> list[models.PluginTaskParameterType]:
+    if not structure:
+        return []
+    elif isinstance(structure, dict):
+        structure_type, structure_value = next(iter(structure.items()))
+        if structure_type == "list":
+            return [structure_value]
+        elif structure_type == "union":
+            return structure_value
+        elif structure_type == "mapping":
+            return list(structure_value.values())
+        elif structure_type == "tuple":
+            return list(structure_value)
+        else:
+            raise ValueError
+    else:
+        raise ValueError
