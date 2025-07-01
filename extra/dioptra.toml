@@ -245,6 +245,31 @@ description = "A plugin to demonstrate cleanlab in dioptra."
     { name = "issuefiles_crossval", type = "dataframe" },
   ]
 
+  [[plugins.tasks]]
+  filename = "plugins.py"
+  name = "filter"
+  input_params = [
+    { name = "dataset", type = "dataset", required = true },
+    { name = "delete_idxs", type = "np.ndarray", required = true},
+    { name = "save", type = "boolean", required = true },
+    { name = "batch_size", type = "integer", required = true }
+  ]
+  output_params = [ 
+    { name = "filtered list", type = "dataset" }
+  ]
+
+[[plugins.tasks]]
+  filename = "plugins.py"
+  name = "poison"
+  input_params = [
+    { name = "dataset", type = "dataset", required = true },
+    { name = "classifier", type = "model", required = true},
+    { name = "percentage", type = "number", required = true },
+    { name = "adv_data_dir", type = "str_path", required = true },
+    { name = "batch_size", type = "integer", required = true }
+  ]
+  output_params = [  ]
+
 [[plugin_param_types]]
 name = "message"
 description = "A message produced by a plugin task"
@@ -599,7 +624,7 @@ plugins = [ "mnist_demo" ]
 [[entrypoints]]
 path = "entrypoints/clean.yml"
 name = "Clean"
-description = "Run Cleanlab on a trained."
+description = "Run Cleanlab with cross validation."
 params = [
   { name = "image_size", type = "list", default_value = "[28, 28, 1]" },
   { name = "model_input_size", type = "list", default_value = "[784, 1]" },
@@ -613,11 +638,35 @@ params = [
   { name = "seed", type = "integer", default_value = "10145783023" },
   { name = "rescale", type = "float", default_value = "0.00392156862" },
   { name = "training_dir", type = "string", default_value = "/dioptra/data/Mnist/training" },
-  { name = "testing_dir", type = "string", default_value = "/dioptra/data/Mnist/testing" },
+  { name = "testing_dir", type = "string", default_value = "/dioptra/data/Mnist/training" },
   { name = "learning_rate", type = "float", default_value = "0.001" },
   { name = "model_architecture", type = "string", default_value = "le_transform_net" },
   { name = "optimizer_name", type = "string", default_value = "Adam" },
   { name = "filename", type = "string", default_value = "deleted_data.csv" },  
   { name = "format", type = "string", default_value = "csv" },
+]
+plugins = [ "cleanlab_demo", "mnist_demo" ]
+
+
+[[entrypoints]]
+path = "entrypoints/poison.yml"
+name = "Poison"
+description = "Run poisoning on a dataset."
+params = [
+  { name = "seed", type = "integer", default_value = "10145783023" },
+  { name = "training_dir", type = "string", default_value = "/dioptra/data/Mnist/training" },
+  { name = "image_size", type = "list", default_value = "[28, 28, 1]" },
+  { name = "rescale", type = "float", default_value = "0.00392156862" },
+  { name = "batch_size", type = "integer", default_value = "128"},
+  { name = "model_architecture", type = "string", default_value = "le_transform_net" },
+  { name = "model_input_size", type = "list", default_value = "[784, 1]" },
+  { name = "learning_rate", type = "float", default_value = "0.001" },
+  { name = "optimizer_name", type = "string", default_value = "Adam" },
+  { name = "percent_poison", type = "float", default_value = "0.33" },
+  { name = "adv_data_dir", type = "string", default_value = "poison_testing" },
+  { name = "adv_tar_name", type = "string", default_value = "poison_testing.tar.gz" },
+  { name = "model_name", type = "string", default_value = "mnist_classifier" },
+  { name = "model_version", type = "integer", default_value = "-1" },
+  { name = "clip_values", type = "list", default_value = "[0, 1]" },
 ]
 plugins = [ "cleanlab_demo", "mnist_demo" ]

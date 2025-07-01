@@ -33,16 +33,25 @@ from sklearn.model_selection import cross_val_predict
 from keras.wrappers import SKLearnClassifier
 from .restapi import post_metrics
 
+from art.attacks.poisoning import (
+    PoisoningAttackBackdoor,
+    PoisoningAttackCleanLabelBackdoor,
+)
+from art.attacks.poisoning.perturbations import add_pattern_bd
+from art.utils import to_categorical
+
+from tensorflow.keras.preprocessing.image import save_img
+
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 @pyplugs.register
 def clean (
     classifier: Model,
-    dataset: Dataset, 
+    dataset: Dataset,
     delete_confidence: float = 0.05,
     relabel_confidence: float = 0.10
 ) -> tuple[np.ndarray, pd.DataFrame]:
-    
+
     # later on found https://cleanlab.ai/blog/cleanlab-2.3 which might solve of the 
     # below class manipulations
     # https://docs.cleanlab.ai/stable/cleanlab/models/keras.html
@@ -55,10 +64,10 @@ def clean (
     labels = []
 
     model = SKLearnClassifierPredictProba(classifier)
-    for _, (x, y) in enumerate(dataset):
+    for (x, y) in dataset:
         x_prime = [reshape(xs, [-1]) for xs in x] 
         data.extend(x_prime)
-        y_prime = [np.argmax(ys) for ys in y]
+        y_prime = np.argmax(y, axis=1)
         labels.extend(y_prime)
     # print("ARRAY", np.array(data).shape)
 
@@ -91,3 +100,64 @@ def clean (
         xval[dataset.file_paths[index]] = pred_probs[index]
         # print(dataset.file_paths[index])
     return (label_issues, pd.DataFrame.from_dict(xval, orient='index'))
+
+@pyplugs.register
+def poison (
+    dataset: Dataset,
+    classifier: Model,
+    percentage: float,
+    adv_data_dir: str | Path,
+    batch_size:int,
+    target_idx: int = 0,
+) -> None:
+
+    assert (0 < percentage) and (percentage < 1), \
+        "the percentage must be between 0 and 1"
+
+    # construct target from target idx
+    # the len call could be replaced with a function from mnist_demo for readability
+    n_classes = len(dataset.class_names)
+    target = to_categorical([target_idx], n_classes)[0]
+
+    perturbation = add_pattern_bd
+    backdoor = PoisoningAttackBackdoor(perturbation)
+    attack = PoisoningAttackCleanLabelBackdoor(backdoor,
+                                               classifier,
+                                               target,
+                                               percentage)
+    img_filenames = [Path(x) for x in dataset.file_paths]
+
+    for batch_num, (x, y) in enumerate(dataset):
+        # This try except is to catch an error for when the set poison tries to poison is empty
+        # It seems like batch_size must be sufficently large enough that probablistically, some
+        # of the batch continues to be poisoned]
+        try:
+            poisoned_batch_data, poisoned_batch_labels = attack.poison(x.numpy(), y)
+        except:
+            poisoned_batch_data, poisoned_batch_labels = (x, y)
+
+        clean_filenames = img_filenames[ batch_num * batch_size : (batch_num + 1) * batch_size  ]
+        poisoned_batch_labels = np.argmax(y, axis=1)
+        _save_adv_batch(poisoned_batch_data, Path(adv_data_dir), poisoned_batch_labels, clean_filenames)
+
+# from mnist demo
+def _save_adv_batch(adv_batch, adv_data_dir, y, clean_filenames) -> None:
+    """Saves a batch of adversarial images to disk.
+
+    Args:
+        adv_batch: A generated batch of adversarial images.
+        adv_data_dir: The directory to use when saving the generated adversarial images.
+        y: An array containing the target labels of the original images.
+        clean_filenames: A list containing the filenames of the original images.
+    """
+    for batch_image_num, adv_image in enumerate(adv_batch):
+        adv_image_path = (
+            adv_data_dir
+            / f"{y[batch_image_num]}"
+            / f"adv_{clean_filenames[batch_image_num].name}"
+        )
+
+        if not adv_image_path.parent.exists():
+            adv_image_path.parent.mkdir(parents=True)
+
+        save_img(path=str(adv_image_path), x=adv_image)
