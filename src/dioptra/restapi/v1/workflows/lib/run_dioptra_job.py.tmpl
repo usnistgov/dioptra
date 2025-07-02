@@ -28,6 +28,8 @@ from dioptra.sdk.utilities.contexts import env_vars, sys_path_dirs
 from dioptra.task_engine.issues import IssueSeverity
 from dioptra.task_engine.task_engine import run_experiment
 from dioptra.task_engine.validation import validate
+from dioptra.rq.tasks.run_task_engine_stoppable import run_experiment_stoppable
+
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 DIOPTRA_JOB_ID = "dioptra.jobId"
@@ -44,7 +46,7 @@ def main(
     enable_mlflow_tracking: bool = False,
     dioptra_client: DioptraClient[dict[str, Any]] | None = None,
     logger: BoundLogger | None = None,
-) -> None:
+) -> bool:
     log = logger or LOGGER.new(job_id=JOB_ID, experiment_id=EXPERIMENT_ID)  # noqa: F841
 
     if not Path(plugins_dir).exists():
@@ -90,7 +92,7 @@ def _run_job(
     job_yaml: Mapping[str, Any],
     job_parameters: MutableMapping[str, Any],
     logger: BoundLogger | None = None,
-) -> None:
+) -> bool:
     """Run the job.
 
     Args:
@@ -100,14 +102,22 @@ def _run_job(
             parameter name to value
         logger: A structlog logger instance. If not provided, a new logger
             will be created
+
+    Returns:
+        True if the experiment was stopped prematurely; False if not
     """
     log = logger or LOGGER.new(job_id=JOB_ID, experiment_id=EXPERIMENT_ID)  # noqa: F841
 
     try:
         with sys_path_dirs(dirs=(str(plugins_dir),)), env_vars({"__JOB_ID": str(JOB_ID)}):
-            run_experiment(job_yaml, job_parameters)
+            was_stopped = run_experiment_stoppable(job_yaml, job_parameters)
 
-        log.info("=== Run succeeded ===")
+        if was_stopped:
+            log.info("=== Run stopped ===")
+        else:
+            log.info("=== Run succeeded ===")
+
+        return was_stopped
 
     except Exception as e:
         log.exception("=== Run failed ===")
@@ -120,7 +130,7 @@ def _run_mlflow_tracked_job(
     job_yaml: Mapping[str, Any],
     job_parameters: MutableMapping[str, Any],
     logger: BoundLogger | None = None,
-) -> None:
+) -> bool:
     """Run the job and start tracking the run in MLflow tracking server.
 
     Args:
@@ -131,6 +141,9 @@ def _run_mlflow_tracked_job(
             parameter name to value
         logger: A structlog logger instance. If not provided, a new logger
             will be created
+
+    Returns:
+        True if the experiment was stopped prematurely; False if not
     """
     log = logger or LOGGER.new(job_id=JOB_ID, experiment_id=EXPERIMENT_ID)  # noqa: F841
     active_run = mlflow.start_run()
@@ -144,10 +157,16 @@ def _run_mlflow_tracked_job(
         mlflow.log_params(job_parameters)
 
         with sys_path_dirs(dirs=(str(plugins_dir),)), env_vars({"__JOB_ID": str(JOB_ID)}):
-            run_experiment(job_yaml, job_parameters)
+            was_stopped = run_experiment_stoppable(job_yaml, job_parameters)
 
-        log.info("=== Run succeeded ===")
-        mlflow.end_run()
+        if was_stopped:
+            log.info("=== Run stopped ===")
+            mlflow.end_run("KILLED")
+        else:
+            log.info("=== Run succeeded ===")
+            mlflow.end_run()
+
+        return was_stopped
 
     except Exception as e:
         log.exception("=== Run failed ===")

@@ -126,15 +126,22 @@ def run_v1_dioptra_job(job_id: int, experiment_id: int) -> None:  # noqa: C901
 
         # Execute the main function in the included script file.
         try:
-            run_dioptra_job.main(
+            was_stopped = run_dioptra_job.main(
                 plugins_dir=plugins_dir,
                 enable_mlflow_tracking=True,
                 dioptra_client=client,
                 logger=log,
             )
-            client.experiments.jobs.set_status(
-                experiment_id=experiment_id, job_id=job_id, status="finished"
-            )
+
+            if was_stopped:
+                # We don't have a job status value for "stopped" or "killed"...
+                client.experiments.jobs.set_status(
+                    experiment_id=experiment_id, job_id=job_id, status="failed"
+                )
+            else:
+                client.experiments.jobs.set_status(
+                    experiment_id=experiment_id, job_id=job_id, status="finished"
+                )
 
         except Exception as e:
             client.experiments.jobs.set_status(
