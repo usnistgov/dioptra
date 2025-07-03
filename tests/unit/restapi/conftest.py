@@ -265,8 +265,7 @@ def deletion_policy(request):
 
 
 @pytest.fixture(
-    params=list(ExistenceResult),
-    ids=[e.name.lower() for e in ExistenceResult]
+    params=list(ExistenceResult), ids=[e.name.lower() for e in ExistenceResult]
 )
 def existence_status(request):
     """

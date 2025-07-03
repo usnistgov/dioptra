@@ -19,6 +19,7 @@ import datetime
 import pytest
 
 import dioptra.restapi.db.models as m
+import tests.unit.restapi.lib.helpers as helpers
 from dioptra.restapi.db.models.constants import resource_lock_types
 from dioptra.restapi.errors import (
     EntityDeletedError,
@@ -27,7 +28,6 @@ from dioptra.restapi.errors import (
     MismatchedResourceTypeError,
     UserNotInGroupError,
 )
-import tests.unit.restapi.lib.helpers as helpers
 
 
 @pytest.fixture

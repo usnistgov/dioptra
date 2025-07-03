@@ -401,7 +401,9 @@ def test_user_get_page_deleted(user_repo, account, db):
 
     # Unsure sqlalchemy always returns lists... just gather from its sequences
     # into lists, to make sure we can compare them.
-    page, count = list(user_repo.get_by_filters_paged([], 0, 3, DeletionPolicy.NOT_DELETED))
+    page, count = list(
+        user_repo.get_by_filters_paged([], 0, 3, DeletionPolicy.NOT_DELETED)
+    )
     assert page == [users[0], users[1], users[3]]
     assert count == 8
 

@@ -22,7 +22,7 @@ from hashlib import sha256
 from io import BytesIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import IO, Any, Final, cast
+from typing import Any, Final, cast
 
 import jsonschema
 import structlog
@@ -52,6 +52,7 @@ from dioptra.restapi.v1.plugin_parameter_types.service import (
     PluginParameterTypeIdService,
     PluginParameterTypeNameService,
     PluginParameterTypeService,
+    get_plugin_task_parameter_types_by_id,
 )
 from dioptra.restapi.v1.plugins.schema import ALLOWED_PLUGIN_FILENAME_REGEX
 from dioptra.restapi.v1.plugins.service import (
@@ -70,10 +71,8 @@ from dioptra.restapi.v1.shared.task_engine_yaml.service import TaskEngineYamlSer
 from dioptra.sdk.utilities.paths import set_cwd
 from dioptra.task_engine.issues import IssueSeverity, IssueType, ValidationIssue
 
-from ..filetypes import FileTypes
 from .lib import views
 from .lib.clone_git_repository import clone_git_repository
-from .lib.package_job_files import package_job_files
 from .schema import (
     ResourceImportResolveNameConflictsStrategy,
     ResourceImportSourceTypes,
@@ -95,66 +94,6 @@ VALID_ENTRYPOINT_PARAM_TYPES: Final[set[str]] = {
     "list",
     "mapping",
 }
-
-
-class JobFilesDownloadService(object):
-    """The service methods for packaging job files for download."""
-
-    @inject
-    def __init__(
-        self,
-        task_engine_yaml_service: TaskEngineYamlService,
-    ) -> None:
-        """Initialize the job files download service.
-
-        All arguments are provided via dependency injection.
-
-        Args:
-            task_engine_yaml_service: A TaskEngineYamlService object.
-        """
-        self._task_engine_yaml_service = task_engine_yaml_service
-
-    def get(self, job_id: int, file_type: FileTypes, **kwargs) -> IO[bytes]:
-        """Get the files needed to run a job and package them for download.
-
-        Args:
-            job_id: The identifier of the job.
-            file_type: The type of file to package the job files into. Must be one of
-                the values in the FileTypes enum.
-
-        Returns:
-            The packaged job files returned as a named temporary file.
-        """
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
-        log.debug("Get job files download", job_id=job_id, file_type=file_type)
-
-        experiment = views.get_experiment(job_id=job_id, logger=log)
-        entry_point = views.get_entry_point(job_id=job_id, logger=log)
-        entry_point_plugin_files = views.get_entry_point_plugin_files(
-            job_id=job_id, logger=log
-        )
-        job_parameter_values = views.get_job_parameter_values(job_id=job_id, logger=log)
-        plugin_parameter_types = views.get_plugin_parameter_types(
-            job_id=job_id, logger=log
-        )
-
-        task_engine_yaml = self._task_engine_yaml_service.build_yaml(
-            entry_point=entry_point,  # pyright: ignore
-            plugin_plugin_files=entry_point_plugin_files,  # pyright: ignore
-            plugin_parameter_types=plugin_parameter_types,  # pyright: ignore
-            logger=log,
-        )
-
-        return package_job_files(
-            job_id=job_id,
-            experiment=experiment,
-            entry_point_name=entry_point.name,
-            task_engine_yaml=task_engine_yaml,
-            entry_point_plugin_files=entry_point_plugin_files,
-            job_parameter_values=job_parameter_values,
-            file_type=file_type,
-            logger=log,
-        )
 
 
 class SignatureAnalysisService(object):
@@ -597,13 +536,12 @@ class ResourceImportService(object):
                     ) from e
 
                 self._plugin_id_file_service.create(
-                    plugin_dict["plugin"].resource_id,
+                    plugin_id=plugin_dict["plugin"].resource_id,
                     filename=filename,
                     contents=contents,
                     description=None,
                     artifact_tasks=function_tasks[filename],
                     function_tasks=artifact_tasks[filename],
-                    plugin_id=plugin_dict["plugin"].resource_id,
                     commit=False,
                     log=log,
                 )
@@ -880,9 +818,24 @@ class EntryPointParameterDataAdapter(object):
 
 
 @dataclass
+class TaskOutputParameterDataAdapter(object):
+    parameter_number: int
+    name: str
+    parameter_type: models.PluginTaskParameterType
+
+
+@dataclass
+class EntryPointArtifactDataAdapter(object):
+    name: str
+    output_parameters: list[TaskOutputParameterDataAdapter]
+
+
+@dataclass
 class EntryPointDataAdapter(object):
     task_graph: str
+    artifact_graph: str
     parameters: list[EntryPointParameterDataAdapter]
+    artifact_parameters: list[EntryPointArtifactDataAdapter]
 
 
 class ValidateEntrypointService(object):
@@ -906,8 +859,10 @@ class ValidateEntrypointService(object):
         self,
         group_id: int,
         task_graph: str,
+        artifact_graph: str,
         plugin_snapshot_ids: list[int],
         entrypoint_parameters: list[dict[str, Any]],
+        entrypoint_artifacts: list[dict[str, Any]],
         **kwargs,
     ) -> dict[str, Any]:
         """Validate the proposed inputs to an entrypoint resource.
@@ -915,9 +870,12 @@ class ValidateEntrypointService(object):
         Args:
             group_id: The ID of the group validating the entrypoint resource.
             task_graph: The proposed task graph for the entrypoint resource.
+            artifact_graph: The proposed artifact graph for the entrypoint resource.
             plugin_snapshot_ids: A list of identifiers for the plugin snapshots that
                 will be attached to the Entrypoint resource.
             entrypoint_parameters: The proposed list of parameters for the entrypoint
+                resource.
+            entrypoint_artifacts: The proposed list of Artifacts for the entrypoint
                 resource.
 
         Returns:
@@ -934,12 +892,21 @@ class ValidateEntrypointService(object):
         log.debug(
             "Validating input for an entrypoint resource",
             task_graph=task_graph,
+            artifact_graph=artifact_graph,
             plugin_ids=plugin_snapshot_ids,
             entrypoint_parameters=entrypoint_parameters,
+            entrypoint_artifacts=entrypoint_artifacts,
         )
 
+        type_ids = [
+            parameter["parameter_type_id"]
+            for artifact in entrypoint_artifacts
+            for parameter in artifact["output_parameters"]
+        ]
+        id_type_map = get_plugin_task_parameter_types_by_id(ids=type_ids, log=log)
         entrypoint = EntryPointDataAdapter(
             task_graph=task_graph,
+            artifact_graph=artifact_graph,
             parameters=[
                 EntryPointParameterDataAdapter(
                     parameter_type=param["parameter_type"],
@@ -948,16 +915,30 @@ class ValidateEntrypointService(object):
                 )
                 for param in entrypoint_parameters
             ],
-        )
-        plugin_plugin_files = views.get_plugin_plugin_files_from_plugin_snapshot_ids(
-            plugin_snapshot_ids=plugin_snapshot_ids, logger=log
+            artifact_parameters=[
+                EntryPointArtifactDataAdapter(
+                    name=artifact["name"],
+                    output_parameters=[
+                        TaskOutputParameterDataAdapter(
+                            name=param["name"],
+                            parameter_number=p,
+                            parameter_type=id_type_map[param["parameter_type_id"]],
+                        )
+                        for p, param in enumerate(entrypoint_parameters)
+                    ],
+                )
+                for artifact in entrypoint_artifacts
+            ],
         )
         plugin_parameter_types = views.get_plugin_parameter_types(
             group_id=group_id, logger=log
         )
+        plugin_plugin_files = views.get_plugin_plugin_files_from_plugin_snapshot_ids(
+            plugin_snapshot_ids=plugin_snapshot_ids, logger=log
+        )
         try:
             task_engine_dict = self._task_engine_yaml_service.build_dict(
-                entry_point=entrypoint,
+                entry_point=entrypoint,  # pyright: ignore
                 plugin_plugin_files=plugin_plugin_files,  # pyright: ignore
                 plugin_parameter_types=plugin_parameter_types,  # pyright: ignore
                 logger=log,

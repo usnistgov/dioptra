@@ -349,6 +349,7 @@ class EntrypointIdService(object):
     def get(
         self,
         entrypoint_id: int,
+        entrypoint_snapshot_id: int | None = None,
         **kwargs,
     ) -> utils.EntrypointDict:
         """Fetch a entrypoint by its unique id.
@@ -365,20 +366,28 @@ class EntrypointIdService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get entrypoint by id", entrypoint_id=entrypoint_id)
         # Get a specific snapshot if entrypoint_snapshot_id is specified
+        snapshot_id = (
+            entrypoint_snapshot_id
+            if entrypoint_snapshot_id is not None
+            else models.Resource.latest_snapshot_id
+        )
         stmt = (
             select(models.EntryPoint)
             .join(models.Resource)
             .where(
                 models.EntryPoint.resource_id == entrypoint_id,
-                models.EntryPoint.resource_snapshot_id
-                == models.Resource.latest_snapshot_id,
+                models.EntryPoint.resource_snapshot_id == snapshot_id,
                 models.Resource.is_deleted == False,  # noqa: E712
             )
         )
         entrypoint = db.session.scalars(stmt).first()
 
         if entrypoint is None:
-            raise EntityDoesNotExistError(RESOURCE_TYPE, entrypoint_id=entrypoint_id)
+            raise EntityDoesNotExistError(
+                RESOURCE_TYPE,
+                entrypoint_id=entrypoint_id,
+                entrypoint_snapshot_id=entrypoint_snapshot_id,
+            )
 
         queue_ids = set(
             resource.resource_id

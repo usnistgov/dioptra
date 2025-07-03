@@ -51,9 +51,7 @@ from dioptra.restapi.v1.shared.tags.controller import (
     generate_resource_tags_endpoint,
     generate_resource_tags_id_endpoint,
 )
-from dioptra.restapi.v1.workflows.lib.export_task_engine_yaml import (
-    build_task_engine_dict,
-)
+from dioptra.restapi.v1.shared.task_engine_yaml.service import TaskEngineYamlService
 
 from .schema import (
     EntrypointArtifactPluginMutableFieldsSchema,
@@ -281,6 +279,7 @@ class EntryPointSnapshotConfigEndpoint(Resource):
     def __init__(
         self,
         entrypoint_snapshot_id_service: EntrypointSnapshotIdService,
+        yaml_service: TaskEngineYamlService,
         *args,
         **kwargs,
     ) -> None:
@@ -290,8 +289,10 @@ class EntryPointSnapshotConfigEndpoint(Resource):
 
         Args:
             entrypoint_snapshot_id_service: A EntrypointSnapshotIdService object.
+            yaml_service: A TaskEngineYamlService object
         """
         self._entrypoint_snapshot_id_service = entrypoint_snapshot_id_service
+        self._yaml_service = yaml_service
         super().__init__(*args, **kwargs)
 
     @login_required
@@ -317,10 +318,10 @@ class EntryPointSnapshotConfigEndpoint(Resource):
         types = self._entrypoint_snapshot_id_service.get_group_plugin_parameter_types(
             entry_point.resource.group_id, log=log
         )
-        return build_task_engine_dict(
-            entrypoint=entry_point,
-            plugin_plugin_files=plugin_files,
-            plugin_parameter_types=types,
+        return self._yaml_service.build_dict(
+            entry_point=entry_point,  # pyright: ignore
+            plugin_plugin_files=plugin_files,  # pyright: ignore
+            plugin_parameter_types=types,  # pyright: ignore
             logger=log,
         )
 

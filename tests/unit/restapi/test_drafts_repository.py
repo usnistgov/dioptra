@@ -303,24 +303,19 @@ def draft_stuff(db, fake_data, draft_content):
         "alannah": alannah,
         "alpha": alpha,
         "abi": abi,
-
         "bear": bear,
         "bria": bria,
         "blaze": blaze,
-
         "cyan": cyan,
         "cydney": cydney,
         "coty": coty,
-
         "dell": dell,
         "derick": derick,
         "dixon": dixon,
-
         "groupa": groupa,
         "groupb": groupb,
         "groupc": groupc,
         "groupd": groupd,
-
         "queues": all_queues,
         "draft_mods": draft_mods,
         "draft_resources": draft_resources,
@@ -929,9 +924,7 @@ def test_drafts_get_modification_by_user(drafts_repo, draft_stuff):
     assert found_draft.draft_resource_id == draft.draft_resource_id
 
 
-def test_drafts_get_modification_by_user_user_not_exist(
-    drafts_repo, draft_stuff
-):
+def test_drafts_get_modification_by_user_user_not_exist(drafts_repo, draft_stuff):
     queue = draft_stuff["queues"][3][2]
 
     with pytest.raises(e.EntityDoesNotExistError):
@@ -941,9 +934,7 @@ def test_drafts_get_modification_by_user_user_not_exist(
         )
 
 
-def test_drafts_get_modification_by_user_user_deleted(
-    db, drafts_repo, draft_stuff
-):
+def test_drafts_get_modification_by_user_user_deleted(db, drafts_repo, draft_stuff):
     queue = draft_stuff["queues"][2][0]
 
     user2 = m.User("user2", "password", "user2@example.org")
@@ -970,9 +961,7 @@ def test_drafts_get_modification_by_user_user_deleted(
         )
 
 
-def test_drafts_get_modification_by_user_resource_not_exist(
-    drafts_repo, draft_stuff
-):
+def test_drafts_get_modification_by_user_resource_not_exist(drafts_repo, draft_stuff):
     draft = draft_stuff["draft_mods"][1]
 
     with pytest.raises(e.EntityDoesNotExistError):
@@ -982,9 +971,7 @@ def test_drafts_get_modification_by_user_resource_not_exist(
         )
 
 
-def test_drafts_get_modification_by_user_resource_deleted(
-    db, drafts_repo, draft_stuff
-):
+def test_drafts_get_modification_by_user_resource_deleted(db, drafts_repo, draft_stuff):
     queue = draft_stuff["queues"][1][1]
     draft = draft_stuff["draft_mods"][1]
 
@@ -999,9 +986,7 @@ def test_drafts_get_modification_by_user_resource_deleted(
         )
 
 
-def test_drafts_get_modification_by_user_not_found(
-    db, drafts_repo, draft_stuff
-):
+def test_drafts_get_modification_by_user_not_found(db, drafts_repo, draft_stuff):
     queue = draft_stuff["queues"][0][0]
 
     user2 = m.User("user2", "password", "user2@example.org")
@@ -1271,10 +1256,15 @@ def test_drafts_update_modification_snapshot(db, drafts_repo, draft_stuff):
     )
     db.session.commit()
 
-    assert updated_draft.payload["resource_snapshot_id"] == draft_stuff["queues"][0][1].resource_snapshot_id
+    assert (
+        updated_draft.payload["resource_snapshot_id"]
+        == draft_stuff["queues"][0][1].resource_snapshot_id
+    )
 
 
-def test_drafts_update_modification_snapshot_not_modification(db, drafts_repo, draft_stuff):
+def test_drafts_update_modification_snapshot_not_modification(
+    db, drafts_repo, draft_stuff
+):
     # trying to update the resource_snapshot_id on a draft resource doesn't
     # make any sense.
     draft = draft_stuff["draft_resources"][0]
@@ -1299,7 +1289,9 @@ def test_drafts_update_modification_snapshot_not_exist(db, drafts_repo, draft_st
         )
 
 
-def test_drafts_update_modification_snapshot_wrong_resource(db, drafts_repo, draft_stuff):
+def test_drafts_update_modification_snapshot_wrong_resource(
+    db, drafts_repo, draft_stuff
+):
     draft = draft_stuff["draft_mods"][0]
     # The above mod is of a different resource, so we aren't allowed to update
     # the snapshot to this one.

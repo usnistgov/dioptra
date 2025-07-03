@@ -17,10 +17,9 @@
 """The module defining the endpoints for Workflow resources."""
 
 import uuid
-from typing import cast
 
 import structlog
-from flask import request, send_file
+from flask import request
 from flask_accepts import accepts, responds
 from flask_login import login_required
 from flask_restx import Namespace, Resource
@@ -30,9 +29,7 @@ from structlog.stdlib import BoundLogger
 from dioptra.restapi.utils import as_api_parser, as_parameters_schema_list
 from dioptra.restapi.v1.schemas import IdStatusResponseSchema
 
-from ..filetypes import FileTypes
 from .schema import (
-    JobFilesDownloadQueryParametersSchema,
     ResourceImportSchema,
     SignatureAnalysisOutputSchema,
     SignatureAnalysisSchema,
@@ -41,7 +38,6 @@ from .schema import (
 )
 from .service import (
     DraftCommitService,
-    JobFilesDownloadService,
     ResourceImportService,
     SignatureAnalysisService,
     ValidateEntrypointService,
@@ -50,46 +46,6 @@ from .service import (
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 api: Namespace = Namespace("Workflows", description="Workflows endpoint")
-
-
-@api.route("/jobFilesDownload")
-class JobFilesDownloadEndpoint(Resource):
-    @inject
-    def __init__(
-        self, job_files_download_service: JobFilesDownloadService, *args, **kwargs
-    ) -> None:
-        """Initialize the workflow resource.
-
-        All arguments are provided via dependency injection.
-
-        Args:
-            job_files_download_service: A JobFilesDownloadService object.
-        """
-        self._job_files_download_service = job_files_download_service
-        super().__init__(*args, **kwargs)
-
-    @login_required
-    @accepts(query_params_schema=JobFilesDownloadQueryParametersSchema, api=api)
-    def get(self):
-        """Download a compressed file archive containing the files needed to execute a submitted job."""  # noqa: B950
-        log = LOGGER.new(  # noqa: F841
-            request_id=str(uuid.uuid4()),
-            resource="JobFilesDownload",
-            request_type="GET",
-        )
-        parsed_query_params = request.parsed_query_params  # noqa: F841
-        file_type = cast(FileTypes, parsed_query_params["file_type"])
-        job_files_download_package = self._job_files_download_service.get(
-            job_id=parsed_query_params["job_id"],
-            file_type=file_type,
-            log=log,
-        )
-        return send_file(
-            path_or_file=job_files_download_package.name,
-            as_attachment=True,
-            mimetype=file_type.mimetype,
-            download_name="job_files" + file_type.suffix,
-        )
 
 
 @api.route("/pluginTaskSignatureAnalysis")
@@ -227,12 +183,16 @@ class ValidateEntrypointEndpoint(Resource):
         parsed_obj = request.parsed_obj  # pyright: ignore
         group_id = parsed_obj["group_id"]
         task_graph = parsed_obj["task_graph"]
+        artifact_graph = parsed_obj.get("artifact_graph", {})
         plugin_snapshot_ids = parsed_obj["plugin_snapshot_ids"]
         parameters = parsed_obj["parameters"]
+        artifact_parameters = parsed_obj.get("artifacts", [])
         return self._validate_entrypoint_service.validate(
             group_id=group_id,
             task_graph=task_graph,
+            artifact_graph=artifact_graph,
             plugin_snapshot_ids=plugin_snapshot_ids,
             entrypoint_parameters=parameters,
+            entrypoint_artifacts=artifact_parameters,
             log=log,
         )

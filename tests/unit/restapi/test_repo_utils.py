@@ -778,10 +778,7 @@ def test_assert_resources_exist_via_ids(db, resource_status_combo, deletion_poli
 
     # Do the check via IDs, and use "999999" as a stand-in for non-existent
     # resources.
-    snap_ids = [
-        snap.resource_id or 999999
-        for snap in snaps
-    ]
+    snap_ids = [snap.resource_id or 999999 for snap in snaps]
 
     exc = helpers.expected_exception_for_combined_status(
         statuses,
@@ -1277,28 +1274,18 @@ def test_get_one_latest_snapshot(db, resource_status, deletion_policy):
 
     snap, status = resource_status
 
-    exc = helpers.expected_exception_for_combined_status(
-        (status,), deletion_policy
-    )
+    exc = helpers.expected_exception_for_combined_status((status,), deletion_policy)
 
     if exc:
         with pytest.raises(exc):
-            utils.get_one_latest_snapshot(
-                db.session,
-                type(snap),
-                snap,
-                deletion_policy
-            )
+            utils.get_one_latest_snapshot(db.session, type(snap), snap, deletion_policy)
     else:
         expected_latest_snaps = helpers.find_expected_snaps_for_deletion_policy(
             (snap,), deletion_policy
         )
 
         latest_snap = utils.get_one_latest_snapshot(
-            db.session,
-            type(snap),
-            snap.resource_id,
-            deletion_policy
+            db.session, type(snap), snap.resource_id, deletion_policy
         )
 
         assert latest_snap == expected_latest_snaps[0]
@@ -1375,11 +1362,7 @@ def test_get_snapshot_by_name(db, account, resource_status_combo, deletion_polic
     all_snap_names.append("doesnt exist")  # add a garbage name too
 
     latest_snaps = utils.get_snapshot_by_name(
-        db.session,
-        snap_class,
-        all_snap_names,
-        account.group,
-        deletion_policy
+        db.session, snap_class, all_snap_names, account.group, deletion_policy
     )
 
     assert _same_snapshots(expected_latest_snaps, latest_snaps)
@@ -1392,11 +1375,7 @@ def test_get_snapshot_by_name(db, account, resource_status_combo, deletion_polic
             expected_latest_snap = None
 
         latest_snap = utils.get_snapshot_by_name(
-            db.session,
-            snap_class,
-            snaps[0].name,
-            account.group,
-            deletion_policy
+            db.session, snap_class, snaps[0].name, account.group, deletion_policy
         )
 
         assert latest_snap == expected_latest_snap

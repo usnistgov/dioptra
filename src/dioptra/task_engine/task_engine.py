@@ -187,7 +187,7 @@ class EngineContext:
                 value = self.artifact_parameters[reference]
                 if len(value) != 1:
                     raise IllegalOutputReferenceError(reference)
-                value = next(iter(value))
+                value = next(iter(value.values()))
 
             else:
                 raise UnresolvableReferenceError(reference)

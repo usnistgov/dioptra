@@ -20,8 +20,7 @@ import structlog
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
-
-from .type_coercions import GlobalParameterType, coerce_to_type
+from dioptra.restapi.v1.type_coercions import GlobalParameterType, coerce_to_type
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 

@@ -21,6 +21,7 @@ API endpoints.
 """
 import datetime
 from typing import Any, Container, Iterable, Type
+
 import dioptra.restapi.db.repository.utils as utils
 import dioptra.restapi.errors as errors
 from dioptra.restapi.db.models import ResourceSnapshot
@@ -157,7 +158,8 @@ def expected_exception_for_combined_status(
 
 
 def expected_exception_for_not_exists(
-    status: utils.ExistenceResult, policy: utils.DeletionPolicy,
+    status: utils.ExistenceResult,
+    policy: utils.DeletionPolicy,
 ) -> Type[errors.DioptraError] | None:
     """
     Compute what the expected exception would be for a non-existence check,
@@ -193,8 +195,7 @@ def expected_exception_for_not_exists(
 
 
 def find_expected_snaps_for_deletion_policy(
-    snaps: Iterable[ResourceSnapshot],
-    deletion_policy: utils.DeletionPolicy
+    snaps: Iterable[ResourceSnapshot], deletion_policy: utils.DeletionPolicy
 ) -> list[ResourceSnapshot]:
     """
     This function determines which snaps match up with a given deletion policy,
@@ -204,22 +205,21 @@ def find_expected_snaps_for_deletion_policy(
 
     if deletion_policy is utils.DeletionPolicy.NOT_DELETED:
         expected_snaps = [
-            snap for snap in snaps
-            if snap.resource.resource_id is not None
-            and not snap.resource.is_deleted
+            snap
+            for snap in snaps
+            if snap.resource.resource_id is not None and not snap.resource.is_deleted
         ]
 
     elif deletion_policy is utils.DeletionPolicy.DELETED:
         expected_snaps = [
-            snap for snap in snaps
-            if snap.resource.resource_id is not None
-            and snap.resource.is_deleted
+            snap
+            for snap in snaps
+            if snap.resource.resource_id is not None and snap.resource.is_deleted
         ]
 
     else:  # DeletionPolicy.ANY
         expected_snaps = [
-            snap for snap in snaps
-            if snap.resource.resource_id is not None
+            snap for snap in snaps if snap.resource.resource_id is not None
         ]
 
     return expected_snaps

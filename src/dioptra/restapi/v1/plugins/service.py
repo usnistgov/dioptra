@@ -40,6 +40,9 @@ from dioptra.restapi.errors import (
 from dioptra.restapi.utils import find_non_unique
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.groups.service import GroupIdService
+from dioptra.restapi.v1.plugin_parameter_types.service import (
+    get_plugin_task_parameter_types_by_id,
+)
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -702,7 +705,6 @@ class PluginIdFileService(object):
         description: str | None,
         function_tasks: list[dict[str, Any]],
         artifact_tasks: list[dict[str, Any]],
-        plugin_id: int,
         commit: bool = True,
         **kwargs,
     ) -> utils.PluginFileDict:
@@ -1343,62 +1345,6 @@ class PluginIdFileIdService(object):
         return {"status": "Success", "id": [plugin_file_id_to_return]}
 
 
-def get_plugin_task_parameter_types_by_id(
-    ids: Iterable[int], log: BoundLogger
-) -> dict[int, models.PluginTaskParameterType]:
-    """Gets all of the PluginTaskParameterType instances based on the given ids
-    iterable
-
-    Args:
-        ids: an iterable containing all of the ids
-        log: where log messages should go
-
-    Returns:
-        The a dictionary of ids to PluginTaskParameterType instances
-
-    Raises:
-        ValueError: if ids does not contain at least one value
-        EntityDoesNotExistError: if one or more of the ids does not exist in the
-            PluginTaskParameterType table
-    """
-    id_list = set(ids)
-    length = len(id_list)
-    if length < 1:
-        raise ValueError("ids must contain at least one value")
-    parameter_types_stmt = (
-        select(models.PluginTaskParameterType)
-        .join(models.Resource)
-        .where(
-            models.PluginTaskParameterType.resource_id.in_(tuple(id_list)),
-            models.Resource.is_deleted == False,  # noqa: E712
-            models.Resource.latest_snapshot_id
-            == models.PluginTaskParameterType.resource_snapshot_id,
-        )
-    )
-    parameter_types = db.session.scalars(parameter_types_stmt).all()
-
-    if parameter_types is None:
-        log.error(
-            "The database query returned a None when it should return plugin "
-            "parameter types.",
-            sql=str(parameter_types_stmt),
-            num_expected=length,
-        )
-        raise BackendDatabaseError
-
-    if not len(parameter_types) == length:
-        returned_parameter_type_ids = set([x.resource_id for x in parameter_types])
-        ids_not_found = id_list - returned_parameter_type_ids
-        raise EntityDoesNotExistError(
-            "plugin task parameter types",
-            num_expected=length,
-            num_found=len(parameter_types),
-            ids_not_found=sorted(list(ids_not_found)),
-        )
-
-    return {x.resource_id: x for x in parameter_types}
-
-
 def _construct_input_params(
     task_name: str,
     parameters: list[dict[str, Any]],
@@ -1475,11 +1421,11 @@ def _construct_artifact_task(
     )
 
 
-def _get_referenced_parameter_types(
+def get_referenced_parameter_types(
     function_tasks: list[dict[str, Any]],
     artifact_tasks: list[dict[str, Any]],
     log: BoundLogger,
-) -> dict[int, models.PluginTaskParameterType] | None:
+) -> dict[int, models.PluginTaskParameterType]:
     parameter_type_ids = list(
         itertools.chain(
             [
@@ -1498,7 +1444,7 @@ def _get_referenced_parameter_types(
     )
 
     if not len(parameter_type_ids) > 0:
-        return None
+        return {}
 
     return get_plugin_task_parameter_types_by_id(ids=parameter_type_ids, log=log)
 
@@ -1515,11 +1461,8 @@ def _add_plugin_tasks(
     if len(duplicates) > 0:
         raise QueryParameterNotUniqueError("plugin task", task_names=duplicates)
 
-    parameter_type_ids_to_orm = (
-        _get_referenced_parameter_types(
-            function_tasks=function_tasks, artifact_tasks=artifact_tasks, log=log
-        )
-        or {}
+    parameter_type_ids_to_orm = get_referenced_parameter_types(
+        function_tasks=function_tasks, artifact_tasks=artifact_tasks, log=log
     )
 
     for task in function_tasks:

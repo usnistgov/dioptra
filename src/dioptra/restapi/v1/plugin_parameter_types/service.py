@@ -16,17 +16,19 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform plugin parameter type endpoint operations."""
 
-from typing import Any, Final
+from typing import Any, Final, Iterable
 
 import structlog
 from flask_login import current_user
 from injector import inject
+from sqlalchemy import select
 from structlog.stdlib import BoundLogger
 
 import dioptra.restapi.db.repository.utils as repoutils
-from dioptra.restapi.db import models
+from dioptra.restapi.db import db, models
 from dioptra.restapi.db.unit_of_work import UnitOfWork
 from dioptra.restapi.errors import (
+    BackendDatabaseError,
     EntityDoesNotExistError,
     InconsistentBuiltinPluginParameterTypesError,
     PluginParameterTypeMatchesBuiltinTypeError,
@@ -533,3 +535,59 @@ class BuiltinPluginParameterTypeService(object):
             )
             for new_builtin_parameter_type in new_builtin_parameter_types
         ]
+
+
+def get_plugin_task_parameter_types_by_id(
+    ids: Iterable[int], log: BoundLogger
+) -> dict[int, models.PluginTaskParameterType]:
+    """Gets all of the PluginTaskParameterType instances based on the given ids
+    iterable
+
+    Args:
+        ids: an iterable containing all of the ids
+        log: where log messages should go
+
+    Returns:
+        The a dictionary of ids to PluginTaskParameterType instances
+
+    Raises:
+        ValueError: if ids does not contain at least one value
+        EntityDoesNotExistError: if one or more of the ids does not exist in the
+            PluginTaskParameterType table
+    """
+    id_list = set(ids)
+    length = len(id_list)
+    if length < 1:
+        raise ValueError("ids must contain at least one value")
+    parameter_types_stmt = (
+        select(models.PluginTaskParameterType)
+        .join(models.Resource)
+        .where(
+            models.PluginTaskParameterType.resource_id.in_(tuple(id_list)),
+            models.Resource.is_deleted == False,  # noqa: E712
+            models.Resource.latest_snapshot_id
+            == models.PluginTaskParameterType.resource_snapshot_id,
+        )
+    )
+    parameter_types = db.session.scalars(parameter_types_stmt).all()
+
+    if parameter_types is None:
+        log.error(
+            "The database query returned a None when it should return plugin "
+            "parameter types.",
+            sql=str(parameter_types_stmt),
+            num_expected=length,
+        )
+        raise BackendDatabaseError
+
+    if not len(parameter_types) == length:
+        returned_parameter_type_ids = set([x.resource_id for x in parameter_types])
+        ids_not_found = id_list - returned_parameter_type_ids
+        raise EntityDoesNotExistError(
+            "plugin task parameter types",
+            num_expected=length,
+            num_found=len(parameter_types),
+            ids_not_found=sorted(list(ids_not_found)),
+        )
+
+    return {x.resource_id: x for x in parameter_types}

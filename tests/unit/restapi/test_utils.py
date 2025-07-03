@@ -19,10 +19,10 @@ from __future__ import annotations
 from http import HTTPStatus
 from typing import Any
 
-from dioptra.client.base import DioptraResponseProtocol, SubCollectionClient
 import pytest
 from marshmallow import ValidationError
 
+from dioptra.client.base import DioptraResponseProtocol, SubCollectionClient
 from dioptra.restapi.utils import find_non_unique, validate_artifact_url
 
 

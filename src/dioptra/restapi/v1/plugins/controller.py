@@ -332,7 +332,6 @@ class PluginIdFilesEndpoint(Resource):
             description=parsed_obj["description"],
             function_tasks=parsed_obj["tasks"].get("functions", []),
             artifact_tasks=parsed_obj["tasks"].get("artifacts", []),
-            plugin_id=id,
             log=log,
         )
         return utils.build_plugin_file(plugin_file)
