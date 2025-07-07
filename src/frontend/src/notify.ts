@@ -12,9 +12,9 @@ export function success(message: string) {
 export function error(message: string) {
   return Notify.create({
     color: 'red-5',
-      textColor: 'white',
-      icon: 'warning',
-      message: message
+    textColor: 'white',
+    icon: 'warning',
+    message: message
   });
 }
 
@@ -24,6 +24,6 @@ export function wait(message: string) {
       textColor: 'white',
       spinner: true,
       message: message,
-	  timeout: 0 //intended to be dismissed manually
+	    timeout: 0 //intended to be dismissed manually
   });
 }
