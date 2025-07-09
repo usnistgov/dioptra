@@ -1,10 +1,19 @@
-hello_step:
-  hello:
-    name: $name
-goodbye_step:
-  greet:
-    greeting: Goodbye
-    name: $name
-shout_step:
-  shout:
-    greeting: $goodbye_step.greeting
+artifacts:
+  output:
+    contents: $goodbye_step.greeting
+    task:
+      name: string
+      args:
+        type: txt
+
+graph:
+  hello_step:
+    hello:
+      name: $name
+  goodbye_step:
+    greet:
+      greeting: Goodbye
+      name: $name
+  shout_step:
+    shout:
+      greeting: $goodbye_step.greeting
