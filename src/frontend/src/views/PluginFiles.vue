@@ -13,7 +13,7 @@
     @create="router.push(`/plugins/${route.params.id}/files/new`)"
   >
     <template #body-cell-tasks="props">
-      {{ props.row.tasks.length }}
+      {{ props.row.tasks.functions.length }}
     </template>
   </TableComponent>
 
