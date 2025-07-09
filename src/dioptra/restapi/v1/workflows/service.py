@@ -540,8 +540,8 @@ class ResourceImportService(object):
                     filename=filename,
                     contents=contents,
                     description=None,
-                    artifact_tasks=function_tasks[filename],
-                    function_tasks=artifact_tasks[filename],
+                    function_tasks=function_tasks[filename],
+                    artifact_tasks=artifact_tasks[filename],
                     commit=False,
                     log=log,
                 )
