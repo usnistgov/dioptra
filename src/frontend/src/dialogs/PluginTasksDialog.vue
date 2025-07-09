@@ -256,7 +256,7 @@ const dupliateTasksWithDifferentParams = computed(() => {
   tasks.value.forEach((task) => {
     const duplicate = props.existingTasks.find((existingTask) => existingTask.name === task.name)
     if(!duplicate) return
-    const areEqual = deepEqual(task, duplicate, ['missing_types'])
+    const areEqual = deepEqual(task, duplicate, ['missing_types', 'id'])
     if(areEqual) return
     else {
       returnObject[`${task.name}`] = {
@@ -274,7 +274,7 @@ const dupliateIdenticalTasks = computed(() => {
   tasks.value.forEach((task) => {
     const duplicate = props.existingTasks.find((existingTask) => existingTask.name === task.name)
     if(!duplicate) return
-    const areEqual = deepEqual(task, duplicate, ['missing_types'])
+    const areEqual = deepEqual(task, duplicate, ['missing_types', 'id'])
     if(!areEqual) return
     else {
       returnObject[`${task.name}`] = {

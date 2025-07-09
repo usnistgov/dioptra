@@ -78,7 +78,7 @@
     <fieldset :class="`${isMobile ? 'col-12' : 'col q-ml-md'}`">
       <legend>Plugin Tasks</legend>
       <TableComponent
-        :rows="pluginFile.tasks"
+        :rows="pluginFile.tasks.functions"
         :columns="taskColumns"
         title="Plugin Tasks"
         ref="tableRef"
@@ -107,7 +107,7 @@
               dense
               clickable
               removable
-              @remove="pluginFile.tasks[props.rowIndex].inputParams.splice(i, 1)"
+              @remove="pluginFile.tasks.functions[props.rowIndex].inputParams.splice(i, 1)"
               @click="handleSelectedParam('edit', props, i, 'inputParams'); showEditParamDialog = true"
             >
               {{ `${param.name}` }}
@@ -137,7 +137,7 @@
               clickable
               removable
               @click="handleSelectedParam('edit', props, i, 'outputParams'); showEditParamDialog = true"
-              @remove="pluginFile.tasks[props.rowIndex].outputParams.splice(i, 1)"
+              @remove="pluginFile.tasks.functions[props.rowIndex].outputParams.splice(i, 1)"
               :label="`${param.name}: ${pluginParameterTypes.filter((type) => type.id === param.parameterType)[0]?.name}`"
             />
             <div v-if="!param.parameterType" class="text-white q-mr-sm q-my-xs bg-red q-pa-xs rounded-borders">
@@ -365,7 +365,7 @@
   />
   <DeleteDialog 
     v-model="showDeleteDialog"
-    @submit="pluginFile.tasks.splice(selectedTaskProps.rowIndex, 1); showDeleteDialog = false"
+    @submit="pluginFile.tasks.functions.splice(selectedTaskProps.rowIndex, 1); showDeleteDialog = false"
     type="Plugin Task"
     :name="selectedTaskProps?.row?.name"
   />
@@ -390,7 +390,7 @@
     v-model="showTasksDialog"
     :pythonCode="pluginFile.contents"
     :pluginParameterTypes="pluginParameterTypes"
-    :existingTasks="JSON.parse(JSON.stringify(pluginFile.tasks))"
+    :existingTasks="JSON.parse(JSON.stringify(pluginFile.tasks.functions))"
     @addTasks="addInferedTasks"
   />
 </template>
@@ -422,13 +422,19 @@
     filename: '',
     description: '',
     contents: '',
-    tasks: []
+    tasks: {
+      functions: [],
+      artifacts: [],
+    }
   })
   const initialCopy = ref({
     filename: '',
     description: '',
     contents: '',
-    tasks: [],
+    tasks: {
+      functions: [],
+      artifacts: [],
+    }
   })
 
   const valuesChanged = computed(() => {
@@ -476,7 +482,7 @@
         description: res.data.description
       }
       title.value = `Edit ${res.data.filename}`
-      pluginFile.value.tasks.forEach((task) => {
+      pluginFile.value.tasks.functions.forEach((task) => {
         [...task.inputParams, ...task.outputParams].forEach((param) => {
           param.parameterType = param.parameterType.id
         })
@@ -492,7 +498,7 @@
   }
 
   function uniqueName(val) {
-    return (!pluginFile.value.tasks.map(task => task.name).includes(val)) || "Duplicate task name"
+    return (!pluginFile.value.tasks.functions.map(task => task.name).includes(val)) || "Duplicate task name"
   }
 
   function pythonFilenameRule(val) {
@@ -519,7 +525,7 @@
   async function submit() {
     basicInfoForm.value.validate().then(success => {
       contentsError.value = pluginFile.value.contents?.length > 0 ? '' : 'This field is required'
-      const missingTypes = pluginFile.value.tasks.some(task => [...task.inputParams, ...task.outputParams].some(param => !param.parameterType))
+      const missingTypes = pluginFile.value.tasks.functions.some(task => [...task.inputParams, ...task.outputParams].some(param => !param.parameterType))
       if(missingTypes) {
         notify.error('Please resolve the missing types in the plugin task parameters')
       }
@@ -535,6 +541,9 @@
   async function addOrModifyFile() {
     try {
       let res
+      pluginFile.value.tasks.functions.forEach((fTask) => {
+        delete fTask.id
+      })
       console.log('submitting file = ', pluginFile.value)
       if(route.params.fileId === 'new') {
         res = await api.addFile(route.params.id, pluginFile.value)
@@ -648,7 +657,7 @@
   function addTask() {
     taskForm.value.validate().then(success => {
       if (success) {
-        pluginFile.value.tasks.push({
+        pluginFile.value.tasks.functions.push({
           name: task.value.name,
           inputParams: inputParams.value,
           outputParams: outputParams.value
@@ -666,13 +675,13 @@
 
   function addInferedTasks(tasks) {
     tasks.forEach((newTask) => {
-      const index = pluginFile.value.tasks.findIndex(existingTask => existingTask.name === newTask.name)
+      const index = pluginFile.value.tasks.functions.findIndex(existingTask => existingTask.name === newTask.name)
       if (index !== -1) {
         // Replace existing task
-        pluginFile.value.tasks.splice(index, 1, newTask)
+        pluginFile.value.tasks.functions.splice(index, 1, newTask)
       } else {
         // Add new task
-        pluginFile.value.tasks.push(newTask)
+        pluginFile.value.tasks.functions.push(newTask)
       }
     })
     notify.success(`Successfully imported ${tasks.length} ${tasks.length === 1 ? 'task' : 'tasks'}`)
@@ -692,11 +701,11 @@
   }
 
   function updateParam(updatedParam) {
-    pluginFile.value.tasks[selectedTaskProps.value.rowIndex][selectedTaskProps.value.type][selectedTaskProps.value.paramIndex] = updatedParam
+    pluginFile.value.tasks.functions[selectedTaskProps.value.rowIndex][selectedTaskProps.value.type][selectedTaskProps.value.paramIndex] = updatedParam
   }
 
   function addParam(newParam) {
-    pluginFile.value.tasks[selectedTaskProps.value.rowIndex][selectedTaskProps.value.type].push(newParam)
+    pluginFile.value.tasks.functions[selectedTaskProps.value.rowIndex][selectedTaskProps.value.type].push(newParam)
   }
 
   onBeforeRouteLeave((to, from, next) => {
