@@ -34,7 +34,7 @@ Prerequisites
 - `Docker Engine 20.10.13 or higher <https://docs.docker.com/engine/install/>`__
 - `Docker Compose <https://docs.docker.com/compose/install/>`__
 - Dictionary of words at ``/usr/share/dict/words`` (``apt-get install wamerican``)
-- :ref:`Working builds of the Dioptra container images <getting-started-building-the-containers>`
+- :ref:`Working builds of the Dioptra container images <getting-started-downloading-the-containers>`
 
 Quickstart
 ----------
@@ -150,8 +150,8 @@ Below is a full list of the variables, their default values, and explanations of
   The template will `"slugify" <https://www.stackbit.com/blog/what-is-a-content-slug>`__ the deployment name you provide and use it to name files, folders, and in configuration settings.
   For example, it will be used to name the main folder created by the template.
   (default: ``Dioptra deployment``)
-- **container_registry:** This is only needed if you are building and pushing Dioptra container images to your own Docker registry.
-  As an example, if you are using a Docker registry `hosted on a hypothetical JFrog Artifactory instance <https://www.jfrog.com/confluence/display/JFROG/Getting+Started+with+Artifactory+as+a+Docker+Registry>`__ at the URL ``acme-dockerv2-virtual.jfrog.io``, then you would answer ``acme-dockerv2-virtual.jfrog.io``.
+- **container_registry:** This is needed if you want to use Dioptra container images from a container registry.
+  If you wish to use the prebuilt Dioptra images from GitHub, then you would answer ``ghcr.io/usnistgov``.
   Otherwise, leave this blank.
   (default: *empty string*)
 - **container_tag:** This should match the tags of the Dioptra container images you will be using (if you are using Docker, you can see the available tags by running ``docker images``).

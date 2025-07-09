@@ -30,7 +30,7 @@ Setup
 
 To prepare your environment for running the examples_, follow the linked instructions below:
 
-1. :ref:`Clone the repository and build the included containers <getting-started-building-the-containers>`
+1. :ref:`Clone the repository and acquire the included containers <getting-started-downloading-the-containers>`
 2. :ref:`Apply the provided cookiecutter template and run Dioptra <getting-started-running-dioptra>`
 3. :ref:`Create and activate the Python virtual environment for the Dioptra examples and download the datasets using the download_data.py script <getting-started-acquiring-datasets-using-the-download-script>`
 4. `Edit the docker-compose.yml file to mount the data folder in the worker containers. <https://github.com/usnistgov/dioptra/blob/main/examples/README.md#mounting-the-data-folder-in-the-worker-containers>`_

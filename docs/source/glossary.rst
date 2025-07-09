@@ -37,6 +37,9 @@ Glossary
       An abbreviation for the Fast Gradient Method adversarial attack, which was first proposed in the conference paper title "Explaining and Harnessing Adversarial Examples" by Ian Goodfellow, Jonathan Shlens, and Christian Szegedy.
       A copy of the paper is available on the arXiv at https://arxiv.org/abs/1412.6572.
 
+   GHCR
+      An acronym for the GitHub Container Registry that hosts container images.
+      
    HTTP
       An acronym for the term *Hypertext Transfer Protocol*, which are a set of rules that control the way data is sent and received over the internet.
       The HTTP specification is available at https://httpwg.org/specs/.
