@@ -140,7 +140,7 @@ class EntrypointArtifactSchema(Schema):
     )
     outputParams = fields.Nested(
         ArtifactOutputParameterSchema,
-        attribute="output_parameters",
+        attribute="output_params",
         many=True,
         metadata=dict(
             description="List of output ArtifactOutputParameters that the artifact is"
