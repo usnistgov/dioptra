@@ -216,7 +216,7 @@ class ArtifactsCollectionClient(CollectionClient[T]):
     def get_contents(
         self,
         artifact_id: str | int,
-        file_type: FileTypes = FileTypes.TAR_GZ,
+        file_type: FileTypes | None = None,
         artifact_path: str | None = None,
         output_dir: Path | None = None,
         file_stem: str = "contents",
@@ -226,7 +226,7 @@ class ArtifactsCollectionClient(CollectionClient[T]):
         Args:
             artifact_id: The artifact resource id, an integer.
             file_type: the file type for the bundle.
-            artifact_path: if the artifact is a directory, then a value other None
+            artifact_path: if the artifact is a directory, then a value other than None
                 indicates the path when the directory structure to retrieve. if the
                 artifact is a file, None must be provided.
             output_dir: the directory to put the downloaded artifact
@@ -236,13 +236,18 @@ class ArtifactsCollectionClient(CollectionClient[T]):
             A path to where the contents are downloaded.
         """
         contents_path = (
-            Path(file_stem).with_suffix(file_type.suffix)
-            if output_dir is None
-            else Path(output_dir, file_stem).with_suffix(file_type.suffix)
+            Path(file_stem) if output_dir is None else Path(output_dir, file_stem)
         )
-        params = {"fileType": file_type.value, "path": artifact_path}
+
+        params = {}
+        if file_type is not None:
+            contents_path = contents_path.with_suffix(file_type.suffix)
+            params["fileType"] = file_type.value
+        if artifact_path is not None:
+            params["path"] = artifact_path
 
         return self._session.download(
+            self.url,
             str(artifact_id),
             CONTENTS,
             output_path=contents_path,
@@ -286,11 +291,12 @@ class ArtifactsSnapshotCollectionClient(SnapshotsSubCollectionClient[T]):
         contents_path = (
             Path(file_stem) if output_dir is None else Path(output_dir, file_stem)
         )
-        params = {"path": artifact_path}
-
+        params = {}
         if file_type is not None:
             contents_path = contents_path.with_suffix(file_type.suffix)
             params["fileType"] = file_type.value
+        if artifact_path is not None:
+            params["path"] = artifact_path
 
         return self._session.download(
             self.build_sub_collection_url(artifact_id),
