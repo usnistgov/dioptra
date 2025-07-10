@@ -47,7 +47,7 @@ from dioptra.restapi.db.repository.types import TypeRepository
 from dioptra.restapi.db.repository.users import UserRepository
 from dioptra.restapi.db.repository.utils import DeletionPolicy, ExistenceResult
 from dioptra.restapi.db.unit_of_work import UnitOfWork
-from dioptra.restapi.v1.shared.request_scope import request
+from dioptra.restapi.request_scope import request
 
 from .lib import db as libdb
 from .lib.client import DioptraFlaskClientSession
