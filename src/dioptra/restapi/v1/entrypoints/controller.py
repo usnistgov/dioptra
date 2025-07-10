@@ -208,7 +208,7 @@ class EntrypointIdEndpoint(Resource):
             name=parsed_obj["name"],
             description=parsed_obj["description"],
             task_graph=parsed_obj["task_graph"],
-            artifact_graph=parsed_obj["artifact_graph"],
+            artifact_graph=parsed_obj.get("artifact_graph", ""),
             parameters=parsed_obj["parameters"],
             artifact_parameters=parsed_obj["artifact_parameters"],
             queue_ids=parsed_obj["queue_ids"],
