@@ -48,8 +48,6 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 def clean (
     classifier: Model,
     dataset: Dataset,
-    delete_confidence: float = 0.05,
-    relabel_confidence: float = 0.10
 ) -> tuple[np.ndarray, pd.DataFrame]:
 
     # later on found https://cleanlab.ai/blog/cleanlab-2.3 which might solve of the 
@@ -102,12 +100,48 @@ def clean (
     return (label_issues, pd.DataFrame.from_dict(xval, orient='index'))
 
 @pyplugs.register
+def parse_csv(
+    csv_file: list[str] | list[Path]
+) -> np.ndarray:
+    import os
+    print("current dir: ", os.getcwd())
+    print("dir list: ", os.listdir("."))
+    file = csv_file[0]
+
+    # read csv and turn all of the file paths into indicies
+    df = pd.read_csv(file)
+
+    # isolate the file name of the image
+    df = df.iloc[:, 0].apply(lambda pathstr: Path(pathstr).name)
+    df = df.to_numpy()
+
+    LOGGER.info(
+        f"Filtering out {len(df)} data points with ids:\n {df}"
+    )
+    return df
+
+@pyplugs.register
+def filter_data (
+    dataset: Dataset,
+    delete_idxs: np.ndarray,
+    clean_data_dir: str | Path,
+    save: bool,
+    batch_size: int
+) -> Dataset:
+    img_filenames = [Path(x) for x in dataset.file_paths]
+
+    if save:
+        for batch_num, (x, y) in enumerate(dataset):
+            clean_filenames = img_filenames[ batch_num * batch_size : (batch_num + 1) * batch_size  ]
+            _save_adv_batch(x, Path(clean_data_dir), np.argmax(y, axis=1), clean_filenames, curridx=batch_num*batch_size, filtered=delete_idxs)
+
+@pyplugs.register
 def poison (
     dataset: Dataset,
     classifier: Model,
     percentage: float,
     adv_data_dir: str | Path,
-    batch_size:int,
+    batch_size: int,
     target_idx: int = 0,
 ) -> None:
 
@@ -140,8 +174,8 @@ def poison (
         poisoned_batch_labels = np.argmax(y, axis=1)
         _save_adv_batch(poisoned_batch_data, Path(adv_data_dir), poisoned_batch_labels, clean_filenames)
 
-# from mnist demo
-def _save_adv_batch(adv_batch, adv_data_dir, y, clean_filenames) -> None:
+# from mnist demo with an extra parameter
+def _save_adv_batch(adv_batch, adv_data_dir, y, clean_filenames, curridx=0, filtered=[]) -> None:
     """Saves a batch of adversarial images to disk.
 
     Args:
@@ -151,13 +185,14 @@ def _save_adv_batch(adv_batch, adv_data_dir, y, clean_filenames) -> None:
         clean_filenames: A list containing the filenames of the original images.
     """
     for batch_image_num, adv_image in enumerate(adv_batch):
-        adv_image_path = (
-            adv_data_dir
-            / f"{y[batch_image_num]}"
-            / f"adv_{clean_filenames[batch_image_num].name}"
-        )
+        if clean_filenames[batch_image_num].name not in filtered:
+            adv_image_path = (
+                adv_data_dir
+                / f"{y[batch_image_num]}"
+                / f"adv_{clean_filenames[batch_image_num].name}"
+            )
 
-        if not adv_image_path.parent.exists():
-            adv_image_path.parent.mkdir(parents=True)
+            if not adv_image_path.parent.exists():
+                adv_image_path.parent.mkdir(parents=True)
 
-        save_img(path=str(adv_image_path), x=adv_image)
+            save_img(path=str(adv_image_path), x=adv_image)

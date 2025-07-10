@@ -237,8 +237,6 @@ description = "A plugin to demonstrate cleanlab in dioptra."
   input_params = [
     { name = "classifier", type = "model", required = true },
     { name = "dataset", type = "dataset", required = true },
-    { name = "delete_confidence", type = "number", required = false },
-    { name = "relabel_confidence", type = "number", required = false }
   ]
   output_params = [ 
     { name = "label_issues", type = "np.ndarray" },
@@ -247,15 +245,24 @@ description = "A plugin to demonstrate cleanlab in dioptra."
 
   [[plugins.tasks]]
   filename = "plugins.py"
-  name = "filter"
+  name = "filter_data"
   input_params = [
     { name = "dataset", type = "dataset", required = true },
     { name = "delete_idxs", type = "np.ndarray", required = true},
+    { name = "clean_data_dir", type = "str_path", required = true },
     { name = "save", type = "boolean", required = true },
     { name = "batch_size", type = "integer", required = true }
   ]
+  output_params = [ ]
+
+  [[plugins.tasks]]
+  filename = "plugins.py"
+  name = "parse_csv"
+  input_params = [
+    { name = "csv_file", type = "list_str", required = true },
+  ]
   output_params = [ 
-    { name = "filtered list", type = "dataset" }
+    { name = "filter_list", type = "np.ndarray" }
   ]
 
 [[plugins.tasks]]
@@ -632,8 +639,6 @@ params = [
   { name = "model_version", type = "integer", default_value = "-1" },
   { name = "job_id", type = "string", default_value = "-1" },
   { name = "data_dir", type = "string", default_value = "adv_testing" },
-  { name = "delete_confidence", type = "float", default_value = "0.05" },
-  { name = "relabel_confidence", type = "float", default_value = "0.1" },
   { name = "batch_size", type = "integer", default_value = "4"},
   { name = "seed", type = "integer", default_value = "10145783023" },
   { name = "rescale", type = "float", default_value = "0.00392156862" },
@@ -642,8 +647,6 @@ params = [
   { name = "learning_rate", type = "float", default_value = "0.001" },
   { name = "model_architecture", type = "string", default_value = "le_transform_net" },
   { name = "optimizer_name", type = "string", default_value = "Adam" },
-  { name = "filename", type = "string", default_value = "deleted_data.csv" },  
-  { name = "format", type = "string", default_value = "csv" },
 ]
 plugins = [ "cleanlab_demo", "mnist_demo" ]
 
@@ -668,5 +671,21 @@ params = [
   { name = "model_name", type = "string", default_value = "mnist_classifier" },
   { name = "model_version", type = "integer", default_value = "-1" },
   { name = "clip_values", type = "list", default_value = "[0, 1]" },
+]
+plugins = [ "cleanlab_demo", "mnist_demo" ]
+
+[[entrypoints]]
+path = "entrypoints/filter.yml"
+name = "Filter"
+description = "Filter clean output from dataset."
+params = [
+  { name = "job_id", type = "string", default_value = "-1" },
+  { name = "seed", type = "integer", default_value = "10145783023" },
+  { name = "training_dir", type = "string", default_value = "/dioptra/data/Mnist/training" },
+  { name = "image_size", type = "list", default_value = "[28, 28, 1]" },
+  { name = "rescale", type = "float", default_value = "0.00392156862" },
+  { name = "batch_size", type = "integer", default_value = "128"},
+  { name = "clean_data_dir", type = "string", default_value = "cleaned_data" },
+  { name = "clean_tar_name", type = "string", default_value = "cleaned_data.tar.gz" },
 ]
 plugins = [ "cleanlab_demo", "mnist_demo" ]

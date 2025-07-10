@@ -6,7 +6,7 @@ dataset:
     subsets: ['testing']
     image_size: $image_size
     rescale: $rescale
-    batch_size: $batch_size      
+    batch_size: $batch_size
     shuffle: False
 
 model:
@@ -32,8 +32,6 @@ cleanlab:
   clean:
     classifier: $model
     dataset: $dataset.testing
-    delete_confidence: $delete_confidence
-    relabel_confidence: $relabel_confidence
   dependencies:
     - model
 
@@ -42,8 +40,8 @@ save:
     artifacts:
       - type: dataframe
         data_frame: $cleanlab.issuefiles_crossval
-        file_name: $filename
-        file_format: $format
+        file_name: "ds_remove.csv"
+        file_format: "csv"
         file_format_kwargs:
   dependencies:
     - cleanlab
