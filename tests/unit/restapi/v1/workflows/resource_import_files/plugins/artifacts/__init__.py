@@ -14,28 +14,3 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-import structlog
-from dioptra import pyplugs
-
-LOGGER = structlog.get_logger()
-
-
-@pyplugs.register
-def hello(name: str) -> str:
-    message = f"Hello, {name}"
-    LOGGER.info(message)
-    return message
-
-
-@pyplugs.register
-def greet(greeting: str, name: str) -> str:
-    message = f"{greeting}, {name}"
-    LOGGER.info(message)
-    return message
-
-
-@pyplugs.register
-def shout(greeting: str) -> str:
-    loud_greeting = greeting.upper()
-    LOGGER.info(loud_greeting)
-    return loud_greeting
