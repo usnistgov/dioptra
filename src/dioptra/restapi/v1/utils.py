@@ -22,13 +22,6 @@ from marshmallow import Schema
 
 from dioptra.restapi.db import models
 from dioptra.restapi.routes import V1_ROOT
-from dioptra.restapi.v1.artifacts.schema import ArtifactSchema
-from dioptra.restapi.v1.entrypoints.schema import EntrypointSchema
-from dioptra.restapi.v1.experiments.schema import ExperimentSchema
-from dioptra.restapi.v1.models.schema import ModelSchema
-from dioptra.restapi.v1.plugin_parameter_types.schema import PluginParameterTypeSchema
-from dioptra.restapi.v1.plugins.schema import PluginFileSchema, PluginSchema
-from dioptra.restapi.v1.queues.schema import QueueSchema
 
 ARTIFACTS: Final[str] = "artifacts"
 ENTRYPOINTS: Final[str] = "entrypoints"
@@ -579,6 +572,15 @@ def build_resource(resource_snapshot: models.ResourceSnapshot) -> dict[str, Any]
     Returns:
         The Resource response dictionary.
     """
+    from dioptra.restapi.v1.artifacts.schema import ArtifactSchema
+    from dioptra.restapi.v1.entrypoints.schema import EntrypointSchema
+    from dioptra.restapi.v1.experiments.schema import ExperimentSchema
+    from dioptra.restapi.v1.models.schema import ModelSchema
+    from dioptra.restapi.v1.plugin_parameter_types.schema import (
+        PluginParameterTypeSchema,
+    )
+    from dioptra.restapi.v1.plugins.schema import PluginFileSchema, PluginSchema
+    from dioptra.restapi.v1.queues.schema import QueueSchema
 
     build_fn = {
         "artifact": build_artifact,
