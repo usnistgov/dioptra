@@ -79,8 +79,8 @@
       <legend>Plugin Tasks</legend>
       <TableComponent
         :rows="pluginFile.tasks.functions"
-        :columns="taskColumns"
-        title="Plugin Tasks"
+        :columns="functionTaskColumns"
+        title="Plugin Function Tasks"
         ref="tableRef"
         :hideToggleDraft="true"
         :hideCreateBtn="true"
@@ -609,7 +609,7 @@
   const inputParamForm = ref(null)
   const outputParamForm = ref(null)
 
-  const taskColumns = [
+  const functionTaskColumns = [
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: false, classes: 'vertical-top', },
     { name: 'inputParams', label: 'Input Params', field: 'inputParams', align: 'right', sortable: false, classes: 'vertical-top', },
     { name: 'outputParams', label: 'Output Params', field: 'outputParams', align: 'right', sortable: false, classes: 'vertical-top', },
