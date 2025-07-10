@@ -526,8 +526,8 @@
       if(typeof plugin === 'number') return
       const pluginName = plugin.name
       plugin.files.forEach((file) => {
-        file.tasks.forEach((task) => {
-          tasks.value.push({ ...task, pluginName: pluginName })
+        file.tasks.functions.forEach((fTask) => {
+          tasks.value.push({ ...fTask, pluginName: pluginName })
         })
       })
     })
@@ -680,7 +680,9 @@
           name: entryPoint.value.name,
           description: entryPoint.value.description,
           taskGraph: entryPoint.value.taskGraph,
+          artifactGraph: '',
           parameters: entryPoint.value.parameters,
+          artifactParameters: [],
           queues: entryPoint.value.queues,
         })
         console.log('pluginsToUpdate = ', pluginsToUpdate.value)
