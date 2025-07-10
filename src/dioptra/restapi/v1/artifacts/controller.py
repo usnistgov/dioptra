@@ -237,7 +237,7 @@ class ArtifactIdContentsEndpoint(Resource):
     @responds(schema=ArtifactFileSchema(many=True), api=api)
     def get(self, id: int):
         """
-        Gets a list of all files associated with an Artifact resource.
+        Downloads the contents of an Artifact resource.
 
         Args:
             id: the resource id of the artifact
@@ -279,7 +279,7 @@ class ArtifactSnapshotIdContentsEndpoint(Resource):
     @responds(schema=ArtifactFileSchema(many=True), api=api)
     def get(self, id: int, snapshotId: int):
         """
-        Gets a list of all files associated with an Artifact resource.
+        Downloads the contents of an Artifact snapshot.
 
         Args:
             id: the resource id of the artifact
