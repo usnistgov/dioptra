@@ -209,10 +209,10 @@ class PluginFileRefSchema(PluginFileRefBaseSchema):  # type: ignore
         metadata=dict(description="Filename of the PluginFile resource."),
     )
     tasks = fields.Nested(
-        PluginTaskSchema,
+        PluginTaskContainerSchema,
         attribute="tasks",
         metadata=dict(description="Tasks associated with the PluginFile resource."),
-        many=True,
+        many=False,
     )
 
 
