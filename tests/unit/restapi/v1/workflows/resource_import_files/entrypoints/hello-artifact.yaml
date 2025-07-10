@@ -1,0 +1,4 @@
+graph:
+  shout_step:
+    shout:
+      greeting: $greeting_artifact
