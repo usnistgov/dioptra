@@ -183,7 +183,7 @@ class ValidateEntrypointEndpoint(Resource):
         parsed_obj = request.parsed_obj  # pyright: ignore
         group_id = parsed_obj["group_id"]
         task_graph = parsed_obj["task_graph"]
-        artifact_graph = parsed_obj.get("artifact_graph", {})
+        artifact_graph = parsed_obj.get("artifact_graph", "")
         plugin_snapshot_ids = parsed_obj["plugin_snapshot_ids"]
         parameters = parsed_obj["parameters"]
         artifact_parameters = parsed_obj.get("artifacts", [])

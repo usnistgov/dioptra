@@ -190,7 +190,8 @@ def test_validate_entrypoint_workflow(
         filename=filename,
         description=description,
         contents=contents,
-        tasks=tasks,
+        function_tasks=tasks,
+        artifact_tasks=None,
     )
 
     # Retrieve the latest plugin snapshot identifier (adding the plugin file creates a
@@ -282,7 +283,8 @@ def test_validate_entrypoint_workflow_with_error(
         filename=filename,
         description=description,
         contents=contents,
-        tasks=tasks,
+        function_tasks=tasks,
+        artifact_tasks=None,
     )
 
     # Retrieve the latest plugin snapshot identifier (adding the plugin file creates a
@@ -376,7 +378,8 @@ def test_validation_rejects_multi_snapshots_for_same_plugin_resource(
         filename=filename,
         description=description,
         contents=contents,
-        tasks=tasks,
+        function_tasks=tasks,
+        artifact_tasks=None,
     )
 
     # Retrieve the latest plugin snapshot identifier (adding the plugin file creates a
