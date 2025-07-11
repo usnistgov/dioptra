@@ -258,7 +258,7 @@ class EntrypointSchema(
         metadata=dict(description="List of plugins for the entrypoint."),
         dump_only=True,
     )
-    artifact_plugins = fields.Nested(
+    artifactPlugins = fields.Nested(
         EntrypointPluginSchema,
         attribute="artifact_plugins",
         many=True,
