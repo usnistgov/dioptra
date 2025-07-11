@@ -372,12 +372,12 @@ def _infer_type(
 
     elif isinstance(value, Mapping):
         type_ = _infer_type_from_mapping(
-            value, type_reg, global_parameter_types, graph, tasks
+            value, type_reg, global_parameter_types, graph, tasks, artifact_inputs
         )
 
     elif util.is_iterable(value):
         type_ = _infer_type_from_iterable(
-            value, type_reg, global_parameter_types, graph, tasks
+            value, type_reg, global_parameter_types, graph, tasks, artifact_inputs
         )
 
     else:
