@@ -17,6 +17,7 @@
 import uuid
 
 import pytest
+from sqlalchemy.orm.session import Session as DBSession
 
 from dioptra.restapi.db.models import Group, GroupMember, User
 from dioptra.restapi.db.repository.utils import DeletionPolicy, assert_user_exists
@@ -27,22 +28,22 @@ from dioptra.restapi.errors import (
 )
 
 
-def test_user_create(user_repo, account, db):
+def test_user_create(user_repo, account, db_session: DBSession):
     u2 = User("user2", "password2", "user2@example.org")
 
     user_repo.create(u2, account.group, read=True, share_read=True)
-    db.session.commit()
+    db_session.commit()
 
-    assert_user_exists(db.session, u2, DeletionPolicy.NOT_DELETED)
+    assert_user_exists(db_session, u2, DeletionPolicy.NOT_DELETED)
 
-    membership = db.session.get(GroupMember, (u2.user_id, account.group.group_id))
+    membership = db_session.get(GroupMember, (u2.user_id, account.group.group_id))
     assert membership.read
     assert not membership.write
     assert membership.share_read
     assert not membership.share_write
 
 
-def test_user_create_group_not_exist(user_repo, account, db):
+def test_user_create_group_not_exist(user_repo, account, db_session: DBSession):
     u2 = User("user2", "password2", "user2@example.org")
     g2 = Group("group2", u2)
 
@@ -50,7 +51,7 @@ def test_user_create_group_not_exist(user_repo, account, db):
         user_repo.create(u2, g2)
 
 
-def test_user_create_user_already_exists(user_repo, account, db):
+def test_user_create_user_already_exists(user_repo, account, db_session: DBSession):
     with pytest.raises(EntityExistsError):
         user_repo.create(account.user, account.group)
 
@@ -66,9 +67,9 @@ def test_user_create_collision(user_repo, account):
         user_repo.create(user_colliding_email, account.group)
 
 
-def test_user_delete(user_repo, account, db):
+def test_user_delete(user_repo, account, db_session: DBSession):
     user_repo.delete(account.user)
-    db.session.commit()
+    db_session.commit()
 
     user = user_repo.get(account.user.user_id, DeletionPolicy.ANY)
     assert user.is_deleted
@@ -95,12 +96,12 @@ def test_user_get(user_repo, account):
     assert user == account.user
 
 
-def test_user_get_deleted(user_repo, account, db):
+def test_user_get_deleted(user_repo, account, db_session: DBSession):
     # Deletes the only user; may break in the future if that violates a
     # consistency rule.  We might have to create more users, so we can delete
     # one.
     user_repo.delete(account.user)
-    db.session.commit()
+    db_session.commit()
 
     user = user_repo.get(account.user.user_id, DeletionPolicy.NOT_DELETED)
     assert not user
@@ -134,12 +135,12 @@ def test_user_get_one(user_repo, account):
     assert user == account.user
 
 
-def test_user_get_one_deleted(user_repo, account, db):
+def test_user_get_one_deleted(user_repo, account, db_session: DBSession):
     # Deletes the only user; may break in the future if that violates a
     # consistency rule.  We might have to create more users, so we can delete
     # one.
     user_repo.delete(account.user)
-    db.session.commit()
+    db_session.commit()
 
     with pytest.raises(EntityDeletedError):
         user_repo.get_one(account.user.user_id, DeletionPolicy.NOT_DELETED)
@@ -176,12 +177,12 @@ def test_user_get_by_name(user_repo, account):
     assert not user
 
 
-def test_user_get_by_name_deleted(user_repo, account, db):
+def test_user_get_by_name_deleted(user_repo, account, db_session: DBSession):
     # Deletes the only user; may break in the future if that violates a
     # consistency rule.  We might have to create more users, so we can delete
     # one.
     user_repo.delete(account.user)
-    db.session.commit()
+    db_session.commit()
 
     user = user_repo.get_by_name(account.user.username, DeletionPolicy.ANY)
     assert user == account.user
@@ -226,12 +227,12 @@ def test_user_get_by_alternative_id(user_repo, account):
     assert not user
 
 
-def test_user_get_by_alternative_id_deleted(user_repo, account, db):
+def test_user_get_by_alternative_id_deleted(user_repo, account, db_session: DBSession):
     # Deletes the only user; may break in the future if that violates a
     # consistency rule.  We might have to create more users, so we can delete
     # one.
     user_repo.delete(account.user)
-    db.session.commit()
+    db_session.commit()
 
     user = user_repo.get_by_alternative_id(
         account.user.alternative_id, DeletionPolicy.ANY
@@ -278,12 +279,12 @@ def test_user_get_by_email(user_repo, account):
     assert not user
 
 
-def test_user_get_by_email_deleted(user_repo, account, db):
+def test_user_get_by_email_deleted(user_repo, account, db_session: DBSession):
     # Deletes the only user; may break in the future if that violates a
     # consistency rule.  We might have to create more users, so we can delete
     # one.
     user_repo.delete(account.user)
-    db.session.commit()
+    db_session.commit()
 
     user = user_repo.get_by_email(account.user.email_address, DeletionPolicy.ANY)
     assert user == account.user
@@ -310,7 +311,7 @@ def test_user_get_by_email_not_exist(user_repo, account):
     assert not user
 
 
-def test_user_num_users(user_repo, account, db):
+def test_user_num_users(user_repo, account, db_session: DBSession):
 
     # Add some more users and delete one
     u2 = User("user2", "password2", "user2@example.org")
@@ -319,7 +320,7 @@ def test_user_num_users(user_repo, account, db):
     user_repo.create(u3, account.group)
 
     user_repo.delete(account.user)
-    db.session.commit()
+    db_session.commit()
 
     num_total = user_repo.num_users(DeletionPolicy.ANY)
     assert num_total == 3
@@ -342,7 +343,7 @@ def test_user_num_users_no_users(user_repo):
     assert num_users == 0
 
 
-def test_user_get_page(user_repo, account, db):
+def test_user_get_page(user_repo, account, db_session: DBSession):
 
     users = [account.user]
     # Make a bunch of users
@@ -350,7 +351,7 @@ def test_user_get_page(user_repo, account, db):
         user = User(f"user{n}", f"password{n}", f"user{n}@example.org")
         users.append(user)
         user_repo.create(user, account.group)
-    db.session.commit()
+    db_session.commit()
 
     # Current sort order is by user_id, which automatically increments, so the
     # users ought to come out in the pages in the same order they were
@@ -379,7 +380,7 @@ def test_user_get_page(user_repo, account, db):
     assert count == 11
 
 
-def test_user_get_page_deleted(user_repo, account, db):
+def test_user_get_page_deleted(user_repo, account, db_session: DBSession):
 
     users = [account.user]
     # Make a bunch of users
@@ -387,13 +388,13 @@ def test_user_get_page_deleted(user_repo, account, db):
         user = User(f"user{n}", f"password{n}", f"user{n}@example.org")
         users.append(user)
         user_repo.create(user, account.group)
-    db.session.commit()
+    db_session.commit()
 
     # Delete some
     user_repo.delete(users[2])
     user_repo.delete(users[6])
     user_repo.delete(users[8])
-    db.session.commit()
+    db_session.commit()
 
     # Current sort order is by user_id, which automatically increments, so the
     # users ought to come out in the pages in the same order they were
@@ -416,12 +417,12 @@ def test_user_get_page_deleted(user_repo, account, db):
     assert count == 11
 
 
-def test_user_get_member_permissions(user_repo, account, db):
+def test_user_get_member_permissions(user_repo, account, db_session: DBSession):
     u2 = User("user2", "password2", "user2@example.org")
     user_repo.create(
         u2, account.group, read=True, write=False, share_read=False, share_write=True
     )
-    db.session.commit()
+    db_session.commit()
 
     perms = user_repo.get_member_permissions(u2, account.group)
     assert perms.read
@@ -480,10 +481,12 @@ def test_user_get_manager_permissions_not_exist(user_repo, account):
         user_repo.get_manager_permissions(account.user.user_id, g2)
 
 
-def test_user_get_manager_permissions_not_manager(user_repo, account, db):
+def test_user_get_manager_permissions_not_manager(
+    user_repo, account, db_session: DBSession
+):
     u2 = User("user2", "password2", "user2@example.org")
     user_repo.create(u2, account.group)
-    db.session.commit()
+    db_session.commit()
 
     mgr = user_repo.get_manager_permissions(u2, account.group)
 

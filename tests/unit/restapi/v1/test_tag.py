@@ -24,7 +24,6 @@ from http import HTTPStatus
 from typing import Any
 
 import pytest
-from flask_sqlalchemy import SQLAlchemy
 
 from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
@@ -206,7 +205,6 @@ def assert_cannot_rename_tag_with_existing_name(
 
 def test_create_tag(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
 ) -> None:
     """Test that tags can be registered and retrieved using the API.
@@ -252,7 +250,6 @@ def test_create_tag(
 )
 def test_tag_sort(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_tags: dict[str, Any],
     sort_by: str | None,
@@ -278,7 +275,6 @@ def test_tag_sort(
 
 def test_tag_search_query(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_tags: dict[str, Any],
 ) -> None:
@@ -305,7 +301,6 @@ def test_tag_search_query(
 
 def test_cannot_register_existing_tag_name(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_tags: dict[str, Any],
 ) -> None:
@@ -325,7 +320,6 @@ def test_cannot_register_existing_tag_name(
 
 def test_rename_tag(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_tags: dict[str, Any],
 ) -> None:
@@ -357,7 +351,6 @@ def test_rename_tag(
 
 def test_delete_tag_by_id(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_tags: dict[str, Any],
 ) -> None:

@@ -20,21 +20,21 @@ import io
 import tarfile
 import time
 from pathlib import Path
-from typing import Any, BinaryIO, Iterable, List
+from typing import Any, BinaryIO, List
 
 import pytest
-import requests
+import sqlalchemy
 from boto3.session import Session
 from botocore.client import BaseClient
 from faker import Faker
 from flask import Flask
 from flask.testing import FlaskClient
-from flask_sqlalchemy import SQLAlchemy
 from injector import Binder, Injector
 from mlflow.tracking import set_tracking_uri
 from redis import Redis
 from requests import ConnectionError
 from requests import Session as RequestsSession
+from sqlalchemy.orm import Session as DBSession
 
 from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
@@ -47,11 +47,10 @@ from dioptra.restapi.db.repository.types import TypeRepository
 from dioptra.restapi.db.repository.users import UserRepository
 from dioptra.restapi.db.repository.utils import DeletionPolicy, ExistenceResult
 from dioptra.restapi.db.unit_of_work import UnitOfWork
-from dioptra.restapi.v1.shared.request_scope import request
+from dioptra.restapi.request_scope import request
 
 from .lib import db as libdb
 from .lib.client import DioptraFlaskClientSession
-from .lib.server import FlaskTestServer
 
 
 @pytest.fixture
@@ -78,7 +77,7 @@ def task_plugin_archive():
     archive_fileobj.close()
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def dependency_modules() -> List[Any]:
     from dioptra.restapi.bootstrap import (
         PasswordServiceModule,
@@ -117,71 +116,59 @@ def dependency_modules() -> List[Any]:
     ]
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def dependency_injector(dependency_modules: List[Any]) -> Injector:
     return Injector(dependency_modules)
 
 
-@pytest.fixture
-def app(dependency_modules: List[Any]) -> Flask:
+@pytest.fixture(scope="function")
+def db_session(flask_app: Flask) -> DBSession:
+    with flask_app.app_context():
+        """Creates a new database session for each test function."""
+        connection = restapi_db.engine.connect()
+        transaction = connection.begin()
+
+        DBSession = sqlalchemy.orm.sessionmaker(connection)
+
+        with DBSession() as session:
+            old = restapi_db.session
+            restapi_db.session = session
+            yield session
+            restapi_db.session = old
+
+        # clean-up
+        transaction.rollback()
+        connection.close()
+
+
+@pytest.fixture(scope="session")
+def flask_app(dependency_modules: List[Any]) -> Flask:
     from dioptra.restapi import create_app
 
     injector = Injector(dependency_modules)
     app = create_app(env="test_no_login", injector=injector)
 
-    yield app
-
-
-@pytest.fixture
-def db(app: Flask) -> SQLAlchemy:
     with app.app_context():
         restapi_db.drop_all()
         restapi_db.create_all()
-        yield restapi_db
+        libdb.setup_ontology(restapi_db.session)
+
+    yield app
+
+    with app.app_context():
         restapi_db.drop_all()
         restapi_db.session.commit()
 
 
-@pytest.fixture(autouse=True)
-def seed_database(db: SQLAlchemy):
-    libdb.setup_ontology(db.session)
-
-
-@pytest.fixture
-def client(app: Flask) -> FlaskClient:
-    return app.test_client()
+@pytest.fixture(scope="function")
+def client(flask_app: Flask, db_session: DBSession) -> FlaskClient:
+    with flask_app.test_client() as client:
+        yield client
 
 
 @pytest.fixture
 def dioptra_client(client: FlaskClient) -> DioptraClient[DioptraResponseProtocol]:
     return DioptraClient[DioptraResponseProtocol](DioptraFlaskClientSession(client))
-
-
-@pytest.fixture
-def flask_test_server(tmp_path: Path, http_client: RequestsSession):
-    """Start a Flask test server.
-
-    Args:
-        tmp_path: The path to the temporary directory.
-        http_client: A Requests session client.
-    """
-    sqlite_path = tmp_path / "dioptra-test.db"
-    server = FlaskTestServer(sqlite_path=sqlite_path)
-    server.upgrade_db()
-    with server:
-        wait_for_healthcheck_success(http_client)
-        yield
-
-
-@pytest.fixture
-def http_client() -> Iterable[RequestsSession]:
-    """A Requests session for accessing the API.
-
-    Yields:
-        A Requests session.
-    """
-    with requests.Session() as s:
-        yield s
 
 
 @pytest.fixture(autouse=True)
@@ -243,11 +230,11 @@ def fake_data(faker: Faker) -> libdb.FakeData:
 
 
 @pytest.fixture
-def account(db: SQLAlchemy, fake_data: libdb.FakeData) -> libdb.FakeAccount:
+def account(db_session: DBSession, fake_data: libdb.FakeData) -> libdb.FakeAccount:
     new_account = fake_data.account()
-    db.session.add(new_account.user)
-    db.session.add(new_account.group)
-    db.session.commit()
+    db_session.add(new_account.user)
+    db_session.add(new_account.group)
+    db_session.commit()
     return new_account
 
 
@@ -277,47 +264,47 @@ def existence_status(request):
 
 
 @pytest.fixture
-def group_repo(db: SQLAlchemy) -> GroupRepository:
-    repo = GroupRepository(db.session)
+def group_repo(db_session: DBSession) -> GroupRepository:
+    repo = GroupRepository(db_session)
 
     return repo
 
 
 @pytest.fixture
-def user_repo(db: SQLAlchemy) -> UserRepository:
-    repo = UserRepository(db.session)
+def user_repo(db_session: DBSession) -> UserRepository:
+    repo = UserRepository(db_session)
 
     return repo
 
 
 @pytest.fixture
-def queue_repo(db: SQLAlchemy) -> QueueRepository:
-    repo = QueueRepository(db.session)
+def queue_repo(db_session: DBSession) -> QueueRepository:
+    repo = QueueRepository(db_session)
 
     return repo
 
 
 @pytest.fixture
-def drafts_repo(db: SQLAlchemy) -> DraftsRepository:
-    repo = DraftsRepository(db.session)
+def drafts_repo(db_session: DBSession) -> DraftsRepository:
+    repo = DraftsRepository(db_session)
 
     return repo
 
 
 @pytest.fixture
-def experiment_repo(db: SQLAlchemy) -> ExperimentRepository:
-    repo = ExperimentRepository(db.session)
+def experiment_repo(db_session: DBSession) -> ExperimentRepository:
+    repo = ExperimentRepository(db_session)
 
     return repo
 
 
 @pytest.fixture
-def type_repo(db: SQLAlchemy) -> TypeRepository:
-    repo = TypeRepository(db.session)
+def type_repo(db_session: DBSession) -> TypeRepository:
+    repo = TypeRepository(db_session)
 
     return repo
 
 
 @pytest.fixture
-def uow() -> UnitOfWork:
+def uow(db_session: DBSession) -> UnitOfWork:
     return UnitOfWork()

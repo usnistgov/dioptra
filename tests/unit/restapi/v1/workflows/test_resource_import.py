@@ -103,7 +103,6 @@ def assert_resource_import_overwrite_works(
 
 def test_resource_import_from_archive_file(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     resources_tar_file: DioptraFile,
     resources_import_config: dict[str, Any],
@@ -116,7 +115,6 @@ def test_resource_import_from_archive_file(
 
 def test_resource_import_from_files(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     resources_files: list[DioptraFile],
     resources_import_config: dict[str, Any],
@@ -130,7 +128,6 @@ def test_resource_import_from_files(
 @pytest.mark.skipif(shutil.which("git") is None, reason="git was not found.")
 def test_resource_import_from_repo(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     resources_repo: str,
     resources_import_config: dict[str, Any],
@@ -143,7 +140,6 @@ def test_resource_import_from_repo(
 
 def test_resource_import_fails_from_name_clash(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     resources_tar_file: NamedTemporaryFile,
 ):
@@ -156,7 +152,6 @@ def test_resource_import_fails_from_name_clash(
 
 def test_resource_import_overwrite(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     resources_tar_file: NamedTemporaryFile,
 ):

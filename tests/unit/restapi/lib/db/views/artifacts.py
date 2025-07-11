@@ -18,8 +18,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import select, text
+from sqlalchemy.orm.session import Session
 
 from dioptra.restapi.db import models
 
@@ -29,11 +29,11 @@ from dioptra.restapi.db import models
 LATEST_ARTIFACTS_SQL_PATH = Path(__file__).parent / "latest_artifacts.sql"
 
 
-def get_latest_artifact(db: SQLAlchemy, resource_id: int) -> models.Artifact | None:
+def get_latest_artifact(session: Session, resource_id: int) -> models.Artifact | None:
     """Get the latest artifact for a given resource ID.
 
     Args:
-        db: The SQLAlchemy database session.
+        session: The SQLAlchemy database session.
         resource_id: The ID of the resource.
 
     Returns:
@@ -49,4 +49,4 @@ def get_latest_artifact(db: SQLAlchemy, resource_id: int) -> models.Artifact | N
         .bindparams(resource_id=resource_id)
     )
     stmt = select(models.Artifact).from_statement(textual_sql)
-    return db.session.execute(stmt).scalar()
+    return session.execute(stmt).scalar()

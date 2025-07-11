@@ -24,7 +24,7 @@ from http import HTTPStatus
 from typing import Any
 
 import pytest
-from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.orm import Session as DBSession
 
 from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
@@ -184,7 +184,6 @@ def assert_registering_existing_artifact_uri_fails(
 
 def test_create_artifact(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
 ) -> None:
@@ -223,7 +222,6 @@ def test_create_artifact(
 
 def test_artifacts_get_all(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_artifacts: dict[str, Any],
 ) -> None:
@@ -255,7 +253,6 @@ def test_artifacts_get_all(
 )
 def test_artifact_sort(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_artifacts: dict[str, Any],
     sort_by: str,
@@ -286,7 +283,6 @@ def test_artifact_sort(
 
 def test_artifact_search_query(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_artifacts: dict[str, Any],
 ) -> None:
@@ -309,7 +305,6 @@ def test_artifact_search_query(
 
 def test_artifact_group_query(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_artifacts: dict[str, Any],
 ) -> None:
@@ -333,7 +328,6 @@ def test_artifact_group_query(
 
 def test_cannot_register_existing_artifact_uri(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_artifacts: dict[str, Any],
 ) -> None:

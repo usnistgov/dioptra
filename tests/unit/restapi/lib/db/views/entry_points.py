@@ -18,8 +18,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import select, text
+from sqlalchemy.orm.session import Session
 
 from dioptra.restapi.db import models
 
@@ -33,12 +33,12 @@ LATEST_ENTRY_POINT_QUEUES_SQL_PATH = (
 
 
 def get_latest_entry_point(
-    db: SQLAlchemy, resource_id: int
+    session: Session, resource_id: int
 ) -> models.EntryPoint | None:
     """Get the latest entry point for a given resource ID.
 
     Args:
-        db: The SQLAlchemy database session.
+        session: The SQLAlchemy database session.
         resource_id: The ID of the resource.
 
     Returns:
@@ -55,16 +55,16 @@ def get_latest_entry_point(
         .bindparams(resource_id=resource_id)
     )
     stmt = select(models.EntryPoint).from_statement(textual_sql)
-    return db.session.execute(stmt).scalar()
+    return session.execute(stmt).scalar()
 
 
 def get_latest_entry_point_queues(
-    db: SQLAlchemy, entry_point_resource_id: int
+    session: Session, entry_point_resource_id: int
 ) -> list[models.Queue]:
     """Get the latest queues associated with a given entry point.
 
     Args:
-        db: The SQLAlchemy database session.
+        session: The SQLAlchemy database session.
         entry_point_resource_id: The ID of the entry point.
 
     Returns:
@@ -82,4 +82,4 @@ def get_latest_entry_point_queues(
         .bindparams(entry_point_resource_id=entry_point_resource_id)
     )
     stmt = select(models.Queue).from_statement(textual_sql)
-    return list(db.session.execute(stmt).scalars())
+    return list(session.execute(stmt).scalars())

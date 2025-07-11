@@ -25,7 +25,7 @@ from http import HTTPStatus
 from typing import Any
 
 import pytest
-from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.orm import Session as DBSession
 
 from dioptra.client.base import DioptraResponseProtocol, FieldNameCollisionError
 from dioptra.client.client import DioptraClient
@@ -452,7 +452,6 @@ def assert_registering_entrypoint_with_no_queues_succeeds(
 
 def test_create_entrypoint(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_with_files: dict[str, Any],
     registered_queues: dict[str, Any],
@@ -549,7 +548,6 @@ def test_create_entrypoint(
 
 def test_entrypoint_get_all(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
 ) -> None:
@@ -598,7 +596,6 @@ def test_entrypoint_get_all(
 )
 def test_entrypoint_sort(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
     sortBy: str,
@@ -632,7 +629,6 @@ def test_entrypoint_sort(
 
 def test_entrypoint_search_query(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
 ) -> None:
@@ -659,7 +655,6 @@ def test_entrypoint_search_query(
 
 def test_entrypoint_group_query(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
 ) -> None:
@@ -683,7 +678,6 @@ def test_entrypoint_group_query(
 
 def test_cannot_register_existing_entrypoint_name(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
     registered_plugin_with_files: dict[str, Any],
@@ -715,7 +709,6 @@ def test_cannot_register_existing_entrypoint_name(
 
 def test_rename_entrypoint(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
 ) -> None:
@@ -790,7 +783,6 @@ def test_rename_entrypoint(
 
 def test_delete_entrypoint_by_id(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_experiments: dict[str, Any],
 ) -> None:
@@ -819,7 +811,6 @@ def test_delete_entrypoint_by_id(
 
 def test_manage_existing_entrypoint_draft(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
 ) -> None:
@@ -921,7 +912,6 @@ def test_manage_existing_entrypoint_draft(
 
 def test_manage_new_entrypoint_drafts(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_queues: dict[str, Any],
     registered_plugins: dict[str, Any],
@@ -1027,7 +1017,6 @@ def test_manage_new_entrypoint_drafts(
 
 def test_client_raises_error_on_field_name_collision(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
 ) -> None:
@@ -1092,7 +1081,6 @@ def test_client_raises_error_on_field_name_collision(
 
 def test_manage_entrypoint_snapshots(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
 ) -> None:
@@ -1131,7 +1119,6 @@ def test_manage_entrypoint_snapshots(
 
 def test_tag_entrypoint(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
     registered_tags: dict[str, Any],
@@ -1155,7 +1142,6 @@ def test_tag_entrypoint(
 
 def test_get_all_queues_for_entrypoint(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_queues: dict[str, Any],
     registered_entrypoints: dict[str, Any],
@@ -1176,7 +1162,6 @@ def test_get_all_queues_for_entrypoint(
 
 def test_append_queues_to_entrypoint(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_queues: dict[str, Any],
     registered_entrypoints: dict[str, Any],
@@ -1202,7 +1187,6 @@ def test_append_queues_to_entrypoint(
 
 def test_modify_queues_for_entrypoint(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_queues: dict[str, Any],
     registered_entrypoints: dict[str, Any],
@@ -1227,7 +1211,6 @@ def test_modify_queues_for_entrypoint(
 
 def test_delete_all_queues_for_entrypoint(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
 ) -> None:
@@ -1248,7 +1231,6 @@ def test_delete_all_queues_for_entrypoint(
 
 def test_delete_queue_by_id_for_entrypoint(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_queues: dict[str, Any],
     registered_entrypoints: dict[str, Any],
@@ -1274,7 +1256,6 @@ def test_delete_queue_by_id_for_entrypoint(
 
 def test_get_plugin_snapshots_for_entrypoint(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_with_files: dict[str, Any],
     registered_entrypoints: dict[str, Any],
@@ -1295,7 +1276,6 @@ def test_get_plugin_snapshots_for_entrypoint(
 
 def test_append_plugins_to_entrypoint(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_with_files: dict[str, Any],
     registered_entrypoints: dict[str, Any],
@@ -1318,7 +1298,6 @@ def test_append_plugins_to_entrypoint(
 
 def test_get_plugin_snapshot_by_id_for_entrypoint(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_with_files: dict[str, Any],
     registered_entrypoints: dict[str, Any],
@@ -1340,7 +1319,6 @@ def test_get_plugin_snapshot_by_id_for_entrypoint(
 
 def test_delete_plugin_snapshot_by_id_for_entrypoint(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_with_files: dict[str, Any],
     registered_entrypoints: dict[str, Any],

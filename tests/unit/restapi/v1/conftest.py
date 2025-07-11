@@ -32,10 +32,10 @@ import pytest
 import tomli as toml
 from flask import Flask
 from flask.testing import FlaskClient
-from flask_sqlalchemy import SQLAlchemy
 from freezegun import freeze_time
 from injector import Injector
 from pytest import MonkeyPatch
+from sqlalchemy.orm import Session as DBSession
 
 from dioptra.client import (
     DioptraFile,
@@ -59,7 +59,7 @@ def app(dependency_modules: list[Any]) -> Iterator[Flask]:
 
 @pytest.fixture
 @freeze_time("Apr 1st, 2025", auto_tick_seconds=1)
-def registered_users(client: FlaskClient, db: SQLAlchemy) -> dict[str, Any]:
+def registered_users(client: FlaskClient, db_session: DBSession) -> dict[str, Any]:
     password = "supersecurepassword"
     user1_response = actions.register_user(
         client, "user1", "user1@example.org", password
@@ -86,7 +86,7 @@ def registered_users(client: FlaskClient, db: SQLAlchemy) -> dict[str, Any]:
 @pytest.fixture
 def auth_account(
     client: FlaskClient,
-    db: SQLAlchemy,
+    db_session: DBSession,
     registered_users: dict[str, Any],  # noqa: F811
 ) -> dict[str, Any]:
     user_info = cast(dict[str, Any], registered_users["user1"])
@@ -100,7 +100,7 @@ def auth_account(
 
 @pytest.fixture
 def registered_tags(
-    client: FlaskClient, db: SQLAlchemy, auth_account: dict[str, Any]
+    client: FlaskClient, db_session: DBSession, auth_account: dict[str, Any]
 ) -> dict[str, Any]:
     tag1_response = actions.register_tag(
         client,
@@ -127,7 +127,7 @@ def registered_tags(
 @pytest.fixture
 def registered_artifacts(
     client: FlaskClient,
-    db: SQLAlchemy,
+    db_session: DBSession,
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
 ) -> dict[str, Any]:
@@ -172,7 +172,7 @@ def registered_artifacts(
 @pytest.fixture
 def registered_models(
     client: FlaskClient,
-    db: SQLAlchemy,
+    db_session: DBSession,
     auth_account: dict[str, Any],
     registered_artifacts: dict[str, Any],
 ) -> dict[str, Any]:
@@ -236,7 +236,7 @@ def registered_models(
 @pytest.fixture
 def registered_model_versions(
     client: FlaskClient,
-    db: SQLAlchemy,
+    db_session: DBSession,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
     registered_artifacts: dict[str, Any],
@@ -283,7 +283,7 @@ def registered_model_versions(
 
 @pytest.fixture
 def registered_plugins(
-    client: FlaskClient, db: SQLAlchemy, auth_account: dict[str, Any]
+    client: FlaskClient, db_session: DBSession, auth_account: dict[str, Any]
 ) -> dict[str, Any]:
     plugin1_response = actions.register_plugin(
         client,
@@ -312,7 +312,7 @@ def registered_plugins(
 
 @pytest.fixture
 def registered_plugin_with_files(
-    client: FlaskClient, db: SQLAlchemy, auth_account: dict[str, Any]
+    client: FlaskClient, db_session: DBSession, auth_account: dict[str, Any]
 ) -> dict[str, Any]:
     plugin_response = actions.register_plugin(
         client,
@@ -361,7 +361,7 @@ def registered_plugin_with_files(
 @pytest.fixture
 def registered_plugin_with_file_and_tasks(
     client: FlaskClient,
-    db: SQLAlchemy,
+    db_session: DBSession,
     auth_account: dict[str, Any],
 ) -> dict[str, Any]:
     plugin_response = actions.register_plugin(
@@ -437,7 +437,7 @@ def registered_plugin_with_file_and_tasks(
 
 @pytest.fixture
 def registered_queues(
-    client: FlaskClient, db: SQLAlchemy, auth_account: dict[str, Any]
+    client: FlaskClient, db_session: DBSession, auth_account: dict[str, Any]
 ) -> dict[str, Any]:
     queue1_response = actions.register_queue(
         client,
@@ -466,7 +466,7 @@ def registered_queues(
 
 @pytest.fixture
 def registered_groups(
-    client: FlaskClient, db: SQLAlchemy, auth_account: dict[str, Any]
+    client: FlaskClient, db_session: DBSession, auth_account: dict[str, Any]
 ) -> dict[str, Any]:
     public_response = actions.get_public_group(client).get_json()
     # group1_response = actions.register_group(
@@ -492,7 +492,7 @@ def registered_groups(
 @pytest.fixture
 @freeze_time("Apr 2nd, 2025", auto_tick_seconds=1)
 def registered_plugin_parameter_types(
-    client: FlaskClient, db: SQLAlchemy, auth_account: dict[str, Any]
+    client: FlaskClient, db_session: DBSession, auth_account: dict[str, Any]
 ) -> dict[str, Any]:
     built_in_types = {"any", "number", "integer", "string", "boolean", "null"}
     response = actions.get_plugin_parameter_types(client).get_json()
@@ -533,7 +533,7 @@ def registered_plugin_parameter_types(
 @pytest.fixture
 def registered_experiments(
     client: FlaskClient,
-    db: SQLAlchemy,
+    db_session: DBSession,
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
 ) -> dict[str, Any]:
@@ -571,7 +571,7 @@ def registered_experiments(
 @pytest.fixture
 def registered_entrypoints(
     client: FlaskClient,
-    db: SQLAlchemy,
+    db_session: DBSession,
     auth_account: dict[str, Any],
     registered_queues: dict[str, Any],
     registered_plugin_with_files: dict[str, Any],
@@ -663,7 +663,7 @@ def registered_entrypoints(
 @pytest.fixture
 def registered_jobs(
     client: FlaskClient,
-    db: SQLAlchemy,
+    db_session: DBSession,
     auth_account: dict[str, Any],
     registered_queues: dict[str, Any],
     registered_experiments: dict[str, Any],
@@ -719,7 +719,7 @@ def registered_jobs(
 @pytest.fixture
 def registered_mlflowrun(
     client: FlaskClient,
-    db: SQLAlchemy,
+    db_session: DBSession,
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
 ) -> dict[str, Any]:
@@ -735,7 +735,7 @@ def registered_mlflowrun(
 @pytest.fixture
 def registered_mlflowrun_incomplete(
     client: FlaskClient,
-    db: SQLAlchemy,
+    db_session: DBSession,
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
 ) -> dict[str, Any]:

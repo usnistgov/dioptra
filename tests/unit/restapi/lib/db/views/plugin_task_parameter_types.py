@@ -18,8 +18,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import select, text
+from sqlalchemy.orm.session import Session
 
 from dioptra.restapi.db import models
 
@@ -32,12 +32,12 @@ LATEST_PLUGIN_TASK_PARAMETER_TYPES_PATH = (
 
 
 def get_latest_plugin_task_parameter_type(
-    db: SQLAlchemy, resource_id: int
+    session: Session, resource_id: int
 ) -> models.PluginTaskParameterType | None:
     """Get the latest plugin task parameter type for a given resource ID.
 
     Args:
-        db: The SQLAlchemy database session.
+        session: The SQLAlchemy database session.
         resource_id: The ID of the resource.
 
     Returns:
@@ -54,4 +54,4 @@ def get_latest_plugin_task_parameter_type(
         .bindparams(resource_id=resource_id)
     )
     stmt = select(models.PluginTaskParameterType).from_statement(textual_sql)
-    return db.session.execute(stmt).scalar()
+    return session.execute(stmt).scalar()
