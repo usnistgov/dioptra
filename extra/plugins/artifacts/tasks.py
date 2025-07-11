@@ -16,12 +16,14 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from __future__ import annotations
 
+import pickle
 import tarfile
 from collections.abc import ByteString
 from pathlib import Path
 from typing import Any, Callable, Dict, Literal, Optional
 
 import pandas as pd
+import numpy as np
 import structlog
 from structlog.stdlib import BoundLogger
 
@@ -269,3 +271,45 @@ class DataframeArtifactTask(ArtifactTaskInterface):
     @staticmethod
     def name() -> str:
         return "dataframe"
+
+
+class NumpyArrayArtifactTask(ArtifactTaskInterface):
+    @staticmethod
+    def serialize(working_dir: Path, name: str, contents: np.ndarray, **kwargs) -> Path:
+        path = (working_dir / name).with_suffix(".npy")
+        np.save(path, contents, allow_pickle=False)
+        return path
+
+    @staticmethod
+    def deserialize(working_dir: Path, path: str, **kwargs) -> np.ndarray:
+        return np.load(working_dir / path)
+
+    @staticmethod
+    def validation() -> dict[str, Any] | None:
+        return None
+
+    @staticmethod
+    def name() -> str:
+        return "npy"
+
+
+class PickleArtifactTask(ArtifactTaskInterface):
+    @staticmethod
+    def serialize(working_dir: Path, name: str, contents: Any, **kwargs) -> Path:
+        path = (working_dir / name).with_suffix(".pkl")
+        with open(path, "wb") as f:
+            pickle.dump(contents, f)
+        return path
+
+    @staticmethod
+    def deserialize(working_dir: Path, path: str, **kwargs) -> Path:
+        with open(working_dir / path, "wb") as f:
+            return pickle.load(f)
+
+    @staticmethod
+    def validation() -> dict[str, Any] | None:
+        return None
+
+    @staticmethod
+    def name() -> str:
+        return "pkl"
