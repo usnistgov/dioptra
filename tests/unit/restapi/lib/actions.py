@@ -340,7 +340,8 @@ def register_plugin_file(
     description: str,
     filename: str,
     contents: str,
-    tasks: list[dict[str, Any]] | None = None,
+    function_tasks: list[dict[str, Any]] | None = None,
+    artifact_tasks: list[dict[str, Any]] | None = None,
 ) -> TestResponse:
     """Register a plugin file using the API.
 
@@ -360,7 +361,10 @@ def register_plugin_file(
         "filename": filename,
         "contents": contents,
         "description": description,
-        "tasks": tasks or [],
+        "tasks": {
+            "functions": function_tasks or [],
+            "artifacts": artifact_tasks or [],
+        }
     }
 
     return client.post(

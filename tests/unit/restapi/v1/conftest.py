@@ -418,7 +418,7 @@ def registered_plugin_with_file_and_tasks(
         description="The plugin file with tasks.",
         filename="plugin_file.py",
         contents=contents,
-        tasks=plugin_task_list,
+        function_tasks=plugin_task_list,
     ).get_json()
     return {
         "plugin": plugin_response,
