@@ -12,8 +12,11 @@
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
     @create="router.push(`/plugins/${route.params.id}/files/new`)"
   >
-    <template #body-cell-tasks="props">
+    <template #body-cell-functionTasks="props">
       {{ props.row.tasks.functions.length }}
+    </template>
+    <template #body-cell-artifactTasks="props">
+      {{ props.row.tasks.artifacts.length }}
     </template>
   </TableComponent>
 
@@ -55,7 +58,8 @@
   const fileColumns = [
     { name: 'filename', label: 'Filename', align: 'left', field: 'filename', sortable: true, },
     { name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true },
-    { name: 'tasks', label: 'Tasks', align: 'left', field: 'tasks', sortable: false, },
+    { name: 'functionTasks', label: 'Function Tasks', align: 'left', sortable: false, },
+    { name: 'artifactTasks', label: 'Artifact Tasks', align: 'left', sortable: false, },
     { name: 'tags', label: 'Tags', align: 'left', field: 'tags', sortable: false },
   ]
 

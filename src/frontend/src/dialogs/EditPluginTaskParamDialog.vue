@@ -68,7 +68,9 @@
   watch(showDialog, (newVal) => {
     if(newVal) {
       name.value = props.editParam.name
-      parameterType.value = props.editParam.parameterType
+      if(props.editParam.parameterType?.id) {
+        parameterType.value = props.editParam.parameterType
+      }
       required.value = props.editParam && Object.hasOwn(props.editParam, 'required') ? props.editParam.required : true
     }
     else {

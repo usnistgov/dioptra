@@ -60,7 +60,7 @@
             </template>
           </q-file>
           <q-btn
-            label="Import Plugin Tasks"
+            label="Import Function Tasks"
             color="primary"
             @click="showTasksDialog = true"
           />
@@ -111,10 +111,17 @@
             >
               {{ `${param.name}` }}
               <span v-if="param.required" class="text-red">*</span>
-              {{ `: ${param.parameterType.name}` }}
+              {{ `: ${pluginParameterTypes.filter((type) => type.id === param.parameterType.id)[0]?.name}` }}
             </q-chip>
-            <div v-if="!param.parameterType" class="text-white q-mr-sm q-my-xs bg-red q-pa-xs rounded-borders">
-              Resolve missing type above
+            <div>
+              <q-chip 
+                v-if="!pluginParameterTypes.filter((type) => type.id === param.parameterType.id)[0]?.name"
+                color="red"
+                text-color="white"
+                square
+              >
+                Resolve missing type above
+              </q-chip>
             </div>
           </div>
           <q-btn
@@ -139,8 +146,15 @@
               @remove="pluginFile.tasks.functions[props.rowIndex].outputParams.splice(i, 1)"
               :label="`${param.name}: ${param.parameterType.name}`"
             />
-            <div v-if="!param.parameterType" class="text-white q-mr-sm q-my-xs bg-red q-pa-xs rounded-borders">
-              Resolve missing type above
+            <div>
+              <q-chip 
+                v-if="!pluginParameterTypes.filter((type) => type.id === param.parameterType.id)[0]?.name"
+                color="red"
+                text-color="white"
+                square
+              >
+                Resolve missing type above
+              </q-chip>
             </div>
           </div>
           <q-btn
@@ -595,7 +609,7 @@
   async function submit() {
     basicInfoForm.value.validate().then(success => {
       contentsError.value = pluginFile.value.contents?.length > 0 ? '' : 'This field is required'
-      const missingTypes = pluginFile.value.tasks.functions.some(task => [...task.inputParams, ...task.outputParams].some(param => !param.parameterType))
+      const missingTypes = pluginFile.value.tasks.functions.some(task => [...task.inputParams, ...task.outputParams].some(param => !param.parameterType.id))
       if(missingTypes) {
         notify.error('Please resolve the missing types in the plugin task parameters')
       }
@@ -611,7 +625,8 @@
   async function addOrModifyFile() {
     try {
       let res
-      pluginFile.value.tasks.functions.forEach((fTask) => {
+      const submitFile = JSON.parse(JSON.stringify(pluginFile.value))
+      submitFile.tasks.functions.forEach((fTask) => {
         delete fTask.id
         fTask.inputParams.forEach((param) => {
           param.parameterType = param.parameterType.id
@@ -620,18 +635,18 @@
           param.parameterType = param.parameterType.id
         })
       })
-      pluginFile.value.tasks.artifacts.forEach((artifact) => {
+      submitFile.tasks.artifacts.forEach((artifact) => {
         delete artifact.id
         delete artifact.inputParams
         artifact.outputParams.forEach((outputParam) => {
           outputParam.parameterType = outputParam.parameterType.id
         })
       })
-      console.log('submitting file = ', pluginFile.value)
+      console.log('submitting file = ', submitFile)
       if(route.params.fileId === 'new') {
-        res = await api.addFile(route.params.id, pluginFile.value)
+        res = await api.addFile(route.params.id, submitFile)
       } else {
-        res = await api.updateFile(route.params.id, route.params.fileId, pluginFile.value)
+        res = await api.updateFile(route.params.id, route.params.fileId, submitFile)
       }
       store.savedForms.files[route.params.id] = null
       notify.success(`Successfully ${route.params.fileId === 'new' ? 'created' : 'updated'} '${res.data.filename}'`)

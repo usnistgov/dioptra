@@ -174,11 +174,14 @@ const emit = defineEmits(['addTasks'])
 
 const showDialog = defineModel()
 
+const existingTasksCopy = ref([])
+
 watch(() => showDialog.value, (newVal) => {
   if(newVal) {
     tasks.value = []
     errorMessage.value = ""
     disabledRowKeys.value = []
+    existingTasksCopy.value = JSON.parse(JSON.stringify(props.existingTasks))
     suggestPluginTasks()
   }
 })
@@ -196,8 +199,8 @@ async function suggestPluginTasks() {
         outputs: [{ name: "output", type: "string" }],
         missing_types: []
       existing task:
-        inputParams: [{ name: "name", required: true, parameterType: 2 }],
-        outputParams: [{ name: "output", parameterType: 2 }],
+        inputParams: [{ name: "name", required: true, parameterType: {id, name} }],
+        outputParams: [{ name: "output", parameterType: {id, name} }],
     */
 
     // endpoint tasks, change inputs/outputs keys to inputParams/outputParams
@@ -206,6 +209,8 @@ async function suggestPluginTasks() {
       inputParams: inputs,
       outputParams: outputs,
     }))
+    console.log('infered tasks = ', tasks.value)
+    console.log('existing tasks = ', existingTasksCopy.value)
 
     // endpoint tasks, add parameterType id
     tasks.value.forEach((task) => {
@@ -215,8 +220,9 @@ async function suggestPluginTasks() {
     })
 
     // existing tasks, add type string
-    props.existingTasks.forEach((task) => {
+    existingTasksCopy.value.forEach((task) => {
       [...task.inputParams, ...task.outputParams].forEach((param) => {
+        param.parameterType = param.parameterType.id
         param.type = props.pluginParameterTypes.find((type) => type.id === param.parameterType)?.name
       })
     })
@@ -243,6 +249,10 @@ async function submit() {
   selectedTasks.value.forEach((task) => {
     delete task.missing_types;
     [...task.inputParams, ...task.outputParams].forEach((param) => {
+      param.parameterType = {
+        id: param.parameterType,
+        name: param.type,
+      }
       delete param.type
     })
   })
@@ -252,9 +262,9 @@ async function submit() {
 
 const dupliateTasksWithDifferentParams = computed(() => {
   let returnObject = {}
-  if(tasks.value.length === 0 || props.existingTasks.length === 0) return returnObject
+  if(tasks.value.length === 0 || existingTasksCopy.value.length === 0) return returnObject
   tasks.value.forEach((task) => {
-    const duplicate = props.existingTasks.find((existingTask) => existingTask.name === task.name)
+    const duplicate = existingTasksCopy.value.find((existingTask) => existingTask.name === task.name)
     if(!duplicate) return
     const areEqual = deepEqual(task, duplicate, ['missing_types', 'id'])
     if(areEqual) return
@@ -270,9 +280,9 @@ const dupliateTasksWithDifferentParams = computed(() => {
 
 const dupliateIdenticalTasks = computed(() => {
   let returnObject = {}
-  if(tasks.value.length === 0 || props.existingTasks.length === 0) return returnObject
+  if(tasks.value.length === 0 || existingTasksCopy.value.length === 0) return returnObject
   tasks.value.forEach((task) => {
-    const duplicate = props.existingTasks.find((existingTask) => existingTask.name === task.name)
+    const duplicate = existingTasksCopy.value.find((existingTask) => existingTask.name === task.name)
     if(!duplicate) return
     const areEqual = deepEqual(task, duplicate, ['missing_types', 'id'])
     if(!areEqual) return
@@ -290,7 +300,7 @@ const disabledRowKeys = ref([])
 
 // expand row only if duplicate with different param exists
 function expandRow(row, rowProps) {
-  const duplicate = props.existingTasks.find((task) => task.name === row.name)
+  const duplicate = existingTasksCopy.value.find((task) => task.name === row.name)
   if(!duplicate) return null
   rowProps.expand = true
   if(row.name in dupliateIdenticalTasks.value) {
