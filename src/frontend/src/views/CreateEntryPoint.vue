@@ -76,6 +76,54 @@
                 <label :class="`field-label`">Description:</label>
               </template>
             </q-input>
+            <q-select
+              v-if="!history"
+              outlined
+              dense
+              v-model="entryPoint.queues"
+              use-input
+              use-chips
+              multiple
+              map-options
+              option-label="name"
+              option-value="id"
+              input-debounce="100"
+              :options="queues"
+              @filter="getQueues"
+              class="q-mt-lg q-mb-md"
+              :disable="history"
+            >
+              <template v-slot:before>
+                <div class="field-label">Queues:</div>
+              </template>  
+              <template v-slot:selected-item="scope">
+                <q-chip
+                  :label="scope.opt.name"
+                  removable
+                  dense
+                  @remove="scope.removeAtIndex(scope.index)"
+                  :tabindex="scope.tabindex"
+                  color="primary"
+                  text-color="white"
+                />
+              </template>
+            </q-select>
+            <div v-else class="row items-center q-mt-lg q-mb-md">
+              <label class="field-label">Queues:</label>
+              <div 
+                class="col" 
+                style="border: 1px solid lightgray; border-radius: 4px; padding: 10px 8px; margin-left: 6px;"
+                :style="history ? 'opacity: 0.5; pointer-events: none;' : ''"
+              >
+                <q-icon
+                  name="sym_o_info"
+                  size="2em"
+                  color="grey"
+                  class="q-mr-sm"
+                />
+                Queues are not yet avaiable in Entrypoint snapshots
+              </div>
+            </div>
           </q-form>
         </div>
       </fieldset>
@@ -184,54 +232,6 @@
             </q-card-actions>
           </q-form>
         </q-card>
-
-        <q-select
-          v-if="!history"
-          outlined
-          dense
-          v-model="entryPoint.queues"
-          use-input
-          use-chips
-          multiple
-          map-options
-          option-label="name"
-          option-value="id"
-          input-debounce="100"
-          :options="queues"
-          @filter="getQueues"
-          class="q-mt-lg q-mb-md"
-          :disable="history"
-        >
-          <template v-slot:before>
-            <div class="field-label">Queues:</div>
-          </template>  
-          <template v-slot:selected-item="scope">
-            <q-chip
-              :label="scope.opt.name"
-              removable
-              @remove="scope.removeAtIndex(scope.index)"
-              :tabindex="scope.tabindex"
-              color="primary"
-              text-color="white"
-            />
-          </template>
-        </q-select>
-        <div v-else class="row items-center q-mt-lg q-mb-md">
-          <label class="field-label">Queues:</label>
-          <div 
-            class="col" 
-            style="border: 1px solid lightgray; border-radius: 4px; padding: 10px 8px; margin-left: 6px;"
-            :style="history ? 'opacity: 0.5; pointer-events: none;' : ''"
-          >
-            <q-icon
-              name="sym_o_info"
-              size="2em"
-              color="grey"
-              class="q-mr-sm"
-            />
-            Queues are not yet avaiable in Entrypoint snapshots
-          </div>
-        </div>
         <q-select
           v-if="route.params.id === 'new'"
           outlined
@@ -246,6 +246,7 @@
           input-debounce="100"
           :options="plugins"
           @filter="getPlugins"
+          class="q-mt-lg"
         >
           <template v-slot:before>
             <div class="field-label">Plugins:</div>
@@ -254,6 +255,7 @@
             <q-chip
               :label="scope.opt.name"
               removable
+              dense
               @remove="scope.removeAtIndex(scope.index)"
               :tabindex="scope.tabindex"
               color="secondary"
@@ -262,7 +264,7 @@
           </template>
         </q-select>
         <div 
-          class="row items-center" 
+          class="row items-center q-mt-lg" 
           v-if="route.params.id !== 'new' && entryPoint.plugins.length > 0"
         >
           <label class="field-label">Plugins:</label>
