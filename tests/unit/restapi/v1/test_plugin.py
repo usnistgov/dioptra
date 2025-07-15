@@ -1334,13 +1334,13 @@ def test_manage_existing_plugin_file_draft(
         "filename": "main.py",
         "description": description,
         "contents": contents,
-        "tasks": [],
+        "tasks": {},
     }
     draft_mod = {
         "filename": "hello_world.py",
         "description": description,
         "contents": contents,
-        "tasks": [],
+        "tasks": {},
     }
 
     # Expected responses
@@ -1407,20 +1407,20 @@ def test_manage_new_plugin_file_drafts(
             "filename": "plugin_file1.py",
             "description": "new plugin_file",
             "contents": contents,
-            "tasks": [],
+            "tasks": {},
         },
         "draft2": {
             "filename": "plugin_file2.py",
             "description": None,
             "contents": contents,
-            "tasks": [],
+            "tasks": {},
         },
     }
     draft1_mod = {
         "filename": "draft_plugin.py",
         "description": "new description",
         "contents": contents,
-        "tasks": [],
+        "tasks": {},
     }
 
     # Expected responses
