@@ -292,7 +292,7 @@ class EntrypointDraftSchema(
     artifactPluginIds = fields.List(
         fields.Integer(),
         attribute="artifact_plugin_ids",
-        data_key="artifact_plugins",
+        data_key="artifactPlugins",
         metadata=dict(description="List of artifact plugin files for the entrypoint."),
     )
 
