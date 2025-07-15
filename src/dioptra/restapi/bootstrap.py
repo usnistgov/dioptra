@@ -24,22 +24,26 @@ from typing import Any, Callable, List, Optional
 from boto3.session import Session
 from botocore.client import BaseClient
 from injector import Binder, Module, provider
-from mlflow.tracking import MlflowClient
+from mlflow import MlflowClient
 from passlib.context import CryptContext
 from redis import Redis
 
 from dioptra.restapi.request_scope import request
+from dioptra.restapi.v1.shared.job_run_store import (
+    JobRunStoreProtocol,
+    MlFlowJobRunStore,
+)
 from dioptra.restapi.v1.shared.password_service import PasswordService
 from dioptra.restapi.v1.shared.rq_service import RQServiceV1
 
 
-class MLFlowClientModule(Module):
+class JobRunStoreModule(Module):
     @request
     @provider
-    def provide_mlflow_client_module(
+    def provide_job_run_store_module(
         self,
-    ) -> MlflowClient:
-        return MlflowClient()
+    ) -> JobRunStoreProtocol:
+        return MlFlowJobRunStore(MlflowClient())
 
 
 @dataclass
@@ -116,6 +120,6 @@ def register_providers(modules: List[Callable[..., Any]]) -> None:
             environment.
     """
 
-    modules.append(MLFlowClientModule)
+    modules.append(JobRunStoreModule)
     modules.append(RQServiceV1Module)
     modules.append(PasswordServiceModule)

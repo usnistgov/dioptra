@@ -38,6 +38,7 @@ from dioptra.restapi.routes import V1_ARTIFACTS_ROUTE
 from dioptra.restapi.utils import verify_filename_is_safe
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.filetypes import FileTypes
+from dioptra.restapi.v1.shared.job_run_store import JobRunStoreProtocol
 from dioptra.restapi.v1.shared.snapshots.controller import (
     generate_resource_snapshots_endpoint,
     generate_resource_snapshots_id_endpoint,
@@ -57,7 +58,6 @@ from .service import (
     SEARCHABLE_FIELDS,
     ArtifactIdService,
     ArtifactService,
-    download_artifacts,
 )
 from .snapshot import ArtifactSnapshotIdService
 
@@ -221,7 +221,13 @@ class ArtifactIdFilesEndpoint(Resource):
 @api.param("id", "ID for the Artifact resource.")
 class ArtifactIdContentsEndpoint(Resource):
     @inject
-    def __init__(self, artifact_id_service: ArtifactIdService, *args, **kwargs) -> None:
+    def __init__(
+        self,
+        artifact_id_service: ArtifactIdService,
+        job_run_store: JobRunStoreProtocol,
+        *args,
+        **kwargs,
+    ) -> None:
         """Initialize the artifact id contents resource.
 
         All arguments are provided via dependency injection.
@@ -230,6 +236,7 @@ class ArtifactIdContentsEndpoint(Resource):
             artifact_id_contents_service: A ArtifactIdContentsService object.
         """
         self._artifact_id_service = artifact_id_service
+        self._job_run_store = job_run_store
         super().__init__(*args, **kwargs)
 
     @login_required
@@ -246,7 +253,8 @@ class ArtifactIdContentsEndpoint(Resource):
             A list of the files associated with artifact.
         """
         return _handle_artifact_contents(
-            self._artifact_id_service.get(artifact_id=id)["artifact"],
+            job_run_store=self._job_run_store,
+            artifact=self._artifact_id_service.get(artifact_id=id)["artifact"],
             log=LOGGER.new(
                 request_id=str(uuid.uuid4()),
                 resource="Artifact",
@@ -262,7 +270,11 @@ class ArtifactIdContentsEndpoint(Resource):
 class ArtifactSnapshotIdContentsEndpoint(Resource):
     @inject
     def __init__(
-        self, artifact_snapshot_id_service: ArtifactSnapshotIdService, *args, **kwargs
+        self,
+        artifact_snapshot_id_service: ArtifactSnapshotIdService,
+        job_run_store: JobRunStoreProtocol,
+        *args,
+        **kwargs,
     ) -> None:
         """Initialize the artifact id contents resource.
 
@@ -272,6 +284,7 @@ class ArtifactSnapshotIdContentsEndpoint(Resource):
             artifact_id_contents_service: A ArtifactIdContentsService object.
         """
         self._artifact_snapshot_id_service = artifact_snapshot_id_service
+        self._job_run_store = job_run_store
         super().__init__(*args, **kwargs)
 
     @login_required
@@ -289,7 +302,8 @@ class ArtifactSnapshotIdContentsEndpoint(Resource):
             A list of the files associated with artifact.
         """
         return _handle_artifact_contents(
-            self._artifact_snapshot_id_service.get(
+            job_run_store=self._job_run_store,
+            artifact=self._artifact_snapshot_id_service.get(
                 artifact_id=id, artifact_snapshot_id=snapshotId
             ),
             log=LOGGER.new(
@@ -320,7 +334,9 @@ ArtifactSnapshotsIdResource = generate_resource_snapshots_id_endpoint(
 )
 
 
-def _handle_artifact_contents(artifact: models.Artifact, log: BoundLogger) -> Response:
+def _handle_artifact_contents(
+    job_run_store: JobRunStoreProtocol, artifact: models.Artifact, log: BoundLogger
+) -> Response:
     parsed_query_params = request.parsed_query_params  # type: ignore # noqa: F841
 
     path: str | None = parsed_query_params.get("path")
@@ -349,7 +365,11 @@ def _handle_artifact_contents(artifact: models.Artifact, log: BoundLogger) -> Re
 
     with TemporaryDirectory() as tmp_dir, set_cwd(tmp_dir):
         mimetype, result = _download_artifacts(
-            tmp_dir=tmp_dir, artifact=artifact, path=path, file_type=file_type
+            job_run_store=job_run_store,
+            tmp_dir=tmp_dir,
+            artifact=artifact,
+            path=path,
+            file_type=file_type,
         )
         return send_file(
             path_or_file=result,
@@ -360,6 +380,7 @@ def _handle_artifact_contents(artifact: models.Artifact, log: BoundLogger) -> Re
 
 
 def _download_artifacts(
+    job_run_store: JobRunStoreProtocol,
     tmp_dir: str,
     artifact: models.Artifact,
     path: str | None,
@@ -369,7 +390,9 @@ def _download_artifacts(
     A helper function for downloading the artifact(s) and preparing them for
     download
     """
-    result = download_artifacts(artifact=artifact, path=path, destination=Path(tmp_dir))
+    result = job_run_store.download_artifacts(
+        artifact_uri=artifact.uri, path=path, destination=Path(tmp_dir)
+    )
     if result.is_dir():
         if file_type is None:
             file_type = FileTypes.TAR_GZ

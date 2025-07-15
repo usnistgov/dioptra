@@ -23,7 +23,6 @@ from typing import Any, Final, cast
 import structlog
 from flask_login import current_user
 from injector import inject
-from mlflow.exceptions import MlflowException
 from sqlalchemy import delete, func, select
 from sqlalchemy.orm import aliased
 from structlog.stdlib import BoundLogger
@@ -39,7 +38,6 @@ from dioptra.restapi.errors import (
     JobInvalidStatusTransitionError,
     JobMlflowRunAlreadySetError,
     JobMlflowRunNotSetError,
-    MLFlowError,
     SortParameterValidationError,
 )
 from dioptra.restapi.v1 import utils
@@ -59,6 +57,7 @@ from dioptra.restapi.v1.experiments.service import (
 from dioptra.restapi.v1.groups.service import GroupIdService
 from dioptra.restapi.v1.queues.service import RESOURCE_TYPE as QUEUE_RESOURCE_TYPE
 from dioptra.restapi.v1.queues.service import QueueIdService
+from dioptra.restapi.v1.shared.job_run_store import JobRunStoreProtocol
 from dioptra.restapi.v1.shared.rq_service import RQServiceV1
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 
@@ -648,6 +647,7 @@ class JobIdMetricsService(object):
     def __init__(
         self,
         job_id_mlflowrun_service: JobIdMlflowrunService,
+        job_run_store: JobRunStoreProtocol,
     ) -> None:
         """Initialize the job metrics service.
 
@@ -655,6 +655,7 @@ class JobIdMetricsService(object):
 
         """
         self._job_id_mlflowrun_service = job_id_mlflowrun_service
+        self._job_run_store = job_run_store
 
     def get(
         self,
@@ -669,31 +670,13 @@ class JobIdMetricsService(object):
         Returns:
             The metrics for the requested job if found, otherwise an error message.
         """
-        from mlflow.tracking import MlflowClient
 
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get job metrics by id", job_id=job_id)
 
         run_id: str | None = self._job_id_mlflowrun_service.get(job_id=job_id, log=log)
 
-        try:
-            client = MlflowClient()
-        except MlflowException as e:
-            raise MLFlowError(e.message) from e
-
-        if run_id is None:
-            metrics = []
-        else:
-            try:
-                run = client.get_run(run_id)
-                metrics = [
-                    {"name": metric, "value": run.data.metrics[metric]}
-                    for metric in run.data.metrics.keys()
-                ]
-            except MlflowException:
-                metrics = []
-
-        return metrics
+        return self._job_run_store.get_metrics(run_id)
 
     def update(
         self,
@@ -715,34 +698,14 @@ class JobIdMetricsService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Update job metrics by id", job_id=job_id)
 
-        from mlflow.tracking import MlflowClient
-
         run_id: str | None = self._job_id_mlflowrun_service.get(job_id=job_id, log=log)
 
         if run_id is None:
             raise JobMlflowRunNotSetError
 
-        try:
-            client = MlflowClient()
-        except MlflowException as e:
-            raise MLFlowError(e.message) from e
-
-        # this is here just to raise an error if the run does not exist
-        try:
-            client.get_run(run_id)  # noqa: F841
-        except MlflowException as e:
-            raise EntityDoesNotExistError("MlFlowRun", run_id=run_id) from e
-
-        try:
-            client.log_metric(
-                run_id,
-                key=metric_name,
-                value=metric_value,
-                step=metric_step,
-            )
-        except MlflowException as e:
-            raise MLFlowError(e.message) from e
-
+        self._job_run_store.log_metric(
+            run_id=run_id, name=metric_name, value=metric_value, step=metric_step
+        )
         return {"name": metric_name, "value": metric_value}
 
 
@@ -751,12 +714,17 @@ class JobIdMetricsSnapshotsService(object):
     job by unique id and metric name."""
 
     @inject
-    def __init__(self, job_id_mlflowrun_service: JobIdMlflowrunService) -> None:
+    def __init__(
+        self,
+        job_id_mlflowrun_service: JobIdMlflowrunService,
+        job_run_store: JobRunStoreProtocol,
+    ) -> None:
         """Initialize the job metrics snapshots service.
 
         All arguments are provided via dependency injection.
         """
         self._job_id_mlflowrun_service = job_id_mlflowrun_service
+        self._job_run_store = job_run_store
 
     def get(
         self,
@@ -777,8 +745,6 @@ class JobIdMetricsSnapshotsService(object):
             The metric history for the requested job and metric if found,
             otherwise an error message.
         """
-        from mlflow.tracking import MlflowClient
-
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug(
             "Get job metric history by id and name",
@@ -787,36 +753,14 @@ class JobIdMetricsSnapshotsService(object):
         )
 
         run_id: str | None = self._job_id_mlflowrun_service.get(job_id=job_id, log=log)
-
-        try:
-            client = MlflowClient()
-        except MlflowException as e:
-            raise MLFlowError(e.message) from e
-
         if run_id is None:
             raise JobMlflowRunNotSetError
-
-        try:
-            history = client.get_metric_history(run_id=run_id, key=metric_name)
-        except MlflowException as e:
-            raise MLFlowError(e.message) from e
-
-        if history == []:
-            raise EntityDoesNotExistError("Metric not found", name=metric_name)
-
-        metrics_page = [
-            {
-                "name": metric.key,
-                "value": metric.value,
-                "step": metric.step,
-                "timestamp": metric.timestamp,
-            }
-            for metric in history[
-                page_index * page_length : (page_index + 1) * page_length
-            ]
-        ]
-
-        return metrics_page, len(history)
+        return self._job_run_store.get_metric_history(
+            run_id=run_id,
+            name=metric_name,
+            page_index=page_index,
+            page_length=page_length,
+        )
 
 
 class ExperimentJobService(object):

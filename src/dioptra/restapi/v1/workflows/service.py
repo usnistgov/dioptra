@@ -331,16 +331,15 @@ class ResourceImportService(object):
 
         hash = sha256()
         for file in sorted(files, key=_sort_by_filename):
+            # The _sort_by_filename sorting key already checks whether filename is None,
+            # so here we can just assert that it's not None to make mypy happy.
+            assert file.filename is not None
             try:
                 verify_filename_is_safe(file.filename)
             except ValueError as e:
                 raise ImportFailedError(
                     "Failed to read uploaded files", reason=str(e)
                 ) from e
-
-            # The _sort_by_filename sorting key already checks whether filename is None,
-            # so here we can just assert that it's not None to make mypy happy.
-            assert file.filename is not None
             Path(file.filename).parent.mkdir(parents=True, exist_ok=True)
 
             bytes = file.stream.read()

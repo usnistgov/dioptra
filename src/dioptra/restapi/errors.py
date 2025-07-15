@@ -508,8 +508,8 @@ class UserPasswordError(DioptraError):
         super().__init__(message)
 
 
-class MLFlowError(DioptraError):
-    """MLFlow Error."""
+class JobStoreError(DioptraError):
+    """JobStoreError Error."""
 
     def __init__(self, message: str):
         super().__init__(message)
@@ -839,8 +839,8 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
         log.debug(error.to_message())
         return error_result(error, http.HTTPStatus.UNAUTHORIZED, {})
 
-    @api.errorhandler(MLFlowError)
-    def handle_mlflow_error(error: MLFlowError):
+    @api.errorhandler(JobStoreError)
+    def handle_mlflow_error(error: JobStoreError):
         log.debug(error.to_message())
         return error_result(error, http.HTTPStatus.INTERNAL_SERVER_ERROR, {})
 

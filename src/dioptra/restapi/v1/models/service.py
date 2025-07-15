@@ -529,11 +529,8 @@ class ModelIdVersionsService(object):
         version = ml_model_dict["version"]
         next_version_number = version.version_number + 1 if version is not None else 1
         group = ml_model.resource.owner
-        artifact_dict = cast(
-            utils.ArtifactDict,
-            self._artifact_id_service.get(
-                artifact_id, error_if_not_found=True, log=log
-            ),
+        artifact_dict = self._artifact_id_service.get(
+            artifact_id, error_if_not_found=True, log=log
         )
         artifact = artifact_dict["artifact"]
 

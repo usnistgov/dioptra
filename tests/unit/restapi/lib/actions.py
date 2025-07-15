@@ -364,7 +364,7 @@ def register_plugin_file(
         "tasks": {
             "functions": function_tasks or [],
             "artifacts": artifact_tasks or [],
-        }
+        },
     }
 
     return client.post(

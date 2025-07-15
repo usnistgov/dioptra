@@ -18,17 +18,11 @@
 
 from __future__ import annotations
 
-from pathlib import Path, PosixPath
 from typing import Any, Final, cast
-from urllib.parse import urlparse
 
-import mlflow.artifacts
-import mlflow.entities
-import mlflow.exceptions
 import structlog
 from flask_login import current_user
 from injector import inject
-from mlflow.tracking import MlflowClient
 from sqlalchemy import Integer, func, select
 from structlog.stdlib import BoundLogger
 
@@ -39,7 +33,6 @@ from dioptra.restapi.errors import (
     EntityDoesNotExistError,
     EntityExistsError,
     JobMlflowRunNotSetError,
-    MLFlowError,
     SortParameterValidationError,
 )
 from dioptra.restapi.v1 import utils
@@ -50,6 +43,7 @@ from dioptra.restapi.v1.plugins.service import (
     PluginIdSnapshotIdService,
     PluginTaskIdService,
 )
+from dioptra.restapi.v1.shared.job_run_store import JobRunStoreProtocol
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -77,6 +71,7 @@ class ArtifactService(object):
         job_id_mlflowrun_service: JobIdMlflowrunService,
         group_id_service: GroupIdService,
         artifact_task_helper: ArtifactTaskHelper,
+        job_run_store: JobRunStoreProtocol,
     ) -> None:
         """Initialize the artifact service.
 
@@ -91,6 +86,7 @@ class ArtifactService(object):
         self._group_id_service = group_id_service
         self._job_id_mlflowrun_service = job_id_mlflowrun_service
         self._artifact_task_helper = artifact_task_helper
+        self._job_run_store = job_run_store
 
     def create(
         self,
@@ -129,9 +125,11 @@ class ArtifactService(object):
         if mlflow_run_id is None:
             raise JobMlflowRunNotSetError
 
-        artifact = _validate_artifact(
-            mlflow_run_id=mlflow_run_id, job_artifacts=job_artifacts, uri=uri, log=log
-        )
+        # check if an artifact with the same uri and job_id has already been created
+        duplicate = _find_artifact(job_artifacts, uri)
+        if duplicate is not None:
+            raise EntityExistsError(RESOURCE_TYPE, duplicate.resource_id, uri=uri)
+        artifact = self._job_run_store.find_artifact(run_id=mlflow_run_id, uri=uri)
 
         group = self._group_id_service.get(group_id, error_if_not_found=True, log=log)
 
@@ -279,6 +277,7 @@ class ArtifactIdService(object):
     def __init__(
         self,
         artifact_task_helper: ArtifactTaskHelper,
+        job_run_store: JobRunStoreProtocol,
     ) -> None:
         """Initialize the artifact service.
 
@@ -288,6 +287,7 @@ class ArtifactIdService(object):
             artifact_task_helper: A ArtifactTaskHelper object.
         """
         self._artifact_task_helper = artifact_task_helper
+        self._job_run_store = job_run_store
 
     def get(
         self,
@@ -416,81 +416,17 @@ class ArtifactIdService(object):
 
         artifact = artifact_dict["artifact"]
 
-        return _get_artifact_file_list(
-            base_uri=artifact.uri,
-            subfolder_path="",
-        )
-
-
-def download_artifacts(
-    artifact: models.Artifact, path: str | None, destination: Path, **kwargs
-) -> Path:
-    log: BoundLogger = kwargs.get("log", LOGGER.new())
-    log.debug("downloading artifacts", artifact_uri=artifact.uri, path=path)
-    if path:
-        root_path = PosixPath(artifact.uri, path).as_posix()
-    else:
-        root_path = artifact.uri
-
-    result = mlflow.artifacts.download_artifacts(
-        artifact_uri=root_path, dst_path=str(destination)
-    )
-    return Path(result)
-
-
-def _get_artifact_file_list(
-    base_uri: str,
-    subfolder_path: str,
-) -> list[utils.ArtifactFileDict]:
-    """
-    A helper function for retrieving the list of files contained within a an artifact.
-
-    Args:
-        base_uri: the base URI under which to list artifacts
-        subfolder_path: the local path to the artifact file
-
-    Returns:
-        a list of ArtifactFiles.
-
-    Raises:
-        DioptraError: If the artifact is not found in MLFlow.
-    """
-    contents: list[utils.ArtifactFileDict] = list()
-
-    artifact_list = mlflow.artifacts.list_artifacts(artifact_uri=base_uri)
-    if artifact_list is None:
-        raise DioptraError(
-            f'An artifact file with path "{base_uri}" does not exist in MLFlow.'
-        )
-    artifact_list = cast(list[mlflow.entities.FileInfo], artifact_list)
-    # If it is empty, it means it is a directory with no contents
-    if len(artifact_list) == 0:
-        contents.append(
+        return [
             utils.ArtifactFileDict(
-                relative_path=subfolder_path, file_size=None, is_dir=True
+                file_size=element.file_size,
+                relative_path=element.relative_path,
+                is_dir=element.is_dir,
             )
-        )
-
-    for artifact in artifact_list:
-        base_name = Path(artifact.path).name
-        if artifact.is_dir:
-            # Recurse into the subdirectory
-            contents.extend(
-                _get_artifact_file_list(
-                    base_uri=Path(base_uri, base_name).as_posix(),
-                    subfolder_path=Path(subfolder_path, base_name).as_posix(),
-                )
+            for element in self._job_run_store.get_artifact_file_list(
+                base_uri=artifact.uri,
+                subfolder_path="",
             )
-        else:
-            # Else it is a file
-            contents.append(
-                utils.ArtifactFileDict(
-                    relative_path=Path(subfolder_path, base_name).as_posix(),
-                    file_size=artifact.file_size,
-                    is_dir=False,
-                )
-            )
-    return contents
+        ]
 
 
 def _find_artifact(
@@ -500,80 +436,6 @@ def _find_artifact(
         if new_artifact_uri == artifact.uri:
             return artifact
     return None
-
-
-def _mflow_run_artifacts(
-    client: MlflowClient, mlflow_run_id: str, base_path: str | None, log: BoundLogger
-) -> list[mlflow.entities.FileInfo]:
-    try:
-        artifact_list = client.list_artifacts(run_id=mlflow_run_id, path=base_path)
-        if artifact_list is None:
-            raise MLFlowError(
-                f"No artifacts are associated with the provided MLFlow run "
-                f"id: {mlflow_run_id}"
-            )
-        return artifact_list
-    except (
-        mlflow.exceptions.RestException,
-        mlflow.exceptions.MlflowException,
-    ) as e:
-        log.error(f"{e}")
-        raise MLFlowError(f"{e}") from e
-
-
-def _validate_artifact(
-    mlflow_run_id: str, job_artifacts: list[models.Artifact], uri: str, log: BoundLogger
-) -> mlflow.entities.FileInfo:
-    # check if an artifact with the same uri and job_id has already been created
-    duplicate = _find_artifact(job_artifacts, uri)
-    if duplicate is not None:
-        raise EntityExistsError(RESOURCE_TYPE, duplicate.resource_id, uri=uri)
-
-    try:
-        client = MlflowClient()
-    except mlflow.exceptions.MlflowException as e:
-        raise MLFlowError(e.message) from e
-
-    # raise an error if the run does not exist
-    try:
-        client.get_run(mlflow_run_id)
-    except mlflow.exceptions.MlflowException as e:
-        raise EntityDoesNotExistError("MlFlowRun", run_id=mlflow_run_id) from e
-
-    # mflow run id should be an element in the uri path
-    # depending on the uri format is likely not stable
-    parsed_uri = urlparse(uri)
-    elements = parsed_uri.path.split("/")
-
-    try:
-        index = elements.index(mlflow_run_id)
-    except ValueError:
-        raise MLFlowError(
-            f"The specified artifact uri {uri} is not part of MLFlow run "
-            f"id: {mlflow_run_id}"
-        ) from None
-
-    if len(elements) < (index + 2) or elements[index + 1] != "artifacts":
-        raise MLFlowError(
-            f"The specified artifact uri {uri} is formatted unexpectedly."
-        )
-    uri_path = "/".join(elements[index + 2 :])
-    base_path = None
-    if index + 2 < (len(elements) - 1):
-        base_path = "/".join(elements[index + 2 : -1])
-
-    artifact_list = _mflow_run_artifacts(
-        client=client, mlflow_run_id=mlflow_run_id, base_path=base_path, log=log
-    )
-    artifact: mlflow.entities.FileInfo
-    for artifact in artifact_list:
-        if artifact.path == uri_path:
-            return artifact
-    else:
-        raise MLFlowError(
-            f"The specified artifact uri {uri} is not part of MLFlow run "
-            f"id: {mlflow_run_id}"
-        )
 
 
 class ArtifactTaskHelper(object):

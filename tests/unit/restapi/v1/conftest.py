@@ -29,14 +29,13 @@ from tempfile import NamedTemporaryFile, TemporaryDirectory
 from typing import Any, cast
 
 import mlflow
-from mlflow.tracking import MlflowClient
-
 import pytest
 import tomli as toml
 from flask import Flask
 from flask.testing import FlaskClient
 from freezegun import freeze_time
 from injector import Injector
+from mlflow.tracking import MlflowClient
 from pytest import MonkeyPatch
 
 from dioptra.client import (
@@ -802,6 +801,7 @@ def resources_import_config() -> dict[str, Any]:
     with set_cwd(path):
         with open(path / "dioptra.toml", "rb") as f:
             return toml.load(f)
+
 
 @pytest.fixture
 def mlflow_client() -> MlflowClient:

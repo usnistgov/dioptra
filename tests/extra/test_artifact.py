@@ -23,7 +23,6 @@ from shutil import rmtree
 
 import pandas as pd
 import pytest
-
 from artifacts.tasks import (
     BytesArtifactTask,
     DataframeArtifactTask,
