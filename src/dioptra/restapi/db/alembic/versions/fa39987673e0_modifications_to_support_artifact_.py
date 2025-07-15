@@ -82,7 +82,18 @@ def upgrade():
             ["entry_point_resource_snapshot_id", "name"],
             unique=True,
         )
+    with op.batch_alter_table("plugin_task_input_parameters", schema=None) as batch_op:
+        batch_op.drop_constraint(
+            "fk_plugin_task_input_parameters_plugin_file_resource_sn_db04",
+            type_="foreignkey",
+        )
+    with op.batch_alter_table("plugin_task_output_parameters", schema=None) as batch_op:
+        batch_op.drop_constraint(
+            "fk_plugin_task_output_parameters_plugin_file_resource_s_3b70",
+            type_="foreignkey",
+        )
 
+        
     with op.batch_alter_table("plugin_tasks", schema=None) as batch_op:
         batch_op.add_column(
             sa.Column(
@@ -91,7 +102,7 @@ def upgrade():
                 nullable=False,
                 primary_key=True,
             )
-        )
+        )   
         batch_op.add_column(sa.Column("type", sa.String(), nullable=False))
         batch_op.create_index(
             batch_op.f("ix_plugin_tasks_plugin_file_resource_snapshot_id"),
@@ -289,7 +300,7 @@ def upgrade():
         batch_op.add_column(
             sa.Column(
                 "task_name",
-                sa.BigInteger().with_variant(sa.Integer(), "sqlite"),
+                sa.Text(),
                 nullable=True,
             )
         )
