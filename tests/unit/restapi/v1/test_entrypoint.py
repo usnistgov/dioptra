@@ -889,14 +889,18 @@ def test_manage_existing_entrypoint_draft(
         "name": name,
         "description": description,
         "task_graph": task_graph,
+        "artifact_graph": "",
         "parameters": parameters,
+        "artifact_parameters": [],
         "queues": queue_ids,
     }
     draft_mod = {
         "name": new_name,
         "description": description,
         "task_graph": task_graph,
+        "artifact_graph": "",
         "parameters": parameters,
+        "artifact_parameters": [],
         "queues": queue_ids,
     }
 
@@ -911,7 +915,9 @@ def test_manage_existing_entrypoint_draft(
             "name": name,
             "description": description,
             "taskGraph": task_graph,
+            "artifactGraph": "",
             "parameters": parameters,
+            "artifactParameters": [],
             "queues": queue_ids,
         },
     }
@@ -925,7 +931,9 @@ def test_manage_existing_entrypoint_draft(
             "name": new_name,
             "description": description,
             "taskGraph": task_graph,
+            "artifactGraph": "",
             "parameters": parameters,
+            "artifactParameters": [],
             "queues": queue_ids,
         },
     }
@@ -968,28 +976,37 @@ def test_manage_new_entrypoint_drafts(
             "name": "entrypoint1",
             "description": "new entrypoint",
             "task_graph": "graph",
+            "artifact_graph": "",
             "parameters": [],
+            "artifact_parameters": [],
             "plugins": [],
+            "artifact_plugins": [],
             "queues": [],
         },
         "draft2": {
             "name": "entrypoint2",
             "description": "entrypoint",
             "task_graph": "graph",
+            "artifact_graph": "",
             "parameters": [],
+            "artifact_parameters": [],
+            "plugins": [registered_plugins["plugin2"]["id"]],
+            "artifact_plugins": [],
             "queues": [
                 registered_queues["queue1"]["id"],
                 registered_queues["queue3"]["id"],
             ],
-            "plugins": [registered_plugins["plugin2"]["id"]],
         },
     }
     draft1_mod = {
         "name": "draft1",
         "description": "new description",
         "task_graph": "graph",
+        "artifact_graph": "",
         "parameters": [],
+        "artifact_parameters": [],
         "plugins": [],
+        "artifact_plugins": [],
         "queues": [],
     }
 
@@ -1001,8 +1018,11 @@ def test_manage_new_entrypoint_drafts(
             "name": "entrypoint1",
             "description": "new entrypoint",
             "taskGraph": "graph",
+            "artifactGraph": "",
             "parameters": [],
+            "artifactParameters": [],
             "plugins": [],
+            "artifactPlugins": [],
             "queues": [],
         },
     }
@@ -1013,12 +1033,15 @@ def test_manage_new_entrypoint_drafts(
             "name": "entrypoint2",
             "description": "entrypoint",
             "taskGraph": "graph",
+            "artifactGraph": "",
             "parameters": [],
+            "artifactParameters": [],
+            "plugins": [registered_plugins["plugin2"]["id"]],
+            "artifactPlugins": [],
             "queues": [
                 registered_queues["queue1"]["id"],
                 registered_queues["queue3"]["id"],
             ],
-            "plugins": [registered_plugins["plugin2"]["id"]],
         },
     }
     draft1_mod_expected = {
@@ -1028,8 +1051,11 @@ def test_manage_new_entrypoint_drafts(
             "name": "draft1",
             "description": "new description",
             "taskGraph": "graph",
+            "artifactGraph": "",
             "parameters": [],
+            "artifactParameters": [],
             "plugins": [],
+            "artifactPlugins": [],
             "queues": [],
         },
     }
