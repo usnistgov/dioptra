@@ -50,11 +50,16 @@ MODIFY_DRAFT_FIELDS: Final[set[str]] = {
     "name",
     "description",
     "taskGraph",
+    "artifactGraph",
     "parameters",
+    "artifactParameters",
     "queues",
 }
 FIELD_NAMES_TO_CAMEL_CASE: Final[dict[str, str]] = {
     "task_graph": "taskGraph",
+    "artifact_graph": "artifactGraph",
+    "artifact_parameters": "artifactParameters",
+    "artifact_plugins": "artifactPlugins",
 }
 
 CONFIG: Final[str] = "config"
