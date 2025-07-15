@@ -24,7 +24,7 @@ from shutil import rmtree
 import pandas as pd
 import pytest
 
-from dioptra.sdk.tasks.artifact import (
+from artifacts.tasks import (
     BytesArtifactTask,
     DataframeArtifactTask,
     DirectoryArtifactTask,
