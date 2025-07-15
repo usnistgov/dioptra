@@ -446,11 +446,13 @@ def assert_registering_entrypoint_with_no_queues_succeeds(
     entrypoint_response = dioptra_client.entrypoints.create(
         group_id=entry_point["group_id"],
         name=entry_point["name"],
+        artifact_graph=entry_point["artifact_graph"],
         task_graph=entry_point["task_graph"],
         description=entry_point["description"],
         parameters=entry_point["parameters"],
         queues=entry_point["queues"],
         plugins=entry_point["plugins"],
+        artifact_plugins=entry_point["artifact_plugings"],
     )
     assert (
         entrypoint_response and entrypoint_response.status_code == HTTPStatus.OK
