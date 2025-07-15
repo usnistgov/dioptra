@@ -836,7 +836,7 @@ def post_mlflowruns(
     for key in mlflowruns.keys():
         job_id = registered_jobs[key]["id"]
         mlflowrun_response = post_mlflowrun(
-            client=client, job_id=job_id, mlflow_run_id=mlflowruns[key].hex
+            client=client, job_id=job_id, mlflow_run_id=mlflowruns[key]
         ).get_json()
         responses[key] = mlflowrun_response
 
