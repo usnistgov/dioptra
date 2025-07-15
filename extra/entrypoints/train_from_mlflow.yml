@@ -1,7 +1,12 @@
+load:
+  load_artifacts_for_job:
+    job_id: $job_id
+    extract_files: [$tar_name]
+
 dataset:
   load_dataset:
     ep_seed: $seed
-    training_dir: $training_dir
+    training_dir: $data_dir
     testing_dir: $testing_dir
     subsets: [training, validation, testing]
     image_size: $image_size
@@ -9,6 +14,8 @@ dataset:
     rescale: $rescale
     batch_size: $batch_size      
     shuffle: True
+  dependencies:
+    - load
 
 model:
   create_model:

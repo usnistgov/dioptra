@@ -638,15 +638,16 @@ params = [
   { name = "model_name", type = "string", default_value = "mnist_classifier" },
   { name = "model_version", type = "integer", default_value = "-1" },
   { name = "job_id", type = "string", default_value = "-1" },
-  { name = "data_dir", type = "string", default_value = "adv_testing" },
+  { name = "data_dir", type = "string", default_value = "poison_testing" },
   { name = "batch_size", type = "integer", default_value = "4"},
   { name = "seed", type = "integer", default_value = "10145783023" },
   { name = "rescale", type = "float", default_value = "0.00392156862" },
-  { name = "training_dir", type = "string", default_value = "/dioptra/data/Mnist/training" },
-  { name = "testing_dir", type = "string", default_value = "/dioptra/data/Mnist/training" },
+  { name = "training_dir", type = "string", default_value = "poison_testing" },
+  { name = "testing_dir", type = "string", default_value = "poison_testing" },
   { name = "learning_rate", type = "float", default_value = "0.001" },
   { name = "model_architecture", type = "string", default_value = "le_transform_net" },
   { name = "optimizer_name", type = "string", default_value = "Adam" },
+  { name = "adv_tar_name", type = "string", default_value = "poison_testing.tar.gz" },
 ]
 plugins = [ "cleanlab_demo", "mnist_demo" ]
 
@@ -689,3 +690,25 @@ params = [
   { name = "clean_tar_name", type = "string", default_value = "cleaned_data.tar.gz" },
 ]
 plugins = [ "cleanlab_demo", "mnist_demo" ]
+
+[[entrypoints]]
+path = "entrypoints/train_from_mlflow.yml"
+name = "Train from MLFlow"
+description = "Training an LeNet model on a dataset from MLFlow."
+params = [
+  { name = "seed", type = "integer", default_value = "10145783023" },
+  { name = "optimizer_name", type = "string", default_value = "Adam" },
+  { name = "learning_rate", type = "float", default_value = "0.001" },
+  { name = "testing_dir", type = "string", default_value = "/dioptra/data/Mnist/testing" },
+  { name = "image_size", type = "list", default_value = "[28, 28, 1]" },
+  { name = "validation_split", type = "float", default_value = "0.2" },
+  { name = "batch_size", type = "integer", default_value = "50" },
+  { name = "rescale", type = "float", default_value = "0.00392156862" },
+  { name = "model_architecture", type = "string", default_value = "le_net" },
+  { name = "epochs", type = "integer", default_value = "30" },
+  { name = "register_model_name", type = "string", default_value = "cleaned_mnist_classifier" },
+  { name = "data_dir", type = "string", default_value = "cleaned_data" },
+  { name = "tar_name", type = "string", default_value = "cleaned_data.tar.gz" },
+  { name = "job_id", type = "string", default_value = "-1" },
+]
+plugins = [ "mnist_demo" ]

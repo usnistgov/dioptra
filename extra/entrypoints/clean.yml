@@ -1,3 +1,8 @@
+load:
+  load_artifacts_for_job:
+    job_id: $job_id
+    extract_files: [$adv_tar_name]
+
 dataset:
   load_dataset:
     ep_seed: $seed
@@ -8,6 +13,8 @@ dataset:
     rescale: $rescale
     batch_size: $batch_size
     shuffle: False
+  dependencies:
+    - load
 
 model:
   create_model:
