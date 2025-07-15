@@ -556,9 +556,9 @@ def get_plugin_task_parameter_types_by_id(
             PluginTaskParameterType table
     """
     id_list = set(ids)
-    length = len(id_list)
-    if length < 1:
-        raise ValueError("ids must contain at least one value")
+    num_ids = len(id_list)
+    if num_ids < 1:
+        return {}
     parameter_types_stmt = (
         select(models.PluginTaskParameterType)
         .join(models.Resource)
@@ -576,16 +576,16 @@ def get_plugin_task_parameter_types_by_id(
             "The database query returned a None when it should return plugin "
             "parameter types.",
             sql=str(parameter_types_stmt),
-            num_expected=length,
+            num_expected=num_ids,
         )
         raise BackendDatabaseError
 
-    if not len(parameter_types) == length:
+    if not len(parameter_types) == num_ids:
         returned_parameter_type_ids = set([x.resource_id for x in parameter_types])
         ids_not_found = id_list - returned_parameter_type_ids
         raise EntityDoesNotExistError(
             "plugin task parameter types",
-            num_expected=length,
+            num_expected=num_ids,
             num_found=len(parameter_types),
             ids_not_found=sorted(list(ids_not_found)),
         )

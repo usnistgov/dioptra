@@ -1685,7 +1685,7 @@ def _create_artifact_parameters(
     if artifact_parameters is None or len(artifact_parameters) == 0:
         return []
     for artifact in artifact_parameters:
-        duplicates = find_non_unique("name", artifact["output_parameters"])
+        duplicates = find_non_unique("name", artifact["output_params"])
         if len(duplicates) > 0:
             raise QueryParameterNotUniqueError(
                 "artifact output parameter",
@@ -1696,7 +1696,7 @@ def _create_artifact_parameters(
     type_ids = [
         parameter["parameter_type_id"]
         for artifact in artifact_parameters
-        for parameter in artifact["output_parameters"]
+        for parameter in artifact["output_params"]
     ]
     id_type_map = get_plugin_task_parameter_types_by_id(ids=type_ids, log=log)
 
@@ -1710,7 +1710,7 @@ def _create_artifact_parameters(
                     parameter_number=p,
                     parameter_type=id_type_map[param["parameter_type_id"]],
                 )
-                for p, param in enumerate(artifact["output_parameters"])
+                for p, param in enumerate(artifact["output_params"])
             ],
         )
         for a, artifact in enumerate(artifact_parameters)

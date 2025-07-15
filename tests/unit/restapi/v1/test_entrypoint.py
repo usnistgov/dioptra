@@ -63,8 +63,11 @@ def assert_entrypoint_response_contents_matches_expectations(
         "name",
         "description",
         "taskGraph",
+        "artifactGraph",
         "parameters",
+        "artifactParameters",
         "plugins",
+        "artifactPlugins",
         "queues",
         "tags",
     }
@@ -287,7 +290,9 @@ def assert_cannot_rename_entrypoint_with_existing_name(
     existing_name: str,
     existing_description: str,
     existing_task_graph: str,
+    existing_artifact_graph: str,
     existing_parameters: list[dict[str, Any]],
+    existing_artifact_parameters: list[dict[str, Any]],
     existing_queue_ids: list[int],
 ) -> None:
     """Assert that renaming a entrypoint with an existing name fails.
@@ -298,7 +303,9 @@ def assert_cannot_rename_entrypoint_with_existing_name(
         existing_name: str,
         existing_description: str,
         existing_task_graph: str,
+        existing_artifact_graph: str,
         existing_parameters: list[dict[str, Any]],
+        existing_artifact_parameters: list[dict[str, Any]],
         existing_queue_ids: list[int],
 
     Raises:
@@ -308,8 +315,10 @@ def assert_cannot_rename_entrypoint_with_existing_name(
         entrypoint_id=entrypoint_id,
         name=existing_name,
         task_graph=existing_task_graph,
+        artifact_graph=existing_artifact_graph,
         description=existing_description,
         parameters=existing_parameters,
+        artifact_parameters=existing_artifact_parameters,
         queues=existing_queue_ids,
     )
     assert response.status_code == HTTPStatus.BAD_REQUEST
@@ -321,18 +330,24 @@ def assert_entrypoint_must_have_unique_param_names(
     description: str,
     group_id: int,
     task_graph: str,
+    artifact_graph: str,
     parameters: list[dict[str, Any]],
+    artifact_parameters: list[dict[str, Any]],
     plugin_ids: list[int],
+    artifact_plugin_ids: list[int],
     queue_ids: list[int],
 ) -> None:
     response = dioptra_client.entrypoints.create(
         group_id=group_id,
         name=name,
         task_graph=task_graph,
+        artifact_graph=artifact_graph,
         description=description,
         parameters=parameters,
+        artifact_parameters=artifact_parameters,
         queues=queue_ids,
         plugins=plugin_ids,
+        artifact_plugins=artifact_plugin_ids,
     )
     assert response.status_code == HTTPStatus.CONFLICT
 
@@ -477,6 +492,7 @@ def test_create_entrypoint(
             my_entrypoint: $name
         """
     )
+    artifact_graph = ""
     parameters = [
         {
             "name": "my_entrypoint_param_1",
@@ -489,14 +505,18 @@ def test_create_entrypoint(
             "parameterType": "string",
         },
     ]
+    artifact_parameters = []
     plugin_ids = [registered_plugin_with_files["plugin"]["id"]]
+    artifact_plugin_ids = []
     queue_ids = [queue["id"] for queue in list(registered_queues.values())]
     entrypoint_response = dioptra_client.entrypoints.create(
         group_id=group_id,
         name=name,
         task_graph=task_graph,
+        artifact_graph=artifact_graph,
         description=description,
         parameters=parameters,
+        artifact_parameters=artifact_parameters,
         queues=queue_ids,
         plugins=plugin_ids,
     )
@@ -509,7 +529,9 @@ def test_create_entrypoint(
             "user_id": user_id,
             "group_id": group_id,
             "task_graph": task_graph,
+            "artifact_graph": artifact_graph,
             "parameters": parameters,
+            "artifact_parameters": artifact_parameters,
             "plugin_ids": plugin_ids,
             "queue_ids": queue_ids,
             "tags": [],
@@ -540,8 +562,11 @@ def test_create_entrypoint(
         description=description,
         group_id=group_id,
         task_graph=task_graph,
+        artifact_graph=artifact_graph,
         parameters=bad_parameters,
+        artifact_parameters=artifact_parameters,
         plugin_ids=plugin_ids,
+        artifact_plugin_ids=artifact_plugin_ids,
         queue_ids=queue_ids,
     )
 
@@ -737,8 +762,10 @@ def test_rename_entrypoint(
         entrypoint_id=entrypoint_to_rename["id"],
         name=updated_entrypoint_name,
         task_graph=entrypoint_to_rename["taskGraph"],
+        artifact_graph=entrypoint_to_rename["artifactGraph"],
         description=entrypoint_to_rename["description"],
         parameters=entrypoint_to_rename["parameters"],
+        artifact_parameters=entrypoint_to_rename["artifactParameters"],
         queues=queue_ids,
     ).json()
     assert_entrypoint_name_matches_expected_name(
@@ -760,8 +787,10 @@ def test_rename_entrypoint(
         entrypoint_id=entrypoint_to_rename["id"],
         name=updated_entrypoint_name,
         task_graph=entrypoint_to_rename["taskGraph"],
+        artifact_graph=entrypoint_to_rename["artifactGraph"],
         description=entrypoint_to_rename["description"],
         parameters=entrypoint_to_rename["parameters"],
+        artifact_parameters=entrypoint_to_rename["artifactParameters"],
         queues=queue_ids,
     ).json()
     assert_entrypoint_name_matches_expected_name(
@@ -776,7 +805,9 @@ def test_rename_entrypoint(
         existing_name=existing_entrypoint["name"],
         existing_description=entrypoint_to_rename["description"],
         existing_task_graph=entrypoint_to_rename["taskGraph"],
+        existing_artifact_graph=entrypoint_to_rename["artifactGraph"],
         existing_parameters=entrypoint_to_rename["parameters"],
+        existing_artifact_parameters=entrypoint_to_rename["artifactParameters"],
         existing_queue_ids=entrypoint_to_rename["queues"],
     )
 
@@ -1103,8 +1134,10 @@ def test_manage_entrypoint_snapshots(
         entrypoint_id=entrypoint_to_rename["id"],
         name=entrypoint_to_rename["name"] + "modified",
         task_graph=entrypoint_to_rename["taskGraph"],
+        artifact_graph=entrypoint_to_rename["artifactGraph"],
         description=entrypoint_to_rename["description"],
         parameters=entrypoint_to_rename["parameters"],
+        artifact_parameters=entrypoint_to_rename["artifactParameters"],
         queues=queue_ids,
     ).json()
 

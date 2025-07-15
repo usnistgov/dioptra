@@ -314,7 +314,7 @@ def assert_plugin_file_response_contents_matches_expectations(
     assert response["group"]["id"] == expected_contents["group_id"]
 
     # Validate the PluginTask structure
-    for task in response["tasks"]:
+    for task in response["tasks"]["functions"]:
         assert isinstance(task["name"], str)
 
         # Validate PluginTaskParameter Structure for inputs and outputs
@@ -423,7 +423,7 @@ def assert_registering_existing_plugin_filename_fails(
         plugin_id=plugin_id,
         filename=existing_filename,
         contents=contents,
-        tasks=[],
+        function_tasks=[],
         description=description,
     )
     assert response.status_code == HTTPStatus.CONFLICT
@@ -481,7 +481,7 @@ def assert_cannot_rename_plugin_file_with_existing_name(
         plugin_file_id=plugin_file_id,
         filename=existing_name,
         contents=existing_contents,
-        tasks=[],
+        function_tasks=[],
         description=existing_description,
     )
     assert response.status_code == HTTPStatus.CONFLICT
@@ -817,7 +817,7 @@ def test_register_plugin_file(
     )
     user_id = auth_account["id"]
     string_parameter_type = registered_plugin_parameter_types["plugin_param_type3"]
-    tasks = [
+    function_tasks = [
         {
             "name": "hello_world",
             "inputParams": [
@@ -835,8 +835,9 @@ def test_register_plugin_file(
     string_url = (
         f"/{V1_ROOT}/{V1_PLUGIN_PARAMETER_TYPES_ROUTE}/{string_parameter_type['id']}"
     )
-    expected_tasks = [
+    expected_function_tasks = [
         {
+            "id": 1,  # can this be hardcoded?
             "name": "hello_world",
             "inputParams": [
                 {
@@ -879,7 +880,7 @@ def test_register_plugin_file(
         filename=filename,
         description=description,
         contents=contents,
-        tasks=tasks,
+        function_tasks=function_tasks,
     )
     plugin_file_expected = plugin_file_response.json()
 
@@ -891,7 +892,7 @@ def test_register_plugin_file(
             "contents": contents,
             "user_id": user_id,
             "group_id": registered_plugin["group"]["id"],
-            "tasks": expected_tasks,
+            "tasks": {"functions": expected_function_tasks, "artifacts": []},
         },
     )
     assert_retrieving_plugin_file_by_id_works(
@@ -976,7 +977,7 @@ def test_plugin_file_filename_regex(
         plugin_id=registered_plugin["id"],
         filename=filename,
         contents="# Empty file",
-        tasks=[],
+        function_tasks=[],
     )
     assert response.status_code == expected_status_code
 
@@ -1134,7 +1135,7 @@ def test_rename_plugin_file(
         plugin_file_id=plugin_file_to_rename["id"],
         filename=updated_plugin_filename,
         contents=plugin_file_to_rename["contents"],
-        tasks=[],
+        function_tasks=[],
         description=plugin_file_to_rename["description"],
     )
     assert_plugin_filename_matches_expected_name(
@@ -1522,7 +1523,7 @@ def test_manage_plugin_file_snapshots(
         plugin_file_id=plugin_file_to_rename["id"],
         filename="modified_" + plugin_file_to_rename["filename"],
         contents=contents,
-        tasks=[],
+        function_tasks=[],
         description=plugin_file_to_rename["description"],
     ).json()
 

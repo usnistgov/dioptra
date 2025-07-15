@@ -2,14 +2,13 @@
 path = "plugins/hello_world"
 description = "A simple plugin used for testing and demonstration purposes."
 
-
-  [[plugins.tasks]]
+  [[plugins.tasks.functions]]
   filename = "tasks.py"
   name = "hello"
-  input_params = [ { name = "name", type = "string", required = true} ]
+  input_params = [ { name = "name", type = "string", required = true } ]
   output_params = [ { name = "greeting", type = "message" } ]
 
-  [[plugins.tasks]]
+  [[plugins.tasks.functions]]
   filename = "tasks.py"
   name = "greet"
   input_params = [
@@ -18,15 +17,102 @@ description = "A simple plugin used for testing and demonstration purposes."
   ]
   output_params = [ { name = "greeting", type = "message" } ]
 
-  [[plugins.tasks]]
+  [[plugins.tasks.functions]]
   filename = "tasks.py"
   name = "shout"
-  input_params = [ { name = "greeting", type = "message", required = true} ]
+  input_params = [ { name = "greeting", type = "message", required = true } ]
   output_params = [ { name = "loud_greeting", type = "message" } ]
+
+[[plugins]]
+path = "plugins/data_science"
+description = "A simple sklearn classification plugin."
+
+  [[plugins.tasks.functions]]
+  filename = "tasks.py"
+  name = "load_toy_dataset"
+  input_params = [ { name = "name", type = "string", required = false } ]
+  output_params = [
+    { name = "x_train", type = "np.ndarray" },
+    { name = "y_train", type = "np.ndarray" },
+    { name = "x_test", type = "np.ndarray" },
+    { name = "y_test", type = "np.ndarray" },
+  ]
+
+  [[plugins.tasks.functions]]
+  filename = "tasks.py"
+  name = "train_model"
+  input_params = [
+    { name = "x_train", type = "np.ndarray", required = true },
+    { name = "y_train", type = "np.ndarray", required = true },
+  ]
+  output_params = [ { name = "model", type = "np.estimator" } ]
+
+  [[plugins.tasks.functions]]
+  filename = "tasks.py"
+  name = "model_predict"
+  input_params = [
+    { name = "model", type = "np.estimator", required = true },
+    { name = "x", type = "np.ndarray", required = true },
+  ]
+  output_params = [ { name = "predictions", type = "np.ndarray" } ]
+
+  [[plugins.tasks.functions]]
+  filename = "tasks.py"
+  name = "compute_metrics"
+  input_params = [
+    { name = "y_true", type = "np.ndarray", required = true },
+    { name = "y_pred", type = "np.ndarray", required = true },
+  ]
+  output_params = [ { name = "predictions", type = "dataframe" } ]
+
+[[plugins]]
+path = "plugins/artifacts"
+description = "A collection of basic artifact tasks."
+
+  [[plugins.tasks.artifacts]]
+  filename = "tasks.py"
+  name = "StringArtifactTask"
+  output_params = [ { name = "contents", type = "string" } ]
+
+  [[plugins.tasks.artifacts]]
+  filename = "tasks.py"
+  name = "BytesArtifactTask"
+  output_params = [ { name = "contents", type = "bytes" } ]
+
+  [[plugins.tasks.artifacts]]
+  filename = "tasks.py"
+  name = "NumpyArrayArtifactTask"
+  output_params = [ { name = "array", type = "np.ndarray" } ]
+
+  [[plugins.tasks.artifacts]]
+  filename = "tasks.py"
+  name = "PickleArtifactTask"
+  output_params = [ { name = "array", type = "any" } ]
+
+  [[plugins.tasks.artifacts]]
+  filename = "tasks.py"
+  name = "DataframeArtifactTask"
+  output_params = [ { name = "dataframe", type = "dataframe" } ]
 
 [[plugin_param_types]]
 name = "message"
-description = "A message produced by a plugin task"
+description = "A message produced by a plugin task."
+
+[[plugin_param_types]]
+name = "bytes"
+description = "Python bytes object."
+
+[[plugin_param_types]]
+name = "np.ndarray"
+description = "A numpy array."
+
+[[plugin_param_types]]
+name = "np.estimator"
+description = "A numpy estimator."
+
+[[plugin_param_types]]
+name = "dataframe"
+description = "A dataframe."
 
 [[entrypoints]]
 path = "entrypoints/hello-world.yaml"
@@ -36,3 +122,24 @@ params = [
   { name = "name", type = "string", default_value = "World" }
 ]
 plugins = [ "hello_world" ]
+artifact_plugins = [ "artifacts" ]
+
+[[entrypoints]]
+path = "entrypoints/hello-artifact.yaml"
+name = "Hello Artifact"
+description = "A simple example demonstrating use of artifacts."
+artifact_params = [
+  { name = "greeting_artifact", output_params = [ { name = "value", type = "message" } ] }
+]
+plugins = [ "hello_world" ]
+artifact_plugins = [ "artifacts" ]
+
+[[entrypoints]]
+path = "entrypoints/sklearn-classification.yaml"
+name = "SKLearn Classification"
+description = "A simple example to fit a model to data and evaluate it."
+params = [
+  { name = "dataset_name", type = "string", default_value = "digits" },
+]
+plugins = [ "data_science" ]
+artifact_plugins = [ "artifacts" ]

@@ -28,6 +28,9 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from typing import Any, cast
 
+import mlflow
+from mlflow.tracking import MlflowClient
+
 import pytest
 import tomli as toml
 from flask import Flask
@@ -127,6 +130,7 @@ def registered_artifacts(
     client: FlaskClient,
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
+    registered_mlflowrun: dict[str, Any],
 ) -> dict[str, Any]:
     group_id = auth_account["groups"][0]["id"]
     artifact1_response = actions.register_artifact(
@@ -418,7 +422,7 @@ def registered_plugin_with_file_and_tasks(
         description="The plugin file with tasks.",
         filename="plugin_file.py",
         contents=contents,
-        tasks=plugin_task_list,
+        function_tasks=plugin_task_list,
     ).get_json()
     return {
         "plugin": plugin_response,
@@ -710,10 +714,21 @@ def registered_jobs(
 @pytest.fixture
 def registered_mlflowrun(
     client: FlaskClient,
+    mlflow_client: MlflowClient,
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
 ) -> dict[str, Any]:
-    mlflowruns = {"job1": uuid.uuid4(), "job2": uuid.uuid4(), "job3": uuid.uuid4()}
+    run_ids = []
+    # should be able to do this without creating an experiment
+    # leaving it here for now
+    experiment_id = mlflow.create_experiment("experiment1")
+    with mlflow.start_run(experiment_id=experiment_id) as run:
+        run_ids.append(run.info.run_id)
+    with mlflow.start_run(experiment_id=experiment_id) as run:
+        run_ids.append(run.info.run_id)
+    with mlflow.start_run(experiment_id=experiment_id) as run:
+        run_ids.append(run.info.run_id)
+    mlflowruns = {"job1": run_ids[0], "job2": run_ids[1], "job3": run_ids[2]}
 
     responses = actions.post_mlflowruns(
         client=client, mlflowruns=mlflowruns, registered_jobs=registered_jobs
@@ -748,7 +763,7 @@ def resources_tar_file() -> DioptraFile:
             with tarfile.open(fileobj=f, mode="w:gz") as tar:
                 tar.add("dioptra.toml")
                 tar.add("plugins", recursive=True)
-                tar.add(Path("entrypoints", "hello-world.yaml"))
+                tar.add("entrypoints", recursive=True)
 
         yield select_one_or_more_files([f.name])[0]
 
@@ -787,3 +802,7 @@ def resources_import_config() -> dict[str, Any]:
     with set_cwd(path):
         with open(path / "dioptra.toml", "rb") as f:
             return toml.load(f)
+
+@pytest.fixture
+def mlflow_client() -> MlflowClient:
+    return MlflowClient()

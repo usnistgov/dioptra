@@ -1008,10 +1008,14 @@ class PluginIdSnapshotIdService(object):
             resource_id=plugin_id,
             resource_snapshot_id=plugin_snapshot_id,
         )
-        plugin_resource_snapshot_stmt = select(models.Plugin).where(
-            models.Plugin.resource_id == plugin_id,
-            models.Plugin.resource_snapshot_id == plugin_snapshot_id,
-            models.Resource.is_deleted == False,  # noqa: E712
+        plugin_resource_snapshot_stmt = (
+            select(models.Plugin)
+            .join(models.Resource)
+            .where(
+                models.Plugin.resource_id == plugin_id,
+                models.Plugin.resource_snapshot_id == plugin_snapshot_id,
+                models.Resource.is_deleted == False,  # noqa: E712
+            )
         )
         plugin = db.session.scalar(plugin_resource_snapshot_stmt)
 

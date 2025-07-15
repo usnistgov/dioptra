@@ -543,8 +543,10 @@ def test_create_job_using_entrypoint_snapshot_id(
         entrypoint_id=entrypoint_id,
         name=updated_entrypoint_name,
         task_graph=registered_entrypoints["entrypoint1"]["taskGraph"],
+        artifact_graph=registered_entrypoints["entrypoint1"]["artifactGraph"],
         description=registered_entrypoints["entrypoint1"]["description"],
         parameters=registered_entrypoints["entrypoint1"]["parameters"],
+        artifact_parameters=registered_entrypoints["entrypoint1"]["artifactParameters"],
         queues=queue_ids,
     ).json()
     new_entrypoint_snapshot_id = modified_entrypoint["snapshot"]

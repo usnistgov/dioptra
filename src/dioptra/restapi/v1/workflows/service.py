@@ -27,6 +27,7 @@ from typing import Any, Final, cast
 import jsonschema
 import structlog
 import tomli as toml
+import yaml
 from injector import inject
 from structlog.stdlib import BoundLogger
 from werkzeug.datastructures import FileStorage
@@ -252,7 +253,12 @@ class ResourceImportService(object):
                     group_id, config.get("plugins", []), param_types, overwrite, log=log
                 )
                 entrypoints = self._register_entrypoints(
-                    group_id, config.get("entrypoints", []), plugins, overwrite, log=log
+                    group_id,
+                    config.get("entrypoints", []),
+                    plugins,
+                    param_types,
+                    overwrite,
+                    log=log,
                 )
 
         db.session.commit()
@@ -505,15 +511,15 @@ class ResourceImportService(object):
             db.session.flush()
 
             task_config = plugin.get("tasks", {})
-            function_tasks = self._build_tasks(
+            function_tasks = ResourceImportService._build_tasks(
                 tasks_config=task_config.get("functions", []),
                 param_types=param_types,
-                function=True,
+                is_function_task=True,
             )
-            artifact_tasks = self._build_tasks(
+            artifact_tasks = ResourceImportService._build_tasks(
                 tasks_config=task_config.get("artifacts", []),
                 param_types=param_types,
-                function=False,
+                is_function_task=False,
             )
             for plugin_file_path in Path(plugin["path"]).rglob("[!.]*.py"):
                 filename = str(plugin_file_path.relative_to(plugin["path"]))
@@ -540,8 +546,8 @@ class ResourceImportService(object):
                     filename=filename,
                     contents=contents,
                     description=None,
-                    artifact_tasks=function_tasks[filename],
-                    function_tasks=artifact_tasks[filename],
+                    function_tasks=function_tasks[filename],
+                    artifact_tasks=artifact_tasks[filename],
                     commit=False,
                     log=log,
                 )
@@ -555,6 +561,7 @@ class ResourceImportService(object):
         group_id: int,
         entrypoints_config: list[dict[str, Any]],
         plugins,
+        param_types,
         overwrite: bool,
         log: BoundLogger,
     ) -> dict[str, models.EntryPoint]:
@@ -565,12 +572,21 @@ class ResourceImportService(object):
             group_id: The identifier of the group that will manage imported resources
             entrypoints_config: A list of dictionaries describing entrypoints
             plugins: A dictionary mapping Plugin names to the ORM objects
+            param_types: A dictionary mapping param type name to the ORM object
             overwrite: Whether imported resources should replace existing resources with
                 a conflicting name
 
         Returns:
             A dictionary mapping newly registered Entrypoint names to ORM object
         """
+
+        param_types = param_types.copy()
+        builtin_param_types = self._builtin_plugin_parameter_type_service.get(
+            group_id=group_id, error_if_not_found=False, log=log
+        )
+        param_types.update(
+            {param_type.name: param_type for param_type in builtin_param_types}
+        )
 
         entrypoints = dict()
         for entrypoint in entrypoints_config:
@@ -584,7 +600,8 @@ class ResourceImportService(object):
                     )
 
             try:
-                contents = Path(entrypoint["path"]).read_text()
+                contents = yaml.safe_load(Path(entrypoint["path"]).read_text())
+                log.info(contents, contents=contents)
             except FileNotFoundError as e:
                 raise ImportFailedError(
                     f"Failed to read entrypoint file from {entrypoint['path']}",
@@ -596,22 +613,13 @@ class ResourceImportService(object):
                     reason=str(e),
                 ) from e
 
-            for param in entrypoint.get("params", []):
-                if param["type"] not in VALID_ENTRYPOINT_PARAM_TYPES:
-                    raise ImportFailedError(
-                        "Invalid entrypoint parameter type provided.",
-                        reason=f"Found '{param['type']}' but must be one of "
-                        f"{VALID_ENTRYPOINT_PARAM_TYPES}.",
-                    )
+            params = ResourceImportService._build_entrypoint_params_list(
+                entrypoint.get("params", [])
+            )
 
-            params = [
-                {
-                    "name": param["name"],
-                    "parameter_type": param["type"],
-                    "default_value": param.get("default_value", None),
-                }
-                for param in entrypoint.get("params", [])
-            ]
+            artifact_params = ResourceImportService._build_artifacts_params_list(
+                entrypoint.get("artifact_params", []), param_types
+            )
             plugin_ids = [
                 plugins[plugin].resource_id for plugin in entrypoint.get("plugins", [])
             ]
@@ -619,13 +627,14 @@ class ResourceImportService(object):
                 plugins[plugin].resource_id
                 for plugin in entrypoint.get("artifact_plugins", [])
             ]
+            log.info("artifact_params", artifact_params=artifact_params)
             entrypoint_dict = self._entrypoint_service.create(
                 name=entrypoint.get("name", Path(entrypoint["path"]).stem),
                 description=entrypoint.get("description", None),
-                task_graph=contents,
-                artifact_graph=entrypoint.get("artifact_graph", None),
+                task_graph=yaml.dump(contents.get("graph", None)),
+                artifact_graph=yaml.dump(contents.get("artifacts", None)),
                 parameters=params,
-                artifact_parameters=entrypoint.get("artifact_parameters", None),
+                artifact_parameters=artifact_params,
                 plugin_ids=plugin_ids,
                 artifact_plugin_ids=artifact_plugin_ids,
                 queue_ids=[],
@@ -641,11 +650,11 @@ class ResourceImportService(object):
 
         return entrypoints
 
+    @staticmethod
     def _build_tasks(
-        self,
         tasks_config: list[dict[str, Any]],
         param_types: dict[str, models.PluginTaskParameterType],
-        function: bool,
+        is_function_task: bool,
     ) -> dict[str, list]:
         """
         Builds dictionaries describing plugin tasks from a configuration file
@@ -653,6 +662,7 @@ class ResourceImportService(object):
         Args:
             tasks_config: A list of dictionaries describing plugin tasks
             param_types: A dictionary mapping param type name to the ORM object
+            is_function_task: True if the task is a function task, false otherwise
 
         Returns:
             A dictionary mapping PluginFile name to a list of tasks
@@ -663,41 +673,123 @@ class ResourceImportService(object):
             entry = {
                 "name": task["name"],
                 "description": task.get("description", None),
+                "output_params": ResourceImportService._build_params_list(
+                    task["output_params"], param_types, include_required=False
+                ),
             }
-            if function:
-                try:
-                    input_params = [
+            if is_function_task:
+                entry["input_params"] = ResourceImportService._build_params_list(
+                    task["input_params"], param_types, include_required=True
+                )
+            tasks[task["filename"]].append(entry)
+        return tasks
+
+    @staticmethod
+    def _build_entrypoint_params_list(
+        entrypoint_params: list[dict[str, Any]],
+    ):
+        """
+        Verifies the param types are valid and and constructs a list of dictionaries in
+        the structure expected by the Entrypoint ORM object.
+
+        Args:
+            params: A list of dictionaries describing task parameters
+
+        Raises:
+            ImportFailedError: If a parameter type is not valid
+        """
+        for param in entrypoint_params:
+            if param["type"] not in VALID_ENTRYPOINT_PARAM_TYPES:
+                raise ImportFailedError(
+                    "Invalid entrypoint parameter type provided.",
+                    reason=f"Found '{param['type']}' but must be one of "
+                    f"{VALID_ENTRYPOINT_PARAM_TYPES}.",
+                )
+
+        return [
+            {
+                "name": param["name"],
+                "parameter_type": param["type"],
+                "default_value": param.get("default_value", None),
+            }
+            for param in entrypoint_params
+        ]
+
+    @staticmethod
+    def _build_params_list(
+        params: list[dict[str, Any]],
+        param_types: dict[str, models.PluginTaskParameterType],
+        include_required: bool = False,
+    ):
+        """
+        Looks up the plugin parameter types specified in the config and constructs a
+        list of dictionaries in the structure expected by the Entrypoint ORM object.
+
+        Args:
+            params: A list of dictionaries describing task parameters
+            param_types: A dictionary mapping param type name to the ORM object
+            include_required: Whether to include the 'required' field
+
+        Raises:
+            ImportFailedError: If a plugin parameter type cannot be found
+        """
+        try:
+            return [
+                {
+                    "name": param["name"],
+                    "parameter_type_id": param_types[param["type"]].resource_id,
+                    **(
+                        {"required": param.get("required", False)}
+                        if include_required
+                        else {}
+                    ),
+                }
+                for param in params
+            ]
+        except KeyError as e:
+            raise ImportFailedError(
+                "Plugin parameter type specified in task parameters not found.",
+                reason=f"Parameter type named {e} not does not exist and "
+                "is not defined in provided toml config.",
+            ) from e
+
+    @staticmethod
+    def _build_artifacts_params_list(
+        artifact_params: list[dict[str, Any]],
+        param_types: dict[str, models.PluginTaskParameterType],
+    ):
+        """
+        Looks up the plugin parameter types specified in the config and constructs a
+        list of dictionaries in the structure expected by the Entrypoint ORM object.
+
+        Args:
+            artifact_params: A list of dictionaries describing artifact parameters
+            param_types: A dictionary mapping param type name to the ORM object
+
+        Raises:
+            ImportFailedError: If a plugin parameter type cannot be found
+        """
+        try:
+
+            return [
+                {
+                    "name": artifact["name"],
+                    "output_params": [
                         {
                             "name": param["name"],
                             "parameter_type_id": param_types[param["type"]].resource_id,
-                            "required": param.get("required", False),
                         }
-                        for param in task["input_params"]
-                    ]
-                    entry["input_params"] = input_params
-                except KeyError as e:
-                    raise ImportFailedError(
-                        "Plugin task input parameter type not found.",
-                        reason=f"Parameter type named {e} not does not exist and "
-                        "is not defined in provided toml config.",
-                    ) from e
-            try:
-                output_params = [
-                    {
-                        "name": param["name"],
-                        "parameter_type_id": param_types[param["type"]].resource_id,
-                    }
-                    for param in task["output_params"]
-                ]
-                entry["output_params"] = output_params
-            except KeyError as e:
-                raise ImportFailedError(
-                    "Plugin task output parameter type not found.",
-                    reason=f"Parameter type named {e} not does not exist and "
-                    "is not defined in provided toml config.",
-                ) from e
-            tasks[task["filename"]].append(entry)
-        return tasks
+                        for param in artifact["output_params"]
+                    ],
+                }
+                for artifact in artifact_params
+            ]
+        except KeyError as e:
+            raise ImportFailedError(
+                "Plugin parameter type specified in artifact parameters not found.",
+                reason=f"Parameter type named {e} not does not exist and "
+                "is not defined in provided toml config.",
+            ) from e
 
 
 class DraftCommitService(object):
