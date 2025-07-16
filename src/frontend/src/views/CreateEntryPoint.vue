@@ -582,8 +582,6 @@
   const title = ref('')
   const showReturnDialog = ref(false)
 
-  getEntrypoint()
-
   async function getEntrypoint() {
     if(route.params.id === 'new') {
       title.value = 'Create Entrypoint'
