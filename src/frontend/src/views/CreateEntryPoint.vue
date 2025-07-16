@@ -320,33 +320,34 @@
         :style="history ? 'opacity: 0.5; pointer-events: none;' : ''"
       >
         <template #body-cell-inputParams="props">
-          <q-chip
-            v-for="(param, i) in props.row.inputParams"
-            :key="i"
-            color="indigo"
-            class="q-mr-sm"
-            text-color="white"
-            dense
-            clickable
-          >
-            {{ `${param.name}` }}
-            <span v-if="param.required" class="text-red">*</span>
-            : {{ param.parameterType.name }}
-          </q-chip>
+          <div v-for="(param, i) in props.row.inputParams" :key="i">
+            <q-chip
+              color="indigo"
+              text-color="white"
+              dense
+              clickable
+              class="q-mr-none"
+            >
+              {{ `${param.name}` }}
+              <span v-if="param.required" class="text-red">*</span>
+              : {{ param.parameterType.name }}
+            </q-chip>
+          </div>
         </template>
         <template #body-cell-outputParams="props">
-          <q-chip
-            v-for="(param, i) in props.row.outputParams"
-            :key="i"
-            color="purple"
-            text-color="white"
-            dense
-            clickable
-          >
-            {{ `${param.name}` }}
-            <span v-if="param.required" class="text-red">*</span>
-            : {{ param.parameterType.name }}
-          </q-chip>
+          <div v-for="(param, i) in props.row.outputParams" :key="i">
+            <q-chip
+              color="purple"
+              text-color="white"
+              dense
+              clickable
+              class="q-mr-none"
+            >
+              {{ `${param.name}` }}
+              <span v-if="param.required" class="text-red">*</span>
+              : {{ param.parameterType.name }}
+            </q-chip>
+          </div>
         </template>
         <template #body-cell-add="props">
           <q-btn icon="add" round size="xs" color="grey-5" text-color="black" @click="addToTaskGraph(props.row)" />
@@ -574,9 +575,9 @@
   const taskColumns = [
     { name: 'pluginName', label: 'Plugin', align: 'left', field: 'pluginName', sortable: true, },
     { name: 'taskName', label: 'Task', align: 'left', field: 'name', sortable: true, },
-    { name: 'inputParams', label: 'Input Params', align: 'left', field: 'inputParams', sortable: false, },
-    { name: 'outputParams', label: 'Output Params', align: 'left', field: 'outputParams', sortable: false, },
-    { name: 'add', label: 'Add to Task Graph', align: 'left', sortable: false, },
+    { name: 'inputParams', label: 'Input Params', align: 'right', field: 'inputParams', sortable: false, classes: 'vertical-top' },
+    { name: 'outputParams', label: 'Output Params', align: 'right', field: 'outputParams', sortable: false, classes: 'vertical-top' },
+    { name: 'add', label: 'Add to Task Graph', align: 'center', sortable: false, },
   ]
 
   const title = ref('')
