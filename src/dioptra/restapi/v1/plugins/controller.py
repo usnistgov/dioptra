@@ -203,7 +203,7 @@ class PluginIdEndpoint(Resource):
             utils.PluginWithFilesDict,
             self._plugin_id_service.get(id, error_if_not_found=True, log=log),
         )
-        return utils.build_plugin(plugin, expandTasks=True)
+        return utils.build_plugin(plugin)
 
     @login_required
     @responds(schema=IdStatusResponseSchema, api=api)
@@ -514,14 +514,14 @@ PluginSnapshotsResource = generate_resource_snapshots_endpoint(
     route_prefix=V1_PLUGINS_ROUTE,
     searchable_fields=PLUGIN_SEARCHABLE_FIELDS,
     page_schema=PluginPageSchema,
-    build_fn=lambda value: utils.build_plugin(value, expandTasks=True),
+    build_fn=utils.build_plugin,
 )
 PluginSnapshotsIdResource = generate_resource_snapshots_id_endpoint(
     api=api,
     resource_model=models.Plugin,
     resource_name=PLUGIN_RESOURCE_TYPE,
     response_schema=PluginSchema,
-    build_fn=lambda value: utils.build_plugin(value, expandTasks=True),
+    build_fn=utils.build_plugin,
 )
 
 PluginTagsResource = generate_resource_tags_endpoint(

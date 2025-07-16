@@ -332,9 +332,7 @@ def build_plugin_snapshot_ref(plugin: models.Plugin) -> dict[str, Any]:
     }
 
 
-def build_plugin_file_ref(
-    plugin_file: models.PluginFile, expandTasks: bool = False
-) -> dict[str, Any]:
+def build_plugin_file_ref(plugin_file: models.PluginFile) -> dict[str, Any]:
     """Build a PluginRef dictionary.
 
     Args:
@@ -345,7 +343,6 @@ def build_plugin_file_ref(
     """
     plugin_id = plugin_file.plugin_id
 
-    build_plugin_task_func = build_plugin_task if expandTasks else build_plugin_task_ref
     return {
         "id": plugin_file.resource_id,
         "plugin": plugin_id,
@@ -354,7 +351,7 @@ def build_plugin_file_ref(
         "url": build_url(
             f"{PLUGINS}/{plugin_id}/{PLUGIN_FILES}/{plugin_file.resource_id}"
         ),
-        "tasks": build_plugin_task_func(plugin_file.tasks),
+        "tasks": build_plugin_task(plugin_file.tasks),
     }
 
 
@@ -990,9 +987,7 @@ def build_queue(queue_dict: QueueDict) -> dict[str, Any]:
     return data
 
 
-def build_plugin(
-    plugin_with_files: PluginWithFilesDict, expandTasks: bool = False
-) -> dict[str, Any]:
+def build_plugin(plugin_with_files: PluginWithFilesDict) -> dict[str, Any]:
     """Build a Plugin response dictionary.
 
     Args:
@@ -1022,8 +1017,7 @@ def build_plugin(
 
     if plugin_files is not None:
         data["files"] = [
-            build_plugin_file_ref(plugin_file, expandTasks)
-            for plugin_file in plugin_files
+            build_plugin_file_ref(plugin_file) for plugin_file in plugin_files
         ]
 
     if has_draft is not None:
