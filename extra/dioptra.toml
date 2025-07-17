@@ -273,7 +273,12 @@ description = "A plugin to demonstrate cleanlab in dioptra."
     { name = "classifier", type = "model", required = true},
     { name = "percentage", type = "number", required = true },
     { name = "adv_data_dir", type = "str_path", required = true },
-    { name = "batch_size", type = "integer", required = true }
+    { name = "batch_size", type = "integer", required = true },
+    { name = "target_idx", type = "integer", required = false },
+    { name = "eps", type = "number", required = false },
+    { name = "eps_step", type = "number", required = false },
+    { name = "max_iter", type = "integer", required = false },
+    { name = "clean_label", type = "boolean", required = false },
   ]
   output_params = [  ]
 
@@ -638,16 +643,16 @@ params = [
   { name = "model_name", type = "string", default_value = "mnist_classifier" },
   { name = "model_version", type = "integer", default_value = "-1" },
   { name = "job_id", type = "string", default_value = "-1" },
-  { name = "data_dir", type = "string", default_value = "poison_testing" },
+  { name = "data_dir", type = "string", default_value = "poisoned_data" },
   { name = "batch_size", type = "integer", default_value = "4"},
   { name = "seed", type = "integer", default_value = "10145783023" },
   { name = "rescale", type = "float", default_value = "0.00392156862" },
-  { name = "training_dir", type = "string", default_value = "poison_testing" },
-  { name = "testing_dir", type = "string", default_value = "poison_testing" },
+  { name = "training_dir", type = "string", default_value = "poisoned_data" },
+  { name = "testing_dir", type = "string", default_value = "poisoned_data" },
   { name = "learning_rate", type = "float", default_value = "0.001" },
   { name = "model_architecture", type = "string", default_value = "le_transform_net" },
   { name = "optimizer_name", type = "string", default_value = "Adam" },
-  { name = "adv_tar_name", type = "string", default_value = "poison_testing.tar.gz" },
+  { name = "adv_tar_name", type = "string", default_value = "poisoned_data.tar.gz" },
 ]
 plugins = [ "cleanlab_demo", "mnist_demo" ]
 
@@ -658,7 +663,7 @@ name = "Poison"
 description = "Run poisoning on a dataset."
 params = [
   { name = "seed", type = "integer", default_value = "10145783023" },
-  { name = "training_dir", type = "string", default_value = "/dioptra/data/Mnist/training" },
+  { name = "poison_dir", type = "string", default_value = "/dioptra/data/Mnist/training" },
   { name = "image_size", type = "list", default_value = "[28, 28, 1]" },
   { name = "rescale", type = "float", default_value = "0.00392156862" },
   { name = "batch_size", type = "integer", default_value = "128"},
@@ -667,11 +672,16 @@ params = [
   { name = "learning_rate", type = "float", default_value = "0.001" },
   { name = "optimizer_name", type = "string", default_value = "Adam" },
   { name = "percent_poison", type = "float", default_value = "0.33" },
-  { name = "adv_data_dir", type = "string", default_value = "poison_testing" },
-  { name = "adv_tar_name", type = "string", default_value = "poison_testing.tar.gz" },
+  { name = "adv_data_dir", type = "string", default_value = "poisoned_data" },
+  { name = "adv_tar_name", type = "string", default_value = "poisoned_data.tar.gz" },
   { name = "model_name", type = "string", default_value = "mnist_classifier" },
   { name = "model_version", type = "integer", default_value = "-1" },
   { name = "clip_values", type = "list", default_value = "[0, 1]" },
+  { name = "target_idx", type = "integer", default_value = "0" },
+  { name = "eps", type = "float", default_value = "0.3" },
+  { name = "eps_step", type = "float", default_value = "0.1" },
+  { name = "max_iter", type = "integer", default_value = "100" },
+  { name = "clean_label", type = "boolean", default_value = "True" },
 ]
 plugins = [ "cleanlab_demo", "mnist_demo" ]
 

@@ -85,7 +85,7 @@ def clean (
     # print(pred_probs[1], "\n")
 
     label_issues = find_label_issues(
-    labels=labels, pred_probs=pred_probs, return_indices_ranked_by="self_confidence"
+        labels=labels, pred_probs=pred_probs, return_indices_ranked_by="self_confidence"
     )
 
     LOGGER.info(
@@ -143,10 +143,23 @@ def poison (
     adv_data_dir: str | Path,
     batch_size: int,
     target_idx: int = 0,
+    eps: float = 0.3,
+    eps_step: float = 0.1,
+    max_iter:int  = 100,
+    clean_label = True,
 ) -> None:
 
     assert (0 < percentage) and (percentage < 1), \
         "the percentage must be between 0 and 1"
+
+    if clean_label:
+        LOGGER.info(
+            f"Poisoning target {target_idx}\n"
+        )
+    else:
+        LOGGER.info(
+            f"Adding backdoors\n"
+        )
 
     # construct target from target idx
     # the len call could be replaced with a function from mnist_demo for readability
@@ -155,10 +168,17 @@ def poison (
 
     perturbation = add_pattern_bd
     backdoor = PoisoningAttackBackdoor(perturbation)
-    attack = PoisoningAttackCleanLabelBackdoor(backdoor,
-                                               classifier,
-                                               target,
-                                               percentage)
+    if clean_label:
+        attack = PoisoningAttackCleanLabelBackdoor(backdoor,
+                                                classifier,
+                                                target,
+                                                percentage,
+                                                eps=eps,
+                                                eps_step=eps_step,
+                                                max_iter=max_iter)
+    else:
+        attack = backdoor
+
     img_filenames = [Path(x) for x in dataset.file_paths]
 
     for batch_num, (x, y) in enumerate(dataset):
@@ -166,7 +186,10 @@ def poison (
         # It seems like batch_size must be sufficently large enough that probablistically, some
         # of the batch continues to be poisoned]
         try:
-            poisoned_batch_data, poisoned_batch_labels = attack.poison(x.numpy(), y)
+            if clean_label:
+                poisoned_batch_data, poisoned_batch_labels = attack.poison(x.numpy(), y)
+            else:
+                poisoned_batch_data, poisoned_batch_labels = attack.poison(x.numpy(), target)
         except:
             poisoned_batch_data, poisoned_batch_labels = (x, y)
 
