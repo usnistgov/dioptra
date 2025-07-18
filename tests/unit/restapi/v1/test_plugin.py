@@ -20,6 +20,7 @@ This module contains a set of tests that validate the CRUD operations and additi
 functionalities for the plugin entity. The tests ensure that the plugins can be
 registered, renamed, and deleted as expected through the REST API.
 """
+
 import textwrap
 from http import HTTPStatus
 from typing import Any
@@ -29,6 +30,7 @@ import pytest
 from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
 from dioptra.restapi.routes import V1_PLUGIN_PARAMETER_TYPES_ROUTE, V1_ROOT
+from dioptra.restapi.v1.shared.resource_service import _plugin_file_payload_adapter
 
 from ..lib import helpers, routines
 from ..test_utils import assert_retrieving_resource_works, match_normalized_json
@@ -912,44 +914,70 @@ def test_register_plugin_file(
         (r"hello_world.py", HTTPStatus.OK),
         (r"hello_world/main.py", HTTPStatus.OK),
         (r"package/sub_package/module.py", HTTPStatus.OK),
-        (r"a/b/c/d/e/f/g/h/i/j/k/l/m/n/o/p.py", HTTPStatus.OK),  # Many nested directories # noqa: B950 # fmt: skip
+        (
+            r"a/b/c/d/e/f/g/h/i/j/k/l/m/n/o/p.py",
+            HTTPStatus.OK,
+        ),  # Many nested directories # noqa: B950 # fmt: skip
         (r"_underscore_start.py", HTTPStatus.OK),
         (r"underscore_end_.py", HTTPStatus.OK),
         (r"_underscore_start_end_.py", HTTPStatus.OK),
         (r"__dunder_start.py", HTTPStatus.OK),
         (r"dunder_end__.py", HTTPStatus.OK),
         (r"__dunder_start_end__.py", HTTPStatus.OK),
-
         # Invalid paths
-        (r"hello world.py", HTTPStatus.BAD_REQUEST),        # Space in filename
-        (r"3ight/hello.py", HTTPStatus.BAD_REQUEST),        # Directory starting with a number # noqa: B950
+        (r"hello world.py", HTTPStatus.BAD_REQUEST),  # Space in filename
+        (
+            r"3ight/hello.py",
+            HTTPStatus.BAD_REQUEST,
+        ),  # Directory starting with a number # noqa: B950
         (r"hello_world//main.py", HTTPStatus.BAD_REQUEST),  # Double slash
-        (r"module.py.txt", HTTPStatus.BAD_REQUEST),         # Wrong extension
-        (r"/absolute/path.py", HTTPStatus.BAD_REQUEST),     # Absolute path
-        (r".py", HTTPStatus.BAD_REQUEST),                   # Just the extension
-        (r"hello.py/", HTTPStatus.BAD_REQUEST),             # Ends with a slash
-        (r"/hello.py", HTTPStatus.BAD_REQUEST),             # Starts with a slash
-        (r"hello..py", HTTPStatus.BAD_REQUEST),             # Double dot in extension
-        (r"hello.py.py", HTTPStatus.BAD_REQUEST),           # Double .py extension
-        (r"_/hello.py", HTTPStatus.BAD_REQUEST),            # Single underscore directory name # noqa: B950
-        (r"hello/_.py", HTTPStatus.BAD_REQUEST),            # Single underscore filename
-        (r"hello/_file.py", HTTPStatus.BAD_REQUEST),        # Underscore start in nested file # noqa: B950
-        (r"HELLO.PY", HTTPStatus.BAD_REQUEST),              # Uppercase extension (assuming case-sensitive) # noqa: B950
-        (r"hello.pY", HTTPStatus.BAD_REQUEST),              # Mixed case extension
-        (r"hello/world/.py", HTTPStatus.BAD_REQUEST),       # Hidden file in nested directory # noqa: B950
+        (r"module.py.txt", HTTPStatus.BAD_REQUEST),  # Wrong extension
+        (r"/absolute/path.py", HTTPStatus.BAD_REQUEST),  # Absolute path
+        (r".py", HTTPStatus.BAD_REQUEST),  # Just the extension
+        (r"hello.py/", HTTPStatus.BAD_REQUEST),  # Ends with a slash
+        (r"/hello.py", HTTPStatus.BAD_REQUEST),  # Starts with a slash
+        (r"hello..py", HTTPStatus.BAD_REQUEST),  # Double dot in extension
+        (r"hello.py.py", HTTPStatus.BAD_REQUEST),  # Double .py extension
+        (
+            r"_/hello.py",
+            HTTPStatus.BAD_REQUEST,
+        ),  # Single underscore directory name # noqa: B950
+        (r"hello/_.py", HTTPStatus.BAD_REQUEST),  # Single underscore filename
+        (
+            r"hello/_file.py",
+            HTTPStatus.BAD_REQUEST,
+        ),  # Underscore start in nested file # noqa: B950
+        (
+            r"HELLO.PY",
+            HTTPStatus.BAD_REQUEST,
+        ),  # Uppercase extension (assuming case-sensitive) # noqa: B950
+        (r"hello.pY", HTTPStatus.BAD_REQUEST),  # Mixed case extension
+        (
+            r"hello/world/.py",
+            HTTPStatus.BAD_REQUEST,
+        ),  # Hidden file in nested directory # noqa: B950
         (r"hello/.world/file.py", HTTPStatus.BAD_REQUEST),  # Hidden directory
-        (r" hello.py", HTTPStatus.BAD_REQUEST),             # Leading space
-        (r"hello.py ", HTTPStatus.BAD_REQUEST),             # Trailing space
-        (r"\thello.py", HTTPStatus.BAD_REQUEST),            # Tab character
-        (r"hello\world.py", HTTPStatus.BAD_REQUEST),        # Backslash instead of forward slash # noqa: B950
-        (r"hello:world.py", HTTPStatus.BAD_REQUEST),        # Invalid character (colon)
-        (r"hello@world.py", HTTPStatus.BAD_REQUEST),        # Invalid character (at sign) # noqa: B950
+        (r" hello.py", HTTPStatus.BAD_REQUEST),  # Leading space
+        (r"hello.py ", HTTPStatus.BAD_REQUEST),  # Trailing space
+        (r"\thello.py", HTTPStatus.BAD_REQUEST),  # Tab character
+        (
+            r"hello\world.py",
+            HTTPStatus.BAD_REQUEST,
+        ),  # Backslash instead of forward slash # noqa: B950
+        (r"hello:world.py", HTTPStatus.BAD_REQUEST),  # Invalid character (colon)
+        (
+            r"hello@world.py",
+            HTTPStatus.BAD_REQUEST,
+        ),  # Invalid character (at sign) # noqa: B950
         (r"hello/world.py/extra", HTTPStatus.BAD_REQUEST),  # Extra content after .py
-        (r"", HTTPStatus.BAD_REQUEST),                      # Empty string
-        (r"hello/", HTTPStatus.BAD_REQUEST),                # Directory without file
-        (r"hello.py/world.py", HTTPStatus.BAD_REQUEST),     # .py in middle of path
-        (r"1/2/3/4.py", HTTPStatus.BAD_REQUEST),            # All numeric directory names # noqa: B950
-        (r"../sample.py", HTTPStatus.BAD_REQUEST),          # No relative paths
+        (r"", HTTPStatus.BAD_REQUEST),  # Empty string
+        (r"hello/", HTTPStatus.BAD_REQUEST),  # Directory without file
+        (r"hello.py/world.py", HTTPStatus.BAD_REQUEST),  # .py in middle of path
+        (
+            r"1/2/3/4.py",
+            HTTPStatus.BAD_REQUEST,
+        ),  # All numeric directory names # noqa: B950
+        (r"../sample.py", HTTPStatus.BAD_REQUEST),  # No relative paths
         (r"..sample.py", HTTPStatus.BAD_REQUEST),
         # No prefix with dots
         # fmt: on
@@ -1372,6 +1400,7 @@ def test_manage_existing_plugin_file_draft(
         draft_mod=draft_mod,
         draft_expected=draft_expected,
         draft_mod_expected=draft_mod_expected,
+        resource_data_adapters=_plugin_file_payload_adapter,
     )
 
 

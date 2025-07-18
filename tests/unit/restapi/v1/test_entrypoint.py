@@ -454,9 +454,9 @@ def assert_registering_entrypoint_with_no_queues_succeeds(
         plugins=entry_point["plugins"],
         artifact_plugins=entry_point["artifact_plugins"],
     )
-    assert entrypoint_response and entrypoint_response.status_code == HTTPStatus.OK, (
-        assert_message
-    )
+    assert (
+        entrypoint_response and entrypoint_response.status_code == HTTPStatus.OK
+    ), assert_message
     # Assert the return values match what was expected
     entry_point_data = entrypoint_response.json()
     assert_correct_emptiness(entry_point, "queues", entry_point_data)
