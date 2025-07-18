@@ -20,12 +20,12 @@ This module contains a set of tests that validate the CRUD operations and additi
 functionalities for the entrypoint entity. The tests ensure that the entrypoints can be
 registered, renamed, deleted, and locked/unlocked as expected through the REST API.
 """
+
 import textwrap
 from http import HTTPStatus
 from typing import Any
 
 import pytest
-from sqlalchemy.orm import Session as DBSession
 
 from dioptra.client.base import DioptraResponseProtocol, FieldNameCollisionError
 from dioptra.client.client import DioptraClient
@@ -452,11 +452,11 @@ def assert_registering_entrypoint_with_no_queues_succeeds(
         parameters=entry_point["parameters"],
         queues=entry_point["queues"],
         plugins=entry_point["plugins"],
-        artifact_plugins=entry_point["artifact_plugings"],
+        artifact_plugins=entry_point["artifact_plugins"],
     )
-    assert (
-        entrypoint_response and entrypoint_response.status_code == HTTPStatus.OK
-    ), assert_message
+    assert entrypoint_response and entrypoint_response.status_code == HTTPStatus.OK, (
+        assert_message
+    )
     # Assert the return values match what was expected
     entry_point_data = entrypoint_response.json()
     assert_correct_emptiness(entry_point, "queues", entry_point_data)
@@ -1419,17 +1419,18 @@ def test_create_entrypoint_with_empty_queues_plugins_params(
         "group_id": group_id,
         "name": "test_entrypoint_3Empties",
         "description": "new test entrypoint #1 With 3 []s",
-        "task_graph": "graph:    message:    my_entrypoint: $name",
         "parameters": [],
         "plugins": [],
+        "artifact_plugins": [],
         "queues": [],
         "task_graph": textwrap.dedent(
-            f"""# my entrypoint graph
+            """# my entrypoint graph
                 graph:
                 message:
                     my_entrypoint:  "test_entrypoint_3Empties"
                 """
         ),
+        "artifact_graph": "",
     }
     assert_registering_entrypoint_with_no_queues_succeeds(
         dioptra_client=dioptra_client,
@@ -1455,17 +1456,18 @@ def test_create_entrypoint_with_none_queues_plugins_params(
         "group_id": group_id,
         "name": "test_entrypoint_3Nones",
         "description": "new test entrypoint #2 With 3 Nones",
-        "task_graph": "graph:    message:    my_entrypoint: $name",
         "parameters": None,
         "plugins": None,
+        "artifact_plugins": None,
         "queues": None,
         "task_graph": textwrap.dedent(
-            f"""# my entrypoint graph
+            """# my entrypoint graph
                 graph:
                 message:
                     my_entrypoint:  "test_entrypoint_3Nones"
                 """
         ),
+        "artifact_graph": "",
     }
     assert_registering_entrypoint_with_no_queues_succeeds(
         dioptra_client=dioptra_client,

@@ -79,12 +79,17 @@ def task_plugin_archive():
 
 @pytest.fixture(scope="session")
 def dependency_modules() -> List[Any]:
+    from mlflow import MlflowClient
+
     from dioptra.restapi.bootstrap import (
+        JobRunStoreModule,
         PasswordServiceModule,
         RQServiceConfiguration,
         RQServiceV1Module,
         _bind_password_service_configuration,
     )
+
+    from .lib.mock_mlflow import MockMlflowClient
 
     def _bind_rq_service_configuration(binder: Binder) -> None:
         configuration: RQServiceConfiguration = RQServiceConfiguration(
@@ -104,16 +109,16 @@ def dependency_modules() -> List[Any]:
         binder.bind(Session, to=s3_session, scope=request)
         binder.bind(BaseClient, to=s3_client, scope=request)
 
+    def _bind_job_run_store_configuration(binder: Binder):
+        binder.bind(interface=MlflowClient, to=MockMlflowClient(), scope=request)
+
     def configure(binder: Binder) -> None:
         _bind_password_service_configuration(binder)
         _bind_rq_service_configuration(binder)
         _bind_s3_service_configuration(binder)
+        _bind_job_run_store_configuration(binder)
 
-    return [
-        configure,
-        PasswordServiceModule,
-        RQServiceV1Module,
-    ]
+    return [configure, PasswordServiceModule, RQServiceV1Module, JobRunStoreModule]
 
 
 @pytest.fixture(scope="session")
@@ -124,11 +129,17 @@ def dependency_injector(dependency_modules: List[Any]) -> Injector:
 @pytest.fixture(scope="function")
 def db_session(flask_app: Flask) -> DBSession:
     with flask_app.app_context():
+        # following the recipe as described here:
+        # https://docs.sqlalchemy.org/en/20/orm/session_transaction.html
+        # append the reference below to get to the exact location
+        #  #joining-a-session-into-an-external-transaction-such-as-for-test-suites
         """Creates a new database session for each test function."""
         connection = restapi_db.engine.connect()
         transaction = connection.begin()
 
-        DBSession = sqlalchemy.orm.sessionmaker(connection)
+        DBSession = sqlalchemy.orm.sessionmaker(
+            connection, join_transaction_mode="create_savepoint"
+        )
 
         with DBSession() as session:
             old = restapi_db.session
@@ -136,7 +147,6 @@ def db_session(flask_app: Flask) -> DBSession:
             yield session
             restapi_db.session = old
 
-        # clean-up
         transaction.rollback()
         connection.close()
 
@@ -149,6 +159,18 @@ def flask_app(dependency_modules: List[Any]) -> Flask:
     app = create_app(env="test_no_login", injector=injector)
 
     with app.app_context():
+        # sqlite specific fix, see:
+        # https://docs.sqlalchemy.org/en/20/dialects/sqlite.html
+        @sqlalchemy.event.listens_for(restapi_db.engine, "connect")
+        def do_connect(dbapi_connection, connection_record):
+            # disable sqlite3's emitting of the BEGIN statement entirely.
+            dbapi_connection.isolation_level = None
+
+        @sqlalchemy.event.listens_for(restapi_db.engine, "begin")
+        def do_begin(conn):
+            # emit our own BEGIN.   sqlite3 still emits COMMIT/ROLLBACK correctly
+            conn.exec_driver_sql("BEGIN")
+
         restapi_db.drop_all()
         restapi_db.create_all()
         libdb.setup_ontology(restapi_db.session)

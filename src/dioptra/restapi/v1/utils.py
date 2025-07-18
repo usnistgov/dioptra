@@ -911,7 +911,7 @@ def build_artifact(artifact_dict: ArtifactDict) -> dict[str, Any]:
         "is_dir": artifact.is_dir,
         "file_size": artifact.file_size,
         "plugin_snapshot_id": artifact.plugin_snapshot_id,
-        "task_id": artifact.task.task_id,
+        "task_id": artifact.task.task_id if artifact.task else None,
         "file_url": build_url(f"{ARTIFACTS}/{artifact.resource_id}/contents"),
     }
 

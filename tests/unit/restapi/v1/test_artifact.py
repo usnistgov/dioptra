@@ -24,7 +24,6 @@ from http import HTTPStatus
 from typing import Any
 
 import pytest
-from sqlalchemy.orm import Session as DBSession
 
 from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
@@ -60,25 +59,41 @@ def assert_artifact_response_contents_matches_expectations(
         "lastModifiedOn",
         "latestSnapshot",
         "hasDraft",
-        "uri",
-        "description",
         "tags",
+        "description",
+        "pluginSnapshotId",
+        "taskId",
+        "isDir",
+        "fileSize",
+        "fileUrl",
+        "artifactUri",
+        "job",
     }
     assert set(response.keys()) == expected_keys
 
     # Validate the non-Ref fields
     assert isinstance(response["id"], int)
     assert isinstance(response["snapshot"], int)
-    assert isinstance(response["uri"], str)
-    assert isinstance(response["description"], str)
     assert isinstance(response["createdOn"], str)
     assert isinstance(response["snapshotCreatedOn"], str)
     assert isinstance(response["lastModifiedOn"], str)
     assert isinstance(response["latestSnapshot"], bool)
     assert isinstance(response["hasDraft"], bool)
+    assert isinstance(response["description"], str)
+    assert response["pluginSnapshotId"] is None or isinstance(
+        response["pluginSnapshotId"], int
+    )
+    assert response["taskId"] is None or isinstance(response["taskId"], int)
+    assert isinstance(response["isDir"], bool)
+    assert response["fileSize"] is None or isinstance(response["fileSize"], int)
+    assert isinstance(response["fileUrl"], str)
+    assert isinstance(response["artifactUri"], str)
+    assert isinstance(response["job"], int)
 
-    assert response["uri"] == expected_contents["uri"]
+    assert response["artifactUri"] == expected_contents["artifactUri"]
     assert response["description"] == expected_contents["description"]
+    assert response["isDir"] == expected_contents["isDir"]
+    assert response["job"] == expected_contents["job"]
 
     assert helpers.is_iso_format(response["createdOn"])
     assert helpers.is_iso_format(response["snapshotCreatedOn"])
@@ -174,7 +189,7 @@ def assert_registering_existing_artifact_uri_fails(
         AssertionError: If the response status code is not 400.
     """
     response = dioptra_client.artifacts.create(
-        group_id=group_id, job_id=job_id, uri=uri, description=""
+        group_id=group_id, job_id=job_id, artifact_uri=uri, description=""
     )
     assert response.status_code == HTTPStatus.CONFLICT
 
@@ -186,22 +201,24 @@ def test_create_artifact(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
+    mlflow_artifact_uris: dict[str, str],
 ) -> None:
     """Test that artifacts can be correctly registered and retrieved using the API.
 
-    Given an authenticated user, this test validates the following sequence of actions:
+    Given an authenticated user and an existing uri that has been logged to mlflow
+    for the given job, this test validates the following sequence of actions:
 
     - The user registers an artifact with uri "s3://bucket/model_v1.artifact".
     - The response is valid matches the expected values given the registration request.
     - The user is able to retrieve information about the artifact using the artifact id.
     """
-    uri = "s3://bucket/model_v1.artifact"
     description = "The first artifact."
     job_id = registered_jobs["job1"]["id"]
     user_id = auth_account["id"]
     group_id = auth_account["groups"][0]["id"]
+    uri = mlflow_artifact_uris["artifact1"]
     artifact_response = dioptra_client.artifacts.create(
-        group_id=group_id, job_id=job_id, uri=uri, description=description
+        group_id=group_id, job_id=job_id, artifact_uri=uri, description=description
     )
 
     artifact_expected = artifact_response.json()
@@ -209,10 +226,12 @@ def test_create_artifact(
     assert_artifact_response_contents_matches_expectations(
         response=artifact_expected,
         expected_contents={
-            "uri": uri,
+            "artifactUri": uri,
             "description": description,
             "user_id": user_id,
             "group_id": group_id,
+            "job": job_id,
+            "isDir": False,
         },
     )
     assert_retrieving_artifact_by_id_works(
@@ -253,6 +272,7 @@ def test_artifacts_get_all(
 )
 def test_artifact_sort(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
+    mockup_mlflow,
     auth_account: dict[str, Any],
     registered_artifacts: dict[str, Any],
     sort_by: str,
@@ -342,7 +362,7 @@ def test_cannot_register_existing_artifact_uri(
     existing_artifact = registered_artifacts["artifact1"]
     assert_registering_existing_artifact_uri_fails(
         dioptra_client,
-        uri=existing_artifact["uri"],
+        uri=existing_artifact["artifactUri"],
         group_id=existing_artifact["group"]["id"],
-        job_id=0,  # TODO: fill in once job stuff is done.
+        job_id=existing_artifact["job"],
     )

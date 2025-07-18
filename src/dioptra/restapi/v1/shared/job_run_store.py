@@ -19,7 +19,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from dataclasses import dataclass
 from pathlib import Path, PosixPath
-from typing import Any, Protocol, cast
+from typing import Any, Protocol
 from urllib.parse import urlparse
 
 import mlflow.artifacts

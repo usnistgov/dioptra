@@ -42,8 +42,9 @@ class JobRunStoreModule(Module):
     @provider
     def provide_job_run_store_module(
         self,
+        client: MlflowClient,
     ) -> JobRunStoreProtocol:
-        return MlFlowJobRunStore(MlflowClient())
+        return MlFlowJobRunStore(client)
 
 
 @dataclass
@@ -79,6 +80,10 @@ def _bind_rq_service_configuration(binder: Binder):
     binder.bind(RQServiceConfiguration, to=configuration, scope=request)
 
 
+def _bind_job_run_store_configuration(binder: Binder):
+    binder.bind(MlflowClient, to=MlflowClient(), scope=request)
+
+
 def _bind_s3_service_configuration(binder: Binder) -> None:
     s3_endpoint_url: Optional[str] = os.getenv("MLFLOW_S3_ENDPOINT_URL")
 
@@ -110,6 +115,7 @@ def bind_dependencies(binder: Binder) -> None:
     _bind_rq_service_configuration(binder)
     _bind_s3_service_configuration(binder)
     _bind_password_service_configuration(binder)
+    _bind_job_run_store_configuration(binder)
 
 
 def register_providers(modules: List[Callable[..., Any]]) -> None:
