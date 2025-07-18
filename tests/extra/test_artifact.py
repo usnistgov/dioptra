@@ -173,7 +173,7 @@ def test_directory_task(name: str, ext: str, dir: DirTest):
     for root, dirs, files in os.walk(extracted):
         count += 1
         # if this errors, missing directory entry
-        current = expected[root]
+        current = expected[Path(root).as_posix()]
         assert len(dirs) == len(current.dirs)
         # make sure there is one and only file entry for each entry
         for file in files:
