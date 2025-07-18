@@ -39,7 +39,7 @@ class Artifact(ResourceSnapshot):
 
     plugin_snapshot_id: Mapped[bigint] = mapped_column(init=False, nullable=True)
     plugin_file_id: Mapped[bigint] = mapped_column(init=False, nullable=True)
-    task_name: Mapped[bigint] = mapped_column(init=False, nullable=True)
+    task_name: Mapped[text_] = mapped_column(init=False, nullable=True)
 
     # Derived fields (read-only)
     job_id: Mapped[bigint] = column_property(
