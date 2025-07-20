@@ -14,16 +14,14 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from __future__ import annotations
-
 import pickle
 import tarfile
 from collections.abc import ByteString
 from pathlib import Path
 from typing import Any, Callable, Dict, Literal, Optional
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 import structlog
 from structlog.stdlib import BoundLogger
 
@@ -59,11 +57,11 @@ class StringArtifactTask(ArtifactTaskInterface):
 
     @staticmethod
     def validation() -> dict[str, Any] | None:
-        return {"type": {"enum": ["txt", "html", "md"]}}
+        return {"type": {"type": "string"}}
 
     @staticmethod
     def name() -> str:
-        return "string"
+        return "string_artifact"
 
 
 class BytesArtifactTask(ArtifactTaskInterface):
@@ -82,11 +80,11 @@ class BytesArtifactTask(ArtifactTaskInterface):
 
     @staticmethod
     def validation() -> dict[str, Any] | None:
-        return {"type": {"enum": ["pdf", "jpg", "png"]}}
+        return {"type": {"type": "string"}}
 
     @staticmethod
     def name() -> str:
-        return "bytes"
+        return "bytes_artifact"
 
 
 class FileArtifactTask(ArtifactTaskInterface):
@@ -108,7 +106,7 @@ class FileArtifactTask(ArtifactTaskInterface):
 
     @staticmethod
     def name() -> str:
-        return "file"
+        return "file_artifact"
 
 
 class DirectoryArtifactTask(ArtifactTaskInterface):
@@ -159,7 +157,7 @@ class DirectoryArtifactTask(ArtifactTaskInterface):
 
     @staticmethod
     def name() -> str:
-        return "directory"
+        return "directory_artifact"
 
 
 class DataframeArtifactTask(ArtifactTaskInterface):
@@ -270,7 +268,7 @@ class DataframeArtifactTask(ArtifactTaskInterface):
 
     @staticmethod
     def name() -> str:
-        return "dataframe"
+        return "dataframe_artifact"
 
 
 class NumpyArrayArtifactTask(ArtifactTaskInterface):
@@ -290,7 +288,7 @@ class NumpyArrayArtifactTask(ArtifactTaskInterface):
 
     @staticmethod
     def name() -> str:
-        return "npy"
+        return "npy_artifact"
 
 
 class PickleArtifactTask(ArtifactTaskInterface):
@@ -312,4 +310,4 @@ class PickleArtifactTask(ArtifactTaskInterface):
 
     @staticmethod
     def name() -> str:
-        return "pkl"
+        return "pkl_artifact"

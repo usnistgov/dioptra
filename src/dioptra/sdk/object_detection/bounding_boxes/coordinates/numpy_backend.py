@@ -14,8 +14,6 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from __future__ import annotations
-
 import numpy as np
 import numpy.typing as npt
 
@@ -236,7 +234,7 @@ class NumpyBoundingBoxesBatchedGrid(BoundingBoxesBatchedGrid):
     @classmethod
     def on_grid_shape(
         cls, grid_shape: tuple[int, int]
-    ) -> NumpyBoundingBoxesBatchedGrid:
+    ) -> "NumpyBoundingBoxesBatchedGrid":
         bbox_coord: NumpyBoundingBoxCoordinates = NumpyBoundingBoxCoordinates(
             grid_shape=grid_shape
         )

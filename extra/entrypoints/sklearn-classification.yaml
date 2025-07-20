@@ -2,15 +2,15 @@ artifacts:
   model:
     contents: $model
     task:
-      name: pkl
+      name: pkl_artifact
   predictions:
     contents: $predictions
     task:
-      name: npy
+      name: npy_artifact
   metrics:
     contents: $metrics
     task:
-      name: dataframe
+      name: dataframe_artifact
       args:
         format: csv
 

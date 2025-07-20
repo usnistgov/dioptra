@@ -15,7 +15,6 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """A module for binding configurations to shared services using dependency injection."""
-from __future__ import annotations
 
 import os
 from dataclasses import dataclass

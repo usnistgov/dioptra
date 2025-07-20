@@ -14,8 +14,6 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from __future__ import annotations
-
 from abc import abstractmethod
 from dataclasses import dataclass
 from pathlib import Path, PosixPath
@@ -227,7 +225,7 @@ class MlFlowJobRunStore:
             self._client.get_run(run_id)
         except mlflow.exceptions.MlflowException as e:
             raise JobStoreError(
-                f'A mlflow run id with value "{run_id}" does not exist in ' "MLFlow."
+                f'A mlflow run id with value "{run_id}" does not exist in MLFlow.'
             ) from e
 
         # mflow run id should be an element in the uri path

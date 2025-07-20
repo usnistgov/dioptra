@@ -15,7 +15,6 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform model endpoint operations."""
-from __future__ import annotations
 
 from typing import Any, Final, cast
 
@@ -63,7 +62,7 @@ class ModelService(object):
     @inject
     def __init__(
         self,
-        model_name_service: ModelNameService,
+        model_name_service: "ModelNameService",
         group_id_service: GroupIdService,
     ) -> None:
         """Initialize the model service.
@@ -295,7 +294,7 @@ class ModelIdService(object):
     @inject
     def __init__(
         self,
-        model_name_service: ModelNameService,
+        model_name_service: "ModelNameService",
     ) -> None:
         """Initialize the model service.
 

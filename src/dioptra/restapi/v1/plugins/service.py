@@ -16,8 +16,6 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform plugin endpoint operations."""
 
-from __future__ import annotations
-
 import itertools
 from typing import Any, Final, Iterable, cast
 
@@ -76,7 +74,7 @@ PLUGIN_FILE_SORTABLE_FIELDS: Final[dict[str, Any]] = {
 class PluginService(object):
     @inject
     def __init__(
-        self, plugin_name_service: PluginNameService, group_id_service: GroupIdService
+        self, plugin_name_service: "PluginNameService", group_id_service: GroupIdService
     ) -> None:
         """Initialize the plugin service.
 
@@ -266,7 +264,7 @@ class PluginIdService(object):
     @inject
     def __init__(
         self,
-        plugin_name_service: PluginNameService,
+        plugin_name_service: "PluginNameService",
     ) -> None:
         """Initialize the plugin service.
 

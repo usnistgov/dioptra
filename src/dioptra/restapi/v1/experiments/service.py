@@ -16,8 +16,6 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform experiment endpoint operations."""
 
-from __future__ import annotations
-
 from typing import Any, Final
 
 import structlog
@@ -28,13 +26,9 @@ from structlog.stdlib import BoundLogger
 from dioptra.restapi.db import models
 from dioptra.restapi.db.repository.utils import DeletionPolicy
 from dioptra.restapi.db.unit_of_work import UnitOfWork
-from dioptra.restapi.errors import (
-    EntityDoesNotExistError,
-)
+from dioptra.restapi.errors import EntityDoesNotExistError
 from dioptra.restapi.v1 import utils
-from dioptra.restapi.v1.entrypoints.service import (
-    EntrypointIdsService,
-)
+from dioptra.restapi.v1.entrypoints.service import EntrypointIdsService
 from dioptra.restapi.v1.shared.search_parser import parse_search_text
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()

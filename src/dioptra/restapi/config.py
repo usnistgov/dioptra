@@ -22,7 +22,6 @@ There are three configuration environments available,
 - **prod:** The configuration for production environments.
 - **test:** The configuration for running unit tests.
 """
-from __future__ import annotations
 
 import os
 from typing import List, Type

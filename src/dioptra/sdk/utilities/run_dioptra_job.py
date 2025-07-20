@@ -14,7 +14,6 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from __future__ import annotations
 
 import argparse
 import json
@@ -331,7 +330,7 @@ def _register_artifacts(
         artifact_path_name = PurePosixPath(artifact["path"]).name
         # add artifact to mlflow
         mlflow.log_artifact(local_path=artifact["path"], artifact_path=artifact["name"])
-        uri = mlflow.get_artifact_uri(f'{artifact["name"]}/{artifact_path_name}')
+        uri = mlflow.get_artifact_uri(f"{artifact['name']}/{artifact_path_name}")
         # add artifact to dioptra_client
         dioptra_client.artifacts.create(
             group_id=group_id,

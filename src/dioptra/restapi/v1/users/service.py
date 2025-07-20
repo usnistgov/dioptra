@@ -16,8 +16,6 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform user endpoint operations."""
 
-from __future__ import annotations
-
 import datetime
 import uuid
 from typing import Any, Final, cast
@@ -62,7 +60,7 @@ class UserService(object):
     @inject
     def __init__(
         self,
-        user_password_service: UserPasswordService,
+        user_password_service: "UserPasswordService",
         group_member_service: GroupMemberService,
         builtin_plugin_parameter_type_service: BuiltinPluginParameterTypeService,
         uow: UnitOfWork,
@@ -207,7 +205,7 @@ class UserIdService(object):
 
     @inject
     def __init__(
-        self, user_password_service: UserPasswordService, uow: UnitOfWork
+        self, user_password_service: "UserPasswordService", uow: UnitOfWork
     ) -> None:
         """Initialize the current user service.
 
@@ -292,7 +290,7 @@ class UserCurrentService(object):
     def __init__(
         self,
         user_id_service: UserIdService,
-        user_password_service: UserPasswordService,
+        user_password_service: "UserPasswordService",
         uow: UnitOfWork,
     ) -> None:
         """Initialize the current user service.

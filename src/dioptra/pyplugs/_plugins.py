@@ -41,8 +41,6 @@
 # SOFTWARE.
 """Decorators for registering plugins"""
 
-from __future__ import annotations
-
 import functools
 import importlib
 import sys

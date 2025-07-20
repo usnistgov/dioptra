@@ -14,8 +14,6 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from __future__ import annotations
-
 from pathlib import Path
 from typing import Any, ClassVar, Final, TypeVar
 
@@ -50,7 +48,7 @@ class ArtifactsCollectionClient(CollectionClient[T]):
         )
 
     @property
-    def snapshots(self) -> ArtifactsSnapshotCollectionClient[T]:
+    def snapshots(self) -> "ArtifactsSnapshotCollectionClient[T]":
         """The client for retrieving artifact resource snapshots.
 
         Each client method in the sub-collection accepts an arbitrary number of

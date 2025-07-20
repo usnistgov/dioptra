@@ -16,8 +16,6 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform artifact endpoint operations."""
 
-from __future__ import annotations
-
 from typing import Any, Final, cast
 
 import structlog
@@ -59,6 +57,59 @@ SORTABLE_FIELDS: Final[dict[str, Any]] = {
     "lastModifiedOn": models.Resource.last_modified_on,
     "description": models.Artifact.description,
 }
+
+
+class ArtifactTaskHelper(object):
+    @inject
+    def __init__(
+        self,
+        plugin_id_snapshot_id_service: PluginIdSnapshotIdService,
+        plugin_task_id_service: PluginTaskIdService,
+    ) -> None:
+        """Initialize the artifact service.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            plugin_id_snapshot_id_service: An PluginIdSnapshotIdService object.
+            plugin_task_id_service: A PluginTaskIdService object.
+        """
+        self._plugin_id_snapshot_id_service = plugin_id_snapshot_id_service
+        self._plugin_task_id_service = plugin_task_id_service
+
+    def associate_task(
+        self,
+        artifact: models.Artifact,
+        plugin_snapshot_id: int | None,
+        task_id: int | None,
+    ) -> None:
+        if task_id is not None:
+            if plugin_snapshot_id is None:
+                raise DioptraError(
+                    "plugin_snapshot_id must be provided if task_id is provided"
+                )
+            # verify the plugin task exists and then associate
+            plugin_task = self._plugin_task_id_service.get(task_id=task_id)
+            if not isinstance(plugin_task, models.ArtifactTask):
+                raise DioptraError("task_id provided was not an Artifact Task")
+            plugin_plugin_file = (
+                self._plugin_id_snapshot_id_service.get_plugin_plugin_file(
+                    plugin_snapshot_id, plugin_task.plugin_file_resource_snapshot_id
+                )
+            )
+            if plugin_plugin_file is None:
+                raise EntityDoesNotExistError(
+                    PLUGIN_TASK_RESOURCE_TYPE,
+                    task_id=task_id,
+                    plugin_snapshot_id=plugin_snapshot_id,
+                )
+            # associate this artifact with the task
+            artifact.task = plugin_task
+            artifact.plugin_plugin_file = plugin_plugin_file
+        elif plugin_snapshot_id is not None:
+            raise DioptraError(
+                "task_id must be provided if plugin_snapshot_id is provided"
+            )
 
 
 class ArtifactService(object):
@@ -436,56 +487,3 @@ def _find_artifact(
         if new_artifact_uri == artifact.uri:
             return artifact
     return None
-
-
-class ArtifactTaskHelper(object):
-    @inject
-    def __init__(
-        self,
-        plugin_id_snapshot_id_service: PluginIdSnapshotIdService,
-        plugin_task_id_service: PluginTaskIdService,
-    ) -> None:
-        """Initialize the artifact service.
-
-        All arguments are provided via dependency injection.
-
-        Args:
-            plugin_id_snapshot_id_service: An PluginIdSnapshotIdService object.
-            plugin_task_id_service: A PluginTaskIdService object.
-        """
-        self._plugin_id_snapshot_id_service = plugin_id_snapshot_id_service
-        self._plugin_task_id_service = plugin_task_id_service
-
-    def associate_task(
-        self,
-        artifact: models.Artifact,
-        plugin_snapshot_id: int | None,
-        task_id: int | None,
-    ) -> None:
-        if task_id is not None:
-            if plugin_snapshot_id is None:
-                raise DioptraError(
-                    "plugin_snapshot_id must be provided if task_id is provided"
-                )
-            # verify the plugin task exists and then associate
-            plugin_task = self._plugin_task_id_service.get(task_id=task_id)
-            if not isinstance(plugin_task, models.ArtifactTask):
-                raise DioptraError("task_id provided was not an Artifact Task")
-            plugin_plugin_file = (
-                self._plugin_id_snapshot_id_service.get_plugin_plugin_file(
-                    plugin_snapshot_id, plugin_task.plugin_file_resource_snapshot_id
-                )
-            )
-            if plugin_plugin_file is None:
-                raise EntityDoesNotExistError(
-                    PLUGIN_TASK_RESOURCE_TYPE,
-                    task_id=task_id,
-                    plugin_snapshot_id=plugin_snapshot_id,
-                )
-            # associate this artifact with the task
-            artifact.task = plugin_task
-            artifact.plugin_plugin_file = plugin_plugin_file
-        elif plugin_snapshot_id is not None:
-            raise DioptraError(
-                "task_id must be provided if plugin_snapshot_id is provided"
-            )

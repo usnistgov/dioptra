@@ -20,7 +20,6 @@ This module provides a context manager for a Flask test server. This can be used
 combination with a requests Session as an alternative to the Flask test client for
 testing the REST API.
 """
-from __future__ import annotations
 
 import os
 import platform

@@ -19,8 +19,6 @@
 .. |Api| replace:: :py:class:`flask_restx.Api`
 """
 
-from __future__ import annotations
-
 import http
 import typing
 

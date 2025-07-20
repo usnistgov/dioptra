@@ -15,7 +15,6 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The schemas for serializing/deserializing Group resource."""
-from __future__ import annotations
 
 from marshmallow import Schema, fields, missing
 

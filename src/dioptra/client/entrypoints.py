@@ -14,8 +14,6 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from __future__ import annotations
-
 from pathlib import Path
 from typing import Any, ClassVar, Final, TypeVar
 
@@ -384,7 +382,7 @@ class EntrypointsSnapshotCollectionClient(SnapshotsSubCollectionClient[T]):
     def __init__(
         self,
         session: DioptraSession[T],
-        root_collection: EntrypointsCollectionClient[T],
+        root_collection: "EntrypointsCollectionClient[T]",
     ):
         super().__init__(session=session, root_collection=root_collection)
 

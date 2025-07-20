@@ -16,8 +16,6 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform entrypoint endpoint operations."""
 
-from __future__ import annotations
-
 from typing import Any, Final, Iterable
 
 import structlog
@@ -71,7 +69,7 @@ class EntrypointService(object):
     @inject
     def __init__(
         self,
-        entrypoint_name_service: EntrypointNameService,
+        entrypoint_name_service: "EntrypointNameService",
         plugin_ids_service: PluginIdsService,
         queue_ids_service: QueueIdsService,
         group_id_service: GroupIdService,
@@ -332,7 +330,7 @@ class EntrypointIdService(object):
     @inject
     def __init__(
         self,
-        entrypoint_name_service: EntrypointNameService,
+        entrypoint_name_service: "EntrypointNameService",
         queue_ids_service: QueueIdsService,
     ) -> None:
         """Initialize the entrypoint service.

@@ -2,7 +2,7 @@ artifacts:
   output:
     contents: $goodbye_step.greeting
     task:
-      name: string
+      name: string_artifact
       args:
         type: txt
 

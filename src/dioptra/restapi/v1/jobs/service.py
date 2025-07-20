@@ -16,8 +16,6 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform job endpoint operations."""
 
-from __future__ import annotations
-
 from typing import Any, Final, cast
 
 import structlog
@@ -646,7 +644,7 @@ class JobIdMetricsService(object):
     @inject
     def __init__(
         self,
-        job_id_mlflowrun_service: JobIdMlflowrunService,
+        job_id_mlflowrun_service: "JobIdMlflowrunService",
         job_run_store: JobRunStoreProtocol,
     ) -> None:
         """Initialize the job metrics service.
@@ -716,7 +714,7 @@ class JobIdMetricsSnapshotsService(object):
     @inject
     def __init__(
         self,
-        job_id_mlflowrun_service: JobIdMlflowrunService,
+        job_id_mlflowrun_service: "JobIdMlflowrunService",
         job_run_store: JobRunStoreProtocol,
     ) -> None:
         """Initialize the job metrics snapshots service.

@@ -14,7 +14,6 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from __future__ import annotations
 
 import uuid
 from typing import Any, Dict, Optional, Union
