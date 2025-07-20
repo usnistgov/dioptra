@@ -19,6 +19,7 @@ from collections.abc import Callable, Container, Iterator, Mapping, Sequence
 from typing import Any, Optional, Tuple, Union
 
 import jsonschema.validators
+import referencing
 
 from dioptra.sdk.exceptions.task_engine import (
     StepNotFoundError,
@@ -70,8 +71,9 @@ def schema_validate(
     """
     # Make use of a more complex API to try to produce better schema
     # validation error messages.
+    registry = referencing.Registry()
     validator_class = jsonschema.validators.validator_for(schema)
-    validator = validator_class(schema=schema)
+    validator = validator_class(schema=schema, registry=registry)
 
     error_messages = [
         validation_error_to_message(error, schema, location_desc_callback)
