@@ -312,7 +312,7 @@ class PluginFilesSubCollectionClient(SubCollectionClient[T]):
             contents: The contents of the new Python file.
             function_tasks: The information needed to register plugin function tasks
                 contained in the plugin file, a list. Can be empty.
-            artifact_tasks: The information needed to register plugin artfiact tasks
+            artifact_tasks: The information needed to register plugin artifact tasks
                 contained in the plugin file, a list. Can be empty.
             description: The description of the new plugin file. Optional, defaults to
                 None.
@@ -360,7 +360,7 @@ class PluginFilesSubCollectionClient(SubCollectionClient[T]):
             contents: The contents of the new Python file.
             function_tasks: The information needed to register plugin function tasks
                 contained in the plugin file, a list. Can be empty.
-            artifact_tasks: The information needed to register plugin artfiact tasks
+            artifact_tasks: The information needed to register plugin artifact tasks
                 contained in the plugin file, a list. Can be empty.
             description: The description of the new plugin file. Optional, defaults to
                 None.
