@@ -273,7 +273,7 @@ class JobService(object):
             job_resource=job_resource,
             entry_point=entrypoint,
             entry_point_parameter_values=entrypoint_parameter_values,
-            entry_point_artifact_values=entrypoint_artifact_values,
+            entry_point_artifact_parameter_values=entrypoint_artifact_values,
         )
         new_job.experiment_job = models.ExperimentJob(
             job_resource=job_resource,
