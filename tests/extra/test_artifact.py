@@ -45,7 +45,7 @@ class FileTest:
 class DirTest:
     name: str
     files: list[FileTest] = field(default_factory=list)
-    dirs: list[DirTest] = field(default_factory=list)
+    dirs: list["DirTest"] = field(default_factory=list)
 
 
 def create_artifact(parent: Path, dir: DirTest):
