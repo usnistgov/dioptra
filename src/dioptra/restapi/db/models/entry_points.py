@@ -221,7 +221,7 @@ class EntryPointArtifactOutputParameter(db.Model):  # type: ignore[name-defined]
 
 
 class EntryPointArtifactParameterValue(db.Model):  # type: ignore[name-defined]
-    __tablename__ = "entry_point_artifact_values"
+    __tablename__ = "entry_point_artifact_parameter_values"
 
     # Database fields
     job_resource_id: Mapped[intpk] = mapped_column(

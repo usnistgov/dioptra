@@ -72,10 +72,10 @@ class EntryPointJob(db.Model):  # type: ignore[name-defined]
             back_populates="entry_point_job", overlaps="job_resource,parameter,values"
         )
     )
-    entry_point_artifact_values: Mapped[list["EntryPointArtifactParameterValue"]] = (
-        relationship(
-            back_populates="entry_point_job", overlaps="job_resource,artifact_parameter"
-        )
+    entry_point_artifact_parameter_values: Mapped[
+        list["EntryPointArtifactParameterValue"]
+    ] = relationship(
+        back_populates="entry_point_job", overlaps="job_resource,artifact_parameter"
     )
 
     # Additional settings
