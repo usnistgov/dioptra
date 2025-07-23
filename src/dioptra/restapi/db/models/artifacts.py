@@ -18,7 +18,7 @@
 from sqlalchemy import ForeignKeyConstraint, Index, and_, select
 from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 
-from dioptra.restapi.db.db import bigint, intpk, optionalbigint, text_
+from dioptra.restapi.db.db import bigint, bool_, intpk, optionalbigint, text_
 
 from .plugins import ArtifactTask, PluginPluginFile
 from .resources import Resource, ResourceSnapshot, resource_dependencies_table
@@ -33,7 +33,7 @@ class Artifact(ResourceSnapshot):
     resource_snapshot_id: Mapped[intpk] = mapped_column(init=False)
     resource_id: Mapped[bigint] = mapped_column(init=False, nullable=False, index=True)
     uri: Mapped[text_] = mapped_column(nullable=False)
-    is_dir: Mapped[bool] = mapped_column(nullable=False)
+    is_dir: Mapped[bool_] = mapped_column(nullable=False)
     file_size: Mapped[optionalbigint] = mapped_column(nullable=True)
 
     plugin_snapshot_id: Mapped[bigint] = mapped_column(init=False, nullable=True)
@@ -56,6 +56,7 @@ class Artifact(ResourceSnapshot):
         .scalar_subquery()
     )
 
+    # Relationships
     task: Mapped["ArtifactTask"] = relationship(init=False)
     plugin_plugin_file: Mapped["PluginPluginFile"] = relationship(
         init=False, overlaps="task"

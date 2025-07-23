@@ -49,6 +49,7 @@ class EntryPoint(ResourceSnapshot):
     name: Mapped[text_] = mapped_column(nullable=False, index=True)
     task_graph: Mapped[text_] = mapped_column(nullable=False)
     artifact_graph: Mapped[text_] = mapped_column(nullable=False)
+
     # Relationships
     parameters: Mapped[list["EntryPointParameter"]] = relationship(
         back_populates="entry_point"

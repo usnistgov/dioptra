@@ -135,19 +135,18 @@ class PluginPluginFile(db.Model):  # type: ignore[name-defined]
 class PluginTask(db.Model):  # type: ignore[name-defined]
     __tablename__ = "plugin_tasks"
 
-    task_id: Mapped[intpk] = mapped_column(init=False)
-
     # Database fields
+    task_id: Mapped[intpk] = mapped_column(init=False)
     plugin_file_resource_snapshot_id: Mapped[bigint] = mapped_column(
         ForeignKey("plugin_files.resource_snapshot_id"), init=False, nullable=False
     )
     plugin_task_name: Mapped[text_] = mapped_column(nullable=False)
-    type: Mapped[str] = mapped_column(init=False, nullable=False)
+    type: Mapped[text_] = mapped_column(init=False, nullable=False)
 
     # Relationships
     file: Mapped["PluginFile"] = relationship(back_populates="tasks")
 
-    # other settings
+    # Additional settings
     __table_args__ = (
         Index(
             None, "plugin_file_resource_snapshot_id", "plugin_task_name", unique=True
@@ -161,10 +160,13 @@ class PluginTask(db.Model):  # type: ignore[name-defined]
 
 class FunctionTask(PluginTask):
     __tablename__ = "function_tasks"
+
+    # Database fields
     task_id: Mapped[intpk] = mapped_column(
         ForeignKey("plugin_tasks.task_id"), init=False
     )
 
+    # Relationships
     input_parameters: Mapped[list["PluginTaskInputParameter"]] = relationship(
         lazy="joined"
     )
@@ -172,6 +174,7 @@ class FunctionTask(PluginTask):
         lazy="joined"
     )
 
+    # Additional settings
     __mapper_args__ = {
         "polymorphic_load": "selectin",
         "polymorphic_identity": "function",
@@ -180,14 +183,18 @@ class FunctionTask(PluginTask):
 
 class ArtifactTask(PluginTask):
     __tablename__ = "artifact_tasks"
+
+    # Database fields
     task_id: Mapped[intpk] = mapped_column(
         ForeignKey("plugin_tasks.task_id"), init=False
     )
 
+    # Relationships
     output_parameters: Mapped[list["PluginTaskOutputParameter"]] = relationship(
         lazy="joined"
     )
 
+    # Additional settings
     __mapper_args__ = {
         "polymorphic_load": "selectin",
         "polymorphic_identity": "artifact",
