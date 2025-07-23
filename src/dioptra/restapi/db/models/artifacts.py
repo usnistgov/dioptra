@@ -14,12 +14,11 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from typing import Optional
 
 from sqlalchemy import ForeignKeyConstraint, Index, and_, select
 from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 
-from dioptra.restapi.db.db import bigint, intpk, text_
+from dioptra.restapi.db.db import bigint, intpk, optionalbigint, text_
 
 from .plugins import ArtifactTask, PluginPluginFile
 from .resources import Resource, ResourceSnapshot, resource_dependencies_table
@@ -35,7 +34,7 @@ class Artifact(ResourceSnapshot):
     resource_id: Mapped[bigint] = mapped_column(init=False, nullable=False, index=True)
     uri: Mapped[text_] = mapped_column(nullable=False)
     is_dir: Mapped[bool] = mapped_column(nullable=False)
-    file_size: Mapped[Optional[int]] = mapped_column(nullable=True)
+    file_size: Mapped[optionalbigint] = mapped_column(nullable=True)
 
     plugin_snapshot_id: Mapped[bigint] = mapped_column(init=False, nullable=True)
     plugin_file_id: Mapped[bigint] = mapped_column(init=False, nullable=True)

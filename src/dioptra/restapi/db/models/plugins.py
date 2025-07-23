@@ -154,14 +154,14 @@ class PluginTask(db.Model):  # type: ignore[name-defined]
         ),
     )
     __mapper_args__ = {
-        "polymorphic_identity": "employee",
+        "polymorphic_identity": "plugin_task",
         "polymorphic_on": "type",
     }
 
 
 class FunctionTask(PluginTask):
     __tablename__ = "function_tasks"
-    function_task_id: Mapped[intpk] = mapped_column(
+    task_id: Mapped[intpk] = mapped_column(
         ForeignKey("plugin_tasks.task_id"), init=False
     )
 
@@ -180,7 +180,7 @@ class FunctionTask(PluginTask):
 
 class ArtifactTask(PluginTask):
     __tablename__ = "artifact_tasks"
-    artifact_task_id: Mapped[intpk] = mapped_column(
+    task_id: Mapped[intpk] = mapped_column(
         ForeignKey("plugin_tasks.task_id"), init=False
     )
 
@@ -231,7 +231,7 @@ class PluginTaskInputParameter(db.Model):  # type: ignore[name-defined]
     __tablename__ = "plugin_task_input_parameters"
 
     # Database fields
-    plugin_task_id: Mapped[intpk] = mapped_column(
+    task_id: Mapped[intpk] = mapped_column(
         ForeignKey("plugin_tasks.task_id"), init=False
     )
     parameter_number: Mapped[intpk]
@@ -241,7 +241,7 @@ class PluginTaskInputParameter(db.Model):  # type: ignore[name-defined]
         nullable=False,
         index=True,
     )
-    name: Mapped[text_] = mapped_column(nullable=False, primary_key=True)
+    name: Mapped[text_] = mapped_column(nullable=False)
     required: Mapped[bool_] = mapped_column(nullable=False)
 
     # Relationships
@@ -249,12 +249,15 @@ class PluginTaskInputParameter(db.Model):  # type: ignore[name-defined]
         back_populates="input_parameters", lazy="joined"
     )
 
+    # Additional settings
+    __table_args__ = (Index(None, "task_id", "name", unique=True),)
+
 
 class PluginTaskOutputParameter(db.Model):  # type: ignore[name-defined]
     __tablename__ = "plugin_task_output_parameters"
 
     # Database fields
-    plugin_task_id: Mapped[intpk] = mapped_column(
+    task_id: Mapped[intpk] = mapped_column(
         ForeignKey("plugin_tasks.task_id"), init=False
     )
     parameter_number: Mapped[intpk]
@@ -264,9 +267,12 @@ class PluginTaskOutputParameter(db.Model):  # type: ignore[name-defined]
         nullable=False,
         index=True,
     )
-    name: Mapped[text_] = mapped_column(nullable=False, primary_key=True)
+    name: Mapped[text_] = mapped_column(nullable=False)
 
     # Relationships
     parameter_type: Mapped["PluginTaskParameterType"] = relationship(
         back_populates="output_parameters", lazy="joined"
     )
+
+    # Additional settings
+    __table_args__ = (Index(None, "task_id", "name", unique=True),)

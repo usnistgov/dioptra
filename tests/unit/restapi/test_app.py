@@ -16,13 +16,14 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 
 from flask import Flask, Response
+from flask.testing import FlaskClient
 
 
 def test_create_app(flask_app: Flask):
     assert isinstance(flask_app, Flask)
 
 
-def test_app_healthy(client: client):
+def test_app_healthy(client: FlaskClient):
     resp: Response = client.get("/health")
     assert resp.status_code == 200
     assert resp.is_json

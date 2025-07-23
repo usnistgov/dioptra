@@ -52,7 +52,7 @@ def build_job_parameters_dict(
 
 
 def build_job_artifacts_dict(
-    job_artifact_values: list[models.EntryPointArtifactValue],
+    job_artifact_values: list[models.EntryPointArtifactParameterValue],
     logger: BoundLogger | None = None,
 ) -> dict[str, dict[str, Any]]:
     """Builds a dict of a job's parameters coerce types as appropriate.

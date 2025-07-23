@@ -14,7 +14,6 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from abc import abstractmethod
 from dataclasses import dataclass
 from pathlib import Path, PosixPath
 from typing import Any, Protocol
@@ -40,37 +39,104 @@ class ArtifactFile:
 
 
 class JobRunStoreProtocol(Protocol):
-    @abstractmethod
     def get_metrics(self, run_id: str | None) -> list[dict[str, Any]]:
-        raise NotImplementedError
+        """Retrieve the metrics for a particular run using its id.
 
-    @abstractmethod
+        Args:
+            run_id: the run id to for which metrics should be retrieved, an empty list
+                is returned if None is provided
+
+        Returns:
+            A list of metrics for the job.
+
+        Raises:
+            EntityDoesNotExistError if a provided run id does not exist
+        """
+        ...
+
     def get_metric_history(
         self, run_id: str, name: str, page_index: int, page_length: int
     ) -> tuple[list[dict[str, Any]], int]:
-        raise NotImplementedError
+        """Retrieve the metrics for a particular run using its id.
 
-    @abstractmethod
+        Args:
+            run_id: the run id to for which metrics should be retrieved
+            name: the name of the metric to retrieve the history of
+            page_index: the index of the page to retrieve
+            page_length: the length of each page, will be the maximum size of the list
+                returned
+
+        Returns:
+            A tuple with the first element the historical values for the metric at the
+            requested page, and the second element the total number of historical values
+            for the given metric
+        """
+        ...
+
     def log_metric(
         self, run_id: str, name: str, value: float, step: int | None
     ) -> None:
-        raise NotImplementedError
+        """Log the metrics for a particular run using its id.
 
-    @abstractmethod
+        Args:
+            run_id: the run id for which to log the metric
+            name: the name of the metric to log
+            value: the metric value to log
+            step: the job step if provided
+
+        Raises:
+            EntityDoesNotExistError if the provided run id does not exist
+        """
+        ...
+
     def download_artifacts(
         self, artifact_uri: str, path: str | None, destination: Path
     ) -> Path:
-        raise NotImplementedError
+        """Retrieve an logged artifact by URI.
 
-    @abstractmethod
+        Args:
+            artifact_uri: the uri
+            path: A valid path for the artifact if it is a directory. The file or
+            directory indicated by the path will returned instead of all of the files
+            pointed to by the artifact. If None, all files are returned for the
+            artifact.
+            destination: the path to where the files should be stored
+        """
+        ...
+
     def get_artifact_file_list(
         self, base_uri: str, subfolder_path: str
     ) -> list[ArtifactFile]:
-        raise NotImplementedError
+        """
+        Retrieve the list of files contained within an artifact.
 
-    @abstractmethod
+        Args:
+            base_uri: the base URI under which to list artifacts
+            subfolder_path: the local path to the artifact file
+
+        Returns:
+            a list of ArtifactFiles.
+
+        Raises:
+            JobStoreError: If the artifact is not found in the JobStore.
+        """
+        ...
+
     def find_artifact(self, run_id: str, uri: str) -> ArtifactFile:
-        raise NotImplementedError
+        """Find an artifact within the provided run.
+
+        Args:
+            run_id: the run id to search
+            uri: uri of the artifact to search for
+
+        Returns:
+            Information about the file or directory indicated by the uri
+
+        Raises:
+            EntityDoesNotExistError if the provided run id does not exist
+            JobStoreError if an error occurs while searching
+        """
+        ...
 
 
 class MlFlowJobRunStore:
@@ -224,9 +290,7 @@ class MlFlowJobRunStore:
         try:
             self._client.get_run(run_id)
         except mlflow.exceptions.MlflowException as e:
-            raise JobStoreError(
-                f'A mlflow run id with value "{run_id}" does not exist in MLFlow.'
-            ) from e
+            raise EntityDoesNotExistError("MlFlowRun", run_id=run_id) from e
 
         # mflow run id should be an element in the uri path
         # depending on the uri format is likely not stable

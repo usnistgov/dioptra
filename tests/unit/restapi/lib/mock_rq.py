@@ -31,7 +31,7 @@ class MockRQJob(object):
         queue: Optional[str] = None,
         job_timeout: Optional[str] = None,
         cmd_kwargs: Optional[Dict[str, Any]] = None,
-        depends_on: Optional[Union[str, MockRQJob]] = None,
+        depends_on: Optional[Union[str, "MockRQJob"]] = None,
     ) -> None:
         LOGGER.info(
             "Mocking rq.job.Job instance",
@@ -53,7 +53,7 @@ class MockRQJob(object):
             ]
 
     @classmethod
-    def fetch(cls, id: str, *args, **kwargs) -> MockRQJob:
+    def fetch(cls, id: str, *args, **kwargs) -> "MockRQJob":
         LOGGER.info(
             "Mocking rq.job.Job.fetch() function", id=id, args=args, kwargs=kwargs
         )
@@ -78,7 +78,7 @@ class MockRQJob(object):
         self._id = value
 
     @property
-    def dependency(self) -> Optional[MockRQJob]:
+    def dependency(self) -> Optional["MockRQJob"]:
         LOGGER.info("Mocking rq.job.Job.dependency getter")
         if not self._dependency_ids:
             return None

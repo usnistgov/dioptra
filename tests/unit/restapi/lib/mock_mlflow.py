@@ -33,6 +33,224 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 PREFIX: str = "mlflow-artifacts:////some/storage/location"
 
 
+class MockMlflowException(Exception):
+    def __init__(
+        self,
+        text: str,
+    ) -> None:
+        LOGGER.info("Mocking mlflow.exceptions.MlflowException class")
+        super().__init__(text)
+
+
+class MockMlflowMetric(object):
+    def __init__(
+        self,
+        key: str,
+        value: float,
+        step: int,
+        timestamp: int,
+    ) -> None:
+        LOGGER.info("Mocking mlflow.entities.Metric class")
+        self._key = key
+        self._value = value
+        self._step = step
+        self._timestamp = timestamp
+
+    @property
+    def key(self) -> str:
+        LOGGER.info("Mocking mlflow.entities.Metric.key getter")
+        return self._key
+
+    @key.setter
+    def key(self, value: str) -> None:
+        LOGGER.info("Mocking mlflow.entities.Metric.key setter", value=value)
+        self._key = value
+
+    @property
+    def value(self) -> float:
+        LOGGER.info("Mocking mlflow.entities.Metric.value getter")
+        return self._value
+
+    @value.setter
+    def value(self, value: float) -> None:
+        LOGGER.info("Mocking mlflow.entities.Metric.value setter", value=value)
+        self._value = value
+
+    @property
+    def step(self) -> int:
+        LOGGER.info("Mocking mlflow.entities.Metric.step getter")
+        return self._step
+
+    @step.setter
+    def step(self, value: int) -> None:
+        LOGGER.info("Mocking mlflow.entities.Metric.step setter", value=value)
+        self._step = value
+
+    @property
+    def timestamp(self) -> int:
+        LOGGER.info("Mocking mlflow.entities.Metric.timestamp getter")
+        return self._timestamp
+
+    @timestamp.setter
+    def timestamp(self, value: int) -> None:
+        LOGGER.info("Mocking mlflow.entities.Metric.timestamp setter", value=value)
+        self._timestamp = value
+
+
+class MockMlflowRunData(object):
+    def __init__(
+        self,
+    ) -> None:
+        LOGGER.info("Mocking mlflow.entities.RunData class")
+        self._metrics: dict[str, Any] = {}
+        self._metric_history: dict[str, list[MockMlflowMetric]] = {}
+
+    @property
+    def metrics(self) -> dict[str, Any]:
+        LOGGER.info("Mocking mlflow.entities.RunData.metrics getter")
+        return self._metrics
+
+    def _add_metric(self, metric: MockMlflowMetric) -> None:
+        self._metrics[metric.key] = metric.value
+        if metric.key in self._metric_history:
+            self._metric_history[metric.key].append(metric)
+        else:
+            self._metric_history[metric.key] = [metric]
+
+
+class MockMlflowRunInfo(object):
+    def __init__(
+        self, run_uuid: uuid.UUID | None, run_id: str | None, experiment_id: int
+    ) -> None:
+        LOGGER.info("Mocking mlflow.entities.RunInfo class")
+        if run_uuid:
+            run_id = run_uuid.hex
+        elif run_id is None:
+            raise Exception("run_id and run_uuid cannot both be None")
+        self._run_id: str = run_id
+        self._experiment_id = experiment_id
+
+    @property
+    def run_id(self) -> str:
+        LOGGER.info("Mocking mlflow.entities.RunInfo.run_id getter")
+        return self._run_id
+
+
+@dataclasses.dataclass
+class MockArtifact:
+    info: mlflow.entities.FileInfo
+    children: dict[str, "MockArtifact"] = dataclasses.field(default_factory=lambda: {})
+
+
+class MockMlflowArtifactStore(object):
+    def __init__(
+        self,
+        info: MockMlflowRunInfo,
+    ) -> None:
+        LOGGER.info("Mocking mlflow.artifacts")
+        self._store: dict[str, MockArtifact] = {}
+        self._info = info
+
+    def add_artifact(self, local_path: str, artifact_path: str | None) -> None:
+        # grab name from local_path and build up the uri
+        path = Path(local_path)
+        if artifact_path:
+            file_path = f"{artifact_path}/{path.name}"
+        else:
+            file_path = path.name
+
+        file_info = mlflow.entities.FileInfo(
+            path=file_path, is_dir=False, file_size=100
+        )
+        if path.exists():
+            if path.is_dir():
+                file_info._is_dir = True
+            else:
+                file_info._bytes = path.stat().st_size
+
+        if artifact_path:
+            parent = self._get_entry(artifact_path)
+            parent.children[path.name] = MockArtifact(file_info)
+        else:
+            self._store[path.name] = MockArtifact(file_info)
+
+    def _get_entry(self, artifact_path: str) -> MockArtifact:
+        result = None
+        store = self._store
+        elements = artifact_path.split("/")
+        for i, e in enumerate(elements):
+            if e not in store:
+                store[e] = MockArtifact(
+                    mlflow.entities.FileInfo(
+                        path=f"{'/'.join(elements[:i])}/{e}",
+                        is_dir=True,
+                        file_size=None,
+                    )
+                )
+            result = store[e]
+            store = result.children
+        if result is None:
+            raise Exception(f"artifact_path has invalid value: {artifact_path}")
+        return result
+
+    def get_artifact_uri(self, artifact_path: str) -> str:
+        return _build_artifact_uri(
+            path_prefix=PREFIX,
+            experiment_id=self._info._experiment_id,
+            run_id=self._info.run_id,
+            artifact_path=artifact_path,
+            name=None,
+        )
+
+    def list(self, path: str | None = None) -> list[mlflow.entities.FileInfo]:
+        def list_artifact(artifact: MockArtifact) -> list[mlflow.entities.FileInfo]:
+            if len(artifact.children) == 0:
+                return [artifact.info]
+            result = []
+            for child in artifact.children.values():
+                result.extend(list_artifact(child))
+            return result
+
+        if path is not None:
+            return list_artifact(self._get_entry(path))
+
+        result = []
+        for element in self._store.values():
+            result.extend(list_artifact(element))
+        return result
+
+
+class MockMlflowRun(contextlib.AbstractContextManager):
+    def __init__(
+        self, run_uuid: uuid.UUID | None, run_id: str | None, experiment_id: int | None
+    ) -> None:
+        LOGGER.info("Mocking mlflow.entities.Run class")
+        self._data = MockMlflowRunData()
+        self._info = MockMlflowRunInfo(
+            run_uuid=run_uuid,
+            run_id=run_id,
+            experiment_id=0 if experiment_id is None else experiment_id,
+        )
+        self.artifacts = MockMlflowArtifactStore(self._info)
+
+    def __exit__(self, exc_type, exc_value, traceback) -> None:
+        pass
+
+    @property
+    def id(self) -> str:
+        return self._info.run_id
+
+    @property
+    def data(self) -> MockMlflowRunData:
+        LOGGER.info("Mocking mlflow.entities.Run.data getter")
+        return self._data
+
+    @property
+    def info(self) -> MockMlflowRunInfo:
+        LOGGER.info("Mocking mlflow.entities.Run.info getter")
+        return self._info
+
+
 class MockState:
     registered_runs: dict[str, MockMlflowRun] = {}
     active_run: MockMlflowRun | None = None
@@ -196,221 +414,3 @@ def download_artifacts(self, artifact_uri: str, dst_path: str) -> str:
     LOGGER.info("Mocking mlflow.artifacts.download_artifacts function")
     # do nothing other than return the dst_path
     return dst_path
-
-
-class MockMlflowRun(contextlib.AbstractContextManager):
-    def __init__(
-        self, run_uuid: uuid.UUID | None, run_id: str | None, experiment_id: int | None
-    ) -> None:
-        LOGGER.info("Mocking mlflow.entities.Run class")
-        self._data = MockMlflowRunData()
-        self._info = MockMlflowRunInfo(
-            run_uuid=run_uuid,
-            run_id=run_id,
-            experiment_id=0 if experiment_id is None else experiment_id,
-        )
-        self.artifacts = MockMlflowArtifactStore(self._info)
-
-    def __exit__(self, exc_type, exc_value, traceback) -> None:
-        pass
-
-    @property
-    def id(self) -> str:
-        return self._info.run_id
-
-    @property
-    def data(self) -> MockMlflowRunData:
-        LOGGER.info("Mocking mlflow.entities.Run.data getter")
-        return self._data
-
-    @property
-    def info(self) -> MockMlflowRunInfo:
-        LOGGER.info("Mocking mlflow.entities.Run.info getter")
-        return self._info
-
-
-@dataclasses.dataclass
-class MockArtifact:
-    info: mlflow.entities.FileInfo
-    children: dict[str, MockArtifact] = dataclasses.field(default_factory=lambda: {})
-
-
-class MockMlflowArtifactStore(object):
-    def __init__(
-        self,
-        info: MockMlflowRunInfo,
-    ) -> None:
-        LOGGER.info("Mocking mlflow.artifacts")
-        self._store: dict[str, MockArtifact] = {}
-        self._info = info
-
-    def add_artifact(self, local_path: str, artifact_path: str | None) -> None:
-        # grab name from local_path and build up the uri
-        path = Path(local_path)
-        if artifact_path:
-            file_path = f"{artifact_path}/{path.name}"
-        else:
-            file_path = path.name
-
-        file_info = mlflow.entities.FileInfo(
-            path=file_path, is_dir=False, file_size=100
-        )
-        if path.exists():
-            if path.is_dir():
-                file_info._is_dir = True
-            else:
-                file_info._bytes = path.stat().st_size
-
-        if artifact_path:
-            parent = self._get_entry(artifact_path)
-            parent.children[path.name] = MockArtifact(file_info)
-        else:
-            self._store[path.name] = MockArtifact(file_info)
-
-    def _get_entry(self, artifact_path: str) -> MockArtifact:
-        result = None
-        store = self._store
-        elements = artifact_path.split("/")
-        for i, e in enumerate(elements):
-            if e not in store:
-                store[e] = MockArtifact(
-                    mlflow.entities.FileInfo(
-                        path=f"{'/'.join(elements[:i])}/{e}",
-                        is_dir=True,
-                        file_size=None,
-                    )
-                )
-            result = store[e]
-            store = result.children
-        if result is None:
-            raise Exception(f"artifact_path has invalid value: {artifact_path}")
-        return result
-
-    def get_artifact_uri(self, artifact_path: str) -> str:
-        return _build_artifact_uri(
-            path_prefix=PREFIX,
-            experiment_id=self._info._experiment_id,
-            run_id=self._info.run_id,
-            artifact_path=artifact_path,
-            name=None,
-        )
-
-    def list(self, path: str | None = None) -> list[mlflow.entities.FileInfo]:
-        def list_artifact(artifact: MockArtifact) -> list[mlflow.entities.FileInfo]:
-            if len(artifact.children) == 0:
-                return [artifact.info]
-            result = []
-            for child in artifact.children.values():
-                result.extend(list_artifact(child))
-            return result
-
-        if path is not None:
-            return list_artifact(self._get_entry(path))
-
-        result = []
-        for element in self._store.values():
-            result.extend(list_artifact(element))
-        return result
-
-
-class MockMlflowRunInfo(object):
-    def __init__(
-        self, run_uuid: uuid.UUID | None, run_id: str | None, experiment_id: int
-    ) -> None:
-        LOGGER.info("Mocking mlflow.entities.RunInfo class")
-        if run_uuid:
-            run_id = run_uuid.hex
-        elif run_id is None:
-            raise Exception("run_id and run_uuid cannot both be None")
-        self._run_id: str = run_id
-        self._experiment_id = experiment_id
-
-    @property
-    def run_id(self) -> str:
-        LOGGER.info("Mocking mlflow.entities.RunInfo.run_id getter")
-        return self._run_id
-
-
-class MockMlflowRunData(object):
-    def __init__(
-        self,
-    ) -> None:
-        LOGGER.info("Mocking mlflow.entities.RunData class")
-        self._metrics: dict[str, Any] = {}
-        self._metric_history: dict[str, list[MockMlflowMetric]] = {}
-
-    @property
-    def metrics(self) -> dict[str, Any]:
-        LOGGER.info("Mocking mlflow.entities.RunData.metrics getter")
-        return self._metrics
-
-    def _add_metric(self, metric: MockMlflowMetric) -> None:
-        self._metrics[metric.key] = metric.value
-        if metric.key in self._metric_history:
-            self._metric_history[metric.key].append(metric)
-        else:
-            self._metric_history[metric.key] = [metric]
-
-
-class MockMlflowMetric(object):
-    def __init__(
-        self,
-        key: str,
-        value: float,
-        step: int,
-        timestamp: int,
-    ) -> None:
-        LOGGER.info("Mocking mlflow.entities.Metric class")
-        self._key = key
-        self._value = value
-        self._step = step
-        self._timestamp = timestamp
-
-    @property
-    def key(self) -> str:
-        LOGGER.info("Mocking mlflow.entities.Metric.key getter")
-        return self._key
-
-    @key.setter
-    def key(self, value: str) -> None:
-        LOGGER.info("Mocking mlflow.entities.Metric.key setter", value=value)
-        self._key = value
-
-    @property
-    def value(self) -> float:
-        LOGGER.info("Mocking mlflow.entities.Metric.value getter")
-        return self._value
-
-    @value.setter
-    def value(self, value: float) -> None:
-        LOGGER.info("Mocking mlflow.entities.Metric.value setter", value=value)
-        self._value = value
-
-    @property
-    def step(self) -> int:
-        LOGGER.info("Mocking mlflow.entities.Metric.step getter")
-        return self._step
-
-    @step.setter
-    def step(self, value: int) -> None:
-        LOGGER.info("Mocking mlflow.entities.Metric.step setter", value=value)
-        self._step = value
-
-    @property
-    def timestamp(self) -> int:
-        LOGGER.info("Mocking mlflow.entities.Metric.timestamp getter")
-        return self._timestamp
-
-    @timestamp.setter
-    def timestamp(self, value: int) -> None:
-        LOGGER.info("Mocking mlflow.entities.Metric.timestamp setter", value=value)
-        self._timestamp = value
-
-
-class MockMlflowException(Exception):
-    def __init__(
-        self,
-        text: str,
-    ) -> None:
-        LOGGER.info("Mocking mlflow.exceptions.MlflowException class")
-        super().__init__(text)

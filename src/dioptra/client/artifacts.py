@@ -62,6 +62,11 @@ class ArtifactsCollectionClient(CollectionClient[T]):
 
             # GET /api/v1/artifacts/1/snapshots/2
             client.artifacts.snapshots.get_by_id(1, snapshot_id=2)
+
+            # GET /api/v1/artifacts/1/snapshots/2/contents?fileType=tar_gz&path=%2Fpath
+            client.artifacts.snapshots.get_contents(
+                1, snapshot_id=2, file_type=FileTypes.TAR_GZ, path="/path"
+            )
         """
         return self._snapshots
 
@@ -77,17 +82,18 @@ class ArtifactsCollectionClient(CollectionClient[T]):
         """Get a list of artifacts.
 
         Args:
-            group_id: The group id the artifacts belong to. If None, return artifacts
-                from all groups that the user has access to. Optional, defaults to None.
+            group_id: The group id the artifacts belong to. If None, return
+                artifacts from all groups that the user has access to. Optional,
+                defaults to None.
             index: The paging index. Optional, defaults to 0.
             page_length: The maximum number of artifacts to return in the paged
                 response. Optional, defaults to 10.
-            sort_by: The field to use to sort the returned list. Optional, defaults to
-                None.
-            descending: Sort the returned list in descending order. Optional, defaults
-                to None.
-            search: Search for artifacts using the Dioptra API's query language.
+            sort_by: The field to use to sort the returned list. Optional,
+                defaults to None.
+            descending: Sort the returned list in descending order.
                 Optional, defaults to None.
+            search: Search for artifacts using the Dioptra API's query
+                language. Optional, defaults to None.
 
         Returns:
             The response from the Dioptra API.
@@ -134,18 +140,24 @@ class ArtifactsCollectionClient(CollectionClient[T]):
         task_id: str | int | None = None,
         description: str | None = None,
     ) -> T:
-        """Creates an artifact.
+        """Creates an artifact and associates with an existing Job.
+
+            Both plugin_snapshot_id and must be None or not None. If None, then the
+            artifact is unavailable for use as input into another job and may only be
+            downloaded.
 
         Args:
             group_id: The id of the group that will own the artifact.
             job_id: The id of the job that produced this artifact.
             artifact_uri: The URI pointing to the location of the artifact.
+            plugin_snapshot_id: the plugin snapshot id of the plugin
+                containing the artifact task used to serialize/deserialize the artifact,
+                defaults to None.
+            task_id: the task id of the plugin artifact task used to
+                serialize/deserialize the artifact, defaults to None
             description: The description of the new artifact. Optional, defaults to
                 None.
-            plugin_snapshot_id: the snapshot id of the plugin contain the
-                tasks used to perform serializing/deserializing of this Artifact
-            task_id: The id of the plugin task that performs
-                serializing/deserializing for this Artifact.
+
         Returns:
             The response from the Dioptra API.
         """
@@ -175,12 +187,17 @@ class ArtifactsCollectionClient(CollectionClient[T]):
     ) -> T:
         """Modify the artifact matching the provided id.
 
+            Both plugin_snapshot_id and must be None or not None. If None, then the
+            artifact is unavailable for use as input into another job and may only be
+            downloaded.
         Args:
             artifact_id: The artifact id, an integer.
-            plugin_snapshot_id: the snapshot id of the plugin contain the
-                tasks used to perform serializing/deserializing of this Artifact
-            task_id: The id of the plugin task that performs
-                serializing/deserializing for this Artifact.
+            plugin_snapshot_id: the plugin snapshot id of the plugin containing the
+                artifact task used to serialize/deserialize the artifact. A value of
+                None removes the association with the artifact task.
+            task_id: the task id of the plugin artifact task used to
+                serialize/deserialize the artifact. A value of None removes the
+                association with the artifact task.
             description: The new description of the artifact. To remove the description,
                 pass None.
 
@@ -223,12 +240,19 @@ class ArtifactsCollectionClient(CollectionClient[T]):
 
         Args:
             artifact_id: The artifact resource id, an integer.
-            file_type: the file type for the bundle.
-            artifact_path: if the artifact is a directory, then a value other than None
-                indicates the path when the directory structure to retrieve. if the
-                artifact is a file, None must be provided.
-            output_dir: the directory to put the downloaded artifact
-            file_stem: the file prefix or stem to save the downloaded file to.
+            file_type: if the artifact is a directory, this indicates the file type of
+                the bundle that is returned, defaults to None. A value of None must be
+                provided if the artifact is a file. If the artifact is a directory and
+                None is provided, then a default of FileTypes.TAR_GZ is used.
+            artifact_path: if the artifact is a directory, then a
+                value other than None indicates a path in the directory structure to
+                retrieve. if the artifact is a file, None must be provided. All of the
+                files for a directory artifact are returned if None is provided.
+            output_dir: the directory to save the downloaded artifact,
+                defaults to None. If None, then the current working directory will be
+                used.
+            file_stem: the file prefix or stem to use for the name of the
+                downloaded file. Defaults to the value of "contents".
 
         Returns:
             A path to where the contents are downloaded.
@@ -276,12 +300,19 @@ class ArtifactsSnapshotCollectionClient(SnapshotsSubCollectionClient[T]):
         Args:
             artifact_id: The artifact resource id, an integer.
             artifact_snapshot_id: The artifact snapshot id, an integer.
-            file_type: the file type for the bundle.
-            artifact_path: if the artifact is a directory, then a value other None
-                indicates the path when the directory structure to retrieve. if the
-                artifact is a file, None must be provided.
-            output_dir: the directory to put the downloaded artifact
-            file_stem: the file prefix or stem to save the downloaded file to.
+            file_type: if the artifact is a directory, this indicates the file type of
+                the bundle that is returned, defaults to None. A value of None must be
+                provided if the artifact is a file. If the artifact is a directory and
+                None is provided, then a default of FileTypes.TAR_GZ is used.
+            artifact_path: if the artifact is a directory, then a
+                value other than None indicates a path in the directory structure to
+                retrieve. if the artifact is a file, None must be provided. All of the
+                files for a directory artifact are returned if None is provided.
+            output_dir: the directory to save the downloaded artifact,
+                defaults to None. If None, then the current working directory will be
+                used.
+            file_stem: the file prefix or stem to use for the name of the
+                downloaded file. Defaults to the value of "contents".
 
         Returns:
             A path to where the contents are downloaded.

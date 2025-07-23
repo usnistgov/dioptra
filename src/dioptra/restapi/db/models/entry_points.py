@@ -53,7 +53,8 @@ class EntryPoint(ResourceSnapshot):
     parameters: Mapped[list["EntryPointParameter"]] = relationship(
         back_populates="entry_point"
     )
-    artifact_parameters: Mapped[list["EntryPointArtifact"]] = relationship(
+    # ArtifactParameters > ArtifactInputs
+    artifact_parameters: Mapped[list["EntryPointArtifactParameter"]] = relationship(
         back_populates="entry_point"
     )
     entry_point_jobs: Mapped[list["EntryPointJob"]] = relationship(
@@ -153,8 +154,8 @@ class EntryPointParameterValue(db.Model):  # type: ignore[name-defined]
     )
 
 
-class EntryPointArtifact(db.Model):  # type: ignore[name-defined]
-    __tablename__ = "entry_point_artifacts"
+class EntryPointArtifactParameter(db.Model):  # type: ignore[name-defined]
+    __tablename__ = "entry_point_artifact_parameters"
 
     # Database fields
     entry_point_resource_snapshot_id: Mapped[intpk] = mapped_column(
@@ -170,7 +171,7 @@ class EntryPointArtifact(db.Model):  # type: ignore[name-defined]
     entry_point: Mapped["EntryPoint"] = relationship(
         init=False, back_populates="artifact_parameters"
     )
-    values: Mapped[list["EntryPointArtifactValue"]] = relationship(
+    values: Mapped[list["EntryPointArtifactParameterValue"]] = relationship(
         init=False, viewonly=True
     )
 
@@ -180,7 +181,7 @@ class EntryPointArtifact(db.Model):  # type: ignore[name-defined]
 
 
 class EntryPointArtifactOutputParameter(db.Model):  # type: ignore[name-defined]
-    __tablename__ = "entry_point_artifact_output_parameters"
+    __tablename__ = "entry_point_artifact_parameter_output_parameters"
 
     # Database fields
     entry_point_resource_snapshot_id: Mapped[intpk] = mapped_column(init=False)
@@ -195,7 +196,7 @@ class EntryPointArtifactOutputParameter(db.Model):  # type: ignore[name-defined]
     name: Mapped[text_] = mapped_column(nullable=False, primary_key=True)
 
     # Relationships
-    entry_point_artifact: Mapped["EntryPointArtifact"] = relationship(
+    entry_point_artifact: Mapped["EntryPointArtifactParameter"] = relationship(
         init=False, back_populates="output_parameters"
     )
     parameter_type: Mapped["PluginTaskParameterType"] = relationship()
@@ -212,14 +213,14 @@ class EntryPointArtifactOutputParameter(db.Model):  # type: ignore[name-defined]
         ForeignKeyConstraint(
             ["entry_point_resource_snapshot_id", "artifact_number"],
             [
-                "entry_point_artifacts.entry_point_resource_snapshot_id",
-                "entry_point_artifacts.artifact_number",
+                "entry_point_artifact_parameters.entry_point_resource_snapshot_id",
+                "entry_point_artifact_parameters.artifact_number",
             ],
         ),
     )
 
 
-class EntryPointArtifactValue(db.Model):  # type: ignore[name-defined]
+class EntryPointArtifactParameterValue(db.Model):  # type: ignore[name-defined]
     __tablename__ = "entry_point_artifact_values"
 
     # Database fields
@@ -228,13 +229,14 @@ class EntryPointArtifactValue(db.Model):  # type: ignore[name-defined]
     )
     entry_point_resource_snapshot_id: Mapped[intpk] = mapped_column(init=False)
     artifact_number: Mapped[intpk] = mapped_column(init=False)
-    value: Mapped[bigint] = mapped_column(
+    # value of the artifact parameter
+    artifact_resource_snapshot_id: Mapped[bigint] = mapped_column(
         ForeignKey("artifacts.resource_snapshot_id"), nullable=False, init=False
     )
 
     # Relationships
     job_resource: Mapped["Resource"] = relationship()
-    artifact_parameter: Mapped["EntryPointArtifact"] = relationship(
+    artifact_parameter: Mapped["EntryPointArtifactParameter"] = relationship(
         back_populates="values", lazy="joined"
     )
     artifact: Mapped["Artifact"] = relationship()
@@ -250,8 +252,8 @@ class EntryPointArtifactValue(db.Model):  # type: ignore[name-defined]
         ForeignKeyConstraint(
             ["entry_point_resource_snapshot_id", "artifact_number"],
             [
-                "entry_point_artifacts.entry_point_resource_snapshot_id",
-                "entry_point_artifacts.artifact_number",
+                "entry_point_artifact_parameters.entry_point_resource_snapshot_id",
+                "entry_point_artifact_parameters.artifact_number",
             ],
         ),
         ForeignKeyConstraint(

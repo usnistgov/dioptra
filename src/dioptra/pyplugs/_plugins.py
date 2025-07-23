@@ -254,7 +254,7 @@ def call(
 
 
 @require_package("prefect", exc_type=PrefectDependencyError)
-def get_task(package: str, plugin: str, func: Optional[str] = None) -> FunctionTask:
+def get_task(package: str, plugin: str, func: Optional[str] = None) -> "FunctionTask":
     """Get a given plugin wrapped as a prefect task"""
     plugin_func: Union[Plugin, NoutPlugin] = info(package, plugin, func).func
     nout: Optional[int] = getattr(plugin_func, "_task_nout", None)
@@ -357,7 +357,7 @@ def call_factory(package: str) -> Callable[..., Any]:
 
 
 @require_package("prefect", exc_type=PrefectDependencyError)
-def get_task_factory(package: str) -> Callable[[str, Optional[str]], FunctionTask]:
+def get_task_factory(package: str) -> Callable[[str, Optional[str]], "FunctionTask"]:
     """Create a get_task() function for one package"""
     return functools.partial(get_task, package)
 

@@ -15,6 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """Utility functions to help in building responses from ORM models"""
+
 from typing import Any, Callable, Final, Iterable, Optional, TypedDict, cast
 from urllib.parse import urlencode, urlunparse
 

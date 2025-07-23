@@ -109,8 +109,20 @@ class EntrypointService(object):
         Args:
             name: The name of the entrypoint. The combination of name and group_id must
                 be unique.
-            description: The description of the entrypoint.
-            group_id: The group that will own the entrypoint.
+            description: The description of the new entrypoint.
+            task_graph: The task graph for the new entrypoint as a YAML-formatted
+                string.
+            artifact_graph: The artifact graph for the new entrypoint as a
+                YAML-formatted string. An empty string indicates there are no artifacts
+                which need to be stored.
+            parameters: The list of parameters for the new entrypoint.
+            artifact_parameters: The list of artifact parameters for the new entrypoint.
+            plugin_ids: A list of plugin ids to associate with the new entrypoint.
+                Optional, defaults to None.
+            artifact_plugin_ids: A list of artifact plugin ids to associate with the new
+                entrypoint. Optional, defaults to None.
+            queue_ids: A list of queue ids to associate with the new entrypoint.
+            group_id: The id of the group that will own the entrypoint.
             commit: If True, commit the transaction. Defaults to True.
 
         Returns:
@@ -432,17 +444,17 @@ class EntrypointIdService(object):
             task_graph: The new task graph of the entrypoint.
             artifact_graph: The new artifact definitions of the entrypoint.
             parameters: the new parameters of the entrypoint.
-            artifact_parameters: the new artifact_parameters of the entrypoint.
-            error_if_not_found: If True, raise an error if the group is not found.
-                Defaults to False.
+            artifact_parameters: the new artifact_parameters of the entrypoint. If None
+                or empty list, all artifact_parameters will be removed.
+            queue_ids: A list of queue ids that will replace the current list of
+                entrypoint queues.
             commit: If True, commit the transaction. Defaults to True.
 
         Returns:
             The updated entrypoint object.
 
         Raises:
-            EntityDoesNotExistError: If the entrypoint is not found and
-                `error_if_not_found` is True.
+            EntityDoesNotExistError: If the entrypoint is not found
             EntityExistsError: If the entrypoint name already exists.
             QueryParameterNotUniqueError: If the values for the "name" parameter in the
                 parameters list is not unique
@@ -1679,7 +1691,7 @@ def _copy_parameters(
 
 def _create_artifact_parameters(
     artifact_parameters: list[dict[str, Any]], log: BoundLogger
-) -> Iterable[models.EntryPointArtifact]:
+) -> Iterable[models.EntryPointArtifactParameter]:
     if artifact_parameters is None or len(artifact_parameters) == 0:
         return []
     for artifact in artifact_parameters:
@@ -1699,7 +1711,7 @@ def _create_artifact_parameters(
     id_type_map = get_plugin_task_parameter_types_by_id(ids=type_ids, log=log)
 
     return [
-        models.EntryPointArtifact(
+        models.EntryPointArtifactParameter(
             name=artifact["name"],
             artifact_number=a,
             output_parameters=[
@@ -1716,10 +1728,10 @@ def _create_artifact_parameters(
 
 
 def _copy_artifact_parameters(
-    artifact_parameters: list[models.EntryPointArtifact],
-) -> Iterable[models.EntryPointArtifact]:
+    artifact_parameters: list[models.EntryPointArtifactParameter],
+) -> Iterable[models.EntryPointArtifactParameter]:
     return [
-        models.EntryPointArtifact(
+        models.EntryPointArtifactParameter(
             name=artifact.name,
             artifact_number=index,
             output_parameters=[

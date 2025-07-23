@@ -152,19 +152,27 @@ class ArtifactService(object):
     ) -> utils.ArtifactDict:
         """Create a new artifact.
 
+            Both plugin_snapshot_id and must be None or not None. If None, then the
+            artifact is unavailable for use as input into another job and may only be
+            downloaded.
         Args:
             uri: The uri of the artifact. This must be globally unique.
             description: The description of the artifact.
             group_id: The group that will own the artifact.
+            job_id: the job which owns/produced this artifact
+            plugin_snapshot_id: the plugin snapshot id of the plugin
+                containing the artifact task used to serialize/deserialize the artifact,
+                defaults to None.
+            task_id: the task id of the plugin artifact task used to
+                serialize/deserialize the artifact, defaults to None
             commit: If True, commit the transaction. Defaults to True.
 
         Returns:
-            The newly created artifact object.
+            utils.ArtifactDict: The newly created artifact object.
 
         Raises:
             EntityExistsError: If the artifact already exists.
             MLFlowError: If the mlflow run id does not exist.
-
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 

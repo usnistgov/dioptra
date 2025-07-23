@@ -306,12 +306,12 @@ class JobService(object):
         entrypoint: models.EntryPoint,
         job_resource: models.Resource,
         log: BoundLogger,
-    ) -> list[models.EntryPointArtifactValue]:
+    ) -> list[models.EntryPointArtifactParameterValue]:
         # Validate the keys in artifact_values against the registered entrypoint
         # artifact names, retrieve the artifacts, verify that there are no extra
         invalid_artifact_params = set(artifact_value_ids.keys())
         missing_artifact_params: list[str] = []
-        entrypoint_artifact_values: list[models.EntryPointArtifactValue] = []
+        entrypoint_artifact_values: list[models.EntryPointArtifactParameterValue] = []
         for artifact_parameter in entrypoint.artifact_parameters:
             try:
                 invalid_artifact_params.remove(artifact_parameter.name)
@@ -354,7 +354,7 @@ class JobService(object):
                     )
 
                 entrypoint_artifact_values.append(
-                    models.EntryPointArtifactValue(
+                    models.EntryPointArtifactParameterValue(
                         artifact=artifact,
                         job_resource=job_resource,
                         artifact_parameter=artifact_parameter,
@@ -573,7 +573,7 @@ class JobIdService(object):
 
     def get_artifact_values(
         self, job_id: int, **kwargs
-    ) -> list[models.EntryPointArtifactValue]:
+    ) -> list[models.EntryPointArtifactParameterValue]:
         """Run a query to get the artfiact values for the job.
 
         Args:
@@ -586,8 +586,10 @@ class JobIdService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
 
-        entry_point_artifact_values_stmt = select(models.EntryPointArtifactValue).where(
-            models.EntryPointArtifactValue.job_resource_id == job_id,
+        entry_point_artifact_values_stmt = select(
+            models.EntryPointArtifactParameterValue
+        ).where(
+            models.EntryPointArtifactParameterValue.job_resource_id == job_id,
         )
         return list(db.session.scalars(entry_point_artifact_values_stmt).unique().all())
 

@@ -436,8 +436,13 @@ class PluginsSnapshotCollectionClient(SnapshotsSubCollectionClient[T]):
         Args:
             entrypoint_id: The entrypoint id, an integer.
             entrypoint_snapshot_id: The entrypoint snapshot id, an integer.
-            file_type: the file type for the bundle.
-
+            file_type: The file type of the bundle that is returned, defaults to None.
+                If None is provided, then a default of FileTypes.TAR_GZ is used.
+            output_dir: the directory to save the downloaded artifact,
+                defaults to None. If None, then the current working directory will be
+                used.
+            file_stem: the file prefix or stem to use for the name of the
+                downloaded file. Defaults to the value of "task-plugins".
         Returns:
             The response from the Dioptra API.
         """
@@ -580,6 +585,9 @@ class PluginsCollectionClient(CollectionClient[T]):
 
             # GET /api/v1/plugins/1/snapshots/2
             client.plugins.snapshots.get_by_id(1, snapshot_id=2)
+
+            # GET /api/v1/plugins/1/snapshots/2/files/bundle?fileType=tar_gz
+            client.plugins.snapshots.get_files_bundle(1, snapshot_id=2)
         """
         return self._snapshots
 

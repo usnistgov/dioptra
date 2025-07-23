@@ -150,7 +150,7 @@ class EntrypointEndpoint(Resource):
             task_graph=parsed_obj["task_graph"],
             artifact_graph=parsed_obj.get("artifact_graph", ""),
             parameters=parsed_obj["parameters"],
-            artifact_parameters=parsed_obj["artifact_parameters"],
+            artifact_parameters=parsed_obj.get("artifact_parameters", []),
             plugin_ids=parsed_obj["plugin_ids"],
             artifact_plugin_ids=parsed_obj.get("artifact_plugin_ids", []),
             queue_ids=parsed_obj["queue_ids"],
@@ -209,7 +209,7 @@ class EntrypointIdEndpoint(Resource):
             task_graph=parsed_obj["task_graph"],
             artifact_graph=parsed_obj.get("artifact_graph", ""),
             parameters=parsed_obj["parameters"],
-            artifact_parameters=parsed_obj["artifact_parameters"],
+            artifact_parameters=parsed_obj.get("artifact_parameters", []),
             queue_ids=parsed_obj["queue_ids"],
             log=log,
         )

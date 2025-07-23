@@ -413,11 +413,18 @@ class EntrypointsSnapshotCollectionClient(SnapshotsSubCollectionClient[T]):
         file_stem: str = "plugins",
     ) -> Path:
         """Get the plugins bundle for the entrypoint matching the provided snapshot id.
+            The bundle contains all of the plugin files needed to execute a
+            plugin.
 
         Args:
             entrypoint_id: The entrypoint id, an integer.
             entrypoint_snapshot_id: The entrypoint snapshot id, an integer.
-            file_type: the file type for the bundle.
+            file_type: the file type for the bundle, defaults to FileTypes.TAR_GZ.
+            output_dir: the directory to save the downloaded artifact,
+                defaults to None. If None, then the current working directory will be
+                used.
+            file_stem: the file prefix or stem to use for the name of the
+                downloaded file. Defaults to the value of "plugins".
 
         Returns:
             The response from the Dioptra API.
@@ -443,7 +450,7 @@ class EntrypointsSnapshotCollectionClient(SnapshotsSubCollectionClient[T]):
         entrypoint_id: str | int,
         entrypoint_snapshot_id: str | int,
     ) -> T:
-        """Get the artifact plugins for the entrypoint matching the provided
+        """Get a list of the artifact plugins for the entrypoint matching the provided
             snapshot id.
 
         Args:
@@ -468,13 +475,18 @@ class EntrypointsSnapshotCollectionClient(SnapshotsSubCollectionClient[T]):
         file_stem: str = "artifact-plugins",
     ) -> Path:
         """Get the artifact plugins bundle for the entrypoint matching the provided
-            snapshot id.
+            snapshot id. The bundle contains all of the plugin files needed to execute a
+            plugin.
 
         Args:
             entrypoint_id: The entrypoint id, an integer.
             entrypoint_snapshot_id: The entrypoint snapshot id, an integer.
             file_type: the file type for the bundle.
-
+            output_dir: the directory to save the downloaded artifact,
+                defaults to None. If None, then the current working directory will be
+                used.
+            file_stem: the file prefix or stem to use for the name of the
+                downloaded file. Defaults to the value of "artifact-plugins".
         Returns:
             The response from the Dioptra API.
         """
@@ -639,7 +651,25 @@ class EntrypointsCollectionClient(CollectionClient[T]):
 
             # GET /api/v1/entrypoints/1/snapshots/2
             client.entrypoints.snapshots.get_by_id(1, snapshot_id=2)
-        """
+
+            # GET /api/v1/entrypoints/1/snapshots/2/config
+            client.entrypoints.snapshots.get_config(1, entrypoint_snapshot_id=2)
+
+            # GET /api/v1/entrypoints/1/snapshots/2/bundle?fileType=tar_gz
+            client.entrypoints.snapshots.get_plugins_bundle(
+                1, entrypoint_snapshot_id=2, file_type=FileTypes.TAR_GZ,
+            )
+
+            # GET /api/v1/entrypoints/1/snapshots/2/artifactPlugins
+            client.entrypoints.snapshots.get_artifact_plugins(
+                1, entrypoint_snapshot_id=2
+            )
+
+            # GET /api/v1/entrypoints/1/snapshots/2/artifactPlugins/bundle?fileType=tar_gz
+            client.entrypoints.snapshots.get_artifact_plugins_bundle(
+                1, entrypoint_snapshot_id=2, file_type=FileTypes.TAR_GZ,
+            )
+        """  # noqa B950
         return self._snapshots
 
     @property
@@ -753,7 +783,8 @@ class EntrypointsCollectionClient(CollectionClient[T]):
             task_graph: The task graph for the new entrypoint as a YAML-formatted
                 string.
             artifact_graph: The artifact graph for the new entrypoint as a
-                YAML-formatted string.
+                YAML-formatted string. Optional, defaults to None. A None value
+                indicates there are no produced artifacts that need to be stored.
             description: The description of the new entrypoint. Optional, defaults to
                 None.
             parameters: The list of parameters for the new entrypoint. Optional,
@@ -818,13 +849,13 @@ class EntrypointsCollectionClient(CollectionClient[T]):
             task_graph: The new task graph for the entrypoint as a YAML-formatted
                 string.
             artifact_graph: The artifact graph for the new entrypoint as a
-                YAML-formatted string.
+                YAML-formatted string. To remove the artifact graph, pass None.
             description: The new description of the entrypoint. To remove the
                 description, pass None.
             parameters: The new list of parameters for the entrypoint. To remove all
                 parameters, pass None.
             artifact_parameters: The list of artifact parameters for the new entrypoint.
-                Optional, defaults to None.
+                To remove all artifact parameters, pass None.
             queues: The new list of queue ids to associate with the entrypoint. To
                 remove all associated queues, pass None.
 

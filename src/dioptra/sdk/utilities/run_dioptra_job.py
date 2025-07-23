@@ -31,7 +31,7 @@ from dioptra.client import DioptraClient, connect_json_dioptra_client
 from dioptra.client.base import StatusCodeError
 from dioptra.client.utils import FileTypes
 from dioptra.sdk.api.artifact import ArtifactTaskInterface
-from dioptra.sdk.utilities.contexts import import_temp
+from dioptra.sdk.utilities.contexts import env_vars, import_temp
 from dioptra.task_engine.issues import IssueSeverity
 from dioptra.task_engine.task_engine import (
     ArtifactOutputEntry,
@@ -415,16 +415,19 @@ def _run_tracked_job(
         mlflow.log_dict(cast(dict[str, Any], job_yaml), entrypoint_name)
         mlflow.log_params(cast(dict[str, Any], job_parameters))
 
-        run_experiment(
-            experiment_desc=job_yaml,
-            global_parameters=job_parameters,
-            artifact_parameters=artifact_parameters,
-            artifact_tasks=artifact_tasks,
-            artifacts_dir=context.artifacts_dir,
-            plugins_dir=context.plugins_dir,
-            serialize_dir=context.serialize_dir,
-            deserialize_dir=context.deserialize_dir,
-        )
+        # plug-ins might need the job id for things like metrics
+        # should consider an alternate way to enable this functionality in the future
+        with env_vars({"__JOB_ID": str(job_id)}):
+            run_experiment(
+                experiment_desc=job_yaml,
+                global_parameters=job_parameters,
+                artifact_parameters=artifact_parameters,
+                artifact_tasks=artifact_tasks,
+                artifacts_dir=context.artifacts_dir,
+                plugins_dir=context.plugins_dir,
+                serialize_dir=context.serialize_dir,
+                deserialize_dir=context.deserialize_dir,
+            )
         _register_artifacts(
             group_id=group_id,
             job_id=job_id,
