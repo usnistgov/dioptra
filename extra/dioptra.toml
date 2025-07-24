@@ -93,10 +93,18 @@ description = "A collection of basic artifact tasks."
   filename = "tasks.py"
   name = "DataframeArtifactTask"
   output_params = [ { name = "dataframe", type = "dataframe" } ]
+
+  [[plugins.tasks.artifacts]]
+  filename = "tasks.py"
+  name = "DirectoryArtifactTask"
+  output_params = [ { name = "directory", type = "path" } ]
+
+
+[[plugins]]
 path = "plugins/mnist_demo"
 description = "A collection of plugins for training an MNIST classifier and running an attack and several defenses."
 
-  [[plugins.tasks]]
+  [[plugins.tasks.functions]]
   filename = "plugins.py"
   name = "load_dataset"
   input_params = [ 
@@ -117,7 +125,7 @@ description = "A collection of plugins for training an MNIST classifier and runn
     { name = "testing", type = "dataset" }
   ]
 
-  [[plugins.tasks]]
+  [[plugins.tasks.functions]]
   filename = "plugins.py"
   name = "create_model"
   input_params = [ 
@@ -131,7 +139,7 @@ description = "A collection of plugins for training an MNIST classifier and runn
   ]
   output_params = [ { name = "output", type = "model" } ]
 
-  [[plugins.tasks]]
+  [[plugins.tasks.functions]]
   filename = "plugins.py"
   name = "load_model"
   input_params = [ 
@@ -144,7 +152,7 @@ description = "A collection of plugins for training an MNIST classifier and runn
   ]
   output_params = [ { name = "output", type = "model" } ]
 
-  [[plugins.tasks]]
+  [[plugins.tasks.functions]]
   filename = "plugins.py"
   name = "train"
   input_params = [ 
@@ -156,16 +164,15 @@ description = "A collection of plugins for training an MNIST classifier and runn
   ]
   output_params = [ { name = "output", type = "model" } ]
 
-  [[plugins.tasks]]
+  [[plugins.tasks.functions]]
   filename = "plugins.py"
-  name = "save_artifacts_and_models"
+  name = "save_models"
   input_params = [ 
-    { name = "artifacts", type = "null_list_mapping_str_any", required = false},
     { name = "models", type = "null_list_mapping_str_str_model", required = false },
   ]
   output_params = [ ]
 
-  [[plugins.tasks]]
+  [[plugins.tasks.functions]]
   filename = "plugins.py"
   name = "load_artifacts_for_job"
   input_params = [ 
@@ -175,7 +182,7 @@ description = "A collection of plugins for training an MNIST classifier and runn
   ]
   output_params = [ { name = "output", type = "list_str" } ]
 
-  [[plugins.tasks]]
+  [[plugins.tasks.functions]]
   filename = "plugins.py"
   name = "load_artifacts"
   input_params = [ 
@@ -184,7 +191,7 @@ description = "A collection of plugins for training an MNIST classifier and runn
   ]
   output_params = [ ]
 
-  [[plugins.tasks]]
+  [[plugins.tasks.functions]]
   filename = "plugins.py"
   name = "attack_fgm"
   input_params = [ 
@@ -200,7 +207,7 @@ description = "A collection of plugins for training an MNIST classifier and runn
   ]
   output_params = [ { name = "output", type = "dataframe" } ]
 
-  [[plugins.tasks]]
+  [[plugins.tasks.functions]]
   filename = "plugins.py"
   name = "attack_patch"
   input_params = [ 
@@ -218,13 +225,13 @@ description = "A collection of plugins for training an MNIST classifier and runn
   ]
   output_params = [ ]
 
-  [[plugins.tasks]]
+  [[plugins.tasks.functions]]
   filename = "plugins.py"
   name = "augment_patch"
   input_params = [ 
     { name = "data_flow", type = "dataset", required = true},
     { name = "adv_data_dir", type = "str_path", required = true },
-    { name = "patch_dir", type = "string", required = true },
+    { name = "patch_dir", type = "path", required = true },
     { name = "model", type = "model", required = true },
     { name = "distance_metrics", type = "list_mapping_str_str", required = true },
     { name = "batch_size", type = "integer", required = true },
@@ -235,7 +242,7 @@ description = "A collection of plugins for training an MNIST classifier and runn
   ]
   output_params = [ ]
 
-  [[plugins.tasks]]
+  [[plugins.tasks.functions]]
   filename = "plugins.py"
   name = "model_metrics"
   input_params = [ 
@@ -244,7 +251,7 @@ description = "A collection of plugins for training an MNIST classifier and runn
   ]
   output_params = [ { name = "output", type = "mapping_str_float" } ]
 
-  [[plugins.tasks]]
+  [[plugins.tasks.functions]]
   filename = "plugins.py"
   name = "prediction_metrics"
   input_params = [ 
@@ -255,7 +262,7 @@ description = "A collection of plugins for training an MNIST classifier and runn
   ]
   output_params = [ { name = "output", type = "dataframe" } ]
 
-  [[plugins.tasks]]
+  [[plugins.tasks.functions]]
   filename = "plugins.py"
   name = "augment_data"
   input_params = [ 
@@ -269,7 +276,7 @@ description = "A collection of plugins for training an MNIST classifier and runn
   ]
   output_params = [ { name = "output", type = "dataset" } ]
 
-  [[plugins.tasks]]
+  [[plugins.tasks.functions]]
   filename = "plugins.py"
   name = "predict"
   input_params = [ 
@@ -280,7 +287,7 @@ description = "A collection of plugins for training an MNIST classifier and runn
   ]
   output_params = [ { name = "output", type = "dataframe" } ]
 
-  [[plugins.tasks]]
+  [[plugins.tasks.functions]]
   filename = "plugins.py"
   name = "load_predictions"
   input_params = [ 
@@ -294,6 +301,10 @@ description = "A collection of plugins for training an MNIST classifier and runn
     { name = "y_true", type = "null_np.ndarray" }, 
     { name = "y_pred", type = "null_np.ndarray" }
   ]
+
+[[plugin_param_types]]
+name = "bytes"
+description = "Python bytes object."
 
 [[plugin_param_types]]
 name = "message"
@@ -723,6 +734,7 @@ params = [
   { name = "register_model_name", type = "string", default_value = "mnist_classifier" }
 ]
 plugins = [ "mnist_demo" ]
+artifact_plugins = [ "artifacts" ]
 
 [[entrypoints]]
 path = "entrypoints/fgm.yml"
@@ -746,6 +758,7 @@ params = [
   { name = "seed", type = "integer", default_value = "-1" }
 ]
 plugins = [ "mnist_demo" ]
+artifact_plugins = [ "artifacts" ]
 
 [[entrypoints]]
 path = "entrypoints/patch_gen.yml"
@@ -772,6 +785,7 @@ params = [
   { name = "rescale", type = "float", default_value = "0.00392156862" },
 ]
 plugins = [ "mnist_demo" ]
+artifact_plugins = [ "artifacts" ]
 
 [[entrypoints]]
 path = "entrypoints/patch_apply.yml"
@@ -797,7 +811,11 @@ params = [
   { name = "batch_size", type = "integer", default_value = "10" },
   { name = "rescale", type = "float", default_value = "0.00392156862" },
 ]
+artifact_params = [
+  { name = "patch", output_params = [ { name = "patch_location", type = "path" } ] }
+]
 plugins = [ "mnist_demo" ]
+artifact_plugins = [ "artifacts" ]
 
 [[entrypoints]]
 path = "entrypoints/predict.yml"
@@ -819,6 +837,7 @@ params = [
   { name = "rescale", type = "float", default_value = "0.00392156862" },
 ]
 plugins = [ "mnist_demo" ]
+artifact_plugins = [ "artifacts" ]
 
 [[entrypoints]]
 path = "entrypoints/metrics.yml"
@@ -837,6 +856,7 @@ params = [
   { name = "rescale", type = "float", default_value = "0.00392156862" },
 ]
 plugins = [ "mnist_demo" ]
+artifact_plugins = [ "artifacts" ]
 
 [[entrypoints]]
 path = "entrypoints/defense.yml"
@@ -861,3 +881,4 @@ params = [
   { name = "rescale", type = "float", default_value = "0.00392156862" },
 ]
 plugins = [ "mnist_demo" ]
+artifact_plugins = [ "artifacts" ]

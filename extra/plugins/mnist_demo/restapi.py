@@ -44,8 +44,13 @@ def get_uri_for_model(
             else:
                 selected_model = model["latestVersion"]
 
+
+    artifact = dioptra_client.artifacts.get_by_id(artifact_id=selected_model["artifact"]["id"])
+
+    print(artifact)
+    
     uri = (
-        selected_model["artifact"]["artifactUri"]
+        artifact["artifactUri"]
         if selected_model is not None
         else None
     )
@@ -125,7 +130,7 @@ def upload_model_to_restapi(
         LOGGER.info("new model created", response=model)
 
     artifact = dioptra_client.artifacts.create(
-        group_id=1, description=f"{name} model artifact", job_id=job_id, uri=source_uri
+        group_id=1, description=f"{name} model artifact", job_id=job_id, artifact_uri=source_uri
     )
     LOGGER.info("artifact", response=artifact)
 

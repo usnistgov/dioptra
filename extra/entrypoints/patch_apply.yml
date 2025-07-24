@@ -1,60 +1,51 @@
-load:
-  load_artifacts_for_job:
-    job_id: $job_id
-    extract_files: [$adv_patch_tar_name]
+artifacts:
+  adversarial_dataset:
+    contents: $adv_data_dir
+    task:
+      name: directory
 
-dataset:
-  load_dataset:
-    ep_seed: $seed
-    testing_dir: $data_dir
-    subsets: [testing]
-    image_size: $image_size
-    batch_size: $batch_size
-    rescale: $rescale
-  dependencies:
-    - load
+graph:
+  dataset:
+    load_dataset:
+      ep_seed: $seed
+      testing_dir: $data_dir
+      subsets: [testing]
+      image_size: $image_size
+      batch_size: $batch_size
+      rescale: $rescale
 
-model:
-  load_model:
-    model_name: $model_name
-    model_version: $model_version
-    art: true
-    image_size: $image_size
-    classifier_kwargs:
-      clip_values: $clip_values
+  model:
+    load_model:
+      model_name: $model_name
+      model_version: $model_version
+      art: true
+      image_size: $image_size
+      classifier_kwargs:
+        clip_values: $clip_values
 
-apply_patches:
-  augment_patch:
-    data_flow: $dataset.testing
-    adv_data_dir: $adv_data_dir
-    patch_dir: $patch_dir
-    model: $model
-    distance_metrics:
-      - name: l_infinity_norm
-        func: l_inf_norm
-      - name: l_1_norm
-        func: l_1_norm
-      - name: l_2_norm
-        func: l_2_norm
-      - name: cosine_similarity
-        func: paired_cosine_similarities
-      - name: euclidean_distance
-        func: paired_euclidean_distances
-      - name: manhattan_distance
-        func: paired_manhattan_distances
-      - name: wasserstein_distance
-        func: paired_wasserstein_distances
-    batch_size: $batch_size
-    patch_scale: $patch_scale
-    rotation_max: $rotation_max
-    scale_min: $scale_min
-    scale_max: $scale_max
-
-save:
-  save_artifacts_and_models:
-    artifacts:
-      - type: tarball
-        adv_data_dir: $adv_data_dir
-        adv_tar_name: $adv_dataset_tar_name
-  dependencies:
-    - apply_patches
+  apply_patches:
+    augment_patch:
+      data_flow: $dataset.testing
+      adv_data_dir: $adv_data_dir
+      patch_dir: $patch
+      model: $model
+      distance_metrics:
+        - name: l_infinity_norm
+          func: l_inf_norm
+        - name: l_1_norm
+          func: l_1_norm
+        - name: l_2_norm
+          func: l_2_norm
+        - name: cosine_similarity
+          func: paired_cosine_similarities
+        - name: euclidean_distance
+          func: paired_euclidean_distances
+        - name: manhattan_distance
+          func: paired_manhattan_distances
+        - name: wasserstein_distance
+          func: paired_wasserstein_distances
+      batch_size: $batch_size
+      patch_scale: $patch_scale
+      rotation_max: $rotation_max
+      scale_min: $scale_min
+      scale_max: $scale_max
