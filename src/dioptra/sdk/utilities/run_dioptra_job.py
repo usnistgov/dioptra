@@ -47,6 +47,7 @@ ENV_DIOPTRA_API: Final[str] = "DIOPTRA_API"
 ENV_DIOPTRA_WORKER_USERNAME: Final[str] = "DIOPTRA_WORKER_USERNAME"
 ENV_DIOPTRA_WORKER_PASSWORD: Final[str] = "DIOPTRA_WORKER_PASSWORD"
 ENV_MLFLOW_S3_ENDPOINT_URL: Final[str] = "MLFLOW_S3_ENDPOINT_URL"
+ENV_MLFLOW_TRACKING_URI: Final[str] = "MLFLOW_TRACKING_URI"
 
 
 class Context(object):
@@ -261,6 +262,10 @@ def _get_client(log: BoundLogger) -> DioptraClient[dict[str, Any]]:
 def _validate_environment(log: BoundLogger) -> None:
     if os.getenv(ENV_MLFLOW_S3_ENDPOINT_URL) is None:
         message = f"{ENV_MLFLOW_S3_ENDPOINT_URL} environment variable is not set"
+        log.error(message)
+        raise ValueError(message)
+    if os.getenv(ENV_MLFLOW_TRACKING_URI) is None:
+        message = f"{ENV_MLFLOW_TRACKING_URI} environment variable is not set"
         log.error(message)
         raise ValueError(message)
 

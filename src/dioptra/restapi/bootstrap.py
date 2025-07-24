@@ -80,7 +80,8 @@ def _bind_rq_service_configuration(binder: Binder):
 
 
 def _bind_job_run_store_configuration(binder: Binder):
-    binder.bind(MlflowClient, to=MlflowClient(), scope=request)
+    tracking_uri = os.getenv("MLFLOW_TRACKING_URI")
+    binder.bind(MlflowClient, to=MlflowClient(tracking_uri=tracking_uri), scope=request)
 
 
 def _bind_s3_service_configuration(binder: Binder) -> None:
