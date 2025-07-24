@@ -160,29 +160,28 @@ def train(
     return estimator
 
 @pyplugs.register    
-def save_artifacts_and_models(
-    artifacts: list[dict[str, Any]] | None = None,
+def save_models(
     models: list[dict[str, str | Model]] | None = None
 ):
-    artifacts = [] if artifacts is None else artifacts
     models = [] if models is None else models
 
     for model in models:
         log_tensorflow_keras_estimator(model['model'], "model")
         add_model_to_registry(model['name'], "model")
-    for artifact in artifacts:
-        if (artifact['type'] == 'tarball'):
-            upload_directory_as_tarball_artifact(
-                source_dir=artifact['adv_data_dir'],
-                tarball_filename=artifact['adv_tar_name']
-            )
-        if (artifact['type'] == 'dataframe'):
-            upload_data_frame_artifact(
-                data_frame=artifact['data_frame'],
-                file_name=artifact['file_name'],
-                file_format=artifact['file_format'],
-                file_format_kwargs=artifact['file_format_kwargs']
-            )
+    #for artifact in artifacts:
+    #    if (artifact['type'] == 'tarball'):
+    #        upload_directory_as_tarball_artifact(
+    #            source_dir=artifact['adv_data_dir'],
+    #            tarball_filename=artifact['adv_tar_name']
+    #        )
+    #    if (artifact['type'] == 'dataframe'):
+    #        upload_data_frame_artifact(
+    #            data_frame=artifact['data_frame'],
+    #            file_name=artifact['file_name'],
+    #            file_format=artifact['file_format'],
+    #            file_format_kwargs=artifact['file_format_kwargs']
+    #        )
+
 @pyplugs.register
 def load_artifacts_for_job(
     job_id: str, 
@@ -278,7 +277,7 @@ def attack_patch(
 def augment_patch(
     data_flow: Dataset,
     adv_data_dir: str | Path,
-    patch_dir: str,
+    patch_dir: Path,
     model: Model,
     distance_metrics: list[dict[str, str]],
     batch_size: int = 32,
@@ -366,25 +365,13 @@ def predict(
 
 @pyplugs.register
 def load_predictions(
-    paths: list[str],
-    filename: str,
-    format: str = 'csv',
+    dataframe: pd.DataFrame,
     dataset: Dataset | None = None,
     n_classes: int = -1,
 ) -> tuple[np.ndarray|None, np.ndarray|None]:
-    loc = None
     y_true, y_pred = None, None
-    for m in paths:
-        if m.endswith(filename):
-            loc = m
-    if (loc is not None):
-        df = None
-        if (format == 'csv'):
-            df = pd.read_csv(loc)
-        elif (format == 'json'):
-            df = pd.read_json(loc)
-        if df is not None:
-            y_true, y_pred = df_to_predictions(df, dataset, n_classes)
+    if dataframe is not None:
+        y_true, y_pred = df_to_predictions(dataframe, dataset, n_classes)
     return y_true, y_pred
     
 

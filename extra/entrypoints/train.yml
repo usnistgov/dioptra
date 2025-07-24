@@ -1,61 +1,63 @@
-dataset:
-  load_dataset:
-    ep_seed: $seed
-    training_dir: $training_dir
-    testing_dir: $testing_dir
-    subsets: [training, validation, testing]
-    image_size: $image_size
-    validation_split: $validation_split
-    rescale: $rescale
-    batch_size: $batch_size      
-    shuffle: True
-model:
-  create_model:
-    dataset: $dataset.training
-    model_architecture: $model_architecture
-    input_shape: $image_size
-    learning_rate: $learning_rate
-    optimizer: $optimizer_name
-    metrics_list:
-      - name: CategoricalAccuracy
-        parameters: { name: accuracy }
-      - name: Precision
-        parameters: { name: precision }
-      - name: Recall
-        parameters: { name: recall }
-      - name: AUC
-        parameters: { name: auc }
-  dependencies:
-    - dataset
+graph:
+  dataset:
+    load_dataset:
+      ep_seed: $seed
+      training_dir: $training_dir
+      testing_dir: $testing_dir
+      subsets: [training, validation, testing]
+      image_size: $image_size
+      validation_split: $validation_split
+      rescale: $rescale
+      batch_size: $batch_size      
+      shuffle: True
 
-trained_model:
-  train:
-    estimator: $model
-    x: $dataset.training
-    callbacks_list:
-      - name: EarlyStopping
-        parameters:
-          monitor: val_loss
-          min_delta: .01
-          patience: 5
-          restore_best_weights: true
-    fit_kwargs:
-      epochs: $epochs
-      validation_data: $dataset.validation
-      verbose: 2
-  dependencies:
-    - model
+  model:
+    create_model:
+      dataset: $dataset.training
+      model_architecture: $model_architecture
+      input_shape: $image_size
+      learning_rate: $learning_rate
+      optimizer: $optimizer_name
+      metrics_list:
+        - name: CategoricalAccuracy
+          parameters: { name: accuracy }
+        - name: Precision
+          parameters: { name: precision }
+        - name: Recall
+          parameters: { name: recall }
+        - name: AUC
+          parameters: { name: auc }
+    dependencies:
+      - dataset
 
-metrics:
-  model_metrics:
-    classifier: $trained_model
-    dataset: $dataset.testing
-  dependencies:
-    - trained_model
+  trained_model:
+    train:
+      estimator: $model
+      x: $dataset.training
+      callbacks_list:
+        - name: EarlyStopping
+          parameters:
+            monitor: val_loss
+            min_delta: .01
+            patience: 5
+            restore_best_weights: true
+      fit_kwargs:
+        epochs: $epochs
+        validation_data: $dataset.validation
+        verbose: 2
+    dependencies:
+      - model
 
-save:
-  save_artifacts_and_models:
-    models:
-      - name: $register_model_name
-        model: $trained_model
-        
+  metrics:
+    model_metrics:
+      classifier: $trained_model
+      dataset: $dataset.testing
+    dependencies:
+      - trained_model
+
+  save:
+    save_models:
+      models:
+        - name: $register_model_name
+          model: $trained_model
+          

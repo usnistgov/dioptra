@@ -1,3 +1,9 @@
+artifacts:
+  patch:
+    contents: $adv_data_dir
+    task:
+      name: directory
+
 predictions:
   load_artifacts_for_job:
     job_id: $job_id
@@ -16,9 +22,7 @@ dataset:
 
 format_predictions:
   load_predictions:
-    paths: $predictions
-    filename: $predictions_filename
-    format: $predictions_format
+    dataframe: $predictions
     dataset: $dataset.testing
     n_classes: $n_classes
 
