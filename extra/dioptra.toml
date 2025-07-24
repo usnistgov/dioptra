@@ -24,7 +24,7 @@ description = "A simple plugin used for testing and demonstration purposes."
   output_params = [ { name = "loud_greeting", type = "message" } ]
 
 [[plugins]]
-path = "plugins/data_science"
+path = "plugins/sklearn_classify"
 description = "A simple sklearn classification plugin."
 
   [[plugins.tasks.functions]]
@@ -141,5 +141,5 @@ description = "A simple example to fit a model to data and evaluate it."
 params = [
   { name = "dataset_name", type = "string", default_value = "digits" },
 ]
-plugins = [ "data_science" ]
+plugins = [ "sklearn_classify" ]
 artifact_plugins = [ "artifacts" ]
