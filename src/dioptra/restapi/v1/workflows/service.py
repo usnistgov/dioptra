@@ -600,7 +600,6 @@ class ResourceImportService(object):
 
             try:
                 contents = yaml.safe_load(Path(entrypoint["path"]).read_text())
-                log.info(contents, contents=contents)
             except FileNotFoundError as e:
                 raise ImportFailedError(
                     f"Failed to read entrypoint file from {entrypoint['path']}",
@@ -626,7 +625,6 @@ class ResourceImportService(object):
                 plugins[plugin].resource_id
                 for plugin in entrypoint.get("artifact_plugins", [])
             ]
-            log.info("artifact_params", artifact_params=artifact_params)
             entrypoint_dict = self._entrypoint_service.create(
                 name=entrypoint.get("name", Path(entrypoint["path"]).stem),
                 description=entrypoint.get("description", None),
