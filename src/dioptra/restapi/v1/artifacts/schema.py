@@ -15,10 +15,11 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The schemas for serializing/deserializing Artifact resources."""
+
 from marshmallow import Schema, fields
 
 from dioptra.restapi.utils import validate_artifact_url
-from dioptra.restapi.v1.filetypes import FileTypes
+from dioptra.restapi.v1.file_types import FileTypes
 from dioptra.restapi.v1.schemas import (
     BasePageSchema,
     GroupIdQueryParametersSchema,

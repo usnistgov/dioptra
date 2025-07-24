@@ -15,6 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The module defining the endpoints for Plugin resources."""
+
 import uuid
 from typing import cast
 
@@ -29,7 +30,7 @@ from structlog.stdlib import BoundLogger
 from dioptra.restapi.db import models
 from dioptra.restapi.routes import V1_PLUGIN_FILES_ROUTE, V1_PLUGINS_ROUTE
 from dioptra.restapi.v1 import utils
-from dioptra.restapi.v1.filetypes import FileTypes, plugin_pluginfiles_to_bundle
+from dioptra.restapi.v1.file_types import FileTypes, plugin_pluginfiles_to_bundle
 from dioptra.restapi.v1.schemas import (
     FileDownloadParametersSchema,
     IdStatusResponseSchema,

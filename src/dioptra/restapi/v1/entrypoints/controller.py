@@ -30,7 +30,7 @@ from structlog.stdlib import BoundLogger
 from dioptra.restapi.db import models
 from dioptra.restapi.routes import V1_ENTRYPOINTS_ROUTE
 from dioptra.restapi.v1 import utils
-from dioptra.restapi.v1.filetypes import FileTypes, plugin_pluginfiles_to_bundle
+from dioptra.restapi.v1.file_types import FileTypes, plugin_pluginfiles_to_bundle
 from dioptra.restapi.v1.queues.schema import QueueRefSchema
 from dioptra.restapi.v1.schemas import (
     FileDownloadParametersSchema,

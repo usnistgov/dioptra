@@ -20,7 +20,7 @@ import enum
 
 from marshmallow import Schema, fields
 
-from .filetypes import FileTypes
+from .file_types import FileTypes
 
 
 def generate_base_resource_schema(name: str, snapshot: bool) -> type[Schema]:

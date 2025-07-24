@@ -36,7 +36,7 @@ from dioptra.restapi.errors import QueryParameterValidationError
 from dioptra.restapi.routes import V1_ARTIFACTS_ROUTE
 from dioptra.restapi.utils import verify_filename_is_safe
 from dioptra.restapi.v1 import utils
-from dioptra.restapi.v1.filetypes import FileTypes
+from dioptra.restapi.v1.file_types import FileTypes
 from dioptra.restapi.v1.shared.job_run_store import JobRunStoreProtocol
 from dioptra.restapi.v1.shared.snapshots.controller import (
     generate_resource_snapshots_endpoint,
