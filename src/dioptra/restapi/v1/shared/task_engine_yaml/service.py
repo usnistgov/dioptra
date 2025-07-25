@@ -25,7 +25,7 @@ from yaml.parser import ParserError
 from yaml.scanner import ScannerError
 
 from dioptra.restapi.errors import InvalidYamlError
-from dioptra.restapi.v1.workflows.lib.type_coercions import (
+from dioptra.restapi.v1.type_coercions import (
     BOOLEAN_PARAM_TYPE,
     FLOAT_PARAM_TYPE,
     INTEGER_PARAM_TYPE,
@@ -45,10 +45,6 @@ EXPLICIT_GLOBAL_TYPES: Final[set[str]] = {
     BOOLEAN_PARAM_TYPE,
     INTEGER_PARAM_TYPE,
     FLOAT_PARAM_TYPE,
-}
-YAML_STRING_DUMP_SETTINGS: Final[dict[str, Any]] = {
-    "indent": 2,
-    "sort_keys": False,
 }
 
 
@@ -77,43 +73,23 @@ class TaskEngineYamlService(object):
         tasks, parameter_types = self.extract_tasks(
             plugin_plugin_files, plugin_parameter_types=plugin_parameter_types
         )
+        # add artifact parameter types if needed
+        self._add_artifact_parameter_types(
+            entry_point.artifact_parameters, parameter_types
+        )
         parameters = self.extract_parameters(entry_point)
         graph = self.extract_graph(entry_point)
+
+        artifact_outputs = self.extract_artifact_outputs(entry_point)
+        artifact_inputs = self.extract_artifact_inputs(entry_point.artifact_parameters)
         return {
             "types": parameter_types,
             "parameters": parameters,
             "tasks": tasks,
             "graph": graph,
+            "artifact_outputs": artifact_outputs,
+            "artifact_inputs": artifact_inputs,
         }
-
-    def build_yaml(
-        self,
-        entry_point: protocols.EntryPointProtocol,
-        plugin_plugin_files: Sequence[protocols.PluginPluginFileProtocol],
-        plugin_parameter_types: Sequence[protocols.PluginTaskParameterTypeProtocol],
-        logger: BoundLogger | None = None,
-    ) -> str:
-        """Export an entry point's task engine YAML file to a specified directory.
-
-        Args:
-            entry_point: The entry point to export.
-            plugin_plugin_files: The entry point's plugin files.
-            plugin_parameter_types: The latest snapshots of the plugin parameter types
-                accessible to the entry point.
-            logger: A structlog logger object to use for logging. A new logger will be
-                created if None.
-
-        Returns:
-            The path to the exported task engine YAML file.
-        """
-        log = logger or LOGGER.new()  # noqa: F841
-        task_engine_dict = self.build_dict(
-            entry_point=entry_point,
-            plugin_plugin_files=plugin_plugin_files,
-            plugin_parameter_types=plugin_parameter_types,
-            logger=log,
-        )
-        return cast(str, yaml.safe_dump(task_engine_dict, **YAML_STRING_DUMP_SETTINGS))
 
     def validate(self, task_engine_dict: dict[str, Any]) -> list[ValidationIssue]:
         """Validate the given task engine dictionary.
@@ -126,6 +102,17 @@ class TaskEngineYamlService(object):
             dictionary is valid.
         """
         return validate_task_engine_dict(task_engine_dict)
+
+    def _add_artifact_parameter_types(
+        self,
+        artifact_parameters: Sequence[protocols.EntryPointArtifactParameterProtocol],
+        types: dict[str, Any],
+    ) -> None:
+        for param in artifact_parameters:
+            for output in param.output_parameters:
+                name = output.parameter_type.name
+                if name not in BUILTIN_TYPES and name not in types:
+                    types[name] = output.parameter_type.structure
 
     def extract_parameters(
         self,
@@ -160,6 +147,28 @@ class TaskEngineYamlService(object):
                 )
 
         return parameters
+
+    def extract_artifact_inputs(
+        self,
+        artifact_parameters: Sequence[protocols.EntryPointArtifactParameterProtocol],
+        logger: BoundLogger | None = None,
+    ) -> dict[str, Any]:
+        """Extract the parameters from an entrypoint.
+
+        Args:
+            entrypoint: The entrypoint to extract parameters from.
+            logger: A structlog logger object to use for logging. A new logger will be
+                created if None.
+
+        Returns:
+            A dictionary of the entrypoint's parameters.
+        """
+        log = logger or LOGGER.new()  # noqa: F841
+        inputs: dict[str, Any] = {}
+        for param in artifact_parameters:
+            inputs[param.name] = self._build_artifact_outputs(param.output_parameters)
+
+        return inputs
 
     def extract_tasks(
         self,
@@ -257,6 +266,27 @@ class TaskEngineYamlService(object):
         except (ParserError, ScannerError) as e:
             raise InvalidYamlError(str(e)) from e
 
+    def extract_artifact_outputs(
+        self,
+        entrypoint: protocols.EntryPointProtocol,
+        logger: BoundLogger | None = None,
+    ) -> dict[str, Any]:
+        """Extract the artifact graph from an entrypoint.
+
+        Args:
+            entrypoint: The entrypoint containing the artifact graph.
+            logger: A structlog logger object to use for logging. A new logger will be
+                created if None.
+
+        Returns:
+            A dictionary representation of the entrypoint's artifact graph.
+        """
+        log = logger or LOGGER.new()  # noqa: F841
+        full_yaml = yaml.safe_load(entrypoint.artifact_graph)
+        if full_yaml is None:
+            full_yaml = {}
+        return cast(dict[str, Any], full_yaml)
+
     def build_plugin_field(
         self,
         plugin: protocols.PluginProtocol,
@@ -292,6 +322,17 @@ class TaskEngineYamlService(object):
         if len(output_parameters) == 1:
             return {output_parameters[0].name: output_parameters[0].parameter_type.name}
 
+        return [
+            {output_param.name: output_param.parameter_type.name}
+            for output_param in output_parameters
+        ]
+
+    def _build_artifact_outputs(
+        self,
+        output_parameters: Sequence[protocols.PluginTaskOutputParameterProtocol],
+    ) -> list[dict[str, Any]] | dict[str, Any]:
+        if len(output_parameters) == 1:
+            return {output_parameters[0].name: output_parameters[0].parameter_type.name}
         return [
             {output_param.name: output_param.parameter_type.name}
             for output_param in output_parameters

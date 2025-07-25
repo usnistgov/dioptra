@@ -2,30 +2,39 @@
 path = "plugins/hello_world"
 description = "A simple plugin used for testing and demonstration purposes."
 
-
-  [[plugins.tasks]]
+  [[plugins.tasks.functions]]
   filename = "tasks.py"
   name = "hello"
   input_params = [ { name = "name", type = "string", required = true} ]
   output_params = [ { name = "greeting", type = "message" } ]
 
-  [[plugins.tasks]]
+  [[plugins.tasks.functions]]
   filename = "tasks.py"
   name = "greet"
   input_params = [
     { name = "greeting", type = "string", required = true },
-	  { name = "name", type = "string", required = true },
+    { name = "name", type = "string", required = true },
   ]
   output_params = [ { name = "greeting", type = "message" } ]
 
-  [[plugins.tasks]]
+  [[plugins.tasks.functions]]
   filename = "tasks.py"
   name = "shout"
   input_params = [ { name = "greeting", type = "message", required = true} ]
   output_params = [ { name = "loud_greeting", type = "message" } ]
 
+[[plugins]]
+path = "plugins/artifacts"
+description = "A collection of basic artifact tasks."
+
+  [[plugins.tasks.artifacts]]
+  filename = "tasks.py"
+  name = "StringArtifactTask"
+  output_params = [ { name = "contents", type = "string" } ]
+
 [[plugin_param_types]]
 name = "message"
+description = "A message produced by a plugin task"
 
 [[entrypoints]]
 path = "entrypoints/hello-world.yaml"
@@ -35,3 +44,14 @@ params = [
   { name = "name", type = "string", default_value = "World" }
 ]
 plugins = [ "hello_world" ]
+artifact_plugins = [ "artifacts" ]
+
+[[entrypoints]]
+path = "entrypoints/hello-artifact.yaml"
+name = "Hello Artifact"
+description = "A simple example demonstrating use of artifacts."
+artifact_params = [
+  { name = "greeting_artifact", output_params = [ { name = "value", type = "message" } ] }
+]
+plugins = [ "hello_world" ]
+artifact_plugins = [ "artifacts" ]

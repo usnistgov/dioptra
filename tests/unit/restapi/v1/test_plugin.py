@@ -20,16 +20,17 @@ This module contains a set of tests that validate the CRUD operations and additi
 functionalities for the plugin entity. The tests ensure that the plugins can be
 registered, renamed, and deleted as expected through the REST API.
 """
+
 import textwrap
 from http import HTTPStatus
 from typing import Any
 
 import pytest
-from flask_sqlalchemy import SQLAlchemy
 
 from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
 from dioptra.restapi.routes import V1_PLUGIN_PARAMETER_TYPES_ROUTE, V1_ROOT
+from dioptra.restapi.v1.shared.resource_service import _plugin_file_payload_adapter
 
 from ..lib import helpers, routines
 from ..test_utils import assert_retrieving_resource_works, match_normalized_json
@@ -315,7 +316,7 @@ def assert_plugin_file_response_contents_matches_expectations(
     assert response["group"]["id"] == expected_contents["group_id"]
 
     # Validate the PluginTask structure
-    for task in response["tasks"]:
+    for task in response["tasks"]["functions"]:
         assert isinstance(task["name"], str)
 
         # Validate PluginTaskParameter Structure for inputs and outputs
@@ -424,7 +425,7 @@ def assert_registering_existing_plugin_filename_fails(
         plugin_id=plugin_id,
         filename=existing_filename,
         contents=contents,
-        tasks=[],
+        function_tasks=[],
         description=description,
     )
     assert response.status_code == HTTPStatus.CONFLICT
@@ -482,7 +483,7 @@ def assert_cannot_rename_plugin_file_with_existing_name(
         plugin_file_id=plugin_file_id,
         filename=existing_name,
         contents=existing_contents,
-        tasks=[],
+        function_tasks=[],
         description=existing_description,
     )
     assert response.status_code == HTTPStatus.CONFLICT
@@ -558,7 +559,6 @@ def assert_plugin_task_response_contents_matches_expectations(
 
 def test_create_plugin(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
 ) -> None:
     """Test that plugins can be correctly registered and retrieved using the API.
@@ -593,7 +593,6 @@ def test_create_plugin(
 
 def test_plugin_get_all(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugins: dict[str, Any],
 ) -> None:
@@ -621,7 +620,6 @@ def test_plugin_get_all(
 )
 def test_plugin_sort(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugins: dict[str, Any],
     sort_by: str,
@@ -650,7 +648,6 @@ def test_plugin_sort(
 
 def test_plugin_search_query(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugins: dict[str, Any],
 ) -> None:
@@ -673,7 +670,6 @@ def test_plugin_search_query(
 
 def test_plugin_group_query(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugins: dict[str, Any],
 ) -> None:
@@ -696,7 +692,6 @@ def test_plugin_group_query(
 
 def test_cannot_register_existing_plugin_name(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugins: dict[str, Any],
 ) -> None:
@@ -718,7 +713,6 @@ def test_cannot_register_existing_plugin_name(
 
 def test_rename_plugin(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugins: dict[str, Any],
 ) -> None:
@@ -776,7 +770,6 @@ def test_rename_plugin(
 
 def test_delete_plugin_by_id(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugins: dict[str, Any],
 ) -> None:
@@ -799,7 +792,6 @@ def test_delete_plugin_by_id(
 
 def test_register_plugin_file(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugins: dict[str, Any],
     registered_plugin_parameter_types: dict[str, Any],
@@ -827,7 +819,7 @@ def test_register_plugin_file(
     )
     user_id = auth_account["id"]
     string_parameter_type = registered_plugin_parameter_types["plugin_param_type3"]
-    tasks = [
+    function_tasks = [
         {
             "name": "hello_world",
             "inputParams": [
@@ -845,8 +837,9 @@ def test_register_plugin_file(
     string_url = (
         f"/{V1_ROOT}/{V1_PLUGIN_PARAMETER_TYPES_ROUTE}/{string_parameter_type['id']}"
     )
-    expected_tasks = [
+    expected_function_tasks = [
         {
+            "id": 1,  # can this be hardcoded?
             "name": "hello_world",
             "inputParams": [
                 {
@@ -889,7 +882,7 @@ def test_register_plugin_file(
         filename=filename,
         description=description,
         contents=contents,
-        tasks=tasks,
+        function_tasks=function_tasks,
     )
     plugin_file_expected = plugin_file_response.json()
 
@@ -901,7 +894,7 @@ def test_register_plugin_file(
             "contents": contents,
             "user_id": user_id,
             "group_id": registered_plugin["group"]["id"],
-            "tasks": expected_tasks,
+            "tasks": {"functions": expected_function_tasks, "artifacts": []},
         },
     )
     assert_retrieving_plugin_file_by_id_works(
@@ -921,44 +914,70 @@ def test_register_plugin_file(
         (r"hello_world.py", HTTPStatus.OK),
         (r"hello_world/main.py", HTTPStatus.OK),
         (r"package/sub_package/module.py", HTTPStatus.OK),
-        (r"a/b/c/d/e/f/g/h/i/j/k/l/m/n/o/p.py", HTTPStatus.OK),  # Many nested directories # noqa: B950 # fmt: skip
+        (
+            r"a/b/c/d/e/f/g/h/i/j/k/l/m/n/o/p.py",
+            HTTPStatus.OK,
+        ),  # Many nested directories # noqa: B950 # fmt: skip
         (r"_underscore_start.py", HTTPStatus.OK),
         (r"underscore_end_.py", HTTPStatus.OK),
         (r"_underscore_start_end_.py", HTTPStatus.OK),
         (r"__dunder_start.py", HTTPStatus.OK),
         (r"dunder_end__.py", HTTPStatus.OK),
         (r"__dunder_start_end__.py", HTTPStatus.OK),
-
         # Invalid paths
-        (r"hello world.py", HTTPStatus.BAD_REQUEST),        # Space in filename
-        (r"3ight/hello.py", HTTPStatus.BAD_REQUEST),        # Directory starting with a number # noqa: B950
+        (r"hello world.py", HTTPStatus.BAD_REQUEST),  # Space in filename
+        (
+            r"3ight/hello.py",
+            HTTPStatus.BAD_REQUEST,
+        ),  # Directory starting with a number # noqa: B950
         (r"hello_world//main.py", HTTPStatus.BAD_REQUEST),  # Double slash
-        (r"module.py.txt", HTTPStatus.BAD_REQUEST),         # Wrong extension
-        (r"/absolute/path.py", HTTPStatus.BAD_REQUEST),     # Absolute path
-        (r".py", HTTPStatus.BAD_REQUEST),                   # Just the extension
-        (r"hello.py/", HTTPStatus.BAD_REQUEST),             # Ends with a slash
-        (r"/hello.py", HTTPStatus.BAD_REQUEST),             # Starts with a slash
-        (r"hello..py", HTTPStatus.BAD_REQUEST),             # Double dot in extension
-        (r"hello.py.py", HTTPStatus.BAD_REQUEST),           # Double .py extension
-        (r"_/hello.py", HTTPStatus.BAD_REQUEST),            # Single underscore directory name # noqa: B950
-        (r"hello/_.py", HTTPStatus.BAD_REQUEST),            # Single underscore filename
-        (r"hello/_file.py", HTTPStatus.BAD_REQUEST),        # Underscore start in nested file # noqa: B950
-        (r"HELLO.PY", HTTPStatus.BAD_REQUEST),              # Uppercase extension (assuming case-sensitive) # noqa: B950
-        (r"hello.pY", HTTPStatus.BAD_REQUEST),              # Mixed case extension
-        (r"hello/world/.py", HTTPStatus.BAD_REQUEST),       # Hidden file in nested directory # noqa: B950
+        (r"module.py.txt", HTTPStatus.BAD_REQUEST),  # Wrong extension
+        (r"/absolute/path.py", HTTPStatus.BAD_REQUEST),  # Absolute path
+        (r".py", HTTPStatus.BAD_REQUEST),  # Just the extension
+        (r"hello.py/", HTTPStatus.BAD_REQUEST),  # Ends with a slash
+        (r"/hello.py", HTTPStatus.BAD_REQUEST),  # Starts with a slash
+        (r"hello..py", HTTPStatus.BAD_REQUEST),  # Double dot in extension
+        (r"hello.py.py", HTTPStatus.BAD_REQUEST),  # Double .py extension
+        (
+            r"_/hello.py",
+            HTTPStatus.BAD_REQUEST,
+        ),  # Single underscore directory name # noqa: B950
+        (r"hello/_.py", HTTPStatus.BAD_REQUEST),  # Single underscore filename
+        (
+            r"hello/_file.py",
+            HTTPStatus.BAD_REQUEST,
+        ),  # Underscore start in nested file # noqa: B950
+        (
+            r"HELLO.PY",
+            HTTPStatus.BAD_REQUEST,
+        ),  # Uppercase extension (assuming case-sensitive) # noqa: B950
+        (r"hello.pY", HTTPStatus.BAD_REQUEST),  # Mixed case extension
+        (
+            r"hello/world/.py",
+            HTTPStatus.BAD_REQUEST,
+        ),  # Hidden file in nested directory # noqa: B950
         (r"hello/.world/file.py", HTTPStatus.BAD_REQUEST),  # Hidden directory
-        (r" hello.py", HTTPStatus.BAD_REQUEST),             # Leading space
-        (r"hello.py ", HTTPStatus.BAD_REQUEST),             # Trailing space
-        (r"\thello.py", HTTPStatus.BAD_REQUEST),            # Tab character
-        (r"hello\world.py", HTTPStatus.BAD_REQUEST),        # Backslash instead of forward slash # noqa: B950
-        (r"hello:world.py", HTTPStatus.BAD_REQUEST),        # Invalid character (colon)
-        (r"hello@world.py", HTTPStatus.BAD_REQUEST),        # Invalid character (at sign) # noqa: B950
+        (r" hello.py", HTTPStatus.BAD_REQUEST),  # Leading space
+        (r"hello.py ", HTTPStatus.BAD_REQUEST),  # Trailing space
+        (r"\thello.py", HTTPStatus.BAD_REQUEST),  # Tab character
+        (
+            r"hello\world.py",
+            HTTPStatus.BAD_REQUEST,
+        ),  # Backslash instead of forward slash # noqa: B950
+        (r"hello:world.py", HTTPStatus.BAD_REQUEST),  # Invalid character (colon)
+        (
+            r"hello@world.py",
+            HTTPStatus.BAD_REQUEST,
+        ),  # Invalid character (at sign) # noqa: B950
         (r"hello/world.py/extra", HTTPStatus.BAD_REQUEST),  # Extra content after .py
-        (r"", HTTPStatus.BAD_REQUEST),                      # Empty string
-        (r"hello/", HTTPStatus.BAD_REQUEST),                # Directory without file
-        (r"hello.py/world.py", HTTPStatus.BAD_REQUEST),     # .py in middle of path
-        (r"1/2/3/4.py", HTTPStatus.BAD_REQUEST),            # All numeric directory names # noqa: B950
-        (r"../sample.py", HTTPStatus.BAD_REQUEST),          # No relative paths
+        (r"", HTTPStatus.BAD_REQUEST),  # Empty string
+        (r"hello/", HTTPStatus.BAD_REQUEST),  # Directory without file
+        (r"hello.py/world.py", HTTPStatus.BAD_REQUEST),  # .py in middle of path
+        (
+            r"1/2/3/4.py",
+            HTTPStatus.BAD_REQUEST,
+        ),  # All numeric directory names # noqa: B950
+        (r"../sample.py", HTTPStatus.BAD_REQUEST),  # No relative paths
         (r"..sample.py", HTTPStatus.BAD_REQUEST),
         # No prefix with dots
         # fmt: on
@@ -966,7 +985,6 @@ def test_register_plugin_file(
 )
 def test_plugin_file_filename_regex(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugins: dict[str, Any],
     filename: str,
@@ -987,14 +1005,13 @@ def test_plugin_file_filename_regex(
         plugin_id=registered_plugin["id"],
         filename=filename,
         contents="# Empty file",
-        tasks=[],
+        function_tasks=[],
     )
     assert response.status_code == expected_status_code
 
 
 def test_plugin_file_get_all(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_with_files: dict[str, Any],
 ) -> None:
@@ -1037,7 +1054,6 @@ def test_plugin_file_get_all(
 )
 def test_plugin_file_sort(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_with_files: dict[str, Any],
     sort_by: str,
@@ -1073,7 +1089,6 @@ def test_plugin_file_sort(
 
 def test_plugin_file_delete_all(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_with_files: dict[str, Any],
 ) -> None:
@@ -1098,7 +1113,6 @@ def test_plugin_file_delete_all(
 
 def test_cannot_register_existing_plugin_filename(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_with_files: dict[str, Any],
 ) -> None:
@@ -1124,7 +1138,6 @@ def test_cannot_register_existing_plugin_filename(
 
 def test_rename_plugin_file(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_with_files: dict[str, Any],
 ) -> None:
@@ -1150,7 +1163,7 @@ def test_rename_plugin_file(
         plugin_file_id=plugin_file_to_rename["id"],
         filename=updated_plugin_filename,
         contents=plugin_file_to_rename["contents"],
-        tasks=[],
+        function_tasks=[],
         description=plugin_file_to_rename["description"],
     )
     assert_plugin_filename_matches_expected_name(
@@ -1171,7 +1184,6 @@ def test_rename_plugin_file(
 
 def test_delete_plugin_file_by_id(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_with_files: dict[str, Any],
 ) -> None:
@@ -1203,7 +1215,6 @@ def test_delete_plugin_file_by_id(
 
 def test_manage_existing_plugin_draft(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugins: dict[str, Any],
 ) -> None:
@@ -1261,7 +1272,6 @@ def test_manage_existing_plugin_draft(
 
 def test_manage_new_plugin_drafts(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
 ) -> None:
     """Test that drafts of plugin can be created and managed by the user
@@ -1317,7 +1327,6 @@ def test_manage_new_plugin_drafts(
 
 def test_manage_existing_plugin_file_draft(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_with_files: dict[str, Any],
 ) -> None:
@@ -1353,13 +1362,13 @@ def test_manage_existing_plugin_file_draft(
         "filename": "main.py",
         "description": description,
         "contents": contents,
-        "tasks": [],
+        "tasks": {},
     }
     draft_mod = {
         "filename": "hello_world.py",
         "description": description,
         "contents": contents,
-        "tasks": [],
+        "tasks": {},
     }
 
     # Expected responses
@@ -1391,12 +1400,12 @@ def test_manage_existing_plugin_file_draft(
         draft_mod=draft_mod,
         draft_expected=draft_expected,
         draft_mod_expected=draft_mod_expected,
+        resource_data_adapters=_plugin_file_payload_adapter,
     )
 
 
 def test_manage_new_plugin_file_drafts(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugins: dict[str, Any],
 ) -> None:
@@ -1427,20 +1436,20 @@ def test_manage_new_plugin_file_drafts(
             "filename": "plugin_file1.py",
             "description": "new plugin_file",
             "contents": contents,
-            "tasks": [],
+            "tasks": {},
         },
         "draft2": {
             "filename": "plugin_file2.py",
             "description": None,
             "contents": contents,
-            "tasks": [],
+            "tasks": {},
         },
     }
     draft1_mod = {
         "filename": "draft_plugin.py",
         "description": "new description",
         "contents": contents,
-        "tasks": [],
+        "tasks": {},
     }
 
     # Expected responses
@@ -1477,7 +1486,6 @@ def test_manage_new_plugin_file_drafts(
 
 def test_manage_plugin_snapshots(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugins: dict[str, Any],
 ) -> None:
@@ -1512,7 +1520,6 @@ def test_manage_plugin_snapshots(
 
 def test_manage_plugin_file_snapshots(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_with_files: dict[str, Any],
 ) -> None:
@@ -1545,7 +1552,7 @@ def test_manage_plugin_file_snapshots(
         plugin_file_id=plugin_file_to_rename["id"],
         filename="modified_" + plugin_file_to_rename["filename"],
         contents=contents,
-        tasks=[],
+        function_tasks=[],
         description=plugin_file_to_rename["description"],
     ).json()
 
@@ -1561,7 +1568,6 @@ def test_manage_plugin_file_snapshots(
 
 def test_tag_plugin(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugins: dict[str, Any],
     registered_tags: dict[str, Any],
@@ -1585,7 +1591,6 @@ def test_tag_plugin(
 
 def test_tag_plugin_file(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_with_files: dict[str, Any],
     registered_tags: dict[str, Any],

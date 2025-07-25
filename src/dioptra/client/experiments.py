@@ -260,6 +260,7 @@ class ExperimentJobsSubCollectionClient(SubCollectionClient[T]):
         queue_id: int,
         entrypoint_snapshot_id: int | None = None,
         values: dict[str, Any] | None = None,
+        artifact_values: dict[str, Any] | None = None,
         timeout: str | None = None,
         description: str | None = None,
     ) -> T:
@@ -274,7 +275,11 @@ class ExperimentJobsSubCollectionClient(SubCollectionClient[T]):
                 be used to run the job. If not specified, the job will use the latest
                 version of the entrypoint. Defaults to None.
             values: A dictionary of keyword arguments to pass to the entrypoint that
-                parameterize the job.
+                parameterize the job. Default to None.
+            artifact_values: A dictionary of artifact input names associated with a
+                value that is also a dictionary that contains the keys "id" and
+                "snapshotId" whose values are the artifact resource id and the artifact
+                resource snapshot id respectively. Defaults to None.
             timeout: The maximum alloted time for a job before it times out and is
                 stopped. If omitted, the job timeout will use the default set in the
                 API.
@@ -290,6 +295,9 @@ class ExperimentJobsSubCollectionClient(SubCollectionClient[T]):
 
         if values is not None:
             json_["values"] = values
+
+        if artifact_values is not None:
+            json_["artifactValues"] = artifact_values
 
         if timeout is not None:
             json_["timeout"] = timeout
@@ -400,6 +408,8 @@ class ExperimentJobsSubCollectionClient(SubCollectionClient[T]):
     def set_status(self, experiment_id: str | int, job_id: str | int, status: str) -> T:
         """Sets the status for an experiment's job.
 
+            Primarily used for testing or to reset a job that has failed, whose cause
+            has been remedied, in order to re-run the job,
         Args:
             experiment_id: The experiment id, an integer.
             job_id: The job id, an integer.

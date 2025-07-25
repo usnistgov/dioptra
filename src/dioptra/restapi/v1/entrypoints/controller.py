@@ -15,13 +15,12 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The module defining the endpoints for Entrypoint resources."""
-from __future__ import annotations
 
 import uuid
 from typing import cast
 
 import structlog
-from flask import request
+from flask import request, send_file
 from flask_accepts import accepts, responds
 from flask_login import login_required
 from flask_restx import Namespace, Resource
@@ -31,8 +30,13 @@ from structlog.stdlib import BoundLogger
 from dioptra.restapi.db import models
 from dioptra.restapi.routes import V1_ENTRYPOINTS_ROUTE
 from dioptra.restapi.v1 import utils
+from dioptra.restapi.v1.file_types import FileTypes, plugin_pluginfiles_to_bundle
 from dioptra.restapi.v1.queues.schema import QueueRefSchema
-from dioptra.restapi.v1.schemas import IdListSchema, IdStatusResponseSchema
+from dioptra.restapi.v1.schemas import (
+    FileDownloadParametersSchema,
+    IdListSchema,
+    IdStatusResponseSchema,
+)
 from dioptra.restapi.v1.shared.drafts.controller import (
     generate_resource_drafts_endpoint,
     generate_resource_drafts_id_endpoint,
@@ -46,8 +50,10 @@ from dioptra.restapi.v1.shared.tags.controller import (
     generate_resource_tags_endpoint,
     generate_resource_tags_id_endpoint,
 )
+from dioptra.restapi.v1.shared.task_engine_yaml.service import TaskEngineYamlService
 
 from .schema import (
+    EntrypointArtifactPluginMutableFieldsSchema,
     EntrypointDraftSchema,
     EntrypointGetQueryParameters,
     EntrypointMutableFieldsSchema,
@@ -59,12 +65,15 @@ from .schema import (
 from .service import (
     RESOURCE_TYPE,
     SEARCHABLE_FIELDS,
+    EntrypointIdArtifactPluginsIdService,
+    EntrypointIdArtifactPluginsService,
     EntrypointIdPluginsIdService,
     EntrypointIdPluginsService,
     EntrypointIdQueuesIdService,
     EntrypointIdQueuesService,
     EntrypointIdService,
     EntrypointService,
+    EntrypointSnapshotIdService,
 )
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -139,8 +148,11 @@ class EntrypointEndpoint(Resource):
             name=parsed_obj["name"],
             description=parsed_obj["description"],
             task_graph=parsed_obj["task_graph"],
+            artifact_graph=parsed_obj.get("artifact_graph", ""),
             parameters=parsed_obj["parameters"],
+            artifact_parameters=parsed_obj.get("artifact_parameters", []),
             plugin_ids=parsed_obj["plugin_ids"],
+            artifact_plugin_ids=parsed_obj.get("artifact_plugin_ids", []),
             queue_ids=parsed_obj["queue_ids"],
             group_id=int(parsed_obj["group_id"]),
             log=log,
@@ -175,10 +187,7 @@ class EntrypointIdEndpoint(Resource):
             request_type="GET",
             id=id,
         )
-        entrypoint = cast(
-            models.EntryPoint,
-            self._entrypoint_id_service.get(id, error_if_not_found=True, log=log),
-        )
+        entrypoint = self._entrypoint_id_service.get(id, log=log)
         return utils.build_entrypoint(entrypoint)
 
     @login_required
@@ -193,18 +202,16 @@ class EntrypointIdEndpoint(Resource):
             id=id,
         )
         parsed_obj = request.parsed_obj  # type: ignore # noqa: F841
-        entrypoint = cast(
-            models.EntryPoint,
-            self._entrypoint_id_service.modify(
-                id,
-                name=parsed_obj["name"],
-                description=parsed_obj["description"],
-                task_graph=parsed_obj["task_graph"],
-                parameters=parsed_obj["parameters"],
-                queue_ids=parsed_obj["queue_ids"],
-                error_if_not_found=True,
-                log=log,
-            ),
+        entrypoint = self._entrypoint_id_service.modify(
+            id,
+            name=parsed_obj["name"],
+            description=parsed_obj["description"],
+            task_graph=parsed_obj["task_graph"],
+            artifact_graph=parsed_obj.get("artifact_graph", ""),
+            parameters=parsed_obj["parameters"],
+            artifact_parameters=parsed_obj.get("artifact_parameters", []),
+            queue_ids=parsed_obj["queue_ids"],
+            log=log,
         )
         return utils.build_entrypoint(entrypoint)
 
@@ -263,6 +270,113 @@ class EntrypointIdPluginsEndpoint(Resource):
         return [utils.build_entrypoint_plugin(plugin) for plugin in plugins]
 
 
+@api.route("/<int:id>/snapshots/<int:snapshotId>/config")
+@api.param("id", "ID for the entrypoint resource.")
+@api.param("snapshotId", "Snapshot ID for the entrypoint resource.")
+class EntryPointSnapshotConfigEndpoint(Resource):
+    @inject
+    def __init__(
+        self,
+        entrypoint_snapshot_id_service: EntrypointSnapshotIdService,
+        yaml_service: TaskEngineYamlService,
+        *args,
+        **kwargs,
+    ) -> None:
+        """Initialize the Entrypoint resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            entrypoint_snapshot_id_service: A EntrypointSnapshotIdService object.
+            yaml_service: A TaskEngineYamlService object
+        """
+        self._entrypoint_snapshot_id_service = entrypoint_snapshot_id_service
+        self._yaml_service = yaml_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    def get(self, id: int, snapshotId: int):
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="EntryPoint",
+            request_type="GET",
+            id=id,
+            snapshotId=snapshotId,
+        )
+        entry_point = self._entrypoint_snapshot_id_service.get(
+            entrypoint_id=id, entrypoint_snapshot_id=snapshotId, log=log
+        )
+        plugin_files = [
+            plugin_plugin_file
+            for entry_point_plugin in entry_point.entry_point_plugins
+            for plugin_plugin_file in entry_point_plugin.plugin.plugin_plugin_files
+        ]
+        # this call is part of a HACK fully explained in extract_tasks, which is called
+        # internally by build_task_engine_dict, the service call would not be needed
+        # if this issue is more permanantly resolved
+        types = self._entrypoint_snapshot_id_service.get_group_plugin_parameter_types(
+            entry_point.resource.group_id, log=log
+        )
+        return self._yaml_service.build_dict(
+            entry_point=entry_point,  # pyright: ignore
+            plugin_plugin_files=plugin_files,  # pyright: ignore
+            plugin_parameter_types=types,  # pyright: ignore
+            logger=log,
+        )
+
+
+@api.route("/<int:id>/snapshots/<int:snapshotId>/plugins/bundle")
+@api.param("id", "ID for the Entrypoint resource.")
+@api.param("snapshotId", "Snapshot ID for the Entrypoint resource.")
+class EntryPointSnapshotPluginBundleEndpoint(Resource):
+    @inject
+    def __init__(
+        self,
+        entrypoint_snapshot_id_service: EntrypointSnapshotIdService,
+        *args,
+        **kwargs,
+    ) -> None:
+        """Initialize the plugin file resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            plugin_service: A PluginService object.
+        """
+        self._entrypoint_snapshot_id_service = entrypoint_snapshot_id_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    @accepts(query_params_schema=FileDownloadParametersSchema, api=api)
+    def get(self, id: int, snapshotId: int):
+        """Returns a file bundle containing all of the PluginFile resources for an
+        EntryPoint Snapshot resource.
+        """
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="EntrypointSnapshotPluginsBundle",
+            request_type="GET",
+            id=id,
+        )
+
+        parsed_query_params = request.parsed_query_params  # type: ignore # noqa: F841
+
+        file_type = cast(FileTypes, parsed_query_params["file_type"])
+
+        plugin_files = self._entrypoint_snapshot_id_service.get_plugin_files(
+            entrypoint_id=id,
+            entrypoint_snapshot_id=snapshotId,
+            log=log,
+        )
+        file = file_type.package(plugin_pluginfiles_to_bundle(plugin_files))
+        return send_file(
+            path_or_file=file,
+            as_attachment=True,
+            mimetype=file_type.mimetype,
+            download_name=f"plugins_bundle{file_type.suffix}",
+        )
+
+
 @api.route("/<int:id>/plugins/<int:pluginId>")
 @api.param("id", "ID for the Entrypoint resource.")
 @api.param("pluginId", "ID for the Plugin resource.")
@@ -307,6 +421,206 @@ class EntrypointIdPluginsIdEndpoint(Resource):
         return self._entrypoint_id_plugins_id_service.delete(id, pluginId, log=log)
 
 
+@api.route("/<int:id>/snapshots/<int:snapshotId>/artifactPlugins/bundle")
+@api.param("id", "ID for the Entrypoint resource.")
+@api.param("snapshotId", "Snapshot ID for the Entrypoint resource.")
+class EntryPointSnapshotArtifactBundleEndpoint(Resource):
+    @inject
+    def __init__(
+        self,
+        entrypoint_snapshot_id_service: EntrypointSnapshotIdService,
+        *args,
+        **kwargs,
+    ) -> None:
+        """Initialize the plugin file resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            plugin_service: A PluginService object.
+        """
+        self._entrypoint_snapshot_id_service = entrypoint_snapshot_id_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    @accepts(query_params_schema=FileDownloadParametersSchema, api=api)
+    def get(self, id: int, snapshotId: int):
+        """Returns a file bundle containing all of the ArtifactPlugin PluginFile
+        resources for an EntryPoint Snapshot resource.
+        """
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="EntryPointSnapshotArtifactBundleEndpoint",
+            request_type="GET",
+            id=id,
+        )
+        parsed_query_params = request.parsed_query_params  # type: ignore # noqa: F841
+
+        file_type = cast(FileTypes, parsed_query_params.get("file_type"))
+
+        plugin_files = self._entrypoint_snapshot_id_service.get_artifact_plugin_files(
+            entrypoint_id=id,
+            entrypoint_snapshot_id=snapshotId,
+            log=log,
+        )
+
+        file = file_type.package(plugin_pluginfiles_to_bundle(plugin_files))
+        return send_file(
+            path_or_file=file,
+            as_attachment=True,
+            mimetype=file_type.mimetype,
+            download_name=f"artifact_serialize_bundle{file_type.suffix}",
+        )
+
+
+@api.route("/<int:id>/artifactPlugins")
+@api.param("id", "ID for the Entrypoint resource.")
+class EntrypointIdArtifactPluginsEndpoint(Resource):
+    @inject
+    def __init__(
+        self,
+        entrypoint_id_artifact_plugins_service: EntrypointIdArtifactPluginsService,
+        *args,
+        **kwargs,
+    ) -> None:
+        """Initialize the entrypoint resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            entrypoint_id_artifact_plugins_service: An
+                EntrypointIdArtifactPluginsService object.
+        """
+        self._entrypoint_id_artifact_plugins_service = (
+            entrypoint_id_artifact_plugins_service
+        )
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    @responds(schema=EntrypointPluginSchema(many=True), api=api)
+    def get(self, id: int):
+        """Retrieves the artifact plugin snapshots for an entrypoint resource."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="Entrypoint", request_type="POST"
+        )
+        artifact_plugins = self._entrypoint_id_artifact_plugins_service.get(id, log=log)
+        return [
+            utils.build_entrypoint_plugin(artifact_plugin)
+            for artifact_plugin in artifact_plugins
+        ]
+
+    @login_required
+    @accepts(schema=EntrypointArtifactPluginMutableFieldsSchema, api=api)
+    @responds(schema=EntrypointPluginSchema(many=True), api=api)
+    def post(self, id: int):
+        """Appends artifact plugins to an entrypoint resource."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="Entrypoint", request_type="POST"
+        )
+        parsed_obj = request.parsed_obj  # type: ignore
+        artifact_plugins = self._entrypoint_id_artifact_plugins_service.append(
+            id, artifact_plugin_ids=parsed_obj["artifact_plugin_ids"], log=log
+        )
+        return [
+            utils.build_entrypoint_plugin(artifact_plugin)
+            for artifact_plugin in artifact_plugins
+        ]
+
+
+@api.route("/<int:id>/artifactPlugins/<int:artifactPluginId>")
+@api.param("id", "ID for the Entrypoint resource.")
+@api.param("artifactPluginId", "ID for the Artifact Plugin resource.")
+class EntrypointIdArtifactPluginIdEndpoint(Resource):
+    @inject
+    def __init__(
+        self,
+        entrypoint_id_artifact_plugin_id_service: EntrypointIdArtifactPluginsIdService,  # noqa: B950
+        *args,
+        **kwargs,
+    ) -> None:
+        """Initialize the entrypoint resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            entrypoint_id_artifact_plugin_id_service:
+                An EntrypointIdArtifactPluginsIdService object.
+        """
+        self._entrypoint_id_artifact_plugin_id_service = (
+            entrypoint_id_artifact_plugin_id_service
+        )
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    @responds(schema=EntrypointPluginSchema, api=api)
+    def get(self, id: int, artifactPluginId: int):
+        """Retrieves a artifact plugin snapshot for an entrypoint resource."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="Entrypoint", request_type="POST"
+        )
+        artifact_plugin = self._entrypoint_id_artifact_plugin_id_service.get(
+            id, artifactPluginId, log=log
+        )
+        return utils.build_entrypoint_plugin(artifact_plugin)
+
+    @login_required
+    @responds(schema=IdStatusResponseSchema, api=api)
+    def delete(self, id: int, artifactPluginId: int):
+        """Removes a artifact plugin from an entrypoint by ID."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="Entrypoint",
+            request_type="DELETE",
+            id=id,
+        )
+        return self._entrypoint_id_artifact_plugin_id_service.delete(
+            id, artifactPluginId, log=log
+        )
+
+
+@api.route("/<int:id>/snapshots/<int:snapshotId>/artifactPlugins")
+@api.param("id", "ID for the Entrypoint resource.")
+@api.param("snapshotId", "Snapshot ID for the Entrypoint snapshot.")
+class EntrypointSnapshotIdArtifactPluginsEndpoint(Resource):
+    @inject
+    def __init__(
+        self,
+        entrypoint_snapshot_service: EntrypointSnapshotIdService,
+        *args,
+        **kwargs,
+    ) -> None:
+        """Initialize the entrypoint resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            entrypoint_snapshot_service: An EntrypointSnapshotIdService object.
+        """
+        self._entrypoint_snapshot_service = entrypoint_snapshot_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    @responds(schema=EntrypointPluginSchema(many=True), api=api)
+    def get(self, id: int, snapshotId: int):
+        """Retrieves the artifact plugin snapshots for an entrypoint resource."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="Entrypoint", request_type="POST"
+        )
+        entry_point = self._entrypoint_snapshot_service.get(
+            entrypoint_id=id, entrypoint_snapshot_id=snapshotId, log=log
+        )
+        return [
+            utils.build_entrypoint_plugin(
+                utils.PluginWithFilesDict(
+                    plugin=artifact_plugin.plugin,
+                    plugin_files=[file for file in artifact_plugin.plugin.plugin_files],
+                    has_draft=False,
+                )
+            )
+            for artifact_plugin in entry_point.entry_point_artifact_plugins
+        ]
+
+
 @api.route("/<int:id>/queues")
 @api.param("id", "ID for the Entrypoint resource.")
 class EntrypointIdQueuesEndpoint(Resource):
@@ -339,7 +653,7 @@ class EntrypointIdQueuesEndpoint(Resource):
         queues = cast(
             list[models.Queue],
             self._entrypoint_id_queues_service.append(
-                id, queue_ids=parsed_obj["ids"], error_if_not_found=True, log=log
+                id, queue_ids=parsed_obj["ids"], log=log
             ),
         )
         return [utils.build_queue_ref(queue) for queue in queues]

@@ -185,7 +185,10 @@ def generate_resource_snapshots_id_endpoint(
             snapshot = cast(
                 models.ResourceSnapshot,
                 self._snapshots_id_service.get(
-                    id, snapshot_id=snapshotId, error_if_not_found=True, log=log
+                    resource_id=id,
+                    snapshot_id=snapshotId,
+                    error_if_not_found=True,
+                    log=log,
                 ),
             )
             return build_fn(snapshot)

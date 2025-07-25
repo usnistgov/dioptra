@@ -27,7 +27,7 @@ from .queues import Queue
 from .resources import ResourceSnapshot
 
 if TYPE_CHECKING:
-    from .entry_points import EntryPointParameterValue
+    from .entry_points import EntryPointArtifactParameterValue, EntryPointParameterValue
     from .resources import Resource
 
 # -- Tables (no ORM) -------------------------------------------------------------------
@@ -71,6 +71,11 @@ class EntryPointJob(db.Model):  # type: ignore[name-defined]
         relationship(
             back_populates="entry_point_job", overlaps="job_resource,parameter,values"
         )
+    )
+    entry_point_artifact_parameter_values: Mapped[
+        list["EntryPointArtifactParameterValue"]
+    ] = relationship(
+        back_populates="entry_point_job", overlaps="job_resource,artifact_parameter"
     )
 
     # Additional settings

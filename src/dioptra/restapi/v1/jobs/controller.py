@@ -15,10 +15,8 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The module defining the endpoints for Plugin resources."""
-from __future__ import annotations
 
 import uuid
-from typing import cast
 from urllib.parse import unquote
 
 import structlog
@@ -40,6 +38,10 @@ from dioptra.restapi.v1.shared.snapshots.controller import (
 from dioptra.restapi.v1.shared.tags.controller import (
     generate_resource_tags_endpoint,
     generate_resource_tags_id_endpoint,
+)
+from dioptra.restapi.v1.workflows.lib.export_job_parameters import (
+    build_job_artifacts_dict,
+    build_job_parameters_dict,
 )
 
 from .schema import (
@@ -146,11 +148,7 @@ class JobIdEndpoint(Resource):
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="Job", request_type="GET", id=id
         )
-        job = cast(
-            models.Job,
-            self._job_id_service.get(id, error_if_not_found=True, log=log),
-        )
-        return utils.build_job(job)
+        return utils.build_job(self._job_id_service.get(id, log=log))
 
     @login_required
     @responds(schema=IdStatusResponseSchema, api=api)
@@ -160,6 +158,58 @@ class JobIdEndpoint(Resource):
             request_id=str(uuid.uuid4()), resource="Job", request_type="DELETE", id=id
         )
         return self._job_id_service.delete(job_id=id, log=log)
+
+
+@api.route("/<int:id>/parameters")
+@api.param("id", "ID for the Job resource.")
+class JobIdParametersEndpoint(Resource):
+    @inject
+    def __init__(self, job_id_service: JobIdService, *args, **kwargs) -> None:
+        """Initialize the jobs resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            job_id_service: A JobIdService object.
+        """
+        self._job_id_service = job_id_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    def get(self, id: int):
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="Job", request_type="GET", id=id
+        )
+        return build_job_parameters_dict(
+            job_param_values=self._job_id_service.get_parameter_values(id),
+            logger=log,
+        )
+
+
+@api.route("/<int:id>/artifactParameters")
+@api.param("id", "ID for the Job resource.")
+class JobIdArtifactParametersEndpoint(Resource):
+    @inject
+    def __init__(self, job_id_service: JobIdService, *args, **kwargs) -> None:
+        """Initialize the jobs resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            job_id_service: A JobIdService object.
+        """
+        self._job_id_service = job_id_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    def get(self, id: int):
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="Job", request_type="GET", id=id
+        )
+        return build_job_artifacts_dict(
+            job_artifact_values=self._job_id_service.get_artifact_values(id),
+            logger=log,
+        )
 
 
 @api.route("/<int:id>/status")
@@ -221,9 +271,7 @@ class JobIdMlflowrunEndpoint(Resource):
             request_type="GET",
             job_id=id,
         )
-        return self._job_id_mlflowrun_service.get(
-            job_id=id, error_if_not_found=True, log=log
-        )
+        return {"mlflow_run_id": self._job_id_mlflowrun_service.get(job_id=id, log=log)}
 
     @login_required
     @accepts(schema=JobMlflowRunSchema, api=api)

@@ -500,7 +500,6 @@ def assert_signature_analysis_file_load_and_contents(
 
 def test_signature_analysis(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
 ) -> None:
     """

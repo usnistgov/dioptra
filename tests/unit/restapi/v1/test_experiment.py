@@ -24,7 +24,6 @@ from http import HTTPStatus
 from typing import Any
 
 import pytest
-from flask_sqlalchemy import SQLAlchemy
 
 from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
@@ -263,7 +262,6 @@ def assert_append_entrypoints_to_experiment_works(
 
 def test_create_experiment(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
 ) -> None:
     """Test that experiments can be registered and retrieved using the API.
@@ -305,7 +303,6 @@ def test_create_experiment(
 
 def test_experiment_get_all(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_experiments: dict[str, Any],
 ) -> None:
@@ -344,7 +341,6 @@ def test_experiment_get_all(
 )
 def test_experiment_sort(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_experiments: dict[str, Any],
     sortBy: str,
@@ -372,7 +368,6 @@ def test_experiment_sort(
 
 def test_experiment_search_query(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_experiments: dict[str, Any],
 ) -> None:
@@ -415,7 +410,6 @@ def test_experiment_search_query(
 
 def test_experiment_group_query(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_experiments: dict[str, Any],
 ) -> None:
@@ -447,7 +441,6 @@ def test_experiment_group_query(
 
 def test_experiment_get_by_id(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_experiments: dict[str, Any],
 ) -> None:
@@ -470,7 +463,6 @@ def test_experiment_get_by_id(
 
 def test_rename_experiment(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_experiments: dict[str, Any],
 ) -> None:
@@ -501,7 +493,6 @@ def test_rename_experiment(
 
 def test_delete_experiment_by_id(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_experiments: dict[str, Any],
 ) -> None:
@@ -523,7 +514,6 @@ def test_delete_experiment_by_id(
 
 def test_experiment_get_entrypoints(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
 ) -> None:
@@ -579,7 +569,6 @@ def test_experiment_get_entrypoints(
 # )
 def test_experiment_add_entrypoints(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     initial_entrypoints: list[int],
     new_entrypoints: list[int],
@@ -643,7 +632,6 @@ def test_experiment_add_entrypoints(
 # )
 def test_experiment_modify_entrypoints(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     initial_entrypoints: list[int],
     new_entrypoints: list[int],
@@ -707,7 +695,6 @@ def test_experiment_modify_entrypoints(
 # )
 def test_experiment_remove_entrypoints(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     initial_entrypoints: list[int],
     entrypoints_to_remove: list[int],
@@ -766,7 +753,6 @@ def test_experiment_remove_entrypoints(
 
 def test_manage_existing_experiment_draft(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_experiments: dict[str, Any],
     registered_entrypoints: dict[str, Any],
@@ -841,7 +827,6 @@ def test_manage_existing_experiment_draft(
 
 def test_manage_new_experiment_drafts(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
 ) -> None:
@@ -909,7 +894,6 @@ def test_manage_new_experiment_drafts(
 
 def test_manage_experiment_snapshots(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_experiments: dict[str, Any],
 ) -> None:
@@ -945,7 +929,6 @@ def test_manage_experiment_snapshots(
 
 def test_tag_experiment(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_experiments: dict[str, Any],
     registered_tags: dict[str, Any],
@@ -969,7 +952,6 @@ def test_tag_experiment(
 
 def test_get_all_entrypoints_for_experiment(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
     registered_experiments: dict[str, Any],
@@ -992,7 +974,6 @@ def test_get_all_entrypoints_for_experiment(
 
 def test_append_entrypoints_to_experiment(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
     registered_experiments: dict[str, Any],
@@ -1020,7 +1001,6 @@ def test_append_entrypoints_to_experiment(
 
 def test_modify_entrypoints_for_experiments(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
     registered_experiments: dict[str, Any],
@@ -1047,7 +1027,6 @@ def test_modify_entrypoints_for_experiments(
 
 def test_delete_all_entrypoints_for_experiment(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_experiments: dict[str, Any],
 ) -> None:
@@ -1066,7 +1045,6 @@ def test_delete_all_entrypoints_for_experiment(
 
 def test_delete_entrypoints_by_id_for_experiment(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
     registered_experiments: dict[str, Any],

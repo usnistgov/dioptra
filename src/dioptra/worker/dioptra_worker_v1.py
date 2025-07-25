@@ -30,6 +30,7 @@ from dioptra.sdk.utilities.logging import (
 )
 
 _REQUIRED_ENV = {
+    "MLFLOW_TRACKING_URI",
     "MLFLOW_S3_ENDPOINT_URL",
     "DIOPTRA_API",
     "DIOPTRA_WORKER_USERNAME",

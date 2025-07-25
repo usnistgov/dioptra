@@ -33,8 +33,6 @@ from typing import (
 
 import jsonschema
 import jsonschema.exceptions
-import jsonschema.protocols
-import jsonschema.validators
 
 # Type alias for general JSON schemas
 _JsonSchema = Union[dict[str, Any], bool]
@@ -235,76 +233,6 @@ def _get_one_of_alternative_names(
     return names
 
 
-def _is_valid_for_sub_schema(
-    full_schema: _JsonSchemaNonBool, sub_schema: _JsonSchema, sub_instance: Any
-) -> bool:
-    """
-    Run a validation of document sub_instance against sub_schema.
-
-    Args:
-        full_schema: The full schema, of which sub_schema is a part.
-            Important for being able to resolve references.
-        sub_schema: The schema to use for validation
-        sub_instance: The instance document to validate
-
-    Returns:
-        True if sub_instance is valid; False if not
-    """
-    validator_class = jsonschema.validators.validator_for(full_schema)
-
-    # Without this type annotation, the is_valid() call below is treated as
-    # returning Any, and mypy errors since this function is defined to return
-    # bool!  Even with the jsonschema type stubs, mypy gets confused.
-    validator: jsonschema.protocols.Validator = validator_class(
-        schema=sub_schema,
-        # Need to construct a resolver from the full schema, since the
-        # sub-schema might contain references relative to the full schema,
-        # and we need to be able to resolve them.
-        resolver=jsonschema.validators.RefResolver.from_schema(full_schema),
-    )
-
-    return validator.is_valid(sub_instance)
-
-
-def _one_of_too_many_alternatives_satisfied_message_lines(
-    error: jsonschema.exceptions.ValidationError, schema: _JsonSchemaNonBool
-) -> list[str]:
-    """
-    Create an error message specifically about the situation where too many
-    alternatives in a oneOf schema were valid.
-
-    Args:
-        error: The ValidationError object representing the aforementioned
-            type of error
-        schema: The schema whose validation failed
-
-    Returns:
-        An error message, as a list of lines (strings).  Returning a list
-        of lines is convenient for callers, who may want to nest this message
-        in another, with indented lines.
-    """
-
-    # In this specific case, validator_value contains the oneOf alternative
-    # schemas, but the typing is such that mypy can't tell that's the case.
-    alt_schemas = cast(Iterable[Any], error.validator_value)
-
-    alt_names = _get_one_of_alternative_names(alt_schemas, schema)
-    error_desc = "Must be exactly one of: {}".format(", ".join(alt_names))
-
-    satisfied_alt_names = []
-    for alt_name, alt_schema in zip(alt_names, alt_schemas):
-        # Perform a little "mini" validation to determine which alternatives
-        # were satisfied, and describe them in the error message.
-        if _is_valid_for_sub_schema(schema, alt_schema, error.instance):
-            satisfied_alt_names.append(alt_name)
-
-    error_desc += ".  Content satisfied more than one alternative: {}.".format(
-        ", ".join(satisfied_alt_names)
-    )
-
-    return [error_desc]
-
-
 def _one_of_no_alternatives_satisfied_message_lines(
     error: jsonschema.exceptions.ValidationError,
     schema: _JsonSchemaNonBool,
@@ -424,9 +352,10 @@ def _validation_error_to_message_lines(
             )
 
         else:
-            what_lines = _one_of_too_many_alternatives_satisfied_message_lines(
-                error, schema
-            )
+            what_lines = [error.message]
+            # what_lines = _one_of_too_many_alternatives_satisfied_message_lines(
+            #     error, schema
+            # )
 
     else:
         # fallback if we can't be more clever about our message

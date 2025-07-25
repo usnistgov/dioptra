@@ -23,8 +23,6 @@ modified, and deleted as expected through the REST API.
 from http import HTTPStatus
 from typing import Any
 
-from flask_sqlalchemy import SQLAlchemy
-
 from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
 
@@ -395,10 +393,7 @@ def assert_new_password_cannot_be_existing(
 # -- Tests -------------------------------------------------------------
 
 
-def test_create_user(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
-) -> None:
+def test_create_user(dioptra_client: DioptraClient[DioptraResponseProtocol]) -> None:
     """Test that we can create a user and its response is expected.
 
     This test validates the following sequence of actions:
@@ -440,7 +435,6 @@ def test_create_user(
 
 def test_user_get_all(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_users: dict[str, Any],
 ) -> None:
@@ -462,7 +456,6 @@ def test_user_get_all(
 
 def test_user_search_query(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_users: dict[str, Any],
 ) -> None:
@@ -498,7 +491,6 @@ def test_user_search_query(
 
 def test_cannot_register_existing_username(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     registered_users: dict[str, Any],
 ) -> None:
     """Test that registering a user with an existing username fails.
@@ -520,7 +512,6 @@ def test_cannot_register_existing_username(
 
 def test_cannot_register_existing_email(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     registered_users: dict[str, Any],
 ) -> None:
     """Test that registering a user with an existing email fails.
@@ -542,7 +533,6 @@ def test_cannot_register_existing_email(
 
 def test_rename_current_user(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
 ) -> None:
     """Test that renaming the current user works.
@@ -563,7 +553,6 @@ def test_rename_current_user(
 
 def test_user_authorization_failure(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     registered_users: dict[str, Any],
 ) -> None:
     """Test that a user providing an incorrect password cannot log in.
@@ -580,7 +569,6 @@ def test_user_authorization_failure(
 
 def test_delete_current_user(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
 ) -> None:
     """Test that deleting the current user works.
@@ -598,7 +586,6 @@ def test_delete_current_user(
 
 def test_change_current_user_password(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
 ):
     """Test that changing the current user password works.
@@ -617,7 +604,6 @@ def test_change_current_user_password(
 
 def test_change_user_password(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_users: dict[str, Any],
 ):
@@ -638,7 +624,6 @@ def test_change_user_password(
 
 def test_new_password_cannot_be_existing(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
 ):
     """Test that changing a password and setting the new password as the

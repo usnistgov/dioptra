@@ -15,6 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 import pytest
+from sqlalchemy.orm.session import Session as DBSession
 
 from dioptra.restapi.db.models import Group, GroupMember, User
 from dioptra.restapi.db.repository.utils import DeletionPolicy
@@ -30,16 +31,16 @@ from dioptra.restapi.errors import (
 )
 
 
-def test_group_create_with_existing_user(group_repo, account, db):
+def test_group_create_with_existing_user(group_repo, account, db_session: DBSession):
 
     group = Group("initial_group", account.user)
 
     group_repo.create(group)
 
-    db.session.commit()
+    db_session.commit()
 
-    check_group = db.session.get_one(Group, group.group_id)
-    check_user = db.session.get_one(User, account.user.user_id)
+    check_group = db_session.get_one(Group, group.group_id)
+    check_user = db_session.get_one(User, account.user.user_id)
 
     assert check_group == group
     assert check_user == account.user
@@ -53,17 +54,17 @@ def test_group_create_with_existing_user(group_repo, account, db):
     assert member_perms.share_write
 
 
-def test_group_create_with_new_user(group_repo, db):
+def test_group_create_with_new_user(group_repo, db_session: DBSession):
 
     creator = User("creator_username", "password", "creator@example.org")
     group = Group("initial_group", creator)
 
     group_repo.create(group)
 
-    db.session.commit()
+    db_session.commit()
 
-    check_group = db.session.get_one(Group, group.group_id)
-    check_user = db.session.get_one(User, creator.user_id)
+    check_group = db_session.get_one(Group, group.group_id)
+    check_user = db_session.get_one(User, creator.user_id)
 
     assert check_group == group
     assert check_user == creator
@@ -90,11 +91,11 @@ def test_group_create_exists(group_repo, account):
         group_repo.create(new_group)
 
 
-def test_group_create_user_exists(group_repo, account, db):
+def test_group_create_user_exists(group_repo, account, db_session: DBSession):
 
     group = Group("new group", account.user)
     group_repo.create(group)
-    db.session.commit()
+    db_session.commit()
 
     assert len(group.members) == 1
     assert group.members[0].user == account.user
@@ -120,23 +121,25 @@ def test_group_create_creator_collision(group_repo, account):
         group_repo.create(g2)
 
 
-def test_group_create_creator_deleted(group_repo, user_repo, account, db):
+def test_group_create_creator_deleted(
+    group_repo, user_repo, account, db_session: DBSession
+):
 
     u2 = User("creator_username", "password", "creator@example.org")
     user_repo.create(u2, account.group)
-    db.session.commit()
+    db_session.commit()
 
     user_repo.delete(u2)
-    db.session.commit()
+    db_session.commit()
 
     g2 = Group("group2", u2)
     with pytest.raises(EntityDeletedError):
         group_repo.create(g2)
 
 
-def test_group_delete(group_repo, account, db):
+def test_group_delete(group_repo, account, db_session: DBSession):
     group_repo.delete(account.group)
-    db.session.commit()
+    db_session.commit()
     assert account.group.is_deleted
 
     # Should be a no-op the second time
@@ -164,9 +167,9 @@ def test_group_get(group_repo, account):
     assert group == account.group
 
 
-def test_group_get_deleted(group_repo, account, db):
+def test_group_get_deleted(group_repo, account, db_session: DBSession):
     group_repo.delete(account.group)
-    db.session.commit()
+    db_session.commit()
 
     group = group_repo.get(account.group.group_id, DeletionPolicy.NOT_DELETED)
     assert not group
@@ -202,9 +205,9 @@ def test_group_get_one(group_repo, account):
     assert group == account.group
 
 
-def test_group_get_one_deleted(group_repo, account, db):
+def test_group_get_one_deleted(group_repo, account, db_session: DBSession):
     group_repo.delete(account.group)
-    db.session.commit()
+    db_session.commit()
 
     with pytest.raises(EntityDeletedError):
         group_repo.get_one(account.group.group_id, DeletionPolicy.NOT_DELETED)
@@ -240,9 +243,9 @@ def test_group_get_by_name(group_repo, account):
     assert group == account.group
 
 
-def test_group_get_by_name_deleted(group_repo, account, db):
+def test_group_get_by_name_deleted(group_repo, account, db_session: DBSession):
     group_repo.delete(account.group)
-    db.session.commit()
+    db_session.commit()
 
     group = group_repo.get_by_name(account.group.name, DeletionPolicy.NOT_DELETED)
     assert not group
@@ -254,7 +257,7 @@ def test_group_get_by_name_deleted(group_repo, account, db):
     assert group == account.group
 
 
-def test_group_get_by_name_not_exist(group_repo, account, db):
+def test_group_get_by_name_not_exist(group_repo, account, db_session: DBSession):
 
     group = group_repo.get_by_name("foo", DeletionPolicy.NOT_DELETED)
     assert not group
@@ -266,33 +269,33 @@ def test_group_get_by_name_not_exist(group_repo, account, db):
     assert not group
 
 
-def test_group_num_groups(group_repo, account, db):
+def test_group_num_groups(group_repo, account, db_session: DBSession):
 
     g2 = Group("group2", account.user)
     g3 = Group("group3", account.user)
     group_repo.create(g2)
     group_repo.create(g3)
-    db.session.commit()
+    db_session.commit()
 
     group_repo.delete(g3)
-    db.session.commit()
+    db_session.commit()
 
     assert group_repo.num_groups(DeletionPolicy.ANY) == 3
     assert group_repo.num_groups(DeletionPolicy.NOT_DELETED) == 2
     assert group_repo.num_groups(DeletionPolicy.DELETED) == 1
 
 
-def test_group_num_members(group_repo, user_repo, account, db):
+def test_group_num_members(group_repo, user_repo, account, db_session: DBSession):
 
     assert group_repo.num_members(account.group) == 1
     assert group_repo.num_members(account.group.group_id) == 1
 
     u2 = User("user2", "password2", "user2@example.org")
     user_repo.create(u2, account.group)
-    db.session.commit()
+    db_session.commit()
 
     group_repo.add_member(account.group, u2)
-    db.session.commit()
+    db_session.commit()
 
     assert group_repo.num_members(account.group) == 2
     assert group_repo.num_members(account.group.group_id) == 2
@@ -305,17 +308,17 @@ def test_group_num_members_not_exist(group_repo, account):
         group_repo.num_members(g2)
 
 
-def test_group_num_managers(group_repo, user_repo, account, db):
+def test_group_num_managers(group_repo, user_repo, account, db_session: DBSession):
 
     assert group_repo.num_managers(account.group) == 1
     assert group_repo.num_managers(account.group.group_id) == 1
 
     u2 = User("user2", "password2", "user2@example.org")
     user_repo.create(u2, account.group)
-    db.session.commit()
+    db_session.commit()
 
     group_repo.add_manager(account.group, u2)
-    db.session.commit()
+    db_session.commit()
 
     assert group_repo.num_managers(account.group) == 2
     assert group_repo.num_managers(account.group.group_id) == 2
@@ -328,10 +331,10 @@ def test_group_num_managers_not_exist(group_repo, account):
         group_repo.num_managers(g2)
 
 
-def test_group_add_manager(group_repo, user_repo, account, db):
+def test_group_add_manager(group_repo, user_repo, account, db_session: DBSession):
     u2 = User("user2", "password2", "user2@example.org")
     user_repo.create(u2, account.group)
-    db.session.commit()
+    db_session.commit()
 
     group_repo.add_manager(account.group, u2, admin=True)
 
@@ -360,11 +363,11 @@ def test_group_add_manager_not_exist(group_repo, account):
         group_repo.add_manager(account.group, u2)
 
 
-def test_group_add_manager_not_member(group_repo, account, db):
+def test_group_add_manager_not_member(group_repo, account, db_session: DBSession):
     u2 = User("user2", "password2", "user2@example.org")
     g2 = Group("group2", u2)
     group_repo.create(g2)
-    db.session.commit()
+    db_session.commit()
 
     # user2 is in group2, not account.group
     with pytest.raises(UserNotInGroupError):
@@ -377,27 +380,27 @@ def test_group_remove_manager_one_group_one_manager(group_repo, account):
         group_repo.remove_manager(account.group, account.user)
 
 
-def test_group_remove_manager_non_member(group_repo, account, db):
+def test_group_remove_manager_non_member(group_repo, account, db_session: DBSession):
     u2 = User("user2", "password2", "user2@example.org")
     g2 = Group("group2", u2)
     group_repo.create(g2)
-    db.session.commit()
+    db_session.commit()
 
     # u2 not a member/manager; so this is a no-op
     group_repo.remove_manager(account.group, u2)
 
 
-def test_group_remove_manager_ok(group_repo, user_repo, account, db):
+def test_group_remove_manager_ok(group_repo, user_repo, account, db_session: DBSession):
     u2 = User("user2", "password2", "user2@example.org")
     user_repo.create(u2, account.group)
-    db.session.commit()
+    db_session.commit()
 
     group_repo.add_manager(account.group, u2)
-    db.session.commit()
+    db_session.commit()
 
     # Two managers, one group: we should be able to delete a manager now
     group_repo.remove_manager(account.group, account.user)
-    db.session.commit()
+    db_session.commit()
 
     assert group_repo.num_managers(account.group) == 1
     assert account.group.managers[0].user == u2
@@ -414,16 +417,16 @@ def test_group_remove_manager_not_exist(group_repo, account):
         group_repo.remove_manager(g2, account.user)
 
 
-def test_group_add_member(group_repo, account, db):
+def test_group_add_member(group_repo, account, db_session: DBSession):
     u2 = User("user2", "password2", "user2@example.org")
     g2 = Group("group2", u2)
     group_repo.create(g2)
-    db.session.commit()
+    db_session.commit()
 
     group_repo.add_member(
         account.group, u2, read=True, write=False, share_read=False, share_write=True
     )
-    db.session.commit()
+    db_session.commit()
 
     assert len(account.group.members) == 2
     assert any(member.user_id == u2.user_id for member in account.group.members)
@@ -431,7 +434,7 @@ def test_group_add_member(group_repo, account, db):
     # Do it again; should be a no-op
     group_repo.add_member(account.group, u2)
 
-    membership = db.session.get(GroupMember, (u2.user_id, account.group.group_id))
+    membership = db_session.get(GroupMember, (u2.user_id, account.group.group_id))
     assert membership.read
     assert not membership.write
     assert not membership.share_read
@@ -449,17 +452,21 @@ def test_group_add_member_not_exist(group_repo, account):
         group_repo.add_member(account.group, u2)
 
 
-def test_group_remove_member_one_group_one_user(group_repo, account, db):
+def test_group_remove_member_one_group_one_user(
+    group_repo, account, db_session: DBSession
+):
 
     with pytest.raises(GroupNeedsAUserError):
         group_repo.remove_member(account.group, account.user)
 
 
-def test_group_remove_member_group_too_small(group_repo, account, db):
+def test_group_remove_member_group_too_small(
+    group_repo, account, db_session: DBSession
+):
 
     g2 = Group("group2", account.user)
     group_repo.create(g2)
-    db.session.commit()
+    db_session.commit()
 
     # Now, member is in two groups, but can't be removed from either since it
     # would make the groups empty.
@@ -467,7 +474,9 @@ def test_group_remove_member_group_too_small(group_repo, account, db):
         group_repo.remove_member(account.group, account.user)
 
 
-def test_group_remove_member_too_few_memberships(group_repo, account, db):
+def test_group_remove_member_too_few_memberships(
+    group_repo, account, db_session: DBSession
+):
 
     # Add a second member to the group
     u2 = User("user2", "password2", "user2@example.org")
@@ -475,8 +484,8 @@ def test_group_remove_member_too_few_memberships(group_repo, account, db):
         GroupMember(read=True, write=True, share_read=True, share_write=True, user=u2)
     )
 
-    db.session.add(u2)
-    db.session.commit()
+    db_session.add(u2)
+    db_session.commit()
 
     # now, the group has enough members, but neither user has enough
     # memberships for them to be removable from the group.
@@ -485,17 +494,19 @@ def test_group_remove_member_too_few_memberships(group_repo, account, db):
         group_repo.remove_member(account.group, account.user)
 
 
-def test_group_remove_member_non_member(group_repo, account, db, fake_data):
+def test_group_remove_member_non_member(
+    group_repo, account, db_session: DBSession, fake_data
+):
     account2 = fake_data.account()
-    db.session.add_all((account2.group, account2.user))
-    db.session.commit()
+    db_session.add_all((account2.group, account2.user))
+    db_session.commit()
 
     # Should be no-ops
     group_repo.remove_member(account2.group, account.user)
     group_repo.remove_member(account.group, account2.user)
 
 
-def test_group_remove_member_ok(group_repo, account, db, fake_data):
+def test_group_remove_member_ok(group_repo, account, db_session: DBSession, fake_data):
     account2 = fake_data.account()
 
     account2.group.members.append(
@@ -510,16 +521,16 @@ def test_group_remove_member_ok(group_repo, account, db, fake_data):
         )
     )
 
-    db.session.add_all((account2.user, account2.group))
-    db.session.commit()
+    db_session.add_all((account2.user, account2.group))
+    db_session.commit()
 
     # Two users in two groups; we should now be able to remove a non-manager
     # user.
 
     group_repo.remove_member(account.group, account2.user)
-    db.session.commit()
+    db_session.commit()
 
-    check_member = db.session.get(
+    check_member = db_session.get(
         GroupMember, (account2.user.user_id, account.group.group_id)
     )
     assert check_member is None
@@ -530,7 +541,9 @@ def test_group_remove_member_ok(group_repo, account, db, fake_data):
     assert len(account2.group.members) == 2
 
 
-def test_group_remove_member_manager(group_repo, account, db, fake_data):
+def test_group_remove_member_manager(
+    group_repo, account, db_session: DBSession, fake_data
+):
     account2 = fake_data.account()
 
     account2.group.members.append(
@@ -545,8 +558,8 @@ def test_group_remove_member_manager(group_repo, account, db, fake_data):
         )
     )
 
-    db.session.add_all((account2.user, account2.group))
-    db.session.commit()
+    db_session.add_all((account2.user, account2.group))
+    db_session.commit()
 
     # Two users in two groups; we can remove non-manager members, but we should
     # not be able to remove manager members.

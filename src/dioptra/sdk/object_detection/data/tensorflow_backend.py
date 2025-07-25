@@ -14,7 +14,6 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from __future__ import annotations
 
 from pathlib import Path
 from typing import Callable, Iterable, List, Optional, Sequence, Tuple, cast
@@ -114,7 +113,7 @@ class TensorflowObjectDetectionData(ObjectDetectionData):
         annotations_dirname: str = "annotations",
         augmentations_seed: Optional[int] = None,
         shuffle_seed: Optional[int] = None,
-    ) -> TensorflowObjectDetectionData:
+    ) -> "TensorflowObjectDetectionData":
         annotation_data_registry: dict[str, Callable[[], PascalVOCAnnotationData]] = (
             dict(
                 pascal_voc=lambda: PascalVOCAnnotationData(

@@ -14,11 +14,33 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+import enum
 import os
 import re
 from pathlib import Path
 
 from .base import DioptraFile
+
+
+class FileTypes(enum.Enum):
+    """
+    Available FileTypes
+    """
+
+    suffix: str
+
+    def __new__(
+        cls,
+        value: str,
+        suffix: str,
+    ):
+        obj = object.__new__(cls)
+        obj._value_ = value
+        obj.suffix = suffix
+        return obj
+
+    TAR_GZ = "tar_gz", ".tar.gz"
+    ZIP = "zip", ".zip"
 
 
 def select_files_in_directory(

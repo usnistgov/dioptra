@@ -17,7 +17,11 @@
 """The schemas for serializing/deserializing Entrypoint resources."""
 from marshmallow import Schema, fields, validate
 
-from dioptra.restapi.v1.plugins.schema import PluginTaskSchema
+from dioptra.restapi.v1.plugins.schema import (
+    ALLOWED_PLUGIN_TASK_PARAMETER_REGEX,
+    PluginTaskContainerSchema,
+    PluginTaskParameterSchema,
+)
 from dioptra.restapi.v1.queues.schema import QueueRefSchema
 from dioptra.restapi.v1.schemas import (
     BasePageSchema,
@@ -51,10 +55,10 @@ class EntrypointPluginFileSchema(Schema):
         relative=True,
     )
     tasks = fields.Nested(
-        PluginTaskSchema,
+        PluginTaskContainerSchema,
         attribute="tasks",
         metadata=dict(description="Tasks associated with the PluginFile resource."),
-        many=True,
+        many=False,
     )
 
 
@@ -113,6 +117,38 @@ class EntrypointParameterSchema(Schema):
     )
 
 
+class ArtifactOutputParameterSchema(PluginTaskParameterSchema):
+    """The schema for the data stored in a ArtifactOutputParameterSchema"""
+
+
+class EntrypointArtifactSchema(Schema):
+    """The schema for the data stored in a Entrypoint artifact resource."""
+
+    name = fields.String(
+        attribute="name",
+        metadata=dict(description="Name of the Entrypoint artifact resource."),
+        required=True,
+        validate=validate.Regexp(
+            ALLOWED_PLUGIN_TASK_PARAMETER_REGEX,
+            error=(
+                "'{input}' is not a compatible name for a Python function "
+                "parameter. A Python function parameter must start with a letter or "
+                "underscore, followed by letters, numbers, or underscores. In "
+                "addition, '_' is not a valid Python function parameter."
+            ),
+        ),
+    )
+    outputParams = fields.Nested(
+        ArtifactOutputParameterSchema,
+        attribute="output_params",
+        many=True,
+        metadata=dict(
+            description="List of output ArtifactOutputParameters that the artifact is"
+            "expected to produce."
+        ),
+    )
+
+
 EntrypointRefBaseSchema = generate_base_resource_ref_schema("Entrypoint")
 EntrypointSnapshotRefBaseSchema = generate_base_resource_ref_schema(
     "Entrypoint", keep_snapshot_id=True
@@ -155,11 +191,22 @@ class EntrypointMutableFieldsSchema(Schema):
         metadata=dict(description="Task graph of the Entrypoint resource."),
         required=True,
     )
+    artifactGraph = fields.String(
+        attribute="artifact_graph",
+        metadata=dict(description="Artifact graph of the Entrypoint resource."),
+    )
     parameters = fields.Nested(
         EntrypointParameterSchema,
         attribute="parameters",
         many=True,
         metadata=dict(description="List of parameters for the entrypoint."),
+        load_default=list,
+    )
+    artifactParameters = fields.Nested(
+        EntrypointArtifactSchema,
+        attribute="artifact_parameters",
+        many=True,
+        metadata=dict(description="List of artifacts for the entrypoint."),
         load_default=list,
     )
     queueIds = fields.List(
@@ -183,10 +230,21 @@ class EntrypointPluginMutableFieldsSchema(Schema):
     )
 
 
+class EntrypointArtifactPluginMutableFieldsSchema(Schema):
+    artifactPluginIds = fields.List(
+        fields.Integer(),
+        attribute="artifact_plugin_ids",
+        data_key="artifactPlugins",
+        metadata=dict(description="List of artifact_plugin files for the entrypoint."),
+        load_only=True,
+    )
+
+
 EntrypointBaseSchema = generate_base_resource_schema("Entrypoint", snapshot=True)
 
 
 class EntrypointSchema(
+    EntrypointArtifactPluginMutableFieldsSchema,
     EntrypointPluginMutableFieldsSchema,
     EntrypointMutableFieldsSchema,
     EntrypointBaseSchema,  # type: ignore
@@ -200,6 +258,13 @@ class EntrypointSchema(
         metadata=dict(description="List of plugins for the entrypoint."),
         dump_only=True,
     )
+    artifactPlugins = fields.Nested(
+        EntrypointPluginSchema,
+        attribute="artifact_plugins",
+        many=True,
+        metadata=dict(description="List of artifact plugins for the entrypoint."),
+        dump_only=True,
+    )
     queues = fields.Nested(
         QueueRefSchema,
         attribute="queues",
@@ -210,6 +275,7 @@ class EntrypointSchema(
 
 
 class EntrypointDraftSchema(
+    EntrypointArtifactPluginMutableFieldsSchema,
     EntrypointPluginMutableFieldsSchema,
     EntrypointMutableFieldsSchema,
     EntrypointBaseSchema,  # type: ignore
@@ -222,6 +288,14 @@ class EntrypointDraftSchema(
         data_key="plugins",
         metadata=dict(description="List of plugin files for the entrypoint."),
     )
+
+    artifactPluginIds = fields.List(
+        fields.Integer(),
+        attribute="artifact_plugin_ids",
+        data_key="artifactPlugins",
+        metadata=dict(description="List of artifact plugin files for the entrypoint."),
+    )
+
     queueIds = fields.List(
         fields.Integer(),
         attribute="queue_ids",

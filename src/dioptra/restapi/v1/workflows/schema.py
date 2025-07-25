@@ -22,30 +22,20 @@ from flask import request
 from marshmallow import Schema, ValidationError, fields, pre_dump, validates_schema
 
 from dioptra.restapi.custom_schema_fields import FileUpload, MultiFileUpload
-from dioptra.restapi.v1.entrypoints.schema import EntrypointParameterSchema
+from dioptra.restapi.v1.entrypoints.schema import (
+    EntrypointArtifactSchema,
+    EntrypointParameterSchema,
+)
+from dioptra.restapi.v1.schemas import FileDownloadParametersSchema
 from dioptra.task_engine.issues import ValidationIssue
 
 
-class FileTypes(Enum):
-    TAR_GZ = "tar_gz"
-    ZIP = "zip"
-
-
-class JobFilesDownloadQueryParametersSchema(Schema):
+class JobFilesDownloadQueryParametersSchema(FileDownloadParametersSchema):
     """The query parameters for making a jobFilesDownload workflow request."""
 
     jobId = fields.String(
         attribute="job_id",
         metadata=dict(description="A job's unique identifier."),
-    )
-    fileType = fields.Enum(
-        FileTypes,
-        attribute="file_type",
-        metadata=dict(
-            description="The type of file to download: tar_gz or zip.",
-        ),
-        by_value=True,
-        default=FileTypes.TAR_GZ.value,
     )
 
 
@@ -191,7 +181,7 @@ class ResourceImportSchema(Schema):
     )
     configPath = fields.String(
         attribute="config_path",
-        metdata=dict(description="The path to the toml configuration file."),
+        metadata=dict(description="The path to the toml configuration file."),
         load_default="dioptra.toml",
     )
     resolveNameConflictsStrategy = fields.Enum(
@@ -261,6 +251,13 @@ class ValidateEntrypointRequestSchema(Schema):
         metadata=dict(description="Proposed task graph for the Entrypoint resource."),
         required=True,
     )
+    artifactGraph = fields.String(
+        attribute="artifact_graph",
+        metadata=dict(
+            description="Proposed artifact graph for the Entrypoint resource."
+        ),
+        required=False,
+    )
     pluginSnapshotIds = fields.List(
         fields.Integer(),
         attribute="plugin_snapshot_ids",
@@ -277,6 +274,14 @@ class ValidateEntrypointRequestSchema(Schema):
         attribute="parameters",
         many=True,
         metadata=dict(description="Proposed parameters for the Entrypoint resource."),
+    )
+    artifacts = fields.Nested(
+        EntrypointArtifactSchema,
+        attribute="artifacts",
+        many=True,
+        metadata=dict(
+            description="Proposed artifact inputs for the Entrypoint resource."
+        ),
     )
 
 

@@ -14,12 +14,11 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from __future__ import annotations
 
 from pathlib import Path
 
-from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import select, text
+from sqlalchemy.orm.session import Session
 
 from dioptra.restapi.db import models
 
@@ -30,11 +29,11 @@ LATEST_PLUGINS_SQL_PATH = Path(__file__).parent / "latest_plugins.sql"
 LATEST_PLUGIN_FILES_SQL_PATH = Path(__file__).parent / "latest_plugin_files.sql"
 
 
-def get_latest_plugin(db: SQLAlchemy, resource_id: int) -> models.Plugin | None:
+def get_latest_plugin(session: Session, resource_id: int) -> models.Plugin | None:
     """Get the latest plugin for a given resource ID.
 
     Args:
-        db: The SQLAlchemy database session.
+        session: The SQLAlchemy database session.
         resource_id: The ID of the resource.
 
     Returns:
@@ -50,16 +49,16 @@ def get_latest_plugin(db: SQLAlchemy, resource_id: int) -> models.Plugin | None:
         .bindparams(resource_id=resource_id)
     )
     stmt = select(models.Plugin).from_statement(textual_sql)
-    return db.session.execute(stmt).scalar()
+    return session.execute(stmt).scalar()
 
 
 def get_latest_plugin_files(
-    db: SQLAlchemy, plugin_resource_id: int
+    session: Session, plugin_resource_id: int
 ) -> list[models.PluginFile]:
     """Get the latest plugin files associated with a given plugin.
 
     Args:
-        db: The SQLAlchemy database session.
+        session: The SQLAlchemy database session.
         plugin_resource_id: The ID of the plugin.
 
     Returns:
@@ -77,4 +76,4 @@ def get_latest_plugin_files(
         .bindparams(plugin_resource_id=plugin_resource_id)
     )
     stmt = select(models.PluginFile).from_statement(textual_sql)
-    return list(db.session.execute(stmt).scalars())
+    return list(session.execute(stmt).scalars())

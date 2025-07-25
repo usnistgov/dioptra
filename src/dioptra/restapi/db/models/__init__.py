@@ -17,6 +17,10 @@
 from .artifacts import Artifact
 from .entry_points import (
     EntryPoint,
+    EntryPointArtifactOutputParameter,
+    EntryPointArtifactParameter,
+    EntryPointArtifactParameterValue,
+    EntryPointArtifactPlugin,
     EntryPointParameter,
     EntryPointParameterValue,
     EntryPointPlugin,
@@ -42,6 +46,8 @@ from .locks import (
 )
 from .ml_models import MlModel, MlModelVersion
 from .plugins import (
+    ArtifactTask,
+    FunctionTask,
     Plugin,
     PluginFile,
     PluginPluginFile,
@@ -67,14 +73,20 @@ from .users import User
 
 __all__ = [
     "Artifact",
+    "ArtifactTask",
     "DraftResource",
     "EntryPoint",
     "EntryPointJob",
     "EntryPointParameter",
+    "EntryPointArtifactParameter",
+    "EntryPointArtifactPlugin",
+    "EntryPointArtifactOutputParameter",
     "EntryPointParameterValue",
+    "EntryPointArtifactParameterValue",
     "EntryPointPlugin",
     "Experiment",
     "ExperimentJob",
+    "FunctionTask",
     "Group",
     "GroupLock",
     "GroupManager",
