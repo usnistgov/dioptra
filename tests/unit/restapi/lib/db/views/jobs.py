@@ -14,12 +14,11 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from __future__ import annotations
 
 from pathlib import Path
 
-from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import select, text
+from sqlalchemy.orm.session import Session
 
 from dioptra.restapi.db import models
 
@@ -30,11 +29,11 @@ LATEST_JOBS_SQL_PATH = Path(__file__).parent / "latest_jobs.sql"
 LATEST_JOB_ARTIFACTS_SQL_PATH = Path(__file__).parent / "latest_job_artifacts.sql"
 
 
-def get_latest_job(db: SQLAlchemy, resource_id: int) -> models.Job | None:
+def get_latest_job(session: Session, resource_id: int) -> models.Job | None:
     """Get the latest job for a given resource ID.
 
     Args:
-        db: The SQLAlchemy database session.
+        session: The SQLAlchemy database session.
         resource_id: The ID of the resource.
 
     Returns:
@@ -50,16 +49,16 @@ def get_latest_job(db: SQLAlchemy, resource_id: int) -> models.Job | None:
         .bindparams(resource_id=resource_id)
     )
     stmt = select(models.Job).from_statement(textual_sql)
-    return db.session.execute(stmt).scalar()
+    return session.execute(stmt).scalar()
 
 
 def get_latest_job_artifacts(
-    db: SQLAlchemy, job_resource_id: int
+    session: Session, job_resource_id: int
 ) -> list[models.Artifact]:
     """Get the latest artifacts associated with a given job.
 
     Args:
-        db: The SQLAlchemy database session.
+        session: The SQLAlchemy database session.
         job_resource_id: The ID of the job resource.
 
     Returns:
@@ -77,4 +76,4 @@ def get_latest_job_artifacts(
         .bindparams(job_resource_id=job_resource_id)
     )
     stmt = select(models.Artifact).from_statement(textual_sql)
-    return list(db.session.execute(stmt).scalars())
+    return list(session.execute(stmt).scalars())

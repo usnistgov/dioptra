@@ -24,6 +24,8 @@ METRICS: Final[str] = "metrics"
 MLFLOW_RUN: Final[str] = "mlflowRun"
 SNAPSHOTS: Final[str] = "snapshots"
 STATUS: Final[str] = "status"
+PARAMETERS: Final[str] = "parameters"
+ARTIFACT_PARAMETERS: Final[str] = "artifactParameters"
 
 T = TypeVar("T")
 
@@ -194,6 +196,28 @@ class JobsCollectionClient(CollectionClient[T]):
         }
 
         return self._session.post(self.url, str(job_id), MLFLOW_RUN, json_=json_)
+
+    def get_parameters(self, job_id: str | int) -> T:
+        """Gets the parameters for a job.
+
+        Args:
+            job_id: The job id, an integer.
+
+        Returns:
+            The response from the Dioptra API.
+        """
+        return self._session.get(self.url, str(job_id), PARAMETERS)
+
+    def get_artifact_parameters(self, job_id: str | int) -> T:
+        """Gets the artifact parameters for a job.
+
+        Args:
+            job_id: The job id, an integer.
+
+        Returns:
+            The response from the Dioptra API.
+        """
+        return self._session.get(self.url, str(job_id), ARTIFACT_PARAMETERS)
 
     def get_status(self, job_id: str | int) -> T:
         """Gets the status for a job.

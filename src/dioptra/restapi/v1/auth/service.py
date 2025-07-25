@@ -16,8 +16,6 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform auth endpoint operations."""
 
-from __future__ import annotations
-
 import datetime
 import uuid
 from typing import Any

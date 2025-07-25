@@ -214,6 +214,7 @@ To run the unit tests, activate your virtual environment if you haven't already 
 ```sh
 python -m tox run -e py311-pytest -- tests/unit
 python -m tox run -e py311-cookiecutter
+python -m tox run -e py311-extra
 ```
 
 Alternatively, you can also use `make` to do this:

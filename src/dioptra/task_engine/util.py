@@ -16,9 +16,10 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 import graphlib
 from collections.abc import Callable, Container, Iterator, Mapping, Sequence
-from typing import Any, Optional, Union
+from typing import Any, Optional, Tuple, Union
 
 import jsonschema.validators
+import referencing
 
 from dioptra.sdk.exceptions.task_engine import (
     StepNotFoundError,
@@ -70,8 +71,9 @@ def schema_validate(
     """
     # Make use of a more complex API to try to produce better schema
     # validation error messages.
+    registry = referencing.Registry()
     validator_class = jsonschema.validators.validator_for(schema)
-    validator = validator_class(schema=schema)
+    validator = validator_class(schema=schema, registry=registry)
 
     error_messages = [
         validation_error_to_message(error, schema, location_desc_callback)
@@ -176,6 +178,14 @@ def is_reference(value: str) -> bool:
     return value != "$" and value.startswith("$") and not value.startswith("$$")
 
 
+def get_reference_coords(ref: str) -> Tuple[str, str | None]:
+    dot_idx = ref.find(".")
+    if dot_idx >= 0:
+        return (ref[:dot_idx], ref[dot_idx + 1 :])
+    else:
+        return (ref, None)
+
+
 def get_references(input_: Any) -> Iterator[str]:
     """
     Search for references within a task invocation specification, and generate
@@ -225,12 +235,7 @@ def _get_step_references(input_: Any, step_names: Container[str]) -> Iterator[st
     # don't refer to either a step name or a global parameter).  Those errors
     # will be caught later, when we actually need to resolve the references.
     for ref_name in get_references(input_):
-        dot_idx = ref_name.find(".")
-        if dot_idx >= 0:
-            step_name = ref_name[:dot_idx]
-        else:
-            step_name = ref_name
-
+        step_name, _ = get_reference_coords(ref_name)
         if step_name in step_names:
             yield step_name
 

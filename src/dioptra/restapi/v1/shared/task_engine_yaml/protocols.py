@@ -18,20 +18,6 @@ from collections.abc import Sequence
 from typing import Any, Protocol
 
 
-class EntryPointParameterProtocol(Protocol):
-    parameter_type: str
-    name: str
-    default_value: str | None
-
-
-class EntryPointProtocol(Protocol):
-    @property
-    def task_graph(self) -> str: ...  # noqa: E704
-
-    @property
-    def parameters(self) -> Sequence[EntryPointParameterProtocol]: ...  # noqa: E704
-
-
 class PluginTaskParameterTypeProtocol(Protocol):
     @property
     def name(self) -> str: ...  # noqa: E704
@@ -55,6 +41,37 @@ class PluginTaskOutputParameterProtocol(Protocol):
 
     @property
     def parameter_type(self) -> PluginTaskParameterTypeProtocol: ...  # noqa: E704
+
+
+class EntryPointParameterProtocol(Protocol):
+    parameter_type: str
+    name: str
+    default_value: str | None
+
+
+class EntryPointArtifactParameterProtocol(Protocol):
+    name: str
+
+    @property
+    def output_parameters(  # noqa: E704
+        self,
+    ) -> Sequence[PluginTaskOutputParameterProtocol]: ...
+
+
+class EntryPointProtocol(Protocol):
+    @property
+    def task_graph(self) -> str: ...  # noqa: E704
+
+    @property
+    def artifact_graph(self) -> str: ...  # noqa: E704
+
+    @property
+    def parameters(self) -> Sequence[EntryPointParameterProtocol]: ...  # noqa: E704
+
+    @property
+    def artifact_parameters(  # noqa: E704
+        self,
+    ) -> Sequence[EntryPointArtifactParameterProtocol]: ...
 
 
 class PluginTaskProtocol(Protocol):

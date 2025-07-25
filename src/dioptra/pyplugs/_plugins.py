@@ -41,8 +41,6 @@
 # SOFTWARE.
 """Decorators for registering plugins"""
 
-from __future__ import annotations
-
 import functools
 import importlib
 import sys
@@ -256,7 +254,7 @@ def call(
 
 
 @require_package("prefect", exc_type=PrefectDependencyError)
-def get_task(package: str, plugin: str, func: Optional[str] = None) -> FunctionTask:
+def get_task(package: str, plugin: str, func: Optional[str] = None) -> "FunctionTask":
     """Get a given plugin wrapped as a prefect task"""
     plugin_func: Union[Plugin, NoutPlugin] = info(package, plugin, func).func
     nout: Optional[int] = getattr(plugin_func, "_task_nout", None)
@@ -308,18 +306,17 @@ def _import(package: str, plugin: str) -> None:
 def _import_all(package: str) -> None:
     """Import all plugins in a package"""
     try:
-        all_resources = resources.contents(package)
-
+        # Loop through all Python files in the directories of the package
+        plugins = [
+            r.name[:-3]
+            for r in resources.files(package).iterdir()
+            if r.is_file() and r.name.endswith(".py") and not r.name.startswith("_")
+        ]
     except ImportError as err:
         raise UnknownPackageError(err) from None
 
     # Note that we have tried to import the package by adding it to _PLUGINS
     _PLUGINS.setdefault(package, {})
-
-    # Loop through all Python files in the directories of the package
-    plugins = [
-        r[:-3] for r in all_resources if r.endswith(".py") and not r.startswith("_")
-    ]
 
     for plugin in plugins:
         try:
@@ -360,7 +357,7 @@ def call_factory(package: str) -> Callable[..., Any]:
 
 
 @require_package("prefect", exc_type=PrefectDependencyError)
-def get_task_factory(package: str) -> Callable[[str, Optional[str]], FunctionTask]:
+def get_task_factory(package: str) -> Callable[[str, Optional[str]], "FunctionTask"]:
     """Create a get_task() function for one package"""
     return functools.partial(get_task, package)
 

@@ -15,9 +15,8 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform resource operations."""
-from __future__ import annotations
 
-from typing import Any
+from typing import Any, Callable
 
 import structlog
 from injector import inject
@@ -47,6 +46,12 @@ from dioptra.restapi.v1.plugins.service import (
 from dioptra.restapi.v1.queues.service import QueueIdService, QueueService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
+
+# A ResourceDataAdapter is a callable that takes a dict matching the Resource's schema
+# and returns a dict whose keys are the argument names for the service layer functions.
+# The intent is the returned dict can be unpacked with "**" to call the service layer
+# functions.
+ResourceDataAdapterType = Callable[[dict[str, Any]], dict[str, Any]]
 
 
 class ResourceService(object):
@@ -89,6 +94,9 @@ class ResourceService(object):
             "plugin_task_parameter_type": plugin_parameter_type_service,
             "queue": queue_service,
         }
+        self._resource_data_adapters: dict[str, ResourceDataAdapterType] = {
+            "plugin_file": _plugin_file_payload_adapter,
+        }
 
     def create(
         self,
@@ -118,6 +126,10 @@ class ResourceService(object):
 
         if resource_type not in self._services:
             raise DioptraError(f"Invalid resource type: {resource_type}")
+
+        # if a resource data adapter exists for this resource type, apply it to the data
+        if resource_type in self._resource_data_adapters:
+            resource_data = self._resource_data_adapters[resource_type](resource_data)
 
         return self._services[resource_type].create(  # type: ignore
             *resource_ids, group_id=group_id, **resource_data, commit=commit, log=log
@@ -164,6 +176,9 @@ class ResourceIdService(object):
             "plugin_task_parameter_type": plugin_parameter_type_id_service,
             "queue": queue_id_service,
         }
+        self._resource_data_adapters: dict[str, ResourceDataAdapterType] = {
+            "plugin_file": _plugin_file_payload_adapter,
+        }
 
     def modify(
         self,
@@ -194,6 +209,18 @@ class ResourceIdService(object):
         if resource_type not in self._services:
             raise DioptraError(f"Invalid resource type: {resource_type}")
 
+        # if a resource data adapter exists for this resource type, apply it to the data
+        if resource_type in self._resource_data_adapters:
+            resource_data = self._resource_data_adapters[resource_type](resource_data)
+
         return self._services[resource_type].modify(  # type: ignore
             *resource_ids, group_id=group_id, **resource_data, commit=commit, log=log
         )
+
+
+def _plugin_file_payload_adapter(data: dict[str, Any]) -> dict[str, Any]:
+    data = data.copy()
+    data["function_tasks"] = data["tasks"].get("functions", [])
+    data["artifact_tasks"] = data["tasks"].get("artifacts", [])
+    del data["tasks"]
+    return data

@@ -24,6 +24,7 @@ from dioptra.client.drafts import (
 from dioptra.client.snapshots import SnapshotsSubCollectionClient
 from dioptra.client.tags import TagsSubCollectionClient
 from dioptra.client.workflows import WorkflowsCollectionClient
+from dioptra.restapi.v1.shared.resource_service import ResourceDataAdapterType
 
 from . import asserts
 
@@ -106,6 +107,7 @@ def run_existing_resource_drafts_tests(
     draft_mod: dict[str, Any],
     draft_expected: dict[str, Any],
     draft_mod_expected: dict[str, Any],
+    resource_data_adapters: ResourceDataAdapterType | None = None,
 ) -> None:
     # Creation operation tests
     response = draft_client.create(*resource_ids, **draft).json()
@@ -137,7 +139,15 @@ def run_existing_resource_drafts_tests(
     # case, the commit should fail until the snapshot ID of the draft is updated to
     # indicate that the user is aware of the changes.
     draft_response = draft_client.create(*resource_ids, **draft).json()
-    resource_response = resource_client.modify_by_id(*resource_ids, **draft_mod).json()
+
+    resource_response = resource_client.modify_by_id(
+        *resource_ids,
+        **(
+            draft_mod
+            if resource_data_adapters is None
+            else resource_data_adapters(draft_mod)
+        ),
+    ).json()
     commit_response = workflow_client.commit_draft(draft_response["id"]).json()
     draft_response = draft_client.modify(
         *resource_ids,

@@ -76,6 +76,7 @@ jobs:
         tox-testenv:
           - "clean,py311-pytest-cov,report"
           - "py311-cookiecutter"
+          - "py311-extra"
 
     steps:
       - uses: actions/checkout@v4

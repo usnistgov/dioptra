@@ -25,7 +25,6 @@ from typing import Any
 
 import pytest
 from flask.testing import FlaskClient
-from flask_sqlalchemy import SQLAlchemy
 from werkzeug.test import TestResponse
 
 from dioptra.client.base import DioptraResponseProtocol
@@ -243,7 +242,6 @@ def assert_cannot_rename_group_with_existing_name(
 def test_create_group(
     client: FlaskClient,
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
 ) -> None:
     """Test that groups can be correctly registered and retrieved using the API.
@@ -275,7 +273,6 @@ def test_create_group(
 
 def test_group_get_all(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_groups: dict[str, Any],
 ) -> None:
@@ -293,7 +290,6 @@ def test_group_get_all(
 
 def test_group_search_query(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_groups: dict[str, Any],
 ) -> None:
@@ -322,7 +318,6 @@ def test_group_search_query(
 @pytest.mark.v1_test
 def test_cannot_register_existing_group_name(
     client: FlaskClient,
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_groups: dict[str, Any],
 ) -> None:
@@ -342,7 +337,6 @@ def test_cannot_register_existing_group_name(
 def test_rename_group(
     client: FlaskClient,
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_groups: dict[str, Any],
 ) -> None:

@@ -15,7 +15,6 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """Custom Marshmallow fields for REST API schemas."""
-from __future__ import annotations
 
 from marshmallow.fields import Field
 

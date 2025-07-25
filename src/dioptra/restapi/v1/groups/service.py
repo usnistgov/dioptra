@@ -15,7 +15,6 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform group endpoint operations."""
-from __future__ import annotations
 
 import datetime
 from typing import Any, Final
@@ -52,8 +51,8 @@ class GroupService(object):
     @inject
     def __init__(
         self,
-        group_member_service: GroupMemberService,
-        group_manager_service: GroupManagerService,
+        group_member_service: "GroupMemberService",
+        group_manager_service: "GroupManagerService",
         uow: UnitOfWork,
     ) -> None:
         """Initialize the group service.

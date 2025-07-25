@@ -32,8 +32,6 @@ from dioptra.restapi.db import models
 from dioptra.restapi.db.repository.experiments import ExperimentRepository
 from dioptra.restapi.routes import V1_EXPERIMENTS_ROUTE
 from dioptra.restapi.v1 import utils
-from dioptra.restapi.v1.artifacts.schema import ArtifactSchema
-from dioptra.restapi.v1.artifacts.service import JobArtifactService
 from dioptra.restapi.v1.entrypoints.schema import EntrypointRefSchema
 from dioptra.restapi.v1.jobs.schema import (
     ExperimentJobGetQueryParameters,
@@ -313,9 +311,10 @@ class ExperimentIdJobEndpoint(Resource):
             experiment_id=id,
             queue_id=parsed_obj["queue_id"],
             entrypoint_id=parsed_obj["entrypoint_id"],
-            values=parsed_obj["values"],
-            description=parsed_obj["description"],
-            timeout=parsed_obj["timeout"],
+            values=parsed_obj.get("values", {}),
+            artifact_values=parsed_obj.get("artifact_values", {}),
+            description=parsed_obj.get("description", ""),
+            timeout=parsed_obj.get("timeout", "60"),
             entrypoint_snapshot_id=parsed_obj["entrypoint_snapshot_id"],
             log=log,
         )
@@ -482,49 +481,6 @@ class ExperimentIdJobIdMlflowrunEndpoint(Resource):
             error_if_not_found=True,
             log=log,
         )
-
-
-@api.route("/<int:id>/jobs/<int:jobId>/artifacts")
-@api.param("id", "ID for the Experiment resource.")
-@api.param("jobId", "ID for the Job resource.")
-class ExperimentIdJobIdArtifactsEndpoint(Resource):
-    @inject
-    def __init__(
-        self, job_artifact_service: JobArtifactService, *args, **kwargs
-    ) -> None:
-        """Initialize the jobs resource.
-
-        All arguments are provided via dependency injection.
-
-        Args:
-            job_id_service: A JobIdStatusService object.
-        """
-        self._job_artifact_service = job_artifact_service
-        super().__init__(*args, **kwargs)
-
-    @login_required
-    @accepts(
-        schema=ArtifactSchema(exclude=["groupId", "jobId"]),
-        model_name="JobArtifactSchema",
-        api=api,
-    )
-    @responds(schema=ArtifactSchema, api=api)
-    def post(self, id: int, jobId: int):
-        """Creates an Artifact resource."""
-        log = LOGGER.new(
-            request_id=str(uuid.uuid4()), resource="Artifact", request_type="POST"
-        )
-        log.debug("Request received")
-        parsed_obj = request.parsed_obj  # type: ignore
-
-        artifact = self._job_artifact_service.create(
-            experiment_id=id,
-            job_id=jobId,
-            uri=parsed_obj["uri"],
-            description=parsed_obj["description"],
-            log=log,
-        )
-        return utils.build_artifact(artifact)
 
 
 @api.route("/<int:id>/metrics")

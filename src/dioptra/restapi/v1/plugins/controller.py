@@ -15,11 +15,12 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The module defining the endpoints for Plugin resources."""
+
 import uuid
 from typing import cast
 
 import structlog
-from flask import request
+from flask import request, send_file
 from flask_accepts import accepts, responds
 from flask_login import login_required
 from flask_restx import Namespace, Resource
@@ -29,7 +30,11 @@ from structlog.stdlib import BoundLogger
 from dioptra.restapi.db import models
 from dioptra.restapi.routes import V1_PLUGIN_FILES_ROUTE, V1_PLUGINS_ROUTE
 from dioptra.restapi.v1 import utils
-from dioptra.restapi.v1.schemas import IdStatusResponseSchema
+from dioptra.restapi.v1.file_types import FileTypes, plugin_pluginfiles_to_bundle
+from dioptra.restapi.v1.schemas import (
+    FileDownloadParametersSchema,
+    IdStatusResponseSchema,
+)
 from dioptra.restapi.v1.shared.drafts.controller import (
     generate_nested_resource_drafts_endpoint,
     generate_nested_resource_drafts_id_endpoint,
@@ -69,6 +74,7 @@ from .service import (
     PluginIdFileIdService,
     PluginIdFileService,
     PluginIdService,
+    PluginIdSnapshotIdService,
     PluginService,
 )
 
@@ -195,7 +201,7 @@ class PluginIdEndpoint(Resource):
             request_id=str(uuid.uuid4()), resource="Plugin", request_type="GET", id=id
         )
         plugin = cast(
-            models.Plugin,
+            utils.PluginWithFilesDict,
             self._plugin_id_service.get(id, error_if_not_found=True, log=log),
         )
         return utils.build_plugin(plugin)
@@ -222,7 +228,7 @@ class PluginIdEndpoint(Resource):
         )
         parsed_obj = request.parsed_obj  # type: ignore # noqa: F841
         plugin = cast(
-            models.Plugin,
+            utils.PluginWithFilesDict,
             self._plugin_id_service.modify(
                 id,
                 name=parsed_obj["name"],
@@ -310,7 +316,11 @@ class PluginIdFilesEndpoint(Resource):
     @accepts(schema=PluginFileSchema(exclude=["groupId"]), api=api)
     @responds(schema=PluginFileSchema, api=api)
     def post(self, id: int):
-        """Creates a PluginFile resource associated with a Plugin resource."""
+        """Creates a PluginFile resource associated with a Plugin resource.
+
+        If type is plugin then blah
+        If type is artifact then blah
+        """
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="PluginFile", request_type="POST"
         )
@@ -321,7 +331,8 @@ class PluginIdFilesEndpoint(Resource):
             filename=parsed_obj["filename"],
             contents=parsed_obj["contents"],
             description=parsed_obj["description"],
-            tasks=parsed_obj["tasks"],
+            function_tasks=parsed_obj["tasks"].get("functions", []),
+            artifact_tasks=parsed_obj["tasks"].get("artifacts", []),
             log=log,
         )
         return utils.build_plugin_file(plugin_file)
@@ -356,7 +367,7 @@ class PluginIdFileIdEndpoint(Resource):
             id=id,
         )
         plugin_file = cast(
-            models.PluginFile,
+            utils.PluginFileDict,
             self._plugin_file_id_service.get(
                 id, plugin_file_id=fileId, error_if_not_found=True, log=log
             ),
@@ -388,19 +399,75 @@ class PluginIdFileIdEndpoint(Resource):
         )
         parsed_obj = request.parsed_obj  # type: ignore # noqa: F841
         plugin_file = cast(
-            models.PluginFile,
+            utils.PluginFileDict,
             self._plugin_file_id_service.modify(
                 id,
                 plugin_file_id=fileId,
                 filename=parsed_obj["filename"],
                 contents=parsed_obj["contents"],
-                tasks=parsed_obj["tasks"],
+                function_tasks=parsed_obj["tasks"].get("functions", []),
+                artifact_tasks=parsed_obj["tasks"].get("artifacts", []),
                 description=parsed_obj["description"],
                 error_if_not_found=True,
                 log=log,
             ),
         )
         return utils.build_plugin_file(plugin_file)
+
+
+@api.route("/<int:id>/snapshots/<int:snapshotId>/files/bundle")
+@api.param("id", "ID for the Entrypoint resource.")
+@api.param("snapshotId", "Snapshot ID for the Entrypoint resource.")
+class PluginSnapshotIdFileBundleEndpoint(Resource):
+    @inject
+    def __init__(
+        self,
+        plugin_snapshot_id_service: PluginIdSnapshotIdService,
+        *args,
+        **kwargs,
+    ) -> None:
+        """Initialize the plugin file resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            plugin_service: A PluginService object.
+        """
+        self._plugin_snapshot_id_service = plugin_snapshot_id_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    @accepts(query_params_schema=FileDownloadParametersSchema, api=api)
+    def get(self, id: int, snapshotId: int):
+        """Returns a file bundle containing all of the PluginFile resources for an
+        EntryPoint Snapshot resource.
+        """
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="EntrypointSnapshotPluginsBundle",
+            request_type="GET",
+            id=id,
+            snapshot_id=snapshotId,
+        )
+
+        parsed_query_params = request.parsed_query_params  # type: ignore # noqa: F841
+
+        file_type = cast(FileTypes, parsed_query_params["file_type"])
+
+        plugin = self._plugin_snapshot_id_service.get(
+            plugin_id=id,
+            plugin_snapshot_id=snapshotId,
+            log=log,
+        )
+        file = file_type.package(
+            plugin_pluginfiles_to_bundle(plugin.plugin_plugin_files)
+        )
+        return send_file(
+            path_or_file=file,
+            as_attachment=True,
+            mimetype=file_type.mimetype,
+            download_name=f"plugins_bundle{file_type.suffix}",
+        )
 
 
 PluginDraftResource = generate_resource_drafts_endpoint(
@@ -439,6 +506,7 @@ PluginFileIdDraftResource = generate_nested_resource_id_draft_endpoint(
     resource_route=V1_PLUGIN_FILES_ROUTE,
     request_schema=PluginFileSchema(exclude=["groupId"]),
 )
+
 
 PluginSnapshotsResource = generate_resource_snapshots_endpoint(
     api=api,

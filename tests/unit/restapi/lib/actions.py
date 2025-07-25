@@ -244,7 +244,7 @@ def register_artifact(
     Returns:
         The response from the API.
     """
-    payload = {"uri": uri, "job": job_id, "group": group_id}
+    payload = {"artifactUri": uri, "job": job_id, "group": group_id}
 
     if description is not None:
         payload["description"] = description
@@ -340,7 +340,8 @@ def register_plugin_file(
     description: str,
     filename: str,
     contents: str,
-    tasks: list[dict[str, Any]] | None = None,
+    function_tasks: list[dict[str, Any]] | None = None,
+    artifact_tasks: list[dict[str, Any]] | None = None,
 ) -> TestResponse:
     """Register a plugin file using the API.
 
@@ -360,7 +361,10 @@ def register_plugin_file(
         "filename": filename,
         "contents": contents,
         "description": description,
-        "tasks": tasks or [],
+        "tasks": {
+            "functions": function_tasks or [],
+            "artifacts": artifact_tasks or [],
+        },
     }
 
     return client.post(
@@ -832,7 +836,7 @@ def post_mlflowruns(
     for key in mlflowruns.keys():
         job_id = registered_jobs[key]["id"]
         mlflowrun_response = post_mlflowrun(
-            client=client, job_id=job_id, mlflow_run_id=mlflowruns[key].hex
+            client=client, job_id=job_id, mlflow_run_id=mlflowruns[key]
         ).get_json()
         responses[key] = mlflowrun_response
 

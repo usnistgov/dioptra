@@ -14,7 +14,6 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from __future__ import annotations
 
 from typing import cast
 
@@ -343,7 +342,7 @@ class TensorflowBoundingBoxesBatchedGrid(BoundingBoxesBatchedGrid):
     @classmethod
     def on_grid_shape(
         cls, grid_shape: tuple[int, int]
-    ) -> TensorflowBoundingBoxesBatchedGrid:
+    ) -> "TensorflowBoundingBoxesBatchedGrid":
         return cls(
             bounding_box_coordinates=TensorflowBoundingBoxCoordinates(
                 grid_shape=grid_shape

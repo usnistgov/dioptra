@@ -39,7 +39,6 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-from __future__ import annotations
 
 from collections import defaultdict
 from typing import cast
@@ -114,7 +113,7 @@ class TensorflowBoundingBoxesYOLOV1Confluence(BoundingBoxesYOLOV1PostProcessing)
         gaussian: bool = False,
         sigma: float = 0.5,
         force_prediction: bool = False,
-    ) -> TensorflowBoundingBoxesYOLOV1Confluence:
+    ) -> "TensorflowBoundingBoxesYOLOV1Confluence":
         return cls(
             bounding_boxes_batched_grid=(
                 TensorflowBoundingBoxesBatchedGrid.on_grid_shape(grid_shape=grid_shape)
