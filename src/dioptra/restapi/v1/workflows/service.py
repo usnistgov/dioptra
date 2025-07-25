@@ -22,11 +22,12 @@ from hashlib import sha256
 from io import BytesIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import IO, Any, Final, cast
+from typing import Any, Final, cast
 
 import jsonschema
 import structlog
 import tomli as toml
+import yaml
 from injector import inject
 from structlog.stdlib import BoundLogger
 from werkzeug.datastructures import FileStorage
@@ -52,6 +53,7 @@ from dioptra.restapi.v1.plugin_parameter_types.service import (
     PluginParameterTypeIdService,
     PluginParameterTypeNameService,
     PluginParameterTypeService,
+    get_plugin_task_parameter_types_by_id,
 )
 from dioptra.restapi.v1.plugins.schema import ALLOWED_PLUGIN_FILENAME_REGEX
 from dioptra.restapi.v1.plugins.service import (
@@ -72,9 +74,7 @@ from dioptra.task_engine.issues import IssueSeverity, IssueType, ValidationIssue
 
 from .lib import views
 from .lib.clone_git_repository import clone_git_repository
-from .lib.package_job_files import package_job_files
 from .schema import (
-    FileTypes,
     ResourceImportResolveNameConflictsStrategy,
     ResourceImportSourceTypes,
 )
@@ -95,66 +95,6 @@ VALID_ENTRYPOINT_PARAM_TYPES: Final[set[str]] = {
     "list",
     "mapping",
 }
-
-
-class JobFilesDownloadService(object):
-    """The service methods for packaging job files for download."""
-
-    @inject
-    def __init__(
-        self,
-        task_engine_yaml_service: TaskEngineYamlService,
-    ) -> None:
-        """Initialize the job files download service.
-
-        All arguments are provided via dependency injection.
-
-        Args:
-            task_engine_yaml_service: A TaskEngineYamlService object.
-        """
-        self._task_engine_yaml_service = task_engine_yaml_service
-
-    def get(self, job_id: int, file_type: FileTypes, **kwargs) -> IO[bytes]:
-        """Get the files needed to run a job and package them for download.
-
-        Args:
-            job_id: The identifier of the job.
-            file_type: The type of file to package the job files into. Must be one of
-                the values in the FileTypes enum.
-
-        Returns:
-            The packaged job files returned as a named temporary file.
-        """
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
-        log.debug("Get job files download", job_id=job_id, file_type=file_type)
-
-        experiment = views.get_experiment(job_id=job_id, logger=log)
-        entry_point = views.get_entry_point(job_id=job_id, logger=log)
-        entry_point_plugin_files = views.get_entry_point_plugin_files(
-            job_id=job_id, logger=log
-        )
-        job_parameter_values = views.get_job_parameter_values(job_id=job_id, logger=log)
-        plugin_parameter_types = views.get_plugin_parameter_types(
-            job_id=job_id, logger=log
-        )
-
-        task_engine_yaml = self._task_engine_yaml_service.build_yaml(
-            entry_point=entry_point,  # pyright: ignore
-            plugin_plugin_files=entry_point_plugin_files,  # pyright: ignore
-            plugin_parameter_types=plugin_parameter_types,  # pyright: ignore
-            logger=log,
-        )
-
-        return package_job_files(
-            job_id=job_id,
-            experiment=experiment,
-            entry_point_name=entry_point.name,
-            task_engine_yaml=task_engine_yaml,
-            entry_point_plugin_files=entry_point_plugin_files,
-            job_parameter_values=job_parameter_values,
-            file_type=file_type,
-            logger=log,
-        )
 
 
 class SignatureAnalysisService(object):
@@ -313,7 +253,12 @@ class ResourceImportService(object):
                     group_id, config.get("plugins", []), param_types, overwrite, log=log
                 )
                 entrypoints = self._register_entrypoints(
-                    group_id, config.get("entrypoints", []), plugins, overwrite, log=log
+                    group_id,
+                    config.get("entrypoints", []),
+                    plugins,
+                    param_types,
+                    overwrite,
+                    log=log,
                 )
 
         db.session.commit()
@@ -386,16 +331,15 @@ class ResourceImportService(object):
 
         hash = sha256()
         for file in sorted(files, key=_sort_by_filename):
+            # The _sort_by_filename sorting key already checks whether filename is None,
+            # so here we can just assert that it's not None to make mypy happy.
+            assert file.filename is not None
             try:
                 verify_filename_is_safe(file.filename)
             except ValueError as e:
                 raise ImportFailedError(
                     "Failed to read uploaded files", reason=str(e)
                 ) from e
-
-            # The _sort_by_filename sorting key already checks whether filename is None,
-            # so here we can just assert that it's not None to make mypy happy.
-            assert file.filename is not None
             Path(file.filename).parent.mkdir(parents=True, exist_ok=True)
 
             bytes = file.stream.read()
@@ -565,7 +509,17 @@ class ResourceImportService(object):
             plugins[plugin_dict["plugin"].name] = plugin_dict["plugin"]
             db.session.flush()
 
-            tasks = self._build_tasks(plugin.get("tasks", []), param_types)
+            task_config = plugin.get("tasks", {})
+            function_tasks = ResourceImportService._build_tasks(
+                tasks_config=task_config.get("functions", []),
+                param_types=param_types,
+                is_function_task=True,
+            )
+            artifact_tasks = ResourceImportService._build_tasks(
+                tasks_config=task_config.get("artifacts", []),
+                param_types=param_types,
+                is_function_task=False,
+            )
             for plugin_file_path in Path(plugin["path"]).rglob("[!.]*.py"):
                 filename = str(plugin_file_path.relative_to(plugin["path"]))
                 if not ALLOWED_PLUGIN_FILENAME_REGEX.fullmatch(filename):
@@ -587,11 +541,12 @@ class ResourceImportService(object):
                     ) from e
 
                 self._plugin_id_file_service.create(
-                    plugin_dict["plugin"].resource_id,
+                    plugin_id=plugin_dict["plugin"].resource_id,
                     filename=filename,
                     contents=contents,
                     description=None,
-                    tasks=tasks[filename],
+                    function_tasks=function_tasks[filename],
+                    artifact_tasks=artifact_tasks[filename],
                     commit=False,
                     log=log,
                 )
@@ -605,6 +560,7 @@ class ResourceImportService(object):
         group_id: int,
         entrypoints_config: list[dict[str, Any]],
         plugins,
+        param_types,
         overwrite: bool,
         log: BoundLogger,
     ) -> dict[str, models.EntryPoint]:
@@ -615,12 +571,21 @@ class ResourceImportService(object):
             group_id: The identifier of the group that will manage imported resources
             entrypoints_config: A list of dictionaries describing entrypoints
             plugins: A dictionary mapping Plugin names to the ORM objects
+            param_types: A dictionary mapping param type name to the ORM object
             overwrite: Whether imported resources should replace existing resources with
                 a conflicting name
 
         Returns:
             A dictionary mapping newly registered Entrypoint names to ORM object
         """
+
+        param_types = param_types.copy()
+        builtin_param_types = self._builtin_plugin_parameter_type_service.get(
+            group_id=group_id, error_if_not_found=False, log=log
+        )
+        param_types.update(
+            {param_type.name: param_type for param_type in builtin_param_types}
+        )
 
         entrypoints = dict()
         for entrypoint in entrypoints_config:
@@ -634,7 +599,7 @@ class ResourceImportService(object):
                     )
 
             try:
-                contents = Path(entrypoint["path"]).read_text()
+                contents = yaml.safe_load(Path(entrypoint["path"]).read_text())
             except FileNotFoundError as e:
                 raise ImportFailedError(
                     f"Failed to read entrypoint file from {entrypoint['path']}",
@@ -646,31 +611,29 @@ class ResourceImportService(object):
                     reason=str(e),
                 ) from e
 
-            for param in entrypoint.get("params", []):
-                if param["type"] not in VALID_ENTRYPOINT_PARAM_TYPES:
-                    raise ImportFailedError(
-                        "Invalid entrypoint parameter type provided.",
-                        reason=f"Found '{param['type']}' but must be one of "
-                        f"{VALID_ENTRYPOINT_PARAM_TYPES}.",
-                    )
+            params = ResourceImportService._build_entrypoint_params_list(
+                entrypoint.get("params", [])
+            )
 
-            params = [
-                {
-                    "name": param["name"],
-                    "parameter_type": param["type"],
-                    "default_value": param.get("default_value", None),
-                }
-                for param in entrypoint.get("params", [])
-            ]
+            artifact_params = ResourceImportService._build_artifacts_params_list(
+                entrypoint.get("artifact_params", []), param_types
+            )
             plugin_ids = [
                 plugins[plugin].resource_id for plugin in entrypoint.get("plugins", [])
+            ]
+            artifact_plugin_ids = [
+                plugins[plugin].resource_id
+                for plugin in entrypoint.get("artifact_plugins", [])
             ]
             entrypoint_dict = self._entrypoint_service.create(
                 name=entrypoint.get("name", Path(entrypoint["path"]).stem),
                 description=entrypoint.get("description", None),
-                task_graph=contents,
+                task_graph=yaml.dump(contents.get("graph", None)),
+                artifact_graph=yaml.dump(contents.get("artifacts", None)),
                 parameters=params,
+                artifact_parameters=artifact_params,
                 plugin_ids=plugin_ids,
+                artifact_plugin_ids=artifact_plugin_ids,
                 queue_ids=[],
                 group_id=group_id,
                 commit=False,
@@ -684,10 +647,11 @@ class ResourceImportService(object):
 
         return entrypoints
 
+    @staticmethod
     def _build_tasks(
-        self,
         tasks_config: list[dict[str, Any]],
         param_types: dict[str, models.PluginTaskParameterType],
+        is_function_task: bool,
     ) -> dict[str, list]:
         """
         Builds dictionaries describing plugin tasks from a configuration file
@@ -695,6 +659,7 @@ class ResourceImportService(object):
         Args:
             tasks_config: A list of dictionaries describing plugin tasks
             param_types: A dictionary mapping param type name to the ORM object
+            is_function_task: True if the task is a function task, false otherwise
 
         Returns:
             A dictionary mapping PluginFile name to a list of tasks
@@ -702,46 +667,126 @@ class ResourceImportService(object):
 
         tasks = defaultdict(list)
         for task in tasks_config:
-            try:
-                input_params = [
-                    {
-                        "name": param["name"],
-                        "parameter_type_id": param_types[param["type"]].resource_id,
-                        "required": param.get("required", False),
-                    }
-                    for param in task["input_params"]
-                ]
-            except KeyError as e:
-                raise ImportFailedError(
-                    "Plugin task input parameter type not found.",
-                    reason=f"Parameter type named {e} not does not exist and "
-                    "is not defined in provided toml config.",
-                ) from e
-
-            try:
-                output_params = [
-                    {
-                        "name": param["name"],
-                        "parameter_type_id": param_types[param["type"]].resource_id,
-                    }
-                    for param in task["output_params"]
-                ]
-            except KeyError as e:
-                raise ImportFailedError(
-                    "Plugin task output parameter type not found.",
-                    reason=f"Parameter type named {e} not does not exist and "
-                    "is not defined in provided toml config.",
-                ) from e
-
-            tasks[task["filename"]].append(
-                {
-                    "name": task["name"],
-                    "description": task.get("description", None),
-                    "input_params": input_params,
-                    "output_params": output_params,
-                }
-            )
+            entry = {
+                "name": task["name"],
+                "description": task.get("description", None),
+                "output_params": ResourceImportService._build_params_list(
+                    task["output_params"], param_types, include_required=False
+                ),
+            }
+            if is_function_task:
+                entry["input_params"] = ResourceImportService._build_params_list(
+                    task["input_params"], param_types, include_required=True
+                )
+            tasks[task["filename"]].append(entry)
         return tasks
+
+    @staticmethod
+    def _build_entrypoint_params_list(
+        entrypoint_params: list[dict[str, Any]],
+    ):
+        """
+        Verifies the param types are valid and and constructs a list of dictionaries in
+        the structure expected by the Entrypoint ORM object.
+
+        Args:
+            params: A list of dictionaries describing task parameters
+
+        Raises:
+            ImportFailedError: If a parameter type is not valid
+        """
+        for param in entrypoint_params:
+            if param["type"] not in VALID_ENTRYPOINT_PARAM_TYPES:
+                raise ImportFailedError(
+                    "Invalid entrypoint parameter type provided.",
+                    reason=f"Found '{param['type']}' but must be one of "
+                    f"{VALID_ENTRYPOINT_PARAM_TYPES}.",
+                )
+
+        return [
+            {
+                "name": param["name"],
+                "parameter_type": param["type"],
+                "default_value": param.get("default_value", None),
+            }
+            for param in entrypoint_params
+        ]
+
+    @staticmethod
+    def _build_params_list(
+        params: list[dict[str, Any]],
+        param_types: dict[str, models.PluginTaskParameterType],
+        include_required: bool = False,
+    ):
+        """
+        Looks up the plugin parameter types specified in the config and constructs a
+        list of dictionaries in the structure expected by the Entrypoint ORM object.
+
+        Args:
+            params: A list of dictionaries describing task parameters
+            param_types: A dictionary mapping param type name to the ORM object
+            include_required: Whether to include the 'required' field
+
+        Raises:
+            ImportFailedError: If a plugin parameter type cannot be found
+        """
+        try:
+            return [
+                {
+                    "name": param["name"],
+                    "parameter_type_id": param_types[param["type"]].resource_id,
+                    **(
+                        {"required": param.get("required", False)}
+                        if include_required
+                        else {}
+                    ),
+                }
+                for param in params
+            ]
+        except KeyError as e:
+            raise ImportFailedError(
+                "Plugin parameter type specified in task parameters not found.",
+                reason=f"Parameter type named {e} not does not exist and "
+                "is not defined in provided toml config.",
+            ) from e
+
+    @staticmethod
+    def _build_artifacts_params_list(
+        artifact_params: list[dict[str, Any]],
+        param_types: dict[str, models.PluginTaskParameterType],
+    ):
+        """
+        Looks up the plugin parameter types specified in the config and constructs a
+        list of dictionaries in the structure expected by the Entrypoint ORM object.
+
+        Args:
+            artifact_params: A list of dictionaries describing artifact parameters
+            param_types: A dictionary mapping param type name to the ORM object
+
+        Raises:
+            ImportFailedError: If a plugin parameter type cannot be found
+        """
+        try:
+
+            return [
+                {
+                    "name": artifact["name"],
+                    "output_params": [
+                        {
+                            "name": param["name"],
+                            "parameter_type_id": param_types[param["type"]].resource_id,
+                        }
+                        for param in artifact["output_params"]
+                    ],
+                }
+                for artifact in artifact_params
+            ]
+        except KeyError as e:
+            raise ImportFailedError(
+                "Plugin parameter type specified in artifact parameters not found.",
+                reason=f"Parameter type named {e} not does not exist and "
+                "is not defined in provided toml config.",
+            ) from e
 
 
 class DraftCommitService(object):
@@ -862,9 +907,24 @@ class EntryPointParameterDataAdapter(object):
 
 
 @dataclass
+class TaskOutputParameterDataAdapter(object):
+    parameter_number: int
+    name: str
+    parameter_type: models.PluginTaskParameterType
+
+
+@dataclass
+class EntryPointArtifactDataAdapter(object):
+    name: str
+    output_parameters: list[TaskOutputParameterDataAdapter]
+
+
+@dataclass
 class EntryPointDataAdapter(object):
     task_graph: str
+    artifact_graph: str
     parameters: list[EntryPointParameterDataAdapter]
+    artifact_parameters: list[EntryPointArtifactDataAdapter]
 
 
 class ValidateEntrypointService(object):
@@ -888,8 +948,10 @@ class ValidateEntrypointService(object):
         self,
         group_id: int,
         task_graph: str,
+        artifact_graph: str,
         plugin_snapshot_ids: list[int],
         entrypoint_parameters: list[dict[str, Any]],
+        entrypoint_artifacts: list[dict[str, Any]],
         **kwargs,
     ) -> dict[str, Any]:
         """Validate the proposed inputs to an entrypoint resource.
@@ -897,9 +959,12 @@ class ValidateEntrypointService(object):
         Args:
             group_id: The ID of the group validating the entrypoint resource.
             task_graph: The proposed task graph for the entrypoint resource.
+            artifact_graph: The proposed artifact graph for the entrypoint resource.
             plugin_snapshot_ids: A list of identifiers for the plugin snapshots that
                 will be attached to the Entrypoint resource.
             entrypoint_parameters: The proposed list of parameters for the entrypoint
+                resource.
+            entrypoint_artifacts: The proposed list of Artifacts for the entrypoint
                 resource.
 
         Returns:
@@ -916,12 +981,21 @@ class ValidateEntrypointService(object):
         log.debug(
             "Validating input for an entrypoint resource",
             task_graph=task_graph,
+            artifact_graph=artifact_graph,
             plugin_ids=plugin_snapshot_ids,
             entrypoint_parameters=entrypoint_parameters,
+            entrypoint_artifacts=entrypoint_artifacts,
         )
 
+        type_ids = [
+            parameter["parameter_type_id"]
+            for artifact in entrypoint_artifacts
+            for parameter in artifact["output_parameters"]
+        ]
+        id_type_map = get_plugin_task_parameter_types_by_id(ids=type_ids, log=log)
         entrypoint = EntryPointDataAdapter(
             task_graph=task_graph,
+            artifact_graph=artifact_graph,
             parameters=[
                 EntryPointParameterDataAdapter(
                     parameter_type=param["parameter_type"],
@@ -930,16 +1004,30 @@ class ValidateEntrypointService(object):
                 )
                 for param in entrypoint_parameters
             ],
-        )
-        plugin_plugin_files = views.get_plugin_plugin_files_from_plugin_snapshot_ids(
-            plugin_snapshot_ids=plugin_snapshot_ids, logger=log
+            artifact_parameters=[
+                EntryPointArtifactDataAdapter(
+                    name=artifact["name"],
+                    output_parameters=[
+                        TaskOutputParameterDataAdapter(
+                            name=param["name"],
+                            parameter_number=p,
+                            parameter_type=id_type_map[param["parameter_type_id"]],
+                        )
+                        for p, param in enumerate(entrypoint_parameters)
+                    ],
+                )
+                for artifact in entrypoint_artifacts
+            ],
         )
         plugin_parameter_types = views.get_plugin_parameter_types(
             group_id=group_id, logger=log
         )
+        plugin_plugin_files = views.get_plugin_plugin_files_from_plugin_snapshot_ids(
+            plugin_snapshot_ids=plugin_snapshot_ids, logger=log
+        )
         try:
             task_engine_dict = self._task_engine_yaml_service.build_dict(
-                entry_point=entrypoint,
+                entry_point=entrypoint,  # pyright: ignore
                 plugin_plugin_files=plugin_plugin_files,  # pyright: ignore
                 plugin_parameter_types=plugin_parameter_types,  # pyright: ignore
                 logger=log,

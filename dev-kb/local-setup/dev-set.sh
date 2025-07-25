@@ -256,6 +256,7 @@ else
   export DIOPTRA_API="http://localhost:5000"       # This is the default API location when you run `flask run`
   export RQ_REDIS_URI="redis://localhost:6379/0"   # This is the default URI when you run `redis-server`
   export MLFLOW_S3_ENDPOINT_URL="http://localhost:35000"  # If you're running a MLflow Tracking server, update this to point at it. Otherwise, this is a placeholder.
+  export MLFLOW_TRACKING_URI="http://localhost:35000"  # If you're running a MLflow Tracking server, update this to point at it. Otherwise, this is a placeholder.
   #export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES   # Macs only, needed to make the RQ worker (i.e. the Dioptra Worker) work
   ######## End-of Worker Configuration
 

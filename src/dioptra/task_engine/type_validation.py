@@ -38,6 +38,7 @@ def _get_reference_type(
     global_parameter_types: _TypeMap,
     graph: _DefMap,
     tasks: _DefMap,
+    artifact_inputs: _DefMap,
 ) -> types.Type:
     """
     Given a reference, look up its type.
@@ -65,6 +66,26 @@ def _get_reference_type(
     # validation has previously occurred, to catch things like bad references.
     if ref_output_name is None and ref_name in global_parameter_types:
         type_ = global_parameter_types[ref_name]
+
+    elif ref_name in artifact_inputs:
+        artifact_outputs = artifact_inputs[ref_name]
+        if not isinstance(artifact_outputs, list):
+            artifact_outputs = [artifact_outputs]
+
+        output_type_name = None
+        if ref_output_name is None:
+            output_def = artifact_outputs[0]
+            output_type_name = next(iter(output_def.values()))
+        else:
+            for output_def in artifact_outputs:
+                this_output_name, output_type_name = next(iter(output_def.items()))
+                if this_output_name == ref_output_name:
+                    break
+
+        # Assume references have already been validated, so we will always
+        # find an output which matches the reference.
+        assert output_type_name
+        type_ = type_reg[output_type_name]
 
     else:
         step_def = graph[ref_name]
@@ -161,6 +182,7 @@ def _infer_type_from_mapping(
     global_parameter_types: Optional[_TypeMap] = None,
     graph: Optional[_DefMap] = None,
     tasks: Optional[_DefMap] = None,
+    artifact_inputs: Optional[_DefMap] = None,
 ) -> types.Type:
     """
     Infer the type of the given Mapping value.  This always produces a mapping
@@ -196,7 +218,12 @@ def _infer_type_from_mapping(
             # If keys are strings, infer an enumerated mapping type
             prop_types = {
                 prop_name: _infer_type(
-                    prop_value, type_reg, global_parameter_types, graph, tasks
+                    prop_value,
+                    type_reg,
+                    global_parameter_types,
+                    graph,
+                    tasks,
+                    artifact_inputs,
                 )
                 for prop_name, prop_value in mapping.items()
             }
@@ -210,7 +237,9 @@ def _infer_type_from_mapping(
             # permitted.  Need to come up with a single type from potentially
             # multiple different property value types.
             value_types = {
-                _infer_type(v, type_reg, global_parameter_types, graph, tasks)
+                _infer_type(
+                    v, type_reg, global_parameter_types, graph, tasks, artifact_inputs
+                )
                 for v in mapping.values()
             }
 
@@ -247,6 +276,7 @@ def _infer_type_from_iterable(
     global_parameter_types: Optional[_TypeMap] = None,
     graph: Optional[_DefMap] = None,
     tasks: Optional[_DefMap] = None,
+    artifact_inputs: Optional[_DefMap] = None,
 ) -> types.Type:
     """
     Infer the type of the given iterable value.  This always produces a tuple
@@ -269,7 +299,9 @@ def _infer_type_from_iterable(
     """
     # Infer all element types
     elt_types = [
-        _infer_type(elt, type_reg, global_parameter_types, graph, tasks)
+        _infer_type(
+            elt, type_reg, global_parameter_types, graph, tasks, artifact_inputs
+        )
         for elt in iterable
     ]
 
@@ -286,6 +318,7 @@ def _infer_type(
     global_parameter_types: Optional[_TypeMap] = None,
     graph: Optional[_DefMap] = None,
     tasks: Optional[_DefMap] = None,
+    artifact_inputs: Optional[_DefMap] = None,
 ) -> types.Type:
     """
     Infer the type of the given value.  If the latter four parameters are
@@ -312,9 +345,15 @@ def _infer_type(
             and global_parameter_types is not None
             and graph is not None
             and tasks is not None
+            and artifact_inputs is not None
         ):
             type_ = _get_reference_type(
-                value[1:], type_reg, global_parameter_types, graph, tasks
+                value[1:],
+                type_reg,
+                global_parameter_types,
+                graph,
+                tasks,
+                artifact_inputs,
             )
         else:
             type_ = type_registry.TYPE_STRING
@@ -333,12 +372,12 @@ def _infer_type(
 
     elif isinstance(value, Mapping):
         type_ = _infer_type_from_mapping(
-            value, type_reg, global_parameter_types, graph, tasks
+            value, type_reg, global_parameter_types, graph, tasks, artifact_inputs
         )
 
     elif util.is_iterable(value):
         type_ = _infer_type_from_iterable(
-            value, type_reg, global_parameter_types, graph, tasks
+            value, type_reg, global_parameter_types, graph, tasks, artifact_inputs
         )
 
     else:
@@ -626,6 +665,7 @@ def _check_invocation_parameter(
     global_parameter_types: _TypeMap,
     graph: _DefMap,
     tasks: _DefMap,
+    artifact_inputs: _DefMap,
 ) -> list[ValidationIssue]:
     """
     Check the type of one task invocation parameter from a step against the
@@ -651,7 +691,12 @@ def _check_invocation_parameter(
     task_param_type = type_reg[task_param_type_name]
 
     inferred_invocation_arg_type = _infer_type(
-        invocation_arg_spec, type_reg, global_parameter_types, graph, tasks
+        invocation_arg_spec,
+        type_reg,
+        global_parameter_types,
+        graph,
+        tasks,
+        artifact_inputs,
     )
 
     if not _types_compatible(inferred_invocation_arg_type, task_param_type):
@@ -672,6 +717,7 @@ def _step_check_types(
     global_parameter_types: _TypeMap,
     graph: _DefMap,
     tasks: _DefMap,
+    artifact_inputs: _DefMap,
 ) -> list[ValidationIssue]:
     """
     Check the types of task invocation parameters in the given step.
@@ -729,6 +775,7 @@ def _step_check_types(
             global_parameter_types,
             graph,
             tasks,
+            artifact_inputs,
         )
 
         # Augment messages with info not known at the point where the message
@@ -756,6 +803,7 @@ def _step_check_types(
             global_parameter_types,
             graph,
             tasks,
+            artifact_inputs,
         )
 
         for issue in issues:
@@ -876,6 +924,7 @@ def check_types(experiment_desc: Mapping[str, Any]) -> list[ValidationIssue]:
     global_parameter_spec = experiment_desc.get("parameters", {})
     tasks = experiment_desc["tasks"]
     graph = experiment_desc["graph"]
+    artifact_inputs = experiment_desc.get("artifact_inputs", {})
 
     type_reg = type_registry.build_type_registry(types_)
 
@@ -890,7 +939,12 @@ def check_types(experiment_desc: Mapping[str, Any]) -> list[ValidationIssue]:
     if not all_issues:
         for step_name, step_def in graph.items():
             issues = _step_check_types(
-                step_def, type_reg, global_parameter_types, graph, tasks
+                step_def,
+                type_reg,
+                global_parameter_types,
+                graph,
+                tasks,
+                artifact_inputs,
             )
 
             for issue in issues:

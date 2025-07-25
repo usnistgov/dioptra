@@ -25,7 +25,6 @@ from http import HTTPStatus
 from typing import Any
 
 import pytest
-from flask_sqlalchemy import SQLAlchemy
 from pytest import MonkeyPatch
 
 from dioptra.client.base import DioptraResponseProtocol
@@ -285,7 +284,6 @@ def assert_job_metrics_snapshots_matches_expectations(
 
 def test_create_job(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_queues: dict[str, Any],
     registered_experiments: dict[str, Any],
@@ -502,7 +500,6 @@ def test_create_job_with_empty_values(
 
 def test_create_job_using_entrypoint_snapshot_id(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_queues: dict[str, Any],
     registered_experiments: dict[str, Any],
@@ -546,8 +543,10 @@ def test_create_job_using_entrypoint_snapshot_id(
         entrypoint_id=entrypoint_id,
         name=updated_entrypoint_name,
         task_graph=registered_entrypoints["entrypoint1"]["taskGraph"],
+        artifact_graph=registered_entrypoints["entrypoint1"]["artifactGraph"],
         description=registered_entrypoints["entrypoint1"]["description"],
         parameters=registered_entrypoints["entrypoint1"]["parameters"],
+        artifact_parameters=registered_entrypoints["entrypoint1"]["artifactParameters"],
         queues=queue_ids,
     ).json()
     new_entrypoint_snapshot_id = modified_entrypoint["snapshot"]
@@ -619,7 +618,6 @@ def test_create_job_using_entrypoint_snapshot_id(
 
 def test_mlflowrun(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
     registered_mlflowrun_incomplete: dict[str, Any],
@@ -645,7 +643,6 @@ def test_mlflowrun(
 
 def test_metrics(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
     registered_experiments: dict[str, Any],
@@ -766,7 +763,6 @@ def test_metrics(
 
 def test_job_get_all(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
 ) -> None:
@@ -793,7 +789,6 @@ def test_job_get_all(
 )
 def test_job_sort(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
     sortBy: str,
@@ -822,7 +817,6 @@ def test_job_sort(
 
 def test_job_search_query(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
 ) -> None:
@@ -847,7 +841,6 @@ def test_job_search_query(
 
 def test_job_group_query(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
 ) -> None:
@@ -870,7 +863,6 @@ def test_job_group_query(
 
 def test_delete_job(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
 ) -> None:
@@ -890,7 +882,6 @@ def test_delete_job(
 
 def test_job_get_status(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
 ) -> None:
@@ -911,7 +902,6 @@ def test_job_get_status(
 
 def test_modify_job_status(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
 ) -> None:
@@ -937,7 +927,6 @@ def test_modify_job_status(
 
 def test_manage_job_snapshots(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
 ) -> None:
@@ -974,7 +963,6 @@ def test_manage_job_snapshots(
 
 def test_tag_job(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
     registered_tags: dict[str, Any],

@@ -25,8 +25,8 @@ import uuid
 
 import pytest
 from faker import Faker
-from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm.session import Session as DBSession
 
 from dioptra.restapi.db import models
 from dioptra.restapi.db.models.constants import (
@@ -43,18 +43,18 @@ from .lib.db import views as viewsdb
 
 @pytest.fixture
 def second_account(
-    db: SQLAlchemy, account: libdb.FakeData, fake_data: libdb.FakeData
+    db_session: DBSession, account: libdb.FakeData, fake_data: libdb.FakeData
 ) -> libdb.FakeAccount:
     new_account = fake_data.account()
-    db.session.add(new_account.user)
-    db.session.add(new_account.group)
-    db.session.commit()
+    db_session.add(new_account.user)
+    db_session.add(new_account.group)
+    db_session.commit()
     return new_account
 
 
 @pytest.fixture
 def deleted_user_id(
-    db: SQLAlchemy,
+    db_session: DBSession,
     account: libdb.FakeAccount,
 ) -> int:
     deleted_user_id = account.user.user_id
@@ -62,14 +62,14 @@ def deleted_user_id(
         user_lock_type=user_lock_types.DELETE,
         user=account.user,
     )
-    db.session.add(deleted_user_lock)
-    db.session.commit()
+    db_session.add(deleted_user_lock)
+    db_session.commit()
     return deleted_user_id
 
 
 @pytest.fixture
 def deleted_group_id(
-    db: SQLAlchemy,
+    db_session: DBSession,
     account: libdb.FakeAccount,
 ) -> int:
     deleted_group_id = account.group.group_id
@@ -77,52 +77,52 @@ def deleted_group_id(
         group_lock_type=group_lock_types.DELETE,
         group=account.group,
     )
-    db.session.add(deleted_group_lock)
-    db.session.commit()
+    db_session.add(deleted_group_lock)
+    db_session.commit()
     return deleted_group_id
 
 
 @pytest.fixture
 def tag_id(
-    db: SQLAlchemy,
+    db_session: DBSession,
     account: libdb.FakeAccount,
     fake_data: libdb.FakeData,
 ) -> int:
     new_tag = fake_data.tag(creator=account.user, group=account.group)
-    db.session.add(new_tag)
-    db.session.commit()
+    db_session.add(new_tag)
+    db_session.commit()
     return new_tag.tag_id
 
 
 @pytest.fixture
 def registered_queue_id(
-    db: SQLAlchemy,
+    db_session: DBSession,
     account: libdb.FakeAccount,
     fake_data: libdb.FakeData,
 ) -> int:
     new_queue = fake_data.queue(creator=account.user, group=account.group)
-    db.session.add(new_queue)
-    db.session.commit()
+    db_session.add(new_queue)
+    db_session.commit()
     return new_queue.resource_id
 
 
 @pytest.fixture
 def registered_queue_id_with_description(
-    db: SQLAlchemy,
+    db_session: DBSession,
     account: libdb.FakeAccount,
     fake_data: libdb.FakeData,
 ) -> int:
     new_queue = fake_data.queue(
         creator=account.user, group=account.group, include_description=True
     )
-    db.session.add(new_queue)
-    db.session.commit()
+    db_session.add(new_queue)
+    db_session.commit()
     return new_queue.resource_id
 
 
 @pytest.fixture
 def draft_resource_id_for_new_queue_resource(
-    db: SQLAlchemy,
+    db_session: DBSession,
     account: libdb.FakeAccount,
     fake_data: libdb.FakeData,
 ) -> int:
@@ -145,18 +145,18 @@ def draft_resource_id_for_new_queue_resource(
         payload=draft_payload,
         creator=account.user,
     )
-    db.session.add(draft_resource)
-    db.session.commit()
+    db_session.add(draft_resource)
+    db_session.commit()
     return draft_resource.draft_resource_id
 
 
 @pytest.fixture
 def edited_queue_id(
-    db: SQLAlchemy,
+    db_session: DBSession,
     faker: Faker,
     registered_queue_id: int,
 ) -> int:
-    queue_v1 = viewsdb.get_latest_queue(db, resource_id=registered_queue_id)
+    queue_v1 = viewsdb.get_latest_queue(db_session, resource_id=registered_queue_id)
 
     if queue_v1 is None:
         raise ValueError("Failed to retrieve the latest queue for test.")
@@ -167,10 +167,10 @@ def edited_queue_id(
         resource=queue_v1.resource,
         creator=queue_v1.creator,
     )
-    db.session.add(queue_v2)
-    db.session.commit()
+    db_session.add(queue_v2)
+    db_session.commit()
 
-    queue_v2 = viewsdb.get_latest_queue(db, resource_id=registered_queue_id)
+    queue_v2 = viewsdb.get_latest_queue(db_session, resource_id=registered_queue_id)
 
     if queue_v2 is None:
         raise ValueError("Failed to retrieve the latest queue for test.")
@@ -181,18 +181,18 @@ def edited_queue_id(
         resource=queue_v2.resource,
         creator=queue_v2.creator,
     )
-    db.session.add(queue_v3)
-    db.session.commit()
+    db_session.add(queue_v3)
+    db_session.commit()
 
     return registered_queue_id
 
 
 @pytest.fixture
 def deleted_queue_id(
-    db: SQLAlchemy,
+    db_session: DBSession,
     registered_queue_id: int,
 ) -> int:
-    queue = viewsdb.get_latest_queue(db, resource_id=registered_queue_id)
+    queue = viewsdb.get_latest_queue(db_session, resource_id=registered_queue_id)
 
     if queue is None:
         raise ValueError("Failed to retrieve the latest queue for test.")
@@ -201,37 +201,37 @@ def deleted_queue_id(
         resource_lock_type=resource_lock_types.DELETE,
         resource=queue.resource,
     )
-    db.session.add(deleted_resource_lock)
-    db.session.commit()
+    db_session.add(deleted_resource_lock)
+    db_session.commit()
     return registered_queue_id
 
 
 @pytest.fixture
 def registered_and_tagged_queue_id(
-    db: SQLAlchemy,
+    db_session: DBSession,
     registered_queue_id: int,
     tag_id: int,
 ) -> int:
-    tag = db.session.get_one(models.Tag, tag_id)
-    queue = viewsdb.get_latest_queue(db, resource_id=registered_queue_id)
+    tag = db_session.get_one(models.Tag, tag_id)
+    queue = viewsdb.get_latest_queue(db_session, resource_id=registered_queue_id)
 
     if queue is None:
         raise ValueError("Failed to retrieve the latest queue for test.")
 
     tag.resources.append(queue.resource)
-    db.session.commit()
+    db_session.commit()
 
     return queue.resource_id
 
 
 @pytest.fixture
 def shared_resource_id_for_queue(
-    db: SQLAlchemy,
+    db_session: DBSession,
     account: libdb.FakeAccount,
     second_account: libdb.FakeAccount,
     registered_queue_id: int,
 ) -> int:
-    queue = viewsdb.get_latest_queue(db, resource_id=registered_queue_id)
+    queue = viewsdb.get_latest_queue(db_session, resource_id=registered_queue_id)
 
     if queue is None:
         raise ValueError("Failed to retrieve the latest queue for test.")
@@ -245,79 +245,81 @@ def shared_resource_id_for_queue(
         resource=queue.resource,
         creator=account.user,
     )
-    db.session.add(shared_resource)
-    db.session.commit()
+    db_session.add(shared_resource)
+    db_session.commit()
 
     return shared_resource.shared_resource_id
 
 
 @pytest.fixture
 def registered_experiment_id(
-    db: SQLAlchemy,
+    db_session: DBSession,
     account: libdb.FakeAccount,
     fake_data: libdb.FakeData,
 ) -> int:
     new_experiment = fake_data.experiment(creator=account.user, group=account.group)
-    db.session.add(new_experiment)
-    db.session.commit()
+    db_session.add(new_experiment)
+    db_session.commit()
     return new_experiment.resource_id
 
 
 @pytest.fixture
 def registered_experiment_id_with_description(
-    db: SQLAlchemy,
+    db_session: DBSession,
     account: libdb.FakeAccount,
     fake_data: libdb.FakeData,
 ) -> int:
     new_experiment = fake_data.experiment(
         creator=account.user, group=account.group, include_description=True
     )
-    db.session.add(new_experiment)
-    db.session.commit()
+    db_session.add(new_experiment)
+    db_session.commit()
     return new_experiment.resource_id
 
 
 @pytest.fixture
 def registered_and_tagged_experiment_id(
-    db: SQLAlchemy,
+    db_session: DBSession,
     registered_experiment_id: int,
     tag_id: int,
 ) -> int:
-    tag = db.session.get_one(models.Tag, tag_id)
-    experiment = viewsdb.get_latest_experiment(db, resource_id=registered_experiment_id)
+    tag = db_session.get_one(models.Tag, tag_id)
+    experiment = viewsdb.get_latest_experiment(
+        db_session, resource_id=registered_experiment_id
+    )
 
     if experiment is None:
         raise ValueError("Failed to retrieve the latest queue for test.")
 
     tag.resources.append(experiment.resource)
-    db.session.commit()
+    db_session.commit()
 
     return experiment.resource_id
 
 
 @pytest.fixture
 def registered_str_parameter_type_id(
-    db: SQLAlchemy,
+    db_session: DBSession,
     account: libdb.FakeAccount,
     fake_data: libdb.FakeData,
 ) -> int:
     new_plugin_task_parameter_type = fake_data.plugin_task_parameter_type(
         creator=account.user, group=account.group, name="str"
     )
-    db.session.add(new_plugin_task_parameter_type)
-    db.session.commit()
+    db_session.add(new_plugin_task_parameter_type)
+    db_session.commit()
     return new_plugin_task_parameter_type.resource_id
 
 
 @pytest.fixture
 def registered_plugin_id(
-    db: SQLAlchemy,
+    db_session: DBSession,
     account: libdb.FakeAccount,
     fake_data: libdb.FakeData,
     registered_str_parameter_type_id: int,
 ) -> int:
     registered_str_parameter_type = viewsdb.get_latest_plugin_task_parameter_type(
-        db, resource_id=registered_str_parameter_type_id
+        db_session, resource_id=registered_str_parameter_type_id
     )
 
     if registered_str_parameter_type is None:
@@ -330,34 +332,38 @@ def registered_plugin_id(
         group=account.group,
         str_parameter_type=registered_str_parameter_type,
     )
-    db.session.add(new_plugin.plugin)
-    db.session.add(new_plugin.init_plugin_file)
-    db.session.add(new_plugin.plugin_file)
-    db.session.add(new_plugin.plugin_task)
-    db.session.commit()
+    db_session.add(new_plugin.plugin)
+    db_session.add(new_plugin.init_plugin_file)
+    db_session.add(new_plugin.plugin_file)
+    db_session.add(new_plugin.plugin_task)
+    db_session.commit()
     return new_plugin.plugin.resource_id
 
 
 @pytest.fixture
 def registered_entry_point_id(
-    db: SQLAlchemy,
+    db_session: DBSession,
     account: libdb.FakeAccount,
     fake_data: libdb.FakeData,
     registered_queue_id: int,
     registered_plugin_id: int,
 ) -> int:
-    registered_queue = viewsdb.get_latest_queue(db, resource_id=registered_queue_id)
+    registered_queue = viewsdb.get_latest_queue(
+        db_session, resource_id=registered_queue_id
+    )
 
     if registered_queue is None:
         raise ValueError("Failed to retrieve the latest queue for test.")
 
-    registered_plugin = viewsdb.get_latest_plugin(db, resource_id=registered_plugin_id)
+    registered_plugin = viewsdb.get_latest_plugin(
+        db_session, resource_id=registered_plugin_id
+    )
 
     if registered_plugin is None:
         raise ValueError("Failed to retrieve the latest plugin for test.")
 
     latest_plugin_files = viewsdb.get_latest_plugin_files(
-        db,
+        db_session,
         plugin_resource_id=registered_plugin_id,
     )
     new_entry_point = fake_data.entry_point(
@@ -367,61 +373,61 @@ def registered_entry_point_id(
         plugin_files=latest_plugin_files,
         queue=registered_queue,
     )
-    db.session.add(new_entry_point)
-    db.session.commit()
+    db_session.add(new_entry_point)
+    db_session.commit()
 
     return new_entry_point.resource_id
 
 
 @pytest.fixture
 def registered_experiment_entry_point_id(
-    db: SQLAlchemy,
+    db_session: DBSession,
     registered_experiment_id: int,
     registered_entry_point_id: int,
 ) -> int:
     registered_experiment = viewsdb.get_latest_experiment(
-        db, resource_id=registered_experiment_id
+        db_session, resource_id=registered_experiment_id
     )
 
     if registered_experiment is None:
         raise ValueError("Failed to retrieve the latest experiment for test.")
 
     registered_entry_point = viewsdb.get_latest_entry_point(
-        db, resource_id=registered_entry_point_id
+        db_session, resource_id=registered_entry_point_id
     )
 
     if registered_entry_point is None:
         raise ValueError("Failed to retrieve the latest entry point for test.")
 
     registered_experiment.children.append(registered_entry_point.resource)
-    db.session.commit()
+    db_session.commit()
 
     return registered_experiment.resource_id
 
 
 @pytest.fixture
 def registered_job_id(
-    db: SQLAlchemy,
+    db_session: DBSession,
     account: libdb.FakeAccount,
     fake_data: libdb.FakeData,
     registered_experiment_entry_point_id: int,
 ) -> int:
     registered_experiment = viewsdb.get_latest_experiment(
-        db, resource_id=registered_experiment_entry_point_id
+        db_session, resource_id=registered_experiment_entry_point_id
     )
 
     if registered_experiment is None:
         raise ValueError("Failed to retrieve the latest experiment for test.")
 
     experiment_entry_points = viewsdb.get_latest_experiment_entry_points(
-        db, experiment_resource_id=registered_experiment_entry_point_id
+        db_session, experiment_resource_id=registered_experiment_entry_point_id
     )
 
     if not experiment_entry_points:
         raise ValueError("No entry points associated with experiment resource.")
 
     entry_point_queues = viewsdb.get_latest_entry_point_queues(
-        db, entry_point_resource_id=experiment_entry_points[0].resource_id
+        db_session, entry_point_resource_id=experiment_entry_points[0].resource_id
     )
 
     if not entry_point_queues:
@@ -434,42 +440,42 @@ def registered_job_id(
         experiment=registered_experiment,
         queue=entry_point_queues[0],
     )
-    db.session.add(new_job)
-    db.session.commit()
+    db_session.add(new_job)
+    db_session.commit()
 
     return new_job.resource_id
 
 
 @pytest.fixture
 def registered_child_job_id(
-    db: SQLAlchemy,
+    db_session: DBSession,
     account: libdb.FakeAccount,
     fake_data: libdb.FakeData,
     registered_experiment_entry_point_id: int,
     registered_job_id: int,
 ) -> int:
     registered_experiment = viewsdb.get_latest_experiment(
-        db, resource_id=registered_experiment_entry_point_id
+        db_session, resource_id=registered_experiment_entry_point_id
     )
 
     if registered_experiment is None:
         raise ValueError("Failed to retrieve the latest experiment for test.")
 
     experiment_entry_points = viewsdb.get_latest_experiment_entry_points(
-        db, experiment_resource_id=registered_experiment_entry_point_id
+        db_session, experiment_resource_id=registered_experiment_entry_point_id
     )
 
     if not experiment_entry_points:
         raise ValueError("No entry points associated with experiment resource.")
 
     entry_point_queues = viewsdb.get_latest_entry_point_queues(
-        db, entry_point_resource_id=experiment_entry_points[0].resource_id
+        db_session, entry_point_resource_id=experiment_entry_points[0].resource_id
     )
 
     if not entry_point_queues:
         raise ValueError("No queues associated with entry point resource.")
 
-    parent_job = viewsdb.get_latest_job(db, resource_id=registered_job_id)
+    parent_job = viewsdb.get_latest_job(db_session, resource_id=registered_job_id)
 
     if parent_job is None:
         raise ValueError("Failed to retrieve the parent job for test.")
@@ -486,58 +492,60 @@ def registered_child_job_id(
     # parent_job ends.
     new_child_job.parents.append(parent_job.resource)
 
-    db.session.add(new_child_job)
-    db.session.commit()
+    db_session.add(new_child_job)
+    db_session.commit()
 
     return new_child_job.resource_id
 
 
 @pytest.fixture
 def registered_mlflow_run_job_resource_id(
-    db: SQLAlchemy,
+    db_session: DBSession,
     account: libdb.FakeAccount,
     fake_data: libdb.FakeData,
     registered_job_id: int,
 ) -> int:
-    job = viewsdb.get_latest_job(db, resource_id=registered_job_id)
+    job = viewsdb.get_latest_job(db_session, resource_id=registered_job_id)
 
     if job is None:
         raise ValueError("Failed to retrieve the latest job for test.")
 
     job_mlflow_run = fake_data.job_mlflow_run(job=job)
-    db.session.add(job_mlflow_run)
-    db.session.commit()
+    db_session.add(job_mlflow_run)
+    db_session.commit()
 
     return job_mlflow_run.job_resource_id
 
 
 @pytest.fixture
 def registered_artifact_id(
-    db: SQLAlchemy,
+    db_session: DBSession,
     account: libdb.FakeAccount,
     fake_data: libdb.FakeData,
     registered_job_id: int,
 ) -> int:
-    job = viewsdb.get_latest_job(db, resource_id=registered_job_id)
+    job = viewsdb.get_latest_job(db_session, resource_id=registered_job_id)
 
     if job is None:
         raise ValueError("Failed to retrieve the latest job for test.")
 
     artifact = fake_data.artifact(creator=account.user, group=account.group, job=job)
-    db.session.add(artifact)
-    db.session.commit()
+    db_session.add(artifact)
+    db_session.commit()
 
     return artifact.resource_id
 
 
 @pytest.fixture
 def registered_ml_model_id(
-    db: SQLAlchemy,
+    db_session: DBSession,
     account: libdb.FakeAccount,
     fake_data: libdb.FakeData,
     registered_artifact_id: int,
 ) -> int:
-    artifact = viewsdb.get_latest_artifact(db, resource_id=registered_artifact_id)
+    artifact = viewsdb.get_latest_artifact(
+        db_session, resource_id=registered_artifact_id
+    )
 
     if artifact is None:
         raise ValueError("Failed to retrieve the latest artifact for test.")
@@ -545,8 +553,8 @@ def registered_ml_model_id(
     ml_model = fake_data.ml_model(
         creator=account.user, group=account.group, artifact=artifact
     )
-    db.session.add(ml_model)
-    db.session.commit()
+    db_session.add(ml_model)
+    db_session.commit()
 
     return ml_model.resource_id
 
@@ -554,16 +562,16 @@ def registered_ml_model_id(
 # -- Tests -----------------------------------------------------------------------------
 
 
-def test_db_user_not_deleted(db: SQLAlchemy, account: libdb.FakeAccount) -> None:
-    user = db.session.get_one(models.User, account.user.user_id)
+def test_db_user_not_deleted(db_session: DBSession, account: libdb.FakeAccount) -> None:
+    user = db_session.get_one(models.User, account.user.user_id)
     delete_lock = [x for x in user.locks if x.user_lock_type == user_lock_types.DELETE]
     assert len(delete_lock) == 0
     assert isinstance(user.is_deleted, bool)
     assert not user.is_deleted
 
 
-def test_db_delete_user(db: SQLAlchemy, deleted_user_id: int) -> None:
-    deleted_user = db.session.get_one(models.User, deleted_user_id)
+def test_db_delete_user(db_session: DBSession, deleted_user_id: int) -> None:
+    deleted_user = db_session.get_one(models.User, deleted_user_id)
     delete_lock = [
         x for x in deleted_user.locks if x.user_lock_type == user_lock_types.DELETE
     ]
@@ -572,8 +580,10 @@ def test_db_delete_user(db: SQLAlchemy, deleted_user_id: int) -> None:
     assert deleted_user.is_deleted
 
 
-def test_db_group_not_deleted(db: SQLAlchemy, account: libdb.FakeAccount) -> None:
-    group = db.session.get_one(models.Group, account.group.group_id)
+def test_db_group_not_deleted(
+    db_session: DBSession, account: libdb.FakeAccount
+) -> None:
+    group = db_session.get_one(models.Group, account.group.group_id)
     delete_lock = [
         x for x in group.locks if x.group_lock_type == group_lock_types.DELETE
     ]
@@ -582,8 +592,8 @@ def test_db_group_not_deleted(db: SQLAlchemy, account: libdb.FakeAccount) -> Non
     assert not group.is_deleted
 
 
-def test_db_delete_group(db: SQLAlchemy, deleted_group_id: int) -> None:
-    deleted_group = db.session.get_one(models.Group, deleted_group_id)
+def test_db_delete_group(db_session: DBSession, deleted_group_id: int) -> None:
+    deleted_group = db_session.get_one(models.Group, deleted_group_id)
     delete_lock = [
         x for x in deleted_group.locks if x.group_lock_type == group_lock_types.DELETE
     ]
@@ -593,9 +603,9 @@ def test_db_delete_group(db: SQLAlchemy, deleted_group_id: int) -> None:
 
 
 def test_db_add_queue(
-    db: SQLAlchemy, account: libdb.FakeAccount, registered_queue_id: int
+    db_session: DBSession, account: libdb.FakeAccount, registered_queue_id: int
 ) -> None:
-    new_queue = viewsdb.get_latest_queue(db, resource_id=registered_queue_id)
+    new_queue = viewsdb.get_latest_queue(db_session, resource_id=registered_queue_id)
 
     assert new_queue is not None
     assert new_queue.creator.user_id == account.user.user_id
@@ -605,12 +615,12 @@ def test_db_add_queue(
 
 
 def test_db_add_queue_with_description(
-    db: SQLAlchemy,
+    db_session: DBSession,
     account: libdb.FakeAccount,
     registered_queue_id_with_description: int,
 ) -> None:
     new_queue = viewsdb.get_latest_queue(
-        db, resource_id=registered_queue_id_with_description
+        db_session, resource_id=registered_queue_id_with_description
     )
 
     assert new_queue is not None
@@ -621,11 +631,11 @@ def test_db_add_queue_with_description(
 
 
 def test_db_add_queue_using_data_in_a_draft_resource(
-    db: SQLAlchemy,
+    db_session: DBSession,
     account: libdb.FakeAccount,
     draft_resource_id_for_new_queue_resource: int,
 ) -> None:
-    draft_resource = db.session.get_one(
+    draft_resource = db_session.get_one(
         models.DraftResource, draft_resource_id_for_new_queue_resource
     )
     created_draft_resource_ids = {
@@ -646,11 +656,11 @@ def test_db_add_queue_using_data_in_a_draft_resource(
         ),
         creator=draft_resource.creator,
     )
-    db.session.add(new_queue)
-    db.session.delete(draft_resource)
-    db.session.commit()
+    db_session.add(new_queue)
+    db_session.delete(draft_resource)
+    db_session.commit()
 
-    deleted_draft_resource = db.session.get(
+    deleted_draft_resource = db_session.get(
         models.DraftResource, draft_resource_id_for_new_queue_resource
     )
 
@@ -664,12 +674,12 @@ def test_db_add_queue_using_data_in_a_draft_resource(
 
 
 def test_db_share_queue_resource(
-    db: SQLAlchemy,
+    db_session: DBSession,
     account: libdb.FakeAccount,
     second_account: libdb.FakeAccount,
     shared_resource_id_for_queue: int,
 ) -> None:
-    shared_resource = db.session.get_one(
+    shared_resource = db_session.get_one(
         models.SharedResource, shared_resource_id_for_queue
     )
     received_shared_resource_ids = {
@@ -678,7 +688,9 @@ def test_db_share_queue_resource(
     created_shared_resource_ids = {
         x.shared_resource_id for x in account.user.created_shares
     }
-    shared_queue = viewsdb.get_latest_queue(db, resource_id=shared_resource.resource_id)
+    shared_queue = viewsdb.get_latest_queue(
+        db_session, resource_id=shared_resource.resource_id
+    )
 
     assert shared_resource.shared_resource_id in received_shared_resource_ids
     assert shared_resource.shared_resource_id in created_shared_resource_ids
@@ -686,27 +698,27 @@ def test_db_share_queue_resource(
 
 
 def test_db_queue_resource_not_deleted(
-    db: SQLAlchemy, registered_queue_id: int
+    db_session: DBSession, registered_queue_id: int
 ) -> None:
-    queue = viewsdb.get_latest_queue(db, resource_id=registered_queue_id)
+    queue = viewsdb.get_latest_queue(db_session, resource_id=registered_queue_id)
     assert queue is not None
 
-    queue_resource = db.session.get_one(models.Resource, registered_queue_id)
+    queue_resource = db_session.get_one(models.Resource, registered_queue_id)
     assert isinstance(queue_resource.is_deleted, bool)
     assert not queue_resource.is_deleted
 
 
-def test_db_delete_queue_resource(db: SQLAlchemy, deleted_queue_id: int) -> None:
-    deleted_queue = viewsdb.get_latest_queue(db, resource_id=deleted_queue_id)
+def test_db_delete_queue_resource(db_session: DBSession, deleted_queue_id: int) -> None:
+    deleted_queue = viewsdb.get_latest_queue(db_session, resource_id=deleted_queue_id)
     assert deleted_queue is None
 
-    deleted_queue_resource = db.session.get_one(models.Resource, deleted_queue_id)
+    deleted_queue_resource = db_session.get_one(models.Resource, deleted_queue_id)
     assert isinstance(deleted_queue_resource.is_deleted, bool)
     assert deleted_queue_resource.is_deleted
 
 
-def test_db_queue_last_modified_on(db: SQLAlchemy, edited_queue_id: int) -> None:
-    queue = viewsdb.get_latest_queue(db, resource_id=edited_queue_id)
+def test_db_queue_last_modified_on(db_session: DBSession, edited_queue_id: int) -> None:
+    queue = viewsdb.get_latest_queue(db_session, resource_id=edited_queue_id)
 
     assert queue is not None
     assert len(queue.resource.versions) > 1
@@ -715,10 +727,10 @@ def test_db_queue_last_modified_on(db: SQLAlchemy, edited_queue_id: int) -> None
 
 
 def test_db_add_experiment(
-    db: SQLAlchemy, account: libdb.FakeAccount, registered_experiment_id: int
+    db_session: DBSession, account: libdb.FakeAccount, registered_experiment_id: int
 ) -> None:
     new_experiment = viewsdb.get_latest_experiment(
-        db, resource_id=registered_experiment_id
+        db_session, resource_id=registered_experiment_id
     )
 
     assert new_experiment is not None
@@ -729,12 +741,12 @@ def test_db_add_experiment(
 
 
 def test_db_add_experiment_with_description(
-    db: SQLAlchemy,
+    db_session: DBSession,
     account: libdb.FakeAccount,
     registered_experiment_id_with_description: int,
 ) -> None:
     new_experiment = viewsdb.get_latest_experiment(
-        db, resource_id=registered_experiment_id_with_description
+        db_session, resource_id=registered_experiment_id_with_description
     )
 
     assert new_experiment is not None
@@ -747,15 +759,17 @@ def test_db_add_experiment_with_description(
 
 
 def test_db_tag_resources(
-    db: SQLAlchemy,
+    db_session: DBSession,
     account: libdb.FakeAccount,
     registered_and_tagged_queue_id: int,
     registered_and_tagged_experiment_id: int,
     tag_id: int,
 ) -> None:
-    queue = viewsdb.get_latest_queue(db, resource_id=registered_and_tagged_queue_id)
+    queue = viewsdb.get_latest_queue(
+        db_session, resource_id=registered_and_tagged_queue_id
+    )
     experiment = viewsdb.get_latest_experiment(
-        db, resource_id=registered_and_tagged_experiment_id
+        db_session, resource_id=registered_and_tagged_experiment_id
     )
 
     assert queue is not None and experiment is not None
@@ -766,10 +780,12 @@ def test_db_tag_resources(
 
 
 def test_db_add_plugin_task_parameter_type(
-    db: SQLAlchemy, account: libdb.FakeAccount, registered_str_parameter_type_id: int
+    db_session: DBSession,
+    account: libdb.FakeAccount,
+    registered_str_parameter_type_id: int,
 ) -> None:
     new_plugin_task_parameter_type = viewsdb.get_latest_plugin_task_parameter_type(
-        db, resource_id=registered_str_parameter_type_id
+        db_session, resource_id=registered_str_parameter_type_id
     )
 
     assert new_plugin_task_parameter_type is not None
@@ -781,11 +797,11 @@ def test_db_add_plugin_task_parameter_type(
 
 
 def test_db_add_plugin(
-    db: SQLAlchemy, account: libdb.FakeAccount, registered_plugin_id: int
+    db_session: DBSession, account: libdb.FakeAccount, registered_plugin_id: int
 ) -> None:
-    new_plugin = viewsdb.get_latest_plugin(db, resource_id=registered_plugin_id)
+    new_plugin = viewsdb.get_latest_plugin(db_session, resource_id=registered_plugin_id)
     new_plugin_files = viewsdb.get_latest_plugin_files(
-        db, plugin_resource_id=registered_plugin_id
+        db_session, plugin_resource_id=registered_plugin_id
     )
 
     assert new_plugin is not None
@@ -802,10 +818,10 @@ def test_db_add_plugin(
     reason="Changes to the Entrypoint ORM object make this test incorrect."
 )
 def test_db_add_entry_point(
-    db: SQLAlchemy, account: libdb.FakeAccount, registered_entry_point_id: int
+    db_session: DBSession, account: libdb.FakeAccount, registered_entry_point_id: int
 ) -> None:
     new_entry_point = viewsdb.get_latest_entry_point(
-        db, resource_id=registered_entry_point_id
+        db_session, resource_id=registered_entry_point_id
     )
 
     assert new_entry_point is not None
@@ -818,11 +834,11 @@ def test_db_add_entry_point(
     reason="Changes to the Entrypoint ORM object make this test incorrect."
 )
 def test_db_add_job(
-    db: SQLAlchemy,
+    db_session: DBSession,
     account: libdb.FakeAccount,
     registered_job_id: int,
 ) -> None:
-    new_job = viewsdb.get_latest_job(db, resource_id=registered_job_id)
+    new_job = viewsdb.get_latest_job(db_session, resource_id=registered_job_id)
 
     assert new_job is not None
     assert new_job.creator.user_id == account.user.user_id
@@ -837,11 +853,11 @@ def test_db_add_job(
     reason="Changes to the Entrypoint ORM object make this test incorrect."
 )
 def test_db_add_job_that_depends_on_another_job(
-    db: SQLAlchemy,
+    db_session: DBSession,
     registered_job_id: int,
     registered_child_job_id: int,
 ) -> None:
-    child_job = viewsdb.get_latest_job(db, resource_id=registered_child_job_id)
+    child_job = viewsdb.get_latest_job(db_session, resource_id=registered_child_job_id)
 
     assert child_job is not None
     assert registered_job_id in {x.resource_id for x in child_job.parents}
@@ -851,10 +867,12 @@ def test_db_add_job_that_depends_on_another_job(
     reason="Changes to the Entrypoint ORM object make this test incorrect."
 )
 def test_db_add_mlflow_run_to_job(
-    db: SQLAlchemy,
+    db_session: DBSession,
     registered_mlflow_run_job_resource_id: int,
 ) -> None:
-    job = viewsdb.get_latest_job(db, resource_id=registered_mlflow_run_job_resource_id)
+    job = viewsdb.get_latest_job(
+        db_session, resource_id=registered_mlflow_run_job_resource_id
+    )
 
     assert job is not None
     assert job.mlflow_run is not None
@@ -863,17 +881,19 @@ def test_db_add_mlflow_run_to_job(
 
 @pytest.mark.skip(reason="Changes to the MlModel ORM object make this test incorrect.")
 def test_db_add_artifact_to_job(
-    db: SQLAlchemy,
+    db_session: DBSession,
     account: libdb.FakeAccount,
     registered_job_id: int,
     registered_artifact_id: int,
 ) -> None:
-    new_artifact = viewsdb.get_latest_artifact(db, resource_id=registered_artifact_id)
+    new_artifact = viewsdb.get_latest_artifact(
+        db_session, resource_id=registered_artifact_id
+    )
 
     # Validate that the job/artifact association worked as expected, should be identical
     # to new_artifact
     job_artifacts = viewsdb.get_latest_job_artifacts(
-        db, job_resource_id=registered_job_id
+        db_session, job_resource_id=registered_job_id
     )
 
     assert new_artifact is not None
@@ -886,11 +906,13 @@ def test_db_add_artifact_to_job(
 
 @pytest.mark.skip(reason="Changes to the MlModel ORM object make this test incorrect.")
 def test_db_add_ml_model_to_job(
-    db: SQLAlchemy,
+    db_session: DBSession,
     account: libdb.FakeAccount,
     registered_ml_model_id: int,
 ) -> None:
-    new_ml_model = viewsdb.get_latest_ml_model(db, resource_id=registered_ml_model_id)
+    new_ml_model = viewsdb.get_latest_ml_model(
+        db_session, resource_id=registered_ml_model_id
+    )
 
     assert new_ml_model is not None
     assert new_ml_model.creator.user_id == account.user.user_id
@@ -902,20 +924,22 @@ def test_db_add_ml_model_to_job(
 
 @pytest.mark.skip(reason="Changes to the MlModel ORM object make this test incorrect.")
 def test_db_invalid_resource_dependency_fails(
-    db: SQLAlchemy,
+    db_session: DBSession,
     registered_plugin_id: int,
     registered_ml_model_id: int,
 ) -> None:
-    plugin = viewsdb.get_latest_plugin(db, resource_id=registered_plugin_id)
-    ml_model = viewsdb.get_latest_ml_model(db, resource_id=registered_ml_model_id)
+    plugin = viewsdb.get_latest_plugin(db_session, resource_id=registered_plugin_id)
+    ml_model = viewsdb.get_latest_ml_model(
+        db_session, resource_id=registered_ml_model_id
+    )
 
     assert plugin is not None and ml_model is not None
 
     with pytest.raises(IntegrityError):
         try:
             ml_model.parents.append(plugin.resource)
-            db.session.commit()
+            db_session.commit()
 
         except IntegrityError as err:
-            db.session.rollback()
+            db_session.rollback()
             raise err

@@ -48,7 +48,6 @@ Current maintainers:
 
 {maintainers}
 """
-from __future__ import annotations
 
 # Standard library imports
 from collections import namedtuple as _namedtuple

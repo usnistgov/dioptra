@@ -20,12 +20,12 @@ This module contains a set of tests that validate the CRUD operations and additi
 functionalities for the entrypoint entity. The tests ensure that the entrypoints can be
 registered, renamed, deleted, and locked/unlocked as expected through the REST API.
 """
+
 import textwrap
 from http import HTTPStatus
 from typing import Any
 
 import pytest
-from flask_sqlalchemy import SQLAlchemy
 
 from dioptra.client.base import DioptraResponseProtocol, FieldNameCollisionError
 from dioptra.client.client import DioptraClient
@@ -63,8 +63,11 @@ def assert_entrypoint_response_contents_matches_expectations(
         "name",
         "description",
         "taskGraph",
+        "artifactGraph",
         "parameters",
+        "artifactParameters",
         "plugins",
+        "artifactPlugins",
         "queues",
         "tags",
     }
@@ -287,7 +290,9 @@ def assert_cannot_rename_entrypoint_with_existing_name(
     existing_name: str,
     existing_description: str,
     existing_task_graph: str,
+    existing_artifact_graph: str,
     existing_parameters: list[dict[str, Any]],
+    existing_artifact_parameters: list[dict[str, Any]],
     existing_queue_ids: list[int],
 ) -> None:
     """Assert that renaming a entrypoint with an existing name fails.
@@ -298,7 +303,9 @@ def assert_cannot_rename_entrypoint_with_existing_name(
         existing_name: str,
         existing_description: str,
         existing_task_graph: str,
+        existing_artifact_graph: str,
         existing_parameters: list[dict[str, Any]],
+        existing_artifact_parameters: list[dict[str, Any]],
         existing_queue_ids: list[int],
 
     Raises:
@@ -308,8 +315,10 @@ def assert_cannot_rename_entrypoint_with_existing_name(
         entrypoint_id=entrypoint_id,
         name=existing_name,
         task_graph=existing_task_graph,
+        artifact_graph=existing_artifact_graph,
         description=existing_description,
         parameters=existing_parameters,
+        artifact_parameters=existing_artifact_parameters,
         queues=existing_queue_ids,
     )
     assert response.status_code == HTTPStatus.BAD_REQUEST
@@ -321,18 +330,24 @@ def assert_entrypoint_must_have_unique_param_names(
     description: str,
     group_id: int,
     task_graph: str,
+    artifact_graph: str,
     parameters: list[dict[str, Any]],
+    artifact_parameters: list[dict[str, Any]],
     plugin_ids: list[int],
+    artifact_plugin_ids: list[int],
     queue_ids: list[int],
 ) -> None:
     response = dioptra_client.entrypoints.create(
         group_id=group_id,
         name=name,
         task_graph=task_graph,
+        artifact_graph=artifact_graph,
         description=description,
         parameters=parameters,
+        artifact_parameters=artifact_parameters,
         queues=queue_ids,
         plugins=plugin_ids,
+        artifact_plugins=artifact_plugin_ids,
     )
     assert response.status_code == HTTPStatus.CONFLICT
 
@@ -431,11 +446,13 @@ def assert_registering_entrypoint_with_no_queues_succeeds(
     entrypoint_response = dioptra_client.entrypoints.create(
         group_id=entry_point["group_id"],
         name=entry_point["name"],
+        artifact_graph=entry_point["artifact_graph"],
         task_graph=entry_point["task_graph"],
         description=entry_point["description"],
         parameters=entry_point["parameters"],
         queues=entry_point["queues"],
         plugins=entry_point["plugins"],
+        artifact_plugins=entry_point["artifact_plugins"],
     )
     assert (
         entrypoint_response and entrypoint_response.status_code == HTTPStatus.OK
@@ -452,7 +469,6 @@ def assert_registering_entrypoint_with_no_queues_succeeds(
 
 def test_create_entrypoint(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_with_files: dict[str, Any],
     registered_queues: dict[str, Any],
@@ -478,6 +494,7 @@ def test_create_entrypoint(
             my_entrypoint: $name
         """
     )
+    artifact_graph = ""
     parameters = [
         {
             "name": "my_entrypoint_param_1",
@@ -490,14 +507,18 @@ def test_create_entrypoint(
             "parameterType": "string",
         },
     ]
+    artifact_parameters = []
     plugin_ids = [registered_plugin_with_files["plugin"]["id"]]
+    artifact_plugin_ids = []
     queue_ids = [queue["id"] for queue in list(registered_queues.values())]
     entrypoint_response = dioptra_client.entrypoints.create(
         group_id=group_id,
         name=name,
         task_graph=task_graph,
+        artifact_graph=artifact_graph,
         description=description,
         parameters=parameters,
+        artifact_parameters=artifact_parameters,
         queues=queue_ids,
         plugins=plugin_ids,
     )
@@ -510,7 +531,9 @@ def test_create_entrypoint(
             "user_id": user_id,
             "group_id": group_id,
             "task_graph": task_graph,
+            "artifact_graph": artifact_graph,
             "parameters": parameters,
+            "artifact_parameters": artifact_parameters,
             "plugin_ids": plugin_ids,
             "queue_ids": queue_ids,
             "tags": [],
@@ -541,15 +564,17 @@ def test_create_entrypoint(
         description=description,
         group_id=group_id,
         task_graph=task_graph,
+        artifact_graph=artifact_graph,
         parameters=bad_parameters,
+        artifact_parameters=artifact_parameters,
         plugin_ids=plugin_ids,
+        artifact_plugin_ids=artifact_plugin_ids,
         queue_ids=queue_ids,
     )
 
 
 def test_entrypoint_get_all(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
 ) -> None:
@@ -598,7 +623,6 @@ def test_entrypoint_get_all(
 )
 def test_entrypoint_sort(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
     sortBy: str,
@@ -632,7 +656,6 @@ def test_entrypoint_sort(
 
 def test_entrypoint_search_query(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
 ) -> None:
@@ -659,7 +682,6 @@ def test_entrypoint_search_query(
 
 def test_entrypoint_group_query(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
 ) -> None:
@@ -683,7 +705,6 @@ def test_entrypoint_group_query(
 
 def test_cannot_register_existing_entrypoint_name(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
     registered_plugin_with_files: dict[str, Any],
@@ -715,7 +736,6 @@ def test_cannot_register_existing_entrypoint_name(
 
 def test_rename_entrypoint(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
 ) -> None:
@@ -744,8 +764,10 @@ def test_rename_entrypoint(
         entrypoint_id=entrypoint_to_rename["id"],
         name=updated_entrypoint_name,
         task_graph=entrypoint_to_rename["taskGraph"],
+        artifact_graph=entrypoint_to_rename["artifactGraph"],
         description=entrypoint_to_rename["description"],
         parameters=entrypoint_to_rename["parameters"],
+        artifact_parameters=entrypoint_to_rename["artifactParameters"],
         queues=queue_ids,
     ).json()
     assert_entrypoint_name_matches_expected_name(
@@ -767,8 +789,10 @@ def test_rename_entrypoint(
         entrypoint_id=entrypoint_to_rename["id"],
         name=updated_entrypoint_name,
         task_graph=entrypoint_to_rename["taskGraph"],
+        artifact_graph=entrypoint_to_rename["artifactGraph"],
         description=entrypoint_to_rename["description"],
         parameters=entrypoint_to_rename["parameters"],
+        artifact_parameters=entrypoint_to_rename["artifactParameters"],
         queues=queue_ids,
     ).json()
     assert_entrypoint_name_matches_expected_name(
@@ -783,14 +807,15 @@ def test_rename_entrypoint(
         existing_name=existing_entrypoint["name"],
         existing_description=entrypoint_to_rename["description"],
         existing_task_graph=entrypoint_to_rename["taskGraph"],
+        existing_artifact_graph=entrypoint_to_rename["artifactGraph"],
         existing_parameters=entrypoint_to_rename["parameters"],
+        existing_artifact_parameters=entrypoint_to_rename["artifactParameters"],
         existing_queue_ids=entrypoint_to_rename["queues"],
     )
 
 
 def test_delete_entrypoint_by_id(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_experiments: dict[str, Any],
 ) -> None:
@@ -819,7 +844,6 @@ def test_delete_entrypoint_by_id(
 
 def test_manage_existing_entrypoint_draft(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
 ) -> None:
@@ -865,14 +889,18 @@ def test_manage_existing_entrypoint_draft(
         "name": name,
         "description": description,
         "task_graph": task_graph,
+        "artifact_graph": "",
         "parameters": parameters,
+        "artifact_parameters": [],
         "queues": queue_ids,
     }
     draft_mod = {
         "name": new_name,
         "description": description,
         "task_graph": task_graph,
+        "artifact_graph": "",
         "parameters": parameters,
+        "artifact_parameters": [],
         "queues": queue_ids,
     }
 
@@ -887,7 +915,9 @@ def test_manage_existing_entrypoint_draft(
             "name": name,
             "description": description,
             "taskGraph": task_graph,
+            "artifactGraph": "",
             "parameters": parameters,
+            "artifactParameters": [],
             "queues": queue_ids,
         },
     }
@@ -901,7 +931,9 @@ def test_manage_existing_entrypoint_draft(
             "name": new_name,
             "description": description,
             "taskGraph": task_graph,
+            "artifactGraph": "",
             "parameters": parameters,
+            "artifactParameters": [],
             "queues": queue_ids,
         },
     }
@@ -921,7 +953,6 @@ def test_manage_existing_entrypoint_draft(
 
 def test_manage_new_entrypoint_drafts(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_queues: dict[str, Any],
     registered_plugins: dict[str, Any],
@@ -945,28 +976,37 @@ def test_manage_new_entrypoint_drafts(
             "name": "entrypoint1",
             "description": "new entrypoint",
             "task_graph": "graph",
+            "artifact_graph": "",
             "parameters": [],
+            "artifact_parameters": [],
             "plugins": [],
+            "artifact_plugins": [],
             "queues": [],
         },
         "draft2": {
             "name": "entrypoint2",
             "description": "entrypoint",
             "task_graph": "graph",
+            "artifact_graph": "",
             "parameters": [],
+            "artifact_parameters": [],
+            "plugins": [registered_plugins["plugin2"]["id"]],
+            "artifact_plugins": [],
             "queues": [
                 registered_queues["queue1"]["id"],
                 registered_queues["queue3"]["id"],
             ],
-            "plugins": [registered_plugins["plugin2"]["id"]],
         },
     }
     draft1_mod = {
         "name": "draft1",
         "description": "new description",
         "task_graph": "graph",
+        "artifact_graph": "",
         "parameters": [],
+        "artifact_parameters": [],
         "plugins": [],
+        "artifact_plugins": [],
         "queues": [],
     }
 
@@ -978,8 +1018,11 @@ def test_manage_new_entrypoint_drafts(
             "name": "entrypoint1",
             "description": "new entrypoint",
             "taskGraph": "graph",
+            "artifactGraph": "",
             "parameters": [],
+            "artifactParameters": [],
             "plugins": [],
+            "artifactPlugins": [],
             "queues": [],
         },
     }
@@ -990,12 +1033,15 @@ def test_manage_new_entrypoint_drafts(
             "name": "entrypoint2",
             "description": "entrypoint",
             "taskGraph": "graph",
+            "artifactGraph": "",
             "parameters": [],
+            "artifactParameters": [],
+            "plugins": [registered_plugins["plugin2"]["id"]],
+            "artifactPlugins": [],
             "queues": [
                 registered_queues["queue1"]["id"],
                 registered_queues["queue3"]["id"],
             ],
-            "plugins": [registered_plugins["plugin2"]["id"]],
         },
     }
     draft1_mod_expected = {
@@ -1005,8 +1051,11 @@ def test_manage_new_entrypoint_drafts(
             "name": "draft1",
             "description": "new description",
             "taskGraph": "graph",
+            "artifactGraph": "",
             "parameters": [],
+            "artifactParameters": [],
             "plugins": [],
+            "artifactPlugins": [],
             "queues": [],
         },
     }
@@ -1027,7 +1076,6 @@ def test_manage_new_entrypoint_drafts(
 
 def test_client_raises_error_on_field_name_collision(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
 ) -> None:
@@ -1092,7 +1140,6 @@ def test_client_raises_error_on_field_name_collision(
 
 def test_manage_entrypoint_snapshots(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
 ) -> None:
@@ -1115,8 +1162,10 @@ def test_manage_entrypoint_snapshots(
         entrypoint_id=entrypoint_to_rename["id"],
         name=entrypoint_to_rename["name"] + "modified",
         task_graph=entrypoint_to_rename["taskGraph"],
+        artifact_graph=entrypoint_to_rename["artifactGraph"],
         description=entrypoint_to_rename["description"],
         parameters=entrypoint_to_rename["parameters"],
+        artifact_parameters=entrypoint_to_rename["artifactParameters"],
         queues=queue_ids,
     ).json()
 
@@ -1131,7 +1180,6 @@ def test_manage_entrypoint_snapshots(
 
 def test_tag_entrypoint(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
     registered_tags: dict[str, Any],
@@ -1155,7 +1203,6 @@ def test_tag_entrypoint(
 
 def test_get_all_queues_for_entrypoint(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_queues: dict[str, Any],
     registered_entrypoints: dict[str, Any],
@@ -1176,7 +1223,6 @@ def test_get_all_queues_for_entrypoint(
 
 def test_append_queues_to_entrypoint(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_queues: dict[str, Any],
     registered_entrypoints: dict[str, Any],
@@ -1202,7 +1248,6 @@ def test_append_queues_to_entrypoint(
 
 def test_modify_queues_for_entrypoint(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_queues: dict[str, Any],
     registered_entrypoints: dict[str, Any],
@@ -1227,7 +1272,6 @@ def test_modify_queues_for_entrypoint(
 
 def test_delete_all_queues_for_entrypoint(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
 ) -> None:
@@ -1248,7 +1292,6 @@ def test_delete_all_queues_for_entrypoint(
 
 def test_delete_queue_by_id_for_entrypoint(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_queues: dict[str, Any],
     registered_entrypoints: dict[str, Any],
@@ -1274,7 +1317,6 @@ def test_delete_queue_by_id_for_entrypoint(
 
 def test_get_plugin_snapshots_for_entrypoint(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_with_files: dict[str, Any],
     registered_entrypoints: dict[str, Any],
@@ -1295,7 +1337,6 @@ def test_get_plugin_snapshots_for_entrypoint(
 
 def test_append_plugins_to_entrypoint(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_with_files: dict[str, Any],
     registered_entrypoints: dict[str, Any],
@@ -1318,7 +1359,6 @@ def test_append_plugins_to_entrypoint(
 
 def test_get_plugin_snapshot_by_id_for_entrypoint(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_with_files: dict[str, Any],
     registered_entrypoints: dict[str, Any],
@@ -1340,7 +1380,6 @@ def test_get_plugin_snapshot_by_id_for_entrypoint(
 
 def test_delete_plugin_snapshot_by_id_for_entrypoint(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_with_files: dict[str, Any],
     registered_entrypoints: dict[str, Any],
@@ -1380,17 +1419,18 @@ def test_create_entrypoint_with_empty_queues_plugins_params(
         "group_id": group_id,
         "name": "test_entrypoint_3Empties",
         "description": "new test entrypoint #1 With 3 []s",
-        "task_graph": "graph:    message:    my_entrypoint: $name",
         "parameters": [],
         "plugins": [],
+        "artifact_plugins": [],
         "queues": [],
         "task_graph": textwrap.dedent(
-            f"""# my entrypoint graph
+            """# my entrypoint graph
                 graph:
                 message:
                     my_entrypoint:  "test_entrypoint_3Empties"
                 """
         ),
+        "artifact_graph": "",
     }
     assert_registering_entrypoint_with_no_queues_succeeds(
         dioptra_client=dioptra_client,
@@ -1416,17 +1456,18 @@ def test_create_entrypoint_with_none_queues_plugins_params(
         "group_id": group_id,
         "name": "test_entrypoint_3Nones",
         "description": "new test entrypoint #2 With 3 Nones",
-        "task_graph": "graph:    message:    my_entrypoint: $name",
         "parameters": None,
         "plugins": None,
+        "artifact_plugins": None,
         "queues": None,
         "task_graph": textwrap.dedent(
-            f"""# my entrypoint graph
+            """# my entrypoint graph
                 graph:
                 message:
                     my_entrypoint:  "test_entrypoint_3Nones"
                 """
         ),
+        "artifact_graph": "",
     }
     assert_registering_entrypoint_with_no_queues_succeeds(
         dioptra_client=dioptra_client,

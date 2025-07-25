@@ -24,7 +24,6 @@ from http import HTTPStatus
 from typing import Any
 
 import pytest
-from flask_sqlalchemy import SQLAlchemy
 
 from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
@@ -317,7 +316,6 @@ def assert_plugin_parameter_type_content_matches_expectations(
 
 def test_get_all_plugin_parameter_types(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_parameter_types: dict[str, Any],
 ) -> None:
@@ -408,7 +406,6 @@ def test_get_all_plugin_parameter_types(
 )
 def test_plugin_parameter_type_sort(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_parameter_types: dict[str, Any],
     sort_by: str | None,
@@ -440,7 +437,6 @@ def test_plugin_parameter_type_sort(
 
 def test_plugin_parameter_type_search_query(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_parameter_types: dict[str, Any],
 ) -> None:
@@ -475,7 +471,6 @@ def test_plugin_parameter_type_search_query(
 
 def test_plugin_parameter_type_group_query(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_parameter_types: dict[str, Any],
 ) -> None:
@@ -499,7 +494,6 @@ def test_plugin_parameter_type_group_query(
 
 def test_create_plugin_parameter_type(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
 ) -> None:
     """Test that Plugin Parameter Types can be created using the API.
@@ -556,7 +550,6 @@ def test_create_plugin_parameter_type(
 
 def test_get_plugin_parameter_type(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_parameter_types: dict[str, Any],
 ) -> None:
@@ -587,7 +580,6 @@ def test_get_plugin_parameter_type(
 
 def test_delete_plugin_parameter_type(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_parameter_types: dict[str, Any],
 ) -> None:
@@ -618,7 +610,6 @@ def test_delete_plugin_parameter_type(
 
 def test_modify_plugin_parameter_type(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_parameter_types: dict[str, Any],
 ) -> None:
@@ -683,7 +674,6 @@ def test_modify_plugin_parameter_type(
 
 def test_cannot_create_existing_plugin_parameter_type(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_parameter_types: dict[str, Any],
 ) -> None:
@@ -705,7 +695,6 @@ def test_cannot_create_existing_plugin_parameter_type(
 
 def test_cannot_retrieve_nonexistent_plugin_parameter_type(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
 ) -> None:
     """Test that retrieving an nonexistent Plugin Parameter Type produces an error.
@@ -719,7 +708,6 @@ def test_cannot_retrieve_nonexistent_plugin_parameter_type(
 
 def test_manage_existing_plugin_parameter_type_draft(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_parameter_types: dict[str, Any],
 ) -> None:
@@ -781,7 +769,6 @@ def test_manage_existing_plugin_parameter_type_draft(
 
 def test_manage_new_plugin_parameter_type_drafts(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
 ) -> None:
     """Test that drafts of plugin parameter type can be created and managed by the user
@@ -843,7 +830,6 @@ def test_manage_new_plugin_parameter_type_drafts(
 
 def test_manage_plugin_parameter_type_snapshots(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_parameter_types: dict[str, Any],
 ) -> None:
@@ -881,7 +867,6 @@ def test_manage_plugin_parameter_type_snapshots(
 
 def test_tag_plugin_parameter_type(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_parameter_types: dict[str, Any],
     registered_tags: dict[str, Any],

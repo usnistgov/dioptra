@@ -137,16 +137,27 @@ class JobStatusSchema(JobIdSchema):
     status = fields.String(
         attribute="status",
         validate=validate.OneOf(
-            ["queued", "started", "deferred", "finished", "failed"],
+            ["queued", "started", "deferred", "finished", "failed", "reset"],
         ),
         metadata=dict(
             description="The current status of the job. The allowed values are: "
-            "queued, started, deferred, finished, failed.",
+            "queued, started, deferred, finished, failed, reset.",
         ),
     )
 
 
 JobBaseSchema = generate_base_resource_schema("Job", snapshot=True)
+
+
+class JobArtifactValueSchema(Schema):
+    id = fields.Int(
+        attribute="id",
+        metadata=dict(description="Artifact Resoure Id."),
+    )
+    snapshotId = fields.Int(
+        attribute="snapshot_id",
+        metadata=dict(description="Artifact Resoure Snapshot Id."),
+    )
 
 
 class JobSchema(JobBaseSchema):  # type: ignore
@@ -204,6 +215,15 @@ class JobSchema(JobBaseSchema):  # type: ignore
             ),
         ),
         load_default=dict,
+    )
+    artifactValues = fields.Dict(
+        keys=fields.String(),
+        values=fields.Nested(JobArtifactValueSchema),
+        attribute="artifact_values",
+        allow_none=True,
+        metadata=dict(
+            description=("A dictionary of artifacts to pass to the Job's Entrypoint."),
+        ),
     )
     timeout = fields.String(
         attribute="timeout",

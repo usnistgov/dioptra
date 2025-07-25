@@ -24,7 +24,6 @@ from http import HTTPStatus
 from typing import Any
 
 import pytest
-from flask_sqlalchemy import SQLAlchemy
 
 from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
@@ -342,7 +341,6 @@ def assert_model_version_description_matches_expected_description(
 
 def test_create_model(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
 ) -> None:
     """"""
@@ -372,7 +370,6 @@ def test_create_model(
 
 def test_model_get_all(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
 ) -> None:
@@ -400,7 +397,6 @@ def test_model_get_all(
 )
 def test_model_sort(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
     sort_by: str,
@@ -426,7 +422,6 @@ def test_model_sort(
 
 def test_model_search_query(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
 ) -> None:
@@ -456,7 +451,6 @@ def test_model_search_query(
 
 def test_model_group_query(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
 ) -> None:
@@ -479,7 +473,6 @@ def test_model_group_query(
 
 def test_cannot_register_existing_model_name(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
 ) -> None:
@@ -502,7 +495,6 @@ def test_cannot_register_existing_model_name(
 
 def test_rename_model(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
 ) -> None:
@@ -559,7 +551,6 @@ def test_rename_model(
 
 def test_delete_model_by_id(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
 ) -> None:
@@ -580,7 +571,6 @@ def test_delete_model_by_id(
 
 def test_manage_existing_model_draft(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
 ) -> None:
@@ -642,7 +632,6 @@ def test_manage_existing_model_draft(
 
 def test_manage_new_model_drafts(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
 ) -> None:
     """Test that drafts of model can be created and managed by the user
@@ -698,7 +687,6 @@ def test_manage_new_model_drafts(
 
 def test_manage_model_snapshots(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
     registered_model_versions: dict[str, Any],
@@ -735,7 +723,6 @@ def test_manage_model_snapshots(
 
 def test_tag_model(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
     registered_tags: dict[str, Any],
@@ -774,7 +761,6 @@ def test_tag_model(
 
 def test_create_model_version(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
     registered_artifacts: dict[str, Any],
@@ -816,7 +802,6 @@ def test_create_model_version(
 
 def test_model_versions_get_all(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
     registered_model_versions: dict[str, Any],
@@ -838,7 +823,6 @@ def test_model_versions_get_all(
 
 def test_model_version_search_query(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
     registered_model_versions: dict[str, Any],
@@ -882,7 +866,6 @@ def test_model_version_search_query(
 
 def test_modify_model_version(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
     registered_model_versions: dict[str, Any],

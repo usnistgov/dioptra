@@ -14,6 +14,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+from pathlib import Path
 from typing import Any, ClassVar, Final, TypeVar
 
 from .base import (
@@ -29,6 +30,7 @@ from .drafts import (
 )
 from .snapshots import SnapshotsSubCollectionClient
 from .tags import TagsSubCollectionClient
+from .utils import FileTypes
 
 PLUGINS_DRAFT_FIELDS: Final[set[str]] = {"name", "description"}
 PLUGIN_FILES_DRAFT_FIELDS: Final[set[str]] = {
@@ -37,6 +39,9 @@ PLUGIN_FILES_DRAFT_FIELDS: Final[set[str]] = {
     "tasks",
     "description",
 }
+
+FILES: Final[str] = "files"
+BUNDLE: Final[str] = "bundle"
 
 T = TypeVar("T")
 
@@ -292,24 +297,41 @@ class PluginFilesSubCollectionClient(SubCollectionClient[T]):
         plugin_id: str | int,
         filename: str,
         contents: str,
-        tasks: list[dict[str, Any]],
+        function_tasks: list[dict[str, Any]] | None = None,
+        artifact_tasks: list[dict[str, Any]] | None = None,
         description: str | None = None,
     ) -> T:
         """Creates a plugin file.
+
+        Either function_tasks or artifact_tasks should be provided. Mixing the two
+        types of tasks is not recommended.
 
         Args:
             plugin_id: The id for the plugin that will own the new plugin file.
             filename: The filename for the new plugin file.
             contents: The contents of the new Python file.
-            tasks: The information needed to register the plugin tasks contained in the
-                plugin file, a list.
+            function_tasks: The information needed to register plugin function tasks
+                contained in the plugin file, a list. Can be empty.
+            artifact_tasks: The information needed to register plugin artifact tasks
+                contained in the plugin file, a list. Can be empty.
             description: The description of the new plugin file. Optional, defaults to
                 None.
 
         Returns:
             The response from the Dioptra API.
         """
-        json_ = {"filename": filename, "contents": contents, "tasks": tasks}
+        tasks: dict[str, list[dict[str, Any]]] = {}
+        json_ = {
+            "filename": filename,
+            "contents": contents,
+            "tasks": tasks,
+        }
+
+        if function_tasks is not None:
+            tasks["functions"] = function_tasks
+
+        if artifact_tasks is not None:
+            tasks["artifacts"] = artifact_tasks
 
         if description is not None:
             json_["description"] = description
@@ -322,25 +344,42 @@ class PluginFilesSubCollectionClient(SubCollectionClient[T]):
         plugin_file_id: str | int,
         filename: str,
         contents: str,
-        tasks: list[dict[str, Any]],
+        function_tasks: list[dict[str, Any]] | None = None,
+        artifact_tasks: list[dict[str, Any]] | None = None,
         description: str | None = None,
     ) -> T:
         """Modify a plugin file matching the provided ids.
+
+        Either function_tasks or artifact_tasks should be provided. Mixing the two
+        types of tasks is not recommended.
 
         Args:
             plugin_id: The id for the plugin that owns the plugin file.
             plugin_file_id: The plugin file id, an integer.
             filename: The filename for the new plugin file.
             contents: The contents of the new Python file.
-            tasks: The information needed to register the plugin tasks contained in the
-                plugin file, a list.
+            function_tasks: The information needed to register plugin function tasks
+                contained in the plugin file, a list. Can be empty.
+            artifact_tasks: The information needed to register plugin artifact tasks
+                contained in the plugin file, a list. Can be empty.
             description: The description of the new plugin file. Optional, defaults to
                 None.
 
         Returns:
             The response from the Dioptra API.
         """
-        json_ = {"filename": filename, "contents": contents, "tasks": tasks}
+        tasks: dict[str, list[dict[str, Any]]] = {}
+        json_ = {
+            "filename": filename,
+            "contents": contents,
+            "tasks": tasks,
+        }
+
+        if function_tasks is not None:
+            tasks["functions"] = function_tasks
+
+        if artifact_tasks is not None:
+            tasks["artifacts"] = artifact_tasks
 
         if description is not None:
             json_["description"] = description
@@ -373,6 +412,55 @@ class PluginFilesSubCollectionClient(SubCollectionClient[T]):
             The response from the Dioptra API.
         """
         return self._session.delete(self.build_sub_collection_url(plugin_id))
+
+
+class PluginsSnapshotCollectionClient(SnapshotsSubCollectionClient[T]):
+    def __init__(
+        self,
+        session: DioptraSession[T],
+        root_collection: "PluginsCollectionClient[T]",
+    ):
+        super().__init__(session=session, root_collection=root_collection)
+
+    def get_files_bundle(
+        self,
+        plugin_id: str | int,
+        plugin_snapshot_id: str | int,
+        file_type: FileTypes = FileTypes.TAR_GZ,
+        output_dir: Path | None = None,
+        file_stem: str = "task-plugins",
+    ) -> Path:
+        """Get the task plugins bundle for the entrypoint matching the provided
+            snapshot id.
+
+        Args:
+            entrypoint_id: The entrypoint id, an integer.
+            entrypoint_snapshot_id: The entrypoint snapshot id, an integer.
+            file_type: The file type of the bundle that is returned, defaults to None.
+                If None is provided, then a default of FileTypes.TAR_GZ is used.
+            output_dir: the directory to save the downloaded artifact,
+                defaults to None. If None, then the current working directory will be
+                used.
+            file_stem: the file prefix or stem to use for the name of the
+                downloaded file. Defaults to the value of "task-plugins".
+        Returns:
+            The response from the Dioptra API.
+        """
+        bundle_path = (
+            Path(file_stem).with_suffix(file_type.suffix)
+            if output_dir is None
+            else Path(output_dir, file_stem).with_suffix(file_type.suffix)
+        )
+        params = {"fileType": file_type.value}
+
+        return self._session.download(
+            self.build_sub_collection_url(plugin_id),
+            str(plugin_snapshot_id),
+            FILES,
+            BUNDLE,
+            output_path=bundle_path,
+            params=params,
+        )
 
 
 class PluginsCollectionClient(CollectionClient[T]):
@@ -410,7 +498,7 @@ class PluginsCollectionClient(CollectionClient[T]):
             ),
             root_collection=self,
         )
-        self._snapshots = SnapshotsSubCollectionClient[T](
+        self._snapshots = PluginsSnapshotCollectionClient[T](
             session=session, root_collection=self
         )
         self._tags = TagsSubCollectionClient[T](session=session, root_collection=self)
@@ -483,7 +571,7 @@ class PluginsCollectionClient(CollectionClient[T]):
         return self._modify_resource_drafts
 
     @property
-    def snapshots(self) -> SnapshotsSubCollectionClient[T]:
+    def snapshots(self) -> PluginsSnapshotCollectionClient[T]:
         """The client for retrieving plugin resource snapshots.
 
         Each client method in the sub-collection accepts an arbitrary number of
@@ -497,6 +585,9 @@ class PluginsCollectionClient(CollectionClient[T]):
 
             # GET /api/v1/plugins/1/snapshots/2
             client.plugins.snapshots.get_by_id(1, snapshot_id=2)
+
+            # GET /api/v1/plugins/1/snapshots/2/files/bundle?fileType=tar_gz
+            client.plugins.snapshots.get_files_bundle(1, snapshot_id=2)
         """
         return self._snapshots
 

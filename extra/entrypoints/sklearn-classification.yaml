@@ -1,0 +1,32 @@
+artifacts:
+  model:
+    contents: $model
+    task:
+      name: pkl_artifact
+  predictions:
+    contents: $predictions
+    task:
+      name: npy_artifact
+  metrics:
+    contents: $metrics
+    task:
+      name: dataframe_artifact
+      args:
+        format: csv
+
+graph:
+  dataset:
+    load_toy_dataset:
+      name: $dataset_name
+  model:
+    train_model:
+      x_train: $dataset.x_train
+      y_train: $dataset.y_train
+  predictions:
+    model_predict:
+      model: $model
+      x: $dataset.x_test
+  metrics:
+    compute_metrics:
+      y_true: $dataset.y_test
+      y_pred: $predictions

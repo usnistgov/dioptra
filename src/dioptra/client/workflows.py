@@ -14,7 +14,6 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from pathlib import Path
 from typing import Any, ClassVar, Final, Literal, TypeVar
 
 from .base import (
@@ -26,7 +25,6 @@ from .base import (
 T = TypeVar("T")
 
 VALIDATE_ENTRYPOINT: Final[str] = "validateEntrypoint"
-JOB_FILES_DOWNLOAD: Final[str] = "jobFilesDownload"
 SIGNATURE_ANALYSIS: Final[str] = "pluginTaskSignatureAnalysis"
 RESOURCE_IMPORT: Final[str] = "resourceImport"
 DRAFT_COMMIT: Final[str] = "draftCommit"
@@ -40,60 +38,6 @@ class WorkflowsCollectionClient(CollectionClient[T]):
     """
 
     name: ClassVar[str] = "workflows"
-
-    def download_job_files(
-        self,
-        job_id: str | int,
-        file_type: str = "tar_gz",
-        output_dir: Path | None = None,
-        file_stem: str = "job_files",
-    ) -> Path:
-        """
-        Download a compressed file archive containing the files needed to execute a
-        submitted job.
-
-        The downloaded file's name is the file stem followed by the file extension
-        corresponding to the specified file type. For example, if the file stem is
-        "job_files" and the file type is "tar_gz", the downloaded file will be named
-        "job_files.tar.gz".
-
-        Args:
-            job_id: The job id, an integer.
-            file_type: The type of file to download. Options are "tar_gz" and "zip".
-                Optional, defaults to "tar_gz".
-            output_dir: The directory where the downloaded file should be saved. The
-                directory will be created if it does not exist. If None, the file will
-                be saved in the current working directory. Optional, defaults to None.
-            file_stem: The file stem to use for naming the downloaded file. Optional,
-                defaults to "job_files".
-
-        Returns:
-            The path to the downloaded file.
-
-        Raises:
-            IllegalArgumentError: If the file type is not one of "tar_gz" or "zip".
-        """
-        file_extensions = {
-            "tar_gz": ".tar.gz",
-            "zip": ".zip",
-        }
-
-        if (output_ext := file_extensions.get(file_type)) is None:
-            raise IllegalArgumentError(
-                'Illegal value for file_type (reason: must be one of "tar_gz", "zip"): '
-                f"{file_type}."
-            )
-
-        job_files_path = (
-            Path(file_stem).with_suffix(output_ext)
-            if output_dir is None
-            else Path(output_dir, file_stem).with_suffix(output_ext)
-        )
-        params = {"jobId": job_id, "fileType": file_type}
-
-        return self._session.download(
-            self.url, JOB_FILES_DOWNLOAD, output_path=job_files_path, params=params
-        )
 
     def analyze_plugin_task_signatures(self, python_code: str) -> T:
         """

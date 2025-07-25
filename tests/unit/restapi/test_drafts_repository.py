@@ -17,6 +17,7 @@
 import datetime
 
 import pytest
+from sqlalchemy.orm.session import Session as DBSession
 
 import dioptra.restapi.db.models as m
 import dioptra.restapi.errors as e
@@ -43,7 +44,7 @@ def draft_content():
 
 
 @pytest.fixture
-def draft_stuff(db, fake_data, draft_content):
+def draft_stuff(db_session: DBSession, fake_data, draft_content):
     """
     Drafts are complicated to set up.  Need users, groups, resources,
     resource snapshots, before you can make drafts.  This fixture creates a
@@ -239,10 +240,10 @@ def draft_stuff(db, fake_data, draft_content):
 
     # gotta add all this junk to the db so it will have IDs we can use in the
     # drafts
-    db.session.add_all((groupa, groupb, groupc, groupd))
+    db_session.add_all((groupa, groupb, groupc, groupd))
     for qs in all_queues:
-        db.session.add_all(qs)
-    db.session.commit()
+        db_session.add_all(qs)
+    db_session.commit()
 
     # Now, we need some draft modifications of some of the above snapshots.
     # draft creator, snapshot being modified (creator must be in the same group
@@ -277,9 +278,18 @@ def draft_stuff(db, fake_data, draft_content):
     # to test base_resource_id of drafts.  And of course, we refer to it by
     # ID, so we need to add and commit it so it has one.
     ep_res = m.Resource("entry_point", groupc)
-    ep = m.EntryPoint("description", ep_res, cydney, "entrypoint", "task graph", [])
-    db.session.add(ep)
-    db.session.commit()
+    ep = m.EntryPoint(
+        "description",
+        ep_res,
+        cydney,
+        "entrypoint",
+        "task graph",
+        "artifact graph",
+        [],
+        [],
+    )
+    db_session.add(ep)
+    db_session.commit()
 
     # we need a pile of drafts created by a single person to test paging.  The
     # get_by_filters_paged() method searches by a single user at a time, so all
@@ -293,9 +303,9 @@ def draft_stuff(db, fake_data, draft_content):
         draft_resources.append(draft_resource)
 
     # And add all our drafts
-    db.session.add_all(draft_mods)
-    db.session.add_all(draft_resources)
-    db.session.commit()
+    db_session.add_all(draft_mods)
+    db_session.add_all(draft_resources)
+    db_session.commit()
 
     # Now we gotta return all this stuff in some big data structure for the
     # unit tests...
@@ -303,24 +313,19 @@ def draft_stuff(db, fake_data, draft_content):
         "alannah": alannah,
         "alpha": alpha,
         "abi": abi,
-
         "bear": bear,
         "bria": bria,
         "blaze": blaze,
-
         "cyan": cyan,
         "cydney": cydney,
         "coty": coty,
-
         "dell": dell,
         "derick": derick,
         "dixon": dixon,
-
         "groupa": groupa,
         "groupb": groupb,
         "groupc": groupc,
         "groupd": groupd,
-
         "queues": all_queues,
         "draft_mods": draft_mods,
         "draft_resources": draft_resources,
@@ -330,7 +335,9 @@ def draft_stuff(db, fake_data, draft_content):
     return fixture_data
 
 
-def test_drafts_create_draft_resource(db, drafts_repo, account, draft_content):
+def test_drafts_create_draft_resource(
+    db_session: DBSession, drafts_repo, account, draft_content
+):
 
     draft = m.DraftResource(
         "queue",
@@ -341,7 +348,7 @@ def test_drafts_create_draft_resource(db, drafts_repo, account, draft_content):
 
     drafts_repo.create_draft_resource(draft)
 
-    db.session.commit()
+    db_session.commit()
 
 
 def test_drafts_create_draft_resource_group_not_exist(
@@ -379,13 +386,13 @@ def test_drafts_create_draft_resource_user_not_exist(
 
 
 def test_drafts_create_draft_resource_user_not_in_group(
-    db, drafts_repo, draft_content, fake_data
+    db_session: DBSession, drafts_repo, draft_content, fake_data
 ):
     acct1 = fake_data.account()
     acct2 = fake_data.account()
 
-    db.session.add_all([acct1.user, acct1.group, acct2.user, acct2.group])
-    db.session.commit()
+    db_session.add_all([acct1.user, acct1.group, acct2.user, acct2.group])
+    db_session.commit()
 
     draft = m.DraftResource(
         "queue",
@@ -399,7 +406,7 @@ def test_drafts_create_draft_resource_user_not_in_group(
 
 
 def test_drafts_create_draft_resource_already_exists(
-    db,
+    db_session: DBSession,
     drafts_repo,
     account,
     draft_content,
@@ -414,7 +421,7 @@ def test_drafts_create_draft_resource_already_exists(
 
     drafts_repo.create_draft_resource(draft)
 
-    db.session.commit()
+    db_session.commit()
 
     with pytest.raises(e.DraftAlreadyExistsError):
         drafts_repo.create_draft_resource(draft)
@@ -438,12 +445,12 @@ def test_drafts_create_draft_resource_base_not_exist(
 
 
 def test_drafts_create_draft_resource_base_deleted(
-    db, drafts_repo, draft_stuff, draft_content
+    db_session: DBSession, drafts_repo, draft_stuff, draft_content
 ):
     base = draft_stuff["base_resource"]
     lock = m.ResourceLock(resource_lock_types.DELETE, base.resource)
-    db.session.add(lock)
-    db.session.commit()
+    db_session.add(lock)
+    db_session.commit()
 
     draft_content["base_resource_id"] = base.resource_id
 
@@ -459,12 +466,12 @@ def test_drafts_create_draft_resource_base_deleted(
 
 
 def test_drafts_create_draft_resource_invalid_base_resource_type(
-    db, drafts_repo, account, fake_data, draft_content
+    db_session: DBSession, drafts_repo, account, fake_data, draft_content
 ):
 
     exp = fake_data.experiment(account.user, account.group)
-    db.session.add(exp)
-    db.session.commit()
+    db_session.add(exp)
+    db_session.commit()
 
     # Parent of a queue can't be an experiment
     draft_content["base_resource_id"] = exp.resource_id
@@ -480,13 +487,15 @@ def test_drafts_create_draft_resource_invalid_base_resource_type(
         drafts_repo.create_draft_resource(draft)
 
 
-def test_drafts_create_draft_modification(db, drafts_repo, fake_data, account):
+def test_drafts_create_draft_modification(
+    db_session: DBSession, drafts_repo, fake_data, account
+):
 
     # Set up something to modify
     queue = fake_data.queue(account.user, account.group)
 
-    db.session.add_all([account.user, account.group, queue])
-    db.session.commit()
+    db_session.add_all([account.user, account.group, queue])
+    db_session.commit()
 
     toplevel_data = {
         "resource_data": {
@@ -506,17 +515,17 @@ def test_drafts_create_draft_modification(db, drafts_repo, fake_data, account):
     )
 
     drafts_repo.create_draft_modification(draft)
-    db.session.commit()
+    db_session.commit()
 
 
 def test_drafts_create_draft_modification_user_not_exist(
-    db, drafts_repo, fake_data, account
+    db_session: DBSession, drafts_repo, fake_data, account
 ):
 
     queue = fake_data.queue(account.user, account.group)
 
-    db.session.add_all([account.user, account.group, queue])
-    db.session.commit()
+    db_session.add_all([account.user, account.group, queue])
+    db_session.commit()
 
     toplevel_data = {
         "resource_data": {
@@ -547,13 +556,13 @@ def test_drafts_create_draft_modification_user_not_exist(
 
 
 def test_drafts_create_draft_modification_group_not_exist(
-    db, drafts_repo, fake_data, account
+    db_session: DBSession, drafts_repo, fake_data, account
 ):
 
     queue = fake_data.queue(account.user, account.group)
 
-    db.session.add_all([account.user, account.group, queue])
-    db.session.commit()
+    db_session.add_all([account.user, account.group, queue])
+    db_session.commit()
 
     toplevel_data = {
         "resource_data": {
@@ -584,9 +593,11 @@ def test_drafts_create_draft_modification_group_not_exist(
         drafts_repo.create_draft_modification(draft)
 
 
-def test_drafts_create_draft_modification_resource_not_exist(db, drafts_repo, account):
-    db.session.add_all([account.user, account.group])
-    db.session.commit()
+def test_drafts_create_draft_modification_resource_not_exist(
+    db_session: DBSession, drafts_repo, account
+):
+    db_session.add_all([account.user, account.group])
+    db_session.commit()
 
     toplevel_data = {
         "resource_data": {
@@ -616,15 +627,15 @@ def test_drafts_create_draft_modification_resource_not_exist(db, drafts_repo, ac
 
 
 def test_drafts_create_draft_modification_resource_deleted(
-    db, drafts_repo, fake_data, account
+    db_session: DBSession, drafts_repo, fake_data, account
 ):
     queue = fake_data.queue(account.user, account.group)
-    db.session.add_all([account.user, account.group, queue])
-    db.session.commit()
+    db_session.add_all([account.user, account.group, queue])
+    db_session.commit()
 
     queue_delete_lock = m.ResourceLock(resource_lock_types.DELETE, queue.resource)
-    db.session.add(queue_delete_lock)
-    db.session.commit()
+    db_session.add(queue_delete_lock)
+    db_session.commit()
 
     toplevel_data = {
         "resource_data": {
@@ -648,11 +659,11 @@ def test_drafts_create_draft_modification_resource_deleted(
 
 
 def test_drafts_create_draft_modification_resource_snapshot_not_exist(
-    db, drafts_repo, fake_data, account
+    db_session: DBSession, drafts_repo, fake_data, account
 ):
     queue = fake_data.queue(account.user, account.group)
-    db.session.add_all([account.user, account.group, queue])
-    db.session.commit()
+    db_session.add_all([account.user, account.group, queue])
+    db_session.commit()
 
     toplevel_data = {
         "resource_data": {
@@ -675,14 +686,16 @@ def test_drafts_create_draft_modification_resource_snapshot_not_exist(
         drafts_repo.create_draft_modification(draft)
 
 
-def test_drafts_create_draft_modification_user_not_in_group(db, drafts_repo, fake_data):
+def test_drafts_create_draft_modification_user_not_in_group(
+    db_session: DBSession, drafts_repo, fake_data
+):
 
     acct1 = fake_data.account()
     acct2 = fake_data.account()
     queue = fake_data.queue(acct1.user, acct1.group)
 
-    db.session.add_all([acct1.user, acct1.group, acct2.user, acct2.group, queue])
-    db.session.commit()
+    db_session.add_all([acct1.user, acct1.group, acct2.user, acct2.group, queue])
+    db_session.commit()
 
     toplevel_data = {
         "resource_data": {
@@ -706,13 +719,13 @@ def test_drafts_create_draft_modification_user_not_in_group(db, drafts_repo, fak
 
 
 def test_drafts_create_draft_modification_draft_already_exists(
-    db, drafts_repo, fake_data, account
+    db_session: DBSession, drafts_repo, fake_data, account
 ):
 
     queue = fake_data.queue(account.user, account.group)
 
-    db.session.add_all([account.user, account.group, queue])
-    db.session.commit()
+    db_session.add_all([account.user, account.group, queue])
+    db_session.commit()
 
     toplevel_data = {
         "resource_data": {
@@ -732,21 +745,23 @@ def test_drafts_create_draft_modification_draft_already_exists(
     )
 
     drafts_repo.create_draft_modification(draft)
-    db.session.commit()
+    db_session.commit()
 
     with pytest.raises(e.DraftAlreadyExistsError):
         # Creating a second draft with the same settings should fail
         drafts_repo.create_draft_modification(draft)
 
 
-def test_drafts_create_draft_modification_owner_mismatch(db, drafts_repo, fake_data):
+def test_drafts_create_draft_modification_owner_mismatch(
+    db_session: DBSession, drafts_repo, fake_data
+):
 
     acct1 = fake_data.account()
     acct2 = fake_data.account()
 
     queue = fake_data.queue(acct1.user, acct1.group)
 
-    db.session.add_all(
+    db_session.add_all(
         [
             acct1.user,
             acct1.group,
@@ -755,7 +770,7 @@ def test_drafts_create_draft_modification_owner_mismatch(db, drafts_repo, fake_d
             queue,
         ]
     )
-    db.session.commit()
+    db_session.commit()
 
     toplevel_data = {
         "resource_data": {
@@ -781,14 +796,14 @@ def test_drafts_create_draft_modification_owner_mismatch(db, drafts_repo, fake_d
 
 
 def test_drafts_create_draft_modification_snapshot_id_mismatch(
-    db, drafts_repo, fake_data, account
+    db_session: DBSession, drafts_repo, fake_data, account
 ):
 
     queue1 = fake_data.queue(account.user, account.group)
     queue2 = fake_data.queue(account.user, account.group)
 
-    db.session.add_all([queue1, queue2])
-    db.session.commit()
+    db_session.add_all([queue1, queue2])
+    db_session.commit()
 
     toplevel_data = {
         "resource_data": {
@@ -812,7 +827,7 @@ def test_drafts_create_draft_modification_snapshot_id_mismatch(
         drafts_repo.create_draft_modification(draft)
 
 
-def test_drafts_get(db, drafts_repo, draft_stuff):
+def test_drafts_get(db_session: DBSession, drafts_repo, draft_stuff):
 
     draft = draft_stuff["draft_resources"][0]
 
@@ -848,7 +863,7 @@ def test_drafts_get_one_not_exist(drafts_repo):
         drafts_repo.get_one(999999)
 
 
-def test_drafts_get_user_not_exist(db, drafts_repo, draft_stuff):
+def test_drafts_get_user_not_exist(db_session: DBSession, drafts_repo, draft_stuff):
 
     draft = draft_stuff["draft_mods"][0]
 
@@ -861,7 +876,7 @@ def test_drafts_get_user_not_exist(db, drafts_repo, draft_stuff):
         drafts_repo.get(draft.draft_resource_id, "queue", 999999)
 
 
-def test_drafts_get_user_deleted(db, drafts_repo, draft_stuff):
+def test_drafts_get_user_deleted(db_session: DBSession, drafts_repo, draft_stuff):
 
     # Add an extra user and delete it
     user = m.User("user", "password", "user@example.org")
@@ -877,8 +892,8 @@ def test_drafts_get_user_deleted(db, drafts_repo, draft_stuff):
 
     user_delete_lock = m.UserLock(user_lock_types.DELETE, user)
 
-    db.session.add_all([user, user_delete_lock])
-    db.session.commit()
+    db_session.add_all([user, user_delete_lock])
+    db_session.commit()
 
     draft = draft_stuff["draft_resources"][0]
 
@@ -889,7 +904,7 @@ def test_drafts_get_user_deleted(db, drafts_repo, draft_stuff):
         drafts_repo.get(draft.draft_resource_id, "queue", user.user_id)
 
 
-def test_drafts_get_resource(db, drafts_repo, draft_stuff):
+def test_drafts_get_resource(db_session: DBSession, drafts_repo, draft_stuff):
 
     queue = draft_stuff["queues"][1][2]
 
@@ -929,9 +944,7 @@ def test_drafts_get_modification_by_user(drafts_repo, draft_stuff):
     assert found_draft.draft_resource_id == draft.draft_resource_id
 
 
-def test_drafts_get_modification_by_user_user_not_exist(
-    drafts_repo, draft_stuff
-):
+def test_drafts_get_modification_by_user_user_not_exist(drafts_repo, draft_stuff):
     queue = draft_stuff["queues"][3][2]
 
     with pytest.raises(e.EntityDoesNotExistError):
@@ -942,7 +955,7 @@ def test_drafts_get_modification_by_user_user_not_exist(
 
 
 def test_drafts_get_modification_by_user_user_deleted(
-    db, drafts_repo, draft_stuff
+    db_session: DBSession, drafts_repo, draft_stuff
 ):
     queue = draft_stuff["queues"][2][0]
 
@@ -956,12 +969,12 @@ def test_drafts_get_modification_by_user_user_deleted(
             user2,
         )
     )
-    db.session.add(user2)
-    db.session.commit()
+    db_session.add(user2)
+    db_session.commit()
 
     delete_lock = m.UserLock(user_lock_types.DELETE, user2)
-    db.session.add(delete_lock)
-    db.session.commit()
+    db_session.add(delete_lock)
+    db_session.commit()
 
     with pytest.raises(e.EntityDeletedError):
         drafts_repo.get_draft_modification_by_user(
@@ -970,9 +983,7 @@ def test_drafts_get_modification_by_user_user_deleted(
         )
 
 
-def test_drafts_get_modification_by_user_resource_not_exist(
-    drafts_repo, draft_stuff
-):
+def test_drafts_get_modification_by_user_resource_not_exist(drafts_repo, draft_stuff):
     draft = draft_stuff["draft_mods"][1]
 
     with pytest.raises(e.EntityDoesNotExistError):
@@ -983,14 +994,14 @@ def test_drafts_get_modification_by_user_resource_not_exist(
 
 
 def test_drafts_get_modification_by_user_resource_deleted(
-    db, drafts_repo, draft_stuff
+    db_session: DBSession, drafts_repo, draft_stuff
 ):
     queue = draft_stuff["queues"][1][1]
     draft = draft_stuff["draft_mods"][1]
 
     delete_lock = m.ResourceLock(resource_lock_types.DELETE, queue.resource)
-    db.session.add(delete_lock)
-    db.session.commit()
+    db_session.add(delete_lock)
+    db_session.commit()
 
     with pytest.raises(e.EntityDeletedError):
         drafts_repo.get_draft_modification_by_user(
@@ -1000,7 +1011,7 @@ def test_drafts_get_modification_by_user_resource_deleted(
 
 
 def test_drafts_get_modification_by_user_not_found(
-    db, drafts_repo, draft_stuff
+    db_session: DBSession, drafts_repo, draft_stuff
 ):
     queue = draft_stuff["queues"][0][0]
 
@@ -1014,8 +1025,8 @@ def test_drafts_get_modification_by_user_not_found(
             user2,
         )
     )
-    db.session.add(user2)
-    db.session.commit()
+    db_session.add(user2)
+    db_session.commit()
 
     found_draft = drafts_repo.get_draft_modification_by_user(user2, queue)
     assert found_draft is None
@@ -1221,13 +1232,15 @@ def test_drafts_get_by_filters_base_resource_not_found(drafts_repo, draft_stuff)
         )
 
 
-def test_drafts_get_by_filters_base_resource_deleted(db, drafts_repo, draft_stuff):
+def test_drafts_get_by_filters_base_resource_deleted(
+    db_session: DBSession, drafts_repo, draft_stuff
+):
 
     queue_resource = draft_stuff["queues"][0][0].resource
 
     delete_lock = m.ResourceLock(resource_lock_types.DELETE, queue_resource)
-    db.session.add(delete_lock)
-    db.session.commit()
+    db_session.add(delete_lock)
+    db_session.commit()
 
     with pytest.raises(e.EntityDeletedError):
         drafts_repo.get_by_filters_paged(
@@ -1240,13 +1253,13 @@ def test_drafts_get_by_filters_base_resource_deleted(db, drafts_repo, draft_stuf
         )
 
 
-def test_drafts_update(db, drafts_repo, draft_stuff):
+def test_drafts_update(db_session: DBSession, drafts_repo, draft_stuff):
 
     draft = draft_stuff["draft_mods"][0]
     orig_ts = draft.last_modified_on
 
     drafts_repo.update(draft, {"draft": "updated", "number": 6})
-    db.session.commit()
+    db_session.commit()
 
     assert draft.last_modified_on > orig_ts
 
@@ -1254,13 +1267,15 @@ def test_drafts_update(db, drafts_repo, draft_stuff):
     assert check_draft.payload["resource_data"]["draft"] == "updated"
 
 
-def test_drafts_update_not_exist(db, drafts_repo):
+def test_drafts_update_not_exist(db_session: DBSession, drafts_repo):
 
     with pytest.raises(e.DraftDoesNotExistError):
         drafts_repo.update(999999, {"draft": "updated", "number": 6})
 
 
-def test_drafts_update_modification_snapshot(db, drafts_repo, draft_stuff):
+def test_drafts_update_modification_snapshot(
+    db_session: DBSession, drafts_repo, draft_stuff
+):
     draft = draft_stuff["draft_mods"][0]
     queue = draft_stuff["queues"][0][1]
 
@@ -1269,12 +1284,17 @@ def test_drafts_update_modification_snapshot(db, drafts_repo, draft_stuff):
         {"draft": "updated", "number": 6},
         queue,
     )
-    db.session.commit()
+    db_session.commit()
 
-    assert updated_draft.payload["resource_snapshot_id"] == draft_stuff["queues"][0][1].resource_snapshot_id
+    assert (
+        updated_draft.payload["resource_snapshot_id"]
+        == draft_stuff["queues"][0][1].resource_snapshot_id
+    )
 
 
-def test_drafts_update_modification_snapshot_not_modification(db, drafts_repo, draft_stuff):
+def test_drafts_update_modification_snapshot_not_modification(
+    db_session: DBSession, drafts_repo, draft_stuff
+):
     # trying to update the resource_snapshot_id on a draft resource doesn't
     # make any sense.
     draft = draft_stuff["draft_resources"][0]
@@ -1288,7 +1308,9 @@ def test_drafts_update_modification_snapshot_not_modification(db, drafts_repo, d
         )
 
 
-def test_drafts_update_modification_snapshot_not_exist(db, drafts_repo, draft_stuff):
+def test_drafts_update_modification_snapshot_not_exist(
+    db_session: DBSession, drafts_repo, draft_stuff
+):
     draft = draft_stuff["draft_mods"][0]
 
     with pytest.raises(e.EntityDoesNotExistError):
@@ -1299,7 +1321,9 @@ def test_drafts_update_modification_snapshot_not_exist(db, drafts_repo, draft_st
         )
 
 
-def test_drafts_update_modification_snapshot_wrong_resource(db, drafts_repo, draft_stuff):
+def test_drafts_update_modification_snapshot_wrong_resource(
+    db_session: DBSession, drafts_repo, draft_stuff
+):
     draft = draft_stuff["draft_mods"][0]
     # The above mod is of a different resource, so we aren't allowed to update
     # the snapshot to this one.

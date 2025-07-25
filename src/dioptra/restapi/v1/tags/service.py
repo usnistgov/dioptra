@@ -15,7 +15,6 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform tag endpoint operations."""
-from __future__ import annotations
 
 import datetime
 from typing import Any, Final
@@ -55,7 +54,7 @@ class TagService(object):
     @inject
     def __init__(
         self,
-        tag_name_service: TagNameService,
+        tag_name_service: "TagNameService",
         group_id_service: GroupIdService,
     ) -> None:
         """Initialize the tag service.
@@ -191,7 +190,7 @@ class TagIdService(object):
     @inject
     def __init__(
         self,
-        tag_name_service: TagNameService,
+        tag_name_service: "TagNameService",
     ) -> None:
         """Initialize the tag id service.
 
@@ -330,7 +329,7 @@ class TagIdResourcesService(object):
     @inject
     def __init__(
         self,
-        tag_name_service: TagNameService,
+        tag_name_service: "TagNameService",
     ) -> None:
         """Initialize the tag id service.
 

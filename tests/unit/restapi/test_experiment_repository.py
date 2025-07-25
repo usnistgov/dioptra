@@ -18,6 +18,7 @@ import datetime
 import itertools
 
 import pytest
+from sqlalchemy.orm.session import Session as DBSession
 
 import dioptra.restapi.db.models as models
 import dioptra.restapi.db.repository.utils as utils
@@ -45,7 +46,7 @@ _STATUS_COMBO_IDS = [
     params=_STATUS_COMBOS,
     ids=_STATUS_COMBO_IDS,
 )
-def entrypoint_status_combo(request, db, account, fake_data):
+def entrypoint_status_combo(request, db_session: DBSession, account, fake_data):
     """
     This parameterized fixture produces entrypoints in all status
     combinations, e.g. exists+deleted, deleted+not-exists, etc.  Each produced
@@ -58,7 +59,9 @@ def entrypoint_status_combo(request, db, account, fake_data):
     for idx, status in enumerate(request.param):
 
         epres = models.Resource("entry_point", account.group)
-        ep = models.EntryPoint("", epres, account.user, f"ep{idx}", "graph:", [])
+        ep = models.EntryPoint(
+            "", epres, account.user, f"ep{idx}", "graph:", "artifact_output:", [], []
+        )
 
         # If creating an existing/deleted resource, create several snapshots;
         # this fixture will just return the latest one.  It allows better
@@ -66,7 +69,7 @@ def entrypoint_status_combo(request, db, account, fake_data):
         # snapshots (actual wrong answers).
         if status in (utils.ExistenceResult.EXISTS, utils.ExistenceResult.DELETED):
 
-            db.session.add(ep)
+            db_session.add(ep)
 
             for snap_idx in range(3):
                 ep = models.EntryPoint(
@@ -75,28 +78,32 @@ def entrypoint_status_combo(request, db, account, fake_data):
                     ep.creator,
                     f"ep{idx}-{snap_idx}",
                     ep.task_graph,
+                    ep.artifact_graph,
                     ep.parameters,
+                    ep.artifact_parameters,
                 )
                 # make sure this is later than the previous snapshot
                 ep.created_on = ep.created_on + datetime.timedelta(hours=snap_idx + 1)
-                db.session.add(ep)
+                db_session.add(ep)
 
             if status is utils.ExistenceResult.DELETED:
                 lock = models.ResourceLock(resource_lock_types.DELETE, epres)
-                db.session.add(lock)
+                db_session.add(lock)
 
         # else: status is DOES_NOT_EXIST, do not add to session; no point in
         # creating additional snapshots.
 
         child_snaps.append(ep)
 
-    db.session.commit()
+    db_session.commit()
 
     return child_snaps, set(request.param)
 
 
 @pytest.fixture
-def experiment_children_combo(entrypoint_status_combo, db, account, fake_data):
+def experiment_children_combo(
+    entrypoint_status_combo, db_session: DBSession, account, fake_data
+):
     """
     This fixture produces (experiment parent snap, entrypoint child snaps,
     status_set) 3-tuples, for all combinations of child status.
@@ -105,7 +112,7 @@ def experiment_children_combo(entrypoint_status_combo, db, account, fake_data):
     child_snaps, statuses = entrypoint_status_combo
 
     parent = fake_data.experiment(account.user, account.group)
-    db.session.add(parent)
+    db_session.add(parent)
 
     # Add the exists/deleted children to parent, but not the not-exists
     # children.  That way, the not-exists children aren't inadvertently added
@@ -117,7 +124,7 @@ def experiment_children_combo(entrypoint_status_combo, db, account, fake_data):
         else:
             not_exists_children.append(child)
 
-    db.session.commit()
+    db_session.commit()
 
     # Now, add the non-exists children, and do not commit.
     parent.children.extend(c.resource for c in not_exists_children)
@@ -144,7 +151,7 @@ def experiment_children_combo_no_commit(entrypoint_status_combo, account, fake_d
 
 @pytest.fixture
 def experiment_snapshot_children_combo_no_commit(
-    entrypoint_status_combo, db, account, fake_data
+    entrypoint_status_combo, db_session: DBSession, account, fake_data
 ):
     """
     This fixture tries to create objects to test snapshot creation.  It creates
@@ -161,8 +168,8 @@ def experiment_snapshot_children_combo_no_commit(
     child_snaps, statuses = entrypoint_status_combo
 
     exp_snap1 = fake_data.experiment(account.user, account.group)
-    db.session.add(exp_snap1)
-    db.session.commit()
+    db_session.add(exp_snap1)
+    db_session.commit()
 
     exp_snap2 = models.Experiment("", exp_snap1.resource, account.user, "exp_snap2")
 
@@ -176,19 +183,19 @@ def experiment_snapshot_children_combo_no_commit(
     try:
         # Prevent non-exists resources from being accidentally added due to
         # autoflush, which messes up the test setup.
-        db.session.autoflush = False
+        db_session.autoflush = False
         yield exp_snap1, exp_snap2, child_snaps, statuses
     finally:
-        db.session.autoflush = True
+        db_session.autoflush = True
         # Rollback is necessary to remove pending table changes from the
         # transaction before the rest of the unit test teardown drops all the
         # tables.  Dropping and changing the same table in the same transaction
         # doesn't work well.
-        db.session.rollback()
+        db_session.rollback()
 
 
 def test_experiment_create_not_exists(
-    experiment_children_combo_no_commit, db, experiment_repo
+    experiment_children_combo_no_commit, db_session: DBSession, experiment_repo
 ):
 
     experiment, _, child_statuses = experiment_children_combo_no_commit
@@ -205,7 +212,7 @@ def test_experiment_create_not_exists(
     else:
         # Should not error
         experiment_repo.create(experiment)
-        db.session.commit()
+        db_session.commit()
 
 
 def test_experiment_create_exists(experiment_children_combo, experiment_repo):
@@ -216,12 +223,12 @@ def test_experiment_create_exists(experiment_children_combo, experiment_repo):
 
 
 def test_experiment_create_exists_deleted(
-    experiment_children_combo, db, experiment_repo
+    experiment_children_combo, db_session: DBSession, experiment_repo
 ):
     experiment, _, _ = experiment_children_combo
     lock = models.ResourceLock(resource_lock_types.DELETE, experiment.resource)
-    db.session.add(lock)
-    db.session.commit()
+    db_session.add(lock)
+    db_session.commit()
 
     with pytest.raises(errors.EntityDeletedError):
         experiment_repo.create(experiment)
@@ -237,12 +244,14 @@ def test_experiment_create_user_not_exist(fake_data, account, experiment_repo):
         experiment_repo.create(experiment)
 
 
-def test_experiment_create_user_deleted(db, fake_data, account, experiment_repo):
+def test_experiment_create_user_deleted(
+    db_session: DBSession, fake_data, account, experiment_repo
+):
     experiment = fake_data.experiment(account.user, account.group)
 
     lock = models.UserLock(user_lock_types.DELETE, experiment.creator)
-    db.session.add(lock)
-    db.session.commit()
+    db_session.add(lock)
+    db_session.commit()
 
     with pytest.raises(errors.EntityDeletedError):
         experiment_repo.create(experiment)
@@ -259,34 +268,40 @@ def test_experiment_create_group_not_exist(fake_data, account, experiment_repo):
         experiment_repo.create(experiment)
 
 
-def test_experiment_create_group_deleted(db, fake_data, account, experiment_repo):
+def test_experiment_create_group_deleted(
+    db_session: DBSession, fake_data, account, experiment_repo
+):
     experiment = fake_data.experiment(account.user, account.group)
 
     lock = models.GroupLock(group_lock_types.DELETE, account.group)
-    db.session.add(lock)
-    db.session.commit()
+    db_session.add(lock)
+    db_session.commit()
 
     with pytest.raises(errors.EntityDeletedError):
         experiment_repo.create(experiment)
 
 
-def test_experiment_create_user_not_member(db, fake_data, account, experiment_repo):
+def test_experiment_create_user_not_member(
+    db_session: DBSession, fake_data, account, experiment_repo
+):
     experiment = fake_data.experiment(account.user, account.group)
 
     user2 = models.User("user2", "pass2", "user2@example.org")
     group2 = models.Group("group2", user2)
-    db.session.add(group2)
-    db.session.commit()
+    db_session.add(group2)
+    db_session.commit()
 
     experiment.resource.owner = group2
     with pytest.raises(errors.UserNotInGroupError):
         experiment_repo.create(experiment)
 
 
-def test_experiment_create_name_collision(db, fake_data, account, experiment_repo):
+def test_experiment_create_name_collision(
+    db_session: DBSession, fake_data, account, experiment_repo
+):
     experiment = fake_data.experiment(account.user, account.group)
     experiment_repo.create(experiment)
-    db.session.commit()
+    db_session.commit()
 
     exp2 = fake_data.experiment(account.user, account.group)
     exp2.name = experiment.name
@@ -294,22 +309,24 @@ def test_experiment_create_name_collision(db, fake_data, account, experiment_rep
         experiment_repo.create(exp2)
 
 
-def test_experiment_create_name_reuse(db, fake_data, account, experiment_repo):
+def test_experiment_create_name_reuse(
+    db_session: DBSession, fake_data, account, experiment_repo
+):
     experiment = fake_data.experiment(account.user, account.group)
     experiment_repo.create(experiment)
-    db.session.commit()
+    db_session.commit()
 
     lock = models.ResourceLock(resource_lock_types.DELETE, experiment.resource)
-    db.session.add(lock)
-    db.session.commit()
+    db_session.add(lock)
+    db_session.commit()
 
     # Once a resource is deleted, creating a new resource with that name is allowed.
     exp2 = fake_data.experiment(account.user, account.group)
     exp2.name = experiment.name
     experiment_repo.create(exp2)
-    db.session.commit()
+    db_session.commit()
 
-    check_exp = db.session.get(models.Experiment, exp2.resource_snapshot_id)
+    check_exp = db_session.get(models.Experiment, exp2.resource_snapshot_id)
     assert check_exp == exp2
 
 
@@ -328,7 +345,7 @@ def test_experiment_create_wrong_resource_type(fake_data, account, experiment_re
 
 
 def test_experiment_create_snapshot_resource_exists(
-    experiment_snapshot_children_combo_no_commit, db, experiment_repo
+    experiment_snapshot_children_combo_no_commit, db_session: DBSession, experiment_repo
 ):
 
     snap1, snap2, _, statuses = experiment_snapshot_children_combo_no_commit
@@ -343,9 +360,9 @@ def test_experiment_create_snapshot_resource_exists(
 
     else:
         experiment_repo.create_snapshot(snap2)
-        db.session.commit()
+        db_session.commit()
 
-        check_resource = db.session.get(models.Resource, snap2.resource_id)
+        check_resource = db_session.get(models.Resource, snap2.resource_id)
         assert check_resource is not None
         assert len(check_resource.versions) == 2
         assert snap1 in check_resource.versions
@@ -364,37 +381,37 @@ def test_experiment_create_snapshot_resource_not_exist(
 
 
 def test_experiment_create_snapshot_resource_deleted(
-    db, fake_data, account, experiment_repo
+    db_session: DBSession, fake_data, account, experiment_repo
 ):
 
     experiment = fake_data.experiment(account.user, account.group)
     lock = models.ResourceLock(resource_lock_types.DELETE, experiment.resource)
-    db.session.add_all((experiment, lock))
-    db.session.commit()
+    db_session.add_all((experiment, lock))
+    db_session.commit()
 
     with pytest.raises(errors.EntityDeletedError):
         experiment_repo.create_snapshot(experiment)
 
 
 def test_experiment_create_snapshot_snapshot_exists(
-    db, fake_data, account, experiment_repo
+    db_session: DBSession, fake_data, account, experiment_repo
 ):
 
     experiment = fake_data.experiment(account.user, account.group)
-    db.session.add(experiment)
-    db.session.commit()
+    db_session.add(experiment)
+    db_session.commit()
 
     with pytest.raises(errors.EntityExistsError):
         experiment_repo.create_snapshot(experiment)
 
 
 def test_experiment_create_snapshot_user_not_exist(
-    db, fake_data, account, experiment_repo
+    db_session: DBSession, fake_data, account, experiment_repo
 ):
 
     exp_snap1 = fake_data.experiment(account.user, account.group)
-    db.session.add(exp_snap1)
-    db.session.commit()
+    db_session.add(exp_snap1)
+    db_session.commit()
 
     user2 = models.User("user2", "pass2", "user2@example.org")
     exp_snap2 = models.Experiment("", exp_snap1.resource, user2, "exp_snap2")
@@ -404,16 +421,16 @@ def test_experiment_create_snapshot_user_not_exist(
 
 
 def test_experiment_create_snapshot_user_deleted(
-    db, fake_data, account, experiment_repo
+    db_session: DBSession, fake_data, account, experiment_repo
 ):
 
     exp_snap1 = fake_data.experiment(account.user, account.group)
-    db.session.add(exp_snap1)
-    db.session.commit()
+    db_session.add(exp_snap1)
+    db_session.commit()
 
     lock = models.UserLock(user_lock_types.DELETE, account.user)
-    db.session.add(lock)
-    db.session.commit()
+    db_session.add(lock)
+    db_session.commit()
 
     exp_snap2 = models.Experiment("", exp_snap1.resource, account.user, "exp_snap2")
 
@@ -422,16 +439,16 @@ def test_experiment_create_snapshot_user_deleted(
 
 
 def test_experiment_create_snapshot_user_not_member(
-    db, fake_data, account, experiment_repo
+    db_session: DBSession, fake_data, account, experiment_repo
 ):
 
     exp_snap1 = fake_data.experiment(account.user, account.group)
-    db.session.add(exp_snap1)
-    db.session.commit()
+    db_session.add(exp_snap1)
+    db_session.commit()
 
     acct2 = fake_data.account()
-    db.session.add_all((acct2.user, acct2.group))
-    db.session.commit()
+    db_session.add_all((acct2.user, acct2.group))
+    db_session.commit()
 
     exp_snap2 = models.Experiment("", exp_snap1.resource, acct2.user, "exp_snap2")
 
@@ -440,19 +457,19 @@ def test_experiment_create_snapshot_user_not_member(
 
 
 def test_experiment_create_snapshot_name_collision(
-    db, fake_data, account, experiment_repo
+    db_session: DBSession, fake_data, account, experiment_repo
 ):
 
     exp1 = fake_data.experiment(account.user, account.group)
     exp2 = fake_data.experiment(account.user, account.group)
-    db.session.add_all((exp1, exp2))
-    db.session.commit()
+    db_session.add_all((exp1, exp2))
+    db_session.commit()
 
     # Creating another snapshot of the same resource with the same name should
     # be ok.
     exp1_snap2 = models.Experiment("", exp1.resource, exp1.creator, exp1.name)
     experiment_repo.create_snapshot(exp1_snap2)
-    db.session.commit()
+    db_session.commit()
 
     # Creating another snapshot of the same resource with another resource's
     # name should cause an error.
@@ -462,7 +479,7 @@ def test_experiment_create_snapshot_name_collision(
 
 
 def test_experiment_get_by_name_exists(
-    db, fake_data, account, experiment_repo, deletion_policy
+    db_session: DBSession, fake_data, account, experiment_repo, deletion_policy
 ):
     exp1 = fake_data.experiment(account.user, account.group)
     exp2 = models.Experiment(exp1.description, exp1.resource, exp1.creator, exp1.name)
@@ -470,8 +487,8 @@ def test_experiment_get_by_name_exists(
     if exp1.created_on == exp2.created_on:
         exp2.created_on = exp2.created_on + datetime.timedelta(hours=1)
 
-    db.session.add_all((exp1, exp2))
-    db.session.commit()
+    db_session.add_all((exp1, exp2))
+    db_session.commit()
 
     snap = experiment_repo.get_by_name(exp1.name, exp1.resource.owner, deletion_policy)
 
@@ -484,7 +501,7 @@ def test_experiment_get_by_name_exists(
 
 
 def test_experiment_get_by_name_deleted(
-    db, fake_data, account, experiment_repo, deletion_policy
+    db_session: DBSession, fake_data, account, experiment_repo, deletion_policy
 ):
     exp1 = fake_data.experiment(account.user, account.group)
     exp2 = models.Experiment(exp1.description, exp1.resource, exp1.creator, exp1.name)
@@ -494,8 +511,8 @@ def test_experiment_get_by_name_deleted(
 
     lock = models.ResourceLock(resource_lock_types.DELETE, exp1.resource)
 
-    db.session.add_all((exp1, exp2, lock))
-    db.session.commit()
+    db_session.add_all((exp1, exp2, lock))
+    db_session.commit()
 
     snap = experiment_repo.get_by_name(exp1.name, exp1.resource.owner, deletion_policy)
 
@@ -508,7 +525,7 @@ def test_experiment_get_by_name_deleted(
 
 
 def test_experiment_get_by_name_not_exist(
-    db, fake_data, account, experiment_repo, deletion_policy
+    db_session: DBSession, fake_data, account, experiment_repo, deletion_policy
 ):
     exp1 = fake_data.experiment(account.user, account.group)
 
@@ -523,7 +540,7 @@ def test_experiment_get_by_name_not_exist(
 
 
 def test_experiment_get_by_name_group_not_exist(
-    db, fake_data, account, experiment_repo, deletion_policy
+    db_session: DBSession, fake_data, account, experiment_repo, deletion_policy
 ):
     exp1 = fake_data.experiment(account.user, account.group)
     exp2 = models.Experiment(exp1.description, exp1.resource, exp1.creator, exp1.name)
@@ -531,8 +548,8 @@ def test_experiment_get_by_name_group_not_exist(
     if exp1.created_on == exp2.created_on:
         exp2.created_on = exp2.created_on + datetime.timedelta(hours=1)
 
-    db.session.add_all((exp1, exp2))
-    db.session.commit()
+    db_session.add_all((exp1, exp2))
+    db_session.commit()
 
     group2 = models.Group("group2", account.user)
 
@@ -541,7 +558,7 @@ def test_experiment_get_by_name_group_not_exist(
 
 
 def test_experiment_get_by_name_group_deleted(
-    db, fake_data, account, experiment_repo, deletion_policy
+    db_session: DBSession, fake_data, account, experiment_repo, deletion_policy
 ):
     exp1 = fake_data.experiment(account.user, account.group)
     exp2 = models.Experiment(exp1.description, exp1.resource, exp1.creator, exp1.name)
@@ -551,8 +568,8 @@ def test_experiment_get_by_name_group_deleted(
 
     lock = models.GroupLock(group_lock_types.DELETE, account.group)
 
-    db.session.add_all((exp1, exp2, lock))
-    db.session.commit()
+    db_session.add_all((exp1, exp2, lock))
+    db_session.commit()
 
     with pytest.raises(errors.EntityDeletedError):
         experiment_repo.get_by_name(exp1.name, account.group, deletion_policy)

@@ -21,11 +21,12 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from dioptra.restapi.db.db import bigint, db, intpk, optionalstr, text_
 
+from .artifacts import Artifact
 from .resources import ResourceSnapshot
 
 if TYPE_CHECKING:
     from .jobs import EntryPointJob
-    from .plugins import Plugin
+    from .plugins import Plugin, PluginTaskParameterType
     from .resources import Resource
 
 
@@ -47,9 +48,14 @@ class EntryPoint(ResourceSnapshot):
     resource_id: Mapped[bigint] = mapped_column(init=False, nullable=False, index=True)
     name: Mapped[text_] = mapped_column(nullable=False, index=True)
     task_graph: Mapped[text_] = mapped_column(nullable=False)
+    artifact_graph: Mapped[text_] = mapped_column(nullable=False)
 
     # Relationships
     parameters: Mapped[list["EntryPointParameter"]] = relationship(
+        back_populates="entry_point"
+    )
+    # ArtifactParameters > ArtifactInputs
+    artifact_parameters: Mapped[list["EntryPointArtifactParameter"]] = relationship(
         back_populates="entry_point"
     )
     entry_point_jobs: Mapped[list["EntryPointJob"]] = relationship(
@@ -57,6 +63,9 @@ class EntryPoint(ResourceSnapshot):
     )
     entry_point_plugins: Mapped[list["EntryPointPlugin"]] = relationship(
         init=False, back_populates="entry_point"
+    )
+    entry_point_artifact_plugins: Mapped[list["EntryPointArtifactPlugin"]] = (
+        relationship(init=False, back_populates="entry_point")
     )
 
     # Additional settings
@@ -146,6 +155,118 @@ class EntryPointParameterValue(db.Model):  # type: ignore[name-defined]
     )
 
 
+class EntryPointArtifactParameter(db.Model):  # type: ignore[name-defined]
+    __tablename__ = "entry_point_artifact_parameters"
+
+    # Database fields
+    entry_point_resource_snapshot_id: Mapped[intpk] = mapped_column(
+        ForeignKey("entry_points.resource_snapshot_id"), init=False
+    )
+    artifact_number: Mapped[intpk]
+    output_parameters: Mapped[list["EntryPointArtifactOutputParameter"]] = relationship(
+        back_populates="entry_point_artifact", lazy="joined"
+    )
+    name: Mapped[text_] = mapped_column(nullable=False)
+
+    # Relationships
+    entry_point: Mapped["EntryPoint"] = relationship(
+        init=False, back_populates="artifact_parameters"
+    )
+    values: Mapped[list["EntryPointArtifactParameterValue"]] = relationship(
+        init=False, viewonly=True
+    )
+
+    __table_args__ = (
+        Index(None, "entry_point_resource_snapshot_id", "name", unique=True),
+    )
+
+
+class EntryPointArtifactOutputParameter(db.Model):  # type: ignore[name-defined]
+    __tablename__ = "entry_point_artifact_parameter_output_parameters"
+
+    # Database fields
+    entry_point_resource_snapshot_id: Mapped[intpk] = mapped_column(init=False)
+    artifact_number: Mapped[intpk] = mapped_column(init=False, primary_key=True)
+    parameter_number: Mapped[intpk]
+    plugin_task_parameter_type_resource_snapshot_id: Mapped[bigint] = mapped_column(
+        ForeignKey("plugin_task_parameter_types.resource_snapshot_id"),
+        init=False,
+        nullable=False,
+        index=True,
+    )
+    name: Mapped[text_] = mapped_column(nullable=False, primary_key=True)
+
+    # Relationships
+    entry_point_artifact: Mapped["EntryPointArtifactParameter"] = relationship(
+        init=False, back_populates="output_parameters"
+    )
+    parameter_type: Mapped["PluginTaskParameterType"] = relationship()
+
+    # Additional settings
+    __table_args__ = (
+        Index(
+            None,
+            "entry_point_resource_snapshot_id",
+            "artifact_number",
+            "name",
+            unique=True,
+        ),
+        ForeignKeyConstraint(
+            ["entry_point_resource_snapshot_id", "artifact_number"],
+            [
+                "entry_point_artifact_parameters.entry_point_resource_snapshot_id",
+                "entry_point_artifact_parameters.artifact_number",
+            ],
+        ),
+    )
+
+
+class EntryPointArtifactParameterValue(db.Model):  # type: ignore[name-defined]
+    __tablename__ = "entry_point_artifact_parameter_values"
+
+    # Database fields
+    job_resource_id: Mapped[intpk] = mapped_column(
+        ForeignKey("resources.resource_id"), init=False
+    )
+    entry_point_resource_snapshot_id: Mapped[intpk] = mapped_column(init=False)
+    artifact_number: Mapped[intpk] = mapped_column(init=False)
+    # value of the artifact parameter
+    artifact_resource_snapshot_id: Mapped[bigint] = mapped_column(
+        ForeignKey("artifacts.resource_snapshot_id"), nullable=False, init=False
+    )
+
+    # Relationships
+    job_resource: Mapped["Resource"] = relationship()
+    artifact_parameter: Mapped["EntryPointArtifactParameter"] = relationship(
+        back_populates="values", lazy="joined"
+    )
+    artifact: Mapped["Artifact"] = relationship()
+    entry_point_job: Mapped["EntryPointJob"] = relationship(
+        init=False,
+        back_populates="entry_point_artifact_parameter_values",
+        overlaps="job_resource,artifact_parameter",
+    )
+
+    # Additional settings
+    __table_args__ = (
+        Index(None, "job_resource_id", "artifact_number", unique=True),
+        ForeignKeyConstraint(
+            ["entry_point_resource_snapshot_id", "artifact_number"],
+            [
+                "entry_point_artifact_parameters.entry_point_resource_snapshot_id",
+                "entry_point_artifact_parameters.artifact_number",
+            ],
+        ),
+        ForeignKeyConstraint(
+            ["entry_point_resource_snapshot_id", "job_resource_id"],
+            [
+                "entry_point_jobs.entry_point_resource_snapshot_id",
+                "entry_point_jobs.job_resource_id",
+            ],
+        ),
+    )
+
+
 class EntryPointPlugin(db.Model):  # type: ignore[name-defined]
     __tablename__ = "entry_point_plugins"
 
@@ -160,5 +281,23 @@ class EntryPointPlugin(db.Model):  # type: ignore[name-defined]
     # Relationships
     entry_point: Mapped["EntryPoint"] = relationship(
         back_populates="entry_point_plugins", lazy="joined"
+    )
+    plugin: Mapped["Plugin"] = relationship(lazy="joined")
+
+
+class EntryPointArtifactPlugin(db.Model):  # type: ignore[name-defined]
+    __tablename__ = "entry_point_artifact_plugins"
+
+    # Database fields
+    entry_point_resource_snapshot_id: Mapped[intpk] = mapped_column(
+        ForeignKey("entry_points.resource_snapshot_id"), init=False
+    )
+    plugin_resource_snapshot_id: Mapped[intpk] = mapped_column(
+        ForeignKey("plugins.resource_snapshot_id"), init=False
+    )
+
+    # Relationships
+    entry_point: Mapped["EntryPoint"] = relationship(
+        back_populates="entry_point_artifact_plugins", lazy="joined"
     )
     plugin: Mapped["Plugin"] = relationship(lazy="joined")

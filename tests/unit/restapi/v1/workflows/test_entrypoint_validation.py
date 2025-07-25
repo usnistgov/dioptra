@@ -135,7 +135,6 @@ def assert_multiple_snapshots_for_plugin_raise_error(
 
 def test_validate_entrypoint_workflow(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_parameter_types: dict[str, Any],
 ) -> None:
@@ -191,7 +190,8 @@ def test_validate_entrypoint_workflow(
         filename=filename,
         description=description,
         contents=contents,
-        tasks=tasks,
+        function_tasks=tasks,
+        artifact_tasks=None,
     )
 
     # Retrieve the latest plugin snapshot identifier (adding the plugin file creates a
@@ -227,7 +227,6 @@ def test_validate_entrypoint_workflow(
 
 def test_validate_entrypoint_workflow_with_error(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_parameter_types: dict[str, Any],
 ) -> None:
@@ -284,7 +283,8 @@ def test_validate_entrypoint_workflow_with_error(
         filename=filename,
         description=description,
         contents=contents,
-        tasks=tasks,
+        function_tasks=tasks,
+        artifact_tasks=None,
     )
 
     # Retrieve the latest plugin snapshot identifier (adding the plugin file creates a
@@ -322,7 +322,6 @@ def test_validate_entrypoint_workflow_with_error(
 
 def test_validation_rejects_multi_snapshots_for_same_plugin_resource(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_parameter_types: dict[str, Any],
 ) -> None:
@@ -379,7 +378,8 @@ def test_validation_rejects_multi_snapshots_for_same_plugin_resource(
         filename=filename,
         description=description,
         contents=contents,
-        tasks=tasks,
+        function_tasks=tasks,
+        artifact_tasks=None,
     )
 
     # Retrieve the latest plugin snapshot identifier (adding the plugin file creates a
