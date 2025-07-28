@@ -141,7 +141,7 @@ export async function getData<T extends ItemType>(type: T, pagination: Paginatio
     params: {
       index: pagination.index,
       pageLength: pagination.rowsPerPage === 0 ? 100 : pagination.rowsPerPage,  // 0 means GET ALL
-      search: urlEncode(pagination.search),
+      search: pagination.search,
       draftType: showDrafts ? 'new' : '',
       sortBy: pagination.sortBy,
       descending: pagination.descending,
@@ -221,7 +221,7 @@ export async function getJobs(id: number, pagination: Pagination) {
     params: {
       index: pagination.index,
       pageLength: pagination.rowsPerPage === 0 ? 100 : pagination.rowsPerPage,  // 0 means GET ALL
-      search: urlEncode(pagination.search),
+      search: pagination.search,
       sortBy: pagination.sortBy,
       descending: pagination.descending,
     }
@@ -242,17 +242,6 @@ export async function getJobs(id: number, pagination: Pagination) {
 export async function getJobMetrics(id: number) {
   return await axios.get(`/api/jobs/${id}/metrics`)
 
-}
-
-function urlEncode(string: string) {
-  if(!string.trim()) return ''
-  if(string.includes(':')) {
-    const words = string.split(':')
-    console.log('words = ', words)
-    return `${words[0]}:"${words[1]}"`
-  } else {
-    return `"${string}"`
-  }
 }
 
 export async function getItem<T extends ItemType>(type: T, id: number, isDraft: boolean = false) {
@@ -328,7 +317,7 @@ export async function getFiles(id: number, pagination: Pagination) {
     params: {
       index: pagination.index,
       pageLength: pagination.rowsPerPage === 0 ? 100 : pagination.rowsPerPage,  // 0 means GET ALL
-      search: urlEncode(pagination.search),
+      search: pagination.search,
       sortBy: pagination.sortBy,
       descending: pagination.descending,
     }

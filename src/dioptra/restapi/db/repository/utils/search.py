@@ -50,6 +50,8 @@ def _construct_sql_search_value(search_term: str) -> str:
         search_term = search_term.replace(r"\\", "\\")
         search_term = search_term.replace(r"\*", "*")
         search_term = search_term.replace(r"\?", "?")
+        search_term = search_term.replace(r"\:", ":")
+        search_term = search_term.replace(r"\,", ",")
         search_term = search_term.replace(r"\"", '"')
         search_term = search_term.replace(r"\'", "'")
         search_term = search_term.replace(r"\n", "\n")

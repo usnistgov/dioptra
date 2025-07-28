@@ -156,10 +156,9 @@
 </template>
 
 <script setup>
-  import { ref, watch, computed, inject, onMounted } from 'vue'
+  import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue'
   import { useQuasar } from 'quasar'
-  
-  const isMobile = inject('isMobile')
+  import * as notify from '../notify'
 
   const props = defineProps({
   columns: Array,
@@ -278,7 +277,16 @@
     tableRef.value.requestServerInteraction()
   }
 
+  let invalidSearchNotification = notify.wait()
+
   function onRequest(props) {
+    const searchError = checkSearch(props.filter)
+
+    invalidSearchNotification()
+    if(searchError.length) {
+      invalidSearchNotification = notify.wait(searchError)
+      return
+    }
     pagination.value = { ...props.pagination }
     const paginationOptions = props.pagination
     const { page, rowsPerPage } = props.pagination
@@ -287,6 +295,55 @@
     paginationOptions.search = props.filter
     emit('request', paginationOptions, showDrafts.value)
   }
+
+  function checkSearch(string) {
+    const trimmed = string.trimEnd()
+
+    // if search ends with unescaped colon
+    if (
+      trimmed.length > 1 &&
+      trimmed.endsWith(':') &&
+      trimmed[trimmed.length - 2] !== '\\' &&
+      trimmed[trimmed.length - 2] !== ':'
+    ) {
+      return `Enter a value after the trailing colon.`
+    }
+
+    // if search ends with unescaped comma
+    if (
+      trimmed.length > 1 &&
+      trimmed.endsWith(',') &&
+      trimmed[trimmed.length - 2] !== '\\' &&
+      trimmed[trimmed.length - 2] !== ','
+    ) {
+      return `Trailing comma.  Please remove or add new search criteria.`
+    }
+
+    // Count unescaped single and double quotes
+    let singleQuotes = 0
+    let doubleQuotes = 0
+
+    for (let i = 0; i < trimmed.length; i++) {
+      const char = trimmed[i]
+      const prevChar = trimmed[i - 1]
+
+      if (char === "'" && prevChar !== '\\') {
+        singleQuotes++
+      } else if (char === '"' && prevChar !== '\\') {
+        doubleQuotes++
+      }
+    }
+
+    if (singleQuotes % 2 !== 0 || doubleQuotes % 2 !== 0) {
+      return `Unclosed quotation mark. Please close all quotes.`
+    }
+
+    return ''
+  }
+
+  onBeforeUnmount(() => {
+    invalidSearchNotification()
+  })
 
   function updateTotalRows(totalRows) {
     pagination.value.rowsNumber = totalRows
