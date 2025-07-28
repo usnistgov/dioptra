@@ -76,6 +76,54 @@
                 <label :class="`field-label`">Description:</label>
               </template>
             </q-input>
+            <q-select
+              v-if="!history"
+              outlined
+              dense
+              v-model="entryPoint.queues"
+              use-input
+              use-chips
+              multiple
+              map-options
+              option-label="name"
+              option-value="id"
+              input-debounce="100"
+              :options="queues"
+              @filter="getQueues"
+              class="q-mt-lg q-mb-md"
+              :disable="history"
+            >
+              <template v-slot:before>
+                <div class="field-label">Queues:</div>
+              </template>  
+              <template v-slot:selected-item="scope">
+                <q-chip
+                  :label="scope.opt.name"
+                  removable
+                  dense
+                  @remove="scope.removeAtIndex(scope.index)"
+                  :tabindex="scope.tabindex"
+                  color="primary"
+                  text-color="white"
+                />
+              </template>
+            </q-select>
+            <div v-else class="row items-center q-mt-lg q-mb-md">
+              <label class="field-label">Queues:</label>
+              <div 
+                class="col" 
+                style="border: 1px solid lightgray; border-radius: 4px; padding: 10px 8px; margin-left: 6px;"
+                :style="history ? 'opacity: 0.5; pointer-events: none;' : ''"
+              >
+                <q-icon
+                  name="sym_o_info"
+                  size="2em"
+                  color="grey"
+                  class="q-mr-sm"
+                />
+                Queues are not yet avaiable in Entrypoint snapshots
+              </div>
+            </div>
           </q-form>
         </div>
       </fieldset>
@@ -184,54 +232,6 @@
             </q-card-actions>
           </q-form>
         </q-card>
-
-        <q-select
-          v-if="!history"
-          outlined
-          dense
-          v-model="entryPoint.queues"
-          use-input
-          use-chips
-          multiple
-          map-options
-          option-label="name"
-          option-value="id"
-          input-debounce="100"
-          :options="queues"
-          @filter="getQueues"
-          class="q-mt-lg q-mb-md"
-          :disable="history"
-        >
-          <template v-slot:before>
-            <div class="field-label">Queues:</div>
-          </template>  
-          <template v-slot:selected-item="scope">
-            <q-chip
-              :label="scope.opt.name"
-              removable
-              @remove="scope.removeAtIndex(scope.index)"
-              :tabindex="scope.tabindex"
-              color="primary"
-              text-color="white"
-            />
-          </template>
-        </q-select>
-        <div v-else class="row items-center q-mt-lg q-mb-md">
-          <label class="field-label">Queues:</label>
-          <div 
-            class="col" 
-            style="border: 1px solid lightgray; border-radius: 4px; padding: 10px 8px; margin-left: 6px;"
-            :style="history ? 'opacity: 0.5; pointer-events: none;' : ''"
-          >
-            <q-icon
-              name="sym_o_info"
-              size="2em"
-              color="grey"
-              class="q-mr-sm"
-            />
-            Queues are not yet avaiable in Entrypoint snapshots
-          </div>
-        </div>
         <q-select
           v-if="route.params.id === 'new'"
           outlined
@@ -246,6 +246,7 @@
           input-debounce="100"
           :options="plugins"
           @filter="getPlugins"
+          class="q-mt-lg"
         >
           <template v-slot:before>
             <div class="field-label">Plugins:</div>
@@ -254,6 +255,7 @@
             <q-chip
               :label="scope.opt.name"
               removable
+              dense
               @remove="scope.removeAtIndex(scope.index)"
               :tabindex="scope.tabindex"
               color="secondary"
@@ -262,7 +264,7 @@
           </template>
         </q-select>
         <div 
-          class="row items-center" 
+          class="row items-center q-mt-lg" 
           v-if="route.params.id !== 'new' && entryPoint.plugins.length > 0"
         >
           <label class="field-label">Plugins:</label>
@@ -318,33 +320,34 @@
         :style="history ? 'opacity: 0.5; pointer-events: none;' : ''"
       >
         <template #body-cell-inputParams="props">
-          <q-chip
-            v-for="(param, i) in props.row.inputParams"
-            :key="i"
-            color="indigo"
-            class="q-mr-sm"
-            text-color="white"
-            dense
-            clickable
-          >
-            {{ `${param.name}` }}
-            <span v-if="param.required" class="text-red">*</span>
-            : {{ param.parameterType.name }}
-          </q-chip>
+          <div v-for="(param, i) in props.row.inputParams" :key="i">
+            <q-chip
+              color="indigo"
+              text-color="white"
+              dense
+              clickable
+              class="q-mr-none"
+            >
+              {{ `${param.name}` }}
+              <span v-if="param.required" class="text-red">*</span>
+              : {{ param.parameterType.name }}
+            </q-chip>
+          </div>
         </template>
         <template #body-cell-outputParams="props">
-          <q-chip
-            v-for="(param, i) in props.row.outputParams"
-            :key="i"
-            color="purple"
-            text-color="white"
-            dense
-            clickable
-          >
-            {{ `${param.name}` }}
-            <span v-if="param.required" class="text-red">*</span>
-            : {{ param.parameterType.name }}
-          </q-chip>
+          <div v-for="(param, i) in props.row.outputParams" :key="i">
+            <q-chip
+              color="purple"
+              text-color="white"
+              dense
+              clickable
+              class="q-mr-none"
+            >
+              {{ `${param.name}` }}
+              <span v-if="param.required" class="text-red">*</span>
+              : {{ param.parameterType.name }}
+            </q-chip>
+          </div>
         </template>
         <template #body-cell-add="props">
           <q-btn icon="add" round size="xs" color="grey-5" text-color="black" @click="addToTaskGraph(props.row)" />
@@ -526,8 +529,8 @@
       if(typeof plugin === 'number') return
       const pluginName = plugin.name
       plugin.files.forEach((file) => {
-        file.tasks.forEach((task) => {
-          tasks.value.push({ ...task, pluginName: pluginName })
+        file.tasks.functions.forEach((fTask) => {
+          tasks.value.push({ ...fTask, pluginName: pluginName })
         })
       })
     })
@@ -572,15 +575,13 @@
   const taskColumns = [
     { name: 'pluginName', label: 'Plugin', align: 'left', field: 'pluginName', sortable: true, },
     { name: 'taskName', label: 'Task', align: 'left', field: 'name', sortable: true, },
-    { name: 'inputParams', label: 'Input Params', align: 'left', field: 'inputParams', sortable: false, },
-    { name: 'outputParams', label: 'Output Params', align: 'left', field: 'outputParams', sortable: false, },
-    { name: 'add', label: 'Add to Task Graph', align: 'left', sortable: false, },
+    { name: 'inputParams', label: 'Input Params', align: 'right', field: 'inputParams', sortable: false, classes: 'vertical-top' },
+    { name: 'outputParams', label: 'Output Params', align: 'right', field: 'outputParams', sortable: false, classes: 'vertical-top' },
+    { name: 'add', label: 'Add to Task Graph', align: 'center', sortable: false, },
   ]
 
   const title = ref('')
   const showReturnDialog = ref(false)
-
-  getEntrypoint()
 
   async function getEntrypoint() {
     if(route.params.id === 'new') {
@@ -680,7 +681,9 @@
           name: entryPoint.value.name,
           description: entryPoint.value.description,
           taskGraph: entryPoint.value.taskGraph,
+          artifactGraph: '',
           parameters: entryPoint.value.parameters,
+          artifactParameters: [],
           queues: entryPoint.value.queues,
         })
         console.log('pluginsToUpdate = ', pluginsToUpdate.value)

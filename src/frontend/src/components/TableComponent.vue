@@ -106,7 +106,7 @@
           </slot>
         </q-td>
       </q-tr>
-      <q-tr v-show="props.expand" :props="props" :class="`${highlightRow(props)}`" style="pointer-events: none;">
+      <q-tr v-show="props.expand" :props="props" :class="`${highlightRow(props)}`">
         <q-td colspan="100%">
           <!-- <div class="text-left ">Additional info for {{ props.row.name }}.</div> -->
           <slot name="expandedSlot" :row="props.row" :rowProps="props" />

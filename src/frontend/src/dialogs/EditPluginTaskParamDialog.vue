@@ -24,7 +24,6 @@
     <q-select 
       v-model="parameterType"
       emit-value
-      option-value="id"
       option-label="name"
       map-options
       :options="pluginParameterTypes"
@@ -37,7 +36,7 @@
         <label for="type" class="field-label">Type:</label>
       </template>
     </q-select>
-    <div v-if="paramType === 'inputParams'" class="row items-center">
+    <div v-if="inputOrOutputParams === 'inputParams'" class="row items-center">
       <label class="col-3" for="required">
         Required:
       </label>
@@ -53,7 +52,7 @@
   import { ref, watch } from 'vue'
   import DialogComponent from './DialogComponent.vue'
 
-  const props = defineProps(['editParam', 'pluginParameterTypes', 'paramType'])
+  const props = defineProps(['editParam', 'pluginParameterTypes', 'inputOrOutputParams'])
   const emit = defineEmits(['addParam', 'updateParam'])
 
   function requiredRule(val) {
@@ -69,7 +68,9 @@
   watch(showDialog, (newVal) => {
     if(newVal) {
       name.value = props.editParam.name
-      parameterType.value = props.editParam.parameterType
+      if(props.editParam.parameterType?.id) {
+        parameterType.value = props.editParam.parameterType
+      }
       required.value = props.editParam && Object.hasOwn(props.editParam, 'required') ? props.editParam.required : true
     }
     else {
@@ -80,7 +81,7 @@
 
   function emitAddOrEdit() {
     let param = {name: name.value, parameterType: parameterType.value}
-    if(props.paramType === 'inputParams') {
+    if(props.inputOrOutputParams === 'inputParams') {
       param.required = required.value
     }
     if(props.editParam) {
