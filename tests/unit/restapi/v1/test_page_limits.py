@@ -28,7 +28,7 @@ from dioptra.restapi.v1.schemas import PagingQueryParametersSchema
         {"index": 999999, "pageLength": 1000},
     ],
 )
-def test_page_limits_valid(page):
+def test_page_limits_valid(page, client):
     PagingQueryParametersSchema().load(page)
 
 
@@ -39,7 +39,7 @@ def test_page_limits_valid(page):
         {"index": 0, "pageLength": 999999},
     ],
 )
-def test_page_limits_invalid(page):
+def test_page_limits_invalid(page, client):
     with pytest.raises(marshmallow.ValidationError):
         PagingQueryParametersSchema().load(page)
 
@@ -51,9 +51,8 @@ def test_page_limits_invalid(page):
         {"index": 20, "pageLength": 200},
     ],
 )
-def test_page_limits_override_invalid(app, page, monkeypatch):
-
-    monkeypatch.setitem(app.config, "DIOPTRA_MAX_PAGE_SIZE", 100)
+def test_page_limits_override_invalid(flask_app, client, page, monkeypatch):
+    monkeypatch.setitem(flask_app.config, "DIOPTRA_MAX_PAGE_SIZE", 100)
 
     with pytest.raises(marshmallow.ValidationError):
         PagingQueryParametersSchema().load(page)
