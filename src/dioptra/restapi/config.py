@@ -53,6 +53,41 @@ def _set_session_protection(default: str = "strong") -> str:
     return value
 
 
+def _set_max_page_size(default_max: int = 1000) -> int:
+    """
+    Find a max page size.  This determines the maximum size of pages which
+    restapi users are allowed to request.  It applies across all endpoints
+    which support paging.
+
+    It can be set via environment variable DIOPTRA_MAX_PAGE_SIZE.  The given
+    default is used if the variable is not set.  In all cases, the max page
+    size can't be less than the default page size, which is currently 10.
+
+    Args:
+        default_max: The default value to use for max page size, if the
+            environment variable is not set
+
+    Returns:
+        The max page size value
+
+    Raises:
+        ValueError: if the environment variable is set to a value which can't
+            be converted to an integer, or is less than the default page size
+    """
+    # should match the marshmallow schema's load_default
+    default_page_size = 10
+
+    max_page_size = int(os.getenv("DIOPTRA_MAX_PAGE_SIZE", default_max))
+
+    if max_page_size < default_page_size:
+        raise ValueError(
+            f"Invalid DIOPTRA_MAX_PAGE_SIZE value: {max_page_size}. "
+            f"Must be >= {default_page_size}."
+        )
+
+    return max_page_size
+
+
 class BaseConfig(object):
     CONFIG_NAME = "base"
     USE_MOCK_EQUIVALENCY = False
@@ -68,6 +103,7 @@ class BaseConfig(object):
     DIOPTRA_PLUGINS_BUCKET = os.getenv("DIOPTRA_PLUGINS_BUCKET", "plugins")
     DIOPTRA_SWAGGER_PATH = os.getenv("DIOPTRA_SWAGGER_PATH", "/")
     DIOPTRA_BASE_URL = os.getenv("DIOPTRA_BASE_URL")
+    DIOPTRA_MAX_PAGE_SIZE = _set_max_page_size()
 
 
 class DevelopmentConfig(BaseConfig):
