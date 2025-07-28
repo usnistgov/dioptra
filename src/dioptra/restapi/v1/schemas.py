@@ -18,7 +18,9 @@
 
 import enum
 
-from marshmallow import Schema, fields
+import flask
+from marshmallow import Schema, ValidationError, fields, validates
+from marshmallow.validate import Range
 
 from .file_types import FileTypes
 
@@ -188,12 +190,21 @@ class PagingQueryParametersSchema(Schema):
         attribute="index",
         metadata=dict(description="Starting index of the current page."),
         load_default=0,
+        validate=Range(min=0),
     )
     pageLength = fields.Integer(
         attribute="page_length",
         metadata=dict(description="Number of results to return per page."),
         load_default=10,
     )
+
+    @validates("pageLength")
+    def check_page_length(self, page_length):
+        # If we can't get app config settings, skip this validation
+        if flask.current_app:
+            max_page_size = flask.current_app.config["DIOPTRA_MAX_PAGE_SIZE"]
+            if page_length > max_page_size:
+                raise ValidationError(f"Must be <= {max_page_size}")
 
 
 class ResourceTypeQueryParametersSchema(Schema):
