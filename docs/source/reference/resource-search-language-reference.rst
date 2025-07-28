@@ -78,7 +78,7 @@ Search terms can be combined using commas.
 
 Example usage:
     * ``search_term_1, search_terms_*, "search_term_3"`` - will search for all text fields that
-    match either ``search_term_1``, start with ``search_terms_`` or match ``search_term_3``.
+    match ``search_term_1``, start with ``search_terms_`` and match ``search_term_3``.
 
 
 Searching by Field Name ``field:``

@@ -44,7 +44,7 @@ def _define_query_grammar() -> pp.ParserElement:
     wildcard = ~pp.Literal("\\") + (pp.Literal("*") | pp.Literal("?"))
 
     # An escaped character is a '\' followed by a character that needs to be escaped
-    escape = pp.Literal("\\") + pp.Word("\\?*\"'n", exact=1)
+    escape = pp.Literal("\\") + pp.Word("\\?*\"'n:,", exact=1)
 
     # Spaces are allowed in unquoted searches, but not when a field is specified
     space = pp.Literal(" ")
