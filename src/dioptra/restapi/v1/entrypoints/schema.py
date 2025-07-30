@@ -15,6 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The schemas for serializing/deserializing Entrypoint resources."""
+
 from marshmallow import Schema, fields, validate
 
 from dioptra.restapi.v1.plugins.schema import (
