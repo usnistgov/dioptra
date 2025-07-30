@@ -47,7 +47,7 @@ from ..lib import actions, mock_mlflow, mock_rq
 
 
 @pytest.fixture
-@freeze_time("Apr 1st, 2025", auto_tick_seconds=1)
+@freeze_time("Apr 1st, 2025 5:00am", auto_tick_seconds=1)
 def registered_users(client: FlaskClient) -> dict[str, Any]:
     password = "supersecurepassword"
     user1_response = actions.register_user(
@@ -73,6 +73,7 @@ def registered_users(client: FlaskClient) -> dict[str, Any]:
 
 
 @pytest.fixture
+@freeze_time("Apr 1st, 2025 5:30am", auto_tick_seconds=1)
 def auth_account(
     client: FlaskClient,
     registered_users: dict[str, Any],  # noqa: F811
@@ -87,6 +88,7 @@ def auth_account(
 
 
 @pytest.fixture
+@freeze_time("Apr 1st, 2025", auto_tick_seconds=1)
 def registered_tags(
     client: FlaskClient, auth_account: dict[str, Any]
 ) -> dict[str, Any]:
@@ -139,6 +141,7 @@ def artifact_info() -> dict[str, dict[str, str]]:
 
 
 @pytest.fixture
+@freeze_time("Apr 1st, 2025 3:00pm", auto_tick_seconds=1)
 def mlflow_artifact_uris(
     mockup_mlflow: MlflowClient,
     registered_mlflowrun: dict[str, Any],
@@ -158,6 +161,7 @@ def mlflow_artifact_uris(
 
 
 @pytest.fixture
+@freeze_time("Apr 1st, 2025 4:00pm", auto_tick_seconds=1)
 def registered_artifacts(
     client: FlaskClient,
     mockup_mlflow: MlflowClient,
@@ -182,6 +186,7 @@ def registered_artifacts(
 
 
 @pytest.fixture
+@freeze_time("Apr 1st, 2025 5:00pm", auto_tick_seconds=1)
 def registered_models(
     client: FlaskClient,
     auth_account: dict[str, Any],
@@ -245,6 +250,7 @@ def registered_models(
 
 
 @pytest.fixture
+@freeze_time("Apr 1st, 2025 6:00pm", auto_tick_seconds=1)
 def registered_model_versions(
     client: FlaskClient,
     auth_account: dict[str, Any],
@@ -292,6 +298,7 @@ def registered_model_versions(
 
 
 @pytest.fixture
+@freeze_time("Apr 1st, 2025 8:00am", auto_tick_seconds=1)
 def registered_plugins(
     client: FlaskClient, auth_account: dict[str, Any]
 ) -> dict[str, Any]:
@@ -321,6 +328,7 @@ def registered_plugins(
 
 
 @pytest.fixture
+@freeze_time("Apr 1st, 2025 8:30am", auto_tick_seconds=1)
 def registered_plugin_with_files(
     client: FlaskClient, auth_account: dict[str, Any]
 ) -> dict[str, Any]:
@@ -369,6 +377,7 @@ def registered_plugin_with_files(
 
 
 @pytest.fixture
+@freeze_time("Apr 1st, 2025 9:00am", auto_tick_seconds=1)
 def registered_plugin_with_file_and_tasks(
     client: FlaskClient,
     auth_account: dict[str, Any],
@@ -445,6 +454,7 @@ def registered_plugin_with_file_and_tasks(
 
 
 @pytest.fixture
+@freeze_time("Apr 1st, 2025 10:00am", auto_tick_seconds=1)
 def registered_queues(
     client: FlaskClient, auth_account: dict[str, Any]
 ) -> dict[str, Any]:
@@ -474,6 +484,7 @@ def registered_queues(
 
 
 @pytest.fixture
+@freeze_time("Apr 1st, 2025 7:00am", auto_tick_seconds=1)
 def registered_groups(
     client: FlaskClient, auth_account: dict[str, Any]
 ) -> dict[str, Any]:
@@ -499,7 +510,7 @@ def registered_groups(
 
 
 @pytest.fixture
-@freeze_time("Apr 2nd, 2025", auto_tick_seconds=1)
+@freeze_time("Apr 1st, 2025 9:30am", auto_tick_seconds=1)
 def registered_plugin_parameter_types(
     client: FlaskClient, auth_account: dict[str, Any]
 ) -> dict[str, Any]:
@@ -540,6 +551,7 @@ def registered_plugin_parameter_types(
 
 
 @pytest.fixture
+@freeze_time("Apr 1st, 2025 12:00pm", auto_tick_seconds=1)
 def registered_experiments(
     client: FlaskClient,
     auth_account: dict[str, Any],
@@ -577,6 +589,7 @@ def registered_experiments(
 
 
 @pytest.fixture
+@freeze_time("Apr 1st, 2025 11:00am", auto_tick_seconds=1)
 def registered_entrypoints(
     client: FlaskClient,
     auth_account: dict[str, Any],
@@ -668,6 +681,7 @@ def registered_entrypoints(
 
 
 @pytest.fixture
+@freeze_time("Apr 1st, 2025 1:00pm", auto_tick_seconds=1)
 def registered_jobs(
     client: FlaskClient,
     auth_account: dict[str, Any],
@@ -723,6 +737,7 @@ def registered_jobs(
 
 
 @pytest.fixture
+@freeze_time("Apr 1st, 2025 2:00pm", auto_tick_seconds=1)
 def registered_mlflowrun(
     client: FlaskClient,
     mockup_mlflow: MlflowClient,
@@ -749,6 +764,7 @@ def registered_mlflowrun(
 
 
 @pytest.fixture
+@freeze_time("Apr 1st, 2025 2:10pm", auto_tick_seconds=1)
 def registered_mlflowrun_incomplete(
     client: FlaskClient,
     auth_account: dict[str, Any],
