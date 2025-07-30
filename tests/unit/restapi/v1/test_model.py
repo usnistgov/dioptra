@@ -20,6 +20,7 @@ This module contains a set of tests that validate the CRUD operations and additi
 functionalities for the model entity. The tests ensure that the models can be
 registered, renamed, deleted, and locked/unlocked as expected through the REST API.
 """
+
 from http import HTTPStatus
 from typing import Any
 
@@ -29,7 +30,7 @@ from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
 
 from ..lib import asserts, helpers, routines
-from ..test_utils import assert_retrieving_resource_works
+from ..test_utils import assert_retrieving_resource_works, assert_searchable_field_works
 
 # -- Assertions ------------------------------------------------------------------------
 
@@ -384,6 +385,32 @@ def test_model_get_all(
     """
     model_expected_list = list(registered_models.values())
     assert_retrieving_models_works(dioptra_client, expected=model_expected_list)
+
+
+@pytest.mark.parametrize(
+    "field, value, expected_count",
+    [
+        ("name", None, 1),
+        ("description", None, 2),
+        ("tag", "Foo", 0),
+    ],
+)
+def test_model_searchable_fields(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_models: dict[str, Any],
+    field: str,
+    value: str | None,
+    expected_count: int,
+) -> None:
+    model = registered_models["model1"]
+    search_value = model[field] if value is None else value
+    assert_searchable_field_works(
+        dioptra_client=dioptra_client.models,
+        term=field,
+        value=search_value,
+        expected_count=expected_count,
+    )
 
 
 @pytest.mark.parametrize(
@@ -818,6 +845,33 @@ def test_model_versions_get_all(
     model_version_expected_list = list(registered_model_versions.values())[::4]
     assert_retrieving_model_versions_works(
         dioptra_client, model_id=model_id, expected=model_version_expected_list
+    )
+
+
+@pytest.mark.parametrize(
+    "field, value, expected_count",
+    [
+        ("description", None, 1),
+        ("tag", "Foo", 0),
+    ],
+)
+def test_model_version_searchable_fields(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_models: dict[str, Any],
+    registered_model_versions: dict[str, Any],
+    field: str,
+    value: str | None,
+    expected_count: int,
+) -> None:
+    model_version = registered_model_versions["version1"]
+    search_value = model_version[field] if value is None else value
+    assert_searchable_field_works(
+        dioptra_client=dioptra_client.models.versions,
+        term=field,
+        value=search_value,
+        expected_count=expected_count,
+        context={"model_id": registered_models["model1"]["id"]},
     )
 
 

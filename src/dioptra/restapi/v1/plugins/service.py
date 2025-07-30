@@ -51,11 +51,13 @@ PLUGIN_TASK_RESOURCE_TYPE: Final[str] = "plugin_task"
 PLUGIN_SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
     "name": lambda x: models.Plugin.name.like(x, escape="/"),
     "description": lambda x: models.Plugin.description.like(x, escape="/"),
+    "tag": lambda x: models.Plugin.tags.any(models.Tag.name.like(x, escape="/")),
 }
 PLUGIN_FILE_SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
     "filename": lambda x: models.PluginFile.filename.like(x, escape="/"),
     "description": lambda x: models.PluginFile.description.like(x, escape="/"),
     "contents": lambda x: models.PluginFile.contents.like(x, escape="/"),
+    "tag": lambda x: models.PluginFile.tags.any(models.Tag.name.like(x, escape="/")),
 }
 PLUGIN_SORTABLE_FIELDS: Final[dict[str, Any]] = {
     "name": models.Plugin.name,

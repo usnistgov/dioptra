@@ -48,8 +48,9 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 RESOURCE_TYPE: Final[str] = "artifact"
 SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
-    "uri": lambda x: models.Artifact.uri.like(x, escape="/"),
+    "artifactUri": lambda x: models.Artifact.uri.like(x, escape="/"),
     "description": lambda x: models.Artifact.description.like(x, escape="/"),
+    "tag": lambda x: models.Artifact.tags.any(models.Tag.name.like(x, escape="/")),
 }
 SORTABLE_FIELDS: Final[dict[str, Any]] = {
     "uri": models.Artifact.uri,

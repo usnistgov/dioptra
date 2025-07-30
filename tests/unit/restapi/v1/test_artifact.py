@@ -20,6 +20,7 @@ This module contains a set of tests that validate the CRUD operations and additi
 functionalities for the model entity. The tests ensure that the models can be
 registered, renamed, deleted, and locked/unlocked as expected through the REST API.
 """
+
 from http import HTTPStatus
 from typing import Any
 
@@ -29,7 +30,7 @@ from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
 
 from ..lib import helpers
-from ..test_utils import assert_retrieving_resource_works
+from ..test_utils import assert_retrieving_resource_works, assert_searchable_field_works
 
 # -- Assertions ------------------------------------------------------------------------
 
@@ -259,6 +260,32 @@ def test_artifacts_get_all(
     """
     artifacts_expected_list = list(registered_artifacts.values())
     assert_retrieving_artifacts_works(dioptra_client, expected=artifacts_expected_list)
+
+
+@pytest.mark.parametrize(
+    "field, value, expected_count",
+    [
+        ("artifactUri", None, 1),
+        ("description", None, 1),
+        ("tag", "Foo", 0),
+    ],
+)
+def test_artifact_searchable_fields(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_artifacts: dict[str, Any],
+    field: str,
+    value: str | None,
+    expected_count: int,
+) -> None:
+    artifact = registered_artifacts["artifact1"]
+    search_value = artifact[field] if value is None else value
+    assert_searchable_field_works(
+        dioptra_client=dioptra_client.artifacts,
+        term=field,
+        value=search_value,
+        expected_count=expected_count,
+    )
 
 
 @pytest.mark.parametrize(

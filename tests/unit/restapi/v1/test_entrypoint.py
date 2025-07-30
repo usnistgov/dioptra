@@ -31,7 +31,7 @@ from dioptra.client.base import DioptraResponseProtocol, FieldNameCollisionError
 from dioptra.client.client import DioptraClient
 
 from ..lib import helpers, routines
-from ..test_utils import assert_retrieving_resource_works
+from ..test_utils import assert_retrieving_resource_works, assert_searchable_field_works
 
 # -- Assertions ------------------------------------------------------------------------
 
@@ -593,6 +593,34 @@ def test_entrypoint_get_all(
     entrypoint_expected_list = list(registered_entrypoints.values())
     assert_retrieving_entrypoints_works(
         dioptra_client, expected=entrypoint_expected_list
+    )
+
+
+@pytest.mark.parametrize(
+    "field, value, expected_count",
+    [
+        ("name", None, 1),
+        ("description", None, 1),
+        ("task_graph", "*my_entrypoint*", 4),
+        ("artifact_graph", "Foo", 0),
+        ("tag", "Foo", 0),
+    ],
+)
+def test_entrypoint_searchable_fields(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+    field: str,
+    value: str | None,
+    expected_count: int,
+) -> None:
+    entrypoint = registered_entrypoints["entrypoint1"]
+    search_value = entrypoint[field] if value is None else value
+    assert_searchable_field_works(
+        dioptra_client=dioptra_client.entrypoints,
+        term=field,
+        value=search_value,
+        expected_count=expected_count,
     )
 
 

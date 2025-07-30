@@ -282,7 +282,7 @@ honor_noqa = true
 [tool.mypy]
 python_version = "3.11"
 platform = "linux"
-mypy_path = "src,task-plugins"
+mypy_path = "src,tests"
 explicit_package_bases = true
 namespace_packages = true
 show_column_numbers = true
@@ -302,7 +302,7 @@ exclude = [
 plugins = "numpy.typing.mypy_plugin"
 
 [tool.pyright]
-include = ["src"]
+include = ["src", "tests"]
 exclude = [
     "**/.ipynb_checkpoints",
     "**/__pycache__",

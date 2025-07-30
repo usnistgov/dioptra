@@ -15,6 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 import pytest
+from freezegun import freeze_time
 from sqlalchemy.orm.session import Session as DBSession
 
 import dioptra.restapi.db.models as models
@@ -44,7 +45,6 @@ def point_type(db_session: DBSession, account):
 
 
 def test_type_create_not_exist(db_session: DBSession, account, type_repo):
-
     res = models.Resource("plugin_task_parameter_type", account.group)
     type_ = models.PluginTaskParameterType(
         "a type", res, account.user, "test_type", {"some": "structure"}
@@ -153,7 +153,6 @@ def test_type_create_user_not_member(
 def test_type_create_wrong_resource_type(
     db_session: DBSession, fake_data, account, type_repo
 ):
-
     res = models.Resource("queue", account.group)
     type_ = models.PluginTaskParameterType(
         "a type", res, account.user, "test_type", {"some": "structure"}
@@ -168,7 +167,6 @@ def test_type_create_wrong_resource_type(
 
 
 def test_type_create_name_collision(account, type_repo, point_type):
-
     res = models.Resource("plugin_task_parameter_type", account.group)
     type_ = models.PluginTaskParameterType(
         "a type", res, account.user, "point", {"some": "structure"}
@@ -179,7 +177,6 @@ def test_type_create_name_collision(account, type_repo, point_type):
 
 
 def test_type_create_name_reuse(db_session: DBSession, account, type_repo, point_type):
-
     lock = models.ResourceLock(resource_lock_types.DELETE, point_type.resource)
     db_session.add(lock)
     db_session.commit()
@@ -212,6 +209,7 @@ def test_type_create_snapshot_exists(
         type_repo.create_snapshot(type_)
 
 
+@freeze_time("Apr 1st, 2025", auto_tick_seconds=1)
 def test_type_create_snapshot_not_exist(
     db_session: DBSession, fake_data, account, type_repo
 ):
@@ -247,7 +245,6 @@ def test_type_create_snapshot_resource_not_exist(fake_data, account, type_repo):
 
 
 def test_type_create_snapshot_user_not_exist(type_repo, point_type):
-
     user2 = models.User("user2", "pass2", "user2@example.org")
     point_type_v2 = models.PluginTaskParameterType(
         point_type.description, point_type.resource, user2, "point2", None
@@ -260,7 +257,6 @@ def test_type_create_snapshot_user_not_exist(type_repo, point_type):
 def test_type_create_snapshot_user_deleted(
     db_session: DBSession, type_repo, point_type
 ):
-
     lock = models.UserLock(user_lock_types.DELETE, point_type.creator)
     db_session.add(lock)
     db_session.commit()
@@ -276,7 +272,6 @@ def test_type_create_snapshot_user_deleted(
 def test_type_create_snapshot_user_not_member(
     db_session: DBSession, type_repo, point_type
 ):
-
     user2 = models.User("user2", "pass2", "user2@example.org")
     group2 = models.Group("group2", user2)
     db_session.add_all((user2, group2))
@@ -305,7 +300,6 @@ def test_type_create_snapshot_user_not_member(
 def test_type_create_snapshot_name_collision(
     db_session: DBSession, fake_data, account, type_repo, point_type
 ):
-
     type_ = fake_data.plugin_task_parameter_type(account.user, account.group, "my_type")
     db_session.add(type_)
     db_session.commit()
@@ -323,7 +317,6 @@ def test_type_create_snapshot_name_collision(
 
 
 def test_type_get_by_name_exists(type_repo, point_type, deletion_policy):
-
     found = type_repo.get_by_name("point", point_type.resource.owner, deletion_policy)
     expected_list = helpers.find_expected_snaps_for_deletion_policy(
         (point_type,), deletion_policy
@@ -344,7 +337,6 @@ def test_type_get_by_name_not_exist(type_repo, account, deletion_policy):
 def test_type_get_by_name_deleted(
     db_session: DBSession, type_repo, point_type, deletion_policy
 ):
-
     lock = models.ResourceLock(resource_lock_types.DELETE, point_type.resource)
     db_session.add(lock)
     db_session.commit()
