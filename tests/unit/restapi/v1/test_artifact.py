@@ -22,7 +22,7 @@ registered, renamed, deleted, and locked/unlocked as expected through the REST A
 """
 
 from http import HTTPStatus
-from typing import Any
+from typing import Any, Tuple, cast
 
 import pytest
 
@@ -95,6 +95,8 @@ def assert_artifact_response_contents_matches_expectations(
     assert response["description"] == expected_contents["description"]
     assert response["isDir"] == expected_contents["isDir"]
     assert response["job"] == expected_contents["job"]
+    assert response["pluginSnapshotId"] == expected_contents["pluginSnapshotId"]
+    assert response["taskId"] == expected_contents["taskId"]
 
     assert helpers.is_iso_format(response["createdOn"])
     assert helpers.is_iso_format(response["snapshotCreatedOn"])
@@ -195,14 +197,42 @@ def assert_registering_existing_artifact_uri_fails(
     assert response.status_code == HTTPStatus.CONFLICT
 
 
+def get_snapshot_id_task_id(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    registered_artifact_plugins: dict[str, Any],
+    plugin_name: str | None,
+    task_index: int | None,
+) -> Tuple[int | None, int | None]:
+    if plugin_name is not None:
+        plugin = registered_artifact_plugins[plugin_name]
+        return (
+            dioptra_client.plugins.get_by_id(plugin["plugin_id"]).json()["snapshot"],
+            plugin["plugin_file"]["tasks"]["artifacts"][task_index]["id"],
+        )
+    else:
+        return (None, None)
+
+
 # -- Tests -----------------------------------------------------------------------------
 
 
+@pytest.mark.parametrize(
+    "job_name, artifact_name, plugin_name, task_index",
+    [
+        ("job1", "artifact1", None, None),
+        ("job2", "artifact3", "artifact_plugin", 0),
+    ],
+)
 def test_create_artifact(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
+    registered_artifact_plugins: dict[str, Any],
     mlflow_artifact_uris: dict[str, str],
+    job_name: str,
+    artifact_name: str,
+    plugin_name: str | None,
+    task_index: int | None,
 ) -> None:
     """Test that artifacts can be correctly registered and retrieved using the API.
 
@@ -214,12 +244,20 @@ def test_create_artifact(
     - The user is able to retrieve information about the artifact using the artifact id.
     """
     description = "The first artifact."
-    job_id = registered_jobs["job1"]["id"]
+    job_id = registered_jobs[job_name]["id"]
     user_id = auth_account["id"]
     group_id = auth_account["groups"][0]["id"]
-    uri = mlflow_artifact_uris["artifact1"]
+    uri = mlflow_artifact_uris[artifact_name]
+    plugin_snapshot_id, task_id = get_snapshot_id_task_id(
+        dioptra_client, registered_artifact_plugins, plugin_name, task_index
+    )
     artifact_response = dioptra_client.artifacts.create(
-        group_id=group_id, job_id=job_id, artifact_uri=uri, description=description
+        group_id=group_id,
+        job_id=job_id,
+        artifact_uri=uri,
+        plugin_snapshot_id=plugin_snapshot_id,
+        task_id=task_id,
+        description=description,
     )
 
     artifact_expected = artifact_response.json()
@@ -233,6 +271,8 @@ def test_create_artifact(
             "group_id": group_id,
             "job": job_id,
             "isDir": False,
+            "pluginSnapshotId": plugin_snapshot_id,
+            "taskId": task_id,
         },
     )
     assert_retrieving_artifact_by_id_works(
@@ -260,6 +300,26 @@ def test_artifacts_get_all(
     """
     artifacts_expected_list = list(registered_artifacts.values())
     assert_retrieving_artifacts_works(dioptra_client, expected=artifacts_expected_list)
+
+
+def test_artifact_get_by_snapshot_id(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_artifacts: dict[str, Any],
+) -> None:
+    """Test that artifacts can be queried by snapshot id.
+
+    Given an authenticated user and registered artifacts, this test validates the
+    following sequence of actions:
+
+    - The user is able to retrieve registered artifacts by their snapshot id.
+    """
+    for artifact in registered_artifacts.values():
+        response = dioptra_client.artifacts.snapshots.get_by_id(
+            artifact["id"], snapshot_id=artifact["snapshot"]
+        ).json()
+        assert response["id"] == artifact["id"]
+        assert response["snapshot"] == artifact["snapshot"]
 
 
 @pytest.mark.parametrize(
@@ -393,3 +453,88 @@ def test_cannot_register_existing_artifact_uri(
         group_id=existing_artifact["group"]["id"],
         job_id=existing_artifact["job"],
     )
+
+
+def test_modify_artifact(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_artifacts: dict[str, Any],
+    registered_artifact_plugins: dict[str, Any],
+) -> None:
+    """Test that an artifact can be modified.
+
+    Given an authenticated user and registered artifact, this test validates the
+    following sequence of actions:
+
+    - The user issues a request to change the description, plugin_id and task_id of the
+      artifact task for the artifact
+    - The user retrieves information about the same artifact and it reflects
+      the changes.
+    """
+    plugin_snapshot_id, task_id = get_snapshot_id_task_id(
+        dioptra_client, registered_artifact_plugins, "artifact_plugin", 0
+    )
+    artifact_to_modify = registered_artifacts["artifact2"]
+    response = dioptra_client.artifacts.modify_by_id(
+        artifact_id=artifact_to_modify["id"],
+        plugin_snapshot_id=plugin_snapshot_id,
+        task_id=task_id,
+        description="New Description",
+    ).json()
+
+    assert_artifact_response_contents_matches_expectations(
+        response=response,
+        expected_contents={
+            "artifactUri": artifact_to_modify["artifactUri"],
+            "description": "New Description",
+            "user_id": artifact_to_modify["user"]["id"],
+            "group_id": artifact_to_modify["group"]["id"],
+            "job": artifact_to_modify["job"],
+            "isDir": artifact_to_modify["isDir"],
+            "pluginSnapshotId": plugin_snapshot_id,
+            "taskId": task_id,
+        },
+    )
+
+
+def test_get_contents(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_artifacts: dict[str, Any],
+) -> None:
+    """Test the get the contents of an artifact works.
+
+    Given an authenticated user and registered artifacts, this test validates the
+    following sequence of actions:
+
+    - The user is able to successfully retrieve the contents for an artifact
+    """
+    existing_artifact = registered_artifacts["artifact1"]
+    contents = dioptra_client.artifacts.get_contents(
+        artifact_id=existing_artifact["id"]
+    )
+    assert contents.exists()
+
+
+def test_get_file_listing(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_artifacts: dict[str, Any],
+    artifact_info: dict[str, Any],
+) -> None:
+    """Test the get the file list for an artifact.
+
+    Given an authenticated user and registered artifacts, this test validates the
+    following sequence of actions:
+
+    - The user is able to successfully retrieve the file listing for an artifact
+    """
+    info = artifact_info["artifact1"]
+    existing_artifact = registered_artifacts["artifact1"]
+    contents = cast(
+        list[dict[str, Any]],
+        dioptra_client.artifacts.get_files(artifact_id=existing_artifact["id"]).json(),
+    )
+
+    assert contents[0]["relativePath"] == info["name"]
+    assert not contents[0]["isDir"]
