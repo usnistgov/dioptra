@@ -77,6 +77,21 @@ def assert_retrieving_resource_works(
     )
 
 
+def assert_searchable_field_works(
+    dioptra_client: SubCollectionClient[DioptraResponseProtocol],
+    term: str,
+    value: str,
+    expected_count: int,
+    context: dict[str, Any] | None = None,
+) -> None:
+    if context is None:
+        context = {}
+    response = dioptra_client.get(**context, search=f'{term}:"{value}"')
+    assert response.status_code == HTTPStatus.OK
+    json_response = response.json()
+    assert json_response["totalNumResults"] == expected_count
+
+
 def match_normalized_json(
     original_entity: DioptraResponseProtocol | list[dict[str, Any]],
     expected_json_entity: DioptraResponseProtocol | list[dict[str, Any]],

@@ -33,7 +33,11 @@ from dioptra.restapi.routes import V1_PLUGIN_PARAMETER_TYPES_ROUTE, V1_ROOT
 from dioptra.restapi.v1.shared.resource_service import _plugin_file_payload_adapter
 
 from ..lib import helpers, routines
-from ..test_utils import assert_retrieving_resource_works, match_normalized_json
+from ..test_utils import (
+    assert_retrieving_resource_works,
+    assert_searchable_field_works,
+    match_normalized_json,
+)
 
 # -- Assertions Plugins ----------------------------------------------------------------
 
@@ -610,6 +614,32 @@ def test_plugin_get_all(
 
 
 @pytest.mark.parametrize(
+    "field, value, expected_count",
+    [
+        ("name", None, 1),
+        ("description", None, 1),
+        ("tag", "Foo", 0),
+    ],
+)
+def test_plugin_searchable_fields(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_plugins: dict[str, Any],
+    field: str,
+    value: str | None,
+    expected_count: int,
+) -> None:
+    plugin = registered_plugins["plugin1"]
+    search_value = plugin[field] if value is None else value
+    assert_searchable_field_works(
+        dioptra_client=dioptra_client.plugins,
+        term=field,
+        value=search_value,
+        expected_count=expected_count,
+    )
+
+
+@pytest.mark.parametrize(
     "sort_by, descending , expected",
     [
         ("name", True, ["plugin2", "plugin3", "plugin1"]),
@@ -1040,6 +1070,35 @@ def test_plugin_file_get_all(
         dioptra_client,
         plugin_id=registered_plugin["id"],
         expected=plugin_file_expected_list,
+    )
+
+
+@pytest.mark.parametrize(
+    "field, value, expected_count",
+    [
+        ("filename", None, 1),
+        ("description", None, 1),
+        ("contents", "*Hello*", 3),
+        ("tag", "Foo", 0),
+    ],
+)
+def test_plugin_file_searchable_fields(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_plugin_with_files: dict[str, Any],
+    field: str,
+    value: str | None,
+    expected_count: int,
+) -> None:
+    registered_plugin = registered_plugin_with_files["plugin"]
+    plugin_file = registered_plugin_with_files["plugin_file1"]
+    search_value = plugin_file[field] if value is None else value
+    assert_searchable_field_works(
+        dioptra_client=dioptra_client.plugins.files,
+        term=field,
+        value=search_value,
+        expected_count=expected_count,
+        context={"plugin_id": registered_plugin["id"]},
     )
 
 

@@ -44,9 +44,13 @@ MODEL_VERSION_RESOURCE_TYPE: Final[str] = "ml_model_version"
 MODEL_SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
     "name": lambda x: models.MlModel.name.like(x, escape="/"),
     "description": lambda x: models.MlModel.description.like(x, escape="/"),
+    "tag": lambda x: models.MlModel.tags.any(models.Tag.name.like(x, escape="/")),
 }
 MODEL_VERSION_SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
     "description": lambda x: models.MlModelVersion.description.like(x, escape="/"),
+    "tag": lambda x: models.MlModelVersion.tags.any(
+        models.Tag.name.like(x, escape="/")
+    ),
 }
 MODEL_SORTABLE_FIELDS: Final[dict[str, Any]] = {
     "name": models.MlModel.name,
