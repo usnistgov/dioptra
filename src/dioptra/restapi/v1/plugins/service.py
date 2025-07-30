@@ -991,16 +991,17 @@ class PluginIdFileService(object):
 
 class PluginIdSnapshotIdService(object):
     def get(self, plugin_id: int, plugin_snapshot_id: int, **kwargs) -> models.Plugin:
-        """Run a query to get the EntryPoint for an entrypoint snapshot id.
+        """Run a query to get the Plugin for an Plugin snapshot id.
 
         Args:
-            entrypoint_snapshot_id: The Snapshot ID of the entrypoint to retrieve
+            plugin_id: The plugin id of the plugin to retrieve
+            plugin_snapshot_id: The Snapshot ID of the plugin to retrieve
 
         Returns:
-            The entrypoint.
+            The Plugin.
 
         Raises:
-            EntityDoesNotExistError: If the entrypoint is not found
+            EntityDoesNotExistError: If the plugin is not found
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug(
