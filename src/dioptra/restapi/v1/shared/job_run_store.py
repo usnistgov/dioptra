@@ -15,7 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from dataclasses import dataclass
-from pathlib import Path, PosixPath
+from pathlib import Path, PurePosixPath
 from typing import Any, Protocol
 from urllib.parse import urlparse
 
@@ -205,7 +205,7 @@ class MlFlowJobRunStore:
         log: BoundLogger = LOGGER.new()
         log.debug("downloading artifacts", artifact_uri=artifact_uri, path=path)
         if path:
-            root_path = PosixPath(artifact_uri, path).as_posix()
+            root_path = PurePosixPath(artifact_uri, path).as_posix()
         else:
             root_path = artifact_uri
 
