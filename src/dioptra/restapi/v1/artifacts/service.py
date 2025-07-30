@@ -434,6 +434,8 @@ class ArtifactIdService(object):
             uri=artifact.uri,
             description=description,
             resource=artifact.resource,
+            is_dir=artifact.is_dir,
+            file_size=artifact.file_size,
             creator=current_user,
         )
         self._artifact_task_helper.associate_task(
