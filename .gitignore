@@ -9,6 +9,7 @@ examples/**/redis
 examples/**/restapi
 examples/**/mlruns
 examples/**/s3
+/examples/dioptra-venv
 
 # ---------------------------
 # BEGIN ignore basic files
@@ -399,6 +400,9 @@ vignettes/*.pdf
 # Javascript
 node_modules/
 
+#mlflow
+mlruns/
+
 # ---------------------------
 # BEGIN Whitelisted Files
 # ---------------------------
@@ -431,4 +435,4 @@ node_modules/
 !tests/**/lib
 !src/**/tags
 !src/**/lib
-/examples/dioptra-venv
+
