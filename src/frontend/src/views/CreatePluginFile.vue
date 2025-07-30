@@ -12,7 +12,7 @@
   <div class="row q-my-lg">
     <fieldset :class="`${isMobile ? 'col-12 q-mb-lg' : 'col q-mr-md'}`">
       <legend>Basic Info</legend>
-      <div style="padding: 0 5%">
+      <div class="q-px-lg column full-height">
         <q-form @submit.prevent="submit" ref="basicInfoForm" greedy>
           <q-input 
             outlined 
@@ -444,13 +444,13 @@
   </InfoPopupDialog>
   <DeleteDialog 
     v-model="showDeleteFileDialog"
-    @submit="deleteFile(); showDeleteFileDialog = false"
+    @submit="deleteFile()"
     type="Plugin File"
     :name="pluginFile.filename"
   />
   <DeleteDialog 
     v-model="showDeleteDialog"
-    @submit="console.log('selectedTaskProps = ', selectedTaskProps); pluginFile.tasks[selectedTaskProps.taskType].splice(selectedTaskProps.rowIndex, 1); showDeleteDialog = false"
+    @submit="pluginFile.tasks[selectedTaskProps.taskType].splice(selectedTaskProps.rowIndex, 1); showDeleteDialog = false"
     type="Plugin Task"
     :name="selectedTaskProps?.row?.name"
   />
@@ -868,6 +868,7 @@
   async function deleteFile() {
     try {
       await api.deleteFile(route.params.id, route.params.fileId)
+      showDeleteFileDialog.value = false
       notify.success(`Successfully deleted '${pluginFile.value.filename}'`)
       router.push(`/plugins/${route.params.id}/files`)
     } catch(err) {
