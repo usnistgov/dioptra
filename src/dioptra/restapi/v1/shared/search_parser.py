@@ -21,6 +21,7 @@ This module is responsible for defining the query language and providing a parse
 It parses syntactically correct search queries into a list of search terms. It also
 provides support for constructing sqlalchemy WHERE clauses from a parsed query.
 """
+
 from typing import Any
 
 import pyparsing as pp
@@ -106,16 +107,21 @@ def parse_search_text(search_text: str) -> list[dict]:
             contains a 'field' and 'value' key. The field is the name of the field to
             be searched or None to indicate the query should not be restricted by
             field. The value is a list of strings that represent the search value.
+
+    Raises:
+        SearchParseError: if an error occurs while trying to parse the received string
     """
 
     formatted_result: list[dict]
     if not search_text:
         formatted_result = []
-
     else:
-        parsed_search = DIOPTRA_QUERY_GRAMMAR.parse_string(
-            search_text, parse_all=True
-        ).as_list()
+        try:
+            parsed_search = DIOPTRA_QUERY_GRAMMAR.parse_string(
+                search_text, parse_all=True
+            ).as_list()
+        except pp.ParseException as error:
+            raise SearchParseError(error.line, repr(error)) from error
         formatted_result = []
         for term in parsed_search:
             if len(term) > 1 and isinstance(term[1], list):
@@ -170,10 +176,7 @@ def construct_sql_query_filters(search_string: str, searchable_fields: dict[str,
     if not search_string:
         return True
 
-    try:
-        parsed_search_terms = parse_search_text(search_string)
-    except pp.ParseException as error:
-        raise SearchParseError(error.line, repr(error)) from error
+    parsed_search_terms = parse_search_text(search_string)
 
     query_filters: list = []
     for search_term in parsed_search_terms:
