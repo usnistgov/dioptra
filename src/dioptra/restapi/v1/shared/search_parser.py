@@ -20,6 +20,8 @@ A module for Dioptra's REST API query language.
 This module is responsible for defining the query language and providing a parser.
 It parses syntactically correct search queries into a list of search terms. It also
 provides support for constructing sqlalchemy WHERE clauses from a parsed query.
+
+See test_grammar in unit tests for example grammar usage
 """
 
 from typing import Any
@@ -166,6 +168,7 @@ def construct_sql_query_filters(search_string: str, searchable_fields: dict[str,
 
     Args:
         search_string: A string conforming to the search grammar.
+        searchable_fields: A mapping of field names to SQL Alchemy filter functions
 
     Returns:
         A filter that can be used in a sqlalchemy query.
@@ -192,55 +195,3 @@ def construct_sql_query_filters(search_string: str, searchable_fields: dict[str,
         query_filters.append(filter)
 
     return and_(*query_filters)
-
-
-if __name__ == "__main__":
-    """
-    A simple demonstration of the query grammar with sample queries.
-    """
-
-    DIOPTRA_QUERY_GRAMMAR.run_tests(
-        r"""
-        # search all text fields matching 'search_*'
-        search_*
-        # search all text the exactly match 'search_*'
-        search_\*
-        # a quoted search term can contain spaces and other characters
-        "search \"this\", and 'that'"
-        # multiple search terms can be provided via a comma-separated list
-        "search=this", 'and, how about "this\?"',this_too
-        # search tags whose name matches 'classification' exactly
-        tag:classification
-        # search tags whose name starts with 'class'
-        tag:class*
-        # search descriptions containing mnist and whose tag name matches 'cv' exactly
-        description:*mnist*,tag:cv
-        # search for name starting with 'trial_' and ending with two valid characters
-        name:trial_??
-        # search for literal '*'
-        \*
-        # multi-word search
-        search all for this
-        # field multi-word search
-        field:"search all for this"
-        """,
-        full_dump=False,
-    )
-
-    DIOPTRA_QUERY_GRAMMAR.run_tests(
-        r"""
-        # invalid multi word field search
-        field:search all for this
-        # incorrect assignment character used
-        bad=assignment
-        # invalid characters in field name
-        bad-name:classification
-        # invalid delimiter between search terms
-        description:bad_delim|tag:cv
-        # missing closing quote
-        "forgot to close this quote
-        # tried to escape an unescapable character
-        \q
-        """,
-        full_dump=False,
-    )

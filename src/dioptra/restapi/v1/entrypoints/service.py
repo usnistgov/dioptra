@@ -54,6 +54,8 @@ SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
     "name": lambda x: models.EntryPoint.name.like(x, escape="/"),
     "description": lambda x: models.EntryPoint.description.like(x, escape="/"),
     "task_graph": lambda x: models.EntryPoint.task_graph.like(x, escape="/"),
+    "artifact_graph": lambda x: models.EntryPoint.artifact_graph.like(x, escape="/"),
+    "tag": lambda x: models.EntryPoint.tags.any(models.Tag.name.like(x, escape="/")),
 }
 SORTABLE_FIELDS: Final[dict[str, Any]] = {
     "name": models.EntryPoint.name,
