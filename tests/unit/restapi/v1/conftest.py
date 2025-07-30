@@ -454,6 +454,71 @@ def registered_plugin_with_file_and_tasks(
 
 
 @pytest.fixture
+@freeze_time("Apr 1st, 2025 9:40am", auto_tick_seconds=1)
+def registered_artifact_plugins(
+    client: FlaskClient,
+    auth_account: dict[str, Any],
+    registered_plugin_parameter_types: dict[str, Any],
+) -> dict[str, Any]:
+    plugin_response = actions.register_plugin(
+        client,
+        name="artifact_plugin",
+        description="An artifact plugin with files.",
+        group_id=auth_account["default_group_id"],
+    ).get_json()
+    contents = textwrap.dedent(
+        """from dioptra.sdk.api.artifact import ArtifactTaskInterface
+        from pathlib import Path
+
+        class TestArtifactTask(ArtifactTaskInterface):
+            @staticmethod
+            def serialize(
+                working_dir: Path, name: str, contents: str, **kwargs
+            ) -> Path:
+                result = Path(working_dir, name)
+                result.write_text(contents, encoding="UTF-8", newline="")
+                return result
+
+            @staticmethod
+            def deserialize(working_dir: Path, path: str, **kwargs) -> str:
+                return Path(working_dir, path).read_text()
+
+            @staticmethod
+            def validation() -> dict[str, Any] | None:
+                return None
+
+            @staticmethod
+            def name() -> str:
+                return "test_artifact"
+        """
+    )
+    test_artifact_task = {
+        "name": "TestArtifactTask",
+        "outputParams": [
+            {
+                "name": "contents",
+                "parameterType": registered_plugin_parameter_types["string"]["id"],
+            }
+        ],
+    }
+    artifact_task_list = [test_artifact_task]
+    plugin_file_response = actions.register_plugin_file(
+        client,
+        plugin_id=plugin_response["id"],
+        description="The artifact plugin file with tasks.",
+        filename="artifact_file.py",
+        contents=contents,
+        artifact_tasks=artifact_task_list,
+    ).get_json()
+    return {
+        "artifact_plugin": {
+            "plugin_id": plugin_response["id"],
+            "plugin_file": plugin_file_response,
+        }
+    }
+
+
+@pytest.fixture
 @freeze_time("Apr 1st, 2025 10:00am", auto_tick_seconds=1)
 def registered_queues(
     client: FlaskClient, auth_account: dict[str, Any]

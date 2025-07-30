@@ -19,7 +19,7 @@ import contextlib
 import dataclasses
 import time
 import uuid
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any, Optional, Tuple
 from urllib.parse import urlparse
 
@@ -395,22 +395,35 @@ def _build_artifact_uri(
 
 
 def _parse_artifact_uri(uri: str) -> Tuple[str, str]:
+    """
+    Parse the Artifact URI
+    Arguments:
+        uri: the uri to parse
+
+    Returns:
+        a tuple with the first element is the run id and the secomde element is path
+        within the artifacts directory of the artifact
+    """
     parsed_uri = urlparse(uri)
     elements = parsed_uri.path.split("/")
     # raises value error if uri is not formatted as expected
     index = elements.index("runs")
 
-    return (elements[index + 2], "/".join(elements[index + 3 :]))
+    return (elements[index + 2], "/".join(elements[index + 4 :]))
 
 
 # mocks for mlflow.artifacts
-def list_artifacts(self, artifact_uri: str) -> list[mlflow.entities.FileInfo]:
+def list_artifacts(artifact_uri: str) -> list[mlflow.entities.FileInfo]:
     LOGGER.info("Mocking mlflow.artifacts.list_artifacts function")
     elements = _parse_artifact_uri(artifact_uri)
     return MockState.registered_runs[elements[0]].artifacts.list(elements[1])
 
 
-def download_artifacts(self, artifact_uri: str, dst_path: str) -> str:
+def download_artifacts(artifact_uri: str, dst_path: str) -> str:
     LOGGER.info("Mocking mlflow.artifacts.download_artifacts function")
+    # just write something to a file
+    Path(dst_path, PurePosixPath(artifact_uri).name).write_text(
+        "test contents", encoding="UTF-8", newline=""
+    )
     # do nothing other than return the dst_path
     return dst_path
