@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="column" style="flex: 1; width: 100%;">
     <codemirror
       v-model="code"
       :placeholder="placeholder"
@@ -10,7 +10,9 @@
       :disabled="readOnly"
       @ready="handleReady"
       @update="highlightPlaceholder"
-      :style="{ 'max-height': '70vh',
+      :style="{
+        flex: 1,
+        'max-height': '100vh',
         'border': `${showError ? '2px solid red' : '2px solid black'}`
       }"
     />
@@ -35,9 +37,10 @@
   import { python } from '@codemirror/lang-python'
   import { CompletionContext, autocompletion, startCompletion } from '@codemirror/autocomplete'
   import YAML from 'yaml'
+  import { EditorView } from '@codemirror/view'
 
   function myCompletions(context) {
-    let word = context.matchBefore(/\w*/)
+    let word = context.matchBefore(/\$\w*/) || context.matchBefore(/\w*/)
     if (word.from == word.to && !context.explicit) {
       return null
     }
@@ -71,11 +74,12 @@
     }
 
     // Filter out the current top-level key from the autocompletions
-    const filteredTopLevelKeys = getTopLevelKeys().filter(option => option.label !== `$${currentTopLevelKey}`)
+    const filteredTopLevelKeys = getTopLevelKeys(code.value).filter(option => option.label !== `$${currentTopLevelKey}`)
+    const additionalTopLevelKeys = getTopLevelKeys(props.additionalCode)
 
     return {
       from: word.from,
-      options: [...props.autocompletions, ...filteredTopLevelKeys],
+      options: [...props.autocompletions, ...filteredTopLevelKeys, ...additionalTopLevelKeys],
       // options: [
       //   {label: "match", type: "keyword"},
       //   {label: "hello", type: "variable", info: "(World)"},
@@ -84,7 +88,7 @@
     }
   }
 
-  const props = defineProps(['placeholder', 'language', 'readOnly', 'showError', 'autocompletions'])
+  const props = defineProps(['placeholder', 'language', 'readOnly', 'showError', 'autocompletions', 'additionalCode'])
 
   const code = defineModel()
 
@@ -100,7 +104,7 @@
     const to = view.value.state.selection.ranges[0].to
     if(from !== to) return // short circut if user is dragging cursor
 
-    const placeholders = ['<input-value>', '<step-name>']
+    const placeholders = ['<input-value>', '<step-name>', '<output-name>', '<contents>']
     placeholders.forEach((placeholder) => {
       let startIndex = code.value.indexOf(placeholder)
       while(startIndex !== -1) {
@@ -112,7 +116,7 @@
           view.value.dispatch({
             selection: { anchor: startIndex, head: endIndex }
           })
-          if(placeholder === '<input-value>') {
+          if(placeholder === '<input-value>' || placeholder === '<contents>') {
             startCompletion(view.value)
           }
           return // Break after the first match to avoid overlapping selection conflicts
@@ -146,11 +150,11 @@
     return diagnostics
   })
 
-  function getTopLevelKeys() {
+  function getTopLevelKeys(code) {
     try {
-      if(code.value) {
+      if(code) {
         let output = []
-        const keys =  Object.keys(YAML.parse(code.value)).filter((key) => key !== '<step-name>')
+        const keys =  Object.keys(YAML.parse(code)).filter((key) => key !== '<step-name>')
         keys.forEach((key) => {
           output.push({
             label: `$${key}`,
@@ -166,22 +170,51 @@
     }
   }
 
+const dollarTriggerExtension = EditorView.updateListener.of((update) => {
+  if (!view.value) return
+
+  let insertedText = ""
+  let isSingleCharInsertion = false
+
+  update.changes.iterChanges((fromA, toA, fromB, toB, inserted) => {
+    insertedText = inserted.sliceString(0)
+
+    // Check if exactly one character was inserted
+    isSingleCharInsertion = (inserted.length === 1) && (insertedText === "$")
+  })
+
+  if (isSingleCharInsertion) {
+    startCompletion(view.value)
+  }
+})
+
   const extensions = computed(() => {
-    if(props.language === 'python') {
-      return [python(), oneDark]
-    }
-    return [
-      yaml(), 
+    const baseExtensions = [
       oneDark,
+    ]
+
+    if (props.language === 'python') {
+      return [python(), ...baseExtensions]
+    }
+
+    return [
+      yaml(),
       yamlLinter,
       lintGutter(),
       autocompletion({ override: [myCompletions] }),
+      dollarTriggerExtension,
+      ...baseExtensions,
     ]
   })
 </script>
 
 <style>
-  .cm-scroller { 
-    overflow: auto; min-height: 250px 
-  }
+  /* .cm-scroller { 
+    overflow: auto; 
+    min-height: 250px;
+  } */
+
+.cm-editor {
+  width: 100% !important;
+}
 </style>

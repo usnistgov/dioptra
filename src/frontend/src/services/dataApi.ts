@@ -368,8 +368,8 @@ export async function addArtifact(expId: string, jobId: string, params: Artifact
   return await axios.post(`/api/experiments/${expId}/jobs/${jobId}/artifacts`, params)
 }
 
-export async function addPluginsToEntrypoint(id: string, plugins: number[]) {
-  return await axios.post(`/api/entrypoints/${id}/plugins`, {plugins})
+export async function addPluginsToEntrypoint(id: string, plugins: number[], pluginType: string) {
+  return await axios.post(`/api/entrypoints/${id}/${pluginType}`, {[pluginType]: plugins})
 }
 
 export async function removePluginFromEntrypoint(entrypointId: string, pluginId: number) {
