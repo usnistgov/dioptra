@@ -719,7 +719,7 @@ def build_entrypoint(entrypoint_dict: EntrypointDict) -> dict[str, Any]:
         "artifact_parameters": [
             {
                 "name": artifact.name,
-                "output_parameters": [
+                "output_params": [
                     {
                         "name": param.name,
                         "parameter_type": build_plugin_parameter_type_ref(
