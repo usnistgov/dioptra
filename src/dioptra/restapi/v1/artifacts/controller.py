@@ -42,7 +42,6 @@ from dioptra.restapi.v1.shared.snapshots.controller import (
     generate_resource_snapshots_endpoint,
     generate_resource_snapshots_id_endpoint,
 )
-from dioptra.sdk.utilities.paths import set_cwd
 
 from .schema import (
     ArtifactContentsGetQueryParameters,
@@ -362,7 +361,7 @@ def _handle_artifact_contents(
             constraint="file_type query parameter may not be provided for a file",
         )
 
-    with TemporaryDirectory() as tmp_dir, set_cwd(tmp_dir):
+    with TemporaryDirectory() as tmp_dir:
         mimetype, result = _download_artifacts(
             job_run_store=job_run_store,
             tmp_dir=tmp_dir,
@@ -403,9 +402,9 @@ def _download_artifacts(
             base_dir=result.name,
         )
 
-        return (file_type.mimetype, Path(archive))
+        return (file_type.mimetype, Path(archive).resolve())
     else:
         mimetype, _ = mimetypes.guess_type(result)
         if mimetype is None:
             mimetype = "application/octet-stream"
-        return (mimetype, result)
+        return (mimetype, result.resolve())
