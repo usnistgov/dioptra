@@ -44,14 +44,15 @@ def assert_imported_resources_match_expected(
     response_plugins = set(plugin["name"] for plugin in response.json()["data"])
     expected_plugins = set(Path(plugin["path"]).stem for plugin in expected["plugins"])
     assert (
-        response.status_code == HTTPStatus.OK and response_plugins == expected_plugins
+        response.status_code == HTTPStatus.OK.value
+        and response_plugins == expected_plugins
     )
 
     response = dioptra_client.plugin_parameter_types.get()
     response_types = set(param["name"] for param in response.json()["data"])
     expected_types = set(param["name"] for param in expected["plugin_param_types"])
     assert (
-        response.status_code == HTTPStatus.OK
+        response.status_code == HTTPStatus.OK.value
         and response_types & expected_types == expected_types
     )
 
@@ -59,7 +60,7 @@ def assert_imported_resources_match_expected(
     response_entrypoints = set(ep["name"] for ep in response.json()["data"])
     expected_entrypoints = set(ep["name"] for ep in expected["entrypoints"])
     assert (
-        response.status_code == HTTPStatus.OK
+        response.status_code == HTTPStatus.OK.value
         and response_entrypoints == expected_entrypoints
     )
 
@@ -95,7 +96,7 @@ def assert_resource_import_overwrite_works(
         resolve_name_conflicts_strategy="overwrite",
     )
 
-    assert response.status_code == HTTPStatus.OK
+    assert response.status_code == HTTPStatus.OK.value
 
 
 # -- Tests -----------------------------------------------------------------------------

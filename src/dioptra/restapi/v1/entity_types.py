@@ -91,8 +91,16 @@ class EntityTypes(Enum):
         return list(map(lambda c: c.name, cls))
         # ----------------------------------------------------------------------
 
-    schema_name: str
-    print_name: str
+    def __str__(self):
+        return self.db_schema_name
+        # ----------------------------------------------------------------------
+
+    def __repr__(self):
+        return self.db_schema_name
+        # ----------------------------------------------------------------------
+
+    db_schema_name: str
+    ui_print_name: str
 
     def __new__(
         cls,
@@ -110,8 +118,8 @@ class EntityTypes(Enum):
         """
         new_instance = object.__new__(cls)
         new_instance._value_ = original_name
-        new_instance.schema_name = original_name
-        new_instance.print_name = readable_name
+        new_instance.db_schema_name = original_name
+        new_instance.ui_print_name = readable_name
         return new_instance
         # ----------------------------------------------------------------------
 
@@ -201,10 +209,10 @@ class EntityTypes(Enum):
         Returns:
             str: returns inst-ENUM.all-lower-case - snake
         """
-        if self.schema_name == EntityTypes.to_snake_case(self.schema_name):
-            return self.schema_name
+        if self.db_schema_name == EntityTypes.to_snake_case(self.db_schema_name):
+            return self.db_schema_name
         else:
-            return EntityTypes.to_snake_case(self.schema_name)
+            return EntityTypes.to_snake_case(self.db_schema_name)
         # ---------------------------------------------------------------------
 
     def get_original_name(self) -> str:
@@ -213,7 +221,7 @@ class EntityTypes(Enum):
         Returns:
             str: returns inst-ENUM.schema_name
         """
-        return self.schema_name
+        return self.db_schema_name
         # ----------------------------------------------------------------------
 
     def get_print_name(self) -> str:
@@ -223,7 +231,7 @@ class EntityTypes(Enum):
             str: returns inst-ENUM.print_name
 
         """
-        return self.print_name
+        return self.ui_print_name
         # ----------------------------------------------------------------------
 
     def get_an_article(self) -> str:
@@ -232,5 +240,5 @@ class EntityTypes(Enum):
         Returns:
             str: The article applicable to the EntityType instance
         """
-        return "an" if self.print_name.strip()[0].lower() in "aeiou" else "a"
+        return "an" if self.ui_print_name.strip()[0].lower() in "aeiou" else "a"
         # ----------------------------------------------------------------------

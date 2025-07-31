@@ -136,7 +136,10 @@ class DraftsRepository:
             if result:
                 is_deleted, parent_resource_type, child_resource_type = result
                 if is_deleted:
-                    raise EntityDeletedError(parent_resource_type, base_resource_id)
+                    raise EntityDeletedError(
+                        EntityTypes.get_from_string(parent_resource_type),
+                        base_resource_id,
+                    )
 
                 if not child_resource_type:
                     raise DraftBaseInvalidError(
