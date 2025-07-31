@@ -127,10 +127,12 @@ class EntityTypes(Enum):
     QUEUE = "queue", "Queue"
     METRIC = "metric", "Metric"
     RESOURCE = "resource", "Resource"
-    ML_MODEL = "ml_model", "M.L. Model"
     WORKFLOW = "workflow", "Workflow"
     EXPERIMENT = "experiment", "Experiment"
+
     ML_FLOW_RUN = "ml_flow_run", "M.L. Flow Run"
+    ML_MODEL = "ml_model", "M.L. Model"
+    ML_MODEL_VERSION = "ml_model_version", "M.L. Model Version"
     # --- Artifact-Related Entities ---
     HAS_DRAFT = "has_draft", "Has Draft"
     ARTIFACT = "artifact", "Artifact"

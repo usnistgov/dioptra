@@ -40,8 +40,8 @@ from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
-MODEL_RESOURCE_TYPE: EntityTypes = EntityTypes.ML_MODEL
-MODEL_VERSION_RESOURCE_TYPE: Final[str] = "ml_model_version"
+MODEL_RESOURCE_TYPE: Final[EntityTypes] = EntityTypes.ML_MODEL
+MODEL_VERSION_RESOURCE_TYPE: Final[EntityTypes] = EntityTypes.ML_MODEL_VERSION
 MODEL_SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
     "name": lambda x: models.MlModel.name.like(x, escape="/"),
     "description": lambda x: models.MlModel.description.like(x, escape="/"),
@@ -539,7 +539,7 @@ class ModelIdVersionsService(object):
         artifact = artifact_dict["artifact"]
 
         resource = models.Resource(
-            resource_type=MODEL_VERSION_RESOURCE_TYPE, owner=group
+            resource_type=MODEL_VERSION_RESOURCE_TYPE.get_db_schema_name(), owner=group
         )
         new_version = models.MlModelVersion(
             description=description,
@@ -732,7 +732,7 @@ class ModelIdVersionsNumberService(object):
         if latest_version is None:
             if error_if_not_found:
                 raise EntityDoesNotExistError(
-                    EntityTypes.get_from_string(MODEL_VERSION_RESOURCE_TYPE),
+                    MODEL_VERSION_RESOURCE_TYPE,
                     model_id=model_id,
                     version_number=version_number,
                 )
