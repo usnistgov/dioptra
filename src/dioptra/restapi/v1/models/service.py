@@ -34,12 +34,13 @@ from dioptra.restapi.errors import (
 )
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.artifacts.service import ArtifactIdService
+from dioptra.restapi.v1.entity_types import EntityTypes
 from dioptra.restapi.v1.groups.service import GroupIdService
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
-MODEL_RESOURCE_TYPE: Final[str] = "ml_model"
+MODEL_RESOURCE_TYPE: EntityTypes = EntityTypes.ML_MODEL
 MODEL_VERSION_RESOURCE_TYPE: Final[str] = "ml_model_version"
 MODEL_SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
     "name": lambda x: models.MlModel.name.like(x, escape="/"),
@@ -731,7 +732,7 @@ class ModelIdVersionsNumberService(object):
         if latest_version is None:
             if error_if_not_found:
                 raise EntityDoesNotExistError(
-                    MODEL_VERSION_RESOURCE_TYPE,
+                    EntityTypes.get_from_string(MODEL_VERSION_RESOURCE_TYPE),
                     model_id=model_id,
                     version_number=version_number,
                 )

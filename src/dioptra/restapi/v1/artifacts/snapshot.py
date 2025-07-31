@@ -22,8 +22,9 @@ from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
 from dioptra.restapi.errors import EntityDoesNotExistError
+from dioptra.restapi.v1.entity_types import EntityTypes
 
-RESOURCE_TYPE: Final[str] = "artifact"
+RESOURCE_TYPE: EntityTypes = EntityTypes.ARTIFACT  # "artifact"
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 # This service has been split out to avoid a circular dependency with the jobs.service

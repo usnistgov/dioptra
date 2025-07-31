@@ -40,18 +40,15 @@ from dioptra.restapi.errors import (
 )
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.artifacts.snapshot import ArtifactSnapshotIdService
+from dioptra.restapi.v1.entity_types import EntityTypes
 from dioptra.restapi.v1.entrypoints.service import (
     RESOURCE_TYPE as ENTRYPOINT_RESOURCE_TYPE,
 )
-from dioptra.restapi.v1.entrypoints.service import (
-    EntrypointIdService,
-)
+from dioptra.restapi.v1.entrypoints.service import EntrypointIdService
 from dioptra.restapi.v1.experiments.service import (
     RESOURCE_TYPE as EXPERIMENT_RESOURCE_TYPE,
 )
-from dioptra.restapi.v1.experiments.service import (
-    ExperimentIdService,
-)
+from dioptra.restapi.v1.experiments.service import ExperimentIdService
 from dioptra.restapi.v1.groups.service import GroupIdService
 from dioptra.restapi.v1.queues.service import RESOURCE_TYPE as QUEUE_RESOURCE_TYPE
 from dioptra.restapi.v1.queues.service import QueueIdService
@@ -61,7 +58,7 @@ from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
-RESOURCE_TYPE: Final[str] = "job"
+RESOURCE_TYPE: Final[EntityTypes] = EntityTypes.JOB
 SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
     "description": lambda x: models.Job.description.like(x),
     "status": lambda x: models.Job.status.like(x),
@@ -241,7 +238,8 @@ class JobService(object):
         # Create the new Job resource and record the assigned entrypoint parameter
         # values
         job_resource = models.Resource(
-            resource_type=RESOURCE_TYPE, owner=experiment.resource.owner
+            resource_type=RESOURCE_TYPE.get_print_name(),
+            owner=experiment.resource.owner,
         )
         entrypoint_parameter_values = [
             models.EntryPointParameterValue(

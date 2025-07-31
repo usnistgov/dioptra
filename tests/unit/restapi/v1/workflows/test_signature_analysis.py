@@ -23,6 +23,7 @@ from flask_sqlalchemy import SQLAlchemy
 from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
 
+
 expected_outputs = {}
 
 expected_outputs["sample_test_real_world.py"] = [

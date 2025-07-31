@@ -317,7 +317,7 @@ class ArtifactSnapshotIdContentsEndpoint(Resource):
 ArtifactSnapshotsResource = generate_resource_snapshots_endpoint(
     api=api,
     resource_model=models.Artifact,
-    resource_name=RESOURCE_TYPE,
+    resource_name=RESOURCE_TYPE.get_db_schema_name(),
     route_prefix=V1_ARTIFACTS_ROUTE,
     searchable_fields=SEARCHABLE_FIELDS,
     page_schema=ArtifactPageSchema,
@@ -326,7 +326,7 @@ ArtifactSnapshotsResource = generate_resource_snapshots_endpoint(
 ArtifactSnapshotsIdResource = generate_resource_snapshots_id_endpoint(
     api=api,
     resource_model=models.Artifact,
-    resource_name=RESOURCE_TYPE,
+    resource_name=RESOURCE_TYPE.get_db_schema_name(),
     response_schema=ArtifactSchema,
     build_fn=utils.build_artifact,
 )

@@ -20,6 +20,7 @@ from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
 from dioptra.restapi.errors import DioptraError, EntityDoesNotExistError
+from dioptra.restapi.v1.entity_types import EntityTypes
 from dioptra.restapi.v1.entrypoints.service import (
     RESOURCE_TYPE as ENTRYPOINT_RESOURCE_TYPE,
 )
@@ -348,7 +349,9 @@ def get_resource_snapshot(
     snapshot = db.session.scalar(snapshot_stmt)
 
     if snapshot is None:
-        raise EntityDoesNotExistError(resource_type, snapshot_id=snapshot_id)
+        raise EntityDoesNotExistError(
+            EntityTypes.get_from_string(resource_type), snapshot_id=snapshot_id
+        )
 
     return snapshot
 

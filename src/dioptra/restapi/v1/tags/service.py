@@ -32,12 +32,13 @@ from dioptra.restapi.errors import (
     EntityExistsError,
     SortParameterValidationError,
 )
+from dioptra.restapi.v1.entity_types import EntityTypes
 from dioptra.restapi.v1.groups.service import GroupIdService
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
-RESOURCE_TYPE: Final[str] = "tag"
+RESOURCE_TYPE: Final[EntityTypes] = EntityTypes.TAG
 SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
     "name": lambda x: models.Tag.name.like(x),
 }

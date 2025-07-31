@@ -41,6 +41,7 @@ from dioptra.restapi.db.repository.utils import (
     user_exists,
 )
 from dioptra.restapi.errors import EntityDoesNotExistError
+from dioptra.restapi.v1.entity_types import EntityTypes
 
 
 class UserRepository:
@@ -121,7 +122,7 @@ class UserRepository:
 
         exists_result = user_exists(self.session, user)
         if exists_result is ExistenceResult.DOES_NOT_EXIST:
-            raise EntityDoesNotExistError("user", user_id=user.user_id)
+            raise EntityDoesNotExistError(EntityTypes.USER, user_id=user.user_id)
 
         elif exists_result is ExistenceResult.EXISTS:
             lock = UserLock(UserLockTypes.DELETE, user)

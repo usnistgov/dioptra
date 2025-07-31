@@ -27,6 +27,7 @@ from dioptra.restapi.db import models
 from dioptra.restapi.db.repository.utils import DeletionPolicy
 from dioptra.restapi.db.unit_of_work import UnitOfWork
 from dioptra.restapi.errors import EntityDoesNotExistError, EntityExistsError
+from dioptra.restapi.v1.entity_types import EntityTypes
 from dioptra.restapi.v1.shared.search_parser import parse_search_text
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -42,7 +43,7 @@ DEFAULT_GROUP_MANAGER_PERMISSIONS: Final[dict[str, bool]] = {
     "admin": True,
 }
 
-GROUP_TYPE: Final[str] = "group"
+GROUP_TYPE: Final[EntityTypes] = EntityTypes.GROUP
 
 
 class GroupService(object):

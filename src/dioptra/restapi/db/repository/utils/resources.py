@@ -17,6 +17,7 @@
 """
 Functionality common to resource repositories.
 """
+
 import enum
 import itertools
 import typing
@@ -27,9 +28,7 @@ import sqlalchemy.orm as sao
 
 import dioptra.restapi.db.models as m
 import dioptra.restapi.errors as e
-from dioptra.restapi.db.models.constants import (
-    resource_lock_types,
-)
+from dioptra.restapi.db.models.constants import resource_lock_types
 from dioptra.restapi.db.repository.utils.checks import (
     assert_exists,
     assert_group_exists,
@@ -46,6 +45,7 @@ from dioptra.restapi.db.repository.utils.common import (
     get_resource_id,
 )
 from dioptra.restapi.db.repository.utils.search import construct_sql_query_filters
+from dioptra.restapi.v1.entity_types import EntityTypes
 
 # May be bound to a resource-type-specific ResourceSnapshot subclass,
 # i.e. represents our python class representation of a resource type.
@@ -585,7 +585,9 @@ def delete_resource(
     if exists_result is ExistenceResult.DOES_NOT_EXIST:
         resource_id = get_resource_id(resource)
         resource_type = None if isinstance(resource, int) else resource.resource_type
-        raise e.EntityDoesNotExistError(resource_type, resource_id=resource_id)
+        raise e.EntityDoesNotExistError(
+            EntityTypes.get_from_string(resource_type), resource_id=resource_id
+        )
 
     elif exists_result is ExistenceResult.EXISTS:
         add_resource_lock_types(session, resource, {ResourceLockType.DELETED})
@@ -686,21 +688,26 @@ def add_resource_lock_types(
         assert resource_id is not None
         if types_to_add:
             raise e.EntityDeletedError(
-                resource_type, resource_id, resource_id=resource_id
+                EntityTypes.get_from_string(resource_type),
+                resource_id,
+                resource_id=resource_id,
             )
 
     if ResourceLockType.READONLY in existing_lock_types:
         if types_to_add:
-            raise e.ReadOnlyLockError(resource_type, resource_id=resource_id)
+            raise e.ReadOnlyLockError(
+                EntityTypes.get_from_string(resource_type), resource_id=resource_id
+            )
 
     else:
-
         # here, we really need the Resource object; ResourceLock's
         # constructor is just designed that way.
         if isinstance(resource, int):
             resource_obj = session.get(m.Resource, resource)
             if not resource_obj:
-                raise e.EntityDoesNotExistError(resource_type, resource_id=resource)
+                raise e.EntityDoesNotExistError(
+                    EntityTypes.get_from_string(resource_type), resource_id=resource
+                )
         elif isinstance(resource, m.ResourceSnapshot):
             resource_obj = resource.resource
         else:
@@ -769,7 +776,7 @@ def get_by_filters_paged(
         if sort_by in sortable_fields:
             sort_by = sortable_fields[sort_by]
         else:
-            raise e.SortParameterValidationError("resource", sort_by)
+            raise e.SortParameterValidationError(EntityTypes.RESOURCE, sort_by)
     group_id = None if group is None else get_group_id(group)
 
     if group_id is not None:

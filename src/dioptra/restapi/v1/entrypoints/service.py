@@ -37,6 +37,7 @@ from dioptra.restapi.errors import (
 )
 from dioptra.restapi.utils import find_non_unique
 from dioptra.restapi.v1 import utils
+from dioptra.restapi.v1.entity_types import EntityTypes
 from dioptra.restapi.v1.groups.service import GroupIdService
 from dioptra.restapi.v1.plugins.service import (
     PluginIdsService,
@@ -47,9 +48,10 @@ from dioptra.restapi.v1.queues.service import QueueIdsService
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
-PLUGIN_RESOURCE_TYPE: Final[str] = "entry_point_plugin"
 
-RESOURCE_TYPE: Final[str] = "entry_point"
+PLUGIN_RESOURCE_TYPE: Final[EntityTypes] = EntityTypes.ENTRY_POINT_PLUGIN
+RESOURCE_TYPE: Final[EntityTypes] = EntityTypes.ENTRY_POINT
+
 SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
     "name": lambda x: models.EntryPoint.name.like(x, escape="/"),
     "description": lambda x: models.EntryPoint.description.like(x, escape="/"),
@@ -1700,7 +1702,7 @@ def _create_artifact_parameters(
         duplicates = find_non_unique("name", artifact["output_params"])
         if len(duplicates) > 0:
             raise QueryParameterNotUniqueError(
-                "artifact output parameter",
+                EntityTypes.ARTIFACT_OUTPUT_PARAMETER,
                 artifact_parameter_name=artifact["name"],
                 parameter_names=duplicates,
             )

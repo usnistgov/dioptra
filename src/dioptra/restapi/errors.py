@@ -29,6 +29,7 @@ from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
 from dioptra.restapi.v1 import utils
+from dioptra.restapi.v1.entity_types import EntityTypes
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -89,12 +90,13 @@ class EntityDoesNotExistError(DioptraError):
         kwargs: the attribute value pairs used to request the entity
     """
 
-    def __init__(self, entity_type: str | None = None, **kwargs: typing.Any):
+    # """| None = None"""
+    def __init__(self, entity_type: EntityTypes, **kwargs: typing.Any):
         super().__init__(
-            "".join(
+            " ".join(
                 [
-                    "Failed to locate ",
-                    "an entity" if entity_type is None else entity_type,
+                    "Failed to locate",
+                    f"{entity_type.get_an_article()} {entity_type.get_print_name()}",
                     *add_attribute_values(**kwargs),
                     ".",
                 ]
@@ -113,12 +115,15 @@ class EntityExistsError(DioptraError):
         kwargs: the attribute value pairs used to request the entity
     """
 
-    def __init__(self, entity_type: str | None, existing_id: int, **kwargs: typing.Any):
+    def __init__(
+        self, entity_type: EntityTypes | None, existing_id: int, **kwargs: typing.Any
+    ):
+        entity = entity_type if entity_type else EntityTypes.get_from_string(None)
         super().__init__(
             "".join(
                 [
                     "The ",
-                    "entity" if entity_type is None else entity_type,
+                    entity.get_print_name(),
                     *add_attribute_values(**kwargs),
                     " is not available.",
                 ]
@@ -138,14 +143,16 @@ class EntityDeletedError(DioptraError):
         kwargs: the attribute value pairs used to request the entity
     """
 
-    def __init__(self, entity_type: str | None, existing_id: int, **kwargs: typing.Any):
+    def __init__(
+        self, entity_type: EntityTypes, existing_id: int, **kwargs: typing.Any
+    ):
         super().__init__(
-            "".join(
+            " ".join(
                 [
-                    "The ",
-                    "entity" if entity_type is None else entity_type,
+                    "The",
+                    entity_type.get_print_name(),
                     *add_attribute_values(**kwargs),
-                    " is deleted.",
+                    "is deleted.",
                 ]
             )
         )
@@ -169,17 +176,18 @@ class LockError(DioptraError):
 class ReadOnlyLockError(LockError):
     """The type has a read-only lock and cannot be modified."""
 
-    def __init__(self, type: str | None = None, **kwargs: typing.Any):
+    def __init__(self, type: EntityTypes | None, **kwargs: typing.Any):
+        entity_type = type if type else EntityTypes.NONE
         super().__init__(
-            "".join(
+            " ".join(
                 [
-                    f"The {type or 'resource'} type",
+                    f"The {entity_type.get_print_name()} type",
                     *add_attribute_values(**kwargs),
-                    " has a read-only lock and cannot be modified.",
+                    "has a read-only lock and cannot be modified.",
                 ]
             )
         )
-        self.entity_type = type
+        self.entity_type = entity_type
         self.entity_attributes = kwargs
 
 
@@ -239,15 +247,15 @@ class DraftResourceModificationsCommitError(DioptraError):
 
     def __init__(
         self,
-        resource_type: str,
+        resource_type: EntityTypes,
         resource_id: int,
         draft: models.DraftResource,
         base_snapshot: models.ResourceSnapshot,
         curr_snapshot: models.ResourceSnapshot,
     ):
         super().__init__(
-            f"Draft modifications for a [{resource_type}] with id: {resource_id} "
-            "could not be commited."
+            f"Draft modifications for a [{resource_type.get_print_name()}] with id: {resource_id} "
+            "could not be committed."
         )
         self.draft = draft
         self.base_snapshot = base_snapshot
@@ -271,8 +279,10 @@ class InvalidDraftBaseResourceSnapshotError(DioptraError):
 class SortParameterValidationError(DioptraError):
     """The sort parameters are not valid."""
 
-    def __init__(self, type: str, column: str, **kwargs):
-        super().__init__(f"The sort parameter, {column}, for {type} is not sortable.")
+    def __init__(self, type: EntityTypes, column: str, **kwargs):
+        super().__init__(
+            f"The sort parameter, {column}, for {type.get_print_name()} is not sortable."
+        )
 
 
 class ArtifactTaskPluginTaskOverlapError(DioptraError):
@@ -298,11 +308,11 @@ class PluginTaskArtifactTaskOverlapError(DioptraError):
 class QueryParameterValidationError(DioptraError):
     """Input parameters failed validation."""
 
-    def __init__(self, type: str, constraint: str, **kwargs):
+    def __init__(self, type: EntityTypes, constraint: str, **kwargs):
         super().__init__(
             "".join(
                 [
-                    f"Input parameters for {type} failed {constraint} check",
+                    f"Input parameters for {type.get_print_name()} failed {constraint} check",
                     *add_attribute_values(**kwargs),
                     ".",
                 ]
@@ -316,7 +326,7 @@ class QueryParameterValidationError(DioptraError):
 class QueryParameterNotUniqueError(QueryParameterValidationError):
     """Query Parameters failed unique validatation check."""
 
-    def __init__(self, type: str, **kwargs):
+    def __init__(self, type: EntityTypes, **kwargs):
         super().__init__(type, "unique", **kwargs)
 
 
@@ -417,11 +427,15 @@ class EntityNotRegisteredError(DioptraError):
     """
 
     def __init__(
-        self, parent_type: str, parent_id: int, child_type: str, child_id: int
+        self,
+        parent_type: EntityTypes,
+        parent_id: int,
+        child_type: EntityTypes,
+        child_id: int,
     ):
         super().__init__(
-            f"The requested {child_type} having id ({child_id}) is not registered to "
-            f"the {parent_type} having id ({parent_id})."
+            f"The requested {child_type.get_print_name()} having id ({child_id}) is not registered to "
+            f"the {parent_type.get_print_name()} having id ({parent_id})."
         )
         self.parent_type = parent_type
         self.parent_id = parent_id
@@ -475,11 +489,11 @@ class UserDoesNotExistError(DioptraError):
 
     def __init__(self, **kwargs: typing.Any):
         super().__init__(
-            "".join(
+            " ".join(
                 [
                     "The user",
                     *add_attribute_values(**kwargs),
-                    " is not available.",
+                    "is not available.",
                 ]
             )
         )

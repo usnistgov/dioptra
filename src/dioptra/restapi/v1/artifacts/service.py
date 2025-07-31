@@ -34,6 +34,7 @@ from dioptra.restapi.errors import (
     SortParameterValidationError,
 )
 from dioptra.restapi.v1 import utils
+from dioptra.restapi.v1.entity_types import EntityTypes
 from dioptra.restapi.v1.groups.service import GroupIdService
 from dioptra.restapi.v1.jobs.service import JobIdMlflowrunService, JobIdService
 from dioptra.restapi.v1.plugins.service import (
@@ -46,7 +47,7 @@ from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
-RESOURCE_TYPE: Final[str] = "artifact"
+RESOURCE_TYPE: Final[EntityTypes] = EntityTypes.ARTIFACT
 SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
     "artifactUri": lambda x: models.Artifact.uri.like(x, escape="/"),
     "description": lambda x: models.Artifact.description.like(x, escape="/"),
@@ -193,7 +194,9 @@ class ArtifactService(object):
 
         group = self._group_id_service.get(group_id, error_if_not_found=True, log=log)
 
-        resource = models.Resource(resource_type="artifact", owner=group)
+        resource = models.Resource(
+            resource_type=RESOURCE_TYPE.get_db_schema_name(), owner=group
+        )
         new_artifact = models.Artifact(
             uri=uri,
             description=description,
@@ -427,7 +430,9 @@ class ArtifactIdService(object):
 
         artifact_dict = self.get(artifact_id, log=log)
 
-        artifact = cast(models.Artifact, artifact_dict.get("artifact"))
+        artifact = cast(
+            models.Artifact, artifact_dict.get(RESOURCE_TYPE.get_db_schema_name(), None)
+        )
         has_draft = cast(bool, artifact_dict.get("has_draft"))
 
         new_artifact = models.Artifact(

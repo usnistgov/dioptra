@@ -19,6 +19,7 @@
 from typing import Any, cast
 
 import structlog
+from dioptra.restapi.v1.entity_types import EntityTypes
 from injector import ClassAssistedBuilder, inject
 from sqlalchemy import select
 from structlog.stdlib import BoundLogger
@@ -260,6 +261,9 @@ class ResourceIdService(object):
         resource = db.session.scalar(stmt)
 
         if resource is None:
-            raise EntityDoesNotExistError(self._resource_type, resource_id=resource_id)
+            raise EntityDoesNotExistError(
+                EntityTypes.get_from_string(self._resource_type),
+                resource_id=resource_id,
+            )
 
         return resource

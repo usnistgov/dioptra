@@ -659,25 +659,25 @@ class ExperimentIdEntrypointsId(Resource):
 
 ExperimentDraftResource = generate_resource_drafts_endpoint(
     api,
-    resource_name=RESOURCE_TYPE,
+    resource_name=RESOURCE_TYPE.get_db_schema_name(),
     route_prefix=V1_EXPERIMENTS_ROUTE,
     request_schema=ExperimentDraftSchema,
 )
 ExperimentDraftIdResource = generate_resource_drafts_id_endpoint(
     api,
-    resource_name=RESOURCE_TYPE,
+    resource_name=RESOURCE_TYPE.get_db_schema_name(),
     request_schema=ExperimentDraftSchema(exclude=["groupId"]),
 )
 ExperimentIdDraftResource = generate_resource_id_draft_endpoint(
     api,
-    resource_name=RESOURCE_TYPE,
+    resource_name=RESOURCE_TYPE.get_db_schema_name(),
     request_schema=ExperimentDraftSchema(exclude=["groupId"]),
 )
 
 ExperimentSnapshotsResource = generate_resource_snapshots_endpoint(
     api=api,
     resource_model=models.Experiment,
-    resource_name=RESOURCE_TYPE,
+    resource_name=RESOURCE_TYPE.get_db_schema_name(),
     route_prefix=V1_EXPERIMENTS_ROUTE,
     searchable_fields=ExperimentRepository.SEARCHABLE_FIELDS,
     page_schema=ExperimentPageSchema,
@@ -686,15 +686,15 @@ ExperimentSnapshotsResource = generate_resource_snapshots_endpoint(
 ExperimentSnapshotsIdResource = generate_resource_snapshots_id_endpoint(
     api=api,
     resource_model=models.Experiment,
-    resource_name=RESOURCE_TYPE,
+    resource_name=RESOURCE_TYPE.get_db_schema_name(),
     response_schema=ExperimentSchema,
     build_fn=utils.build_experiment,
 )
 
 ExperimentTagsResource = generate_resource_tags_endpoint(
     api=api,
-    resource_name=RESOURCE_TYPE,
+    resource_name=RESOURCE_TYPE.get_db_schema_name(),
 )
 ExperimentTagsIdResource = generate_resource_tags_id_endpoint(
-    api=api, resource_name=RESOURCE_TYPE
+    api=api, resource_name=RESOURCE_TYPE.get_db_schema_name()
 )

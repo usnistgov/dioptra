@@ -28,11 +28,12 @@ from dioptra.restapi.db.repository.utils import DeletionPolicy
 from dioptra.restapi.db.unit_of_work import UnitOfWork
 from dioptra.restapi.errors import EntityDoesNotExistError
 from dioptra.restapi.v1 import utils
+from dioptra.restapi.v1.entity_types import EntityTypes
 from dioptra.restapi.v1.shared.search_parser import parse_search_text
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
-RESOURCE_TYPE: Final[str] = "queue"
+RESOURCE_TYPE: Final[EntityTypes] = EntityTypes.QUEUE
 
 
 class QueueService(object):
@@ -200,13 +201,13 @@ class QueueIdService(object):
 
         if not queue:
             if error_if_not_found:
-                raise EntityDoesNotExistError("queue", resource_id=queue_id)
+                raise EntityDoesNotExistError(EntityTypes.QUEUE, resource_id=queue_id)
             else:
                 return None
         elif queue.resource.is_deleted:
             if error_if_not_found:
                 # treat "deleted" as if "not found"?
-                raise EntityDoesNotExistError("queue", resource_id=queue_id)
+                raise EntityDoesNotExistError(EntityTypes.QUEUE, resource_id=queue_id)
             else:
                 return None
 
@@ -252,13 +253,13 @@ class QueueIdService(object):
 
         if not queue:
             if error_if_not_found:
-                raise EntityDoesNotExistError("queue", resource_id=queue_id)
+                raise EntityDoesNotExistError(EntityTypes.QUEUE, resource_id=queue_id)
             else:
                 return None
         elif queue.resource.is_deleted:
             if error_if_not_found:
                 # treat "deleted" as if "not found"?
-                raise EntityDoesNotExistError("queue", resource_id=queue_id)
+                raise EntityDoesNotExistError(EntityTypes.QUEUE, resource_id=queue_id)
             else:
                 return None
 
@@ -355,7 +356,9 @@ class QueueIdsService(object):
                 queue.resource_id for queue in queues
             )
             log.debug("Queue not found", queue_ids=list(queue_ids_missing))
-            raise EntityDoesNotExistError("queue", resource_ids=queue_ids_missing)
+            raise EntityDoesNotExistError(
+                EntityTypes.QUEUE, resource_ids=queue_ids_missing
+            )
 
         return list(queues)
 

@@ -17,6 +17,7 @@
 """
 The drafts repository: data operations related to drafts
 """
+
 import datetime
 import enum
 from collections.abc import Iterable, Sequence
@@ -60,6 +61,7 @@ from dioptra.restapi.errors import (
     EntityDeletedError,
     EntityDoesNotExistError,
 )
+from dioptra.restapi.v1.entity_types import EntityTypes
 
 
 class DraftType(enum.Enum):
@@ -144,7 +146,7 @@ class DraftsRepository:
                     )
             else:
                 raise EntityDoesNotExistError(
-                    None,
+                    EntityTypes.NONE,
                     resource_id=base_resource_id,
                 )
 
@@ -196,9 +198,11 @@ class DraftsRepository:
 
         resource_obj = self.get_resource(resource_id, DeletionPolicy.ANY)
         if not resource_obj:
-            raise EntityDoesNotExistError(None, resource_id=resource_id)
+            raise EntityDoesNotExistError(EntityTypes.NONE, resource_id=resource_id)
         elif resource_obj.is_deleted:
-            raise EntityDeletedError(None, resource_id, resource_id=resource_id)
+            raise EntityDeletedError(
+                EntityTypes.NONE, resource_id, resource_id=resource_id
+            )
 
         assert_snapshot_exists(self._session, resource_snapshot_id)
 

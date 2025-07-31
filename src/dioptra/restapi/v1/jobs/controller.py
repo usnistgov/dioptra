@@ -413,7 +413,7 @@ class JobIdMetricsSnapshotsEndpoint(Resource):
 JobSnapshotsResource = generate_resource_snapshots_endpoint(
     api=api,
     resource_model=models.Job,
-    resource_name=RESOURCE_TYPE,
+    resource_name=RESOURCE_TYPE.get_db_schema_name(),
     route_prefix=V1_JOBS_ROUTE,
     searchable_fields=SEARCHABLE_FIELDS,
     page_schema=JobPageSchema,
@@ -422,16 +422,16 @@ JobSnapshotsResource = generate_resource_snapshots_endpoint(
 JobSnapshotsIdResource = generate_resource_snapshots_id_endpoint(
     api=api,
     resource_model=models.Job,
-    resource_name=RESOURCE_TYPE,
+    resource_name=RESOURCE_TYPE.get_db_schema_name(),
     response_schema=JobSchema,
     build_fn=utils.build_job,
 )
 
 JobTagsResource = generate_resource_tags_endpoint(
     api=api,
-    resource_name=RESOURCE_TYPE,
+    resource_name=RESOURCE_TYPE.get_db_schema_name(),
 )
 JobTagsIdResource = generate_resource_tags_id_endpoint(
     api=api,
-    resource_name=RESOURCE_TYPE,
+    resource_name=RESOURCE_TYPE.get_db_schema_name(),
 )

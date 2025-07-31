@@ -27,6 +27,7 @@ from mlflow.tracking import MlflowClient
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.errors import EntityDoesNotExistError, JobStoreError
+from dioptra.restapi.v1.entity_types import EntityTypes
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -153,7 +154,9 @@ class MlFlowJobRunStore:
                     for metric in run.data.metrics.keys()
                 ]
             except mlflow.exceptions.MlflowException as e:
-                raise EntityDoesNotExistError("MLFLowRun", run_id=run_id) from e
+                raise EntityDoesNotExistError(
+                    EntityTypes.ML_FLOW_RUN, run_id=run_id
+                ) from e
         return metrics
 
     def log_metric(
@@ -163,7 +166,7 @@ class MlFlowJobRunStore:
         try:
             self._client.get_run(run_id)  # noqa: F841
         except mlflow.exceptions.MlflowException as e:
-            raise EntityDoesNotExistError("MlFlowRun", run_id=run_id) from e
+            raise EntityDoesNotExistError(EntityTypes.ML_FLOW_RUN, run_id=run_id) from e
 
         try:
             self._client.log_metric(
@@ -184,7 +187,7 @@ class MlFlowJobRunStore:
             raise JobStoreError(e.message) from e
 
         if history == []:
-            raise EntityDoesNotExistError("Metric", name=name)
+            raise EntityDoesNotExistError(EntityTypes.METRIC, name=name)
 
         metrics_page = [
             {
@@ -290,7 +293,7 @@ class MlFlowJobRunStore:
         try:
             self._client.get_run(run_id)
         except mlflow.exceptions.MlflowException as e:
-            raise EntityDoesNotExistError("MlFlowRun", run_id=run_id) from e
+            raise EntityDoesNotExistError(EntityTypes.ML_FLOW_RUN, run_id=run_id) from e
 
         # mflow run id should be an element in the uri path
         # depending on the uri format is likely not stable

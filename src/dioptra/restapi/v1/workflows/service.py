@@ -28,6 +28,7 @@ import jsonschema
 import structlog
 import tomli as toml
 import yaml
+from dioptra.restapi.v1.entity_types import EntityTypes
 from injector import inject
 from structlog.stdlib import BoundLogger
 from werkzeug.datastructures import FileStorage
@@ -767,7 +768,6 @@ class ResourceImportService(object):
             ImportFailedError: If a plugin parameter type cannot be found
         """
         try:
-
             return [
                 {
                     "name": artifact["name"],
@@ -845,7 +845,8 @@ class DraftCommitService(object):
             resource = views.get_resource(draft.payload["resource_id"])
             if resource is None:
                 raise EntityDoesNotExistError(
-                    draft.resource_type, resource_id=draft.payload["resource_id"]
+                    EntityTypes.get_from_string(draft.resource_type),
+                    resource_id=draft.payload["resource_id"],
                 )
 
             # if the underlying resource was modified since the draft was created,
@@ -856,7 +857,7 @@ class DraftCommitService(object):
                 )
                 if base_snapshot is None:
                     raise EntityDoesNotExistError(
-                        draft.resource_type,
+                        EntityTypes.get_from_string(draft.resource_type),
                         snapshot_id=draft.payload["resource_snapshot_id"],
                     )
 
@@ -869,7 +870,7 @@ class DraftCommitService(object):
                     )
 
                 raise DraftResourceModificationsCommitError(
-                    resource_type=draft.resource_type,
+                    resource_type=EntityTypes.get_from_string(draft.resource_type),
                     resource_id=draft.payload["resource_id"],
                     draft=draft,
                     base_snapshot=base_snapshot,

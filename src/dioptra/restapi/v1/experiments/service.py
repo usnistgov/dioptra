@@ -28,12 +28,13 @@ from dioptra.restapi.db.repository.utils import DeletionPolicy
 from dioptra.restapi.db.unit_of_work import UnitOfWork
 from dioptra.restapi.errors import EntityDoesNotExistError
 from dioptra.restapi.v1 import utils
+from dioptra.restapi.v1.entity_types import EntityTypes
 from dioptra.restapi.v1.entrypoints.service import EntrypointIdsService
 from dioptra.restapi.v1.shared.search_parser import parse_search_text
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
-RESOURCE_TYPE: Final[str] = "experiment"
+RESOURCE_TYPE: Final[EntityTypes] = EntityTypes.EXPERIMENT
 
 
 class ExperimentService(object):
@@ -87,7 +88,7 @@ class ExperimentService(object):
 
         owner = self._uow.group_repo.get_one(group_id, DeletionPolicy.NOT_DELETED)
 
-        resource = models.Resource(RESOURCE_TYPE, owner)
+        resource = models.Resource(RESOURCE_TYPE.get_db_schema_name(), owner)
         new_experiment = models.Experiment(
             description,
             resource,
@@ -313,13 +314,17 @@ class ExperimentIdService(object):
 
         if not experiment:
             if error_if_not_found:
-                raise EntityDoesNotExistError("experiment", resource_id=experiment_id)
+                raise EntityDoesNotExistError(
+                    EntityTypes.EXPERIMENT, resource_id=experiment_id
+                )
             else:
                 return None
         elif experiment.resource.is_deleted:
             if error_if_not_found:
                 # treat "deleted" as if "not found"?
-                raise EntityDoesNotExistError("experiment", resource_id=experiment_id)
+                raise EntityDoesNotExistError(
+                    EntityTypes.EXPERIMENT, resource_id=experiment_id
+                )
             else:
                 return None
 

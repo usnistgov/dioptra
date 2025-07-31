@@ -88,7 +88,7 @@ api: Namespace = Namespace("Plugins", description="Plugins endpoint")
 PluginFileSnapshotsResource = generate_nested_resource_snapshots_endpoint(
     api=api,
     resource_model=models.PluginFile,
-    resource_name=PLUGIN_FILE_RESOURCE_TYPE,
+    resource_name=PLUGIN_FILE_RESOURCE_TYPE.get_db_schema_name(),
     resource_route=V1_PLUGIN_FILES_ROUTE,
     base_resource_route=V1_PLUGINS_ROUTE,
     searchable_fields=PLUGIN_FILE_SEARCHABLE_FIELDS,
@@ -98,7 +98,7 @@ PluginFileSnapshotsResource = generate_nested_resource_snapshots_endpoint(
 PluginFileSnapshotsIdResource = generate_nested_resource_snapshots_id_endpoint(
     api=api,
     resource_model=models.PluginFile,
-    resource_name=PLUGIN_FILE_RESOURCE_TYPE,
+    resource_name=PLUGIN_FILE_RESOURCE_TYPE.get_db_schema_name(),
     resource_route=V1_PLUGIN_FILES_ROUTE,
     response_schema=PluginFileSchema,
     build_fn=utils.build_plugin_file,
@@ -472,37 +472,37 @@ class PluginSnapshotIdFileBundleEndpoint(Resource):
 
 PluginDraftResource = generate_resource_drafts_endpoint(
     api,
-    resource_name=PLUGIN_RESOURCE_TYPE,
+    resource_name=PLUGIN_RESOURCE_TYPE.get_db_schema_name(),
     route_prefix=V1_PLUGINS_ROUTE,
     request_schema=PluginSchema,
 )
 PluginDraftIdResource = generate_resource_drafts_id_endpoint(
     api,
-    resource_name=PLUGIN_RESOURCE_TYPE,
+    resource_name=PLUGIN_RESOURCE_TYPE.get_db_schema_name(),
     request_schema=PluginMutableFieldsSchema,
 )
 PluginIdDraftResource = generate_resource_id_draft_endpoint(
     api,
-    resource_name=PLUGIN_RESOURCE_TYPE,
+    resource_name=PLUGIN_RESOURCE_TYPE.get_db_schema_name(),
     request_schema=PluginMutableFieldsSchema,
 )
 
 PluginFileDraftResource = generate_nested_resource_drafts_endpoint(
     api,
-    resource_name=PLUGIN_FILE_RESOURCE_TYPE,
+    resource_name=PLUGIN_FILE_RESOURCE_TYPE.get_db_schema_name(),
     resource_route=V1_PLUGIN_FILES_ROUTE,
     base_resource_route=V1_PLUGINS_ROUTE,
     request_schema=PluginFileSchema(exclude=["groupId"]),
 )
 PluginFileDraftIdResource = generate_nested_resource_drafts_id_endpoint(
     api,
-    resource_name=PLUGIN_FILE_RESOURCE_TYPE,
+    resource_name=PLUGIN_FILE_RESOURCE_TYPE.get_db_schema_name(),
     resource_route=V1_PLUGIN_FILES_ROUTE,
     request_schema=PluginFileSchema(exclude=["groupId"]),
 )
 PluginFileIdDraftResource = generate_nested_resource_id_draft_endpoint(
     api,
-    resource_name=PLUGIN_FILE_RESOURCE_TYPE,
+    resource_name=PLUGIN_FILE_RESOURCE_TYPE.get_db_schema_name(),
     resource_route=V1_PLUGIN_FILES_ROUTE,
     request_schema=PluginFileSchema(exclude=["groupId"]),
 )
@@ -511,7 +511,7 @@ PluginFileIdDraftResource = generate_nested_resource_id_draft_endpoint(
 PluginSnapshotsResource = generate_resource_snapshots_endpoint(
     api=api,
     resource_model=models.Plugin,
-    resource_name=PLUGIN_RESOURCE_TYPE,
+    resource_name=PLUGIN_RESOURCE_TYPE.get_db_schema_name(),
     route_prefix=V1_PLUGINS_ROUTE,
     searchable_fields=PLUGIN_SEARCHABLE_FIELDS,
     page_schema=PluginPageSchema,
@@ -520,28 +520,28 @@ PluginSnapshotsResource = generate_resource_snapshots_endpoint(
 PluginSnapshotsIdResource = generate_resource_snapshots_id_endpoint(
     api=api,
     resource_model=models.Plugin,
-    resource_name=PLUGIN_RESOURCE_TYPE,
+    resource_name=PLUGIN_RESOURCE_TYPE.get_db_schema_name(),
     response_schema=PluginSchema,
     build_fn=utils.build_plugin,
 )
 
 PluginTagsResource = generate_resource_tags_endpoint(
     api=api,
-    resource_name=PLUGIN_RESOURCE_TYPE,
+    resource_name=PLUGIN_RESOURCE_TYPE.get_db_schema_name(),
 )
 PluginTagsIdResource = generate_resource_tags_id_endpoint(
     api=api,
-    resource_name=PLUGIN_RESOURCE_TYPE,
+    resource_name=PLUGIN_RESOURCE_TYPE.get_db_schema_name(),
 )
 PluginFileTagsIdResource = generate_nested_resource_tags_endpoint(
     api=api,
-    resource_name=PLUGIN_FILE_RESOURCE_TYPE,
+    resource_name=PLUGIN_FILE_RESOURCE_TYPE.get_db_schema_name(),
     resource_route=V1_PLUGIN_FILES_ROUTE,
-    base_resource_name=PLUGIN_RESOURCE_TYPE,
+    base_resource_name=PLUGIN_RESOURCE_TYPE.get_db_schema_name(),
 )
 PluginFileTagsIdResource = generate_nested_resource_tags_id_endpoint(
     api=api,
-    resource_name=PLUGIN_FILE_RESOURCE_TYPE,
+    resource_name=PLUGIN_FILE_RESOURCE_TYPE.get_db_schema_name(),
     resource_route=V1_PLUGIN_FILES_ROUTE,
-    base_resource_name=PLUGIN_RESOURCE_TYPE,
+    base_resource_name=PLUGIN_RESOURCE_TYPE.get_db_schema_name(),
 )
