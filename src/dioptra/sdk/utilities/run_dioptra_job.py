@@ -472,7 +472,7 @@ def _build_artifact_tasks(
                         )
                         exit(1)
                     if issubclass(task, ArtifactTaskInterface):
-                        result[task.name()] = ArtifactTaskEntry(
+                        result[task.__name__] = ArtifactTaskEntry(
                             task=task,
                             plugin_snapshot_id=plugin["snapshotId"],
                             task_id=artifact_task["id"],
@@ -502,13 +502,13 @@ def _create_engine_schema(
                         )
                         exit(1)
                     if issubclass(task, ArtifactTaskInterface):
-                        task_names.append(task.name())
+                        task_names.append(task.__name__)
                         validation = task.validation()
                         if validation is not None:
                             allof.append(
                                 {
                                     "if": {
-                                        "properties": {"name": {"const": task.name()}}
+                                        "properties": {"name": {"const": task.__name__}}
                                     },
                                     "then": {
                                         "properties": {
