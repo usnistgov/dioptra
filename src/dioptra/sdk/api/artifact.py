@@ -99,14 +99,3 @@ class ArtifactTaskInterface(abc.ABCMeta):
             to serialize or `None` if no extra keyword arguments are used.
         """
         raise NotImplementedError
-
-    @staticmethod
-    @abc.abstractmethod
-    def name() -> str:
-        """
-        The name of the artifact task.
-
-        Returns:
-            The name of this particular artifact task instance.
-        """
-        raise NotImplementedError
