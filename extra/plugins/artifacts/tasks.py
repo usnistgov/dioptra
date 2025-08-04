@@ -59,10 +59,6 @@ class StringArtifactTask(ArtifactTaskInterface):
     def validation() -> dict[str, Any] | None:
         return {"type": {"type": "string"}}
 
-    @staticmethod
-    def name() -> str:
-        return "string_artifact"
-
 
 class BytesArtifactTask(ArtifactTaskInterface):
     @staticmethod
@@ -82,10 +78,6 @@ class BytesArtifactTask(ArtifactTaskInterface):
     def validation() -> dict[str, Any] | None:
         return {"type": {"type": "string"}}
 
-    @staticmethod
-    def name() -> str:
-        return "bytes_artifact"
-
 
 class FileArtifactTask(ArtifactTaskInterface):
     @staticmethod
@@ -103,10 +95,6 @@ class FileArtifactTask(ArtifactTaskInterface):
     @staticmethod
     def validation() -> dict[str, Any] | None:
         return None
-
-    @staticmethod
-    def name() -> str:
-        return "file_artifact"
 
 
 class DirectoryArtifactTask(ArtifactTaskInterface):
@@ -154,10 +142,6 @@ class DirectoryArtifactTask(ArtifactTaskInterface):
     @staticmethod
     def validation() -> dict[str, Any]:
         return {"tarball_write_mode": {"enum": ["w", "w:", "w:gz", "x:bz2", "w:xz"]}}
-
-    @staticmethod
-    def name() -> str:
-        return "directory_artifact"
 
 
 class DataframeArtifactTask(ArtifactTaskInterface):
@@ -266,10 +250,6 @@ class DataframeArtifactTask(ArtifactTaskInterface):
             }
         }
 
-    @staticmethod
-    def name() -> str:
-        return "dataframe_artifact"
-
 
 class NumpyArrayArtifactTask(ArtifactTaskInterface):
     @staticmethod
@@ -285,10 +265,6 @@ class NumpyArrayArtifactTask(ArtifactTaskInterface):
     @staticmethod
     def validation() -> dict[str, Any] | None:
         return None
-
-    @staticmethod
-    def name() -> str:
-        return "npy_artifact"
 
 
 class PickleArtifactTask(ArtifactTaskInterface):
@@ -307,7 +283,3 @@ class PickleArtifactTask(ArtifactTaskInterface):
     @staticmethod
     def validation() -> dict[str, Any] | None:
         return None
-
-    @staticmethod
-    def name() -> str:
-        return "pkl_artifact"
