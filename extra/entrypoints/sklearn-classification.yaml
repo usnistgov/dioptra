@@ -2,15 +2,15 @@ artifacts:
   model:
     contents: $model
     task:
-      name: pkl_artifact
+      name: PickleArtifactTask
   predictions:
     contents: $predictions
     task:
-      name: npy_artifact
+      name: NumpyArrayArtifactTask
   metrics:
     contents: $metrics
     task:
-      name: dataframe_artifact
+      name: DataframeArtifactTask
       args:
         format: csv
 

@@ -668,9 +668,10 @@ Artifact outputs are declared and can use the result of any other artifact, para
 task as input for serialization. All artifacts are serialized at the end of the job. The
 value of the top-level ``artifact_outputs`` key must be a mapping.  The keys 
 of the mapping are the names of the artifacts to be serialized and the values are the
-declarative description for what should be the ``contents``, the ``name`` of the
-``ArtifactTaskHandler`` which should be used to serialize and deserialize the artifact,
-and any optional ``args`` that should be passed to the serialize method for the handler.
+declarative description for what should be the ``contents``, the ``name`` of the class
+implementing ``ArtifactTaskInterface`` which should be used to serialize and
+deserialize the artifact, and any optional ``args`` that should be passed to the
+serialize method for the handler.
 
 For example:
 
@@ -680,14 +681,15 @@ For example:
         artifact1:
             contents: $task1.result2
             task:
-                name: result2_serializer
+                name: Result2Serializer
                 args:
                     foo: arg1
 
 Here, ``artifact1`` is the name of an artifact that has as its ``contents`` the value of
-``result2`` from the output of ``task1``. The ``name`` of the ``ArtifactTaskHandler``
-to use is called ``result2_serializer`` and this particular serializer has a single extra
-argument called ``foo`` and a value of ``arg1`` has been provided in this example.
+``result2`` from the output of ``task1``. The ``name`` of the ``ArtifactTaskInterface``
+to use is a class called ``Result2Serializer`` and this particular implementation has a
+single extra argument called ``foo`` and a value of ``arg1`` which has been provided in
+this example.
 
 Type Validation
 ===============
