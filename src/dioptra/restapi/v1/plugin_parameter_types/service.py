@@ -102,7 +102,9 @@ class PluginParameterTypeService(object):
             group_id, repoutils.DeletionPolicy.NOT_DELETED
         )
 
-        resource = models.Resource(resource_type=RESOURCE_TYPE, owner=group)
+        resource = models.Resource(
+            resource_type=RESOURCE_TYPE.get_db_schema_name(), owner=group
+        )
         new_plugin_parameter_type = models.PluginTaskParameterType(
             name=name,
             structure=structure,

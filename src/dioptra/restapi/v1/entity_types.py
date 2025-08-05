@@ -17,6 +17,29 @@
 
 import re
 from enum import Enum
+from json import JSONEncoder
+from typing import Any
+
+# This is the serializer overwrite for the Enum-Derived objects
+# Derived from stack overflow article:
+# https://stackoverflow.com/questions/36699512/is-it-possible-to-dump-an-enum-in-json-without-passing-an-encoder-to-json-dumps
+#
+_saved_default = (
+    JSONEncoder().default
+)  # Save the original default method for json-dumps
+
+
+def _new_default(self, obj) -> str | Any:
+    if isinstance(obj, Enum):
+        # OUR SPECIAL CASE WHEN THE OBJECT IS ENUM-DERIVED
+        return obj.name  # Cough up the default property .name or .value or ._value_
+    else:
+        # Dispatch bask to the original mechanism of json-dumping for non-Enum objects
+        return _saved_default
+
+
+# Glue-up the new default method with the patch-back.
+JSONEncoder.default = _new_default
 
 """_summary_
 
@@ -51,6 +74,15 @@ EntityTypes.USER
 EntityTypes.RESOURCE
 
 .get_db_schema_name()
+
+========== Debugging ==========
+        ###!!!Debug!!!
+        [print(f"\n{type(x)=}\n{x=}\n{dir(x)}\n") for x in effective_parameters  ]
+===>>>
+Aug-4-2025 @ 12:50PM
+64 failed, 1062 passed, 17 skipped, 47 warnings, 122 errors in 91.82s (0:01:31)
+Aug-4-2025 @ 13:01PM
+25 failed, 1223 passed, 17 skipped, 161 warnings in 63.53s (0:01:03)
 """
 
 
@@ -82,7 +114,7 @@ class EntityTypes(Enum):
                 # print(f"2. {current_value=} vs. {name=} ")
                 if name == current_value:
                     return EntityTypes[name]
-        print(f"!!! {resource_type_name=} Was Not Found in ENUM !!!")
+        print(f"{'!' * 80}\n\t{resource_type_name=} Was Not Found in ENUM {'!' * 80}")
         return EntityTypes.UNDEFINED
         # ----------------------------------------------------------------------
 
@@ -157,8 +189,8 @@ class EntityTypes(Enum):
         "Artifact Task Input Parameter",
     )
     # --- Entry-Point Entities ---
-    ENTRY_POINT = "entry_point", "Entry Point"
-    ENTRY_POINT_PLUGIN = "entry_point_plugin", "Entry Point Plugin"
+    ENTRYPOINT = "entry_point", "Entry Point"
+    ENTRYPOINT_PLUGIN = "entry_point_plugin", "Entry Point Plugin"
     # --- Plugin-Related Entities ---
     PLUGIN = "plugin", "Plugin"
     PLUGIN_TASK = "plugin_task", "Plugin Task"

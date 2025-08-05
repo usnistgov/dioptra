@@ -424,7 +424,9 @@ class PluginIdService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         stmt = select(models.Resource).filter_by(
-            resource_id=plugin_id, resource_type=PLUGIN_RESOURCE_TYPE, is_deleted=False
+            resource_id=plugin_id,
+            resource_type=PLUGIN_RESOURCE_TYPE.get_db_schema_name(),
+            is_deleted=False,
         )
         plugin_resource = db.session.scalar(stmt)
 
@@ -440,7 +442,7 @@ class PluginIdService(object):
         plugin_file_resources = [
             child
             for child in plugin_resource.children
-            if child.resource_type == PLUGIN_FILE_RESOURCE_TYPE
+            if child.resource_type == PLUGIN_FILE_RESOURCE_TYPE.get_db_schema_name()
         ]
         plugin_file_ids = [
             plugin_file_resource.resource_id
@@ -762,7 +764,8 @@ class PluginIdFileService(object):
         db.session.add(new_plugin)
 
         resource = models.Resource(
-            resource_type=PLUGIN_FILE_RESOURCE_TYPE, owner=new_plugin.resource.owner
+            resource_type=PLUGIN_FILE_RESOURCE_TYPE.get_db_schema_name(),
+            owner=new_plugin.resource.owner,
         )
         new_plugin_file = models.PluginFile(
             filename=filename,
@@ -947,7 +950,9 @@ class PluginIdFileService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         stmt = select(models.Resource).filter_by(
-            resource_id=plugin_id, resource_type=PLUGIN_RESOURCE_TYPE, is_deleted=False
+            resource_id=plugin_id,
+            resource_type=PLUGIN_RESOURCE_TYPE.get_db_schema_name(),
+            is_deleted=False,
         )
 
         plugin_resource = db.session.scalar(stmt)

@@ -52,7 +52,7 @@ from .schema import (
     ArtifactSchema,
 )
 from .service import (
-    RESOURCE_TYPE,
+    ARTIFACT_RESOURCE_TYPE,
     SEARCHABLE_FIELDS,
     ArtifactIdService,
     ArtifactService,
@@ -317,7 +317,7 @@ class ArtifactSnapshotIdContentsEndpoint(Resource):
 ArtifactSnapshotsResource = generate_resource_snapshots_endpoint(
     api=api,
     resource_model=models.Artifact,
-    resource_name=RESOURCE_TYPE.get_db_schema_name(),
+    resource_name=ARTIFACT_RESOURCE_TYPE.get_db_schema_name(),
     route_prefix=V1_ARTIFACTS_ROUTE,
     searchable_fields=SEARCHABLE_FIELDS,
     page_schema=ArtifactPageSchema,
@@ -326,7 +326,7 @@ ArtifactSnapshotsResource = generate_resource_snapshots_endpoint(
 ArtifactSnapshotsIdResource = generate_resource_snapshots_id_endpoint(
     api=api,
     resource_model=models.Artifact,
-    resource_name=RESOURCE_TYPE.get_db_schema_name(),
+    resource_name=ARTIFACT_RESOURCE_TYPE.get_db_schema_name(),
     response_schema=ArtifactSchema,
     build_fn=utils.build_artifact,
 )
@@ -345,19 +345,19 @@ def _handle_artifact_contents(
         except ValueError as e:
             log.error("Query Parameter validation failed.", error=e)
             raise QueryParameterValidationError(
-                RESOURCE_TYPE, constraint="invalid path query parameter"
+                ARTIFACT_RESOURCE_TYPE, constraint="invalid path query parameter"
             ) from None
 
     file_type: FileTypes | None = parsed_query_params.get("file_type")
 
     if not artifact.is_dir and path is not None:
         raise QueryParameterValidationError(
-            RESOURCE_TYPE,
+            ARTIFACT_RESOURCE_TYPE,
             constraint="path query parameter may not be provided for a file",
         )
     if not artifact.is_dir and file_type is not None:
         raise QueryParameterValidationError(
-            RESOURCE_TYPE,
+            ARTIFACT_RESOURCE_TYPE,
             constraint="file_type query parameter may not be provided for a file",
         )
 

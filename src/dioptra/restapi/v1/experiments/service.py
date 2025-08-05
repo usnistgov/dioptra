@@ -34,7 +34,7 @@ from dioptra.restapi.v1.shared.search_parser import parse_search_text
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
-RESOURCE_TYPE: Final[EntityTypes] = EntityTypes.EXPERIMENT
+EXPERIMENT_RESOURCE_TYPE: Final[EntityTypes] = EntityTypes.EXPERIMENT
 
 
 class ExperimentService(object):
@@ -88,7 +88,7 @@ class ExperimentService(object):
 
         owner = self._uow.group_repo.get_one(group_id, DeletionPolicy.NOT_DELETED)
 
-        resource = models.Resource(RESOURCE_TYPE.get_db_schema_name(), owner)
+        resource = models.Resource(EXPERIMENT_RESOURCE_TYPE.get_db_schema_name(), owner)
         new_experiment = models.Experiment(
             description,
             resource,
@@ -253,7 +253,7 @@ class ExperimentIdService(object):
         if experiment is None:
             if error_if_not_found:
                 raise EntityDoesNotExistError(
-                    RESOURCE_TYPE, experiment_id=experiment_id
+                    EXPERIMENT_RESOURCE_TYPE, experiment_id=experiment_id
                 )
 
             return None

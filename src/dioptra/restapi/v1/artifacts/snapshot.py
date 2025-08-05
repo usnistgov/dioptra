@@ -24,7 +24,7 @@ from dioptra.restapi.db import db, models
 from dioptra.restapi.errors import EntityDoesNotExistError
 from dioptra.restapi.v1.entity_types import EntityTypes
 
-RESOURCE_TYPE: Final[EntityTypes] = EntityTypes.ARTIFACT  # "artifact"
+ARTIFACT_RESOURCE_TYPE: Final[EntityTypes] = EntityTypes.ARTIFACT
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 # This service has been split out to avoid a circular dependency with the jobs.service
@@ -65,7 +65,7 @@ class ArtifactSnapshotIdService(object):
 
         if artifact is None:
             raise EntityDoesNotExistError(
-                RESOURCE_TYPE,
+                ARTIFACT_RESOURCE_TYPE,
                 artifact_id=artifact_id,
                 artifact_snapshot_id=artifact_snapshot_id,
             )

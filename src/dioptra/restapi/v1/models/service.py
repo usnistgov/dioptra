@@ -114,7 +114,9 @@ class ModelService(object):
 
         group = self._group_id_service.get(group_id, error_if_not_found=True)
 
-        resource = models.Resource(resource_type=MODEL_RESOURCE_TYPE, owner=group)
+        resource = models.Resource(
+            resource_type=MODEL_RESOURCE_TYPE.get_db_schema_name(), owner=group
+        )
 
         ml_model = models.MlModel(
             name=name,
@@ -467,7 +469,9 @@ class ModelIdService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         stmt = select(models.Resource).filter_by(
-            resource_id=model_id, resource_type=MODEL_RESOURCE_TYPE, is_deleted=False
+            resource_id=model_id,
+            resource_type=MODEL_RESOURCE_TYPE.get_db_schema_name(),
+            is_deleted=False,
         )
         model_resource = db.session.scalars(stmt).first()
 

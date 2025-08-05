@@ -63,7 +63,7 @@ from .schema import (
     EntrypointSchema,
 )
 from .service import (
-    RESOURCE_TYPE,
+    ENTRYPOINT_RESOURCE_TYPE,
     SEARCHABLE_FIELDS,
     EntrypointIdArtifactPluginsIdService,
     EntrypointIdArtifactPluginsService,
@@ -710,25 +710,25 @@ class EntrypointIdQueuesId(Resource):
 
 EntrypointDraftResource = generate_resource_drafts_endpoint(
     api,
-    resource_name=RESOURCE_TYPE.get_db_schema_name(),
+    resource_name=ENTRYPOINT_RESOURCE_TYPE.get_db_schema_name(),
     route_prefix=V1_ENTRYPOINTS_ROUTE,
     request_schema=EntrypointDraftSchema,
 )
 EntrypointDraftIdResource = generate_resource_drafts_id_endpoint(
     api,
-    resource_name=RESOURCE_TYPE.get_db_schema_name(),
+    resource_name=ENTRYPOINT_RESOURCE_TYPE.get_db_schema_name(),
     request_schema=EntrypointDraftSchema(exclude=["groupId"]),
 )
 EntrypointIdDraftResource = generate_resource_id_draft_endpoint(
     api,
-    resource_name=RESOURCE_TYPE.get_db_schema_name(),
+    resource_name=ENTRYPOINT_RESOURCE_TYPE.get_db_schema_name(),
     request_schema=EntrypointDraftSchema(exclude=["groupId", "pluginIds"]),
 )
 
 EntrypointSnapshotsResource = generate_resource_snapshots_endpoint(
     api=api,
     resource_model=models.EntryPoint,
-    resource_name=RESOURCE_TYPE.get_db_schema_name(),
+    resource_name=ENTRYPOINT_RESOURCE_TYPE.get_db_schema_name(),
     route_prefix=V1_ENTRYPOINTS_ROUTE,
     searchable_fields=SEARCHABLE_FIELDS,
     page_schema=EntrypointPageSchema,
@@ -737,16 +737,16 @@ EntrypointSnapshotsResource = generate_resource_snapshots_endpoint(
 EntrypointSnapshotsIdResource = generate_resource_snapshots_id_endpoint(
     api=api,
     resource_model=models.EntryPoint,
-    resource_name=RESOURCE_TYPE.get_db_schema_name(),
+    resource_name=ENTRYPOINT_RESOURCE_TYPE.get_db_schema_name(),
     response_schema=EntrypointSchema,
     build_fn=utils.build_entrypoint,
 )
 
 EntrypointTagsResource = generate_resource_tags_endpoint(
     api=api,
-    resource_name=RESOURCE_TYPE.get_db_schema_name(),
+    resource_name=ENTRYPOINT_RESOURCE_TYPE.get_db_schema_name(),
 )
 EntrypointTagsIdResource = generate_resource_tags_id_endpoint(
     api=api,
-    resource_name=RESOURCE_TYPE.get_db_schema_name(),
+    resource_name=ENTRYPOINT_RESOURCE_TYPE.get_db_schema_name(),
 )

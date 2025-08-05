@@ -49,8 +49,8 @@ from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
-PLUGIN_RESOURCE_TYPE: Final[EntityTypes] = EntityTypes.ENTRY_POINT_PLUGIN
-RESOURCE_TYPE: Final[EntityTypes] = EntityTypes.ENTRY_POINT
+PLUGIN_RESOURCE_TYPE: Final[EntityTypes] = EntityTypes.ENTRYPOINT_PLUGIN
+ENTRYPOINT_RESOURCE_TYPE: Final[EntityTypes] = EntityTypes.ENTRYPOINT
 
 SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
     "name": lambda x: models.EntryPoint.name.like(x, escape="/"),
@@ -142,7 +142,10 @@ class EntrypointService(object):
         duplicate = self._entrypoint_name_service.get(name, group_id=group_id, log=log)
         if duplicate is not None:
             raise EntityExistsError(
-                RESOURCE_TYPE, duplicate.resource_id, name=name, group_id=group_id
+                ENTRYPOINT_RESOURCE_TYPE,
+                duplicate.resource_id,
+                name=name,
+                group_id=group_id,
             )
 
         plugin_ids = list(set(plugin_ids))
@@ -156,7 +159,9 @@ class EntrypointService(object):
         # check this early
         _ensure_no_plugin_task_overlap(plugin_ids, artifact_plugin_ids, True)
 
-        resource = models.Resource(resource_type=RESOURCE_TYPE, owner=group)
+        resource = models.Resource(
+            resource_type=ENTRYPOINT_RESOURCE_TYPE.get_db_schema_name(), owner=group
+        )
 
         new_entrypoint = models.EntryPoint(
             name=name,
@@ -296,7 +301,7 @@ class EntrypointService(object):
                 sort_column = sort_column.asc()
             entrypoints_stmt = entrypoints_stmt.order_by(sort_column)
         elif sort_by_string and sort_by_string not in SORTABLE_FIELDS:
-            raise SortParameterValidationError(RESOURCE_TYPE, sort_by_string)
+            raise SortParameterValidationError(ENTRYPOINT_RESOURCE_TYPE, sort_by_string)
 
         entrypoints = list(db.session.scalars(entrypoints_stmt).unique().all())
 
@@ -398,7 +403,7 @@ class EntrypointIdService(object):
 
         if entrypoint is None:
             raise EntityDoesNotExistError(
-                RESOURCE_TYPE,
+                ENTRYPOINT_RESOURCE_TYPE,
                 entrypoint_id=entrypoint_id,
                 entrypoint_snapshot_id=entrypoint_snapshot_id,
             )
@@ -466,7 +471,9 @@ class EntrypointIdService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         duplicates = find_non_unique("name", parameters)
         if len(duplicates) > 0:
-            raise QueryParameterNotUniqueError(RESOURCE_TYPE, name=duplicates)
+            raise QueryParameterNotUniqueError(
+                ENTRYPOINT_RESOURCE_TYPE, name=duplicates
+            )
 
         entrypoint_dict = self.get(entrypoint_id, log=log)
 
@@ -478,7 +485,10 @@ class EntrypointIdService(object):
             )
             if duplicate is not None:
                 raise EntityExistsError(
-                    RESOURCE_TYPE, duplicate.resource_id, name=name, group_id=group_id
+                    ENTRYPOINT_RESOURCE_TYPE,
+                    duplicate.resource_id,
+                    name=name,
+                    group_id=group_id,
                 )
 
         queues = self._queue_ids_service.get(queue_ids, error_if_not_found=True)
@@ -534,12 +544,16 @@ class EntrypointIdService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         stmt = select(models.Resource).filter_by(
-            resource_id=entrypoint_id, resource_type=RESOURCE_TYPE, is_deleted=False
+            resource_id=entrypoint_id,
+            resource_type=ENTRYPOINT_RESOURCE_TYPE.get_db_schema_name(),
+            is_deleted=False,
         )
         entrypoint_resource = db.session.scalars(stmt).first()
 
         if entrypoint_resource is None:
-            raise EntityDoesNotExistError(RESOURCE_TYPE, entrypoint_id=entrypoint_id)
+            raise EntityDoesNotExistError(
+                ENTRYPOINT_RESOURCE_TYPE, entrypoint_id=entrypoint_id
+            )
 
         deleted_resource_lock = models.ResourceLock(
             resource_lock_type=resource_lock_types.DELETE,
@@ -582,7 +596,7 @@ class EntrypointSnapshotIdService(object):
 
         if entry_point is None:
             raise EntityDoesNotExistError(
-                RESOURCE_TYPE,
+                ENTRYPOINT_RESOURCE_TYPE,
                 entrypoint_id=entrypoint_id,
                 entrypoint_snapshot_id=entrypoint_snapshot_id,
             )
@@ -1300,7 +1314,7 @@ class EntrypointIdsService(object):
                 entrypoint.resource_id for entrypoint in entrypoints
             )
             raise EntityDoesNotExistError(
-                RESOURCE_TYPE, entrypoint_ids=list(entrypoint_ids_missing)
+                ENTRYPOINT_RESOURCE_TYPE, entrypoint_ids=list(entrypoint_ids_missing)
             )
 
         return entrypoints
@@ -1579,7 +1593,7 @@ class EntrypointNameService(object):
         if entrypoint is None:
             if error_if_not_found:
                 raise EntityDoesNotExistError(
-                    RESOURCE_TYPE, name=name, group_id=group_id
+                    ENTRYPOINT_RESOURCE_TYPE, name=name, group_id=group_id
                 )
 
             return None

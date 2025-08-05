@@ -42,11 +42,11 @@ from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.artifacts.snapshot import ArtifactSnapshotIdService
 from dioptra.restapi.v1.entity_types import EntityTypes
 from dioptra.restapi.v1.entrypoints.service import (
-    RESOURCE_TYPE as ENTRYPOINT_RESOURCE_TYPE,
+    ENTRYPOINT_RESOURCE_TYPE as ENTRYPOINT_RESOURCE_TYPE,
 )
 from dioptra.restapi.v1.entrypoints.service import EntrypointIdService
 from dioptra.restapi.v1.experiments.service import (
-    RESOURCE_TYPE as EXPERIMENT_RESOURCE_TYPE,
+    EXPERIMENT_RESOURCE_TYPE as EXPERIMENT_RESOURCE_TYPE,
 )
 from dioptra.restapi.v1.experiments.service import ExperimentIdService
 from dioptra.restapi.v1.groups.service import GroupIdService
@@ -238,7 +238,7 @@ class JobService(object):
         # Create the new Job resource and record the assigned entrypoint parameter
         # values
         job_resource = models.Resource(
-            resource_type=RESOURCE_TYPE.get_print_name(),
+            resource_type=RESOURCE_TYPE.get_db_schema_name(),
             owner=experiment.resource.owner,
         )
         entrypoint_parameter_values = [
@@ -532,7 +532,9 @@ class JobIdService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         stmt = select(models.Resource).filter_by(
-            resource_id=job_id, resource_type=RESOURCE_TYPE, is_deleted=False
+            resource_id=job_id,
+            resource_type=RESOURCE_TYPE.get_db_schema_name(),
+            is_deleted=False,
         )
         job_resource = db.session.scalars(stmt).first()
 

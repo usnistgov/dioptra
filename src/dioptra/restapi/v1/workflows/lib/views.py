@@ -22,10 +22,10 @@ from dioptra.restapi.db import db, models
 from dioptra.restapi.errors import DioptraError, EntityDoesNotExistError
 from dioptra.restapi.v1.entity_types import EntityTypes
 from dioptra.restapi.v1.entrypoints.service import (
-    RESOURCE_TYPE as ENTRYPOINT_RESOURCE_TYPE,
+    ENTRYPOINT_RESOURCE_TYPE as ENTRYPOINT_RESOURCE_TYPE,
 )
 from dioptra.restapi.v1.experiments.service import (
-    RESOURCE_TYPE as EXPERIMENT_RESOURCE_TYPE,
+    EXPERIMENT_RESOURCE_TYPE as EXPERIMENT_RESOURCE_TYPE,
 )
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
