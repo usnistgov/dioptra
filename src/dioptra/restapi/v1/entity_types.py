@@ -29,7 +29,7 @@ _saved_default = (
 )  # Save the original default method for json-dumps
 
 
-def _new_default(self, obj) -> str | Any:
+def _new_default(self, obj) -> Any:
     if isinstance(obj, Enum):
         # OUR SPECIAL CASE WHEN THE OBJECT IS ENUM-DERIVED
         return obj.name  # Cough up the default property .name or .value or ._value_
@@ -39,7 +39,7 @@ def _new_default(self, obj) -> str | Any:
 
 
 # Glue-up the new default method with the patch-back.
-JSONEncoder.default = _new_default
+JSONEncoder.default = _new_default  # type: ignore
 
 
 class EntityTypes(Enum):
