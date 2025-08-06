@@ -315,7 +315,7 @@ class ExperimentIdService(object):
         if not experiment:
             if error_if_not_found:
                 raise EntityDoesNotExistError(
-                    EntityTypes.EXPERIMENT, resource_id=experiment_id
+                    EXPERIMENT_RESOURCE_TYPE, resource_id=experiment_id
                 )
             else:
                 return None
@@ -323,7 +323,7 @@ class ExperimentIdService(object):
             if error_if_not_found:
                 # treat "deleted" as if "not found"?
                 raise EntityDoesNotExistError(
-                    EntityTypes.EXPERIMENT, resource_id=experiment_id
+                    EXPERIMENT_RESOURCE_TYPE, resource_id=experiment_id
                 )
             else:
                 return None

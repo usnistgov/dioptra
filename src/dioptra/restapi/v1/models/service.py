@@ -736,7 +736,7 @@ class ModelIdVersionsNumberService(object):
         if latest_version is None:
             if error_if_not_found:
                 raise EntityDoesNotExistError(
-                    MODEL_VERSION_RESOURCE_TYPE,
+                    EntityTypes.get_from_string(MODEL_VERSION_RESOURCE_TYPE),
                     model_id=model_id,
                     version_number=version_number,
                 )

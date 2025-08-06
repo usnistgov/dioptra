@@ -17,6 +17,7 @@
 """
 The user repository: data operations related to users
 """
+
 import uuid
 from collections.abc import Sequence
 from typing import Any, Final
@@ -45,7 +46,6 @@ from dioptra.restapi.v1.entity_types import EntityTypes
 
 
 class UserRepository:
-
     SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
         "username": lambda x: User.username.like(x, escape="/"),
         "email": lambda x: User.email_address.like(x, escape="/"),

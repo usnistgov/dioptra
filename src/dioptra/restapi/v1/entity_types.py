@@ -41,56 +41,13 @@ def _new_default(self, obj) -> str | Any:
 # Glue-up the new default method with the patch-back.
 JSONEncoder.default = _new_default
 
-"""_summary_
-
-Returns:
-    _type_: _description_
-
-Example:
-
-import sys
-import os
-# Define the path to the directory containing your module
-module_directory = "/Users/dac4/di2run/dio-src/src/dioptra/restapi/v1/" 
-# Add the directory to sys.path
-sys.path.append(module_directory)
-import entity_types as et
-et.EntityTypes.get_from_string('job')
-et.EntityTypes.get_from_string('plugin_task_parameter')
-[print(f"{x.name=}\t{x.value=}\t{x.schema_name=}\t{x.print_name=}") for x in et.EntityTypes]
-
-from entity_types import EntityType
-
-from dioptra.restapi.v1.entity_types import EntityTypes
-
-dioptra.restapi.v1.entity_types
-
-Final[EntityTypes]
-
-EntityTypes.get_from_string
-
-EntityTypes.QUEUE
-EntityTypes.USER
-EntityTypes.RESOURCE
-
-.get_db_schema_name()
-
-========== Debugging ==========
-        ###!!!Debug!!!
-        [print(f"\n{type(x)=}\n{x=}\n{dir(x)}\n") for x in effective_parameters  ]
-===>>>
-Aug-4-2025 @ 12:50PM
-64 failed, 1062 passed, 17 skipped, 47 warnings, 122 errors in 91.82s (0:01:31)
-Aug-4-2025 @ 13:01PM
-25 failed, 1223 passed, 17 skipped, 161 warnings in 63.53s (0:01:03)
-"""
-
 
 class EntityTypes(Enum):
-    """Entity enumeration used for the unified way of identifying entities as const-style name/enumerable tuples
+    """Entity enumeration used for the unified way of identifying
+        entities as const-style name/enumerable tuples
 
     Args:
-        Enum (_type_): _description_
+        Enum (_type_): [str, str]
     """
 
     @staticmethod
@@ -114,7 +71,7 @@ class EntityTypes(Enum):
                 # print(f"2. {current_value=} vs. {name=} ")
                 if name == current_value:
                     return EntityTypes[name]
-        print(f"{'!' * 80}\n\t{resource_type_name=} Was Not Found in ENUM {'!' * 80}")
+        # print(f"{'!' * 80}\n\t{resource_type_name=} Was Not Found in ENUM {'!' * 80}")
         return EntityTypes.UNDEFINED
         # ----------------------------------------------------------------------
 
@@ -191,6 +148,9 @@ class EntityTypes(Enum):
     # --- Entry-Point Entities ---
     ENTRYPOINT = "entry_point", "Entry Point"
     ENTRYPOINT_PLUGIN = "entry_point_plugin", "Entry Point Plugin"
+    # --- Entry-Point Entities ---
+    ENTRY_POINT = "entry_point", "Entry Point"
+    ENTRY_POINT_PLUGIN = "entry_point_plugin", "Entry Point Plugin"
     # --- Plugin-Related Entities ---
     PLUGIN = "plugin", "Plugin"
     PLUGIN_TASK = "plugin_task", "Plugin Task"

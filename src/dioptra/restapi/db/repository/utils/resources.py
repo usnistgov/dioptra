@@ -673,9 +673,9 @@ def add_resource_lock_types(
     """
 
     if isinstance(resource, (m.Resource, m.ResourceSnapshot)):
-        resource_type = resource.resource_type
+        resource_type = EntityTypes.get_from_string(resource.resource_type)
     else:
-        resource_type = None
+        resource_type = EntityTypes.NONE
 
     resource_id = get_resource_id(resource)
 
