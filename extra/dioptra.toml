@@ -279,6 +279,8 @@ description = "A plugin to demonstrate cleanlab in dioptra."
     { name = "eps_step", type = "number", required = false },
     { name = "max_iter", type = "integer", required = false },
     { name = "clean_label", type = "boolean", required = false },
+    { name = "nb_epochs", type = "integer", required = true },
+    { name = "norm", type = "integer", required = false },
   ]
   output_params = [  ]
 
@@ -674,7 +676,7 @@ params = [
   { name = "percent_poison", type = "float", default_value = "0.33" },
   { name = "adv_data_dir", type = "string", default_value = "poisoned_data" },
   { name = "adv_tar_name", type = "string", default_value = "poisoned_data.tar.gz" },
-  { name = "model_name", type = "string", default_value = "mnist_classifier" },
+  { name = "model_name", type = "string", default_value = "poisonadv_mnist_classifier" },
   { name = "model_version", type = "integer", default_value = "-1" },
   { name = "clip_values", type = "list", default_value = "[0, 1]" },
   { name = "target_idx", type = "integer", default_value = "0" },
@@ -682,6 +684,7 @@ params = [
   { name = "eps_step", type = "float", default_value = "0.1" },
   { name = "max_iter", type = "integer", default_value = "100" },
   { name = "clean_label", type = "boolean", default_value = "True" },
+  { name = "nb_epochs", type = "integer", default_value = "10" },
 ]
 plugins = [ "cleanlab_demo", "mnist_demo" ]
 
@@ -698,6 +701,9 @@ params = [
   { name = "batch_size", type = "integer", default_value = "128"},
   { name = "clean_data_dir", type = "string", default_value = "cleaned_data" },
   { name = "clean_tar_name", type = "string", default_value = "cleaned_data.tar.gz" },
+  { name = "dir_job_id", type = "string", default_value = "-1" },
+  { name = "dir_tar_name", type = "string", default_value = "poisoned_data.tar.gz" },
+  { name = "dir_name", type = "string", default_value = "poisoned_data" },
 ]
 plugins = [ "cleanlab_demo", "mnist_demo" ]
 

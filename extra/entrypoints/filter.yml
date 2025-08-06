@@ -3,11 +3,16 @@ load:
     job_id: $job_id
     files: ['ds_remove.csv']
 
+load_dir:
+  load_artifacts_for_job:
+    job_id: $dir_job_id
+    extract_files: [$dir_tar_name]
+
 dataset:
   load_dataset:
     ep_seed: $seed
-    training_dir: $training_dir
-    testing_dir: $training_dir
+    training_dir: $dir_name
+    testing_dir: $dir_name
     subsets: ['testing']
     image_size: $image_size
     rescale: $rescale

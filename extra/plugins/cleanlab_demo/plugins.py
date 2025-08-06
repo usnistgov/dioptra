@@ -26,6 +26,7 @@ import structlog
 from dioptra import pyplugs
 from structlog.stdlib import BoundLogger
 from tensorflow import reshape
+from tensorflow.compat.v1 import disable_eager_execution
 from tensorflow.data import Dataset
 from tensorflow.keras.models import Model
 from cleanlab.filter import find_label_issues
@@ -39,8 +40,13 @@ from art.attacks.poisoning import (
 )
 from art.attacks.poisoning.perturbations import add_pattern_bd
 from art.utils import to_categorical
+from art.defences.trainer import AdversarialTrainerMadryPGD
+from art.estimators.classification import KerasClassifier
+from art.utils import load_mnist, preprocess
 
 from tensorflow.keras.preprocessing.image import save_img
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Flatten, Conv2D, MaxPooling2D, Activation, Dropout
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -83,9 +89,20 @@ def clean (
     # print("\n", type(pred_probs))
     # print(pred_probs.shape)
     # print(pred_probs[1], "\n")
-
     label_issues = find_label_issues(
         labels=labels, pred_probs=pred_probs, return_indices_ranked_by="self_confidence"
+    )
+    np.append(
+        label_issues,
+        find_label_issues(
+            labels=labels, pred_probs=pred_probs, filter_by="confident_learning", return_indices_ranked_by="self_confidence"
+        )
+    )
+    np.append(
+        label_issues,
+        find_label_issues(
+            labels=labels, pred_probs=pred_probs, filter_by="predicted_neq_given", return_indices_ranked_by="self_confidence"
+        )
     )
 
     LOGGER.info(
@@ -145,9 +162,30 @@ def poison (
     target_idx: int = 0,
     eps: float = 0.3,
     eps_step: float = 0.1,
+    nb_epochs: int = 10,
+    norm: int | str = 2,
     max_iter:int  = 100,
     clean_label = True,
 ) -> None:
+    # some of this function's parameters are unused, support for these parameters are
+    # also in the toml but the function itself currently does not support them 
+    # TODO: add support for the unused parameters within the function body as they may be useful
+
+    # Create Keras convolutional neural network - basic architecture from Keras examples
+    # Source here: https://github.com/keras-team/keras/blob/master/examples/mnist_cnn.py
+    def create_model():    
+        model = Sequential()
+        model.add(Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=(28, 28, 1)))
+        model.add(Conv2D(64, (3, 3), activation='relu'))
+        model.add(MaxPooling2D(pool_size=(2, 2)))
+        model.add(Dropout(0.25))
+        model.add(Flatten())
+        model.add(Dense(128, activation='relu'))
+        model.add(Dropout(0.5))
+        model.add(Dense(10, activation='softmax'))
+
+        model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+        return model
 
     assert (0 < percentage) and (percentage < 1), \
         "the percentage must be between 0 and 1"
@@ -161,24 +199,49 @@ def poison (
             f"Adding backdoors\n"
         )
 
-    # construct target from target idx
-    # the len call could be replaced with a function from mnist_demo for readability
-    n_classes = len(dataset.class_names)
-    target = to_categorical([target_idx], n_classes)[0]
-
     perturbation = add_pattern_bd
     backdoor = PoisoningAttackBackdoor(perturbation)
+
+    # TODO: this way of creating and training a poisoning model (pulled from the ART notebook) works very well 
+    # with poisoning, but something is different in Dioptra's create model plugin, figure out discrepency
+    # and replace?
+    # Source: https://github.com/Trusted-AI/adversarial-robustness-toolbox/blob/e30d32d1a1ef296be65097a98391fc2c53a8e509/notebooks/poisoning_attack_clean_label_backdoor.ipynb
     if clean_label:
-        attack = PoisoningAttackCleanLabelBackdoor(backdoor,
-                                                classifier,
-                                                target,
-                                                percentage,
-                                                eps=eps,
-                                                eps_step=eps_step,
-                                                max_iter=max_iter)
+        (x_raw, y_raw), (x_raw_test, y_raw_test), min_, max_ = load_mnist(raw=True)
+
+        # Random Selection:
+        n_train = np.shape(x_raw)[0]
+        num_selection = 10000
+        random_selection_indices = np.random.choice(n_train, num_selection)
+        x_raw = x_raw[random_selection_indices]
+        y_raw = y_raw[random_selection_indices]
+        # Poison training data
+        percent_poison = percentage
+        x_train, y_train = preprocess(x_raw, y_raw)
+        x_train = np.expand_dims(x_train, axis=3)
+
+        x_test, _ = preprocess(x_raw_test, y_raw_test)
+        x_test = np.expand_dims(x_test, axis=3)
+
+        # Shuffle training data
+        n_train = np.shape(y_train)[0]
+        shuffled_indices = np.arange(n_train)
+        np.random.shuffle(shuffled_indices)
+        x_train = x_train[shuffled_indices]
+        y_train = y_train[shuffled_indices]
+        
+        proxy = AdversarialTrainerMadryPGD(KerasClassifier(create_model(),clip_values=[0,1]), nb_epochs=10, eps=0.15, eps_step=0.001)
+        proxy.fit(x_train, y_train)
+        targets = to_categorical([9], 10)[0] 
+
+
+        attack = PoisoningAttackCleanLabelBackdoor(backdoor=backdoor, proxy_classifier=proxy.get_classifier(),
+                                           target=targets, pp_poison=percent_poison, norm=2, eps=5,
+                                           eps_step=0.1, max_iter=200)
     else:
         attack = backdoor
 
+    # Saving the resulting poisoned files
     img_filenames = [Path(x) for x in dataset.file_paths]
 
     for batch_num, (x, y) in enumerate(dataset):
@@ -189,10 +252,9 @@ def poison (
             if clean_label:
                 poisoned_batch_data, poisoned_batch_labels = attack.poison(x.numpy(), y)
             else:
-                poisoned_batch_data, poisoned_batch_labels = attack.poison(x.numpy(), target)
+                poisoned_batch_data, poisoned_batch_labels = attack.poison(x.numpy(), y)
         except:
             poisoned_batch_data, poisoned_batch_labels = (x, y)
-
         clean_filenames = img_filenames[ batch_num * batch_size : (batch_num + 1) * batch_size  ]
         poisoned_batch_labels = np.argmax(y, axis=1)
         _save_adv_batch(poisoned_batch_data, Path(adv_data_dir), poisoned_batch_labels, clean_filenames)
