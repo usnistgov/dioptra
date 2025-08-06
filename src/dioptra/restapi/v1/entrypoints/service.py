@@ -19,6 +19,7 @@
 from typing import Any, Final, Iterable
 
 import structlog
+from dioptra.restapi.v1.entity_types import EntityTypes
 from flask_login import current_user
 from injector import inject
 from sqlalchemy import Integer, func, select
