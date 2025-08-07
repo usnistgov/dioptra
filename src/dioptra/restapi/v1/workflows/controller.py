@@ -68,7 +68,7 @@ class SignatureAnalysisEndpoint(Resource):
     @accepts(schema=SignatureAnalysisSchema, api=api)
     @responds(schema=SignatureAnalysisOutputSchema, api=api)
     def post(self):
-        """Download a compressed file archive containing the files needed to execute a submitted job."""  # noqa: B950
+        """Download a compressed file archive containing the files needed to execute a submitted job."""
         log = LOGGER.new(  # noqa: F841
             request_id=str(uuid.uuid4()),
             resource="SignatureAnalysis",
@@ -107,7 +107,7 @@ class ResourceImport(Resource):
     )
     @accepts(form_schema=ResourceImportSchema, api=api)
     def post(self):
-        """Import resources from an external source."""  # noqa: B950
+        """Import resources from an external source."""
         log = LOGGER.new(  # noqa: F841
             request_id=str(uuid.uuid4()), resource="ResourceImport", request_type="POST"
         )
@@ -147,7 +147,7 @@ class DraftCommitEndpoint(Resource):
     @login_required
     @responds(schema=IdStatusResponseSchema, api=api)
     def post(self, id: int):
-        """Commit a draft as a new resource"""  # noqa: B950
+        """Commit a draft as a new resource"""
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="DraftCommit", request_type="POST"
         )  # noqa: F841
@@ -174,7 +174,7 @@ class ValidateEntrypointEndpoint(Resource):
     @accepts(schema=ValidateEntrypointRequestSchema, api=api)
     @responds(schema=ValidateEntrypointResponseSchema, api=api)
     def post(self):
-        """Validates the proposed inputs for an entrypoint."""  # noqa: B950
+        """Validates the proposed inputs for an entrypoint."""
         log = LOGGER.new(
             request_id=str(uuid.uuid4()),
             resource="ValidateEntrypoint",

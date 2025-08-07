@@ -947,7 +947,7 @@ def test_register_plugin_file(
         (
             r"a/b/c/d/e/f/g/h/i/j/k/l/m/n/o/p.py",
             HTTPStatus.OK,
-        ),  # Many nested directories # noqa: B950 # fmt: skip
+        ),  # Many nested directories # fmt: skip
         (r"_underscore_start.py", HTTPStatus.OK),
         (r"underscore_end_.py", HTTPStatus.OK),
         (r"_underscore_start_end_.py", HTTPStatus.OK),
@@ -959,7 +959,7 @@ def test_register_plugin_file(
         (
             r"3ight/hello.py",
             HTTPStatus.BAD_REQUEST,
-        ),  # Directory starting with a number # noqa: B950
+        ),  # Directory starting with a number
         (r"hello_world//main.py", HTTPStatus.BAD_REQUEST),  # Double slash
         (r"module.py.txt", HTTPStatus.BAD_REQUEST),  # Wrong extension
         (r"/absolute/path.py", HTTPStatus.BAD_REQUEST),  # Absolute path
@@ -971,21 +971,21 @@ def test_register_plugin_file(
         (
             r"_/hello.py",
             HTTPStatus.BAD_REQUEST,
-        ),  # Single underscore directory name # noqa: B950
+        ),  # Single underscore directory name
         (r"hello/_.py", HTTPStatus.BAD_REQUEST),  # Single underscore filename
         (
             r"hello/_file.py",
             HTTPStatus.BAD_REQUEST,
-        ),  # Underscore start in nested file # noqa: B950
+        ),  # Underscore start in nested file
         (
             r"HELLO.PY",
             HTTPStatus.BAD_REQUEST,
-        ),  # Uppercase extension (assuming case-sensitive) # noqa: B950
+        ),  # Uppercase extension (assuming case-sensitive)
         (r"hello.pY", HTTPStatus.BAD_REQUEST),  # Mixed case extension
         (
             r"hello/world/.py",
             HTTPStatus.BAD_REQUEST,
-        ),  # Hidden file in nested directory # noqa: B950
+        ),  # Hidden file in nested directory
         (r"hello/.world/file.py", HTTPStatus.BAD_REQUEST),  # Hidden directory
         (r" hello.py", HTTPStatus.BAD_REQUEST),  # Leading space
         (r"hello.py ", HTTPStatus.BAD_REQUEST),  # Trailing space
@@ -993,12 +993,12 @@ def test_register_plugin_file(
         (
             r"hello\world.py",
             HTTPStatus.BAD_REQUEST,
-        ),  # Backslash instead of forward slash # noqa: B950
+        ),  # Backslash instead of forward slash
         (r"hello:world.py", HTTPStatus.BAD_REQUEST),  # Invalid character (colon)
         (
             r"hello@world.py",
             HTTPStatus.BAD_REQUEST,
-        ),  # Invalid character (at sign) # noqa: B950
+        ),  # Invalid character (at sign)
         (r"hello/world.py/extra", HTTPStatus.BAD_REQUEST),  # Extra content after .py
         (r"", HTTPStatus.BAD_REQUEST),  # Empty string
         (r"hello/", HTTPStatus.BAD_REQUEST),  # Directory without file
@@ -1006,7 +1006,7 @@ def test_register_plugin_file(
         (
             r"1/2/3/4.py",
             HTTPStatus.BAD_REQUEST,
-        ),  # All numeric directory names # noqa: B950
+        ),  # All numeric directory names
         (r"../sample.py", HTTPStatus.BAD_REQUEST),  # No relative paths
         (r"..sample.py", HTTPStatus.BAD_REQUEST),
         # No prefix with dots

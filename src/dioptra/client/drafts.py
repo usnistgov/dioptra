@@ -35,13 +35,11 @@ class DraftFieldsValidationError(DioptraClientError):
 
 
 class ConvertFieldNamesToCamelCaseProtocol(Protocol):
-    def __call__(self, json_: dict[str, Any]) -> dict[str, Any]:
-        ...  # fmt: skip
+    def __call__(self, json_: dict[str, Any]) -> dict[str, Any]: ...  # fmt: skip
 
 
 class ValidateDraftFieldsProtocol(Protocol):
-    def __call__(self, json_: dict[str, Any]) -> dict[str, Any]:
-        ...  # fmt: skip
+    def __call__(self, json_: dict[str, Any]) -> dict[str, Any]: ...  # fmt: skip
 
 
 def make_field_names_to_camel_case_converter(

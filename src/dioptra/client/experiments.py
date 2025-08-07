@@ -530,7 +530,7 @@ class ExperimentsCollectionClient(CollectionClient[T]):
                 1,
                 resource_snapshot_id=1,
                 name="new-name",
-                description="new-description"
+                description="new-description",
             )
 
             # POST /api/v1/experiments/1/draft

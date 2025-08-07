@@ -92,7 +92,7 @@ class ResourceSnapshotsService(object):
 
             return None
 
-        filters = list()
+        filters = []
 
         if search_string:
             filters.append(

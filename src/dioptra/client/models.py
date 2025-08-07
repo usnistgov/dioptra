@@ -258,7 +258,7 @@ class ModelsCollectionClient(CollectionClient[T]):
                 1,
                 resource_snapshot_id=1,
                 name="new-name",
-                description="new-description"
+                description="new-description",
             )
 
             # POST /api/v1/models/1/draft

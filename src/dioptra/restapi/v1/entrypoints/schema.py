@@ -40,25 +40,25 @@ class EntrypointPluginFileSchema(Schema):
 
     id = fields.Integer(
         attribute="id",
-        metadata=dict(description="ID for the PluginFile resource."),
+        metadata={"description": "ID for the PluginFile resource."},
     )
     filename = fields.String(
         attribute="filename",
-        metadata=dict(description="Filename of the PluginFile resource."),
+        metadata={"description": "Filename of the PluginFile resource."},
     )
     snapshotId = fields.Integer(
         attribute="snapshot_id",
-        metadata=dict(description="Snapshot ID for the PluginFile resource."),
+        metadata={"description": "Snapshot ID for the PluginFile resource."},
     )
     url = fields.Url(
         attribute="url",
-        metadata=dict(description="URL for accessing the full PluginFile snapshot."),
+        metadata={"description": "URL for accessing the full PluginFile snapshot."},
         relative=True,
     )
     tasks = fields.Nested(
         PluginTaskContainerSchema,
         attribute="tasks",
-        metadata=dict(description="Tasks associated with the PluginFile resource."),
+        metadata={"description": "Tasks associated with the PluginFile resource."},
         many=False,
     )
 
@@ -68,30 +68,30 @@ class EntrypointPluginSchema(Schema):
 
     id = fields.Integer(
         attribute="id",
-        metadata=dict(description="ID for the Plugin resource."),
+        metadata={"description": "ID for the Plugin resource."},
     )
     name = fields.String(
         attribute="name",
-        metadata=dict(description="Name of the Plugin resource."),
+        metadata={"description": "Name of the Plugin resource."},
     )
     snapshotId = fields.Integer(
         attribute="snapshot_id",
-        metadata=dict(description="Snapshot ID for the Plugin resource."),
+        metadata={"description": "Snapshot ID for the Plugin resource."},
     )
     latestSnapshot = fields.Boolean(
         attribute="latest_snapshot",
-        metadata=dict(description="Whether or not the Plugin is the latest version."),
+        metadata={"description": "Whether or not the Plugin is the latest version."},
     )
     url = fields.Url(
         attribute="url",
-        metadata=dict(description="URL for accessing the full Plugin snapshot."),
+        metadata={"description": "URL for accessing the full Plugin snapshot."},
         relative=True,
     )
     files = fields.Nested(
         EntrypointPluginFileSchema,
         attribute="files",
         many=True,
-        metadata=dict(description="List of parameters for the entrypoint."),
+        metadata={"description": "List of parameters for the entrypoint."},
     )
 
 
@@ -100,17 +100,17 @@ class EntrypointParameterSchema(Schema):
 
     name = fields.String(
         attribute="name",
-        metadata=dict(description="Name of the Entrypoint parameter resource."),
+        metadata={"description": "Name of the Entrypoint parameter resource."},
         required=True,
     )
     defaultValue = fields.String(
         attribute="default_value",
-        metadata=dict(description="Default value of the Entrypoint parameter."),
+        metadata={"description": "Default value of the Entrypoint parameter."},
         load_default=None,
     )
     parameterType = fields.String(
         attribute="parameter_type",
-        metadata=dict(description="Data type of the Entrypoint parameter."),
+        metadata={"description": "Data type of the Entrypoint parameter."},
         required=True,
         validate=validate.OneOf(
             ["string", "float", "integer", "boolean", "list", "mapping"]
@@ -127,7 +127,7 @@ class EntrypointArtifactSchema(Schema):
 
     name = fields.String(
         attribute="name",
-        metadata=dict(description="Name of the Entrypoint artifact resource."),
+        metadata={"description": "Name of the Entrypoint artifact resource."},
         required=True,
         validate=validate.Regexp(
             ALLOWED_PLUGIN_TASK_PARAMETER_REGEX,
@@ -143,10 +143,10 @@ class EntrypointArtifactSchema(Schema):
         ArtifactOutputParameterSchema,
         attribute="output_params",
         many=True,
-        metadata=dict(
-            description="List of output ArtifactOutputParameters that the artifact is"
+        metadata={
+            "description": "List of output ArtifactOutputParameters that the artifact is"
             "expected to produce."
-        ),
+        },
     )
 
 
@@ -161,7 +161,7 @@ class EntrypointRefSchema(EntrypointRefBaseSchema):  # type: ignore
 
     name = fields.String(
         attribute="name",
-        metadata=dict(description="Name of the Entrypoint resource."),
+        metadata={"description": "Name of the Entrypoint resource."},
     )
 
 
@@ -170,7 +170,7 @@ class EntrypointSnapshotRefSchema(EntrypointSnapshotRefBaseSchema):  # type: ign
 
     name = fields.String(
         attribute="name",
-        metadata=dict(description="Name of the Entrypoint resource."),
+        metadata={"description": "Name of the Entrypoint resource."},
     )
 
 
@@ -179,42 +179,42 @@ class EntrypointMutableFieldsSchema(Schema):
 
     name = fields.String(
         attribute="name",
-        metadata=dict(description="Name of the Entrypoint resource."),
+        metadata={"description": "Name of the Entrypoint resource."},
         required=True,
     )
     description = fields.String(
         attribute="description",
-        metadata=dict(description="Description of the Entrypoint resource."),
+        metadata={"description": "Description of the Entrypoint resource."},
         load_default=None,
     )
     taskGraph = fields.String(
         attribute="task_graph",
-        metadata=dict(description="Task graph of the Entrypoint resource."),
+        metadata={"description": "Task graph of the Entrypoint resource."},
         required=True,
     )
     artifactGraph = fields.String(
         attribute="artifact_graph",
-        metadata=dict(description="Artifact graph of the Entrypoint resource."),
+        metadata={"description": "Artifact graph of the Entrypoint resource."},
     )
     parameters = fields.Nested(
         EntrypointParameterSchema,
         attribute="parameters",
         many=True,
-        metadata=dict(description="List of parameters for the entrypoint."),
+        metadata={"description": "List of parameters for the entrypoint."},
         load_default=list,
     )
     artifactParameters = fields.Nested(
         EntrypointArtifactSchema,
         attribute="artifact_parameters",
         many=True,
-        metadata=dict(description="List of artifacts for the entrypoint."),
+        metadata={"description": "List of artifacts for the entrypoint."},
         load_default=list,
     )
     queueIds = fields.List(
         fields.Integer(),
         attribute="queue_ids",
         data_key="queues",
-        metadata=dict(description="The queue for the entrypoint."),
+        metadata={"description": "The queue for the entrypoint."},
         load_only=True,
         load_default=list,
     )
@@ -225,7 +225,7 @@ class EntrypointPluginMutableFieldsSchema(Schema):
         fields.Integer(),
         attribute="plugin_ids",
         data_key="plugins",
-        metadata=dict(description="List of plugin files for the entrypoint."),
+        metadata={"description": "List of plugin files for the entrypoint."},
         load_only=True,
         load_default=list,
     )
@@ -236,7 +236,7 @@ class EntrypointArtifactPluginMutableFieldsSchema(Schema):
         fields.Integer(),
         attribute="artifact_plugin_ids",
         data_key="artifactPlugins",
-        metadata=dict(description="List of artifact_plugin files for the entrypoint."),
+        metadata={"description": "List of artifact_plugin files for the entrypoint."},
         load_only=True,
     )
 
@@ -256,21 +256,21 @@ class EntrypointSchema(
         EntrypointPluginSchema,
         attribute="plugins",
         many=True,
-        metadata=dict(description="List of plugins for the entrypoint."),
+        metadata={"description": "List of plugins for the entrypoint."},
         dump_only=True,
     )
     artifactPlugins = fields.Nested(
         EntrypointPluginSchema,
         attribute="artifact_plugins",
         many=True,
-        metadata=dict(description="List of artifact plugins for the entrypoint."),
+        metadata={"description": "List of artifact plugins for the entrypoint."},
         dump_only=True,
     )
     queues = fields.Nested(
         QueueRefSchema,
         attribute="queues",
         many=True,
-        metadata=dict(description="The queue for the entrypoint."),
+        metadata={"description": "The queue for the entrypoint."},
         dump_only=True,
     )
 
@@ -287,21 +287,21 @@ class EntrypointDraftSchema(
         fields.Integer(),
         attribute="plugin_ids",
         data_key="plugins",
-        metadata=dict(description="List of plugin files for the entrypoint."),
+        metadata={"description": "List of plugin files for the entrypoint."},
     )
 
     artifactPluginIds = fields.List(
         fields.Integer(),
         attribute="artifact_plugin_ids",
         data_key="artifactPlugins",
-        metadata=dict(description="List of artifact plugin files for the entrypoint."),
+        metadata={"description": "List of artifact plugin files for the entrypoint."},
     )
 
     queueIds = fields.List(
         fields.Integer(),
         attribute="queue_ids",
         data_key="queues",
-        metadata=dict(description="The queue for the entrypoint."),
+        metadata={"description": "The queue for the entrypoint."},
     )
 
 
@@ -311,7 +311,7 @@ class EntrypointPageSchema(BasePageSchema):
     data = fields.Nested(
         EntrypointSchema,
         many=True,
-        metadata=dict(description="List of Entrypoint resources in the current page."),
+        metadata={"description": "List of Entrypoint resources in the current page."},
     )
 
 

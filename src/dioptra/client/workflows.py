@@ -94,10 +94,10 @@ class WorkflowsCollectionClient(CollectionClient[T]):
             )
 
         if isinstance(source, list):
-            if not all([isinstance(x, DioptraFile) for x in source]):
-                illegal_types = set(
-                    [type(x).__name__ for x in source if not isinstance(x, DioptraFile)]
-                )
+            if not all(isinstance(x, DioptraFile) for x in source):
+                illegal_types = {
+                    type(x).__name__ for x in source if not isinstance(x, DioptraFile)
+                }
                 raise IllegalArgumentError(
                     "Illegal type for source (reason: list contains type(s) other "
                     f"than DioptraFile): {', '.join(sorted(illegal_types))}"

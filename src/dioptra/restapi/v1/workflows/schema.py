@@ -35,30 +35,30 @@ class JobFilesDownloadQueryParametersSchema(FileDownloadParametersSchema):
 
     jobId = fields.String(
         attribute="job_id",
-        metadata=dict(description="A job's unique identifier."),
+        metadata={"description": "A job's unique identifier."},
     )
 
 
 class SignatureAnalysisSchema(Schema):
     pythonCode = fields.String(
         attribute="python_code",
-        metadata=dict(description="The contents of the python file"),
+        metadata={"description": "The contents of the python file"},
     )
 
 
 class SignatureAnalysisSignatureParamSchema(Schema):
     name = fields.String(
-        attribute="name", metadata=dict(description="The name of the parameter")
+        attribute="name", metadata={"description": "The name of the parameter"}
     )
     type = fields.String(
-        attribute="type", metadata=dict(description="The type of the parameter")
+        attribute="type", metadata={"description": "The type of the parameter"}
     )
 
 
 class SignatureAnalysisSignatureInputSchema(SignatureAnalysisSignatureParamSchema):
     required = fields.Boolean(
         attribute="required",
-        metadata=dict(description="Whether this is a required parameter"),
+        metadata={"description": "Whether this is a required parameter"},
     )
 
 
@@ -71,38 +71,36 @@ class SignatureAnalysisSuggestedTypes(Schema):
 
     name = fields.String(
         attribute="name",
-        metadata=dict(description="A suggestion for the name of the type"),
+        metadata={"description": "A suggestion for the name of the type"},
     )
 
     description = fields.String(
         attribute="description",
-        metadata=dict(
-            description="The annotation the suggestion is attempting to represent"
-        ),
+        metadata={
+            "description": "The annotation the suggestion is attempting to represent"
+        },
     )
 
 
 class SignatureAnalysisSignatureSchema(Schema):
     name = fields.String(
-        attribute="name", metadata=dict(description="The name of the function")
+        attribute="name", metadata={"description": "The name of the function"}
     )
     inputs = fields.Nested(
         SignatureAnalysisSignatureInputSchema,
-        metadata=dict(description="A list of objects describing the input parameters."),
+        metadata={"description": "A list of objects describing the input parameters."},
         many=True,
     )
     outputs = fields.Nested(
         SignatureAnalysisSignatureOutputSchema,
-        metadata=dict(
-            description="A list of objects describing the output parameters."
-        ),
+        metadata={"description": "A list of objects describing the output parameters."},
         many=True,
     )
     missing_types = fields.Nested(
         SignatureAnalysisSuggestedTypes,
-        metadata=dict(
-            description="A list of missing types for non-primitives defined by the file"
-        ),
+        metadata={
+            "description": "A list of missing types for non-primitives defined by the file"
+        },
         many=True,
     )
 
@@ -110,10 +108,10 @@ class SignatureAnalysisSignatureSchema(Schema):
 class SignatureAnalysisOutputSchema(Schema):
     tasks = fields.Nested(
         SignatureAnalysisSignatureSchema,
-        metadata=dict(
-            description="A list of signature analyses for the plugin tasks "
+        metadata={
+            "description": "A list of signature analyses for the plugin tasks "
             "provided in the input file"
-        ),
+        },
         many=True,
     )
 
@@ -135,62 +133,62 @@ class ResourceImportSchema(Schema):
     groupId = fields.Integer(
         attribute="group_id",
         data_key="group",
-        metadata=dict(
-            description="ID of the Group that will own the imported resources."
-        ),
+        metadata={
+            "description": "ID of the Group that will own the imported resources."
+        },
         required=True,
     )
     sourceType = fields.Enum(
         ResourceImportSourceTypes,
         attribute="source_type",
-        metadata=dict(
-            description="The source of the resources to import"
+        metadata={
+            "description": "The source of the resources to import"
             "('upload_archive', 'upload_files', or 'git'."
-        ),
+        },
         by_value=True,
         required=True,
     )
     gitUrl = fields.String(
         attribute="git_url",
-        metadata=dict(
-            description="The URL of the git repository containing resources to import. "
+        metadata={
+            "description": "The URL of the git repository containing resources to import. "
             "A git branch can optionally be specified by appending #BRANCH_NAME. "
             "Used when sourceType is 'git'."
-        ),
+        },
         required=False,
     )
     archiveFile = FileUpload(
         attribute="archive_file",
-        metadata=dict(
-            type="file",
-            format="binary",
-            description="The archive file containing resources to import (.tar.gz). "
+        metadata={
+            "type": "file",
+            "format": "binary",
+            "description": "The archive file containing resources to import (.tar.gz). "
             "Used when sourceType is 'upload_archive'.",
-        ),
+        },
         required=False,
     )
     files = MultiFileUpload(
         attribute="files",
-        metadata=dict(
-            type="file",
-            format="binary",
-            description="The files containing the resources to import."
+        metadata={
+            "type": "file",
+            "format": "binary",
+            "description": "The files containing the resources to import."
             "Used when sourceType is 'upload_files'.",
-        ),
+        },
         required=False,
     )
     configPath = fields.String(
         attribute="config_path",
-        metadata=dict(description="The path to the toml configuration file."),
+        metadata={"description": "The path to the toml configuration file."},
         load_default="dioptra.toml",
     )
     resolveNameConflictsStrategy = fields.Enum(
         ResourceImportResolveNameConflictsStrategy,
         attribute="resolve_name_conflicts_strategy",
-        metadata=dict(
-            description="Strategy for resolving resource name conflicts. "
+        metadata={
+            "description": "Strategy for resolving resource name conflicts. "
             "Available options are 'fail' or 'overwrite'"
-        ),
+        },
         by_value=True,
         load_default=ResourceImportResolveNameConflictsStrategy.FAIL.value,
     )
@@ -241,47 +239,45 @@ class ValidateEntrypointRequestSchema(Schema):
     groupId = fields.Integer(
         attribute="group_id",
         data_key="group",
-        metadata=dict(
-            description="ID of the Group validating the Entrypoint resource."
-        ),
+        metadata={"description": "ID of the Group validating the Entrypoint resource."},
         required=True,
     )
     taskGraph = fields.String(
         attribute="task_graph",
-        metadata=dict(description="Proposed task graph for the Entrypoint resource."),
+        metadata={"description": "Proposed task graph for the Entrypoint resource."},
         required=True,
     )
     artifactGraph = fields.String(
         attribute="artifact_graph",
-        metadata=dict(
-            description="Proposed artifact graph for the Entrypoint resource."
-        ),
+        metadata={
+            "description": "Proposed artifact graph for the Entrypoint resource."
+        },
         required=False,
     )
     pluginSnapshotIds = fields.List(
         fields.Integer(),
         attribute="plugin_snapshot_ids",
         data_key="pluginSnapshots",
-        metadata=dict(
-            description=(
+        metadata={
+            "description": (
                 "A list of IDs for the Plugin Snapshots that will be attached to the "
                 "Entrypoint resource."
             )
-        ),
+        },
     )
     parameters = fields.Nested(
         EntrypointParameterSchema,
         attribute="parameters",
         many=True,
-        metadata=dict(description="Proposed parameters for the Entrypoint resource."),
+        metadata={"description": "Proposed parameters for the Entrypoint resource."},
     )
     artifacts = fields.Nested(
         EntrypointArtifactSchema,
         attribute="artifacts",
         many=True,
-        metadata=dict(
-            description="Proposed artifact inputs for the Entrypoint resource."
-        ),
+        metadata={
+            "description": "Proposed artifact inputs for the Entrypoint resource."
+        },
     )
 
 
@@ -291,15 +287,15 @@ class ValidateEntrypointIssueSchema(Schema):
     type_ = fields.String(
         attribute="type",
         data_key="type",
-        metadata=dict(description="The validation issue type."),
+        metadata={"description": "The validation issue type."},
     )
     severity = fields.String(
         attribute="severity",
-        metadata=dict(description="The severity of the validation issue."),
+        metadata={"description": "The severity of the validation issue."},
     )
     message = fields.String(
         attribute="message",
-        metadata=dict(description="A message describing the validation issue."),
+        metadata={"description": "A message describing the validation issue."},
     )
 
     @pre_dump
@@ -319,19 +315,17 @@ class ValidateEntrypointResponseSchema(Schema):
 
     schemaValid = fields.Bool(
         attribute="schema_valid",
-        metadata=dict(
-            description=(
+        metadata={
+            "description": (
                 "Indicates whether the proposed inputs for the Entrypoint resource "
                 "are valid. If False, the schemaIssues field will contain a list of "
                 "validation issues."
             ),
-        ),
+        },
     )
     schemaIssues = fields.Nested(
         ValidateEntrypointIssueSchema,
         attribute="schema_issues",
-        metadata=dict(
-            description="A list of validation issues detected in the schema."
-        ),
+        metadata={"description": "A list of validation issues detected in the schema."},
         many=True,
     )

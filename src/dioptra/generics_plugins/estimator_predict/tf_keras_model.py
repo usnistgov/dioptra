@@ -49,10 +49,10 @@ def _(estimator: Model, x: Any, pred_type: str, **kwargs) -> np.ndarray:
         args_signature=("Model", "Any", "str"),
     )
 
-    predict: Callable[..., np.ndarray] = dict(
-        prob=keras_model_predict_proba,
-        label=keras_model_predict_label,
-    ).get(pred_type, _null_predict)
+    predict: Callable[..., np.ndarray] = {
+        "prob": keras_model_predict_proba,
+        "label": keras_model_predict_label,
+    }.get(pred_type, _null_predict)
 
     try:
         prediction: np.ndarray = predict(

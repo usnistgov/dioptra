@@ -534,7 +534,7 @@ class EntrypointIdArtifactPluginIdEndpoint(Resource):
     @inject
     def __init__(
         self,
-        entrypoint_id_artifact_plugin_id_service: EntrypointIdArtifactPluginsIdService,  # noqa: B950
+        entrypoint_id_artifact_plugin_id_service: EntrypointIdArtifactPluginsIdService,
         *args,
         **kwargs,
     ) -> None:
@@ -613,7 +613,7 @@ class EntrypointSnapshotIdArtifactPluginsEndpoint(Resource):
             utils.build_entrypoint_plugin(
                 utils.PluginWithFilesDict(
                     plugin=artifact_plugin.plugin,
-                    plugin_files=[file for file in artifact_plugin.plugin.plugin_files],
+                    plugin_files=list(artifact_plugin.plugin.plugin_files),
                     has_draft=False,
                 )
             )

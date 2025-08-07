@@ -16,7 +16,7 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 #
 # This is a fork of the work
-# https://github.com/gahjelle/pyplugs/blob/c75a5e1693691adc22bf91d01fad63aa67189d73/pyplugs/__init__.py  # noqa: B950
+# https://github.com/gahjelle/pyplugs/blob/c75a5e1693691adc22bf91d01fad63aa67189d73/pyplugs/__init__.py
 # See copyright below.
 #
 # Copyright (c) 2019 Geir Arne Hjelle

@@ -17,6 +17,7 @@
 """
 The group repository: data operations related to groups
 """
+
 from collections.abc import Sequence
 from typing import Any, Final
 
@@ -64,7 +65,6 @@ GROUP_CREATOR_MEMBER_PERMISSIONS: Final[dict[str, bool]] = {
 
 
 class GroupRepository:
-
     SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
         "name": lambda x: Group.name.like(x, escape="/"),
     }
@@ -550,7 +550,6 @@ class GroupRepository:
                 raise GroupNeedsAUserError(user.user_id, group.group_id)
             # else: the given user is not in the group; nothing to do
         else:
-
             # Group has more than one user, so we won't violate that
             # consistency rule.  But does user belong to any other groups?
             num_groups_stmt = (
@@ -565,7 +564,6 @@ class GroupRepository:
                     raise UserNeedsAGroupError(user.user_id, group.group_id)
                 # else: the given user is not in the group; nothing to do
             else:
-
                 # User has more than one group membership, so removal is not
                 # prevented for that reason.  If they are a manager, we prevent
                 # removal to ensure all managers are members and there is at

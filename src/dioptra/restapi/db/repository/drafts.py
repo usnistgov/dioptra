@@ -17,6 +17,7 @@
 """
 The drafts repository: data operations related to drafts
 """
+
 import datetime
 import enum
 from collections.abc import Iterable, Sequence

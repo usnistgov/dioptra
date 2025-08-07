@@ -15,8 +15,8 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "dioptra"
@@ -26,7 +26,7 @@ authors = [
     { name="Harold Booth", email="harold.booth@nist.gov" },
     { name="Keith Manville", email="kmanville@mitre.org" },
     { name="Julian Sexton", email="jtsexton@mitre.org" },
-    { name="Michael Andy Chisholm", email="chisholm@mitre.org" },
+    { name="Michael Andy Chisholm" },
     { name="Henry Choy", email="hchoy@mitre.org" },
     { name="Andrew Hand", email="ahand@mitre.org" },
     { name="Bronwyn Hodges", email="bhodges@mitre.org" },
@@ -50,36 +50,43 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "alembic>=1.13.0",
+    "async-timeout>=4.0.0",
     "boto3>=1.16.0",
     "Click>=8.0.0,<9",
     "entrypoints>=0.3",
-    "Flask>=2.0.0",
     "flask-accepts>=0.17.0",
     "Flask-Cors>=3.0.1",
     "Flask-Login>=0.6.0",
     "Flask-Migrate>=2.5.0",
     "flask-restx>=0.5.1",
     "Flask-SQLAlchemy>=2.4.0",
+    "Flask>=2.0.0",
+    "gunicorn>=20.0.0",
     "injector>=0.18.0",
     "jsonschema>=4.17.0",
     "marshmallow>=3.9.0,<4",
+    "mlflow-skinny>=2",
     "multimethod>=1.5",
     "numpy>=1.22.0",
     "pandas>=1.5.0",
     "passlib>=1.7.0",
+    "pillow>=9.2.0",
+    "psycopg2-binary>=2.9.0",
     "pyparsing>=3.1.0",
     "python-dateutil>=2.8.0",
+    "python-json-logger>=2.0.0",
     "PyYAML>=6.0.0",
     "redis>=3.5.0",
-    "requests>=2.25,<3",
     "requests-toolbelt>=1.0.0",
+    "requests>=2.25,<3",
     "rq>=1.5.0",
     "scipy>=1.4.1",
-    "structlog>=20.2.0",
+    "simplejson>=3.10.0",
     "SQLAlchemy>=2",
+    "structlog>=20.2.0",
     "tomli>=2.2.0",
     "typing-extensions>=3.7.4.3",
-    "werkzeug>=3.0.0",
+    "werkzeug>=3.0.0,<3.1.0",
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -111,68 +118,117 @@ tf_keras_model = "dioptra.generics_plugins.estimator_predict.tf_keras_model"
 [project.entry-points."dioptra.generics.fit_estimator"]
 tf_keras_model = "dioptra.generics_plugins.fit_estimator.tf_keras_model"
 
-[project.optional-dependencies]
-cookiecutter = [
+[dependency-groups]
+dev = [
+    "autopep8>=2.3.2",
+    "binaryornot>=0.4.0",
     "cookiecutter>=2.0.0,<2.2.0",
-]
-mlflow-skinny = [
-    "mlflow-skinny>=2",
-]
-mlflow-full = [
+    "coverage[toml]>=7.8.0",
+    "cruft>=2.16.0",
+    "Faker>=24.0.0",
+    "flake8-bugbear>=24.12.12",
+    "flake8>=7.2.0",
+    "freezegun>=1.5.2",
+    "ipykernel>=6.29.5",
+    "ipython>=9.1.0",
+    "jupyter>=1.1.1",
+    "jupyterlab>=4.4.0",
     "mlflow>=2",
+    "mypy-extensions>=1.1.0",
+    "mypy[reports]>=1.15.0",
+    "nbconvert>=6.0.0",
+    "prefect>=1.0.0,<2",
+    "pycodestyle>=2.13.0",
+    "pydocstyle>=6.3.0",
+    "pytest-cookies>=0.7.0",
+    "pytest-cov>=6.1.1",
+    "pytest-datadir>=1.7.2",
+    "pytest>=8.3.5",
+    "pytoml>=0.1.21",
+    "tomli>=2.2.1",
+    "tox>=4.25.0",
+    "types-cryptography>=3.3.23.2",
+    "types-freezegun>=1.1.10",
+    "types-jsonschema>=4.24.0.20250528",
+    "types-mypy-extensions>=1.1.0.20250425",
+    "types-python-dateutil>=2.9.0.20241206",
+    "types-pyyaml>=6.0.12.20250402",
+    "types-redis>=4.6.0.20241004",
+    "types-requests>=2.32.0.20250328",
+    "types-toml>=0.10.8.20240310",
 ]
+docs = [
+    "Markdown>=3.4.0",
+    "mistune<2",
+    "plantuml-markdown>=3.11.1",
+    "pydata-sphinx-theme>=0.13.3",
+    "pymdown-extensions>=9.4",
+    "recommonmark>=0.7.1",
+    "Sphinx>=4.5.0,<5",
+    "sphinx-autobuild>=2024.10.3",
+    "sphinx-autodoc-typehints>=1.19.1",
+    "sphinx-book-theme>=0.3.3",
+    "sphinx-copybutton>=0.5.0",
+    "sphinx-design>=0.1.0",
+    "sphinx-togglebutton>=0.3.2",
+    "sphinxcontrib-applehelp<=1.0.4",
+    "sphinxcontrib-devhelp<=1.0.2",
+    "sphinxcontrib-htmlhelp<=2.0.1",
+    "sphinxcontrib-openapi>=0.7.0",
+    "sphinxcontrib-qthelp<=1.0.3",
+    "sphinxcontrib-serializinghtml<=1.1.5",
+    "typing-extensions>=3.7.4.0",
+    "web-compile>=0.2.3",
+]
+mlflow-tracking-container = [
+    "boto3>=1.16.0",
+    "mlflow>=2",
+    "psycopg2-binary>=2.9.0",
+    "simplejson>=3.10.0",
+]
+
+[project.optional-dependencies]
 examples = [
     "aiohttp>=3.8.0",
     "kaggle>=1.5.0",
-    "Pillow>=9.2.0",
     "rich>=13.3.0",
     "universal_pathlib>=0.0.23",
 ]
-postgres = [
-    "psycopg2-binary>=2.9.0",
+pytorch-cpu = [
+    "tensorboard>=2.16.0",
+    "torch==2.2.2",
+    "torchaudio==2.2.2",
+    "torchvision==0.17.2",
+]
+pytorch-gpu = [
+    "tensorboard>=2.16.0",
+    "torch==2.2.2",
+    "torchaudio==2.2.2",
+    "torchvision==0.17.2",
+]
+tensorflow-cpu = [
+    "tensorflow==2.16.1",
+    "tensorflow-metal==1.1.0; sys_platform == 'darwin' and platform_machine == 'arm64'",
+    "tensorboard>=2.16.0",
+]
+tensorflow-gpu = [
+    "tensorflow[and-cuda]==2.16.1; sys_platform == 'linux' and platform_machine == 'x86_64'",
+    "tensorboard>=2.16.0",
 ]
 worker = [
-    "async_timeout",
     "adversarial-robustness-toolbox>=1.9.0",
     "heart-library>=0.4.2",
     "imgaug>=0.4.0",
     "maite>=0.6.0",
     "matplotlib",
+    "mlflow>=2",
     "nrtk>=0.3.0",
-    "opencv-python",
-    "Pillow>=9.2.0",
+    "opencv-python>=4",
     "prefect>=1.0.0,<2",
-    "pyarrow",
-    "pycocotools",
-    "python-json-logger>=2.0.0",
+    "pyarrow>=18.0.0",
+    "pycocotools>=2.0.0",
     "rich>=13.3.0",
     "scikit-learn>=1.0.0",
-    "simplejson",
-    "tensorboard",
-]
-dev = [
-    "autopep8",
-    "binaryornot>=0.4.0",
-    "build",
-    "entrypoints",
-    "esbonio",
-    "Faker>=24.0.0",
-    "flake8-bugbear",
-    "flake8>=3.8.0",
-    "freezegun",
-    "ipykernel",
-    "ipython",
-    "jupyter",
-    "jupyterlab",
-    "nbconvert",
-    "pip-tools",
-    "pycodestyle",
-    "pydocstyle",
-    "pytest-cookies",
-    "pytest>=7",
-    "Sphinx>=4.5.0,<5",
-    "tox>=4.4.0",
-    "wheel",
 ]
 
 [tool.black]
@@ -199,7 +255,7 @@ current_version = "1.0.0-dev"
 version_pattern = "MAJOR.MINOR.PATCH[-TAG]"
 commit_message = "release {old_version} → {new_version}"
 commit = true
-tag = true
+tag = false
 push = false
 
 [tool.bumpver.file_patterns]
@@ -275,9 +331,13 @@ omit = [
 [tool.doc8]
 ignore = ["D001"]
 
+[tool.hatch.build.targets.wheel]
+packages = ["src/dioptra"]
+
 [tool.isort]
 profile = "black"
 honor_noqa = true
+skip_gitignore = true
 
 [tool.mypy]
 python_version = "3.11"
@@ -332,6 +392,12 @@ norecursedirs = [
     '{arch}',
     "alembic",
 ]
+filterwarnings = [
+    "ignore:.*mypy_extensions.TypedDict is deprecated.*:DeprecationWarning:prefect.*",
+    "ignore:.*Object of type <.*> not in session.*:sqlalchemy.exc.SAWarning",
+    "ignore:.*The '__version__' attribute is deprecated.*:DeprecationWarning",
+    "ignore:.*'crypt' is deprecated and slated for removal.*:DeprecationWarning",
+]
 
 [tool.rstcheck]
 ignore_directives = [
@@ -351,3 +417,73 @@ ignore_roles = [
     "kbd",
 ]
 report_level = "INFO"
+
+[tool.ruff]
+line-length = 88
+indent-width = 4
+target-version = "py311"
+extend-exclude = [
+    ".ipynb_checkpoints",
+    "alembic",
+]
+
+[tool.ruff.lint]
+select = ["B", "B9", "C", "E", "F", "W"]
+extend-select = ["I"]
+ignore = ["E203", "E302", "E501", "B905"]
+per-file-ignores = { "examples/*/src/*.py" = ["E402"] }
+
+# Allow fix for all enabled rules (when `--fix` is provided).
+fixable = ["ALL"]
+unfixable = []
+
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+docstring-code-format = true
+docstring-code-line-length = "dynamic"
+
+[tool.ruff.lint.pycodestyle]
+max-line-length = 100
+
+[tool.ruff.lint.mccabe]
+max-complexity = 12
+
+[tool.uv]
+conflicts = [
+    [
+        { extra = "pytorch-cpu" },
+        { extra = "pytorch-gpu" },
+        { extra = "tensorflow-cpu" },
+        { extra = "tensorflow-gpu" },
+    ],
+]
+
+[tool.uv.sources]
+torch = [
+    { index = "pytorch-cpu", extra = "pytorch-cpu" },
+    { index = "pytorch-gpu", extra = "pytorch-gpu" },
+]
+torchaudio = [
+    { index = "pytorch-cpu", extra = "pytorch-cpu" },
+    { index = "pytorch-gpu", extra = "pytorch-gpu" },
+]
+torchvision = [
+    { index = "pytorch-cpu", extra = "pytorch-cpu" },
+    { index = "pytorch-gpu", extra = "pytorch-gpu" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-gpu"
+url = "https://download.pytorch.org/whl/cu121"
+explicit = true

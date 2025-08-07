@@ -56,8 +56,8 @@ class PascalVOCAnnotationData(AnnotationData):
 
         # Get the root of the document
         root = tree.getroot()
-        boxes: List[List[float]] = list()
-        classes: List[int] = list()
+        boxes: List[List[float]] = []
+        classes: List[int] = []
 
         # Get width and height of an image
         width_element = root.find(".//size/width")

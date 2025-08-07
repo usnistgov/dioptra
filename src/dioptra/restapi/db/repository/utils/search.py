@@ -17,6 +17,7 @@
 """
 Common search functionality
 """
+
 from collections.abc import Callable, Iterable
 
 import sqlalchemy as sa

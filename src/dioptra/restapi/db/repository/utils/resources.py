@@ -17,6 +17,7 @@
 """
 Functionality common to resource repositories.
 """
+
 import enum
 import itertools
 import typing
@@ -98,7 +99,7 @@ def apply_resource_deletion_policy(
 
 
 @typing.overload
-def get_latest_snapshots(  # noqa: E704
+def get_latest_snapshots(
     session: CompatibleSession[S],
     snap_class: typing.Type[ResourceT],
     resources: int | m.Resource | m.ResourceSnapshot,
@@ -107,7 +108,7 @@ def get_latest_snapshots(  # noqa: E704
 
 
 @typing.overload
-def get_latest_snapshots(  # noqa: E704
+def get_latest_snapshots(
     session: CompatibleSession[S],
     snap_class: typing.Type[ResourceT],
     resources: Iterable[int | m.Resource | m.ResourceSnapshot],
@@ -314,7 +315,7 @@ def get_latest_child_snapshots(
 # https://github.com/python/typing/issues/256
 # https://github.com/python/mypy/issues/11001
 @typing.overload
-def get_snapshot_by_name(  # type: ignore[overload-overlap]  # noqa: E704
+def get_snapshot_by_name(  # type: ignore[overload-overlap]
     session: CompatibleSession[S],
     snap_class: typing.Type[ResourceT],
     name: str,
@@ -324,7 +325,7 @@ def get_snapshot_by_name(  # type: ignore[overload-overlap]  # noqa: E704
 
 
 @typing.overload
-def get_snapshot_by_name(  # noqa: E704
+def get_snapshot_by_name(
     session: CompatibleSession[S],
     snap_class: typing.Type[ResourceT],
     name: Iterable[str],
@@ -694,7 +695,6 @@ def add_resource_lock_types(
             raise e.ReadOnlyLockError(resource_type, resource_id=resource_id)
 
     else:
-
         # here, we really need the Resource object; ResourceLock's
         # constructor is just designed that way.
         if isinstance(resource, int):
