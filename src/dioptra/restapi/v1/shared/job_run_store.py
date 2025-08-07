@@ -19,14 +19,14 @@ from pathlib import Path, PurePosixPath
 from typing import Any, Protocol
 from urllib.parse import urlparse
 
+import structlog
+from structlog.stdlib import BoundLogger
+
 import mlflow.artifacts
 import mlflow.entities
 import mlflow.exceptions
-import structlog
-from mlflow.tracking import MlflowClient
-from structlog.stdlib import BoundLogger
-
 from dioptra.restapi.errors import EntityDoesNotExistError, JobStoreError
+from mlflow.tracking import MlflowClient
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 

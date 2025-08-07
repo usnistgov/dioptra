@@ -23,7 +23,6 @@ from typing import Any, Callable, List, Optional
 from boto3.session import Session
 from botocore.client import BaseClient
 from injector import Binder, Module, provider
-from mlflow import MlflowClient
 from passlib.context import CryptContext
 from redis import Redis
 
@@ -34,6 +33,7 @@ from dioptra.restapi.v1.shared.job_run_store import (
 )
 from dioptra.restapi.v1.shared.password_service import PasswordService
 from dioptra.restapi.v1.shared.rq_service import RQServiceV1
+from mlflow import MlflowClient
 
 
 class JobRunStoreModule(Module):
