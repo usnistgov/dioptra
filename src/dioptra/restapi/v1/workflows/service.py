@@ -82,7 +82,7 @@ from .schema import (
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
-RESOURCE_TYPE: Final[str] = "workflow"
+RESOURCE_TYPE: Final[EntityTypes] = EntityTypes.WORKFLOW
 
 DIOPTRA_RESOURCES_SCHEMA: Final[dict] = read_json_file(
     "dioptra.restapi.v1.workflows", "dioptra-resources.schema.json"

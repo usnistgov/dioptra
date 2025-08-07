@@ -26,8 +26,7 @@ from structlog.stdlib import BoundLogger
 from dioptra.restapi.db import db, models
 from dioptra.restapi.errors import EntityDoesNotExistError
 from dioptra.restapi.v1.entity_types import EntityTypes
-from dioptra.restapi.v1.tags.service import RESOURCE_TYPE as TAG_RESOURCE_TYPE
-from dioptra.restapi.v1.tags.service import TagIdService
+from dioptra.restapi.v1.tags.service import RESOURCE_TYPE, TagIdService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -233,7 +232,7 @@ class ResourceTagsIdService(object):
         tag_exists = tag_id in {tag.tag_id for tag in current_tags}
         if not tag_exists:
             raise EntityDoesNotExistError(
-                TAG_RESOURCE_TYPE, resource_id=resource_id, tag_id=tag_id
+                RESOURCE_TYPE, resource_id=resource_id, tag_id=tag_id
             )
 
         resource.tags = [tag for tag in current_tags if tag.tag_id != tag_id]
