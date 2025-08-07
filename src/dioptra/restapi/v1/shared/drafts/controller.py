@@ -15,6 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The module defining the endpoints for Drafts."""
+
 import uuid
 from functools import partial
 from typing import Type, cast
@@ -65,7 +66,7 @@ def generate_resource_drafts_endpoint(
         The generated Resource class
     """
 
-    # Based on: https://github.com/apryor6/flask_accepts/blob/05567461c421a534d6fc6e122d5e086b0b0e53aa/flask_accepts/utils.py#L154-L160  # noqa: B950
+    # Based on: https://github.com/apryor6/flask_accepts/blob/05567461c421a534d6fc6e122d5e086b0b0e53aa/flask_accepts/utils.py#L154-L160
     if isinstance(request_schema, Schema):
         model_name = "Drafts" + "".join(
             request_schema.__class__.__name__.rsplit("Schema", 1)
@@ -152,7 +153,7 @@ def generate_resource_drafts_id_endpoint(
         The generated Resource class
     """
 
-    # Based on: https://github.com/apryor6/flask_accepts/blob/05567461c421a534d6fc6e122d5e086b0b0e53aa/flask_accepts/utils.py#L154-L160  # noqa: B950
+    # Based on: https://github.com/apryor6/flask_accepts/blob/05567461c421a534d6fc6e122d5e086b0b0e53aa/flask_accepts/utils.py#L154-L160
     if isinstance(request_schema, Schema):
         model_name = "DraftsId" + "".join(
             request_schema.__class__.__name__.rsplit("Schema", 1)
@@ -230,7 +231,7 @@ def generate_resource_id_draft_endpoint(
         The generated Resource class
     """
 
-    # Based on: https://github.com/apryor6/flask_accepts/blob/05567461c421a534d6fc6e122d5e086b0b0e53aa/flask_accepts/utils.py#L154-L160  # noqa: B950
+    # Based on: https://github.com/apryor6/flask_accepts/blob/05567461c421a534d6fc6e122d5e086b0b0e53aa/flask_accepts/utils.py#L154-L160
     if isinstance(request_schema, Schema):
         model_name = "Draft" + "".join(
             request_schema.__class__.__name__.rsplit("Schema", 1)
@@ -242,7 +243,7 @@ def generate_resource_id_draft_endpoint(
         resourceData = fields.Nested(
             request_schema,
             attribute="resource_data",
-            metadata=dict(description="Draft resource data."),
+            metadata={"description": "Draft resource data."},
         )
 
     @api.route("/<int:id>/draft")
@@ -337,7 +338,7 @@ def generate_nested_resource_drafts_endpoint(
         The generated Resource class
     """
 
-    # Based on: https://github.com/apryor6/flask_accepts/blob/05567461c421a534d6fc6e122d5e086b0b0e53aa/flask_accepts/utils.py#L154-L160  # noqa: B950
+    # Based on: https://github.com/apryor6/flask_accepts/blob/05567461c421a534d6fc6e122d5e086b0b0e53aa/flask_accepts/utils.py#L154-L160
     if isinstance(request_schema, Schema):
         model_name = "NestedDrafts" + "".join(
             request_schema.__class__.__name__.rsplit("Schema", 1)
@@ -430,7 +431,7 @@ def generate_nested_resource_drafts_id_endpoint(
         The generated Resource class
     """
 
-    # Based on: https://github.com/apryor6/flask_accepts/blob/05567461c421a534d6fc6e122d5e086b0b0e53aa/flask_accepts/utils.py#L154-L160  # noqa: B950
+    # Based on: https://github.com/apryor6/flask_accepts/blob/05567461c421a534d6fc6e122d5e086b0b0e53aa/flask_accepts/utils.py#L154-L160
     if isinstance(request_schema, Schema):
         model_name = "NestedDraftsId" + "".join(
             request_schema.__class__.__name__.rsplit("Schema", 1)
@@ -515,7 +516,7 @@ def generate_nested_resource_id_draft_endpoint(
     route_singular = resource_route[:-1]
     resource_id = f"{route_singular}Id"
 
-    # Based on: https://github.com/apryor6/flask_accepts/blob/05567461c421a534d6fc6e122d5e086b0b0e53aa/flask_accepts/utils.py#L154-L160  # noqa: B950
+    # Based on: https://github.com/apryor6/flask_accepts/blob/05567461c421a534d6fc6e122d5e086b0b0e53aa/flask_accepts/utils.py#L154-L160
     if isinstance(request_schema, Schema):
         model_name = "NestedDraft" + "".join(
             request_schema.__class__.__name__.rsplit("Schema", 1)
@@ -529,7 +530,7 @@ def generate_nested_resource_id_draft_endpoint(
         resourceData = fields.Nested(
             request_schema,
             attribute="resource_data",
-            metadata=dict(description="Draft resource data."),
+            metadata={"description": "Draft resource data."},
         )
 
     @api.route(f"/<int:id>/{resource_route}/<int:{resource_id}>/draft")
@@ -552,7 +553,7 @@ def generate_nested_resource_id_draft_endpoint(
             log = LOGGER.new(
                 request_id=str(uuid.uuid4()), resource="Draft", request_type="GET"
             )
-            if set(kwargs.keys()) != set([resource_id]):
+            if set(kwargs.keys()) != {resource_id}:
                 unexpected_kwargs = {
                     k: v for k, v in kwargs.items() if resource_id != k
                 }
@@ -577,7 +578,7 @@ def generate_nested_resource_id_draft_endpoint(
             log = LOGGER.new(
                 request_id=str(uuid.uuid4()), resource="Draft", request_type="POST"
             )
-            if set(kwargs.keys()) != set([resource_id]):
+            if set(kwargs.keys()) != {resource_id}:
                 unexpected_kwargs = {
                     k: v for k, v in kwargs.items() if resource_id != k
                 }
@@ -603,7 +604,7 @@ def generate_nested_resource_id_draft_endpoint(
             log = LOGGER.new(
                 request_id=str(uuid.uuid4()), resource="Draft", request_type="POST"
             )
-            if set(kwargs.keys()) != set([resource_id]):
+            if set(kwargs.keys()) != {resource_id}:
                 unexpected_kwargs = {
                     k: v for k, v in kwargs.items() if resource_id != k
                 }
@@ -631,7 +632,7 @@ def generate_nested_resource_id_draft_endpoint(
             log = LOGGER.new(
                 request_id=str(uuid.uuid4()), resource="Draft", request_type="DELETE"
             )
-            if set(kwargs.keys()) != set([resource_id]):
+            if set(kwargs.keys()) != {resource_id}:
                 unexpected_kwargs = {
                     k: v for k, v in kwargs.items() if resource_id != k
                 }

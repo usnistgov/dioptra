@@ -56,7 +56,6 @@ def _depth_limited_repr(value: Any, out: io.TextIOBase, max_depth: int) -> None:
         max_depth: A maximum depth
     """
     if isinstance(value, sao.DeclarativeBase):
-
         # Let depth be only applicable here; the primary use case for this
         # function is to limit traversal of ORM object graphs, not arbitrary
         # data structures.

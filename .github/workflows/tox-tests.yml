@@ -30,42 +30,23 @@ jobs:
       matrix:
         python-version: ["3.11"]
         tox-testenv:
-          - "black"
-          - "flake8"
+          - "format"
           - "gitlint"
-          - "isort"
+          - "lint"
           - "mypy"
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: setup python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5.6.0
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
           python-version: ${{ matrix.python-version }}
 
-      - name: upgrade pip
-        run: |
-          # install pip=>20.1 to use "pip cache dir"
-          python3 -m pip install --upgrade pip
-
-      - name: get pip cache dir
-        id: pip-cache
-        run: echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
-
-      - name: cache dependencies
-        uses: actions/cache@v4.2.3
-        with:
-          path: ${{ steps.pip-cache.outputs.dir }}
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml', '**/tox.ini') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      - name: install dependencies
-        run: python3 -m pip install tox
-
       - name: run tox
-        run: python3 -m tox run -e ${{ matrix.tox-testenv }}
+        run: uvx -p ${{ matrix.python-version }} tox run -e ${{ matrix.tox-testenv }}
 
   unit-tests:
     runs-on: ${{ matrix.os }}
@@ -74,9 +55,9 @@ jobs:
         os: ["ubuntu-22.04", "windows-latest"]
         python-version: ["3.11"]
         tox-testenv:
-          - "clean,py311-pytest-cov,report"
-          - "py311-cookiecutter"
-          - "py311-extra"
+          - "clean,pytest-cov,report"
+          - "pytest-cookiecutter"
+          - "pytest-extra"
 
     steps:
       - uses: actions/checkout@v4
@@ -85,49 +66,15 @@ jobs:
         if: ${{ matrix.os == 'ubuntu-22.04' }}
         run: sudo apt install -y wamerican
 
-      - name: setup python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5.6.0
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
           python-version: ${{ matrix.python-version }}
 
-      - name: upgrade pip
-        run: |
-          # install pip=>20.1 to use "pip cache dir"
-          python3 -m pip install --upgrade pip
-
-      - name: get pip cache dir
-        if: ${{ matrix.os != 'windows-latest' }}
-        id: pip-cache
-        run: echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
-
-      - name: get pip cache dir (Windows)
-        if: ${{ matrix.os == 'windows-latest' }}
-        id: pip-cache-win
-        run: echo "dir=$(pip cache dir)" >> $env:GITHUB_OUTPUT
-
-      - name: cache dependencies
-        if: ${{ matrix.os != 'windows-latest' }}
-        uses: actions/cache@v4.2.3
-        with:
-          path: ${{ steps.pip-cache.outputs.dir }}
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml', '**/tox.ini') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      - name: cache dependencies (Windows)
-        if: ${{ matrix.os == 'windows-latest' }}
-        uses: actions/cache@v4.2.3
-        with:
-          path: ${{ steps.pip-cache-win.outputs.dir }}
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml', '**/tox.ini') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      - name: install dependencies
-        run: python3 -m pip install --upgrade tox
-
       - name: run tox
-        run: python3 -m tox run -e ${{ matrix.tox-testenv }}
+        run: uvx -p ${{ matrix.python-version }} tox run -e ${{ matrix.tox-testenv }}
 
       - name: archive the code coverage results
         if: ${{ contains(matrix.tox-testenv, 'pytest-cov') }}

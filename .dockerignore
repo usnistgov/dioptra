@@ -42,10 +42,12 @@ wheels
 **/.lsp_symlink
 **/.mypy_cache
 **/.pytest_cache
+**/.ruff_cache
 **/.tox
 **/.virtual_documents
 **/.vscode
 **/.vscode-cache
+**/.venv*
 **/*.egg-info
 **/*.md
 **/*.pyc

@@ -15,6 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """A File Type enumeration for handling the production of downloaded files."""
+
 import enum
 import io
 import itertools

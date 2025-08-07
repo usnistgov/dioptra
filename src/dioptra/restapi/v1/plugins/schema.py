@@ -15,6 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The schemas for serializing/deserializing Plugin resources."""
+
 import re
 
 from marshmallow import Schema, fields, validate
@@ -32,10 +33,10 @@ from dioptra.restapi.v1.schemas import (
     generate_base_resource_schema,
 )
 
-ALLOWED_PLUGIN_NAME_REGEX = re.compile(r"^([A-Z]|[A-Z_][A-Z0-9_]+)$", flags=re.IGNORECASE)  # noqa: B950; fmt: skip
-ALLOWED_PLUGIN_FILENAME_REGEX = re.compile(r"^(?!.*/_)(?!_/)([a-zA-Z][a-zA-Z0-9_]*/)*[a-zA-Z_][a-zA-Z0-9_]*\.py$")  # noqa: B950; fmt: skip
-ALLOWED_PLUGIN_TASK_REGEX = re.compile(r"^([A-Z]|[A-Z_][A-Z0-9_]+)$", flags=re.IGNORECASE)  # noqa: B950; fmt: skip
-ALLOWED_PLUGIN_TASK_PARAMETER_REGEX = re.compile(r"^([A-Z]|[A-Z_][A-Z0-9_]+)$", flags=re.IGNORECASE)  # noqa: B950; fmt: skip
+ALLOWED_PLUGIN_NAME_REGEX = re.compile(r"^([A-Z]|[A-Z_][A-Z0-9_]+)$", flags=re.IGNORECASE)  # fmt: skip
+ALLOWED_PLUGIN_FILENAME_REGEX = re.compile(r"^(?!.*/_)(?!_/)([a-zA-Z][a-zA-Z0-9_]*/)*[a-zA-Z_][a-zA-Z0-9_]*\.py$")  # fmt: skip
+ALLOWED_PLUGIN_TASK_REGEX = re.compile(r"^([A-Z]|[A-Z_][A-Z0-9_]+)$", flags=re.IGNORECASE)  # fmt: skip
+ALLOWED_PLUGIN_TASK_PARAMETER_REGEX = re.compile(r"^([A-Z]|[A-Z_][A-Z0-9_]+)$", flags=re.IGNORECASE)  # fmt: skip
 
 
 PluginRefBaseSchema = generate_base_resource_ref_schema("Plugin")
@@ -49,7 +50,7 @@ class PluginRefSchema(PluginRefBaseSchema):  # type: ignore
 
     name = fields.String(
         attribute="name",
-        metadata=dict(description="Name of the Plugin resource."),
+        metadata={"description": "Name of the Plugin resource."},
     )
 
 
@@ -58,7 +59,7 @@ class PluginSnapshotRefSchema(PluginSnapshotRefBaseSchema):  # type: ignore
 
     name = fields.String(
         attribute="name",
-        metadata=dict(description="Name of the Plugin resource."),
+        metadata={"description": "Name of the Plugin resource."},
     )
 
 
@@ -67,7 +68,7 @@ class PluginTaskParameterSchema(Schema):
 
     name = fields.String(
         attribute="name",
-        metadata=dict(description="Name of the PluginTaskParameter."),
+        metadata={"description": "Name of the PluginTaskParameter."},
         required=True,
         validate=validate.Regexp(
             ALLOWED_PLUGIN_TASK_PARAMETER_REGEX,
@@ -82,16 +83,14 @@ class PluginTaskParameterSchema(Schema):
     parameterTypeId = fields.Integer(
         attribute="parameter_type_id",
         data_key="parameterType",
-        metadata=dict(
-            description="The ID of the assigned PluginParameterType resource"
-        ),
+        metadata={"description": "The ID of the assigned PluginParameterType resource"},
         load_only=True,
         required=True,
     )
     parameterType = fields.Nested(
         PluginParameterTypeRefSchema,
         attribute="parameter_type",
-        metadata=dict(description="The assigned PluginParameterType resource."),
+        metadata={"description": "The assigned PluginParameterType resource."},
         dump_only=True,
     )
 
@@ -101,13 +100,13 @@ class PluginTaskInputParameterSchema(PluginTaskParameterSchema):
 
     required = fields.Boolean(
         attribute="required",
-        metadata=dict(
-            description=(
+        metadata={
+            "description": (
                 "Sets whether the input parameter is required (True) or optional "
                 "(False). If True, then this parameter must be assigned a value in "
                 "order to execute the PluginTask."
             ),
-        ),
+        },
         load_default=True,
     )
 
@@ -121,12 +120,12 @@ class PluginTaskSchema(Schema):
 
     id = fields.Integer(
         attribute="id",
-        metadata=dict(description="Id of the PluginTask."),
+        metadata={"description": "Id of the PluginTask."},
         dump_only=True,
     )
     name = fields.String(
         attribute="name",
-        metadata=dict(description="Name of the PluginTask."),
+        metadata={"description": "Name of the PluginTask."},
         required=True,
         validate=validate.Regexp(
             ALLOWED_PLUGIN_TASK_REGEX,
@@ -147,17 +146,17 @@ class FunctionTaskSchema(PluginTaskSchema):
         PluginTaskInputParameterSchema,
         attribute="input_params",
         many=True,
-        metadata=dict(
-            description="List of input PluginTaskParameters in this FunctionTask."
-        ),
+        metadata={
+            "description": "List of input PluginTaskParameters in this FunctionTask."
+        },
     )
     outputParams = fields.Nested(
         PluginTaskOutputParameterSchema,
         attribute="output_params",
         many=True,
-        metadata=dict(
-            description="List of output PluginTaskParameters in this FunctionTask."
-        ),
+        metadata={
+            "description": "List of output PluginTaskParameters in this FunctionTask."
+        },
     )
 
 
@@ -168,11 +167,11 @@ class ArtifactTaskSchema(PluginTaskSchema):
         PluginTaskOutputParameterSchema,
         attribute="output_params",
         many=True,
-        metadata=dict(
-            description=(
+        metadata={
+            "description": (
                 "List of output PluginTaskParameters produced by this ArtifactTask."
             )
-        ),
+        },
     )
 
 
@@ -183,13 +182,13 @@ class PluginTaskContainerSchema(Schema):
         FunctionTaskSchema,
         attribute="functions",
         many=True,
-        metadata=dict(description=("List of function tasks.")),
+        metadata={"description": ("List of function tasks.")},
     )
     artifacts = fields.Nested(
         ArtifactTaskSchema,
         attribute="artifacts",
         many=True,
-        metadata=dict(description=("List of artifact tasks.")),
+        metadata={"description": ("List of artifact tasks.")},
     )
 
 
@@ -202,16 +201,16 @@ class PluginFileRefSchema(PluginFileRefBaseSchema):  # type: ignore
     pluginId = fields.Integer(
         attribute="plugin_id",
         data_key="plugin",
-        metadata=dict(description="ID for the Plugin resource this file belongs to."),
+        metadata={"description": "ID for the Plugin resource this file belongs to."},
     )
     filename = fields.String(
         attribute="filename",
-        metadata=dict(description="Filename of the PluginFile resource."),
+        metadata={"description": "Filename of the PluginFile resource."},
     )
     tasks = fields.Nested(
         PluginTaskContainerSchema,
         attribute="tasks",
-        metadata=dict(description="Tasks associated with the PluginFile resource."),
+        metadata={"description": "Tasks associated with the PluginFile resource."},
         many=False,
     )
 
@@ -224,7 +223,7 @@ class PluginMutableFieldsSchema(Schema):
 
     name = fields.String(
         attribute="name",
-        metadata=dict(description="Name of the Plugin resource."),
+        metadata={"description": "Name of the Plugin resource."},
         required=True,
         validate=validate.Regexp(
             ALLOWED_PLUGIN_NAME_REGEX,
@@ -238,7 +237,7 @@ class PluginMutableFieldsSchema(Schema):
     )
     description = fields.String(
         attribute="description",
-        metadata=dict(description="Description of the Plugin resource."),
+        metadata={"description": "Description of the Plugin resource."},
         load_default=None,
     )
 
@@ -249,7 +248,7 @@ class PluginSchema(PluginMutableFieldsSchema, PluginBaseSchema):  # type: ignore
     files = fields.Nested(
         PluginFileRefSchema,
         attribute="files",
-        metadata=dict(description="Files associated with the Plugin resource."),
+        metadata={"description": "Files associated with the Plugin resource."},
         many=True,
         dump_only=True,
     )
@@ -261,7 +260,7 @@ class PluginPageSchema(BasePageSchema):
     data = fields.Nested(
         PluginSchema,
         many=True,
-        metadata=dict(description="List of Plugin resources in the current page."),
+        metadata={"description": "List of Plugin resources in the current page."},
     )
 
 
@@ -282,7 +281,7 @@ class PluginFileMutableFieldsSchema(Schema):
 
     filename = fields.String(
         attribute="filename",
-        metadata=dict(description="Name of the PluginFile resource."),
+        metadata={"description": "Name of the PluginFile resource."},
         required=True,
         validate=validate.Regexp(
             ALLOWED_PLUGIN_FILENAME_REGEX,
@@ -296,18 +295,18 @@ class PluginFileMutableFieldsSchema(Schema):
     )
     contents = fields.String(
         attribute="contents",
-        metadata=dict(description="Contents of the file."),
+        metadata={"description": "Contents of the file."},
         required=True,
     )
     tasks = fields.Nested(
         PluginTaskContainerSchema,
         attribute="tasks",
-        metadata=dict(description="Tasks associated with the PluginFile resource."),
+        metadata={"description": "Tasks associated with the PluginFile resource."},
         many=False,
     )
     description = fields.String(
         attribute="description",
-        metadata=dict(description="Description of the PluginFile resource."),
+        metadata={"description": "Description of the PluginFile resource."},
         load_default=None,
     )
 
@@ -318,7 +317,7 @@ class PluginFileSchema(PluginFileMutableFieldsSchema, PluginFileBaseSchema):  # 
     plugin = fields.Nested(
         PluginRefSchema,
         attribute="plugin",
-        metadata=dict(description="The Plugin resource this file belongs to."),
+        metadata={"description": "The Plugin resource this file belongs to."},
         dump_only=True,
     )
 
@@ -329,7 +328,7 @@ class PluginFilePageSchema(BasePageSchema):
     data = fields.Nested(
         PluginFileSchema,
         many=True,
-        metadata=dict(description="List of PluginFile resources in the current page."),
+        metadata={"description": "List of PluginFile resources in the current page."},
     )
 
 

@@ -15,6 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The module defining the endpoints for Snapshots."""
+
 import uuid
 from typing import Any, Callable, Type, cast
 from urllib.parse import unquote
@@ -63,7 +64,7 @@ def generate_resource_snapshots_endpoint(
         The parameterized ResourceSnapshotsEndpoint class.
     """
 
-    # Based on: https://github.com/apryor6/flask_accepts/blob/05567461c421a534d6fc6e122d5e086b0b0e53aa/flask_accepts/utils.py#L154-L160  # noqa: B950
+    # Based on: https://github.com/apryor6/flask_accepts/blob/05567461c421a534d6fc6e122d5e086b0b0e53aa/flask_accepts/utils.py#L154-L160
     if isinstance(page_schema, Schema):
         model_name = "Snapshots" + "".join(
             page_schema.__class__.__name__.rsplit("Schema", 1)
@@ -148,7 +149,7 @@ def generate_resource_snapshots_id_endpoint(
         The parameterized ResourceSnapshotsIdEndpoint class.
     """
 
-    # Based on: https://github.com/apryor6/flask_accepts/blob/05567461c421a534d6fc6e122d5e086b0b0e53aa/flask_accepts/utils.py#L154-L160  # noqa: B950
+    # Based on: https://github.com/apryor6/flask_accepts/blob/05567461c421a534d6fc6e122d5e086b0b0e53aa/flask_accepts/utils.py#L154-L160
     if isinstance(response_schema, Schema):
         model_name = "SnapshotsId" + "".join(
             response_schema.__class__.__name__.rsplit("Schema", 1)
@@ -223,7 +224,7 @@ def generate_nested_resource_snapshots_endpoint(
         The parameterized ResourceSnapshotsEndpoint class.
     """
 
-    # Based on: https://github.com/apryor6/flask_accepts/blob/05567461c421a534d6fc6e122d5e086b0b0e53aa/flask_accepts/utils.py#L154-L160  # noqa: B950
+    # Based on: https://github.com/apryor6/flask_accepts/blob/05567461c421a534d6fc6e122d5e086b0b0e53aa/flask_accepts/utils.py#L154-L160
     if isinstance(page_schema, Schema):
         model_name = "NestedSnapshots" + "".join(
             page_schema.__class__.__name__.rsplit("Schema", 1)
@@ -262,7 +263,7 @@ def generate_nested_resource_snapshots_endpoint(
             log = LOGGER.new(
                 request_id=str(uuid.uuid4()), resource="Snapshots", request_type="GET"
             )
-            if set(kwargs.keys()) != set([resource_id]):
+            if set(kwargs.keys()) != {resource_id}:
                 unexpected_kwargs = {
                     k: v for k, v in kwargs.items() if resource_id != k
                 }
@@ -328,7 +329,7 @@ def generate_nested_resource_snapshots_id_endpoint(
     route_singular = resource_route[:-1]
     resource_id = f"{route_singular}Id"
 
-    # Based on: https://github.com/apryor6/flask_accepts/blob/05567461c421a534d6fc6e122d5e086b0b0e53aa/flask_accepts/utils.py#L154-L160  # noqa: B950
+    # Based on: https://github.com/apryor6/flask_accepts/blob/05567461c421a534d6fc6e122d5e086b0b0e53aa/flask_accepts/utils.py#L154-L160
     if isinstance(response_schema, Schema):
         model_name = "NestedSnapshotsId" + "".join(
             response_schema.__class__.__name__.rsplit("Schema", 1)
@@ -365,7 +366,7 @@ def generate_nested_resource_snapshots_id_endpoint(
             log = LOGGER.new(
                 request_id=str(uuid.uuid4()), resource="Snapshots", request_type="GET"
             )
-            if set(kwargs.keys()) != set([resource_id]):
+            if set(kwargs.keys()) != {resource_id}:
                 unexpected_kwargs = {
                     k: v for k, v in kwargs.items() if resource_id != k
                 }

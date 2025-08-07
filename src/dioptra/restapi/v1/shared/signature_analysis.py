@@ -17,6 +17,7 @@
 """
 Extract task plugin function signature information from Python source code.
 """
+
 import ast as ast_module  # how many variables named "ast" might we have...
 import itertools
 import re
@@ -292,7 +293,6 @@ def _is_task_plugin(
         True if the function definition is for a task plugin; False if not
     """
     for decorator_expr in func_def.decorator_list:
-
         # we will only handle simple decorator expressions: simple dotted
         # names, optionally with a function call.
         if _is_simple_dotted_name(decorator_expr):
@@ -329,7 +329,6 @@ def _find_plugins(ast: ast_module.Module) -> Iterator[ast_module.FunctionDef]:
     if isinstance(ast, ast_module.Module):
         symbol_tree: dict[str, Any] = {}
         for stmt in ast.body:
-
             if isinstance(stmt, (ast_module.Import, ast_module.ImportFrom)):
                 _process_import(stmt, symbol_tree)
 
@@ -699,7 +698,6 @@ def get_plugin_signatures(
         raise InvalidPythonError(f"Failed to parse Python source: {e}") from e
 
     for plugin_func in _find_plugins(ast):
-
         # We need to come up with a syntax for unique type names.  But no
         # matter what syntax we choose, a user's type annotations might collide
         # with it.  So we can't easily do this in one pass where we generate a

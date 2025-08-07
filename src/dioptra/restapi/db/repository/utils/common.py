@@ -17,6 +17,7 @@
 """
 Functionality common across repos and repo utils
 """
+
 import enum
 import typing
 

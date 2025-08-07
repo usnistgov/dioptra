@@ -530,8 +530,7 @@ def _types_compatible_structured(
     # to inheritance (e.g. tuple[int, number] needs to be compatible with
     # list[number]).
     if (
-        invocation_arg_type.structure.struct_type
-        is types.StructureType.TUPLE  # noqa: E721
+        invocation_arg_type.structure.struct_type is types.StructureType.TUPLE  # noqa: E721
         and task_param_type.structure.struct_type is types.StructureType.LIST
     ):
         tuple_elt_types = invocation_arg_type.structure.struct_def
@@ -556,16 +555,14 @@ def _types_compatible_structured(
     # Structure types are the same; must dig into their components and
     # compare
     elif (
-        invocation_arg_type.structure.struct_type
-        is types.StructureType.MAPPING  # noqa: E721
+        invocation_arg_type.structure.struct_type is types.StructureType.MAPPING  # noqa: E721
     ):
         result = _mapping_structures_compatible(
             invocation_arg_type.structure, task_param_type.structure
         )
 
     elif (
-        invocation_arg_type.structure.struct_type
-        is types.StructureType.LIST  # noqa: E721
+        invocation_arg_type.structure.struct_type is types.StructureType.LIST  # noqa: E721
     ):
         # Redundant, for mypy.
         assert isinstance(invocation_arg_type.structure.struct_def, types.Type)

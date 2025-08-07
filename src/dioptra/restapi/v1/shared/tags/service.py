@@ -108,7 +108,7 @@ class ResourceTagsService(object):
         resource = self._resource_id_service.get(resource_id, log=log)
 
         tag_ids = list(set(tag_ids))
-        existing_tag_ids = set(tag.tag_id for tag in resource.tags)
+        existing_tag_ids = {tag.tag_id for tag in resource.tags}
         tags = [
             self._tag_id_service.get(
                 tag_id, error_if_not_found=error_if_not_found, log=log

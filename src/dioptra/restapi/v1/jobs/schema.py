@@ -31,7 +31,7 @@ from dioptra.restapi.v1.schemas import (
     generate_base_resource_schema,
 )
 
-ALLOWED_METRIC_NAME_REGEX = re.compile(r"^([A-Z]|[A-Z_][A-Z0-9_]+)$", flags=re.IGNORECASE)  # noqa: B950; fmt: skip
+ALLOWED_METRIC_NAME_REGEX = re.compile(r"^([A-Z]|[A-Z_][A-Z0-9_]+)$", flags=re.IGNORECASE)  # fmt: skip
 
 
 JobRefSchema = generate_base_resource_ref_schema("Job")
@@ -43,14 +43,14 @@ class JobMlflowRunSchema(Schema):
 
     mlflowRunId = fields.UUID(
         attribute="mlflow_run_id",
-        metadata=dict(description="UUID for the associated Mlflow Run."),
+        metadata={"description": "UUID for the associated Mlflow Run."},
     )
 
 
 class JobIdSchema(Schema):
     id = fields.Integer(
         attribute="id",
-        metadata=dict(description="ID for the Job resource."),
+        metadata={"description": "ID for the Job resource."},
         dump_only=True,
     )
 
@@ -58,7 +58,7 @@ class JobIdSchema(Schema):
 class MetricsSchema(Schema):
     name = fields.String(
         attribute="name",
-        metadata=dict(description="The name of the metric."),
+        metadata={"description": "The name of the metric."},
         required=True,
         validate=validate.Regexp(
             ALLOWED_METRIC_NAME_REGEX,
@@ -73,12 +73,12 @@ class MetricsSchema(Schema):
 
     value = fields.Float(
         attribute="value",
-        metadata=dict(description="The value of the metric."),
+        metadata={"description": "The value of the metric."},
         required=True,
     )
     step = fields.Integer(
         attribute="step",
-        metadata=dict(description="The step value for the metric."),
+        metadata={"description": "The step value for the metric."},
         load_only=True,
         required=False,
         load_default=0,
@@ -88,19 +88,19 @@ class MetricsSchema(Schema):
 class MetricsSnapshotSchema(Schema):
     name = fields.String(
         attribute="name",
-        metadata=dict(description="The name of the metric."),
+        metadata={"description": "The name of the metric."},
     )
     value = fields.Float(
         attribute="value",
-        metadata=dict(description="The value of the metric."),
+        metadata={"description": "The value of the metric."},
     )
     step = fields.Integer(
         attribute="step",
-        metadata=dict(description="The step value for the metric."),
+        metadata={"description": "The step value for the metric."},
     )
     timestamp = fields.Integer(
         attribute="timestamp",
-        metadata=dict(description="The timestamp of the metric in milliseconds."),
+        metadata={"description": "The timestamp of the metric in milliseconds."},
     )
 
 
@@ -108,7 +108,7 @@ class MetricsSnapshotPageSchema(BasePageSchema):
     data = fields.Nested(
         MetricsSnapshotSchema,
         many=True,
-        metadata=dict(description="List of Metric Snapshots in the current page."),
+        metadata={"description": "List of Metric Snapshots in the current page."},
     )
 
 
@@ -116,9 +116,9 @@ class JobIdMetricsSchema(JobIdSchema):
     metrics = fields.Nested(
         MetricsSchema,
         attribute="metrics",
-        metadata=dict(
-            description="A list of the latest metrics associated with the job."
-        ),
+        metadata={
+            "description": "A list of the latest metrics associated with the job."
+        },
         many=True,
     )
 
@@ -127,7 +127,7 @@ class ExperimentJobsMetricsSchema(BasePageSchema):
     data = fields.Nested(
         JobIdMetricsSchema,
         many=True,
-        metadata=dict(description="List of metrics for each job in the experiment"),
+        metadata={"description": "List of metrics for each job in the experiment"},
     )
 
 
@@ -139,10 +139,10 @@ class JobStatusSchema(JobIdSchema):
         validate=validate.OneOf(
             ["queued", "started", "deferred", "finished", "failed", "reset"],
         ),
-        metadata=dict(
-            description="The current status of the job. The allowed values are: "
+        metadata={
+            "description": "The current status of the job. The allowed values are: "
             "queued, started, deferred, finished, failed, reset.",
-        ),
+        },
     )
 
 
@@ -152,11 +152,11 @@ JobBaseSchema = generate_base_resource_schema("Job", snapshot=True)
 class JobArtifactValueSchema(Schema):
     id = fields.Int(
         attribute="id",
-        metadata=dict(description="Artifact Resoure Id."),
+        metadata={"description": "Artifact Resoure Id."},
     )
     snapshotId = fields.Int(
         attribute="snapshot_id",
-        metadata=dict(description="Artifact Resoure Snapshot Id."),
+        metadata={"description": "Artifact Resoure Snapshot Id."},
     )
 
 
@@ -169,39 +169,39 @@ class JobSchema(JobBaseSchema):  # type: ignore
 
     description = fields.String(
         attribute="description",
-        metadata=dict(description="Description of the Job resource."),
+        metadata={"description": "Description of the Job resource."},
         load_default=None,
     )
     queueId = fields.Integer(
         attribute="queue_id",
         data_key="queue",
-        metadata=dict(description="An integer identifying a registered queue."),
+        metadata={"description": "An integer identifying a registered queue."},
         load_only=True,
         required=True,
     )
     queue = fields.Nested(
         QueueSnapshotRefSchema,
         attribute="queue",
-        metadata=dict(description="The active queue used to run the Job."),
+        metadata={"description": "The active queue used to run the Job."},
         dump_only=True,
     )
     experiment = fields.Nested(
         ExperimentSnapshotRefSchema,
         attribute="experiment",
-        metadata=dict(description="The registered experiment associated with the Job."),
+        metadata={"description": "The registered experiment associated with the Job."},
         dump_only=True,
     )
     entrypointId = fields.Integer(
         attribute="entrypoint_id",
         data_key="entrypoint",
-        metadata=dict(description="An integer identifying a registered entry point."),
+        metadata={"description": "An integer identifying a registered entry point."},
         load_only=True,
         required=True,
     )
     entrypoint = fields.Nested(
         EntrypointSnapshotRefSchema,
         attribute="entrypoint",
-        metadata=dict(description="The entry point associated with the Job."),
+        metadata={"description": "The entry point associated with the Job."},
         dump_only=True,
     )
     values = fields.Dict(
@@ -209,11 +209,11 @@ class JobSchema(JobBaseSchema):  # type: ignore
         values=fields.String(),
         attribute="values",
         allow_none=True,
-        metadata=dict(
-            description=(
+        metadata={
+            "description": (
                 "A dictionary of keyword arguments to pass to the Job's Entrypoint."
             ),
-        ),
+        },
         load_default=dict,
     )
     artifactValues = fields.Dict(
@@ -221,31 +221,33 @@ class JobSchema(JobBaseSchema):  # type: ignore
         values=fields.Nested(JobArtifactValueSchema),
         attribute="artifact_values",
         allow_none=True,
-        metadata=dict(
-            description=("A dictionary of artifacts to pass to the Job's Entrypoint."),
-        ),
+        metadata={
+            "description": (
+                "A dictionary of artifacts to pass to the Job's Entrypoint."
+            ),
+        },
     )
     timeout = fields.String(
         attribute="timeout",
         load_default="24h",
-        metadata=dict(
-            description="The maximum alloted time for a job before it times out and "
+        metadata={
+            "description": "The maximum alloted time for a job before it times out and "
             "is stopped. If omitted, the job timeout will default to 24 hours.",
-        ),
+        },
     )
     status = fields.String(
         attribute="status",
-        metadata=dict(
-            description="The current status of the job. The allowed values are: "
+        metadata={
+            "description": "The current status of the job. The allowed values are: "
             "queued, started, deferred, finished, failed.",
-        ),
+        },
         dump_only=True,
     )
     artifacts = fields.Nested(
         ArtifactRefSchema,
         attribute="artifacts",
         many=True,
-        metadata=dict(description="Artifacts created by the Job resource."),
+        metadata={"description": "Artifacts created by the Job resource."},
         dump_only=True,
     )
 
@@ -257,14 +259,14 @@ class JobCreateRequestSchema(JobSchema):
         attribute="entrypoint_snapshot_id",
         data_key="entrypointSnapshot",
         allow_none=True,
-        metadata=dict(
-            description=(
+        metadata={
+            "description": (
                 "An integer identifying a snapshot ID associated with the entrypoint. "
                 "If specified, the snapshotted version of the entrypoint will be used "
                 "to run the job. If not specified, the job will default to using the "
                 "latest version of the entrypoint."
             )
-        ),
+        },
         required=False,
         load_default=None,
     )
@@ -276,7 +278,7 @@ class JobPageSchema(BasePageSchema):
     data = fields.Nested(
         JobSchema,
         many=True,
-        metadata=dict(description="List of Job resources in the current page."),
+        metadata={"description": "List of Job resources in the current page."},
     )
 
 

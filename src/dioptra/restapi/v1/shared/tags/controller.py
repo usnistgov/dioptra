@@ -199,7 +199,7 @@ def generate_nested_resource_tags_endpoint(
             log = LOGGER.new(
                 request_id=str(uuid.uuid4()), resource="Tag", request_type="GET"
             )
-            if set(kwargs.keys()) != set([resource_id]):
+            if set(kwargs.keys()) != {resource_id}:
                 unexpected_kwargs = {
                     k: v for k, v in kwargs.items() if resource_id != k
                 }
@@ -220,7 +220,7 @@ def generate_nested_resource_tags_endpoint(
             log = LOGGER.new(
                 request_id=str(uuid.uuid4()), resource="Tag", request_type="POST"
             )
-            if set(kwargs.keys()) != set([resource_id]):
+            if set(kwargs.keys()) != {resource_id}:
                 unexpected_kwargs = {
                     k: v for k, v in kwargs.items() if resource_id != k
                 }
@@ -247,7 +247,7 @@ def generate_nested_resource_tags_endpoint(
             log = LOGGER.new(
                 request_id=str(uuid.uuid4()), resource="Tag", request_type="POST"
             )
-            if set(kwargs.keys()) != set([resource_id]):
+            if set(kwargs.keys()) != {resource_id}:
                 unexpected_kwargs = {
                     k: v for k, v in kwargs.items() if resource_id != k
                 }
@@ -273,7 +273,7 @@ def generate_nested_resource_tags_endpoint(
             log = LOGGER.new(
                 request_id=str(uuid.uuid4()), resource="Tag", request_type="DELETE"
             )
-            if set(kwargs.keys()) != set([resource_id]):
+            if set(kwargs.keys()) != {resource_id}:
                 unexpected_kwargs = {
                     k: v for k, v in kwargs.items() if resource_id != k
                 }
@@ -334,7 +334,7 @@ def generate_nested_resource_tags_id_endpoint(
             log = LOGGER.new(
                 request_id=str(uuid.uuid4()), resource="Tag", request_type="DELETE"
             )
-            if set(kwargs.keys()) != set([resource_id]):
+            if set(kwargs.keys()) != {resource_id}:
                 unexpected_kwargs = {
                     k: v for k, v in kwargs.items() if resource_id != k
                 }

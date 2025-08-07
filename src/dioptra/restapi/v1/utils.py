@@ -676,7 +676,7 @@ def build_entrypoint(entrypoint_dict: EntrypointDict) -> dict[str, Any]:
     plugins = [
         PluginWithFilesDict(
             plugin=entry_point_plugin.plugin,
-            plugin_files=[file for file in entry_point_plugin.plugin.plugin_files],
+            plugin_files=list(entry_point_plugin.plugin.plugin_files),
             has_draft=False,
         )
         for entry_point_plugin in entrypoint.entry_point_plugins
@@ -685,9 +685,7 @@ def build_entrypoint(entrypoint_dict: EntrypointDict) -> dict[str, Any]:
     artifact_plugins = [
         PluginWithFilesDict(
             plugin=entry_point_artifact_plugin.plugin,
-            plugin_files=[
-                file for file in entry_point_artifact_plugin.plugin.plugin_files
-            ],
+            plugin_files=list(entry_point_artifact_plugin.plugin.plugin_files),
             has_draft=False,
         )
         for entry_point_artifact_plugin in entrypoint.entry_point_artifact_plugins
@@ -1204,7 +1202,7 @@ def build_resource_draft(
         schema = draft_schema()
     payload = schema.dump(draft.payload["resource_data"])
 
-    metadata = dict()
+    metadata = {}
     if num_other_drafts is not None:
         metadata["num_other_drafts"] = num_other_drafts
     return {

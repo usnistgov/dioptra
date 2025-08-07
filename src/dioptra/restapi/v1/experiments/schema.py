@@ -15,6 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The schemas for serializing/deserializing Experiment resources."""
+
 from marshmallow import Schema, fields
 
 from dioptra.restapi.v1.schemas import (
@@ -38,7 +39,7 @@ class ExperimentRefSchema(ExperimentRefBaseSchema):  # type: ignore
 
     name = fields.String(
         attribute="name",
-        metadata=dict(description="Name of the Experiment resource."),
+        metadata={"description": "Name of the Experiment resource."},
     )
 
 
@@ -47,7 +48,7 @@ class ExperimentSnapshotRefSchema(ExperimentSnapshotRefBaseSchema):  # type: ign
 
     name = fields.String(
         attribute="name",
-        metadata=dict(description="Name of the Experiment resource."),
+        metadata={"description": "Name of the Experiment resource."},
     )
 
 
@@ -56,12 +57,12 @@ class ExperimentMutableFieldsSchema(Schema):
 
     name = fields.String(
         attribute="name",
-        metadata=dict(description="Name of the Experiment resource."),
+        metadata={"description": "Name of the Experiment resource."},
         required=True,
     )
     description = fields.String(
         attribute="description",
-        metadata=dict(description="Description of the Experiment resource."),
+        metadata={"description": "Description of the Experiment resource."},
         load_default=None,
     )
     entrypointIds = fields.List(
@@ -69,11 +70,11 @@ class ExperimentMutableFieldsSchema(Schema):
         attribute="entrypoint_ids",
         data_key="entrypoints",
         allow_none=True,
-        metadata=dict(
-            description="A list of Entrypoint IDs.",
-        ),
+        metadata={
+            "description": "A list of Entrypoint IDs.",
+        },
         load_only=True,
-        load_default=list(),
+        load_default=[],
     )
 
 
@@ -89,7 +90,7 @@ class ExperimentSchema(ExperimentMutableFieldsSchema, ExperimentBaseSchema):  # 
         EntrypointRefSchema,
         attribute="entrypoints",
         many=True,
-        metadata=dict(description="List of associated Entrypoint resources."),
+        metadata={"description": "List of associated Entrypoint resources."},
         dump_only=True,
     )
 
@@ -100,10 +101,10 @@ class ExperimentDraftSchema(ExperimentMutableFieldsSchema, ExperimentBaseSchema)
         attribute="entrypoint_ids",
         data_key="entrypoints",
         allow_none=True,
-        metadata=dict(
-            description="A list of Entrypoint IDs.",
-        ),
-        load_default=list(),
+        metadata={
+            "description": "A list of Entrypoint IDs.",
+        },
+        load_default=[],
     )
 
 
@@ -113,7 +114,7 @@ class ExperimentPageSchema(BasePageSchema):
     data = fields.Nested(
         ExperimentSchema,
         many=True,
-        metadata=dict(description="List of Experiment resources in the current page."),
+        metadata={"description": "List of Experiment resources in the current page."},
     )
 
 
