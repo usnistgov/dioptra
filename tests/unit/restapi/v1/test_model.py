@@ -20,18 +20,18 @@ This module contains a set of tests that validate the CRUD operations and additi
 functionalities for the model entity. The tests ensure that the models can be
 registered, renamed, deleted, and locked/unlocked as expected through the REST API.
 """
+
 from http import HTTPStatus
 from typing import Any
 
 import pytest
-from flask_sqlalchemy import SQLAlchemy
 from mlflow.tracking import MlflowClient
 
 from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
 
 from ..lib import asserts, helpers, routines
-from ..test_utils import assert_retrieving_resource_works
+from ..test_utils import assert_retrieving_resource_works, assert_searchable_field_works
 
 # -- Assertions ------------------------------------------------------------------------
 
@@ -150,7 +150,6 @@ def assert_retrieving_model_by_id_works(
 
     name = f"resource_{response.json()['id']:09d}"
     assert mlflow_client.get_registered_model(name).name == name
-
 
 def assert_retrieving_models_works(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
@@ -308,6 +307,7 @@ def assert_retrieving_model_versions_works(
     search: str | None = None,
     paging_info: dict[str, Any] | None = None,
 ) -> None:
+    """"""
     query_string: dict[str, Any] = {}
 
     if search is not None:
@@ -354,9 +354,9 @@ def assert_model_version_description_matches_expected_description(
 def test_create_model(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     mlflow_client: MlflowClient,
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
 ) -> None:
+    """"""
     name = "my_model"
     description = "The first model."
     user_id = auth_account["id"]
@@ -386,7 +386,6 @@ def test_create_model(
 
 def test_model_get_all(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
 ) -> None:
@@ -404,6 +403,32 @@ def test_model_get_all(
 
 
 @pytest.mark.parametrize(
+    "field, value, expected_count",
+    [
+        ("name", None, 1),
+        ("description", None, 2),
+        ("tag", "Foo", 0),
+    ],
+)
+def test_model_searchable_fields(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_models: dict[str, Any],
+    field: str,
+    value: str | None,
+    expected_count: int,
+) -> None:
+    model = registered_models["model1"]
+    search_value = model[field] if value is None else value
+    assert_searchable_field_works(
+        dioptra_client=dioptra_client.models,
+        term=field,
+        value=search_value,
+        expected_count=expected_count,
+    )
+
+
+@pytest.mark.parametrize(
     "sort_by, descending , expected",
     [
         ("name", True, ["model1", "model3", "model2"]),
@@ -414,7 +439,6 @@ def test_model_get_all(
 )
 def test_model_sort(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
     sort_by: str,
@@ -440,7 +464,6 @@ def test_model_sort(
 
 def test_model_search_query(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
 ) -> None:
@@ -470,7 +493,6 @@ def test_model_search_query(
 
 def test_model_group_query(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
 ) -> None:
@@ -493,7 +515,6 @@ def test_model_group_query(
 
 def test_cannot_register_existing_model_name(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
 ) -> None:
@@ -516,7 +537,6 @@ def test_cannot_register_existing_model_name(
 
 def test_rename_model(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
 ) -> None:
@@ -573,7 +593,6 @@ def test_rename_model(
 
 def test_delete_model_by_id(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
 ) -> None:
@@ -594,7 +613,6 @@ def test_delete_model_by_id(
 
 def test_manage_existing_model_draft(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
 ) -> None:
@@ -656,7 +674,6 @@ def test_manage_existing_model_draft(
 
 def test_manage_new_model_drafts(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
 ) -> None:
     """Test that drafts of model can be created and managed by the user
@@ -712,7 +729,6 @@ def test_manage_new_model_drafts(
 
 def test_manage_model_snapshots(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
     registered_model_versions: dict[str, Any],
@@ -749,7 +765,6 @@ def test_manage_model_snapshots(
 
 def test_tag_model(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
     registered_tags: dict[str, Any],
@@ -789,7 +804,6 @@ def test_tag_model(
 def test_create_model_version(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     mlflow_client: MlflowClient,
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
     registered_artifacts: dict[str, Any],
@@ -832,7 +846,6 @@ def test_create_model_version(
 
 def test_model_versions_get_all(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
     registered_model_versions: dict[str, Any],
@@ -852,9 +865,35 @@ def test_model_versions_get_all(
     )
 
 
+@pytest.mark.parametrize(
+    "field, value, expected_count",
+    [
+        ("description", None, 1),
+        ("tag", "Foo", 0),
+    ],
+)
+def test_model_version_searchable_fields(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_models: dict[str, Any],
+    registered_model_versions: dict[str, Any],
+    field: str,
+    value: str | None,
+    expected_count: int,
+) -> None:
+    model_version = registered_model_versions["version1"]
+    search_value = model_version[field] if value is None else value
+    assert_searchable_field_works(
+        dioptra_client=dioptra_client.models.versions,
+        term=field,
+        value=search_value,
+        expected_count=expected_count,
+        context={"model_id": registered_models["model1"]["id"]},
+    )
+
+
 def test_model_version_search_query(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
     registered_model_versions: dict[str, Any],
@@ -898,7 +937,6 @@ def test_model_version_search_query(
 
 def test_modify_model_version(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
     registered_model_versions: dict[str, Any],
