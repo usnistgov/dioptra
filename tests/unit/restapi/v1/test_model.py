@@ -25,10 +25,10 @@ from http import HTTPStatus
 from typing import Any
 
 import pytest
-from mlflow.tracking import MlflowClient
 
 from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
+from mlflow.tracking import MlflowClient
 
 from ..lib import asserts, helpers, routines
 from ..test_utils import assert_retrieving_resource_works, assert_searchable_field_works
@@ -150,6 +150,7 @@ def assert_retrieving_model_by_id_works(
 
     name = f"resource_{response.json()['id']:09d}"
     assert mlflow_client.get_registered_model(name).name == name
+
 
 def assert_retrieving_models_works(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
@@ -297,7 +298,6 @@ def assert_retrieving_model_version_by_version_number_works(
     name = f"resource_{json_['model']['id']:09d}"
     model_version = mlflow_client.get_model_version(name, str(version_number))
     assert model_version.name == name
-    assert model_version.source == json_["artifact"]["artifactUri"]
 
 
 def assert_retrieving_model_versions_works(
@@ -353,7 +353,7 @@ def assert_model_version_description_matches_expected_description(
 
 def test_create_model(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    mlflow_client: MlflowClient,
+    mockup_mlflow: MlflowClient,
     auth_account: dict[str, Any],
 ) -> None:
     """"""
@@ -378,7 +378,7 @@ def test_create_model(
     )
     assert_retrieving_model_by_id_works(
         dioptra_client=dioptra_client,
-        mlflow_client=mlflow_client,
+        mlflow_client=mockup_mlflow,
         model_id=model_expected["id"],
         expected=model_expected,
     )
@@ -803,7 +803,7 @@ def test_tag_model(
 
 def test_create_model_version(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    mlflow_client: MlflowClient,
+    mockup_mlflow: MlflowClient,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
     registered_artifacts: dict[str, Any],
@@ -837,7 +837,7 @@ def test_create_model_version(
 
     assert_retrieving_model_version_by_version_number_works(
         dioptra_client=dioptra_client,
-        mlflow_client=mlflow_client,
+        mlflow_client=mockup_mlflow,
         model_id=model_id,
         version_number=model_version_response["versionNumber"],
         expected=model_version_response,

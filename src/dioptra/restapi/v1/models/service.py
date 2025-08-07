@@ -30,7 +30,7 @@ from dioptra.restapi.errors import (
     BackendDatabaseError,
     EntityDoesNotExistError,
     EntityExistsError,
-    MLFlowError,
+    # MLFlowError, TODO: re-create this
     SortParameterValidationError,
 )
 from dioptra.restapi.v1 import utils

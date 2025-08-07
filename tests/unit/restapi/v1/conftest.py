@@ -27,21 +27,21 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from typing import Any, cast
 
-import mlflow
-import mlflow.artifacts
 import pytest
 import tomli as toml
 from flask.testing import FlaskClient
 from freezegun import freeze_time
-from mlflow.tracking import MlflowClient
 from pytest import MonkeyPatch
 
+import mlflow
+import mlflow.artifacts
 from dioptra.client import (
     DioptraFile,
     select_files_in_directory,
     select_one_or_more_files,
 )
 from dioptra.sdk.utilities.paths import set_cwd
+from mlflow.tracking import MlflowClient
 
 from ..lib import actions, mock_mlflow, mock_rq
 
@@ -809,17 +809,7 @@ def registered_mlflowrun(
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
 ) -> dict[str, Any]:
-    run_ids = []
-    # should be able to do this without creating an experiment
-    # leaving it here for now
-    experiment_id = mlflow.create_experiment("experiment1")
-    with mlflow.start_run(experiment_id=experiment_id) as run:
-        run_ids.append(run.info.run_id)
-    with mlflow.start_run(experiment_id=experiment_id) as run:
-        run_ids.append(run.info.run_id)
-    with mlflow.start_run(experiment_id=experiment_id) as run:
-        run_ids.append(run.info.run_id)
-    mlflowruns = {"job1": run_ids[0], "job2": run_ids[1], "job3": run_ids[2]}
+    mlflowruns = {"job1": uuid.uuid4(), "job2": uuid.uuid4(), "job3": uuid.uuid4()}
 
     responses = actions.post_mlflowruns(
         client=client, mlflowruns=mlflowruns, registered_jobs=registered_jobs
@@ -912,7 +902,3 @@ def mockup_mlflow(monkeypatch: MonkeyPatch) -> mock_mlflow.MockMlflowClient:
         mlflow.artifacts, "download_artifacts", mock_mlflow.download_artifacts
     )
     return mock_mlflow.MockMlflowClient()
-
-
-def mlflow_client() -> MlflowClient:
-    return MlflowClient()

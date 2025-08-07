@@ -23,9 +23,10 @@ from pathlib import Path, PurePosixPath
 from typing import Any, Optional, Tuple
 from urllib.parse import urlparse
 
-import mlflow.entities
 import structlog
 from structlog.stdlib import BoundLogger
+
+import mlflow.entities
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -95,6 +96,42 @@ class MockMlflowMetric(object):
     def timestamp(self, value: int) -> None:
         LOGGER.info("Mocking mlflow.entities.Metric.timestamp setter", value=value)
         self._timestamp = value
+
+
+class MockMlflowModelVersion(object):
+    def __init__(self, name: str, source: str):
+        self._name = name
+        self._source = source
+
+    @property
+    def name(self) -> str:
+        LOGGER.info("Mocking mlflow.entities.model_registry.ModelVersion.name getter")
+        return self._name
+
+    @property
+    def source(self) -> str:
+        LOGGER.info("Mocking mlflow.entities.model_registry.ModelVersion.source getter")
+        return self._source
+
+
+class MockMlflowRegisteredModel(object):
+    def __init__(self, name: str):
+        self._name = name
+        self._latest_versions = []
+
+    @property
+    def name(self) -> str:
+        LOGGER.info(
+            "Mocking mlflow.entities.model_registry.RegisteredModel.name getter"
+        )
+        return self._name
+
+    @property
+    def latest_versions(self) -> list[MockMlflowModelVersion]:
+        LOGGER.info(
+            "Mocking mlflow.entities.model_registry.RegisteredModel.latest_versions getter"
+        )
+        return self._latest_versions
 
 
 class MockMlflowRunData(object):
@@ -252,6 +289,7 @@ class MockMlflowRun(contextlib.AbstractContextManager):
 
 
 class MockState:
+    registered_models: dict[str, MockMlflowRegisteredModel] = {}
     registered_runs: dict[str, MockMlflowRun] = {}
     active_run: MockMlflowRun | None = None
     experiments: list[str] = []
@@ -262,6 +300,25 @@ class MockMlflowClient(object):
         LOGGER.info(
             "Mocking mlflow.tracking.MlflowClient instance",
         )
+
+    def create_registered_model(self, name: str) -> MockMlflowRegisteredModel:
+        LOGGER.info("Mocking MlflowClient.create_registered_model() function")
+        registered_model = MockMlflowRegisteredModel(name)
+        MockState.registered_models[name] = registered_model
+        return registered_model
+
+    def create_model_version(self, name: str, source: str) -> MockMlflowModelVersion:
+        model_version = MockMlflowModelVersion(name, source)
+        MockState.registered_models[name].latest_versions.append(model_version)
+        return model_version
+
+    def get_registered_model(self, name: str) -> MockMlflowRegisteredModel:
+        LOGGER.info("Mocking MlflowClient.get_registered_model() function")
+        return MockState.registered_models[name]
+
+    def get_model_version(self, name: str, version: str) -> MockMlflowModelVersion:
+        LOGGER.info("Mocking MlflowClient.get_model_version() function")
+        return MockState.registered_models[name].latest_versions[int(version) - 1]
 
     def get_run(self, run_id: str) -> MockMlflowRun:
         # Note: In Mlflow, this function would usually throw an MlflowException
