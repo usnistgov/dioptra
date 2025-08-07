@@ -28,7 +28,6 @@ import jsonschema
 import structlog
 import tomli as toml
 import yaml
-from dioptra.restapi.v1.entity_types import EntityTypes
 from injector import inject
 from structlog.stdlib import BoundLogger
 from werkzeug.datastructures import FileStorage
@@ -44,6 +43,7 @@ from dioptra.restapi.errors import (
     InvalidYamlError,
 )
 from dioptra.restapi.utils import read_json_file, verify_filename_is_safe
+from dioptra.restapi.v1.entity_types import EntityTypes
 from dioptra.restapi.v1.entrypoints.service import (
     EntrypointIdService,
     EntrypointNameService,

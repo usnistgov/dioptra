@@ -19,13 +19,13 @@
 from typing import Any, cast
 
 import structlog
-from dioptra.restapi.v1.entity_types import EntityTypes
 from injector import ClassAssistedBuilder, inject
 from sqlalchemy import select
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
 from dioptra.restapi.errors import EntityDoesNotExistError
+from dioptra.restapi.v1.entity_types import EntityTypes
 from dioptra.restapi.v1.tags.service import RESOURCE_TYPE as TAG_RESOURCE_TYPE
 from dioptra.restapi.v1.tags.service import TagIdService
 
