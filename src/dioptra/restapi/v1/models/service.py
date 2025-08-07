@@ -21,8 +21,6 @@ from typing import Any, Final, cast
 import structlog
 from flask_login import current_user
 from injector import inject
-from mlflow.exceptions import MlflowException
-from mlflow.tracking import MlflowClient
 from sqlalchemy import Integer, func, select
 from sqlalchemy.orm import aliased
 from structlog.stdlib import BoundLogger
@@ -39,6 +37,8 @@ from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.artifacts.service import ArtifactIdService
 from dioptra.restapi.v1.groups.service import GroupIdService
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
+from mlflow.exceptions import MlflowException
+from mlflow.tracking import MlflowClient
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 

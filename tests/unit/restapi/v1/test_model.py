@@ -296,7 +296,7 @@ def assert_retrieving_model_version_by_version_number_works(
 
     json_ = response.json()
     name = f"resource_{json_['model']['id']:09d}"
-    model_version = mlflow_client.get_model_version(name, version_number)
+    model_version = mlflow_client.get_model_version(name, str(version_number))
     assert model_version.name == name
     assert model_version.source == json_["artifact"]["artifactUri"]
 
