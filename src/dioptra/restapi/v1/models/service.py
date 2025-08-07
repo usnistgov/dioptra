@@ -22,6 +22,7 @@ import structlog
 from flask_login import current_user
 from injector import inject
 from mlflow.exceptions import MlflowException
+from mlflow.tracking import MlflowClient
 from sqlalchemy import Integer, func, select
 from sqlalchemy.orm import aliased
 from structlog.stdlib import BoundLogger
@@ -70,6 +71,7 @@ class ModelService(object):
         self,
         model_name_service: "ModelNameService",
         group_id_service: GroupIdService,
+        mlflow_client: MlflowClient,
     ) -> None:
         """Initialize the model service.
 
@@ -78,9 +80,11 @@ class ModelService(object):
         Args:
             model_name_service: A ModelNameService object.
             group_id_service: A GroupIdService object.
+            mlflow_client: An MlflowClient object,
         """
         self._model_name_service = model_name_service
         self._group_id_service = group_id_service
+        self._mlflow_client = mlflow_client
 
     def create(
         self,
@@ -103,8 +107,6 @@ class ModelService(object):
         Raises:
             EntityExistsError: If a model with the given name already exists.
         """
-        from mlflow.tracking import MlflowClient
-
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         duplicate = self._model_name_service.get(name, group_id=group_id, log=log)
@@ -127,9 +129,10 @@ class ModelService(object):
 
         db.session.flush()
 
+        mlflow_model_name = f"resource_{ml_model.resource_id:09d}"
+
         try:
-            client = MlflowClient()
-            client.create_registered_model(f"resource_{ml_model.resource_id:09d}")
+            self._mlflow_client.create_registered_model(mlflow_model_name)
         except MlflowException as e:
             raise MLFlowError(e.message) from e
 
@@ -498,6 +501,7 @@ class ModelIdVersionsService(object):
         self,
         artifact_id_service: ArtifactIdService,
         model_id_service: ModelIdService,
+        mlflow_client: MlflowClient,
     ) -> None:
         """Initialize the model service.
 
@@ -506,9 +510,11 @@ class ModelIdVersionsService(object):
         Args:
             artifact_id_service: A ArtifactIdService object.
             model_id_service: A ModelIdService object.
+            mlflow_client: An MlflowClient object,
         """
         self._artifact_id_service = artifact_id_service
         self._model_id_service = model_id_service
+        self._mlflow_client = mlflow_client
 
     def create(
         self,
@@ -527,8 +533,6 @@ class ModelIdVersionsService(object):
         Returns:
             The newly created model object.
         """
-        from mlflow.tracking import MlflowClient
-
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         ml_model_dict = cast(
@@ -560,15 +564,16 @@ class ModelIdVersionsService(object):
         db.session.add(new_version)
         db.session.flush()
 
+        mlflow_model_name = f"resource_{ml_model.resource_id:09d}"
         try:
-            client = MlflowClient()
-            client.create_model_version(
-                f"resource_{ml_model.resource_id:09d}", source=artifact.uri
+            self._mlflow_client.create_model_version(
+                mlflow_model_name, source=artifact.uri
             )
         except MlflowException as e:
             raise MLFlowError(e.message) from e
 
         db.session.commit()
+
         log.debug(
             "Model registration successful",
             model_id=ml_model.resource_id,
