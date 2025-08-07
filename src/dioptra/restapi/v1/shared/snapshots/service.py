@@ -88,7 +88,8 @@ class ResourceSnapshotsService(object):
         if resource is None:
             if error_if_not_found:
                 raise EntityDoesNotExistError(
-                    EntityTypes.get_from_string(self._resource_type), resource_id=resource_id
+                    EntityTypes.get_from_string(self._resource_type),
+                    resource_id=resource_id,
                 )
 
             return None
@@ -191,7 +192,8 @@ class ResourceSnapshotsIdService(object):
         if resource is None:
             if error_if_not_found:
                 raise EntityDoesNotExistError(
-                    EntityTypes.get_from_string(self._resource_type), resource_id=resource_id
+                    EntityTypes.get_from_string(self._resource_type),
+                    resource_id=resource_id,
                 )
 
             return None
@@ -210,7 +212,8 @@ class ResourceSnapshotsIdService(object):
         if snapshot is None:
             if error_if_not_found:
                 raise EntityDoesNotExistError(
-                    EntityTypes.get_from_string(self._resource_type + "_snapshot"), snapshot_id=snapshot_id
+                    EntityTypes.get_from_string(self._resource_type + "_snapshot"),
+                    snapshot_id=snapshot_id,
                 )
 
             return None
