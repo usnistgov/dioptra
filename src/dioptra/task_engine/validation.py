@@ -457,8 +457,7 @@ def _check_union_member_duplicates(
 
             if dupe_types:
                 message = (
-                    'In definition of type "{}": duplicate member types'
-                    " encountered: {}"
+                    'In definition of type "{}": duplicate member types encountered: {}'
                 ).format(type_name, ", ".join(str(t) for t in dupe_types))
 
                 issue = ValidationIssue(

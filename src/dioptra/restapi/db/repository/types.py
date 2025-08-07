@@ -113,14 +113,14 @@ class TypeRepository:
         self.session.add(type_)
 
     @overload
-    def get(  # noqa: E704
+    def get(
         self,
         resource_ids: int,
         deletion_policy: utils.DeletionPolicy,
     ) -> PluginTaskParameterType | None: ...
 
     @overload
-    def get(  # noqa: E704
+    def get(
         self,
         resource_ids: Iterable[int],
         deletion_policy: utils.DeletionPolicy,
@@ -177,7 +177,7 @@ class TypeRepository:
         )
 
     @overload
-    def get_by_name(  # type: ignore[overload-overlap]  # noqa: E704
+    def get_by_name(  # type: ignore[overload-overlap]
         self,
         name: str,
         group: Group | int,
@@ -185,7 +185,7 @@ class TypeRepository:
     ) -> PluginTaskParameterType | None: ...
 
     @overload
-    def get_by_name(  # noqa: E704
+    def get_by_name(
         self,
         name: Iterable[str],
         group: Group | int,

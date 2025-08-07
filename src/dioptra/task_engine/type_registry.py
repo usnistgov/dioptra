@@ -18,6 +18,7 @@
 Build a "type registry", i.e. a mapping from type name to Type instance,
 from a set of type definitions.
 """
+
 import graphlib
 from collections.abc import Iterable, Iterator, Mapping, MutableMapping, Sequence
 from typing import Any, Optional, Union, cast

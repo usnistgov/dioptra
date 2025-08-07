@@ -122,7 +122,7 @@ class PluginParameterTypesCollectionClient(CollectionClient[T]):
                 resource_snapshot_id=1,
                 name="new-name",
                 description="new-description",
-                structure=None
+                structure=None,
             )
 
             # POST /api/v1/pluginParameterTypes/1/draft

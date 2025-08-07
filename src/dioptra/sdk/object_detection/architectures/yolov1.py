@@ -21,7 +21,7 @@ import numpy as np
 import structlog
 from structlog.stdlib import BoundLogger
 
-from dioptra.sdk.object_detection.architectures.tensorflow_layers.backbones import (  # noqa: B950
+from dioptra.sdk.object_detection.architectures.tensorflow_layers.backbones import (
     EfficientNetBackbone,
 )
 from dioptra.sdk.object_detection.bounding_boxes.postprocessing import (
@@ -134,33 +134,33 @@ class YOLOV1ObjectDetector(Model):
     def _set_backbone(
         backbone: str, input_shape: Optional[Tuple[int, int, int]]
     ) -> Model:
-        backbone_registry: dict[str, Callable[[], EfficientNetBackbone]] = dict(
-            efficientnetb0=lambda: EfficientNetBackbone(
+        backbone_registry: dict[str, Callable[[], EfficientNetBackbone]] = {
+            "efficientnetb0": lambda: EfficientNetBackbone(
                 flavor="b0", input_shape=input_shape
             ),
-            efficientnetb1=lambda: EfficientNetBackbone(
+            "efficientnetb1": lambda: EfficientNetBackbone(
                 flavor="b1", input_shape=input_shape
             ),
-            efficientnetb2=lambda: EfficientNetBackbone(
+            "efficientnetb2": lambda: EfficientNetBackbone(
                 flavor="b2", input_shape=input_shape
             ),
-            efficientnetb3=lambda: EfficientNetBackbone(
+            "efficientnetb3": lambda: EfficientNetBackbone(
                 flavor="b3", input_shape=input_shape
             ),
-            efficientnetb4=lambda: EfficientNetBackbone(
+            "efficientnetb4": lambda: EfficientNetBackbone(
                 flavor="b4", input_shape=input_shape
             ),
-            efficientnetb5=lambda: EfficientNetBackbone(
+            "efficientnetb5": lambda: EfficientNetBackbone(
                 flavor="b5", input_shape=input_shape
             ),
-            efficientnetb6=lambda: EfficientNetBackbone(
+            "efficientnetb6": lambda: EfficientNetBackbone(
                 flavor="b6", input_shape=input_shape
             ),
-            efficientnetb7=lambda: EfficientNetBackbone(
+            "efficientnetb7": lambda: EfficientNetBackbone(
                 flavor="b7", input_shape=input_shape
             ),
-            mobilenetv2=lambda: MobileNetV2Backbone(input_shape=input_shape),
-        )
+            "mobilenetv2": lambda: MobileNetV2Backbone(input_shape=input_shape),
+        }
 
         return backbone_registry[backbone.strip().lower()]()
 
@@ -171,23 +171,23 @@ class YOLOV1ObjectDetector(Model):
         n_bounding_boxes: int,
         n_classes: int,
     ) -> Layer:
-        detector_registry: dict[str, Callable[[], Layer]] = dict(
-            original=lambda: YOLOV1Detector(
+        detector_registry: dict[str, Callable[[], Layer]] = {
+            "original": lambda: YOLOV1Detector(
                 grid_shape=grid_shape,
                 n_bounding_boxes=n_bounding_boxes,
                 n_classes=n_classes,
             ),
-            shallow=lambda: SimpleYOLOV1Detector(
+            "shallow": lambda: SimpleYOLOV1Detector(
                 grid_shape=grid_shape,
                 n_bounding_boxes=n_bounding_boxes,
                 n_classes=n_classes,
             ),
-            two_headed=lambda: TwoHeadedYOLOV1Detector(
+            "two_headed": lambda: TwoHeadedYOLOV1Detector(
                 grid_shape=grid_shape,
                 n_bounding_boxes=n_bounding_boxes,
                 n_classes=n_classes,
             ),
-        )
+        }
 
         return detector_registry[detector.strip().lower()]()
 

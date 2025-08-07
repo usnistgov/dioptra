@@ -15,6 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The module defining the endpoints for User resources."""
+
 import uuid
 from typing import Any, cast
 from urllib.parse import unquote

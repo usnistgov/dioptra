@@ -114,35 +114,33 @@ class TensorflowObjectDetectionData(ObjectDetectionData):
         augmentations_seed: Optional[int] = None,
         shuffle_seed: Optional[int] = None,
     ) -> "TensorflowObjectDetectionData":
-        annotation_data_registry: dict[str, Callable[[], PascalVOCAnnotationData]] = (
-            dict(
-                pascal_voc=lambda: PascalVOCAnnotationData(
-                    labels=labels,
-                    encoding=NumpyAnnotationEncoding(
-                        boxes_dtype="float32", labels_dtype="int32"
-                    ),
+        annotation_data_registry: dict[str, Callable[[], PascalVOCAnnotationData]] = {
+            "pascal_voc": lambda: PascalVOCAnnotationData(
+                labels=labels,
+                encoding=NumpyAnnotationEncoding(
+                    boxes_dtype="float32", labels_dtype="int32"
                 ),
-            )
-        )
+            ),
+        }
         augmentations_registry: dict[
             str, Callable[[], ImgAugObjectDetectionAugmentations]
-        ] = dict(
-            imgaug_heavy=(
+        ] = {
+            "imgaug_heavy": (
                 lambda: ImgAugObjectDetectionAugmentations.use_heavy_augmenters(
                     image_dimensions=image_dimensions[:2], seed=augmentations_seed
                 )
             ),
-            imgaug_light=(
+            "imgaug_light": (
                 lambda: ImgAugObjectDetectionAugmentations.use_light_augmenters(
                     image_dimensions=image_dimensions[:2], seed=augmentations_seed
                 )
             ),
-            imgaug_minimal=(
+            "imgaug_minimal": (
                 lambda: ImgAugObjectDetectionAugmentations.use_minimal_augmenters(
                     image_dimensions=image_dimensions[:2], seed=augmentations_seed
                 )
             ),
-        )
+        }
 
         annotation_data_object = annotation_data_registry[annotation_format]()
         augmentations_object = augmentations_registry.get(
@@ -169,7 +167,7 @@ class TensorflowObjectDetectionData(ObjectDetectionData):
             augmentations=augmentations_object,
             image_dimensions=image_dimensions,
             grid_shape=grid_shape,
-            labels=[x for x in labels],
+            labels=list(labels),
             n_classes=n_classes,
             training_directory=training_directory,
             validation_directory=validation_directory,

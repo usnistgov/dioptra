@@ -63,16 +63,16 @@ class EfficientNetBackbone(Model):
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
-        efficient_net_registry = dict(
-            b0=EfficientNetB0,
-            b1=EfficientNetB1,
-            b2=EfficientNetB2,
-            b3=EfficientNetB3,
-            b4=EfficientNetB4,
-            b5=EfficientNetB5,
-            b6=EfficientNetB6,
-            b7=EfficientNetB7,
-        )
+        efficient_net_registry = {
+            "b0": EfficientNetB0,
+            "b1": EfficientNetB1,
+            "b2": EfficientNetB2,
+            "b3": EfficientNetB3,
+            "b4": EfficientNetB4,
+            "b5": EfficientNetB5,
+            "b6": EfficientNetB6,
+            "b7": EfficientNetB7,
+        }
         self.model = efficient_net_registry[flavor.strip().lower()](
             include_top=False,
             weights=weights,

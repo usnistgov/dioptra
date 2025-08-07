@@ -19,6 +19,7 @@
 exceptions, and non-assert style functions which just return information
 without raising exceptions.
 """
+
 from collections.abc import Iterable, Mapping
 
 import sqlalchemy as sa

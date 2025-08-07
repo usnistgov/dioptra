@@ -37,9 +37,8 @@ from flask.views import View
 from flask_restx import Api, Namespace, Resource, inputs
 from flask_restx.reqparse import RequestParser
 from injector import Injector
-from marshmallow import Schema, ValidationError
+from marshmallow import Schema, ValidationError, missing
 from marshmallow import fields as ma
-from marshmallow import missing
 from marshmallow.schema import SchemaMeta
 from typing_extensions import TypedDict
 from werkzeug.datastructures import FileStorage
@@ -280,7 +279,7 @@ def verify_filename_is_safe(
     Raises:
         ValueError: If filename is deemed to be unsafe
     """
-    if PureWindowsPath(filename).as_posix() != str(PurePosixPath(filename)):  # noqa: B950; fmt: skip
+    if PureWindowsPath(filename).as_posix() != str(PurePosixPath(filename)):  # fmt: skip
         raise ValueError(
             "Invalid filename (reason: filename is a Windows path): {filename}"
         )
@@ -300,13 +299,13 @@ def verify_filename_is_safe(
             f"Invalid filename (reason: filename is not an absolute path): {filename}"
         )
 
-    if PurePosixPath("..") in PurePosixPath(filename).parents:  # noqa: B950; fmt: skip
+    if PurePosixPath("..") in PurePosixPath(filename).parents:  # fmt: skip
         raise ValueError(
             "Invalid filename (reason: filename contains directory traversal parts): "
             f"{filename}"
         )
 
-    if any([DOTS_REGEX.match(str(x)) for x in PurePosixPath(filename).parts]):  # noqa: B950; fmt: skip
+    if any(DOTS_REGEX.match(str(x)) for x in PurePosixPath(filename).parts):  # fmt: skip
         raise ValueError(
             "Invalid filename (reason: filename contains a sub-directory name that "
             f"is all dots): {filename}"
@@ -321,7 +320,7 @@ class _ClassBasedViewFunction(Protocol):
 
     view_class: Type[View]
 
-    def __call__(self, *args, **kwargs) -> Any: ...  # noqa: E704
+    def __call__(self, *args, **kwargs) -> Any: ...
 
 
 def _new_class_view_function(

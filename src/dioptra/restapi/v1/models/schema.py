@@ -15,6 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The schemas for serializing/deserializing Model resources."""
+
 from marshmallow import Schema, fields
 
 from dioptra.restapi.v1.artifacts.schema import ArtifactRefSchema
@@ -36,7 +37,7 @@ class ModelRefSchema(ModelBaseRefSchema):  # type: ignore
 
     name = fields.String(
         attribute="name",
-        metadata=dict(description="Name of the Model resource."),
+        metadata={"description": "Name of the Model resource."},
         required=True,
     )
 
@@ -46,12 +47,12 @@ class ModelVersionRefSchema(Schema):
 
     versionNumber = fields.Integer(
         attribute="version_number",
-        metadata=dict(description="The version number of the Model."),
+        metadata={"description": "The version number of the Model."},
         dump_only=True,
     )
     url = fields.Url(
         attribute="url",
-        metadata=dict(description="URL for accessing the full Model Version."),
+        metadata={"description": "URL for accessing the full Model Version."},
         relative=True,
     )
 
@@ -59,7 +60,7 @@ class ModelVersionRefSchema(Schema):
 class ModelVersionMutableFieldsSchema(Schema):
     description = fields.String(
         attribute="description",
-        metadata=dict(description="Description of the Model Version."),
+        metadata={"description": "Description of the Model Version."},
         load_default=None,
     )
 
@@ -70,30 +71,30 @@ class ModelVersionSchema(ModelVersionMutableFieldsSchema):
     model = fields.Nested(
         ModelRefSchema,
         attribute="model",
-        metadata=dict(description="The Model resource."),
+        metadata={"description": "The Model resource."},
         dump_only=True,
     )
     artifactId = fields.Integer(
         attribute="artifact_id",
         data_key="artifact",
-        metadata=dict(description="The artifact representing the Model Version."),
+        metadata={"description": "The artifact representing the Model Version."},
         load_only=True,
         required=True,
     )
     artifact = fields.Nested(
         ArtifactRefSchema,
         attribute="artifact",
-        metadata=dict(description="The artifact representing the Model Version."),
+        metadata={"description": "The artifact representing the Model Version."},
         dump_only=True,
     )
     versionNumber = fields.Integer(
         attribute="version_number",
-        metadata=dict(description="The version number of the Model."),
+        metadata={"description": "The version number of the Model."},
         dump_only=True,
     )
     createdOn = fields.DateTime(
         attribute="created_on",
-        metadata=dict(description="Timestamp when the Model Version was created."),
+        metadata={"description": "Timestamp when the Model Version was created."},
         dump_only=True,
     )
 
@@ -103,12 +104,12 @@ class ModelMutableFieldsSchema(Schema):
 
     name = fields.String(
         attribute="name",
-        metadata=dict(description="Name of the Model resource."),
+        metadata={"description": "Name of the Model resource."},
         required=True,
     )
     description = fields.String(
         attribute="description",
-        metadata=dict(description="Description of the Model resource."),
+        metadata={"description": "Description of the Model resource."},
         load_default=None,
     )
 
@@ -123,13 +124,13 @@ class ModelSchema(ModelMutableFieldsSchema, ModelBaseSchema):  # type: ignore
         ModelVersionRefSchema,
         many=True,
         attribute="versions",
-        metadata=dict(description="The details of this model version."),
+        metadata={"description": "The details of this model version."},
         dump_only=True,
     )
     latestVersion = fields.Nested(
         ModelVersionSchema,
         attribute="latest_version",
-        metadata=dict(description="The details of latest version of this model."),
+        metadata={"description": "The details of latest version of this model."},
         dump_only=True,
     )
 
@@ -140,7 +141,7 @@ class ModelPageSchema(BasePageSchema):
     data = fields.Nested(
         ModelSchema,
         many=True,
-        metadata=dict(description="List of Model resources in the current page."),
+        metadata={"description": "List of Model resources in the current page."},
     )
 
 
@@ -150,7 +151,7 @@ class ModelVersionPageSchema(BasePageSchema):
     data = fields.Nested(
         ModelVersionSchema,
         many=True,
-        metadata=dict(description="List of Model resources in the current page."),
+        metadata={"description": "List of Model resources in the current page."},
     )
 
 

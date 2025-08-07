@@ -132,7 +132,7 @@ class DioptraFile(object):
     content_type: str | None
 
     def __post_init__(self) -> None:
-        if PureWindowsPath(self.filename).as_posix() != str(PurePosixPath(self.filename)):  # noqa: B950; fmt: skip
+        if PureWindowsPath(self.filename).as_posix() != str(PurePosixPath(self.filename)):  # fmt: skip
             raise ValueError(
                 "Invalid filename (reason: filename is a Windows path): "
                 f"{self.filename}"
@@ -150,13 +150,13 @@ class DioptraFile(object):
                 f"{self.filename}"
             )
 
-        if PurePosixPath("..") in PurePosixPath(posixpath.normpath(self.filename)).parents:  # noqa: B950; fmt: skip
+        if PurePosixPath("..") in PurePosixPath(posixpath.normpath(self.filename)).parents:  # fmt: skip
             raise ValueError(
                 "Invalid filename (reason: filename is not a sub-directory of ./): "
                 f"{self.filename}"
             )
 
-        if any([DOTS_REGEX.match(str(x)) for x in PurePosixPath(posixpath.normpath(self.filename)).parts]):  # noqa: B950; fmt: skip
+        if any(DOTS_REGEX.match(str(x)) for x in PurePosixPath(posixpath.normpath(self.filename)).parts):  # fmt: skip
             raise ValueError(
                 "Invalid filename (reason: filename contains a sub-directory name that "
                 f"is all dots): {self.filename}"

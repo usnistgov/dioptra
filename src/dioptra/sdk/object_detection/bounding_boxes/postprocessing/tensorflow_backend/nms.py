@@ -24,7 +24,7 @@ from structlog.stdlib import BoundLogger
 from dioptra.sdk.object_detection.bounding_boxes.coordinates import (
     TensorflowBoundingBoxesBatchedGrid,
 )
-from dioptra.sdk.object_detection.bounding_boxes.postprocessing.bounding_boxes_postprocessing import (  # noqa: B950
+from dioptra.sdk.object_detection.bounding_boxes.postprocessing.bounding_boxes_postprocessing import (
     BoundingBoxesYOLOV1PostProcessing,
 )
 

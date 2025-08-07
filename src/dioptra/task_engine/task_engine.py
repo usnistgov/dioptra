@@ -383,7 +383,8 @@ def _update_output_map(
 
         if num_outputs is not None and num_outputs != num_output_names:
             log.warning(
-                'Different numbers of outputs and output definitions for step "%s": %d != %d',  # noqa: B950
+                "Different numbers of outputs and output definitions for step "
+                '"%s": %d != %d',
                 step_name,
                 num_outputs,
                 num_output_names,
@@ -580,7 +581,7 @@ def _load_artifact_parameters(
                 if num_outputs is not None and num_outputs != num_expected_outputs:
                     log.warning(
                         "Different numbers of outputs and expected outputs for "
-                        'artifact parameter "%s": %d != %d',  # noqa: B950
+                        'artifact parameter "%s": %d != %d',
                         name,
                         num_outputs,
                         num_expected_outputs,

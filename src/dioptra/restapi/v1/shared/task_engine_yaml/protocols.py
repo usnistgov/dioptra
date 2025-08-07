@@ -20,10 +20,10 @@ from typing import Any, Protocol
 
 class PluginTaskParameterTypeProtocol(Protocol):
     @property
-    def name(self) -> str: ...  # noqa: E704
+    def name(self) -> str: ...
 
     @property
-    def structure(self) -> dict[str, Any] | None: ...  # noqa: E704
+    def structure(self) -> dict[str, Any] | None: ...
 
 
 class PluginTaskInputParameterProtocol(Protocol):
@@ -32,7 +32,7 @@ class PluginTaskInputParameterProtocol(Protocol):
     required: bool
 
     @property
-    def parameter_type(self) -> PluginTaskParameterTypeProtocol: ...  # noqa: E704
+    def parameter_type(self) -> PluginTaskParameterTypeProtocol: ...
 
 
 class PluginTaskOutputParameterProtocol(Protocol):
@@ -40,7 +40,7 @@ class PluginTaskOutputParameterProtocol(Protocol):
     name: str
 
     @property
-    def parameter_type(self) -> PluginTaskParameterTypeProtocol: ...  # noqa: E704
+    def parameter_type(self) -> PluginTaskParameterTypeProtocol: ...
 
 
 class EntryPointParameterProtocol(Protocol):
@@ -53,23 +53,23 @@ class EntryPointArtifactParameterProtocol(Protocol):
     name: str
 
     @property
-    def output_parameters(  # noqa: E704
+    def output_parameters(
         self,
     ) -> Sequence[PluginTaskOutputParameterProtocol]: ...
 
 
 class EntryPointProtocol(Protocol):
     @property
-    def task_graph(self) -> str: ...  # noqa: E704
+    def task_graph(self) -> str: ...
 
     @property
-    def artifact_graph(self) -> str: ...  # noqa: E704
+    def artifact_graph(self) -> str: ...
 
     @property
-    def parameters(self) -> Sequence[EntryPointParameterProtocol]: ...  # noqa: E704
+    def parameters(self) -> Sequence[EntryPointParameterProtocol]: ...
 
     @property
-    def artifact_parameters(  # noqa: E704
+    def artifact_parameters(
         self,
     ) -> Sequence[EntryPointArtifactParameterProtocol]: ...
 
@@ -78,12 +78,12 @@ class PluginTaskProtocol(Protocol):
     plugin_task_name: str
 
     @property
-    def input_parameters(  # noqa: E704
+    def input_parameters(
         self,
     ) -> Sequence[PluginTaskInputParameterProtocol]: ...
 
     @property
-    def output_parameters(  # noqa: E704
+    def output_parameters(
         self,
     ) -> Sequence[PluginTaskOutputParameterProtocol]: ...
 
@@ -92,7 +92,7 @@ class PluginFileProtocol(Protocol):
     filename: str
 
     @property
-    def tasks(self) -> Sequence[PluginTaskProtocol]: ...  # noqa: E704
+    def tasks(self) -> Sequence[PluginTaskProtocol]: ...
 
 
 class PluginProtocol(Protocol):
@@ -101,7 +101,7 @@ class PluginProtocol(Protocol):
 
 class PluginPluginFileProtocol(Protocol):
     @property
-    def plugin(self) -> PluginProtocol: ...  # noqa: E704
+    def plugin(self) -> PluginProtocol: ...
 
     @property
-    def plugin_file(self) -> PluginFileProtocol: ...  # noqa: E704
+    def plugin_file(self) -> PluginFileProtocol: ...

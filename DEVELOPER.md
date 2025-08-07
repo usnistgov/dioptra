@@ -2,103 +2,115 @@
 
 If you have not already, please review [CONTRIBUTING.md](CONTRIBUTING.md) for more complete information on expectations for contributions.
 
+<!-- markdownlint-disable MD007 MD030 -->
+- [Note for Windows Users](#note-for-windows-users)
+- [Developer Set-up](#developer-set-up)
+    - [Building the documentation](#building-the-documentation)
+    - [Lint and format your files](#lint-and-format-your-files)
+    - [Type check your files](#type-check-your-files)
+    - [Checking your commit message with gitlint](#checking-your-commit-message-with-gitlint)
+    - [Running unit tests with pytest](#running-unit-tests-with-pytest)
+    - [Cleanup](#cleanup)
+    - [Upgrading the uv.lock file](#upgrading-the-uvlock-file)
+<!-- markdownlint-enable MD007 MD030 -->
+
+## Note for Windows Users
+
+Please note that **only a subset of Dioptra's components work natively on Windows**.
+You can develop for the frontend or REST API natively on Windows, and [Windows-specific instructions for setting up the environment are available in the dev-kb/local-setup/MANUAL.md file](dev-kb/local-setup/MANUAL.md).
+However, if you need to run all of Dioptra's components locally, you must [install and use WSL2](https://learn.microsoft.com/en-us/windows/wsl/install).
+
 ## Developer Set-up
-See the [Local Developer Set-up](dev-kb/local-setup/README.md) knowledge base article for
-instructions.
+
+See the [Local Developer Set-up](dev-kb/local-setup/README.md) knowledge base article for instructions.
 
 ### Building the documentation
 
-This project uses Sphinx to generate the documentation published at <https://pages.nist.gov/dioptra>.
-To build the documentation locally, activate your virtual environment if you haven't already and run:
+This project uses Sphinx to generate the documentation published at <https://pages.nist.gov/dioptra> and uses [tox](https://tox.wiki/en/stable/) to run it.
+If you haven't done so yet, install `tox` as a uv tool:
 
-```sh
-python -m tox run -e web-compile,docs
-```
+    uv tool install --python 3.11 tox --with tox-uv
 
-Alternatively, you can also use `make` to do this:
+To build the documentation locally, run:
 
-```sh
-make docs
-```
+    uvx tox run -e web-compile,docs
 
-### Reformatting code with black and isort
+### Lint and format your files
 
-This project uses `black` and `isort` to automatically format Python code:
-Developers are expected to run `black` and `isort` over their contributions before opening a Pull Request.
-To do this, activate your virtual environment if you haven't already and run:
+This project uses [ruff](https://docs.astral.sh/ruff) to lint and format code and uses [tox](https://tox.wiki/en/stable/) to run it.
+If you haven't done so yet, install `tox` as a uv tool:
 
-```sh
-# Run black to reformat code
-python -m tox run -e black -- src/dioptra task-plugins/dioptra_builtins tests
+    uv tool install --python 3.11 tox --with tox-uv
 
-# Run isort to reformat import statements
-python -m tox run -e isort -- src/dioptra task-plugins/dioptra_builtins tests
-```
+To run the code linter, use:
 
-Alternatively, you can also use `make` to do this:
+    # Run this to lint (but not fix) your code
+    uvx tox run -e lint
 
-```sh
-make beautify
-```
+    # Run this to lint your code and fix it where possible (includes import sorting)
+    uvx tox run -e lint -- --fix src/dioptra
 
-### Checking your code with flake8 and mypy
+To run the code formatter, use:
 
-This project uses `flake8` as a code linter and `mypy` to perform static type checking.
-Developers are expected to run `flake8` and `mypy` and resolve all issues before opening a Pull Request.
-To do this, activate your virtual environment if you haven't already and run:
+    # Run this to check (but not fix) your code formatting
+    uvx tox run -e format
 
-```sh
-# Lint the code
-python -m tox run -e flake8
+    # Run this to fix your code formatting automatically
+    uvx tox run -e format -- src/dioptra
 
-# Perform static type checking
-python -m tox run -e mypy
-```
+At a minimum, you should run this before opening a merge request on your branch:
 
-Alternatively, you can also use `make` to do this:
+    uvx tox run -e lint -- --select I --fix src/dioptra
+    uvx tox run -e format -- src/dioptra
 
-```sh
-make code-check
-```
+### Type check your files
+
+This project uses [mypy](https://mypy.readthedocs.io/en/stable/) to type check code and uses [tox](https://tox.wiki/en/stable/) to run it.
+If you haven't done so yet, install `tox` as a uv tool:
+
+    uv tool install --python 3.11 tox --with tox-uv
+
+To run the type checker, use:
+
+    uvx tox run -e mypy
 
 ### Checking your commit message with gitlint
 
-This project has a [commit style guide](./COMMIT_STYLE_GUIDE.md) that is enforced using the `gitlint` tool.
+This project has a [commit style guide](./COMMIT_STYLE_GUIDE.md) that is enforced using the `gitlint` tool and uses [tox](https://tox.wiki/en/stable/) to run it.
+If you haven't done so yet, install `tox` as a uv tool:
+
+    uv tool install --python 3.11 tox --with tox-uv
+
 Developers are expected to run `gitlint` and validate their commit message before opening a Pull Request.
-After committing your contribution, activate your virtual environment if you haven't already and run:
+After committing your contribution, run:
 
-```sh
-python -m tox run -e gitlint
-```
-
-Alternatively, you can also use `make` to do this:
-
-```sh
-make commit-check
-```
+    uvx tox run -e gitlint
 
 ### Running unit tests with pytest
 
-This project stores its unit tests in the `tests/` folder and runs them using pytest.
+This project stores its pytest-based unit tests in the `tests/` folder and uses [tox](https://tox.wiki/en/stable/) to run it.
+If you haven't done so yet, install `tox` as a uv tool:
+
+    uv tool install --python 3.11 tox --with tox-uv
+
 Developers are expected to create new unit tests to validate any new features or behavior that they contribute and to verify that all unit tests pass before opening a Pull Request.
-To run the unit tests, activate your virtual environment if you haven't already and run:
+To run the unit tests:
 
-```sh
-python -m tox run -e py311-pytest -- tests/unit
-python -m tox run -e py311-cookiecutter
-python -m tox run -e py311-extra
-```
-
-Alternatively, you can also use `make` to do this:
-
-```sh
-make tests-unit
-```
+    uvx tox run -e pytest -- tests/unit
+    uvx tox run -e pytest-cookiecutter
+    uvx tox run -e pytest-extra
 
 ### Cleanup
 
+> **NOTE:** This command will not work in a Windows environment.
+
 Run the following to clear away the project's temporary files, which includes the sentinel dotfiles that are created in `build/` when using `make`:
 
-```sh
-make clean
-```
+    make clean
+
+### Upgrading the uv.lock file
+
+The uv.lock file is generated by uv as a standardized lockfile that specifies exact versions of Python dependencies, ensuring reproducible and consistent builds across different environments.
+To keep dependencies up-to-date and apply important fixes or improvements, a maintainer should periodically upgrade the lockfile by running:
+
+    uv lock --upgrade

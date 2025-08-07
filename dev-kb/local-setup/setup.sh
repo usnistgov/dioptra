@@ -1,5 +1,15 @@
 #!/usr/bin/env bash
 
+_dioptra_worker_lib="${DIOPTRA_WORKER_LIB:-tensorflow-cpu}"
+
+# Exit early and print message if uv is not installed
+if ! command -v uv >/dev/null 2>&1; then
+    echo "uv is not installed, run the following command to install it, then try again:"
+    echo ""
+    echo "curl -LsSf https://astral.sh/uv/install.sh | sh"
+    exit 1
+fi
+
 # Get Dioptra code from Github
 if [ -a ${DIOPTRA_CODE} ] ; then
     echo "Directory ${DIOPTRA_CODE} already exists"
@@ -17,14 +27,7 @@ git checkout ${DIOPTRA_BRANCH}
 mkdir -p ${DIOPTRA_DEPLOY}
 
 # set-up python environment
-if [ -a ${DIOPTRA_VENV} ] ; then
-    echo "${DIOPTRA_VENV} directory already exists. Skipping environment creation."
-else
-    python3 -m venv ${DIOPTRA_VENV}
-    source ${DIOPTRA_VENV}/bin/activate
-    python3 -m pip install --upgrade pip pip-tools
-    pip-sync requirements/${DIOPTRA_PLATFORM}-py3.11-requirements-dev.txt
-fi
+uv sync --extra worker --extra "${_dioptra_worker_lib}"
 
 # Set-up frontend files
 if [ -a src/frontend/node_modules ] ; then

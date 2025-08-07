@@ -15,6 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The schemas for serializing/deserializing User resources."""
+
 from marshmallow import Schema, fields
 
 from dioptra.restapi.v1.groups.schema import GroupRefSchema
@@ -30,16 +31,16 @@ class UserRefSchema(Schema):
 
     id = fields.Integer(
         attribute="id",
-        metadata=dict(description="ID for the User resource."),
+        metadata={"description": "ID for the User resource."},
         dump_only=True,
     )
     username = fields.String(
         attribute="username",
-        metadata=dict(description="Username of the User resource."),
+        metadata={"description": "Username of the User resource."},
     )
     url = fields.Url(
         attribute="url",
-        metadata=dict(description="URL for accessing the full User resource."),
+        metadata={"description": "URL for accessing the full User resource."},
         relative=True,
     )
 
@@ -48,10 +49,10 @@ class UserMutableFieldsSchema(Schema):
     """The schema for the mutable data fields in a User resource."""
 
     username = fields.String(
-        attribute="username", metadata=dict(description="Username of the User.")
+        attribute="username", metadata={"description": "Username of the User."}
     )
     email = fields.String(
-        attribute="email", metadata=dict(description="Email of the User.")
+        attribute="email", metadata={"description": "Email of the User."}
     )
 
 
@@ -60,19 +61,19 @@ class UserSchema(UserMutableFieldsSchema):
 
     password = fields.String(
         attribute="password",
-        metadata=dict(description="Password for the User resource."),
+        metadata={"description": "Password for the User resource."},
         load_only=True,
     )
     confirmPassword = fields.String(
         attribute="confirm_password",
-        metadata=dict(
-            description="The password confirmation when creating a new user account."
-        ),
+        metadata={
+            "description": "The password confirmation when creating a new user account."
+        },
         load_only=True,
     )
     id = fields.Integer(
         attribute="id",
-        metadata=dict(description="ID for the User resource."),
+        metadata={"description": "ID for the User resource."},
         dump_only=True,
     )
 
@@ -83,36 +84,34 @@ class UserCurrentSchema(UserSchema):
     groups = fields.Nested(
         GroupRefSchema,
         attribute="groups",
-        metadata=dict(description="A list of Groups the User is a part of."),
+        metadata={"description": "A list of Groups the User is a part of."},
         many=True,
         dump_only=True,
     )
     createdOn = fields.DateTime(
         attribute="created_on",
-        metadata=dict(
-            description="Timestamp when the User resource was created.",
-            dump_only=True,
-        ),
+        metadata={
+            "description": "Timestamp when the User resource was created.",
+            "dump_only": True,
+        },
     )
     lastModifiedOn = fields.DateTime(
         attribute="last_modified_on",
-        metadata=dict(
-            description="Timestamp when the User resource was last modified."
-        ),
+        metadata={"description": "Timestamp when the User resource was last modified."},
         dump_only=True,
     )
     lastLoginOn = fields.DateTime(
         attribute="last_login_on",
-        metadata=dict(
-            description="Timestamp when the User resource was last logged in."
-        ),
+        metadata={
+            "description": "Timestamp when the User resource was last logged in."
+        },
         dump_only=True,
     )
     passwordExpiresOn = fields.DateTime(
         attribute="password_expires_on",
-        metadata=dict(
-            description="Timestamp when the User resource password expires on."
-        ),
+        metadata={
+            "description": "Timestamp when the User resource password expires on."
+        },
         dump_only=True,
     )
 
@@ -122,17 +121,17 @@ class UserPasswordSchema(Schema):
 
     oldPassword = fields.String(
         attribute="old_password",
-        metadata=dict(description="Old password for the User resource."),
+        metadata={"description": "Old password for the User resource."},
     )
     newPassword = fields.String(
         attribute="new_password",
-        metadata=dict(description="New password for the User resource."),
+        metadata={"description": "New password for the User resource."},
     )
     confirmNewPassword = fields.String(
         attribute="confirm_new_password",
-        metadata=dict(
-            description="The new password confirmation when changing a password."
-        ),
+        metadata={
+            "description": "The new password confirmation when changing a password."
+        },
         load_only=True,
     )
 
@@ -142,7 +141,7 @@ class UserDeleteSchema(Schema):
 
     password = fields.String(
         attribute="password",
-        metadata=dict(description="The users current password."),
+        metadata={"description": "The users current password."},
     )
 
 
@@ -152,7 +151,7 @@ class UserPageSchema(BasePageSchema):
     data = fields.Nested(
         UserSchema,
         many=True,
-        metadata=dict(description="List of User resources in the current page."),
+        metadata={"description": "List of User resources in the current page."},
     )
 
 

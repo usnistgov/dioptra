@@ -311,7 +311,7 @@ class TooManyTypeStructuresError(DioptraTypeError):
         context_type_name: Optional[str] = None,
     ) -> None:
         message = (
-            "A type definition may include at most one structure type." "  Found: {}"
+            "A type definition may include at most one structure type.  Found: {}"
         ).format(", ".join(structure_type.name for structure_type in structure_types))
 
         super().__init__(message, context_type_name)

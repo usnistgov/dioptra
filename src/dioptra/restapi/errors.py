@@ -812,8 +812,8 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
             error,
             http.HTTPStatus.INTERNAL_SERVER_ERROR,
             {
-                "missing_names": sorted(list(error.missing_names)),
-                "extra_names": sorted(list(error.extra_names)),
+                "missing_names": sorted(error.missing_names),
+                "extra_names": sorted(error.extra_names),
             },
         )
 

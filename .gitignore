@@ -426,6 +426,7 @@ mlruns/
 !.markdownlint.json
 !.mdlrc
 !.pre-commit-config.yaml
+!.python-version
 !.readthedocs.yml
 !.rstcheck.cfg
 !.style.yapf
@@ -435,4 +436,3 @@ mlruns/
 !tests/**/lib
 !src/**/tags
 !src/**/lib
-
