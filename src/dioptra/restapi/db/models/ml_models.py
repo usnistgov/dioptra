@@ -14,6 +14,8 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+import uuid
+
 from sqlalchemy import (
     ForeignKey,
     ForeignKeyConstraint,
@@ -24,7 +26,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 
-from dioptra.restapi.db.db import bigint, intpk, text_
+from dioptra.restapi.db.db import bigint, guid, intpk, text_
 
 from .artifacts import Artifact
 from .resources import Resource, ResourceSnapshot, resource_dependencies_table
@@ -39,6 +41,15 @@ class MlModel(ResourceSnapshot):
     resource_snapshot_id: Mapped[intpk] = mapped_column(init=False)
     resource_id: Mapped[bigint] = mapped_column(init=False, nullable=False, index=True)
     name: Mapped[text_] = mapped_column(nullable=False)
+    alternative_id: Mapped[guid] = mapped_column(
+        init=False, nullable=False, unique=True, index=True
+    )
+
+    # Initialize default values using dataclass __post_init__ method
+    # https://docs.python.org/3/library/dataclasses.html#dataclasses.__post_init__
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        self.alternative_id = uuid.uuid4()
 
     # Additional settings
     __table_args__ = (  # type: ignore[assignment]

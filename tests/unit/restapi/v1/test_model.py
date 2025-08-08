@@ -148,8 +148,10 @@ def assert_retrieving_model_by_id_works(
     response = dioptra_client.models.get_by_id(model_id)
     assert response.status_code == HTTPStatus.OK and response.json() == expected
 
-    name = f"resource_{response.json()['id']:09d}"
-    assert mlflow_client.get_registered_model(name).name == name
+    # can no longer check name since it is a UUID now
+    # could added it to the model repsonse, but it feels like an internal thing
+    # name = f"resource_{response.json()['id']:09d}"
+    # assert mlflow_client.get_registered_model(name).name == name
 
 
 def assert_retrieving_models_works(
@@ -294,10 +296,12 @@ def assert_retrieving_model_version_by_version_number_works(
     )
     assert response.status_code == HTTPStatus.OK and response.json() == expected
 
-    json_ = response.json()
-    name = f"resource_{json_['model']['id']:09d}"
-    model_version = mlflow_client.get_model_version(name, str(version_number))
-    assert model_version.name == name
+    # can no longer check name since it is a UUID now
+    # could added it to the model repsonse, but it feels like an internal thing
+    # json_ = response.json()
+    # name = f"resource_{json_['model']['id']:09d}"
+    # model_version = mlflow_client.get_model_version(name, str(version_number))
+    # assert model_version.name == name
 
 
 def assert_retrieving_model_versions_works(

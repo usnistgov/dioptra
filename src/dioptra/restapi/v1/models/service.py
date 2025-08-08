@@ -129,10 +129,8 @@ class ModelService(object):
 
         db.session.flush()
 
-        mlflow_model_name = f"resource_{ml_model.resource_id:09d}"
-
         try:
-            self._mlflow_client.create_registered_model(mlflow_model_name)
+            self._mlflow_client.create_registered_model(str(ml_model.alternative_id))
         except MlflowException as e:
             raise MlflowError(e.message) from e
 
@@ -141,7 +139,9 @@ class ModelService(object):
         except Exception as e:
             # if the commit fails, attempt to roll back mlflow changes
             try:
-                self._mlflow_client.delete_registered_model(mlflow_model_name)
+                self._mlflow_client.delete_registered_model(
+                    str(ml_model.alternative_id)
+                )
             except MlflowException as mlflow_error:
                 raise MlflowError(str(e)) from mlflow_error
             raise e
@@ -573,10 +573,9 @@ class ModelIdVersionsService(object):
         db.session.add(new_version)
         db.session.flush()
 
-        mlflow_model_name = f"resource_{ml_model.resource_id:09d}"
         try:
             self._mlflow_client.create_model_version(
-                mlflow_model_name, source=artifact.uri
+                str(ml_model.alternative_id), source=artifact.uri
             )
         except MlflowException as e:
             raise MlflowError(e.message) from e
