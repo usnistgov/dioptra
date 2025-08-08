@@ -30,7 +30,7 @@ from dioptra.restapi.errors import (
     BackendDatabaseError,
     EntityDoesNotExistError,
     EntityExistsError,
-    # MLFlowError, TODO: re-create this
+    MlflowError,
     SortParameterValidationError,
 )
 from dioptra.restapi.v1 import utils
@@ -134,7 +134,7 @@ class ModelService(object):
         try:
             self._mlflow_client.create_registered_model(mlflow_model_name)
         except MlflowException as e:
-            raise MLFlowError(e.message) from e
+            raise MlflowError(e.message) from e
 
         try:
             db.session.commit()
@@ -143,7 +143,7 @@ class ModelService(object):
             try:
                 self._mlflow_client.delete_registered_model(mlflow_model_name)
             except MlflowException as mlflow_error:
-                raise MLFlowError(str(e)) from mlflow_error
+                raise MlflowError(str(e)) from mlflow_error
             raise e
 
         log.debug(
@@ -579,7 +579,7 @@ class ModelIdVersionsService(object):
                 mlflow_model_name, source=artifact.uri
             )
         except MlflowException as e:
-            raise MLFlowError(e.message) from e
+            raise MlflowError(e.message) from e
 
         db.session.commit()
 

@@ -374,6 +374,13 @@ class JobArtifactParameterMissingError(DioptraError):
         )
 
 
+class MlflowError(DioptraError):
+    """The mlflow client raised an exception."""
+
+    def __init__(self, message: str):
+        super().__init__(message)
+
+
 class JobMlflowRunAlreadySetError(DioptraError):
     """The requested job already has an mlflow run id set."""
 
@@ -838,12 +845,17 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
         return error_result(error, http.HTTPStatus.UNAUTHORIZED, {})
 
     @api.errorhandler(JobStoreError)
-    def handle_mlflow_error(error: JobStoreError):
+    def handle_jobs_tore_error(error: JobStoreError):
         log.debug(error.to_message())
         return error_result(error, http.HTTPStatus.INTERNAL_SERVER_ERROR, {})
 
     @api.errorhandler(GitError)
     def handle_git_error(error: GitError):
+        log.debug(error.to_message())
+        return error_result(error, http.HTTPStatus.INTERNAL_SERVER_ERROR, {})
+
+    @api.errorhandler(MlflowError)
+    def handle_mlflow_error(error: MlflowError):
         log.debug(error.to_message())
         return error_result(error, http.HTTPStatus.INTERNAL_SERVER_ERROR, {})
 
