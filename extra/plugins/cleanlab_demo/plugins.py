@@ -173,19 +173,6 @@ def poison (
 
     # Create Keras convolutional neural network - basic architecture from Keras examples
     # Source here: https://github.com/keras-team/keras/blob/master/examples/mnist_cnn.py
-    def create_model():    
-        model = Sequential()
-        model.add(Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=(28, 28, 1)))
-        model.add(Conv2D(64, (3, 3), activation='relu'))
-        model.add(MaxPooling2D(pool_size=(2, 2)))
-        model.add(Dropout(0.25))
-        model.add(Flatten())
-        model.add(Dense(128, activation='relu'))
-        model.add(Dropout(0.5))
-        model.add(Dense(10, activation='softmax'))
-
-        model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-        return model
 
     assert (0 < percentage) and (percentage < 1), \
         "the percentage must be between 0 and 1"
@@ -202,7 +189,7 @@ def poison (
     perturbation = add_pattern_bd
     backdoor = PoisoningAttackBackdoor(perturbation)
 
-    # TODO: this way of creating and training a poisoning model (pulled from the ART notebook) works very well 
+    # TODO: this way of training a poisoning model (pulled from the ART notebook) works very well 
     # with poisoning, but something is different in Dioptra's create model plugin, figure out discrepency
     # and replace?
     # Source: https://github.com/Trusted-AI/adversarial-robustness-toolbox/blob/e30d32d1a1ef296be65097a98391fc2c53a8e509/notebooks/poisoning_attack_clean_label_backdoor.ipynb
@@ -215,6 +202,7 @@ def poison (
         random_selection_indices = np.random.choice(n_train, num_selection)
         x_raw = x_raw[random_selection_indices]
         y_raw = y_raw[random_selection_indices]
+        
         # Poison training data
         percent_poison = percentage
         x_train, y_train = preprocess(x_raw, y_raw)
@@ -230,7 +218,7 @@ def poison (
         x_train = x_train[shuffled_indices]
         y_train = y_train[shuffled_indices]
         
-        proxy = AdversarialTrainerMadryPGD(KerasClassifier(create_model(),clip_values=[0,1]), nb_epochs=10, eps=0.15, eps_step=0.001)
+        proxy = AdversarialTrainerMadryPGD(KerasClassifier(classifier,clip_values=[0,1]), nb_epochs=10, eps=0.15, eps_step=0.001)
         proxy.fit(x_train, y_train)
         targets = to_categorical([9], 10)[0] 
 
