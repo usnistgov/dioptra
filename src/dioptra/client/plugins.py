@@ -131,16 +131,12 @@ class PluginFilesSubCollectionClient(SubCollectionClient[T]):
                 filename="new_name.py",
                 contents="",
                 tasks=[],
-                description="new-description"
+                description="new-description",
             )
 
             # POST /api/v1/plugins/1/files/drafts
             client.plugins.files.new_resource_drafts.create(
-                1,
-                filename="name.py",
-                contents="",
-                tasks=[],
-                description="description"
+                1, filename="name.py", contents="", tasks=[], description="description"
             )
 
             # DELETE /api/v1/plugins/1/files/drafts/1
@@ -169,7 +165,7 @@ class PluginFilesSubCollectionClient(SubCollectionClient[T]):
                 filename="new_name.py",
                 contents="",
                 tasks=[],
-                description="new-description"
+                description="new-description",
             )
 
             # POST /api/v1/plugins/1/files/2/draft
@@ -179,7 +175,7 @@ class PluginFilesSubCollectionClient(SubCollectionClient[T]):
                 filename="name.py",
                 contents="",
                 tasks=[],
-                description="description"
+                description="description",
             )
 
             # DELETE /api/v1/plugins/1/files/2/draft
@@ -557,7 +553,7 @@ class PluginsCollectionClient(CollectionClient[T]):
                 1,
                 resource_snapshot_id=1,
                 name="new-name",
-                description="new-description"
+                description="new-description",
             )
 
             # POST /api/v1/plugins/1/draft

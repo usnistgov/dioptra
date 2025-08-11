@@ -430,7 +430,7 @@ class ResourceImportService(object):
             object
         """
 
-        param_types = dict()
+        param_types = {}
         for param_type in param_types_config:
             if overwrite:
                 existing = self._plugin_parameter_type_name_service.get(
@@ -588,7 +588,7 @@ class ResourceImportService(object):
             {param_type.name: param_type for param_type in builtin_param_types}
         )
 
-        entrypoints = dict()
+        entrypoints = {}
         for entrypoint in entrypoints_config:
             if overwrite:
                 existing = self._entrypoint_name_service.get(

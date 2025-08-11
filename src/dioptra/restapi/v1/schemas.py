@@ -34,75 +34,75 @@ def generate_base_resource_schema(name: str, snapshot: bool) -> type[Schema]:
     schema: dict[str, fields.Field] = {
         "id": fields.Integer(
             attribute="id",
-            metadata=dict(description=f"ID for the {name} resource."),
+            metadata={"description": f"ID for the {name} resource."},
             dump_only=True,
         ),
         "snapshotId": fields.Integer(
             attribute="snapshot_id",
             data_key="snapshot",
-            metadata=dict(description=f"ID for the underlying {name} snapshot."),
+            metadata={"description": f"ID for the underlying {name} snapshot."},
             dump_only=True,
         ),
         "groupId": fields.Integer(
             attribute="group_id",
             data_key="group",
-            metadata=dict(
-                description=f"ID of the Group that will own the {name} resource."
-            ),
+            metadata={
+                "description": f"ID of the Group that will own the {name} resource."
+            },
             load_only=True,
             required=True,
         ),
         "group": fields.Nested(
             GroupRefSchema,
             attribute="group",
-            metadata=dict(description=f"Group that owns the {name} resource."),
+            metadata={"description": f"Group that owns the {name} resource."},
             dump_only=True,
         ),
         "user": fields.Nested(
             UserRefSchema,
             attribute="user",
-            metadata=dict(description=f"User that created the {name} resource."),
+            metadata={"description": f"User that created the {name} resource."},
             dump_only=True,
         ),
         "createdOn": fields.DateTime(
             attribute="created_on",
-            metadata=dict(
-                description=f"Timestamp when the {name} resource was created."
-            ),
+            metadata={
+                "description": f"Timestamp when the {name} resource was created."
+            },
             dump_only=True,
         ),
         "snapshotCreatedOn": fields.DateTime(
             attribute="snapshot_created_on",
-            metadata=dict(
-                description=f"Timestamp when the {name} resource snapshot was created."
-            ),
+            metadata={
+                "description": f"Timestamp when the {name} resource snapshot was created."
+            },
             dump_only=True,
         ),
         "lastModifiedOn": fields.DateTime(
             attribute="last_modified_on",
-            metadata=dict(
-                description=f"Timestamp when the {name} resource was last modified."
-            ),
+            metadata={
+                "description": f"Timestamp when the {name} resource was last modified."
+            },
             dump_only=True,
         ),
         "latestSnapshot": fields.Bool(
             attribute="latest_snapshot",
-            metadata=dict(
-                description=f"Whether or not the {name} resource is the latest version."
-            ),
+            metadata={
+                "description": f"Whether or not the {name} resource is the latest version."
+            },
             dump_only=True,
         ),
         "hasDraft": fields.Bool(
             attribute="has_draft",
-            metadata=dict(
-                description=f"Whether a draft exists for the {name} resource."
-            ),
+            metadata={
+                "description": f"Whether a draft exists for the {name} resource."
+            },
             dump_only=True,
         ),
         "tags": fields.Nested(
             TagRefSchema,
             attribute="tags",
-            metadata=dict(description=f"Tags associated with the {name} resource."),
+            metadata={"description": f"Tags associated with the {name} resource."},
             many=True,
             dump_only=True,
         ),
@@ -126,20 +126,20 @@ def generate_base_resource_ref_schema(
     schema: dict[str, fields.Field] = {
         "id": fields.Integer(
             attribute="id",
-            metadata=dict(description=f"ID for the {name} resource."),
+            metadata={"description": f"ID for the {name} resource."},
         ),
         "snapshotId": fields.Integer(
             attribute="snapshot_id",
-            metadata=dict(description=f"Snapshot ID for the {name} resource."),
+            metadata={"description": f"Snapshot ID for the {name} resource."},
         ),
         "group": fields.Nested(
             GroupRefSchema,
             attribute="group",
-            metadata=dict(description=f"Group that owns the {name} resource."),
+            metadata={"description": f"Group that owns the {name} resource."},
         ),
         "url": fields.Url(
             attribute="url",
-            metadata=dict(description=f"URL for accessing the full {name} resource."),
+            metadata={"description": f"URL for accessing the full {name} resource."},
             relative=True,
         ),
     }
@@ -156,29 +156,29 @@ class BasePageSchema(Schema):
 
     index = fields.Integer(
         attribute="index",
-        metadata=dict(description="Starting index of the current page."),
+        metadata={"description": "Starting index of the current page."},
     )
     isComplete = fields.Boolean(
         attribute="is_complete",
-        metadata=dict(description="Boolean indicating if more data is available."),
+        metadata={"description": "Boolean indicating if more data is available."},
     )
     totalNumResults = fields.Integer(
         attribute="total_num_results",
-        metadata=dict(description="Total number of results."),
+        metadata={"description": "Total number of results."},
     )
     first = fields.Url(
         attribute="first",
-        metadata=dict(description="URL to first page in results set."),
+        metadata={"description": "URL to first page in results set."},
         relative=True,
     )
     next = fields.Url(
         attribute="next",
-        metadata=dict(description="URL to next page in results set."),
+        metadata={"description": "URL to next page in results set."},
         relative=True,
     )
     prev = fields.Url(
         attribute="prev",
-        metadata=dict(description="URL to last page in results set."),
+        metadata={"description": "URL to last page in results set."},
         relative=True,
     )
 
@@ -188,13 +188,13 @@ class PagingQueryParametersSchema(Schema):
 
     index = fields.Integer(
         attribute="index",
-        metadata=dict(description="Starting index of the current page."),
+        metadata={"description": "Starting index of the current page."},
         load_default=0,
         validate=Range(min=0),
     )
     pageLength = fields.Integer(
         attribute="page_length",
-        metadata=dict(description="Number of results to return per page."),
+        metadata={"description": "Number of results to return per page."},
         load_default=10,
     )
 
@@ -212,7 +212,7 @@ class ResourceTypeQueryParametersSchema(Schema):
 
     resourceType = fields.String(
         attribute="resource_type",
-        metadata=dict(description="Filter results by the type of resource."),
+        metadata={"description": "Filter results by the type of resource."},
         load_default=None,
     )
 
@@ -222,7 +222,7 @@ class GroupIdQueryParametersSchema(Schema):
 
     groupId = fields.Integer(
         attribute="group_id",
-        metadata=dict(description="Filter results by the Group ID."),
+        metadata={"description": "Filter results by the Group ID."},
         load_default=None,
     )
 
@@ -239,9 +239,9 @@ class DraftTypeQueryParametersSchema(Schema):
     draftType = fields.Enum(
         DraftTypes,
         attribute="draft_type",
-        metadata=dict(
-            description="The type of drafts to return: all, existing, or new."
-        ),
+        metadata={
+            "description": "The type of drafts to return: all, existing, or new."
+        },
         by_value=True,
         load_default=DraftTypes.ALL,
     )
@@ -252,7 +252,7 @@ class SearchQueryParametersSchema(Schema):
 
     search = fields.String(
         attribute="search",
-        metadata=dict(description="Search terms for the query (* and ? wildcards)."),
+        metadata={"description": "Search terms for the query (* and ? wildcards)."},
         load_default="",
     )
 
@@ -262,15 +262,15 @@ class SortByGetQueryParametersSchema(Schema):
 
     sortBy = fields.String(
         attribute="sort_by",
-        metadata=dict(description="The name of the column to sort."),
+        metadata={"description": "The name of the column to sort."},
         load_default="",
     )
 
     descending = fields.Bool(
         attribute="descending",
-        metadata=dict(
-            description="Boolean indicating whether to sort by descending or not."
-        ),
+        metadata={
+            "description": "Boolean indicating whether to sort by descending or not."
+        },
         load_default=False,
     )
 
@@ -288,7 +288,7 @@ class IdListSchema(Schema):
     ids = fields.List(
         fields.Integer(),
         attribute="ids",
-        metadata=dict(description="List of identifiers for one or more objects."),
+        metadata={"description": "List of identifiers for one or more objects."},
     )
 
 
@@ -298,13 +298,13 @@ class IdStatusResponseSchema(Schema):
     id = fields.List(
         fields.Integer(),
         attribute="id",
-        metadata=dict(
-            description="A list of integers identifying the affected resource(s)."
-        ),
+        metadata={
+            "description": "A list of integers identifying the affected resource(s)."
+        },
     )
     status = fields.String(
         attribute="status",
-        metadata=dict(description="The status of the request."),
+        metadata={"description": "The status of the request."},
     )
 
 
@@ -314,7 +314,7 @@ class ResourceUrlsPageSchema(BasePageSchema):
     data = fields.List(
         fields.String(),
         many=True,
-        metadata=dict(description="List of Resource URLs in the current page."),
+        metadata={"description": "List of Resource URLs in the current page."},
     )
 
 
@@ -324,9 +324,9 @@ class FileDownloadParametersSchema(Schema):
     fileType = fields.Enum(
         FileTypes,
         attribute="file_type",
-        metadata=dict(
-            description="The type of file to download: tar_gz or zip.",
-        ),
+        metadata={
+            "description": "The type of file to download: tar_gz or zip.",
+        },
         by_value=True,
         load_default=FileTypes.TAR_GZ,
     )

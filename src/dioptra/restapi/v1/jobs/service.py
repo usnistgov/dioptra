@@ -229,7 +229,7 @@ class JobService(object):
 
         # Validate the keys in values against the registered entrypoint parameter names
         invalid_job_params = list(
-            set(values.keys()) - set(param.name for param in entrypoint.parameters)
+            set(values.keys()) - {param.name for param in entrypoint.parameters}
         )
         if len(invalid_job_params) > 0:
             log.debug("Invalid parameter names", parameters=invalid_job_params)
@@ -404,7 +404,7 @@ class JobService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get full list of jobs")
 
-        filters = list()
+        filters = []
 
         if group_id is not None:
             filters.append(models.Resource.group_id == group_id)

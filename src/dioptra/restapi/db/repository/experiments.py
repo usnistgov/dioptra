@@ -105,14 +105,14 @@ class ExperimentRepository:
         self.session.add(experiment)
 
     @overload
-    def get(  # noqa: E704
+    def get(
         self,
         resource_ids: int,
         deletion_policy: utils.DeletionPolicy,
     ) -> Experiment | None: ...
 
     @overload
-    def get(  # noqa: E704
+    def get(
         self,
         resource_ids: Iterable[int],
         deletion_policy: utils.DeletionPolicy,

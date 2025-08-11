@@ -31,16 +31,16 @@ class DraftRefSchema(Schema):
 
     id = fields.Integer(
         attribute="id",
-        metadata=dict(description="ID for the Draft."),
+        metadata={"description": "ID for the Draft."},
         dump_only=True,
     )
     resourceType = fields.String(
         attribute="resource_type",
-        metadata=dict(description="The resource type of the Draft."),
+        metadata={"description": "The resource type of the Draft."},
     )
     url = fields.Url(
         attribute="url",
-        metadata=dict(description="URL for accessing the full Draft."),
+        metadata={"description": "URL for accessing the full Draft."},
         relative=True,
     )
 
@@ -53,57 +53,57 @@ class DraftSchema(Schema):
 
     id = fields.Integer(
         attribute="id",
-        metadata=dict(description="ID of the Draft."),
+        metadata={"description": "ID of the Draft."},
         dump_only=True,
     )
     group = fields.Nested(
         GroupRefSchema,
         attribute="group",
-        metadata=dict(description="Group that owns the draft resource."),
+        metadata={"description": "Group that owns the draft resource."},
         dump_only=True,
     )
     user = fields.Nested(
         UserRefSchema,
         attribute="user",
-        metadata=dict(description="User that created the draft resource."),
+        metadata={"description": "User that created the draft resource."},
         dump_only=True,
     )
     payload = fields.Dict(
         attribute="payload",
-        metadata=dict(description="The contents of the draft resource."),
+        metadata={"description": "The contents of the draft resource."},
         dump_only=True,
     )
     createdOn = fields.DateTime(
         attribute="created_on",
-        metadata=dict(description="Timestamp when the draft resource was created."),
+        metadata={"description": "Timestamp when the draft resource was created."},
         dump_only=True,
     )
     lastModifiedOn = fields.DateTime(
         attribute="last_modified_on",
-        metadata=dict(
-            description="Timestamp when the draft resource was last modified."
-        ),
+        metadata={
+            "description": "Timestamp when the draft resource was last modified."
+        },
         dump_only=True,
     )
     resourceType = fields.String(
         attribute="resource_type",
-        metadata=dict(description="The type of resource of this draft."),
+        metadata={"description": "The type of resource of this draft."},
         dump_only=True,
     )
     resource = fields.Integer(
         attribute="resource_id",
-        metadata=dict(description="ID of the resource this draft modifies."),
+        metadata={"description": "ID of the resource this draft modifies."},
         dump_only=True,
     )
     resourceSnapshot = fields.Integer(
         attribute="resource_snapshot_id",
-        metadata=dict(description="ID of the resource snapshot this draft modifies."),
+        metadata={"description": "ID of the resource snapshot this draft modifies."},
         dump_only=True,
         allow_none=True,
     )
     metadata = fields.Dict(
         attribute="metadata",
-        metadata=dict(description="Additional metadata about the draft"),
+        metadata={"description": "Additional metadata about the draft"},
         dump_only=True,
     )
 
@@ -111,7 +111,7 @@ class DraftSchema(Schema):
 class ModifyDraftBaseSchema(Schema):
     resourceSnapshot = fields.Integer(
         attribute="resource_snapshot_id",
-        metadata=dict(description="ID of the resource snapshot this draft modifies."),
+        metadata={"description": "ID of the resource snapshot this draft modifies."},
     )
 
 
@@ -121,7 +121,7 @@ class DraftPageSchema(BasePageSchema):
     data = fields.Nested(
         DraftSchema,
         many=True,
-        metadata=dict(description="List of Drafts in the current page."),
+        metadata={"description": "List of Drafts in the current page."},
     )
 
 

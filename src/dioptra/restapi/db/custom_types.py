@@ -15,6 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """Custom SQLAlchemy data types for the REST API database."""
+
 import datetime
 import uuid
 

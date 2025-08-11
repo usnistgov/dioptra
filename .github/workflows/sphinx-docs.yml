@@ -29,33 +29,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: setup python 3.11
-        uses: actions/setup-python@v5.6.0
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
           python-version: "3.11"
 
-      - name: upgrade pip
-        run: |
-          # install pip=>20.1 to use "pip cache dir"
-          python3 -m pip install --upgrade pip
-
-      - name: get pip cache dir
-        id: pip-cache
-        run: echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
-
-      - name: cache dependencies
-        uses: actions/cache@v4.2.3
-        with:
-          path: ${{ steps.pip-cache.outputs.dir }}
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml', '**/tox.ini') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      - name: install dependencies
-        run: python3 -m pip install tox
-
       - name: build the documentation
-        run: python3 -m tox run -e docs
+        run: uvx -p "3.11" tox run -e docs
 
       - name: archive the documentation
         uses: actions/upload-artifact@v4

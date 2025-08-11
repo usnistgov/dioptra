@@ -30,14 +30,14 @@ class GroupRefSchema(Schema):
 
     id = fields.Integer(
         attribute="id",
-        metadata=dict(description="ID for the Group resource."),
+        metadata={"description": "ID for the Group resource."},
     )
     name = fields.String(
-        attribute="name", metadata=dict(description="Name of the Group resource.")
+        attribute="name", metadata={"description": "Name of the Group resource."}
     )
     url = fields.Url(
         attribute="url",
-        metadata=dict(description="URL for accessing the full Group resource."),
+        metadata={"description": "URL for accessing the full Group resource."},
         relative=True,
     )
 
@@ -48,46 +48,44 @@ def generate_group_permissions_schema(
     schema: dict[str, fields.Field] = {
         "read": fields.Boolean(
             attribute="read",
-            metadata=dict(description="Permission for member to read Group."),
+            metadata={"description": "Permission for member to read Group."},
             dump_only=is_response,
             load_only=not is_response,
             load_default=(False if use_defaults else missing),
         ),
         "write": fields.Boolean(
             attribute="write",
-            metadata=dict(description="Permission for member to modify Group."),
+            metadata={"description": "Permission for member to modify Group."},
             dump_only=is_response,
             load_only=not is_response,
             load_default=(False if use_defaults else missing),
         ),
         "shareRead": fields.Boolean(
             attribute="share_read",
-            metadata=dict(
-                description="Permission for member to share read-only Group."
-            ),
+            metadata={"description": "Permission for member to share read-only Group."},
             dump_only=is_response,
             load_only=not is_response,
             load_default=(False if use_defaults else missing),
         ),
         "shareWrite": fields.Boolean(
             attribute="share_write",
-            metadata=dict(
-                description="Permission for member to share read+write Group."
-            ),
+            metadata={
+                "description": "Permission for member to share read+write Group."
+            },
             dump_only=is_response,
             load_only=not is_response,
             load_default=(False if use_defaults else missing),
         ),
         "owner": fields.Boolean(
             attribute="owner",
-            metadata=dict(description="Flag for if the member is a Group owner."),
+            metadata={"description": "Flag for if the member is a Group owner."},
             dump_only=is_response,
             load_only=not is_response,
             load_default=(False if use_defaults else missing),
         ),
         "admin": fields.Boolean(
             attribute="admin",
-            metadata=dict(description="Flag for if the member is a Group admin."),
+            metadata={"description": "Flag for if the member is a Group admin."},
             dump_only=is_response,
             load_only=not is_response,
             load_default=(False if use_defaults else missing),
@@ -118,28 +116,28 @@ class GroupMemberBaseSchema(Schema):
     userId = fields.Integer(
         attribute="user_id",
         data_key="user",
-        metadata=dict(
-            description="Unique identifier for the User that is a member of the Group."
-        ),
+        metadata={
+            "description": "Unique identifier for the User that is a member of the Group."
+        },
         load_only=True,
         required=True,
     )
     user = fields.Nested(
         UserRefSchema,
         attribute="user",
-        metadata=dict(description="User that is a member of the Group."),
+        metadata={"description": "User that is a member of the Group."},
         dump_only=True,
     )
     group = fields.Nested(
         GroupRefSchema,
         attribute="group",
-        metadata=dict(description="The Group of which the User is a member."),
+        metadata={"description": "The Group of which the User is a member."},
         dump_only=True,
     )
     permissions = fields.Nested(
         GroupPermissionsResponseSchema,
         attribute="permissions",
-        metadata=dict(description="The Group Permissions for this User."),
+        metadata={"description": "The Group Permissions for this User."},
         dump_only=True,
     )
 
@@ -152,7 +150,7 @@ class GroupMutableFieldsSchema(Schema):
     """The schema for the mutable data by GroupMembers in a Group."""
 
     name = fields.String(
-        attribute="name", metadata=dict(description="Name of the Group."), required=True
+        attribute="name", metadata={"description": "Name of the Group."}, required=True
     )
 
 
@@ -163,32 +161,32 @@ class GroupSchema(GroupMutableFieldsSchema):
 
     id = fields.Integer(
         attribute="id",
-        metadata=dict(description="ID for the Group resource."),
+        metadata={"description": "ID for the Group resource."},
         dump_only=True,
     )
     user = fields.Nested(
         UserRefSchema,
         attribute="user",
-        metadata=dict(description="User that created the Group resource."),
+        metadata={"description": "User that created the Group resource."},
         dump_only=True,
     )
     members = fields.Nested(
         GroupMemberSchema,
         attribute="members",
         many=True,
-        metadata=dict(description="A list of GroupMembers in a Group."),
+        metadata={"description": "A list of GroupMembers in a Group."},
         dump_only=True,
     )
     createdOn = fields.DateTime(
         attribute="created_on",
-        metadata=dict(description="Timestamp when the Group resource was created."),
+        metadata={"description": "Timestamp when the Group resource was created."},
         dump_only=True,
     )
     lastModifiedOn = fields.DateTime(
         attribute="last_modified_on",
-        metadata=dict(
-            description="Timestamp when the Group resource was last modified."
-        ),
+        metadata={
+            "description": "Timestamp when the Group resource was last modified."
+        },
         dump_only=True,
     )
 
@@ -199,7 +197,7 @@ class GroupPageSchema(BasePageSchema):
     data = fields.Nested(
         GroupSchema,
         many=True,
-        metadata=dict(description="List of Group resources in the current page."),
+        metadata={"description": "List of Group resources in the current page."},
     )
 
 

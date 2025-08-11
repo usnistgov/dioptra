@@ -583,13 +583,13 @@ def get_plugin_task_parameter_types_by_id(
         raise BackendDatabaseError
 
     if not len(parameter_types) == num_ids:
-        returned_parameter_type_ids = set([x.resource_id for x in parameter_types])
+        returned_parameter_type_ids = {x.resource_id for x in parameter_types}
         ids_not_found = id_list - returned_parameter_type_ids
         raise EntityDoesNotExistError(
             RESOURCE_TYPE,
             num_expected=num_ids,
             num_found=len(parameter_types),
-            ids_not_found=sorted(list(ids_not_found)),
+            ids_not_found=sorted(ids_not_found),
         )
 
     return {x.resource_id: x for x in parameter_types}

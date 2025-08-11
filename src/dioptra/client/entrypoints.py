@@ -623,7 +623,7 @@ class EntrypointsCollectionClient(CollectionClient[T]):
                 1,
                 resource_snapshot_id=1,
                 name="new-name",
-                description="new-description"
+                description="new-description",
             )
 
             # POST /api/v1/entrypoints/1/draft
@@ -657,7 +657,9 @@ class EntrypointsCollectionClient(CollectionClient[T]):
 
             # GET /api/v1/entrypoints/1/snapshots/2/bundle?fileType=tar_gz
             client.entrypoints.snapshots.get_plugins_bundle(
-                1, entrypoint_snapshot_id=2, file_type=FileTypes.TAR_GZ,
+                1,
+                entrypoint_snapshot_id=2,
+                file_type=FileTypes.TAR_GZ,
             )
 
             # GET /api/v1/entrypoints/1/snapshots/2/artifactPlugins
@@ -667,9 +669,11 @@ class EntrypointsCollectionClient(CollectionClient[T]):
 
             # GET /api/v1/entrypoints/1/snapshots/2/artifactPlugins/bundle?fileType=tar_gz
             client.entrypoints.snapshots.get_artifact_plugins_bundle(
-                1, entrypoint_snapshot_id=2, file_type=FileTypes.TAR_GZ,
+                1,
+                entrypoint_snapshot_id=2,
+                file_type=FileTypes.TAR_GZ,
             )
-        """  # noqa B950
+        """
         return self._snapshots
 
     @property

@@ -178,7 +178,7 @@ class PluginService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get full list of plugins")
 
-        filters = list()
+        filters = []
 
         if group_id is not None:
             filters.append(models.Resource.group_id == group_id)
@@ -506,9 +506,9 @@ class PluginIdsService(object):
         plugins = db.session.scalars(latest_plugins_stmt).all()
 
         if len(plugins) != len(plugin_ids) and error_if_not_found:
-            plugin_ids_missing = set(plugin_ids) - set(
+            plugin_ids_missing = set(plugin_ids) - {
                 plugin.resource_id for plugin in plugins
-            )
+            }
             raise EntityDoesNotExistError(
                 PLUGIN_RESOURCE_TYPE, plugin_ids=list(plugin_ids_missing)
             )
@@ -838,7 +838,7 @@ class PluginIdFileService(object):
             page_length=page_length,
         )
 
-        filters = list()
+        filters = []
 
         if search_string:
             filters.append(

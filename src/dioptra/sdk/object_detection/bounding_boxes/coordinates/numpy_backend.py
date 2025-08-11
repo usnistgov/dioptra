@@ -59,13 +59,13 @@ class NumpyBoundingBoxCoordinates(BoundingBoxCoordinates):
         )
 
     def find_no_obj_cell_ij(self, bboxes_cell_ij: npt.NDArray) -> npt.NDArray:
-        cell_ij_set: set[tuple[int, int]] = set(
-            [(i, j) for i in range(self.cell_nrow) for j in range(self.cell_ncol)]
-        )
-        cell_ij_seen: set[tuple[int, int]] = set(
-            [(int(x[0]), int(x[1])) for x in bboxes_cell_ij.tolist()]
-        )
-        no_obj_cell_ij = sorted(list(cell_ij_set - cell_ij_seen))
+        cell_ij_set: set[tuple[int, int]] = {
+            (i, j) for i in range(self.cell_nrow) for j in range(self.cell_ncol)
+        }
+        cell_ij_seen: set[tuple[int, int]] = {
+            (int(x[0]), int(x[1])) for x in bboxes_cell_ij.tolist()
+        }
+        no_obj_cell_ij = sorted(cell_ij_set - cell_ij_seen)
 
         return np.array(no_obj_cell_ij, dtype="int32")
 

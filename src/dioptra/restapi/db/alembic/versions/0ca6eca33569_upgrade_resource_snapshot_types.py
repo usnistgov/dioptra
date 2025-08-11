@@ -4,7 +4,7 @@ Revision ID: 0ca6eca33569
 Revises: f1d231f7ef15
 Create Date: 2024-12-12 00:47:23.575103
 
-"""  # noqa: B950
+"""
 
 from typing import Annotated
 

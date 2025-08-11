@@ -247,7 +247,7 @@ class EntrypointService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get full list of entrypoints")
 
-        filters = list()
+        filters = []
 
         if group_id is not None:
             filters.append(models.Resource.group_id == group_id)
@@ -305,12 +305,12 @@ class EntrypointService(object):
 
         entrypoints = list(db.session.scalars(entrypoints_stmt).unique().all())
 
-        queue_ids = set(
+        queue_ids = {
             resource.resource_id
             for entrypoint in entrypoints
             for resource in entrypoint.children
             if resource.resource_type == "queue" and not resource.is_deleted
-        )
+        }
         queues = {
             queue.resource_id: queue
             for queue in self._queue_ids_service.get(
@@ -408,11 +408,11 @@ class EntrypointIdService(object):
                 entrypoint_snapshot_id=entrypoint_snapshot_id,
             )
 
-        queue_ids = set(
+        queue_ids = {
             resource.resource_id
             for resource in entrypoint.children
             if resource.resource_type == "queue" and not resource.is_deleted
-        )
+        }
         queues = self._queue_ids_service.get(list(queue_ids), error_if_not_found=True)
 
         drafts_stmt = (
@@ -918,9 +918,9 @@ class EntrypointIdPluginsIdService(object):
             "entry_point"
         ]
 
-        plugin_ids = set(
+        plugin_ids = {
             plugin.plugin.resource_id for plugin in entrypoint.entry_point_plugins
-        )
+        }
         if plugin_id not in plugin_ids:
             raise EntityDoesNotExistError(
                 PLUGIN_RESOURCE_TYPE, entrypoint_id=entrypoint_id, plugin_id=plugin_id
@@ -1210,10 +1210,10 @@ class EntrypointIdArtifactPluginsIdService(object):
             "entry_point"
         ]
 
-        artifact_plugin_ids = set(
+        artifact_plugin_ids = {
             artifact_plugin.plugin.resource_id
             for artifact_plugin in entrypoint.entry_point_artifact_plugins
-        )
+        }
         if artifact_plugin_id not in artifact_plugin_ids:
             raise EntityDoesNotExistError(
                 PLUGIN_RESOURCE_TYPE,
@@ -1310,9 +1310,9 @@ class EntrypointIdsService(object):
         entrypoints = list(db.session.scalars(stmt).all())
 
         if len(entrypoints) != len(entrypoint_ids) and error_if_not_found:
-            entrypoint_ids_missing = set(entrypoint_ids) - set(
+            entrypoint_ids_missing = set(entrypoint_ids) - {
                 entrypoint.resource_id for entrypoint in entrypoints
-            )
+            }
             raise EntityDoesNotExistError(
                 ENTRYPOINT_RESOURCE_TYPE, entrypoint_ids=list(entrypoint_ids_missing)
             )
@@ -1397,11 +1397,11 @@ class EntrypointIdQueuesService(object):
         entrypoint = entrypoint_dict["entry_point"]
         queues = entrypoint_dict["queues"]
 
-        existing_queue_ids = set(
+        existing_queue_ids = {
             resource.resource_id
             for resource in entrypoint.children
             if resource.resource_type == "queue"
-        )
+        }
         new_queue_ids = set(queue_ids) - existing_queue_ids
         new_queues = self._queue_ids_service.get(
             list(new_queue_ids), error_if_not_found=True, log=log
@@ -1665,10 +1665,10 @@ def _copy_artifact_plugins(
 ) -> list[models.Resource]:
     target_entrypoint.entry_point_artifact_plugins = [
         models.EntryPointArtifactPlugin(
-            entry_point=target_entrypoint,
-            plugin=artifact_plugin.plugin,
+            entry_point=target_entrypoint,  # pyright: ignore
+            plugin=artifact_plugin.plugin,  # pyright: ignore
         )
-        for artifact_plugin in artifact_plugins  # noqa: B950
+        for artifact_plugin in artifact_plugins
     ]
     # return a unique list of artifact plugin resources
     return list(

@@ -257,7 +257,7 @@ class ArtifactService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get full list of artifacts")
 
-        filters = list()
+        filters = []
 
         if group_id is not None:
             filters.append(models.Resource.group_id == group_id)

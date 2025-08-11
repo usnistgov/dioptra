@@ -354,9 +354,7 @@ class QueueIdsService(object):
         queues = self._uow.queue_repo.get(queue_ids, DeletionPolicy.NOT_DELETED)
 
         if len(queues) != len(queue_ids) and error_if_not_found:
-            queue_ids_missing = set(queue_ids) - set(
-                queue.resource_id for queue in queues
-            )
+            queue_ids_missing = set(queue_ids) - {queue.resource_id for queue in queues}
             log.debug("Queue not found", queue_ids=list(queue_ids_missing))
             raise EntityDoesNotExistError(
                 EntityTypes.QUEUE, resource_ids=queue_ids_missing

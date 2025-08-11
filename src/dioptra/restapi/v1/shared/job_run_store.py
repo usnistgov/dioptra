@@ -233,7 +233,7 @@ class MlFlowJobRunStore:
         Raises:
             JobStoreError: If the artifact is not found in MLFlow.
         """
-        contents: list[ArtifactFile] = list()
+        contents: list[ArtifactFile] = []
 
         artifact_list = mlflow.artifacts.list_artifacts(artifact_uri=base_uri)
         if artifact_list is None:

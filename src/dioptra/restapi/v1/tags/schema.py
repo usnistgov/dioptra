@@ -35,20 +35,18 @@ class TagRefSchema(Schema):
 
     id = fields.Integer(
         attribute="id",
-        metadata=dict(description="ID for the Tag."),
+        metadata={"description": "ID for the Tag."},
         dump_only=True,
     )
-    name = fields.String(
-        attribute="name", metadata=dict(description="Name of the Tag.")
-    )
+    name = fields.String(attribute="name", metadata={"description": "Name of the Tag."})
     group = fields.Nested(
         GroupRefSchema,
         attribute="group",
-        metadata=dict(description="Owner of the Tag."),
+        metadata={"description": "Owner of the Tag."},
     )
     url = fields.Url(
         attribute="url",
-        metadata=dict(description="URL for accessing the full Tag."),
+        metadata={"description": "URL for accessing the full Tag."},
         relative=True,
     )
 
@@ -57,7 +55,7 @@ class TagMutableFieldsSchema(Schema):
     """The fields schema for the mutable data in a Tag resource."""
 
     name = fields.String(
-        attribute="name", metadata=dict(description="Name of the Tag resource.")
+        attribute="name", metadata={"description": "Name of the Tag resource."}
     )
 
 
@@ -66,35 +64,35 @@ class TagBaseSchema(Schema):
 
     id = fields.Integer(
         attribute="id",
-        metadata=dict(description="ID for the Tag."),
+        metadata={"description": "ID for the Tag."},
         dump_only=True,
     )
     groupId = fields.Integer(
         attribute="group_id",
         data_key="group",
-        metadata=dict(description="Group that owns the Tag."),
+        metadata={"description": "Group that owns the Tag."},
         load_only=True,
     )
     group = fields.Nested(
         GroupRefSchema,
         attribute="group",
-        metadata=dict(description="Group that owns the Tag."),
+        metadata={"description": "Group that owns the Tag."},
         dump_only=True,
     )
     user = fields.Nested(
         UserRefSchema,
         attribute="user",
-        metadata=dict(description="User that created the Tag."),
+        metadata={"description": "User that created the Tag."},
         dump_only=True,
     )
     createdOn = fields.DateTime(
         attribute="created_on",
-        metadata=dict(description="Timestamp when the Tag resource was created."),
+        metadata={"description": "Timestamp when the Tag resource was created."},
         dump_only=True,
     )
     lastModifiedOn = fields.DateTime(
         attribute="last_modified_on",
-        metadata=dict(description="Timestamp when the Tag resource was last modified."),
+        metadata={"description": "Timestamp when the Tag resource was last modified."},
         dump_only=True,
     )
 
@@ -109,7 +107,7 @@ class TagPageSchema(BasePageSchema):
     data = fields.Nested(
         TagSchema,
         many=True,
-        metadata=dict(description="List of Tags in the current page."),
+        metadata={"description": "List of Tags in the current page."},
     )
 
 

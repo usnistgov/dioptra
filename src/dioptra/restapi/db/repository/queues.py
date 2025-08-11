@@ -26,7 +26,6 @@ from dioptra.restapi.db.models import Group, Queue, Tag
 
 
 class QueueRepository:
-
     SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
         "name": lambda x: Queue.name.like(x, escape="/"),
         "description": lambda x: Queue.description.like(x, escape="/"),
@@ -129,14 +128,14 @@ class QueueRepository:
         utils.delete_resource(self.session, queue)
 
     @overload
-    def get(  # noqa: E704
+    def get(
         self,
         resource_ids: int,
         deletion_policy: utils.DeletionPolicy,
     ) -> Queue | None: ...
 
     @overload
-    def get(  # noqa: E704
+    def get(
         self,
         resource_ids: Iterable[int],
         deletion_policy: utils.DeletionPolicy,
