@@ -99,6 +99,10 @@ description = "A collection of basic artifact tasks."
   name = "DirectoryArtifactTask"
   output_params = [ { name = "directory", type = "path" } ]
 
+  [[plugins.tasks.artifacts]]
+  filename="tasks.py"
+  name = "FileArtifactTask"
+  output_params = [ { name = "path", type = "path" } ]
 
 [[plugins]]
 path = "plugins/mnist_demo"
@@ -291,8 +295,7 @@ description = "A collection of plugins for training an MNIST classifier and runn
   filename = "plugins.py"
   name = "load_predictions"
   input_params = [ 
-    { name = "paths", type = "list_str", required = true},
-    { name = "filename", type = "string", required = true},
+    { name = "dataframe", type = "dataframe", required = true},
     { name = "format", type = "string", required = false},
     { name = "dataset", type = "null_dataset", required = false},
     { name = "n_classes", type = "integer", required = false},
@@ -300,6 +303,31 @@ description = "A collection of plugins for training an MNIST classifier and runn
   output_params = [ 
     { name = "y_true", type = "null_np.ndarray" }, 
     { name = "y_pred", type = "null_np.ndarray" }
+  ]
+
+  [[plugins.tasks.functions]]
+  filename = "plugins.py"
+  name = "read_model"
+  input_params = [ 
+    { name = "location", type = "path", required = true},
+    { name = "imagenet_preprocessing", type = "boolean", required = false },
+    { name = "art", type = "boolean", required = false },
+    { name = "image_size", type = "tuple_int_int_int", required = false },
+    { name = "classifier_kwargs", type = "null_mapping_str_any", required = false },
+ ]
+  output_params = [ 
+    { name = "output", type = "model" }, 
+  ]
+  [[plugins.tasks.functions]]
+  filename = "plugins.py"
+  name = "write_model"
+  input_params = [ 
+    { name = "model", type = "model", required = true},
+    { name = "name", type = "string", required = true},
+    { name = "suffix", type = "string", required = false},
+  ]
+  output_params = [ 
+    { name = "output", type = "path" }, 
   ]
 
 [[plugin_param_types]]
@@ -757,6 +785,9 @@ params = [
   { name = "norm", type = "string", default_value = "inf" },
   { name = "seed", type = "integer", default_value = "-1" }
 ]
+artifact_params = [
+  { name = "model_file", output_params = [ { name = "path", type = "path" } ] }
+]
 plugins = [ "mnist_demo" ]
 artifact_plugins = [ "artifacts" ]
 
@@ -783,6 +814,9 @@ params = [
   { name = "patch_shape", type = "list", default_value = "[2, 2, 1]" },
   { name = "batch_size", type = "integer", default_value = "10" },
   { name = "rescale", type = "float", default_value = "0.00392156862" },
+]
+artifact_params = [
+  { name = "model_file", output_params = [ { name = "path", type = "path" } ] }
 ]
 plugins = [ "mnist_demo" ]
 artifact_plugins = [ "artifacts" ]
@@ -812,6 +846,7 @@ params = [
   { name = "rescale", type = "float", default_value = "0.00392156862" },
 ]
 artifact_params = [
+  { name = "model_file", output_params = [ { name = "path", type = "path" } ] },
   { name = "patch", output_params = [ { name = "patch_location", type = "path" } ] }
 ]
 plugins = [ "mnist_demo" ]
@@ -836,6 +871,10 @@ params = [
   { name = "seed", type = "integer", default_value = "-1" },
   { name = "rescale", type = "float", default_value = "0.00392156862" },
 ]
+artifact_params = [
+  { name = "model_file", output_params = [ { name = "path", type = "path" } ] },
+  { name = "testing", output_params = [ { name = "testing", type = "string" } ] }
+]
 plugins = [ "mnist_demo" ]
 artifact_plugins = [ "artifacts" ]
 
@@ -854,6 +893,9 @@ params = [
   { name = "n_classes", type = "integer", default_value = "10" },
   { name = "seed", type = "integer", default_value = "-1" },
   { name = "rescale", type = "float", default_value = "0.00392156862" },
+]
+artifact_params = [
+  { name = "predictions", output_params = [ { name = "predictions", type = "dataframe" } ] }
 ]
 plugins = [ "mnist_demo" ]
 artifact_plugins = [ "artifacts" ]
@@ -879,6 +921,10 @@ params = [
   { name = "def_type", type = "string", default_value = "spatial_smothing" },
   { name = "defense_kwargs", type = "mapping", default_value = "{}"},
   { name = "rescale", type = "float", default_value = "0.00392156862" },
+]
+artifact_params = [
+  { name = "model_file", output_params = [ { name = "path", type = "path" } ] },
+  { name = "adversarial_dataset", output_params = [ { name = "adversarial_dataset", type = "string" } ] }
 ]
 plugins = [ "mnist_demo" ]
 artifact_plugins = [ "artifacts" ]
