@@ -14,16 +14,14 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from __future__ import annotations
-
 import pickle
 import tarfile
 from collections.abc import ByteString
 from pathlib import Path
 from typing import Any, Callable, Dict, Literal, Optional
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 import structlog
 from structlog.stdlib import BoundLogger
 
@@ -59,11 +57,7 @@ class StringArtifactTask(ArtifactTaskInterface):
 
     @staticmethod
     def validation() -> dict[str, Any] | None:
-        return {"type": {"enum": ["txt", "html", "md"]}}
-
-    @staticmethod
-    def name() -> str:
-        return "string"
+        return {"type": {"type": "string"}}
 
 
 class BytesArtifactTask(ArtifactTaskInterface):
@@ -82,11 +76,7 @@ class BytesArtifactTask(ArtifactTaskInterface):
 
     @staticmethod
     def validation() -> dict[str, Any] | None:
-        return {"type": {"enum": ["pdf", "jpg", "png"]}}
-
-    @staticmethod
-    def name() -> str:
-        return "bytes"
+        return {"type": {"type": "string"}}
 
 
 class FileArtifactTask(ArtifactTaskInterface):
@@ -105,10 +95,6 @@ class FileArtifactTask(ArtifactTaskInterface):
     @staticmethod
     def validation() -> dict[str, Any] | None:
         return None
-
-    @staticmethod
-    def name() -> str:
-        return "file"
 
 
 class DirectoryArtifactTask(ArtifactTaskInterface):
@@ -138,13 +124,8 @@ class DirectoryArtifactTask(ArtifactTaskInterface):
     @staticmethod
     def deserialize(working_dir: Path, path: str, **kwargs) -> Path:
         name: str
-    
-        print(working_dir, path)
-        import os
-        print(os.path.abspath('.'))
-        print(os.listdir('.'))
         try:
-            with tarfile.open(path, mode="r:*") as tar:
+            with tarfile.open(Path(working_dir, path), mode="r:*") as tar:
                 tar.extractall(path=working_dir, filter="data")
                 names = tar.getnames()
                 if len(names) < 1:
@@ -161,10 +142,6 @@ class DirectoryArtifactTask(ArtifactTaskInterface):
     @staticmethod
     def validation() -> dict[str, Any]:
         return {"tarball_write_mode": {"enum": ["w", "w:", "w:gz", "x:bz2", "w:xz"]}}
-
-    @staticmethod
-    def name() -> str:
-        return "directory"
 
 
 class DataframeArtifactTask(ArtifactTaskInterface):
@@ -273,10 +250,6 @@ class DataframeArtifactTask(ArtifactTaskInterface):
             }
         }
 
-    @staticmethod
-    def name() -> str:
-        return "dataframe"
-
 
 class NumpyArrayArtifactTask(ArtifactTaskInterface):
     @staticmethod
@@ -292,10 +265,6 @@ class NumpyArrayArtifactTask(ArtifactTaskInterface):
     @staticmethod
     def validation() -> dict[str, Any] | None:
         return None
-
-    @staticmethod
-    def name() -> str:
-        return "npy"
 
 
 class PickleArtifactTask(ArtifactTaskInterface):
@@ -314,7 +283,3 @@ class PickleArtifactTask(ArtifactTaskInterface):
     @staticmethod
     def validation() -> dict[str, Any] | None:
         return None
-
-    @staticmethod
-    def name() -> str:
-        return "pkl"
