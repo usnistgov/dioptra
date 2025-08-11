@@ -21,7 +21,6 @@ import uuid
 from typing import Any, Final, cast
 
 import structlog
-from entity_types import EntityTypes
 from flask_login import current_user
 from injector import inject
 from structlog.stdlib import BoundLogger
