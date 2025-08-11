@@ -77,7 +77,7 @@ class EntityTypes(Enum):
 
     @classmethod
     def list_names(cls) -> list[str]:
-        return list(map(lambda c: c.name, cls))
+        return [c.name for c in cls]  # list(map(lambda c: c.name, cls))
         # ----------------------------------------------------------------------
 
     def __str__(self):
