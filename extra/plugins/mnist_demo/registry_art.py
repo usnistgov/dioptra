@@ -48,7 +48,7 @@ except ImportError:  # pragma: nocover
 
 try:
     from tensorflow.keras import losses
-    from tensorflow.keras.models import Sequential
+    from tensorflow.keras.models import Model
 
 except ImportError:  # pragma: nocover
     LOGGER.warn(
@@ -61,7 +61,7 @@ except ImportError:  # pragma: nocover
 @require_package("art", exc_type=ARTDependencyError)
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
 def load_wrapped_tensorflow_keras_classifier(
-    artifact_uri: str,
+    keras_classifier: Model,
     imagenet_preprocessing: bool = False,
     image_size: Any = None,
     classifier_kwargs: dict[str, Any] | None = None,
@@ -82,9 +82,6 @@ def load_wrapped_tensorflow_keras_classifier(
         - :py:func:`.mlflow.load_tensorflow_keras_classifier`
     """
     classifier_kwargs = classifier_kwargs or {}
-    keras_classifier: Sequential = load_tensorflow_keras_classifier(
-        uri=artifact_uri
-    )
     nb_classes = keras_classifier.output_shape[1]
     input_shape = keras_classifier.input_shape if image_size == None else image_size
     loss_object = losses.get(keras_classifier.loss)

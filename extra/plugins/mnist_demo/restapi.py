@@ -154,3 +154,4 @@ def upload_artifact_to_restapi(
         uri=source_uri,
     )
     LOGGER.info("artifact", response=artifact)
+

@@ -138,7 +138,8 @@ def load_model(
 ) -> Model:
     uri = get_uri_for_model(model_name, model_version)
     if (art):
-        classifier = load_wrapped_tensorflow_keras_classifier(uri, imagenet_preprocessing, image_size, classifier_kwargs)
+        keras_classifier = load_tensorflow_keras_classifier(uri=uri)
+        classifier = load_wrapped_tensorflow_keras_classifier(keras_classifier, imagenet_preprocessing, image_size, classifier_kwargs)
     else:
         classifier = load_tensorflow_keras_classifier(uri)
     return classifier
@@ -373,6 +374,24 @@ def load_predictions(
     if dataframe is not None:
         y_true, y_pred = df_to_predictions(dataframe, dataset, n_classes)
     return y_true, y_pred
-    
 
 
+@pyplugs.register
+def write_model(model, name, suffix = "keras", **kwargs) -> Path:
+    result = Path(name).with_suffix('.' + suffix)
+    model.save(result, kwargs)
+    return result
+
+@pyplugs.register
+def read_model(
+    location: Path, 
+    imagenet_preprocessing: bool = False,
+    art: bool = False,
+    image_size: tuple[int,int,int] | None = None,
+    classifier_kwargs: dict[str, Any] | None = None
+) -> Model:
+    from tensorflow.keras.models import load_model
+    model = load_model(Path(location))
+    if art:
+        model = load_wrapped_tensorflow_keras_classifier(model, imagenet_preprocessing, image_size, classifier_kwargs)
+    return model
