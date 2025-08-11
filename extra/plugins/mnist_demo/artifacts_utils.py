@@ -18,9 +18,6 @@
 
 from __future__ import annotations
 
-import os
-import tarfile
-import uuid
 from pathlib import Path
 from tarfile import TarFile
 from typing import Any
@@ -31,50 +28,6 @@ from structlog.stdlib import BoundLogger
 from dioptra import pyplugs
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
-
-
-def is_within_directory(directory: str | Path, target: str | Path) -> bool:
-    abs_directory = os.path.abspath(directory)
-    abs_target = os.path.abspath(target)
-
-    prefix = os.path.commonprefix([abs_directory, abs_target])
-
-    return prefix == abs_directory
-
-
-def safe_extract(tar: TarFile, path: str | Path = ".") -> None:
-    for member in tar.getmembers():
-        member_path = os.path.join(path, member.name)
-        if not is_within_directory(path, member_path):
-            raise Exception("Attempted Path Traversal in Tar File")
-
-    tar.extractall(path, members=None, numeric_owner=False)
-
-
-@pyplugs.register
-def extract_tarfile(
-    filepath: str | Path,
-    tarball_read_mode: str = "r:gz",
-    output_dir: Any = None,
-) -> None:
-    """Extracts a tarball archive into the current working directory.
-
-    Args:
-        filepath: The location of the tarball archive file provided as a string or a
-            :py:class:`~pathlib.Path` object.
-        tarball_read_mode: The read mode for the tarball, see :py:func:`tarfile.open`
-            for the full list of compression options. The default is `"r:gz"` (gzip
-            compression).
-
-    See Also:
-        - :py:func:`tarfile.open`
-    """
-    output_dir = Path(output_dir) if output_dir is not None else Path.cwd()
-
-    filepath = Path(filepath)
-    with tarfile.open(filepath, tarball_read_mode) as f: # type: ignore
-        safe_extract(f, path=output_dir)
-
 
 @pyplugs.register
 def make_directories(dirs: list[str | Path]) -> None:
@@ -88,30 +41,3 @@ def make_directories(dirs: list[str | Path]) -> None:
         d = Path(d)
         d.mkdir(parents=True, exist_ok=True)
         LOGGER.info("Directory created", directory=d)
-
-
-@pyplugs.register
-def extract_tarfile_in_unique_subdir(
-    filepath: str | Path,
-    tarball_read_mode: str = "r:gz",
-) -> Path:
-    """Extracts a tarball archive into a unique subdirectory of the
-    current working directory.
-
-    Args:
-        filepath: The location of the tarball archive file provided as a string or a
-            :py:class:`~pathlib.Path` object.
-        tarball_read_mode: The read mode for the tarball, see :py:func:`tarfile.open`
-            for the full list of compression options. The default is `"r:gz"` (gzip
-            compression).
-
-    See Also:
-        - :py:func:`tarfile.open`
-    """
-    output_dir = Path(uuid.uuid4().hex)
-    output_dir.mkdir(mode=0o700, parents=True, exist_ok=True)
-
-    filepath = Path(filepath)
-    with tarfile.open(filepath, tarball_read_mode) as f: # type: ignore
-        safe_extract(f, path=output_dir)
-    return output_dir

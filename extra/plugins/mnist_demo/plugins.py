@@ -31,8 +31,7 @@ from tensorflow.data import (
 
 from tensorflow.keras.models import Model
 
-from .artifacts_mlflow import upload_directory_as_tarball_artifact, upload_data_frame_artifact, download_all_artifacts
-from .artifacts_utils import make_directories, extract_tarfile
+from .artifacts_utils import make_directories
 from .attacks_fgm import fgm
 from .attacks_patch import create_adversarial_patches, create_adversarial_patch_dataset
 from .data_tensorflow import dataset_transforms, get_n_classes_from_directory_iterator, create_image_dataset, predictions_to_df, df_to_predictions
@@ -44,7 +43,7 @@ from .mlflow import add_model_to_registry
 from .random_sample import draw_random_integer, init_rng
 from .registry_art import load_wrapped_tensorflow_keras_classifier
 from .registry_mlflow import load_tensorflow_keras_classifier
-from .restapi import get_uri_for_model, get_uris_for_job, get_uris_for_artifacts
+from .restapi import get_uri_for_model
 from .tensorflow import get_optimizer, get_model_callbacks, get_performance_metrics, evaluate_metrics_tensorflow, init_tensorflow, fit_tensorflow, predict_tensorflow
 from .tracking_mlflow import log_parameters, log_tensorflow_keras_estimator, log_metrics
 
@@ -169,52 +168,6 @@ def save_models(
     for model in models:
         log_tensorflow_keras_estimator(model['model'], "model")
         add_model_to_registry(model['name'], "model")
-    #for artifact in artifacts:
-    #    if (artifact['type'] == 'tarball'):
-    #        upload_directory_as_tarball_artifact(
-    #            source_dir=artifact['adv_data_dir'],
-    #            tarball_filename=artifact['adv_tar_name']
-    #        )
-    #    if (artifact['type'] == 'dataframe'):
-    #        upload_data_frame_artifact(
-    #            data_frame=artifact['data_frame'],
-    #            file_name=artifact['file_name'],
-    #            file_format=artifact['file_format'],
-    #            file_format_kwargs=artifact['file_format_kwargs']
-    #        )
-
-@pyplugs.register
-def load_artifacts_for_job(
-    job_id: str, 
-    files: list[str] | None = None,
-    extract_files: list[str] | None = None
-) -> list[str]:
-    files = [] if files is None else files
-    extract_files = [] if extract_files is None else extract_files
-    files += extract_files # need to download them to be able to extract
-
-    uris = get_uris_for_job(job_id)
-
-    # unsure why this type cast is necessary - download_all_artifacts seems to be
-    # typed properly but types to Any in mypy
-    paths: list[str] = download_all_artifacts(uris, files) 
-    
-    for extract in paths:
-        for ef in extract_files:
-            if (ef.endswith(str(ef))):
-                extract_tarfile(extract)
-    return paths
-
-@pyplugs.register
-def load_artifacts(
-    artifact_ids: list[int] | None = None, extract_files: list[str] | None = None
-) -> None:
-    extract_files = [] if extract_files is None else extract_files
-    artifact_ids = [] if artifact_ids is None else artifact_ids
-    uris = get_uris_for_artifacts(artifact_ids)
-    paths = download_all_artifacts(uris, extract_files)
-    for extract in paths:
-        extract_tarfile(filepath=extract)
 
 @pyplugs.register
 def attack_fgm(

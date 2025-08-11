@@ -178,25 +178,6 @@ description = "A collection of plugins for training an MNIST classifier and runn
 
   [[plugins.tasks.functions]]
   filename = "plugins.py"
-  name = "load_artifacts_for_job"
-  input_params = [ 
-    { name = "job_id", type = "string", required = true},
-    { name = "files", type = "null_list_str", required = false },
-    { name = "extract_files", type = "null_list_str", required = false },
-  ]
-  output_params = [ { name = "output", type = "list_str" } ]
-
-  [[plugins.tasks.functions]]
-  filename = "plugins.py"
-  name = "load_artifacts"
-  input_params = [ 
-    { name = "artifact_ids", type = "null_list_int", required = false},
-    { name = "extract_files", type = "null_list_str", required = false },
-  ]
-  output_params = [ ]
-
-  [[plugins.tasks.functions]]
-  filename = "plugins.py"
   name = "attack_fgm"
   input_params = [ 
     { name = "dataset", type = "dataset", required = true},
@@ -557,7 +538,7 @@ path = "entrypoints/train.yml"
 name = "Train"
 description = "Training an LeNet model on MNIST."
 params = [
-  { name = "seed", type = "integer", default_value = "-1" },
+  { name = "seed", type = "integer", default_value = "1286012834" },
   { name = "optimizer_name", type = "string", default_value = "Adam" },
   { name = "learning_rate", type = "float", default_value = "0.001" },
   { name = "training_dir", type = "string", default_value = "/dioptra/data/Mnist/training" },
@@ -583,8 +564,8 @@ params = [
   { name = "adv_tar_name", type = "string", default_value = "testing_adversarial_fgm.tar.gz" },
   { name = "adv_data_dir", type = "string", default_value = "adv_testing" },
   { name = "distance_metrics_filename", type = "string", default_value = "distance_metrics.csv" },
-  { name = "model_name", type = "string", default_value = "mnist_classifier" },
-  { name = "model_version", type = "integer", default_value = "-1" },
+  #{ name = "model_name", type = "string", default_value = "mnist_classifier" },
+  #{ name = "model_version", type = "integer", default_value = "-1" },
   { name = "clip_values", type = "list", default_value = "[0, 1]" },
   { name = "batch_size", type = "integer", default_value = "50" },
   { name = "rescale", type = "float", default_value = "0.00392156862" },
@@ -592,7 +573,7 @@ params = [
   { name = "eps_step", type = "float", default_value = "0.1" },
   { name = "minimal", type = "boolean", default_value = "false" },
   { name = "norm", type = "string", default_value = "inf" },
-  { name = "seed", type = "integer", default_value = "-1" }
+  { name = "seed", type = "integer", default_value = "1286012834" }
 ]
 artifact_params = [
   { name = "model_file", output_params = [ { name = "path", type = "path" } ] }
@@ -609,10 +590,10 @@ params = [
   { name = "image_size", type = "list", default_value = "[28, 28, 1]" },
   { name = "adv_tar_name", type = "string", default_value = "adversarial_patch.tar.gz" },
   { name = "adv_data_dir", type = "string", default_value = "adv_patches" },
-  { name = "model_name", type = "string", default_value = "mnist_classifier" },
-  { name = "model_version", type = "integer", default_value = "-1" },
+  #{ name = "model_name", type = "string", default_value = "mnist_classifier" },
+  #{ name = "model_version", type = "integer", default_value = "-1" },
   { name = "clip_values", type = "list", default_value = "[0, 1]" },
-  { name = "seed", type = "integer", default_value = "-1" },
+  { name = "seed", type = "integer", default_value = "1286012834" },
   { name = "patch_target", type = "integer", default_value = "-1" },
   { name = "num_patch", type = "integer", default_value = "1" },
   { name = "rotation_max", type = "float", default_value = "22.5" },
@@ -642,10 +623,10 @@ params = [
   { name = "adv_data_dir", type = "string", default_value = "adv_testing" },
   { name = "adv_dataset_tar_name", type = "string", default_value = "testing_adversarial_patch.tar.gz" },
   { name = "job_id", type = "string", default_value = "-1" },
-  { name = "model_name", type = "string", default_value = "mnist_classifier" },
-  { name = "model_version", type = "integer", default_value = "-1" },
+  #{ name = "model_name", type = "string", default_value = "mnist_classifier" },
+  #{ name = "model_version", type = "integer", default_value = "-1" },
   { name = "clip_values", type = "list", default_value = "[0, 1]" },
-  { name = "seed", type = "integer", default_value = "-1" },
+  { name = "seed", type = "integer", default_value = "1286012834" },
   { name = "rotation_max", type = "float", default_value = "22.5" },
   { name = "scale_min", type = "float", default_value = "0.1" },
   { name = "scale_max", type = "float", default_value = "1.0" },
@@ -667,8 +648,8 @@ name = "Predict"
 description = "Get predictions from the model on the given dataset."
 params = [
   { name = "image_size", type = "list", default_value = "[28, 28, 1]" },
-  { name = "model_name", type = "string", default_value = "mnist_classifier" },
-  { name = "model_version", type = "integer", default_value = "-1" },
+  #{ name = "model_name", type = "string", default_value = "mnist_classifier" },
+  #{ name = "model_version", type = "integer", default_value = "-1" },
   { name = "job_id", type = "string", default_value = "-1" },
   { name = "tar_name", type = "string", default_value = "testing_adversarial_fgm.tar.gz" },
   { name = "data_dir", type = "string", default_value = "adv_testing" },
@@ -677,7 +658,7 @@ params = [
   { name = "record_target_class", type = "boolean", default_value = "False" },
   { name = "format", type = "string", default_value = "csv" },
   { name = "batch_size", type = "integer", default_value = "4"},
-  { name = "seed", type = "integer", default_value = "-1" },
+  { name = "seed", type = "integer", default_value = "1286012834" },
   { name = "rescale", type = "float", default_value = "0.00392156862" },
 ]
 artifact_params = [
@@ -700,7 +681,7 @@ params = [
   { name = "metrics_filename", type = "string", default_value = "metrics.csv" },
   { name = "metrics_format", type = "string", default_value = "csv" },
   { name = "n_classes", type = "integer", default_value = "10" },
-  { name = "seed", type = "integer", default_value = "-1" },
+  { name = "seed", type = "integer", default_value = "1286012834" },
   { name = "rescale", type = "float", default_value = "0.00392156862" },
 ]
 artifact_params = [
@@ -722,11 +703,11 @@ params = [
   { name = "def_tar_name", type = "string", default_value = "testing_adversarial_def.tar.gz" },
   { name = "def_data_dir", type = "string", default_value = "def_testing" },
   { name = "distance_metrics_filename", type = "string", default_value = "distance_metrics.csv" },
-  { name = "model_name", type = "string", default_value = "mnist_classifier" },
-  { name = "model_version", type = "integer", default_value = "-1" },
+  #{ name = "model_name", type = "string", default_value = "mnist_classifier" },
+  #{ name = "model_version", type = "integer", default_value = "-1" },
   { name = "clip_values", type = "list", default_value = "[0, 1]" },
   { name = "batch_size", type = "integer", default_value = "10" },
-  { name = "seed", type = "integer", default_value = "-1" },
+  { name = "seed", type = "integer", default_value = "1286012834" },
   { name = "def_type", type = "string", default_value = "spatial_smothing" },
   { name = "defense_kwargs", type = "mapping", default_value = "{}"},
   { name = "rescale", type = "float", default_value = "0.00392156862" },
