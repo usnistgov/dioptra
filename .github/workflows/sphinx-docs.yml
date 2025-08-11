@@ -27,7 +27,7 @@ jobs:
   docs:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: setup python 3.11
         uses: actions/setup-python@v5.6.0
