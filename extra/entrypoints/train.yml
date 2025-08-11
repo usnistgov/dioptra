@@ -1,3 +1,9 @@
+artifacts:
+  model:
+    contents: $written_model
+    task:
+      name: FileArtifactTask
+
 graph:
   dataset:
     load_dataset:
@@ -55,9 +61,8 @@ graph:
     dependencies:
       - trained_model
 
-  save:
-    save_models:
-      models:
-        - name: $register_model_name
-          model: $trained_model
-          
+  written_model:
+    write_model:
+      model: $trained_model
+      name: model
+      suffix: keras

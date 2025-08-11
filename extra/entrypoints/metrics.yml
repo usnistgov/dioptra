@@ -1,50 +1,35 @@
 artifacts:
-  patch:
-    contents: $adv_data_dir
+  metrics:
+    contents: $metrics
     task:
-      name: directory
+      name: DataframeArtifactTask
+      args: 
+        format: csv
 
-predictions:
-  load_artifacts_for_job:
-    job_id: $job_id
-    files: [$predictions_filename]
+graph: 
+  dataset:
+    load_dataset:
+      ep_seed: $seed
+      testing_dir: $data_dir
+      subsets: [testing]
+      image_size: $image_size
+      shuffle: False
+      rescale: $rescale
 
-dataset:
-  load_dataset:
-    ep_seed: $seed
-    testing_dir: $data_dir
-    subsets: [testing]
-    image_size: $image_size
-    shuffle: False
-    rescale: $rescale
-  dependencies:
-    - predictions
+  format_predictions:
+    load_predictions:
+      dataframe: $predictions
+      dataset: $dataset.testing
+      n_classes: $n_classes
 
-format_predictions:
-  load_predictions:
-    dataframe: $predictions
-    dataset: $dataset.testing
-    n_classes: $n_classes
-
-metrics:
-  prediction_metrics:
-    y_true: $format_predictions.y_true
-    y_pred: $format_predictions.y_pred
-    metrics_list:
-      - name: accuracy
-        func: accuracy
-      - name: roc_auc
-        func: roc_auc
-  dependencies:
-    - format_predictions
-
-save:
-  save_artifacts_and_models:
-    artifacts:
-      - type: dataframe
-        data_frame: $metrics
-        file_name: $metrics_filename
-        file_format: $metrics_format
-        file_format_kwargs:
-  dependencies:
-    - metrics
+  metrics:
+    prediction_metrics:
+      y_true: $format_predictions.y_true
+      y_pred: $format_predictions.y_pred
+      metrics_list:
+        - name: accuracy
+          func: accuracy
+        - name: roc_auc
+          func: roc_auc
+    dependencies:
+      - format_predictions
