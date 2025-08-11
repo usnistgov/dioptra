@@ -38,7 +38,8 @@ def _new_default(self, obj) -> Any:
         return _saved_default
 
 
-# Glue-up the new default method with the patch-back.
+# Glue-up the new default method with the patch-back,
+# and tell MyPy not to wrinkle it's nose at the monkey patch
 JSONEncoder.default = _new_default  # type: ignore
 
 
