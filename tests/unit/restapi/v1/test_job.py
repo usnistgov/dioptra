@@ -21,6 +21,7 @@ functionalities for the job entity. The tests ensure that the queues can be
 registered, renamed, queried, and deleted as expected through the REST API.
 """
 
+import datetime
 from http import HTTPStatus
 from typing import Any
 
@@ -32,6 +33,54 @@ from dioptra.client.client import DioptraClient
 
 from ..lib import asserts, helpers, mock_mlflow, mock_rq, routines
 from ..test_utils import assert_retrieving_resource_works
+
+
+@pytest.fixture
+def registered_job_logs(dioptra_client, registered_jobs):
+    log_records = [
+        {
+            "severity": "DEBUG",
+            "stepName": "step1",
+            "timestamp": "1992-07-17T07:48:07.137870+00:00",
+            "message": "Log message 1",
+        },
+        {
+            # stepName is optional
+            # "stepName": "step2",
+            "severity": "INFO",
+            "timestamp": "1992-07-17T07:55:38.619870+00:00",
+            "message": "Log message 2",
+        },
+        {
+            "severity": "WARNING",
+            "stepName": "step3",
+            "timestamp": "1992-07-17T08:49:59.675870+00:00",
+            "message": "Log message 3",
+        },
+        {
+            "severity": "ERROR",
+            "stepName": "step4",
+            "timestamp": "1992-07-17T09:25:19.683870+00:00",
+            "message": "Log message 4",
+        },
+        {
+            "severity": "CRITICAL",
+            "stepName": "step5",
+            "timestamp": "1992-07-17T10:24:16.740870+00:00",
+            "message": "Log message 5",
+        },
+    ]
+
+    job = registered_jobs["job1"]
+    job_resource_id = job["id"]
+
+    dioptra_client.jobs.append_logs_by_id(
+        job_resource_id,
+        log_records,
+    )
+
+    return log_records
+
 
 # -- Assertions ------------------------------------------------------------------------
 
@@ -994,3 +1043,160 @@ def test_tag_job(
         job["id"],
         tag_ids=tag_ids,
     )
+
+
+def test_add_logs(dioptra_client, auth_account, registered_jobs):
+    log_records = [
+        {
+            "severity": "DEBUG",
+            "stepName": "step1",
+            "message": "Log message 1",
+        },
+        {
+            # stepName is optional
+            # "stepName": "step2",
+            "severity": "INFO",
+            "message": "Log message 2",
+        },
+        {
+            "severity": "WARNING",
+            "stepName": "step3",
+            "timestamp": "1984-05-21T15:23:52.123456-05:00",
+            "message": "Log message 3",
+        },
+    ]
+
+    job = registered_jobs["job1"]
+    job_resource_id = job["id"]
+
+    resp = dioptra_client.jobs.append_logs_by_id(job_resource_id, log_records)
+
+    assert resp.status_code == HTTPStatus.OK
+    returned_logs = resp.json()["data"]
+
+    # The timestamps on the first two returned records are unpredictable (the
+    # server set them), so just ensure they are there.  Then delete them, so we
+    # can do a predictable comparison.
+    assert "timestamp" in returned_logs[0]
+    assert "timestamp" in returned_logs[1]
+
+    del returned_logs[0]["timestamp"]
+    del returned_logs[1]["timestamp"]
+
+    # The timestamp on the third log will have changed to UTC.  Switch it
+    # over manually in the input, to produce expected output.
+    log_records[2]["timestamp"] = (
+        datetime.datetime.fromisoformat(log_records[2]["timestamp"])
+        .astimezone(datetime.UTC)
+        .isoformat()
+    )
+
+    assert returned_logs == log_records
+
+
+def test_get_logs_all(dioptra_client, registered_jobs, registered_job_logs):
+    job = registered_jobs["job1"]
+    job_resource_id = job["id"]
+
+    resp = dioptra_client.jobs.get_logs_by_id(job_resource_id)
+    returned_page = resp.json()
+
+    assert returned_page == {
+        "index": 0,
+        "isComplete": True,
+        "totalNumResults": 5,
+        "first": f"/api/v1/jobs/{job_resource_id}/log?index=0&pageLength=10",
+        "data": registered_job_logs,
+    }
+
+
+def test_get_logs_page(dioptra_client, registered_jobs, registered_job_logs):
+    job = registered_jobs["job1"]
+    job_resource_id = job["id"]
+
+    resp = dioptra_client.jobs.get_logs_by_id(
+        job_resource_id,
+        1,
+        3,
+    )
+    returned_page = resp.json()
+
+    assert returned_page == {
+        "index": 1,
+        "isComplete": False,
+        "totalNumResults": 5,
+        "first": f"/api/v1/jobs/{job_resource_id}/log?index=0&pageLength=3",
+        "prev": f"/api/v1/jobs/{job_resource_id}/log?index=0&pageLength=3",
+        "next": f"/api/v1/jobs/{job_resource_id}/log?index=4&pageLength=3",
+        "data": registered_job_logs[1:4],
+    }
+
+
+def test_get_logs_past_end(dioptra_client, registered_jobs, registered_job_logs):
+    job = registered_jobs["job1"]
+    job_resource_id = job["id"]
+
+    resp = dioptra_client.jobs.get_logs_by_id(
+        job_resource_id,
+        999999,
+        3,
+    )
+    returned_page = resp.json()
+
+    assert returned_page == {
+        "index": 999999,
+        "isComplete": True,
+        "totalNumResults": 5,
+        "first": f"/api/v1/jobs/{job_resource_id}/log?index=0&pageLength=3",
+        "prev": f"/api/v1/jobs/{job_resource_id}/log?index=999996&pageLength=3",
+        "data": [],
+    }
+
+
+# Behavior when using a negative OFFSET in a query seems to be DB dependent.
+# Sqlite treats it the same as offset 0, whereas postgres errors.  So if our
+# behavior depends on DB behavior, our behavior is unpredictable.
+# def test_get_logs_before_beginning(dioptra_client, registered_jobs, registered_job_logs):
+
+
+def test_get_logs_zero_page_length(
+    dioptra_client, registered_jobs, registered_job_logs
+):
+    job = registered_jobs["job1"]
+    job_resource_id = job["id"]
+
+    resp = dioptra_client.jobs.get_logs_by_id(
+        job_resource_id,
+        1,
+        0,
+    )
+    returned_page = resp.json()
+
+    assert returned_page == {
+        "index": 1,
+        "isComplete": False,
+        "totalNumResults": 5,
+        "first": f"/api/v1/jobs/{job_resource_id}/log?index=0&pageLength=0",
+        "next": f"/api/v1/jobs/{job_resource_id}/log?index=1&pageLength=0",
+        "prev": f"/api/v1/jobs/{job_resource_id}/log?index=1&pageLength=0",
+        "data": [],
+    }
+
+
+def test_get_logs_bad_job_id(dioptra_client, registered_jobs, registered_job_logs):
+    resp = dioptra_client.jobs.get_logs_by_id(
+        999999,
+        1,
+        3,
+    )
+    returned_page = resp.json()
+
+    # Should it be a 404?
+    assert returned_page == {
+        "index": 1,
+        "isComplete": True,
+        "totalNumResults": 0,
+        "first": "/api/v1/jobs/999999/log?index=0&pageLength=3",
+        "prev": "/api/v1/jobs/999999/log?index=0&pageLength=3",
+        "data": [],
+    }

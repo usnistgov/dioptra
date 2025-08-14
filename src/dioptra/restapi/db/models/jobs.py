@@ -19,7 +19,15 @@ from typing import TYPE_CHECKING
 from sqlalchemy import Column, ForeignKey, ForeignKeyConstraint, Index, Text, select
 from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 
-from dioptra.restapi.db.db import bigint, db, guid, intpk, text_
+from dioptra.restapi.db.db import (
+    bigint,
+    datetimetz,
+    db,
+    guid,
+    intpk,
+    optionalstr,
+    text_,
+)
 
 from .entry_points import EntryPoint
 from .experiments import Experiment
@@ -35,6 +43,11 @@ if TYPE_CHECKING:
 job_status_types_table = db.Table(
     "job_status_types",
     Column("status", Text(), primary_key=True),
+)
+
+job_log_severity_table = db.Table(
+    "job_log_severity",
+    Column("severity", Text(), primary_key=True),
 )
 
 # -- ORM Classes -----------------------------------------------------------------------
@@ -215,3 +228,25 @@ class Job(ResourceSnapshot):
     __mapper_args__ = {
         "polymorphic_identity": "job",
     }
+
+
+class JobLog(db.Model):  # type: ignore[name-defined]
+    __tablename__ = "job_logs"
+
+    # Database fields
+
+    # "id" also acts as an ordinal for recording log entry order
+    id: Mapped[intpk] = mapped_column(init=False)
+    job_resource_id: Mapped[bigint] = mapped_column(
+        ForeignKey("resources.resource_id"), init=False
+    )
+    severity: Mapped[text_] = mapped_column(ForeignKey("job_log_severity.severity"))
+    step_name: Mapped[optionalstr]
+    timestamp: Mapped[datetimetz]
+    message: Mapped[text_]
+
+    # Relationships
+    job_resource: Mapped["Resource"] = relationship()
+
+    # Additional settings
+    __table_args__ = (Index(None, "job_resource_id", "id"),)

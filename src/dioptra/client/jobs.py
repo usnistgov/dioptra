@@ -14,6 +14,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+from collections.abc import Iterable
 from typing import Any, ClassVar, Final, TypeVar
 
 from .base import CollectionClient, DioptraSession
@@ -24,6 +25,7 @@ METRICS: Final[str] = "metrics"
 MLFLOW_RUN: Final[str] = "mlflowRun"
 SNAPSHOTS: Final[str] = "snapshots"
 STATUS: Final[str] = "status"
+LOG: Final[str] = "log"
 PARAMETERS: Final[str] = "parameters"
 ARTIFACT_PARAMETERS: Final[str] = "artifactParameters"
 
@@ -294,3 +296,58 @@ class JobsCollectionClient(CollectionClient[T]):
         return self._session.get(
             self.url, str(job_id), METRICS, metric_name, SNAPSHOTS, params=params
         )
+
+    def get_logs_by_id(
+        self,
+        job_id: str | int,
+        index: int = 0,
+        page_length: int = 10,
+    ) -> T:
+        """
+        Get log records for the given job resource. Records are returned in the order
+        they were added.
+
+        Args:
+            job_id: The resource ID of a job.
+            index: Index of the first log record to return.
+            page_length: Number of log records to return.
+
+        Returns:
+            The response from the Dioptra API.
+        """
+
+        params: dict[str, Any] = {
+            "index": index,
+            "pageLength": page_length,
+        }
+
+        return self._session.get(self.url, str(job_id), LOG, params=params)
+
+    def append_logs_by_id(self, job_id: str | int, logs: Iterable[dict[str, Any]]) -> T:
+        """
+        Add log records for the given job. Job records are dicts of the form::
+
+            {
+                "severity": "WARNING",
+                "stepName": "step1",
+                "timestamp": "1984-05-21T15:23:52.123456-05:00",
+                "message": "Log message",
+            }
+
+        Legal values for severity include DEBUG, INFO, WARNING, ERROR, CRITICAL. The
+        step name is intended to capture which step of an experiment was being executed
+        at the time the log record was emitted. Step names and timestamps are optional.
+        Timestamps, if given, must be ISO strings. If a timestamp is not included, the
+        server's current timestamp will be used.
+
+        Args:
+            job_id: The resource ID of a job.
+            logs: An iterable of log records.
+
+        Returns:
+            The response from the Dioptra API.
+        """
+
+        json_ = {"data": list(logs)}
+
+        return self._session.post(self.url, str(job_id), LOG, json_=json_)

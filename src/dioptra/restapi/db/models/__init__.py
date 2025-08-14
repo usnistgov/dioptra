@@ -32,8 +32,10 @@ from .jobs import (
     EntryPointJob,
     ExperimentJob,
     Job,
+    JobLog,
     JobMlflowRun,
     QueueJob,
+    job_log_severity_table,
     job_status_types_table,
 )
 from .locks import (
@@ -93,6 +95,7 @@ __all__ = [
     "GroupMember",
     "Job",
     "JobMlflowRun",
+    "JobLog",
     "MlModel",
     "MlModelVersion",
     "Plugin",
@@ -114,6 +117,7 @@ __all__ = [
     "entry_point_parameter_types_table",
     "group_lock_types_table",
     "job_status_types_table",
+    "job_log_severity_table",
     "resource_dependencies_table",
     "resource_dependency_types_table",
     "resource_lock_types_table",
