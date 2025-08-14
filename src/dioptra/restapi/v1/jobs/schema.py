@@ -16,9 +16,11 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The schemas for serializing/deserializing Job resources."""
 
+import datetime
+import enum
 import re
 
-from marshmallow import Schema, fields, validate
+from marshmallow import Schema, fields, post_load, validate
 
 from dioptra.restapi.v1.artifacts.schema import ArtifactRefSchema
 from dioptra.restapi.v1.schemas import (
@@ -305,3 +307,86 @@ class ExperimentJobGetQueryParameters(
 ):
     """The query parameters for the GET method of the /experiments/{id}/jobs
     endpoint."""
+
+
+class JobLogSeverity(enum.Enum):
+    DEBUG = enum.auto()
+    INFO = enum.auto()
+    WARNING = enum.auto()
+    ERROR = enum.auto()
+    CRITICAL = enum.auto()
+
+
+class JobLogRecordSchema(Schema):
+    """
+    A logging record within the context of a running job.
+    """
+
+    stepName = fields.String(
+        attribute="step_name",
+        metadata={
+            "description": "The name of the step which was executing when the"
+            " log record was emitted, if known/applicable."
+        },
+    )
+    timestamp = fields.DateTime(
+        metadata={"description": "The date/time when the log record was emitted."}
+    )
+    severity = fields.Enum(
+        JobLogSeverity,
+        required=True,
+        metadata={
+            "description": "Log severity level: {}".format(
+                ", ".join(e.name for e in JobLogSeverity)
+            )
+        },
+    )
+    message = fields.String(
+        required=True, metadata={"description": "The logged message."}
+    )
+
+    @post_load
+    def fill_in_timestamp(self, obj, **kwargs):
+        """
+        If timestamp is missing, fill it in with the current timestamp (UTC).
+        If present, ensure it is using the UTC timezone.
+        """
+        if "timestamp" in obj:
+            obj["timestamp"] = obj["timestamp"].astimezone(datetime.UTC)
+        else:
+            obj["timestamp"] = datetime.datetime.now(datetime.UTC)
+
+        return obj
+
+
+class JobLogRecordsSchema(Schema):
+    """
+    A list of logging records.  Used for upload.
+    """
+
+    data = fields.Nested(
+        JobLogRecordSchema,
+        many=True,
+        validate=validate.Length(min=1),
+        required=True,
+    )
+
+
+class JobLogRecordsPageSchema(BasePageSchema):
+    """
+    A page of logging records with detailed paging information.  Used for
+    download.
+    """
+
+    data = fields.Nested(
+        JobLogRecordSchema,
+        many=True,
+        validate=validate.Length(min=1),
+        required=True,
+    )
+
+
+class JobLogGetQueryParameters(PagingQueryParametersSchema):
+    """
+    The query parameters for the GET method of the /jobs/{id}/log endpoint.
+    """

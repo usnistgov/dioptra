@@ -46,6 +46,9 @@ from dioptra.restapi.v1.workflows.lib.export_job_parameters import (
 
 from .schema import (
     JobGetQueryParameters,
+    JobLogGetQueryParameters,
+    JobLogRecordsPageSchema,
+    JobLogRecordsSchema,
     JobMlflowRunSchema,
     JobPageSchema,
     JobSchema,
@@ -62,6 +65,7 @@ from .service import (
     JobIdMlflowrunService,
     JobIdService,
     JobIdStatusService,
+    JobLogService,
     JobService,
 )
 
@@ -408,6 +412,48 @@ class JobIdMetricsSnapshotsEndpoint(Resource):
             sort_by=None,
             descending=None,
         )
+
+
+@api.route("/<int:id>/log")
+@api.param("id", "ID for the Job resource.")
+class JobIdLogEndpoint(Resource):
+    @inject
+    def __init__(self, job_log_service: JobLogService, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._job_log_service = job_log_service
+
+    @login_required
+    @accepts(query_params_schema=JobLogGetQueryParameters, api=api)
+    @responds(schema=JobLogRecordsPageSchema, api=api)
+    def get(self, id: int):
+        index = request.parsed_query_params["index"]  # type: ignore
+        page_length = request.parsed_query_params["page_length"]  # type: ignore
+
+        records, total = self._job_log_service.get_logs(id, index, page_length)
+
+        page = utils.build_paging_envelope(
+            f"{V1_JOBS_ROUTE}/{id}/log",
+            build_fn=lambda x: x,
+            data=records,
+            group_id=None,
+            query=None,
+            draft_type=None,
+            index=index,
+            length=page_length,
+            total_num_elements=total,
+        )
+
+        return page
+
+    @login_required
+    @accepts(schema=JobLogRecordsSchema, api=api)
+    @responds(schema=JobLogRecordsSchema, api=api)
+    def post(self, id: int):
+        records = request.parsed_obj["data"]  # type: ignore
+
+        self._job_log_service.add_logs(id, records)
+
+        return request.parsed_obj  # type: ignore
 
 
 JobSnapshotsResource = generate_resource_snapshots_endpoint(
