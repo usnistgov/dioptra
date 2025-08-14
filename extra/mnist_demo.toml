@@ -435,7 +435,7 @@ name = "dataframe"
 description = "dataframe"
 
 [[entrypoints]]
-path = "entrypoints/train.yml"
+path = "entrypoints/mnist_demo/train.yml"
 name = "Train"
 description = "Training an LeNet model on MNIST."
 params = [
@@ -456,7 +456,7 @@ plugins = [ "mnist_demo" ]
 artifact_plugins = [ "artifacts" ]
 
 [[entrypoints]]
-path = "entrypoints/fgm.yml"
+path = "entrypoints/mnist_demo/fgm.yml"
 name = "FGM"
 description = "Running the FGM attack on an MNIST trained LeNet model."
 params = [
@@ -483,7 +483,7 @@ plugins = [ "mnist_demo" ]
 artifact_plugins = [ "artifacts" ]
 
 [[entrypoints]]
-path = "entrypoints/patch_gen.yml"
+path = "entrypoints/mnist_demo/patch_gen.yml"
 name = "Patch Generation"
 description = "Running the Patch attack on an MNIST trained LeNet model to generate patches."
 params = [
@@ -513,7 +513,7 @@ plugins = [ "mnist_demo" ]
 artifact_plugins = [ "artifacts" ]
 
 [[entrypoints]]
-path = "entrypoints/patch_apply.yml"
+path = "entrypoints/mnist_demo/patch_apply.yml"
 name = "Patch Application"
 description = "Applying a patch to the images in the dataset."
 params = [
@@ -544,7 +544,7 @@ plugins = [ "mnist_demo" ]
 artifact_plugins = [ "artifacts" ]
 
 [[entrypoints]]
-path = "entrypoints/predict.yml"
+path = "entrypoints/mnist_demo/predict.yml"
 name = "Predict"
 description = "Get predictions from the model on the given dataset."
 params = [
@@ -570,7 +570,7 @@ plugins = [ "mnist_demo" ]
 artifact_plugins = [ "artifacts" ]
 
 [[entrypoints]]
-path = "entrypoints/metrics.yml"
+path = "entrypoints/mnist_demo/metrics.yml"
 name = "Metrics"
 description = "Get metrics based on the predictions and the actual classifications."
 params = [
@@ -592,7 +592,7 @@ plugins = [ "mnist_demo" ]
 artifact_plugins = [ "artifacts" ]
 
 [[entrypoints]]
-path = "entrypoints/defense.yml"
+path = "entrypoints/mnist_demo/defense.yml"
 name = "Defense"
 description = "Perform defenses on a dataset."
 params = [
