@@ -20,7 +20,14 @@ import json
 import os
 import tarfile
 from pathlib import Path, PurePosixPath
-from typing import Any, Final, Iterable, Mapping, MutableMapping, cast
+from typing import (
+    Any,
+    Final,
+    Iterable,
+    Mapping,
+    MutableMapping,
+    cast,
+)
 
 import mlflow
 import structlog
@@ -231,9 +238,6 @@ def main(
 
 
 def _get_client(log: BoundLogger) -> DioptraClient[dict[str, Any]]:
-    import logging
-
-    logging.basicConfig(level=logging.DEBUG)
     if (username := os.getenv(ENV_DIOPTRA_WORKER_USERNAME)) is None:
         log.error(f"{ENV_DIOPTRA_WORKER_USERNAME} environment variable is not set")
         raise ValueError(
