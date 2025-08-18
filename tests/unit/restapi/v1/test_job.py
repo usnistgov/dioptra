@@ -21,6 +21,7 @@ functionalities for the job entity. The tests ensure that the queues can be
 registered, renamed, queried, and deleted as expected through the REST API.
 """
 
+import logging
 from http import HTTPStatus
 from typing import Any
 
@@ -29,6 +30,7 @@ from pytest import MonkeyPatch
 
 from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
+from dioptra.sdk.utilities.logging import forward_job_logs_to_api
 
 from ..lib import asserts, helpers, mock_mlflow, mock_rq, routines
 from ..test_utils import assert_retrieving_resource_works
@@ -1214,4 +1216,86 @@ def test_get_logs_bad_job_id(dioptra_client, registered_jobs, registered_job_log
         "first": "/api/v1/jobs/999999/log?index=0&pageLength=3",
         "prev": "/api/v1/jobs/999999/log?index=0&pageLength=3",
         "data": [],
+    }
+
+
+def test_forward_job_logs_using_loggers(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_jobs: dict[str, Any],
+) -> None:
+    # Get the job ID to use for testing log forwarding.
+    job = registered_jobs["job1"]
+    job_resource_id = job["id"]
+
+    # Create named loggers to verify that different loggers will be forwarded and that
+    # the logger name is included in the forwarded log records.
+    hello_world_tasks_logger = logging.getLogger("hello_world.tasks")
+    goodbye_world_tasks_logger = logging.getLogger("goodbye_world.tasks")
+    return_world_tasks_logger = logging.getLogger("return_world.tasks")
+
+    # Declare what is expected to be forwarded to the API for verification. Note that
+    # the messages are not identical to what will be returned using get_logs_by_id,
+    # because they get rendered using structlog before they're sent to the API.
+    expected_log_records = [
+        {
+            "severity": "DEBUG",
+            "loggerName": "hello_world.tasks",
+            "message": "Log message 1",
+        },
+        {
+            "severity": "INFO",
+            "loggerName": "goodbye_world.tasks",
+            "message": "Log message 2",
+        },
+        {
+            "severity": "WARNING",
+            "loggerName": "return_world.tasks",
+            "message": "Log message 3",
+        },
+    ]
+
+    # Set the logging level to DEBUG so that all messages are forwarded to the api. This
+    # is necessary because the loggers are set to INFO by default, and we want to
+    # capture a DEBUG message as well.
+    old_logging_level = logging.getLogger().level
+    logging.getLogger().setLevel(logging.DEBUG)
+
+    with forward_job_logs_to_api(job_resource_id, client=dioptra_client):
+        hello_world_tasks_logger.debug("Log message 1")
+        goodbye_world_tasks_logger.info("Log message 2")
+        return_world_tasks_logger.warning("Log message 3")
+
+    # Sanity check: This message should not get forwarded because it is outside the
+    # context
+    goodbye_world_tasks_logger.info("Log message 4")
+
+    # Restore the logging level to what it was before entering the context
+    logging.getLogger().setLevel(old_logging_level)
+
+    resp = dioptra_client.jobs.get_logs_by_id(job_resource_id)
+    returned_page = resp.json()
+
+    # Validate that createdOn timestamps are present in the logs, then remove them for a
+    # predictable comparison.
+    for log in returned_page["data"]:
+        assert "createdOn" in log
+        del log["createdOn"]
+
+    # The messages get rendered using structlog before they're sent, so they look
+    # different. We just check that the original message is embedded in the returned
+    # one, then delete them for a predictable comparison.
+    for returned, expected in zip(returned_page["data"], expected_log_records):
+        assert expected["message"] in returned["message"]
+        del expected["message"]
+        del returned["message"]
+
+    # Note: We expect the total number of records returned is 3, not 4. The "Log message
+    # 4" was emitted outside the context manager, so it was not forwarded to the API.
+    assert returned_page == {
+        "index": 0,
+        "isComplete": True,
+        "totalNumResults": 3,
+        "first": f"/api/v1/jobs/{job_resource_id}/log?index=0&pageLength=10",
+        "data": expected_log_records,
     }
