@@ -21,7 +21,6 @@ functionalities for the job entity. The tests ensure that the queues can be
 registered, renamed, queried, and deleted as expected through the REST API.
 """
 
-import datetime
 from http import HTTPStatus
 from typing import Any
 
@@ -40,33 +39,27 @@ def registered_job_logs(dioptra_client, registered_jobs):
     log_records = [
         {
             "severity": "DEBUG",
-            "stepName": "step1",
-            "timestamp": "1992-07-17T07:48:07.137870+00:00",
+            "loggerName": "hello_world.tasks",
             "message": "Log message 1",
         },
         {
-            # stepName is optional
-            # "stepName": "step2",
             "severity": "INFO",
-            "timestamp": "1992-07-17T07:55:38.619870+00:00",
+            "loggerName": "goodbye_world.tasks",
             "message": "Log message 2",
         },
         {
             "severity": "WARNING",
-            "stepName": "step3",
-            "timestamp": "1992-07-17T08:49:59.675870+00:00",
+            "loggerName": "return_world.tasks",
             "message": "Log message 3",
         },
         {
             "severity": "ERROR",
-            "stepName": "step4",
-            "timestamp": "1992-07-17T09:25:19.683870+00:00",
+            "loggerName": "error_world.tasks",
             "message": "Log message 4",
         },
         {
             "severity": "CRITICAL",
-            "stepName": "step5",
-            "timestamp": "1992-07-17T10:24:16.740870+00:00",
+            "loggerName": "critical_world.tasks",
             "message": "Log message 5",
         },
     ]
@@ -1049,19 +1042,17 @@ def test_add_logs(dioptra_client, auth_account, registered_jobs):
     log_records = [
         {
             "severity": "DEBUG",
-            "stepName": "step1",
+            "loggerName": "hello_world.tasks",
             "message": "Log message 1",
         },
         {
-            # stepName is optional
-            # "stepName": "step2",
             "severity": "INFO",
+            "loggerName": "goodbye_world.tasks",
             "message": "Log message 2",
         },
         {
             "severity": "WARNING",
-            "stepName": "step3",
-            "timestamp": "1984-05-21T15:23:52.123456-05:00",
+            "loggerName": "return_world.tasks",
             "message": "Log message 3",
         },
     ]
@@ -1072,24 +1063,18 @@ def test_add_logs(dioptra_client, auth_account, registered_jobs):
     resp = dioptra_client.jobs.append_logs_by_id(job_resource_id, log_records)
 
     assert resp.status_code == HTTPStatus.OK
-    returned_logs = resp.json()["data"]
+    returned_logs = resp.json()
 
-    # The timestamps on the first two returned records are unpredictable (the
-    # server set them), so just ensure they are there.  Then delete them, so we
-    # can do a predictable comparison.
-    assert "timestamp" in returned_logs[0]
-    assert "timestamp" in returned_logs[1]
+    # The createdOn timestamps on the returned records are unpredictable (the server set
+    # them), so just ensure they are there.  Then delete them, so we can do a
+    # predictable comparison.
+    assert "createdOn" in returned_logs[0]
+    assert "createdOn" in returned_logs[1]
+    assert "createdOn" in returned_logs[2]
 
-    del returned_logs[0]["timestamp"]
-    del returned_logs[1]["timestamp"]
-
-    # The timestamp on the third log will have changed to UTC.  Switch it
-    # over manually in the input, to produce expected output.
-    log_records[2]["timestamp"] = (
-        datetime.datetime.fromisoformat(log_records[2]["timestamp"])
-        .astimezone(datetime.UTC)
-        .isoformat()
-    )
+    del returned_logs[0]["createdOn"]
+    del returned_logs[1]["createdOn"]
+    del returned_logs[2]["createdOn"]
 
     assert returned_logs == log_records
 
@@ -1100,6 +1085,12 @@ def test_get_logs_all(dioptra_client, registered_jobs, registered_job_logs):
 
     resp = dioptra_client.jobs.get_logs_by_id(job_resource_id)
     returned_page = resp.json()
+
+    # Validate that createdOn timestamps are present in the logs, then remove them for a
+    # predictable comparison.
+    for log in returned_page["data"]:
+        assert "createdOn" in log
+        del log["createdOn"]
 
     assert returned_page == {
         "index": 0,
@@ -1120,6 +1111,12 @@ def test_get_logs_page(dioptra_client, registered_jobs, registered_job_logs):
         3,
     )
     returned_page = resp.json()
+
+    # Validate that createdOn timestamps are present in the logs, then remove them for a
+    # predictable comparison.
+    for log in returned_page["data"]:
+        assert "createdOn" in log
+        del log["createdOn"]
 
     assert returned_page == {
         "index": 1,
@@ -1142,6 +1139,12 @@ def test_get_logs_past_end(dioptra_client, registered_jobs, registered_job_logs)
         3,
     )
     returned_page = resp.json()
+
+    # Validate that createdOn timestamps are present in the logs, then remove them for a
+    # predictable comparison.
+    for log in returned_page["data"]:
+        assert "createdOn" in log
+        del log["createdOn"]
 
     assert returned_page == {
         "index": 999999,
@@ -1172,6 +1175,12 @@ def test_get_logs_zero_page_length(
     )
     returned_page = resp.json()
 
+    # Validate that createdOn timestamps are present in the logs, then remove them for a
+    # predictable comparison.
+    for log in returned_page["data"]:
+        assert "createdOn" in log
+        del log["createdOn"]
+
     assert returned_page == {
         "index": 1,
         "isComplete": False,
@@ -1190,6 +1199,12 @@ def test_get_logs_bad_job_id(dioptra_client, registered_jobs, registered_job_log
         3,
     )
     returned_page = resp.json()
+
+    # Validate that createdOn timestamps are present in the logs, then remove them for a
+    # predictable comparison.
+    for log in returned_page["data"]:
+        assert "createdOn" in log
+        del log["createdOn"]
 
     # Should it be a 404?
     assert returned_page == {
