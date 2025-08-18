@@ -91,7 +91,12 @@ def wrap_request_method(
         except requests.ConnectionError as err:
             raise APIConnectionError(f"Connection failed: {url}") from err
 
-        LOGGER.debug("Response received: status_code=%s", str(response.status_code))
+        LOGGER.debug(
+            "Response received: url=%s  method=%s  status_code=%s",
+            url,
+            str(func.__name__).upper(),
+            str(response.status_code),
+        )
         return response
 
     return wrapper
