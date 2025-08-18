@@ -329,16 +329,12 @@ class JobsCollectionClient(CollectionClient[T]):
 
             {
                 "severity": "WARNING",
-                "stepName": "step1",
-                "timestamp": "1984-05-21T15:23:52.123456-05:00",
+                "loggerName": "hello_world.tasks",
                 "message": "Log message",
             }
 
         Legal values for severity include DEBUG, INFO, WARNING, ERROR, CRITICAL. The
-        step name is intended to capture which step of an experiment was being executed
-        at the time the log record was emitted. Step names and timestamps are optional.
-        Timestamps, if given, must be ISO strings. If a timestamp is not included, the
-        server's current timestamp will be used.
+        logger name captures the name of the logger that emitted the record.
 
         Args:
             job_id: The resource ID of a job.

@@ -16,11 +16,10 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The schemas for serializing/deserializing Job resources."""
 
-import datetime
 import enum
 import re
 
-from marshmallow import Schema, fields, post_load, validate
+from marshmallow import Schema, fields, validate
 
 from dioptra.restapi.v1.artifacts.schema import ArtifactRefSchema
 from dioptra.restapi.v1.schemas import (
@@ -322,46 +321,38 @@ class JobLogRecordSchema(Schema):
     A logging record within the context of a running job.
     """
 
-    stepName = fields.String(
-        attribute="step_name",
-        metadata={
-            "description": "The name of the step which was executing when the"
-            " log record was emitted, if known/applicable."
-        },
-    )
-    timestamp = fields.DateTime(
-        metadata={"description": "The date/time when the log record was emitted."}
-    )
     severity = fields.Enum(
         JobLogSeverity,
-        required=True,
+        attribute="severity",
         metadata={
             "description": "Log severity level: {}".format(
                 ", ".join(e.name for e in JobLogSeverity)
             )
         },
+        required=True,
+    )
+    loggerName = fields.String(
+        attribute="logger_name",
+        metadata={
+            "description": "The name of the logger that emitted the log message."
+        },
+        required=True,
     )
     message = fields.String(
-        required=True, metadata={"description": "The logged message."}
+        attribute="message",
+        metadata={"description": "The logged message."},
+        required=True,
     )
-
-    @post_load
-    def fill_in_timestamp(self, obj, **kwargs):
-        """
-        If timestamp is missing, fill it in with the current timestamp (UTC).
-        If present, ensure it is using the UTC timezone.
-        """
-        if "timestamp" in obj:
-            obj["timestamp"] = obj["timestamp"].astimezone(datetime.UTC)
-        else:
-            obj["timestamp"] = datetime.datetime.now(datetime.UTC)
-
-        return obj
+    createdOn = fields.DateTime(
+        attribute="created_on",
+        metadata={"description": "Server timestamp for when the job log was received."},
+        dump_only=True,
+    )
 
 
 class JobLogRecordsSchema(Schema):
     """
-    A list of logging records.  Used for upload.
+    A list of logging records. Used for upload.
     """
 
     data = fields.Nested(
@@ -374,8 +365,7 @@ class JobLogRecordsSchema(Schema):
 
 class JobLogRecordsPageSchema(BasePageSchema):
     """
-    A page of logging records with detailed paging information.  Used for
-    download.
+    A page of logging records with detailed paging information. Used for download.
     """
 
     data = fields.Nested(

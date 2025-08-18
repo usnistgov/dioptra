@@ -14,6 +14,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+import datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import Column, ForeignKey, ForeignKeyConstraint, Index, Text, select
@@ -25,7 +26,6 @@ from dioptra.restapi.db.db import (
     db,
     guid,
     intpk,
-    optionalstr,
     text_,
 )
 
@@ -241,12 +241,18 @@ class JobLog(db.Model):  # type: ignore[name-defined]
         ForeignKey("resources.resource_id"), init=False
     )
     severity: Mapped[text_] = mapped_column(ForeignKey("job_log_severity.severity"))
-    step_name: Mapped[optionalstr]
-    timestamp: Mapped[datetimetz]
+    logger_name: Mapped[text_]
     message: Mapped[text_]
+    created_on: Mapped[datetimetz] = mapped_column(init=False, nullable=False)
 
     # Relationships
     job_resource: Mapped["Resource"] = relationship()
 
     # Additional settings
     __table_args__ = (Index(None, "job_resource_id", "id"),)
+
+    # Initialize default values using dataclass __post_init__ method
+    # https://docs.python.org/3/library/dataclasses.html#dataclasses.__post_init__
+    def __post_init__(self) -> None:
+        timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
+        self.created_on = timestamp

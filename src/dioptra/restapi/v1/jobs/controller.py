@@ -47,6 +47,7 @@ from dioptra.restapi.v1.workflows.lib.export_job_parameters import (
 from .schema import (
     JobGetQueryParameters,
     JobLogGetQueryParameters,
+    JobLogRecordSchema,
     JobLogRecordsPageSchema,
     JobLogRecordsSchema,
     JobMlflowRunSchema,
@@ -447,13 +448,10 @@ class JobIdLogEndpoint(Resource):
 
     @login_required
     @accepts(schema=JobLogRecordsSchema, api=api)
-    @responds(schema=JobLogRecordsSchema, api=api)
+    @responds(schema=JobLogRecordSchema(many=True), api=api)
     def post(self, id: int):
         records = request.parsed_obj["data"]  # type: ignore
-
-        self._job_log_service.add_logs(id, records)
-
-        return request.parsed_obj  # type: ignore
+        return self._job_log_service.add_logs(id, records)
 
 
 JobSnapshotsResource = generate_resource_snapshots_endpoint(

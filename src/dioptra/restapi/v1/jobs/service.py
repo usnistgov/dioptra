@@ -1354,7 +1354,9 @@ class JobLogService(object):
     def __init__(self, job_id_service: JobIdService):
         self._job_id_service = job_id_service
 
-    def add_logs(self, job_resource_id: int, records: Iterable[dict[str, Any]]) -> None:
+    def add_logs(
+        self, job_resource_id: int, records: Iterable[dict[str, Any]], **kwargs
+    ) -> list[dict[str, Any]]:
         """
         Add the given log records to the database.
 
@@ -1363,30 +1365,44 @@ class JobLogService(object):
             records: An iterable of dicts, where each dict complies with the
                 JobLogRecordSchema marshmallow schema (after loading).
         """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.debug("Add job logs", job_id=job_resource_id)
         job_dict = self._job_id_service.get(job_resource_id, error_if_not_found=True)
         # can't be None since error_if_not_found is True: the .get() call would
         # error instead of returning None.
         assert job_dict is not None
 
         job = job_dict["job"]
+        job_logs: list[models.JobLog] = []
 
         for record in records:
             job_log = models.JobLog(
-                record["severity"].name,
-                record.get("step_name"),
-                record["timestamp"],
-                record["message"],
-                job.resource,
+                severity=record["severity"].name,
+                logger_name=record["logger_name"],
+                message=record["message"],
+                job_resource=job.resource,
             )
             db.session.add(job_log)
+            job_logs.append(job_log)
 
         db.session.commit()
+        response = [
+            {
+                "severity": JobLogSeverity[log.severity],
+                "logger_name": log.logger_name,
+                "message": log.message,
+                "created_on": log.created_on,
+            }
+            for log in job_logs
+        ]
+        return response
 
     def get_logs(
         self,
         job_resource_id: int,
         index: int,
         page_length: int,
+        **kwargs,
     ) -> tuple[list[dict[str, Any]], int]:
         """
         Get log records from the database, for the given job.
@@ -1402,6 +1418,8 @@ class JobLogService(object):
             records across all pages.
         """
 
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.debug("Get job logs", job_id=job_resource_id)
         count_stmt = (
             select(func.count())
             .select_from(models.JobLog)
@@ -1425,13 +1443,10 @@ class JobLogService(object):
         for log_obj in log_objs:
             record = {
                 "severity": JobLogSeverity[log_obj.severity],
-                "timestamp": log_obj.timestamp,
+                "logger_name": log_obj.logger_name,
                 "message": log_obj.message,
+                "created_on": log_obj.created_on,
             }
-
-            if log_obj.step_name is not None:
-                record["step_name"] = log_obj.step_name
-
             records.append(record)
 
         return records, total_count
