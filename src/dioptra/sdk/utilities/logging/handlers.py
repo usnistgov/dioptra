@@ -85,12 +85,8 @@ class DioptraJobLoggingHandler(logging.handlers.BufferingHandler):
         """
         self.acquire()
         try:
-            try:
-                self.sender(job_id=self.job_id, logs=self._extract_logs_from_buffer())
-
-            except Exception:
-                for record in self.buffer:
-                    self.handleError(record)
+            if self.buffer:
+                self._send_buffered_logs()
 
             self.buffer.clear()
 
@@ -111,6 +107,14 @@ class DioptraJobLoggingHandler(logging.handlers.BufferingHandler):
 
             finally:
                 self.release()
+
+    def _send_buffered_logs(self) -> None:
+        try:
+            self.sender(job_id=self.job_id, logs=self._extract_logs_from_buffer())
+
+        except Exception:
+            for record in self.buffer:
+                self.handleError(record)
 
     def _extract_logs_from_buffer(self) -> list[dict[str, str]]:
         return [
