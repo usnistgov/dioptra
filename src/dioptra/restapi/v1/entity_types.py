@@ -25,11 +25,20 @@ from typing import Any
 # https://stackoverflow.com/questions/36699512/is-it-possible-to-dump-an-enum-in-json-without-passing-an-encoder-to-json-dumps
 #
 _saved_default = (
+    # Persisting the current state of the JSON serializer
     JSONEncoder().default
 )  # Save the original default method for json-dumps
 
 
 def _new_default(self, obj) -> Any:
+    """Default function that would also handle the Enums in serialization
+
+    Args:
+        obj (_type_): Python object to serialize
+    Returns:
+        Any: The method to serialize the object,
+            with special handler for the Enum
+    """
     if isinstance(obj, Enum):
         # OUR SPECIAL CASE WHEN THE OBJECT IS ENUM-DERIVED
         return obj.name  # Cough up the default property .name or .value or ._value_
@@ -41,6 +50,8 @@ def _new_default(self, obj) -> Any:
 # Glue-up the new default method with the patch-back,
 # and tell MyPy not to wrinkle it's nose at the "monkey patch"
 JSONEncoder.default = _new_default  # type: ignore
+# End of the monkey-patching the serialization fot he Enums
+# ======================================================================
 
 
 class EntityTypes(Enum):
@@ -48,7 +59,7 @@ class EntityTypes(Enum):
         entities as const-style name/enumerable tuples
 
     Args:
-        Enum (_type_): [str, str]
+        Enum (_type_): [str, str] [DB-compatible name; User-friendly name]
     """
 
     @staticmethod
@@ -56,10 +67,10 @@ class EntityTypes(Enum):
         """
          EntityTypes.get_from_string ('entity_type')
         Args:
-            value (_type_): _description_
+            value (_type_): String entity name to get matching Enum, .NONE, or .UNDEFINED
 
         Returns:
-            _type_: _description_
+            _type_: The EntityTypes Enum
         """
         if not resource_type_name:
             # print(f"1. {resource_type_name=} ")
@@ -78,19 +89,34 @@ class EntityTypes(Enum):
 
     @classmethod
     def list_names(cls) -> list[str]:
+        """Lists Enum Names
+
+        Returns:
+            list[str]: List of the names in the Enum
+        """
         return [c.name for c in cls]  # list(map(lambda c: c.name, cls))
         # ----------------------------------------------------------------------
 
     def __str__(self):
+        """Default for serialization
+
+        Returns:
+            _type_: Fallback to DB-compatible name
+        """
         return self.db_schema_name
         # ----------------------------------------------------------------------
 
     def __repr__(self):
+        """Default for print and pprint
+
+        Returns:
+            _type_: Fallback to DB-compatible name
+        """
         return self.db_schema_name
         # ----------------------------------------------------------------------
 
-    db_schema_name: str
-    ui_print_name: str
+    db_schema_name: str  # DB-compatible name representation
+    ui_print_name: str  # Yser-friendly name representation
 
     def __new__(
         cls,
@@ -107,7 +133,9 @@ class EntityTypes(Enum):
             _type_: The created const-style immutable tuple-member the enum
         """
         new_instance = object.__new__(cls)
-        new_instance._value_ = original_name
+        new_instance._value_ = (
+            original_name  # Set default value to make sure the Enum base works
+        )
         new_instance.db_schema_name = original_name
         new_instance.ui_print_name = readable_name
         return new_instance
@@ -171,11 +199,14 @@ class EntityTypes(Enum):
         semicolons, or hyphens.
 
         Args:
-            text_to_snake (str): The text to format
+            text_to_snake (str):  text to format to snake case
 
         Returns:
-            str: _description_
+            str: Snake-case formatted name-type string
         """
+        # Bail out for empty input
+        if not text_to_snake:
+            return ""
         # Replace punctuation with spaces
         text_to_snake = (
             text_to_snake.replace("-", " ")
