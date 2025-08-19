@@ -1,0 +1,51 @@
+artifacts:
+  #seed:
+    #contents: $random_seed
+    #task:
+      #name: StringArtifactTask
+  defended_dataset:
+    contents: $defended_dataset
+    task:
+      name: TensorflowDatasetArtifactTask
+  defended_dataset_sample:
+    contents: $defended_dataset
+    task:
+      name: TensorflowDatasetSamplerArtifactTask
+  predictions:
+    contents: $predictions
+    task:
+      name: DataframeArtifactTask
+      args:
+        format: csv
+  metrics:
+    contents: $metrics
+    task:
+      name: DataframeArtifactTask
+      args:
+        format: csv
+
+graph:
+  random_seed:
+    set_random_seed:
+      seed: $seed
+
+  defended_dataset:
+    preprocessing:
+      dataset: $dataset_artifact
+      defense_name: $defense_name
+      defense_options: $defense_options
+      save_dataset: true
+
+  predictions:
+    model_predict:
+      model: $model_artifact
+      dataset: $defended_dataset
+    dependencies:
+      - defended_dataset
+
+  metrics:
+    evaluate_predictions:
+      predictions: $predictions
+      dataset: $defended_dataset
+    dependencies:
+      - predictions

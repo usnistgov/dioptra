@@ -1,0 +1,69 @@
+artifacts:
+  #seed:
+    #contents: $random_seed
+    #task:
+      #name: StringArtifactTask
+  model:
+    contents: $trained_model
+    task:
+      name: KerasModelArtifactTask
+  dataset_sample:
+    contents: $dataset.test
+    task:
+      name: TensorflowDatasetSamplerArtifactTask
+  metrics:
+    contents: $metrics
+    task:
+      name: DataframeArtifactTask
+      args:
+        format: csv
+
+graph:
+  random_seed:
+    set_random_seed:
+      seed: $seed
+
+  dataset:
+    load_dataset_from_tfds:
+      name: $dataset_name
+      split: $dataset_split
+      normalize_val: $normalize_val
+      image_size: $image_size
+      batch_size: $batch_size
+      seed: $random_seed
+    dependencies:
+      - random_seed
+
+  model:
+    create_model:
+      model_name: $model_name
+      dataset: $dataset.train
+      loss: $loss_name
+      optimizer: $optimizer_name
+      learning_rate: $learning_rate
+    dependencies:
+      - dataset
+
+  trained_model:
+    train_model:
+      model: $model
+      train_dataset: $dataset.train
+      val_dataset: $dataset.train
+      epochs: $epochs
+      callbacks:
+        - name: EarlyStopping
+          parameters:
+            monitor: val_loss
+            min_delta: .01
+            patience: 5
+            restore_best_weights: true
+      fit_options: $fit_options
+    dependencies:
+      - model
+
+  metrics:
+    evaluate_model:
+      model: $trained_model
+      dataset: $dataset.test
+    dependencies:
+      - trained_model

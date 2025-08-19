@@ -15,17 +15,17 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 import logging
-import os
 import sys
 from collections.abc import Iterator, Mapping, MutableMapping
 from contextlib import contextmanager
 from logging import getLogger
-from typing import Any, Callable, Final
+from typing import Any, Callable
 
 import structlog
 
-from dioptra.client import DioptraClient, connect_response_dioptra_client
+from dioptra.client import DioptraClient
 from dioptra.client.base import DioptraResponseProtocol
+from dioptra.sdk.utilities.auth_client import get_authenticated_worker_client
 
 from .filters import LibraryFilter, OmitClientJobLoggingFilter
 from .handlers import DioptraJobLoggingHandler
@@ -34,10 +34,6 @@ ProcessorType = Callable[
     [Any, str, MutableMapping[str, Any]],
     Mapping[str, Any] | str | bytes | tuple[Any, ...],
 ]
-
-ENV_DIOPTRA_API: Final[str] = "DIOPTRA_API"
-ENV_DIOPTRA_WORKER_USERNAME: Final[str] = "DIOPTRA_WORKER_USERNAME"
-ENV_DIOPTRA_WORKER_PASSWORD: Final[str] = "DIOPTRA_WORKER_PASSWORD"
 
 
 def attach_stdout_stream_handler(
@@ -76,7 +72,7 @@ def forward_job_logs_to_api(
             using environment variables for authentication.
     """
     logger = getLogger()
-    client = client or _get_authenticated_client(logger)
+    client = client or get_authenticated_worker_client(logger, "response")
 
     formatter = structlog.stdlib.ProcessorFormatter(
         processors=[
@@ -183,31 +179,3 @@ def _get_logging_level(level: str) -> str:
         level = "INFO"
 
     return level
-
-
-def _get_authenticated_client(
-    log: logging.Logger,
-) -> DioptraClient[DioptraResponseProtocol]:
-    if (username := os.getenv(ENV_DIOPTRA_WORKER_USERNAME)) is None:
-        log.error(f"{ENV_DIOPTRA_WORKER_USERNAME} environment variable is not set")
-        raise ValueError(
-            f"{ENV_DIOPTRA_WORKER_USERNAME} environment variable is not set"
-        )
-
-    if (password := os.getenv(ENV_DIOPTRA_WORKER_PASSWORD)) is None:
-        log.error(f"{ENV_DIOPTRA_WORKER_PASSWORD} environment variable is not set")
-        raise ValueError(
-            f"{ENV_DIOPTRA_WORKER_PASSWORD} environment variable is not set"
-        )
-
-    # Instantiate a Dioptra client and login using worker's authentication details
-    try:
-        client = connect_response_dioptra_client()
-
-    except ValueError:
-        log.error(f"{ENV_DIOPTRA_API} environment variable is not set")
-        raise ValueError(f"{ENV_DIOPTRA_API} environment variable is not set") from None
-
-    client.auth.login(username=username, password=password)
-
-    return client

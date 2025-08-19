@@ -22,6 +22,8 @@ from collections.abc import Iterable, Mapping, MutableMapping, Sequence
 from pathlib import Path, PurePosixPath
 from typing import Any, NotRequired, Type, TypedDict, Union, cast
 
+import structlog
+
 import dioptra.pyplugs
 from dioptra.sdk.api.artifact import ArtifactTaskInterface
 from dioptra.sdk.exceptions.task_engine import (
@@ -630,6 +632,8 @@ def _handle_artifacts(
 ) -> list[ArtifactOutputEntry]:
     result: list[ArtifactOutputEntry] = []
     for name, artifact in artifacts.items():
+        LOGGER = structlog.get_logger()
+        LOGGER.info("handle artifact", name=name)
         contents = _resolve_task_parameter_value(artifact["contents"], context)
         task_name = artifact["task"]["name"]
         # search through plug-ins to find the correct artifact task based on the name
