@@ -67,6 +67,7 @@ dependencies = [
     "marshmallow>=3.9.0,<4",
     "mlflow-skinny>=2",
     "multimethod>=1.5",
+    "nh3>=0.3.0",
     "numpy>=1.22.0",
     "pandas>=1.5.0",
     "passlib>=1.7.0",

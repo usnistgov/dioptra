@@ -1079,6 +1079,59 @@ def test_add_logs(dioptra_client, auth_account, registered_jobs):
     assert returned_logs == log_records
 
 
+def test_clean_unsafe_logs(dioptra_client, auth_account, registered_jobs):
+    log_records = [
+        {
+            "severity": "INFO",
+            "loggerName": "xss.tasks",
+            "message": "<b><img src='' onerror='alert(\\'hax\\')'>I'm not trying to XSS you</b> Log message 1",
+        },
+        {
+            "severity": "INFO",
+            "loggerName": "xss.tasks",
+            "message": '<a href="https://dioptra.org">Log message 2</a>',
+        },
+        {
+            "severity": "INFO",
+            "loggerName": "<script>alert('hello')</script>xss.tasks",
+            "message": "Log message 3",
+        },
+    ]
+    expected_log_records = [
+        {
+            "severity": "INFO",
+            "loggerName": "xss.tasks",
+            "message": '<b><img src="">I\'m not trying to XSS you</b> Log message 1',
+        },
+        {
+            "severity": "INFO",
+            "loggerName": "xss.tasks",
+            "message": '<a href="https://dioptra.org" rel="noopener noreferrer">Log message 2</a>',
+        },
+        {
+            "severity": "INFO",
+            "loggerName": "xss.tasks",
+            "message": "Log message 3",
+        },
+    ]
+
+    job = registered_jobs["job1"]
+    job_resource_id = job["id"]
+
+    resp = dioptra_client.jobs.append_logs_by_id(job_resource_id, log_records)
+
+    assert resp.status_code == HTTPStatus.OK
+    returned_logs = resp.json()
+
+    # Validate that createdOn timestamps are present in the logs, then remove them for a
+    # predictable comparison.
+    for returned_log in returned_logs:
+        assert "createdOn" in returned_log
+        del returned_log["createdOn"]
+
+    assert returned_logs == expected_log_records
+
+
 def test_get_logs_all(dioptra_client, registered_jobs, registered_job_logs):
     job = registered_jobs["job1"]
     job_resource_id = job["id"]
