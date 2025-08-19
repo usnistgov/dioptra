@@ -695,9 +695,7 @@ def add_resource_lock_types(
 
     if ResourceLockType.READONLY in existing_lock_types:
         if types_to_add:
-            raise e.ReadOnlyLockError(
-                EntityTypes.get_from_string(resource_type), resource_id=resource_id
-            )
+            raise e.ReadOnlyLockError(resource_type, resource_id=resource_id)
 
     else:
         # here, we really need the Resource object; ResourceLock's
@@ -705,9 +703,7 @@ def add_resource_lock_types(
         if isinstance(resource, int):
             resource_obj = session.get(m.Resource, resource)
             if not resource_obj:
-                raise e.EntityDoesNotExistError(
-                    EntityTypes.get_from_string(resource_type), resource_id=resource
-                )
+                raise e.EntityDoesNotExistError(resource_type, resource_id=resource)
         elif isinstance(resource, m.ResourceSnapshot):
             resource_obj = resource.resource
         else:

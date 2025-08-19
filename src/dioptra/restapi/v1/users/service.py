@@ -42,7 +42,6 @@ from dioptra.restapi.v1.plugin_parameter_types.service import (
 )
 from dioptra.restapi.v1.shared.password_service import PasswordService
 from dioptra.restapi.v1.shared.search_parser import parse_search_text
-from entity_types import EntityTypes
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
