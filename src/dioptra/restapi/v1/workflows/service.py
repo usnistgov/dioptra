@@ -28,6 +28,7 @@ import jsonschema
 import structlog
 import tomli as toml
 import yaml
+from dioptra.restapi.v1.entity_types import EntityTypes
 from injector import inject
 from structlog.stdlib import BoundLogger
 from werkzeug.datastructures import FileStorage

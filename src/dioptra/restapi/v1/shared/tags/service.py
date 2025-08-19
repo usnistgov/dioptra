@@ -19,6 +19,7 @@
 from typing import Any, cast
 
 import structlog
+from dioptra.restapi.v1.entity_types import EntityTypes
 from injector import ClassAssistedBuilder, inject
 from sqlalchemy import select
 from structlog.stdlib import BoundLogger

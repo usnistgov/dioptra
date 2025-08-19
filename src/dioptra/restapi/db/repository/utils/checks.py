@@ -637,7 +637,7 @@ def assert_resource_type(
     if isinstance(resource, int):
         resource_obj = session.get(m.Resource, resource)
         if not resource_obj:
-            raise e.EntityDoesNotExistError(None, resource_id=resource)
+            raise e.EntityDoesNotExistError(EntityTypes.NONE, resource_id=resource)
         resource = resource_obj
 
     if isinstance(resource, (m.Resource, m.ResourceSnapshot)):
