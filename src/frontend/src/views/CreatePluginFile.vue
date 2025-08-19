@@ -247,7 +247,7 @@
             outlined 
             dense 
             v-model.trim="task.name"
-            :rules="[requiredRule, taskType === 'functions' ? uniqueFunctionName : uniqueArtifactName]"
+            :rules="[requiredRule]"
             class="q-mt-sm"
           >
             <template v-slot:before>
@@ -575,14 +575,6 @@
 
   function requiredRule(val) {
     return (!!val) || "This field is required"
-  }
-
-  function uniqueFunctionName(val) {
-    return (!pluginFile.value.tasks.functions.map(task => task.name).includes(val)) || "Duplicate task name"
-  }
-
-  function uniqueArtifactName(val) {
-    return (!pluginFile.value.tasks.artifacts.map(task => task.name).includes(val)) || "Duplicate task name"
   }
 
   function pythonFilenameRule(val) {
