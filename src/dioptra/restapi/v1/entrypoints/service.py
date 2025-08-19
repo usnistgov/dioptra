@@ -465,6 +465,11 @@ class EntrypointIdService(object):
         duplicates = find_non_unique("name", parameters)
         if len(duplicates) > 0:
             raise QueryParameterNotUniqueError(RESOURCE_TYPE, name=duplicates)
+        artifact_parameter_duplicates = find_non_unique("name", artifact_parameters)
+        if len(artifact_parameter_duplicates) > 0:
+            raise QueryParameterNotUniqueError(
+                RESOURCE_TYPE, name=artifact_parameter_duplicates
+            )
 
         entrypoint_dict = self.get(entrypoint_id, log=log)
 
