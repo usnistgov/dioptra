@@ -691,7 +691,7 @@ def registered_entrypoints(
         },
         {
             "name": "entrypoint_param_5",
-            "defaultValue": "['a', 'b', {'c': 1}]",
+            "defaultValue": "[\"a\", \"b\", {\"c\": 1}]",
             "parameterType": "list",
         },
     ]

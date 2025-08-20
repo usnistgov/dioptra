@@ -20,7 +20,10 @@ import structlog
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
-from dioptra.restapi.v1.type_coercions import GlobalParameterType, coerce_to_type
+from dioptra.restapi.v1.shared.task_engine_yaml.service import (
+    coerce_entrypoint_param_types,
+)
+from dioptra.restapi.v1.type_coercions import GlobalParameterType
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -41,13 +44,10 @@ def build_job_parameters_dict(
     """
     log = logger or LOGGER.new()  # noqa: F841
 
-    job_parameters: dict[str, GlobalParameterType] = {}
-    for param_value in job_param_values:
-        value = coerce_to_type(
-            x=param_value.value,
-            type_name=param_value.parameter.parameter_type,
-        )
-        job_parameters[param_value.parameter.name] = value
+    job_parameters: dict[str, GlobalParameterType] = coerce_entrypoint_param_types(
+        job_param_values
+    )
+
     return job_parameters
 
 

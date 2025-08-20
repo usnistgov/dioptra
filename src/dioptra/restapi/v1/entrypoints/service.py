@@ -45,6 +45,9 @@ from dioptra.restapi.v1.plugins.service import (
 from dioptra.restapi.v1.queues.service import RESOURCE_TYPE as QUEUE_RESOURCE_TYPE
 from dioptra.restapi.v1.queues.service import QueueIdsService
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
+from dioptra.restapi.v1.shared.task_engine_yaml.service import (
+    coerce_entrypoint_default_param_types,
+)
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 PLUGIN_RESOURCE_TYPE: Final[str] = "entry_point_plugin"
@@ -1671,7 +1674,7 @@ def _copy_artifact_plugins(
 def _create_parameters(
     parameters: list[dict[str, Any]],
 ) -> Iterable[models.EntryPointParameter]:
-    return [
+    params = [
         models.EntryPointParameter(
             name=param["name"],
             default_value=param["default_value"],
@@ -1680,6 +1683,10 @@ def _create_parameters(
         )
         for i, param in enumerate(parameters)
     ]
+
+    coerce_entrypoint_default_param_types(params)
+
+    return params
 
 
 def _copy_parameters(
