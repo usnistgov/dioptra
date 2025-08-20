@@ -15,20 +15,33 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 import logging
+import os
 import sys
+from collections.abc import Iterator, Mapping, MutableMapping
+from contextlib import contextmanager
 from logging import getLogger
-from typing import Any, Callable, List, Mapping, MutableMapping, Optional, Tuple, Union
+from typing import Any, Callable, Final
 
 import structlog
 
+from dioptra.client import DioptraClient, connect_response_dioptra_client
+from dioptra.client.base import DioptraResponseProtocol
+
+from .filters import LibraryFilter, OmitClientJobLoggingFilter
+from .handlers import DioptraJobLoggingHandler
+
 ProcessorType = Callable[
     [Any, str, MutableMapping[str, Any]],
-    Union[Mapping[str, Any], str, bytes, Tuple[Any, ...]],
+    Mapping[str, Any] | str | bytes | tuple[Any, ...],
 ]
+
+ENV_DIOPTRA_API: Final[str] = "DIOPTRA_API"
+ENV_DIOPTRA_WORKER_USERNAME: Final[str] = "DIOPTRA_WORKER_USERNAME"
+ENV_DIOPTRA_WORKER_PASSWORD: Final[str] = "DIOPTRA_WORKER_PASSWORD"
 
 
 def attach_stdout_stream_handler(
-    as_json: bool, logger: Optional[logging.Logger] = None
+    as_json: bool, logger: logging.Logger | None = None
 ) -> None:
     logger = logger or getLogger()
     log_processor: ProcessorType = _get_structlog_processor(as_json)
@@ -39,6 +52,7 @@ def attach_stdout_stream_handler(
         foreign_pre_chain=[
             structlog.stdlib.add_logger_name,
             structlog.stdlib.add_log_level,
+            structlog.stdlib.PositionalArgumentsFormatter(),
             structlog.processors.TimeStamper(fmt="iso", utc=True),
             structlog.processors.StackInfoRenderer(),
             structlog.processors.format_exc_info,
@@ -50,7 +64,55 @@ def attach_stdout_stream_handler(
     logger.addHandler(handler)
 
 
-def clear_logger_handlers(logger: Optional[logging.Logger]) -> None:
+@contextmanager
+def forward_job_logs_to_api(
+    job_id: str | int, client: DioptraClient[DioptraResponseProtocol] | None = None
+) -> Iterator[None]:
+    """Context manager for forwarding job logs to the Dioptra API.
+
+    Args:
+        job_id: The Dioptra job ID the logs are for.
+        client: An authenticated Dioptra client. If not provided, it will be created
+            using environment variables for authentication.
+    """
+    logger = getLogger()
+    client = client or _get_authenticated_client(logger)
+
+    formatter = structlog.stdlib.ProcessorFormatter(
+        processors=[
+            structlog.stdlib.ProcessorFormatter.remove_processors_meta,
+            structlog.dev.ConsoleRenderer(colors=False),
+        ],
+        foreign_pre_chain=[
+            structlog.stdlib.add_logger_name,
+            structlog.stdlib.add_log_level,
+            structlog.stdlib.PositionalArgumentsFormatter(),
+            structlog.processors.TimeStamper(fmt="iso", utc=True),
+            structlog.processors.StackInfoRenderer(),
+            structlog.processors.format_exc_info,
+            structlog.processors.UnicodeDecoder(),
+        ],
+    )
+    library_filter = LibraryFilter(["git", "rq", "urllib3", "tests"])
+    omit_client_job_logging_filter = OmitClientJobLoggingFilter()
+
+    handler = DioptraJobLoggingHandler(
+        sender=client.jobs.append_logs_by_id, job_id=job_id
+    )
+    handler.setFormatter(formatter)
+    handler.addFilter(library_filter)
+    handler.addFilter(omit_client_job_logging_filter)
+
+    try:
+        logger.addHandler(handler)
+        yield
+
+    finally:
+        handler.close()
+        logger.removeHandler(handler)
+
+
+def clear_logger_handlers(logger: logging.Logger | None) -> None:
     if logger is None:
         return None
 
@@ -58,8 +120,28 @@ def clear_logger_handlers(logger: Optional[logging.Logger]) -> None:
         logger.removeHandler(handler)
 
 
+def configure_structlog_for_worker() -> None:
+    structlog.configure(
+        processors=[
+            structlog.stdlib.filter_by_level,
+            structlog.stdlib.add_logger_name,
+            structlog.stdlib.add_log_level,
+            structlog.stdlib.PositionalArgumentsFormatter(),
+            structlog.processors.TimeStamper(fmt="iso", utc=True),
+            structlog.processors.StackInfoRenderer(),
+            structlog.processors.format_exc_info,
+            structlog.processors.UnicodeDecoder(),
+            structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
+        ],
+        context_class=dict,
+        logger_factory=structlog.stdlib.LoggerFactory(),
+        wrapper_class=structlog.stdlib.BoundLogger,
+        cache_logger_on_first_use=True,
+    )
+
+
 def configure_structlog() -> None:
-    processors: List[Any] = [
+    processors: list[Any] = [
         structlog.stdlib.filter_by_level,
         structlog.stdlib.add_logger_name,
         structlog.stdlib.add_log_level,
@@ -80,7 +162,7 @@ def configure_structlog() -> None:
     )
 
 
-def set_logging_level(level: str, logger: Optional[logging.Logger] = None) -> None:
+def set_logging_level(level: str, logger: logging.Logger | None = None) -> None:
     logger = logger or getLogger()
     logger.setLevel(_get_logging_level(level.strip().upper()))
 
@@ -101,3 +183,31 @@ def _get_logging_level(level: str) -> str:
         level = "INFO"
 
     return level
+
+
+def _get_authenticated_client(
+    log: logging.Logger,
+) -> DioptraClient[DioptraResponseProtocol]:
+    if (username := os.getenv(ENV_DIOPTRA_WORKER_USERNAME)) is None:
+        log.error(f"{ENV_DIOPTRA_WORKER_USERNAME} environment variable is not set")
+        raise ValueError(
+            f"{ENV_DIOPTRA_WORKER_USERNAME} environment variable is not set"
+        )
+
+    if (password := os.getenv(ENV_DIOPTRA_WORKER_PASSWORD)) is None:
+        log.error(f"{ENV_DIOPTRA_WORKER_PASSWORD} environment variable is not set")
+        raise ValueError(
+            f"{ENV_DIOPTRA_WORKER_PASSWORD} environment variable is not set"
+        )
+
+    # Instantiate a Dioptra client and login using worker's authentication details
+    try:
+        client = connect_response_dioptra_client()
+
+    except ValueError:
+        log.error(f"{ENV_DIOPTRA_API} environment variable is not set")
+        raise ValueError(f"{ENV_DIOPTRA_API} environment variable is not set") from None
+
+    client.auth.login(username=username, password=password)
+
+    return client
