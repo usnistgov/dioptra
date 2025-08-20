@@ -59,6 +59,10 @@ from dioptra.restapi.v1.queues.service import QueueIdService
 from dioptra.restapi.v1.shared.job_run_store import JobRunStoreProtocol
 from dioptra.restapi.v1.shared.rq_service import RQServiceV1
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
+from dioptra.restapi.v1.shared.task_engine_yaml.service import (
+    check_artifact_param_type_mismatch,
+    coerce_entrypoint_param_types,
+)
 
 from .schema import JobLogSeverity
 
@@ -246,6 +250,7 @@ class JobService(object):
         job_resource = models.Resource(
             resource_type=RESOURCE_TYPE, owner=experiment.resource.owner
         )
+
         entrypoint_parameter_values = [
             models.EntryPointParameterValue(
                 value=values.get(
@@ -256,6 +261,8 @@ class JobService(object):
             )
             for entrypoint_parameter in entrypoint.parameters
         ]
+
+        coerce_entrypoint_param_types(entrypoint_parameter_values)
 
         entrypoint_artifact_values = self._create_entrypoint_artifact_values(
             artifact_value_ids=artifact_value_ids,
@@ -338,23 +345,10 @@ class JobService(object):
                     log.error(message)
                     raise DioptraError(message)
 
-                if [
-                    param.parameter_type.resource_snapshot_id
-                    for param in sorted(
-                        artifact_parameter.output_parameters,
-                        key=lambda x: x.parameter_number,
-                    )
-                ] != [
-                    param.parameter_type.resource_snapshot_id
-                    for param in sorted(
-                        artifact_parameter.output_parameters,
-                        key=lambda x: x.parameter_number,
-                    )
-                ]:
-                    raise DioptraError(
-                        "Output parameter types do not match for "
-                        f"parameter {artifact_parameter.name}."
-                    )
+                check_artifact_param_type_mismatch(
+                    artifact_parameter.output_parameters,
+                    artifact.task.output_parameters,
+                )
 
                 entrypoint_artifact_values.append(
                     models.EntryPointArtifactParameterValue(

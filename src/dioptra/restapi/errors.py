@@ -320,6 +320,52 @@ class QueryParameterNotUniqueError(QueryParameterValidationError):
         super().__init__(type, "unique", **kwargs)
 
 
+class EntrypointParameterTypeMismatchError(DioptraError):
+    """Could not cast to the specified type"""
+
+    values: list[str | None]
+    parameter_names: list[str]
+    correct_types: list[str]
+
+    def __init__(
+        self,
+        values: list[str | None],
+        parameter_names: list[str],
+        correct_types: list[str],
+    ):
+        super().__init__(
+            f'Could not cast value(s) "{values}" of parameter(s) "{parameter_names}" to declared '
+            f'entrypoint parameter type "{correct_types}".'
+        )
+
+        self.values = values
+        self.parameter_names = parameter_names
+        self.correct_types = correct_types
+
+
+class ArtifactParameterTypeMismatchError(DioptraError):
+    """Could not cast to the specified type"""
+
+    parameter_names: list[str]
+    given_types: list[str]
+    correct_types: list[str]
+
+    def __init__(
+        self,
+        parameter_names: list[str],
+        given_types: list[str],
+        correct_types: list[str],
+    ):
+        super().__init__(
+            f"Artifact parameter type mismatch for parameter with name(s): {parameter_names}."
+            f" Given types: {given_types}, expected: {correct_types}."
+        )
+
+        self.parameter_name = parameter_names
+        self.given_types = given_types
+        self.correct_types = correct_types
+
+
 class JobInvalidStatusTransitionError(DioptraError):
     """The requested status transition is invalid."""
 

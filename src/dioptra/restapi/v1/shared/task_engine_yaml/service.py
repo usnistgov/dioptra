@@ -24,7 +24,16 @@ from structlog.stdlib import BoundLogger
 from yaml.parser import ParserError
 from yaml.scanner import ScannerError
 
-from dioptra.restapi.errors import InvalidYamlError
+from dioptra.restapi.db.models.entry_points import (
+    EntryPointArtifactOutputParameter,
+    EntryPointParameterValue,
+)
+from dioptra.restapi.db.models.plugins import PluginTaskOutputParameter
+from dioptra.restapi.errors import (
+    ArtifactParameterTypeMismatchError,
+    EntrypointParameterTypeMismatchError,
+    InvalidYamlError,
+)
 from dioptra.restapi.v1.type_coercions import (
     BOOLEAN_PARAM_TYPE,
     FLOAT_PARAM_TYPE,
@@ -131,14 +140,10 @@ class TaskEngineYamlService(object):
         """
         log = logger or LOGGER.new()  # noqa: F841
         parameters: dict[str, Any] = {}
-        for param in entry_point.parameters:
-            default_value = param.default_value
-            parameters[param.name] = {
-                "default": coerce_to_type(
-                    x=default_value, type_name=param.parameter_type
-                )
-            }
 
+        parameters = coerce_entrypoint_default_param_types(entry_point.parameters)
+
+        for param in entry_point.parameters:
             if param.parameter_type in EXPLICIT_GLOBAL_TYPES:
                 parameters[param.name]["type"] = (
                     self.convert_parameter_type_to_task_engine_type(
@@ -348,3 +353,135 @@ class TaskEngineYamlService(object):
             "mapping": {"mapping": ["string", "any"]},
         }
         return conversion_map[parameter_type]
+
+
+def coerce_entrypoint_default_param_types(
+    parameters: Sequence[protocols.EntryPointParameterProtocol],
+) -> dict[str, Any]:
+    """Attempt to coerce entrypoint parameter default values.
+
+    Args:
+        parameters: A list of parameters for which to coerce the default
+        values to the specified type for each parameter.
+
+    Returns:
+        A dictionary with the following structure for each parameter:
+            {
+                "parameter_name": {
+                    "default": coerced_value
+                }
+            }
+    """
+
+    param_values = []
+    param_names = []
+    correct_types = []
+    params: dict[str, Any] = {}
+
+    for param in parameters:
+        default_value = param.default_value
+        try:
+            params[param.name] = {
+                "default": coerce_to_type(
+                    x=default_value, type_name=param.parameter_type
+                )
+            }
+        except ValueError:
+            param_values += [default_value]
+            param_names += [param.name]
+            correct_types += [param.parameter_type]
+
+    if len(param_names) > 0:
+        raise EntrypointParameterTypeMismatchError(
+            values=param_values,
+            parameter_names=param_names,
+            correct_types=correct_types,
+        )
+
+    return params
+
+
+def coerce_entrypoint_param_types(
+    parameters: Sequence[EntryPointParameterValue],
+) -> dict[str, Any]:
+    """Attempt to coerce entrypoint parameter job-provided values.
+
+    Args:
+        parameters: A list of parameters for which to coerce the job-provided
+        values to the specified type for each parameter.
+
+    Returns:
+        A dictionary with the following structure for each parameter:
+            {
+                "parameter_name": coerced_value
+            }
+    """
+    param_values = []
+    param_names = []
+    correct_types = []
+
+    coerced_params = {}
+
+    for param in parameters:
+        passed_value = param.value
+
+        try:
+            coerced = coerce_to_type(
+                x=passed_value, type_name=param.parameter.parameter_type
+            )
+            coerced_params[param.parameter.name] = coerced
+
+        except ValueError:
+            param_values += [passed_value]
+            param_names += [param.parameter.name]
+            correct_types += [param.parameter.parameter_type]
+
+    if len(param_names) > 0:
+        raise EntrypointParameterTypeMismatchError(
+            values=param_values,
+            parameter_names=param_names,
+            correct_types=correct_types,
+        )
+
+    return coerced_params
+
+
+def check_artifact_param_type_mismatch(
+    expected_parameters: list[EntryPointArtifactOutputParameter],
+    given_parameters: list[PluginTaskOutputParameter],
+):
+    """Compare the types of the given artifact outputs to the expected output
+    from the corresponding task plugin and report all mismatches.
+
+    Args:
+        expected_parameters: A list of parameters corresponding entrypoint artifact parameter
+        declarations.
+        given_parameters: A list of parameters corresponding to the expected output
+        type of the task plugin used to deserialize these artifacts.
+    """
+
+    parameter_names = []
+    given_types = []
+    expected_types = []
+
+    for expected, given in zip(
+        sorted(
+            expected_parameters,
+            key=lambda x: x.parameter_number,
+        ),
+        sorted(
+            given_parameters,
+            key=lambda x: x.parameter_number,
+        ),
+    ):
+        if expected.parameter_type.resource_id != given.parameter_type.resource_id:
+            parameter_names += [expected.name]
+            given_types += [given.parameter_type.name]
+            expected_types += [expected.parameter_type.name]
+
+    if len(parameter_names) > 0:
+        raise ArtifactParameterTypeMismatchError(
+            parameter_names=parameter_names,
+            given_types=given_types,
+            correct_types=expected_types,
+        )
