@@ -22,7 +22,9 @@ from dataclasses import dataclass
 from io import BufferedReader
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from posixpath import join as urljoin
-from typing import Any, ClassVar, Generic, Protocol, TypeVar
+from typing import Any, Callable, ClassVar, Generic, Protocol, TypeVar, cast
+
+from requests import Response
 
 T = TypeVar("T")
 
@@ -115,6 +117,47 @@ class DioptraResponseProtocol(Protocol):
             The response body as a dictionary.
         """
         ...  # fmt: skip
+
+
+class DioptraNoneToNanResponse(object):
+    """
+    A wrapper for the requests Response which converts JSON Nones to
+    NaNs for the metrics client functions
+    """
+
+    def __init__(
+        self, response: Response, caster: Callable[..., dict[str, Any]]
+    ) -> None:
+        """Initialize the DioptraTestResponse instance.
+
+        Args:
+            response: The Response object from the .
+        """
+        self._response = response
+        self._caster = caster
+
+    @property
+    def request(self) -> DioptraRequestProtocol:
+        """The request that generated the response."""
+        return cast(DioptraRequestProtocol, self._response.request)
+
+    @property
+    def status_code(self) -> int:
+        """The HTTP status code of the response."""
+        return self._response.status_code
+
+    @property
+    def text(self) -> str:
+        """The response body as a string."""
+        return self._response.text
+
+    def json(self) -> dict[str, Any]:
+        """Return the response body as a JSON-like Python dictionary.
+
+        Returns:
+            The response body as a dictionary.
+        """
+        return self._caster(cast(dict[str, Any], self._response.json()))
 
 
 @dataclass
