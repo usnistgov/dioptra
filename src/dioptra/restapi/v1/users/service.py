@@ -35,6 +35,7 @@ from dioptra.restapi.errors import (
     UserPasswordChangeError,
     UserPasswordError,
 )
+from dioptra.restapi.v1.entity_types import EntityTypes
 from dioptra.restapi.v1.groups.service import GroupMemberService
 from dioptra.restapi.v1.plugin_parameter_types.service import (
     BuiltinPluginParameterTypeService,
@@ -115,7 +116,7 @@ class UserService(object):
 
         if password != confirm_password:
             raise QueryParameterValidationError(
-                "password", "equivalence", password="***", confirmation="***"
+                EntityTypes.PASSWORD, "equivalence", password="***", confirmation="***"
             )
 
         hashed_password = self._user_password_service.hash(password, log=log)

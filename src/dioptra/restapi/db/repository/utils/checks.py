@@ -42,6 +42,7 @@ from dioptra.restapi.db.repository.utils.common import (
     get_resource_snapshot_id,
     get_user_id,
 )
+from dioptra.restapi.v1.entity_types import EntityTypes
 
 
 def user_exists(session: CompatibleSession[S], user: m.User | int) -> ExistenceResult:
@@ -603,7 +604,10 @@ def assert_resource_modifiable(
         resource_type = None
 
     if not modifiable:
-        raise e.ReadOnlyLockError(resource_type, resource_id=get_resource_id(resource))
+        raise e.ReadOnlyLockError(
+            EntityTypes.get_from_string(resource_type),
+            resource_id=get_resource_id(resource),
+        )
 
 
 def assert_resource_type(
@@ -633,7 +637,7 @@ def assert_resource_type(
     if isinstance(resource, int):
         resource_obj = session.get(m.Resource, resource)
         if not resource_obj:
-            raise e.EntityDoesNotExistError(None, resource_id=resource)
+            raise e.EntityDoesNotExistError(EntityTypes.NONE, resource_id=resource)
         resource = resource_obj
 
     if isinstance(resource, (m.Resource, m.ResourceSnapshot)):
@@ -666,9 +670,9 @@ def assert_snapshot_exists(
 
     if not snapshot_exists(session, snapshot):
         if isinstance(snapshot, int):
-            resource_type = None
+            resource_type = EntityTypes.UNDEFINED
         else:
-            resource_type = snapshot.resource_type
+            resource_type = EntityTypes.get_from_string(snapshot.resource_type)
 
         snapshot_id = get_resource_snapshot_id(snapshot)
 
@@ -836,9 +840,9 @@ def assert_snapshot_does_not_exist(
 
     if snapshot_exists(session, snapshot):
         if isinstance(snapshot, int):
-            resource_type = None
+            resource_type = EntityTypes.NONE
         else:
-            resource_type = snapshot.resource_type
+            resource_type = EntityTypes.get_from_string(snapshot.resource_type)
 
         snapshot_id = get_resource_snapshot_id(snapshot)
 
@@ -989,20 +993,24 @@ def assert_exists(
             a non-deleted entity
     """
     if existence_result is ExistenceResult.DOES_NOT_EXIST:
-        raise e.EntityDoesNotExistError(obj_type, **kwargs)
+        raise e.EntityDoesNotExistError(EntityTypes.get_from_string(obj_type), **kwargs)
 
     elif existence_result is ExistenceResult.EXISTS:
         # An object which exists (in the db) must have a non-null ID.  So at
         # this point, obj_id must not be None.
         assert obj_id is not None
         if deletion_policy is DeletionPolicy.DELETED:
-            raise e.EntityExistsError(obj_type, obj_id, **kwargs)
+            raise e.EntityExistsError(
+                EntityTypes.get_from_string(obj_type), obj_id, **kwargs
+            )
 
     elif existence_result is ExistenceResult.DELETED:
         # Same as above; deleted objects are in the DB too.
         assert obj_id is not None
         if deletion_policy is DeletionPolicy.NOT_DELETED:
-            raise e.EntityDeletedError(obj_type, obj_id, **kwargs)
+            raise e.EntityDeletedError(
+                EntityTypes.get_from_string(obj_type), obj_id, **kwargs
+            )
 
 
 def _assert_exists_multi(
@@ -1051,7 +1059,7 @@ def _assert_exists_multi(
         # Got some objects with null IDs; treat as not exist.  Can't identify
         # the relevant children with numeric IDs, so just use None.
         raise e.EntityDoesNotExistError(
-            None,
+            EntityTypes.NONE,
             resource_id=None,
         )
 
@@ -1064,7 +1072,7 @@ def _assert_exists_multi(
             if res is ExistenceResult.DOES_NOT_EXIST
         )
 
-        raise e.EntityDoesNotExistError(None, resource_ids=dne_ids)
+        raise e.EntityDoesNotExistError(EntityTypes.NONE, resource_ids=dne_ids)
 
     elif deletion_policy is DeletionPolicy.NOT_DELETED and any(
         status == ExistenceResult.DELETED for status in existence_result.values()
@@ -1079,7 +1087,9 @@ def _assert_exists_multi(
         # deleted... so just pick the first deleted ID.
         first_deleted_id = next(deleted_ids)
 
-        raise e.EntityDeletedError(None, first_deleted_id, resource_id=first_deleted_id)
+        raise e.EntityDeletedError(
+            EntityTypes.NONE, first_deleted_id, resource_id=first_deleted_id
+        )
 
     elif deletion_policy is DeletionPolicy.DELETED and any(
         status == ExistenceResult.EXISTS for status in existence_result.values()
@@ -1130,13 +1140,17 @@ def _assert_does_not_exist(
         # this point, obj_id must not be None.
         assert obj_id is not None
         if deletion_policy is not DeletionPolicy.DELETED:
-            raise e.EntityExistsError(obj_type, obj_id, **kwargs)
+            raise e.EntityExistsError(
+                EntityTypes.get_from_string(obj_type), obj_id, **kwargs
+            )
 
     elif existence_result is ExistenceResult.DELETED:
         # Same as above; deleted objects are in the DB too.
         assert obj_id is not None
         if deletion_policy is not DeletionPolicy.NOT_DELETED:
-            raise e.EntityDeletedError(obj_type, obj_id, **kwargs)
+            raise e.EntityDeletedError(
+                EntityTypes.get_from_string(obj_type), obj_id, **kwargs
+            )
 
     # else: ExistenceResult.DOES_NOT_EXIST.  deletion policy doesn't matter in
     # this case; the object does not exist at all.
@@ -1186,13 +1200,15 @@ def check_user_collision(session: CompatibleSession[S], user: m.User) -> None:
     user_id = session.scalar(stmt)
 
     if user_id is not None:
-        raise e.EntityExistsError("User", user_id, username=user.username)
+        raise e.EntityExistsError(EntityTypes.USER, user_id, username=user.username)
 
     stmt = sa.select(m.User.user_id).where(m.User.email_address == user.email_address)
     user_id = session.scalar(stmt)
 
     if user_id is not None:
-        raise e.EntityExistsError("User", user_id, email_address=user.email_address)
+        raise e.EntityExistsError(
+            EntityTypes.USER, user_id, email_address=user.email_address
+        )
 
 
 def assert_resource_name_available(

@@ -34,6 +34,7 @@ from dioptra.restapi.errors import (
     SortParameterValidationError,
 )
 from dioptra.restapi.v1 import utils
+from dioptra.restapi.v1.entity_types import EntityTypes
 from dioptra.restapi.v1.groups.service import GroupIdService
 from dioptra.restapi.v1.jobs.service import JobIdMlflowrunService, JobIdService
 from dioptra.restapi.v1.plugins.service import (
@@ -46,7 +47,7 @@ from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
-RESOURCE_TYPE: Final[str] = "artifact"
+ARTIFACT_RESOURCE_TYPE: Final[EntityTypes] = EntityTypes.ARTIFACT
 SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
     "artifactUri": lambda x: models.Artifact.uri.like(x, escape="/"),
     "description": lambda x: models.Artifact.description.like(x, escape="/"),
@@ -188,12 +189,16 @@ class ArtifactService(object):
         # check if an artifact with the same uri and job_id has already been created
         duplicate = _find_artifact(job_artifacts, uri)
         if duplicate is not None:
-            raise EntityExistsError(RESOURCE_TYPE, duplicate.resource_id, uri=uri)
+            raise EntityExistsError(
+                ARTIFACT_RESOURCE_TYPE, duplicate.resource_id, uri=uri
+            )
         artifact = self._job_run_store.find_artifact(run_id=mlflow_run_id, uri=uri)
 
         group = self._group_id_service.get(group_id, error_if_not_found=True, log=log)
 
-        resource = models.Resource(resource_type="artifact", owner=group)
+        resource = models.Resource(
+            resource_type=ARTIFACT_RESOURCE_TYPE.get_db_schema_name(), owner=group
+        )
         new_artifact = models.Artifact(
             uri=uri,
             description=description,
@@ -307,7 +312,7 @@ class ArtifactService(object):
                 sort_column = sort_column.asc()
             latest_artifacts_stmt = latest_artifacts_stmt.order_by(sort_column)
         elif sort_by_string and sort_by_string not in SORTABLE_FIELDS:
-            raise SortParameterValidationError(RESOURCE_TYPE, sort_by_string)
+            raise SortParameterValidationError(ARTIFACT_RESOURCE_TYPE, sort_by_string)
 
         artifacts = db.session.scalars(latest_artifacts_stmt).all()
 
@@ -381,7 +386,9 @@ class ArtifactIdService(object):
         artifact = db.session.scalars(stmt).first()
 
         if artifact is None:
-            raise EntityDoesNotExistError(RESOURCE_TYPE, artifact_id=artifact_id)
+            raise EntityDoesNotExistError(
+                ARTIFACT_RESOURCE_TYPE, artifact_id=artifact_id
+            )
 
         drafts_stmt = (
             select(models.DraftResource.draft_resource_id)
@@ -427,7 +434,10 @@ class ArtifactIdService(object):
 
         artifact_dict = self.get(artifact_id, log=log)
 
-        artifact = cast(models.Artifact, artifact_dict.get("artifact"))
+        artifact = cast(
+            models.Artifact,
+            artifact_dict.get(ARTIFACT_RESOURCE_TYPE.get_db_schema_name(), None),
+        )
         has_draft = cast(bool, artifact_dict.get("has_draft"))
 
         new_artifact = models.Artifact(

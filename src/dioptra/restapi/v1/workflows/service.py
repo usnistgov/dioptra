@@ -43,6 +43,7 @@ from dioptra.restapi.errors import (
     InvalidYamlError,
 )
 from dioptra.restapi.utils import read_json_file, verify_filename_is_safe
+from dioptra.restapi.v1.entity_types import EntityTypes
 from dioptra.restapi.v1.entrypoints.service import (
     EntrypointIdService,
     EntrypointNameService,
@@ -81,7 +82,7 @@ from .schema import (
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
-RESOURCE_TYPE: Final[str] = "workflow"
+RESOURCE_TYPE: Final[EntityTypes] = EntityTypes.WORKFLOW
 
 DIOPTRA_RESOURCES_SCHEMA: Final[dict] = read_json_file(
     "dioptra.restapi.v1.workflows", "dioptra-resources.schema.json"
@@ -844,7 +845,8 @@ class DraftCommitService(object):
             resource = views.get_resource(draft.payload["resource_id"])
             if resource is None:
                 raise EntityDoesNotExistError(
-                    draft.resource_type, resource_id=draft.payload["resource_id"]
+                    EntityTypes.get_from_string(draft.resource_type),
+                    resource_id=draft.payload["resource_id"],
                 )
 
             # if the underlying resource was modified since the draft was created,
@@ -855,7 +857,7 @@ class DraftCommitService(object):
                 )
                 if base_snapshot is None:
                     raise EntityDoesNotExistError(
-                        draft.resource_type,
+                        EntityTypes.get_from_string(draft.resource_type),
                         snapshot_id=draft.payload["resource_snapshot_id"],
                     )
 
@@ -868,7 +870,7 @@ class DraftCommitService(object):
                     )
 
                 raise DraftResourceModificationsCommitError(
-                    resource_type=draft.resource_type,
+                    resource_type=EntityTypes.get_from_string(draft.resource_type),
                     resource_id=draft.payload["resource_id"],
                     draft=draft,
                     base_snapshot=base_snapshot,

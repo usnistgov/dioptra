@@ -34,12 +34,13 @@ from dioptra.restapi.errors import (
     PluginParameterTypeMatchesBuiltinTypeError,
 )
 from dioptra.restapi.v1 import utils
+from dioptra.restapi.v1.entity_types import EntityTypes
 from dioptra.restapi.v1.shared.search_parser import parse_search_text
 from dioptra.task_engine.type_registry import BUILTIN_TYPES
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
-RESOURCE_TYPE: Final[str] = "plugin_task_parameter_type"
+RESOURCE_TYPE: Final[EntityTypes] = EntityTypes.PLUGIN_TASK_PARAMETER_TYPE
 
 
 class PluginParameterTypeService(object):
@@ -101,7 +102,9 @@ class PluginParameterTypeService(object):
             group_id, repoutils.DeletionPolicy.NOT_DELETED
         )
 
-        resource = models.Resource(resource_type=RESOURCE_TYPE, owner=group)
+        resource = models.Resource(
+            resource_type=RESOURCE_TYPE.get_db_schema_name(), owner=group
+        )
         new_plugin_parameter_type = models.PluginTaskParameterType(
             name=name,
             structure=structure,
@@ -583,7 +586,7 @@ def get_plugin_task_parameter_types_by_id(
         returned_parameter_type_ids = {x.resource_id for x in parameter_types}
         ids_not_found = id_list - returned_parameter_type_ids
         raise EntityDoesNotExistError(
-            "plugin task parameter types",
+            RESOURCE_TYPE,
             num_expected=num_ids,
             num_found=len(parameter_types),
             ids_not_found=sorted(ids_not_found),

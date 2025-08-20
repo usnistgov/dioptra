@@ -34,13 +34,14 @@ from dioptra.restapi.errors import (
 )
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.artifacts.service import ArtifactIdService
+from dioptra.restapi.v1.entity_types import EntityTypes
 from dioptra.restapi.v1.groups.service import GroupIdService
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
-MODEL_RESOURCE_TYPE: Final[str] = "ml_model"
-MODEL_VERSION_RESOURCE_TYPE: Final[str] = "ml_model_version"
+MODEL_RESOURCE_TYPE: Final[EntityTypes] = EntityTypes.ML_MODEL
+MODEL_VERSION_RESOURCE_TYPE: Final[EntityTypes] = EntityTypes.ML_MODEL_VERSION
 MODEL_SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
     "name": lambda x: models.MlModel.name.like(x, escape="/"),
     "description": lambda x: models.MlModel.description.like(x, escape="/"),
@@ -113,7 +114,9 @@ class ModelService(object):
 
         group = self._group_id_service.get(group_id, error_if_not_found=True)
 
-        resource = models.Resource(resource_type=MODEL_RESOURCE_TYPE, owner=group)
+        resource = models.Resource(
+            resource_type=MODEL_RESOURCE_TYPE.get_db_schema_name(), owner=group
+        )
 
         ml_model = models.MlModel(
             name=name,
@@ -466,7 +469,9 @@ class ModelIdService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         stmt = select(models.Resource).filter_by(
-            resource_id=model_id, resource_type=MODEL_RESOURCE_TYPE, is_deleted=False
+            resource_id=model_id,
+            resource_type=MODEL_RESOURCE_TYPE.get_db_schema_name(),
+            is_deleted=False,
         )
         model_resource = db.session.scalars(stmt).first()
 
@@ -538,7 +543,7 @@ class ModelIdVersionsService(object):
         artifact = artifact_dict["artifact"]
 
         resource = models.Resource(
-            resource_type=MODEL_VERSION_RESOURCE_TYPE, owner=group
+            resource_type=MODEL_VERSION_RESOURCE_TYPE.get_db_schema_name(), owner=group
         )
         new_version = models.MlModelVersion(
             description=description,

@@ -37,6 +37,7 @@ from dioptra.restapi.errors import (
 )
 from dioptra.restapi.utils import find_non_unique
 from dioptra.restapi.v1 import utils
+from dioptra.restapi.v1.entity_types import EntityTypes
 from dioptra.restapi.v1.groups.service import GroupIdService
 from dioptra.restapi.v1.plugin_parameter_types.service import (
     get_plugin_task_parameter_types_by_id,
@@ -45,9 +46,9 @@ from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
-PLUGIN_RESOURCE_TYPE: Final[str] = "plugin"
-PLUGIN_FILE_RESOURCE_TYPE: Final[str] = "plugin_file"
-PLUGIN_TASK_RESOURCE_TYPE: Final[str] = "plugin_task"
+PLUGIN_RESOURCE_TYPE: Final[EntityTypes] = EntityTypes.PLUGIN
+PLUGIN_FILE_RESOURCE_TYPE: Final[EntityTypes] = EntityTypes.PLUGIN_FILE
+PLUGIN_TASK_RESOURCE_TYPE: Final[EntityTypes] = EntityTypes.PLUGIN_TASK
 PLUGIN_SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
     "name": lambda x: models.Plugin.name.like(x, escape="/"),
     "description": lambda x: models.Plugin.description.like(x, escape="/"),
@@ -423,7 +424,9 @@ class PluginIdService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         stmt = select(models.Resource).filter_by(
-            resource_id=plugin_id, resource_type=PLUGIN_RESOURCE_TYPE, is_deleted=False
+            resource_id=plugin_id,
+            resource_type=PLUGIN_RESOURCE_TYPE.get_db_schema_name(),
+            is_deleted=False,
         )
         plugin_resource = db.session.scalar(stmt)
 
@@ -439,7 +442,7 @@ class PluginIdService(object):
         plugin_file_resources = [
             child
             for child in plugin_resource.children
-            if child.resource_type == PLUGIN_FILE_RESOURCE_TYPE
+            if child.resource_type == PLUGIN_FILE_RESOURCE_TYPE.get_db_schema_name()
         ]
         plugin_file_ids = [
             plugin_file_resource.resource_id
@@ -761,7 +764,8 @@ class PluginIdFileService(object):
         db.session.add(new_plugin)
 
         resource = models.Resource(
-            resource_type=PLUGIN_FILE_RESOURCE_TYPE, owner=new_plugin.resource.owner
+            resource_type=PLUGIN_FILE_RESOURCE_TYPE.get_db_schema_name(),
+            owner=new_plugin.resource.owner,
         )
         new_plugin_file = models.PluginFile(
             filename=filename,
@@ -946,7 +950,9 @@ class PluginIdFileService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         stmt = select(models.Resource).filter_by(
-            resource_id=plugin_id, resource_type=PLUGIN_RESOURCE_TYPE, is_deleted=False
+            resource_id=plugin_id,
+            resource_type=PLUGIN_RESOURCE_TYPE.get_db_schema_name(),
+            is_deleted=False,
         )
 
         plugin_resource = db.session.scalar(stmt)
@@ -1358,7 +1364,7 @@ def _construct_input_params(
     duplicates = find_non_unique("name", parameters)
     if len(duplicates) > 0:
         raise QueryParameterNotUniqueError(
-            "artifact task input parameter",
+            EntityTypes.ARTIFACT_TASK_INPUT_PARAMETER,
             plugin_task_name=task_name,
             input_param_names=duplicates,
         )
@@ -1381,7 +1387,7 @@ def _construct_output_params(
     duplicates = find_non_unique("name", parameters)
     if len(duplicates) > 0:
         raise QueryParameterNotUniqueError(
-            "artifact task output parameter",
+            EntityTypes.ARTIFACT_TASK_OUTPUT_PARAMETER,
             plugin_task_name=task_name,
             output_param_names=duplicates,
         )
@@ -1464,7 +1470,9 @@ def _add_plugin_tasks(
         "name", itertools.chain(function_tasks, artifact_tasks)
     )
     if len(duplicates) > 0:
-        raise QueryParameterNotUniqueError("plugin task", task_names=duplicates)
+        raise QueryParameterNotUniqueError(
+            EntityTypes.PLUGIN_TASK, task_names=duplicates
+        )
 
     parameter_type_ids_to_orm = get_referenced_parameter_types(
         function_tasks=function_tasks, artifact_tasks=artifact_tasks, log=log
