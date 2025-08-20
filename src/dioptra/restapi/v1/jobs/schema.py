@@ -19,7 +19,8 @@
 import enum
 import re
 
-from marshmallow import Schema, fields, validate
+import nh3
+from marshmallow import Schema, fields, post_load, validate
 
 from dioptra.restapi.v1.artifacts.schema import ArtifactRefSchema
 from dioptra.restapi.v1.schemas import (
@@ -348,6 +349,16 @@ class JobLogRecordSchema(Schema):
         metadata={"description": "Server timestamp for when the job log was received."},
         dump_only=True,
     )
+
+    @post_load
+    def sanitize_logger_name(self, in_data, **kwargs):
+        in_data["logger_name"] = nh3.clean(in_data["logger_name"])
+        return in_data
+
+    @post_load
+    def sanitize_message(self, in_data, **kwargs):
+        in_data["message"] = nh3.clean(in_data["message"])
+        return in_data
 
 
 class JobLogRecordsSchema(Schema):
