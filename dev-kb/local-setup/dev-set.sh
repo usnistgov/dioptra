@@ -54,6 +54,7 @@ set_display_env_details(){
       \tbranch-id:\t$DIOPTRA_BRANCH
       \tcode-dir:\t$DIOPTRA_CODE
       \tdeploy-dir:\t$DIOPTRA_DEPLOY
+      \tworker-
       \n"
   fi
   printf "To recall "Environment Info:" below use command: printf \"\${DIOPTRA_CONFIG_DETAILS}\"\nEnvironment Info:$DIOPTRA_CONFIG_DETAILS\n"
@@ -95,6 +96,9 @@ read_properties_from_file()
         ;;
       "DIOPTRA_CONFIG_INFO")
         export DIOPTRA_CONFIG_INFO="$value"
+        ;;
+      "DIOPTRA_WORKER_LIB")
+        export DIOPTRA_WORKER_LIB="$value"
         ;;
       "DIOPTRA_ENV_NAME")
         export DIOPTRA_ENV_NAME="$value"
@@ -156,15 +160,19 @@ read_cli_parameters()
         export DIOPTRA_CODE="${2}"
         shift
         ;;
+      --lib|-l)
+        export DIOPTRA_WORKER_LIB="${2}"
+        shift
+        ;;      
       --environment|--env|-e)
         export DIOPTRA_ENV_FILE="${2}"
-        echo "Reading ${DIOPTRA_ENV_FILE@Q} file"
+        echo "Reading ${DIOPTRA_ENV_FILE} file"
         read_properties_from_file "${DIOPTRA_ENV_FILE}"
         shift
         break
         ;;
       *)
-        printf "Error: Incorrect Parameter [${1} ${2}]\n"
+        printf "Error: Incorrect CLI Parameter [${1} ${2}]\n"
         ### return 1
         shift
         ;;
@@ -172,6 +180,8 @@ read_cli_parameters()
     shift
   done
 }
+
+
 ##################################################################################
 ### Script Main-Body
 ##################################################################################
@@ -182,7 +192,10 @@ unset DIOPTRA_CODE
 unset DIOPTRA_DEPLOY
 unset DIOPTRA_CONFIG_INFO
 unset DIOPTRA_CONFIG_DETAILS
-
+# Add setting the default value of the env-variable
+# DIOPTRA_WORKER_LIB to tensorflow-cpu so the 
+# existing functionality keeps on working
+export DIOPTRA_WORKER_LIB=tensorflow-cpu
 
 # if [ -n "${BASH_VERSION}" ]; then
 #   printf "\nStarting script with BASH Version: ${BASH_VERSION}\n"
