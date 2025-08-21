@@ -4,10 +4,11 @@ The following are a set of manual instructions to set-up a local development env
 The instructions for the automated scripts can be found in [README.md](README.md).
 
 <!-- markdownlint-disable MD007 MD030 -->
-- [Note for Windows Users](#note-for-windows-users)
-- [Environment setup](#environment-setup)
-- [Limited frontend and REST API setup for Windows (no containers)](#limited-frontend-and-rest-api-setup-for-windows-no-containers)
-- [Full local development setup (no containers)](#full-local-development-setup-no-containers)
+- [Manual Instructions](#manual-instructions)
+  - [Note for Windows Users](#note-for-windows-users)
+  - [Environment setup](#environment-setup)
+  - [Limited frontend and REST API setup for Windows (no containers)](#limited-frontend-and-rest-api-setup-for-windows-no-containers)
+  - [Full local development setup (no containers)](#full-local-development-setup-no-containers)
 <!-- markdownlint-enable MD007 MD030 -->
 
 ## Note for Windows Users
@@ -151,6 +152,7 @@ It's also recommended that you install `tox` as a uv tool:
                 MLFLOW_TRACKING_URI="http://localhost:35000"     # If you're running a MLflow Tracking server, update this to point at it. Otherwise, this is a placeholder.
                 MLFLOW_S3_ENDPOINT_URL="http://localhost:35000"  # If you're running a MLflow Tracking server, update this to point at it. Otherwise, this is a placeholder.
                 OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES   # Macs only, needed to make the RQ worker (i.e. the Dioptra Worker) work
+                DIOPTRA_WORKER_LIB=pytorch-cpu # Other options include: [pytorch-cpu | pytorch-gpu | tensorflow-cpu | tensorflow-cpu]
 
         -   Activate the python environment set-up in prior steps (e.g. `source .venv/bin/activate`)
         -   With the prior environment variables set then execute the following commands:

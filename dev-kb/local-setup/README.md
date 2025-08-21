@@ -80,6 +80,11 @@ DIOPTRA_DEPLOY_DIR=~/di/di-dep
 ### The source code location
 DIOPTRA_CODE_DIR=~/di/di-src
 
+### [NEW!!!] Mandatory entry Defaults to "tensorflow-cpu"
+### Worker-Type
+DIOPTRA_WORKER_LIB=tensorflow-cpu 
+### Other options include: [pytorch-cpu | pytorch-gpu | tensorflow-cpu | tensorflow-cpu]
+
 ### [OPTIONAL-ENTRY] Environment Info
 ### Auto-Generated from ENV, if not explicitly provided
 DIOPTRA_CONFIG_INFO=Dev-Dioptra for Tuning Unit-Tests
@@ -191,15 +196,16 @@ The `setup.sh` script will setup working and source directories using the config
 
 **Note:** The key names are **case-sensitive**.
 
-**Note:** The configuration file currently has the following four configuration parameter names:
+**Note:** The configuration file currently has the following configuration parameter names:
 
 -   DIOPTRA_GIT_BRANCH
 -   DIOPTRA_DEPLOY_DIR
 -   DIOPTRA_CODE_DIR
+-   DIOPTRA_WORKER_LIB
 -   DIOPTRA_CONFIG_INFO [OPTIONAL]
 -   DIOPTRA_ENV_NAME [OPTIONAL]
 
-See the [example]#a-configuration-file) above for usage. DIOPTRA_CONFIG_NAME is optional and will be composed (in case it is not provided) by the script using the mandatory keys.
+See the [example](#a-configuration-file) above for usage. DIOPTRA_CONFIG_NAME is optional and will be composed (in case it is not provided) by the script using the mandatory keys.
 
 **Note:** If you want to change the names of the config variables, then the script logic must be augmented to accommodate the changes. The names from within the config file are **mapped to the environment variables** and **do not directly become environment variables**. Case-insensitive configuration names are a nice-to-have feature.
 
