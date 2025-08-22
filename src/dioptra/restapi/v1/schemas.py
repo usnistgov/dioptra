@@ -154,7 +154,6 @@ def generate_base_resource_ref_schema(
             dump_only=True,
             load_default=False,
         ),
-
     }
 
     if keep_snapshot_id:
