@@ -219,6 +219,9 @@ class QueuesCollectionClient(CollectionClient[T]):
         if group_id is not None:
             params["groupId"] = group_id
 
+        if show_hidden is not None:
+            params["showHidden"] = show_hidden
+
         return self._session.get(
             self.url,
             params=params,

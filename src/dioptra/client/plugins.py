@@ -268,6 +268,9 @@ class PluginFilesSubCollectionClient(SubCollectionClient[T]):
         if search is not None:
             params["search"] = search
 
+        if show_hidden is not None:
+            params["showHidden"] = show_hidden
+
         return self._session.get(
             self.build_sub_collection_url(plugin_id),
             params=params,
@@ -657,6 +660,9 @@ class PluginsCollectionClient(CollectionClient[T]):
 
         if group_id is not None:
             params["groupId"] = group_id
+
+        if show_hidden is not None:
+            params["showHidden"] = show_hidden
 
         return self._session.get(
             self.url,

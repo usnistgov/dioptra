@@ -55,6 +55,7 @@ class ResourceSnapshotsService(object):
         search_string: str,
         page_index: int,
         page_length: int,
+        show_hidden: bool = False,
         error_if_not_found: bool = False,
         **kwargs,
     ) -> tuple[list[dict[str, Any]], int] | None:
@@ -79,18 +80,20 @@ class ResourceSnapshotsService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get resource snapshots by id", resource_id=resource_id)
 
-        stmt = select(models.Resource).filter_by(
-            resource_id=resource_id, resource_type=self._resource_type, is_deleted=False
-        )
-        resource = db.session.scalars(stmt).first()
 
-        if resource is None:
-            if error_if_not_found:
+        if not show_hidden:
+            stmt = select(models.Resource).filter_by(
+                resource_id=resource_id, resource_type=self._resource_type, is_deleted=False
+            )
+            
+            resource = db.session.scalars(stmt).first()
+
+            if resource is None and error_if_not_found:
                 raise EntityDoesNotExistError(
                     self._resource_type, resource_id=resource_id
                 )
 
-            return None
+        acceptable_deleted_condition = [True, False] if show_hidden else [False]
 
         filters = []
 
@@ -105,9 +108,10 @@ class ResourceSnapshotsService(object):
             .where(
                 *filters,
                 models.Resource.resource_id == resource_id,
-                models.Resource.is_deleted == False,  # noqa: E712
+                models.Resource.is_deleted.in_(acceptable_deleted_condition),  # noqa: E712
             )
         )
+
         total_num_snapshots = db.session.scalars(stmt).unique().first()
 
         if total_num_snapshots is None:
@@ -127,14 +131,15 @@ class ResourceSnapshotsService(object):
             .where(
                 *filters,
                 models.Resource.resource_id == resource_id,
-                models.Resource.is_deleted == False,  # noqa: E712
+                models.Resource.is_deleted.in_(acceptable_deleted_condition),  # noqa: E712
             )
             .order_by(self.resource_model.created_on)
             .offset(page_index)
             .limit(page_length)
         )
+        
         snapshots = [
-            {self._resource_type: snapshot, "has_draft": None}
+            {self._resource_type: snapshot, "deleted": snapshot.is_deleted, "has_draft": None}
             for snapshot in db.session.scalars(stmt).unique()
         ]
 
@@ -182,26 +187,12 @@ class ResourceSnapshotsIdService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get resource snapshot by id", resource_id=resource_id)
 
-        stmt = select(models.Resource).filter_by(
-            resource_id=resource_id, resource_type=self._resource_type, is_deleted=False
-        )
-        resource = db.session.scalars(stmt).first()
-
-        if resource is None:
-            if error_if_not_found:
-                raise EntityDoesNotExistError(
-                    self._resource_type, resource_id=resource_id
-                )
-
-            return None
-
         stmt = (
             select(self.resource_model)
             .join(models.Resource)
             .where(
                 models.ResourceSnapshot.resource_snapshot_id == snapshot_id,
                 models.Resource.resource_id == resource_id,
-                models.Resource.is_deleted == False,  # noqa: E712
             )
         )
         snapshot = db.session.scalars(stmt).first()
@@ -214,4 +205,4 @@ class ResourceSnapshotsIdService(object):
 
             return None
 
-        return {self._resource_type: snapshot, "has_draft": None}
+        return {self._resource_type: snapshot, "deleted": snapshot.is_deleted, "has_draft": None}

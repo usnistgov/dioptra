@@ -269,6 +269,16 @@ class SearchQueryParametersSchema(Schema):
     )
 
 
+class ShowHiddenQueryParametersSchema(Schema):
+    showHidden = fields.Bool(
+        attribute = "show_hidden",
+        metadata={
+            "description": "Boolean indicating whether to include deleted resources in the results."
+        },
+        load_default=False,
+    )
+
+
 class SortByGetQueryParametersSchema(Schema):
     """A schema for adding sort query parameters to a resource endpoint."""
 
@@ -288,6 +298,7 @@ class SortByGetQueryParametersSchema(Schema):
 
 
 class ResourceGetQueryParameters(
+    ShowHiddenQueryParametersSchema,
     PagingQueryParametersSchema,
     SearchQueryParametersSchema,
 ):

@@ -202,6 +202,7 @@ class ExperimentJobsSubCollectionClient(SubCollectionClient[T]):
         sort_by: str | None = None,
         descending: bool | None = None,
         search: str | None = None,
+        show_hidden: bool | None = None,
     ) -> T:
         """Get an experiment's jobs.
 
@@ -216,6 +217,7 @@ class ExperimentJobsSubCollectionClient(SubCollectionClient[T]):
                 to None.
             search: Search for models using the Dioptra API's query language. Optional,
                 defaults to None.
+            show_hidden: Whether to include deleted resources in this query.
 
         Returns:
             The response from the Dioptra API.
@@ -233,6 +235,9 @@ class ExperimentJobsSubCollectionClient(SubCollectionClient[T]):
 
         if search is not None:
             params["search"] = search
+
+        if show_hidden is not None:
+            params["showHidden"] = show_hidden
 
         return self._session.get(
             self.build_sub_collection_url(experiment_id), params=params
@@ -598,6 +603,7 @@ class ExperimentsCollectionClient(CollectionClient[T]):
         sort_by: str | None = None,
         descending: bool | None = None,
         search: str | None = None,
+        show_hidden: bool | None = None,
     ) -> T:
         """Get a list of experiments.
 
@@ -614,6 +620,7 @@ class ExperimentsCollectionClient(CollectionClient[T]):
                 to None.
             search: Search for experiments using the Dioptra API's query language.
                 Optional, defaults to None.
+            show_hidden: Whether to include deleted resources in this query.
 
         Returns:
             The response from the Dioptra API.
@@ -634,6 +641,9 @@ class ExperimentsCollectionClient(CollectionClient[T]):
 
         if group_id is not None:
             params["groupId"] = group_id
+
+        if show_hidden is not None:
+            params["showHidden"] = show_hidden
 
         return self._session.get(
             self.url,
@@ -733,6 +743,7 @@ class ExperimentsCollectionClient(CollectionClient[T]):
         sort_by: str | None = None,
         descending: bool | None = None,
         search: str | None = None,
+        show_hidden: bool | None = None,
     ) -> T:
         """Get the metrics for the jobs in this experiment.
 
@@ -747,6 +758,7 @@ class ExperimentsCollectionClient(CollectionClient[T]):
                 to None.
             search: Search for jobs using the Dioptra API's query language.
                 Optional, defaults to None.
+            show_hidden: Whether to include deleted resources in this query.
 
         Returns:
             The response from the Dioptra API.
@@ -766,5 +778,8 @@ class ExperimentsCollectionClient(CollectionClient[T]):
 
         if search is not None:
             params["search"] = search
+
+        if show_hidden is not None:
+            params["showHidden"] = show_hidden
 
         return self._session.get(self.url, str(experiment_id), METRICS, params=params)

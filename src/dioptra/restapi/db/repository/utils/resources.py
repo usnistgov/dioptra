@@ -721,6 +721,7 @@ def get_by_filters_paged(
     page_start: int,
     page_length: int,
     sort_by: str | None,
+    show_hidden: bool | None,
     descending: bool,
     deletion_policy: DeletionPolicy = DeletionPolicy.NOT_DELETED,
 ) -> tuple[Sequence[ResourceT], int]:
