@@ -28,10 +28,10 @@ from tempfile import NamedTemporaryFile
 from typing import Any
 
 import pytest
-from flask_sqlalchemy import SQLAlchemy
 
 from dioptra.client import DioptraClient, DioptraFile
 from dioptra.client.base import DioptraResponseProtocol
+from dioptra.client.utils import select_one_or_more_files
 
 # -- Assertions ------------------------------------------------------------------------
 
@@ -77,6 +77,18 @@ def assert_resource_import_fails_due_to_name_clash(
     )
 
     assert response.status_code == HTTPStatus.CONFLICT
+
+
+def assert_resource_import_fails_due_to_duplicate_names(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    group_id: int,
+    files: list[DioptraFile],
+):
+    response = dioptra_client.workflows.import_resources(
+        group_id, source=files, config_path="dioptra.toml"
+    )
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert "duplicate" in response.text
 
 
 def assert_resource_import_overwrite_works(
@@ -160,3 +172,39 @@ def test_resource_import_overwrite(
     assert_resource_import_overwrite_works(
         dioptra_client, group_id=group_id, archive_file=resources_tar_file
     )
+
+
+@pytest.mark.parametrize(
+    "resources_import_config",
+    [
+        # test duplicate entrypoints
+        "entrypoints = [ { name = 'duplicate' }, { name = 'duplicate' } ]",
+        # test duplicate plugins
+        "plugins = [ { path = 'duplicate' }, { path = 'duplicate' } ]",
+        # test duplicate plugin tasks
+        "plugins = [ { path = 'tasks.py', tasks = { functions = [ { name='duplicate' }, { name = 'duplicate' } ] } } ]",
+        # test duplicate entrypoint parameters
+        "entrypoints = [ { name = 'ep1', params = [ { name = 'duplicate', type = 'str'}, { name = 'duplicate', type = 'str'} ] } ]",
+        # test duplicate plugin parameters
+        "plugins = [ { path = 'tasks.py', tasks = { functions = [ { name = 'duplicate', input_params = [ { name = 'duplicate', type = 'str' }, { name = 'duplicate', type = 'str' } ] } ] } } ]",
+        # test duplicate plugin output parameters
+        "plugins = [ { path = 'tasks.py', tasks = { functions = [ { name = 'duplicate', output_params = [ { name = 'duplicate', type = 'str' }, { name = 'duplicate', type = 'str' } ] } ] } } ]",
+        # test duplicate artifact parameters
+        "entrypoints = [ { name = 'ep2', artifact_params = [ { name = 'duplicate', type = 'str'}, { name = 'duplicate', type = 'str'} ] } ]",
+        # test duplicate artifact output parameters
+        "plugins = [ { path = 'tasks.py', tasks = { artifacts = [ { name = 'duplicate' }, { name = 'duplicate' } ] } } ]",
+    ],
+)
+def test_resource_import_duplicate_names_fail(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    resources_import_config: str,
+):
+    group_id = auth_account["groups"][0]["id"]
+    with NamedTemporaryFile(suffix=".toml", delete=False) as f:
+        f.write(resources_import_config.encode("utf-8"))
+        f.seek(0)
+        files = select_one_or_more_files([f.name], renames={f.name: "dioptra.toml"})
+        assert_resource_import_fails_due_to_duplicate_names(
+            dioptra_client, group_id, files
+        )
