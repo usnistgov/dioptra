@@ -350,6 +350,7 @@ class JobIdMetricsEndpoint(Resource):
             metric_name=parsed_obj["name"],
             metric_value=parsed_obj["value"],
             metric_step=parsed_obj["step"],
+            metric_timestamp=parsed_obj["timestamp"],
             error_if_not_found=True,
             log=log,
         )

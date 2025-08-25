@@ -274,30 +274,6 @@ class MockMlflowClient(object):
         LOGGER.warning(f"creating run with id {run_id}")
         return _create_run(run_id=run_id)
 
-    def log_metric(
-        self,
-        run_id: str,
-        key: str,
-        value: float,
-        timestamp: Optional[int] = None,
-        step: Optional[int] = None,
-    ) -> None:
-        run = self.get_run(run_id)
-        if timestamp is None:
-            timestamp = time.time_ns() // 1000000
-        run._data._add_metric(
-            MockMlflowMetric(
-                key=key,
-                value=value,
-                timestamp=timestamp,
-                step=0 if step is None else step,
-            )
-        )
-
-    def get_metric_history(self, run_id: str, key: str):
-        LOGGER.info("Mocking MlflowClient.get_metric_history() function")
-        return self.get_run(run_id).data._metric_history.get(key, [])
-
     def list_artifacts(
         self, run_id: str, path: str | None = None
     ) -> list[mlflow.entities.FileInfo]:

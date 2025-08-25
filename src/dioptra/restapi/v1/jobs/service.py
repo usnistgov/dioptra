@@ -16,6 +16,8 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform job endpoint operations."""
 
+import datetime
+import math
 from collections.abc import Iterable
 from typing import Any, Final, cast
 
@@ -36,7 +38,6 @@ from dioptra.restapi.errors import (
     JobInvalidParameterNameError,
     JobInvalidStatusTransitionError,
     JobMlflowRunAlreadySetError,
-    JobMlflowRunNotSetError,
     SortParameterValidationError,
 )
 from dioptra.restapi.v1 import utils
@@ -651,18 +652,13 @@ class JobIdMetricsService(object):
     """The service methods for retrieving the metrics of a job by unique id."""
 
     @inject
-    def __init__(
-        self,
-        job_id_mlflowrun_service: "JobIdMlflowrunService",
-        job_run_store: JobRunStoreProtocol,
-    ) -> None:
+    def __init__(self, job_id_service: JobIdService) -> None:
         """Initialize the job metrics service.
 
         All arguments are provided via dependency injection.
 
         """
-        self._job_id_mlflowrun_service = job_id_mlflowrun_service
-        self._job_run_store = job_run_store
+        self._job_id_service = job_id_service
 
     def get(
         self,
@@ -681,16 +677,28 @@ class JobIdMetricsService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get job metrics by id", job_id=job_id)
 
-        run_id: str | None = self._job_id_mlflowrun_service.get(job_id=job_id, log=log)
+        stmt = select(models.JobMetric).where(
+            models.JobMetric.is_latest, models.JobMetric.job_resource_id == job_id
+        )
+        job_metrics = list(db.session.scalars(stmt).all())
 
-        return self._job_run_store.get_metrics(run_id)
+        return [
+            {
+                "name": job_metric.name,
+                "value": job_metric.value
+                if job_metric.special_value is None
+                else job_metric.special_value,
+            }
+            for job_metric in job_metrics
+        ]
 
     def update(
         self,
         job_id: int,
         metric_name: str,
         metric_value: float,
-        metric_step: int | None = None,
+        metric_step: int,
+        metric_timestamp: datetime.datetime | None,
         **kwargs,
     ) -> dict[str, Any]:
         """Update a job's metrics by its unique id.
@@ -699,21 +707,54 @@ class JobIdMetricsService(object):
             job_id: The unique id of the job.
             metric_name: The name of the metric to create or update.
             metric_value: The value of the metric being updated.
+
         Returns:
             The metric dictionary passed in if successful, otherwise an error message.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Update job metrics by id", job_id=job_id)
 
-        run_id: str | None = self._job_id_mlflowrun_service.get(job_id=job_id, log=log)
+        job_dict = self._job_id_service.get(job_id, error_if_not_found=True)
 
-        if run_id is None:
-            raise JobMlflowRunNotSetError
+        job = job_dict["job"]
 
-        self._job_run_store.log_metric(
-            run_id=run_id, name=metric_name, value=metric_value, step=metric_step
+        stmt = select(models.JobMetric).where(
+            models.JobMetric.step == metric_step,
+            models.JobMetric.job_resource_id == job_id,
+            models.JobMetric.name == metric_name,
         )
-        return {"name": metric_name, "value": metric_value}
+
+        metric: models.JobMetric | None = db.session.scalars(stmt).first()
+
+        value, special_value = _prepare_metric_value(metric_value)
+        ts = (
+            metric_timestamp
+            if metric_timestamp is not None
+            else datetime.datetime.now(tz=datetime.timezone.utc)
+        )
+
+        if metric is None:
+            new_metric = models.JobMetric(
+                name=metric_name,
+                value=value,
+                special_value=special_value,
+                step=metric_step,
+                timestamp=ts,
+                job_resource=job.resource,
+            )
+
+            db.session.add(new_metric)
+        else:
+            metric.value = metric_value
+            metric.special_value = special_value
+            metric.timestamp = ts
+
+        db.session.commit()
+
+        return {
+            "name": metric_name,
+            "value": value if special_value is None else special_value,
+        }
 
 
 class JobIdMetricsSnapshotsService(object):
@@ -759,15 +800,27 @@ class JobIdMetricsSnapshotsService(object):
             metric_name=metric_name,
         )
 
-        run_id: str | None = self._job_id_mlflowrun_service.get(job_id=job_id, log=log)
-        if run_id is None:
-            raise JobMlflowRunNotSetError
-        return self._job_run_store.get_metric_history(
-            run_id=run_id,
-            name=metric_name,
-            page_index=page_index,
-            page_length=page_length,
+        job_metrics_stmt = select(models.JobMetric).where(
+            models.JobMetric.job_resource_id == job_id,
+            models.JobMetric.name == metric_name,
         )
+
+        history = list(db.session.scalars(job_metrics_stmt).unique().all())
+
+        metrics_page = [
+            {
+                "name": metric.name,
+                "value": metric.value
+                if metric.special_value is None
+                else metric.special_value,
+                "step": metric.step,
+                "timestamp": metric.timestamp,
+            }
+            for metric in history[
+                page_index * page_length : (page_index + 1) * page_length
+            ]
+        ]
+        return metrics_page, len(history)
 
 
 class ExperimentJobService(object):
@@ -1510,3 +1563,23 @@ def _build_job_dict(jobs: list[models.Job]) -> list[utils.JobDict]:
         job_dicts[artifact.job_id]["artifacts"].append(artifact)
 
     return list(job_dicts.values())
+
+
+def _prepare_metric_value(metric_value: float) -> tuple[float, str | None]:
+    """Prepare a metric value for storage in database.
+
+    Used to detect if the float is a special value (NaN, +Inf, -Inf), which needs
+    special handling before it can be stored in a database.
+
+    Args:
+        metric_value: The metric value to prepare, may be a special value
+            (float("nan"), float("inf"), float("-inf)).
+
+    Returns:
+        A tuple containing the prepared metric value and a special value string
+        if applicable.
+    """
+    is_special_value = math.isnan(metric_value) or math.isinf(metric_value)
+    special_value = str(metric_value) if is_special_value else None
+    value = 0.0 if is_special_value else metric_value
+    return value, special_value
