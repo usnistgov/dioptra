@@ -27,7 +27,6 @@ from dioptra.restapi.db.db import (
     guid,
     intpk,
     text_,
-    float_
 )
 
 from .entry_points import EntryPoint
@@ -54,8 +53,8 @@ job_log_severity_table = db.Table(
 # -- ORM Classes -----------------------------------------------------------------------
 
 
-class EntryPointJob(db.Model):  # type: ignore[name-defined]
-    __tablename__ = "entry_point_jobs"
+class JobMetrics(db.Model):  # type: ignore[name-defined]
+    __tablename__ = "job_metrics"
 
     # Database fields
     entry_point_resource_snapshot_id: Mapped[intpk] = mapped_column(
@@ -251,32 +250,6 @@ class JobLog(db.Model):  # type: ignore[name-defined]
 
     # Additional settings
     __table_args__ = (Index(None, "job_resource_id", "id"),)
-
-    # Initialize default values using dataclass __post_init__ method
-    # https://docs.python.org/3/library/dataclasses.html#dataclasses.__post_init__
-    def __post_init__(self) -> None:
-        timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
-        self.created_on = timestamp
-
-
-class JobMetric(db.Model):  # type: ignore[name-defined]
-    __tablename__ = "job_metrics"
-
-    # Database fields
-
-    job_resource_id: Mapped[bigint] = mapped_column(
-        ForeignKey("resources.resource_id"), init=False
-    )
-    name: Mapped[text_]
-    value: Mapped[float_]
-    step: Mapped[bigint]
-    timestamp: Mapped[datetimetz] = mapped_column(init=False, nullable=False)
-
-    # Relationships
-    job_resource: Mapped["Resource"] = relationship()
-
-    # Additional settings
-    __table_args__ = (Index(None, "job_resource_id", "name", "timestamp"),)
 
     # Initialize default values using dataclass __post_init__ method
     # https://docs.python.org/3/library/dataclasses.html#dataclasses.__post_init__

@@ -30,7 +30,7 @@ from sqlite3 import Connection as SQLite3Connection
 from typing import Annotated, Any, Optional
 
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import JSON, BigInteger, Boolean, Integer, MetaData, String, Text, event
+from sqlalchemy import JSON, BigInteger, Boolean, Integer, Float, MetaData, String, Text, event
 from sqlalchemy.engine import Engine
 from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.orm import DeclarativeBase, MappedAsDataclass, mapped_column
@@ -59,6 +59,7 @@ str36 = Annotated[str, mapped_column(String(36))]
 str255 = Annotated[str, mapped_column(String(255))]
 text_ = Annotated[str, mapped_column(Text())]
 bool_ = Annotated[bool, mapped_column(Boolean())]
+float_ = Annotated[Optional[float], mapped_column(Float(), nullable=True)]
 
 _naming_convention = {
     "ix": "ix_%(column_0_label)s",

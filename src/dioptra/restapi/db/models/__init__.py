@@ -33,6 +33,7 @@ from .jobs import (
     ExperimentJob,
     Job,
     JobLog,
+    JobMetric,
     JobMlflowRun,
     QueueJob,
     job_log_severity_table,

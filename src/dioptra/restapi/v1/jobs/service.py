@@ -677,15 +677,20 @@ class JobIdMetricsService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get job metrics by id", job_id=job_id)
 
-        run_id: str | None = self._job_id_mlflowrun_service.get(job_id=job_id, log=log)
+        job_metrics_stmt = select(
+            models.JobMetric
+        ).where(
+            models.JobMetric.job_resource_id == job_id,
+            models.JobMetric.step == max(step)
+        )
 
-        return self._job_run_store.get_metrics(run_id)
+        return list(db.session.scalars(job_metrics_stmt).unique().all())
 
     def update(
         self,
         job_id: int,
         metric_name: str,
-        metric_value: float,
+        metric_value: float | None,
         metric_step: int | None = None,
         **kwargs,
     ) -> dict[str, Any]:
@@ -701,14 +706,11 @@ class JobIdMetricsService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Update job metrics by id", job_id=job_id)
 
-        run_id: str | None = self._job_id_mlflowrun_service.get(job_id=job_id, log=log)
+        new_metric = models.JobMetric(name=metric_name, value=metric_value, step=metric_step)
 
-        if run_id is None:
-            raise JobMlflowRunNotSetError
+        db.session.add(new_metric)
+        db.session.commit()
 
-        self._job_run_store.log_metric(
-            run_id=run_id, name=metric_name, value=metric_value, step=metric_step
-        )
         return {"name": metric_name, "value": metric_value}
 
 
@@ -755,15 +757,27 @@ class JobIdMetricsSnapshotsService(object):
             metric_name=metric_name,
         )
 
-        run_id: str | None = self._job_id_mlflowrun_service.get(job_id=job_id, log=log)
-        if run_id is None:
-            raise JobMlflowRunNotSetError
-        return self._job_run_store.get_metric_history(
-            run_id=run_id,
-            name=metric_name,
-            page_index=page_index,
-            page_length=page_length,
+        job_metrics_stmt = select(
+            models.JobMetric
+        ).where(
+            models.JobMetric.job_resource_id == job_id,
+            models.JobMetric.name == metric_name
         )
+        
+        history =  list(db.session.scalars(job_metrics_stmt).unique().all())
+
+        metrics_page = [
+            {
+                "name": metric.name,
+                "value": metric.value,
+                "step": metric.step,
+                "timestamp": metric.timestamp,
+            }
+            for metric in history[
+                page_index * page_length : (page_index + 1) * page_length
+            ]
+        ]
+        return metrics_page, len(history)
 
 
 class ExperimentJobService(object):
