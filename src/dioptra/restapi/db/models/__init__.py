@@ -97,6 +97,7 @@ __all__ = [
     "Job",
     "JobMlflowRun",
     "JobLog",
+    "JobMetric",
     "MlModel",
     "MlModelVersion",
     "Plugin",
