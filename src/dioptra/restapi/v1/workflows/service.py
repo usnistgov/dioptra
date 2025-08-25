@@ -478,6 +478,9 @@ class ResourceImportService(object):
         Returns:
             A dictionary mapping newly registered Plugin names to the ORM objects
         """
+        ResourceImportService._check_for_duplicate_names(
+            named_objects=plugins_config, named_object_type="plugin", key="path"
+        )
 
         param_types = param_types.copy()
         builtin_param_types = self._builtin_plugin_parameter_type_service.get(
@@ -578,6 +581,9 @@ class ResourceImportService(object):
         Returns:
             A dictionary mapping newly registered Entrypoint names to ORM object
         """
+        ResourceImportService._check_for_duplicate_names(
+            named_objects=entrypoints_config, named_object_type="entrypoint"
+        )
 
         param_types = param_types.copy()
         builtin_param_types = self._builtin_plugin_parameter_type_service.get(
@@ -588,6 +594,7 @@ class ResourceImportService(object):
         )
 
         entrypoints = {}
+
         for entrypoint in entrypoints_config:
             if overwrite:
                 existing = self._entrypoint_name_service.get(
@@ -664,8 +671,12 @@ class ResourceImportService(object):
         Returns:
             A dictionary mapping PluginFile name to a list of tasks
         """
+        ResourceImportService._check_for_duplicate_names(
+            named_objects=tasks_config, named_object_type="plugin task"
+        )
 
         tasks = defaultdict(list)
+
         for task in tasks_config:
             entry = {
                 "name": task["name"],
@@ -695,6 +706,10 @@ class ResourceImportService(object):
         Raises:
             ImportFailedError: If a parameter type is not valid
         """
+        ResourceImportService._check_for_duplicate_names(
+            named_objects=entrypoint_params, named_object_type="entrypoint parameter"
+        )
+
         for param in entrypoint_params:
             if param["type"] not in VALID_ENTRYPOINT_PARAM_TYPES:
                 raise ImportFailedError(
@@ -730,6 +745,10 @@ class ResourceImportService(object):
         Raises:
             ImportFailedError: If a plugin parameter type cannot be found
         """
+        ResourceImportService._check_for_duplicate_names(
+            named_objects=params, named_object_type="plugin parameter"
+        )
+
         try:
             return [
                 {
@@ -766,6 +785,16 @@ class ResourceImportService(object):
         Raises:
             ImportFailedError: If a plugin parameter type cannot be found
         """
+        ResourceImportService._check_for_duplicate_names(
+            named_objects=artifact_params, named_object_type="artifact parameter"
+        )
+
+        for artifact in artifact_params:
+            ResourceImportService._check_for_duplicate_names(
+                named_objects=artifact["output_params"],
+                named_object_type="artifact output parameter",
+            )
+
         try:
             return [
                 {
@@ -786,6 +815,25 @@ class ResourceImportService(object):
                 reason=f"Parameter type named {e} not does not exist and "
                 "is not defined in provided toml config.",
             ) from e
+
+    @staticmethod
+    def _check_for_duplicate_names(
+        named_objects: list[dict[str, Any]],
+        named_object_type: str,
+        key: str = "name",
+    ):
+        encountered_names = set()
+        duplicates = set()
+        for named_object in named_objects:
+            if named_object[key] not in encountered_names:
+                encountered_names.add(named_object[key])
+            else:
+                duplicates.add(named_object[key])
+        if len(duplicates) > 0:
+            raise ImportFailedError(
+                f"Failed to import {named_object_type}(s) {list(duplicates)}.",
+                reason="Duplicate names encountered in TOML file.",
+            )
 
 
 class DraftCommitService(object):
