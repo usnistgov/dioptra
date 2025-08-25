@@ -14,10 +14,12 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+import datetime
+import math
 from collections.abc import Iterable
 from typing import Any, ClassVar, Final, TypeVar
 
-from .base import CollectionClient, DioptraSession
+from .base import CollectionClient, DioptraSession, IllegalArgumentError
 from .snapshots import SnapshotsSubCollectionClient
 from .tags import TagsSubCollectionClient
 
@@ -235,6 +237,12 @@ class JobsCollectionClient(CollectionClient[T]):
     def get_metrics_by_id(self, job_id: str | int) -> T:
         """Gets all the latest metrics for a job.
 
+        The returned metric value is either a float or a string representing the special
+        values of NaN, Infinity, or -Infinity. NaN values are represented as the string
+        "nan", positive infinity as "inf", and negative infinity as "-inf". To convert
+        these string values back to their corresponding float representations in Python,
+        wrap the returned value with ``float()``.
+
         Args:
             job_id: The job id, an integer.
 
@@ -249,25 +257,65 @@ class JobsCollectionClient(CollectionClient[T]):
         metric_name: str,
         metric_value: float,
         metric_step: int | None = None,
+        timestamp: datetime.datetime | str | None = None,
     ) -> T:
         """Posts a new metric to a job.
 
         Args:
             job_id: The job id, an integer.
             metric_name: The name of the metric.
-            metric_value: The value of the metric.
-            metric_step: The step number of the metric, optional.
+            metric_value: The value of the metric. Can be a float, NaN, Infinity, or
+                -Infinity. NaN values will be converted to the string "nan" and infinite
+                values will be converted to the strings "inf" and "-inf" before sending
+                to the API.
+            metric_step: The step value for the metric, optional. Sequentially
+                increasing step values are used to track how a metric changes over time.
+                Indexed from 0. If not provided, defaults to 0.
+            timestamp: A timestamp value to associate with the metric. If not provided,
+                defaults to the server time when the metric is received.
 
         Returns:
             The response from the Dioptra API.
         """
+        value: float | str
+
+        # Detect and standardize NaN: base Python, numpy, and pandas variants
+        if math.isnan(metric_value) or str(metric_value) == "<NA>":
+            value = "nan"
+
+        # Detect and standardize infinities
+        elif math.isinf(metric_value):
+            value = "inf" if metric_value > 0 else "-inf"
+
+        # Not a special value, use float directly
+        else:
+            value = metric_value
+
         json_ = {
             "name": metric_name,
-            "value": metric_value,
+            "value": value,
         }
 
         if metric_step is not None:
             json_["step"] = metric_step
+
+        if timestamp is not None:
+            if isinstance(timestamp, datetime.datetime):
+                json_["timestamp"] = timestamp.isoformat()
+
+            else:
+                # Validate string can be parsed as datetime
+                try:
+                    datetime.datetime.fromisoformat(timestamp)
+
+                except ValueError as err:
+                    raise IllegalArgumentError(
+                        "Illegal type for timestamp (reason: must be a "
+                        "datetime.datetime or timestamp string in ISO 8601 format): "
+                        f"{timestamp}"
+                    ) from err
+
+                json_["timestamp"] = timestamp
 
         return self._session.post(self.url, str(job_id), METRICS, json_=json_)
 
@@ -280,12 +328,19 @@ class JobsCollectionClient(CollectionClient[T]):
     ) -> T:
         """Gets the metric history for a job with a specific metric name.
 
+        Each returned metric value is either a float or a string representing the
+        special values of NaN, Infinity, or -Infinity. NaN values are represented as the
+        string "nan", positive infinity as "inf", and negative infinity as "-inf". To
+        convert these string values back to their corresponding float representations in
+        Python, wrap the returned value with ``float()``.
+
         Args:
             job_id: The job id, an integer.
             metric_name: The name of the metric.
             index: The paging index. Optional, defaults to 0.
             page_length: The maximum number of metrics to return in the paged
                 response. Optional, defaults to 10.
+
         Returns:
             The response from the Dioptra API.
         """

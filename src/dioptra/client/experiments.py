@@ -736,6 +736,12 @@ class ExperimentsCollectionClient(CollectionClient[T]):
     ) -> T:
         """Get the metrics for the jobs in this experiment.
 
+        Each returned metric value is either a float or a string representing the
+        special values of NaN, Infinity, or -Infinity. NaN values are represented as the
+        string "nan", positive infinity as "inf", and negative infinity as "-inf". To
+        convert these string values back to their corresponding float representations in
+        Python, wrap the returned value with ``float()``.
+
         Args:
             experiment_id: The experiment id, an integer.
             index: The paging index. Optional, defaults to 0.

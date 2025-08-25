@@ -17,10 +17,11 @@
 """The schemas for serializing/deserializing Job resources."""
 
 import enum
+import math
 import re
 
 import nh3
-from marshmallow import Schema, fields, post_load, validate
+from marshmallow import Schema, fields, post_dump, post_load, validate
 
 from dioptra.restapi.v1.artifacts.schema import ArtifactRefSchema
 from dioptra.restapi.v1.schemas import (
@@ -72,19 +73,54 @@ class MetricsSchema(Schema):
             ),
         ),
     )
-
     value = fields.Float(
         attribute="value",
-        metadata={"description": "The value of the metric."},
+        metadata={
+            "description": (
+                "The value of the metric. Can be a float, NaN, Infinity, or -Infinity. "
+                'NaN values are represented with the string "nan" and infinite values '
+                'are represented with the strings "inf" and "-inf".'
+            )
+        },
         required=True,
+        allow_nan=True,
+        as_string=True,
     )
     step = fields.Integer(
         attribute="step",
-        metadata={"description": "The step value for the metric."},
+        metadata={
+            "description": (
+                "The step value for the metric, optional. Sequentially increasing "
+                "step values are used to track how a metric changes over time. Indexed "
+                "from 0. If not provided, defaults to 0."
+            ),
+        },
         load_only=True,
         required=False,
         load_default=0,
     )
+    timestamp = fields.DateTime(
+        attribute="timestamp",
+        metadata={
+            "description": (
+                "A timestamp value to associate with the metric. If not provided, "
+                "defaults to the server time when the metric is received."
+            ),
+        },
+        load_only=True,
+        required=False,
+        load_default=None,
+    )
+
+    @post_dump
+    def try_coerce_value_to_float(self, data, **kwargs):
+        value = float(data["value"])
+        is_special_value = math.isnan(value) or math.isinf(value)
+
+        if not is_special_value:
+            data["value"] = value
+
+        return data
 
 
 class MetricsSnapshotSchema(Schema):
@@ -94,16 +130,39 @@ class MetricsSnapshotSchema(Schema):
     )
     value = fields.Float(
         attribute="value",
-        metadata={"description": "The value of the metric."},
+        metadata={
+            "description": (
+                "The value of the metric. Can be a float, NaN, Infinity, or -Infinity. "
+                'NaN values are represented with the string "nan" and infinite values '
+                'are represented with the strings "inf" and "-inf".'
+            )
+        },
+        allow_nan=True,
+        as_string=True,
     )
     step = fields.Integer(
         attribute="step",
-        metadata={"description": "The step value for the metric."},
+        metadata={
+            "description": (
+                "The step value for the metric, indexed from 0. Sequentially increasing "
+                "step values track a metric changing over time."
+            ),
+        },
     )
-    timestamp = fields.Integer(
+    timestamp = fields.DateTime(
         attribute="timestamp",
-        metadata={"description": "The timestamp of the metric in milliseconds."},
+        metadata={"description": "The timestamp for the metric."},
     )
+
+    @post_dump
+    def try_coerce_value_to_float(self, data, **kwargs):
+        value = float(data["value"])
+        is_special_value = math.isnan(value) or math.isinf(value)
+
+        if not is_special_value:
+            data["value"] = value
+
+        return data
 
 
 class MetricsSnapshotPageSchema(BasePageSchema):

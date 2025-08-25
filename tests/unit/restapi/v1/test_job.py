@@ -21,7 +21,9 @@ functionalities for the job entity. The tests ensure that the queues can be
 registered, renamed, queried, and deleted as expected through the REST API.
 """
 
+import datetime
 import logging
+import math
 from http import HTTPStatus
 from typing import Any
 
@@ -32,7 +34,7 @@ from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
 from dioptra.sdk.utilities.logging import forward_job_logs_to_api
 
-from ..lib import asserts, helpers, mock_mlflow, mock_rq, routines
+from ..lib import asserts, helpers, mock_rq, routines
 from ..test_utils import assert_retrieving_resource_works
 
 
@@ -114,7 +116,7 @@ def assert_job_response_contents_matches_expectations(
         "experiment",
         "entrypoint",
         "artifacts",
-        "artifactValues"
+        "artifactValues",
     }
     assert set(response.keys()) == expected_keys
 
@@ -691,23 +693,13 @@ def test_metrics(
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
     registered_experiments: dict[str, Any],
-    registered_mlflowrun: dict[str, Any],
-    monkeypatch: MonkeyPatch,
 ) -> None:
-    import mlflow.exceptions
-    import mlflow.tracking
-
-    monkeypatch.setattr(mlflow.tracking, "MlflowClient", mock_mlflow.MockMlflowClient)
-    monkeypatch.setattr(
-        mlflow.exceptions, "MlflowException", mock_mlflow.MockMlflowException
-    )
-
     experiment_id = registered_experiments["experiment1"]["id"]
     job1_id = registered_jobs["job1"]["id"]
     job2_id = registered_jobs["job2"]["id"]
     job3_id = registered_jobs["job3"]["id"]
 
-    metric_response = dioptra_client.jobs.append_metric_by_id(  # noqa: F841
+    _ = dioptra_client.jobs.append_metric_by_id(  # noqa: F841
         job_id=job1_id,
         metric_name="accuracy",
         metric_value=4.0,
@@ -717,25 +709,25 @@ def test_metrics(
         dioptra_client, job_id=job1_id, expected=[{"name": "accuracy", "value": 4.0}]
     )
 
-    metric_response = dioptra_client.jobs.append_metric_by_id(  # noqa: F841
+    _ = dioptra_client.jobs.append_metric_by_id(  # noqa: F841
         job_id=job1_id,
         metric_name="accuracy",
         metric_value=4.1,
     ).json()
 
-    metric_response = dioptra_client.jobs.append_metric_by_id(  # noqa: F841
+    _ = dioptra_client.jobs.append_metric_by_id(  # noqa: F841
         job_id=job1_id,
         metric_name="accuracy",
         metric_value=4.2,
     ).json()
 
-    metric_response = dioptra_client.jobs.append_metric_by_id(  # noqa: F841
+    _ = dioptra_client.jobs.append_metric_by_id(  # noqa: F841
         job_id=job1_id,
         metric_name="roc_auc",
         metric_value=0.99,
     ).json()
 
-    metric_response = dioptra_client.jobs.append_metric_by_id(  # noqa: F841
+    _ = dioptra_client.jobs.append_metric_by_id(  # noqa: F841
         job_id=job2_id,
         metric_name="job_2_metric",
         metric_value=0.11,
@@ -804,6 +796,157 @@ def test_metrics(
             {"name": "accuracy", "value": 4.0},
         ],
     )
+
+
+def test_metrics_special_float_values(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_jobs: dict[str, Any],
+) -> None:
+    """Test that special float values (NaN, Inf, -Inf) are correctly stored/retrieved.
+
+    Special float values are stored and returned as strings: "nan", "inf", "-inf".
+    Regular float values remain as floats in JSON responses.
+    """
+    job_id = registered_jobs["job1"]["id"]
+
+    # Post NaN value
+    response = dioptra_client.jobs.append_metric_by_id(
+        job_id=job_id,
+        metric_name="loss_nan",
+        metric_value=float("nan"),
+    )
+    assert response.status_code == HTTPStatus.OK
+
+    # Post positive infinity
+    response = dioptra_client.jobs.append_metric_by_id(
+        job_id=job_id,
+        metric_name="loss_inf",
+        metric_value=float("inf"),
+    )
+    assert response.status_code == HTTPStatus.OK
+
+    # Post negative infinity
+    response = dioptra_client.jobs.append_metric_by_id(
+        job_id=job_id,
+        metric_name="loss_neg_inf",
+        metric_value=float("-inf"),
+    )
+    assert response.status_code == HTTPStatus.OK
+
+    # Post regular float for comparison
+    response = dioptra_client.jobs.append_metric_by_id(
+        job_id=job_id,
+        metric_name="regular_float",
+        metric_value=3.14159,
+    )
+    assert response.status_code == HTTPStatus.OK
+
+    # Retrieve metrics and verify values
+    response = dioptra_client.jobs.get_metrics_by_id(job_id=job_id)
+    assert response.status_code == HTTPStatus.OK
+
+    metrics = {m["name"]: m["value"] for m in response.json()}  # type: ignore[index]
+
+    # Special values should be returned as strings
+    assert metrics["loss_nan"] == "nan"
+    assert metrics["loss_inf"] == "inf"
+    assert metrics["loss_neg_inf"] == "-inf"
+
+    # Regular float should remain a float
+    assert math.isclose(metrics["regular_float"], 3.14159, abs_tol=1e-6)  # type: ignore
+    assert isinstance(metrics["regular_float"], float)
+
+
+def test_metrics_step_and_timestamp(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_jobs: dict[str, Any],
+) -> None:
+    """Test that metric_step and timestamp fields are correctly handled.
+
+    The metric_step field tracks the evolution of a metric over time.
+    The timestamp field records when the metric was captured.
+    """
+    job_id = registered_jobs["job1"]["id"]
+    timestamp1 = datetime.datetime(2024, 1, 15, 10, 30, 0, tzinfo=datetime.timezone.utc)
+    timestamp2 = datetime.datetime(2024, 1, 15, 10, 35, 0, tzinfo=datetime.timezone.utc)
+    timestamp3 = datetime.datetime(2024, 1, 15, 10, 40, 0, tzinfo=datetime.timezone.utc)
+
+    # Post metrics with explicit step values and timestamps
+    response = dioptra_client.jobs.append_metric_by_id(
+        job_id=job_id,
+        metric_name="training_loss",
+        metric_value=0.9,
+        metric_step=0,
+        timestamp=timestamp1,
+    )
+    assert response.status_code == HTTPStatus.OK
+
+    response = dioptra_client.jobs.append_metric_by_id(
+        job_id=job_id,
+        metric_name="training_loss",
+        metric_value=0.5,
+        metric_step=1,
+        timestamp=timestamp2,
+    )
+    assert response.status_code == HTTPStatus.OK
+
+    response = dioptra_client.jobs.append_metric_by_id(
+        job_id=job_id,
+        metric_name="training_loss",
+        metric_value=0.2,
+        metric_step=2,
+        timestamp=timestamp3,
+    )
+    assert response.status_code == HTTPStatus.OK
+
+    # Retrieve metric snapshots to verify step and timestamp are stored
+    response = dioptra_client.jobs.get_metrics_snapshots_by_id(
+        job_id=job_id,
+        metric_name="training_loss",
+    )
+    assert response.status_code == HTTPStatus.OK
+
+    snapshots = response.json()["data"]
+    assert len(snapshots) == 3
+
+    # Snapshots are returned in reverse order (most recent first)
+    # Verify each snapshot has the correct step and timestamp
+    snapshot_by_step = {s["step"]: s for s in snapshots}
+
+    assert snapshot_by_step[0]["value"] == 0.9
+    assert snapshot_by_step[0]["timestamp"] == timestamp1.isoformat()
+
+    assert snapshot_by_step[1]["value"] == 0.5
+    assert snapshot_by_step[1]["timestamp"] == timestamp2.isoformat()
+
+    assert snapshot_by_step[2]["value"] == 0.2
+    assert snapshot_by_step[2]["timestamp"] == timestamp3.isoformat()
+
+    # Also test with ISO format string timestamp
+    timestamp_str = "2024-01-15T11:00:00+00:00"
+    response = dioptra_client.jobs.append_metric_by_id(
+        job_id=job_id,
+        metric_name="training_loss",
+        metric_value=0.1,
+        metric_step=3,
+        timestamp=timestamp_str,
+    )
+    assert response.status_code == HTTPStatus.OK
+
+    # Verify the new snapshot
+    response = dioptra_client.jobs.get_metrics_snapshots_by_id(
+        job_id=job_id,
+        metric_name="training_loss",
+    )
+    assert response.status_code == HTTPStatus.OK
+
+    snapshots = response.json()["data"]
+    snapshot_by_step = {s["step"]: s for s in snapshots}
+
+    assert snapshot_by_step[3]["value"] == 0.1
+    assert snapshot_by_step[3]["timestamp"] == timestamp_str
 
 
 def test_job_get_all(
@@ -1404,9 +1547,7 @@ def test_job_log_sort(
     job_resource_id = job["id"]
 
     resp = dioptra_client.jobs.get_logs_by_id(
-        job_resource_id,
-        sort_by=sortBy,
-        descending=descending
+        job_resource_id, sort_by=sortBy, descending=descending
     )
     returned = resp.json()
     returned_severities = [log["severity"] for log in returned["data"]]
