@@ -62,8 +62,7 @@ def assert_artifact_response_contents_matches_expectations(
         "hasDraft",
         "tags",
         "description",
-        "pluginSnapshotId",
-        "taskId",
+        "task",
         "isDir",
         "fileSize",
         "fileUrl",
@@ -81,10 +80,6 @@ def assert_artifact_response_contents_matches_expectations(
     assert isinstance(response["latestSnapshot"], bool)
     assert isinstance(response["hasDraft"], bool)
     assert isinstance(response["description"], str)
-    assert response["pluginSnapshotId"] is None or isinstance(
-        response["pluginSnapshotId"], int
-    )
-    assert response["taskId"] is None or isinstance(response["taskId"], int)
     assert isinstance(response["isDir"], bool)
     assert response["fileSize"] is None or isinstance(response["fileSize"], int)
     assert isinstance(response["fileUrl"], str)
@@ -95,8 +90,6 @@ def assert_artifact_response_contents_matches_expectations(
     assert response["description"] == expected_contents["description"]
     assert response["isDir"] == expected_contents["isDir"]
     assert response["job"] == expected_contents["job"]
-    assert response["pluginSnapshotId"] == expected_contents["pluginSnapshotId"]
-    assert response["taskId"] == expected_contents["taskId"]
 
     assert helpers.is_iso_format(response["createdOn"])
     assert helpers.is_iso_format(response["snapshotCreatedOn"])
@@ -119,6 +112,11 @@ def assert_artifact_response_contents_matches_expectations(
         assert isinstance(tag["id"], int)
         assert isinstance(tag["name"], str)
         assert isinstance(tag["url"], str)
+
+    # validate the task structure
+    for attribute, value in expected_contents["task"].items():
+        assert attribute in response["task"]
+        assert response["task"][attribute] == value
 
 
 def assert_retrieving_artifact_by_id_works(
@@ -197,20 +195,24 @@ def assert_registering_existing_artifact_uri_fails(
     assert response.status_code == HTTPStatus.CONFLICT
 
 
-def get_snapshot_id_task_id(
+def get_artifact_artifact_task_contents(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     registered_artifact_plugins: dict[str, Any],
     plugin_name: str | None,
     task_index: int | None,
-) -> Tuple[int | None, int | None]:
+) -> dict[str, Any]:
     if plugin_name is not None:
         plugin = registered_artifact_plugins[plugin_name]
-        return (
-            dioptra_client.plugins.get_by_id(plugin["plugin_id"]).json()["snapshot"],
-            plugin["plugin_file"]["tasks"]["artifacts"][task_index]["id"],
-        )
+        plugin_response = dioptra_client.plugins.get_by_id(plugin["plugin_id"]).json()
+        return {
+            **plugin["plugin_file"]["tasks"]["artifacts"][task_index],
+            "pluginResourceId": plugin_response["id"],
+            "pluginResourceSnapshotId": plugin_response["snapshot"],
+            "pluginFileResourceId": plugin["plugin_file"]["id"],
+            "pluginFileResourceSnapshotId": plugin["plugin_file"]["snapshot"],
+        }
     else:
-        return (None, None)
+        return {}
 
 
 # -- Tests -----------------------------------------------------------------------------
@@ -248,15 +250,15 @@ def test_create_artifact(
     user_id = auth_account["id"]
     group_id = auth_account["groups"][0]["id"]
     uri = mlflow_artifact_uris[artifact_name]
-    plugin_snapshot_id, task_id = get_snapshot_id_task_id(
+    task_contents = get_artifact_artifact_task_contents(
         dioptra_client, registered_artifact_plugins, plugin_name, task_index
     )
     artifact_response = dioptra_client.artifacts.create(
         group_id=group_id,
         job_id=job_id,
         artifact_uri=uri,
-        plugin_snapshot_id=plugin_snapshot_id,
-        task_id=task_id,
+        plugin_snapshot_id=task_contents.get("pluginResourceSnapshotId", None),
+        task_id=task_contents.get("id", None),
         description=description,
     )
 
@@ -271,8 +273,7 @@ def test_create_artifact(
             "group_id": group_id,
             "job": job_id,
             "isDir": False,
-            "pluginSnapshotId": plugin_snapshot_id,
-            "taskId": task_id,
+            "task": task_contents,
         },
     )
     assert_retrieving_artifact_by_id_works(
@@ -471,14 +472,14 @@ def test_modify_artifact(
     - The user retrieves information about the same artifact and it reflects
       the changes.
     """
-    plugin_snapshot_id, task_id = get_snapshot_id_task_id(
+    task_contents = get_artifact_artifact_task_contents(
         dioptra_client, registered_artifact_plugins, "artifact_plugin", 0
     )
     artifact_to_modify = registered_artifacts["artifact2"]
     response = dioptra_client.artifacts.modify_by_id(
         artifact_id=artifact_to_modify["id"],
-        plugin_snapshot_id=plugin_snapshot_id,
-        task_id=task_id,
+        plugin_snapshot_id=task_contents["pluginResourceSnapshotId"],
+        task_id=task_contents["id"],
         description="New Description",
     ).json()
 
@@ -491,8 +492,7 @@ def test_modify_artifact(
             "group_id": artifact_to_modify["group"]["id"],
             "job": artifact_to_modify["job"],
             "isDir": artifact_to_modify["isDir"],
-            "pluginSnapshotId": plugin_snapshot_id,
-            "taskId": task_id,
+            "task": task_contents,
         },
     )
 
