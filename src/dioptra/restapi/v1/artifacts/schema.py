@@ -20,6 +20,7 @@ from marshmallow import Schema, fields
 
 from dioptra.restapi.utils import validate_artifact_url
 from dioptra.restapi.v1.file_types import FileTypes
+from dioptra.restapi.v1.plugins.schema import ArtifactTaskSchema
 from dioptra.restapi.v1.schemas import (
     BasePageSchema,
     GroupIdQueryParametersSchema,
@@ -90,6 +91,7 @@ class ArtifactMutableFieldsSchema(Schema):
             "performs serializing/deserializing of this Artifact."
         },
         load_default=None,
+        load_only=True,
     )
     taskId = fields.Int(
         attribute="task_id",
@@ -98,10 +100,48 @@ class ArtifactMutableFieldsSchema(Schema):
             "serializing/deserializing of this Artifact."
         },
         load_default=None,
+        load_only=True,
     )
 
 
 ArtifactBaseSchema = generate_base_resource_schema("Artifact", snapshot=True)
+
+
+class ArtifactArtifactTaskSchema(ArtifactTaskSchema):
+    pluginResourceId = fields.Int(
+        attribute="plugin_resource_id",
+        metadata={
+            "description": ("resource id of the plugin containing the Artifact Task")
+        },
+        dump_only=True,
+    )
+    pluginResourceSnapshotId = fields.Int(
+        attribute="plugin_resource_snapshot_id",
+        metadata={
+            "description": (
+                "snapshot resource id of the plugin containing the Artifact Task"
+            )
+        },
+        dump_only=True,
+    )
+    pluginFileResourceId = fields.Int(
+        attribute="plugin_file_resource_id",
+        metadata={
+            "description": (
+                "resource id of the plugin file containing the Artifact Task"
+            )
+        },
+        dump_only=True,
+    )
+    pluginFileResourceSnapshotId = fields.Int(
+        attribute="plugin_file_resource_snapshot_id",
+        metadata={
+            "description": (
+                "snapshot resource id of the plugin file containing the Artifact Task"
+            )
+        },
+        dump_only=True,
+    )
 
 
 class ArtifactSchema(
@@ -124,6 +164,12 @@ class ArtifactSchema(
         data_key="job",
         metadata={"description": "id of the job that produced this Artifact"},
         required=True,
+    )
+    task = fields.Nested(
+        ArtifactArtifactTaskSchema,
+        attribute="task",
+        metadata={"description": "The artifact task."},
+        dump_only=True,
     )
 
 

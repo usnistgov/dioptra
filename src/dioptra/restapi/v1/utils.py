@@ -879,6 +879,19 @@ def build_model_version(model_dict: ModelWithVersionDict) -> dict[str, Any]:
     }
 
 
+def build_artifact_artifact_task(artifact: models.Artifact) -> dict[str, Any]:
+    if not artifact.task:
+        return {}
+
+    return {
+        "plugin_resource_id": artifact.plugin_plugin_file.plugin.resource_id,
+        "plugin_resource_snapshot_id": artifact.plugin_plugin_file.plugin.resource_snapshot_id,
+        "plugin_file_resource_id": artifact.plugin_plugin_file.plugin_file.resource_id,
+        "plugin_file_resource_snapshot_id": artifact.plugin_plugin_file.plugin_file.resource_snapshot_id,
+        **_build_artifact_task(plugin_task=artifact.task),
+    }
+
+
 def build_artifact(artifact_dict: ArtifactDict) -> dict[str, Any]:
     """Build an Artifact response dictionary.
 
@@ -909,8 +922,7 @@ def build_artifact(artifact_dict: ArtifactDict) -> dict[str, Any]:
         "artifact_uri": artifact.uri,
         "is_dir": artifact.is_dir,
         "file_size": artifact.file_size,
-        "plugin_snapshot_id": artifact.plugin_snapshot_id,
-        "task_id": artifact.task.task_id if artifact.task else None,
+        "task": build_artifact_artifact_task(artifact=artifact),
         "file_url": build_url(f"{ARTIFACTS}/{artifact.resource_id}/contents"),
     }
 
