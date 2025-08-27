@@ -17,18 +17,18 @@
 import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, ForeignKey, ForeignKeyConstraint, Index, PrimaryKeyConstraint, Text, select
+from sqlalchemy import (
+    Column,
+    ForeignKey,
+    ForeignKeyConstraint,
+    Index,
+    PrimaryKeyConstraint,
+    Text,
+    select,
+)
 from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 
-from dioptra.restapi.db.db import (
-    bigint,
-    datetimetz,
-    db,
-    guid,
-    intpk,
-    text_,
-    float_
-)
+from dioptra.restapi.db.db import bigint, datetimetz, db, float_, guid, intpk, text_
 
 from .entry_points import EntryPoint
 from .experiments import Experiment
@@ -276,12 +276,11 @@ class JobMetric(db.Model):  # type: ignore[name-defined]
     job_resource: Mapped["Resource"] = relationship()
 
     # Additional settings
-    __table_args__ = (
-        PrimaryKeyConstraint("job_resource_id", "name", "timestamp"),
-    )
+    __table_args__ = (PrimaryKeyConstraint("job_resource_id", "name", "timestamp"),)
 
     # Initialize default values using dataclass __post_init__ method
     # https://docs.python.org/3/library/dataclasses.html#dataclasses.__post_init__
     def __post_init__(self) -> None:
         import time
+
         self.timestamp = int(time.time() * 1000.0)

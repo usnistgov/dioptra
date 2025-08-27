@@ -30,7 +30,17 @@ from sqlite3 import Connection as SQLite3Connection
 from typing import Annotated, Any, Optional
 
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import JSON, BigInteger, Boolean, Integer, Float, MetaData, String, Text, event
+from sqlalchemy import (
+    JSON,
+    BigInteger,
+    Boolean,
+    Float,
+    Integer,
+    MetaData,
+    String,
+    Text,
+    event,
+)
 from sqlalchemy.engine import Engine
 from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.orm import DeclarativeBase, MappedAsDataclass, mapped_column
