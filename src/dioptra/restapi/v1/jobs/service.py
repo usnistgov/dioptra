@@ -646,10 +646,7 @@ class JobIdMetricsService(object):
     """The service methods for retrieving the metrics of a job by unique id."""
 
     @inject
-    def __init__(
-        self,
-        job_id_service: JobIdService
-    ) -> None:
+    def __init__(self, job_id_service: JobIdService) -> None:
         """Initialize the job metrics service.
 
         All arguments are provided via dependency injection.
@@ -674,25 +671,29 @@ class JobIdMetricsService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get job metrics by id", job_id=job_id)
 
-        job_metrics_max_step_sub_query = select(
-            models.JobMetric.name, func.max(models.JobMetric.step).label("mstep")
-        ).where(
-            models.JobMetric.job_resource_id == job_id
-        ).group_by(
-            models.JobMetric.name
-        ).subquery()
-
-        job_metrics_stmt = select(
-            models.JobMetric
-        ).where(
-            models.JobMetric.job_resource_id == job_id
-        ).join_from(
-            models.JobMetric,
-            job_metrics_max_step_sub_query,
-            and_(models.JobMetric.name == job_metrics_max_step_sub_query.c.name, models.JobMetric.step == job_metrics_max_step_sub_query.c.mstep)
+        job_metrics_max_step_sub_query = (
+            select(
+                models.JobMetric.name, func.max(models.JobMetric.step).label("mstep")
+            )
+            .where(models.JobMetric.job_resource_id == job_id)
+            .group_by(models.JobMetric.name)
+            .subquery()
         )
 
-        #select metrics with the highest step value
+        job_metrics_stmt = (
+            select(models.JobMetric)
+            .where(models.JobMetric.job_resource_id == job_id)
+            .join_from(
+                models.JobMetric,
+                job_metrics_max_step_sub_query,
+                and_(
+                    models.JobMetric.name == job_metrics_max_step_sub_query.c.name,
+                    models.JobMetric.step == job_metrics_max_step_sub_query.c.mstep,
+                ),
+            )
+        )
+
+        # select metrics with the highest step value
         job_metrics = list(db.session.scalars(job_metrics_stmt).unique().all())
 
         job_metrics_dict = {}
@@ -703,7 +704,6 @@ class JobIdMetricsService(object):
 
             if kept is None or kept.timestamp < job_metric.timestamp:
                 job_metrics_dict[job_metric.name] = job_metric
-
 
         return list(job_metrics_dict.values())
 
@@ -733,7 +733,12 @@ class JobIdMetricsService(object):
         assert job_dict is not None
         job = job_dict["job"]
 
-        new_metric = models.JobMetric(name=metric_name, value=metric_value, step=metric_step, job_resource=job.resource)
+        new_metric = models.JobMetric(
+            name=metric_name,
+            value=metric_value,
+            step=metric_step,
+            job_resource=job.resource,
+        )
 
         db.session.add(new_metric)
         db.session.commit()
@@ -784,14 +789,12 @@ class JobIdMetricsSnapshotsService(object):
             metric_name=metric_name,
         )
 
-        job_metrics_stmt = select(
-            models.JobMetric
-        ).where(
+        job_metrics_stmt = select(models.JobMetric).where(
             models.JobMetric.job_resource_id == job_id,
-            models.JobMetric.name == metric_name
+            models.JobMetric.name == metric_name,
         )
 
-        history =  list(db.session.scalars(job_metrics_stmt).unique().all())
+        history = list(db.session.scalars(job_metrics_stmt).unique().all())
 
         metrics_page = [
             {
