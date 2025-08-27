@@ -7,7 +7,6 @@ Create Date: 2025-08-26 10:25:55.222239
 """
 from alembic import op
 import sqlalchemy as sa
-from dioptra.restapi.db.custom_types import TZDateTime
 
 # revision identifiers, used by Alembic.
 revision = 'ad4f89b2288d'
@@ -22,7 +21,7 @@ def upgrade():
         sa.Column('name', sa.Text(), nullable=False),
         sa.Column('value', sa.Float(), nullable=True),
         sa.Column('step', sa.BigInteger().with_variant(sa.Integer(), 'sqlite'), nullable=False),
-        sa.Column('timestamp', sa.BigInteger(), nullable=False),
+        sa.Column('timestamp', sa.BigInteger().with_variant(sa.Integer(), 'sqlite'), nullable=False),
         sa.ForeignKeyConstraint(['job_resource_id'], ['resources.resource_id'], name=op.f('fk_job_metrics_job_resource_id_resources')),
         sa.PrimaryKeyConstraint('job_resource_id', 'name', 'timestamp', name=op.f('pk_job_metrics'))
     )
