@@ -696,7 +696,7 @@ class JobIdMetricsService(object):
         # select metrics with the highest step value
         job_metrics = list(db.session.scalars(job_metrics_stmt).unique().all())
 
-        job_metrics_dict: dict[str, dict[str, Any]] = {}
+        job_metrics_dict: dict[str, models.JobMetric] = {}
 
         # select metrics with the biggest timestamp for each metric name + step
         for job_metric in job_metrics:
