@@ -22,7 +22,7 @@ from typing import Any, Final, cast
 import structlog
 from flask_login import current_user
 from injector import inject
-from sqlalchemy import delete, func, select, and_
+from sqlalchemy import and_, delete, func, select
 from sqlalchemy.orm import aliased
 from structlog.stdlib import BoundLogger
 
@@ -36,7 +36,6 @@ from dioptra.restapi.errors import (
     JobInvalidParameterNameError,
     JobInvalidStatusTransitionError,
     JobMlflowRunAlreadySetError,
-    JobMlflowRunNotSetError,
     SortParameterValidationError,
 )
 from dioptra.restapi.v1 import utils
@@ -682,7 +681,7 @@ class JobIdMetricsService(object):
         ).group_by(
             models.JobMetric.name
         ).subquery()
-        
+
         job_metrics_stmt = select(
             models.JobMetric
         ).where(
@@ -704,8 +703,8 @@ class JobIdMetricsService(object):
 
             if kept is None or kept.timestamp < job_metric.timestamp:
                 job_metrics_dict[job_metric.name] = job_metric
-    
-        
+
+
         return list(job_metrics_dict.values())
 
     def update(
@@ -791,7 +790,7 @@ class JobIdMetricsSnapshotsService(object):
             models.JobMetric.job_resource_id == job_id,
             models.JobMetric.name == metric_name
         )
-        
+
         history =  list(db.session.scalars(job_metrics_stmt).unique().all())
 
         metrics_page = [
