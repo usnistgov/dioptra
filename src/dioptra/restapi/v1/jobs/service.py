@@ -22,7 +22,7 @@ from typing import Any, Final, cast
 import structlog
 from flask_login import current_user
 from injector import inject
-from sqlalchemy import delete, func, select
+from sqlalchemy import delete, func, select, and_
 from sqlalchemy.orm import aliased
 from structlog.stdlib import BoundLogger
 
@@ -649,16 +649,14 @@ class JobIdMetricsService(object):
     @inject
     def __init__(
         self,
-        job_id_mlflowrun_service: "JobIdMlflowrunService",
-        job_run_store: JobRunStoreProtocol,
+        job_id_service: JobIdService
     ) -> None:
         """Initialize the job metrics service.
 
         All arguments are provided via dependency injection.
 
         """
-        self._job_id_mlflowrun_service = job_id_mlflowrun_service
-        self._job_run_store = job_run_store
+        self._job_id_service = job_id_service
 
     def get(
         self,
@@ -677,14 +675,38 @@ class JobIdMetricsService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get job metrics by id", job_id=job_id)
 
+        job_metrics_max_step_sub_query = select(
+            models.JobMetric.name, func.max(models.JobMetric.step).label("mstep")
+        ).where(
+            models.JobMetric.job_resource_id == job_id
+        ).group_by(
+            models.JobMetric.name
+        ).subquery()
+        
         job_metrics_stmt = select(
             models.JobMetric
         ).where(
-            models.JobMetric.job_resource_id == job_id,
-            models.JobMetric.step == max(step)
+            models.JobMetric.job_resource_id == job_id
+        ).join_from(
+            models.JobMetric,
+            job_metrics_max_step_sub_query,
+            and_(models.JobMetric.name == job_metrics_max_step_sub_query.c.name, models.JobMetric.step == job_metrics_max_step_sub_query.c.mstep)
         )
 
-        return list(db.session.scalars(job_metrics_stmt).unique().all())
+        #select metrics with the highest step value
+        job_metrics = list(db.session.scalars(job_metrics_stmt).unique().all())
+
+        job_metrics_dict = {}
+
+        # select metrics with the biggest timestamp for each metric name + step
+        for job_metric in job_metrics:
+            kept = job_metrics_dict.get(job_metric.name, None)
+
+            if kept is None or kept.timestamp < job_metric.timestamp:
+                job_metrics_dict[job_metric.name] = job_metric
+    
+        
+        return list(job_metrics_dict.values())
 
     def update(
         self,
@@ -706,7 +728,13 @@ class JobIdMetricsService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Update job metrics by id", job_id=job_id)
 
-        new_metric = models.JobMetric(name=metric_name, value=metric_value, step=metric_step)
+        job_dict = self._job_id_service.get(job_id, error_if_not_found=True)
+        # can't be None since error_if_not_found is True: the .get() call would
+        # error instead of returning None.
+        assert job_dict is not None
+        job = job_dict["job"]
+
+        new_metric = models.JobMetric(name=metric_name, value=metric_value, step=metric_step, job_resource=job.resource)
 
         db.session.add(new_metric)
         db.session.commit()

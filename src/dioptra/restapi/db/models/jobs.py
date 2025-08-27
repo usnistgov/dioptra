@@ -270,7 +270,7 @@ class JobMetric(db.Model):  # type: ignore[name-defined]
     name: Mapped[text_]
     value: Mapped[float_]
     step: Mapped[bigint]
-    timestamp: Mapped[datetimetz] = mapped_column(init=False, nullable=False)
+    timestamp: Mapped[bigint] = mapped_column(init=False, nullable=False)
 
     # Relationships
     job_resource: Mapped["Resource"] = relationship()
@@ -283,5 +283,5 @@ class JobMetric(db.Model):  # type: ignore[name-defined]
     # Initialize default values using dataclass __post_init__ method
     # https://docs.python.org/3/library/dataclasses.html#dataclasses.__post_init__
     def __post_init__(self) -> None:
-        timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
-        self.created_on = timestamp
+        import time
+        self.timestamp = int(time.time() * 1000.0)
