@@ -103,14 +103,6 @@ description = "A collection of plugins for training an MNIST classifier and runn
 
   [[plugins.tasks.functions]]
   filename = "plugins.py"
-  name = "save_models"
-  input_params = [ 
-    { name = "models", type = "null_list_mapping_str_str_model", required = false },
-  ]
-  output_params = [ ]
-
-  [[plugins.tasks.functions]]
-  filename = "plugins.py"
   name = "attack_fgm"
   input_params = [ 
     { name = "dataset", type = "dataset", required = true},
@@ -122,8 +114,9 @@ description = "A collection of plugins for training an MNIST classifier and runn
     { name = "eps_step", type = "number", required = false },
     { name = "minimal", type = "boolean", required = false },
     { name = "norm", type = "int_float_str", required = false },
+
   ]
-  output_params = [ { name = "output", type = "dataframe" } ]
+  output_params = [ { name = "df", type = "dataframe" }, { name = "directory", type="path"} ]
 
   [[plugins.tasks.functions]]
   filename = "plugins.py"
@@ -439,7 +432,7 @@ path = "entrypoints/mnist_demo/train.yml"
 name = "Train"
 description = "Training an LeNet model on MNIST."
 params = [
-  { name = "seed", type = "integer", default_value = "1286012834" },
+  { name = "seed", type = "integer", default_value = "12834" },
   { name = "optimizer_name", type = "string", default_value = "Adam" },
   { name = "learning_rate", type = "float", default_value = "0.001" },
   { name = "training_dir", type = "string", default_value = "/dioptra/data/Mnist/training" },
@@ -474,7 +467,7 @@ params = [
   { name = "eps_step", type = "float", default_value = "0.1" },
   { name = "minimal", type = "boolean", default_value = "false" },
   { name = "norm", type = "string", default_value = "inf" },
-  { name = "seed", type = "integer", default_value = "1286012834" }
+  { name = "seed", type = "integer", default_value = "12834" }
 ]
 artifact_params = [
   { name = "model_file", output_params = [ { name = "path", type = "path" } ] }
@@ -494,7 +487,7 @@ params = [
   #{ name = "model_name", type = "string", default_value = "mnist_classifier" },
   #{ name = "model_version", type = "integer", default_value = "-1" },
   { name = "clip_values", type = "list", default_value = "[0, 1]" },
-  { name = "seed", type = "integer", default_value = "1286012834" },
+  { name = "seed", type = "integer", default_value = "12834" },
   { name = "patch_target", type = "integer", default_value = "-1" },
   { name = "num_patch", type = "integer", default_value = "1" },
   { name = "rotation_max", type = "float", default_value = "22.5" },
@@ -502,7 +495,6 @@ params = [
   { name = "scale_max", type = "float", default_value = "1.0" },
   { name = "learning_rate", type = "float", default_value = "5.0" },
   { name = "max_iter", type = "integer", default_value = "500" },
-  { name = "patch_shape", type = "list", default_value = "[2, 2, 1]" },
   { name = "batch_size", type = "integer", default_value = "10" },
   { name = "rescale", type = "float", default_value = "0.00392156862" },
 ]
@@ -527,12 +519,11 @@ params = [
   #{ name = "model_name", type = "string", default_value = "mnist_classifier" },
   #{ name = "model_version", type = "integer", default_value = "-1" },
   { name = "clip_values", type = "list", default_value = "[0, 1]" },
-  { name = "seed", type = "integer", default_value = "1286012834" },
+  { name = "seed", type = "integer", default_value = "12834" },
   { name = "rotation_max", type = "float", default_value = "22.5" },
   { name = "scale_min", type = "float", default_value = "0.1" },
   { name = "scale_max", type = "float", default_value = "1.0" },
   { name = "patch_scale", type = "float", default_value = "0.4" },
-  { name = "patch_shape", type = "list", default_value = "[2, 2, 1]" },
   { name = "batch_size", type = "integer", default_value = "10" },
   { name = "rescale", type = "float", default_value = "0.00392156862" },
 ]
@@ -559,7 +550,7 @@ params = [
   { name = "record_target_class", type = "boolean", default_value = "False" },
   { name = "format", type = "string", default_value = "csv" },
   { name = "batch_size", type = "integer", default_value = "4"},
-  { name = "seed", type = "integer", default_value = "1286012834" },
+  { name = "seed", type = "integer", default_value = "12834" },
   { name = "rescale", type = "float", default_value = "0.00392156862" },
 ]
 artifact_params = [
@@ -582,7 +573,7 @@ params = [
   { name = "metrics_filename", type = "string", default_value = "metrics.csv" },
   { name = "metrics_format", type = "string", default_value = "csv" },
   { name = "n_classes", type = "integer", default_value = "10" },
-  { name = "seed", type = "integer", default_value = "1286012834" },
+  { name = "seed", type = "integer", default_value = "12834" },
   { name = "rescale", type = "float", default_value = "0.00392156862" },
 ]
 artifact_params = [
@@ -608,7 +599,7 @@ params = [
   #{ name = "model_version", type = "integer", default_value = "-1" },
   { name = "clip_values", type = "list", default_value = "[0, 1]" },
   { name = "batch_size", type = "integer", default_value = "10" },
-  { name = "seed", type = "integer", default_value = "1286012834" },
+  { name = "seed", type = "integer", default_value = "12834" },
   { name = "def_type", type = "string", default_value = "spatial_smothing" },
   { name = "defense_kwargs", type = "mapping", default_value = "{}"},
   { name = "rescale", type = "float", default_value = "0.00392156862" },

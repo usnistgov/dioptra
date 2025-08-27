@@ -26,10 +26,6 @@ import numpy as np
 
 from structlog.stdlib import BoundLogger
 
-from dioptra import pyplugs
-from dioptra.sdk.exceptions import TensorflowDependencyError
-from dioptra.sdk.utilities.decorators import require_package
-
 from . import import_keras
 from .restapi import post_metrics
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -47,8 +43,6 @@ except ImportError:  # pragma: nocover
         package="tensorflow",
     )
 
-@pyplugs.register
-@require_package("tensorflow", exc_type=TensorflowDependencyError)
 def init_tensorflow(seed: int) -> None:
     """Initializes Tensorflow to ensure reproducibility.
 
@@ -60,7 +54,6 @@ def init_tensorflow(seed: int) -> None:
     """
     tf.keras.utils.set_random_seed(seed)
 
-@pyplugs.register
 def fit_tensorflow(
     estimator: Model,
     x: Dataset = None,
@@ -97,8 +90,6 @@ def fit_tensorflow(
     return estimator_fit_result
 
 
-@pyplugs.register
-@require_package("tensorflow", exc_type=TensorflowDependencyError)
 def evaluate_metrics_tensorflow(
     classifier: Model,
     dataset: Dataset
@@ -106,20 +97,16 @@ def evaluate_metrics_tensorflow(
     result: dict[str, float] = classifier.evaluate(dataset, verbose=0, return_dict=True)
     return result
 
-@pyplugs.register
-@require_package("tensorflow", exc_type=TensorflowDependencyError)
+
 def predict_tensorflow(classifier, dataset) -> np.ndarray:
     result: np.ndarray = classifier.predict(dataset)
     return result
 
-@pyplugs.register
-@require_package("tensorflow", exc_type=TensorflowDependencyError)
+
 def get_optimizer(optimizer: str, learning_rate: float) -> Optimizer:
     return import_keras.get_optimizer(optimizer)(learning_rate)
 
 
-@pyplugs.register
-@require_package("tensorflow", exc_type=TensorflowDependencyError)
 def get_model_callbacks(callbacks_list: list[dict[str, Any]]) -> list[Callback]:
     return [
         import_keras.get_callback(callback["name"])(**callback.get("parameters", {}))
@@ -127,8 +114,6 @@ def get_model_callbacks(callbacks_list: list[dict[str, Any]]) -> list[Callback]:
     ]
 
 
-@pyplugs.register
-@require_package("tensorflow", exc_type=TensorflowDependencyError)
 def get_performance_metrics(
     metrics_list: list[dict[str, Any]] | None
 ) -> list[Metric | FunctionType]:

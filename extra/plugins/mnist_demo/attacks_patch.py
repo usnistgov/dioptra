@@ -84,6 +84,7 @@ def create_adversarial_patches(
         max_iter=max_iter,
     )
 
+
     # Start by generating adversarial patches.
     target_index = patch_target
     patch_list: list[np.ndarray] = []
@@ -145,6 +146,8 @@ def create_adversarial_patch_dataset(
         scale_min=scale_min,
         scale_max=scale_max,
     )
+
+
 
     img_filenames = [Path(x) for x in data_flow.file_paths]
     class_names_list = sorted(data_flow.class_names)

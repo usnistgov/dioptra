@@ -57,21 +57,6 @@ def get_uri_for_model(
     return uri
 
 
-def get_uris_for_job(
-    job_id: str | int
-) -> list[str]:
-    dioptra_client = get_logged_in_session()
-    job = dioptra_client.jobs.get_by_id(job_id)
-    return [artifact["artifactUri"] for artifact in job["artifacts"]]
-
-
-def get_uris_for_artifacts(
-    artifact_ids: list[int]
-) -> list[str]:
-    dioptra_client = get_logged_in_session()
-    return [dioptra_client.artifacts.get_by_id(artifact_id=aid)['uri'] for aid in artifact_ids]
-
-
 def post_metrics(
     metric_name: str,
     metric_value: float,
@@ -91,6 +76,20 @@ def post_metrics(
         metric_step=metric_step,
     )
 
+def log_metrics(metrics: dict[str, float]) -> None:
+    """Logs metrics to Dioptra for the current run.
+
+    Args:
+        metrics: A dictionary with the metrics to be logged. The keys are the metric
+            names and the values are the metric values.
+    """
+    for metric_name, metric_value in metrics.items():
+        post_metrics(metric_name=metric_name, metric_value=metric_value)
+        LOGGER.info(
+            "Logging metric",
+            metric_name=metric_name,
+            metric_value=metric_value,
+        )
 
 def get_logged_in_session() -> DioptraClient[dict[str, Any]]:
     url = os.environ["DIOPTRA_API"]
@@ -100,58 +99,3 @@ def get_logged_in_session() -> DioptraClient[dict[str, Any]]:
         password=os.environ["DIOPTRA_WORKER_PASSWORD"],
     )
     return dioptra_client
-
-
-def upload_model_to_restapi(
-    name: str, 
-    source_uri: str, 
-    job_id: str | int,
-):
-    version = 0
-    model_id = 0
-
-    dioptra_client = get_logged_in_session()
-    models = dioptra_client.models.get(search=name, page_length=500)
-
-    LOGGER.info("requesting models from RESTAPI", response=models)
-
-    for model in models["data"]:
-        # check whether to create a new model
-        if model["name"] == name:
-            model_id = model["id"]
-            if model["latestVersion"] != None:
-                version = model["latestVersion"]["versionNumber"] + 1
-
-    if version == 0 and model_id == 0:
-        model = dioptra_client.models.create(
-            group_id=1, name=name, description=f"{name} model"
-        )
-        model_id = model["id"]
-        LOGGER.info("new model created", response=model)
-
-    artifact = dioptra_client.artifacts.create(
-        group_id=1, description=f"{name} model artifact", job_id=job_id, artifact_uri=source_uri
-    )
-    LOGGER.info("artifact", response=artifact)
-
-    model_version = dioptra_client.models.versions.create(
-        model_id=model_id,
-        artifact_id=artifact["id"],
-        description=f"{name} model version",
-    )
-    LOGGER.info("model created", response=model_version)
-
-
-def upload_artifact_to_restapi(
-    source_uri: str,
-    job_id: str | int,
-):
-    dioptra_client = get_logged_in_session()
-    artifact = dioptra_client.artifacts.create(
-        group_id=1,
-        description=f"artifact for job {job_id}",
-        job_id=job_id,
-        uri=source_uri,
-    )
-    LOGGER.info("artifact", response=artifact)
-

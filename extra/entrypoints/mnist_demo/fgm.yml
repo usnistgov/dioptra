@@ -1,10 +1,10 @@
 artifacts:
   adversarial_dataset:
-    contents: $adv_data_dir
+    contents: $fgm.directory
     task:
       name: DirectoryArtifactTask
   distance_metrics:
-    contents: $fgm
+    contents: $fgm.df
     task:
       name: DataframeArtifactTask
       args:

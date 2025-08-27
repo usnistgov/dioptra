@@ -89,7 +89,7 @@ def fgm(
     eps_step: float = 0.1,
     minimal: bool = False,
     norm: int | float | str = np.inf,
-) -> pd.DataFrame:
+) -> tuple[pd.DataFrame, Path]:
     """Generates an adversarial dataset using the Fast Gradient Method attack.
 
     Each generated adversarial image is saved as an image file in the directory
@@ -137,6 +137,9 @@ def fgm(
     .. |flow_from_directory| replace:: :py:meth:`tf.keras.preprocessing.image\\
        .ImageDataGenerator.flow_from_directory`
     """
+    raise Exception("This is a fake error")
+
+
     tf.experimental.numpy.experimental_enable_numpy_behavior()
     distance_metrics_list = distance_metrics_list or []
     adv_data_dir = Path(adv_data_dir)
@@ -149,7 +152,6 @@ def fgm(
         minimal=minimal,
         norm=norm,
     )
-    print(data_flow.file_paths)
 
     img_filenames = [Path(x) for x in data_flow.file_paths]
 
@@ -185,7 +187,7 @@ def fgm(
     LOGGER.info("Adversarial image generation complete", attack="fgm")
     _log_distance_metrics(distance_metrics_)
 
-    return pd.DataFrame(distance_metrics_)
+    return pd.DataFrame(distance_metrics_), adv_data_dir
 
 
 def _init_fgm(

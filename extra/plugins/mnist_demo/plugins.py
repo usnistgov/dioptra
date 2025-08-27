@@ -31,7 +31,6 @@ from tensorflow.data import (
 
 from tensorflow.keras.models import Model
 
-from .artifacts_utils import make_directories
 from .attacks_fgm import fgm
 from .attacks_patch import create_adversarial_patches, create_adversarial_patch_dataset
 from .data_tensorflow import dataset_transforms, get_n_classes_from_directory_iterator, create_image_dataset, predictions_to_df, df_to_predictions
@@ -39,13 +38,11 @@ from .defenses_image_preprocessing import create_defended_dataset
 from .estimators_keras_classifiers import init_classifier
 from .metrics_distance import get_distance_metric_list
 from .metrics_performance import get_performance_metric_list, evaluate_metrics_generic
-from .mlflow import add_model_to_registry
 from .random_sample import draw_random_integer, init_rng
 from .registry_art import load_wrapped_tensorflow_keras_classifier
 from .registry_mlflow import load_tensorflow_keras_classifier
-from .restapi import get_uri_for_model
+from .restapi import get_uri_for_model, log_metrics
 from .tensorflow import get_optimizer, get_model_callbacks, get_performance_metrics, evaluate_metrics_tensorflow, init_tensorflow, fit_tensorflow, predict_tensorflow
-from .tracking_mlflow import log_parameters, log_tensorflow_keras_estimator, log_metrics
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -66,10 +63,6 @@ def load_dataset(
     global_seed = draw_random_integer(rng)
     dataset_seed = draw_random_integer(rng)
     init_tensorflow(global_seed)
-    log_parameters(
-       {'entry_point_seed': ep_seed, 
-        'tensorflow_global_seed':global_seed, 
-        'dataset_seed':dataset_seed})
     training_dataset = None if "training" not in subsets else create_image_dataset(
         data_dir=training_dir,
         subset="training",
@@ -159,16 +152,6 @@ def train(
     fit_tensorflow(estimator=estimator, x=x, y=y, fit_kwargs=fit_kwargs)
     return estimator
 
-@pyplugs.register    
-def save_models(
-    models: list[dict[str, str | Model]] | None = None
-):
-    models = [] if models is None else models
-
-    for model in models:
-        log_tensorflow_keras_estimator(model['model'], "model")
-        add_model_to_registry(model['name'], "model")
-
 @pyplugs.register
 def attack_fgm(
     dataset: Dataset,
@@ -180,11 +163,11 @@ def attack_fgm(
     eps_step: float = 0.1,
     minimal: bool = False,
     norm: int | float | str = np.inf,
-) -> pd.DataFrame:
+) -> tuple[pd.DataFrame, Path]:
     '''generate fgm examples'''
-    make_directories([adv_data_dir])
+    Path(adv_data_dir).mkdir(parents=True, exist_ok=True)
     distance_metrics_list = get_distance_metric_list(distance_metrics)
-    fgm_distance_metrics = fgm(
+    fgm_distance_metrics, directory = fgm(
         data_flow=dataset,
         adv_data_dir=adv_data_dir,
         keras_classifier=classifier,
@@ -195,7 +178,7 @@ def attack_fgm(
         minimal=minimal,
         norm=norm
     )
-    return fgm_distance_metrics
+    return fgm_distance_metrics, directory
 
 @pyplugs.register
 def attack_patch(
@@ -212,7 +195,7 @@ def attack_patch(
     max_iter: int,
 ) -> None:
     '''generate patches'''
-    make_directories([adv_data_dir])
+    Path(adv_data_dir).mkdir(parents=True, exist_ok=True)
     create_adversarial_patches(    
         data_flow=data_flow,
         adv_data_dir=adv_data_dir,
@@ -241,7 +224,7 @@ def augment_patch(
     scale_max: float = 1.0,
 ) -> None:
     '''add patches to a dataset'''
-    make_directories([adv_data_dir])
+    Path(adv_data_dir).mkdir(parents=True, exist_ok=True)
     distance_metrics_list = get_distance_metric_list(distance_metrics)
     create_adversarial_patch_dataset(
         data_flow=data_flow,
@@ -289,7 +272,7 @@ def augment_data(
     def_type: str = "spatial_smoothing",
     defense_kwargs: dict[str, Any] | None = None,
 ):
-    make_directories([def_data_dir])
+    Path(def_data_dir).mkdir(parents=True, exist_ok=True)
     distance_metrics_list = get_distance_metric_list(distance_metrics)
     defended_dataset = create_defended_dataset(
         data_flow=dataset,
