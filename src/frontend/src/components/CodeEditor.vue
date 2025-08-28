@@ -12,10 +12,19 @@
       @update="highlightPlaceholder"
       :style="{
         flex: 1,
-        'max-height': '100vh',
+        'max-height': expanded ? 'none' : (props.maxHeight || '100vh'),
         'border': `${showError ? '2px solid red' : '2px solid black'}`
       }"
     />
+    <div v-if="code.split('\n').length > 10 && props.maxHeight">
+      <q-btn
+        :label="`${expanded ? 'Collapse' : 'Expand'}`"
+        :icon="`${expanded ? 'arrow_upward' : 'arrow_downward'}`"
+        color="secondary" 
+        @click="expanded = !expanded"
+        class="q-mt-xs"
+      />
+    </div>
     <div
       :class="{ visibility: showError ? 'hidden' : '' }"
       class="row text-caption q-ml-md text-negative"
@@ -28,7 +37,7 @@
 </template>
 
 <script setup>
-  import { computed, shallowRef } from 'vue'
+  import { computed, shallowRef, ref } from 'vue'
   import { Codemirror } from 'vue-codemirror'
   import { yaml } from '@codemirror/lang-yaml'
   import { oneDark } from '@codemirror/theme-one-dark'
@@ -38,6 +47,11 @@
   import { CompletionContext, autocompletion, startCompletion } from '@codemirror/autocomplete'
   import YAML from 'yaml'
   import { EditorView } from '@codemirror/view'
+  import { useQuasar } from 'quasar'
+
+  const $q = useQuasar()
+
+  const expanded = ref(false)
 
   function myCompletions(context) {
     let word = context.matchBefore(/\$\w*/) || context.matchBefore(/\w*/)
@@ -88,7 +102,7 @@
     }
   }
 
-  const props = defineProps(['placeholder', 'language', 'readOnly', 'showError', 'autocompletions', 'additionalCode'])
+  const props = defineProps(['placeholder', 'language', 'readOnly', 'showError', 'autocompletions', 'additionalCode', 'maxHeight'])
 
   const code = defineModel()
 
@@ -188,13 +202,28 @@ const dollarTriggerExtension = EditorView.updateListener.of((update) => {
   }
 })
 
+  const noActiveLine = EditorView.theme({
+    '.cm-activeLine': { backgroundColor: 'transparent' },
+    '.cm-activeLineGutter': { backgroundColor: 'transparent' }
+  })
+
   const extensions = computed(() => {
-    const baseExtensions = [
-      oneDark,
-    ]
+    const baseExtensions = []
+
+    if($q.dark.isActive) {
+      baseExtensions.push(oneDark)
+    }
 
     if (props.language === 'python') {
       return [python(), ...baseExtensions]
+    }
+
+    if (props.language === 'text') {
+      return [
+        EditorView.lineWrapping,
+        noActiveLine,  
+        ...baseExtensions,
+      ]
     }
 
     return [
@@ -203,6 +232,7 @@ const dollarTriggerExtension = EditorView.updateListener.of((update) => {
       lintGutter(),
       autocompletion({ override: [myCompletions] }),
       dollarTriggerExtension,
+      EditorView.lineWrapping,
       ...baseExtensions,
     ]
   })

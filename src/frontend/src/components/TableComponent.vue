@@ -115,6 +115,7 @@
     </template>
 
     <template #top-right>
+      <slot name="jobLogSlot" />
       <q-btn
         v-if="!hideCreateBtn" 
         color="primary" 
@@ -278,6 +279,10 @@
   }
 
   let invalidSearchNotification = notify.wait()
+
+  // watch(() => props.rows, (newVal) => {
+  //   loading.value = false
+  // })
 
   function onRequest(props) {
     const searchError = checkSearch(props.filter)
