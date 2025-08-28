@@ -210,26 +210,26 @@ pytorch-gpu = [
 tensorflow-cpu = [
     "tensorflow==2.16.1",
     "tensorflow-metal==1.1.0; sys_platform == 'darwin' and platform_machine == 'arm64'",
-    "tensorboard>=2.16.0",
+    "tensorboard==2.16.0",
 ]
 tensorflow-gpu = [
     "tensorflow[and-cuda]==2.16.1; sys_platform == 'linux' and platform_machine == 'x86_64'",
     "tensorboard>=2.16.0",
+    "tensorflow==2.16.1",
 ]
 worker = [
     "adversarial-robustness-toolbox>=1.9.0",
-    "heart-library>=0.4.2",
     "imgaug>=0.4.0",
     "maite>=0.6.0",
     "matplotlib",
     "mlflow>=2",
-    "nrtk>=0.3.0",
     "opencv-python>=4",
     "prefect>=1.0.0,<2",
     "pyarrow>=18.0.0",
     "pycocotools>=2.0.0",
     "rich>=13.3.0",
     "scikit-learn>=1.0.0",
+    "tensorflow-datasets>=4.9.9",
 ]
 
 [tool.black]
