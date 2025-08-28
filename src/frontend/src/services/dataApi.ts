@@ -241,7 +241,28 @@ export async function getJobs(id: number, pagination: Pagination) {
 
 export async function getJobMetrics(id: number) {
   return await axios.get(`/api/jobs/${id}/metrics`)
+}
 
+export async function getJobLogs(id: number, pagination: Pagination) {
+  const res = await axios.get(`/api/jobs/${id}/log`, {
+    params: {
+      index: pagination.index,
+      pageLength: pagination.rowsPerPage === 0 ? 100 : pagination.rowsPerPage,  // 0 means GET ALL
+      search: pagination.search,
+    },
+  })
+
+  // if GET ALL (rowsPerPage = 0), then keep on getting next page until there is no next
+  if(pagination.rowsPerPage === 0 && res.data.next) {
+    let nextUrl = res.data.next.replace("/v1", "")
+    while (nextUrl) {
+      const response = await axios.get(nextUrl)
+      res.data.data.push(...response.data.data)
+      nextUrl = response.data.next ? response.data.next.replace("/v1", "") : null
+    }
+  }
+
+  return res
 }
 
 export async function getItem<T extends ItemType>(type: T, id: number, isDraft: boolean = false) {

@@ -18,6 +18,7 @@
           align="left"
         >
           <q-tab name="overview" label="Overview" />
+          <q-tab name="logs" label="Logs" />
           <q-tab name="model metrics" label="Model metrics" />
           <q-tab name="system metrics" label="System metrics" />
           <q-tab name="artifacts" label="Artifacts" />
@@ -113,6 +114,73 @@
         />
       </div>
     </div>
+    <div v-if="tab === 'logs'">
+      <TableComponent
+        title="Job Logs"
+        :columns="logColumns"
+        :rows="jobLogs"
+        @request="getJobLogs"
+        :hideDeleteBtn="true"
+        :disableSelect="true"
+        :hideCreateBtn="true"
+        :hideSearch="true"
+        style="margin-top: 0;"
+        class="q-mb-lg"
+        ref="tableRef"
+      >
+        <template #body-cell-message="props">
+          <CodeEditor
+            v-model="props.row.message"
+            :readOnly="true"
+            language="text"
+            maxHeight="215px"
+            class="code-cell"
+          />
+        </template>
+        <template #jobLogSlot>
+          <q-select
+            v-if="job.status !== 'finished' && job.status !== 'failed'"
+            v-model="selectedFrequency"
+            label="Refresh Frequency"
+            :options="refreshOptions"
+            option-value="value"
+            option-label="label"
+            emit-value
+            map-options
+            dense
+            filled
+            style="width: 175px"
+            class="q-mr-lg"
+          />
+          <!-- <q-select
+            label="Filter Severity"
+            v-model="selectedSeverity"
+            :options="['INFO', 'WARNING', 'ERROR']"
+            multiple
+            style="width: 225px;"
+            filled
+            dense 
+            class="q-mr-lg" 
+          >
+            <template v-slot:option="{ itemProps, opt, selected, toggleOption }">
+              <q-item v-bind="itemProps">
+                <q-item-section>
+                  <q-item-label>
+                    {{ opt }}
+                  </q-item-label>
+                </q-item-section>
+                <q-item-section side>
+                  <q-checkbox
+                    v-model="selectedSeverity"
+                    :val="opt"
+                  />
+                </q-item-section>
+              </q-item>
+            </template>
+          </q-select> -->
+        </template>
+      </TableComponent>
+    </div>
     <div v-if="tab === 'model metrics'" class="row q-col-gutter-x-lg q-col-gutter-y-lg">
       <div class="col-12">
         <div class="row items-center">
@@ -190,7 +258,7 @@
 </template>
 
 <script setup>
-import { ref, computed, inject, watch } from 'vue'
+import { ref, computed, inject, watch, nextTick } from 'vue'
 import PageTitle from '@/components/PageTitle.vue'
 import * as api from '@/services/dataApi'
 import { useRoute, useRouter } from 'vue-router'
@@ -201,6 +269,7 @@ import TableComponent from '@/components/TableComponent.vue'
 import DeleteDialog from '@/dialogs/DeleteDialog.vue'
 import * as notify from '../notify'
 import PlotlyGraph from '@/components/PlotlyGraph.vue'
+import CodeEditor from '@/components/CodeEditor.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -230,7 +299,7 @@ const metricNames = computed(() => {
 })
 
 watch(tab, async (newVal) => {
-  if (newVal === 'model metrics') {
+  if(newVal === 'model metrics') {
     await loadAllMetricHistories()
   }
 })
@@ -244,6 +313,76 @@ async function loadAllMetricHistories() {
   const results = await Promise.all(promises)
   metricsData.value = results
 }
+
+const jobLogs = ref([])
+const filteredJobLogs = computed(() => {
+  return jobLogs.value.filter((log) => selectedSeverity.value.includes(log.severity))
+})
+const selectedSeverity = ref(['INFO', 'WARNING', 'ERROR'])
+watch(selectedSeverity, () => {
+  tableRef.value.refreshTable()
+})
+
+const tableRef = ref(null)
+
+async function getJobLogs(pagination) {
+  try {
+    const res = await api.getJobLogs(job.value.id, pagination)
+    console.log('logs = ', res.data)
+    jobLogs.value = res.data.data.filter(log =>
+      selectedSeverity.value.includes(log.severity)
+    )
+    tableRef.value.updateTotalRows(res.data.totalNumResults)
+  } catch(err) {
+    console.log('err = ', err)
+    notify.error(err.response.data.message);
+  }
+}
+
+const selectedFrequency = ref(5)
+const refreshOptions = [
+  {label: '5 Seconds', value: 5},
+  {label: '10 Seconds', value: 10},
+  {label: '15 Seconds', value: 15},
+  {label: '30 Seconds', value: 30}
+]
+
+let logsIntervalId = null
+
+function clearLogsInterval() {
+  if (logsIntervalId) {
+    clearInterval(logsIntervalId)
+    logsIntervalId = null
+  }
+}
+
+async function setupLogsPolling() {
+  clearLogsInterval()
+
+  if (tab.value !== 'logs') return
+
+  await getJob()
+  if(job.value.status === 'finished' || job.value.status === 'failed') return
+
+  // Ensure the table is rendered so tableRef is non-null
+  await nextTick()
+
+  // Guard if the ref/method isn't ready yet
+  if (!tableRef.value?.refreshTable) return
+
+  // Then start interval
+  logsIntervalId = setInterval(async() => {
+    await getJob()
+    if(job.value.status === 'finished' || job.value.status === 'failed') {
+      clearLogsInterval()
+      return
+    }
+    tableRef.value?.refreshTable()
+  }, selectedFrequency.value * 1000)
+}
+
+// React to BOTH tab changes and frequency changes
+watch([tab, selectedFrequency], setupLogsPolling, { immediate: true })
 
 async function getJobMetrics() {
   try {
@@ -318,6 +457,13 @@ const metricColumns = [
   { name: 'value', label: 'Value', align: 'left', field: 'value', sortable: false, },
 ]
 
+const logColumns = [
+  { name: 'severity', label: 'Severity', align: 'left', field: 'severity', sortable: false, classes: 'vertical-top' },
+  { name: 'loggerName', label: 'Logger Name', align: 'left', field: 'loggerName', sortable: false, classes: 'vertical-top', },
+  { name: 'createdOn', label: 'Received On', align: 'left', field: 'createdOn', sortable: false, classes: 'vertical-top', },
+  { name: 'message', label: 'Message', align: 'left', field: 'message', sortable: false, },
+]
+
 const paramRows = computed(() => {
   if(!job.value?.values) return []
   return Object.entries(job.value?.values).map(([key, value]) => ({
@@ -345,3 +491,16 @@ function reRunJob() {
 }
 
 </script>
+
+<style scoped>
+  :deep(.q-table .code-cell .cm-editor),
+  :deep(.q-table .code-cell .cm-content),
+  :deep(.q-table .code-cell .cm-scroller),
+  :deep(.q-table .code-cell .cm-line) {
+    cursor: text !important;
+  }
+
+  :deep(.q-table .code-cell .cm-gutters) {
+    cursor: default !important;
+  }
+</style>
