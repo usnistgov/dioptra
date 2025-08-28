@@ -99,8 +99,7 @@
   }
 
   const artifactColumns = [
-    { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true, },
-    { name: 'uri', label: 'uri', align: 'left', field: 'uri', sortable: true, },
+    { name: 'id', label: 'id', align: 'left', field: 'id', sortable: true, },
   ]
 
   const selected = ref([])
