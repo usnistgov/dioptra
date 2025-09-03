@@ -632,11 +632,13 @@ class ResourceImportService(object):
                 plugins[plugin].resource_id
                 for plugin in entrypoint.get("artifact_plugins", [])
             ]
+            task_graph = contents.get("graph", None)
+            artifact_graph = contents.get("artifacts", None)
             entrypoint_dict = self._entrypoint_service.create(
                 name=entrypoint.get("name", Path(entrypoint["path"]).stem),
                 description=entrypoint.get("description", None),
-                task_graph=yaml.dump(contents.get("graph", None)),
-                artifact_graph=yaml.dump(contents.get("artifacts", None)),
+                task_graph=yaml.dump(task_graph) if task_graph else "",
+                artifact_graph=yaml.dump(artifact_graph) if artifact_graph else "",
                 parameters=params,
                 artifact_parameters=artifact_params,
                 plugin_ids=plugin_ids,
