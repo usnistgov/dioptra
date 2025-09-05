@@ -1,6 +1,9 @@
 <template>
-  <table class="text-left">
-    <tr v-for="(row, index) in rows" :key="index">
+  <table 
+    class="text-left"
+    :class="{ 'no-pointer': disabled }"
+  >
+    <tr v-for="(row, index) in rows" :key="index" :class="{ 'disabled': disabled }">
       <td>{{ row.label }}</td>
       <td>
         <!-- Render as plain text OR use a custom slot -->
@@ -17,6 +20,10 @@ defineProps({
   rows: {
     type: Array,
     required: true
+  },
+  disabled: {
+    type: Boolean,
+    default: false
   }
 })
 </script>
@@ -50,5 +57,13 @@ defineProps({
 
   .body--light td:first-child {
     background-color: rgb(246, 247, 249);
+  }
+
+  .no-pointer {
+    cursor: not-allowed;
+  }
+
+  .disabled {
+    pointer-events: none;
   }
 </style>

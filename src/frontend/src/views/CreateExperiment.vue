@@ -5,11 +5,15 @@
       <q-chip
         v-if="route.params.id !== 'new'"
         class="q-ml-lg"
+        :color="`${darkMode ? 'grey-9' : ''}`"
+        label="View History"
+        icon="history"
+        @click="store.showRightDrawer = !store.showRightDrawer"
+        clickable
       >
         <q-toggle
           v-model="store.showRightDrawer"
           left-label
-          label="View History"
           color="orange"
         />
       </q-chip>
@@ -186,6 +190,7 @@
 
   const isMobile = inject('isMobile')
   const isMedium = inject('isMedium')
+  const darkMode = inject('darkMode')
 
   function requiredRule(val) {
     return (!!val) || "This field is required"
