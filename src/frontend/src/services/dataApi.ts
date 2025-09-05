@@ -360,6 +360,10 @@ export async function getFile(pluginID: string, fileID: string) {
   return await axios.get(`/api/plugins/${pluginID}/files/${fileID}`)
 }
 
+export async function getFileSnapshot(pluginID: string, fileID: string, snapshotId: number) {
+  return await axios.get(`/api/plugins/${pluginID}/files/${fileID}/snapshots/${snapshotId}`)
+}
+
 export async function addFile(id: number, params: CreateParams['files']){
   return await axios.post(`/api/plugins/${id}/files`, params)
 }
