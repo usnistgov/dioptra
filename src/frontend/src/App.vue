@@ -49,10 +49,15 @@
   const isMedium = computed(() => {
     return $q.screen.md || $q.screen.sm || $q.screen.xs
   })
+
+  const darkMode = computed(() => {
+    return $q.dark.mode
+  })
   
   provide('isMobile', isMobile)
   provide('isMedium', isMedium)
   provide('isExtraSmall', isExtraSmall)
+  provide('darkMode', darkMode)
 
   watch(route, (to) => {
     // on every route change, close snapshot drawer if open

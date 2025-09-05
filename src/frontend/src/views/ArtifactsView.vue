@@ -5,17 +5,41 @@
     :columns="columns"
     title="Artifacts"
     v-model:selected="selected"
-    @edit="editing = true; showAddEditDialog = true"
+    @edit="router.push(`/artifacts/${selected[0].id}`)"
     @delete="showDeleteDialog = true"
     @request="getArtifacts"
     ref="tableRef"
     :hideCreateBtn="true"
     :hideDeleteBtn="true"
   >
-    <template #body-cell-group="props">
-      <div>{{ props.row.group.name }}</div>
+    <template #body-cell-job="props">
+      <RouterLink :to="`/jobs/${props.row.job}`" @click.stop>
+        Job {{ props.row.job }}
+      </RouterLink>
     </template>
-    <template #expandedSlot="{ row }">
+    <template #body-cell-taskName="props">
+      {{ props.row.task.name }}
+    </template>
+    <template #body-cell-taskOutputParams="props">
+      <q-chip
+        v-for="param in props.row.task.outputParams"
+        color="purple"
+        text-color="white"
+        dense
+      >
+        {{ param.name }}: {{ param.parameterType.name }}
+      </q-chip>
+    </template>
+    <template #body-cell-download="props">
+      <q-btn
+        :href="props.row.fileUrl"
+        :download="`artifact-${props.row?.id}`"
+        color="primary"
+        round
+        icon="download"
+        size="sm"
+        @click.stop
+      />
     </template>
   </TableComponent>
 
@@ -47,6 +71,9 @@ import * as api from '@/services/dataApi'
 import * as notify from '../notify'
 import PageTitle from '@/components/PageTitle.vue'
 import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 const selected = ref([])
 const editing = ref(false)
@@ -73,11 +100,11 @@ async function getArtifacts(pagination) {
 }
 
 const columns = [
-  { name: 'description', label: 'Description', field: 'description',align: 'left', sortable: true },
-  { name: 'uri', label: 'uri', align: 'left', field: 'uri', sortable: true },
-  { name: 'createdOn', label: 'Created On', align: 'left', field: 'createdOn', sortable: true },
-  { name: 'lastModifiedOn', label: 'Last Modified', align: 'left', field: 'lastModifiedOn', sortable: true },
-  // { name: 'tags', label: 'Tags', align: 'left', field: 'tags', sortable: false },
+  { name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true },
+  { name: 'job', label: 'Job', align: 'left' },
+  { name: 'taskName', label: 'Task Name', align: 'left' },
+  { name: 'taskOutputParams', label: 'Task Output Params', align: 'left' },
+  { name: 'download', label: 'Download', align: 'center' },
 ]
 
 async function addArtifact(name, group, description) {

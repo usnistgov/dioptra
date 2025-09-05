@@ -7,11 +7,15 @@
       <q-chip
         v-if="route.params.id !== 'new'"
         class="q-ml-md"
+        :color="`${darkMode ? 'grey-9' : ''}`"
+        label="View History"
+        icon="history"
+        @click="store.showRightDrawer = !store.showRightDrawer"
+        clickable
       >
         <q-toggle
           v-model="store.showRightDrawer"
           left-label
-          label="View History"
           color="orange"
         />
       </q-chip>
@@ -633,6 +637,7 @@
   const store = useLoginStore()
 
   const isMobile = inject('isMobile')
+  const darkMode = inject('darkMode')
 
   const history = computed(() => {
     return store.showRightDrawer

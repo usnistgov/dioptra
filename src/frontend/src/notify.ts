@@ -18,6 +18,15 @@ export function error(message: string) {
   });
 }
 
+export function info(message: string) {
+  return Notify.create({
+    color: 'blue-5',
+    textColor: 'white',
+    icon: 'info',
+    message: message
+  });
+}
+
 export function wait(message: string) {
   return Notify.create({
     color: 'blue-5',

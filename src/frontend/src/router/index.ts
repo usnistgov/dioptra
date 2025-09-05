@@ -118,8 +118,19 @@ const router = createRouter({
     },
     {
       path: '/artifacts',
-      component: () => import('../views/ArtifactsView.vue'),
-      name: 'artifacts'
+      children: [
+        {
+          path: '/artifacts',
+          component: () => import('../views/ArtifactsView.vue'),
+          name: 'artifacts',
+          meta: { type: 'artifacts' }
+        },
+        {
+          path: '/artifacts/:id',
+          component: () => import('../views/EditArtifactView.vue'),
+          meta: { type: 'artifacts' }
+        },
+      ]
     },
     {
       path: '/login',
