@@ -681,7 +681,11 @@ class JobIdMetricsService(object):
         )
 
         job_metrics_max_timestamp_sub_query = (
-            select(models.JobMetric.name, models.JobMetric.step, func.max(models.JobMetric.timestamp).label("mtimestamp"))
+            select(
+                models.JobMetric.name,
+                models.JobMetric.step,
+                func.max(models.JobMetric.timestamp).label("mtimestamp"),
+            )
             .where(models.JobMetric.job_resource_id == job_id)
             .group_by(models.JobMetric.name, models.JobMetric.step)
             .join_from(
@@ -691,7 +695,8 @@ class JobIdMetricsService(object):
                     models.JobMetric.name == job_metrics_max_step_sub_query.c.name,
                     models.JobMetric.step == job_metrics_max_step_sub_query.c.mstep,
                 ),
-            ).subquery()
+            )
+            .subquery()
         )
 
         job_metrics_stmt = (
@@ -703,11 +708,11 @@ class JobIdMetricsService(object):
                 and_(
                     models.JobMetric.name == job_metrics_max_timestamp_sub_query.c.name,
                     models.JobMetric.step == job_metrics_max_timestamp_sub_query.c.step,
-                    models.JobMetric.timestamp == job_metrics_max_timestamp_sub_query.c.mtimestamp,
+                    models.JobMetric.timestamp
+                    == job_metrics_max_timestamp_sub_query.c.mtimestamp,
                 ),
             )
         )
-
 
         # select metrics with the highest step value and highest timestamp for that step
         job_metrics = list(db.session.scalars(job_metrics_stmt).unique().all())
