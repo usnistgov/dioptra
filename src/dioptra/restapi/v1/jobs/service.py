@@ -728,9 +728,7 @@ class JobIdMetricsService(object):
         log.debug("Update job metrics by id", job_id=job_id)
 
         job_dict = self._job_id_service.get(job_id, error_if_not_found=True)
-        # can't be None since error_if_not_found is True: the .get() call would
-        # error instead of returning None.
-        assert job_dict is not None
+
         job = job_dict["job"]
 
         new_metric = models.JobMetric(

@@ -39,56 +39,6 @@ class ArtifactFile:
 
 
 class JobRunStoreProtocol(Protocol):
-    def get_metrics(self, run_id: str | None) -> list[dict[str, Any]]:
-        """Retrieve the metrics for a particular run using its id.
-
-        Args:
-            run_id: the run id to for which metrics should be retrieved, an empty list
-                is returned if None is provided
-
-        Returns:
-            A list of metrics for the job.
-
-        Raises:
-            EntityDoesNotExistError if a provided run id does not exist
-        """
-        ...
-
-    def get_metric_history(
-        self, run_id: str, name: str, page_index: int, page_length: int
-    ) -> tuple[list[dict[str, Any]], int]:
-        """Retrieve the metrics for a particular run using its id.
-
-        Args:
-            run_id: the run id to for which metrics should be retrieved
-            name: the name of the metric to retrieve the history of
-            page_index: the index of the page to retrieve
-            page_length: the length of each page, will be the maximum size of the list
-                returned
-
-        Returns:
-            A tuple with the first element the historical values for the metric at the
-            requested page, and the second element the total number of historical values
-            for the given metric
-        """
-        ...
-
-    def log_metric(
-        self, run_id: str, name: str, value: float, step: int | None
-    ) -> None:
-        """Log the metrics for a particular run using its id.
-
-        Args:
-            run_id: the run id for which to log the metric
-            name: the name of the metric to log
-            value: the metric value to log
-            step: the job step if provided
-
-        Raises:
-            EntityDoesNotExistError if the provided run id does not exist
-        """
-        ...
-
     def download_artifacts(
         self, artifact_uri: str, path: str | None, destination: Path
     ) -> Path:
@@ -142,62 +92,6 @@ class JobRunStoreProtocol(Protocol):
 class MlFlowJobRunStore:
     def __init__(self, client: MlflowClient):
         self._client = client
-
-    def get_metrics(self, run_id: str | None) -> list[dict[str, Any]]:
-        metrics = []
-        if run_id is not None:
-            try:
-                run = self._client.get_run(run_id)
-                metrics = [
-                    {"name": metric, "value": run.data.metrics[metric]}
-                    for metric in run.data.metrics.keys()
-                ]
-            except mlflow.exceptions.MlflowException as e:
-                raise EntityDoesNotExistError("MLFLowRun", run_id=run_id) from e
-        return metrics
-
-    def log_metric(
-        self, run_id: str, name: str, value: float, step: int | None
-    ) -> None:
-        # this is here just to raise an error if the run does not exist
-        try:
-            self._client.get_run(run_id)  # noqa: F841
-        except mlflow.exceptions.MlflowException as e:
-            raise EntityDoesNotExistError("MlFlowRun", run_id=run_id) from e
-
-        try:
-            self._client.log_metric(
-                run_id,
-                key=name,
-                value=value,
-                step=step,
-            )
-        except mlflow.exceptions.MlflowException as e:
-            raise JobStoreError(e.message) from e
-
-    def get_metric_history(
-        self, run_id: str, name: str, page_index: int, page_length: int
-    ) -> tuple[list[dict[str, Any]], int]:
-        try:
-            history = self._client.get_metric_history(run_id=run_id, key=name)
-        except mlflow.exceptions.MlflowException as e:
-            raise JobStoreError(e.message) from e
-
-        if history == []:
-            raise EntityDoesNotExistError("Metric", name=name)
-
-        metrics_page = [
-            {
-                "name": metric.key,
-                "value": metric.value,
-                "step": metric.step,
-                "timestamp": metric.timestamp,
-            }
-            for metric in history[
-                page_index * page_length : (page_index + 1) * page_length
-            ]
-        ]
-        return metrics_page, len(history)
 
     def download_artifacts(
         self, artifact_uri: str, path: str | None, destination: Path
