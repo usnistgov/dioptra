@@ -680,9 +680,10 @@ class JobIdMetricsService(object):
             .subquery()
         )
 
-        job_metrics_stmt = (
-            select(models.JobMetric)
+        job_metrics_max_timestamp_sub_query = (
+            select(models.JobMetric.name, models.JobMetric.step, func.max(models.JobMetric.timestamp).label("mtimestamp"))
             .where(models.JobMetric.job_resource_id == job_id)
+            .group_by(models.JobMetric.name, models.JobMetric.step)
             .join_from(
                 models.JobMetric,
                 job_metrics_max_step_sub_query,
@@ -690,22 +691,28 @@ class JobIdMetricsService(object):
                     models.JobMetric.name == job_metrics_max_step_sub_query.c.name,
                     models.JobMetric.step == job_metrics_max_step_sub_query.c.mstep,
                 ),
+            ).subquery()
+        )
+
+        job_metrics_stmt = (
+            select(models.JobMetric)
+            .where(models.JobMetric.job_resource_id == job_id)
+            .join_from(
+                models.JobMetric,
+                job_metrics_max_timestamp_sub_query,
+                and_(
+                    models.JobMetric.name == job_metrics_max_timestamp_sub_query.c.name,
+                    models.JobMetric.step == job_metrics_max_timestamp_sub_query.c.step,
+                    models.JobMetric.timestamp == job_metrics_max_timestamp_sub_query.c.mtimestamp,
+                ),
             )
         )
 
-        # select metrics with the highest step value
+
+        # select metrics with the highest step value and highest timestamp for that step
         job_metrics = list(db.session.scalars(job_metrics_stmt).unique().all())
 
-        job_metrics_dict: dict[str, models.JobMetric] = {}
-
-        # select metrics with the biggest timestamp for each metric name + step
-        for job_metric in job_metrics:
-            kept = job_metrics_dict.get(job_metric.name, None)
-
-            if kept is None or kept.timestamp < job_metric.timestamp:
-                job_metrics_dict[job_metric.name] = job_metric
-
-        return list(job_metrics_dict.values())
+        return job_metrics
 
     def update(
         self,
