@@ -717,7 +717,13 @@ class JobIdMetricsService(object):
         # select metrics with the highest step value and highest timestamp for that step
         job_metrics = list(db.session.scalars(job_metrics_stmt).unique().all())
 
-        return job_metrics
+        return [
+            {
+                "name": job_metric.name,
+                "value": job_metric.value,
+            }
+            for job_metric in job_metrics
+        ]
 
     def update(
         self,
