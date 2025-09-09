@@ -206,10 +206,7 @@ class EntityTypes(Enum):
         Returns:
             str: returns inst-ENUM.all-lower-case - snake
         """
-        if self.db_schema_name == EntityTypes.to_snake_case(self.db_schema_name):
-            return self.db_schema_name
-        else:
-            return self.to_snake_case(self.db_schema_name)
+        return self.to_snake_case(self.db_schema_name)
 
     def get_original_name(self) -> str:
         """Returns current Entity's key/db-schema-safe Name
