@@ -15,7 +15,6 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 
-import re
 from enum import Enum
 from json import JSONEncoder
 from typing import Any
@@ -80,7 +79,9 @@ class EntityTypes(Enum):
             name = EntityTypes.to_snake_case(resource_type_name).upper()
             try:
                 return EntityTypes[name]
-            except KeyError as error:
+            except (
+                KeyError
+            ):  # Maybe with ` as error` we should log the name of non-found key?
                 return EntityTypes.UNDEFINED
 
     @classmethod
