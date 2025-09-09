@@ -137,8 +137,6 @@ def fgm(
     .. |flow_from_directory| replace:: :py:meth:`tf.keras.preprocessing.image\\
        .ImageDataGenerator.flow_from_directory`
     """
-    raise Exception("This is a fake error")
-
 
     tf.experimental.numpy.experimental_enable_numpy_behavior()
     distance_metrics_list = distance_metrics_list or []
