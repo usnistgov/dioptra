@@ -20,6 +20,8 @@ from enum import Enum
 from json import JSONEncoder
 from typing import Any
 
+from ..utils import to_snake_case
+
 # This is the serializer overwrite for the Enum-Derived objects
 # Derived from stack overflow article:
 # https://stackoverflow.com/questions/36699512/is-it-possible-to-dump-an-enum-in-json-without-passing-an-encoder-to-json-dumps
@@ -73,19 +75,13 @@ class EntityTypes(Enum):
             _type_: The EntityTypes Enum
         """
         if not resource_type_name:
-            # print(f"1. {resource_type_name=} ")
             return EntityTypes.NONE
         else:
             name = EntityTypes.to_snake_case(resource_type_name).upper()
-            # print(f"pre-2. {name=} ")
-            for current_value in EntityTypes.list_names():
-                # for entry in
-                # print(f"2. {current_value=} vs. {name=} ")
-                if name == current_value:
-                    return EntityTypes[name]
-        # print(f"{'!' * 80}\n\t{resource_type_name=} Was Not Found in ENUM {'!' * 80}")
-        return EntityTypes.UNDEFINED
-        # ----------------------------------------------------------------------
+            try:
+                return EntityTypes[name]
+            except KeyError as error:
+                return EntityTypes.UNDEFINED
 
     @classmethod
     def list_names(cls) -> list[str]:
@@ -95,7 +91,6 @@ class EntityTypes(Enum):
             list[str]: List of the names in the Enum
         """
         return [c.name for c in cls]  # list(map(lambda c: c.name, cls))
-        # ----------------------------------------------------------------------
 
     def __str__(self):
         """Default for serialization
@@ -104,7 +99,6 @@ class EntityTypes(Enum):
             _type_: Fallback to DB-compatible name
         """
         return self.db_schema_name
-        # ----------------------------------------------------------------------
 
     def __repr__(self):
         """Default for print and pprint
@@ -113,7 +107,6 @@ class EntityTypes(Enum):
             _type_: Fallback to DB-compatible name
         """
         return self.db_schema_name
-        # ----------------------------------------------------------------------
 
     db_schema_name: str  # DB-compatible name representation
     ui_print_name: str  # Yser-friendly name representation
@@ -139,7 +132,6 @@ class EntityTypes(Enum):
         new_instance.db_schema_name = original_name
         new_instance.ui_print_name = readable_name
         return new_instance
-        # ----------------------------------------------------------------------
 
     NONE = "none", "Entity of Type NONE"
     UNDEFINED = "undefined", "Entity of Type 'Undefined'"
@@ -189,7 +181,6 @@ class EntityTypes(Enum):
         "plugin_task_parameter_type",
         "Plugin Task Parameter Type",
     )
-    # --------------------------------------------------------------------------
 
     @staticmethod
     def to_snake_case(text_to_snake: str) -> str:
@@ -204,28 +195,10 @@ class EntityTypes(Enum):
         Returns:
             str: Snake-case formatted name-type string
         """
-        # Bail out for empty input
-        if not text_to_snake:
-            return ""
-        # Replace punctuation with spaces
-        text_to_snake = (
-            text_to_snake.replace("-", " ")
-            .replace(",", " ")
-            .replace(".", " ")
-            .replace(";", " ")
-            .replace(":", " ")
-        )
-        # Replace spaces with underscores and convert to lowercase
-        # Insert underscore before uppercase letters in camelCase/PascalCase
-        # Handles cases like:
-        #   "PascalCase" -> "Pascal_Case" and
-        #   "varInCamelCase" -> "var_In_Camel_Case"
-        text_to_snake = re.sub(r"(?<!^)(?=[A-Z])", " ", text_to_snake)
-        # Clean multiple spaces by collapsing them, if they happen
-        text_to_snake = re.sub(r"\s+", " ", text_to_snake).strip()
-        # Replace spaces with underscores
-        return text_to_snake.replace(" ", "_").lower()
-        # ------------------------------------------------------------------
+        # Use the utils-exiled function
+        # This way if any breaking changes done in utils, then
+        # there is a facade, protecting EntityType functionality
+        return to_snake_case(text_to_snake)
 
     def get_db_schema_name(self) -> str:
         """Returns current instance name/key
@@ -236,8 +209,7 @@ class EntityTypes(Enum):
         if self.db_schema_name == EntityTypes.to_snake_case(self.db_schema_name):
             return self.db_schema_name
         else:
-            return EntityTypes.to_snake_case(self.db_schema_name)
-        # ---------------------------------------------------------------------
+            return self.to_snake_case(self.db_schema_name)
 
     def get_original_name(self) -> str:
         """Returns current Entity's key/db-schema-safe Name
@@ -246,7 +218,6 @@ class EntityTypes(Enum):
             str: returns inst-ENUM.schema_name
         """
         return self.db_schema_name
-        # ----------------------------------------------------------------------
 
     def get_print_name(self) -> str:
         """Returns current instance Human-Readable Name
@@ -256,7 +227,6 @@ class EntityTypes(Enum):
 
         """
         return self.ui_print_name
-        # ----------------------------------------------------------------------
 
     def get_an_article(self) -> str:
         """Returns proper form on an indefinite article
@@ -265,4 +235,3 @@ class EntityTypes(Enum):
             str: The article applicable to the EntityType instance
         """
         return "an" if self.ui_print_name.strip()[0].lower() in "aeiou" else "a"
-        # ----------------------------------------------------------------------

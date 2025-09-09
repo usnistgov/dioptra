@@ -47,6 +47,10 @@ from dioptra.restapi.request_scope import set_request_scope_callbacks
 
 from .custom_schema_fields import FileUpload, MultiFileUpload
 
+# -- Pre-Compiled Regular Expressions ------------------------------------------
+REGEX_CAMEL_TO_SNAKE = re.compile(r"(?<!^)(?=[A-Z])")
+REGEX_REPLACE_MULTIPLE_SPACES = re.compile(r"\s+")
+
 DOTS_REGEX = re.compile(r"^\.\.\.+$")
 
 
@@ -191,6 +195,41 @@ def slugify(text: str) -> str:
     """
 
     return text.lower().strip().replace(" ", "-")
+
+
+def to_snake_case(text_to_snake: str) -> str:
+    """Converts a string to lower-case snake_case format.
+    Handles various input formats like camelCase, PascalCase,
+    and strings with spaces, comas, hyphens, colons,
+    semicolons, or hyphens.
+
+    Args:
+        text_to_snake (str):  text to format to snake case
+
+    Returns:
+        str: Snake-case formatted name-type string
+    """
+    # Bail out for empty input
+    if not text_to_snake:
+        return ""
+    # Replace punctuation with spaces
+    text_to_snake = (
+        text_to_snake.replace("-", " ")
+        .replace(",", " ")
+        .replace(".", " ")
+        .replace(";", " ")
+        .replace(":", " ")
+    )
+    # Replace spaces with underscores and convert to lowercase
+    # Insert underscore before uppercase letters in camelCase/PascalCase
+    # Handles cases like:
+    #   "PascalCase" -> "Pascal_Case" and
+    #   "varInCamelCase" -> "var_In_Camel_Case"
+    text_to_snake = REGEX_CAMEL_TO_SNAKE.sub(" ", text_to_snake)
+    # Clean multiple spaces by collapsing them, if they happen
+    text_to_snake = REGEX_REPLACE_MULTIPLE_SPACES.sub(" ", text_to_snake).strip()
+    # Replace spaces with underscores
+    return text_to_snake.replace(" ", "_").lower()
 
 
 def read_text_file(package: str, filename: str) -> str:
