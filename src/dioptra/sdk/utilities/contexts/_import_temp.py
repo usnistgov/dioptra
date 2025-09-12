@@ -25,8 +25,6 @@ def import_temp(package_name: str, path: Path):
     """
     Context manager to temporarily add a module
     """
-    original_modules = sys.modules.copy()
-
     sys.path.insert(0, path.resolve().as_posix())
     module = importlib.import_module(package_name)
     try:
@@ -34,5 +32,5 @@ def import_temp(package_name: str, path: Path):
     finally:
         sys.path.pop(0)
         for name in list(sys.modules.keys()):
-            if name not in original_modules:
+            if name.startswith(f"{package_name}."):
                 del sys.modules[name]
