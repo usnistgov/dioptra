@@ -671,51 +671,11 @@ class JobIdMetricsService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get job metrics by id", job_id=job_id)
 
-        job_metrics_max_step_sub_query = (
-            select(
-                models.JobMetric.name, func.max(models.JobMetric.step).label("mstep")
-            )
-            .where(models.JobMetric.job_resource_id == job_id)
-            .group_by(models.JobMetric.name)
-            .subquery()
-        )
-
-        job_metrics_max_timestamp_sub_query = (
-            select(
-                models.JobMetric.name,
-                models.JobMetric.step,
-                func.max(models.JobMetric.timestamp).label("mtimestamp"),
-            )
-            .where(models.JobMetric.job_resource_id == job_id)
-            .group_by(models.JobMetric.name, models.JobMetric.step)
-            .join_from(
-                models.JobMetric,
-                job_metrics_max_step_sub_query,
-                and_(
-                    models.JobMetric.name == job_metrics_max_step_sub_query.c.name,
-                    models.JobMetric.step == job_metrics_max_step_sub_query.c.mstep,
-                ),
-            )
-            .subquery()
-        )
-
-        job_metrics_stmt = (
+        stmt = (
             select(models.JobMetric)
-            .where(models.JobMetric.job_resource_id == job_id)
-            .join_from(
-                models.JobMetric,
-                job_metrics_max_timestamp_sub_query,
-                and_(
-                    models.JobMetric.name == job_metrics_max_timestamp_sub_query.c.name,
-                    models.JobMetric.step == job_metrics_max_timestamp_sub_query.c.step,
-                    models.JobMetric.timestamp
-                    == job_metrics_max_timestamp_sub_query.c.mtimestamp,
-                ),
-            )
+            .where(models.JobMetric.is_latest, models.JobMetric.job_resource_id == job_id)
         )
-
-        # select metrics with the highest step value and highest timestamp for that step
-        job_metrics = list(db.session.scalars(job_metrics_stmt).unique().all())
+        job_metrics = list(db.session.scalars(stmt).all())
 
         return [
             {
@@ -749,14 +709,27 @@ class JobIdMetricsService(object):
 
         job = job_dict["job"]
 
-        new_metric = models.JobMetric(
-            name=metric_name,
-            value=metric_value,
-            step=metric_step,
-            job_resource=job.resource,
+        stmt = (
+            select(models.JobMetric)
+            .where(
+                models.JobMetric.step == metric_step,
+                models.JobMetric.job_resource_id == job_id, 
+                models.JobMetric.name == metric_name)
         )
 
-        db.session.add(new_metric)
+        metric: models.JobMetric = db.session.scalars(stmt).first()
+
+        if metric is None:
+            new_metric = models.JobMetric(
+                name=metric_name,
+                value=metric_value,
+                step=metric_step,
+                job_resource=job.resource,
+            )
+
+            db.session.add(new_metric)   
+        else:
+            metric.value = metric_value
         db.session.commit()
 
         return {"name": metric_name, "value": metric_value}

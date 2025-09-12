@@ -34,7 +34,7 @@ from sqlalchemy import (
     JSON,
     BigInteger,
     Boolean,
-    Float,
+    Double,
     Integer,
     MetaData,
     String,
@@ -69,7 +69,7 @@ str36 = Annotated[str, mapped_column(String(36))]
 str255 = Annotated[str, mapped_column(String(255))]
 text_ = Annotated[str, mapped_column(Text())]
 bool_ = Annotated[bool, mapped_column(Boolean())]
-float_ = Annotated[Optional[float], mapped_column(Float(), nullable=True)]
+optionaldouble_ = Annotated[Optional[float], mapped_column(Double(), nullable=True)]
 
 _naming_convention = {
     "ix": "ix_%(column_0_label)s",

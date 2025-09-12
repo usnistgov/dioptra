@@ -19,11 +19,11 @@ def upgrade():
     op.create_table('job_metrics',
         sa.Column('job_resource_id', sa.BigInteger().with_variant(sa.Integer(), 'sqlite'), nullable=False),
         sa.Column('name', sa.Text(), nullable=False),
-        sa.Column('value', sa.Float(), nullable=True),
+        sa.Column('value', sa.Double(), nullable=True),
         sa.Column('step', sa.BigInteger().with_variant(sa.Integer(), 'sqlite'), nullable=False),
-        sa.Column('timestamp', sa.BigInteger().with_variant(sa.Integer(), 'sqlite'), nullable=False),
+        sa.Column('timestamp', sa.DateTime(), nullable=False),
         sa.ForeignKeyConstraint(['job_resource_id'], ['resources.resource_id'], name=op.f('fk_job_metrics_job_resource_id_resources')),
-        sa.PrimaryKeyConstraint('job_resource_id', 'name', 'timestamp', name=op.f('pk_job_metrics'))
+        sa.PrimaryKeyConstraint('job_resource_id', 'name', 'step', name=op.f('pk_job_metrics'))
     )
 
 

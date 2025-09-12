@@ -26,9 +26,10 @@ from sqlalchemy import (
     Text,
     select,
 )
-from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
+from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship, aliased
+from sqlalchemy import func
 
-from dioptra.restapi.db.db import bigint, datetimetz, db, float_, guid, intpk, text_
+from dioptra.restapi.db.db import bigint, datetimetz, db, optionaldouble_, guid, intpk, text_
 
 from .entry_points import EntryPoint
 from .experiments import Experiment
@@ -268,19 +269,32 @@ class JobMetric(db.Model):  # type: ignore[name-defined]
         ForeignKey("resources.resource_id"), init=False
     )
     name: Mapped[text_]
-    value: Mapped[float_]
+    value: Mapped[optionaldouble_]
     step: Mapped[bigint]
-    timestamp: Mapped[bigint] = mapped_column(init=False, nullable=False)
+    timestamp: Mapped[datetimetz] = mapped_column(init=False, nullable=False)
 
     # Relationships
     job_resource: Mapped["Resource"] = relationship()
 
     # Additional settings
-    __table_args__ = (PrimaryKeyConstraint("job_resource_id", "name", "timestamp"),)
+    __table_args__ = (PrimaryKeyConstraint("job_resource_id", "name", "step"),)
 
     # Initialize default values using dataclass __post_init__ method
     # https://docs.python.org/3/library/dataclasses.html#dataclasses.__post_init__
     def __post_init__(self) -> None:
-        import time
-
-        self.timestamp = int(time.time() * 1000.0)
+        timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
+        self.timestamp = timestamp
+    
+    @classmethod
+    def __declare_last__(cls) -> None:
+        job_metric_alias = aliased(cls)
+        cls.is_latest = column_property(
+            select(func.max(job_metric_alias.step))
+            .where(
+                job_metric_alias.job_resource_id == cls.job_resource_id,
+                job_metric_alias.name == cls.name,
+            )
+            .correlate_except(job_metric_alias)
+            .scalar_subquery()
+            == cls.step
+        )
