@@ -279,19 +279,13 @@ class JobMetric(db.Model):  # type: ignore[name-defined]
     name: Mapped[text_]
     value: Mapped[optionaldouble_]
     step: Mapped[bigint]
-    timestamp: Mapped[datetimetz] = mapped_column(init=False, nullable=False)
+    timestamp: Mapped[datetimetz]
 
     # Relationships
     job_resource: Mapped["Resource"] = relationship()
 
     # Additional settings
     __table_args__ = (PrimaryKeyConstraint("job_resource_id", "name", "step"),)
-
-    # Initialize default values using dataclass __post_init__ method
-    # https://docs.python.org/3/library/dataclasses.html#dataclasses.__post_init__
-    def __post_init__(self) -> None:
-        timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
-        self.timestamp = timestamp
 
     @classmethod
     def __declare_last__(cls) -> None:

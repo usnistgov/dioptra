@@ -691,6 +691,7 @@ class JobIdMetricsService(object):
         metric_name: str,
         metric_value: float | None,
         metric_step: int,
+        metric_timestamp: datetime.datetime | None,
         **kwargs,
     ) -> dict[str, Any]:
         """Update a job's metrics by its unique id.
@@ -722,13 +723,18 @@ class JobIdMetricsService(object):
                 name=metric_name,
                 value=metric_value,
                 step=metric_step,
+                timestamp=metric_timestamp,
                 job_resource=job.resource,
             )
 
             db.session.add(new_metric)
         else:
             metric.value = metric_value
-            metric.timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
+            metric.timestamp = (
+                metric_timestamp
+                if metric_timestamp is not None
+                else datetime.datetime.now(tz=datetime.timezone.utc)
+            )
 
         db.session.commit()
 

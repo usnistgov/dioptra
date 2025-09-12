@@ -85,6 +85,13 @@ class MetricsSchema(Schema):
         required=False,
         load_default=0,
     )
+    timestamp = fields.DateTime(
+        attribute="timestamp",
+        metadata={"description": "A timestamp value for the metric"},
+        load_only=True,
+        required=False,
+        load_default=None,
+    )
 
 
 class MetricsSnapshotSchema(Schema):
