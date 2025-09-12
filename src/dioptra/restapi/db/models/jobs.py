@@ -24,12 +24,20 @@ from sqlalchemy import (
     Index,
     PrimaryKeyConstraint,
     Text,
+    func,
     select,
 )
-from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship, aliased
-from sqlalchemy import func
+from sqlalchemy.orm import Mapped, aliased, column_property, mapped_column, relationship
 
-from dioptra.restapi.db.db import bigint, datetimetz, db, optionaldouble_, guid, intpk, text_
+from dioptra.restapi.db.db import (
+    bigint,
+    datetimetz,
+    db,
+    guid,
+    intpk,
+    optionaldouble_,
+    text_,
+)
 
 from .entry_points import EntryPoint
 from .experiments import Experiment
@@ -284,7 +292,7 @@ class JobMetric(db.Model):  # type: ignore[name-defined]
     def __post_init__(self) -> None:
         timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
         self.timestamp = timestamp
-    
+
     @classmethod
     def __declare_last__(cls) -> None:
         job_metric_alias = aliased(cls)

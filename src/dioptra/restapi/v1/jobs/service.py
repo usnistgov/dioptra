@@ -16,13 +16,14 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform job endpoint operations."""
 
+import datetime
 from collections.abc import Iterable
 from typing import Any, Final, cast
 
 import structlog
 from flask_login import current_user
 from injector import inject
-from sqlalchemy import and_, delete, func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import aliased
 from structlog.stdlib import BoundLogger
 
@@ -671,9 +672,8 @@ class JobIdMetricsService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get job metrics by id", job_id=job_id)
 
-        stmt = (
-            select(models.JobMetric)
-            .where(models.JobMetric.is_latest, models.JobMetric.job_resource_id == job_id)
+        stmt = select(models.JobMetric).where(
+            models.JobMetric.is_latest, models.JobMetric.job_resource_id == job_id
         )
         job_metrics = list(db.session.scalars(stmt).all())
 
@@ -690,7 +690,7 @@ class JobIdMetricsService(object):
         job_id: int,
         metric_name: str,
         metric_value: float | None,
-        metric_step: int | None = None,
+        metric_step: int,
         **kwargs,
     ) -> dict[str, Any]:
         """Update a job's metrics by its unique id.
@@ -709,15 +709,13 @@ class JobIdMetricsService(object):
 
         job = job_dict["job"]
 
-        stmt = (
-            select(models.JobMetric)
-            .where(
-                models.JobMetric.step == metric_step,
-                models.JobMetric.job_resource_id == job_id, 
-                models.JobMetric.name == metric_name)
+        stmt = select(models.JobMetric).where(
+            models.JobMetric.step == metric_step,
+            models.JobMetric.job_resource_id == job_id,
+            models.JobMetric.name == metric_name,
         )
 
-        metric: models.JobMetric = db.session.scalars(stmt).first()
+        metric: models.JobMetric | None = db.session.scalars(stmt).first()
 
         if metric is None:
             new_metric = models.JobMetric(
@@ -727,9 +725,11 @@ class JobIdMetricsService(object):
                 job_resource=job.resource,
             )
 
-            db.session.add(new_metric)   
+            db.session.add(new_metric)
         else:
             metric.value = metric_value
+            metric.timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
+
         db.session.commit()
 
         return {"name": metric_name, "value": metric_value}

@@ -100,9 +100,11 @@ class MetricsSnapshotSchema(Schema):
         attribute="step",
         metadata={"description": "The step value for the metric."},
     )
-    timestamp = fields.Integer(
+    timestamp = fields.DateTime(
         attribute="timestamp",
-        metadata={"description": "The timestamp of the metric in milliseconds."},
+        metadata={
+            "description": "The server timestamp for when the metric was last created/updated."
+        },
     )
 
 
