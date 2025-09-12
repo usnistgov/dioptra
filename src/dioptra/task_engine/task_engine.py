@@ -553,13 +553,10 @@ def _load_artifact_parameters(
                     f"plugin: {plugin_name} for artifact parameter: {name}"
                 )
                 exit(1)
-            if info["is_dir"]:
-                value = task.deserialize(working_dir=artifacts_dir, path=artifact_dir)
-            else:
-                uri_name = PurePosixPath(info["artifact_uri"]).name
-                value = value = task.deserialize(
-                    working_dir=artifacts_dir / artifact_dir, path=uri_name
-                )
+            uri_name = PurePosixPath(info["artifact_uri"]).name
+            value = value = task.deserialize(
+                working_dir=artifacts_dir / artifact_dir, path=uri_name
+            )
             result[name] = {}
             num_expected_outputs = len(outputs)
             if num_expected_outputs == 1:
