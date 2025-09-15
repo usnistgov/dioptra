@@ -18,10 +18,9 @@
           align="left"
         >
           <q-tab name="overview" label="Overview" />
-          <q-tab name="logs" label="Logs" />
-          <q-tab name="model metrics" label="Model metrics" />
-          <q-tab name="system metrics" label="System metrics" />
-          <q-tab name="artifacts" label="Artifacts" />
+          <q-tab name="logs" :label="`Logs ${logTotalNumber ? `(${logTotalNumber})` : ''}`" />
+          <q-tab name="metrics" :label="`Metrics ${metrics.length ? `(${metrics.length})` : ''}`" />
+          <q-tab name="artifacts" :label="`Artifacts Created ${job?.artifacts.length ? `(${job?.artifacts.length})` : ''}`" />
         </q-tabs>
         <q-separator />
     </div>
@@ -101,16 +100,16 @@
         />
       </div>
       <div class="col">
-        <h2>Metrics</h2>
+        <h2>Artifacts Used</h2>
         <TableComponent
-          :columns="metricColumns"
-          :rows="metrics"
-          @request="getJobMetrics"
-          v-model:selected="selectedMetric"
-          rowKey="name"
+          label="Artifacts used"
+          :columns="artifactsUsedColumns"
+          v-model:selected="selectedUsedArtifact"
+          :rows="artifactsUsed"
           :hideCreateBtn="true"
           :hideDeleteBtn="true"
           style="margin-top: 0px;"
+          @edit="router.push(`/artifacts/${selectedUsedArtifact[0].id}?snapshotId=${selectedUsedArtifact[0].snapshotId}`)"
         />
       </div>
     </div>
@@ -119,7 +118,7 @@
         title="Job Logs"
         :columns="logColumns"
         :rows="jobLogs"
-        @request="getJobLogs"
+        @request="getLogs"
         :hideDeleteBtn="true"
         :disableSelect="true"
         :hideCreateBtn="true"
@@ -181,8 +180,21 @@
         </template>
       </TableComponent>
     </div>
-    <div v-if="tab === 'model metrics'" class="row q-col-gutter-x-lg q-col-gutter-y-lg">
+    <div v-if="tab === 'metrics'" class="row q-col-gutter-x-lg q-col-gutter-y-lg">
       <div class="col-12">
+        <!-- @request="getJobMetrics" is not needed because getJobMetrics is run by loadAllMetricHistories -->
+        <TableComponent
+          title="Job Metrics Latest Values"
+          :columns="metricColumns"
+          :rows="metrics"
+          v-model:selected="selectedMetric"
+          rowKey="name"
+          :hideCreateBtn="true"
+          :hideDeleteBtn="true"
+          style="margin-top: 0px;"
+          class="q-mb-lg"
+          v-model:filter="filter"
+        />
         <div class="row items-center">
           <q-input 
             v-model="filter" 
@@ -230,6 +242,12 @@
         <div style="opacity: 0.7">No metrics found</div>
       </div>
     </div>
+    <div v-if="tab === 'artifacts'">
+      <JobArtifactsTable 
+        :artifactIds="job.artifacts.map((artifact) => artifact.id)"
+        style="margin-top: 0px"
+      />
+    </div>
 
     <q-space />
     <div class="row justify-end">
@@ -237,7 +255,7 @@
         outline  
         label="Return to Jobs"
         @click="router.back()"
-        class="cancel-btn"
+        class="cancel-btn q-mt-lg"
         color="primary"
       />
     </div>
@@ -258,7 +276,7 @@
 </template>
 
 <script setup>
-import { ref, computed, inject, watch, nextTick } from 'vue'
+import { ref, computed, inject, watch, nextTick, onMounted } from 'vue'
 import PageTitle from '@/components/PageTitle.vue'
 import * as api from '@/services/dataApi'
 import { useRoute, useRouter } from 'vue-router'
@@ -270,6 +288,7 @@ import DeleteDialog from '@/dialogs/DeleteDialog.vue'
 import * as notify from '../notify'
 import PlotlyGraph from '@/components/PlotlyGraph.vue'
 import CodeEditor from '@/components/CodeEditor.vue'
+import JobArtifactsTable from '@/components/JobArtifactsTable.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -282,6 +301,7 @@ const job = ref()
 const showTagsDialog = ref(false)
 const showDeleteDialog = ref(false)
 const selectedParam = ref([])
+const selectedUsedArtifact = ref([])
 const selectedMetric = ref([])
 const metrics = ref([])
 
@@ -294,12 +314,18 @@ async function getJob() {
   }
 }
 
+onMounted(() => {
+  // to get tab counts
+  getLogNumber()
+  getJobMetrics()
+})
+
 const metricNames = computed(() => {
   return metrics.value.map(metric => metric.name)
 })
 
 watch(tab, async (newVal) => {
-  if(newVal === 'model metrics') {
+  if(newVal === 'metrics') {
     await loadAllMetricHistories()
   }
 })
@@ -325,17 +351,33 @@ watch(selectedSeverity, () => {
 
 const tableRef = ref(null)
 
-async function getJobLogs(pagination) {
+async function getLogs(pagination) {
   try {
     const res = await api.getJobLogs(job.value.id, pagination)
     console.log('logs = ', res.data)
     jobLogs.value = res.data.data.filter(log =>
       selectedSeverity.value.includes(log.severity)
     )
+    logTotalNumber.value = res.data.totalNumResults
     tableRef.value.updateTotalRows(res.data.totalNumResults)
   } catch(err) {
     console.log('err = ', err)
     notify.error(err.response.data.message);
+  }
+}
+
+const logTotalNumber = ref()
+
+async function getLogNumber() {
+  try {
+    const res = await api.getJobLogs(route.params.id, {
+      index: 0,
+      pageLength: 1,
+      search: ''
+    })
+    logTotalNumber.value = res.data.totalNumResults
+  } catch(err) {
+    console.warn(err)
   }
 }
 
@@ -452,6 +494,12 @@ const parametersColumns = [
   { name: 'value', label: 'Value', align: 'left', field: 'value', sortable: false, },
 ]
 
+const artifactsUsedColumns = [
+  { name: 'id', label: 'ID', align: 'left', field: 'id', sortable: true, },
+  { name: 'snapshotId', label: 'Snapshot Id', align: 'left', field: 'snapshotId', sortable: false, },
+  { name: 'artifactParamName', label: 'Param Name', align: 'left', field: 'artifactParamName', sortable: true, },
+]
+
 const metricColumns = [
   { name: 'metric', label: 'Metric', align: 'left', field: 'name', sortable: true, },
   { name: 'value', label: 'Value', align: 'left', field: 'value', sortable: false, },
@@ -489,6 +537,14 @@ function reRunJob() {
     state: { oldJobId: route.params.id, jobSnapshotId: job.value.snapshot } 
   })
 }
+
+const artifactsUsed = computed(() => {
+  return Object.entries(job.value?.artifactValues ?? {}).map(([key, value]) => ({
+    artifactParamName: key,
+    id: value.id,
+    snapshotId: value.snapshotId,
+  }))
+})
 
 </script>
 

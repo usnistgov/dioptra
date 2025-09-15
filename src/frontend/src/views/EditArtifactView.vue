@@ -170,6 +170,9 @@ onMounted(async() => {
   await getArtifact()
   await getPluginSnapshot()
   await getFileSnapshot()
+  if(route.query.snapshotId && !store.showRightDrawer) {
+    store.showRightDrawer = true
+  }
 })
 
 const artifact = ref({
