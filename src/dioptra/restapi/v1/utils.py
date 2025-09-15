@@ -785,6 +785,10 @@ def build_job(job_dict: JobDict) -> dict[str, Any]:
             param.parameter.name: param.value
             for param in job.entry_point_job.entry_point_parameter_values
         },
+        "artifact_values": {
+            av.artifact_parameter.name: build_artifact_value(av.artifact)
+            for av in job.entry_point_job.entry_point_artifact_parameter_values
+        },
         "timeout": job.timeout,
         "user": build_user_ref(job.creator),
         "group": build_group_ref(job.resource.owner),
@@ -889,6 +893,21 @@ def build_artifact_artifact_task(artifact: models.Artifact) -> dict[str, Any]:
         "plugin_file_resource_id": artifact.plugin_plugin_file.plugin_file.resource_id,
         "plugin_file_resource_snapshot_id": artifact.plugin_plugin_file.plugin_file.resource_snapshot_id,
         **_build_artifact_task(plugin_task=artifact.task),
+    }
+
+
+def build_artifact_value(artifact: models.Artifact) -> dict[str, Any]:
+    """Build a JobArtifactValue dictionary.
+
+    Args:
+        artifact: The Artifact object to convert into a JobArtifactValue dictionary.
+
+    Returns:
+        The JobArtifactValue dictionary.
+    """
+    return {
+        "id": artifact.resource_id,
+        "snapshot_id": artifact.resource_snapshot_id,
     }
 
 

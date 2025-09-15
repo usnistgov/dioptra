@@ -114,6 +114,7 @@ def assert_job_response_contents_matches_expectations(
         "experiment",
         "entrypoint",
         "artifacts",
+        "artifactValues"
     }
     assert set(response.keys()) == expected_keys
 
