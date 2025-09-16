@@ -718,23 +718,25 @@ class JobIdMetricsService(object):
 
         metric: models.JobMetric | None = db.session.scalars(stmt).first()
 
+        ts = (
+            metric_timestamp
+            if metric_timestamp is not None
+            else datetime.datetime.now(tz=datetime.timezone.utc)
+        )
+
         if metric is None:
             new_metric = models.JobMetric(
                 name=metric_name,
                 value=metric_value,
                 step=metric_step,
-                timestamp=metric_timestamp,
+                timestamp=ts,
                 job_resource=job.resource,
             )
 
             db.session.add(new_metric)
         else:
             metric.value = metric_value
-            metric.timestamp = (
-                metric_timestamp
-                if metric_timestamp is not None
-                else datetime.datetime.now(tz=datetime.timezone.utc)
-            )
+            metric.timestamp = ts
 
         db.session.commit()
 
