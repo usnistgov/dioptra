@@ -149,7 +149,7 @@
             color="primary cancel-btn" 
             label="Cancel" 
             v-close-popup 
-            class="q-mr-xs"
+            class="q-mr-md"
           />
           <q-btn
             color="primary"

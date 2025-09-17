@@ -136,24 +136,21 @@
 
   <fieldset class="q-px-lg q-mt-lg q-py-lg" :class="history ? `disabled` : ``">
     <legend>Parameters</legend>
-    <h2>Entrypoint Parameters</h2>
     <div class="row" :style="{ 'pointer-events': history ? 'none' : '' }">
       <div :class="`${isMobile ? 'col-12' : 'col-6'} q-mr-xl column`">
-        <EntrypointParamForm 
-          @submit="(param) => entryPoint.parameters.push(param)"
-        />
-      </div>
-      <div class="col">
         <TableComponent
-          title="Entrypoint Params"
+          title="Entrypoint Parameters"
           :rows="entryPoint.parameters"
           :columns="columns"
           :hideToggleDraft="true"
           :hideSearch="true"
           :disableSelect="true"
-          :hideCreateBtn=true
           :hideOpenBtn="true"
           :hideDeleteBtn="true"
+          :hideBottom="true"
+          :showAll="true"
+          @create="selectedParam = null; showEntrypointParamDialog = true;"
+          style="margin-top: 0;"
         >
           <template #body-cell-actions="props">
             <q-btn 
@@ -165,7 +162,7 @@
               @click="
                 selectedParam = props.row; 
                 selectedParamIndex = props.rowIndex; 
-                showEditParamDialog = true;
+                showEntrypointParamDialog = true;
                 selectedParamType = 'parameters';
               " 
             />
@@ -184,27 +181,21 @@
           </template>
         </TableComponent>
       </div>
-    </div>
-    <h2 class="q-mt-xl">Artifact Parameters</h2>
-    <div class="row" :style="{ 'pointer-events': history ? 'none' : '' }">
-      <div :class="`${isMobile ? 'col-12' : 'col-6'} q-mr-xl column`">
-        <ArtifactParamForm
-          @submit="addArtifactParam"
-        />
-      </div>
       <div class="col">
         <TableComponent
           :rows="entryPoint.artifactParameters"
           :columns="artifactColumns"
-          title="Artifact Params"
+          title="Artifact Parameters"
           :hideToggleDraft="true"
-          :hideCreateBtn="true"
           :hideSearch="true"
           :disableSelect="true"
           :hideOpenBtn="true"
           :hideDeleteBtn="true"
-          rightCaption="*Click param to edit, or X to delete"
-
+          :hideBottom="true"
+          :showAll="true"
+          rightCaption="*Click parameter to edit, or X to delete"
+          style="margin-top: 0;"
+          @create="showArtifactParamDialog = true"
         >
           <template #body-cell-name="props">
             <div style="font-size: 18px;">
@@ -563,18 +554,23 @@
     v-model="showDeleteDialogParam"
     @submit="deleteParam()"
     type="Parameter"
-    :name="selectedParam.name"
+    :name="selectedParam?.name"
   />
   <DeleteDialog 
     v-model="showDeleteDialogArtifactParam"
     @submit="entryPoint.artifactParameters.splice(selectedArtifactParamProps.rowIndex, 1); showDeleteDialogArtifactParam = false"
-    type="Artifact Param"
+    type="Artifact Parameter"
     :name="selectedArtifactParamProps?.row?.name"
   />
-  <EditParamDialog 
-    v-model="showEditParamDialog"
+  <EntrypointParamDialog 
+    v-model="showEntrypointParamDialog"
     :editParam="selectedParam"
     @updateParam="updateParam"
+    @createParam="createParam"
+  />
+  <ArtifactParamDialog
+    v-model="showArtifactParamDialog"
+    @submit="addArtifactParam"
   />
   <LeaveFormDialog 
     v-model="showLeaveDialog"
@@ -617,7 +613,7 @@
   import { useRouter, onBeforeRouteLeave } from 'vue-router'
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'
   import CodeEditor from '@/components/CodeEditor.vue'
-  import EditParamDialog from '@/dialogs/EditParamDialog.vue'
+  import EntrypointParamDialog from '@/dialogs/EntrypointParamDialog.vue'
   import { useRoute } from 'vue-router'
   import * as api from '@/services/dataApi'
   import * as notify from '../notify'
@@ -626,9 +622,8 @@
   import LeaveFormDialog from '@/dialogs/LeaveFormDialog.vue'
   import ReturnToFormDialog from '@/dialogs/ReturnToFormDialog.vue'
   import InfoPopupDialog from '@/dialogs/InfoPopupDialog.vue'
-  import ArtifactParamForm from '@/components/ArtifactParamForm.vue'
+  import ArtifactParamDialog from '@/dialogs/ArtifactParamDialog.vue'
   import EditPluginTaskParamDialog from '@/dialogs/EditPluginTaskParamDialog.vue'
-  import EntrypointParamForm from '@/components/EntrypointParamForm.vue'
 
   const route = useRoute()
   
@@ -777,15 +772,15 @@
   const taskColumns = [
     { name: 'pluginName', label: 'Plugin', align: 'left', field: 'pluginName', sortable: true, },
     { name: 'taskName', label: 'Task', align: 'left', field: 'name', sortable: true, },
-    { name: 'inputParams', label: 'Input Params', align: 'right', field: 'inputParams', sortable: false, classes: 'vertical-top' },
-    { name: 'outputParams', label: 'Output Params', align: 'right', field: 'outputParams', sortable: false, classes: 'vertical-top' },
+    { name: 'inputParams', label: 'Input Parameters', align: 'right', field: 'inputParams', sortable: false, classes: 'vertical-top' },
+    { name: 'outputParams', label: 'Output Parameters', align: 'right', field: 'outputParams', sortable: false, classes: 'vertical-top' },
     { name: 'add', label: 'Add to Task Graph', align: 'center', sortable: false, },
   ]
 
   const artifactTaskColumns = [
     { name: 'pluginName', label: 'Plugin', align: 'left', field: 'pluginName', sortable: true, },
     { name: 'taskName', label: 'Task', align: 'left', field: 'name', sortable: true, },
-    { name: 'outputParams', label: 'Output Params', align: 'right', field: 'outputParams', sortable: false, classes: 'vertical-top' },
+    { name: 'outputParams', label: 'Output Parameters', align: 'right', field: 'outputParams', sortable: false, classes: 'vertical-top' },
     { name: 'add', label: 'Add to Artifact Output Graph', align: 'center', sortable: false, },
   ]
 
@@ -937,11 +932,17 @@
     showDeleteDialogParam.value = false
   }
 
-  const showEditParamDialog = ref(false)
+  const showEntrypointParamDialog = ref(false)
+  const showArtifactParamDialog = ref(false)
 
   function updateParam(parameter) {
     entryPoint.value.parameters[selectedParamIndex.value] = { ...parameter }
-    showEditParamDialog.value = false
+    showEntrypointParamDialog.value = false
+  }
+
+  function createParam(parameter) {
+    entryPoint.value.parameters.push({...parameter})
+    showEntrypointParamDialog.value = false
   }
 
   const queues = ref([])
@@ -1109,8 +1110,8 @@
   }
 
   function addArtifactParam(param) {
-    console.log('param = ', param)
     entryPoint.value.artifactParameters.push(param)
+    showArtifactParamDialog.value = false
   }
 
   const showEditArtifactParamDialog = ref(false)
