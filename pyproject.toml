@@ -19,8 +19,8 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "dioptra"
-version = "1.0.0dev0"
+name = "dioptra-test"
+version = "1.0.0dev0.1"
 authors = [
     { name="James Glasbrenner", email="jglasbrenner@mitre.org" },
     { name="Harold Booth", email="harold.booth@nist.gov" },
