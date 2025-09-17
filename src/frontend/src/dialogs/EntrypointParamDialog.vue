@@ -1,12 +1,12 @@
 <template>
   <DialogComponent 
     v-model="showDialog"
-    @emitSubmit="$emit('updateParam', parameter)"
+    @emitSubmit="emitSubmit()"
     :hideDraftBtn="true"
   >
     <template #title>
       <label id="modalTitle">
-        Edit Parameter
+        {{ props.editParam ? 'Edit' : 'Create' }} Parameter
       </label>
     </template>
     <q-input 
@@ -51,22 +51,22 @@
 
 <script setup>
   import DialogComponent from './DialogComponent.vue'
-  import { reactive, watch } from 'vue'
+  import { ref, watch } from 'vue'
 
-  defineEmits(['updateParam'])
+  const emit = defineEmits(['updateParam', 'createParam'])
 
   const requiredRule = (val) => (val && val.length > 0) || "This field is required"
 
   const showDialog = defineModel()
   const props = defineProps(['editParam'])
 
-  let parameter = reactive({
+  let parameter = ref({
     name: '',
     parameterType: '',
     defaultValue: '',
   })
 
-  const typeOptions = reactive([
+  const typeOptions = ref([
     'string',
     'float',
     'integer',
@@ -76,19 +76,25 @@
   ])
 
   watch(showDialog, (newVal) => {
-    if(newVal) {
-      parameter.name = props.editParam.name
-      parameter.parameterType = props.editParam.parameterType
-      parameter.defaultValue = props.editParam.defaultValue
-
-    }
-    else {
-      parameter.name = ''
-      parameter.parameterType = ''
-      parameter.defaultValue = ''
+    if(newVal && props.editParam) {
+      // edit param
+      parameter.value.name = props.editParam.name
+      parameter.value.parameterType = props.editParam.parameterType
+      parameter.value.defaultValue = props.editParam.defaultValue
+    } else {
+      // close dialog
+      parameter.value.name = ''
+      parameter.value.parameterType = ''
+      parameter.value.defaultValue = ''
     }
   })
 
-
+  function emitSubmit() {
+    if(props.editParam) {
+      emit('updateParam', parameter.value)
+    } else {
+      emit('createParam', parameter.value)
+    }
+  }
 
 </script>
