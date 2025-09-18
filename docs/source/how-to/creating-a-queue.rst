@@ -19,38 +19,28 @@
 
 .. _how_to_create_a_queue:
 
-[OLD] How-To: Create a Queue
-======================
+How-To: Create a Queue
+=====================
 
 In Dioptra, jobs are submitted to queues, which represent a computing environment. This
 guide assumes that Dioptra is already installed and is accessible through the web browser,
-and that the user is logged in. It also assumes that a worker container is running / available
-as part of the deployment.
+and that the user is logged in.
 
 
-1. On the Dioptra Web UI, navigate to the **Queues** tab.
+1.  On the Dioptra Web UI, navigate to the **Queues** tab.
 
-   .. figure:: /images/queues-page.png
-      :alt: Figure depicting the Dioptra queues page
-       
-      Dioptra queues page
+    .. figure:: /images/queues-page.png
 
-2. On the Queues page, click **Create**.
-3. Enter a name for the queue, select the group that should have access to the queue,
-   and a description in the appropriate fields. *Note: the name should match the worker 
-   the queue is associated with.*
+2.  On the Queues page, click **Create**.
+3.  Enter a name for the queue, select the group that should have access to the queue,
+    and a description in the appropriate fields. *Note: the name should match the worker 
+    the queue is associated with.*
 
-   .. figure:: /images/queue-create.png
-      :alt: Figure depicting the Dioptra queue creation page
-       
-      Dioptra queue creation page
+    .. figure:: /images/queue-create.png
 
-4. Click **Confirm**.
+4.  Click **Confirm**.
 
-   .. figure:: /images/queue-created.png
-      :alt: Figure depicting the Dioptra queue page with newly created queue
-       
-      Dioptra queue page with newly created queue
+    .. figure:: /images/queue-created.png
 
-5. If successful, the newly created queue should appear in the list.
+5.  If successful, the newly created queue should appear in the list.
 
