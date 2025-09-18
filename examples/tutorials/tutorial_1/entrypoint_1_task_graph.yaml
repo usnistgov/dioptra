@@ -1,0 +1,2 @@
+draw_and_log: # Task name
+    task: sample_normal_distribution_print_mean # One of our registered tasks

@@ -57,6 +57,7 @@ extensions = [
     "sphinx_togglebutton",
     "sphinxcontrib.httpdomain",
     "sphinxcontrib.openapi",
+    "sphinx.ext.napoleon",     # Google/NumPy docstrings
 ]
 
 # Add any paths that contain templates here, relative to this directory.
