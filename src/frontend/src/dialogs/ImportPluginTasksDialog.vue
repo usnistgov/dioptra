@@ -170,7 +170,7 @@ import TableComponent from '@/components/TableComponent.vue'
 import * as notify from '../notify'
 
 const props = defineProps(['pythonCode', 'pluginParameterTypes', 'existingTasks'])
-const emit = defineEmits(['addTasks'])
+const emit = defineEmits(['importTasks'])
 
 const showDialog = defineModel()
 
@@ -241,8 +241,8 @@ async function suggestPluginTasks() {
 const taskColumns = [
   { name: 'select', label: 'Select', align: 'center', },
   { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: false,  },
-  { name: 'inputParams', label: 'Input Params', field: 'inputParams', align: 'right', sortable: false, style: 'width: 150px', },
-  { name: 'outputParams', label: 'Output Params', field: 'outputParams', align: 'right', sortable: false, style: 'width: 150px' },
+  { name: 'inputParams', label: 'Input Parameters', field: 'inputParams', align: 'right', sortable: false, style: 'width: 150px', },
+  { name: 'outputParams', label: 'Output Parameters', field: 'outputParams', align: 'right', sortable: false, style: 'width: 150px' },
 ]
 
 async function submit() {
@@ -256,7 +256,7 @@ async function submit() {
       delete param.type
     })
   })
-  emit('addTasks', selectedTasks.value)
+  emit('importTasks', selectedTasks.value)
   showDialog.value = false
 }
 

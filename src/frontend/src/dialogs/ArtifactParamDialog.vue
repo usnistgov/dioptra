@@ -1,8 +1,8 @@
 <template>
-  <q-dialog v-model="showDialog">
+  <q-dialog v-model="showDialog" :persistent="true">
     <q-card>
       <q-card-section class="bg-primary text-white text-h6">
-        <div class="text-h6">Add Artifact Parameter</div>
+        <div class="text-h6">Create Artifact Parameter</div>
       </q-card-section>
       <q-card-section>
         <q-form ref="artifactParamForm" greedy @submit.prevent="addArtifactParam" id="artifactForm">
@@ -17,7 +17,7 @@
               <label :class="`field-label`">Name:</label>
             </template>
           </q-input>
-          <div class="row items-end" style="height: 30px;">
+          <div class="row items-end" style="min-height: 30px;">
             <label>
               Output Parameters:
             </label>
@@ -121,7 +121,7 @@ function requiredRule(val) {
 
 watch(showDialog, (newVal) => {
   getPluginParameterTypes()
-  if(newVal) {
+  if(!newVal) {
     artifactParam.value = {
       name: '',
       outputParams: []
@@ -130,6 +130,7 @@ watch(showDialog, (newVal) => {
       name: '',
       parameterType: ''
     }
+    resetForm()
   }
 })
 
@@ -155,9 +156,6 @@ function addOutputParam() {
       outputParam.value = {}
       outputParamForm.value.reset()
     }
-    else {
-      // error
-    }
   })
 }
 
@@ -170,9 +168,6 @@ function addArtifactParam() {
       }
       emit('submit', submitArtifactParam)
       resetForm()
-    }
-    else {
-      // error
     }
   })
 }
