@@ -120,9 +120,7 @@ class ResourceImport(Resource):
             archive_file=request.files.get("archiveFile", None),
             files=request.files.getlist("files", None),
             config_path=parsed_form["config_path"],
-            resolve_name_conflicts_strategy=parsed_form[
-                "resolve_name_conflicts_strategy"
-            ],
+            conflict_strat=parsed_form["resolve_name_conflicts_strategy"],
             log=log,
         )
 

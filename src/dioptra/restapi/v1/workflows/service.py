@@ -30,6 +30,7 @@ import tomli as toml
 import yaml
 from injector import inject
 from structlog.stdlib import BoundLogger
+from sqlalchemy import select
 from werkzeug.datastructures import FileStorage
 
 from dioptra.restapi.db import db, models
@@ -57,6 +58,7 @@ from dioptra.restapi.v1.plugin_parameter_types.service import (
 )
 from dioptra.restapi.v1.plugins.schema import ALLOWED_PLUGIN_FILENAME_REGEX
 from dioptra.restapi.v1.plugins.service import (
+    PluginIdFileIdService,
     PluginIdFileService,
     PluginIdService,
     PluginNameService,
@@ -154,6 +156,7 @@ class ResourceImportService(object):
         plugin_service: PluginService,
         plugin_id_service: PluginIdService,
         plugin_name_service: PluginNameService,
+        plugin_id_file_id_service: PluginIdFileIdService,
         plugin_id_file_service: PluginIdFileService,
         plugin_parameter_type_service: PluginParameterTypeService,
         plugin_parameter_type_id_service: PluginParameterTypeIdService,
@@ -172,6 +175,7 @@ class ResourceImportService(object):
             plugin_service: A PluginService object,
             plugin_name_service: A PluginNameService object.
             plugin_id_service: A PluginIdService object.
+            plugin_id_file_id_service: PluginIdFileIdService,
             plugin_id_file_service: A PluginIdFileService object.
             plugin_parameter_type_service: A PluginParameterTypeService object.
             plugin_parameter_type_id_service: A PluginParameterTypeIdService object.
@@ -186,6 +190,7 @@ class ResourceImportService(object):
         self._plugin_service = plugin_service
         self._plugin_id_service = plugin_id_service
         self._plugin_name_service = plugin_name_service
+        self._plugin_id_file_id_service = plugin_id_file_id_service
         self._plugin_id_file_service = plugin_id_file_service
         self._plugin_parameter_type_service = plugin_parameter_type_service
         self._plugin_parameter_type_id_service = plugin_parameter_type_id_service
@@ -206,7 +211,7 @@ class ResourceImportService(object):
         archive_file: FileStorage | None,
         files: list[FileStorage] | None,
         config_path: str,
-        resolve_name_conflicts_strategy: str,
+        conflict_strat: ResourceImportResolveNameConflictsStrategy,
         **kwargs,
     ) -> dict[str, Any]:
         """Import resources from a archive file or git repository
@@ -219,18 +224,13 @@ class ResourceImportService(object):
             files: The contents of the upload if source_type is "upload_files"
             config_path: The path to the toml configuration file in the import source.
             resolve_name_conflicts_strategy: The strategy for resolving name conflicts.
-                Either "fail" or "overwrite"
+                Either "fail", "update", or "overwrite"
 
         Returns:
             A message summarizing imported resources
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Import resources", group_id=group_id)
-
-        overwrite = (
-            resolve_name_conflicts_strategy
-            == ResourceImportResolveNameConflictsStrategy.OVERWRITE
-        )
 
         with TemporaryDirectory() as tmp_dir, set_cwd(tmp_dir):
             working_dir = Path(tmp_dir)
@@ -247,17 +247,17 @@ class ResourceImportService(object):
             # all resources are relative to the config file directory
             with set_cwd((working_dir / config_path).parent):
                 param_types = self._register_plugin_param_types(
-                    group_id, config.get("plugin_param_types", []), overwrite, log=log
+                    group_id, config.get("plugin_param_types", []), conflict_strat, log=log
                 )
                 plugins = self._register_plugins(
-                    group_id, config.get("plugins", []), param_types, overwrite, log=log
+                    group_id, config.get("plugins", []), param_types, conflict_strat, log=log
                 )
                 entrypoints = self._register_entrypoints(
                     group_id,
                     config.get("entrypoints", []),
                     plugins,
                     param_types,
-                    overwrite,
+                    conflict_strat,
                     log=log,
                 )
 
@@ -412,7 +412,7 @@ class ResourceImportService(object):
         self,
         group_id: int,
         param_types_config: list[dict[str, Any]],
-        overwrite: bool,
+        conflict_strat: ResourceImportResolveNameConflictsStrategy,
         log: BoundLogger,
     ) -> dict[str, models.PluginTaskParameterType]:
         """
@@ -431,7 +431,40 @@ class ResourceImportService(object):
 
         param_types = {}
         for param_type in param_types_config:
-            if overwrite:
+            if conflict_strat == ResourceImportResolveNameConflictsStrategy.FAIL:
+                param_type_dict = self._plugin_parameter_type_service.create(
+                    name=param_type["name"],
+                    description=param_type.get("description", None),
+                    structure=param_type.get("structure", None),
+                    group_id=group_id,
+                    commit=False,
+                    log=log,
+                )
+            elif conflict_strat == ResourceImportResolveNameConflictsStrategy.UPDATE:
+                existing = self._plugin_parameter_type_name_service.get(
+                    param_type["name"], group_id=group_id, log=log
+                )
+                if existing:
+                    param_type_dict = self._plugin_parameter_type_id_service.modify(
+                        plugin_parameter_type_id=existing.resource_id,
+                        name=param_type["name"],
+                        description=param_type.get("description", None),
+                        structure=param_type.get("structure", None),
+                        group_id=group_id,
+                        error_if_not_found=True,
+                        commit=False,
+                        log=log,
+                    )
+                else:
+                    param_type_dict = self._plugin_parameter_type_service.create(
+                        name=param_type["name"],
+                        description=param_type.get("description", None),
+                        structure=param_type.get("structure", None),
+                        group_id=group_id,
+                        commit=False,
+                        log=log,
+                    )
+            elif conflict_strat == ResourceImportResolveNameConflictsStrategy.OVERWRITE:
                 existing = self._plugin_parameter_type_name_service.get(
                     param_type["name"], group_id=group_id, log=log
                 )
@@ -440,15 +473,15 @@ class ResourceImportService(object):
                         plugin_parameter_type_id=existing.resource_id,
                         log=log,
                     )
+                param_type_dict = self._plugin_parameter_type_service.create(
+                    name=param_type["name"],
+                    description=param_type.get("description", None),
+                    structure=param_type.get("structure", None),
+                    group_id=group_id,
+                    commit=False,
+                    log=log,
+                )
 
-            param_type_dict = self._plugin_parameter_type_service.create(
-                name=param_type["name"],
-                description=param_type.get("description", None),
-                structure=param_type.get("structure", None),
-                group_id=group_id,
-                commit=False,
-                log=log,
-            )
             param_types[param_type["name"]] = param_type_dict[
                 "plugin_task_parameter_type"
             ]
@@ -462,7 +495,7 @@ class ResourceImportService(object):
         group_id: int,
         plugins_config: list[dict[str, Any]],
         param_types: dict[str, models.PluginTaskParameterType],
-        overwrite: bool,
+        conflict_strat: ResourceImportResolveNameConflictsStrategy,
         log: BoundLogger,
     ) -> dict[str, models.PluginTaskParameterType]:
         """
@@ -491,8 +524,52 @@ class ResourceImportService(object):
         )
 
         plugins = {}
+        plugins_existing_files = {}
         for plugin in plugins_config:
-            if overwrite:
+            if conflict_strat == ResourceImportResolveNameConflictsStrategy.FAIL:
+                plugin_dict = self._plugin_service.create(
+                    name=Path(plugin["path"]).stem,
+                    description=plugin.get("description", None),
+                    group_id=group_id,
+                    commit=False,
+                    log=log,
+                )
+            if conflict_strat == ResourceImportResolveNameConflictsStrategy.UPDATE:
+                existing = self._plugin_name_service.get(
+                    Path(plugin["path"]).stem, group_id=group_id
+                )
+                if existing:
+                    plugin_dict = self._plugin_id_service.modify(
+                        plugin_id=existing.resource_id,
+                        name=Path(plugin["path"]).stem,
+                        description=plugin.get("description", None),
+                        group_id=group_id,
+                        commit=False,
+                        log=log,
+                    )
+                    latest_plugin_files_stmt = (
+                        select(models.PluginFile)
+                        .join(models.Resource)
+                        .where(
+                            models.PluginFile.plugin_id == existing.resource_id,
+                            models.Resource.is_deleted == False,  # noqa: E712
+                            models.Resource.latest_snapshot_id
+                            == models.PluginFile.resource_snapshot_id,
+                        )
+                    )
+                    plugins_existing_files[existing.resource_id] = {
+                        plugin_file.filename: plugin_file
+                        for plugin_file in db.session.scalars(latest_plugin_files_stmt).unique()
+                    }
+                else:
+                    plugin_dict = self._plugin_service.create(
+                        name=Path(plugin["path"]).stem,
+                        description=plugin.get("description", None),
+                        group_id=group_id,
+                        commit=False,
+                        log=log,
+                    )
+            elif conflict_strat == ResourceImportResolveNameConflictsStrategy.OVERWRITE:
                 existing = self._plugin_name_service.get(
                     Path(plugin["path"]).stem, group_id=group_id
                 )
@@ -501,15 +578,16 @@ class ResourceImportService(object):
                         plugin_id=existing.resource_id,
                         log=log,
                     )
+                plugin_dict = self._plugin_service.create(
+                    name=Path(plugin["path"]).stem,
+                    description=plugin.get("description", None),
+                    group_id=group_id,
+                    commit=False,
+                    log=log,
+                )
 
-            plugin_dict = self._plugin_service.create(
-                name=Path(plugin["path"]).stem,
-                description=plugin.get("description", None),
-                group_id=group_id,
-                commit=False,
-                log=log,
-            )
             plugins[plugin_dict["plugin"].name] = plugin_dict["plugin"]
+
             db.session.flush()
 
             task_config = plugin.get("tasks", {})
@@ -543,16 +621,42 @@ class ResourceImportService(object):
                         reason=str(e),
                     ) from e
 
-                self._plugin_id_file_service.create(
-                    plugin_id=plugin_dict["plugin"].resource_id,
-                    filename=filename,
-                    contents=contents,
-                    description=None,
-                    function_tasks=function_tasks[filename],
-                    artifact_tasks=artifact_tasks[filename],
-                    commit=False,
-                    log=log,
-                )
+                if conflict_strat == ResourceImportResolveNameConflictsStrategy.FAIL or conflict_strat == ResourceImportResolveNameConflictsStrategy.OVERWRITE:
+                    self._plugin_id_file_service.create(
+                        plugin_id=plugin_dict["plugin"].resource_id,
+                        filename=filename,
+                        contents=contents,
+                        description=None,
+                        function_tasks=function_tasks[filename],
+                        artifact_tasks=artifact_tasks[filename],
+                        commit=False,
+                        log=log,
+                    )
+                elif conflict_strat == ResourceImportResolveNameConflictsStrategy.UPDATE:
+                    existing = plugins_existing_files[plugin_dict["plugin"].resource_id].get(filename, None)
+                    if existing:
+                        self._plugin_id_file_id_service.modify(
+                            plugin_id=plugin_dict["plugin"].resource_id,
+                            plugin_file_id=existing.resource_id,
+                            filename=filename,
+                            contents=contents,
+                            description=None,
+                            function_tasks=function_tasks[filename],
+                            artifact_tasks=artifact_tasks[filename],
+                            commit=False,
+                            log=log,
+                        )
+                    else:
+                        self._plugin_id_file_service.create(
+                            plugin_id=plugin_dict["plugin"].resource_id,
+                            filename=filename,
+                            contents=contents,
+                            description=None,
+                            function_tasks=function_tasks[filename],
+                            artifact_tasks=artifact_tasks[filename],
+                            commit=False,
+                            log=log,
+                        )
 
         db.session.flush()
 
@@ -564,7 +668,7 @@ class ResourceImportService(object):
         entrypoints_config: list[dict[str, Any]],
         plugins,
         param_types,
-        overwrite: bool,
+        conflict_strat: ResourceImportResolveNameConflictsStrategy,
         log: BoundLogger,
     ) -> dict[str, models.EntryPoint]:
         """
@@ -596,15 +700,6 @@ class ResourceImportService(object):
         entrypoints = {}
 
         for entrypoint in entrypoints_config:
-            if overwrite:
-                existing = self._entrypoint_name_service.get(
-                    entrypoint["name"], group_id=group_id, log=log
-                )
-                if existing is not None:
-                    self._entrypoint_id_service.delete(
-                        entrypoint_id=existing.resource_id
-                    )
-
             try:
                 contents = yaml.safe_load(Path(entrypoint["path"]).read_text())
             except FileNotFoundError as e:
@@ -634,20 +729,80 @@ class ResourceImportService(object):
             ]
             task_graph = contents.get("graph", None)
             artifact_graph = contents.get("artifacts", None)
-            entrypoint_dict = self._entrypoint_service.create(
-                name=entrypoint.get("name", Path(entrypoint["path"]).stem),
-                description=entrypoint.get("description", None),
-                task_graph=yaml.dump(task_graph) if task_graph else "",
-                artifact_graph=yaml.dump(artifact_graph) if artifact_graph else "",
-                parameters=params,
-                artifact_parameters=artifact_params,
-                plugin_ids=plugin_ids,
-                artifact_plugin_ids=artifact_plugin_ids,
-                queue_ids=[],
-                group_id=group_id,
-                commit=False,
-                log=log,
-            )
+
+            if conflict_strat == ResourceImportResolveNameConflictsStrategy.FAIL:
+                entrypoint_dict = self._entrypoint_service.create(
+                    name=entrypoint.get("name", Path(entrypoint["path"]).stem),
+                    description=entrypoint.get("description", None),
+                    task_graph=yaml.dump(task_graph) if task_graph else "",
+                    artifact_graph=yaml.dump(artifact_graph) if artifact_graph else "",
+                    parameters=params,
+                    artifact_parameters=artifact_params,
+                    plugin_ids=plugin_ids,
+                    artifact_plugin_ids=artifact_plugin_ids,
+                    queue_ids=[],
+                    group_id=group_id,
+                    commit=False,
+                    log=log,
+                )
+            elif conflict_strat == ResourceImportResolveNameConflictsStrategy.OVERWRITE:
+                existing = self._entrypoint_name_service.get(
+                    entrypoint["name"], group_id=group_id, log=log
+                )
+                if existing:
+                    self._entrypoint_id_service.delete(
+                        entrypoint_id=existing.resource_id
+                    )
+                entrypoint_dict = self._entrypoint_service.create(
+                    name=entrypoint.get("name", Path(entrypoint["path"]).stem),
+                    description=entrypoint.get("description", None),
+                    task_graph=yaml.dump(task_graph) if task_graph else "",
+                    artifact_graph=yaml.dump(artifact_graph) if artifact_graph else "",
+                    parameters=params,
+                    artifact_parameters=artifact_params,
+                    plugin_ids=plugin_ids,
+                    artifact_plugin_ids=artifact_plugin_ids,
+                    queue_ids=[],
+                    group_id=group_id,
+                    commit=False,
+                    log=log,
+                )
+            elif conflict_strat == ResourceImportResolveNameConflictsStrategy.UPDATE:
+                existing = self._entrypoint_name_service.get(
+                    entrypoint["name"], group_id=group_id, log=log
+                )
+                if existing:
+                    entrypoint_dict = self._entrypoint_id_service.modify(
+                        entrypoint_id=existing.resource_id,
+                        name=entrypoint.get("name", Path(entrypoint["path"]).stem),
+                        description=entrypoint.get("description", None),
+                        task_graph=yaml.dump(task_graph) if task_graph else "",
+                        artifact_graph=yaml.dump(artifact_graph) if artifact_graph else "",
+                        parameters=params,
+                        artifact_parameters=artifact_params,
+                        plugin_ids=plugin_ids,
+                        artifact_plugin_ids=artifact_plugin_ids,
+                        queue_ids=[],
+                        group_id=group_id,
+                        commit=False,
+                        log=log,
+                    )
+                else:
+                    entrypoint_dict = self._entrypoint_service.create(
+                        name=entrypoint.get("name", Path(entrypoint["path"]).stem),
+                        description=entrypoint.get("description", None),
+                        task_graph=yaml.dump(task_graph) if task_graph else "",
+                        artifact_graph=yaml.dump(artifact_graph) if artifact_graph else "",
+                        parameters=params,
+                        artifact_parameters=artifact_params,
+                        plugin_ids=plugin_ids,
+                        artifact_plugin_ids=artifact_plugin_ids,
+                        queue_ids=[],
+                        group_id=group_id,
+                        commit=False,
+                        log=log,
+                    )
+
             entrypoints[entrypoint_dict["entry_point"].name] = entrypoint_dict[
                 "entry_point"
             ]
