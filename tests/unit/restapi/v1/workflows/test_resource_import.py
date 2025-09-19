@@ -69,7 +69,6 @@ def assert_resource_import_fails_due_to_name_clash(
     group_id: int,
     archive_file: DioptraFile,
 ):
-    dioptra_client.plugins.create(group_id=group_id, name="hello_world")
     response = dioptra_client.workflows.import_resources(
         group_id=group_id,
         source=archive_file,
@@ -91,16 +90,48 @@ def assert_resource_import_fails_due_to_duplicate_names(
     assert "duplicate" in response.text
 
 
+def assert_resource_import_update_works(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    group_id: int,
+    archive_file: DioptraFile,
+    description: str,
+):
+    response = dioptra_client.workflows.import_resources(
+        group_id=group_id,
+        source=archive_file,
+        resolve_name_conflicts_strategy="update",
+    )
+    resource_ids = response.json()["resources"]
+    plugin_response = dioptra_client.plugins.get_by_id(
+        resource_ids["plugins"]["hello_world"]
+    )
+    entrypoint_response = dioptra_client.entrypoints.get_by_id(
+        resource_ids["entrypoints"]["Hello World"]
+    )
+    param_type_response = dioptra_client.plugin_parameter_types.get_by_id(
+        resource_ids["plugin_param_types"]["message"]
+    )
+
+    assert response.status_code == HTTPStatus.OK
+    assert (
+        plugin_response.status_code == HTTPStatus.OK
+        and plugin_response.json()["description"] != description
+    )
+    assert (
+        entrypoint_response.status_code == HTTPStatus.OK
+        and entrypoint_response.json()["description"] != description
+    )
+    assert (
+        param_type_response.status_code == HTTPStatus.OK
+        and param_type_response.json()["description"] != description
+    )
+
+
 def assert_resource_import_overwrite_works(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     group_id: int,
     archive_file: DioptraFile,
 ):
-    dioptra_client.entrypoints.create(
-        group_id=group_id, name="Hello World", task_graph=""
-    )
-    dioptra_client.plugins.create(group_id=group_id, name="hello_world")
-    dioptra_client.plugin_parameter_types.create(group_id=group_id, name="message")
     response = dioptra_client.workflows.import_resources(
         group_id=group_id,
         source=archive_file,
@@ -157,8 +188,37 @@ def test_resource_import_fails_from_name_clash(
 ):
     group_id = auth_account["groups"][0]["id"]
 
+    dioptra_client.plugins.create(group_id=group_id, name="hello_world")
     assert_resource_import_fails_due_to_name_clash(
         dioptra_client, group_id=group_id, archive_file=resources_tar_file
+    )
+
+
+def test_resource_import_update(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    resources_tar_file: NamedTemporaryFile,
+):
+    group_id = auth_account["groups"][0]["id"]
+    description_to_replace = "original description"
+
+    dioptra_client.entrypoints.create(
+        group_id=group_id,
+        name="Hello World",
+        task_graph="",
+        description=description_to_replace,
+    )
+    dioptra_client.plugins.create(
+        group_id=group_id, name="hello_world", description=description_to_replace
+    )
+    dioptra_client.plugin_parameter_types.create(
+        group_id=group_id, name="message", description=description_to_replace
+    )
+    assert_resource_import_update_works(
+        dioptra_client,
+        group_id=group_id,
+        archive_file=resources_tar_file,
+        description=description_to_replace,
     )
 
 
@@ -169,6 +229,11 @@ def test_resource_import_overwrite(
 ):
     group_id = auth_account["groups"][0]["id"]
 
+    dioptra_client.entrypoints.create(
+        group_id=group_id, name="Hello World", task_graph=""
+    )
+    dioptra_client.plugins.create(group_id=group_id, name="hello_world")
+    dioptra_client.plugin_parameter_types.create(group_id=group_id, name="message")
     assert_resource_import_overwrite_works(
         dioptra_client, group_id=group_id, archive_file=resources_tar_file
     )

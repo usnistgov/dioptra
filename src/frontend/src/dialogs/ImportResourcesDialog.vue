@@ -48,8 +48,8 @@
           />
           <br />
           <q-select
-            v-model="group" 
-            outlined 
+            v-model="group"
+            outlined
             emit-value
             map-options
             :options="store.groups"
@@ -63,17 +63,24 @@
             class="q-py-md"
             label="Path to config file (dioptra.toml)"
           />
-          <q-toggle v-model="overwrite" label="Overwrite any existing resources with name conflicts." />
+          <q-select
+            v-model="conflictStrat"
+            outlined
+            emit-value
+            map-options
+            :options="conflictStratOptions"
+            label="Resource name conflict resolution strategy"
+          />
         </q-card-section>
 
         <q-separator />
 
         <q-card-actions align="right" class="text-primary">
-          <q-btn 
+          <q-btn
             outline
-            color="primary cancel-btn" 
-            label="Cancel" 
-            v-close-popup 
+            color="primary cancel-btn"
+            label="Cancel"
+            v-close-popup
             class="q-mr-xs"
           />
            <q-btn
@@ -102,10 +109,11 @@
   const isMedium = inject('isMedium')
   const isMobile = inject('isMobile')
   const isExtraSmall = inject('isExtraSmall')
+  const text = "Overwrite any existing resources with name conflicts.";
 
   const gitUrlDefault = 'https://github.com/usnistgov/dioptra.git#main'
   const configPathDefault = 'extra/dioptra.toml'
-  const overwriteDefault = false
+  const conflictStratDefault = "fail"
 
   const sourceTypeOptions = [
     {slot: 'git', value: 'git'},
@@ -117,8 +125,13 @@
   const archiveFile = ref(null);
   const files = ref(null);
   const group = ref(store.loggedInGroup.id)
-  const configPath = ref(configPathDefault);
-  const overwrite = ref(overwriteDefault)
+  const conflictStratOptions = [
+    {value: 'fail', label: 'Fail: if any imported resources have the same name, the import will fail'},
+    {value: 'update', label: 'Update: naively match resources by name and update them as defined in import config'},
+    {value: 'overwrite', label: 'Overwrite: delete any conflicing resources and create new resouces as defined in import config'},
+  ];
+  const configPath = ref(conflictStratOptions[0]);
+  const conflictStrat = ref(conflictStratDefault)
 
   watch(showDialog, (newVal) => {
     if (!group.value) {
@@ -126,7 +139,7 @@
     }
     gitUrl.value = gitUrlDefault
     configPath.value = configPathDefault
-    overwrite.value = overwriteDefault
+    conflictStrat.value = conflictStratDefault
     archiveFile.value = null
     files.value = null
   })
@@ -139,7 +152,7 @@
       archiveFile: sourceType.value === "upload_archive" ? archiveFile.value : null,
       files: sourceType.value == "upload_files" ? files.value : null,
       configPath: configPath.value,
-      resolveNameConflictsStrategy: overwrite.value ? "overwrite" : "fail",
+      resolveNameConflictsStrategy: conflictStrat.value,
     };
     const importWaitNotification = notify.wait('Importing resources...');
     try {

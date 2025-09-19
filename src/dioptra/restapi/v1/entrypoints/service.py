@@ -431,7 +431,7 @@ class EntrypointIdService(object):
         self,
         entrypoint_id: int,
         name: str,
-        description: str,
+        description: str | None,
         task_graph: str,
         artifact_graph: str,
         parameters: list[dict[str, Any]],
