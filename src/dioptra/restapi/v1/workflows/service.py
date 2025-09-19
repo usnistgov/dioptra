@@ -29,8 +29,8 @@ import structlog
 import tomli as toml
 import yaml
 from injector import inject
-from structlog.stdlib import BoundLogger
 from sqlalchemy import select
+from structlog.stdlib import BoundLogger
 from werkzeug.datastructures import FileStorage
 
 from dioptra.restapi.db import db, models
@@ -247,10 +247,17 @@ class ResourceImportService(object):
             # all resources are relative to the config file directory
             with set_cwd((working_dir / config_path).parent):
                 param_types = self._register_plugin_param_types(
-                    group_id, config.get("plugin_param_types", []), conflict_strat, log=log
+                    group_id,
+                    config.get("plugin_param_types", []),
+                    conflict_strat,
+                    log=log,
                 )
                 plugins = self._register_plugins(
-                    group_id, config.get("plugins", []), param_types, conflict_strat, log=log
+                    group_id,
+                    config.get("plugins", []),
+                    param_types,
+                    conflict_strat,
+                    log=log,
                 )
                 entrypoints = self._register_entrypoints(
                     group_id,
@@ -559,7 +566,9 @@ class ResourceImportService(object):
                     )
                     plugins_existing_files[existing.resource_id] = {
                         plugin_file.filename: plugin_file
-                        for plugin_file in db.session.scalars(latest_plugin_files_stmt).unique()
+                        for plugin_file in db.session.scalars(
+                            latest_plugin_files_stmt
+                        ).unique()
                     }
                 else:
                     plugin_dict = self._plugin_service.create(
@@ -621,7 +630,11 @@ class ResourceImportService(object):
                         reason=str(e),
                     ) from e
 
-                if conflict_strat == ResourceImportResolveNameConflictsStrategy.FAIL or conflict_strat == ResourceImportResolveNameConflictsStrategy.OVERWRITE:
+                if (
+                    conflict_strat == ResourceImportResolveNameConflictsStrategy.FAIL
+                    or conflict_strat
+                    == ResourceImportResolveNameConflictsStrategy.OVERWRITE
+                ):
                     self._plugin_id_file_service.create(
                         plugin_id=plugin_dict["plugin"].resource_id,
                         filename=filename,
@@ -632,8 +645,12 @@ class ResourceImportService(object):
                         commit=False,
                         log=log,
                     )
-                elif conflict_strat == ResourceImportResolveNameConflictsStrategy.UPDATE:
-                    existing = plugins_existing_files[plugin_dict["plugin"].resource_id].get(filename, None)
+                elif (
+                    conflict_strat == ResourceImportResolveNameConflictsStrategy.UPDATE
+                ):
+                    existing = plugins_existing_files[
+                        plugin_dict["plugin"].resource_id
+                    ].get(filename, None)
                     if existing:
                         self._plugin_id_file_id_service.modify(
                             plugin_id=plugin_dict["plugin"].resource_id,
@@ -777,7 +794,9 @@ class ResourceImportService(object):
                         name=entrypoint.get("name", Path(entrypoint["path"]).stem),
                         description=entrypoint.get("description", None),
                         task_graph=yaml.dump(task_graph) if task_graph else "",
-                        artifact_graph=yaml.dump(artifact_graph) if artifact_graph else "",
+                        artifact_graph=yaml.dump(artifact_graph)
+                        if artifact_graph
+                        else "",
                         parameters=params,
                         artifact_parameters=artifact_params,
                         plugin_ids=plugin_ids,
@@ -792,7 +811,9 @@ class ResourceImportService(object):
                         name=entrypoint.get("name", Path(entrypoint["path"]).stem),
                         description=entrypoint.get("description", None),
                         task_graph=yaml.dump(task_graph) if task_graph else "",
-                        artifact_graph=yaml.dump(artifact_graph) if artifact_graph else "",
+                        artifact_graph=yaml.dump(artifact_graph)
+                        if artifact_graph
+                        else "",
                         parameters=params,
                         artifact_parameters=artifact_params,
                         plugin_ids=plugin_ids,
