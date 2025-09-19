@@ -124,6 +124,7 @@ class ResourceImportSourceTypes(Enum):
 
 class ResourceImportResolveNameConflictsStrategy(Enum):
     FAIL = "fail"
+    UPDATE = "update"
     OVERWRITE = "overwrite"
 
 
@@ -187,7 +188,7 @@ class ResourceImportSchema(Schema):
         attribute="resolve_name_conflicts_strategy",
         metadata={
             "description": "Strategy for resolving resource name conflicts. "
-            "Available options are 'fail' or 'overwrite'"
+            "Available options are 'fail', 'update', or 'overwrite'"
         },
         by_value=True,
         load_default=ResourceImportResolveNameConflictsStrategy.FAIL.value,
