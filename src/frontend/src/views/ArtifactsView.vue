@@ -89,6 +89,11 @@ watch(showAddEditDialog, (newVal) => {
 const artifacts = ref([])
 
 async function getArtifacts(pagination) {
+  // default sort by job id descending
+  if(!pagination.sortBy) {
+    pagination.sortBy = 'job'
+    pagination.descending = true
+  }
   try {
     const res = await api.getData('artifacts', pagination)
     artifacts.value = res.data.data

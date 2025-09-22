@@ -179,7 +179,7 @@
     <fieldset :class="`${isMobile ? 'col-12 q-mt-lg' : 'col'} q-px-lg`" :disabled="job.entrypoint === ''">
       <legend>Values</legend>
       <TableComponent
-        title="Entrypoint Params"
+        title="Entrypoint Parameters"
         :columns="columns"
         :rows="parameters"
         :hideCreateBtn="true"
@@ -228,7 +228,7 @@
         </q-tooltip>
       </q-btn>
       <TableComponent
-        title="Artifact Params"
+        title="Artifact Parameters"
         :columns="artifactParamColumns"
         :rows="artifactParameters"
         :hideCreateBtn="true"
@@ -252,7 +252,7 @@
               label="Artifact"
               v-model="props.row.selectedArtifact"
               dense
-              filled
+              outlined
               :options="getMatchingArtifacts(props.row.outputParams)"
               option-label="description"
               clearable
@@ -287,19 +287,23 @@
             label="Artifact Snapshot"
             v-model="props.row.selectedArtifactSnapshot"
             dense
-            filled
+            outlined
             :options="props.row.artifactSnapshotOptions"
             option-label="description"
             clearable
             @clear="props.row.showSnapshotDropdown = false; onSelectArtifact(props.row)"
             :disable="!props.row.selectedArtifact"
           >
+            <template #before>
+              <q-icon name="subdirectory_arrow_right" />
+            </template>
             <template v-slot:option="scope">
               <q-item v-bind="scope.itemProps">
                 <q-item-section>
                   <q-item-label>Description: {{ scope.opt.description }}</q-item-label>
                   <q-item-label caption>Job ID: {{ scope.opt.job }}</q-item-label>
                   <q-item-label caption>Snapshot: {{ scope.opt.snapshot }} {{ scope.opt.latestSnapshot ? '(latest)' : '' }}</q-item-label>
+                  <q-item-label caption>Snapshot Created On: {{ formatDate(scope.opt.snapshotCreatedOn) }}</q-item-label>
                 </q-item-section>
               </q-item>
             </template>
@@ -926,6 +930,11 @@
     } catch(err) {
       console.warn(err)
     }
+  }
+
+  function formatDate(dateString) {
+    const options = { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: true }
+    return new Date(dateString).toLocaleString('en-US', options)
   }
 
 </script>

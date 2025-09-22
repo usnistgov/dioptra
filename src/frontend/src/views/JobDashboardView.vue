@@ -20,7 +20,7 @@
           <q-tab name="overview" label="Overview" />
           <q-tab name="logs" :label="`Logs ${logTotalNumber ? `(${logTotalNumber})` : ''}`" />
           <q-tab name="metrics" :label="`Metrics ${metrics.length ? `(${metrics.length})` : ''}`" />
-          <q-tab name="artifacts" :label="`Artifacts Created ${job?.artifacts.length ? `(${job?.artifacts.length})` : ''}`" />
+          <q-tab name="artifacts" :label="`Artifact Outputs ${job?.artifacts.length ? `(${job?.artifacts.length})` : ''}`" />
         </q-tabs>
         <q-separator />
     </div>
@@ -87,7 +87,7 @@
         />
       </div>
       <div class="col">
-        <h2>Parameters</h2>
+        <h2>Entrypoint Parameters</h2>
         <TableComponent
           :columns="parametersColumns"
           :rows="paramRows"
@@ -100,9 +100,8 @@
         />
       </div>
       <div class="col">
-        <h2>Artifacts Used</h2>
+        <h2>Artifact Parameters</h2>
         <TableComponent
-          label="Artifacts used"
           :columns="artifactsUsedColumns"
           v-model:selected="selectedUsedArtifact"
           :rows="artifactsUsed"
@@ -497,7 +496,7 @@ const parametersColumns = [
 const artifactsUsedColumns = [
   { name: 'id', label: 'ID', align: 'left', field: 'id', sortable: true, },
   { name: 'snapshotId', label: 'Snapshot Id', align: 'left', field: 'snapshotId', sortable: false, },
-  { name: 'artifactParamName', label: 'Param Name', align: 'left', field: 'artifactParamName', sortable: true, },
+  { name: 'artifactParamName', label: 'Parameter Name', align: 'left', field: 'artifactParamName', sortable: true, },
 ]
 
 const metricColumns = [
