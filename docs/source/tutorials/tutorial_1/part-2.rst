@@ -10,7 +10,7 @@ Now, you will extend that example to include **parameters and outputs**.
 This will let you:
 
 - Define **input parameters** for a Plugin Task  
-- Create a custom **output type** (NumPy array)  
+- Create a custom **Plugin Parameter type** (NumPy array)  
 - Parameterize Entrypoints and Jobs to get different results  
 
 The goal is to run our Entrypoint twice with different **sample sizes** and see how the observed mean compares to the true distribution mean.  
@@ -61,7 +61,9 @@ We will now create a new plugin with one task. This task:
 Register the Task
 ~~~~~~~~~~~~~~~~~~~
 
-Unlike last time, we must specify input and output types.
+Unlike last time, we must specify input and output types for the Plugin Task.
+
+Instead of manually specifying the input/output types, let's use Dioptra's autodetect functionality.
 
 .. admonition:: Steps
 
@@ -72,6 +74,12 @@ Unlike last time, we must specify input and output types.
    :width: 900px
    :figclass: bordered-image
 
+.. note::
+
+   Input and output types are auto-detected from **Python type hints** and the
+   **return annotation** (``->``); see `PEP 484 <https://peps.python.org/pep-0484/>`_ for more.
+
+
 You may see an error under **Plugin Tasks**: *Resolve missing Type* for the ``np_ndarray`` output.
 
 .. figure:: _static/screenshots/resolve_missing_type.png
@@ -79,33 +87,30 @@ You may see an error under **Plugin Tasks**: *Resolve missing Type* for the ``np
    :width: 900px
    :figclass: bordered-image
 
-This is because we created a type called ``NumpyArray``.  
+This is because we called our custom type ``NumpyArray``, not ``np_ndarray``.  
 
-Delete the incorrect output, then add a new one:  
+Let's correct the output type. Delete the auto-detected output and then add a new one with the following specs:
 
-- Name: ``draws`` (more descriptive)  
+- Name: ``draws`` (more descriptive than 'output')  
 - Type: ``NumpyArray``  
 
-Save the file.
-
+Save the Plugin file. 
 
 Create Entrypoint 2
 -------------------
 
-Entrypoint setup is very similar to before, but this time we’ll add an **Entrypoint parameter**.
-
+Entrypoint setup is very similar to before, but we now add an **Entrypoint parameter** and use it in our task graph.
 
 .. admonition:: Steps
 
    1. Create a new Entrypoint (``entrypoint_2``).  
-   2. In the **Entrypoint Parameters** window, create a parameter:  
+   2. Define an **Entrypoint Parameter**:
+      
+      In the **Entrypoint Parameters** window, create a parameter with the following specs:
       - Name: ``sample_size``  
       - Type: ``int``  
       - Default value: e.g., ``100``  
 
-.. literalinclude:: ../../../../examples/tutorials/tutorial_2/entrypoint_2_task_graph.yaml
-   :language: yaml
-   :linenos:
 
 .. figure:: _static/screenshots/sample_size_entrypoint_param.png
    :alt: Screenshot of adding the sample_size parameter to Entrypoint 2.
@@ -113,28 +118,36 @@ Entrypoint setup is very similar to before, but this time we’ll add an **Entry
    :figclass: bordered-image
 
 .. note::
-   Default parameters can be overridden when running a Job.
+   Default parameters for an entrypoint can be overridden when running a Job.
 
 Create the Entrypoint Task Graph 
 ~~~~~~~~~~~~~~~~~~~
 
 Next, add the plugin task to the graph:
 
-- Go to **Task Graph Info**.  
-- Select **plugin_2** from the Plugins list.  
-- Click **Add to Task Graph**.  
+.. admonition:: Steps (continued)
+
+   1. Go to **Task Graph Info** window in the UI.  
+   2. Select **plugin_2** from the Plugins list.  
+   3. Click **Add to Task Graph** to automatically populate the Task Graph.  
+
 
 .. figure:: _static/screenshots/entrypoint_2_add_to_task_graph.png
    :alt: Screenshot of adding plugin_2 to Entrypoint 2.
    :width: 900px
    :figclass: bordered-image
 
-By default, the step has no name and no parameter bindings. We must configure inputs:
+By default, the **step** of the graph has no name and no parameter bindings. We must configure inputs.
+Use the following values:
 
 - ``mean`` = ``10``  
 - ``var`` = ``10``  
 - ``random_seed`` = ``0``  
 - ``sample_size`` = ``$sample_size`` (a reference to the Entrypoint parameter)  
+
+
+.. admonition:: Steps (finalized)
+   1. Edit the Task Graph YAML code to overwrite the default values 
 
 .. figure:: _static/screenshots/entrypoint_2_edit_task_graph.png
    :alt: Screenshot of editing parameters in Entrypoint 2 task graph.
@@ -177,7 +190,9 @@ Now we’ll test different parameter values.
 
 Repeat the process:
 
-- Create another Job with ``sample_size`` = 100.  
+.. admonition:: Steps (continued)
+   
+   1. Create another Job with ``sample_size`` = 100.  
 
 .. figure:: _static/screenshots/entrypoint_2_showing_all_jobs.png
    :alt: Screenshot showing multiple jobs created with different sample sizes.
