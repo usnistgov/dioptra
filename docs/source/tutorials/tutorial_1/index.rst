@@ -11,6 +11,7 @@ Each step will iterate on the previous step, incorporating more features and fun
    part-0
    part-1
    part-2
+   part-3
 
 **By the end of this tutorial, you will have:**
 
