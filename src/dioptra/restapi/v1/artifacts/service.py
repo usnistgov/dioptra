@@ -58,6 +58,7 @@ SORTABLE_FIELDS: Final[dict[str, Any]] = {
     "createdOn": models.Artifact.created_on,
     "lastModifiedOn": models.Resource.last_modified_on,
     "description": models.Artifact.description,
+    "job": models.Artifact.job_id,
 }
 
 

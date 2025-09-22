@@ -259,7 +259,7 @@
 
   function getSelectedColor(selected) {
     if(darkMode.value && selected) return 'bg-deep-purple-10'
-    // else if(selected) return 'bg-blue-grey-1'
+    else if(selected) return 'bg-blue-grey-1'
   }
 
   const pagination = ref({

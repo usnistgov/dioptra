@@ -18,7 +18,7 @@
     </q-chip>
   </div>
   <h2 class="q-mt-lg">Details</h2>
-  <KeyValueTable :rows="rows" :disabled="store.showRightDrawer">
+  <KeyValueTable :rows="rows" :disabled="showHistory">
     <template #description="{ }">
       {{ artifact.description }}
       <q-btn icon="edit" round size="sm" color="primary" flat />
@@ -27,7 +27,6 @@
       </q-popup-edit>
     </template>
     <template #fileUrl="{ fileUrl }">
-      <!-- <a :download="`artifact-${artifact?.id}`" :href="fileUrl">{{fileUrl}}</a> -->
       <q-btn
         :href="fileUrl"
         :download="`artifact-${artifact?.id}`"
@@ -44,92 +43,121 @@
         {{ artifact?.job }}
       </RouterLink>
     </template>
-    <template #task>
-      <q-select
-        v-if="!store.showRightDrawer"
-        dense
-        v-model="selectedArtifactTask"
-        :options="artifactTaskOptions"
-        option-label="name"
-        filled
-        label="Artifact Task"
-      />
-      <div v-else>
-        {{ artifact.task.name }}
-      </div>
-      <div v-if="artifactTaskOptions.length === 0" class="text-caption text-negative">
-        The selected plugin has no artifact tasks with matching output param types.  Please select another plugin.
-      </div>
-    </template>
-    <template #outputParams="{ outputParams = [] }">
-      <q-chip
-        v-for="param in outputParams"
-        color="purple"
-        text-color="white"
-      >
-        {{ param.name }}: {{ param.parameterType.name }}
-      </q-chip>
-    </template>
     <template #plugin="{ plugin = {} }">
-      <div :disabled="selectedPlugin">
-        <div v-if="Object.keys(plugin).length === 0" class="text-red">
+      <div class="row items-end">
+        <div v-if="Object.keys(plugin).length === 0 && !isLoading" class="text-red">
           <q-icon
             name="sym_o_warning"
             size="2.5em"
           />
             The attached plugin has been deleted.
         </div>
-        <q-chip
-          :label="plugin.name"
-          color="secondary"
-          text-color="white"
-          v-if="Object.keys(plugin).length > 0"
+        <q-select
+          label="Plugin"
+          v-model="artifact.plugin"
+          @filter="getPlugins"
+          :options="plugins"
+          option-label="name"
+          input-debounce="100"
+          dense
+          outlined
+          use-input
+          class="q-mt-sm q-ml-md col"
         >
-          <q-badge
-            v-if="!plugin.latestSnapshot" 
-            color="red" 
-            label="outdated" 
-            rounded
-            class="q-ml-xs"
-          />
-        </q-chip>
-        <q-btn
-          v-if="!plugin.latestSnapshot && Object.keys(plugin).length > 0"
-          round 
-          color="red" 
-          icon="sync"
-          size="sm"
-          @click="syncPlugin(plugin.id)"
-          :disable="!!selectedPlugin"
-        >
-          <q-tooltip>
-            Sync to latest version of plugin
-          </q-tooltip>
-        </q-btn>
+          <template v-slot:option="scope">
+            <q-item v-bind="scope.itemProps">
+              <q-item-section>
+                <q-item-label>{{ scope.opt.name }}</q-item-label>
+                <q-item-label caption>Number of Files: {{ scope.opt.files.length }}</q-item-label>
+                <q-item-label caption>Number of artifact tasks: {{ countTasks(scope.opt) }}</q-item-label>
+              </q-item-section>
+            </q-item>
+          </template>
+          <template v-slot:selected-item="scope">
+            <q-item-label class="q-my-sm">
+              <q-chip
+                :label="plugin.name"
+                color="secondary"
+                text-color="white"
+                v-if="Object.keys(plugin).length > 0"
+              >
+                <q-badge
+                  v-if="!plugin.latestSnapshot" 
+                  color="red" 
+                  label="outdated" 
+                  rounded
+                  class="q-ml-xs"
+                />
+              </q-chip>
+              <q-btn
+                v-if="!plugin.latestSnapshot && Object.keys(plugin).length > 0"
+                round 
+                color="red" 
+                icon="sync"
+                size="sm"
+                @click.stop="syncPlugin(plugin.id)"
+              >
+                <q-tooltip>
+                  Sync to latest version of plugin
+                </q-tooltip>
+              </q-btn>
+            </q-item-label>
+          </template>
+        </q-select>
       </div>
       <q-select
-        label="Select Different Plugin"
-        v-model="selectedPlugin"
-        @filter="getPlugins"
-        :options="plugins"
-        option-label="name"
-        input-debounce="100"
         dense
-        filled
-        use-input
-        clearable
-        class="q-mt-sm"
+        v-model="selectedArtifactTask"
+        :options="artifactTaskOptions"
+        option-label="name"
+        outlined
+        label="Artifact Task"
+        class="q-mt-sm q-ml-md"
+        :disable="artifactTaskOptions.length === 0"
       >
+        <template #before>
+          <q-icon name="subdirectory_arrow_right" color="black" />
+        </template>
         <template v-slot:option="scope">
           <q-item v-bind="scope.itemProps">
             <q-item-section>
               <q-item-label>{{ scope.opt.name }}</q-item-label>
-              <q-item-label caption>Number of Files: {{ scope.opt.files.length }}</q-item-label>
-              <q-item-label caption>Number of artifact tasks: {{ countTasks(scope.opt) }}</q-item-label>
+              <q-item-label caption>
+                Output Parameters:
+                <q-chip
+                  v-for="param in scope.opt.outputParams"
+                  color="purple"
+                  text-color="white"
+                  dense
+                >
+                  {{ param.name }}: {{ param.parameterType.name }}
+                </q-chip>
+              </q-item-label>
+            </q-item-section>
+          </q-item>
+        </template>
+        <template v-slot:selected-item="scope">
+          <q-item v-bind="scope.itemProps" class="q-pl-none" v-if="artifactTaskOptions.length !== 0">
+            <q-item-section>
+              <q-item-label>{{ scope.opt.name }}</q-item-label>
+              <q-item-label caption>
+                <br />
+                Output Parameters: <br />
+                <q-chip
+                  v-for="outputParam in scope.opt.outputParams"
+                  :key="outputParam.name"
+                  :label="`${outputParam.name}: ${outputParam.parameterType.name}`"
+                  color="purple"
+                  text-color="white"
+                />
+              </q-item-label>
             </q-item-section>
           </q-item>
         </template>
       </q-select>
+      <div v-if="artifactTaskOptions.length === 0 && !isLoading" class="text-caption text-negative">
+        The selected plugin has no files with artifact tasks.  Please select another plugin.
+      </div>
     </template>
   </KeyValueTable>
 
@@ -166,13 +194,20 @@ const router = useRouter()
 
 const darkMode = inject('darkMode')
 
+const isLoading = ref(true)
+
+const showHistory = computed(() => {
+  return store.showRightDrawer
+})
+
 onMounted(async() => {
   await getArtifact()
   await getPluginSnapshot()
-  await getFileSnapshot()
-  if(route.query.snapshotId && !store.showRightDrawer) {
+  await getPlugins('', (fn) => fn())
+  if(route.query.snapshotId && !showHistory.value) {
     store.showRightDrawer = true
   }
+  isLoading.value = false
 })
 
 const artifact = ref({
@@ -191,12 +226,20 @@ async function getArtifact() {
   }
 }
 
+let ORIGINAL_PLUGIN_SNAPSHOT
+
 async function getPluginSnapshot() {
   try {
-    console.log('artifact.value.task = ', artifact.value.task)
     const res = await api.getSnapshot('plugins', artifact.value.task.pluginResourceId, artifact.value.task.pluginResourceSnapshotId)
     console.log('plugin snap = ', res.data)
     artifact.value.plugin = res.data
+    ORIGINAL_PLUGIN_SNAPSHOT = JSON.parse(JSON.stringify(artifact.value.plugin))
+    // load task dropdown
+    const pluginFile = artifact.value.plugin.files.find((file) => file.id === artifact.value.task.pluginFileResourceId)
+    pluginFile.tasks.artifacts.forEach((task) => {
+      artifactTaskOptions.value.push(task)
+    })
+    selectedArtifactTask.value = artifactTaskOptions.value.find((task) => task.id === artifact.value.task.id)
   } catch(err) {
     console.warn(err)
   }
@@ -205,43 +248,40 @@ async function getPluginSnapshot() {
 const artifactTaskOptions = ref([])
 const selectedArtifactTask = ref()
 
-const artifactOutputTypeIds = computed(() => {
-  return artifact.value.task.outputParams.map(param => param.parameterType.id)
-})
-
 const plugins = ref([])
-const selectedPlugin = ref()
 
 async function getPlugins(val = '', update) {
   update(async () => {
     try {
-      const res = await api.getData('plugins', {
+      let res = await api.getData('plugins', {
         search: val,
         rowsPerPage: 0, // get all
         index: 0
       })
+      const originalPluginIndex = res.data.data.findIndex((plugin) => plugin.id === ORIGINAL_PLUGIN_SNAPSHOT.id)
+      // replace latest plugin snapshot with original plugin snapshot from artifact
+      res.data.data[originalPluginIndex] = ORIGINAL_PLUGIN_SNAPSHOT
       plugins.value = res.data.data
-      plugins.value = plugins.value.filter((plugin) => plugin.id !== artifact.value.plugin.id)
     } catch(err) {
       notify.error(err.response.data.message)
     } 
   })
 }
 
-watch(() => selectedPlugin.value, (newVal) => {
-  if(newVal) {
+watch(() => artifact.value.plugin, (newVal, oldVal) => {
+  // execute on plugin change, not on page load or turning off history
+  if(!oldVal || !newVal) {
+    return
+  }
+  if(!showHistory.value) {
+    // reset task dropdown
     selectedArtifactTask.value = ''
     artifactTaskOptions.value = []
-    selectedPlugin.value.files.forEach((file) => {
+    newVal.files.forEach((file) => {
       file.tasks.artifacts.forEach((task) => {
-        const fileTaskOutputTypes = task.outputParams.map((param) => param.parameterType.id)
-        if(arraysEqual(fileTaskOutputTypes, artifactOutputTypeIds.value)) {
-          artifactTaskOptions.value.push(task)
-        }
+        artifactTaskOptions.value.push(task)
       })
     })
-  } else {
-    getFileSnapshot()
   }
 })
 
@@ -251,35 +291,6 @@ function countTasks(plugin) {
     numberOfTasks += file.tasks.artifacts.length
   })
   return numberOfTasks
-}
-
-async function getFileSnapshot() {
-  try {
-    const res = await api.getFileSnapshot(
-      artifact.value.task.pluginResourceId,
-      artifact.value.task.pluginFileResourceId,
-      artifact.value.task.pluginFileResourceSnapshotId
-    )
-    console.log('file snap = ', res.data)
-    artifactTaskOptions.value = []
-    res.data.tasks.artifacts.forEach((task) => {
-      const fileTaskOutputTypes = task.outputParams.map((param) => param.parameterType.id)
-      if(arraysEqual(fileTaskOutputTypes, artifactOutputTypeIds.value)) {
-        artifactTaskOptions.value.push(task)
-      }
-    })
-    selectedArtifactTask.value = artifactTaskOptions.value.find((task) => task.id === artifact.value.task.id)
-  } catch(err) {
-    console.warn(err)
-  }
-}
-
-function arraysEqual(a = [], b = []) {
-  if (a.length !== b.length) return false
-  for (let i = 0; i < a.length; i++) {
-    if (a[i] !== b[i]) return false
-  }
-  return true
 }
 
 async function syncPlugin(pluginID) {
@@ -304,14 +315,11 @@ async function syncPlugin(pluginID) {
     selectedArtifactTask.value = ''
     let originalTaskFound = false
     resFile.data.tasks.artifacts.forEach((task) => {
-      const fileTaskOutputTypeIds = task.outputParams.map((param) => param.parameterType.id)
-      if(arraysEqual(fileTaskOutputTypeIds, artifactOutputTypeIds.value)) {
-        artifactTaskOptions.value.push(task)
-        if(task.id === artifact.value.task.id || task.name === artifact.value.task.name) {
-          selectedArtifactTask.value = task
-          originalTaskFound = true
-        }
-      }
+    artifactTaskOptions.value.push(task)
+    if(task.id === artifact.value.task.id) {
+      selectedArtifactTask.value = task
+      originalTaskFound = true
+    }
     })
     if(!originalTaskFound) {
       notify.info(`Task "${artifact.value.task.name}" not found in latest file, please select a new artifact task.`)
@@ -326,13 +334,10 @@ const rows = computed(() => [
   { label: 'Description', slot: 'description', props: { description: artifact.value?.description }  },
   { label: 'Created On', value: formatDate(artifact.value?.createdOn) },
   { label: 'Last Modified On', value: formatDate(artifact.value?.lastModifiedOn) },
-  { label: 'artifactUri', value: artifact.value?.artifactUri },
   { label: 'Download', slot: 'fileUrl', props: { fileUrl: artifact.value?.fileUrl } },
   { label: 'fileSize', slot: 'fileSize' },
   { label: 'Job ID', slot: 'job' },
   { label: 'isDir', value: artifact.value?.isDir },
-  { label: 'Artifact Task', slot: 'task' },
-  { label: 'Output Params', slot: 'outputParams', props: { outputParams: artifact.value?.task?.outputParams }  },
   { label: 'Plugin', slot: 'plugin', props: { plugin: artifact.value?.plugin }  },
 ])
 
@@ -345,7 +350,7 @@ async function submit() {
   try {
     const res = await api.updateItem('artifacts', route.params.id, {
       description: artifact.value.description,
-      pluginSnapshotId: selectedPlugin.value ? selectedPlugin.value.snapshot : artifact.value.plugin.snapshot,
+      pluginSnapshotId: artifact.value.plugin.snapshot,
       taskId: selectedArtifactTask.value.id
     })
     notify.success(`Successfully updated artifact '${route.params.id}'`)
@@ -356,14 +361,16 @@ async function submit() {
 }
 
 watch(() => store.selectedSnapshot, async (newVal) => {
+  isLoading.value = true
   if(newVal) {
-    console.log('newVal = ', newVal)
     artifact.value = newVal
     await getPluginSnapshot()
   } else {
     await getArtifact()
     await getPluginSnapshot()
+    await getPlugins('', (fn) => fn())
   }
+  isLoading.value = false
 })
 
 function prettyBytes(num) {
