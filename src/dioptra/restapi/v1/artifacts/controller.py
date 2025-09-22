@@ -87,6 +87,7 @@ class ArtifactEndpoint(Resource):
         )
         parsed_query_params = request.parsed_query_params  # noqa: F841
 
+        output_params = parsed_query_params["output_params"]
         group_id = parsed_query_params["group_id"]
         search_string = unquote(parsed_query_params["search"])
         page_index = parsed_query_params["index"]
@@ -97,6 +98,7 @@ class ArtifactEndpoint(Resource):
         artifacts, total_num_artifacts = self._artifact_service.get(
             group_id=group_id,
             search_string=search_string,
+            output_params=output_params,
             page_index=page_index,
             page_length=page_length,
             sort_by_string=sort_by_string,

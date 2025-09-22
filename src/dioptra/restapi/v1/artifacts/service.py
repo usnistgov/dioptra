@@ -21,7 +21,8 @@ from typing import Any, Final, cast
 import structlog
 from flask_login import current_user
 from injector import inject
-from sqlalchemy import Integer, func, select
+from sqlalchemy import Integer, Select, func, select
+from sqlalchemy.orm import aliased
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
@@ -223,6 +224,7 @@ class ArtifactService(object):
         self,
         group_id: int | None,
         search_string: str,
+        output_params: list[int] | None,
         page_index: int,
         page_length: int,
         sort_by_string: str,
@@ -235,6 +237,9 @@ class ArtifactService(object):
         Args:
             group_id: A group ID used to filter results.
             search_string: A search string used to filter results.
+            output_params: An ordered list of parameter type ids. Used to filter the
+                results to just those artifacts that have an artifact task whose output
+                value types exactly match the provided list.
             page_index: The index of the first group to be returned.
             page_length: The maximum number of artifacts to be returned.
             sort_by_string: The name of the column to sort.
@@ -272,6 +277,10 @@ class ArtifactService(object):
                 == models.Artifact.resource_snapshot_id,
             )
         )
+
+        if output_params:
+            stmt = self._apply_ouput_params_filter(stmt, output_params)
+
         total_num_artifacts = db.session.scalars(stmt).first()
 
         if total_num_artifacts is None:
@@ -298,6 +307,11 @@ class ArtifactService(object):
             .offset(page_index)
             .limit(page_length)
         )
+
+        if output_params:
+            latest_artifacts_stmt = self._apply_ouput_params_filter(
+                latest_artifacts_stmt, output_params
+            )
 
         if sort_by_string and sort_by_string in SORTABLE_FIELDS:
             sort_column = SORTABLE_FIELDS[sort_by_string]
@@ -328,6 +342,50 @@ class ArtifactService(object):
             artifacts_dict[resource_id]["has_draft"] = True
 
         return list(artifacts_dict.values()), total_num_artifacts
+
+    def _apply_ouput_params_filter(
+        self, stmt: Select, output_params: list[int]
+    ) -> Select:
+        # creates a comparison for each outuput parameter and makes
+        # sure the type is correct for that parameter_number
+        for index, p in enumerate(output_params):
+            task_alias = aliased(models.ArtifactTask)
+            parameter_alias = aliased(models.PluginTaskOutputParameter)
+            type_alias = aliased(models.PluginTaskParameterType)
+            stmt = (
+                stmt.join(models.Artifact.task.of_type(task_alias))
+                .join(models.ArtifactTask.output_parameters.of_type(parameter_alias))
+                .join(
+                    type_alias,
+                    type_alias.resource_snapshot_id
+                    == parameter_alias.plugin_task_parameter_type_resource_snapshot_id,
+                )
+                .where(
+                    type_alias.resource_id == p,
+                    parameter_alias.parameter_number == index,
+                )
+            )
+
+        # verifies that the number of parameters is what we are looking for
+        # prevents picking up artifacts which match the ones we are looking
+        # for, but have more parameters
+        count_subquery = (
+            select(
+                models.PluginTaskOutputParameter.task_id,
+                func.count().label("param_count"),
+            )
+            .group_by(models.PluginTaskOutputParameter.task_id)
+            .subquery()
+        )
+        task_alias = aliased(models.ArtifactTask)
+        stmt = (
+            stmt.join(models.Artifact.task.of_type(task_alias))
+            .join(count_subquery, task_alias.task_id == count_subquery.c.task_id)
+            .where(
+                count_subquery.c.param_count == len(output_params),
+            )
+        )
+        return stmt
 
 
 class ArtifactIdService(object):

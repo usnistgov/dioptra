@@ -16,7 +16,12 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The schemas for serializing/deserializing Artifact resources."""
 
+from typing import List
+
+import structlog
 from marshmallow import Schema, fields
+from marshmallow.exceptions import ValidationError
+from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.utils import validate_artifact_url
 from dioptra.restapi.v1.file_types import FileTypes
@@ -30,6 +35,9 @@ from dioptra.restapi.v1.schemas import (
     generate_base_resource_ref_schema,
     generate_base_resource_schema,
 )
+
+LOGGER: BoundLogger = structlog.stdlib.get_logger()
+
 
 ArtifactRefBaseSchema = generate_base_resource_ref_schema("Artifact")
 
@@ -206,6 +214,27 @@ class ArtifactContentsGetQueryParameters(Schema):
     )
 
 
+class DelimitedIntegerList(fields.Field):
+    def __init__(
+        self,
+        *,
+        delimiter: str = ",",
+        **additional_metadata,
+    ) -> None:
+        super().__init__(**additional_metadata)
+        self.delimiter = delimiter
+
+    def _deserialize(self, value, attr, data, **kwargs) -> List[int]:
+        try:
+            return [int(v) for v in value.split(self.delimiter)]
+        except AttributeError:
+            raise ValidationError(f"{attr} is not a delimited list {value}.") from None
+        except ValueError:
+            raise ValidationError(
+                f"{attr} contains a non-integer value {value}."
+            ) from None
+
+
 class ArtifactGetQueryParameters(
     PagingQueryParametersSchema,
     GroupIdQueryParametersSchema,
@@ -213,3 +242,14 @@ class ArtifactGetQueryParameters(
     SortByGetQueryParametersSchema,
 ):
     """The query parameters for the GET method of the /artifacts endpoint."""
+
+    outputParams = DelimitedIntegerList(
+        attribute="output_params",
+        metadata={
+            "description": (
+                "Ordered List of Plugin Task Parameter Ids of the output values "
+                "produced by the ArtifactTask associated with the target Artifacts."
+            )
+        },
+        load_default=None,
+    )
