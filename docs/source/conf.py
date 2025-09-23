@@ -57,6 +57,7 @@ extensions = [
     "sphinx_togglebutton",
     "sphinxcontrib.httpdomain",
     "sphinxcontrib.openapi",
+    "sphinx.ext.napoleon",     # Google/NumPy docstrings
     "sphinx_tabs.tabs",
 ]
 
@@ -92,7 +93,6 @@ add_module_names = False
 #
 on_rtd = os.environ.get("READTHEDOCS") == "True"
 html_theme = "sphinx_book_theme"
-
 # if on_rtd:
 #     html_theme = "default"
 
@@ -104,15 +104,13 @@ html_theme = "sphinx_book_theme"
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
 
-
-html_css_files = ["dioptra.css",]
+html_css_files = ["dioptra.css"]
 
 html_js_files = [
     "jquery.visible.js",
     "jquery.leaveNotice-nist.js",
     "applyLeaveNotice.js",
     "smoothNavScroll.js",
-    "image_modals.js"
 ]
 
 html_theme_options = {
@@ -122,8 +120,6 @@ html_theme_options = {
     "home_page_in_toc": True,
     "path_to_docs": "docs/source",
 }
-
-html_scaled_image_link = False
 
 # -- Extension configuration -------------------------------------------------
 
