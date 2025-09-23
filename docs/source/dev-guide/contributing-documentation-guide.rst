@@ -71,31 +71,47 @@ To caveat steps or reference explanation/reference material elsewhere, use notes
 Figures (screenshots)
 ~~~~~~~~~~~~~~~~~~~~~
 
-Screenshots should be cropped and zoomed for readability. Always include ``:alt:`` text.
+Screenshots should be cropped and zoomed for readability. Always include ``:alt:`` text.  
 
-.. tabs::
+We provide **custom CSS and JavaScript** for images.
 
-   .. tab:: Rendered
+To get our custom styling, use one or more of the following figure classes with ``:figclass:``:  
 
-      .. figure:: ../tutorials/tutorial_1/_static/screenshots/login_dioptra.png
-         :alt: Dioptra login screen
-         :width: 900px
-         :figclass: bordered-image
+- ``border-image`` → Adds a light border, shadow, and background  
+- ``clickable-image`` → Makes the image interactive with cursor + modal support  
+- ``big-image`` → Allows images to grow wider than the text column (fragile; hacky CSS that may break with sidebar/layout changes — use sparingly)  
 
-         **Login screen.** Use a tight crop so text remains readable.
+.. note::
+   These assets are loaded via ``conf.py`` using ``html_css_files`` and ``html_js_files`` to point to CSS and JS code in our ``_static`` directory. 
+   Modals are included by adding a ``div`` element in the ``layout.html`` footer.
+
+**A screenshot using all three CSS classes**
+
+On click, JavaScript shows the modal ``div`` element. 
+
+.. figure:: ../tutorials/tutorial_1/_static/screenshots/login_dioptra.png
+   :alt: Dioptra login screen
+   :figclass: border-image clickable-image big-image
+
+   **Login screen.** Use a tight crop so text remains readable.  
+   Click to enlarge.
 
 
+**RST Source code**
 
-   .. tab:: RST Source
+.. code-block:: rst
 
-      .. code-block:: rst
+   .. figure:: ../tutorials/tutorial_1/_static/screenshots/login_dioptra.png
+      :alt: Dioptra login screen
+      :figclass: border-image clickable-image big-image
 
-         .. figure:: ../tutorials/tutorial_1/_static/screenshots/login_dioptra.png
-            :alt: Dioptra login screen
-            :width: 900px
-            :figclass: bordered-image
+      **Login screen.** Use a tight crop so text remains readable.  
+      Click to enlarge.
 
-            **Login screen.** Use a tight crop so text remains readable.
+.. note::
+   Making images larger than the text column with ``big-image`` is potentially **fragile** and relies on CSS workarounds.
+   It may look odd with different sidebar widths or screen sizes. Prefer standard-sized images unless
+   the extra width is necessary for readability.
 
 
 Literal includes
@@ -121,7 +137,9 @@ Use ``literalinclude`` to pull code from the repo instead of pasting it:
             :linenos:
 
 .. note::
-   Use ``[docs:start]`` and ``[docs:end]`` to only grab sections of code. Needs corresponding tags in code files
+   Use ``# [docs:start]`` and ``# [docs:end]`` in Python files
+   (or the appropriate comment style for other languages)
+   to only grab sections of code. These tags must be present in the code files.
 
 Tabs for alternate paths
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -140,7 +158,7 @@ Tabs can be used for alternate instructions (e.g. UI vs API):
             .. figure:: ../tutorials/tutorial_1/_static/screenshots/login_dioptra.png
                :alt: Dioptra login screen
                :width: 900px
-               :figclass: bordered-image
+               :figclass: border-image
 
          .. tab:: API
             Login using the Python client API 
@@ -166,7 +184,7 @@ Tabs can be used for alternate instructions (e.g. UI vs API):
                .. figure:: ../tutorials/tutorial_1/_static/screenshots/login_dioptra.png
                   :alt: Dioptra login screen
                   :width: 900px
-                  :figclass: bordered-image
+                  :figclass: border-image
 
             .. tab:: API
                Login using the Python client API 
@@ -181,7 +199,7 @@ Tabs can be used for alternate instructions (e.g. UI vs API):
 
 
 Collapsible content
--------------------
+~~~~~~~~~~~~~~~~
 
 Use collapsible admonitions for long sections of code or optional context.  
 
@@ -208,18 +226,13 @@ Use collapsible admonitions for long sections of code or optional context.
                :linenos:
 
 Cross-references
-----------------
+~~~~~~~~~~~~~~~~
 
 Use explicit references (``.. _label-name:``) together with ``:ref:``.  
 This is the most reliable way to link between pages, since it does not  
 depend on the document being in a ``.. toctree::``.
 
 
-   .. code-block:: rst
-
-      .. _getting-started-running-dioptra:
-
-   Once the label exists, you can link to it with ``:ref:``.
 
 .. tabs::
 
@@ -235,7 +248,7 @@ depend on the document being in a ``.. toctree::``.
          See more about :ref:`getting-started-running-dioptra`  
          in the dedicated page.
 
-.. warning::
+.. note::
 
    To make a ``:ref:`` work, the target document must define a label
    (``.. _label-name:``). Without a label, ``:link-type: ref`` cannot resolve.
@@ -253,7 +266,7 @@ depend on the document being in a ``.. toctree::``.
 
 
 Cards, grids, and callouts
---------------------------
+~~~~~~~~~~~~~~~~
 
 `sphinx-design` provides cards and grids for menus or callouts.  
 

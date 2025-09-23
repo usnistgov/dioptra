@@ -1,3 +1,6 @@
+:html_theme.sidebar_secondary.remove:
+:html_theme.content_width: 100%
+
 Building a Multi-Step Workflow
 ==============================
 
@@ -65,8 +68,8 @@ Parameters for this Entrypoint:
 
 .. figure:: _static/screenshots/entrypoint_3_add_params.png
    :alt: Screenshot of Entrypoint 3 parameters window.
-   :width: 900px
-   :figclass: bordered-image
+   :width: 100%
+   :figclass: big-image border-image clickable-image
 
 
 Build the Task Graph
@@ -98,8 +101,8 @@ Key ideas:
 
 .. figure:: _static/screenshots/entrypoint_3_task_graph.png
    :alt: Screenshot of a multi-step task graph for Entrypoint 3.
-   :width: 900px
-   :figclass: bordered-image
+   :width: 100%
+   :figclass: big-image border-image clickable-image
 
 .. Note:: 
 
@@ -134,8 +137,8 @@ Let’s try it out.
 
 .. figure:: _static/screenshots/entrypoint_3_create_job.png
    :alt: Screenshot of a multi-step task graph for Entrypoint 3.
-   :width: 900px
-   :figclass: bordered-image
+   :width: 100%
+   :figclass: big-image border-image clickable-image
 
 
 Inspect Results

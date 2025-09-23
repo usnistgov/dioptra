@@ -15,7 +15,7 @@ The essential steps are:
 .. figure:: _static/screenshots/dioptra_workflow.png
    :alt: Diagram showing steps needed to run Python functions in Dioptra.
    :width: 900px
-   :figclass: bordered-image
+   :figclass: big-image border-image clickable-image
 
    **Dioptra Workflow Overview**  
    The four essential steps needed to run Python functions in Dioptra.
@@ -69,7 +69,7 @@ We now attach code to the plugin.
 .. figure:: _static/screenshots/plugin_1_add_file.png
    :alt: Screenshot of the plugin creation process in Dioptra.
    :width: 900px
-   :figclass: bordered-image
+   :figclass: big-image border-image clickable-image
 
    Adding a Python file during Plugin creation
 
@@ -110,7 +110,7 @@ Entrypoints define workflows made of tasks. Ours will be a single-task workflow.
 .. figure:: _static/screenshots/entrypoint_1_task_graph.png
    :alt: Screenshot of the Entrypoint task graph editor with YAML pasted in.
    :width: 900px
-   :figclass: bordered-image
+   :figclass: big-image border-image clickable-image
 
    Defining the Entrypoint task graph in the UI
 
@@ -150,7 +150,7 @@ Jobs execute entrypoints within experiments.
 .. figure:: _static/screenshots/create_job.png
    :alt: Screenshot of creating a job from the experiment page.
    :width: 900px
-   :figclass: bordered-image
+   :figclass: big-image border-image clickable-image
 
    Submitting a job from the Experiment page
 
@@ -159,7 +159,7 @@ The job will first appear as **Queued**, then change to **Finished** after a sho
 .. figure:: _static/screenshots/job_1_finished.png
    :alt: Screenshot showing a finished job in Dioptra.
    :width: 900px
-   :figclass: bordered-image
+   :figclass: big-image border-image clickable-image
 
    Job status changes from Queued to Finished
 

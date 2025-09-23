@@ -1,0 +1,84 @@
+/* --- Layout classes --- */
+
+/* Wide image: grow up to 1100px, respecting sidebar */
+figure.big-image {
+  /* default: assume sidebar present (~250px) */
+  width: min(1100px, calc(100vw - 350px - 2rem)) !important; /*350 px to be safe */
+  margin-left: 0;
+  margin-right: auto;
+}
+
+figure.big-image img {
+  width: 100% !important;
+  height: auto;
+  display: block;
+}
+
+/* When sidebar collapses (small screens), allow full width */
+@media (max-width: 960px) {  /* adjust to your theme’s breakpoint */
+  figure.big-image {
+    width: min(1100px, 100vw - 2rem) !important;
+  }
+}
+
+
+/* --- Styling classes --- */
+
+/* Add subtle shadow + light gray frame */
+figure.border-image {
+  border: 1px solid #d0d0d0;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  padding: 4px;
+  transition: border-color 0.25s ease, border-width 0.25s ease, box-shadow 0.25s ease;
+}
+
+
+/* --- Interaction classes --- */
+
+figure.clickable-image,
+figure.clickable-image img {
+  /* cursor: zoom-in; */ /* Not legible on chromium or linux */
+  cursor: pointer !important;  /* force override inline style from sphinx */
+}
+
+figure.border-image.clickable-image:hover {
+  border-color: #40acff9d;   
+  border-width: 3px;       
+  box-shadow: 0 6px 14px rgba(0,0,0,0.18);
+}
+
+/* for image modal popup on click */
+
+/* Modal background */
+#img-modal {
+  display: none;          
+  position: fixed;
+  z-index: 9999;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.8);
+  justify-content: center;
+  align-items: center;
+}
+
+/* Modal content image */
+#img-modal img {
+  max-width: 90%;
+  max-height: 90%;
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  background: #fff;
+}
+
+/* Close button */
+#img-modal .close-btn {
+  position: absolute;
+  top: 20px;
+  right: 30px;
+  font-size: 2rem;
+  color: #fff;
+  cursor: pointer;
+}
