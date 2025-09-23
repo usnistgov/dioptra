@@ -31,7 +31,7 @@ Before a task can output a NumPy array, we need to define the type in Dioptra.
 .. figure:: _static/screenshots/make_numpy_array_type.png
    :alt: Screenshot of creating a new type called NumpyArray.
    :width: 900px
-   :figclass: bordered-image
+   :figclass: big-image border-image clickable-image
 
    Creating a new type in the UI
 
@@ -72,7 +72,7 @@ Instead of manually specifying the input/output types, let's use Dioptra's autod
 .. figure:: _static/screenshots/import_plugin_tasks.png
    :alt: Screenshot of the "Import Function Tasks" button.
    :width: 900px
-   :figclass: bordered-image
+   :figclass: big-image border-image clickable-image
 
 .. note::
 
@@ -85,7 +85,7 @@ You may see an error under **Plugin Tasks**: *Resolve missing Type* for the ``np
 .. figure:: _static/screenshots/resolve_missing_type.png
    :alt: Screenshot of a missing type error in Plugin Task registration.
    :width: 900px
-   :figclass: bordered-image
+   :figclass: big-image border-image clickable-image
 
 This is because we called our custom type ``NumpyArray``, not ``np_ndarray``.  
 
@@ -115,7 +115,7 @@ Entrypoint setup is very similar to before, but we now add an **Entrypoint param
 .. figure:: _static/screenshots/sample_size_entrypoint_param.png
    :alt: Screenshot of adding the sample_size parameter to Entrypoint 2.
    :width: 900px
-   :figclass: bordered-image
+   :figclass: big-image border-image clickable-image
 
 .. note::
    Default parameters for an entrypoint can be overridden when running a Job.
@@ -135,7 +135,7 @@ Next, add the plugin task to the graph:
 .. figure:: _static/screenshots/entrypoint_2_add_to_task_graph.png
    :alt: Screenshot of adding plugin_2 to Entrypoint 2.
    :width: 900px
-   :figclass: bordered-image
+   :figclass: big-image border-image clickable-image
 
 By default, the **step** of the graph has no name and no parameter bindings. We must configure inputs.
 Use the following values:
@@ -152,7 +152,7 @@ Use the following values:
 .. figure:: _static/screenshots/entrypoint_2_edit_task_graph.png
    :alt: Screenshot of editing parameters in Entrypoint 2 task graph.
    :width: 900px
-   :figclass: bordered-image
+   :figclass: big-image border-image clickable-image
 
 
 Add Entrypoint 2 to Experiment 1
@@ -168,7 +168,7 @@ We don’t need a new Experiment. We can add Entrypoint 2 to the one we already 
 .. figure:: _static/screenshots/add_entrypoint_2_to_experiment_1.png
    :alt: Screenshot of adding Entrypoint 2 to an existing experiment.
    :width: 900px
-   :figclass: bordered-image
+   :figclass: big-image border-image clickable-image
 
 
 Run Two Jobs
@@ -186,18 +186,18 @@ Now we’ll test different parameter values.
 .. figure:: _static/screenshots/entrypoint_2_job_10000.png
    :alt: Screenshot of running Entrypoint 2 with sample_size=10000.
    :width: 900px
-   :figclass: bordered-image
+   :figclass: big-image border-image clickable-image
 
 Repeat the process:
 
 .. admonition:: Steps (continued)
-   
+
    1. Create another Job with ``sample_size`` = 100.  
 
 .. figure:: _static/screenshots/entrypoint_2_showing_all_jobs.png
    :alt: Screenshot showing multiple jobs created with different sample sizes.
    :width: 900px
-   :figclass: bordered-image
+   :figclass: big-image border-image clickable-image
 
 Wait for both jobs to finish.
 

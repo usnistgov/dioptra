@@ -93,6 +93,9 @@ add_module_names = False
 #
 on_rtd = os.environ.get("READTHEDOCS") == "True"
 html_theme = "sphinx_book_theme"
+
+
+
 # if on_rtd:
 #     html_theme = "default"
 
@@ -102,15 +105,19 @@ html_theme = "sphinx_book_theme"
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ["_static"]
+html_static_path = ['_static']
 
-html_css_files = ["dioptra.css"]
+
+html_css_files = ["dioptra.css", 
+                  'css/images.css',
+                  ]
 
 html_js_files = [
     "jquery.visible.js",
     "jquery.leaveNotice-nist.js",
     "applyLeaveNotice.js",
     "smoothNavScroll.js",
+    "image_modals.js"
 ]
 
 html_theme_options = {
@@ -118,8 +125,11 @@ html_theme_options = {
     "repository_branch": "main",
     "use_repository_button": True,
     "home_page_in_toc": True,
-    "path_to_docs": "docs/source",
+    "path_to_docs": "docs/source"
 }
+
+html_scaled_image_link = False
+
 
 # -- Extension configuration -------------------------------------------------
 
