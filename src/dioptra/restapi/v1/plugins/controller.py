@@ -17,7 +17,7 @@
 """The module defining the endpoints for Plugin resources."""
 
 import uuid
-from typing import cast
+from typing import Any, cast
 
 import structlog
 from flask import request, send_file
@@ -508,6 +508,11 @@ PluginFileIdDraftResource = generate_nested_resource_id_draft_endpoint(
 )
 
 
+def build_plugin(plugin: utils.PluginWithFilesDict) -> dict[str, Any]:
+    plugin["plugin_files"] = plugin["plugin"].plugin_files
+    return utils.build_plugin(plugin)
+
+
 PluginSnapshotsResource = generate_resource_snapshots_endpoint(
     api=api,
     resource_model=models.Plugin,
@@ -515,14 +520,14 @@ PluginSnapshotsResource = generate_resource_snapshots_endpoint(
     route_prefix=V1_PLUGINS_ROUTE,
     searchable_fields=PLUGIN_SEARCHABLE_FIELDS,
     page_schema=PluginPageSchema,
-    build_fn=utils.build_plugin,
+    build_fn=build_plugin,
 )
 PluginSnapshotsIdResource = generate_resource_snapshots_id_endpoint(
     api=api,
     resource_model=models.Plugin,
     resource_name=PLUGIN_RESOURCE_TYPE,
     response_schema=PluginSchema,
-    build_fn=utils.build_plugin,
+    build_fn=build_plugin,
 )
 
 PluginTagsResource = generate_resource_tags_endpoint(
