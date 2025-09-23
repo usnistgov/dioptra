@@ -20,7 +20,7 @@
 .. _how_to_create_a_queue:
 
 How-To: Create a Queue
-=====================
+======================
 
 In Dioptra, jobs are submitted to queues, which represent a computing environment. This
 guide assumes that Dioptra is already installed and is accessible through the web browser,
