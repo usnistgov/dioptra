@@ -71,17 +71,23 @@ If your function uses a type not captured by one of the built-in types, you can 
 
 1. Click the **Plugin Parameters** tab. 
 
-    .. figure:: /images/plugin-param.png
+   .. figure:: /images/plugin-param.png
+      :alt: Figure depicting the Dioptra Plugin Parameters page
+    
+      Dioptra Plugin Parameters page
 
 2. Click **Create**.
 3. Enter a name, select the group that should have access to the type, and enter a description.
 4. If your type is a structure consisting of mappings, lists, and you would like to represent that, 
    you can do that in the structure field using the type specific. Below is an example of a structure.
 
-    .. code-block:: yaml
-        tuple: [integer, string]
+   .. code-block:: yaml
+      tuple: [integer, string]
 
-    .. figure:: /images/plugin-param-create.png
+   .. figure:: /images/plugin-param-create.png
+      :alt: Figure depicting the Dioptra Plugin Parameter creation page
+       
+      Dioptra Plugin Parameter creation
 
 5. Click **Confirm** when finished.
 
@@ -90,37 +96,55 @@ Create a Plugin
 
 1. Navigate to the **Plugins** tab.
 
-    .. figure:: /images/plugin.png
+   .. figure:: /images/plugin.png
+      :alt: Figure depicting the Dioptra Plugins page
+       
+      Dioptra Plugins page
 
 2. Click **Create**.
 3. Enter a name, select the group that should have access to the plugin, and enter a description.
 
-    .. figure:: /images/plugin-create.png
+   .. figure:: /images/plugin-create.png
+      :alt: Figure depicting the Dioptra plugin creation page
+       
+      Dioptra plugin creation page
 
 4. Click **Confirm**.
 5. If successful, you should see the newly created plugin in the list.
 
-    .. figure:: /images/plugin-created.png
+   .. figure:: /images/plugin-created.png
+      :alt: Figure depicting the Dioptra Plugins page with newly created plugin
+
+      Dioptra Plugins page with newly created plugin
 
 
 Create a Plugin File
 --------------------
+1. Navigate to the **Plugins** page.
 
-    .. figure:: /images/plugin-manage-files.png
+   .. figure:: /images/plugin-manage-files.png
+      :alt: Figure depicting the location of the Manage Plugin Files button on the Dioptra Plugins page
 
-1. On the **Plugins** page, click the **Manage Plugin Files** button next to the plugin you would 
+      Manage Plugin Files button on the Dioptra Plugins page
+
+2. On the **Plugins** page, click the **Manage Plugin Files** button next to the plugin you would 
    like to add functions to.
 
-    .. figure:: /images/plugin-files.png
+   .. figure:: /images/plugin-files.png
+      :alt: Figure depicting the Dioptra Plugin Files page
 
-2. On the **Plugin Files** page, click **Create**.
-3. On the **Create File** page, you can choose to upload a python file by clicking **Upload Python File**,
+      Dioptra Plugins Files page
+
+3. On the **Plugin Files** page, click **Create**.
+4. On the **Create File** page, you can choose to upload a python file by clicking **Upload Python File**,
    or just use the code box to type python code manually. Ensure that your functions are annotated
    as described above.
-4. Enter a filename, and description in the appropriate fields.
+5. Enter a filename, and description in the appropriate fields.
 
+   .. figure:: /images/plugin-file-create.png
+      :alt: Figure depicting the Dioptra Plugin File Creation page
 
-    .. figure:: /images/plugin-file-create.png
+      Dioptra plugin file creation page
 
 
 Create Tasks for each Function in the File
@@ -133,18 +157,30 @@ Create Tasks for each Function in the File
 3. For every output parameter to the task, enter the name of the parameter, select the parameter type, and
    click the **Add Output Param** button when finished to add that parameter.
 
-    .. figure:: /images/plugin-task-params.png
+   .. figure:: /images/plugin-task-params.png
+      :alt: Figure depicting the Dioptra Plugin Task Form
+
+      Dioptra Plugin Task Form 
 
 4. Ensure that the task name matches the function name in the code. 
 5. Indicate whether the function is a function or an artifact task.
    
-    .. figure:: /images/plugin-task-create.png
+   .. figure:: /images/plugin-task-create.png
+      :alt: Figure depicting the Dioptra Plugin Task Form with created input and output parameters
+
+      Dioptra Plugin Task Form with created input and output parameters
 
 6. Click **Add Task**.
 7. If successful, it should appear in the **Plugin Function Tasks** section.
 
-    .. figure:: /images/plugin-task-created.png
+   .. figure:: /images/plugin-task-created.png
+      :alt: Figure depicting the Dioptra Plugin File Creation page with tasks registered for the file
+
+      Dioptra Plugin File Creation page with tasks registered for the file
 
 8. After adding all the tasks from the file, click **Save File**. Repeat this process for all plugin files in your plugin.
 
-    .. figure:: /images/plugin-file-created.png
+   .. figure:: /images/plugin-file-created.png
+      :alt: Figure depicting the Dioptra Plugin Files page with newly registered plugin file
+
+      Dioptra Plugin Files page with newly registered plugin file
