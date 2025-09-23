@@ -1573,7 +1573,6 @@ def test_manage_plugin_snapshots(
         dioptra_client.plugins.snapshots,
         resource_to_rename=plugin_to_rename.copy(),
         modified_resource=modified_plugin.copy(),
-        drop_additional_fields=["files"],
     )
 
 
