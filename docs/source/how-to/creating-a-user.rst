@@ -26,16 +26,22 @@ Before you can create plugins, run experiments, or view jobs, a user
 is needed. This guide assumes that Dioptra is already installed and
 is accessible through the web browser.
 
-1.  Navigate to the Dioptra Web UI in your browser. If using the default container setup,
-    it will be located at http://localhost/.
+1. Navigate to the Dioptra Web UI in your browser. If using the default container setup,
+   it will be located at http://localhost/.
 
-    .. figure:: /images/creating-a-user-login-page.png
+   .. figure:: /images/creating-a-user-login-page.png
+      :alt: Figure depicting the Dioptra user login page
 
-2.  On the presented login screen, click **Signup**.
-3.  Enter a username, email, and password in the appropriate fields.
+      Dioptra user login page
 
-    .. figure:: /images/creating-a-user-registration.png
+2. On the presented login screen, click **Signup**.
+3. Enter a username, email, and password in the appropriate fields.
 
-4.  Click **Register**.
-5.  A green popup should show up indicating the user has been successfully created, and
-    you can now login as that user.
+   .. figure:: /images/creating-a-user-registration.png
+      :alt: Figure depicting the Dioptra user registration page
+       
+      Dioptra user registration page
+
+4. Click **Register**.
+5. A green popup should show up indicating the user has been successfully created, and
+   you can now login as that user.
