@@ -17,7 +17,7 @@
 .. https://creativecommons.org/licenses/by/4.0/legalcode
 
 
-.. _how_to_create_a_queue:
+.. _how_to_create_a_plugin:
 
 How-To: Creating New Plugins
 ============================
