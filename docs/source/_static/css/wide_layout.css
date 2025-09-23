@@ -1,9 +1,0 @@
-/* Make the article content wider */
-.bd-main .bd-content .bd-article-container {
-  max-width: 100%;  /* default is 60em */
-}
-
-/* Make the page wrapper wider (affects navbar + content) */
-.bd-page-width {
-  max-width: 100%;  /* default is 88rem */
-}
