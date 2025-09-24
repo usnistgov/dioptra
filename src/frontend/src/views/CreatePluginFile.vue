@@ -86,7 +86,7 @@
         :disableSelect="true"
         :hideOpenBtn="true"
         :hideDeleteBtn="true"
-        rightCaption="*Click param to edit, or X to delete"
+        rightCaption="*Click parameter to edit, or X to delete"
         @create="showTaskDialog=true; taskType='functions'"
       >
         <template #body-cell-name="props">
@@ -187,7 +187,7 @@
         :disableSelect="true"
         :hideOpenBtn="true"
         :hideDeleteBtn="true"
-        rightCaption="*Click param to edit, or X to delete"
+        rightCaption="*Click parameter to edit, or X to delete"
         @create="showTaskDialog=true; taskType='artifacts'"
       >
         <template #body-cell-name="props">
