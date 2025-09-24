@@ -1,5 +1,4 @@
 :html_theme.sidebar_secondary.remove:
-:html_theme.content_width: 100%
 
 Building a Multi-Step Workflow
 ==============================
@@ -43,10 +42,13 @@ The tasks include:
 
 **Plugin 3 Code**
 
-.. literalinclude:: ../../../../examples/tutorials/tutorial_1/plugin_3.py
-   :language: python
-   :linenos:
 
+.. admonition:: Plugin 3
+    :class: code-panel python
+
+    .. literalinclude:: ../../../../examples/tutorials/tutorial_1/plugin_3.py
+       :language: python
+       :linenos:
 
 Create Entrypoint 3
 -------------------
@@ -71,6 +73,7 @@ Parameters for this Entrypoint:
    :width: 100%
    :figclass: big-image border-image clickable-image
 
+   Defining a couple entrypoint parameters we wish to override on a job run. Feel free to experiment with other inputs from our plugin tasks instead and adjust the task graph accordingly.
 
 Build the Task Graph
 ~~~~~~~~~~~~~~~~~~~~
@@ -95,14 +98,20 @@ Key ideas:
 
 **Entrypoint 3 Task Graph YAML** 
 
-.. literalinclude:: ../../../../examples/tutorials/tutorial_1/entrypoint_3_task_graph.yaml
-   :language: yaml
-   :linenos:
+.. admonition:: Task Graph
+    :class: code-panel yaml
+
+    .. literalinclude:: ../../../../examples/tutorials/tutorial_1/entrypoint_3_task_graph.yaml
+       :language: yaml
+       :linenos:
+
 
 .. figure:: _static/screenshots/entrypoint_3_task_graph.png
    :alt: Screenshot of a multi-step task graph for Entrypoint 3.
    :width: 100%
    :figclass: big-image border-image clickable-image
+
+   Multi-step task graph that repeats Plugin Task "print_stats" three times, each utilizing a different output array. 
 
 .. Note:: 
 
@@ -136,9 +145,11 @@ Let’s try it out.
    4. Submit the Job.  
 
 .. figure:: _static/screenshots/entrypoint_3_create_job.png
-   :alt: Screenshot of a multi-step task graph for Entrypoint 3.
+   :alt: Creating a job that uses entrypoint 3 with specific parameters.
    :width: 100%
    :figclass: big-image border-image clickable-image
+
+   Creating a new job - any parameter that is not set in the job run will be set to the entrypoint default.
 
 
 Inspect Results

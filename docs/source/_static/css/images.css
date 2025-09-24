@@ -28,7 +28,6 @@ figure.big-image img {
 figure.border-image {
   border: 1px solid #d0d0d0;
   border-radius: 6px;
-  background: #fff;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
   padding: 4px;
   transition: border-color 0.25s ease, border-width 0.25s ease, box-shadow 0.25s ease;

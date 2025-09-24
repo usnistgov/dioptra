@@ -1,0 +1,72 @@
+/* Base code panel */
+.admonition.code-panel {
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 6px;
+  margin: 1.5em 0;
+  background: var(--pst-color-surface);
+}
+
+/* Title baseline */
+.admonition.code-panel > .admonition-title {
+  font-family: monospace;
+  font-weight: normal;
+  min-height: 2.5em;
+  display: flex;
+  align-items: center;
+  position: relative;
+  border-radius: 0;
+  gap: .4rem;
+  font-size: .9em;
+}
+
+/* Remove margins inside */
+.admonition.code-panel .highlight,
+.highlight-yaml, .highlight-python {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* Target any code inside .code-panel admonitions */
+.admonition.code-panel pre,
+.admonition.code-panel code,
+.admonition.code-panel .highlight {
+  font-size: 0.85em !important;
+}
+
+
+/* --- Nuke theme defaults --- */
+.admonition.code-panel > .admonition-title::before,
+div.admonition.code-panel > .admonition-title::before,
+.admonition.code-panel > .admonition-title::after {
+  content: none !important;
+  background: none !important;
+  position: static !important;
+  opacity: 1 !important;
+  width: auto !important;
+}
+
+/* --- Add our prompts back on ::before --- */
+.admonition.code-panel.python > .admonition-title::before {
+  content: ">>>" !important;
+  color: #f7f7f7;
+}
+
+.admonition.code-panel.yaml > .admonition-title::before {
+  content: ">>" !important;
+  color: #e8e8e8;
+}
+
+/* Python-specific look */
+.admonition.code-panel.python > .admonition-title {
+  background-color: #4b7eb3;
+  border-bottom: 2px solid #ffe873;
+  color: #f7f7f7;
+}
+
+/* YAML-specific look */
+.admonition.code-panel.yaml > .admonition-title {
+  background-color: #c5636b;
+  border-bottom: 2px solid #ad424b;
+  color: #e8e8e8;
+}
+
