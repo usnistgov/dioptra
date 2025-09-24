@@ -1,5 +1,4 @@
 :html_theme.sidebar_secondary.remove:
-:html_theme.content_width: 100%
 
 Saving Artifacts
 ==========================
@@ -29,9 +28,15 @@ Just like before, we will create a new plugin, but this time define **artifact t
 
 **Artifact Plugin Code**
 
-.. literalinclude:: ../../../../examples/tutorials/tutorial_1/numpy_artifact_plugin.py
-   :language: python
-   :linenos:
+
+.. admonition:: Artifact Plugin 
+    :class: code-panel python
+
+    .. literalinclude:: ../../../../examples/tutorials/tutorial_1/numpy_artifact_plugin.py
+       :language: python
+       :linenos:
+
+
 
 .. note::
 
@@ -46,6 +51,8 @@ Just like before, we will create a new plugin, but this time define **artifact t
    :alt: Screenshot of a job producing an artifact.
    :width: 100%
    :figclass: big-image border-image clickable-image
+
+   Defining an Artifact Task Plugin requires creating a subclass of ``ArtifactTaskInterface``. The validation method is undefined here but can validate the arguments for the serialize and deserialize function. 
 
 .. admonition:: Steps (finalized)
 
@@ -74,6 +81,8 @@ Nothing about **Plugin 3** itself needs to change.
    :alt: Screenshot of a job producing an artifact.
    :width: 100%
    :figclass: big-image border-image clickable-image
+
+   The Artifact Output Graph defines the logic for which Plugin Tasks should be saved and how. 
 
 .. note::
 
@@ -118,6 +127,7 @@ After the job finishes:
    :width: 100%
    :figclass: big-image border-image clickable-image
 
+   A work in progress display of the created artifacts - needs to be updated. 
 
 Congratulations—you’ve just saved your first artifact!  
 

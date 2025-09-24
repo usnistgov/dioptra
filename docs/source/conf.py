@@ -110,6 +110,7 @@ html_static_path = ['_static']
 
 html_css_files = ["dioptra.css", 
                   'css/images.css',
+                  'css/component_styling.css'
                   ]
 
 html_js_files = [

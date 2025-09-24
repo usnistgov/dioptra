@@ -1,3 +1,5 @@
+:html_theme.sidebar_secondary.remove:
+
 Adding Inputs and Outputs
 =========================
 
@@ -53,9 +55,13 @@ We will now create a new plugin with one task. This task:
 
 **Plugin 2 Code**
 
-.. literalinclude:: ../../../../examples/tutorials/tutorial_1/plugin_2.py
-   :language: python
-   :linenos:
+
+.. admonition:: Plugin 2
+    :class: code-panel python
+
+    .. literalinclude:: ../../../../examples/tutorials/tutorial_1/plugin_2.py
+       :language: python
+       :linenos:
 
 
 Register the Task
@@ -74,6 +80,8 @@ Instead of manually specifying the input/output types, let's use Dioptra's autod
    :width: 900px
    :figclass: big-image border-image clickable-image
 
+   Using "Import Tasks" to automatically detect and register Plugin Tasks in a Python file
+
 .. note::
 
    Input and output types are auto-detected from **Python type hints** and the
@@ -86,6 +94,8 @@ You may see an error under **Plugin Tasks**: *Resolve missing Type* for the ``np
    :alt: Screenshot of a missing type error in Plugin Task registration.
    :width: 900px
    :figclass: big-image border-image clickable-image
+
+   The output type was detected as np_ndarray, but our type is called NumpyArray. Click the output to fix this.
 
 This is because we called our custom type ``NumpyArray``, not ``np_ndarray``.  
 
@@ -117,8 +127,8 @@ Entrypoint setup is very similar to before, but we now add an **Entrypoint param
    :width: 900px
    :figclass: big-image border-image clickable-image
 
-.. note::
-   Default parameters for an entrypoint can be overridden when running a Job.
+   Creating an entrypoint parameter allows the parameter to be changed during a job run.
+
 
 Create the Entrypoint Task Graph 
 ~~~~~~~~~~~~~~~~~~~
@@ -136,6 +146,8 @@ Next, add the plugin task to the graph:
    :alt: Screenshot of adding plugin_2 to Entrypoint 2.
    :width: 900px
    :figclass: big-image border-image clickable-image
+
+   Using "Add To Task Graph" to automatically add Plugin Tasks into an entrypoint. Step Name and Parameterization need to be defined by hand.
 
 By default, the **step** of the graph has no name and no parameter bindings. We must configure inputs.
 Use the following values:
@@ -170,6 +182,7 @@ We don’t need a new Experiment. We can add Entrypoint 2 to the one we already 
    :width: 900px
    :figclass: big-image border-image clickable-image
 
+   You can edit experiments and add new entrypoints to them.
 
 Run Two Jobs
 ------------
@@ -188,6 +201,8 @@ Now we’ll test different parameter values.
    :width: 900px
    :figclass: big-image border-image clickable-image
 
+   Setting the sample size parameter for a job to 10,000.
+
 Repeat the process:
 
 .. admonition:: Steps (continued)
@@ -198,6 +213,8 @@ Repeat the process:
    :alt: Screenshot showing multiple jobs created with different sample sizes.
    :width: 900px
    :figclass: big-image border-image clickable-image
+
+   Jobs change from "queued" to "started", and then either "fail" or "finish".
 
 Wait for both jobs to finish.
 

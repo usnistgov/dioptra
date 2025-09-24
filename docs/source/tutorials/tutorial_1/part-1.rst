@@ -1,3 +1,5 @@
+:html_theme.sidebar_secondary.remove:
+
 Running your first plugin task
 ==============================
 
@@ -15,7 +17,7 @@ The essential steps are:
 .. figure:: _static/screenshots/dioptra_workflow.png
    :alt: Diagram showing steps needed to run Python functions in Dioptra.
    :width: 900px
-   :figclass: big-image border-image clickable-image
+   :figclass: border-image clickable-image
 
    **Dioptra Workflow Overview**  
    The four essential steps needed to run Python functions in Dioptra.
@@ -62,9 +64,15 @@ We now attach code to the plugin.
    3. In the **Basic Info** tab, provide a filename (e.g., `plugin_1.py`).  
    4. Paste the following code into the editor:
 
-.. literalinclude:: ../../../../examples/tutorials/tutorial_1/plugin_1.py
-   :language: python
-   :linenos:
+**Plugin 1** 
+
+.. admonition:: Plugin 1
+    :class: code-panel python
+
+    .. literalinclude:: ../../../../examples/tutorials/tutorial_1/plugin_1.py
+       :language: python
+       :linenos:
+
 
 .. figure:: _static/screenshots/plugin_1_add_file.png
    :alt: Screenshot of the plugin creation process in Dioptra.
@@ -103,9 +111,14 @@ Entrypoints define workflows made of tasks. Ours will be a single-task workflow.
    3. Fill in the name and description.  
    4. In the **Task Graph** tab, paste the following YAML:
 
-.. literalinclude:: ../../../../examples/tutorials/tutorial_1/entrypoint_1_task_graph.yaml
-   :language: yaml
-   :linenos:
+**Entrypoint 1 Task Graph**
+
+.. admonition:: Task Graph
+    :class: code-panel yaml
+
+    .. literalinclude:: ../../../../examples/tutorials/tutorial_1/entrypoint_1_task_graph.yaml
+       :language: yaml
+       :linenos:
 
 .. figure:: _static/screenshots/entrypoint_1_task_graph.png
    :alt: Screenshot of the Entrypoint task graph editor with YAML pasted in.

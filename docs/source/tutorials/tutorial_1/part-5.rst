@@ -1,5 +1,4 @@
 :html_theme.sidebar_secondary.remove:
-:html_theme.content_width: 100%
 
 Using Saved Artifacts
 =====================
@@ -36,9 +35,12 @@ This is similar to first few steps in this tutorial.
 
 **Rescaling Plugin Code**
 
-.. literalinclude:: ../../../../examples/tutorials/tutorial_1/plugin_4.py
-   :language: python
-   :linenos:
+.. admonition:: Plugin 4
+    :class: code-panel python
+
+    .. literalinclude:: ../../../../examples/tutorials/tutorial_1/plugin_4.py
+       :language: python
+       :linenos:
 
 This plugin defines two new tasks - ``scale_array`` to rescale the array three different ways and ``visualize_rescaling_multi`` to visualize all the rescaled arrays. 
 
@@ -57,9 +59,12 @@ Next, let’s update the artifact plugin so that we can save a Matplotlib figure
 
 **Matplotlib Artifact Code**
 
-.. literalinclude:: ../../../../examples/tutorials/tutorial_1/matplotlib_fig_artifact_plugin.py
-   :language: python
-   :linenos:
+.. admonition:: Artifact Plugin
+    :class: code-panel python
+        
+    .. literalinclude:: ../../../../examples/tutorials/tutorial_1/matplotlib_fig_artifact_plugin.py
+       :language: python
+       :linenos:
 
 
 
@@ -72,30 +77,35 @@ Now let’s define a new Entrypoint that uses an artifact as input.
 
    1. Go to the **Entrypoints** tab → **Create Entrypoint**.  
    2. Name it ``entrypoint_5``.  
-   3. Copy the following code into the Task Graph 
+   3. Copy the following code blocks into the Task Graph and Artifact Output Graph boxes
 
-**Entrypoint 5 Task Graph** 
+**Entrypoint 5 Task Graph and Artifact Output Task Graph** 
 
-.. literalinclude:: ../../../../examples/tutorials/tutorial_1/entrypoint_5_task_graph.yaml
-   :language: yaml
-   :linenos:
+.. admonition:: Task Graph
+    :class: code-panel yaml
 
-.. note::
-    Note that we are referencing ``$artifact_input_array``. We need to define this as a artifact input param. 
+    .. literalinclude:: ../../../../examples/tutorials/tutorial_1/entrypoint_5_task_graph.yaml
+       :language: yaml
+       :linenos:
 
-.. admonition:: Steps (continued)
-    In addition to the task graph, also define the artifact output graph to save the Matplotlib figure
 
-**Entrypoint 5 Artifact Output Task Graph**
+.. admonition:: Artifact Output Task Graph
+    :class: code-panel yaml
 
-.. literalinclude:: ../../../../examples/tutorials/tutorial_1/entrypoint_5_artifact_output_task_graph.yaml
-   :language: yaml
-   :linenos:
+    .. literalinclude:: ../../../../examples/tutorials/tutorial_1/entrypoint_5_artifact_output_task_graph.yaml
+       :language: yaml
+       :linenos:
+
+**Copy the code into the appropriate boxes**
 
 .. figure:: _static/screenshots/entrypoint_5_task_graph_and_artifact_output_graph.png
    :alt: Screenshot showing artifact parameter input in Entrypoint 5.
    :width: 100%
    :figclass: big-image border-image clickable-image
+
+.. note::
+    Note that in the task graph, we are referencing ``$artifact_input_array``. We need to define this as a artifact input param. 
+
 
 
 
@@ -109,7 +119,7 @@ Now let’s define a new Entrypoint that uses an artifact as input.
    :width: 100%
    :figclass: big-image border-image clickable-image
 
-
+   This task graph uses positional arguments instead of keyword arguments. Our artifact output graph saves the generated matplotlib figure from step 2. 
 
 Create Experiment and Job
 ----------------------------------
@@ -128,7 +138,7 @@ Finally, let’s test it out.
    :width: 100%
    :figclass: big-image border-image clickable-image
 
-
+   After defining the artifact parameter ``artifact_input_array``, we are able to use it just like a regular entrypoint parameter in our task graph. 
 
 Inspect Results
 ---------------
@@ -153,7 +163,7 @@ The saved Matplotlib figure should display these transformations side-by-side.
    :width: 100%
    :figclass: big-image border-image clickable-image
 
-
+   The artifact that was generated from this entrypoint - a matplotlib figure showing the various rescaling methods. 
 
 
 Conclusion
