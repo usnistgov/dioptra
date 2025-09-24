@@ -16,30 +16,30 @@
           <q-item clickable v-close-popup to="/experiments">
             <q-item-section>Experiments</q-item-section>
           </q-item>
+          <q-item clickable v-close-popup to="/jobs">
+            <q-item-section>Jobs</q-item-section>
+          </q-item>
+          <q-item clickable v-close-popup to="/artifacts">
+            <q-item-section>Artifacts</q-item-section>
+          </q-item>
           <q-item clickable v-close-popup to="/entryPoints">
             <q-item-section>Entrypoints</q-item-section>
           </q-item>
           <q-item clickable v-close-popup to="/plugins">
             <q-item-section>Plugins</q-item-section>
           </q-item>
+          <q-item clickable v-close-popup to="/pluginParams">
+            <q-item-section>Plugin Parameters</q-item-section>
+          </q-item>
           <q-item clickable v-close-popup to="/queues">
             <q-item-section>Queues</q-item-section>
-          </q-item>
-          <q-item clickable v-close-popup to="/jobs">
-            <q-item-section>Jobs</q-item-section>
-          </q-item>
-          <q-item clickable v-close-popup to="/pluginParams">
-            <q-item-section>Plugin-Params</q-item-section>
           </q-item>
           <q-item clickable v-close-popup to="/tags">
             <q-item-section>Tags</q-item-section>
           </q-item>
-          <q-item clickable v-close-popup to="/models">
+          <!-- <q-item clickable v-close-popup to="/models">
             <q-item-section>Models</q-item-section>
-          </q-item>
-          <q-item clickable v-close-popup to="/artifacts">
-            <q-item-section>Artifacts</q-item-section>
-          </q-item>
+          </q-item> -->
           <q-item clickable v-close-popup to="/groups">
             <q-item-section>Groups</q-item-section>
           </q-item>
@@ -50,14 +50,14 @@
       <q-tabs no-caps>
         <q-route-tab label="Home" to="/" />
         <q-route-tab label="Experiments" to="/experiments" />
+        <q-route-tab label="Jobs" to="/jobs" />
+        <q-route-tab label="Artifacts" to="/artifacts" />
         <q-route-tab label="Entrypoints" to="/entrypoints" />
         <q-route-tab label="Plugins" to="/plugins" />
+        <q-route-tab label="Plugin Parameters" to="/pluginParams" />
         <q-route-tab label="Queues" to="/queues" />
-        <q-route-tab label="Jobs" to="/jobs" />
-        <q-route-tab label="Plugin-Params" to="/pluginParams" />
         <q-route-tab label="Tags" to="/tags" />
-        <q-route-tab label="Models" to="/models" />
-        <q-route-tab label="Artifacts" to="/artifacts" />
+        <!-- <q-route-tab label="Models" to="/models" /> -->
       </q-tabs>
     </nav>
 

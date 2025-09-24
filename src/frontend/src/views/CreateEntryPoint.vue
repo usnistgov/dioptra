@@ -765,7 +765,7 @@
 
   const artifactColumns = [
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, },
-    { name: 'outputParams', label: 'Output Params', align: 'right', field: 'outputParams', sortable: false, classes: 'vertical-top' },
+    { name: 'outputParams', label: 'Output Parameters', align: 'right', field: 'outputParams', sortable: false, classes: 'vertical-top' },
     { name: 'delete', label: 'Delete', align: 'center', },
   ]
 

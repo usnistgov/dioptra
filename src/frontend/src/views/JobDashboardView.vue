@@ -20,7 +20,7 @@
           <q-tab name="overview" label="Overview" />
           <q-tab name="logs" :label="`Logs ${logTotalNumber ? `(${logTotalNumber})` : ''}`" />
           <q-tab name="metrics" :label="`Metrics ${metrics.length ? `(${metrics.length})` : ''}`" />
-          <q-tab name="artifacts" :label="`Artifact Outputs ${job?.artifacts.length ? `(${job?.artifacts.length})` : ''}`" />
+          <q-tab name="artifacts" :label="`Output Artifacts ${job?.artifacts.length ? `(${job?.artifacts.length})` : ''}`" />
         </q-tabs>
         <q-separator />
     </div>

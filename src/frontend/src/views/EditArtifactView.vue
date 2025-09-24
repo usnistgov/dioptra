@@ -332,8 +332,9 @@ async function syncPlugin(pluginID) {
 const rows = computed(() => [
   { label: 'ID', value: artifact.value?.id },
   { label: 'Description', slot: 'description', props: { description: artifact.value?.description }  },
-  { label: 'Created On', value: formatDate(artifact.value?.createdOn) },
-  { label: 'Last Modified On', value: formatDate(artifact.value?.lastModifiedOn) },
+  { label: 'Resource Created On', value: formatDate(artifact.value?.createdOn) },
+  { label: 'Resource Last Modified On', value: formatDate(artifact.value?.lastModifiedOn) },
+  { label: 'Snapshot Timestamp', value: formatDate(artifact.value?.snapshotCreatedOn) },
   { label: 'Download', slot: 'fileUrl', props: { fileUrl: artifact.value?.fileUrl } },
   { label: 'fileSize', slot: 'fileSize' },
   { label: 'Job ID', slot: 'job' },
