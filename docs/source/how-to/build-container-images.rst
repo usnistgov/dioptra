@@ -22,8 +22,7 @@ Building the Container Images
 
 .. include:: /_glossary_note.rst
 
-You will need to build several container images using the Dockerfiles in the Dioptra GitHub repository before you can run Dioptra for the first time.
-This guide will walk you through the steps for building these images.
+You will need several container images before you can run Dioptra for the first time. The easiest way to acquire these images is to download them from the GitHub Container Registry: :doc:`../getting-started/downloading-the-containers`. However, if you wish to use GPU-enabled images or to customize the containers, you will need to build the images using the steps in this guide.
 
 To begin, open a Terminal and clone the GitHub repository if you have not already done so.
 
