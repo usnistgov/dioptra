@@ -99,6 +99,8 @@ output declaration:
 
 The rest of the structural description describes what goes in each of those six places.
 
+.. _type_reference:
+
 Types
 -----
 
