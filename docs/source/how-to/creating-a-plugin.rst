@@ -31,25 +31,42 @@ Adding Annotations to Your Functions
 This guide assumes you have files containing functions you want to import into Dioptra.
 Here is an example function.
 
-.. literalinclude:: ./code/original_function.py
-   :language: python
-   :linenos:
+
+.. code-block:: python
+
+   import numpy as np
+
+   def sample_function(a: np.ndarray, b: str) -> str:
+       return f"{b}: {a}"
+
 
 To the top of each file, you should add the following import.
 
-.. literalinclude:: ./code/pyplug_import.py
-   :language: python
+
+.. code-block:: python
+
+   from dioptra import pyplugs
+
 
 Annotate each function that should be made available as a plugin task in Dioptra with:
 
-.. literalinclude:: ./code/pyplug_annotation.py
-   :language: python
+
+.. code-block:: python
+
+   @pyplugs.register
+
 
 The file containing our original function would now look like this.
 
-.. literalinclude:: ./code/new_function.py
-   :language: python
-   :linenos:
+
+.. code-block:: python
+
+   from dioptra import pyplugs
+   import numpy as np
+
+   @pyplugs.register
+   def sample_function(a: np.ndarray, b: str) -> str:
+       return f"{b}: {a}"
 
 
 Creating Types For Plugin Task Parameters

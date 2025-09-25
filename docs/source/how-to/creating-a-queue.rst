@@ -24,7 +24,8 @@ How-To: Create a Queue
 
 In Dioptra, jobs are submitted to queues, which represent a computing environment. This
 guide assumes that Dioptra is already installed and is accessible through the web browser,
-and that the user is logged in.
+and that the user is logged in. It also assumes that a worker container is running / available
+as part of the deployment.
 
 
 1. On the Dioptra Web UI, navigate to the **Queues** tab.
