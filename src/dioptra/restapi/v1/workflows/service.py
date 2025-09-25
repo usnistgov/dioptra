@@ -45,6 +45,8 @@ from dioptra.restapi.errors import (
 )
 from dioptra.restapi.utils import read_json_file, verify_filename_is_safe
 from dioptra.restapi.v1.entrypoints.service import (
+    EntrypointIdArtifactPluginsService,
+    EntrypointIdPluginsService,
     EntrypointIdService,
     EntrypointNameService,
     EntrypointService,
@@ -164,6 +166,8 @@ class ResourceImportService(object):
         builtin_plugin_parameter_type_service: BuiltinPluginParameterTypeService,
         entrypoint_service: EntrypointService,
         entrypoint_id_service: EntrypointIdService,
+        entrypoint_id_plugins_service: EntrypointIdPluginsService,
+        entrypoint_id_artifact_plugins_service: EntrypointIdArtifactPluginsService,
         entrypoint_name_service: EntrypointNameService,
         io_file_service: IOFileService,
     ) -> None:
@@ -184,6 +188,8 @@ class ResourceImportService(object):
                 object.
             entrypoint_service: An EntrypointService object.
             entrypoint_id_service: An EntrypointIdService object.
+            entrypoint_id_plugins_service: An EntrypointIdPluginsService object.
+            entrypoint_id_artifact_plugins_service: An EntrypointIdArtifactPluginsService object.
             entrypoint_name_service: An EntrypointNameService object.
             io_file_service: An IOFileService object.
         """
@@ -200,6 +206,8 @@ class ResourceImportService(object):
         )
         self._entrypoint_service = entrypoint_service
         self._entrypoint_id_service = entrypoint_id_service
+        self._entrypoint_id_plugins_service = entrypoint_id_plugins_service
+        self._entrypoint_id_artifact_plugins_service = entrypoint_id_artifact_plugins_service
         self._entrypoint_name_service = entrypoint_name_service
         self._io_file_service = io_file_service
 
@@ -719,6 +727,10 @@ class ResourceImportService(object):
         for entrypoint in entrypoints_config:
             try:
                 contents = yaml.safe_load(Path(entrypoint["path"]).read_text())
+                task_graph = contents.get("graph", "")
+                task_graph = yaml.dump(task_graph, sort_keys=False, default_flow_style=False) if task_graph else ""
+                artifact_graph = contents.get("artifacts", "")
+                artifact_graph = yaml.dump(artifact_graph, sort_keys=False, default_flow_style=False) if artifact_graph else ""
             except FileNotFoundError as e:
                 raise ImportFailedError(
                     f"Failed to read entrypoint file from {entrypoint['path']}",
@@ -744,15 +756,13 @@ class ResourceImportService(object):
                 plugins[plugin].resource_id
                 for plugin in entrypoint.get("artifact_plugins", [])
             ]
-            task_graph = contents.get("graph", None)
-            artifact_graph = contents.get("artifacts", None)
 
             if conflict_strat == ResourceImportResolveNameConflictsStrategy.FAIL:
                 entrypoint_dict = self._entrypoint_service.create(
                     name=entrypoint.get("name", Path(entrypoint["path"]).stem),
                     description=entrypoint.get("description", None),
-                    task_graph=yaml.dump(task_graph) if task_graph else "",
-                    artifact_graph=yaml.dump(artifact_graph) if artifact_graph else "",
+                    task_graph=task_graph,
+                    artifact_graph=artifact_graph,
                     parameters=params,
                     artifact_parameters=artifact_params,
                     plugin_ids=plugin_ids,
@@ -773,8 +783,8 @@ class ResourceImportService(object):
                 entrypoint_dict = self._entrypoint_service.create(
                     name=entrypoint.get("name", Path(entrypoint["path"]).stem),
                     description=entrypoint.get("description", None),
-                    task_graph=yaml.dump(task_graph) if task_graph else "",
-                    artifact_graph=yaml.dump(artifact_graph) if artifact_graph else "",
+                    task_graph=task_graph,
+                    artifact_graph=artifact_graph,
                     parameters=params,
                     artifact_parameters=artifact_params,
                     plugin_ids=plugin_ids,
@@ -789,31 +799,30 @@ class ResourceImportService(object):
                     entrypoint["name"], group_id=group_id, log=log
                 )
                 if existing:
+                    queue_ids = [r.resource_id for r in existing.resource.children if r.resource_type == "queue"]
                     entrypoint_dict = self._entrypoint_id_service.modify(
                         entrypoint_id=existing.resource_id,
                         name=entrypoint.get("name", Path(entrypoint["path"]).stem),
                         description=entrypoint.get("description", None),
-                        task_graph=yaml.dump(task_graph) if task_graph else "",
-                        artifact_graph=yaml.dump(artifact_graph)
-                        if artifact_graph
-                        else "",
+                        task_graph=task_graph,
+                        artifact_graph=artifact_graph,
                         parameters=params,
                         artifact_parameters=artifact_params,
                         plugin_ids=plugin_ids,
                         artifact_plugin_ids=artifact_plugin_ids,
-                        queue_ids=[],
+                        queue_ids=queue_ids,
                         group_id=group_id,
                         commit=False,
                         log=log,
                     )
+                    self._entrypoint_id_plugins_service.append(existing.resource_id, plugin_ids)
+                    self._entrypoint_id_artifact_plugins_service.append(existing.resource_id, artifact_plugin_ids)
                 else:
                     entrypoint_dict = self._entrypoint_service.create(
                         name=entrypoint.get("name", Path(entrypoint["path"]).stem),
                         description=entrypoint.get("description", None),
-                        task_graph=yaml.dump(task_graph) if task_graph else "",
-                        artifact_graph=yaml.dump(artifact_graph)
-                        if artifact_graph
-                        else "",
+                        task_graph=task_graph,
+                        artifact_graph=artifact_graph,
                         parameters=params,
                         artifact_parameters=artifact_params,
                         plugin_ids=plugin_ids,
