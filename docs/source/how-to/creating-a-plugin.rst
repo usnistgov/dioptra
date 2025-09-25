@@ -74,7 +74,7 @@ Creating Types For Plugin Task Parameters
 
 Input and output parameters types for functions should be registered in Dioptra. By default,
 Dioptra provides the following pre-registered types: ``any``, ``string``, ``integer``, ``number``,
-``boolean``, and ``null``.
+``boolean``, and ``null``. See :ref:`type_reference` for more details.
 
 If your function uses a type not captured by one of the built-in types, you can register new ones.
 
