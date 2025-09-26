@@ -22,6 +22,9 @@ on:
             version:
               description: 'Use during test to quickly specify a version'
               required: true
+    push:
+      branches:
+        - et-955
 
 jobs:
     # get-version:
