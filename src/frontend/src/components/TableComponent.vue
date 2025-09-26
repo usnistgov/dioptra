@@ -39,13 +39,13 @@
               {{ col.value ? '✅' : 	'❌'}}
             </div>
             <div v-else-if="col.name === 'name'">
-              {{ props.row.name?.length <= 18 ? props.row.name : props.row.name?.replace(/(.{17})..+/, "$1…") }}
+              {{ truncateString(props.row.name, 18) }}
               <q-tooltip v-if="props.row.name.length > 18" max-width="30vw" style="overflow-wrap: break-word">
                 {{ props.row.name }}
               </q-tooltip>
             </div>
             <div v-else-if="col.name === 'description'">
-              {{ props.row.description?.length <= 40 ? props.row.description : props.row.description?.replace(/(.{39})..+/, "$1…") }}
+              {{ truncateString(props.row.description, 40) }}
               <q-tooltip v-if="props.row.description?.length > 40" max-width="30vw" style="overflow-wrap: break-word">
                 {{ props.row.description }}
               </q-tooltip>
@@ -400,6 +400,12 @@ function disableRow(rowProps) {
   if(props.disabledRowKeys.includes(rowProps.row[props.rowKey])) {
     return 'disabled-row'
   }
+}
+
+function truncateString(str, limit) { 
+  if(!str) return ''
+  if(str?.length < limit) return str 
+  return str?.slice(0, limit > 3 ? limit - 3 : limit) + '...'; 
 }
 
 </script>
