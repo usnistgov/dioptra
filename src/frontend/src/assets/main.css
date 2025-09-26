@@ -142,3 +142,7 @@ legend {
 .body--dark .cancel-btn {
   color: #41a4f4 !important;
 }
+
+.body--dark fieldset {
+  border-color: #717070;
+}

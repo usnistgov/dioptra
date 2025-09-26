@@ -5,9 +5,8 @@
     :columns="columns"
     title="Plugins"
     v-model:selected="selected"
-    @edit="editing = true; showPluginDialog = true"
+    @edit="router.push(`/plugins/${selected[0].id}`)"
     @delete="showDeleteDialog = true"
-    :showExpand="true"
     @request="getPlugins"
     ref="tableRef"
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
@@ -17,52 +16,7 @@
       <div>{{ props.row.group.name }}</div>
     </template>
     <template #body-cell-files="props">
-      <div>
-        {{ props.row.files?.length }}
-        <q-btn
-          round
-          icon="folder"
-          size="sm"
-          class="q-ml-sm"
-          color="primary"
-          @click="router.push(`/plugins/${props.row.id}/files`)" 
-        >
-          <q-tooltip>
-            Manage Plugin Files
-          </q-tooltip>
-        </q-btn>
-      </div>
-    </template>
-    <template #expandedSlot="{ row }">
-      <q-btn 
-        color="primary" 
-        icon="folder" 
-        :label="`Manage ${row.name} files`" 
-        class="q-ma-md" 
-        @click="router.push(`/plugins/${row.id}/files`)" 
-      />
-      <TableComponent
-        :columns="fileColumns"
-        :rows="row.files"
-        :title="`${row.name} Files`"
-        :hideSearch="true"
-        :hideEditTable="true"
-        :hideCreateBtn="true"
-        :hideDeleteBtn="true"
-        :hideEditBtn="true"
-        :disableSelect="true"
-        :hideOpenBtn="true"
-        style="margin: 0px 5vw 2vh"
-      >
-        <template #body-cell-filename="props">
-          <RouterLink :to="`/plugins/${row.id}/files/${props.row.id}`">
-            {{ props.row.filename }}
-          </RouterLink>
-        </template>
-        <template #body-cell-tasks="props">
-          <div>{{ props.row.tasks?.length }}</div>
-        </template>
-      </TableComponent>
+      {{ props.row.files?.length }}
     </template>
   </TableComponent>
 

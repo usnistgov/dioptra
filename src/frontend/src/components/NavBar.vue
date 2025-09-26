@@ -22,7 +22,7 @@
           <q-item clickable v-close-popup to="/artifacts">
             <q-item-section>Artifacts</q-item-section>
           </q-item>
-          <q-item clickable v-close-popup to="/entryPoints">
+          <q-item clickable v-close-popup to="/entrypoints">
             <q-item-section>Entrypoints</q-item-section>
           </q-item>
           <q-item clickable v-close-popup to="/plugins">
@@ -37,9 +37,6 @@
           <q-item clickable v-close-popup to="/tags">
             <q-item-section>Tags</q-item-section>
           </q-item>
-          <!-- <q-item clickable v-close-popup to="/models">
-            <q-item-section>Models</q-item-section>
-          </q-item> -->
           <q-item clickable v-close-popup to="/groups">
             <q-item-section>Groups</q-item-section>
           </q-item>
@@ -47,7 +44,7 @@
       </q-menu>
     </q-btn>
     <nav v-if="store.loggedInUser" class="gt-md">
-      <q-tabs no-caps>
+      <q-tabs no-caps :key="$route.fullPath">
         <q-route-tab label="Home" to="/" />
         <q-route-tab label="Experiments" to="/experiments" />
         <q-route-tab label="Jobs" to="/jobs" />
@@ -57,7 +54,6 @@
         <q-route-tab label="Plugin Parameters" to="/pluginParams" />
         <q-route-tab label="Queues" to="/queues" />
         <q-route-tab label="Tags" to="/tags" />
-        <!-- <q-route-tab label="Models" to="/models" /> -->
       </q-tabs>
     </nav>
 

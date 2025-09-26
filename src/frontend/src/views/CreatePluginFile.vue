@@ -509,7 +509,7 @@
       store.savedForms.files[route.params.id] = null
       notify.success(`Successfully ${route.params.fileId === 'new' ? 'created' : 'updated'} '${res.data.filename}'`)
       confirmLeave.value = true
-      router.push(`/plugins/${route.params.id}/files`)
+      router.push(`/plugins/${route.params.id}`)
     } catch(err) {
       notify.error(err.response.data.message)
     } 

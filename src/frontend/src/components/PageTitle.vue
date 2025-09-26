@@ -1,7 +1,7 @@
 <template>
   <div>
-    <h1 class="q-mb-sm" :class="{ invisible: title ? false : true }">
-      {{ title || 'Loading...' }}
+    <h1 class="q-mb-sm">
+      {{ title }}
     </h1>
     <nav aria-label="Breadcrumb" style="font-size: 1.2em;">
       <q-breadcrumbs class="text-grey">
@@ -12,15 +12,15 @@
         </template>
         <q-breadcrumbs-el label="Home" icon="home" to="/" />
         <q-breadcrumbs-el 
-          :label="path[0]" 
+          :label="path[0] === 'pluginParams' ? 'Plugin Parameters' : path[0]" 
           :to="path[1] ? `/${path[0]}` : ''" 
           :aria-current="`${path.length === 1 ? 'true' : 'false'}`"
           class="text-capitalize"
         />
         <q-breadcrumbs-el
           v-if="route.name === 'pluginFile'"
-          :label="`${objName} Files`"
-          :to="`/plugins/${route.params.id}/files`"
+          :label="`${objName}`"
+          :to="`/plugins/${route.params.id}`"
         />
         <q-breadcrumbs-el
           v-if="route.name === 'createExperimentJob'"

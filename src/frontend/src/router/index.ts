@@ -59,9 +59,9 @@ const router = createRouter({
           name: 'plugins',
         },
         {
-          path: '/plugins/:id/files',
-          component: () => import('../views/PluginFiles.vue'),
-          name: 'pluginFiles'
+          path: '/plugins/:id',
+          component: () => import('../views/EditPluginView.vue'),
+          name: 'editPlugin',
         },
         {
           path: '/plugins/:id/files/:fileId',
