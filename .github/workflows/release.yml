@@ -17,14 +17,31 @@
 name: Publish to Test PyPI
 
 on:
-    push:
-        branches:
-            - et-955
+    workflow_dispatch:
+        inputs:
+            version:
+              description: 'Use during test to quickly specify a version'
+              required: true
 
 jobs:
+    # get-version:
+    #     name: Extract project version
+    #     runs-on: ubuntu-24.04
+    #     outputs:
+    #         version: ${{ steps.extract-version.outputs.version }}
+    #     steps:
+    #         - name: Checkout code
+    #           uses: actions/checkout@v5
+            
+    #         - name: Extract project version
+    #           id: extract-version
+    #           run: |
+    #             VERSION=$(python3 -c "import toml; toml_dict = toml.load('pyproject.toml'); print(toml_dict['project']['version'])")
+    #             echo "pyproject.toml version=$VERSION"
+    #             echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
     build-and-publish:
         runs-on: ubuntu-24.04
-
         steps:
             - name: Checkout code
               uses: actions/checkout@v5
@@ -47,3 +64,12 @@ jobs:
                 TWINE_USERNAME: __token__
                 TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
               run: twine upload --repository testpypi dist/*
+
+
+    build-images:
+      name: Call docker-images.yml
+      needs: [build-and-publish]
+      uses: ./.github/workflows/docker-images.yml
+      with:
+        version: ${{ inputs.version }}
+        use_pypi: true

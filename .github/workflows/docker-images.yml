@@ -30,6 +30,16 @@ on:
       - "main"
       - "dev"
 
+  workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
+      use_pypi:
+        required: false
+        default: false
+        type: boolean
+
 env:
   PROJECT_PREFIX: dioptra
 
@@ -51,6 +61,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/remove-extra-software
+
+      # ensure we are using everything in PyPI
+      - name: overwrite src using PyPI content
+        if: inputs.use_pypi == 'true'
+        run: |
+          echo "Downloading dioptra version ${{ inputs.version }} from PyPI"
+          pip install --upgrade pip
+          pip download dioptra-test==${{ inputs.version }} --no-deps --index-url https://test.pypi.org/simple
+
+          unzip *.whl -d wheel_contents
+          DIOPTRA_DIR="wheel_contents/dioptra"
+
+          # replace src/dioptra with PyPI contents
+          rm -rf src/dioptra
+          cp -r "$DIOPTRA_DIR" src/dioptra
 
       - name: set docker metadata
         id: meta
