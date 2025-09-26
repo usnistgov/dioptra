@@ -1,5 +1,5 @@
 <template>
-  <PageTitle title="Plugin Params" />
+  <PageTitle title="Plugin Parameters" />
   <TableComponent
     :rows="pluginParameterTypes"
     :columns="columns"

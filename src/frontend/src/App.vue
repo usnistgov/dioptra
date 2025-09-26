@@ -73,7 +73,6 @@
     'experimentJobs',
     'entrypoints',
     'plugins',
-    'pluginFiles',
     'queues',
     'allJobs',
     'pluginParams',
