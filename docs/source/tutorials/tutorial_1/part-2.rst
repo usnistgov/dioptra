@@ -1,4 +1,22 @@
+.. This Software (Dioptra) is being made available as a public service by the
+.. National Institute of Standards and Technology (NIST), an Agency of the United
+.. States Department of Commerce. This software was developed in part by employees of
+.. NIST and in part by NIST contractors. Copyright in portions of this software that
+.. were developed by NIST contractors has been licensed or assigned to NIST. Pursuant
+.. to Title 17 United States Code Section 105, works of NIST employees are not
+.. subject to copyright protection in the United States. However, NIST may hold
+.. international copyright in software created by its employees and domestic
+.. copyright (or licensing rights) in portions of software that were assigned or
+.. licensed to NIST. To the extent that NIST holds copyright in this software, it is
+.. being made available under the Creative Commons Attribution 4.0 International
+.. license (CC BY 4.0). The disclaimers of the CC BY 4.0 license apply to all parts
+.. of the software developed or licensed by NIST.
+..
+.. ACCESS THE FULL CC BY 4.0 LICENSE HERE:
+.. https://creativecommons.org/licenses/by/4.0/legalcode
 :html_theme.sidebar_secondary.remove:
+
+.. _tutorial-1-part-2:
 
 Adding Inputs and Outputs
 =========================
@@ -44,7 +62,7 @@ Make Plugin 2
 We will now create a new plugin with one task. This task:
 
 - Accepts four parameters: ``random_seed``, ``sample_size``, ``mean``, and ``var``  
-- Samples a NumPy array from a normal distribution  
+- Samples a NumPy array from a normal distribution and logs the mean value, along with the input parameters
 - Returns the array as an output  
 
 .. admonition:: Steps
@@ -61,8 +79,10 @@ We will now create a new plugin with one task. This task:
 
     .. literalinclude:: ../../../../examples/tutorials/tutorial_1/plugin_2.py
        :language: python
-       :linenos:
+       
 
+
+.. _tutorial-1-part-2-register-the-task:
 
 Register the Task
 ~~~~~~~~~~~~~~~~~~~
@@ -99,9 +119,9 @@ You may see an error under **Plugin Tasks**: *Resolve missing Type* for the ``np
 
 This is because we called our custom type ``NumpyArray``, not ``np_ndarray``.  
 
-Let's correct the output type. Delete the auto-detected output and then add a new one with the following specs:
+Let's correct the output type. Click on the ``output`` badge and select the appropriate type
 
-- Name: ``draws`` (more descriptive than 'output')  
+- Name: ``output``
 - Type: ``NumpyArray``  
 
 Save the Plugin file. 
@@ -117,6 +137,7 @@ Entrypoint setup is very similar to before, but we now add an **Entrypoint param
    2. Define an **Entrypoint Parameter**:
       
       In the **Entrypoint Parameters** window, create a parameter with the following specs:
+
       - Name: ``sample_size``  
       - Type: ``int``  
       - Default value: e.g., ``100``  
@@ -157,6 +178,8 @@ Use the following values:
 - ``random_seed`` = ``0``  
 - ``sample_size`` = ``$sample_size`` (a reference to the Entrypoint parameter)  
 
+These parameter bindings will allow us to adjust the value for ``sample_size`` for every job. 
+The other parameters will remain constant and equal to the values we hardcoded above.
 
 .. admonition:: Steps (finalized)
    1. Edit the Task Graph YAML code to overwrite the default values 
@@ -222,10 +245,23 @@ Wait for both jobs to finish.
 Inspect Results
 ---------------
 
-When jobs complete, check:
+When jobs complete, check the logs for each. 
 
-- Logs confirm the parameter values used  
-- The returned ``NumpyArray`` outputs differ in how close their sample mean is to the true mean  
+.. admonition:: Job 2 Log Outputs (Small Sample Size)
+   :class: code-panel console
+
+   .. code-block:: console
+
+      Plugin 2 - The mean value of the draws was 10.2565, which was 0.2565 different from the passed-in mean (2.56%). [Passed-in Parameters]Seed: 0; Mean: 10; Variance: 10; Sample Size: 100
+
+.. admonition:: Job 3 Log Outputs (Large Sample Size)
+   :class: code-panel console
+
+   .. code-block:: console
+
+      Plugin 2 - The mean value of the draws was 9.9971, which was 0.0029 different from the passed-in mean (0.03%). [Passed-in Parameters]Seed: 0; Mean: 10; Variance: 10; Sample Size: 100000
+
+The logs should reflect the parameters you show. Notice that the sample mean was much closer to the distribution mean when the sample size was larger.
 
 .. note::
    This experiment shows a basic illustration of the Law of Large Numbers: 

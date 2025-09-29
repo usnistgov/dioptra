@@ -1,18 +1,21 @@
 from __future__ import annotations
 
-import os
-import pickle
 from pathlib import Path
 from typing import Any
-
 import structlog
 from structlog.stdlib import BoundLogger
+# [new-imports]
+import os
+import pickle
+# [end-new-imports]
 
 from dioptra.sdk.api.artifact import ArtifactTaskInterface
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
+
+# [Plugin-definition]
 class MatplotlibArtifactTask(ArtifactTaskInterface):
     """Save PNG in CWD and pickle the Figure in working_dir; return the pickle path."""
 
