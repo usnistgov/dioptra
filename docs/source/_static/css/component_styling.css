@@ -1,3 +1,19 @@
+/* This Software (Dioptra) is being made available as a public service by the
+National Institute of Standards and Technology (NIST), an Agency of the United
+States Department of Commerce. This software was developed in part by employees of
+NIST and in part by NIST contractors. Copyright in portions of this software that
+were developed by NIST contractors has been licensed or assigned to NIST. Pursuant
+to Title 17 United States Code Section 105, works of NIST employees are not
+subject to copyright protection in the United States. However, NIST may hold
+international copyright in software created by its employees and domestic
+copyright (or licensing rights) in portions of software that were assigned or
+licensed to NIST. To the extent that NIST holds copyright in this software, it is
+being made available under the Creative Commons Attribution 4.0 International
+license (CC BY 4.0). The disclaimers of the CC BY 4.0 license apply to all parts
+of the software developed or licensed by NIST.
+ACCESS THE FULL CC BY 4.0 LICENSE HERE:
+https://creativecommons.org/licenses/by/4.0/legalcode */
+
 /* Base code panel */
 .admonition.code-panel {
   border: 1px solid rgba(0,0,0,0.08);
@@ -6,7 +22,7 @@
   background: var(--pst-color-surface);
 }
 
-/* Title baseline */
+/* Style admonition title bar*/
 .admonition.code-panel > .admonition-title {
   font-family: monospace;
   font-weight: normal;
@@ -19,12 +35,12 @@
   font-size: .9em;
 }
 
-/* Remove margins inside */
 .admonition.code-panel .highlight,
-.highlight-yaml, .highlight-python {
+.highlight-yaml, .highlight-python, .highlight-console {
   margin-left: 0 !important;
   margin-right: 0 !important;
 }
+
 
 /* Target any code inside .code-panel admonitions */
 .admonition.code-panel pre,
@@ -34,7 +50,7 @@
 }
 
 
-/* --- Nuke theme defaults --- */
+/* --- Nuke theme defaults which places a bell icon by default --- */
 .admonition.code-panel > .admonition-title::before,
 div.admonition.code-panel > .admonition-title::before,
 .admonition.code-panel > .admonition-title::after {
@@ -45,7 +61,7 @@ div.admonition.code-panel > .admonition-title::before,
   width: auto !important;
 }
 
-/* --- Add our prompts back on ::before --- */
+/* --- Add custom prompts back in place for ::before --- */
 .admonition.code-panel.python > .admonition-title::before {
   content: ">>>" !important;
   color: #f7f7f7;
@@ -57,18 +73,16 @@ div.admonition.code-panel > .admonition-title::before,
 }
 
 .admonition.code-panel.console > .admonition-title::before {
-  content: "$" !important; /* Standard shell prompt */
+  content: "$" !important;
   color: #cccccc;
 }
 
-/* Python-specific look */
 .admonition.code-panel.python > .admonition-title {
   background-color: #4b7eb3;
   border-bottom: 2px solid #ffe873;
   color: #f7f7f7;
 }
 
-/* YAML-specific look */
 .admonition.code-panel.yaml > .admonition-title {
   background-color: #9b7100;
   border-bottom: 2px solid #553e00;
@@ -81,7 +95,3 @@ div.admonition.code-panel > .admonition-title::before,
   color: #cccccc; 
 }
 
-.admonition.code-panel .highlight-console {
-  margin-left: 0 !important;
-  margin-right: 0 !important;
-}
