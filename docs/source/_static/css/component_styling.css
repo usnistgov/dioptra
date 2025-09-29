@@ -56,6 +56,11 @@ div.admonition.code-panel > .admonition-title::before,
   color: #e8e8e8;
 }
 
+.admonition.code-panel.console > .admonition-title::before {
+  content: "$" !important; /* Standard shell prompt */
+  color: #cccccc;
+}
+
 /* Python-specific look */
 .admonition.code-panel.python > .admonition-title {
   background-color: #4b7eb3;
@@ -65,8 +70,18 @@ div.admonition.code-panel > .admonition-title::before,
 
 /* YAML-specific look */
 .admonition.code-panel.yaml > .admonition-title {
-  background-color: #c5636b;
-  border-bottom: 2px solid #ad424b;
+  background-color: #9b7100;
+  border-bottom: 2px solid #553e00;
   color: #e8e8e8;
 }
 
+.admonition.code-panel.console > .admonition-title {
+  background-color: #1f1f1f; 
+  border-bottom: 2px solid #6c6c6c; 
+  color: #cccccc; 
+}
+
+.admonition.code-panel .highlight-console {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}

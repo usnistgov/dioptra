@@ -11,14 +11,14 @@ log_stats_1:
   task: print_stats
   args: []
   kwargs:
-    input_array: $draw_samples.draws # This is the output from Task 1
+    input_array: $draw_samples.output # This is the output from Task 1
     plugin_step_name: "Task 1: Drawing from normal distribution"
 
 add_noise_step:
   task: add_noise
   args: []
   kwargs:
-    input_array: $draw_samples.draws # This is the output from Task 1
+    input_array: $draw_samples.output # This is the output from Task 1
     random_seed: 0
     var: 10
     mean: 0
@@ -28,19 +28,19 @@ log_stats_2:
   task: print_stats # Invoking this plugin task again with different input_array
   args: []
   kwargs:
-    input_array: $add_noise_step.noisy_array # This is the output from Task 3
+    input_array: $add_noise_step.output # This is the output from Task 3
     plugin_step_name: "Task 2: Adding Noise"
 
 transform_step:
   task: nonlinear_transform
   args: []
   kwargs:
-    input_array: $add_noise_step.noisy_array
+    input_array: $add_noise_step.output
     transform: $transform_type # User Parameter
 
 log_stats_3:
   task: print_stats # Invoking this plugin task a third time
   args: []
   kwargs:
-    input_array: $transform_step.transformed_array # This is the output from Task 5
+    input_array: $transform_step.output # This is the output from Task 5
     plugin_step_name: "Task 3: Transforming the array"

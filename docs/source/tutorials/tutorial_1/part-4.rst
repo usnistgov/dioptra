@@ -1,4 +1,22 @@
+.. This Software (Dioptra) is being made available as a public service by the
+.. National Institute of Standards and Technology (NIST), an Agency of the United
+.. States Department of Commerce. This software was developed in part by employees of
+.. NIST and in part by NIST contractors. Copyright in portions of this software that
+.. were developed by NIST contractors has been licensed or assigned to NIST. Pursuant
+.. to Title 17 United States Code Section 105, works of NIST employees are not
+.. subject to copyright protection in the United States. However, NIST may hold
+.. international copyright in software created by its employees and domestic
+.. copyright (or licensing rights) in portions of software that were assigned or
+.. licensed to NIST. To the extent that NIST holds copyright in this software, it is
+.. being made available under the Creative Commons Attribution 4.0 International
+.. license (CC BY 4.0). The disclaimers of the CC BY 4.0 license apply to all parts
+.. of the software developed or licensed by NIST.
+..
+.. ACCESS THE FULL CC BY 4.0 LICENSE HERE:
+.. https://creativecommons.org/licenses/by/4.0/legalcode
 :html_theme.sidebar_secondary.remove:
+
+.. _tutorial-1-part-4:
 
 Saving Artifacts
 ==========================
@@ -9,8 +27,9 @@ Overview
 In the last section, you created a multi-step workflow and watched how data evolved across chained tasks.  
 Now, you will learn how to **save outputs as artifacts**.  
 
-We will build on **Experiment 2**, **Plugin 3**, and **Entrypoint 3**, adding artifact-saving logic.  
+We will build on **Experiment 3**, **Plugin 3**, and **Entrypoint 3**, adding artifact-saving logic.  
 
+.. _tutorial-1-part-4-create-artifact-plugin:
 
 Create an Artifact Plugin
 -------------------------
@@ -34,7 +53,7 @@ Just like before, we will create a new plugin, but this time define **artifact t
 
     .. literalinclude:: ../../../../examples/tutorials/tutorial_1/numpy_artifact_plugin.py
        :language: python
-       :linenos:
+       
 
 
 
@@ -47,19 +66,23 @@ Just like before, we will create a new plugin, but this time define **artifact t
    - **serialize**: convert an in-memory object (e.g., NumPy array) into a file  
    - **deserialize**: read the file back into an object  
 
+   You may optionally define **validate** to validate the argument types for these methods. 
+
+.. _tutorial-1-part-4-register-artifact-task:
+
 .. figure:: _static/screenshots/artifact_task_plugin.png
    :alt: Screenshot of a job producing an artifact.
    :width: 100%
    :figclass: big-image border-image clickable-image
 
-   Defining an Artifact Task Plugin requires creating a subclass of ``ArtifactTaskInterface``. The validation method is undefined here but can validate the arguments for the serialize and deserialize function. 
+   Defining an Artifact Task Plugin requires creating a subclass of ``ArtifactTaskInterface``.
 
 .. admonition:: Steps (finalized)
 
    1. In the **Task Form** window, select **Artifact** and enter the name ``NumpyArrayArtifactTask`` 
    2. Leave the output params blank - our Artifact Task is basic and requires no special arguments 
 
-Once registered, Dioptra will know how to store and retrieve this object type.  
+Once registered, Dioptra will know how to store and retrieve this object type. We invoke the logic through the use of **Artifact Tasks** in Entrypoints.
 
 
 Modify Entrypoint 3
@@ -82,19 +105,19 @@ Nothing about **Plugin 3** itself needs to change.
    :width: 100%
    :figclass: big-image border-image clickable-image
 
-   The Artifact Output Graph defines the logic for which Plugin Tasks should be saved and how. 
+   The Artifact Output Graph defines the logic for which Plugin Tasks should be saved and how. ``contents`` should be a reference to a step name from the task graph. 
 
 .. note::
 
    When the artifact task runs, it automatically calls the ``serialize`` method and writes a file to the artifact store.  
 
 .. warning::
-    Currently the UI does not actually support editing entrypoints in this way - we need to investigate and fix this. For now, you could make a new entrypoint instead.
+   BUG - Currently the UI does not support editing entrypoints in this way - we need to investigate and fix this. For now, you could make a new entrypoint instead.
 
 Update the Experiment
 ---------------------
 
-Because this changes the workflow, let’s re-run Experiment 2 with the updated Entrypoint.  
+Because this changes the workflow, let’s re-run Experiment 3 with the updated Entrypoint.  
 
 **Question**: Would the experiment automatically update with a new entrypoint? 
 
@@ -116,20 +139,22 @@ Now let’s try it out.
 Inspect the Artifact
 --------------------
 
-After the job finishes:
+After the job finishes, click on the job to see the results:
 
 - Go to the **Artifacts** tab.  
 - You should see a new artifact file created by the workflow.  
-- Download it to confirm it was saved successfully (?)
+- Download it to confirm it was saved successfully
 
-.. figure:: _static/screenshots/artifact_placeholder.png
+.. figure:: _static/screenshots/download_artifact.png
    :alt: Screenshot of a job producing an artifact.
    :width: 100%
    :figclass: big-image border-image clickable-image
 
-   A work in progress display of the created artifacts - needs to be updated. 
+   Download the artifact from the Job Dashboard.
 
-Congratulations—you’ve just saved your first artifact!  
+A ``.npy`` should have been downloaded. This is the numpy array after the the random noise was added and the transform was applied. 
+
+Congratulations — you’ve just saved your first artifact!  
 
 
 Conclusion
