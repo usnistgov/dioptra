@@ -17,9 +17,9 @@
 .. https://creativecommons.org/licenses/by/4.0/legalcode
 
 
-.. _how-to-use-complex-types:
+.. _how_to_create_a_user:
 
-[OLD] How-To: Use Complex Plugin Parameter Types
+How-To: Use Complex Plugin Parameter Types
 =====================
 
 Simple Types
@@ -201,7 +201,7 @@ can be represented as
       list: [nparray]
    nparray_dict:
       mapping: [str, list_of_nparray]
-   nparray_dict_or_str:
+   nparray_dict_or_none:
       union: [nparray_dict, string]
 
 In this example we represent ``dict[str, list[np.ndarray]] | str`` as a type, but also represent
