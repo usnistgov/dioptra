@@ -16,6 +16,7 @@ A collection of plugin tasks for evaluating evasion attacks and defenses using t
   input_params = [
     { name = "name", type = "string", required = true },
     { name = "split", type = "dataset_split", required = false},
+    { name = "data_dir", type = "string", required = false},
     { name = "normalize_val", type = "number", required = false},
     { name = "image_size", type = "image_size", required = false},
     { name = "batch_size", type = "integer", required = false },
@@ -152,7 +153,7 @@ A collection of plugin tasks for evaluating evasion attacks and defenses using t
   input_params = [
     { name = "dataset", type = "tf.data.Dataset", required = true},
     { name = "defense_name", type = "string", required = true },
-    { name = "defense_options", type = "options_dicts", required = false },
+    { name = "defense_options", type = "options_dict", required = false },
     { name = "save_dataset", type = "boolean", required = false },
   ]
   output_params = [ { name = "adversarial_dataset", type = "tf.data.Dataset" } ]
@@ -248,6 +249,7 @@ params = [
   { name = "seed", type = "integer", default_value = "42" },
   { name = "dataset_name", type = "string", default_value = "mnist" },
   { name = "dataset_split", type = "mapping", default_value = '{"train": "train[80%:]", "val": "train[80%:]", "test": "test"}' },
+  { name = "dataset_dir", type = "string", default_value = '/dioptra/data'},
   { name = "normalize_val", type = "float", default_value = "255.0" },
   { name = "image_size", type = "list", default_value = "[28, 28]" },
   { name = "model_name", type = "string", default_value = "LeNet" },
@@ -295,6 +297,7 @@ params = [
   { name = "seed", type = "integer", default_value = "1286012834" },
   { name = "dataset_name", type = "string", default_value = "mnist" },
   { name = "dataset_split", type = "mapping", default_value = '{"test": "test"}'},
+  { name = "dataset_dir", type = "string", default_value = '/dioptra/data'},
   { name = "normalize_val", type = "float", default_value = "255.0" },
   { name = "batch_size", type = "integer", default_value = "32" },
   { name = "image_size", type = "list", default_value = "[28, 28]" },
@@ -319,6 +322,7 @@ params = [
   { name = "seed", type = "integer", default_value = "1286012834" },
   { name = "dataset_name", type = "string", default_value = "mnist" },
   { name = "dataset_split", type = "mapping", default_value = '{"train": "train"}'},
+  { name = "dataset_dir", type = "string", default_value = '/dioptra/data'},
   { name = "normalize_val", type = "float", default_value = "255.0" },
   { name = "batch_size", type = "integer", default_value = "32" },
   { name = "image_size", type = "list", default_value = "[28, 28]" },
@@ -343,6 +347,7 @@ params = [
   { name = "seed", type = "integer", default_value = "1286012834" },
   { name = "dataset_name", type = "string", default_value = "mnist" },
   { name = "dataset_split", type = "mapping", default_value = '{"test": "test"}'},
+  { name = "dataset_dir", type = "string", default_value = '/dioptra/data'},
   { name = "normalize_val", type = "float", default_value = "255.0" },
   { name = "batch_size", type = "integer", default_value = "32" },
   { name = "image_size", type = "list", default_value = "[28, 28]" },

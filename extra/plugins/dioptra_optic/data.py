@@ -35,6 +35,7 @@ def load_dataset_from_tfds(
         "val": "train[80%:]",
         "test": "test",
     },
+    data_dir: str = "/dioptra/data",
     normalize_val: float | None = 255.0,
     image_size: tuple[int, int] | None = None,
     batch_size: int = 32,
@@ -50,7 +51,7 @@ def load_dataset_from_tfds(
     Returns:
         A tuple of train, val, test tf.data.Dataset objects.
     """
-    builder = tfds.builder(name)
+    builder = tfds.builder(name, data_dir=data_dir)
     return _load_dataset_from_builder(
         builder,
         split=split,

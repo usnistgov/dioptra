@@ -17,6 +17,7 @@ graph:
     load_dataset_from_tfds:
       name: $dataset_name
       split: $dataset_split
+      data_dir: $dataset_dir
       normalize_val: $normalize_val
       image_size: $image_size
       batch_size: $batch_size

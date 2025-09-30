@@ -25,6 +25,7 @@ import mlflow.exceptions
 import structlog
 from mlflow.tracking import MlflowClient
 from structlog.stdlib import BoundLogger
+from upath import UPath
 
 from dioptra.restapi.errors import EntityDoesNotExistError, JobStoreError
 
@@ -205,10 +206,10 @@ class MlFlowJobRunStore:
         log: BoundLogger = LOGGER.new()
         log.debug("downloading artifacts", artifact_uri=artifact_uri, path=path)
         if path:
-            root_path = PurePosixPath(artifact_uri, path).as_posix()
+            root_path = (UPath(artifact_uri) / path).as_posix()
         else:
             root_path = artifact_uri
-
+        
         result = mlflow.artifacts.download_artifacts(
             artifact_uri=root_path, dst_path=str(destination)
         )

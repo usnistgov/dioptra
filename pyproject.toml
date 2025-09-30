@@ -88,6 +88,7 @@ dependencies = [
     "tomli>=2.2.0",
     "typing-extensions>=3.7.4.3",
     "werkzeug>=3.0.0,<3.1.0",
+    "universal_pathlib>=0.0.23",
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",

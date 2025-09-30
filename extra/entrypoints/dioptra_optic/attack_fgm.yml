@@ -28,6 +28,7 @@ graph:
   dataset:
     load_dataset_from_tfds:
       name: $dataset_name
+      data_dir: $dataset_dir
       split: $dataset_split
       normalize_val: $normalize_val
       image_size: $image_size
