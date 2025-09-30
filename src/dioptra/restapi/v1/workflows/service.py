@@ -539,7 +539,7 @@ class ResourceImportService(object):
         )
 
         plugins = {}
-        plugins_existing_files = {}
+        plugins_existing_files = defaultdict(dict)
         for plugin in plugins_config:
             if conflict_strat == ResourceImportResolveNameConflictsStrategy.FAIL:
                 plugin_dict = self._plugin_service.create(
