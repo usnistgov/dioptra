@@ -63,7 +63,7 @@ class WorkflowsCollectionClient(CollectionClient[T]):
         group_id: int,
         source: str | DioptraFile | list[DioptraFile],
         config_path: str | None = None,
-        resolve_name_conflicts_strategy: Literal["fail", "overwrite"] | None = None,
+        resolve_name_conflicts_strategy: Literal["fail", "update", "overwrite"] | None = None,
     ):
         """
         Import resources from a archive file or git repository
@@ -77,7 +77,7 @@ class WorkflowsCollectionClient(CollectionClient[T]):
                 If None, the API will use "dioptra.toml" as the default. Defaults to
                 None.
             resolve_name_conflicts_strategy: The strategy for resolving name conflicts.
-                Either "fail" or "overwrite". If None, the API will use "fail" as the
+                Either "fail", "update", or "overwrite". If None, the API will use "fail" as the
                 default. Defaults to None.
 
         Raises:
