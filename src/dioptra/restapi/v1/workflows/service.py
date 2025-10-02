@@ -73,6 +73,7 @@ from dioptra.restapi.v1.shared.resource_service import (
 )
 from dioptra.restapi.v1.shared.signature_analysis import get_plugin_signatures
 from dioptra.restapi.v1.shared.task_engine_yaml.service import TaskEngineYamlService
+from dioptra.restapi.v1.utils import PluginParameterTypeDict, PluginWithFilesDict
 from dioptra.sdk.utilities.paths import set_cwd
 from dioptra.task_engine.issues import IssueSeverity, IssueType, ValidationIssue
 
@@ -460,15 +461,18 @@ class ResourceImportService(object):
                     param_type["name"], group_id=group_id, log=log
                 )
                 if existing:
-                    param_type_dict = self._plugin_parameter_type_id_service.modify(
-                        plugin_parameter_type_id=existing.resource_id,
-                        name=param_type["name"],
-                        description=param_type.get("description", None),
-                        structure=param_type.get("structure", None),
-                        group_id=group_id,
-                        error_if_not_found=True,
-                        commit=False,
-                        log=log,
+                    param_type_dict = cast(
+                        PluginParameterTypeDict,
+                        self._plugin_parameter_type_id_service.modify(
+                            plugin_parameter_type_id=existing.resource_id,
+                            name=param_type["name"],
+                            description=param_type.get("description", None),
+                            structure=param_type.get("structure", None),
+                            group_id=group_id,
+                            error_if_not_found=True,
+                            commit=False,
+                            log=log,
+                        ),
                     )
                 else:
                     param_type_dict = self._plugin_parameter_type_service.create(
@@ -538,8 +542,8 @@ class ResourceImportService(object):
         )
 
         plugins = {}
-        plugins_existing_files = defaultdict(dict)
         for plugin in plugins_config:
+            existing_files = {}
             if conflict_strat == ResourceImportResolveNameConflictsStrategy.FAIL:
                 plugin_dict = self._plugin_service.create(
                     name=Path(plugin["path"]).stem,
@@ -553,13 +557,17 @@ class ResourceImportService(object):
                     Path(plugin["path"]).stem, group_id=group_id
                 )
                 if existing:
-                    plugin_dict = self._plugin_id_service.modify(
-                        plugin_id=existing.resource_id,
-                        name=Path(plugin["path"]).stem,
-                        description=plugin.get("description", None),
-                        group_id=group_id,
-                        commit=False,
-                        log=log,
+                    plugin_dict = cast(
+                        PluginWithFilesDict,
+                        self._plugin_id_service.modify(
+                            plugin_id=existing.resource_id,
+                            name=Path(plugin["path"]).stem,
+                            description=plugin.get("description", None),
+                            group_id=group_id,
+                            error_if_not_found=True,
+                            commit=False,
+                            log=log,
+                        ),
                     )
                     latest_plugin_files_stmt = (
                         select(models.PluginFile)
@@ -571,7 +579,7 @@ class ResourceImportService(object):
                             == models.PluginFile.resource_snapshot_id,
                         )
                     )
-                    plugins_existing_files[existing.resource_id] = {
+                    existing_files = {
                         plugin_file.filename: plugin_file
                         for plugin_file in db.session.scalars(
                             latest_plugin_files_stmt
@@ -624,6 +632,7 @@ class ResourceImportService(object):
                         f"Failed to read plugin file from {filename}",
                         reason="File is not a valid python filename.",
                     )
+
                 try:
                     contents = plugin_file_path.read_text()
                 except FileNotFoundError as e:
@@ -637,54 +646,84 @@ class ResourceImportService(object):
                         reason=str(e),
                     ) from e
 
-                if (
-                    conflict_strat == ResourceImportResolveNameConflictsStrategy.FAIL
-                    or conflict_strat
-                    == ResourceImportResolveNameConflictsStrategy.OVERWRITE
-                ):
-                    self._plugin_id_file_service.create(
-                        plugin_id=plugin_dict["plugin"].resource_id,
-                        filename=filename,
-                        contents=contents,
-                        description=None,
-                        function_tasks=function_tasks[filename],
-                        artifact_tasks=artifact_tasks[filename],
-                        commit=False,
-                        log=log,
-                    )
-                elif (
-                    conflict_strat == ResourceImportResolveNameConflictsStrategy.UPDATE
-                ):
-                    existing = plugins_existing_files[
-                        plugin_dict["plugin"].resource_id
-                    ].get(filename, None)
-                    if existing:
-                        self._plugin_id_file_id_service.modify(
-                            plugin_id=plugin_dict["plugin"].resource_id,
-                            plugin_file_id=existing.resource_id,
-                            filename=filename,
-                            contents=contents,
-                            description=None,
-                            function_tasks=function_tasks[filename],
-                            artifact_tasks=artifact_tasks[filename],
-                            commit=False,
-                            log=log,
-                        )
-                    else:
-                        self._plugin_id_file_service.create(
-                            plugin_id=plugin_dict["plugin"].resource_id,
-                            filename=filename,
-                            contents=contents,
-                            description=None,
-                            function_tasks=function_tasks[filename],
-                            artifact_tasks=artifact_tasks[filename],
-                            commit=False,
-                            log=log,
-                        )
+                self._register_plugin_file(
+                    plugin_dict["plugin"].resource_id,
+                    filename,
+                    contents,
+                    function_tasks[filename],
+                    artifact_tasks[filename],
+                    conflict_strat,
+                    existing_files,
+                    log,
+                )
 
         db.session.flush()
 
         return plugins
+
+    def _register_plugin_file(
+        self,
+        plugin_id: int,
+        filename: str,
+        contents: str,
+        function_tasks: list,
+        artifact_tasks: list,
+        conflict_strat,
+        existing_plugin_files,
+        log: BoundLogger,
+    ):
+        """Registers a PluginFile according to the spcified conflict strategy.
+
+        Args:
+            plugin_id: The identifier of the Plugin this file belongs to
+            filename: The python filename
+            contents: The contents of the python file
+            function_tasks: The function task definitions from the toml config file.
+            function_tasks: The artifact task definitions from the toml config file.
+            conflict_strat: The strategy for resolving name conflicts
+
+        Returns:
+            The registered PluginFile ORM object
+        """
+        if (
+            conflict_strat == ResourceImportResolveNameConflictsStrategy.FAIL
+            or conflict_strat == ResourceImportResolveNameConflictsStrategy.OVERWRITE
+        ):
+            return self._plugin_id_file_service.create(
+                plugin_id=plugin_id,
+                filename=filename,
+                contents=contents,
+                description=None,
+                function_tasks=function_tasks,
+                artifact_tasks=artifact_tasks,
+                commit=False,
+                log=log,
+            )
+        elif conflict_strat == ResourceImportResolveNameConflictsStrategy.UPDATE:
+            existing = existing_plugin_files.get(filename, None)
+            if existing:
+                return self._plugin_id_file_id_service.modify(
+                    plugin_id=plugin_id,
+                    plugin_file_id=existing.resource_id,
+                    filename=filename,
+                    contents=contents,
+                    description=existing.description,
+                    function_tasks=function_tasks,
+                    artifact_tasks=artifact_tasks,
+                    commit=False,
+                    log=log,
+                )
+            else:
+                return self._plugin_id_file_service.create(
+                    plugin_id=plugin_id,
+                    filename=filename,
+                    contents=contents,
+                    description=None,
+                    function_tasks=function_tasks,
+                    artifact_tasks=artifact_tasks,
+                    commit=False,
+                    log=log,
+                )
 
     def _register_entrypoints(
         self,

@@ -63,7 +63,8 @@ class WorkflowsCollectionClient(CollectionClient[T]):
         group_id: int,
         source: str | DioptraFile | list[DioptraFile],
         config_path: str | None = None,
-        resolve_name_conflicts_strategy: Literal["fail", "update", "overwrite"] | None = None,
+        resolve_name_conflicts_strategy: Literal["fail", "update", "overwrite"]
+        | None = None,
     ):
         """
         Import resources from a archive file or git repository
