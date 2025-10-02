@@ -41,12 +41,12 @@ jobs:
       matrix:
         dioptra-app:
           - nginx
-          - mlflow-tracking
-          - restapi
-          - pytorch-cpu
-          - tensorflow2-cpu
-        #  - pytorch-gpu # CUDA installation exceeds GitHub runner disk space
-        #  - tensorflow2-gpu # CUDA installation exceeds GitHub runner disk space
+        # - mlflow-tracking
+        # - restapi
+        # - pytorch-cpu
+        # - tensorflow2-cpu
+        # - pytorch-gpu # CUDA installation exceeds GitHub runner disk space
+        # - tensorflow2-gpu # CUDA installation exceeds GitHub runner disk space
 
     steps:
       - uses: actions/checkout@v4
