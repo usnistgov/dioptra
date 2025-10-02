@@ -201,7 +201,7 @@ can be represented as
       list: [nparray]
    nparray_dict:
       mapping: [str, list_of_nparray]
-   nparray_dict_or_none:
+   nparray_dict_or_str:
       union: [nparray_dict, string]
 
 In this example we represent ``dict[str, list[np.ndarray]] | str`` as a type, but also represent
