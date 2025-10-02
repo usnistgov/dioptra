@@ -52,6 +52,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/remove-extra-software
 
+      - name: install rekor-cli
+        uses: ./.github/actions/install-rekor-cli
+
+      - name: install cosign
+        uses: sigstore/cosign-installer@v3.9.2
+
       - name: set docker metadata
         id: meta
         uses: docker/metadata-action@v5
@@ -77,7 +83,6 @@ jobs:
             org.opencontainers.image.source=https://github.com/usnistgov/dioptra
             org.opencontainers.image.documentation=https://pages.nist.gov/dioptra
             org.opencontainers.image.licenses=NIST-PD OR CC-BY-4.0
-
 
       - name: set up docker qemu
         uses: docker/setup-qemu-action@v3
@@ -108,155 +113,150 @@ jobs:
       - name: extract first image tag
         id: extract_tag
         run: |
-          IMAGE_TAG=$(echo ${{ steps.meta.outputs.tags }} | cut -d',' -f1)
+          IMAGE_TAG="$(echo ${{ steps.meta.outputs.tags }} | cut -d',' -f1)"
           echo "Using image tag: $IMAGE_TAG"
           echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-      - name: install cosign
-        uses: sigstore/cosign-installer@v3.9.2
-
       - name: generate cosign payload
+        id: gen_cosign_payload
         run: |
-            APP_NAME=${{ env.PROJECT_PREFIX }}_${{ matrix.dioptra-app }}
-            IMAGE=ghcr.io/${{ steps.extract_tag.outputs.image_tag }} 
-            mkdir -p ${{ github.workspace }}/tmp
-            cosign generate $IMAGE > tmp/${APP_NAME}_payload.json
+          IMAGE="${{ steps.extract_tag.outputs.image_tag }}"
+          mkdir -p "${{ github.workspace }}/tmp"
+          cosign generate "${IMAGE}" > ${{ github.workspace }}/tmp/image_payload.json
+          echo "payload=$(cat ${{ github.workspace }}/tmp/image_payload.json)" >> $GITHUB_OUTPUT
 
-      - name: sign cosign payload with FIPS OpenSSL (via docker run)
-        run: |
-            APP_NAME=${{ env.PROJECT_PREFIX }}_${{ matrix.dioptra-app }}
-            docker run --rm \
-                -v "${{ github.workspace }}:/work" \
-                -e APP_NAME=$APP_NAME \
-                registry.access.redhat.com/ubi8/ubi:8.6 \
-                bash -c '
-                dnf install -y openssl && dnf clean all && \
-                echo "${{ secrets.DIOPTRA_PRIVATE_KEY }}" > dioptra_fips.pem && \
-                chmod 400 dioptra_fips.pem && \
-                openssl version && \
-                openssl dgst -sha256 \
-                    -sign dioptra_fips.pem \
-                    -out /work/tmp/${APP_NAME}.sig \
-                    /work/tmp/${APP_NAME}_payload.json && \
-                shred -u dioptra_fips.pem
-            '
-
-      - name: verify cosign payload signature with FIPS OpenSSL (via docker run)
-        run: |
-            docker run --rm \
-                -v "${{ github.workspace }}:/work" \
-                -e APP_NAME=${{ env.PROJECT_PREFIX }}_${{ matrix.dioptra-app }} \
-                registry.access.redhat.com/ubi8/ubi:8.6 \
-                bash -c '
-                dnf install -y openssl && \
-                echo "${{ secrets.DIOPTRA_PUBLIC_KEY }}" > tmp/${{ env.PROJECT_PREFIX }}.pub && \
-                openssl dgst -sha256 \
-                    -verify tmp/${{ env.PROJECT_PREFIX }}.pub \
-                    -signature /work/tmp/${APP_NAME}.sig \
-                    /work/tmp/${APP_NAME}_payload.json
-                '
+      - uses: ./.github/actions/sign-payload-fips
+        id: sign_payload_fips
+        with:
+          payload: ${{ steps.gen_cosign_payload.outputs.payload }}
+          private-key: ${{ secrets.DIOPTRA_PRIVATE_KEY }}
+          public-key: ${{ secrets.DIOPTRA_PUBLIC_KEY }}
 
       - name: attach openssl signature using cosign
         run: |
-            APP_NAME=${{ env.PROJECT_PREFIX }}_${{ matrix.dioptra-app }}
-            IMAGE=ghcr.io/${{ steps.extract_tag.outputs.image_tag }} 
-            base64 < tmp/${APP_NAME}.sig | tr -d '\n' > tmp/${APP_NAME}_b64.sig
+          IMAGE="${{ steps.extract_tag.outputs.image_tag }}"
+          echo "${{ steps.sign_payload_fips.outputs.signature }}" | tr -d '\n' > ${{ github.workspace }}/tmp/payload_b64.sig
+          cosign attach signature --payload "${{ github.workspace }}/tmp/image_payload.json" --signature "${{ github.workspace }}/tmp/payload_b64.sig" "${IMAGE}"
 
-            cosign attach signature \
-              --payload tmp/${APP_NAME}_payload.json \
-              --signature tmp/${APP_NAME}_b64.sig \
-              $IMAGE
+      - uses: ./.github/actions/create-rekor-entry
+        id: create_rekor_entry
+        with:
+          payload: ${{ steps.gen_cosign_payload.outputs.payload }}
+          public-key: ${{ secrets.DIOPTRA_PUBLIC_KEY }}
+          signature: ${{ steps.sign_payload_fips.outputs.signature }}
 
-      - name: build JSON rekor entry
-        id: rekor_build_json
-        run: |
-            APP_NAME=${{ env.PROJECT_PREFIX }}_${{ matrix.dioptra-app }}
-            HASH=$(sha256sum tmp/${APP_NAME}_payload.json | cut -d ' ' -f1
-            echo "${{ secrets.DIOPTRA_PUBLIC_KEY }}" > tmp/${{ env.PROJECT_PREFIX }}.pub )
-
-            # Signature and pub key must be base64
-            SIG_CONTENT_B64=$(base64 < tmp/${APP_NAME}.sig | tr -d '\n')
-            PUB_KEY_B64=$(base64 < tmp/${{ env.PROJECT_PREFIX }}.pub | tr -d '\n')
-
-            # Write the JSON
-            cat <<EOF > tmp/rekor_payload.json
-            {
-                "apiVersion": "0.0.1",
-                "kind": "hashedrekord",
-                "spec": {
-                    "data": {
-                        "hash": {
-                            "algorithm": "sha256",
-                            "value": "$HASH"
-                        }
-                    },
-                    "signature": {
-                        "content": "$SIG_CONTENT_B64",
-                        "publicKey": {
-                            "content": "$PUB_KEY_B64"
-                        }
-                    }
-                }
-            }
-            EOF
-            echo "Rekor payload:"
-            jq . tmp/rekor_payload.json
-
-      - name: upload JSON rekor entry
-        id: rekor_upload
-        run: |
-            APP_NAME=${{ env.PROJECT_PREFIX }}_${{ matrix.dioptra-app }}
-
-            # Get the http response code and body
-            RESPONSE_AS_FILE=$(mktemp)
-            STATUS_CODE=$(curl -s -w "%{http_code}" -o "$RESPONSE_AS_FILE" -X POST \
-               -H "Content-Type: application/json" \
-               -d @tmp/rekor_payload.json \
-               https://rekor.sigstore.dev/api/v1/log/entries)
-
-            RESPONSE_BODY=$(cat "$RESPONSE_AS_FILE")
-            echo "rekor response:"
-            echo "$RESPONSE_BODY"
-
-            if [ "$STATUS_CODE" == "409" ]; then
-                echo "Rekor entry already exists. Checking for an existing UUID."
-                UUID=$(echo "$RESPONSE_BODY" | jq -r '.message' | grep -oE '[a-f0-9]{64,}')
-            elif [ "$STATUS_CODE" == "201" ]; then
-                echo "Rekor entry created successfully."
-                UUID=$(echo "$RESPONSE_BODY" | jq -r 'keys[0]')
-            else
-                echo "Unexpected HTTP status code: $STATUS_CODE"
-                exit 1
-            fi
-
-            if [[ ! "$UUID" =~ ^[a-f0-9]{64,}$ ]]; then
-                echo "Invalid UUID found: $UUID"
-                exit 1
-            fi
-
-            echo "rekor UUID"
-            echo "$UUID"
-            echo "UUID=$UUID" >> $GITHUB_OUTPUT
-
-      - name: install rekor-cli
-        run: |
-            curl -LO https://github.com/sigstore/rekor/releases/download/v1.3.10/rekor-cli-linux-amd64
-            chmod +x rekor-cli-linux-amd64
-            mv rekor-cli-linux-amd64 /usr/local/bin/rekor-cli
+#     - name: sign cosign payload with FIPS OpenSSL (via docker run)
+#       run: |
+#           APP_NAME=${{ env.PROJECT_PREFIX }}_${{ matrix.dioptra-app }}
+#           docker run --rm \
+#               -v "${{ github.workspace }}:/work" \
+#               -e APP_NAME=$APP_NAME \
+#               registry.access.redhat.com/ubi8/ubi:8.6 \
+#               bash -c '
+#               dnf install -y openssl && dnf clean all && \
+#               echo "${{ secrets.DIOPTRA_PRIVATE_KEY }}" > dioptra_fips.pem && \
+#               chmod 400 dioptra_fips.pem && \
+#               openssl version && \
+#               openssl dgst -sha256 \
+#                   -sign dioptra_fips.pem \
+#                   -out /work/tmp/${APP_NAME}.sig \
+#                   /work/tmp/${APP_NAME}_payload.json && \
+#               shred -u dioptra_fips.pem
+#           '
+#     - name: verify cosign payload signature with FIPS OpenSSL (via docker run)
+#       run: |
+#           docker run --rm \
+#               -v "${{ github.workspace }}:/work" \
+#               -e APP_NAME=${{ env.PROJECT_PREFIX }}_${{ matrix.dioptra-app }} \
+#               registry.access.redhat.com/ubi8/ubi:8.6 \
+#               bash -c '
+#               dnf install -y openssl && \
+#               echo "${{ secrets.DIOPTRA_PUBLIC_KEY }}" > tmp/${{ env.PROJECT_PREFIX }}.pub && \
+#               openssl dgst -sha256 \
+#                   -verify tmp/${{ env.PROJECT_PREFIX }}.pub \
+#                   -signature /work/tmp/${APP_NAME}.sig \
+#                   /work/tmp/${APP_NAME}_payload.json
+#               '
+#     - name: attach openssl signature using cosign
+#       run: |
+#           APP_NAME=${{ env.PROJECT_PREFIX }}_${{ matrix.dioptra-app }}
+#           IMAGE=ghcr.io/${{ steps.extract_tag.outputs.image_tag }} 
+#           base64 < tmp/${APP_NAME}.sig | tr -d '\n' > tmp/${APP_NAME}_b64.sig
+#           cosign attach signature \
+#             --payload tmp/${APP_NAME}_payload.json \
+#             --signature tmp/${APP_NAME}_b64.sig \
+#             $IMAGE
+#     - name: build JSON rekor entry
+#       id: rekor_build_json
+#       run: |
+#           APP_NAME=${{ env.PROJECT_PREFIX }}_${{ matrix.dioptra-app }}
+#           HASH=$(sha256sum tmp/${APP_NAME}_payload.json | cut -d ' ' -f1
+#           echo "${{ secrets.DIOPTRA_PUBLIC_KEY }}" > tmp/${{ env.PROJECT_PREFIX }}.pub )
+#           # Signature and pub key must be base64
+#           SIG_CONTENT_B64=$(base64 < tmp/${APP_NAME}.sig | tr -d '\n')
+#           PUB_KEY_B64=$(base64 < tmp/${{ env.PROJECT_PREFIX }}.pub | tr -d '\n')
+#           # Write the JSON
+#           cat <<EOF > tmp/rekor_payload.json
+#           {
+#               "apiVersion": "0.0.1",
+#               "kind": "hashedrekord",
+#               "spec": {
+#                   "data": {
+#                       "hash": {
+#                           "algorithm": "sha256",
+#                           "value": "$HASH"
+#                       }
+#                   },
+#                   "signature": {
+#                       "content": "$SIG_CONTENT_B64",
+#                       "publicKey": {
+#                           "content": "$PUB_KEY_B64"
+#                       }
+#                   }
+#               }
+#           }
+#           EOF
+#           echo "Rekor payload:"
+#           jq . tmp/rekor_payload.json
+#     - name: upload JSON rekor entry
+#       id: rekor_upload
+#       run: |
+#           APP_NAME=${{ env.PROJECT_PREFIX }}_${{ matrix.dioptra-app }}
+#           # Get the http response code and body
+#           RESPONSE_AS_FILE=$(mktemp)
+#           STATUS_CODE=$(curl -s -w "%{http_code}" -o "$RESPONSE_AS_FILE" -X POST \
+#              -H "Content-Type: application/json" \
+#              -d @tmp/rekor_payload.json \
+#              https://rekor.sigstore.dev/api/v1/log/entries)
+#           RESPONSE_BODY=$(cat "$RESPONSE_AS_FILE")
+#           echo "rekor response:"
+#           echo "$RESPONSE_BODY"
+#           if [ "$STATUS_CODE" == "409" ]; then
+#               echo "Rekor entry already exists. Checking for an existing UUID."
+#               UUID=$(echo "$RESPONSE_BODY" | jq -r '.message' | grep -oE '[a-f0-9]{64,}')
+#           elif [ "$STATUS_CODE" == "201" ]; then
+#               echo "Rekor entry created successfully."
+#               UUID=$(echo "$RESPONSE_BODY" | jq -r 'keys[0]')
+#           else
+#               echo "Unexpected HTTP status code: $STATUS_CODE"
+#               exit 1
+#           fi
+#           if [[ ! "$UUID" =~ ^[a-f0-9]{64,}$ ]]; then
+#               echo "Invalid UUID found: $UUID"
+#               exit 1
+#           fi
+#           echo "rekor UUID"
+#           echo "$UUID"
+#           echo "UUID=$UUID" >> $GITHUB_OUTPUT
 
       - name: verify Rekor entry
         run: |
-            UUID="${{ steps.rekor_upload.outputs.UUID }}"
-            echo "Checking Rekor for UUID=$UUID"
-            rekor-cli get --uuid  "$UUID" \
-                --rekor_server https://rekor.sigstore.dev
+            UUID="${{ steps.create_rekor_entry.outputs.uuid }}"
+            echo "Checking Rekor for UUID=${UUID}"
+            rekor-cli get --uuid "${UUID}" --rekor_server https://rekor.sigstore.dev
 
       - name: cosign verify
         run: |
-            APP_NAME=${{ env.PROJECT_PREFIX }}_${{ matrix.dioptra-app }}
-            IMAGE=ghcr.io/${{ steps.extract_tag.outputs.image_tag }}
-            echo "${{ secrets.DIOPTRA_PUBLIC_KEY }}" > tmp/${{ env.PROJECT_PREFIX }}.pub 
-
-            cosign verify \
-              --key tmp/${{ env.PROJECT_PREFIX }}.pub \
-              $IMAGE
+            IMAGE="${{ steps.extract_tag.outputs.image_tag }}"
+            echo "${{ secrets.DIOPTRA_PUBLIC_KEY }}" > "${{ github.workspace }}/tmp/dioptra.pub"
+            cosign verify --key "${{ github.workspace }}/tmp/dioptra.pub" "${IMAGE}"

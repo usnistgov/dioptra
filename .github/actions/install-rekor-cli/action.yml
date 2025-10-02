@@ -1,0 +1,132 @@
+# This Software (Dioptra) is being made available as a public service by the
+# National Institute of Standards and Technology (NIST), an Agency of the United
+# States Department of Commerce. This software was developed in part by employees of
+# NIST and in part by NIST contractors. Copyright in portions of this software that
+# were developed by NIST contractors has been licensed or assigned to NIST. Pursuant
+# to Title 17 United States Code Section 105, works of NIST employees are not
+# subject to copyright protection in the United States. However, NIST may hold
+# international copyright in software created by its employees and domestic
+# copyright (or licensing rights) in portions of software that were assigned or
+# licensed to NIST. To the extent that NIST holds copyright in this software, it is
+# being made available under the Creative Commons Attribution 4.0 International
+# license (CC BY 4.0). The disclaimers of the CC BY 4.0 license apply to all parts
+# of the software developed or licensed by NIST.
+#
+# ACCESS THE FULL CC BY 4.0 LICENSE HERE:
+# https://creativecommons.org/licenses/by/4.0/legalcode
+name: "rekor-cli-installer"
+description: Includes the rekor-cli and includes it in your path
+inputs:
+  rekor-release:
+    description: 'rekor release version to be installed'
+    required: false
+    default: 'v1.3.10'
+  install-dir:
+    description: 'Where to install the rekor binary'
+    required: false
+    default: '$HOME/.rekor'
+  use-sudo:
+    description: 'set to true if install-dir location requires sudo privs'
+    required: false
+    default: 'false'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install rekor-cli
+      shell: bash
+      run: |
+        #!/usr/bin/env bash
+        shopt -s expand_aliases
+        set -e
+
+        LOGNAME="install-rekor-cli"
+        rekor_executable_name=rekor-cli
+
+        log_error() {
+          echo "${LOGNAME}: ERROR -" "${@}" 1>&2
+        }
+
+        log_info() {
+          echo "${LOGNAME}: INFO -" "${@}"
+        }
+
+        mkdir -p ${{ inputs.install-dir }}
+        trap "popd >/dev/null" EXIT
+        pushd ${{ inputs.install-dir }} > /dev/null
+
+        case ${{ runner.os }} in
+          Linux | linux)
+            case ${{ runner.arch }} in
+              X64 | amd64)
+                source_filename='rekor-cli-linux-amd64'
+                ;;
+
+              ARM | arm)
+                source_filename='rekor-cli-linux-arm'
+                ;;
+
+              ARM64|arm64)
+                source_filename='rekor-cli-linux-arm64'
+                ;;
+
+              *)
+                log_error "unsupported architecture ${{ runner.arch }}"
+                exit 1
+                ;;
+            esac
+            ;;
+
+          macOS|macos)
+            case ${{ runner.arch }} in
+              X64|amd64)
+                source_filename='rekor-cli-darwin-amd64'
+                ;;
+
+              ARM64|arm64)
+                source_filename='rekor-cli-darwin-arm64'
+                ;;
+
+              *)
+                log_error "unsupported architecture ${{ runner.arch }}"
+                exit 1
+                ;;
+            esac
+            ;;
+
+          Windows|windows)
+            case ${{ runner.arch }} in
+              X64|amd64)
+                source_filename='rekor-cli-windows-amd64.exe'
+                rekor_executable_name=rekor-cli.exe
+                ;;
+              *)
+                log_error "unsupported architecture ${{ runner.arch }}"
+                exit 1
+                ;;
+            esac
+            ;;
+          *)
+            log_error "unsupported os ${{ runner.os }}"
+            exit 1
+            ;;
+        esac
+
+        SUDO=
+        if [[ "${{ inputs.use-sudo }}" == "true" ]] && command -v sudo >/dev/null; then
+          SUDO=sudo
+        fi
+
+        log_info "Downloading version '${{ inputs.rekor-release }}' of rekor-cli to be installed..."
+        log_info "https://github.com/sigstore/rekor/releases/download/${{ inputs.rekor-release }}/${source_filename}"
+        $SUDO curl -fsL https://github.com/sigstore/rekor/releases/download/${{ inputs.rekor-release }}/${source_filename} -o ${rekor_executable_name}
+        $SUDO chmod +x ${rekor_executable_name}
+        log_info "Installation complete!"
+
+    - if: ${{ runner.os == 'Linux' || runner.os == 'macOS' }}
+      run: echo "${{ inputs.install-dir }}" >> $GITHUB_PATH
+      shell: bash
+
+    - if: ${{ runner.os == 'Windows' }}
+      run: echo "${{ inputs.install-dir }}" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+      shell: pwsh
