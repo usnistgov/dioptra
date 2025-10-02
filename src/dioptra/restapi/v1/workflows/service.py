@@ -233,8 +233,7 @@ class ResourceImportService(object):
             archive_file: The contents of the upload if source_type is "upload_archive"
             files: The contents of the upload if source_type is "upload_files"
             config_path: The path to the toml configuration file in the import source.
-            resolve_name_conflicts_strategy: The strategy for resolving name conflicts.
-                Either "fail", "update", or "overwrite"
+            conflict_strat: The strategy for resolving name conflicts.
 
         Returns:
             A message summarizing imported resources
@@ -438,8 +437,7 @@ class ResourceImportService(object):
         Args:
             group_id: The identifier of the group that will manage imported resources
             param_types_config: A list of dictionaries describing a plugin param types
-            overwrite: Whether imported resources should replace existing resources with
-                a conflicting name
+            conflict_strat: The strategy for resolving name conflicts.
 
         Returns:
             A dictionary mapping newly registered PluginParameterType names to the ORM
@@ -522,8 +520,7 @@ class ResourceImportService(object):
             group_id: The identifier of the group that will manage imported resources
             plugins_config: A list of dictionaries describing a plugin and its tasks
             param_types: A dictionary mapping param type name to the ORM object
-            overwrite: Whether imported resources should replace existing resources with
-                a conflicting name
+            conflict_strat: The strategy for resolving name conflicts.
 
         Returns:
             A dictionary mapping newly registered Plugin names to the ORM objects
@@ -706,8 +703,7 @@ class ResourceImportService(object):
             entrypoints_config: A list of dictionaries describing entrypoints
             plugins: A dictionary mapping Plugin names to the ORM objects
             param_types: A dictionary mapping param type name to the ORM object
-            overwrite: Whether imported resources should replace existing resources with
-                a conflicting name
+            conflict_strat: The strategy for resolving name conflicts.
 
         Returns:
             A dictionary mapping newly registered Entrypoint names to ORM object
