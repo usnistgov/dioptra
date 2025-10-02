@@ -207,7 +207,9 @@ class ResourceImportService(object):
         self._entrypoint_service = entrypoint_service
         self._entrypoint_id_service = entrypoint_id_service
         self._entrypoint_id_plugins_service = entrypoint_id_plugins_service
-        self._entrypoint_id_artifact_plugins_service = entrypoint_id_artifact_plugins_service
+        self._entrypoint_id_artifact_plugins_service = (
+            entrypoint_id_artifact_plugins_service
+        )
         self._entrypoint_name_service = entrypoint_name_service
         self._io_file_service = io_file_service
 
@@ -728,9 +730,17 @@ class ResourceImportService(object):
             try:
                 contents = yaml.safe_load(Path(entrypoint["path"]).read_text())
                 task_graph = contents.get("graph", "")
-                task_graph = yaml.dump(task_graph, sort_keys=False, default_flow_style=False) if task_graph else ""
+                task_graph = (
+                    yaml.dump(task_graph, sort_keys=False, default_flow_style=False)
+                    if task_graph
+                    else ""
+                )
                 artifact_graph = contents.get("artifacts", "")
-                artifact_graph = yaml.dump(artifact_graph, sort_keys=False, default_flow_style=False) if artifact_graph else ""
+                artifact_graph = (
+                    yaml.dump(artifact_graph, sort_keys=False, default_flow_style=False)
+                    if artifact_graph
+                    else ""
+                )
             except FileNotFoundError as e:
                 raise ImportFailedError(
                     f"Failed to read entrypoint file from {entrypoint['path']}",
@@ -799,7 +809,11 @@ class ResourceImportService(object):
                     entrypoint["name"], group_id=group_id, log=log
                 )
                 if existing:
-                    queue_ids = [r.resource_id for r in existing.resource.children if r.resource_type == "queue"]
+                    queue_ids = [
+                        r.resource_id
+                        for r in existing.resource.children
+                        if r.resource_type == "queue"
+                    ]
                     entrypoint_dict = self._entrypoint_id_service.modify(
                         entrypoint_id=existing.resource_id,
                         name=entrypoint.get("name", Path(entrypoint["path"]).stem),
@@ -815,8 +829,12 @@ class ResourceImportService(object):
                         commit=False,
                         log=log,
                     )
-                    self._entrypoint_id_plugins_service.append(existing.resource_id, plugin_ids)
-                    self._entrypoint_id_artifact_plugins_service.append(existing.resource_id, artifact_plugin_ids)
+                    self._entrypoint_id_plugins_service.append(
+                        existing.resource_id, plugin_ids
+                    )
+                    self._entrypoint_id_artifact_plugins_service.append(
+                        existing.resource_id, artifact_plugin_ids
+                    )
                 else:
                     entrypoint_dict = self._entrypoint_service.create(
                         name=entrypoint.get("name", Path(entrypoint["path"]).stem),
