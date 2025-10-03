@@ -24,8 +24,8 @@
         />
         <q-breadcrumbs-el
           v-if="route.name === 'createExperimentJob'"
-          :label="`${objName} jobs`"
-          :to="`/experiments/${route.params.id}/jobs`"
+          :label="`${objName}`"
+          :to="`/experiments/${route.params.id}`"
         />
         <q-breadcrumbs-el
           v-if="path[1]"

@@ -1,5 +1,8 @@
 <template>
-  <PageTitle :title="title" />
+  <PageTitle
+    v-if="route.name !== 'experimentJobs'"
+    :title="title" 
+  />
   <TableComponent 
     :rows="jobs"
     :columns="columns"
@@ -8,7 +11,6 @@
     @request="getJobs"
     @delete="showDeleteDialog = true"
     ref="tableRef"
-    :showExpand="true"
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
     @create="pushToJobRoute"
     :hideOpenBtn="true"
@@ -25,22 +27,6 @@
     </template>
     <template #body-cell-status="props">
       <JobStatus :status="props.row.status" />
-    </template>
-    <template #expandedSlot="{ row }">
-      <q-btn
-        label="Create Artifact"
-        color="primary"
-        class="q-ml-md q-my-sm"
-        @click="jobId = row.id; showArtifactsDialog = true"
-      />
-      <BasicTable
-        :columns="artifactColumns"
-        :rows="row.artifacts"
-        :hideSearch="true"
-        :hideEditTable="true"
-        class="q-mx-md"
-        :title="`Job Artifacts`"
-      />
     </template>
   </TableComponent>
 
@@ -75,7 +61,6 @@
   import * as api from '@/services/dataApi'
   import * as notify from '../notify'
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'
-  import BasicTable from '@/components/BasicTable.vue'
   import ArtifactsDialog from '@/dialogs/ArtifactsDialog.vue'
   import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
   import JobStatus from '@/components/JobStatus.vue'
@@ -156,8 +141,9 @@
 
   async function deleteJob() {
     try {
+      const jobId = JSON.parse(JSON.stringify(selected.value[0].id))
       await api.deleteItem('jobs', selected.value[0].id)
-      notify.success(`Successfully deleted '${selected.value[0].description}'`)
+      notify.success(`Successfully deleted job ${jobId}`)
       showDeleteDialog.value = false
       selected.value = []
       tableRef.value.refreshTable()

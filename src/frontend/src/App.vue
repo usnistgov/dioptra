@@ -70,7 +70,6 @@
   const includeCreateButton = [
     'home',
     'experiments',
-    'experimentJobs',
     'entrypoints',
     'plugins',
     'queues',
