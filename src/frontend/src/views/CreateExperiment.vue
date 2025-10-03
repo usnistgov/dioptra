@@ -1,33 +1,5 @@
 <template>
-  <div class="row items-center justify-between">
-    <div class="row items-center">
-      <PageTitle :title="title" />
-      <q-chip
-        v-if="route.params.id !== 'new'"
-        class="q-ml-lg"
-        :color="`${darkMode ? 'grey-9' : ''}`"
-        label="View History"
-        icon="history"
-        @click="store.showRightDrawer = !store.showRightDrawer"
-        clickable
-      >
-        <q-toggle
-          v-model="store.showRightDrawer"
-          left-label
-          color="orange"
-        />
-      </q-chip>
-    </div>
-    <q-btn 
-      v-if="route.params.id !== 'new'"
-      :color="history ? 'red-3' : 'negative'" 
-      icon="sym_o_delete" 
-      label="Delete Experiment" 
-      @click="showDeleteDialog = true"
-      :disable="history"
-    />
-  </div>
-
+  <PageTitle :title="title" />
   <div :class="`row q-my-lg`">
     <div :class="`${isMobile ? 'col-12' : 'col-5'} q-mr-xl`">
       <fieldset>
@@ -41,7 +13,6 @@
               :rules="[requiredRule]"
               class="q-mb-sm q-mt-md"
               aria-required="true"
-              :disable="history"
             >
               <template v-slot:before>
                 <label :class="`field-label`">Name:</label>
@@ -58,7 +29,6 @@
               dense
               :rules="[requiredRule]"
               aria-required="true"
-              :disable="history"
             >
               <template v-slot:before>
                 <div class="field-label">Group:</div>
@@ -70,7 +40,6 @@
               v-model.trim="experiment.description"
               class="q-mb-sm q-mt-sm"
               type="textarea"
-              :disable="history"
             >
               <template v-slot:before>
                 <label :class="`field-label`">Description:</label>
@@ -80,11 +49,10 @@
         </div>
       </fieldset>
     </div>
-    <fieldset :class="`${isMobile ? 'col-12 q-mt-lg' : 'col'}`" :disabled="history">
+    <fieldset :class="`${isMobile ? 'col-12 q-mt-lg' : 'col'}`">
       <legend>Entrypoint</legend>
       <div class="q-ma-lg">
         <q-select
-          v-if="!history"
           outlined
           dense
           v-model="experiment.entrypoints"
@@ -98,7 +66,6 @@
           :options="entrypoints"
           @filter="getEntrypoints"
           class="q-mb-md"
-          :disable="history"
         >
           <template v-slot:before>
             <div class="field-label">Entrypoints:</div>
@@ -117,23 +84,12 @@
         </q-select>
 
         <q-btn
-          v-if="!history"
           color="primary"
           icon="add"
-          label="Create new Entry Point"
+          label="Create new Entrypoint"
           class="q-mt-lg"
           @click="router.push('/entrypoints/new')" 
         />
-
-        <div class="row items-center" v-if="history">
-          <q-icon
-            name="sym_o_info"
-            size="2.5em"
-            color="grey"
-            class="q-mr-sm"
-          />
-          <div>Entrypoints are not yet available in Experiment snapshots</div>
-        </div>
       </div>
     </fieldset>
   </div>
@@ -148,9 +104,8 @@
       />
       <q-btn  
         @click="submit()" 
-        :color="history ? 'blue-2' : 'primary'" 
+        color="primary"
         label="Submit Experiment"
-        :disable="history"
       />
     </div>
 
@@ -163,12 +118,6 @@
       v-model="showReturnDialog"
       @cancel="clearForm"
     />
-    <DeleteDialog
-      v-model="showDeleteDialog"
-      @submit="deleteExperiment"
-      type="Experiment"
-      :name="experiment.name"
-    />
 </template>
 
 <script setup>
@@ -180,7 +129,6 @@
   import PageTitle from '@/components/PageTitle.vue'
   import LeaveFormDialog from '@/dialogs/LeaveFormDialog.vue'
   import ReturnToFormDialog from '@/dialogs/ReturnToFormDialog.vue'
-  import DeleteDialog from '@/dialogs/DeleteDialog.vue'
 
   const route = useRoute()
   
@@ -212,6 +160,7 @@
     }
     basicInfoForm.value.reset()
     store.savedForms.experiment = null
+    
   }
 
   async function checkIfStillValid() {
@@ -272,36 +221,18 @@
   })
 
   async function getExperiment() {
-    if(route.params.id === 'new') {
-      title.value = 'Create Experiment'
-      if(store.savedForms?.experiment) {
-        showReturnDialog.value = true
-        await checkIfStillValid()
-        copyAtEditStart.value = JSON.parse(JSON.stringify({
-          name: store.savedForms.experiment.name,
-          group: store.savedForms.experiment.group,
-          description: store.savedForms.experiment.description,
-          entrypoints: store.savedForms.experiment.entrypoints,
-        }))
-        experiment.value = store.savedForms.experiment
-      }
-      return
-    }
-    try {
-      const res = await api.getItem('experiments', route.params.id)
-      experiment.value = res.data
+    title.value = 'Create Experiment'
+    if(store.savedForms?.experiment) {
+      showReturnDialog.value = true
+      await checkIfStillValid()
       copyAtEditStart.value = JSON.parse(JSON.stringify({
-        name: res.data.name,
-        group: res.data.group,
-        description: res.data.description,
-        entrypoints: res.data.entrypoints,
+        name: store.savedForms.experiment.name,
+        group: store.savedForms.experiment.group,
+        description: store.savedForms.experiment.description,
+        entrypoints: store.savedForms.experiment.entrypoints,
       }))
-      title.value = `Edit ${res.data.name}`
-      console.log('experiment = ', experiment.value)
-    } catch(err) {
-      console.log('err = ', err)
-      notify.error(err.response.data.message)
-    } 
+      experiment.value = store.savedForms.experiment
+    }
   }
 
   function submit() {
@@ -320,18 +251,9 @@
       }
     })
     try {
-      if(route.params.id === 'new') {
-        await api.addItem('experiments', experiment.value)
-        store.savedForms.experiment = null
-        notify.success(`Successfully created '${experiment.value.name}'`)
-      } else {
-        await api.updateItem('experiments', route.params.id, {
-        name: experiment.value.name,
-        description: experiment.value.description,
-        entrypoints: experiment.value.entrypoints
-      })
-        notify.success(`Successfully updated '${experiment.value.name}'`)
-      }
+      await api.addItem('experiments', experiment.value)
+      store.savedForms.experiment = null
+      notify.success(`Successfully created '${experiment.value.name}'`)
       router.push('/experiments')
     } catch(err) {
       console.log('err = ', err)
@@ -358,10 +280,8 @@
 
   onBeforeRouteLeave((to, from, next) => {
     toPath.value = to.path
-    if(confirmLeave.value || !valuesChangedFromEditStart.value || history.value) {
+    if(confirmLeave.value || !valuesChangedFromEditStart.value) {
       next(true)
-    } else if(route.params.id === 'new') {
-      leaveForm()
     } else {
       showLeaveDialog.value = true
     }
@@ -372,7 +292,7 @@
   const toPath = ref()
 
   function leaveForm() {
-    if(route.params.id === 'new' && valuesChangedFromEditStart.value && valuesChangedFromOriginal.value) {
+    if(valuesChangedFromEditStart.value && valuesChangedFromOriginal.value) {
       store.savedForms.experiment = experiment.value
     } else {
       store.savedForms.experiment = null
@@ -380,10 +300,6 @@
     confirmLeave.value = true
     router.push(toPath.value)
   }
-
-  const history = computed(() => {
-    return store.showRightDrawer
-  })
 
   watch(() => store.selectedSnapshot, (newVal) => {
     if(newVal) {
@@ -398,16 +314,6 @@
     }
   })
 
-  const showDeleteDialog = ref(false)
 
-  async function deleteExperiment() {
-    try {
-      await api.deleteItem('experiments', experiment.value.id)
-      notify.success(`Successfully deleted '${experiment.value.name}'`)
-      router.push(`/experiments`)
-    } catch(err) {
-      notify.error(err.response.data.message);
-    }
-  }
 
 </script>

@@ -12,14 +12,14 @@
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
     @create="router.push('/experiments/new')"
   >
-    <template #body-cell-name="props">
+    <!-- <template #body-cell-name="props">
       <RouterLink :to="`/experiments/${props.row.id}/jobs`" @click.stop>
         {{ props.row.name.length < 18 ? props.row.name : props.row.name.replace(/(.{18})..+/, "$1…") }}
         <q-tooltip v-if="props.row.name.length > 18" max-width="30vw" style="overflow-wrap: break-word">
           {{ props.row.name }}
         </q-tooltip>
       </RouterLink>
-    </template>
+    </template> -->
     <template #body-cell-entrypoints="props">
       <q-chip
         v-for="(entrypoint, i) in props.row.entrypoints"

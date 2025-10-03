@@ -39,8 +39,8 @@
               {{ col.value ? '✅' : 	'❌'}}
             </div>
             <div v-else-if="col.name === 'name'">
-              {{ truncateString(props.row.name, 18) }}
-              <q-tooltip v-if="props.row.name.length > 18" max-width="30vw" style="overflow-wrap: break-word">
+              {{ truncateString(props.row.name, 20) }}
+              <q-tooltip v-if="props.row.name.length > 20" max-width="30vw" style="overflow-wrap: break-word">
                 {{ props.row.name }}
               </q-tooltip>
             </div>
