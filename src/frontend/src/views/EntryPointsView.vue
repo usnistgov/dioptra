@@ -5,7 +5,6 @@
   <TableComponent 
     :rows="entrypoints"
     :columns="columns"
-    :showExpand="true"
     title="Entrypoints"
     v-model:selected="selected"
     @edit="router.push(`/entrypoints/${selected[0].id}`)"
@@ -28,9 +27,6 @@
       <span v-else class="text-negative">
         EMPTY
       </span>
-    </template>
-    <template #expandedSlot="{ row }">
-      <CodeEditor v-model="row.taskGraph" language="yaml" :readOnly="true" />
     </template>
     <template #body-cell-plugins="props">
       <span

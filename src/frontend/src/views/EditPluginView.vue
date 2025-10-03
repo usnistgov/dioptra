@@ -1,5 +1,13 @@
 <template>
-  <PageTitle :title="ORIGINAL_PLUGIN?.name"/>
+  <div class="row items-center justify-between">
+    <PageTitle :title="ORIGINAL_PLUGIN?.name"/>
+    <q-btn 
+      color="negative"
+      icon="sym_o_delete" 
+      label="Delete Plugin" 
+      @click="showDeletePluginDialog = true"
+    />
+  </div>
   <fieldset class="q-mt-md q-pa-lg" style="display: inline-block; width: auto; height: auto; max-width: 50%;">
     <legend>Metadata</legend>
     <KeyValueTable :rows="pluginRows">
@@ -87,6 +95,12 @@
     type="Plugin File"
     :name="selected.length ? selected[0].filename : ''"
   />
+  <DeleteDialog
+    v-model="showDeletePluginDialog"
+    @submit="deletePlugin"
+    type="Plugin"
+    :name="name"
+  />
 
   <AssignTagsDialog 
     v-model="showTagsDialog"
@@ -163,8 +177,8 @@ function checkName(val) {
 }
 
 function revertValues() {
-  name.value = ORIGINAL_PLUGIN.value.name
-  description.value = ORIGINAL_PLUGIN.value.description
+  name.value = JSON.parse(JSON.stringify(ORIGINAL_PLUGIN.value.name))
+  description.value = JSON.parse(JSON.stringify(ORIGINAL_PLUGIN.value.description))
 }
 
 async function updatePlugin() {
@@ -223,6 +237,18 @@ async function deleteFile() {
     showDeleteDialog.value = false
     selected.value = []
     tableRef.value.refreshTable()
+  } catch(err) {
+    notify.error(err.response.data.message);
+  }
+}
+
+const showDeletePluginDialog = ref(false)
+
+async function deletePlugin() {
+  try {
+    await api.deleteItem('plugins', route.params.id)
+    notify.success(`Successfully deleted '${name}'`)
+    router.push(`/plugins`)
   } catch(err) {
     notify.error(err.response.data.message);
   }

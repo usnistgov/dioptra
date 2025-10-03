@@ -19,13 +19,14 @@ const router = createRouter({
           name: 'experiments',
         },
         {
-          path: '/experiments/:id',
+          path: '/experiments/new',
           component: () => import('../views/CreateExperiment.vue'),
           meta: { type: 'experiments' }
         },
         {
-          path: '/experiments/:id/jobs',
-          component: () => import('../views/JobsView.vue'),
+          path: '/experiments/:id',
+          component: () => import('../views/EditExperiment.vue'),
+          meta: { type: 'experiments' },
           name: 'experimentJobs'
         },
         {

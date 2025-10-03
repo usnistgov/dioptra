@@ -562,7 +562,7 @@
       await api.addJob(job.value.experiment.id, payload)
       notify.success(`Successfully created job`)
       store.savedForms.jobs[expJobOrAllJobs.value] = null
-      router.push(expJobOrAllJobs.value === 'allJobs' ? `/jobs` : `/experiments/${route.params.id}/jobs`)
+      router.push(expJobOrAllJobs.value === 'allJobs' ? `/jobs` : `/experiments/${route.params.id}`)
     } catch(err) {
       // error shows when redis isn't installed, but job is still created
       store.savedForms.jobs[expJobOrAllJobs.value] = null
