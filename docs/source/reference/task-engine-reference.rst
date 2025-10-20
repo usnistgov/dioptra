@@ -501,6 +501,12 @@ two.  A step description supports all of these styles.
     due to the naming of each argument.  It is also structurally simpler than
     the mixed style.
 
+.. important:: 
+    The Positional Style Invocation and Keyword Style Invocation cannot be used
+    with a parameter that has zero parameters. Instead, the Mixed Style Invocation
+    must be used. (Both Positional and Keyword Style Invocations will assume a 
+    single ``None`` parameter if none are specified.)
+
 Positional Style Invocation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
