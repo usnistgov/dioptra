@@ -109,6 +109,7 @@
               :style="{ 'margin-bottom': queueField?.hasError ? '' : '25px' }"
               :disable="!job.entrypoint || allowableQueueIds.length === 0"
               ref="queueField"
+              :selectedOption="queues[0]"
             >
               <template v-slot:before>
                 <div class="field-label">Queue:</div>
