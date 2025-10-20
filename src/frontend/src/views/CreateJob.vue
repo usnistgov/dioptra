@@ -485,6 +485,9 @@
   watch(() => job.value.entrypoint, async (newVal) => {
     if(newVal) {
       await getQueues()
+      if (queues.value.length == 1) {
+        job.value.queue = queues.value[0]
+      }
     } else {
       queueError.value = false
     }
