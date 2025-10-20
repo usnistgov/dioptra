@@ -164,7 +164,7 @@
 
   async function syncPlugin(entrypointId, pluginId, pluginName) {
     try {
-      await api.addPluginsToEntrypoint(entrypointId, [pluginId]) 
+      await api.addPluginsToEntrypoint(entrypointId, [pluginId], 'plugins')
       tableRef.value.refreshTable()
       notify.success(`Successfully updated plugin '${pluginName}' to latest version`)
     } catch(err) {

@@ -112,7 +112,7 @@
 
     try {
       if(pluginsToAdd.length > 0) {
-        await api.addPluginsToEntrypoint(props.editObj.id, pluginsToAdd) 
+        await api.addPluginsToEntrypoint(props.editObj.id, pluginsToAdd, 'plugins')
       }
       for(const plugin of pluginsToRemove) {
         await api.removePluginFromEntrypoint(props.editObj.id, plugin)
