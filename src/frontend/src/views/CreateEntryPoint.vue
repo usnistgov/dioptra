@@ -273,81 +273,10 @@
       
       <div class="col">
         <h2>Task Plugins</h2>
-        <q-select
-          v-if="route.params.id === 'new'"
-          outlined
-          dense
-          v-model="entryPoint.plugins"
-          use-input
-          use-chips
-          multiple
-          map-options
-          option-label="name"
-          option-value="id"
-          input-debounce="100"
-          :options="plugins"
-          @filter="getPlugins"
-          class="q-mt-lg"
-        >
-          <template v-slot:before>
-            <div class="field-label">Plugins:</div>
-          </template>
-          <template v-slot:selected-item="scope">
-            <q-chip
-              :label="scope.opt.name"
-              removable
-              dense
-              @remove="scope.removeAtIndex(scope.index)"
-              :tabindex="scope.tabindex"
-              color="secondary"
-              text-color="white"
-            />
-          </template>
-        </q-select>
-        <div 
-          class="row items-center q-mt-md" 
-          v-if="route.params.id !== 'new'"
-        >
-          <label class="field-label">Plugins:</label>
-          <div 
-            class="col" 
-            style="border: 1px solid lightgray; border-radius: 4px; padding: 5px 8px; margin-left: 6px;"
-          >
-            <div v-if="entryPoint.plugins.length === 0">
-              No plugins attached
-            </div>
-            <div
-              v-for="(plugin, i) in entryPoint.plugins"
-              :key="i"
-            >
-              <q-chip
-                :label="plugin.name"
-                color="secondary"
-                text-color="white"
-              >
-                <q-badge
-                  v-if="!plugin.latestSnapshot" 
-                  color="red" 
-                  label="outdated" 
-                  rounded
-                  class="q-ml-xs"
-                />
-              </q-chip>
-              <q-btn
-                v-if="!plugin.latestSnapshot"
-                round 
-                color="red" 
-                icon="sync"
-                size="sm"
-                @click="syncPlugin(plugin.id, i, 'plugins')"
-              >
-                <q-tooltip>
-                  Sync to latest version of plugin
-                </q-tooltip>
-              </q-btn>
-            </div>
-          </div>
-        </div>
+
+
+        <AssignPluginsComponent :entryPoint="entryPoint" :pluginType="'plugins'" />
+
         <TableComponent
           :rows="tasks"
           :columns="taskColumns"
@@ -418,81 +347,9 @@
       
       <div class="col">
         <h2>Artifact Task Plugins</h2>
-        <q-select
-          v-if="route.params.id === 'new'"
-          outlined
-          dense
-          v-model="entryPoint.artifactPlugins"
-          use-input
-          use-chips
-          multiple
-          map-options
-          option-label="name"
-          option-value="id"
-          input-debounce="100"
-          :options="plugins"
-          @filter="getPlugins"
-          class="q-mt-lg"
-        >
-          <template v-slot:before>
-            <div class="field-label">Plugins:</div>
-          </template>
-          <template v-slot:selected-item="scope">
-            <q-chip
-              :label="scope.opt.name"
-              removable
-              dense
-              @remove="scope.removeAtIndex(scope.index)"
-              :tabindex="scope.tabindex"
-              color="secondary"
-              text-color="white"
-            />
-          </template>
-        </q-select>
-        <div 
-          class="row items-center q-mt-md" 
-          v-if="route.params.id !== 'new'"
-        >
-          <label class="field-label">Plugins:</label>
-          <div 
-            class="col" 
-            style="border: 1px solid lightgray; border-radius: 4px; padding: 5px 8px; margin-left: 6px;"
-          >
-            <div v-if="entryPoint.artifactPlugins.length === 0" class="disabled">
-              No plugins attached
-            </div>
-            <div
-              v-for="(plugin, i) in entryPoint.artifactPlugins"
-              :key="i"
-            >
-              <q-chip
-                :label="plugin.name"
-                color="secondary"
-                text-color="white"
-              >
-                <q-badge
-                  v-if="!plugin.latestSnapshot" 
-                  color="red" 
-                  label="outdated" 
-                  rounded
-                  class="q-ml-xs"
-                />
-              </q-chip>
-              <q-btn
-                v-if="!plugin.latestSnapshot"
-                round 
-                color="red" 
-                icon="sync"
-                size="sm"
-                @click="syncPlugin(plugin.id, i, 'artifactPlugins')"
-              >
-                <q-tooltip>
-                  Sync to latest version of plugin
-                </q-tooltip>
-              </q-btn>
-            </div>
-          </div>
-        </div>
+
+        <AssignPluginsComponent :entryPoint="entryPoint" :pluginType="'artifacts'" />
+
         <TableComponent
           :rows="artifactTasks"
           :columns="artifactTaskColumns"
@@ -613,6 +470,7 @@
   import { useRouter, onBeforeRouteLeave } from 'vue-router'
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'
   import CodeEditor from '@/components/CodeEditor.vue'
+  import AssignPluginsComponent from '@/components/AssignPluginsComponent.vue'
   import EntrypointParamDialog from '@/dialogs/EntrypointParamDialog.vue'
   import { useRoute } from 'vue-router'
   import * as api from '@/services/dataApi'
@@ -893,6 +751,7 @@
         ['group', 'plugins', 'artifactPlugins'].forEach(key => delete submitObject[key])
         await api.updateItem('entrypoints', route.params.id, submitObject)
         console.log('pluginsToUpdate = ', pluginsToUpdate.value)
+        console.log('selectedPlugins = ', selectedPlugins.value)
         if(pluginsToUpdate.value.length > 0) {
           await api.addPluginsToEntrypoint(route.params.id, pluginsToUpdate.value, "plugins")
         }
@@ -1054,6 +913,7 @@
     router.push(toPath.value)
   }
 
+  const selectedPlugins = ref([])
   const pluginsToUpdate = ref([])
   const artifactPluginsToUpdate = ref([])
 

@@ -9,6 +9,8 @@
         Assign Plugins for '{{ editObj.name || editObj.description }}'
       </label>
     </template>
+
+    <AssignPluginsComponent :entryPoint="editObj" :pluginType="'plugins'" />
     <q-select
       outlined
       dense
@@ -64,12 +66,14 @@
         </div>
       </template>
     </q-select>
+
   </DialogComponent>
 </template>
 
 <script setup>
   import { ref, watch, computed } from 'vue'
   import DialogComponent from './DialogComponent.vue'
+  import AssignPluginsComponent from '@/components/AssignPluginsComponent.vue'
   import * as api from '@/services/dataApi'
   import * as notify from '../notify'
 
