@@ -109,7 +109,6 @@
               :style="{ 'margin-bottom': queueField?.hasError ? '' : '25px' }"
               :disable="!job.entrypoint || allowableQueueIds.length === 0"
               ref="queueField"
-              :selectedOption="queues[0]"
             >
               <template v-slot:before>
                 <div class="field-label">Queue:</div>
@@ -486,6 +485,9 @@
   watch(() => job.value.entrypoint, async (newVal) => {
     if(newVal) {
       await getQueues()
+      if (queues.value.length == 1) {
+        job.value.queue = queues.value[0]
+      }
     } else {
       queueError.value = false
     }
