@@ -1,0 +1,37 @@
+artifacts:
+  patch:
+    contents: $adversarial_patch.patch
+    task:
+      name: NumpyArrayArtifactTask
+  patch_mask:
+    contents: $adversarial_patch.patch_mask
+    task:
+      name: NumpyArrayArtifactTask
+
+graph:
+  random_seed:
+    set_random_seed:
+      seed: $seed
+
+  dataset:
+    load_dataset_from_tfds:
+      name: $dataset_name
+      split: $dataset_split
+      data_dir: $dataset_dir
+      normalize_val: $normalize_val
+      image_size: $image_size
+      batch_size: $batch_size
+      seed: $random_seed
+    dependencies:
+      - random_seed
+
+  adversarial_patch:
+    create_adversarial_patch:
+      model: $model_artifact
+      dataset: $dataset.train
+      target: $patch_target
+      rotation_max: $patch_rotation_max
+      scale_min: $patch_scale_min
+      scale_max: $patch_scale_max
+      learning_rate: $patch_learning_rate
+      max_iter: $patch_max_iter
