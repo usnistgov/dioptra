@@ -85,6 +85,7 @@ dependencies = [
     "simplejson>=3.10.0",
     "SQLAlchemy>=2",
     "structlog>=20.2.0",
+    "tensorflow-datasets>=4.9.9",
     "tomli>=2.2.0",
     "typing-extensions>=3.7.4.3",
     "universal-pathlib>=0.2.6",
