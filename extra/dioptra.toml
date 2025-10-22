@@ -6,7 +6,7 @@ description = "A simple plugin used for testing and demonstration purposes."
   filename = "tasks.py"
   name = "hello"
   input_params = [ { name = "name", type = "string", required = true } ]
-  output_params = [ { name = "greeting", type = "message" } ]
+  output_params = [ { name = "greeting", type = "string" } ]
 
   [[plugins.tasks.functions]]
   filename = "tasks.py"
@@ -15,13 +15,13 @@ description = "A simple plugin used for testing and demonstration purposes."
     { name = "greeting", type = "string", required = true },
     { name = "name", type = "string", required = true },
   ]
-  output_params = [ { name = "greeting", type = "message" } ]
+  output_params = [ { name = "greeting", type = "string" } ]
 
   [[plugins.tasks.functions]]
   filename = "tasks.py"
   name = "shout"
-  input_params = [ { name = "greeting", type = "message", required = true } ]
-  output_params = [ { name = "loud_greeting", type = "message" } ]
+  input_params = [ { name = "greeting", type = "string", required = true } ]
+  output_params = [ { name = "loud_greeting", type = "string" } ]
 
 [[plugins]]
 path = "plugins/sklearn_classify"
@@ -95,10 +95,6 @@ description = "A collection of basic artifact tasks."
   output_params = [ { name = "dataframe", type = "dataframe" } ]
 
 [[plugin_param_types]]
-name = "message"
-description = "A message produced by a plugin task."
-
-[[plugin_param_types]]
 name = "bytes"
 description = "Python bytes object."
 
@@ -129,7 +125,7 @@ path = "entrypoints/hello-artifact.yaml"
 name = "Hello Artifact"
 description = "A simple example demonstrating use of artifacts."
 artifact_params = [
-  { name = "greeting_artifact", output_params = [ { name = "value", type = "message" } ] }
+  { name = "greeting_artifact", output_params = [ { name = "value", type = "string" } ] }
 ]
 plugins = [ "hello_world" ]
 artifact_plugins = [ "artifacts" ]
