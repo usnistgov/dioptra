@@ -41,10 +41,16 @@ Email us: dioptra@nist.gov
 
    getting-started/building-the-containers
    getting-started/running-dioptra
-   getting-started/acquiring-datasets
    getting-started/additional-configuration
 .. getting-started/examples-setup
    getting-started/installation
+
+.. toctree::
+   :hidden:
+   :maxdepth: -1
+   :caption: How-To Guides
+
+   how-to/add-a-dataset
 
 .. toctree::
    :hidden:
