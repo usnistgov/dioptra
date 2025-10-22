@@ -60,7 +60,7 @@ This will generate a setup that is appropriate for testing Dioptra on your perso
 
 Next, run cruft to begin the deployment process. The following command will run cruft and use all of the default template values except for the `datasets_directory`. If you wish to configure the deployment in a different manner, see the :ref:`Applying the template <getting-started-running-dioptra-applying-the-template>` section for detailed description of the template values and how to configure them. 
 
-We recommend identifying a location to store datasets you will want to use with Dioptra at this point and setting the `datasets_directory` variable accordingly. See the :ref:`Downloading the datasets <getting-started-acquiring-datasets>` section for more details.
+We recommend identifying a location to store datasets you will want to use with Dioptra at this point and setting the `datasets_directory` variable accordingly. See the :ref:`How to add a dataset <how-to-add-a-dataset>` guide for more details.
 
 .. code:: sh
 
