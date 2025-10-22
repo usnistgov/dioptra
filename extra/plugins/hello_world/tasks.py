@@ -16,6 +16,7 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 # [reference-task]
 import structlog
+
 from dioptra import pyplugs
 
 LOGGER = structlog.get_logger()
