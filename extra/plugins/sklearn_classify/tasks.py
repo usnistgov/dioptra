@@ -14,27 +14,25 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-import structlog
-from dioptra import pyplugs
-
 from dataclasses import dataclass
 
 # Adapted from:
 # https://scikit-learn.org/stable/auto_examples/classification/plot_digits_classification.html#sphx-glr-auto-examples-classification-plot-digits-classification-py
-
 # Authors: The scikit-learn developers
 # SPDX-License-Identifier: BSD-3-Clause
-
 import numpy as np
 
 # import matplotlib.pyplot as plt
 import pandas as pd
-
-from sklearn.base import BaseEstimator
+import structlog
 from sklearn import datasets, metrics, svm
+from sklearn.base import BaseEstimator
 from sklearn.model_selection import train_test_split
 
+from dioptra import pyplugs
+
 LOGGER = structlog.get_logger()
+
 
 @pyplugs.register
 def load_toy_dataset(name: str) -> list[np.ndarray]:
