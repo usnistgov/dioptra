@@ -1,0 +1,38 @@
+artifacts:
+  predictions:
+    contents: $predictions
+    task:
+      name: DataframeArtifactTask
+      args:
+        format: csv
+
+graph:
+  dataset:
+    load_dataset:
+      ep_seed: $seed
+      testing_dir: $testing
+      subsets: [testing]
+      image_size: $image_size
+      batch_size: $batch_size
+      rescale: $rescale
+      shuffle: False
+
+  model: 
+    read_model:
+      location: $model_file
+
+
+  # model:
+  #   load_model:
+  #     model_name: $model_name
+  #     model_version: $model_version
+
+  predictions:
+    predict:
+      classifier: $model
+      dataset: $dataset.testing
+      show_actual: $record_actual_class
+      show_target: $record_target_class
+    dependencies:
+      - model
+

@@ -111,6 +111,9 @@ class DirectoryArtifactTask(ArtifactTaskInterface):
         tarball_path = working_dir / name
         tarball_path = tarball_path.with_suffix(".tar")
 
+        if tarball_write_mode in ["w:gz", "x:bz2", "w:xz"]:
+            tarball_path = tarball_path.with_suffix(f".tar.{tarball_write_mode[2:]}")
+
         with tarfile.open(tarball_path, tarball_write_mode) as f:
             f.add(source_dir, arcname=source_dir.name)
 

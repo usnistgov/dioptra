@@ -1,0 +1,180 @@
+# This Software (Dioptra) is being made available as a public service by the
+# National Institute of Standards and Technology (NIST), an Agency of the United
+# States Department of Commerce. This software was developed in part by employees of
+# NIST and in part by NIST contractors. Copyright in portions of this software that
+# were developed by NIST contractors has been licensed or assigned to NIST. Pursuant
+# to Title 17 United States Code Section 105, works of NIST employees are not
+# subject to copyright protection in the United States. However, NIST may hold
+# international copyright in software created by its employees and domestic
+# copyright (or licensing rights) in portions of software that were assigned or
+# licensed to NIST. To the extent that NIST holds copyright in this software, it is
+# being made available under the Creative Commons Attribution 4.0 International
+# license (CC BY 4.0). The disclaimers of the CC BY 4.0 license apply to all parts
+# of the software developed or licensed by NIST.
+#
+# ACCESS THE FULL CC BY 4.0 LICENSE HERE:
+# https://creativecommons.org/licenses/by/4.0/legalcode
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Callable, Any
+
+from .restapi import post_metrics
+from .data_tensorflow import get_n_classes_from_directory_iterator
+import numpy as np
+import pandas as pd
+import scipy.stats
+import structlog
+from structlog.stdlib import BoundLogger
+
+from dioptra import pyplugs
+from dioptra.sdk.exceptions import ARTDependencyError, TensorflowDependencyError
+from dioptra.sdk.utilities.decorators import require_package
+
+LOGGER: BoundLogger = structlog.stdlib.get_logger()
+
+try:
+    from art.defences.preprocessor import (
+        GaussianAugmentation,
+        JpegCompression,
+        SpatialSmoothing,
+    )
+
+except ImportError:  # pragma: nocover
+    LOGGER.warn(
+        "Unable to import one or more optional packages, functionality may be reduced",
+        package="art",
+    )
+
+
+try:
+    from tensorflow.keras.preprocessing.image import save_img
+    import tensorflow as tf
+except ImportError:  # pragma: nocover
+    LOGGER.warn(
+        "Unable to import one or more optional packages, functionality may be reduced",
+        package="tensorflow",
+    )
+
+DEFENSE_LIST = {
+    "spatial_smoothing": SpatialSmoothing,
+    "jpeg_compression": JpegCompression,
+    "gaussian_augmentation": GaussianAugmentation,
+}
+
+
+@pyplugs.register
+@require_package("art", exc_type=ARTDependencyError)
+@require_package("tensorflow", exc_type=TensorflowDependencyError)
+def create_defended_dataset(
+    data_flow: Any,
+    def_data_dir: str | Path,
+    image_size: tuple[int, int, int],
+    distance_metrics_list: list[tuple[str, Callable[..., np.ndarray]]] | None = None,
+    batch_size: int = 32,
+    def_type: str = "spatial_smoothing",
+    defense_kwargs: dict[str, Any] | None = None,
+) -> pd.DataFrame:
+    tf.experimental.numpy.experimental_enable_numpy_behavior()
+    distance_metrics_list = distance_metrics_list or []
+    clip_values: tuple[float, float] = (0, 255) if image_size[2] == 3 else (0, 1.0)
+    def_data_dir = Path(def_data_dir)
+    defense_kwargs = {} if defense_kwargs is None else defense_kwargs
+    defense = _init_defense(
+        clip_values=clip_values,
+        def_type=def_type,
+        defense_kwargs=defense_kwargs,
+    )
+
+    img_filenames = [Path(x) for x in data_flow.file_paths]
+    class_names_list = sorted(data_flow.class_names)
+
+    distance_metrics_: dict[str, list[list[float]]] = {"image": [], "label": []}
+    for metric_name, _ in distance_metrics_list:
+        distance_metrics_[metric_name] = []
+
+
+    for batch_num, (x, y) in enumerate(data_flow):
+
+        clean_filenames = img_filenames[
+            batch_num * batch_size : (batch_num + 1) * batch_size  # noqa: E203
+        ]
+
+        LOGGER.info(
+            "Generate defended image batch",
+            defense=def_type,
+            batch_num=batch_num,
+        )
+
+        y_int = np.argmax(y, axis=1)
+        adv_batch_defend, _ = defense(x.numpy())
+
+        _save_def_batch(
+            adv_batch_defend, def_data_dir, y_int, clean_filenames, class_names_list
+        )
+
+        _evaluate_distance_metrics(
+            clean_filenames=clean_filenames,
+            distance_metrics_=distance_metrics_,
+            clean_batch=x,
+            adv_batch=adv_batch_defend,
+            distance_metrics_list=distance_metrics_list,
+        )
+
+    LOGGER.info("Defended image generation complete", defense=def_type)
+    _log_distance_metrics(distance_metrics_)
+    return pd.DataFrame(distance_metrics_)
+
+
+def _init_defense(
+    clip_values: tuple[float, float],
+    def_type: str,
+    defense_kwargs: dict[str, Any]
+):
+    defense = DEFENSE_LIST[def_type](
+        clip_values=clip_values,
+        **defense_kwargs,
+    )
+    return defense
+
+
+def _save_def_batch(
+    adv_batch, def_data_dir, y, clean_filenames, class_names_list
+) -> None:
+    for batch_image_num, adv_image in enumerate(adv_batch):
+        out_label = class_names_list[y[batch_image_num]]
+        adv_image_path = (
+            def_data_dir
+            / f"{out_label}"
+            / f"def_{clean_filenames[batch_image_num].name}"
+        )
+
+        if not adv_image_path.parent.exists():
+            adv_image_path.parent.mkdir(parents=True)
+
+        save_img(path=str(adv_image_path), x=adv_image)
+
+
+def _evaluate_distance_metrics(
+    clean_filenames, distance_metrics_, clean_batch, adv_batch, distance_metrics_list
+) -> None:
+    LOGGER.debug("evaluate image perturbations using distance metrics")
+    distance_metrics_["image"].extend([x.name for x in clean_filenames])
+    distance_metrics_["label"].extend([x.parent for x in clean_filenames])
+    for metric_name, metric in distance_metrics_list:
+        distance_metrics_[metric_name].extend(metric(clean_batch, adv_batch))
+
+
+def _log_distance_metrics(distance_metrics_: dict[str, list[list[float]]]) -> None:
+    distance_metrics_ = distance_metrics_.copy()
+    del distance_metrics_["image"]
+    del distance_metrics_["label"]
+    for metric_name, metric_values_list in distance_metrics_.items():
+        metric_values = np.array(metric_values_list).astype('float64')
+        post_metrics(metric_name=f"{metric_name}_mean", metric_value=metric_values.mean())
+        post_metrics(metric_name=f"{metric_name}_median", metric_value=np.median(metric_values))
+        post_metrics(metric_name=f"{metric_name}_stdev", metric_value=metric_values.std())
+        post_metrics(metric_name=f"{metric_name}_iqr", metric_value=scipy.stats.iqr(metric_values))
+        post_metrics(metric_name=f"{metric_name}_min", metric_value=metric_values.min())
+        post_metrics(metric_name=f"{metric_name}_max", metric_value=metric_values.max())
+        LOGGER.info("logged distance-based metric", metric_name=metric_name)

@@ -1,0 +1,60 @@
+artifacts:
+  adversarial_dataset:
+    contents: $adv_data_dir
+    task:
+      name: DirectoryArtifactTask
+
+graph:
+  dataset:
+    load_dataset:
+      ep_seed: $seed
+      testing_dir: $data_dir
+      subsets: [testing]
+      image_size: $image_size
+      batch_size: $batch_size
+      rescale: $rescale
+      shuffle: False
+
+  model: 
+    read_model:
+      location: $model_file
+      art: true
+      image_size: $image_size
+      classifier_kwargs:
+        clip_values: $clip_values
+
+  # model:
+  #   load_model:
+  #     model_name: $model_name
+  #     model_version: $model_version
+  #     art: true
+  #     image_size: $image_size
+  #     classifier_kwargs:
+  #       clip_values: $clip_values
+
+  apply_patches:
+    augment_patch:
+      data_flow: $dataset.testing
+      adv_data_dir: $adv_data_dir
+      patch_dir: $patch
+      model: $model
+      distance_metrics:
+        - name: l_infinity_norm
+          func: l_inf_norm
+        - name: l_1_norm
+          func: l_1_norm
+        - name: l_2_norm
+          func: l_2_norm
+        - name: cosine_similarity
+          func: paired_cosine_similarities
+        - name: euclidean_distance
+          func: paired_euclidean_distances
+        - name: manhattan_distance
+          func: paired_manhattan_distances
+        - name: wasserstein_distance
+          func: paired_wasserstein_distances
+      batch_size: $batch_size
+      patch_scale: $patch_scale
+      rotation_max: $rotation_max
+      scale_min: $scale_min
+      scale_max: $scale_max

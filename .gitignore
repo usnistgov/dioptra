@@ -436,3 +436,5 @@ mlruns/
 !tests/**/lib
 !src/**/tags
 !src/**/lib
+*.npy
+/examples/artifacts

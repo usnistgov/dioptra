@@ -1,0 +1,35 @@
+artifacts:
+  metrics:
+    contents: $metrics
+    task:
+      name: DataframeArtifactTask
+      args: 
+        format: csv
+
+graph: 
+  dataset:
+    load_dataset:
+      ep_seed: $seed
+      testing_dir: $data_dir
+      subsets: [testing]
+      image_size: $image_size
+      shuffle: False
+      rescale: $rescale
+
+  format_predictions:
+    load_predictions:
+      dataframe: $predictions
+      dataset: $dataset.testing
+      n_classes: $n_classes
+
+  metrics:
+    prediction_metrics:
+      y_true: $format_predictions.y_true
+      y_pred: $format_predictions.y_pred
+      metrics_list:
+        - name: accuracy
+          func: accuracy
+        - name: roc_auc
+          func: roc_auc
+    dependencies:
+      - format_predictions
