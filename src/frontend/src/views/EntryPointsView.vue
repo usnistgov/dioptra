@@ -37,7 +37,7 @@
           color="secondary" 
           text-color="white"
           clickable
-          @click.stop="editEntrypoint = props.row; showAssignPluginsDialog = true"
+          @click.stop="editEntrypoint = props.row; pluginType = 'plugins'; showAssignPluginsDialog = true"
         >
           {{ plugin.name }}
           <q-badge
@@ -54,8 +54,7 @@
           color="red" 
           icon="sync"
           size="sm"
-          @click.stop="syncPlugin(props.row.id, plugin.id, plugin.name)"
-          class="q-mr-md"
+          @click.stop="syncPlugin(props.row.id, plugin.id, plugin.name, 'plugins')"
         >
           <q-tooltip>
             Sync to latest version of plugin
@@ -66,7 +65,49 @@
         round
         size="sm"
         icon="add"
-        @click.stop="editEntrypoint = props.row; showAssignPluginsDialog = true"
+        @click.stop="editEntrypoint = props.row; pluginType = 'plugins'; showAssignPluginsDialog = true"
+        class="q-ml-sm"
+      />
+    </template>
+      <template #body-cell-artifactPlugins="props">
+      <span
+        v-for="(plugin, i) in props.row.artifactPlugins"
+        :key="i"
+      >
+        <q-chip
+          color="secondary" 
+          text-color="white"
+          clickable
+          @click.stop="editEntrypoint = props.row; pluginType = 'artifactPlugins'; showAssignPluginsDialog = true"
+        >
+          {{ plugin.name }}
+          <q-badge
+            v-if="!plugin.latestSnapshot" 
+            color="red" 
+            label="outdated" 
+            rounded
+            class="q-ml-xs"
+          />
+        </q-chip>
+        <q-btn
+          v-if="!plugin.latestSnapshot"
+          round 
+          color="red" 
+          icon="sync"
+          size="sm"
+          @click.stop="syncPlugin(props.row.id, plugin.id, plugin.name, 'artifactPlugins')"
+        >
+          <q-tooltip>
+            Sync to latest version of plugin
+          </q-tooltip>
+        </q-btn>
+      </span>
+      <q-btn
+        round
+        size="sm"
+        icon="add"
+        @click.stop="editEntrypoint = props.row; pluginType = 'artifactPlugins'; showAssignPluginsDialog = true"
+        class="q-ml-sm"
       />
     </template>
   </TableComponent>
@@ -95,6 +136,7 @@
   />
   <AssignPluginsDialog 
     v-model="showAssignPluginsDialog"
+    :pluginType="pluginType"
     :editObj="editEntrypoint"
     @refreshTable="tableRef.refreshTable()"
   />
@@ -122,6 +164,7 @@
     { name: 'taskGraph', label: 'Task Graph', align: 'left', field: 'taskGraph',sortable: false, },
     { name: 'tags', label: 'Tags', align: 'left', field: 'tags', sortable: false },
     { name: 'plugins', label: 'Plugins', align: 'left', field: 'plugins', sortable: false },
+    { name: 'artifactPlugins', label: 'Artifact Plugins', align: 'left', field: 'artifactPlugins', sortable: false },
   ]
 
   const selected = ref([])
@@ -136,6 +179,7 @@
   const showDeleteDialog = ref(false)
   const showAssignPluginsDialog = ref(false)
   const editEntrypoint = ref('')
+  const pluginType = ref('')
 
   async function getEntrypoints(pagination, showDrafts) {
     try {
@@ -163,9 +207,9 @@
   const editObjTags = ref({})
   const showTagsDialog = ref(false)
 
-  async function syncPlugin(entrypointId, pluginId, pluginName) {
+  async function syncPlugin(entrypointId, pluginId, pluginName, pluginType) {
     try {
-      await api.addPluginsToEntrypoint(entrypointId, [pluginId], 'plugins')
+      await api.addPluginsToEntrypoint(entrypointId, [pluginId], pluginType)
       tableRef.value.refreshTable()
       notify.success(`Successfully updated plugin '${pluginName}' to latest version`)
     } catch(err) {

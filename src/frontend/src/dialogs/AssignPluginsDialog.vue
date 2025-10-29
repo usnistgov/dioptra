@@ -6,149 +6,56 @@
   >
     <template #title>
       <label id="modalTitle">
-        Assign Plugins for '{{ editObj.name || editObj.description }}'
+        Assign {{ pluginType === 'plugins' ? 'Plugins' : 'Artifact Plugins' }} for '{{ editObj.name }}'
       </label>
     </template>
-    <q-select
-      outlined
-      dense
-      v-model="selectedPlugins"
-      use-input
-      use-chips
-      multiple
-      option-label="name"
-      option-value="id"
-      input-debounce="100"
-      :options="pluginOptions"
-      @filter="getPlugins"
-    >
-      <template v-slot:before>
-        <div class="field-label">Plugins:</div>
-      </template>
-      <template v-slot:selected>
-        <div>
-          <div
-            v-for="(plugin, i) in selectedPlugins"
-            :key="plugin.id"
-            :class="i > 0 ? 'q-mt-xs' : ''"
-            >
-              <q-chip
-                removable
-                color="secondary"
-                text-color="white"
-                class="q-ml-xs "
-                @remove="selectedPlugins.splice(i, 1)"
-              >
-                {{ plugin.name }}
-                <q-badge
-                  v-if="!plugin.latestSnapshot" 
-                  color="red" 
-                  label="outdated" 
-                  rounded
-                  class="q-ml-xs"
-                />
-              </q-chip>
-              <q-btn
-                v-if="!plugin.latestSnapshot"
-                round 
-                color="red" 
-                icon="sync"
-                size="sm"
-                @click.stop="syncPlugin(plugin.id, i)"
-              >
-                <q-tooltip>
-                  Sync to latest version of plugin
-                </q-tooltip>
-              </q-btn>
-          </div>
-        </div>
-      </template>
-    </q-select>
+    <AssignPluginsDropdown
+      v-model:selectedPlugins="selectedPlugins"
+      v-model:pluginIDsToUpdate="pluginIDsToUpdate"
+      v-model:pluginIDsToRemove="pluginIDsToRemove"
+    />
   </DialogComponent>
 </template>
 
 <script setup>
-  import { ref, watch, computed } from 'vue'
+  import { ref, onUpdated } from 'vue'
   import DialogComponent from './DialogComponent.vue'
   import * as api from '@/services/dataApi'
   import * as notify from '../notify'
+  import AssignPluginsDropdown from '@/components/AssignPluginsDropdown.vue'
 
-
-  const props = defineProps(['editObj' ])
+  const props = defineProps(['editObj', 'pluginType'])
   const emit = defineEmits(['refreshTable'])
 
   const showDialog = defineModel()
 
-  const selectedPlugins = ref([])
-  const selectedPluginIds = computed(() => {
-    return selectedPlugins.value.map((plugin) => plugin.id)
-  })
-
-  const pluginOptions = ref([])
-  const originalPlugins = ref()
-
-  watch(showDialog, (newVal) => {
-    if(newVal) {
+  onUpdated(() => {
+    pluginIDsToUpdate.value = []
+    pluginIDsToRemove.value = []
+    if(props.pluginType === 'plugins') {
       selectedPlugins.value = JSON.parse(JSON.stringify(props.editObj.plugins))
-      originalPlugins.value = JSON.parse(JSON.stringify(props.editObj.plugins.map((obj) => obj.id)))
+    } else {
+      selectedPlugins.value = JSON.parse(JSON.stringify(props.editObj.artifactPlugins))
     }
   })
+
+  const selectedPlugins = ref([])
+  const pluginIDsToUpdate = ref([])
+  const pluginIDsToRemove = ref([])
 
   async function submitPlugins() {
-    let pluginsToAdd = [...pluginsToUpdate.value]
-    let pluginsToRemove = []
-
-    selectedPluginIds.value.forEach((plugin) => {
-      if (!originalPlugins.value.includes(plugin)) {
-        pluginsToAdd.push(plugin)
-      }
-    })
-
-    originalPlugins.value.forEach((plugin) => {
-      if (!selectedPluginIds.value.includes(plugin)) {
-        pluginsToRemove.push(plugin)
-      }
-    })
-
     try {
-      if(pluginsToAdd.length > 0) {
-        await api.addPluginsToEntrypoint(props.editObj.id, pluginsToAdd, 'plugins')
+      if(pluginIDsToUpdate.value.length > 0) {
+        await api.addPluginsToEntrypoint(props.editObj.id, pluginIDsToUpdate.value, props.pluginType)
       }
-      for(const plugin of pluginsToRemove) {
-        await api.removePluginFromEntrypoint(props.editObj.id, plugin)
+      for(const pluginId of pluginIDsToRemove.value) {
+        await api.removePluginFromEntrypoint(props.editObj.id, pluginId, props.pluginType)
       }
-      notify.success(`Successfully updated plugins for  '${props.editObj.name}'`)
-      showDialog.value = false
+      notify.success(`Successfully updated plugins for '${props.editObj.name}'`)
       emit('refreshTable')
+      showDialog.value = false
     } catch (err) {
-      notify.error("Error in processing plugins: " + err.message);
-    }
-  }
-
-  async function getPlugins(val = '', update) {
-    update(async () => {
-      try {
-        const res = await api.getData('plugins', {
-          search: val,
-          rowsPerPage: 0, // get all
-          index: 0
-        })
-        pluginOptions.value = res.data.data.filter((plugin) => !selectedPluginIds.value.includes(plugin.id))
-      } catch(err) {
-        notify.error(err.response.data.message)
-      } 
-    })
-  }
-
-  const pluginsToUpdate = ref([])
-
-  async function syncPlugin(pluginID, index) {
-    try {
-      const res = await api.getItem('plugins', pluginID)
-      selectedPlugins.value.splice(index, 1, res.data)
-      pluginsToUpdate.value.push(pluginID)
-    } catch(err) {
-      console.warn(err)
+      notify.error(err.response.data.message);
     }
   }
 

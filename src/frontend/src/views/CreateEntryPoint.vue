@@ -273,81 +273,12 @@
       
       <div class="col">
         <h2>Task Plugins</h2>
-        <q-select
-          v-if="route.params.id === 'new'"
-          outlined
-          dense
-          v-model="entryPoint.plugins"
-          use-input
-          use-chips
-          multiple
-          map-options
-          option-label="name"
-          option-value="id"
-          input-debounce="100"
-          :options="plugins"
-          @filter="getPlugins"
+        <AssignPluginsDropdown
+          v-model:selectedPlugins="entryPoint.plugins"
+          v-model:pluginIDsToUpdate="pluginIDsToUpdate"
+          v-model:pluginIDsToRemove="pluginIDsToRemove"
           class="q-mt-lg"
-        >
-          <template v-slot:before>
-            <div class="field-label">Plugins:</div>
-          </template>
-          <template v-slot:selected-item="scope">
-            <q-chip
-              :label="scope.opt.name"
-              removable
-              dense
-              @remove="scope.removeAtIndex(scope.index)"
-              :tabindex="scope.tabindex"
-              color="secondary"
-              text-color="white"
-            />
-          </template>
-        </q-select>
-        <div 
-          class="row items-center q-mt-md" 
-          v-if="route.params.id !== 'new'"
-        >
-          <label class="field-label">Plugins:</label>
-          <div 
-            class="col" 
-            style="border: 1px solid lightgray; border-radius: 4px; padding: 5px 8px; margin-left: 6px;"
-          >
-            <div v-if="entryPoint.plugins.length === 0">
-              No plugins attached
-            </div>
-            <div
-              v-for="(plugin, i) in entryPoint.plugins"
-              :key="i"
-            >
-              <q-chip
-                :label="plugin.name"
-                color="secondary"
-                text-color="white"
-              >
-                <q-badge
-                  v-if="!plugin.latestSnapshot" 
-                  color="red" 
-                  label="outdated" 
-                  rounded
-                  class="q-ml-xs"
-                />
-              </q-chip>
-              <q-btn
-                v-if="!plugin.latestSnapshot"
-                round 
-                color="red" 
-                icon="sync"
-                size="sm"
-                @click="syncPlugin(plugin.id, i, 'plugins')"
-              >
-                <q-tooltip>
-                  Sync to latest version of plugin
-                </q-tooltip>
-              </q-btn>
-            </div>
-          </div>
-        </div>
+        />
         <TableComponent
           :rows="tasks"
           :columns="taskColumns"
@@ -418,81 +349,12 @@
       
       <div class="col">
         <h2>Artifact Task Plugins</h2>
-        <q-select
-          v-if="route.params.id === 'new'"
-          outlined
-          dense
-          v-model="entryPoint.artifactPlugins"
-          use-input
-          use-chips
-          multiple
-          map-options
-          option-label="name"
-          option-value="id"
-          input-debounce="100"
-          :options="plugins"
-          @filter="getPlugins"
+        <AssignPluginsDropdown
+          v-model:selectedPlugins="entryPoint.artifactPlugins"
+          v-model:pluginIDsToUpdate="artifactPluginIDsToUpdate"
+          v-model:pluginIDsToRemove="artifactPluginIDsToRemove"
           class="q-mt-lg"
-        >
-          <template v-slot:before>
-            <div class="field-label">Plugins:</div>
-          </template>
-          <template v-slot:selected-item="scope">
-            <q-chip
-              :label="scope.opt.name"
-              removable
-              dense
-              @remove="scope.removeAtIndex(scope.index)"
-              :tabindex="scope.tabindex"
-              color="secondary"
-              text-color="white"
-            />
-          </template>
-        </q-select>
-        <div 
-          class="row items-center q-mt-md" 
-          v-if="route.params.id !== 'new'"
-        >
-          <label class="field-label">Plugins:</label>
-          <div 
-            class="col" 
-            style="border: 1px solid lightgray; border-radius: 4px; padding: 5px 8px; margin-left: 6px;"
-          >
-            <div v-if="entryPoint.artifactPlugins.length === 0" class="disabled">
-              No plugins attached
-            </div>
-            <div
-              v-for="(plugin, i) in entryPoint.artifactPlugins"
-              :key="i"
-            >
-              <q-chip
-                :label="plugin.name"
-                color="secondary"
-                text-color="white"
-              >
-                <q-badge
-                  v-if="!plugin.latestSnapshot" 
-                  color="red" 
-                  label="outdated" 
-                  rounded
-                  class="q-ml-xs"
-                />
-              </q-chip>
-              <q-btn
-                v-if="!plugin.latestSnapshot"
-                round 
-                color="red" 
-                icon="sync"
-                size="sm"
-                @click="syncPlugin(plugin.id, i, 'artifactPlugins')"
-              >
-                <q-tooltip>
-                  Sync to latest version of plugin
-                </q-tooltip>
-              </q-btn>
-            </div>
-          </div>
-        </div>
+        />
         <TableComponent
           :rows="artifactTasks"
           :columns="artifactTaskColumns"
@@ -628,6 +490,7 @@
   import InfoPopupDialog from '@/dialogs/InfoPopupDialog.vue'
   import ArtifactParamDialog from '@/dialogs/ArtifactParamDialog.vue'
   import EditPluginTaskParamDialog from '@/dialogs/EditPluginTaskParamDialog.vue'
+  import AssignPluginsDropdown from '@/components/AssignPluginsDropdown.vue'
 
   const route = useRoute()
   
@@ -740,6 +603,12 @@
       }
     }
     return false
+  })
+
+  const valuesChangedFromEditStartBesidesPlugins = computed(() => {
+    const { plugins: _1, artifactPlugins: _2, ...copyRest } = copyAtEditStart.value
+    const { plugins: _3, artifactPlugins: _4, ...entryRest } = entryPoint.value
+    return JSON.stringify(copyRest) !== JSON.stringify(entryRest)
   })
 
   const tasks = ref([])
@@ -923,21 +792,28 @@
       if (route.params.id === 'new') {
         await api.addItem('entrypoints', submitObject)
         store.savedForms.entryPoint = null
-        router.push('/entrypoints')
         notify.success(`Successfully created '${entryPoint.value.name}'`)
       } else {
-        ['group', 'plugins', 'artifactPlugins'].forEach(key => delete submitObject[key])
-        await api.updateItem('entrypoints', route.params.id, submitObject)
-        console.log('pluginsToUpdate = ', pluginsToUpdate.value)
-        if(pluginsToUpdate.value.length > 0) {
-          await api.addPluginsToEntrypoint(route.params.id, pluginsToUpdate.value, "plugins")
+        if(valuesChangedFromEditStartBesidesPlugins.value) {
+          const keysToRemove = ['group', 'plugins', 'artifactPlugins']
+          keysToRemove.forEach((key) => delete submitObject[key])
+          await api.updateItem('entrypoints', route.params.id, submitObject)
         }
-        if(artifactPluginsToUpdate.value.length > 0) {
-          await api.addPluginsToEntrypoint(route.params.id, artifactPluginsToUpdate.value, "artifactPlugins")
-        }  
-        router.push('/entrypoints')
+        if(pluginIDsToUpdate.value.length > 0) {
+          await api.addPluginsToEntrypoint(route.params.id, pluginIDsToUpdate.value, "plugins")
+        }
+        if(artifactPluginIDsToUpdate.value.length > 0) {
+          await api.addPluginsToEntrypoint(route.params.id, artifactPluginIDsToUpdate.value, "artifactPlugins")
+        }
+        for(const pluginId of pluginIDsToRemove.value) {
+          await api.removePluginFromEntrypoint(route.params.id, pluginId, 'plugins')
+        }
+        for(const pluginId of artifactPluginIDsToRemove.value) {
+          await api.removePluginFromEntrypoint(route.params.id, pluginId, 'artifactPlugins')
+        }
         notify.success(`Successfully updated '${entryPoint.value.name}'`)
       }
+      router.push('/entrypoints')
     } catch(err) {
       notify.error(err.response.data.message)
     }
@@ -1072,6 +948,7 @@
     clearFormExecuted.value = true
     taskGraphError.value = ''
     store.savedForms.entryPoint = null
+    copyAtEditStart.value = JSON.parse(JSON.stringify(entryPoint.value))
   }
 
   const isEmptyValues = computed(() => {
@@ -1091,23 +968,11 @@
     router.push(toPath.value)
   }
 
-  const pluginsToUpdate = ref([])
-  const artifactPluginsToUpdate = ref([])
+  const pluginIDsToUpdate = ref([])
+  const artifactPluginIDsToUpdate = ref([])
+  const pluginIDsToRemove = ref([])
+  const artifactPluginIDsToRemove = ref([])
 
-  async function syncPlugin(pluginID, index, pluginType) {
-    try {
-      const res = await api.getItem('plugins', pluginID)
-      console.log('res = ', res)
-      entryPoint.value[pluginType].splice(index, 1, res.data)
-      if(pluginType === "plugins") {
-        pluginsToUpdate.value.push(pluginID)
-      } else {
-        artifactPluginsToUpdate.value.push(pluginID)
-      }
-    } catch(err) {
-      console.warn(err)
-    }
-  }
   const objectForDeletion = ref()
 
   async function deleteEntrypoint() {
