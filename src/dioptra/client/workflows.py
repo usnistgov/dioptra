@@ -24,6 +24,7 @@ from .base import (
 
 T = TypeVar("T")
 
+DYNAMIC_GLOBAL_PARAMETERS: Final[str] = "dynamicGlobalParameters"
 VALIDATE_ENTRYPOINT: Final[str] = "validateEntrypoint"
 SIGNATURE_ANALYSIS: Final[str] = "pluginTaskSignatureAnalysis"
 RESOURCE_IMPORT: Final[str] = "resourceImport"
@@ -171,3 +172,16 @@ class WorkflowsCollectionClient(CollectionClient[T]):
         }
 
         return self._session.post(self.url, VALIDATE_ENTRYPOINT, json_=json_)
+
+    def task_graph_global_params(
+        self,
+        task_graph: str,
+        swaps: dict[str, str]
+    ) -> T:
+        
+        json_ = {
+            "taskGraph": task_graph,
+            "swapChoices": swaps,
+        }
+        
+        return self._session.post(self.url, DYNAMIC_GLOBAL_PARAMETERS, json_=json_)
