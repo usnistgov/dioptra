@@ -329,3 +329,18 @@ class ValidateEntrypointResponseSchema(Schema):
         metadata={"description": "A list of validation issues detected in the schema."},
         many=True,
     )
+
+class DynamicGlobalParametersRequestSchema(Schema):
+    taskGraph = fields.String(
+        attribute="task_graph",
+        metadata={"description": "Proposed task graph for the Entrypoint resource."},
+        required=True,
+    )
+
+    swapChoices = fields.Mapping(
+        attribute="swap_choices",
+        metadata={"description": "The chosen swaps for the given entrypoint graphs."},
+        required=False
+    )
+class DynamicGlobalParametersResponseSchema(Schema):
+    ...

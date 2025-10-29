@@ -71,7 +71,7 @@ from dioptra.restapi.v1.shared.signature_analysis import get_plugin_signatures
 from dioptra.restapi.v1.shared.task_engine_yaml.service import TaskEngineYamlService
 from dioptra.sdk.utilities.paths import set_cwd
 from dioptra.task_engine.issues import IssueSeverity, IssueType, ValidationIssue
-
+from dioptra.task_engine import util
 from .lib import views
 from .lib.clone_git_repository import clone_git_repository
 from .schema import (
@@ -1101,3 +1101,52 @@ class ValidateEntrypointService(object):
             return {"schema_valid": False, "schema_issues": issues}
 
         return {"schema_valid": True, "schema_issues": []}
+
+class DynamicGlobalParametersService(object):
+    @inject
+    def __init__(
+        self,
+        task_engine_yaml_service: TaskEngineYamlService,
+    ) -> None:
+        """Initialize the entrypoint service.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            task_engine_yaml_service: A TaskEngineYamlService object.
+        """
+        self._task_engine_yaml_service = task_engine_yaml_service
+    def get_params(
+        self,
+        task_graph: str,
+        swaps: dict[str,str],
+        **kwargs,
+    ) -> dict[str, Any]:
+        graph = yaml.safe_load(task_graph)
+        rendered = render(graph, swaps)
+        vars = set()
+        needed_vars = set()
+        for step in rendered:
+            vars.add(step)
+            for plugin in rendered[step]:
+                for ref in util.get_references(rendered[step][plugin]):
+                    print("REF:", ref, flush=True)
+        pass
+        
+
+def render(graph, swaps):
+    rendered_graph = {}
+    for step, task in graph.items():
+        if step.startswith("_"):
+            continue
+        rendered_graph[step] = {}
+
+        for task_name, task_defn in task.items():
+            if task_name.startswith("?"):
+                task_name = swaps[task_name[1:]]  # could raise swap not specified error
+                swap = task_defn[task_name]
+                rendered_graph[step][task_name] = swap
+            else:
+                rendered_graph[step][task_name] = graph[step][task_name]
+    return rendered_graph
+
