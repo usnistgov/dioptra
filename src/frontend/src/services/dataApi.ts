@@ -397,8 +397,8 @@ export async function addPluginsToEntrypoint(id: string, plugins: number[], plug
   return await axios.post(`/api/entrypoints/${id}/${pluginType}`, {[pluginType]: plugins})
 }
 
-export async function removePluginFromEntrypoint(entrypointId: string, pluginId: number) {
-  return await axios.delete(`/api/entrypoints/${entrypointId}/plugins/${pluginId}`)
+export async function removePluginFromEntrypoint(entrypointId: string, pluginId: number, pluginType: string) {
+  return await axios.delete(`/api/entrypoints/${entrypointId}/${pluginType}/${pluginId}`)
 }
 
 export async function appendResource<T extends ItemType>(parentResourceType: T, parentResourceId: number, childResourceType: T, ids: number[]) {
