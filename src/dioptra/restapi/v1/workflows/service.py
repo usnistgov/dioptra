@@ -1126,12 +1126,19 @@ class DynamicGlobalParametersService(object):
         rendered = render(graph, swaps)
         vars = set()
         needed_vars = set()
+        topsorted = list()
         for step in rendered:
-            vars.add(step)
+            vars.add(step) # set of variables produced by steps (i.e. step names)
             for plugin in rendered[step]:
                 for ref in util.get_references(rendered[step][plugin]):
-                    print("REF:", ref, flush=True)
-        pass
+                    potential_step_name = ref.split('.')[0]
+                    if potential_step_name not in vars:
+                        needed_vars.add(ref) # if it is not a step output, it must be a global param
+        return {
+            "entrypoint_params": list(needed_vars),
+            "topological_sort": [],
+            "active_plugins": []
+        }
         
 
 def render(graph, swaps):
