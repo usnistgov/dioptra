@@ -16,184 +16,148 @@
 .. https://creativecommons.org/licenses/by/4.0/legalcode
 :html_theme.sidebar_secondary.remove:
 
-.. _tutorial_1_part_5:
+.. _tutorial-1-part-4:
 
-Using Saved Artifacts
-=====================
+Saving Artifacts
+==========================
 
 Overview
 --------
 
-In the last section, you learned how to save task outputs as artifacts.  
-Now, we will take the next step: **using a saved artifact as input in a new workflow**.  
+In the last two sections, you created a multi-step workflow and watched how data evolved across chained tasks.  
+Now, you will learn how to **save task outputs as artifacts**.  
 
-This is done through **artifact parameters**. They behave like Entrypoint parameters, but instead of being set at job creation, they are **loaded from disk**. You can then reference them throughout the task graph.  
+We will build on **Experiment 3**, **Plugin 3**, and **Entrypoint 3**, adding artifact-saving logic.  
 
-In this example, we will build a new workflow that:
+.. _tutorial-1-part-4-create-artifact-plugin:
 
-- **Loads** a saved NumPy array **artifact** from Entrypoint 4  
-- Applies **multiple rescaling methods  **
-- **Visualizes** the results with Matplotlib  
-- **Saves** the resulting **figure as a new artifact**
+Create an Artifact Plugin
+-------------------------
 
+Before Dioptra can save objects to disk, it needs to know how to serialize and deserialize them.  
+This is handled by an **artifact plugin**.  
 
-
-Create a Rescaling Plugin
-----------------------------------
-
-First, we need a new plugin containing new Plugin Tasks for a brand new Entrypoint workflow.  
-This Entrypoint will use our saved Numpy artifact as an input. The plugin creation process is the same process as done in :ref:`tutorial-1-part-3-make-plugin-3`.
+Just like before, we will create a new plugin, but this time we'll define **artifact tasks**.
 
 .. admonition:: Steps
 
    1. Go to the **Plugins** tab → **Create Plugin**.  
-   2. Name it ``rescaling_plugin`` and add a short description.  
-   3. Copy and paste the code below.  
-   4. Import the functions via **Import Function Tasks**. Fix any Types as needed.
+   2. Name it ``artifact_plugin`` and add a short description.  
+   3. Create a python file in the plugin and name it
+   4. Copy and paste the code below.  
 
-**Rescaling Plugin Code**
+**Artifact Plugin Code**
 
-.. admonition:: Plugin 4
+
+.. admonition:: Artifact Plugin 
     :class: code-panel python
 
-    .. literalinclude:: ../../../../examples/tutorials/tutorial_1/plugin_4.py
+    .. literalinclude:: ../../../../examples/tutorials/tutorial_1/numpy_artifact_plugin.py
        :language: python
        
 
-This plugin defines two new tasks - ``scale_array`` to rescale the array three different ways and ``visualize_rescaling_multi`` to visualize all the rescaled arrays. 
 
 
-Add Matplotlib Figure Artifact
----------------------------------------
+.. note::
 
-Next, let’s update the artifact plugin so that we can save a Matplotlib figure (the output of our second task).
+   This plugin defines an artifact task: ``NumpyArrayArtifactTask``
 
-.. admonition:: Steps
+   To define an artifact task, you must overwrite two methods:
+   
+   - **serialize**: convert an in-memory object (e.g., NumPy array) into a file  
+   - **deserialize**: read the file back into an object  
 
-   1. Open your ``artifact_plugin`` from Part 4 :ref:`tutorial-1-part-4-create-artifact-plugin`.  
-   2. Add the new imports and the new Artifact Plugin code below to define ``MatplotlibArtifactTask``.  
-   3. Register it in our Plugin the same way as the ``NumpyArrayArtifactTask`` in :ref:`tutorial-1-part-4-register-artifact-task`.  
+   You may optionally define **validate** to validate the argument types for these methods. 
 
-**Matplotlib Artifact Code**
+   The serialize method should return the path to where the object is saved to disk. More information 
+   is available in <ADD REFERENCE>
 
-Add this code to your existing Python file with the NumpyArray Artifact Task. 
+.. _tutorial-1-part-4-register-artifact-task:
 
-.. admonition:: New Imports (copy to top of file)
-   :class: code-panel python
-
-    .. literalinclude:: ../../../../examples/tutorials/tutorial_1/matplotlib_fig_artifact_plugin.py
-       :language: python
-       :start-after: # [new-imports]
-       :end-before: # [end-new-imports]
-
-.. admonition:: Artifact Plugin (add below your Numpy Array Artifact Task)
-    :class: code-panel python
-        
-    .. literalinclude:: ../../../../examples/tutorials/tutorial_1/matplotlib_fig_artifact_plugin.py
-       :language: python
-       :start-after: # [Plugin-definition]
-       
-
-
-
-Create Entrypoint 5
--------------------------
-
-Now let’s define a new Entrypoint that uses an artifact as input.  
-
-.. admonition:: Steps
-
-   1. Go to the **Entrypoints** tab → **Create Entrypoint**.  
-   2. Name it ``entrypoint_5``.  
-   3. Select the relevant Plugins in the ``Task Plugins`` and ``Artifact Task Plugins`` windows
-   3. Copy the following code blocks into the Task Graph and Artifact Output Graph boxes
-
-**Entrypoint 5 Task Graph and Artifact Output Task Graph** 
-
-.. admonition:: Task Graph
-    :class: code-panel yaml
-
-    .. literalinclude:: ../../../../examples/tutorials/tutorial_1/entrypoint_5_task_graph.yaml
-       :language: yaml
-       
-
-
-.. admonition:: Artifact Output Task Graph
-    :class: code-panel yaml
-
-    .. literalinclude:: ../../../../examples/tutorials/tutorial_1/entrypoint_5_artifact_output_task_graph.yaml
-       :language: yaml
-       
-
-**Copy the code into the appropriate boxes**
-
-.. figure:: _static/screenshots/entrypoint_5_task_graph_and_artifact_output_graph.png
-   :alt: Screenshot showing artifact parameter input in Entrypoint 5.
+.. figure:: _static/screenshots/artifact_task_plugin.png
+   :alt: Screenshot of a job producing an artifact.
    :width: 100%
    :figclass: big-image border-image clickable-image
 
-.. note::
-    Note that in the task graph, we are referencing ``$artifact_input_array``. This is referencing a loaded artifact. We will need to define this under the ``Artifact Parameters`` window. 
-
-
-**Add Artifact and Entrypoint Parameters**
+   Defining an Artifact Task Plugin requires creating a subclass of ``ArtifactTaskInterface``.
 
 .. admonition:: Steps (finalized)
 
-   1. Add an **artifact parameter** that points to the saved NumPy array artifact from Part 4. Call the Artifact Parameter ``artifact_input_array``
-   2. Add standard parameters if desired (e.g., figure title for the visualization plugin task).  
+   1. In the **Task Form** window, select **Artifact** and enter the name ``NumpyArrayArtifactTask`` 
+   2. For the output parameter of the task, add the **name** ``output`` and the **type** ``NumpyArray``
 
-.. figure:: _static/screenshots/entrypoint_5_params_and_artifact_params.png
-   :alt: Screenshot showing artifact parameter input in Entrypoint 5.
-   :width: 100%
-   :figclass: big-image border-image clickable-image
+.. note::
 
-   This task graph uses positional arguments instead of keyword arguments. Our artifact output graph saves the generated matplotlib figure from step 2. 
+   Whereas a Plugin task gets its name from the Python function name, an Artifact plugin task gets its name from the subclass name 
+   (in this case, NumpyArrayArtifactTask). The output parameter type tells Dioptra what kind of object we can expect to be made
+   available after the ``deserialize`` method is ran - in this case, a Numpy Array. 
 
-Click validate inputs to ensure all the types are aligned. Submit your entrypoint. 
+Once registered, Dioptra will know how to store and retrieve this object type. We invoke the logic through the use of **Artifact Tasks** in Entrypoints.
 
-Create Experiment and Job
-----------------------------------
 
-Finally, let’s test it out.
+Modify Entrypoint 3 to save artifacts
+-------------------
+
+Next, we will modify **Entrypoint 3** to include an artifact-saving task.  
+Nothing about **Plugin 3** itself needs to change.
 
 .. admonition:: Steps
 
-   1. Create a new Experiment (``experiment_5``).  
-   2. Add **Entrypoint 5**.  
-   3. Create a new Job.  
-   4. When configuring the job, select the artifact snapshot created in Part 4.  
+   1. Open **Entrypoint 3**.  
+   2. In the **Artifact Info** window, add our new Artifact Plugin
+   3. Add the task to the graph 
+   4. Rename the step to something like ``save_numpy_artifact``
+   5. Set contents equal to the output from step 4, e.g. ``$transform_step``
 
-.. figure:: _static/screenshots/job_select_artifact.png
-   :alt: Screenshot of job configuration showing artifact snapshot selection.
+
+.. figure:: _static/screenshots/artifact_task_graph.png
+   :alt: Screenshot of a job producing an artifact.
    :width: 100%
    :figclass: big-image border-image clickable-image
 
+   The Artifact Output Graph defines the logic for which Plugin Tasks should be saved and how. ``contents`` should be a reference to a step name from the task graph. 
 
-Inspect Results
----------------
+.. note::
 
-After running the job, open the logs and artifact view. Comparing the original array to rescaling methods, we see:
+   When the artifact task runs, it automatically calls the ``serialize`` method and writes a file to the artifact store.  
 
-
-The original NumPy array from Entrypoint 4 ranged from 0–516.  
-Here’s how the three scaling methods reshape it:
-
-- **Min–Max Scaling**: Linearly maps values into [0,1], preserving relative spacing.  
-- **Z-Score Scaling**: Centers data at 0 with unit variance; shows distance from the mean.  
-- **Log1p Scaling**: Nonlinear compression; reduces the impact of large values and outliers.  
-
-The saved Matplotlib figure should display these transformations side-by-side.  
+.. warning::
+   BUG - Currently the UI does not support editing entrypoints in this way - we need to investigate and fix this. For now, you could make a new entrypoint instead.
 
 
-**Artifact Output from Entrypoint 5**
+Run a job of entrypoint 3 with artifact saving
+-------------
 
-.. figure:: _static/screenshots/entrypoint_5_artifact_visualization.png
-   :alt: The Matplotlib Figure created from Entrypoint 5 showing three scatter plots of rescaled data
+Now let’s try it out.
+
+.. admonition:: Steps
+
+   1. Create a new job using the entrypoint we just defined / edited (use whatever parameters you'd like)
+
+.. note::
+
+   When an artifact task graph is defined, the logic will execute once all the plugin tasks have completed.  
+
+
+Inspect the Artifact
+--------------------
+
+After the job finishes, click on the job to see the results:
+
+- Go to the **Artifacts** tab.  
+- You should see a new artifact file created by the workflow.  
+- Download it to confirm it was saved successfully
+
+.. figure:: _static/screenshots/download_artifact.png
+   :alt: Screenshot of a job producing an artifact.
    :width: 100%
    :figclass: big-image border-image clickable-image
 
-   The artifact that was generated from this entrypoint - a matplotlib figure showing the various rescaling methods. 
+   Download the artifact from the Job Dashboard.
+
+A ``.npy`` should have been downloaded. This is the numpy array after the the random noise was added and the transform was applied. 
+
+Congratulations — you’ve just saved your first artifact!  
 
 
 Conclusion
@@ -201,10 +165,9 @@ Conclusion
 
 You now know how to:
 
-- Define new plugins for additional data transformations  
-- Extend the artifact plugin to handle new object types (e.g., Matplotlib figures)  
-- Create Entrypoints that use **artifact parameters** as inputs  
-- Chain workflows together across Experiments using artifacts  
+- Create an artifact plugin with **serialize** and **deserialize** methods  
+- Add artifact tasks into an Entrypoint  
+- Save task outputs as reusable files  
+- Verify artifact creation through the Dioptra UI  
 
-**Tutorial complete!** 
-You’re now ready to design your own workflows in Dioptra, combining multiple plugins, artifacts, and experiments.
+In the next part, we will **load artifacts into new Entrypoints**, so results from one workflow can feed directly into another.

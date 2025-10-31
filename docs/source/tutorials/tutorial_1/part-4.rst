@@ -18,153 +18,98 @@
 
 .. _tutorial-1-part-4:
 
-Saving Artifacts
-==========================
+Utilizing Metric Logging
+==============================
 
 Overview
 --------
 
-In the last section, you created a multi-step workflow and watched how data evolved across chained tasks.  
-Now, you will learn how to **save outputs as artifacts**.  
+In the last tutorial, you built a multi-step workflow that transformed a numpy array multiple times.
+After each step, you printed summary stats and then viewed those in the logs. 
 
-We will build on **Experiment 3**, **Plugin 3**, and **Entrypoint 3**, adding artifact-saving logic.  
+Instead of printing values in the logs, we will record them using 'metrics'. This will produce nice time-series visualizations for us. 
+This can be useful if you are trying to keep track of a metric across various steps, both within and across plugins. 
+Metrics are stored at the job level. 
 
-.. _tutorial-1-part-4-create-artifact-plugin:
+All we'll do in this step is replace our prior ``print_stats`` plugin task with a new ``log_metrics`` task instead.
 
-Create an Artifact Plugin
--------------------------
+.. Warning:: 
 
-Before Dioptra can save objects to disk, it needs to know how to serialize and deserialize them.  
-This is handled by an **artifact plugin**.  
+    This part of the tutorial will not work properly until new changes from DIOPTRA-OPTIC branch are merged in for metric logging
 
-Just like before, we will create a new plugin, but this time define **artifact tasks**.
+.. _tutorial-1-part-4-modify-plugin-3:
+
+Add metrics task to plugin 3
+-------------
+
+Let's create the new plugin task that using Dioptra's metric logging. 
 
 .. admonition:: Steps
 
-   1. Go to the **Plugins** tab → **Create Plugin**.  
-   2. Name it ``artifact_plugin`` and add a short description.  
-   3. Copy and paste the code below.  
+   1. Go to the **Plugins** tab and open up the **plugin 3** from last step  
+   2. Navigate to the Python file you created 
+   3. Copy in the following new plugin task to the bottom of the file
 
-**Artifact Plugin Code**
+ 
+**Plugin task: Using Metrics**
 
+`Paste this below your existing Python code in Plugin 3`
 
-.. admonition:: Artifact Plugin 
+.. admonition:: Plugin 3
     :class: code-panel python
 
-    .. literalinclude:: ../../../../examples/tutorials/tutorial_1/numpy_artifact_plugin.py
+    .. literalinclude:: ../../../../examples/tutorials/tutorial_1/plugin_3_w_metrics.py
        :language: python
-       
+       :start-after: # [new-plugin-definition]
+
+.. admonition:: Steps (continued)
+
+   4. Click "Import Tasks" again to import the new plugin task. 
+
+.. Note:: 
+
+    Metrics are appended to a job. They are identified by the metric name, and they also require a value and a step name.
 
 
-
-.. note::
-
-   This plugin defines an artifact task: ``NumpyArrayArtifactTask``
-
-   To define an artifact task, you must overwrite two methods:
-   
-   - **serialize**: convert an in-memory object (e.g., NumPy array) into a file  
-   - **deserialize**: read the file back into an object  
-
-   You may optionally define **validate** to validate the argument types for these methods. 
-
-.. _tutorial-1-part-4-register-artifact-task:
-
-.. figure:: _static/screenshots/artifact_task_plugin.png
-   :alt: Screenshot of a job producing an artifact.
-   :width: 100%
-   :figclass: big-image border-image clickable-image
-
-   Defining an Artifact Task Plugin requires creating a subclass of ``ArtifactTaskInterface``.
-
-.. admonition:: Steps (finalized)
-
-   1. In the **Task Form** window, select **Artifact** and enter the name ``NumpyArrayArtifactTask`` 
-   2. Leave the output params blank - our Artifact Task is basic and requires no special arguments 
-
-Once registered, Dioptra will know how to store and retrieve this object type. We invoke the logic through the use of **Artifact Tasks** in Entrypoints.
-
+Now let's edit entrypoint 3 to use this new Plugin task.
 
 Modify Entrypoint 3
 -------------------
 
-Next, we will modify **Entrypoint 3** to include an artifact-saving task.  
-Nothing about **Plugin 3** itself needs to change.
+Change the entrypoint graph to utilize ``log_metrics`` instead of ``print_stats``
 
 .. admonition:: Steps
 
-   1. Open **Entrypoint 3**.  
-   2. In the **Artifact Info** window, add our new Artifact Plugin
-   3. Add the task to the graph 
-   4. Rename the step to something like ``save_numpy_artifact``
-   5. Set contents equal to the output from step 4, e.g. ``$transform_step``
+   1. Open up entrypoint 3
+   2. In the entrypoint task graph window, change every reference of ``print_stats`` to ``log_metrics`` (should be 3 references)
+   
 
+Now let's re-run this entrypoint and see if our metrics get logged. 
 
-.. figure:: _static/screenshots/artifact_task_graph.png
-   :alt: Screenshot of a job producing an artifact.
-   :width: 100%
-   :figclass: big-image border-image clickable-image
+Re-run Entrypoint 3 
+-------------------
 
-   The Artifact Output Graph defines the logic for which Plugin Tasks should be saved and how. ``contents`` should be a reference to a step name from the task graph. 
-
-.. note::
-
-   When the artifact task runs, it automatically calls the ``serialize`` method and writes a file to the artifact store.  
-
-.. warning::
-   BUG - Currently the UI does not support editing entrypoints in this way - we need to investigate and fix this. For now, you could make a new entrypoint instead.
-
-Update the Experiment
----------------------
-
-Because this changes the workflow, let’s re-run Experiment 3 with the updated Entrypoint.  
-
-**Question**: Would the experiment automatically update with a new entrypoint? 
 
 .. admonition:: Steps
 
-   1. Click refresh on the experiment? TBD
+   1. Go to the last experiment you made (e.g. ``experiment_3``).  
+   2. Create a new job with entrypoint 3 and click run
 
-Run a New Job
--------------
 
-Now let’s try it out.
+Inspect Metrics
+---------
+
+Let's view our results
 
 .. admonition:: Steps
 
-   1. Create a new job using the entrypoint we just defined / edited (use whatever parameters you'd like)
-
-
-
-Inspect the Artifact
---------------------
-
-After the job finishes, click on the job to see the results:
-
-- Go to the **Artifacts** tab.  
-- You should see a new artifact file created by the workflow.  
-- Download it to confirm it was saved successfully
-
-.. figure:: _static/screenshots/download_artifact.png
-   :alt: Screenshot of a job producing an artifact.
-   :width: 100%
-   :figclass: big-image border-image clickable-image
-
-   Download the artifact from the Job Dashboard.
-
-A ``.npy`` should have been downloaded. This is the numpy array after the the random noise was added and the transform was applied. 
-
-Congratulations — you’ve just saved your first artifact!  
+   1. Go to the job page for the job you just ran
+   2. Click the `metrics` tabs - you should see some graphs
 
 
 Conclusion
 ----------
 
-You now know how to:
+You now know how to log metrics within a plugin task!
 
-- Create an artifact plugin with **serialize** and **deserialize** methods  
-- Add artifact tasks into an Entrypoint  
-- Save task outputs as reusable files  
-- Verify artifact creation through the Dioptra UI  
-
-In the next part, we will **load artifacts into new Entrypoints**, so results from one workflow can feed directly into another.
+Next, we will save outputs from plugin tasks as **artifacts**.

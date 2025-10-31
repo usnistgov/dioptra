@@ -7,6 +7,7 @@ from structlog.stdlib import BoundLogger
 # [new-imports]
 import os
 import pickle
+import io
 # [end-new-imports]
 
 from dioptra.sdk.api.artifact import ArtifactTaskInterface
@@ -14,35 +15,23 @@ from dioptra.sdk.api.artifact import ArtifactTaskInterface
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
-
 # [Plugin-definition]
 class MatplotlibArtifactTask(ArtifactTaskInterface):
-    """Save PNG in CWD and pickle the Figure in working_dir; return the pickle path."""
+    """Save PNG in working_dir and return the PNG path. Deserialize returns PNG bytes."""
 
     @staticmethod
     def serialize(working_dir: Path, name: str, contents: Any, **kwargs) -> Path:
         os.environ.setdefault("MPLBACKEND", "Agg")
-        png_path = (Path.cwd() / name).with_suffix(".png")
-        try:
-            contents.savefig(png_path, dpi=150, bbox_inches="tight")  # type: ignore[attr-defined]
-            LOGGER.info("Saved PNG in CWD", png_path=str(png_path))
-        except Exception:
-            LOGGER.exception("Failed to save PNG (continuing)")
-
-        pkl_path = (working_dir / name).with_suffix(".pkl")
-        with open(pkl_path, "wb") as f:
-            pickle.dump(contents, f)
-        LOGGER.info("Pickled Matplotlib figure", pickle_path=str(pkl_path))
-        return pkl_path
+        png_path = (working_dir / name).with_suffix(".png")
+        contents.savefig(png_path, dpi=150, bbox_inches="tight")  # type: ignore[attr-defined]
+        return png_path
 
     @staticmethod
-    def deserialize(working_dir: Path, path: str, **kwargs) -> Any:
-        os.environ.setdefault("MPLBACKEND", "Agg")
-        # Import here so pickle can resolve the Figure class.
-        import matplotlib  # noqa: F401
-        with open(working_dir / path, "rb") as f:
-            fig = pickle.load(f)
-        return fig
+    def deserialize(working_dir: Path, path: str, **kwargs) -> bytes:
+        png_file_path = working_dir / path
+        with open(png_file_path, "rb") as f:
+            png_data = f.read()
+        return png_data
 
     @staticmethod
     def validation() -> dict[str, Any] | None:
