@@ -210,4 +210,4 @@ You now know how to:
 - Reference outputs and repeat tasks  
 - Run experiments with complex workflows  
 
-Next, we will save outputs as **artifacts**.
+Next, we will modify this workflow to utilize `metrics`

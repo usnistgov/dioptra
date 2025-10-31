@@ -72,3 +72,51 @@ def print_stats(input_array: np.ndarray, plugin_step_name: str) -> None:
         f"with std={arr_std:.4f}, min={arr_min:.4f}, max={arr_max:.4f}, len={arr_len}."
 
     )
+    
+# [new-plugin-definition]
+import os
+
+@pyplugs.register
+def log_stats(input_array: np.ndarray, plugin_step_name: str) -> None:    
+    arr_mean = float(np.mean(input_array))
+    arr_std = float(np.std(input_array))
+    arr_min = float(np.min(input_array))
+    arr_max = float(np.max(input_array))
+    arr_len = int(len(input_array))
+    
+    metrics = {
+        "mean": arr_mean,
+        "std": arr_std,
+        "min": arr_min,
+        f"max": arr_max,
+        f"len": arr_len,
+    }
+
+    try:
+        # Try and log metrics using Dioptra client 
+        from dioptra.sdk.utilities.auth_client import get_authenticated_worker_client
+
+        # Get the job ID and client
+        job_id = os.environ["__JOB_ID"]
+        dioptra_client = get_authenticated_worker_client(LOGGER, "json")
+
+        for metric_name, value in metrics.items():
+            dioptra_client.jobs.append_metric_by_id(
+                job_id=job_id,
+                metric_name=metric_name,
+                metric_value=value, 
+                metric_step=plugin_step_name,
+            )
+
+    # Handle failure and fall back to basic logging
+    except Exception as e:
+        LOGGER.warning(
+            f"Failed to log metrics for '{plugin_step_name}' to Dioptra client, falling back to standard logger.",
+            error=str(e)
+        )
+        
+        LOGGER.info(
+            f"Plugin Task: '{plugin_step_name}' - "
+            f"The mean value of the array after this step was {arr_mean:.4f}, "
+            f"with std={arr_std:.4f}, min={arr_min:.4f}, max={arr_max:.4f}, len={arr_len}."
+        )
