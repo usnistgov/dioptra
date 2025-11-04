@@ -106,14 +106,14 @@
         @click="submit()" 
         color="primary"
         label="Submit Experiment"
-      />
+        :disable="!valuesChangedFromOriginal"
+      >
+        <q-tooltip v-if="!valuesChangedFromOriginal">
+          No changes detected — nothing to save
+        </q-tooltip>
+      </q-btn>
     </div>
 
-    <LeaveFormDialog 
-      v-model="showLeaveDialog"
-      type="experiment"
-      @leaveForm="leaveForm"
-    />
     <ReturnToFormDialog
       v-model="showReturnDialog"
       @cancel="clearForm"
@@ -127,7 +127,6 @@
   import * as api from '@/services/dataApi'
   import * as notify from '../notify'
   import PageTitle from '@/components/PageTitle.vue'
-  import LeaveFormDialog from '@/dialogs/LeaveFormDialog.vue'
   import ReturnToFormDialog from '@/dialogs/ReturnToFormDialog.vue'
 
   const route = useRoute()
@@ -182,15 +181,6 @@
     group: store.loggedInGroup.id,
     description: '',
     entrypoints: [],
-  })
-
-  const valuesChangedFromEditStart = computed(() => {
-    for (const key in copyAtEditStart.value) {
-      if(JSON.stringify(copyAtEditStart.value[key]) !== JSON.stringify(experiment.value[key])) {
-        return true
-      }
-    }
-    return false
   })
 
   const ORIGINAL_COPY = {
@@ -280,26 +270,19 @@
 
   onBeforeRouteLeave((to, from, next) => {
     toPath.value = to.path
-    if(confirmLeave.value || !valuesChangedFromEditStart.value) {
+    if(confirmLeave.value) {
+      next(true)
+    } else if(valuesChangedFromOriginal.value) {
+      store.savedForms.experiment = experiment.value
       next(true)
     } else {
-      showLeaveDialog.value = true
+      store.savedForms.experiment = null
+      next(true)
     }
   })
 
-  const showLeaveDialog = ref(false)
   const confirmLeave = ref(false)
   const toPath = ref()
-
-  function leaveForm() {
-    if(valuesChangedFromEditStart.value && valuesChangedFromOriginal.value) {
-      store.savedForms.experiment = experiment.value
-    } else {
-      store.savedForms.experiment = null
-    }
-    confirmLeave.value = true
-    router.push(toPath.value)
-  }
 
   watch(() => store.selectedSnapshot, (newVal) => {
     if(newVal) {
@@ -313,7 +296,5 @@
       getExperiment()
     }
   })
-
-
 
 </script>

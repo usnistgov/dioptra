@@ -81,6 +81,11 @@
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
     @create="router.push(`/plugins/${route.params.id}/files/new`)"
   >
+    <template #body-cell-filename="props">
+      <span class="link">
+        {{ props.row.filename }}
+      </span>
+    </template>
     <template #body-cell-functionTasks="props">
       {{ props.row.tasks.functions.length }}
     </template>

@@ -280,9 +280,14 @@
     <q-btn  
       @click="submit()" 
       color="primary" 
-      label="Save File"
+      label="Submit File"
       type="submit"
-    />
+      :disable="!enableSubmit"
+    >
+      <q-tooltip v-if="!enableSubmit">
+        No changes detected — nothing to save
+      </q-tooltip>
+    </q-btn>
   </div>
 
   <InfoPopupDialog
@@ -378,7 +383,7 @@
       artifacts: [],
     }
   })
-  const initialCopy = ref({
+  const ORIGINAL_COPY = {
     filename: '',
     description: '',
     contents: '',
@@ -386,15 +391,36 @@
       functions: [],
       artifacts: [],
     }
-  })
+  }
 
-  const valuesChanged = computed(() => {
-    for (const key in initialCopy.value) {
-      if(JSON.stringify(initialCopy.value[key]) !== JSON.stringify(pluginFile.value[key])) {
+  const valuesChangedFromOriginal = computed(() => {
+    for (const key in ORIGINAL_COPY) {
+      if(JSON.stringify(ORIGINAL_COPY[key]) !== JSON.stringify(pluginFile.value[key])) {
         return true
       }
     }
     return false
+  })
+
+  const copyAtEditStart = ref()
+
+  const valuesChangedFromEditStart = computed(() => {
+    for (const key in copyAtEditStart.value) {
+      if(JSON.stringify(copyAtEditStart.value[key]) !== JSON.stringify(pluginFile.value[key])) {
+        return true
+      }
+    }
+    return false
+  })
+
+  const enableSubmit = computed(() => {
+    if(route.params.fileId === 'new' && valuesChangedFromOriginal.value) {
+      return true
+    } else if(route.params.fileId !== 'new' && valuesChangedFromEditStart.value) {
+      return true
+    } else {
+      return false
+    }
   })
 
   const uploadedFile = ref(null)
@@ -418,9 +444,10 @@
       title.value = 'Create File'
       if(store.savedForms.files[route.params.id]) {
         pluginFile.value = JSON.parse(JSON.stringify(store.savedForms.files[route.params.id]))
-        initialCopy.value = JSON.parse(JSON.stringify(store.savedForms.files[route.params.id]))
+        copyAtEditStart.value = JSON.parse(JSON.stringify(store.savedForms.files[route.params.id]))
         showReturnDialog.value = true
       }
+      copyAtEditStart.value = JSON.parse(JSON.stringify(pluginFile.value))
       return
     }
     try {
@@ -433,7 +460,7 @@
         description: res.data.description
       }
       title.value = `Edit ${res.data.filename}`
-      initialCopy.value = JSON.parse(JSON.stringify(pluginFile.value))
+      copyAtEditStart.value = JSON.parse(JSON.stringify(pluginFile.value))
     } catch(err) {
       notify.error(err.response.data.message)
     } 
@@ -603,7 +630,7 @@
 
   onBeforeRouteLeave((to, from, next) => {
     toPath.value = to.path
-    if(confirmLeave.value || !valuesChanged.value) {
+    if(confirmLeave.value || !valuesChangedFromEditStart.value) {
       next(true)
     } else if(route.params.fileId === 'new') {
       leaveForm()
@@ -625,10 +652,11 @@
   })
 
   function leaveForm() {
-    if(isEmptyValues.value) {
-      store.savedForms.files[route.params.id] = null
-    } else if(route.params.fileId === 'new') {
+    if(route.params.fileId === 'new' && valuesChangedFromOriginal.value) {
+      console.log('saving form...')
       store.savedForms.files[route.params.id] = pluginFile.value
+    } else {
+      store.savedForms.files[route.params.id] = null
     }
     confirmLeave.value = true
     router.push(toPath.value)

@@ -39,14 +39,16 @@
               {{ col.value ? '✅' : 	'❌'}}
             </div>
             <div v-else-if="col.name === 'name'">
-              {{ truncateString(props.row.name, 20) }}
-              <q-tooltip v-if="props.row.name.length > 20" max-width="30vw" style="overflow-wrap: break-word">
+              <span :class="disableSelect ? '' : 'link'">
+                {{ truncateString(props.row.name, 20) }}
+              </span>
+              <q-tooltip v-if="props.row.name.length >= 20" max-width="30vw" style="overflow-wrap: break-word">
                 {{ props.row.name }}
               </q-tooltip>
             </div>
             <div v-else-if="col.name === 'description'">
               {{ truncateString(props.row.description, 40) }}
-              <q-tooltip v-if="props.row.description?.length > 40" max-width="30vw" style="overflow-wrap: break-word">
+              <q-tooltip v-if="props.row.description?.length >= 40" max-width="30vw" style="overflow-wrap: break-word">
                 {{ props.row.description }}
               </q-tooltip>
             </div>
