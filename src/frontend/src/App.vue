@@ -51,7 +51,7 @@
   })
 
   const darkMode = computed(() => {
-    return $q.dark.mode
+    return $q.dark.isActive
   })
   
   provide('isMobile', isMobile)

@@ -44,7 +44,16 @@ p {
 
 .body--dark a {
   color: #51bef4;
-  font-weight: 500;
+}
+
+.link {
+  cursor:pointer;
+  color:blue;
+  text-decoration:underline;
+}
+
+.body--dark .link {
+  color: #51bef4;
 }
 
 .body--dark {

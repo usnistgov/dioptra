@@ -539,8 +539,12 @@
       @click="submit()" 
       :color="history ? 'blue-2' : 'primary'" 
       label="Submit EntryPoint"
-      :disable="history"
-    />
+      :disable="history || !enableSubmit"
+    >
+      <q-tooltip v-if="!enableSubmit">
+        No changes detected — nothing to save
+      </q-tooltip>
+    </q-btn>
   </div>
 
   <DeleteDialog 
@@ -653,6 +657,38 @@
     queues: [],
     plugins: [],
     artifactPlugins: [],
+  })
+
+  const ORIGINAL_COPY = {
+    name: '',
+    group: store.loggedInGroup.id,
+    description: '',
+    parameters: [],
+    artifactParameters: [],
+    taskGraph: '',
+    artifactGraph: '',
+    queues: [],
+    plugins: [],
+    artifactPlugins: [],
+  }
+
+  const valuesChangedFromOriginal = computed(() => {
+    for (const key in ORIGINAL_COPY) {
+      if(JSON.stringify(ORIGINAL_COPY[key]) !== JSON.stringify(entryPoint.value[key])) {
+        return true
+      }
+    }
+    return false
+  })
+
+  const enableSubmit = computed(() => {
+    if(route.params.id === 'new' && valuesChangedFromOriginal.value) {
+      return true
+    } else if(route.params.id !== 'new' && valuesChangedFromEditStart.value) {
+      return true
+    } else {
+      return false
+    }
   })
 
   const copyAtEditStart = ref({})
@@ -1017,7 +1053,7 @@
     }
   })
 
-  const clearFormExecuted= ref(false)
+  const clearFormExecuted = ref(false)
 
   function clearForm() {
     entryPoint.value = {
@@ -1034,6 +1070,7 @@
     }
     basicInfoForm.value.reset()
     clearFormExecuted.value = true
+    taskGraphError.value = ''
     store.savedForms.entryPoint = null
   }
 
@@ -1045,7 +1082,7 @@
   })
 
   function leaveForm() {
-    if(route.params.id === 'new' && valuesChangedFromEditStart.value) {
+    if(route.params.id === 'new' && valuesChangedFromOriginal.value) {
       store.savedForms.entryPoint = entryPoint.value
     } else {
       store.savedForms.entryPoint = null

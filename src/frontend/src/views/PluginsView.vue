@@ -130,12 +130,6 @@
     }
   }
 
-  const fileColumns = [
-    // field must be name or else selection doesn't work, possible quasar bug
-    { name: 'filename', label: 'Filename', align: 'left', field: 'filename', sortable: true, },
-    { name: 'tasks', label: 'Number of Tasks', align: 'left', field: 'tasks', sortable: true, },
-  ]
-
   const tableRef = ref(null)
 
 </script>
