@@ -63,13 +63,16 @@ The plugin creation process is the same process as done in :ref:`tutorial-1-part
 **Rescaling Plugin Code**
 
 .. admonition:: Plugin 4
-    :class: code-panel python
+   :class: code-panel python
 
     .. literalinclude:: ../../../../examples/tutorials/tutorial_1/plugin_4.py
        :language: python
        
 
-This plugin defines two new tasks - ``scale_array`` to rescale the input array three different ways and ``visualize_rescaling_multi`` to visualize all the rescaled arrays. 
+This plugin defines two new tasks:
+
+   - ``scale_array`` to rescale the input array three different ways
+   - ``visualize_rescaling_multi`` to visualize all the rescaled arrays. 
 
 
 Add another artifact task
@@ -79,13 +82,17 @@ Did you notice that our second plugin task outputs a Matplotlib figure? To view 
 
 Let's add a new artifact plugin task that serializes a matplotlib object as a png so we can view it. 
 
+
+
+**Create Maplotlib Figure Artifact Task**
+
 .. admonition:: Steps
 
    1. Open your ``artifact_plugin`` from Part 4 :ref:`tutorial-1-part-4-create-artifact-plugin`.  
    2. Add the new imports and the new Artifact Plugin code below to define ``MatplotlibArtifactTask``.  
-   3. Register it in our Plugin the same way as the ``NumpyArrayArtifactTask`` in :ref:`tutorial-1-part-4-register-artifact-task`.  
+   3. Register it in our Plugin the same way as the ``NumpyArrayArtifactTask`` in :ref:`tutorial-1-part-4-register-artifact-task`  
 
-**Matplotlib Artifact Code**
+**Artifact Task Code**
 
 Add this code to your existing Python file with the NumpyArray Artifact Task. 
 
@@ -97,8 +104,10 @@ Add this code to your existing Python file with the NumpyArray Artifact Task.
        :start-after: # [new-imports]
        :end-before: # [end-new-imports]
 
+And then add this code to the bottom of the file below the NumpyArrayArtifactTask. 
+
 .. admonition:: Artifact Plugin (add below your Numpy Array Artifact Task)
-    :class: code-panel python
+   :class: code-panel python
         
     .. literalinclude:: ../../../../examples/tutorials/tutorial_1/matplotlib_fig_artifact_plugin.py
        :language: python
@@ -110,47 +119,68 @@ Add this code to your existing Python file with the NumpyArray Artifact Task.
 Create Entrypoint 5
 -------------------------
 
-Now let’s define a new Entrypoint that does all of the following:
+Now let’s define a new Entrypoint that does the following:
 
-- Defines a new task graph to use our new ``rescaling_plugin``
-- Utilizes an **artifact parameter** in the task graph - e.g. the numpy array created from another job - in its task graph 
-- *Also* saves the final output of the task graph, a matplotlib figure, to a *new* Artifact
+1. Defines a new task graph workflow that uses our newly created ``rescaling_plugin``
+2. Utilizes an **artifact parameter** in the task graph - e.g. load and reference the numpy array created from another job in our task graph
+3. *Also* saves the final output of our workflow, a matplotlib figure, to a *new* Artifact
 
 .. admonition:: Steps
 
    1. Go to the **Entrypoints** tab → **Create Entrypoint**.  
    2. Name it ``entrypoint_5``.  
 
-Let's add our entrypoint parameters *and* the new artifact input parameter to this entrypoint.
+Add an entrypoint parameter *and* the new artifact input parameter to this entrypoint.
 
 **Add Artifact and Entrypoint Parameters**
 
 .. admonition:: Steps (continued)
 
-   3. In the entrypoint parameters box, add a parameter. **Name** ``figure_title``, **type** ``string``, **Default** ``Comparing rescaling methods plot``
-   4. Add an **artifact parameter** that points to the saved NumPy array artifact from Part 4. Call the Artifact Parameter ``artifact_input_array``. In the output parameters, make the name ``artifact_input_array`` and make the type ``NumpyArray``
+   3. In the entrypoint parameters box, add a parameter
+   
+      - **Name** ``figure_title``
+      - **Type** ``string``
+      - **Default** ``"Comparing rescaling methods plot"`` (or something similar)
 
-.. note:: 
+   4. Add an **artifact parameter** that points to the saved NumPy array artifact from Part 4. 
+   
+      - **Artifact parameter name:** ``artifact_input_array``. 
+      - **Output parameter name** ``artifact_input_array``
+      - **Output parameter type** ``NumpyArray``
 
-   You can use entrypoint parameters and artifact parameters in your task graph in the exact same way. 
-   When you run a job, you will decide which artifact to deserialize and make available for the task graph. 
 
 .. figure:: _static/screenshots/entrypoint_5_params_and_artifact_params.png
    :alt: Screenshot showing artifact parameter input in Entrypoint 5.
    :width: 100%
    :figclass: big-image border-image clickable-image
 
+   Create one entrypoint parameter and one artifact parameter. 
+
+.. note:: 
+
+   Entrypoint parameters and artifact parameters are referenced in the task graph in the same way (using the ``$`` syntax)
+
+.. note::
+   
+   The specific artifact instantiated for a given artifact entrypoint parameter is decided at job runtime. 
+
 Now let's define the task graph and the artifact output task graph.
 
 
-**Entrypoint 5 Task Graph and Artifact Output Task Graph** 
+**Entrypoint 5 Task Graph** 
+
+Rescales our artifact input parameter in three different ways and the plots the results.
 
 .. admonition:: Steps (finalized)
    1. Select the relevant Plugins in the ``Task Plugins`` and ``Artifact Task Plugins`` windows
    2. Copy the following code blocks into the Task Graph and Artifact Output Graph boxes
 
+**Artifact Output Task Graph**
+
+Saves the created figure to a PNG file. 
+
 .. admonition:: Task Graph
-    :class: code-panel yaml
+   :class: code-panel yaml
 
     .. literalinclude:: ../../../../examples/tutorials/tutorial_1/entrypoint_5_task_graph.yaml
        :language: yaml
@@ -160,13 +190,18 @@ Now let's define the task graph and the artifact output task graph.
 
 
 .. admonition:: Artifact Output Task Graph
-    :class: code-panel yaml
+   :class: code-panel yaml
 
     .. literalinclude:: ../../../../examples/tutorials/tutorial_1/entrypoint_5_artifact_output_task_graph.yaml
        :language: yaml
        
 
-**Copy the code into the appropriate boxes**
+.. admonition:: Steps
+
+   1. Copy the two task graphs above into their respective boxes
+   2. Attach the relevant plugins
+   3. Click "Validate Inputs" - task graph should be valid
+   4. Click "Submit Entrypoint"
 
 .. figure:: _static/screenshots/entrypoint_5_task_graph_and_artifact_output_graph.png
    :alt: Screenshot showing artifact parameter input in Entrypoint 5.
@@ -175,8 +210,6 @@ Now let's define the task graph and the artifact output task graph.
 
 .. note::
     Note that in the task graph, we are referencing ``$artifact_input_array``. This is referencing a loaded artifact.
-
-Click validate inputs to ensure all the types are aligned. Submit your entrypoint. 
 
 Create Experiment and Job
 ----------------------------------

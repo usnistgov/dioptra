@@ -237,7 +237,14 @@ Notice that the logger name ``plugin_1.plugin_1`` generated the following messag
 
       Plugin 1 - We took 100 draws from a normal distribution with mean 0 and variance 1. The mean value of the draws was -0.0736 
 
-This behavior matches what we would expect from our simple Plugin Task. It worked!
+What happened? To recap:
+
+- You wrote a Python function to take 100 samples from a normal distribution and print the sample mean 
+- You created your first **Dioptra Plugin**, and you registered our Python function in that Plugin as a **Plugin Task**
+- You created an **Entrypoint**. In that entrypoint, you defined a simple workflow to run our plugin task 
+- We created an **experiment**, attached our entrypoint, and ran it as a **job**. We inspected the logs of the job to verify the Plugin task ran.
+
+Analyzing the logs, it seems like everything worked! 
 
 Conclusion
 ----------
