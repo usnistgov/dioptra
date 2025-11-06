@@ -14,9 +14,8 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-import yaml
-from pprint import pprint
 from dioptra.task_engine import validation
+
 
 def render(graph, swaps):
     rendered_graph = {}
@@ -34,6 +33,7 @@ def render(graph, swaps):
                 rendered_graph[step][task_name] = graph[step][task_name]
 
     return rendered_graph
+
 
 def validate(graph):
     # validation checks that can be performed with only the graph portion of the yaml

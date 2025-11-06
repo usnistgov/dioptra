@@ -14,9 +14,13 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+from pathlib import Path
 from dioptra.restapi.v1.shared.swaps import validate, render
 import yaml
 import itertools
+import pytest
+
+FILES_LOCATION = "swaps_files"
 
 available_swaps = {
     "output/output_load_defend.yml": {
@@ -60,7 +64,7 @@ available_swaps = {
 def verify_correct_yaml(graph, all_swaps):
     issues = []
     for output_file in all_swaps.keys():
-        with open(output_file) as f:
+        with (Path(__file__).absolute().parent / FILES_LOCATION / output_file).open('r') as f:
             data = f.read()
         expected_graph = yaml.safe_load(data)
 
@@ -74,19 +78,22 @@ def verify_correct_yaml(graph, all_swaps):
 
         assert expected_graph == rendered_graph
         issues.append(validate(rendered_graph))
+    if len(issues) > 0:
+        print(issues, flush=True)
+
     return issues
 
-
-def test_no_anchors():
-    with open('dataset_transformer.yml') as f:
+@pytest.mark.parametrize(
+    "yaml_file",
+    [
+        'dataset_transformer.yml',
+        'dataset_transformer_with_anchors.yml'
+    ],
+)
+def test_swap_render(yaml_file: str):
+    with (Path(__file__).absolute().parent / FILES_LOCATION / yaml_file).open('r') as f:
         data = f.read()
     graph = yaml.safe_load(data)
 
-    assert len(verify_correct_yaml(graph, available_swaps)) == 0
-
-def test_anchors():
-    with open('dataset_transformer_with_anchors.yml') as f:
-        data = f.read()
-    graph = yaml.safe_load(data)
-
-    assert len(verify_correct_yaml(graph, available_swaps)) == 0
+    issues = verify_correct_yaml(graph, available_swaps)
+    assert all([issue == [] for issue in issues])
