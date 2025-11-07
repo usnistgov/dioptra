@@ -31,7 +31,7 @@ def render_swaps_graph(graph: dict[str, Any], swaps: dict[str, str]) -> dict[str
         The rendered graph using the selected swaps.
 
     """
-    rendered_graph = {}
+    rendered_graph: dict[str, Any] = {}
 
     used_swaps = set()
     not_found_swaps = set()
