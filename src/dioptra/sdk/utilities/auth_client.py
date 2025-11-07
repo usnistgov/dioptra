@@ -35,7 +35,7 @@ ENV_DIOPTRA_WORKER_PASSWORD: Final[str] = "DIOPTRA_WORKER_PASSWORD"
 def get_authenticated_worker_client(
     log: logging.Logger | BoundLogger,
     client_type: Literal["json", "response"] = "response",
-) -> DioptraClient:
+) -> DioptraClient[DioptraResponseProtocol] | DioptraClient[dict[str, Any]]:
     if (username := os.getenv(ENV_DIOPTRA_WORKER_USERNAME)) is None:
         log.error(f"{ENV_DIOPTRA_WORKER_USERNAME} environment variable is not set")
         raise ValueError(
