@@ -15,13 +15,11 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from typing import Any
+
 from dioptra.task_engine import validation
 
 
-def render_swaps_graph(
-    graph: dict[str, Any], 
-    swaps: dict[str, str]
-) -> dict[str, Any]:
+def render_swaps_graph(graph: dict[str, Any], swaps: dict[str, str]) -> dict[str, Any]:
     """
     Requests signature analysis for the functions in an annotated python file.
 
@@ -51,7 +49,7 @@ def render_swaps_graph(
                 try:
                     swapped_name = swaps[task_name]
                     used_swaps.add(task_name)
-                    
+
                     try:
                         swap = task_defn[swapped_name]
                         rendered_graph[step][swapped_name] = swap
@@ -72,7 +70,9 @@ def render_swaps_graph(
         raise Exception(f"Swaps {unused_swaps} were provided but not used.")
 
     if len(not_found_tasks) > 0:
-        raise Exception(f"Tasks {not_found_tasks} requested for swaps but were not found.")
+        raise Exception(
+            f"Tasks {not_found_tasks} requested for swaps but were not found."
+        )
 
     return rendered_graph
 
