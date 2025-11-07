@@ -29,6 +29,7 @@ graph:
     create_adversarial_patch:
       model: $model_artifact
       dataset: $dataset.train
+      dataset_meta: $dataset.metadata
       target: $patch_target
       rotation_max: $patch_rotation_max
       scale_min: $patch_scale_min

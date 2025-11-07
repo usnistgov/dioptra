@@ -20,12 +20,14 @@ A collection of plugin tasks for evaluating evasion attacks and defenses using t
     { name = "normalize_val", type = "number", required = false},
     { name = "image_size", type = "image_size", required = false},
     { name = "batch_size", type = "integer", required = false },
+    { name = "shuffle_buffer_size", type = "integer", required = false },
     { name = "seed", type = "integer", required = false },
   ]
   output_params = [
     { name = "train", type = "tf.data.Dataset" },
     { name = "val", type = "tf.data.Dataset" },
     { name = "test", type = "tf.data.Dataset" },
+    { name = "metadata", type = "DatasetMetadata" },
   ]
 
   [[plugins.tasks.functions]]
@@ -33,7 +35,7 @@ A collection of plugin tasks for evaluating evasion attacks and defenses using t
   name = "create_model"
   input_params = [
     { name = "model_name", type = "string", required = true },
-    { name = "dataset", type = "tf.data.Dataset", required = true},
+    { name = "dataset_metadata", type = "DatasetMetadata", required = true},
     { name = "model_options", type = "options_dict", required = false},
     { name = "loss", type = "string", required = false },
     { name = "loss_options", type = "options_dict", required = false },
@@ -91,6 +93,7 @@ A collection of plugin tasks for evaluating evasion attacks and defenses using t
   input_params = [
     { name = "model", type = "keras.Model", required = true },
     { name = "dataset", type = "tf.data.Dataset", required = true},
+    { name = "dataset_meta", type = "DatasetMetadata", required = true},
     { name = "target", type = "integer", required = false },
     { name = "norm", type = "norm", required = false },
     { name = "eps", type = "number", required = false },
@@ -106,6 +109,7 @@ A collection of plugin tasks for evaluating evasion attacks and defenses using t
   input_params = [
     { name = "model", type = "keras.Model", required = true },
     { name = "dataset", type = "tf.data.Dataset", required = true},
+    { name = "dataset_meta", type = "DatasetMetadata", required = true},
     { name = "target", type = "integer", required = false },
     { name = "norm", type = "norm", required = false },
     { name = "confidence", type = "number", required = false },
@@ -122,6 +126,7 @@ A collection of plugin tasks for evaluating evasion attacks and defenses using t
   input_params = [
     { name = "model", type = "keras.Model", required = true},
     { name = "dataset", type = "tf.data.Dataset", required = true},
+    { name = "dataset_meta", type = "DatasetMetadata", required = true},
     { name = "target", type = "integer", required = true },
     { name = "rotation_max", type = "number", required = false },
     { name = "scale_min", type = "number", required = false },
@@ -140,6 +145,7 @@ A collection of plugin tasks for evaluating evasion attacks and defenses using t
   input_params = [
     { name = "model", type = "keras.Model", required = true},
     { name = "dataset", type = "tf.data.Dataset", required = true},
+    { name = "dataset_meta", type = "DatasetMetadata", required = true},
     { name = "patch", type = "np.ndarray", required = true },
     { name = "rotation_max", type = "number", required = false },
     { name = "scale", type = "number", required = false },
@@ -231,6 +237,10 @@ description = "A pandas DataFrame object."
 [[plugin_param_types]]
 name = "tf.data.Dataset"
 description = "A tensorflow Dataset object."
+
+[[plugin_param_types]]
+name = "DatasetMetadata"
+description = "Metadata for a tf.data.Dataset."
 
 [[plugin_param_types]]
 name = "norm"

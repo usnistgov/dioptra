@@ -1,8 +1,4 @@
 artifacts:
-  #seed:
-    #contents: $random_seed
-    #task:
-      #name: StringArtifactTask
   defended_dataset:
     contents: $defended_dataset
     task:

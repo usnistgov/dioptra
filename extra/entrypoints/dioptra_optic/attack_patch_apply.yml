@@ -40,6 +40,7 @@ graph:
     apply_adversarial_patch:
       model: $model_artifact
       dataset: $dataset.test
+      dataset_meta: $dataset.metadata
       patch: $patch_artifact
       rotation_max: $patch_rotation_max
       scale: $patch_scale

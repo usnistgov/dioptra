@@ -40,6 +40,7 @@ graph:
     fast_gradient_method:
       model: $model_artifact
       dataset: $dataset.test
+      dataset_meta: $dataset.metadata
       target: $fgm_target
       norm: $fgm_norm
       eps: $fgm_eps
