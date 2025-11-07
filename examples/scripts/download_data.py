@@ -25,8 +25,8 @@ def download(datasets: tuple[str, ...], data_dir: str | None, dryrun: bool):
     for dataset in datasets:
         print(f"  -- downloading and preparing {dataset}")
         if not dryrun:
-            builder = tfds.builder(dataset)
-            builder.download_and_prepare(download_dir=data_dir)
+            builder = tfds.builder(dataset, data_dir=data_dir)
+            builder.download_and_prepare()
             # TODO: use array_records for better compatability with torch/jax.
             # this removes the requirement to have tensorflow installed after preparing the data.
             # It creates data sources instead of datasets so additional steps are required on load.
