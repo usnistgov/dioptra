@@ -261,6 +261,7 @@ class TensorflowDatasetArtifactTask(ArtifactTaskInterface):
         Serializes a tf.data.Dataset to disk.
         """
         import tensorflow as tf
+
         # if contents is a str, it is a directory path to an already serialized dataset
         dataset_name = contents.options().dataset_name
         if dataset_name and (working_dir / dataset_name).exists():
@@ -273,7 +274,13 @@ class TensorflowDatasetArtifactTask(ArtifactTaskInterface):
     @staticmethod
     def deserialize(working_dir: Path, path: str, **kwargs) -> "tf.data.Dataset":
         import tensorflow as tf
-        LOGGER.warning("deserialize", working_dir=working_dir, path=path, files=(working_dir/path).glob("*"))
+
+        LOGGER.warning(
+            "deserialize",
+            working_dir=working_dir,
+            path=path,
+            files=(working_dir / path).glob("*"),
+        )
         return tf.data.Dataset.load(str(working_dir / path), **kwargs)
 
     @staticmethod
@@ -299,7 +306,9 @@ class TensorflowDatasetSamplerArtifactTask(ArtifactTaskInterface):
         contents = contents.shuffle(num_samples, seed=seed).unbatch()
         for idx, (x, y) in contents.take(num_samples).enumerate():
             y = keras.ops.argmax(y, axis=0)
-            keras.utils.save_img(output_dir / f"{idx:06d}_label_{y:04d}.png", x.numpy(), **kwargs)
+            keras.utils.save_img(
+                output_dir / f"{idx:06d}_label_{y:04d}.png", x.numpy(), **kwargs
+            )
         return output_dir
 
     @staticmethod
@@ -329,10 +338,18 @@ class NumpyArrayArtifactTask(ArtifactTaskInterface):
 
 class NumpyArraysArtifactTask(ArtifactTaskInterface):
     @staticmethod
-    def serialize(working_dir: Path, name: str, contents: Sequence[np.ndarray], names: Sequence[str] | None = None, **kwargs) -> Path:
+    def serialize(
+        working_dir: Path,
+        name: str,
+        contents: Sequence[np.ndarray],
+        names: Sequence[str] | None = None,
+        **kwargs,
+    ) -> Path:
         path = (working_dir / name).with_suffix(".npy")
         if names is not None and len(names) == len(contents):
-            np.savez(path, **dict(list(zip(names, contents))), allow_pickle=False, **kwargs)
+            np.savez(
+                path, **dict(list(zip(names, contents))), allow_pickle=False, **kwargs
+            )
         else:
             np.savez(path, *contents, allow_pickle=False)
         return path
@@ -374,6 +391,7 @@ class KerasModelArtifactTask(ArtifactTaskInterface):
     @staticmethod
     def deserialize(working_dir: Path, path: str, **kwargs) -> Any:
         import keras
+
         return keras.saving.load_model(Path(working_dir) / path, **kwargs)
 
     @staticmethod

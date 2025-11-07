@@ -31,7 +31,7 @@ from numpy.typing import ArrayLike
 
 from dioptra import pyplugs
 
-from .data import create_transformed_dataset
+from .data import DatasetMetadata, create_transformed_dataset
 
 LOGGER = structlog.get_logger()
 
@@ -40,6 +40,7 @@ LOGGER = structlog.get_logger()
 def fast_gradient_method(
     model: keras.Model,
     dataset: tf.data.Dataset,
+    dataset_meta: DatasetMetadata,
     target: int | None = None,
     norm: int | float | str = np.inf,
     eps: float = 0.3,
@@ -52,6 +53,7 @@ def fast_gradient_method(
     Args:
         model: The classifier used to generate the attack.
         dataset: The dataset to apply the attack to.
+        dataset_meta: The dataset's metadata.
         target: The target class index or None for an untargeted attack.
         norm: The norm of the adversarial perturbation. Can be `"inf"`,
             :py:data:`numpy.inf`, `1`, or `2`. The default is :py:data:`numpy.inf`.
@@ -65,8 +67,7 @@ def fast_gradient_method(
     Returns:
         The transformed tf.data.Dataset.
     """
-    batch_size, num_classes = next(iter(dataset))[1].shape
-    clip_values = (0.0, 255.0) if ops.max(next(iter(dataset))[0]) > 1.0 else (0.0, 1.0)
+    clip_values = (0.0, 255.0 / dataset_meta.normalize_val)
 
     attack = FastGradientMethod(
         estimator=KerasClassifier(model, clip_values=clip_values),
@@ -74,7 +75,7 @@ def fast_gradient_method(
         targeted=target is not None,
         eps=eps,
         eps_step=eps_step,
-        batch_size=batch_size,
+        batch_size=dataset_meta.batch_size,
         minimal=minimal,
     )
 
@@ -95,6 +96,7 @@ def fast_gradient_method(
 def carlini_wagner(
     model: keras.Model,
     dataset: tf.data.Dataset,
+    dataset_meta: DatasetMetadata,
     target: int | None = None,
     norm: int | float | str = np.inf,
     confidence: float = 0.0,
@@ -108,6 +110,7 @@ def carlini_wagner(
     Args:
         model: The classifier used to generate the attack.
         dataset: The dataset to apply the attack to.
+        dataset_meta: The dataset's metadata.
         target: The target class index or None for an untargeted attack.
         norm: The norm of the adversarial perturbation. Can be `"inf"`,
             :py:data:`numpy.inf`, `1`, or `2`. The default is :py:data:`numpy.inf`.
@@ -120,8 +123,7 @@ def carlini_wagner(
     Returns:
         The transformed tf.data.Dataset.
     """
-    batch_size, num_classes = next(iter(dataset))[1].shape
-    clip_values = (0.0, 255.0) if ops.max(next(iter(dataset))[0]) > 1.0 else (0.0, 1.0)
+    clip_values = (0.0, 255.0 / dataset_meta.normalize_val)
 
     method = {
         "0": CarliniL0Method,
@@ -137,7 +139,7 @@ def carlini_wagner(
         confidence=confidence,
         targeted=target is not None,
         learning_rate=learning_rate,
-        batch_size=batch_size,
+        batch_size=dataset_meta.batch_size,
         max_iter=max_iter,
         initial_const=initial_const,
         verbose=False,
@@ -160,6 +162,7 @@ def carlini_wagner(
 def create_adversarial_patch(
     model: keras.Model,
     dataset: tf.data.Dataset,
+    dataset_meta: DatasetMetadata,
     target: int,
     rotation_max: float = 180.0,
     scale_min: float = 0.1,
@@ -172,6 +175,7 @@ def create_adversarial_patch(
     Args:
         model: The classifier used to generate the patch.
         dataset: The dataset used to generate the patch.
+        dataset_meta: The dataset's metadata.
         target: The index of target class for the patch.
         rotation_max: The max angle to rotate the patch by.
         scale_min: The min scale of the patch as a fraction of image size.
@@ -182,30 +186,34 @@ def create_adversarial_patch(
     Returns:
         The trained patch and its mask.
     """
-    batch_size, num_classes = next(iter(dataset))[1].shape
-    clip_values = (0.0, 255.0) if ops.max(next(iter(dataset))[0]) > 1.0 else (0.0, 1.0)
+    clip_values = (0.0, 255.0 / dataset_meta.normalize_val)
 
     attack = AdversarialPatchNumpy(
         classifier=KerasClassifier(model, clip_values=clip_values),
-        batch_size=batch_size,
+        batch_size=dataset_meta.batch_size,
         rotation_max=rotation_max,
         scale_min=scale_min,
         scale_max=scale_max,
         learning_rate=learning_rate,
-        max_iter=max_iter,
+        max_iter=1,
         verbose=False,
     )
 
-    x, _ = next(iter(dataset))
-    y_target = ops.repeat([ops.one_hot(target, num_classes)], batch_size, axis=0)
+    y_target = ops.repeat(
+        [ops.one_hot(target, dataset_meta.num_classes)], dataset_meta.batch_size, axis=0
+    )
 
-    return attack.generate(x, y=y_target)
+    for x, y in dataset.take(max_iter):
+        patch, mask = attack.generate(x, y=y_target)
+
+    return patch, mask
 
 
 @pyplugs.register
 def apply_adversarial_patch(
     model: keras.Model,
     dataset: tf.data.Dataset,
+    dataset_meta: DatasetMetadata,
     patch: ArrayLike,
     rotation_max: float = 180.0,
     scale: float = 0.5,
@@ -216,6 +224,7 @@ def apply_adversarial_patch(
     Args:
         model: The keras model used for configuring AdversarialPatchNumpy.
         dataset: The dataset to transform into an adversarial dataset.
+        dataset_meta: The dataset's metadata
         patch: The adversarial patch to be applied to the dataset.
         rotation_max: The max angle to rotate the patch by.
         scale: The scale of the patch as a fraction of image size.
@@ -224,12 +233,11 @@ def apply_adversarial_patch(
     Returns:
         The transformed tf.data.Dataset
     """
-    batch_size, num_classes = next(iter(dataset))[1].shape
-    clip_values = (0.0, 255.0) if ops.max(next(iter(dataset))[0]) > 1.0 else (0.0, 1.0)
+    clip_values = (0.0, 255.0 / dataset_meta.normalize_val)
 
     attack = AdversarialPatchNumpy(
         classifier=KerasClassifier(model, clip_values=clip_values),
-        batch_size=batch_size,
+        batch_size=dataset_meta.batch_size,
         rotation_max=rotation_max,
         verbose=False,
     )

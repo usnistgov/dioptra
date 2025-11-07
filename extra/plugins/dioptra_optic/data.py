@@ -15,6 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcodefrom typing import Literal
 import uuid
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Literal
 
@@ -27,20 +28,31 @@ from dioptra import pyplugs
 LOGGER = structlog.get_logger()
 
 
+@dataclass
+class DatasetMetadata:
+    split: dict[Literal["train", "val", "test"]]
+    normalize_val: float
+    image_size: tuple[int, int]
+    batch_size: int
+    num_classes: int
+
+
 @pyplugs.register
 def load_dataset_from_tfds(
     name: str,
-    split: dict[Literal["train", "val", "test"], str] = {
-        "train": "train[:80%]",
-        "val": "train[80%:]",
-        "test": "test",
-    },
+    split: dict[Literal["train", "val", "test"], str] | None = None,
     data_dir: str = "/dioptra/data",
     normalize_val: float | None = 255.0,
     image_size: tuple[int, int] | None = None,
     batch_size: int = 32,
+    shuffle_buffer_size: int = 10000,
     seed: int | None = None,
-) -> tuple[tf.data.Dataset | None, tf.data.Dataset | None, tf.data.Dataset | None]:
+) -> tuple[
+    tf.data.Dataset | None,
+    tf.data.Dataset | None,
+    tf.data.Dataset | None,
+    DatasetMetadata,
+]:
     """
     Loads a registered tfds dataset by name from disk and constructs a preprocessing pipeline.
 
@@ -51,6 +63,12 @@ def load_dataset_from_tfds(
     Returns:
         A tuple of train, val, test tf.data.Dataset objects.
     """
+    split = split or {
+        "train": "train[:80%]",
+        "val": "train[80%:]",
+        "test": "test",
+    }
+
     builder = tfds.builder(name, data_dir=data_dir)
     return _load_dataset_from_builder(
         builder,
@@ -58,6 +76,7 @@ def load_dataset_from_tfds(
         normalize_val=normalize_val,
         image_size=image_size,
         batch_size=batch_size,
+        shuffle_buffer_size=shuffle_buffer_size,
         seed=seed,
     )
 
@@ -65,16 +84,18 @@ def load_dataset_from_tfds(
 @pyplugs.register
 def load_dataset_from_image_directory(
     data_dir: Path,
-    split: dict[Literal["train", "val", "test"], str] = {
-        "train": "train[:80%]",
-        "val": "train[80%:]",
-        "test": "test",
-    },
+    split: dict[Literal["train", "val", "test"], str] | None = None,
     normalize_val: float | None = 255.0,
     image_size: tuple[int, int] | None = None,
     batch_size: int = 32,
+    shuffle_buffer_size: int = 10000,
     seed: int | None = None,
-) -> tuple[tf.data.Dataset | None, tf.data.Dataset | None, tf.data.Dataset | None]:
+) -> tuple[
+    tf.data.Dataset | None,
+    tf.data.Dataset | None,
+    tf.data.Dataset | None,
+    DatasetMetadata,
+]:
     """
     Loads a tfds dataset by path from disk and constructs a preprocessing pipeline.
 
@@ -85,6 +106,12 @@ def load_dataset_from_image_directory(
     Returns:
         A tuple of train, val, test tf.data.Dataset objects.
     """
+    split = split or {
+        "train": "train[:80%]",
+        "val": "train[80%:]",
+        "test": "test",
+    }
+
     builder = tfds.ImageFolder(str(data_dir))
     return _load_dataset_from_builder(
         builder,
@@ -92,22 +119,25 @@ def load_dataset_from_image_directory(
         normalize_val=normalize_val,
         image_size=image_size,
         batch_size=batch_size,
+        shuffle_buffer_size=shuffle_buffer_size,
         seed=seed,
     )
 
 
 def _load_dataset_from_builder(
     builder: tfds.core.DatasetBuilder,
-    split: dict[Literal["train", "val", "test"], str] = {
-        "train": "train[:80%]",
-        "val": "train[80%:]",
-        "test": "test",
-    },
+    split: dict[Literal["train", "val", "test"], str] | None = None,
     normalize_val: float | None = 255.0,
     image_size: tuple[int, int] | None = None,
     batch_size: int = 32,
+    shuffle_buffer_size: int = 10000,
     seed: int | None = None,
-) -> tuple[tf.data.Dataset | None, tf.data.Dataset | None, tf.data.Dataset | None]:
+) -> tuple[
+    tf.data.Dataset | None,
+    tf.data.Dataset | None,
+    tf.data.Dataset | None,
+    DatasetMetadata,
+]:
     """
     Args:
         builder: A tfds.core.DatasetBuilder to build the dataset from.
@@ -119,18 +149,28 @@ def _load_dataset_from_builder(
             If None, no resizing is applied.
         batch_size: Applies batching to the dataset with the specified size.
             If None, no batching is applied.
+        shuffle_buffer_size: The number of data samples to use in the shuffle buffer,
+            see https://www.tensorflow.org/api_docs/python/tf/data/Dataset#shuffle
         seed: The random seed used to shuffle the train split. Used for deterministic results.
             If None, shuff
 
     Returns:
         A tuple of train, val, test tf.data.Dataset objects.
     """
+    split = split or {
+        "train": "train[:80%]",
+        "val": "train[80%:]",
+        "test": "test",
+    }
+
     # get a dictionary of dataset splits from the builder
     dataset: dict = builder.as_dataset(split=split, as_supervised=True)
 
+    num_classes = builder.info.features["label"].num_classes
+
     def normalize(x, y):
         """Normalizes images: `uint8` -> `float32`."""
-        return tf.cast(x, tf.float32) / normalize_val, y
+        return tf.cast(x, tf.float32) / tf.cast(normalize_val, tf.float32), y
 
     def resize(x, y):
         """Resizes images"""
@@ -138,23 +178,22 @@ def _load_dataset_from_builder(
 
     def one_hot(x, y):
         """Converts categorical labels to one-hot vectors."""
-        return x, tf.one_hot(y, len(builder.info.features["label"].names))
+        return x, tf.one_hot(y, num_classes)
 
     # setup train/val/test data pipelines
-    # should this be moved to the "consumer" of the dataset?
+    # following the guidance for ordering of cache, shuffle, and batch operations from:
+    # https://www.tensorflow.org/datasets/keras_example
     for name, ds in dataset.items():
         ds = ds.map(one_hot, num_parallel_calls=tf.data.AUTOTUNE)
         if normalize_val is not None:
             ds = ds.map(normalize, num_parallel_calls=tf.data.AUTOTUNE)
         if image_size is not None:
             ds = ds.map(resize, num_parallel_calls=tf.data.AUTOTUNE)
+
         if name == "train":
+            buffer_size = max(ds.cardinaliy().numpy(), shuffle_buffer_size)
             ds = ds.cache()
-            ds = ds.shuffle(
-                builder.info.splits[name].num_examples // 10,
-                seed=seed,
-                reshuffle_each_iteration=True,
-            )
+            ds = ds.shuffle(buffer_size, seed=seed, reshuffle_each_iteration=True)
             ds = ds.batch(batch_size)
         else:
             ds = ds.batch(batch_size)
@@ -163,16 +202,25 @@ def _load_dataset_from_builder(
 
         dataset[name] = ds
 
+    metadata = DatasetMetadata(
+        split=split,
+        normalize_val=normalize_val or 1.0,
+        image_size=image_size or builder.info.features["image"].shape[:2],
+        batch_size=batch_size,
+        num_classes=num_classes,
+    )
+
     return (
         dataset.get("train", None),
         dataset.get("val", None),
         dataset.get("test", None),
+        metadata,
     )
 
 
 def create_transformed_dataset(
     dataset: tf.data.Dataset,
-    fn: Callable,
+    fn: Callable[[tf.Tensor, tf.Tensor], tuple[tf.Tensor, tf.Tensor]],
     save_dataset: bool = False,
 ):
     """

@@ -36,6 +36,7 @@ from keras.models import Sequential
 
 from dioptra import pyplugs
 
+from .data import DatasetMetadata
 from .utils import DioptraMetricsLoggingCallback
 
 LOGGER = structlog.get_logger()
@@ -44,20 +45,14 @@ LOGGER = structlog.get_logger()
 @pyplugs.register
 def create_model(
     model_name: str,
-    dataset: tf.data.Dataset,
+    dataset_meta: DatasetMetadata,
     model_options: dict[str, Any] | None = None,
     loss: str = "categorical_crossentropy",
     loss_options: dict[str, Any] | None = None,
     optimizer: str = "Adam",
     learning_rate: float = 0.001,
     optimizer_options: dict[str, Any] | None = None,
-    metrics: list[str | dict[str, Any]] | None = [
-        "categorical_accuracy",
-        "auc",
-        "precision",
-        "recall",
-        {"name": "f1_score", "options": {"average": "weighted"}},
-    ],
+    metrics: list[str | dict[str, Any]] | None = None,
 ) -> keras.Model:
     """Initializes an untrained neural network image classifier for Tensorflow/Keras.
 
@@ -72,7 +67,7 @@ def create_model(
 
     Args:
         model_name: The neural network architecture to use.
-        dataset: A Dataset object used to get input_shape, and number of classes
+        dataset_meta: A DatasetMetadata object used to get input_shape, and number of classes
         loss: A string specifying the loss function to be minimized during training. The
             string must match the name of one of the loss functions in the
             :py:mod:`keras.losses` module. The default is
@@ -99,15 +94,18 @@ def create_model(
     model_options = model_options or {}
     loss_options = loss_options or {}
     optimizer_options = optimizer_options or {"learning_rate": learning_rate}
-    metrics = metrics or []
-
-    input_shape = next(iter(dataset))[0].shape[-3:]
-    batch_size, num_classes = next(iter(dataset))[1].shape
+    metrics = metrics or [
+        "categorical_accuracy",
+        "auc",
+        "precision",
+        "recall",
+        {"name": "f1_score", "options": {"average": "weighted"}},
+    ]
 
     LOGGER.info(f"initializing {model_name} model", task="create_model")
     model = KERAS_CLASSIFIERS_REGISTRY[model_name](
-        input_shape=input_shape,
-        classes=num_classes,
+        input_shape=dataset_meta.image_size,
+        classes=dataset_meta.num_classes,
         **model_options,
     )
 
@@ -139,9 +137,9 @@ def train_model(
 
     Args:
         model: The keras model to be trained.
-        train_dataset:
-        val_dataset:
-        epochs:
+        train_dataset: The dataset used to train the model.
+        val_dataset: The dataset used to validate the model after each epoch of training.
+        epochs: The number of full passes through the dataset to train the model for.
         callbacks: A list of keras callbacks.
             See https://keras.io/api/callbacks/ for the full list.
         fit_options: Additional options passed as keyword arguments to model.fit
@@ -402,12 +400,11 @@ def _get_keras_init_fn(module: ModuleType, model_name: str) -> Callable:
 
     """
     model_fn = getattr(module, model_name)
-    preprocess_fn = getattr(module, "preprocess_input")
 
     def fn(input_shape: tuple[int, int, int], classes: int, **model_kwargs):
         i = Input([None, None, 3], dtype="uint8")
         x = keras.ops.cast(i, "float32")
-        x = preprocess_fn(x)
+        x = module.preprocess_input(x)
         core = model_fn(input_shape=input_shape, classes=classes, **model_kwargs)
         x = core(x)
         model = keras.Model(inputs=[i], outputs=[x])
