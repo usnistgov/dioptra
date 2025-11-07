@@ -14,11 +14,31 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+from typing import Any
 from dioptra.task_engine import validation
 
 
-def render(graph, swaps):
+def render_swaps_graph(
+    graph: dict[str, Any], 
+    swaps: dict[str, str]
+) -> dict[str, Any]:
+    """
+    Requests signature analysis for the functions in an annotated python file.
+
+    Args:
+        graph: A dictionary object representing a task graph.
+        swaps: A dictionary mapping swap names to the selected task.
+
+    Returns:
+        The rendered graph using the selected swaps.
+
+    """
     rendered_graph = {}
+
+    used_swaps = set()
+    not_found_swaps = set()
+    not_found_tasks = set()
+
     for step, task in graph.items():
         if step.startswith("_"):
             continue
@@ -26,16 +46,38 @@ def render(graph, swaps):
         rendered_graph[step] = {}
         for task_name, task_defn in task.items():
             if task_name.startswith("?"):
-                task_name = swaps[task_name[1:]]  # could raise swap not specified error
-                swap = task_defn[task_name]
-                rendered_graph[step][task_name] = swap
+                task_name = task_name[1:]
+
+                try:
+                    swapped_name = swaps[task_name]
+                    used_swaps.add(task_name)
+                    
+                    try:
+                        swap = task_defn[swapped_name]
+                        rendered_graph[step][swapped_name] = swap
+                    except KeyError:
+                        not_found_tasks.add(swapped_name)
+                except KeyError:
+                    not_found_swaps.add(task_name)
             else:
                 rendered_graph[step][task_name] = graph[step][task_name]
+
+    print(swaps.keys(), used_swaps, flush=True)
+    unused_swaps = swaps.keys() - used_swaps
+
+    if len(not_found_swaps) > 0:
+        raise Exception(f"Swaps {not_found_swaps} needed by graph but not provided.")
+
+    if len(unused_swaps) > 0:
+        raise Exception(f"Swaps {unused_swaps} were provided but not used.")
+
+    if len(not_found_tasks) > 0:
+        raise Exception(f"Tasks {not_found_tasks} requested for swaps but were not found.")
 
     return rendered_graph
 
 
-def validate(graph):
+def validate_swaps_graph(graph):
     # validation checks that can be performed with only the graph portion of the yaml
     issues = []
     issues += validation._find_non_string_keys(graph, "graph")

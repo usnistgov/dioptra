@@ -15,7 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from pathlib import Path
-from dioptra.restapi.v1.shared.swaps import validate, render
+from dioptra.sdk.utilities.swaps import validate_swaps_graph, render_swaps_graph
 import yaml
 import itertools
 import pytest
@@ -70,14 +70,14 @@ def verify_correct_yaml(graph, all_swaps):
 
         swaps = all_swaps[output_file]
         
-        rendered_graph = render(graph, swaps)
+        rendered_graph = render_swaps_graph(graph, swaps)
 
         #if (expected_graph != rendered_graph):
         #    print("expected:", expected_graph)
         #    print("rendered:", rendered_graph)
 
         assert expected_graph == rendered_graph
-        issues.append(validate(rendered_graph))
+        issues.append(validate_swaps_graph(rendered_graph))
     if len(issues) > 0:
         print(issues, flush=True)
 
@@ -97,3 +97,34 @@ def test_swap_render(yaml_file: str):
 
     issues = verify_correct_yaml(graph, available_swaps)
     assert all([issue == [] for issue in issues])
+
+@pytest.mark.parametrize(
+    "yaml_file",
+    [
+        'dataset_transformer.yml',
+        'dataset_transformer_with_anchors.yml'
+    ],
+)
+def test_swap_errors(yaml_file: str): 
+    with (Path(__file__).absolute().parent / FILES_LOCATION / yaml_file).open('r') as f:
+        data = f.read()
+    graph = yaml.safe_load(data)
+
+    missing = set(["load", "transform_data"])
+    with pytest.raises(Exception, match=f"Swaps {missing} needed by graph but not provided."):
+        rendered_graph = render_swaps_graph(graph, {})
+
+    extra = set(["extra"])
+    with pytest.raises(Exception, match=f"Swaps {extra} were provided but not used."):
+        rendered_graph = render_swaps_graph(graph, {
+            "load": "passthrough",
+            "transform_data": "attack_patch",
+            "extra": "function_name"
+        })
+
+    nonexistant = set(["nonexistant"])
+    with pytest.raises(Exception, match=f"Tasks {nonexistant} requested for swaps but were not found."):
+        rendered_graph = render_swaps_graph(graph, {
+            "load": "passthrough",
+            "transform_data": "nonexistant",
+        })
