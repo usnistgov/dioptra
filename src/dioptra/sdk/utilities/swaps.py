@@ -21,7 +21,8 @@ from dioptra.task_engine import validation
 
 def render_swaps_graph(graph: dict[str, Any], swaps: dict[str, str]) -> dict[str, Any]:
     """
-    Requests signature analysis for the functions in an annotated python file.
+    Renders a task graph given a graph containing swaps and dictionary
+    specifying the swap choices.
 
     Args:
         graph: A dictionary object representing a task graph.
