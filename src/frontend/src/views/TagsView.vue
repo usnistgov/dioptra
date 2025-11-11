@@ -52,8 +52,8 @@
   const tableRef = ref(null)
 
   const columns = [
+    { name: 'id', label: 'ID', align: 'left', field: 'id', sortable: false },
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true },
-    { name: 'id', label: 'Tag ID', align: 'left', field: 'id', sortable: false },
     { name: 'createdOn', label: 'Created On', align: 'left', field: 'createdOn', sortable: true },
     { name: 'lastModifiedOn', label: 'Last Modified', align: 'left', field: 'lastModifiedOn', sortable: true },
   ]

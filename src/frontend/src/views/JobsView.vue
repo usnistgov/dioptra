@@ -69,7 +69,7 @@
   const router = useRouter()
 
   const columns = [
-    { name: 'id', label: 'Job ID', align: 'left', field: 'id', sortable: true, },
+    { name: 'id', label: 'ID', align: 'left', field: 'id', sortable: true, },
     { name: 'entrypoint', label: 'Entrypoint', align: 'left', field: 'entrypoint', sortable: true, },
     { name: 'queue', label: 'Queue', align: 'left', field: 'queue', sortable: true, },
     { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true, style: 'width: 275px',},

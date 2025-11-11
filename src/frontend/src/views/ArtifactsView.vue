@@ -13,9 +13,11 @@
     :hideDeleteBtn="true"
   >
     <template #body-cell-job="props">
-      <RouterLink :to="`/jobs/${props.row.job}`" @click.stop>
-        Job {{ props.row.job }}
-      </RouterLink>
+      <q-btn
+        color="primary"
+        :to="`/jobs/${props.row.job}`"
+        :label="`View Job ${props.row.job}`"
+      />
     </template>
     <template #body-cell-taskName="props">
       {{ props.row.task.name }}
@@ -105,6 +107,7 @@ async function getArtifacts(pagination) {
 }
 
 const columns = [
+  { name: 'id', label: 'ID', align: 'left', field: 'id', sortable: false, },
   { name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true },
   { name: 'job', label: 'Job', align: 'left' },
   { name: 'taskName', label: 'Task Name', align: 'left' },

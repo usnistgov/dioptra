@@ -38,10 +38,11 @@
             <div v-if="typeof(col.value) === 'boolean'" class="text-body1">
               {{ col.value ? '✅' : 	'❌'}}
             </div>
+            <div v-else-if="col.name === 'id'">
+              <span class="link">{{ props.row.id }}</span>
+            </div>
             <div v-else-if="col.name === 'name'">
-              <span :class="disableSelect ? '' : 'link'">
-                {{ truncateString(props.row.name, 20) }}
-              </span>
+              {{ truncateString(props.row.name, 20) }}
               <q-tooltip v-if="props.row.name.length >= 20" max-width="30vw" style="overflow-wrap: break-word">
                 {{ props.row.name }}
               </q-tooltip>
