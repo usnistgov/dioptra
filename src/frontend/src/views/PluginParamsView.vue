@@ -79,6 +79,7 @@
   }
 
   const columns = [
+    { name: 'id', label: 'ID', align: 'left', field: 'id', sortable: false },
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, },
     { name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true },
     { name: 'createdOn', label: 'Created On', align: 'left', field: 'createdOn', sortable: true },

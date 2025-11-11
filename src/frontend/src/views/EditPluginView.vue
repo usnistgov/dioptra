@@ -81,11 +81,6 @@
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
     @create="router.push(`/plugins/${route.params.id}/files/new`)"
   >
-    <template #body-cell-filename="props">
-      <span class="link">
-        {{ props.row.filename }}
-      </span>
-    </template>
     <template #body-cell-functionTasks="props">
       {{ props.row.tasks.functions.length }}
     </template>
@@ -217,6 +212,7 @@ const editObjTags = ref({})
 const tableRef = ref(null)
 
 const fileColumns = [
+  { name: 'id', label: 'ID', align: 'left', field: 'id', sortable: false, },
   { name: 'filename', label: 'Filename', align: 'left', field: 'filename', sortable: true, },
   { name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true },
   { name: 'functionTasks', label: 'Function Tasks', align: 'left', sortable: false, },

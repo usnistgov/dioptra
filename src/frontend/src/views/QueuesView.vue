@@ -77,6 +77,7 @@
   const tableRef = ref(null)
 
   const columns = [
+    { name: 'id', label: 'ID', align: 'left', field: 'id', sortable: false },
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true },
     { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true },
     { name: 'hasDraft', label: 'hasDraft', align: 'left', field: 'hasDraft', sortable: false },
