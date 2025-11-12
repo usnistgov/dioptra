@@ -1,11 +1,21 @@
 <template>
   <PageTitle title="Plugins" />
+
+  <q-btn
+      v-if="selected.length > 0"
+      color="negative"
+      icon="delete"
+      :label="`Delete ${selected.length} Selected`"
+      @click="showDeleteDialog = true"
+      class="q-mb-md"
+    />
+
   <TableComponent
     :rows="plugins"
     :columns="columns"
     title="Plugins"
     v-model:selected="selected"
-    @edit="router.push(`/plugins/${selected[0].id}`)"
+    selection="multiple"     @edit="router.push(`/plugins/${selected[0].id}`)"
     @delete="showDeleteDialog = true"
     @request="getPlugins"
     ref="tableRef"
@@ -13,6 +23,7 @@
     @create="showPluginDialog = true"
     :loading="isLoading"
   >
+
     <template #body-cell-group="props">
       <div>{{ props.row.group.name }}</div>
     </template>
@@ -27,11 +38,12 @@
     @updatePlugin="updatePlugin"
     :editPlugin="selected.length && editing ? selected[0] : ''"
   />
-  <DeleteDialog 
+
+<DeleteDialog 
     v-model="showDeleteDialog"
-    @submit="deletePlugin"
+    @submit="deleteSelectedPlugins"
     type="Plugin"
-    :name="selected.length ? selected[0].name : ''"
+    :name="selected.length > 1 ? `${selected.length} plugins` : (selected.length === 1 ? selected[0].name : '')"
   />
   <AssignTagsDialog 
     v-model="showTagsDialog"
@@ -130,17 +142,22 @@
     }  
   }
 
-  async function deletePlugin() {
+async function deleteSelectedPlugins() {
     try {
-      await api.deleteItem('plugins', selected.value[0].id)
-      notify.success(`Successfully deleted '${selected.value[0].name}'`)
-      showDeleteDialog.value = false
-      selected.value = []
-      tableRef.value.refreshTable()
+      const deletePromises = selected.value.map(plugin => 
+        api.deleteItem('plugins', plugin.id)
+      );
+      
+      await Promise.all(deletePromises);
+      
+      notify.success(`Successfully deleted ${selected.value.length} plugin(s)`);
+      showDeleteDialog.value = false;
+      selected.value = []; 
+      tableRef.value.refreshTable(); 
     } catch(err) {
       notify.error(err.response.data.message);
     }
-  }
+}
 
   const fileColumns = [
     // field must be name or else selection doesn't work, possible quasar bug

@@ -22,22 +22,28 @@
   >
     <template v-slot:header="props">
       <q-tr :props="props">
+                <q-th auto-width v-if="selection === 'multiple'">
+          <q-checkbox v-model="props.selected" />
+        </q-th>
         <q-th v-for="col in props.cols" :key="col.name" :props="props">
           {{ col.label }}
         </q-th>
       </q-tr>
-    </template> 
-    <template v-slot:body="props">
-      <!-- props.row[field] - field needs to be unique ID, pass this in as a prop, or just use id -->
-      <q-tr 
+    </template>
+<template v-slot:body="props">
+            <q-tr 
         :class="`${getSelectedColor(props.selected)} cursor-pointer ${highlightRow(props)} ${disableRow(props)}` " 
         :props="props"
         @click="openResource(props); selectResource(props)"
       >
-        <q-td v-for="col in props.cols" :key="col.name" :props="props" :style="props.expand ? {'border-bottom': 'none'} : {}">
+                <q-td auto-width v-if="selection === 'multiple'">
+          <q-checkbox v-model="props.selected" @click.stop />
+        </q-td>
+
+                <q-td v-for="col in props.cols" :key="col.name" :props="props" :style="props.expand ? {'border-bottom': 'none'} : {}">
           <slot v-bind="props" :name="`body-cell-${col.name}`">
             <div v-if="typeof(col.value) === 'boolean'" class="text-body1">
-              {{ col.value ? '✅' : 	'❌'}}
+              {{ col.value ? '✅' :  '❌'}}
             </div>
             <div v-else-if="col.name === 'name'">
               {{ truncateString(props.row.name, 20) }}
@@ -56,7 +62,7 @@
                 v-for="(tag, i) in props.row.tags"
                 :key="i"
                 color="primary" 
-                text-color="white"
+  m             text-color="white"
                 clickable
                 @click.stop
                 class="q-my-none"
@@ -80,18 +86,9 @@
               {{ formatDate(col.value) }}
             </div>
             <div v-else-if="!Array.isArray(col.value)">
-              <!-- if value is an array, then render it with a custom slot -->
-              {{ col.value }}
+                            {{ col.value }}
             </div>
-            <!-- <q-btn
-              v-if="col.name === 'open'"
-              round
-              color="primary"
-              icon="edit"
-              size="sm"
-              @click.stop="openResource(props)"
-            /> -->
-            <q-btn
+                        <q-btn
               v-if="col.name === 'delete'"
               round
               color="negative"
@@ -103,15 +100,15 @@
               v-if="col.name === 'expand'" 
               size="md" flat dense round  
               @click.stop="props.expand = !props.expand" 
-              :icon="props.expand ? 'expand_less' : 'expand_more'" 
+Thinker:                :icon="props.expand ? 'expand_less' : 'expand_more'" 
             />
           </slot>
         </q-td>
       </q-tr>
-      <q-tr v-show="props.expand" :props="props" :class="`${highlightRow(props)}`">
+      
+            <q-tr v-show="props.expand" :props="props" :class="`${highlightRow(props)}`">
         <q-td colspan="100%">
-          <!-- <div class="text-left ">Additional info for {{ props.row.name }}.</div> -->
-          <slot name="expandedSlot" :row="props.row" :rowProps="props" />
+                    <slot name="expandedSlot" :row="props.row" :rowProps="props" />
         </q-td>
       </q-tr>
     </template>
