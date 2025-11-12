@@ -18,7 +18,6 @@
     @keydown="keydown"
     :rows-per-page-options="props.showAll ? [0] : [5,10,15,20,25,50,0]"
     :hideBottom="props.hideBottom && rows.length > 0"
-    :loading="props.loading"
   >
     <template v-slot:header="props">
       <q-tr :props="props">
@@ -38,6 +37,9 @@
           <slot v-bind="props" :name="`body-cell-${col.name}`">
             <div v-if="typeof(col.value) === 'boolean'" class="text-body1">
               {{ col.value ? '✅' : 	'❌'}}
+            </div>
+            <div v-else-if="col.name === 'id'">
+              <span class="link">{{ props.row.id }}</span>
             </div>
             <div v-else-if="col.name === 'id'">
               <span class="link">{{ props.row.id }}</span>
@@ -182,7 +184,6 @@
   showAll: Boolean,
   highlightRow: Boolean,
   selection: String,
-  loading: Boolean,
   disabledRowKeys: {
     type: Array,
     default: []

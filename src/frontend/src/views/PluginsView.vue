@@ -1,10 +1,11 @@
 <template>
   <PageTitle title="Plugins" />
+
   <TableComponent
     :rows="plugins"
     :columns="columns"
     title="Plugins"
-    v-model:selected="selected"
+    v-model:selected="selected"  
     @edit="router.push(`/plugins/${selected[0].id}`)"
     @delete="showDeleteDialog = true"
     @request="getPlugins"
@@ -13,6 +14,7 @@
     @create="showPluginDialog = true"
     :loading="isLoading"
   >
+
     <template #body-cell-group="props">
       <div>{{ props.row.group.name }}</div>
     </template>
@@ -27,6 +29,7 @@
     @updatePlugin="updatePlugin"
     :editPlugin="selected.length && editing ? selected[0] : ''"
   />
+
   <DeleteDialog 
     v-model="showDeleteDialog"
     @submit="deletePlugin"
