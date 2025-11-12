@@ -15,6 +15,7 @@
     @create="pushToJobRoute"
     :hideOpenBtn="true"
     @edit="router.push(`/jobs/${selected[0].id}`)"
+    :loading="isLoading"
   >
     <template #body-cell-experiment="props">
       {{ props.row.experiment.name }}
@@ -108,9 +109,14 @@
 
   const jobs = ref([])
 
+  const isLoading = ref(false)
+
   const tableRef = ref(null)
 
-  async function getJobs(pagination, showDrafts) {
+async function getJobs(pagination, showDrafts) {
+    isLoading.value = true
+    const minLoadTimePromise = new Promise(resolve => setTimeout(resolve, 300));
+
     // default sort by id descending
     if(!pagination.sortBy) {
       pagination.sortBy = 'id'
@@ -119,9 +125,18 @@
     try {
       let res
       if(route.name === 'experimentJobs') {
-        res = await api.getJobs(route.params.id, pagination, showDrafts)
+        [res] = await Promise.all([
+          api.getJobs(route.params.id, pagination, showDrafts),
+          minLoadTimePromise
+        ]);
       } else if(route.name === 'allJobs') {
-        res = await api.getData('jobs', pagination, false)
+        [res] = await Promise.all([
+          api.getData('jobs', pagination, false),
+          minLoadTimePromise
+        ]);
+      } else {
+        await minLoadTimePromise;
+        return;
       }
       console.log('jobs res = ', res)
       jobs.value = res.data.data
@@ -129,7 +144,9 @@
     } catch(err) {
       console.log('err = ', err)
       notify.error(err.response.data.message)
-    } 
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   const showDeleteDialog = ref(false)

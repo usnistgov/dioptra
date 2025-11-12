@@ -13,6 +13,7 @@
     :showToggleDraft="true"
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
     @create="showQueueDialog = true"
+    :loading="isLoading"
   >
     <template #body-cell-hasDraft="props">
       <q-btn
@@ -72,6 +73,7 @@
   const showTagsDialog = ref(false)
 
   const queues = ref([])
+  const isLoading = ref(false)
   const queueToDraft = ref(false)
 
   const tableRef = ref(null)
@@ -90,14 +92,23 @@
   const showDrafts = ref(false)
 
   async function getQueues(pagination, showDrafts) {
+    isLoading.value = true
+    const minLoadTimePromise = new Promise(resolve => setTimeout(resolve, 300)); 
+
     try {
-      const res = await api.getData('queues', pagination, showDrafts);
-      queues.value = res.data.data
-      tableRef.value.updateTotalRows(res.data.totalNumResults)
+      const [res] = await Promise.all([
+        api.getData('queues', pagination, showDrafts),
+        minLoadTimePromise
+      ]);
+        
+      queues.value = res.data.data;
+      tableRef.value.updateTotalRows(res.data.totalNumResults);
     } catch(err) {
-      console.log('err = ', err)
-      notify.error(err.response.data.message)
-    } 
+      console.log('err = ', err);
+      notify.error(err.response.data.message);
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   async function addQueue(name, description, id) {
