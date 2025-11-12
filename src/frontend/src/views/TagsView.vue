@@ -10,6 +10,7 @@
     @request="getTags"
     ref="tableRef"
     @create="showAddDialog = true"
+    :loading="isLoading"
   >
     <template #body-cell-name="props">
       <q-chip color="primary" text-color="white">
@@ -49,6 +50,8 @@
 
   const tags = ref([])
 
+  const isLoading = ref(false)
+
   const tableRef = ref(null)
 
   const columns = [
@@ -59,14 +62,23 @@
   ]
 
   async function getTags(pagination) {
+    isLoading.value = true
+    const minLoadTimePromise = new Promise(resolve => setTimeout(resolve, 300)); 
+
     try {
-      const res = await api.getData('tags', pagination)
-      tags.value = res.data.data
-      tableRef.value.updateTotalRows(res.data.totalNumResults)
+      const [res] = await Promise.all([
+        api.getData('tags', pagination),
+        minLoadTimePromise
+      ]);
+      
+      tags.value = res.data.data;
+      tableRef.value.updateTotalRows(res.data.totalNumResults);
     } catch(err) {
-      console.log('err = ', err)
-      notify.error(err.response.data.message)
-    } 
+      console.log('err = ', err);
+      notify.error(err.response.data.message);
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   async function addTag(name, group) {

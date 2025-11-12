@@ -12,6 +12,7 @@
     :hideToggleDraft="true"
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
     @create="showAddDialog = true"
+    :loading="isLoading"
   >
     <template #body-cell-group="props">
       <div>{{ props.row.group.name }}</div>
@@ -61,6 +62,8 @@
 
   const pluginParameterTypes = ref([])
 
+  const isLoading = ref(false)
+
   const editing = ref(false)
 
   watch(showAddDialog, (newVal) => {
@@ -68,14 +71,23 @@
   })
 
   async function getPluginParameterTypes(pagination) {
+    isLoading.value = true
+    const minLoadTimePromise = new Promise(resolve => setTimeout(resolve, 300)); 
+
     try {
-      const res = await api.getData('pluginParameterTypes', pagination)
-      pluginParameterTypes.value = res.data.data
-      tableRef.value.updateTotalRows(res.data.totalNumResults)
+      const [res] = await Promise.all([
+        api.getData('pluginParameterTypes', pagination),
+        minLoadTimePromise
+      ]);
+        
+      pluginParameterTypes.value = res.data.data;
+      tableRef.value.updateTotalRows(res.data.totalNumResults);
     } catch(err) {
-      console.log('err = ', err)
-      notify.error(err.response.data.message)
-    } 
+      console.log('err = ', err);
+      notify.error(err.response.data.message);
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   const columns = [
