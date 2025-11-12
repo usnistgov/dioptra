@@ -11,6 +11,7 @@
     ref="tableRef"
     :hideCreateBtn="true"
     :hideDeleteBtn="true"
+    :loading="isLoading"
   >
     <template #body-cell-job="props">
       <RouterLink :to="`/jobs/${props.row.job}`" @click.stop>
@@ -88,20 +89,29 @@ watch(showAddEditDialog, (newVal) => {
 
 const artifacts = ref([])
 
+const isLoading = ref(false)
+
 async function getArtifacts(pagination) {
-  // default sort by job id descending
+  isLoading.value = true
+  const minLoadTimePromise = new Promise(resolve => setTimeout(resolve, 300)); 
   if(!pagination.sortBy) {
     pagination.sortBy = 'job'
     pagination.descending = true
   }
   try {
-    const res = await api.getData('artifacts', pagination)
+    const [res] = await Promise.all([
+      api.getData('artifacts', pagination),
+      minLoadTimePromise
+    ]);
+    
     artifacts.value = res.data.data
     tableRef.value.updateTotalRows(res.data.totalNumResults)
   } catch(err) {
-    console.log('err = ', err)
-    notify.error(err.response.data.message)
-  } 
+    console.log('err = ', err);
+    notify.error(err.response.data.message);
+  } finally {
+    isLoading.value = false;
+  }
 }
 
 const columns = [

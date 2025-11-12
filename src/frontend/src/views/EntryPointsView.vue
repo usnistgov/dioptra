@@ -13,6 +13,7 @@
     ref="tableRef"
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
     @create="router.push('/entrypoints/new')"
+    :loading="isLoading"
   >
     <template #body-cell-group="props">
       <div>{{ props.row.group.name }}</div>
@@ -130,6 +131,8 @@
 
   const tableRef = ref(null)
   
+  const isLoading = ref(false)
+
   const entrypoints = ref([])
 
   const showDeleteDialog = ref(false)
@@ -137,14 +140,24 @@
   const editEntrypoint = ref('')
 
   async function getEntrypoints(pagination, showDrafts) {
+    isLoading.value = true
+      
+    const minLoadTimePromise = new Promise(resolve => setTimeout(resolve, 300)); 
+
     try {
-      const res = await api.getData('entrypoints', pagination, showDrafts)
-      entrypoints.value = res.data.data
-      tableRef.value.updateTotalRows(res.data.totalNumResults)
+      const [res] = await Promise.all([
+        api.getData('entrypoints', pagination, showDrafts),
+        minLoadTimePromise
+      ]);
+        
+      entrypoints.value = res.data.data;
+      tableRef.value.updateTotalRows(res.data.totalNumResults);
     } catch(err) {
-      console.log('err = ', err)
-      notify.error(err.response.data.message)
-    } 
+      console.log('err = ', err);
+      notify.error(err.response.data.message);
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   async function deleteEntryPoint() {

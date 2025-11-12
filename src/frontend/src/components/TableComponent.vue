@@ -18,6 +18,7 @@
     @keydown="keydown"
     :rows-per-page-options="props.showAll ? [0] : [5,10,15,20,25,50,0]"
     :hideBottom="props.hideBottom && rows.length > 0"
+    :loading="props.loading"
   >
     <template v-slot:header="props">
       <q-tr :props="props">
@@ -178,6 +179,7 @@
   showAll: Boolean,
   highlightRow: Boolean,
   selection: String,
+  loading: Boolean,
   disabledRowKeys: {
     type: Array,
     default: []

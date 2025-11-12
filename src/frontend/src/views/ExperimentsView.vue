@@ -11,6 +11,7 @@
     ref="tableRef"
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
     @create="router.push('/experiments/new')"
+    :loading="isLoading"
   >
     <!-- <template #body-cell-name="props">
       <RouterLink :to="`/experiments/${props.row.id}/jobs`" @click.stop>
@@ -65,6 +66,8 @@
 
   const experiments = ref([])
 
+  const isLoading = ref(false)
+
   const columns = [
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, },
     { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true },
@@ -73,17 +76,25 @@
   ]
 
   const selected = ref([])
-
   async function getExperiments(pagination) {
+    isLoading.value = true
+    const minLoadTimePromise = new Promise(resolve => setTimeout(resolve, 300)); 
+
     try {
-      const res = await api.getData('experiments', pagination, false)
-      experiments.value = res.data.data
-      tableRef.value.updateTotalRows(res.data.totalNumResults)
+        const [res] = await Promise.all([
+            api.getData('experiments', pagination, false),
+            minLoadTimePromise
+        ]);
+        
+        experiments.value = res.data.data;
+        tableRef.value.updateTotalRows(res.data.totalNumResults);
     } catch(err) {
-      console.log('err = ', err)
-      notify.error(err.response.data.message)
-    } 
-  }
+        console.log('err = ', err);
+        notify.error(err.response.data.message);
+    } finally {
+        isLoading.value = false;
+    }
+}
 
   const tableRef = ref(null)
 

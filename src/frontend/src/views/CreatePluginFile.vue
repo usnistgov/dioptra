@@ -548,7 +548,6 @@
 
   const taskColumns = [
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: false, classes: 'vertical-top', },
-    { name: 'inputParams', label: 'Input Parameters', field: 'inputParams', align: 'right', sortable: false, classes: 'vertical-top', },
     { name: 'outputParams', label: 'Output Parameters', field: 'outputParams', align: 'right', sortable: false, classes: 'vertical-top', },
     { name: 'actions', label: 'Actions', align: 'center', },
   ]
