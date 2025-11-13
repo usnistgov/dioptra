@@ -1,0 +1,72 @@
+artifacts:
+  adversarial_dataset:
+    contents: $adversarial_dataset
+    task:
+      name: TensorflowDatasetArtifactTask
+  adversarial_dataset_sample:
+    contents: $adversarial_dataset
+    task:
+      name: TensorflowDatasetSamplerArtifactTask
+  predictions:
+    contents: $predictions
+    task:
+      name: DataframeArtifactTask
+      args:
+        format: csv
+  metrics:
+    contents: $metrics
+    task:
+      name: DataframeArtifactTask
+      args:
+        format: csv
+
+graph:
+  random_seed:
+    set_random_seed:
+      seed: $seed
+
+  dataset:
+    load_dataset_from_tfds:
+      name: $dataset_name
+      data_dir: $dataset_dir
+      split: $dataset_split
+      normalize_val: $normalize_val
+      image_size: $image_size
+      batch_size: $batch_size
+    dependencies:
+      - random_seed
+
+  adversarial_dataset:
+    ?attack:
+      fast_gradient_method:
+        model: $model_artifact
+        dataset: $dataset.test
+        target: $fgm_target
+        norm: $fgm_norm
+        eps: $fgm_eps
+        eps_step: $fgm_eps_step
+        minimal: $fgm_minimal
+        save_dataset: true
+      apply_adversarial_patch:
+        model: $model_artifact
+        dataset: $dataset.test
+        patch: $patch_artifact
+        rotation_max: $patch_rotation_max
+        scale: $patch_scale
+        save_dataset: true
+    dependencies:
+      - dataset
+
+  predictions:
+    model_predict:
+      model: $model_artifact
+      dataset: $adversarial_dataset
+    dependencies:
+      - adversarial_dataset
+
+  metrics:
+    evaluate_predictions:
+      predictions: $predictions
+      dataset: $adversarial_dataset
+    dependencies:
+      - predictions

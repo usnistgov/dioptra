@@ -47,6 +47,7 @@ from dioptra.restapi.v1.entrypoints.service import (
     EntrypointIdService,
     EntrypointNameService,
     EntrypointService,
+    EntrypointSnapshotIdService,
 )
 from dioptra.restapi.v1.plugin_parameter_types.service import (
     BuiltinPluginParameterTypeService,
@@ -1106,6 +1107,7 @@ class DynamicGlobalParametersService(object):
     @inject
     def __init__(
         self,
+        entrypoint_snapshot_id_service: EntrypointSnapshotIdService,
         task_engine_yaml_service: TaskEngineYamlService,
     ) -> None:
         """Initialize the entrypoint service.
@@ -1115,31 +1117,87 @@ class DynamicGlobalParametersService(object):
         Args:
             task_engine_yaml_service: A TaskEngineYamlService object.
         """
+        self._entrypoint_snapshot_id_service = entrypoint_snapshot_id_service
         self._task_engine_yaml_service = task_engine_yaml_service
+
     def get_params(
         self,
-        task_graph: str,
+        entrypoint_id: int,
+        entrypoint_snapshot_id: int,
         swaps: dict[str,str],
-        **kwargs,
+        logger: BoundLogger | None = None
     ) -> dict[str, Any]:
+
+        entry_point = self._entrypoint_snapshot_id_service.get(
+            entrypoint_id=entrypoint_id,
+            entrypoint_snapshot_id=entrypoint_snapshot_id
+        )
+
+        task_graph = entry_point.task_graph
+
         graph = yaml.safe_load(task_graph)
+
+        # TODO: catch errors on this
         rendered = render(graph, swaps)
+
         vars = set()
         needed_vars = set()
+        used_tasks = set()
+
         for step in rendered:
             vars.add(step) # set of variables produced by steps (i.e. step names)
-            for plugin in rendered[step]:
-                for ref in util.get_references(rendered[step][plugin]):
+            for task in rendered[step]:
+                used_tasks.add(task)
+                for ref in util.get_references(rendered[step][task]):
                     potential_step_name = ref.split('.')[0]
                     if potential_step_name not in vars:
                         needed_vars.add(ref) # if it is not a step output, it must be a global param
         
         topsorted = util.get_sorted_steps(rendered)
-        
+
+        plugin_files = [
+            plugin_plugin_file
+            for entry_point_plugin in entry_point.entry_point_plugins
+            for plugin_plugin_file in entry_point_plugin.plugin.plugin_plugin_files
+        ]
+
+        types = self._entrypoint_snapshot_id_service.get_group_plugin_parameter_types(
+            entry_point.resource.group_id, log=logger
+        )
+
+        print("FILES:", entry_point.entry_point_plugins)
+
+        task_engine_yaml = self._task_engine_yaml_service.build_dict(
+            entry_point=entry_point,
+            plugin_plugin_files=plugin_files,   
+            plugin_parameter_types=types, 
+            logger=logger
+        )
+
+        active_plugin_names = set()
+        print("YAML", task_engine_yaml)
+        for task in task_engine_yaml["tasks"]:
+            print('used_tasks:', used_tasks)
+            print('task:',task)
+            if task in used_tasks:
+                active_plugin_names.add(task_engine_yaml["tasks"][task]["plugin"].split('.')[0])
+
+        active_plugins = []
+
+        for epp in entry_point.entry_point_plugins:
+            #print(epp)
+            if epp.plugin.name in active_plugin_names:
+                active_plugins.append(epp.plugin)
+
+        print(needed_vars)
+        print(topsorted)
+        print(active_plugins)
+        print(active_plugin_names, flush=True)
+
         return {
             "entrypoint_params": list(needed_vars),
             "topological_sort": topsorted,
-            "active_plugins": []
+            "active_plugins": active_plugins
         }
         
 

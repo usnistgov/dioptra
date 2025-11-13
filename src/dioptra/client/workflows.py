@@ -175,12 +175,14 @@ class WorkflowsCollectionClient(CollectionClient[T]):
 
     def task_graph_global_params(
         self,
-        task_graph: str,
+        entrypoint_id: int,
+        entrypoint_snapshot_id: int,
         swaps: dict[str, str]
     ) -> T:
         
         json_ = {
-            "taskGraph": task_graph,
+            "entrypointId": entrypoint_id,
+            "entrypointSnapshotId": entrypoint_snapshot_id,
             "swapChoices": swaps,
         }
         

@@ -227,9 +227,11 @@ class DynamicGlobalParametersEntrypoint(Resource):
         )
 
         parsed_obj = request.parsed_obj  # pyright: ignore
-        task_graph = parsed_obj["task_graph"]
+        entrypoint_id = parsed_obj["entrypoint_id"]
+        entrypoint_snapshot_id = parsed_obj["entrypoint_snapshot_id"]
         swap_choices = parsed_obj["swap_choices"]
         return self._dynamic_global_parameters_service.get_params(
-            task_graph=task_graph,
+            entrypoint_id=entrypoint_id,
+            entrypoint_snapshot_id=entrypoint_snapshot_id,
             swaps=swap_choices
         )
