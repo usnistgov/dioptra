@@ -1,0 +1,271 @@
+[[plugins]]
+path = "plugins/dioptra_optic"
+description = """
+Dioptra OPTIC: Open Perturbation Testing for Image Classfiers"
+A collection of plugin tasks for evaluating evasion attacks and defenses using the adversarial robustness toolbox.
+"""
+  [[plugins.tasks.functions]]
+  filename = "utils.py"
+  name = "set_random_seed"
+  input_params = [ { name = "seed", type = "integer", required = false } ]
+  output_params = [ { name = "seed", type = "integer" } ]
+
+  [[plugins.tasks.functions]]
+  filename = "data.py"
+  name = "load_dataset_from_tfds"
+  input_params = [
+    { name = "name", type = "string", required = true },
+    { name = "split", type = "dataset_split", required = false},
+    { name = "data_dir", type = "string", required = false},
+    { name = "normalize_val", type = "number", required = false},
+    { name = "image_size", type = "image_size", required = false},
+    { name = "batch_size", type = "integer", required = false },
+    { name = "seed", type = "integer", required = false },
+  ]
+  output_params = [
+    { name = "train", type = "tf.data.Dataset" },
+    { name = "val", type = "tf.data.Dataset" },
+    { name = "test", type = "tf.data.Dataset" },
+  ]
+
+  [[plugins.tasks.functions]]
+  filename = "models.py"
+  name = "create_model"
+  input_params = [
+    { name = "model_name", type = "string", required = true },
+    { name = "dataset", type = "tf.data.Dataset", required = true},
+    { name = "model_options", type = "options_dict", required = false},
+    { name = "loss", type = "string", required = false },
+    { name = "loss_options", type = "options_dict", required = false },
+    { name = "optimizer", type = "string", required = false },
+    { name = "learning_rate", type = "number", required = false },
+    { name = "optimizer_options", type = "options_dict", required = false },
+    { name = "metrics", type = "options_dicts", required = false },
+  ]
+  output_params = [ { name = "model", type = "keras.Model" } ]
+
+  [[plugins.tasks.functions]]
+  filename = "models.py"
+  name = "train_model"
+  input_params = [
+    { name = "model", type = "keras.Model", required = true},
+    { name = "train_dataset", type = "tf.data.Dataset", required = true },
+    { name = "val_dataset", type = "tf.data.Dataset", required = false },
+    { name = "epochs", type = "number", required = false },
+    { name = "callbacks", type = "options_dicts", required = false },
+    { name = "fit_options", type = "options_dict", required = false },
+  ]
+  output_params = [ { name = "model", type = "keras.Model" } ]
+
+  [[plugins.tasks.functions]]
+  filename = "models.py"
+  name = "evaluate_model"
+  input_params = [
+    { name = "model", type = "keras.Model", required = true},
+    { name = "dataset", type = "tf.data.Dataset", required = true },
+  ]
+  output_params = [ { name = "metrics", type = "pd.DataFrame" } ]
+
+  [[plugins.tasks.functions]]
+  filename = "models.py"
+  name = "evaluate_predictions"
+  input_params = [
+    { name = "predictions", type = "pd.DataFrame", required = true},
+    { name = "dataset", type = "tf.data.Dataset", required = true },
+    { name = "metrics", type = "options_dicts", required = false },
+  ]
+  output_params = [ { name = "metrics", type = "pd.DataFrame" } ]
+
+  [[plugins.tasks.functions]]
+  filename = "models.py"
+  name = "model_predict"
+  input_params = [
+    { name = "model", type = "keras.Model", required = true},
+    { name = "dataset", type = "tf.data.Dataset", required = true },
+  ]
+  output_params = [ { name = "predictions", type = "pd.DataFrame" } ]
+
+  [[plugins.tasks.functions]]
+  filename = "attacks.py"
+  name = "fast_gradient_method"
+  input_params = [
+    { name = "model", type = "keras.Model", required = true },
+    { name = "dataset", type = "tf.data.Dataset", required = true},
+    { name = "target", type = "integer", required = false },
+    { name = "norm", type = "norm", required = false },
+    { name = "eps", type = "number", required = false },
+    { name = "eps_step", type = "number", required = false },
+    { name = "minimal", type = "boolean", required = false },
+    { name = "save_dataset", type = "boolean", required = false },
+  ]
+  output_params = [ { name = "adversarial_dataset", type = "tf.data.Dataset" } ]
+
+  [[plugins.tasks.functions]]
+  filename = "attacks.py"
+  name = "carlini_wagner"
+  input_params = [
+    { name = "model", type = "keras.Model", required = true },
+    { name = "dataset", type = "tf.data.Dataset", required = true},
+    { name = "target", type = "integer", required = false },
+    { name = "norm", type = "norm", required = false },
+    { name = "confidence", type = "number", required = false },
+    { name = "learning_rate", type = "number", required = false },
+    { name = "max_iter", type = "integer", required = false },
+    { name = "initial_const", type = "number", required = false },
+    { name = "save_dataset", type = "boolean", required = false },
+  ]
+  output_params = [ { name = "adversarial_dataset", type = "tf.data.Dataset" } ]
+
+  [[plugins.tasks.functions]]
+  filename = "attacks.py"
+  name = "create_adversarial_patch"
+  input_params = [
+    { name = "model", type = "keras.Model", required = true},
+    { name = "dataset", type = "tf.data.Dataset", required = true},
+    { name = "target", type = "integer", required = true },
+    { name = "rotation_max", type = "number", required = false },
+    { name = "scale_min", type = "number", required = false },
+    { name = "scale_max", type = "number", required = false },
+    { name = "learning_rate", type = "number", required = false },
+    { name = "max_iter", type = "integer", required = false },
+  ]
+  output_params = [
+    { name = "patch", type = "np.ndarray" },
+    { name = "patch_mask", type = "np.ndarray" },
+  ]
+
+  [[plugins.tasks.functions]]
+  filename = "attacks.py"
+  name = "apply_adversarial_patch"
+  input_params = [
+    { name = "model", type = "keras.Model", required = true},
+    { name = "dataset", type = "tf.data.Dataset", required = true},
+    { name = "patch", type = "np.ndarray", required = true },
+    { name = "rotation_max", type = "number", required = false },
+    { name = "scale", type = "number", required = false },
+    { name = "save_dataset", type = "boolean", required = false },
+  ]
+  output_params = [ { name = "adversarial_dataset", type = "tf.data.Dataset" } ]
+
+  [[plugins.tasks.functions]]
+  filename = "defenses.py"
+  name = "preprocessing"
+  input_params = [
+    { name = "dataset", type = "tf.data.Dataset", required = true},
+    { name = "defense_name", type = "string", required = true },
+    { name = "defense_options", type = "options_dict", required = false },
+    { name = "save_dataset", type = "boolean", required = false },
+  ]
+  output_params = [ { name = "adversarial_dataset", type = "tf.data.Dataset" } ]
+
+[[plugins]]
+path = "plugins/artifacts"
+description = "A collection of basic artifact tasks."
+
+  [[plugins.tasks.artifacts]]
+  filename = "tasks.py"
+  name = "StringArtifactTask"
+  output_params = [ { name = "contents", type = "string" } ]
+
+  [[plugins.tasks.artifacts]]
+  filename = "tasks.py"
+  name = "NumpyArrayArtifactTask"
+  output_params = [ { name = "array", type = "np.ndarray" } ]
+
+  [[plugins.tasks.artifacts]]
+  filename = "tasks.py"
+  name = "DataframeArtifactTask"
+  output_params = [ { name = "dataframe", type = "pd.DataFrame" } ]
+
+  [[plugins.tasks.artifacts]]
+  filename="tasks.py"
+  name = "TensorflowDatasetArtifactTask"
+  output_params = [ { name = "dataset", type = "tf.data.Dataset" } ]
+
+  [[plugins.tasks.artifacts]]
+  filename="tasks.py"
+  name = "TensorflowDatasetSamplerArtifactTask"
+  output_params = [ { name = "dataset", type = "path" } ]
+
+  [[plugins.tasks.artifacts]]
+  filename="tasks.py"
+  name = "KerasModelArtifactTask"
+  output_params = [ { name = "model", type = "keras.Model" } ]
+
+[[plugin_param_types]]
+name = "dataset_split"
+description = """
+A dictionary defining the train/val/test split.
+The keys must be one of (train, val, test).
+The values use the tensorflow datasets notation (see https://www.tensorflow.org/datasets/splits).
+"""
+structure = { mapping = ["string", "string"] }
+
+[[plugin_param_types]]
+name = "image_size"
+description = "Size of an image (rows, cols)"
+structure = { tuple = ["integer", "integer"] }
+
+[[plugin_param_types]]
+name = "options_dict"
+description = "Represents parameters passed as keyword args."
+structure = { mapping = ["string", "any"] }
+
+[[plugin_param_types]]
+name = "options_dicts"
+description = "Represents parameters passed as keyword args."
+structure = { list = "options_dict" }
+
+[[plugin_param_types]]
+name = "keras.Model"
+description = "A keras Model object."
+
+[[plugin_param_types]]
+name = "np.ndarray"
+description = "A numpy ndarray object."
+
+[[plugin_param_types]]
+name = "pd.DataFrame"
+description = "A pandas DataFrame object."
+
+[[plugin_param_types]]
+name = "tf.data.Dataset"
+description = "A tensorflow Dataset object."
+
+[[plugin_param_types]]
+name = "norm"
+description = "l_p norm used to parameterize attacks. typically 0, 1, 2, or inf"
+structure = { union = ["string", "integer"] }
+
+[[plugin_param_types]]
+name = "path"
+description = "A pathlib Path object."
+
+[[entrypoints]]
+path = "entrypoints/attack.yml"
+name = "Evasion Attack"
+description = "Create an adversarial dataset"
+params = [
+  { name = "seed", type = "integer", default_value = "1286012834" },
+  { name = "dataset_name", type = "string", default_value = "mnist" },
+  { name = "dataset_split", type = "mapping", default_value = '{"test": "test"}'},
+  { name = "dataset_dir", type = "string", default_value = '/dioptra/data'},
+  { name = "normalize_val", type = "float", default_value = "255.0" },
+  { name = "batch_size", type = "integer", default_value = "32" },
+  { name = "image_size", type = "list", default_value = "[28, 28]" },
+  { name = "fgm_target", type = "integer", default_value = "0" },
+  { name = "fgm_norm", type = "string", default_value = "inf" },
+  { name = "fgm_eps", type = "float", default_value = "0.3" },
+  { name = "fgm_eps_step", type = "float", default_value = "0.1" },
+  { name = "fgm_minimal", type = "boolean", default_value = "false" },
+  { name = "save_dataset", type = "boolean", default_value = "true" },
+  { name = "patch_rotation_max", type = "float", default_value = "22.5" },
+  { name = "patch_scale", type = "float", default_value = "0.5" },
+
+]
+artifact_params = [
+  { name = "model_artifact", output_params = [ { name = "model", type = "keras.Model" } ] },
+  { name = "patch_artifact", output_params = [ { name = "patch", type = "np.ndarray" } ] },
+]
+plugins = [ "dioptra_optic" ]
+artifact_plugins = [ "artifacts" ]
