@@ -61,7 +61,6 @@ def render_swaps_graph(graph: dict[str, Any], swaps: dict[str, str]) -> dict[str
             else:
                 rendered_graph[step][task_name] = graph[step][task_name]
 
-    print(swaps.keys(), used_swaps, flush=True)
     unused_swaps = swaps.keys() - used_swaps
 
     if len(not_found_swaps) > 0:

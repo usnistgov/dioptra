@@ -72,14 +72,8 @@ def verify_correct_yaml(graph, all_swaps):
         
         rendered_graph = render_swaps_graph(graph, swaps)
 
-        #if (expected_graph != rendered_graph):
-        #    print("expected:", expected_graph)
-        #    print("rendered:", rendered_graph)
-
         assert expected_graph == rendered_graph
         issues.append(validate_swaps_graph(rendered_graph))
-    if len(issues) > 0:
-        print(issues, flush=True)
 
     return issues
 
