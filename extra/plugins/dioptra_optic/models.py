@@ -104,7 +104,7 @@ def create_model(
 
     LOGGER.info(f"initializing {model_name} model", task="create_model")
     model = KERAS_CLASSIFIERS_REGISTRY[model_name](
-        input_shape=dataset_meta.image_size,
+        input_shape=dataset_meta.image_shape,
         classes=dataset_meta.num_classes,
         **model_options,
     )

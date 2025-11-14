@@ -23,11 +23,10 @@ from art.defences.preprocessor import (
     JpegCompression,
     SpatialSmoothing,
 )
-from keras import ops
 
 from dioptra import pyplugs
 
-from .data import create_transformed_dataset
+from .data import DatasetMetadata, create_transformed_dataset
 
 LOGGER = structlog.get_logger()
 
@@ -35,6 +34,7 @@ LOGGER = structlog.get_logger()
 @pyplugs.register
 def preprocessing(
     dataset: tf.data.Dataset,
+    dataset_meta: DatasetMetadata,
     defense_name: str = "spatial_smoothing",
     defense_options: dict[str, Any] | None = None,
     save_dataset: bool = False,
@@ -44,6 +44,7 @@ def preprocessing(
 
     Args:
         dataset: The tf.data.Dataset to apply the defense to.
+        dataset_meta: The dataset's metadata
         defense_name: The name of the defense.
         defense_options: Options passed to the defense as kwargs.
 
@@ -52,7 +53,7 @@ def preprocessing(
     """
     defense_options = defense_options or {}
 
-    clip_values = (0.0, 255.0) if ops.max(next(iter(dataset))[0]) > 1.0 else (0.0, 1.0)
+    clip_values = (0.0, 255.0 / dataset_meta.normalize_val)
 
     method = {
         "spatial_smoothing": SpatialSmoothing,

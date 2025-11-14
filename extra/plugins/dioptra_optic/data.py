@@ -14,6 +14,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcodefrom typing import Literal
+import os
 import uuid
 from dataclasses import dataclass
 from pathlib import Path
@@ -30,9 +31,9 @@ LOGGER = structlog.get_logger()
 
 @dataclass
 class DatasetMetadata:
-    split: dict[Literal["train", "val", "test"]]
+    split: dict[Literal["train", "val", "test"], str]
     normalize_val: float
-    image_size: tuple[int, int]
+    image_shape: tuple[int, int]
     batch_size: int
     num_classes: int
 
@@ -41,7 +42,7 @@ class DatasetMetadata:
 def load_dataset_from_tfds(
     name: str,
     split: dict[Literal["train", "val", "test"], str] | None = None,
-    data_dir: str = "/dioptra/data",
+    data_dir: str = os.environ.get("TFDS_DATA_DIR", "/dioptra/data"),
     normalize_val: float | None = 255.0,
     image_size: tuple[int, int] | None = None,
     batch_size: int = 32,
@@ -191,7 +192,7 @@ def _load_dataset_from_builder(
             ds = ds.map(resize, num_parallel_calls=tf.data.AUTOTUNE)
 
         if name == "train":
-            buffer_size = max(ds.cardinaliy().numpy(), shuffle_buffer_size)
+            buffer_size = max(ds.cardinality().numpy(), shuffle_buffer_size)
             ds = ds.cache()
             ds = ds.shuffle(buffer_size, seed=seed, reshuffle_each_iteration=True)
             ds = ds.batch(batch_size)
@@ -202,10 +203,14 @@ def _load_dataset_from_builder(
 
         dataset[name] = ds
 
+    image_shape = list(builder.info.features["image"].shape)
+    if image_size is not None:
+        image_shape[:2] = image_size
+
     metadata = DatasetMetadata(
         split=split,
         normalize_val=normalize_val or 1.0,
-        image_size=image_size or builder.info.features["image"].shape[:2],
+        image_shape=tuple(image_shape),
         batch_size=batch_size,
         num_classes=num_classes,
     )

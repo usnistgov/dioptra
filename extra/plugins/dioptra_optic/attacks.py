@@ -82,7 +82,11 @@ def fast_gradient_method(
     y_target = (
         None
         if target is None
-        else ops.repeat([ops.one_hot(target, num_classes)], batch_size, axis=0)
+        else ops.repeat(
+            [ops.one_hot(target, dataset_meta.num_classes)],
+            dataset_meta.batch_size,
+            axis=0,
+        )
     )
 
     @tf.numpy_function(Tout=(tf.float32, tf.float32))
@@ -148,7 +152,11 @@ def carlini_wagner(
     y_target = (
         None
         if target is None
-        else ops.repeat([ops.one_hot(target, num_classes)], batch_size, axis=0)
+        else ops.repeat(
+            [ops.one_hot(target, dataset_meta.num_classes)],
+            dataset_meta.batch_size,
+            axis=0,
+        )
     )
 
     @tf.numpy_function(Tout=(tf.float32, tf.float32))
