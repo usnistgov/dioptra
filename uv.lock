@@ -1203,7 +1203,6 @@ pytorch-gpu = [
 tensorflow-cpu = [
     { name = "tensorboard" },
     { name = "tensorflow" },
-    { name = "tensorflow-metal", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
 ]
 tensorflow-gpu = [
     { name = "tensorboard" },
@@ -1355,7 +1354,6 @@ requires-dist = [
     { name = "tensorflow", marker = "extra == 'tensorflow-cpu'", specifier = "==2.16.1" },
     { name = "tensorflow", extras = ["and-cuda"], marker = "platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'tensorflow-gpu'", specifier = "==2.16.1" },
     { name = "tensorflow-datasets", specifier = ">=4.9.9" },
-    { name = "tensorflow-metal", marker = "platform_machine == 'arm64' and sys_platform == 'darwin' and extra == 'tensorflow-cpu'", specifier = "==1.1.0" },
     { name = "tomli", specifier = ">=2.2.0" },
     { name = "torch", marker = "extra == 'pytorch-cpu'", specifier = "==2.2.2", index = "https://download.pytorch.org/whl/cpu", conflict = { package = "dioptra", extra = "pytorch-cpu" } },
     { name = "torch", marker = "extra == 'pytorch-gpu'", specifier = "==2.2.2", index = "https://download.pytorch.org/whl/cu121", conflict = { package = "dioptra", extra = "pytorch-gpu" } },
@@ -6743,18 +6741,6 @@ dependencies = [
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/ec/bf/443fc7c325e59b9016f710bc7f6b0574e73eca7b789a6a6a2054ca77e887/tensorflow_metadata-1.17.2-py3-none-any.whl", hash = "sha256:7da3f8501d6ccfcdbe1a56e975c3624150ce6829048ab9efe62409c362d509b4", size = 31536, upload-time = "2025-06-24T18:11:31.326Z" },
-]
-
-[[package]]
-name = "tensorflow-metal"
-version = "1.1.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "six" },
-    { name = "wheel" },
-]
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/52/56/8373f5751011304a346f07e5423e69f809b626989d2541ae9e816ae7ced2/tensorflow_metal-1.1.0-cp311-cp311-macosx_12_0_arm64.whl", hash = "sha256:1c365669fc9d764edcc1773254a477db7096975b1bff58fb37a11d7b8ca4295f", size = 1424880, upload-time = "2023-09-29T23:36:25.184Z" },
 ]
 
 [[package]]
