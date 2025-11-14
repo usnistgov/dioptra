@@ -100,7 +100,7 @@
               v-if="col.name === 'expand'" 
               size="md" flat dense round  
               @click.stop="props.expand = !props.expand" 
-Thinker:                :icon="props.expand ? 'expand_less' : 'expand_more'" 
+              :icon="props.expand ? 'expand_less' : 'expand_more'" 
             />
           </slot>
         </q-td>
