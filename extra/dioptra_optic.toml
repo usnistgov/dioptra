@@ -35,7 +35,7 @@ A collection of plugin tasks for evaluating evasion attacks and defenses using t
   name = "create_model"
   input_params = [
     { name = "model_name", type = "string", required = true },
-    { name = "dataset_metadata", type = "DatasetMetadata", required = true},
+    { name = "dataset_meta", type = "DatasetMetadata", required = true},
     { name = "model_options", type = "options_dict", required = false},
     { name = "loss", type = "string", required = false },
     { name = "loss_options", type = "options_dict", required = false },
