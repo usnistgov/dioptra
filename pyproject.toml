@@ -195,7 +195,6 @@ examples = [
     "aiohttp>=3.8.0",
     "kaggle>=1.5.0",
     "rich>=13.3.0",
-    "universal_pathlib>=0.0.23",
 ]
 pytorch-cpu = [
     "tensorboard>=2.16.0",
