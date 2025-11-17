@@ -32,8 +32,24 @@
         :class="`${getSelectedColor(props.selected)} cursor-pointer ${highlightRow(props)} ${disableRow(props)}` " 
         :props="props"
         @click="openResource(props); selectResource(props)"
+        @auxclick="onAuxClick($event, props)"
       >
         <q-td v-for="col in props.cols" :key="col.name" :props="props" :style="props.expand ? {'border-bottom': 'none'} : {}">
+          <q-menu
+            v-if="selection !== 'multiple'"
+
+            context-menu
+            @show="props.selected = true"
+          >
+            <q-list dense>
+              <q-item clickable v-close-popup @click="openResource(props)">
+                <q-item-section>Open</q-item-section>
+              </q-item>
+              <q-item clickable v-close-popup @click="openResource(props, true)">
+                <q-item-section>Open In New Tab</q-item-section>
+              </q-item>
+            </q-list>
+          </q-menu>
           <slot v-bind="props" :name="`body-cell-${col.name}`">
             <div v-if="typeof(col.value) === 'boolean'" class="text-body1">
               {{ col.value ? '✅' : 	'❌'}}
@@ -237,14 +253,15 @@
   const showDrafts = defineModel('showDrafts')
 
   function selectResource(tableProps) {
-    if(props.disableSelect || props.selection !== 'multiple') return
+    if(props.disableSelect) return
     else tableProps.selected = !tableProps.selected
   }
 
-  function openResource(tableProps) {
+  function openResource(tableProps, openTab = false) {
+    console.log('openTab = ', openTab)
     if(props.disableSelect || props.selection === 'multiple') return
     tableProps.selected = true
-    emit('edit')
+    emit('edit', openTab)
   }
 
   function deleteResource(tableProps) {
@@ -406,6 +423,12 @@ function truncateString(str, limit) {
   if(!str) return ''
   if(str?.length < limit) return str 
   return str?.slice(0, limit > 3 ? limit - 3 : limit) + '...'; 
+}
+
+function onAuxClick(event, tableProps) {
+  if (event.button === 1) {   // middle mouse button only
+    openResource(tableProps, true)
+  }
 }
 
 </script>

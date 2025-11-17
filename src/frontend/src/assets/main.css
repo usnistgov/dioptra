@@ -146,3 +146,9 @@ legend {
 .body--dark fieldset {
   border-color: #717070;
 }
+
+.link {
+  cursor:pointer;
+  color:blue;
+  text-decoration:underline;
+}
