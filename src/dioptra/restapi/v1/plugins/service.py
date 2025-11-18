@@ -446,11 +446,12 @@ class PluginIdService(object):
             for plugin_file_resource in plugin_file_resources
         ]
         for plugin_file_resource in plugin_file_resources:
-            deleted_resource_lock = models.ResourceLock(
-                resource_lock_type=resource_lock_types.DELETE,
-                resource=plugin_file_resource,
-            )
-            db.session.add(deleted_resource_lock)
+            if not plugin_file_resource.is_deleted:
+                deleted_resource_lock = models.ResourceLock(
+                    resource_lock_type=resource_lock_types.DELETE,
+                    resource=plugin_file_resource,
+                )
+                db.session.add(deleted_resource_lock)
 
         db.session.commit()
 
