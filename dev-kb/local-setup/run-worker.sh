@@ -16,4 +16,4 @@ uv sync --extra worker --extra "${_dioptra_worker_lib}"
 
 source ${DIOPTRA_CODE}/${DIOPTRA_VENV}/bin/activate
 cd ${DIOPTRA_DEPLOY}/workdir
-dioptra-worker-v1 "Configured-as: $_dioptra_worker_lib"
+dioptra-worker-v1 $_dioptra_worker_lib
