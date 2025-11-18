@@ -16,180 +16,267 @@
 .. ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 .. https://creativecommons.org/licenses/by/4.0/legalcode
 
-
 .. _how_to_create_a_plugin:
 
-How-To: Creating New Plugins
-============================
+Create Plugins
+========================
 
-In Dioptra, the core of experiments are plugins, which are effectively collections
-of annotated python files. This guide assumes that Dioptra is already installed and 
-is accessible through the web browser, and that the user is logged in.
+This how-to explains how to build Plugins in Dioptra. 
 
-Adding Annotations to Your Functions
-------------------------------------
-This guide assumes you have files containing functions you want to import into Dioptra.
-Here is an example function.
+There are two types of Plugins:
 
+- **Plugin Function Tasks** - Python functions chained together in entrypoint task graphs 
+- **Plugin Artifact Tasks** - Handle artifact saving and loading
 
-.. code-block:: python
+You will learn how to build both of these Plugin types in the GUI, the Rest API, and through the Python Client. 
 
-   import numpy as np
-
-   def sample_function(a: np.ndarray, b: str) -> str:
-       return f"{b}: {a}"
-
-
-To the top of each file, you should add the following import.
-
-
-.. code-block:: python
-
-   from dioptra import pyplugs
-
-
-Annotate each function that should be made available as a plugin task in Dioptra with:
-
-
-.. code-block:: python
-
-   @pyplugs.register
-
-
-The file containing our original function would now look like this.
-
-
-.. code-block:: python
-
-   from dioptra import pyplugs
-   import numpy as np
-
-   @pyplugs.register
-   def sample_function(a: np.ndarray, b: str) -> str:
-       return f"{b}: {a}"
-
-
-Creating Types For Plugin Task Parameters
------------------------------------------
-
-Input and output parameters types for functions should be registered in Dioptra. By default,
-Dioptra provides the following pre-registered types: ``any``, ``string``, ``integer``, ``number``,
-``boolean``, and ``null``. See :ref:`type_reference` for more details.
-
-If your function uses a type not captured by one of the built-in types, you can register new ones.
-
-1. Click the **Plugin Parameters** tab. 
-
-   .. figure:: /images/plugin-param.png
-      :alt: Figure depicting the Dioptra Plugin Parameters page
-    
-      Dioptra Plugin Parameters page
-
-2. Click **Create**.
-3. Enter a name, select the group that should have access to the type, and enter a description.
-4. If your type is a structure consisting of mappings, lists, and you would like to represent that, 
-   you can do that in the structure field using the type specific. Below is an example of a structure.
-
-   .. code-block:: yaml
-      tuple: [integer, string]
-
-   .. figure:: /images/plugin-param-create.png
-      :alt: Figure depicting the Dioptra Plugin Parameter creation page
-       
-      Dioptra Plugin Parameter creation
-
-5. Click **Confirm** when finished.
-
-Create a Plugin
----------------
-
-1. Navigate to the **Plugins** tab.
-
-   .. figure:: /images/plugin.png
-      :alt: Figure depicting the Dioptra Plugins page
-       
-      Dioptra Plugins page
-
-2. Click **Create**.
-3. Enter a name, select the group that should have access to the plugin, and enter a description.
-
-   .. figure:: /images/plugin-create.png
-      :alt: Figure depicting the Dioptra plugin creation page
-       
-      Dioptra plugin creation page
-
-4. Click **Confirm**.
-5. If successful, you should see the newly created plugin in the list.
-
-   .. figure:: /images/plugin-created.png
-      :alt: Figure depicting the Dioptra Plugins page with newly created plugin
-
-      Dioptra Plugins page with newly created plugin
-
-
-Create a Plugin File
---------------------
-1. Navigate to the **Plugins** page.
-
-   .. figure:: /images/plugin-manage-files.png
-      :alt: Figure depicting the location of the Manage Plugin Files button on the Dioptra Plugins page
-
-      Manage Plugin Files button on the Dioptra Plugins page
-
-2. On the **Plugins** page, click the **Manage Plugin Files** button next to the plugin you would 
-   like to add functions to.
-
-   .. figure:: /images/plugin-files.png
-      :alt: Figure depicting the Dioptra Plugin Files page
-
-      Dioptra Plugins Files page
-
-3. On the **Plugin Files** page, click **Create**.
-4. On the **Create File** page, you can choose to upload a python file by clicking **Upload Python File**,
-   or just use the code box to type python code manually. Ensure that your functions are annotated
-   as described above.
-5. Enter a filename, and description in the appropriate fields.
-
-   .. figure:: /images/plugin-file-create.png
-      :alt: Figure depicting the Dioptra Plugin File Creation page
-
-      Dioptra plugin file creation page
-
-
-Create Tasks for each Function in the File
-******************************************
-
-1. For each plugin task in the file, use the Task Form on the right to enter the definition of that
-   task.
-2. For every input parameter to the task, enter the name of the parameter, select the parameter type,
-   indicate whether it's required, and click the **Add Input Param** button when finished to add that parameter.
-3. For every output parameter to the task, enter the name of the parameter, select the parameter type, and
-   click the **Add Output Param** button when finished to add that parameter.
-
-   .. figure:: /images/plugin-task-params.png
-      :alt: Figure depicting the Dioptra Plugin Task Form
-
-      Dioptra Plugin Task Form 
-
-4. Ensure that the task name matches the function name in the code. 
-5. Indicate whether the function is a function or an artifact task.
+.. seealso::
    
-   .. figure:: /images/plugin-task-create.png
-      :alt: Figure depicting the Dioptra Plugin Task Form with created input and output parameters
+   * :ref:`explanation-experiment-overview` to understand how plugins fit into experiments
+   * :ref:`explanation-plugins` to learn more about how plugins work
 
-      Dioptra Plugin Task Form with created input and output parameters
+Prerequisites
+-------------
+Before proceeding with the how-to, ensure Dioptra has been set up correctly.
+   
+* :ref:`getting-started-running-dioptra` - You need access to a Dioptra deployment
+* :ref:`getting-started-access-gui` - You need to have access to the GUI
 
-6. Click **Add Task**.
-7. If successful, it should appear in the **Plugin Function Tasks** section.
+.. contents:: On this page
+   :local:
+   :depth: 4
 
-   .. figure:: /images/plugin-task-created.png
-      :alt: Figure depicting the Dioptra Plugin File Creation page with tasks registered for the file
 
-      Dioptra Plugin File Creation page with tasks registered for the file
+Create Plugin Function Tasks
+----------------------------
 
-8. After adding all the tasks from the file, click **Save File**. Repeat this process for all plugin files in your plugin.
+Plugin function tasks are chained together in entrypoints to create reusable workflows. 
 
-   .. figure:: /images/plugin-file-created.png
-      :alt: Figure depicting the Dioptra Plugin Files page with newly registered plugin file
+First: Annotate custom Python functions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-      Dioptra Plugin Files page with newly registered plugin file
+Before creating a plugin (functional), you need Python functions you want to register as Plugin function tasks.
+
+.. admonition:: Define plugin function tasks in Python code
+
+   1. **Create one or more Python files with function definitions**. These files will be bundled into a Dioptra Plugin
+
+      .. note:: 
+
+         - Functions *must* be decorated with the ``@Pyplugs`` decorator to be used in entrypoint task graphs. More at :ref:`reference-plugin-task-syntax`
+         - Type annotations help with automatic task registration and are recommended 
+
+      **Example Python file with one Plugin function task**
+
+      .. admonition:: Plugin Function Task 
+         :class: code-panel python
+
+         .. code-block:: python
+
+            # plugin_file_1.py
+
+            from dioptra import pyplugs
+
+            # Helper function
+            def sqr(a: float) -> float:
+               return a*a
+
+            # Plugin function task
+            @pyplugs.register # Required for task registration
+            def my_plugin_task(b: float) -> str:
+               return f"{b} squared is {sqr(b)}"
+
+Once you've created a set of properly annotated Python functions, you can register them within a Dioptra Plugin.
+
+Second: Register Plugin Function Tasks - GUI
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. admonition:: Register plugin function tasks in Dioptra plugin (GUI)
+
+   1. **Create the Plugin Container:**
+      
+      In the GUI, go to the **Plugins tab**. Click **create a new plugin**. Add a *name* and *description*.
+
+      .. figure:: /images/plugin.png
+         :alt: Figure depicting the Dioptra Plugins page
+         :figclass: border-image
+      
+         Dioptra Plugins page
+
+      .. figure:: /images/plugin-create.png
+         :alt: Figure depicting the Dioptra plugin creation page
+         :figclass: border-image
+      
+         Dioptra plugin creation page
+
+   2. **Add a file:**
+      
+      Navigate into your newly created plugin. Click **"Add a file"** and open it.
+
+      .. figure:: /images/plugin-manage-files.png
+         :alt: Figure depicting the location of the Manage Plugin Files button on the Dioptra Plugins page
+         :figclass: border-image
+
+         Manage Plugin Files button
+
+   3. **Customize the file:**
+      
+      **Edit the metadata**. Add a *name* and optionally a *description*.
+
+      .. figure:: /images/plugin-file-create.png
+         :alt: Figure depicting the Dioptra Plugin File Creation page
+         :figclass: border-image
+
+         Dioptra plugin file creation page
+
+   4. **Add Code and Register Tasks:**
+      
+      Upload your code or copy/paste it into the editor. Then, register the tasks:
+      
+      - **Option 1:** Click **"Import Function Tasks"** to auto detect function tasks.
+      - **Option 2:** **Manually register each task**. The Plugin function task Name must match the Python function name exactly. 
+
+      .. figure:: /images/plugin-task-create.png
+         :alt: Figure depicting the Dioptra Plugin Task Form with created input and output parameters
+         :figclass: border-image
+
+         Dioptra Plugin Task Form with created input and output parameters
+
+      .. seealso::
+         Refer to the :ref:`type_reference` guide to learn how to register new **Plugin Parameter Types** for your 
+         Plugin function tasks outside of the built-in types (``any``, ``string``, ``integer``, etc.).
+
+   5. **Confirm Creation:**
+
+      Once added, the task will appear in the tasks list. **Save** your file.
+
+      .. figure:: /images/plugin-task-created.png
+         :alt: Figure depicting the Dioptra Plugin File Creation page with tasks registered for the file
+         :figclass: border-image
+         
+         Dioptra Plugin File Creation page with tasks registered for the file
+
+Alternatively: Register Plugin Function Tasks - REST API
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+It is possible to register plugins programmatically, though it is outside the scope of this guide.
+
+.. admonition:: REST API Info
+   :class: code-panel console
+
+   You can create plugins by sending ``POST`` requests to the ``/api/v1/plugins`` endpoint.
+   
+   .. seealso::
+      See the :ref:`reference-rest-api` for payload definitions and authentication requirements.
+
+
+Create Plugin Artifact Tasks
+----------------------------
+
+**Artifact Plugins** are designed to handle the serialization (saving to disk) and deserialization (loading from disk) of **Artifacts**.
+
+.. seealso::
+   
+   * :ref:`explanation-artifacts` to learn about artifacts
+
+First: Create Artifact Classes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Artifacts are defined by **Python Classes** that inherit from ``ArtifactTaskInterface``.
+
+.. admonition:: Define plugin artifact tasks in Python code
+
+   1. **Create a Python file**.
+   2. **Import dependencies**: You must import ``ArtifactTaskInterface`` from ``dioptra.sdk.api.artifact``.
+   3. **Define the class**: Create a class that inherits from ``ArtifactTaskInterface``.
+   4. **Implement required methods**:
+      
+      - ``serialize``: Logic to convert an in-memory object (e.g., a NumPy array) into a file on disk.
+      - ``deserialize``: Logic to read the file back into an object.
+      
+      .. note::
+         You may optionally define a ``validation`` method to validate the argument types for these methods.
+
+   **Example Artifact Plugin File**
+
+   .. admonition:: Python 
+      :class: code-panel python
+
+      .. code-block:: python
+
+         from __future__ import annotations
+         from pathlib import Path
+         from typing import Any
+         import numpy as np
+         from dioptra.sdk.api.artifact import ArtifactTaskInterface
+
+         # Defining serialize and deserialize methods for ArtifactTask
+         # Method is required
+         class NumpyArrayArtifactTask(ArtifactTaskInterface):
+             @staticmethod
+             def serialize(working_dir: Path, name: str, contents: np.ndarray, **kwargs) -> Path:
+                 path = (working_dir / name).with_suffix(".npy")
+                 np.save(path, contents, allow_pickle=False)
+                 return path
+
+             @staticmethod
+             def deserialize(working_dir: Path, path: str, **kwargs) -> np.ndarray:
+                 return np.load(working_dir / path)
+
+             @staticmethod
+             def validation() -> dict[str, Any] | None:
+                 return None
+
+Second: Register Plugin Artifact Tasks - GUI
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Once your class is defined, you can register it in Dioptra using the GUI.
+
+.. admonition:: Register plugin artifact tasks in Dioptra plugin (GUI)
+
+   1. **Create the Plugin Container:**
+      
+      Navigate to the **Plugins** tab and click **Create**. Enter a name (e.g., "artifact_plugin") and description, then click **Confirm**.
+
+      .. figure:: /images/plugin-create.png
+         :alt: Figure depicting the Dioptra plugin creation page
+         :figclass: border-image
+      
+         Dioptra plugin creation page
+
+   2. **Add the Python File:**
+      
+      Click the **Manage Plugin Files** button next to your new plugin. Click **Create**, enter a filename, and paste the Artifact Class code (from the step above) into the editor.
+
+      .. figure:: /images/plugin-file-create.png
+         :alt: Figure depicting the Dioptra Plugin File Creation page
+         :figclass: border-image
+
+         Dioptra plugin file creation page
+
+   3. **Register the Artifact Task:**
+      
+      On the right-hand side of the file creation page, locate the **Task Form**. You must manually register the artifact task.
+
+      - **Task Name:** Must match the **Class Name** exactly (e.g., ``NumpyArrayArtifactTask``).
+      - **Task Type:** Ensure you select "Artifact"
+      - **Output Params:** For an Artifact Task, the "Output Parameter" is the **Type** of object produced by the ``deserialize`` method (e.g., ``NumpyArray``).
+
+      .. figure:: /images/plugin-task-params.png
+         :alt: Figure depicting the Dioptra Plugin Task Form
+         :figclass: border-image
+
+         Dioptra Plugin Task Form. Ensure the Task Name matches your Python Class name.
+
+      - Click **Add Task**
+   4. **Save:**
+      
+      Register any additional artifact tasks, then click **Save File** to finalize the changes.
+
+You can now attach these plugins to entrypoints and use plugin function tasks and plugin artifact tasks 
+in your task graphs. 
+
+.. seealso::
+   
+   * :ref:`tutorial-1-part-4` to see how artifacts can be used in a basic data science workflow
+   * :ref:`entrypoints-how-to` to learn how to use plugin function tasks and artifact plugin tasks in entrypoints

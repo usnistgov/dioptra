@@ -45,6 +45,13 @@ Email us: dioptra@nist.gov
 .. toctree::
    :hidden:
    :maxdepth: -1
+   :caption: How-Tos
+
+   how-to/index.rst
+
+.. toctree::
+   :hidden:
+   :maxdepth: -1
    :caption: Getting Started
 
    getting-started/building-the-containers
