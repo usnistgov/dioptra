@@ -32,7 +32,7 @@ The essential steps are:
 3. Create an Entrypoint workflow that sequences specific tasks  
 4. Run the Entrypoint as a Job within an Experiment  
 
-.. figure:: _static/screenshots/dioptra_workflow.png
+.. figure:: ../../images/dioptra_workflow.png
    :alt: Diagram showing steps needed to run Python functions in Dioptra.
    :figclass: border-image clickable-image
 

@@ -15,7 +15,7 @@
 .. ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 .. https://creativecommons.org/licenses/by/4.0/legalcode
 
-.. _explanation-experiment-overview:
+.. _experiment-overview-explanation:
 
 
 Experiment Overview
@@ -23,7 +23,7 @@ Experiment Overview
 
 Overview of how all high level components fit into a Dioptra experiment. 
 
-.. figure:: ../images/figures/dioptra_workflow.png
+.. figure:: ../images/dioptra_workflow.png
    :alt: Diagram showing steps needed to run Python functions in Dioptra.
    :figclass: border-image clickable-image
 

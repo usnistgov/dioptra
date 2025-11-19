@@ -15,24 +15,21 @@
 .. ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 .. https://creativecommons.org/licenses/by/4.0/legalcode
 
-.. _explanation-dioptra-components:
-
 Dioptra Components
 ================
 
-.. container:: wide-lightly-shaded
 
+Explaining key components of Dioptra.
 
-   .. toctree::
-      :maxdepth: 2
-      :caption: Table of Contents
+.. toctree::
+   :maxdepth: 1
 
-      queues-workers-explanation 
-      users-groups-explanation
-      param-types-explanation 
-      plugin-explanation
-      entrypoints-explanation
-      task-graph-explanation 
-      artifacts-explanation 
-      metrics-explanation
-      experiments-jobs-explanation 
+   plugin-explanation
+
+To be created:
+^^^^^^^^^^^^^^
+
+- Entrypoints
+- Experiments
+- Types
+- etc

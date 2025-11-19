@@ -45,6 +45,14 @@ Email us: dioptra@nist.gov
 .. toctree::
    :hidden:
    :maxdepth: -1
+   :caption: Learn Dioptra 
+
+   explanation/experiment-overview-explanation
+   explanation/components/index.rst
+
+.. toctree::
+   :hidden:
+   :maxdepth: -1
    :caption: How-Tos
 
    how-to/index.rst
@@ -77,9 +85,10 @@ Email us: dioptra@nist.gov
 
 .. toctree::
    :hidden:
-   :maxdepth: -1
+   :maxdepth: 2
    :caption: Reference
 
+   reference/dioptra-components/index.rst
    reference/task-engine-reference
    reference/resource-import-reference
    reference/resource-search-language-reference
