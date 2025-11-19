@@ -200,11 +200,15 @@ class ValidateEntrypointEndpoint(Resource):
             log=log,
         )
 
+
 @api.route("/dynamicGlobalParameters")
 class DynamicGlobalParametersEntrypoint(Resource):
     @inject
     def __init__(
-        self, dynamic_global_parameters_service: DynamicGlobalParametersService, *args, **kwargs
+        self,
+        dynamic_global_parameters_service: DynamicGlobalParametersService,
+        *args,
+        **kwargs,
     ) -> None:
         """Initialize the workflow resource.
 
@@ -233,5 +237,6 @@ class DynamicGlobalParametersEntrypoint(Resource):
         return self._dynamic_global_parameters_service.get_params(
             entrypoint_id=entrypoint_id,
             entrypoint_snapshot_id=entrypoint_snapshot_id,
-            swaps=swap_choices
+            swaps=swap_choices,
+            logger=log
         )

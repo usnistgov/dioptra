@@ -38,6 +38,7 @@ from dioptra.restapi.errors import (
     DraftDoesNotExistError,
     DraftResourceModificationsCommitError,
     EntityDoesNotExistError,
+    EntrypointSwapsRenderError,
     GitError,
     ImportFailedError,
     InvalidYamlError,
@@ -71,8 +72,9 @@ from dioptra.restapi.v1.shared.resource_service import (
 from dioptra.restapi.v1.shared.signature_analysis import get_plugin_signatures
 from dioptra.restapi.v1.shared.task_engine_yaml.service import TaskEngineYamlService
 from dioptra.sdk.utilities.paths import set_cwd
-from dioptra.task_engine.issues import IssueSeverity, IssueType, ValidationIssue
 from dioptra.task_engine import util
+from dioptra.task_engine.issues import IssueSeverity, IssueType, ValidationIssue
+
 from .lib import views
 from .lib.clone_git_repository import clone_git_repository
 from .schema import (
@@ -1103,6 +1105,7 @@ class ValidateEntrypointService(object):
 
         return {"schema_valid": True, "schema_issues": []}
 
+
 class DynamicGlobalParametersService(object):
     @inject
     def __init__(
@@ -1124,35 +1127,36 @@ class DynamicGlobalParametersService(object):
         self,
         entrypoint_id: int,
         entrypoint_snapshot_id: int,
-        swaps: dict[str,str],
-        logger: BoundLogger | None = None
+        swaps: dict[str, str],
+        logger: BoundLogger | None = None,
     ) -> dict[str, Any]:
-
         entry_point = self._entrypoint_snapshot_id_service.get(
-            entrypoint_id=entrypoint_id,
-            entrypoint_snapshot_id=entrypoint_snapshot_id
+            entrypoint_id=entrypoint_id, entrypoint_snapshot_id=entrypoint_snapshot_id
         )
 
         task_graph = entry_point.task_graph
 
         graph = yaml.safe_load(task_graph)
 
-        # TODO: catch errors on this
-        rendered = render(graph, swaps)
+        try:
+            rendered = render_swaps_graph(graph, swaps)
+        except Exception as e:
+            raise EntrypointSwapsRenderError(str(e)) from e
 
-        vars = set()
+        vars = rendered.keys()
         needed_vars = set()
         used_tasks = set()
 
         for step in rendered:
-            vars.add(step) # set of variables produced by steps (i.e. step names)
             for task in rendered[step]:
                 used_tasks.add(task)
                 for ref in util.get_references(rendered[step][task]):
-                    potential_step_name = ref.split('.')[0]
+                    potential_step_name = ref.split(".")[0]
                     if potential_step_name not in vars:
-                        needed_vars.add(ref) # if it is not a step output, it must be a global param
-        
+                        needed_vars.add(
+                            ref
+                        )  # if it is not a step output, it must be a global param
+
         topsorted = util.get_sorted_steps(rendered)
 
         plugin_files = [
@@ -1165,55 +1169,84 @@ class DynamicGlobalParametersService(object):
             entry_point.resource.group_id, log=logger
         )
 
-        print("FILES:", entry_point.entry_point_plugins)
-
         task_engine_yaml = self._task_engine_yaml_service.build_dict(
             entry_point=entry_point,
-            plugin_plugin_files=plugin_files,   
-            plugin_parameter_types=types, 
-            logger=logger
+            plugin_plugin_files=plugin_files,
+            plugin_parameter_types=types,
+            logger=logger,
         )
 
         active_plugin_names = set()
-        print("YAML", task_engine_yaml)
+
         for task in task_engine_yaml["tasks"]:
-            print('used_tasks:', used_tasks)
-            print('task:',task)
             if task in used_tasks:
-                active_plugin_names.add(task_engine_yaml["tasks"][task]["plugin"].split('.')[0])
+                active_plugin_names.add(
+                    task_engine_yaml["tasks"][task]["plugin"].split(".")[0]
+                )
 
         active_plugins = []
 
         for epp in entry_point.entry_point_plugins:
-            #print(epp)
+            # print(epp)
             if epp.plugin.name in active_plugin_names:
                 active_plugins.append(epp.plugin)
-
-        print(needed_vars)
-        print(topsorted)
-        print(active_plugins)
-        print(active_plugin_names, flush=True)
 
         return {
             "entrypoint_params": list(needed_vars),
             "topological_sort": topsorted,
-            "active_plugins": active_plugins
+            "active_plugins": active_plugins,
         }
-        
 
-def render(graph, swaps):
-    rendered_graph = {}
+
+def render_swaps_graph(graph: dict[str, Any], swaps: dict[str, str]) -> dict[str, Any]:
+    """
+    Renders a task graph given a graph containing swaps and dictionary
+    specifying the swap choices.
+
+    Args:
+        graph: A dictionary object representing a task graph.
+        swaps: A dictionary mapping swap names to the selected task.
+
+    Returns:
+        The rendered graph using the selected swaps.
+    """
+    rendered_graph: dict[str, Any] = {}
+
+    used_swaps = set()
+    not_found_swaps = set()
+    not_found_tasks = set()
+
     for step, task in graph.items():
-        if step.startswith("_"):
-            continue
         rendered_graph[step] = {}
-
         for task_name, task_defn in task.items():
             if task_name.startswith("?"):
-                task_name = swaps[task_name[1:]]  # could raise swap not specified error
-                swap = task_defn[task_name]
-                rendered_graph[step][task_name] = swap
+                task_name = task_name[1:]
+
+                try:
+                    swapped_name = swaps[task_name]
+                    used_swaps.add(task_name)
+
+                    try:
+                        swap = task_defn[swapped_name]
+                        rendered_graph[step][swapped_name] = swap
+                    except KeyError:
+                        not_found_tasks.add(swapped_name)
+                except KeyError:
+                    not_found_swaps.add(task_name)
             else:
                 rendered_graph[step][task_name] = graph[step][task_name]
-    return rendered_graph
 
+    unused_swaps = swaps.keys() - used_swaps
+
+    if len(not_found_swaps) > 0:
+        raise Exception(f"Swaps {not_found_swaps} needed by graph but not provided.")
+
+    if len(unused_swaps) > 0:
+        raise Exception(f"Swaps {unused_swaps} were provided but not used.")
+
+    if len(not_found_tasks) > 0:
+        raise Exception(
+            f"Tasks {not_found_tasks} requested for swaps but were not found."
+        )
+
+    return rendered_graph

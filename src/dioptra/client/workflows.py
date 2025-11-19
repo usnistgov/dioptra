@@ -174,16 +174,12 @@ class WorkflowsCollectionClient(CollectionClient[T]):
         return self._session.post(self.url, VALIDATE_ENTRYPOINT, json_=json_)
 
     def task_graph_global_params(
-        self,
-        entrypoint_id: int,
-        entrypoint_snapshot_id: int,
-        swaps: dict[str, str]
+        self, entrypoint_id: int, entrypoint_snapshot_id: int, swaps: dict[str, str]
     ) -> T:
-        
         json_ = {
             "entrypointId": entrypoint_id,
             "entrypointSnapshotId": entrypoint_snapshot_id,
             "swapChoices": swaps,
         }
-        
+
         return self._session.post(self.url, DYNAMIC_GLOBAL_PARAMETERS, json_=json_)
