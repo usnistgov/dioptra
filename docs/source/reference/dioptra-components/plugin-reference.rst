@@ -17,12 +17,113 @@
 
 .. _plugins-reference:
 
-Plugins
-============================
-
-Reference material for Dioptra plugins. 
+Plugins Reference
+=================
 
 .. seealso::
    
-   * :ref:`What are Plugins? <plugins-explanation>` - Explanation of Plugins 
-   * :ref:`How to create a plugin <how_to_create_a_plugin>` - Create plugins in the user interface
+   * :ref:`What are Plugins? <plugins-explanation>` 
+   * :ref:`How to create a plugin <how_to_create_a_plugin>`
+
+.. contents:: Table of Contents
+   :local:
+   :depth: 2
+
+Module Requirements
+-------------------
+
+**Plugin Package**
+
+* **Naming:** Valid Python module name (alphanumeric, underscores). Unique.
+* **Structure:** Directory containing ``.py`` files. ``__init__.py`` not required.
+
+**Plugin Files**
+
+* **Extension:** ``.py``
+* **Naming:** Valid Python module name.
+* **Content:** Function Task definitions OR Artifact Task definitions.
+
+.. _ref-plugin-function-tasks:
+
+Plugin Function Tasks
+---------------------
+
+**Syntax**
+
+.. code-block:: python
+
+    from dioptra import pyplugs
+
+    @pyplugs.register
+    def task_name(param_1: type, param_2: type) -> return_type:
+        ...
+
+**Requirements**
+
+* **Decorator:** ``@pyplugs.register`` required.
+* **Type Hints:** Recommended for auto-detection of parameters.
+
+**Registration Schema**
+
+* **Task Name:** String. Must match Python function name.
+* **Input Parameters:**
+    * **Name:** String. Matches argument name.
+    * **Type:** Plugin Parameter Type (e.g., ``float``).
+
+* **Output Parameters:**
+    * **Name:** String.
+    * **Type:** Dioptra Type.
+
+.. _ref-plugin-artifact-tasks:
+
+Plugin Artifact Tasks
+---------------------
+
+**Syntax**
+
+.. code-block:: python
+
+    from typing import Any
+    from pathlib import Path
+    from dioptra.sdk.api.artifact import ArtifactTaskInterface
+
+    class MyArtifactTask(ArtifactTaskInterface):
+        @staticmethod
+        def serialize(working_dir: Path, name: str, contents: Any, **kwargs) -> Path:
+            ...
+        
+        @staticmethod
+        def deserialize(working_dir: Path, path: str, **kwargs) -> Any:
+            ...
+
+**Requirements**
+
+* **Inheritance:** Must inherit from ``dioptra.sdk.api.artifact.ArtifactTaskInterface``.
+* **Methods:** ``serialize`` and ``deserialize`` are required static methods.
+
+**Method Signatures**
+
+* **serialize**
+    
+    .. code-block:: python
+
+       (working_dir: Path, name: str, contents: Any, **kwargs) -> Path
+
+* **deserialize**
+    
+    .. code-block:: python
+
+       (working_dir: Path, path: str, **kwargs) -> Any
+
+* **validation** (Optional)
+    
+    .. code-block:: python
+
+       () -> dict[str, Any] | None
+
+**Registration Schema**
+
+* **Task Name:** String. Must match Python Class name.
+* **Output Parameters:**
+    * **Name:** String.
+    * **Type:** Dioptra Type (Matches ``deserialize`` return type).
