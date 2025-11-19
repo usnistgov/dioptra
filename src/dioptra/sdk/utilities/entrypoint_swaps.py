@@ -30,7 +30,6 @@ def render_swaps_graph(graph: dict[str, Any], swaps: dict[str, str]) -> dict[str
 
     Returns:
         The rendered graph using the selected swaps.
-
     """
     rendered_graph: dict[str, Any] = {}
 
@@ -39,9 +38,6 @@ def render_swaps_graph(graph: dict[str, Any], swaps: dict[str, str]) -> dict[str
     not_found_tasks = set()
 
     for step, task in graph.items():
-        if step.startswith("_"):
-            continue
-
         rendered_graph[step] = {}
         for task_name, task_defn in task.items():
             if task_name.startswith("?"):

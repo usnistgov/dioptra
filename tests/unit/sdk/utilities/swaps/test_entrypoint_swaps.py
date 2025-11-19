@@ -15,7 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from pathlib import Path
-from dioptra.sdk.utilities.swaps import validate_swaps_graph, render_swaps_graph
+from dioptra.sdk.utilities.entrypoint_swaps import validate_swaps_graph, render_swaps_graph
 import yaml
 import itertools
 import pytest
@@ -81,7 +81,6 @@ def verify_correct_yaml(graph, all_swaps):
     "yaml_file",
     [
         'dataset_transformer.yml',
-        'dataset_transformer_with_anchors.yml'
     ],
 )
 def test_swap_render(yaml_file: str):
@@ -95,8 +94,31 @@ def test_swap_render(yaml_file: str):
 @pytest.mark.parametrize(
     "yaml_file",
     [
+        'no_swaps_test.yml'
+    ]
+)
+def test_without_swaps(yaml_file: str):
+    with (Path(__file__).absolute().parent / FILES_LOCATION / yaml_file).open('r') as f:
+        data = f.read()
+    graph = yaml.safe_load(data)
+
+    rendered_graph = render_swaps_graph(graph, {})
+    assert rendered_graph == graph
+
+
+    extra = set(["load", "transform_data", "extra"])
+    with pytest.raises(Exception, match=f"Swaps {extra} were provided but not used."):
+        rendered_graph = render_swaps_graph(graph, {
+            "load": "passthrough",
+            "transform_data": "attack_patch",
+            "extra": "function_name"
+        })
+
+
+@pytest.mark.parametrize(
+    "yaml_file",
+    [
         'dataset_transformer.yml',
-        'dataset_transformer_with_anchors.yml'
     ],
 )
 def test_swap_errors(yaml_file: str): 
