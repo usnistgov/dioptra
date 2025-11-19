@@ -55,10 +55,30 @@ swap_entrypoints = {
     "swap_test.yml" : {
         "name": "swap_test",
         "params": ["global1", "global3", "global6", "global9", "global12"]
+    },
+    "no_swap_test.yml": {
+        "name": "no_swap_test",
+        "params": ["global1", "global6", "global12"]
     }
 }
 
 test_cases_for_file = {}
+
+test_cases_for_file["no_swap_test"] = [
+    {
+        "swaps": {},
+        "globals": [
+            "global1", "global6", "global12"
+        ],
+        "sort_order": [
+            ["step1", "step3", "step4", "step2"],
+        ],
+        "active_plugins": [
+            "plugin1", "plugin9", "plugin13"
+        ],
+    },
+]
+
 test_cases_for_file["swap_test"] = [
     {
         "swaps": {
@@ -258,11 +278,14 @@ def test_entrypoint_swaps_endpoint(
             for plugin in evaluated["activePlugins"]:
                 assert plugin['name'] in expected_active_plugins
 
-            forgot_swaps = dioptra_client.workflows.task_graph_global_params(
-                entrypoint_id=registered_swap_entrypoints[file]["id"],
-                entrypoint_snapshot_id=registered_swap_entrypoints[file]["snapshot"],
-                swaps={}
-            )
+            if swaps != {}:
+                # this test is N/A if the entrypoint has no swaps
+                forgot_swaps = dioptra_client.workflows.task_graph_global_params(
+                    entrypoint_id=registered_swap_entrypoints[file]["id"],
+                    entrypoint_snapshot_id=registered_swap_entrypoints[file]["snapshot"],
+                    swaps={}
+                )
+                assert forgot_swaps.status_code == HTTPStatus.BAD_REQUEST
 
             too_many = swaps
             too_many['extra'] = 'task10'
@@ -273,6 +296,8 @@ def test_entrypoint_swaps_endpoint(
                 swaps=swaps
             )
 
+            assert too_many_swaps.status_code == HTTPStatus.BAD_REQUEST
+
             imaginary = swaps
             imaginary['step3_choice'] = "doesnt_exist2"
 
@@ -282,6 +307,4 @@ def test_entrypoint_swaps_endpoint(
                 swaps=swaps
             )
 
-            assert forgot_swaps.status_code == HTTPStatus.BAD_REQUEST
-            assert too_many_swaps.status_code == HTTPStatus.BAD_REQUEST
             assert imaginary_tasks.status_code == HTTPStatus.BAD_REQUEST
