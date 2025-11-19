@@ -238,5 +238,5 @@ class DynamicGlobalParametersEntrypoint(Resource):
             entrypoint_id=entrypoint_id,
             entrypoint_snapshot_id=entrypoint_snapshot_id,
             swaps=swap_choices,
-            logger=log
+            logger=log,
         )
