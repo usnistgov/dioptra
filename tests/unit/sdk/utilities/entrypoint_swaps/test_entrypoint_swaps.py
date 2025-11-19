@@ -20,7 +20,7 @@ import yaml
 import itertools
 import pytest
 
-FILES_LOCATION = "swaps_files"
+FILES_LOCATION = "entrypoint_swaps_files"
 
 available_swaps = {
     "output/output_load_defend.yml": {
