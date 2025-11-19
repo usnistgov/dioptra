@@ -552,6 +552,13 @@ class UserPasswordError(DioptraError):
         super().__init__(message)
 
 
+class EntrypointSwapsRenderError(DioptraError):
+    """Password Error."""
+
+    def __init__(self, message: str):
+        super().__init__(message)
+
+
 class JobStoreError(DioptraError):
     """JobStoreError Error."""
 
@@ -882,6 +889,11 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
     def handle_user_password_error(error: UserPasswordError):
         log.debug(error.to_message())
         return error_result(error, http.HTTPStatus.UNAUTHORIZED, {})
+
+    @api.errorhandler(EntrypointSwapsRenderError)
+    def handle_entrypoint_swaps_error(error: EntrypointSwapsRenderError):
+        log.debug(error.to_message())
+        return error_result(error, http.HTTPStatus.BAD_REQUEST, {})
 
     @api.errorhandler(JobStoreError)
     def handle_mlflow_error(error: JobStoreError):
