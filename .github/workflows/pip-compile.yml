@@ -102,7 +102,7 @@ jobs:
           python3 -m tox run -e py311-win-${{ matrix.architecture }}-${{ matrix.requirements }}
 
       - name: archive the requirements file
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: py${{ matrix.python-version }}-${{ matrix.os }}-${{ matrix.architecture }}-${{ matrix.requirements }}
           path: venvs
@@ -155,7 +155,7 @@ jobs:
           python3 -m tox run -e py311-linux-${{ matrix.architecture }}-${{ matrix.requirements }}
 
       - name: archive the requirements file
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: py${{ matrix.python-version }}-${{ matrix.os }}-${{ matrix.architecture }}-${{ matrix.requirements }}
           path: venvs
@@ -206,7 +206,7 @@ jobs:
           pull: true
 
       - name: archive the requirements file
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: requirements-${{ matrix.tox-testenv }}
           path: /image/app/venvs
@@ -235,7 +235,7 @@ jobs:
           mv artifacts/**/*.txt venvs
 
       - name: archive the consolidated requirements files
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: requirements-files
           path: venvs
