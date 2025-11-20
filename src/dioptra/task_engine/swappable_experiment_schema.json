@@ -443,7 +443,7 @@
                 ]
             },
             "minProperties": 1,
-            "maxProperties": 2
+            "maxProperties": 1
         },
         "swap_keyword_invocation": {
             "title": "Keyword invocation",
@@ -459,7 +459,7 @@
                 "type": "object"
             },
             "minProperties": 1,
-            "maxProperties": 2
+            "maxProperties": 1
         },
         "swap_mixed_invocation": {
             "title": "Mixed position/keyword invocation",
