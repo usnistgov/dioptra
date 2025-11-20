@@ -20,110 +20,167 @@
 Plugins Reference
 =================
 
-.. seealso::
-   
-   * :ref:`What are Plugins? <plugins-explanation>` 
-   * :ref:`How to create a plugin <how_to_create_a_plugin>`
 
 .. contents:: Table of Contents
    :local:
    :depth: 2
 
-Module Requirements
--------------------
+Plugin Definition
+-----------------
 
-**Plugin Package**
+A **Plugin** in Dioptra acts as a logical container for code, functionally similar to a standard Python package.
 
-* **Naming:** Valid Python module name (alphanumeric, underscores). Unique.
-* **Structure:** Directory containing ``.py`` files. ``__init__.py`` not required.
 
-**Plugin Files**
 
-* **Extension:** ``.py``
-* **Naming:** Valid Python module name.
-* **Content:** Function Task definitions OR Artifact Task definitions.
+**Requirements**
+
+* **Naming:** Must be a valid Python module name (alphanumeric, underscores only). Must be unique within the Dioptra deployment.
+* **Structure:** A flat directory containing ``.py`` files. 
+* **Init File:** Unlike standard Python packages, an ``__init__.py`` file is **not** required.
+* **Content:** Files may contain **Function Task** definitions or **Artifact Task** definitions.
 
 .. _ref-plugin-function-tasks:
 
 Plugin Function Tasks
 ---------------------
 
-**Syntax**
+Function tasks are the primary computational units of an experiment.
+
+Code Syntax
+~~~~~~~~~~~
+
+To define a function task, you must write a standard Python function and decorate it with ``@pyplugs.register``.
 
 .. code-block:: python
 
     from dioptra import pyplugs
 
+    # The decorator is required for Dioptra to recognize the task
     @pyplugs.register
-    def task_name(param_1: type, param_2: type) -> return_type:
-        ...
+    def task_name(param_1: float, param_2: int = 10) -> float:
+        return param_1 * param_2
 
-**Requirements**
+**Type Hints**
+Type hints are strongly recommended. Dioptra uses them to automatically populate parameter types during registration imports.
 
-* **Decorator:** ``@pyplugs.register`` required.
-* **Type Hints:** Recommended for auto-detection of parameters.
+Registration Configuration
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**Registration Schema**
+When registering a function task (via API or GUI), the configuration must match the code logic.
 
-* **Task Name:** String. Must match Python function name.
-* **Input Parameters:**
-    * **Name:** String. Matches argument name.
-    * **Type:** Plugin Parameter Type (e.g., ``float``).
+**Parameter Mapping**
 
-* **Output Parameters:**
-    * **Name:** String.
-    * **Type:** Dioptra Type.
+* **Input Names:** The registered input parameter names must match the Python function argument names exactly.
+* **Order:** [INSERT EXPLANATION ABOUT POSITIONAL VS KEYWORD ARGUMENTS HERE]
+* **\*Args / \*\*Kwargs:** [INSERT EXPLANATION ABOUT HOW VARIABLE ARGUMENTS ARE HANDLED HERE]
+
+**Return Values & Multiple Outputs**
+A function task may return a single value or multiple values (via a tuple or list).
+
+
+
+* **Single Return:** Maps to a single registered Output Parameter.
+* **Iterable Return (Tuple/List):** If the function returns an iterable, Dioptra maps the values to the registered Output Parameters in order (Index 0 to Output 1, Index 1 to Output 2).
+* **Partial Mapping:** If fewer output parameters are registered than values returned, Dioptra discards the excess trailing values.
 
 .. _ref-plugin-artifact-tasks:
 
 Plugin Artifact Tasks
 ---------------------
 
-**Syntax**
+Artifact tasks handle the serialization and deserialization of complex objects.
+
+Code Syntax
+~~~~~~~~~~~
+
+Artifact tasks must be defined as classes that inherit from the ``ArtifactTaskInterface``.
+
+**Parent Class Definition**
+
+    .. autoclass:: dioptra.sdk.api.artifact.ArtifactTaskInterface
+        :members:
+
+**Example Implementation**
+    
+.. admonition:: Artifact Handler Class Definition Example 
+   :class: code-panel python
+
+   .. code-block:: python
+
+      from __future__ import annotations
+      from pathlib import Path
+      from typing import Any
+      import numpy as np
+      from dioptra.sdk.api.artifact import ArtifactTaskInterface
+
+      class NumpyArrayArtifactTask(ArtifactTaskInterface):
+          @staticmethod
+          def serialize(working_dir: Path, name: str, contents: np.ndarray, **kwargs) -> Path:
+              path = (working_dir / name).with_suffix(".npy")
+              np.save(path, contents, allow_pickle=False)
+              return path
+
+          @staticmethod
+          def deserialize(working_dir: Path, path: str, **kwargs) -> np.ndarray:
+              return np.load(working_dir / path)
+
+          @staticmethod
+          def validation() -> dict[str, Any] | None:
+              return None
+
+
+
+Registration Interfaces
+-----------------------
+
+Plugins can be registered programmatically via the :ref:`guided user interface <how_to_create_a_plugin>`, the Python Client or the REST API.
+
+Using Python Client
+~~~~~~~~~~~~~~~~~~~
+
+    .. automethod:: dioptra.client.plugins.PluginFilesSubCollectionClient.create
+
+**Example Payload**
 
 .. code-block:: python
 
-    from typing import Any
-    from pathlib import Path
-    from dioptra.sdk.api.artifact import ArtifactTaskInterface
+      # Assumes 'client' is authenticated and 'string_param_type_id' is defined
+      plugin = client.plugins.create(GROUP_ID, "hello", "This is a Hello World Plugin")
+      file = client.plugins.files.create(
+          plugin_id=plugin["id"],
+          filename="hello.py",
+          content=PYTHON_CONTENTS,
+          tasks=[{
+              "name": "hello_world",
+              "inputParams": [
+                  {
+                      "name": "greeting",
+                      "parameterType": string_param_type_id,
+                      "required": True
+                  },
+                  {
+                      "name": "name",
+                      "parameterType": string_param_type_id,
+                      "required": True
+                  }
+              ],
+              "outputParams": [
+                  {
+                      "name": "message",
+                      "parameterType": string_param_type_id,
+                  }
+              ]
+          }]
+      )
 
-    class MyArtifactTask(ArtifactTaskInterface):
-        @staticmethod
-        def serialize(working_dir: Path, name: str, contents: Any, **kwargs) -> Path:
-            ...
-        
-        @staticmethod
-        def deserialize(working_dir: Path, path: str, **kwargs) -> Any:
-            ...
+Using REST API
+~~~~~~~~~~~~~~
 
-**Requirements**
+Plugins can be created and registered directly via the HTTP API.
 
-* **Inheritance:** Must inherit from ``dioptra.sdk.api.artifact.ArtifactTaskInterface``.
-* **Methods:** ``serialize`` and ``deserialize`` are required static methods.
+See the :http:post:`POST /api/v1/plugins </api/v1/plugins/>` endpoint documentation for payload requirements.
 
-**Method Signatures**
-
-* **serialize**
-    
-    .. code-block:: python
-
-       (working_dir: Path, name: str, contents: Any, **kwargs) -> Path
-
-* **deserialize**
-    
-    .. code-block:: python
-
-       (working_dir: Path, path: str, **kwargs) -> Any
-
-* **validation** (Optional)
-    
-    .. code-block:: python
-
-       () -> dict[str, Any] | None
-
-**Registration Schema**
-
-* **Task Name:** String. Must match Python Class name.
-* **Output Parameters:**
-    * **Name:** String.
-    * **Type:** Dioptra Type (Matches ``deserialize`` return type).
+.. seealso::
+   
+   * :ref:`What are Plugins? <plugins-explanation>` 
+   * :ref:`How to create a plugin <how_to_create_a_plugin>`
