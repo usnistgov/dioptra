@@ -5,7 +5,7 @@
   >
     <tr v-for="(row, index) in rows" :key="index" :class="{ 'disabled': disabled }">
       <td>{{ row.label }}</td>
-      <td>
+      <td :style="secondColumnFullWidth ? { width: '100%' } : {}">
         <!-- Render as plain text OR use a custom slot -->
         <slot :name="row.slot" v-bind="row.props">
           {{ row.value }}
@@ -22,6 +22,10 @@ defineProps({
     required: true
   },
   disabled: {
+    type: Boolean,
+    default: false
+  },
+  secondColumnFullWidth: {
     type: Boolean,
     default: false
   }

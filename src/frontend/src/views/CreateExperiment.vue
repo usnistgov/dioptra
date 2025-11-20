@@ -54,7 +54,6 @@
       <div class="q-ma-lg">
         <q-select
           outlined
-          dense
           v-model="experiment.entrypoints"
           use-input
           use-chips
