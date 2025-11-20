@@ -110,59 +110,25 @@ A task may produce zero, one, or multiple outputs. These outputs must be named a
 
 If your function returns a single value, you map it to a single output parameter. If your function returns an **iterable** (e.g., a list or tuple), Dioptra extracts values from the iterable and assigns them to your defined output parameters in order.
 
-   See :ref:`Plugins - Reference <plugins-reference>` for more. 
-
+   See :ref:`Plugins - Reference <plugins-reference-return-values>` for more. 
 
 Register with REST API
----------------------------
+----------------------
 
 Using Python Client
 ~~~~~~~~~~~~~~~~~~~~~~
 
-You can register plugins programmatically using the Dioptra Python client. This is useful for automated deployment pipelines.
-
-
+You can register plugins programmatically using the **Dioptra Python client**. This is essential for automated deployment pipelines.
 
    .. automethod:: dioptra.client.plugins.PluginFilesSubCollectionClient.create
+      :no-docstring:
 
-.. admonition:: Example: Registering Function Tasks via Client
-   :class: code-panel python
-
-   .. code-block:: python
-
-      # Assumes 'client' is authenticated and 'string_param_type_id' is defined
-      plugin = client.plugins.create(GROUP_ID, "hello", "This is a Hello World Plugin")
-      file = client.plugins.files.create(
-          plugin_id=plugin["id"],
-          filename="hello.py",
-          content=PYTHON_CONTENTS,
-          tasks=[{
-              "name": "hello_world",
-              "inputParams": [
-                  {
-                      "name": "greeting",
-                      "parameterType": string_param_type_id,
-                      "required": True
-                  },
-                  {
-                      "name": "name",
-                      "parameterType": string_param_type_id,
-                      "required": True
-                  }
-              ],
-              "outputParams": [
-                  {
-                      "name": "message",
-                      "parameterType": string_param_type_id,
-                  }
-              ]
-          }]
-      )
+See :ref:`Plugins - Reference <plugin-reference-python-client-registration>` for full code examples and workflow.
 
 With HTTP Requests
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Plugins can be created and registered directly via the HTTP API.
+Plugins can also be created and registered directly using **HTTP POST** requests.
 
 See the :http:post:`POST /api/v1/plugins </api/v1/plugins/>` endpoint documentation for payload requirements.
 
