@@ -319,21 +319,27 @@
         },
         "swap": {
             "title": "Swap choices as a list",
-            "type": "array",
-            "items": {
-                "$ref": "#/$defs/swap_choice"
-            }
+            "type": "object",
+            "properties": {
+                "dependencies": {
+                    "$ref": "#/$defs/step_dependencies"
+                }
+            },
+            "additionalProperties": {
+                "$ref": "#/$defs/swap_choice"                
+            },
+            "minProperties": 1
         },
         "swap_choice": {
             "oneOf": [
                 {
-                    "$ref": "#/$defs/positional_invocation"
+                    "$ref": "#/$defs/swap_positional_invocation"
                 },
                 {
-                    "$ref": "#/$defs/keyword_invocation"
+                    "$ref": "#/$defs/swap_keyword_invocation"
                 },
                 {
-                    "$ref": "#/$defs/mixed_invocation"
+                    "$ref": "#/$defs/swap_mixed_invocation"
                 }
             ]
         },
@@ -410,6 +416,73 @@
                 },
                 "dependencies": {
                     "$ref": "#/$defs/step_dependencies"
+                }
+            },
+            "required": [
+                "task"
+            ],
+            "additionalProperties": false
+        },        
+        "swap_positional_invocation": {
+            "title": "Positional invocation",
+            "type": "object",
+            "not": {
+                "$comment": "If the 'task' property is present, we always treat as a mixed invocation.",
+                "required": [
+                    "task"
+                ]
+            },
+            "additionalProperties": {
+                "$comment": "The task plugin short name + arg value(s)",
+                "type": [
+                    "string",
+                    "number",
+                    "boolean",
+                    "null",
+                    "array"
+                ]
+            },
+            "minProperties": 1,
+            "maxProperties": 2
+        },
+        "swap_keyword_invocation": {
+            "title": "Keyword invocation",
+            "type": "object",
+            "not": {
+                "$comment": "If the 'task' property is present, we always treat as a mixed invocation.",
+                "required": [
+                    "task"
+                ]
+            },
+            "additionalProperties": {
+                "$comment": "The task plugin short name + kwargs",
+                "type": "object"
+            },
+            "minProperties": 1,
+            "maxProperties": 2
+        },
+        "swap_mixed_invocation": {
+            "title": "Mixed position/keyword invocation",
+            "type": "object",
+            "properties": {
+                "task": {
+                    "$comment": "Task plugin short name",
+                    "type": "string",
+                    "minLength": 1
+                },
+                "args": {
+                    "$comment": "Positional args",
+                    "type": [
+                        "string",
+                        "number",
+                        "boolean",
+                        "null",
+                        "array"
+                    ]
+                },
+                "kwargs": {
+                    "$comment": "Keyword args",
+                    "type": "object"
                 }
             },
             "required": [
