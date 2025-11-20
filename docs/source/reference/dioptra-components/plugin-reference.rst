@@ -74,6 +74,8 @@ When registering a function task (via API or GUI), the configuration must match 
 * **Order:** [INSERT EXPLANATION ABOUT POSITIONAL VS KEYWORD ARGUMENTS HERE]
 * **\*Args / \*\*Kwargs:** [INSERT EXPLANATION ABOUT HOW VARIABLE ARGUMENTS ARE HANDLED HERE]
 
+.. _plugins-reference-return-values:
+
 **Return Values & Multiple Outputs**
 A function task may return a single value or multiple values (via a tuple or list).
 
@@ -133,10 +135,19 @@ Artifact tasks must be defined as classes that inherit from the ``ArtifactTaskIn
 Registration Interfaces
 -----------------------
 
-Plugins can be registered programmatically via the :ref:`guided user interface <how_to_create_a_plugin>`, the Python Client or the REST API.
+Plugins can be created and tasks can be registered programmatically via the Python Client or the REST API.
+They can also be registered manually through the :ref:`guided user interface <how_to_create_a_plugin>`.
+
+.. _plugin-reference-python-client-registration:
 
 Using Python Client
 ~~~~~~~~~~~~~~~~~~~
+
+**Create a Plugin Container**
+
+    .. automethod:: dioptra.client.plugins.PluginsCollectionClient.create
+
+**Add a Python file and register function tasks / artifact tasks**
 
     .. automethod:: dioptra.client.plugins.PluginFilesSubCollectionClient.create
 
@@ -144,8 +155,7 @@ Using Python Client
 
 .. code-block:: python
 
-      # Assumes 'client' is authenticated and 'string_param_type_id' is defined
-      plugin = client.plugins.create(GROUP_ID, "hello", "This is a Hello World Plugin")
+      plugin = client.plugins.create(group_id, "hello", "This is a Hello World Plugin")
       file = client.plugins.files.create(
           plugin_id=plugin["id"],
           filename="hello.py",
@@ -176,9 +186,15 @@ Using Python Client
 Using REST API
 ~~~~~~~~~~~~~~
 
-Plugins can be created and registered directly via the HTTP API.
+Plugins can be created and and tasks can be registered directly via the HTTP API.
+
+**Create Plugins**
 
 See the :http:post:`POST /api/v1/plugins </api/v1/plugins/>` endpoint documentation for payload requirements.
+
+**Add Files**
+
+See the :http:post:`/api/v1/plugins/{int:id}/files/` endpoint documentation for payload requirements.
 
 .. seealso::
    
