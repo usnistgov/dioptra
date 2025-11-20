@@ -382,7 +382,7 @@ save_payload_to_file() {
 
   local payload_path="$(get_payload_path)"
 
-  if ! echo "${_arg_payload}" > "${payload_path}"; then
+  if ! echo -n "${_arg_payload}" > "${payload_path}"; then
     log_error "Encountered an error when saving the payload to ${payload_path}," \
       "exiting..."
     exit 1
