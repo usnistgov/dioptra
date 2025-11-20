@@ -14,45 +14,28 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-name: Sphinx documentation
-
-on:
-  push:
-    branches:
-      - "**"
-    tags:
-      - "*.*.*"
-
-jobs:
-  docs:
-    if: ${{ false }}  # disable for now
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          enable-cache: true
-          cache-dependency-glob: "uv.lock"
-          python-version: "3.11"
-
-      - name: build the documentation
-        run: uvx -p "3.11" tox run -e docs
-
-      - name: archive the documentation
-        uses: actions/upload-artifact@v4
-        with:
-          name: docs-build
-          path: docs/build
-
-      - name: deploy documentation to github pages
-        uses: peaceiris/actions-gh-pages@v4
-        if: ${{ github.ref == 'refs/heads/main' }}
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: docs/build
-          publish_branch: nist-pages
-          user_name: "github-actions[bot]"
-          user_email: "github-actions[bot]@users.noreply.github.com"
-          commit_message: ${{ github.event.head_commit.message }}
+name: "create-rekor-entry"
+description: Create a Rekor entry for a signed image payload
+inputs:
+  payload:
+    description: The payload to be signed and verified
+    required: true
+  public-key:
+    description: The public key to use when verifying a payload
+    required: true
+  signature:
+    description: The contents of the payload signature file (base64-encoded)
+    required: true
+outputs:
+  uuid:
+    description: The UUID assigned to the signed payload by the Rekor server
+runs:
+  using: docker
+  image: Dockerfile
+  args:
+    - --payload
+    - ${{ inputs.payload }}
+    - --public-key
+    - ${{ inputs.public-key }}
+    - --signature
+    - ${{ inputs.signature }}

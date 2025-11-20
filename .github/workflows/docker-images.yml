@@ -36,7 +36,7 @@ env:
 jobs:
   build-docker-dioptra-apps:
     runs-on: ubuntu-22.04
-    if: ${{ false }}  # disable for now
+
     strategy:
       matrix:
         dioptra-app:
@@ -44,20 +44,26 @@ jobs:
           - mlflow-tracking
           - restapi
           - pytorch-cpu
-          - pytorch-gpu
           - tensorflow2-cpu
-          - tensorflow2-gpu
+        # - pytorch-gpu # CUDA installation exceeds GitHub runner disk space
+        # - tensorflow2-gpu # CUDA installation exceeds GitHub runner disk space
 
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/remove-extra-software
+
+      - name: install rekor-cli
+        uses: ./.github/actions/install-rekor-cli
+
+      - name: install cosign
+        uses: sigstore/cosign-installer@v3.9.2
 
       - name: set docker metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: |
-            ${{ env.PROJECT_PREFIX }}/${{ matrix.dioptra-app }}
+            ghcr.io/${{ github.repository_owner }}/${{ env.PROJECT_PREFIX }}/${{ matrix.dioptra-app }}
           tags: |
             type=schedule,pattern=nightly
             type=schedule,prefix=nightly-,pattern={{date 'YYYYMMDD'}}
@@ -84,12 +90,19 @@ jobs:
       - name: set up docker buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+            registry: ghcr.io
+            username: ${{ github.actor }}
+            password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: build and push
         uses: docker/build-push-action@v6
         with:
           context: .
           target: final
-          push: false
+          push: true
           load: true
           file: docker/Dockerfile.${{ matrix.dioptra-app }}
           tags: ${{ steps.meta.outputs.tags }}
@@ -97,17 +110,49 @@ jobs:
           no-cache: true
           pull: true
 
-      - name: create 'dev' tag
+      - name: extract first image tag
+        id: extract_tag
         run: |
-          docker tag ${{ env.PROJECT_PREFIX }}/${{ matrix.dioptra-app }}:${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.revision'] }} ${{ env.PROJECT_PREFIX }}/${{ matrix.dioptra-app }}:dev
+          IMAGE_TAG="$(echo ${{ steps.meta.outputs.tags }} | cut -d',' -f1)"
+          echo "Using image tag: $IMAGE_TAG"
+          echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-      - name: export dev-tagged image to tar.gz file
-        shell: bash
+      - name: generate cosign payload
+        id: gen_cosign_payload
         run: |
-          docker save ${{ env.PROJECT_PREFIX }}/${{ matrix.dioptra-app }}:dev | gzip > /tmp/${{ env.PROJECT_PREFIX }}_${{ matrix.dioptra-app }}_dev.tar.gz
+          IMAGE="${{ steps.extract_tag.outputs.image_tag }}"
+          mkdir -p "${{ github.workspace }}/tmp"
+          cosign generate "${IMAGE}" > ${{ github.workspace }}/tmp/image_payload.json
+          echo "payload=$(cat ${{ github.workspace }}/tmp/image_payload.json)" >> $GITHUB_OUTPUT
 
-      - name: archive the testing images
-        uses: actions/upload-artifact@v4
+      - uses: ./.github/actions/sign-payload-fips
+        id: sign_payload_fips
         with:
-          name: ${{ env.PROJECT_PREFIX }}-${{ matrix.dioptra-app }}-dev-image
-          path: /tmp/${{ env.PROJECT_PREFIX }}_${{ matrix.dioptra-app }}_dev.tar.gz
+          payload: ${{ steps.gen_cosign_payload.outputs.payload }}
+          private-key: ${{ secrets.DIOPTRA_PRIVATE_KEY }}
+          public-key: ${{ secrets.DIOPTRA_PUBLIC_KEY }}
+
+      - name: attach openssl signature using cosign
+        run: |
+          IMAGE="${{ steps.extract_tag.outputs.image_tag }}"
+          echo "${{ steps.sign_payload_fips.outputs.signature }}" | tr -d '\n' > ${{ github.workspace }}/tmp/payload_b64.sig
+          cosign attach signature --payload "${{ github.workspace }}/tmp/image_payload.json" --signature "${{ github.workspace }}/tmp/payload_b64.sig" "${IMAGE}"
+
+      - uses: ./.github/actions/create-rekor-entry
+        id: create_rekor_entry
+        with:
+          payload: ${{ steps.gen_cosign_payload.outputs.payload }}
+          public-key: ${{ secrets.DIOPTRA_PUBLIC_KEY }}
+          signature: ${{ steps.sign_payload_fips.outputs.signature }}
+
+      - name: verify Rekor entry
+        run: |
+            UUID="${{ steps.create_rekor_entry.outputs.uuid }}"
+            echo "Checking Rekor for UUID=${UUID}"
+            rekor-cli get --uuid "${UUID}" --rekor_server https://rekor.sigstore.dev
+
+      - name: cosign verify
+        run: |
+            IMAGE="${{ steps.extract_tag.outputs.image_tag }}"
+            echo "${{ secrets.DIOPTRA_PUBLIC_KEY }}" > "${{ github.workspace }}/tmp/dioptra.pub"
+            cosign verify --key "${{ github.workspace }}/tmp/dioptra.pub" "${IMAGE}"

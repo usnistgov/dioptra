@@ -15,15 +15,14 @@
 .. ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 .. https://creativecommons.org/licenses/by/4.0/legalcode
 
-.. _getting-started-building-the-containers:
+.. _how-to-build-container-images:
 
-Building the Containers
-=======================
+Building the Container Images
+=============================
 
 .. include:: /_glossary_note.rst
 
-You will need to build several container images using the Dockerfiles in the Dioptra GitHub repository before you can run Dioptra for the first time.
-This guide will walk you through the steps for building these images.
+You will need several container images before you can run Dioptra for the first time. The easiest way to acquire these images is to download them from the GitHub Container Registry: :doc:`../getting-started/downloading-the-containers`. However, if you wish to use GPU-enabled images or to customize the containers, you will need to build the images using the steps in this guide.
 
 To begin, open a Terminal and clone the GitHub repository if you have not already done so.
 
@@ -71,12 +70,6 @@ If you are running Dioptra on a host machine that has one or more CUDA-compatibl
 Finally, run ``docker images`` to verify that the container images are now available with the ``dev`` tag.
 You should see output that looks like the following,
 
-.. margin::
-
-   .. note::
-
-      The ``IMAGE ID``, ``CREATED``, and ``SIZE`` fields in the ``docker images`` output will likely be different.
-
 .. code:: text
 
    REPOSITORY                           TAG       IMAGE ID       CREATED         SIZE
@@ -85,5 +78,9 @@ You should see output that looks like the following,
    dioptra/mlflow-tracking              dev       56c574822dad   3 weeks ago     1.04GB
    dioptra/pytorch-cpu                  dev       5309d66defd5   3 weeks ago     3.74GB
    dioptra/tensorflow2-cpu              dev       13c4784dd4f0   3 weeks ago     3.73GB
+
+.. note::
+
+   The ``IMAGE ID``, ``CREATED``, and ``SIZE`` fields in the ``docker images`` output will likely be different.
 
 Your ``REPOSITORY`` and ``TAG`` columns should match up with the above list.

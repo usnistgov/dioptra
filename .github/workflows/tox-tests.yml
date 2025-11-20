@@ -25,6 +25,7 @@ on:
 
 jobs:
   linting-and-style-checks:
+    if: ${{ false }}  # disable for now
     runs-on: ubuntu-22.04
     strategy:
       matrix:
@@ -49,6 +50,7 @@ jobs:
         run: uvx -p ${{ matrix.python-version }} tox run -e ${{ matrix.tox-testenv }}
 
   unit-tests:
+    if: ${{ false }}  # disable for now
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:

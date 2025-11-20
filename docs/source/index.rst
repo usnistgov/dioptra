@@ -39,7 +39,7 @@ Email us: dioptra@nist.gov
    :maxdepth: -1
    :caption: Getting Started
 
-   getting-started/building-the-containers
+   getting-started/downloading-the-containers
    getting-started/running-dioptra
    getting-started/acquiring-datasets
    getting-started/additional-configuration
@@ -59,6 +59,14 @@ Email us: dioptra@nist.gov
    user-guide/custom-task-plugins
    user-guide/generics-plugin-system
    user-guide/task-plugins-collection
+
+.. toctree::
+   :hidden:
+   :maxdepth: -1
+   :caption: How-To
+
+   how-to/build-container-images
+   how-to/verify-container-images
 
 .. toctree::
    :hidden:

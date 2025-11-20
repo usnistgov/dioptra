@@ -14,45 +14,21 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-name: Sphinx documentation
 
-on:
-  push:
-    branches:
-      - "**"
-    tags:
-      - "*.*.*"
+# Use FIPS compliant image
+FROM registry.access.redhat.com/ubi8/ubi:8.6
 
-jobs:
-  docs:
-    if: ${{ false }}  # disable for now
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@v4
+USER root
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          enable-cache: true
-          cache-dependency-glob: "uv.lock"
-          python-version: "3.11"
+ENV LANG=C.UTF-8
+ENV LANGUAGE=C.UTF-8
+ENV LC_ALL=C.UTF-8
 
-      - name: build the documentation
-        run: uvx -p "3.11" tox run -e docs
+RUN dnf install -y \
+    openssl && \
+    # Cleanup
+    dnf clean all
 
-      - name: archive the documentation
-        uses: actions/upload-artifact@v4
-        with:
-          name: docs-build
-          path: docs/build
+COPY --chown=root:root --chmod=0755 entrypoint.sh /usr/local/bin/entrypoint.sh
 
-      - name: deploy documentation to github pages
-        uses: peaceiris/actions-gh-pages@v4
-        if: ${{ github.ref == 'refs/heads/main' }}
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: docs/build
-          publish_branch: nist-pages
-          user_name: "github-actions[bot]"
-          user_email: "github-actions[bot]@users.noreply.github.com"
-          commit_message: ${{ github.event.head_commit.message }}
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
