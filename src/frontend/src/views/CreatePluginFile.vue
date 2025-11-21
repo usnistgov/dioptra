@@ -79,7 +79,7 @@
       <legend>Plugin Tasks</legend>
       <TableComponent
         :rows="pluginFile.tasks.functions"
-        :columns="taskColumns"
+        :columns="functionTaskColumns"
         title="Plugin Function Tasks"
         :hideToggleDraft="true"
         :hideSearch="true"
@@ -180,7 +180,7 @@
       </TableComponent>
       <TableComponent
         :rows="pluginFile.tasks.artifacts"
-        :columns="taskColumns"
+        :columns="artifactTaskColumns"
         title="Plugin Artifact Tasks"
         :hideToggleDraft="true"
         :hideSearch="true"
@@ -573,9 +573,15 @@
 
   const basicInfoForm = ref(null)
 
-  const taskColumns = [
+  const functionTaskColumns = [
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: false, classes: 'vertical-top', },
     { name: 'inputParams', label: 'Input Parameters', field: 'inputParams', align: 'right', sortable: false, classes: 'vertical-top', },
+    { name: 'outputParams', label: 'Output Parameters', field: 'outputParams', align: 'right', sortable: false, classes: 'vertical-top', },
+    { name: 'actions', label: 'Actions', align: 'center', },
+  ]
+
+    const artifactTaskColumns = [
+    { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: false, classes: 'vertical-top', },
     { name: 'outputParams', label: 'Output Parameters', field: 'outputParams', align: 'right', sortable: false, classes: 'vertical-top', },
     { name: 'actions', label: 'Actions', align: 'center', },
   ]

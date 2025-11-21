@@ -1,17 +1,20 @@
 <template>
   <PageTitle title="Plugins" />
+
   <TableComponent
     :rows="plugins"
     :columns="columns"
     title="Plugins"
-    v-model:selected="selected"
+    v-model:selected="selected"  
     @edit="router.push(`/plugins/${selected[0].id}`)"
     @delete="showDeleteDialog = true"
     @request="getPlugins"
     ref="tableRef"
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
     @create="showPluginDialog = true"
+    :loading="isLoading"
   >
+
     <template #body-cell-group="props">
       <div>{{ props.row.group.name }}</div>
     </template>
@@ -26,6 +29,7 @@
     @updatePlugin="updatePlugin"
     :editPlugin="selected.length && editing ? selected[0] : ''"
   />
+
   <DeleteDialog 
     v-model="showDeleteDialog"
     @submit="deletePlugin"
@@ -71,6 +75,8 @@
 
   const plugins = ref([])
 
+  const isLoading = ref(false)
+
   const editing = ref(false)
 
   watch(showPluginDialog, (newVal) => {
@@ -78,14 +84,23 @@
   })
 
   async function getPlugins(pagination) {
+    isLoading.value = true
+    const minLoadTimePromise = new Promise(resolve => setTimeout(resolve, 300)); 
+
     try {
-      const res = await api.getData('plugins', pagination)
-      plugins.value = res.data.data
-      tableRef.value.updateTotalRows(res.data.totalNumResults)
+      const [res] = await Promise.all([
+        api.getData('plugins', pagination),
+        minLoadTimePromise
+      ]);
+      
+      plugins.value = res.data.data;
+      tableRef.value.updateTotalRows(res.data.totalNumResults);
     } catch(err) {
-      console.log('err = ', err)
-      notify.error(err.response.data.message)
-    } 
+      console.log('err = ', err);
+      notify.error(err.response.data.message);
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   const columns = [
