@@ -14,11 +14,12 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+import os
 import pickle
 import tarfile
 from collections.abc import ByteString
 from pathlib import Path
-from typing import Any, Callable, Dict, Literal, Optional
+from typing import Any, Callable, Dict, Literal, Optional, Sequence
 
 import numpy as np
 import pandas as pd
@@ -251,16 +252,111 @@ class DataframeArtifactTask(ArtifactTaskInterface):
         }
 
 
+class TensorflowDatasetArtifactTask(ArtifactTaskInterface):
+    @staticmethod
+    def serialize(
+        working_dir: Path, name: str, contents: "tf.data.Dataset", **kwargs
+    ) -> Path:
+        """
+        Serializes a tf.data.Dataset to disk.
+        """
+        import tensorflow as tf
+
+        # if contents is a str, it is a directory path to an already serialized dataset
+        dataset_name = contents.options().dataset_name
+        if dataset_name and (working_dir / dataset_name).exists():
+            os.symlink(working_dir / dataset_name, working_dir / name)
+        elif isinstance(contents, tf.data.Dataset):
+            contents.save(str(working_dir / name), **kwargs)
+
+        return working_dir / name
+
+    @staticmethod
+    def deserialize(working_dir: Path, path: str, **kwargs) -> "tf.data.Dataset":
+        import tensorflow as tf
+
+        LOGGER.warning(
+            "deserialize",
+            working_dir=working_dir,
+            path=path,
+            files=(working_dir / path).glob("*"),
+        )
+        return tf.data.Dataset.load(str(working_dir / path), **kwargs)
+
+    @staticmethod
+    def validation() -> dict[str, Any] | None:
+        return None
+
+
+class TensorflowDatasetSamplerArtifactTask(ArtifactTaskInterface):
+    @staticmethod
+    def serialize(
+        working_dir: Path,
+        name: str,
+        contents: "tf.data.Dataset",
+        num_samples: int = 32,
+        seed: int | None = 42,
+        **kwargs,
+    ) -> Path:
+        import keras
+
+        output_dir = working_dir / name
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        contents = contents.shuffle(num_samples, seed=seed).unbatch()
+        for idx, (x, y) in contents.take(num_samples).enumerate():
+            y = keras.ops.argmax(y, axis=0)
+            keras.utils.save_img(
+                output_dir / f"{idx:06d}_label_{y:04d}.png", x.numpy(), **kwargs
+            )
+        return output_dir
+
+    @staticmethod
+    def deserialize(working_dir: Path, path: str, **kwargs) -> Path:
+        return working_dir / path
+
+    @staticmethod
+    def validation() -> dict[str, Any] | None:
+        return None
+
+
 class NumpyArrayArtifactTask(ArtifactTaskInterface):
     @staticmethod
     def serialize(working_dir: Path, name: str, contents: np.ndarray, **kwargs) -> Path:
         path = (working_dir / name).with_suffix(".npy")
-        np.save(path, contents, allow_pickle=False)
+        np.save(path, contents, allow_pickle=False, **kwargs)
         return path
 
     @staticmethod
     def deserialize(working_dir: Path, path: str, **kwargs) -> np.ndarray:
-        return np.load(working_dir / path)
+        return np.load(working_dir / path, **kwargs)
+
+    @staticmethod
+    def validation() -> dict[str, Any] | None:
+        return None
+
+
+class NumpyArraysArtifactTask(ArtifactTaskInterface):
+    @staticmethod
+    def serialize(
+        working_dir: Path,
+        name: str,
+        contents: Sequence[np.ndarray],
+        names: Sequence[str] | None = None,
+        **kwargs,
+    ) -> Path:
+        path = (working_dir / name).with_suffix(".npy")
+        if names is not None and len(names) == len(contents):
+            np.savez(
+                path, **dict(list(zip(names, contents))), allow_pickle=False, **kwargs
+            )
+        else:
+            np.savez(path, *contents, allow_pickle=False)
+        return path
+
+    @staticmethod
+    def deserialize(working_dir: Path, path: str, **kwargs) -> dict[str, np.ndarray]:
+        return dict(list(np.load(working_dir / path, **kwargs).items()))
 
     @staticmethod
     def validation() -> dict[str, Any] | None:
@@ -272,13 +368,31 @@ class PickleArtifactTask(ArtifactTaskInterface):
     def serialize(working_dir: Path, name: str, contents: Any, **kwargs) -> Path:
         path = (working_dir / name).with_suffix(".pkl")
         with open(path, "wb") as f:
-            pickle.dump(contents, f)
+            pickle.dump(contents, f, **kwargs)
         return path
 
     @staticmethod
     def deserialize(working_dir: Path, path: str, **kwargs) -> Path:
         with open(working_dir / path, "wb") as f:
-            return pickle.load(f)
+            return pickle.load(f, **kwargs)
+
+    @staticmethod
+    def validation() -> dict[str, Any] | None:
+        return None
+
+
+class KerasModelArtifactTask(ArtifactTaskInterface):
+    @staticmethod
+    def serialize(working_dir: Path, name: str, contents: Any, **kwargs) -> Path:
+        result = (working_dir / name).with_suffix(".keras")
+        contents.save(result, **kwargs)
+        return result
+
+    @staticmethod
+    def deserialize(working_dir: Path, path: str, **kwargs) -> Any:
+        import keras
+
+        return keras.saving.load_model(Path(working_dir) / path, **kwargs)
 
     @staticmethod
     def validation() -> dict[str, Any] | None:

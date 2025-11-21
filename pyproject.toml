@@ -85,8 +85,10 @@ dependencies = [
     "simplejson>=3.10.0",
     "SQLAlchemy>=2",
     "structlog>=20.2.0",
+    "tensorflow-datasets>=4.9.9",
     "tomli>=2.2.0",
     "typing-extensions>=3.7.4.3",
+    "universal-pathlib>=0.2.6",
     "werkzeug>=3.0.0,<3.1.0",
 ]
 classifiers = [
@@ -193,7 +195,6 @@ examples = [
     "aiohttp>=3.8.0",
     "kaggle>=1.5.0",
     "rich>=13.3.0",
-    "universal_pathlib>=0.0.23",
 ]
 pytorch-cpu = [
     "tensorboard>=2.16.0",
@@ -209,7 +210,6 @@ pytorch-gpu = [
 ]
 tensorflow-cpu = [
     "tensorflow==2.16.1",
-    "tensorflow-metal==1.1.0; sys_platform == 'darwin' and platform_machine == 'arm64'",
     "tensorboard>=2.16.0",
 ]
 tensorflow-gpu = [
