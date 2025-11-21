@@ -8,66 +8,80 @@
       @click="showDeletePluginDialog = true"
     />
   </div>
-  <fieldset class="q-mt-md q-pa-lg" style="display: inline-block; width: auto; height: auto; max-width: 50%;">
-    <legend>Metadata</legend>
-    <KeyValueTable :rows="pluginRows">
-      <template #name="{ }">
-        {{ name }}
-        <q-btn icon="edit" round size="sm" color="primary" flat />
-        <q-popup-edit
-          v-model="name" 
-          auto-save 
-          v-slot="scope"
-          :validate="requiredRule"
-        >
-          <q-input 
-            v-model.trim="scope.value"
-            dense
-            autofocus
-            counter
-            @keyup.enter="scope.set"
-            :error="invalidName"
-            :error-message="nameError"
-            @update:model-value="checkName"
-          />
-        </q-popup-edit>
-      </template>
-      <template #description="{ }">
-        <div class="row items-center no-wrap">
-          <div style="white-space: pre-line; overflow-wrap: break-word; ">
-            {{ description }}
+
+    <q-expansion-item
+    v-model="showMetadata"
+    class="shadow-1 overflow-hidden q-mt-lg"
+    style="border-radius: 10px; width: 40%"
+    header-style="font-size: 22px"
+    header-class="bg-primary text-white"
+    expand-icon-class="text-white"
+    :label="`${showMetadata ? 'Hide' : 'Edit'} Plugin Metadata`"
+  >
+    <q-card class="q-pa-md">
+      <KeyValueTable :rows="pluginRows" :secondColumnFullWidth="true">
+        <template #name="{ }">
+          {{ name }}
+          <q-btn icon="edit" round size="sm" color="primary" flat />
+          <q-popup-edit
+            v-model="name" 
+            auto-save 
+            v-slot="scope"
+            :validate="requiredRule"
+          >
+            <q-input 
+              v-model.trim="scope.value"
+              dense
+              autofocus
+              counter
+              @keyup.enter="scope.set"
+              :error="invalidName"
+              :error-message="nameError"
+              @update:model-value="checkName"
+            />
+          </q-popup-edit>
+        </template>
+        <template #description="{ }">
+          <div class="row items-center no-wrap">
+            <div style="white-space: pre-line; overflow-wrap: break-word; ">
+              {{ description }}
+            </div>
+            <q-btn icon="edit" round size="sm" color="primary" flat class="q-ml-xs" />
           </div>
-          <q-btn icon="edit" round size="sm" color="primary" flat class="q-ml-xs" />
-        </div>
-        <q-popup-edit v-model.trim="description" auto-save v-slot="scope" buttons>
-          <q-input
-            v-model="scope.value"
-            dense
-            autofocus
-            counter
-            type="textarea"
-            @keyup.enter.stop
-          />
-        </q-popup-edit>
-      </template>
-    </KeyValueTable>
-    <div class="float-right q-mt-md">
-      <q-btn
-        outline  
-        color="primary" 
-        label="Revert"
-        class="q-mr-lg cancel-btn"
-        @click="revertValues"
-        :disable="!valuesChanged"
-      />
-      <q-btn
-        label="Save"
-        color="primary"
-        @click="updatePlugin"
-        :disable="!valuesChanged"
-      />
-    </div>
-  </fieldset>
+          <q-popup-edit v-model.trim="description" auto-save v-slot="scope" buttons>
+            <q-input
+              v-model="scope.value"
+              dense
+              autofocus
+              counter
+              type="textarea"
+              @keyup.enter.stop
+            />
+          </q-popup-edit>
+        </template>
+      </KeyValueTable>
+      <div class="float-right q-my-sm">
+        <q-btn
+          outline  
+          color="primary" 
+          label="Revert"
+          class="q-mr-lg cancel-btn"
+          @click="revertValues"
+          :disable="!valuesChanged"
+        />
+        <q-btn
+          label="Save"
+          color="primary"
+          @click="updatePlugin"
+          :disable="!valuesChanged"
+        >
+          <q-tooltip v-if="!valuesChanged">
+            No changes detected — nothing to save
+          </q-tooltip>
+        </q-btn>
+      </div>
+    </q-card>
+  </q-expansion-item>
 
   <TableComponent 
     :rows="files"
@@ -255,5 +269,6 @@ async function deletePlugin() {
   }
 }
 
+const showMetadata = ref(false)
 
 </script>

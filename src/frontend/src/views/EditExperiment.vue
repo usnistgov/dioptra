@@ -28,135 +28,145 @@
     />
   </div>
 
-  <fieldset 
-    class="q-mt-md q-pa-lg"
-    style="display: inline-block; width: auto; height: auto; max-width: 50%;"
-    :style="{ cursor: history ? 'not-allowed' : 'auto', }"
-    :disabled="history"
+  <q-expansion-item
+    v-model="showMetadata"
+    class="shadow-1 overflow-hidden q-mt-lg"
+    style="border-radius: 10px; width: 40%"
+    header-style="font-size: 22px"
+    header-class="bg-primary text-white"
+    expand-icon-class="text-white"
+    :label="`${showMetadata ? 'Hide' : 'Edit'} Experiment Metadata`"
   >
-    <legend>Metadata</legend>
-    <KeyValueTable 
-      :rows="metadataRows"
-      :style="{ pointerEvents: history ? 'none' : 'auto', }"
+    <q-card 
+      class="q-pa-md"
+      :class="history ? 'disabled' : ''"
     >
-      <template #name="{ }">
-        {{ experiment?.name }}
-        <q-btn icon="edit" round size="sm" color="primary" flat />
-        <q-popup-edit
-          v-model="experiment.name" 
-          auto-save 
-          v-slot="scope"
-          :validate="requiredRule"
-        >
-          <q-input 
-            v-model.trim="scope.value"
-            dense
-            autofocus
-            counter
-            @keyup.enter="scope.set"
-            :error="invalidName"
-            :error-message="nameError"
-            @update:model-value="checkName"
-          />
-        </q-popup-edit>
-      </template>
-      <template #group="{ }">
-        <q-select
-          outlined 
-          v-model="experiment.group" 
-          :options="store.groups"
-          option-label="name"
-          option-value="id"
-          emit-value
-          map-options
-          dense
-          :rules="[requiredRule]"
-          aria-required="true"
-          :disable="history"
-          hide-bottom-space
-        />
-      </template>
-      <template #description="{ }">
-        <div class="row items-center no-wrap">
-          <div style="white-space: pre-line; overflow-wrap: break-word; ">
-            {{ experiment?.description }}
-          </div>
-          <q-btn icon="edit" round size="sm" color="primary" flat class="q-ml-xs" />
-        </div>
-        <q-popup-edit v-model.trim="experiment.description" auto-save v-slot="scope" buttons>
-          <q-input
-            v-model="scope.value"
-            dense
-            autofocus
-            counter
-            type="textarea"
-            @keyup.enter.stop
-          />
-        </q-popup-edit>
-      </template>
-      <template #entrypoints="{ }">
-        <q-select
-          v-if="!history"
-          outlined
-          dense
-          v-model="experiment.entrypoints"
-          use-input
-          use-chips
-          multiple
-          map-options
-          option-label="name"
-          option-value="id"
-          input-debounce="300"
-          :options="entrypoints"
-          @filter="getEntrypoints"
-          class="q-mb-md"
-          :disable="history"
-        >
-          <template v-slot:before>
-            <div class="field-label">Entrypoints:</div>
-          </template>
-          <template v-slot:selected>
-            <q-chip
-              v-for="(entrypoint, i) in experiment.entrypoints"
-              :key="entrypoint.id"
-              color="secondary"
-              :label="entrypoint.name"
-              class="text-white"
-              removable
-              @remove="experiment.entrypoints.splice(i, 1)"
+      <KeyValueTable 
+        :rows="metadataRows"
+        :style="{ pointerEvents: history ? 'none' : 'auto', }"
+        :secondColumnFullWidth="true"
+      >
+        <template #name="{ }">
+          {{ experiment?.name }}
+          <q-btn icon="edit" round size="sm" color="primary" flat />
+          <q-popup-edit
+            v-model="experiment.name" 
+            auto-save 
+            v-slot="scope"
+            :validate="requiredRule"
+          >
+            <q-input 
+              v-model.trim="scope.value"
+              dense
+              autofocus
+              counter
+              @keyup.enter="scope.set"
+              :error="invalidName"
+              :error-message="nameError"
+              @update:model-value="checkName"
             />
-          </template>  
-        </q-select>
-        <div class="row items-center" v-if="history">
-          <q-icon
-            name="sym_o_info"
-            size="2.5em"
-            color="grey"
-            class="q-mr-sm"
+          </q-popup-edit>
+        </template>
+        <template #group="{ }">
+          <q-select
+            outlined 
+            v-model="experiment.group" 
+            :options="store.groups"
+            option-label="name"
+            option-value="id"
+            emit-value
+            map-options
+            dense
+            :rules="[requiredRule]"
+            aria-required="true"
+            :disable="history"
+            hide-bottom-space
           />
-          <div style="flex: 1; white-space: normal; word-break: break-word;">
-            Entrypoints are not yet available in Experiment snapshots
+        </template>
+        <template #description="{ }">
+          <div class="row items-center no-wrap">
+            <div style="white-space: pre-line; overflow-wrap: break-word; ">
+              {{ experiment?.description }}
+            </div>
+            <q-btn icon="edit" round size="sm" color="primary" flat class="q-ml-xs" />
           </div>
-        </div>
-      </template>
-    </KeyValueTable>
-    <div class="float-right q-mt-md">
-      <q-btn
-        outline  
-        color="primary" 
-        label="Revert"
-        class="q-mr-lg cancel-btn"
-        @click="revertValues"
-        :disable="!valuesChanged"
-      />
-      <q-btn
-        label="Save"
-        color="primary"
-        @click="updateExperiment"
-        :disable="!valuesChanged"
-      />
-    </div>
-  </fieldset>
+          <q-popup-edit v-model.trim="experiment.description" auto-save v-slot="scope" buttons>
+            <q-input
+              v-model="scope.value"
+              dense
+              autofocus
+              counter
+              type="textarea"
+              @keyup.enter.stop
+            />
+          </q-popup-edit>
+        </template>
+        <template #entrypoints="{ }">
+          <q-select
+            v-if="!history"
+            outlined
+            v-model="experiment.entrypoints"
+            use-input
+            use-chips
+            multiple
+            map-options
+            option-label="name"
+            option-value="id"
+            input-debounce="300"
+            :options="entrypoints"
+            @filter="getEntrypoints"
+            :disable="history"
+              
+          >
+            <template v-slot:selected>
+              <q-chip
+                v-for="(entrypoint, i) in experiment.entrypoints"
+                :key="entrypoint.id"
+                color="secondary"
+                :label="entrypoint.name"
+                class="text-white"
+                removable
+                @remove="experiment.entrypoints.splice(i, 1)"
+              />
+            </template>  
+          </q-select>
+          <div class="row items-center" v-if="history">
+            <q-icon
+              name="sym_o_info"
+              size="2.5em"
+              color="grey"
+              class="q-mr-sm"
+            />
+            <div style="flex: 1; white-space: normal; word-break: break-word;">
+              Entrypoints are not yet available in Experiment snapshots
+            </div>
+          </div>
+        </template>
+      </KeyValueTable>
+      <div class="float-right q-my-sm" >
+        <q-btn
+          outline  
+          color="primary" 
+          label="Revert"
+          class="q-mr-lg cancel-btn"
+          @click="revertValues"
+          :disable="!valuesChanged"
+        />
+        <q-btn
+          label="Save"
+          color="primary"
+          @click="updateExperiment"
+          :disable="!valuesChanged"
+          style="min-width: 100px;"
+        >
+          <q-tooltip v-if="!valuesChanged">
+            No changes detected — nothing to save
+          </q-tooltip>
+        </q-btn>
+      </div>
+    </q-card>
+  </q-expansion-item>
+
   <JobsView /> 
 
   <DeleteDialog
@@ -295,6 +305,12 @@ async function updateExperiment() {
   }  
 }
 
+watch(() => history.value, (newVal) => {
+  if(newVal) {
+    showMetadata.value = true
+  }
+})
+
 watch(() => store.selectedSnapshot, (newVal) => {
   if(newVal) {
     experiment.value = newVal
@@ -314,5 +330,7 @@ async function deleteExperiment() {
     notify.error(err.response.data.message);
   }
 }
+
+const showMetadata = ref(false)
 
 </script>
