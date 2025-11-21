@@ -46,8 +46,119 @@
   import { python } from '@codemirror/lang-python'
   import { CompletionContext, autocompletion, startCompletion } from '@codemirror/autocomplete'
   import YAML from 'yaml'
-  import { EditorView } from '@codemirror/view'
+  import { 
+    Decoration, 
+    ViewPlugin, 
+    MatchDecorator, 
+    EditorView 
+  } from '@codemirror/view'
   import { useQuasar } from 'quasar'
+
+  import { RangeSetBuilder } from '@codemirror/state'
+
+const variableHighlighter = ViewPlugin.fromClass(class {
+  constructor(view) {
+    this.decorations = this.computeDecorations(view)
+  }
+
+  update(update) {
+    if (update.docChanged || update.viewportChanged) {
+      this.decorations = this.computeDecorations(update.view)
+    }
+  }
+
+  computeDecorations(view) {
+    const builder = new RangeSetBuilder()
+    
+    // This regex uses an optional capture group:
+    // 1. \$([\w-]+)     - Captures the base name (e.g., "step_name")
+    // 2. (\.[\w.-]+)?  - Optionally captures the dot-path (e.g., ".output")
+    const variableRegex = /\$([\w-]+)(\.[\w.-]*)?/g;
+    
+    for (let { from, to } of view.visibleRanges) {
+      const text = view.state.doc.sliceString(from, to)
+      let match
+      
+      while ((match = variableRegex.exec(text))) {
+        // match[0] is the full text, e.g., "$step.output"
+        // match[1] is the base, e.g., "step"
+        // match[2] is the dot-path, e.g., ".output" or undefined
+        
+        const isComplex = match[2] !== undefined // True if it has a dot-path
+        const cssClass = isComplex ? "cm-yaml-variable-complex" : "cm-yaml-variable-simple"
+        
+        const start = from + match.index
+        const end = start + match[0].length
+        
+        builder.add(start, end, Decoration.mark({
+          class: cssClass
+        }))
+      }
+    }
+    return builder.finish()
+  }
+}, {
+  decorations: v => v.decorations
+})
+
+
+// --- 2. Structural Highlighting (Indentation Logic) ---
+// This scans lines to detect Step Names (indent 0) vs Plugin Names (indent 2)
+const structureHighlighter = ViewPlugin.fromClass(class {
+  constructor(view) {
+    this.decorations = this.computeDecorations(view)
+  }
+
+  update(update) {
+    if (update.docChanged || update.viewportChanged) {
+      this.decorations = this.computeDecorations(update.view)
+    }
+  }
+
+  computeDecorations(view) {
+    const builder = new RangeSetBuilder()
+    
+    for (let { from, to } of view.visibleRanges) {
+      for (let pos = from; pos <= to;) {
+        const line = view.state.doc.lineAt(pos)
+        const text = line.text
+        let match
+        
+        // Logic 1: Step Name (Indent 0)
+        // Regex captures the key text before the colon
+        match = text.match(/^(\S[^:]*):/) 
+        if (match) {
+          const keyText = match[1] // The captured key
+          const keyStart = line.from
+          const keyEnd = line.from + keyText.length
+          
+          builder.add(keyStart, keyEnd, Decoration.mark({
+            class: "cm-yaml-step-key" // Apply class directly to the key
+          }))
+        }
+        
+        // Logic 2: Plugin Name (Indent 2)
+        // Regex captures the key text after the 2 spaces
+        match = text.match(/^\s{2}(\S[^:]*):/)
+        if (match) {
+          const keyText = match[1] // The captured key
+          // Start position needs to account for the 2 spaces
+          const keyStart = line.from + 2 
+          const keyEnd = keyStart + keyText.length
+          
+          builder.add(keyStart, keyEnd, Decoration.mark({
+            class: "cm-yaml-plugin-key" // Apply class directly to the key
+          }))
+        }
+        
+        pos = line.to + 1
+      }
+    }
+    return builder.finish()
+  }
+}, {
+  decorations: v => v.decorations
+})
 
   const $q = useQuasar()
 
@@ -233,6 +344,9 @@ const dollarTriggerExtension = EditorView.updateListener.of((update) => {
       autocompletion({ override: [myCompletions] }),
       dollarTriggerExtension,
       EditorView.lineWrapping,
+      variableHighlighter,
+      structureHighlighter,
+
       ...baseExtensions,
     ]
   })
@@ -247,4 +361,123 @@ const dollarTriggerExtension = EditorView.updateListener.of((update) => {
 .cm-editor {
   width: 100% !important;
 }
+
+/* Existing styles... */
+
+
+
+/* 1. The $variable Badge */
+/* (This usually works because regex matches often happen on text nodes, 
+    but we can bulletproof it too just in case) */
+.cm-yaml-variable,
+.cm-yaml-variable * {
+  background-color: #e0f7fa;
+  color: #006064 !important;
+  border-radius: 4px;
+  padding: 0px 4px;
+  font-family: monospace;
+  font-weight: bold;
+  font-size: 0.9em;
+  border: 1px solid #b2ebf2;
+  display: inline-block;
+  line-height: normal;
+}
+
+/* Dark Mode Badge */
+body.body--dark .cm-yaml-variable,
+body.body--dark .cm-yaml-variable * {
+  background-color: #2c3e50;
+  color: #56c6eb !important;
+  border-color: #34495e;
+}
+
+/* 1a. The $variable Badge (Simple - BLUE) */
+.cm-yaml-variable-simple,
+.cm-yaml-variable-simple * {
+  background-color: #e0f7fa; /* Light Cyan */
+  color: #006064 !important;    /* Dark Cyan Text */
+  border-radius: 4px;
+  padding: 0px 4px;
+  font-family: monospace;
+  font-weight: bold;
+  font-size: 0.9em;
+  border: 1px solid #b2ebf2;
+  display: inline-block;
+  line-height: normal;
+}
+
+/* Dark Mode Badge (Simple - BLUE) */
+body.body--dark .cm-yaml-variable-simple,
+body.body--dark .cm-yaml-variable-simple * {
+  background-color: #2c3e50;
+  color: #56c6eb !important;
+  border-color: #34495e;
+}
+
+/* 1b. The $variable Badge (Complex - PURPLE) */
+.cm-yaml-variable-complex,
+.cm-yaml-variable-complex * {
+  background-color: #f3e5f5; /* Light Purple */
+  color: #6a1b9a !important;   /* Dark Purple */
+  border-radius: 4px;
+  padding: 0px 4px;
+  font-family: monospace;
+  font-weight: bold;
+  font-size: 0.9em;
+  border: 1px solid #e1bee7;
+  display: inline-block;
+  line-height: normal;
+}
+
+/* Dark Mode Badge (Complex - PURPLE) */
+body.body--dark .cm-yaml-variable-complex,
+body.body--dark .cm-yaml-variable-complex * {
+  background-color: #3e2753; /* Darker Purple */
+  color: #ce93d8 !important;    /* Lighter Purple */
+  border-color: #4a148c;
+}
+
+/* 2. Step Name (Indent 0) */
+.cm-yaml-step-key,
+.cm-yaml-step-key * { /* <--- The * targets the inner .ͼl span */
+  font-weight: 900;
+  color: #1976d2 !important; 
+  font-size: 1.1em;
+  text-decoration: underline;
+  text-decoration-color: rgba(25, 118, 210, 0.3);
+}
+
+/* 3. Plugin Name (Indent 2) */
+.cm-yaml-plugin-key{
+/* Box styles */
+  background-color: transparent;
+  border: 1px solid #9c27b0; /* Purple border */
+  border-radius: 4px;         /* Rounded edges */
+  padding: 0px 4px;           /* Add some space */
+  display: inline-block;
+  line-height: normal;
+  
+  /* Text styles for the wrapper */
+  font-weight: 900;
+  font-size: 1.1em;
+  color: #9c27b0 !important; /* Purple text */
+}
+
+.cm-yaml-plugin-key * { /* <--- The * targets the inner .ͼl span */
+font-weight: inherit;
+  font-size: inherit;
+  color: #9c27b0 !important;
+  text-decoration: none !important;
+}
+
+/* Dark Mode Adjustment for Step Name */
+body.body--dark .cm-yaml-plugin-key {
+  border-color: #ce93d8; /* Lighter purple border */
+  color: #ce93d8 !important;
+}
+
+body.body--dark .cm-yaml-plugin-key * {
+   color: #ce93d8 !important;
+}
+
 </style>

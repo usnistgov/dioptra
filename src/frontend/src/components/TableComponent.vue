@@ -18,42 +18,38 @@
     @keydown="keydown"
     :rows-per-page-options="props.showAll ? [0] : [5,10,15,20,25,50,0]"
     :hideBottom="props.hideBottom && rows.length > 0"
-    :loading="props.loading"
   >
     <template v-slot:header="props">
       <q-tr :props="props">
-                <q-th auto-width v-if="selection === 'multiple'">
-          <q-checkbox v-model="props.selected" />
-        </q-th>
         <q-th v-for="col in props.cols" :key="col.name" :props="props">
           {{ col.label }}
         </q-th>
       </q-tr>
-    </template>
-<template v-slot:body="props">
-            <q-tr 
+    </template> 
+    <template v-slot:body="props">
+      <!-- props.row[field] - field needs to be unique ID, pass this in as a prop, or just use id -->
+      <q-tr 
         :class="`${getSelectedColor(props.selected)} cursor-pointer ${highlightRow(props)} ${disableRow(props)}` " 
         :props="props"
         @click="openResource(props); selectResource(props)"
       >
-                <q-td auto-width v-if="selection === 'multiple'">
-          <q-checkbox v-model="props.selected" @click.stop />
-        </q-td>
-
-                <q-td v-for="col in props.cols" :key="col.name" :props="props" :style="props.expand ? {'border-bottom': 'none'} : {}">
+        <q-td v-for="col in props.cols" :key="col.name" :props="props" :style="props.expand ? {'border-bottom': 'none'} : {}">
           <slot v-bind="props" :name="`body-cell-${col.name}`">
             <div v-if="typeof(col.value) === 'boolean'" class="text-body1">
-              {{ col.value ? '✅' :  '❌'}}
+              {{ col.value ? '✅' : 	'❌'}}
+            </div>
+            <div v-else-if="col.name === 'id'">
+              <span class="link">{{ props.row.id }}</span>
             </div>
             <div v-else-if="col.name === 'name'">
               {{ truncateString(props.row.name, 20) }}
-              <q-tooltip v-if="props.row.name.length > 20" max-width="30vw" style="overflow-wrap: break-word">
+              <q-tooltip v-if="props.row.name.length >= 20" max-width="30vw" style="overflow-wrap: break-word">
                 {{ props.row.name }}
               </q-tooltip>
             </div>
             <div v-else-if="col.name === 'description'">
               {{ truncateString(props.row.description, 40) }}
-              <q-tooltip v-if="props.row.description?.length > 40" max-width="30vw" style="overflow-wrap: break-word">
+              <q-tooltip v-if="props.row.description?.length >= 40" max-width="30vw" style="overflow-wrap: break-word">
                 {{ props.row.description }}
               </q-tooltip>
             </div>
@@ -62,7 +58,7 @@
                 v-for="(tag, i) in props.row.tags"
                 :key="i"
                 color="primary" 
-  m             text-color="white"
+                text-color="white"
                 clickable
                 @click.stop
                 class="q-my-none"
@@ -86,9 +82,18 @@
               {{ formatDate(col.value) }}
             </div>
             <div v-else-if="!Array.isArray(col.value)">
-                            {{ col.value }}
+              <!-- if value is an array, then render it with a custom slot -->
+              {{ col.value }}
             </div>
-                        <q-btn
+            <!-- <q-btn
+              v-if="col.name === 'open'"
+              round
+              color="primary"
+              icon="edit"
+              size="sm"
+              @click.stop="openResource(props)"
+            /> -->
+            <q-btn
               v-if="col.name === 'delete'"
               round
               color="negative"
@@ -105,10 +110,10 @@
           </slot>
         </q-td>
       </q-tr>
-      
-            <q-tr v-show="props.expand" :props="props" :class="`${highlightRow(props)}`">
+      <q-tr v-show="props.expand" :props="props" :class="`${highlightRow(props)}`">
         <q-td colspan="100%">
-                    <slot name="expandedSlot" :row="props.row" :rowProps="props" />
+          <!-- <div class="text-left ">Additional info for {{ props.row.name }}.</div> -->
+          <slot name="expandedSlot" :row="props.row" :rowProps="props" />
         </q-td>
       </q-tr>
     </template>
@@ -176,7 +181,6 @@
   showAll: Boolean,
   highlightRow: Boolean,
   selection: String,
-  loading: Boolean,
   disabledRowKeys: {
     type: Array,
     default: []
