@@ -18,6 +18,7 @@
 What is Dioptra?
 ================
 
+
 .. include:: /_glossary_note.rst
 
 .. include:: overview/executive-summary.rst
@@ -33,6 +34,28 @@ Email us: dioptra@nist.gov
    :maxdepth: -1
 
    glossary
+
+.. toctree::
+   :hidden:
+   :maxdepth: -1
+   :caption: Tutorials
+
+   tutorials/tutorial_1/index.rst
+
+.. toctree::
+   :hidden:
+   :maxdepth: -1
+   :caption: Learn Dioptra 
+
+   explanation/experiment-overview-explanation
+   explanation/components/index.rst
+
+.. toctree::
+   :hidden:
+   :maxdepth: -1
+   :caption: How-Tos
+
+   how-to/index.rst
 
 .. toctree::
    :hidden:
@@ -62,9 +85,10 @@ Email us: dioptra@nist.gov
 
 .. toctree::
    :hidden:
-   :maxdepth: -1
+   :maxdepth: 2
    :caption: Reference
 
+   reference/dioptra-components/index.rst
    reference/task-engine-reference
    reference/resource-import-reference
    reference/resource-search-language-reference

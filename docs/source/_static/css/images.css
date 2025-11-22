@@ -1,0 +1,93 @@
+/* This Software (Dioptra) is being made available as a public service by the
+National Institute of Standards and Technology (NIST), an Agency of the United
+States Department of Commerce. This software was developed in part by employees of
+NIST and in part by NIST contractors. Copyright in portions of this software that
+were developed by NIST contractors has been licensed or assigned to NIST. Pursuant
+to Title 17 United States Code Section 105, works of NIST employees are not
+subject to copyright protection in the United States. However, NIST may hold
+international copyright in software created by its employees and domestic
+copyright (or licensing rights) in portions of software that were assigned or
+licensed to NIST. To the extent that NIST holds copyright in this software, it is
+being made available under the Creative Commons Attribution 4.0 International
+license (CC BY 4.0). The disclaimers of the CC BY 4.0 license apply to all parts
+of the software developed or licensed by NIST.
+ACCESS THE FULL CC BY 4.0 LICENSE HERE:
+https://creativecommons.org/licenses/by/4.0/legalcode */
+
+figure.big-image {
+  width: min(1100px, calc(100vw - 350px - 2rem)) !important;
+  margin-left: 0;
+  margin-right: auto;
+}
+
+figure.big-image img {
+  width: 100% !important;
+  height: auto;
+  display: block;
+}
+
+@media (max-width: 960px) { 
+  figure.big-image {
+    width: min(1100px, 100vw - 2rem) !important;
+  }
+}
+
+
+/* --- Styling classes --- */
+
+/* Add subtle shadow + light gray frame */
+figure.border-image {
+  border: 1px solid #d0d0d0;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  padding: 4px;
+  transition: border-color 0.25s ease, border-width 0.25s ease, box-shadow 0.25s ease;
+}
+
+
+/* --- Interaction classes --- */
+
+figure.clickable-image,
+figure.clickable-image img {
+  /* cursor: zoom-in; */ /* Not legible on chromium or linux */
+  cursor: pointer !important;  /* force override inline style from sphinx */
+}
+
+figure.border-image.clickable-image:hover {
+  border-color: #40acff9d;   
+  border-width: 3px;       
+  box-shadow: 0 6px 14px rgba(0,0,0,0.18);
+}
+
+/* for image modal popup on click */
+
+/* Modal background */
+#img-modal {
+  display: none;          
+  position: fixed;
+  z-index: 9999;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.8);
+  justify-content: center;
+  align-items: center;
+}
+
+/* Modal content image */
+#img-modal img {
+  max-width: 90%;
+  max-height: 90%;
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  background: #fff;
+}
+
+#img-modal .close-btn {
+  position: absolute;
+  top: 20px;
+  right: 30px;
+  font-size: 2rem;
+  color: #fff;
+  cursor: pointer;
+}

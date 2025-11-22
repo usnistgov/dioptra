@@ -1,0 +1,4 @@
+MatplotlibArtifactTask:
+  contents: $viz_step
+  task:
+    name: MatplotlibArtifactTask

@@ -57,6 +57,7 @@ extensions = [
     "sphinx_togglebutton",
     "sphinxcontrib.httpdomain",
     "sphinxcontrib.openapi",
+    "sphinx_tabs.tabs",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -75,7 +76,9 @@ master_doc = "index"
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "dev-guide", "getting-started/installation.rst"]
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", 
+                    # "dev-guide", 
+                    "getting-started/installation.rst"]
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = "sphinx"
@@ -89,6 +92,7 @@ add_module_names = False
 #
 on_rtd = os.environ.get("READTHEDOCS") == "True"
 html_theme = "sphinx_book_theme"
+
 # if on_rtd:
 #     html_theme = "default"
 
@@ -100,13 +104,18 @@ html_theme = "sphinx_book_theme"
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
 
-html_css_files = ["dioptra.css"]
+
+html_css_files = ["dioptra.css", 
+                  'css/images.css',
+                  'css/component_styling.css'
+                  ]
 
 html_js_files = [
     "jquery.visible.js",
     "jquery.leaveNotice-nist.js",
     "applyLeaveNotice.js",
     "smoothNavScroll.js",
+    "image_modals.js"
 ]
 
 html_theme_options = {
@@ -116,6 +125,8 @@ html_theme_options = {
     "home_page_in_toc": True,
     "path_to_docs": "docs/source",
 }
+
+html_scaled_image_link = False
 
 # -- Extension configuration -------------------------------------------------
 

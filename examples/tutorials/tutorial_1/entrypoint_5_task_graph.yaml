@@ -1,0 +1,9 @@
+scale_step:
+  task: scale_array
+  args: [$artifact_input_array] # This comes from our Artifact Inputs
+
+viz_step:
+  task: visualize_rescaling_multi
+  args: [$artifact_input_array, $scale_step.output] # Reusing the artifact input, as well as the output of task 1
+  kwargs:
+    title: $figure_title # A regular entrypoint parameter
