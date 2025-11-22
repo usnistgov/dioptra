@@ -338,7 +338,7 @@ class PluginIdService(object):
         self,
         plugin_id: int,
         name: str,
-        description: str,
+        description: str | None,
         error_if_not_found: bool = False,
         commit: bool = True,
         **kwargs,

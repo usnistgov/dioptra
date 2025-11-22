@@ -30,6 +30,7 @@ from dioptra.restapi.utils import as_api_parser, as_parameters_schema_list
 from dioptra.restapi.v1.schemas import IdStatusResponseSchema
 
 from .schema import (
+    ResourceImportResolveNameConflictsStrategy,
     ResourceImportSchema,
     SignatureAnalysisOutputSchema,
     SignatureAnalysisSchema,
@@ -113,6 +114,10 @@ class ResourceImport(Resource):
         )
         parsed_form = request.parsed_form
 
+        conflict_strat = ResourceImportResolveNameConflictsStrategy(
+            parsed_form["resolve_name_conflicts_strategy"]
+        )
+
         return self._resource_import_service.import_resources(
             group_id=parsed_form["group_id"],
             source_type=parsed_form["source_type"],
@@ -120,9 +125,7 @@ class ResourceImport(Resource):
             archive_file=request.files.get("archiveFile", None),
             files=request.files.getlist("files", None),
             config_path=parsed_form["config_path"],
-            resolve_name_conflicts_strategy=parsed_form[
-                "resolve_name_conflicts_strategy"
-            ],
+            conflict_strat=conflict_strat,
             log=log,
         )
 
