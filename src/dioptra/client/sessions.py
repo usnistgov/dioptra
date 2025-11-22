@@ -335,7 +335,8 @@ class BaseDioptraRequestsSession(DioptraSession[T], ABC, Generic[T]):
             method_kwargs["data"] = merged_data
             method_kwargs["headers"] = {"Content-Type": merged_data.content_type}
 
-        return method(url, **method_kwargs)
+        response = method(url, **method_kwargs)
+        return response
 
     def download(
         self,

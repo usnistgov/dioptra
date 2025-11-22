@@ -15,9 +15,16 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from collections.abc import Iterable
-from typing import Any, ClassVar, Final, TypeVar
+from math import isnan
+from typing import Any, ClassVar, Final, TypeVar, cast
 
-from .base import CollectionClient, DioptraSession
+from requests import Response
+
+from .base import (
+    CollectionClient,
+    DioptraNoneToNanResponse,
+    DioptraSession,
+)
 from .snapshots import SnapshotsSubCollectionClient
 from .tags import TagsSubCollectionClient
 
@@ -241,7 +248,9 @@ class JobsCollectionClient(CollectionClient[T]):
         Returns:
             The response from the Dioptra API.
         """
-        return self._session.get(self.url, str(job_id), METRICS)
+        return metrics_wrapper(
+            self._session.get(self.url, str(job_id), METRICS), json_list_value_caster
+        )
 
     def append_metric_by_id(
         self,
@@ -263,13 +272,16 @@ class JobsCollectionClient(CollectionClient[T]):
         """
         json_ = {
             "name": metric_name,
-            "value": metric_value,
+            "value": metric_value if not isnan(metric_value) else None,
         }
 
         if metric_step is not None:
             json_["step"] = metric_step
 
-        return self._session.post(self.url, str(job_id), METRICS, json_=json_)
+        return metrics_wrapper(
+            self._session.post(self.url, str(job_id), METRICS, json_=json_),
+            json_value_caster,
+        )
 
     def get_metrics_snapshots_by_id(
         self,
@@ -293,8 +305,11 @@ class JobsCollectionClient(CollectionClient[T]):
             "index": index,
             "pageLength": page_length,
         }
-        return self._session.get(
-            self.url, str(job_id), METRICS, metric_name, SNAPSHOTS, params=params
+        return metrics_wrapper(
+            self._session.get(
+                self.url, str(job_id), METRICS, metric_name, SNAPSHOTS, params=params
+            ),
+            json_data_list_value_caster,
         )
 
     def get_logs_by_id(
@@ -347,3 +362,31 @@ class JobsCollectionClient(CollectionClient[T]):
         json_ = {"data": list(logs)}
 
         return self._session.post(self.url, str(job_id), LOG, json_=json_)
+
+
+def metrics_wrapper(response: T, caster) -> T:
+    try:
+        response = caster(response)
+    except TypeError:
+        response = cast(T, DioptraNoneToNanResponse(cast(Response, response), caster))
+    return response
+
+
+def json_experiment_caster(response):
+    for job in response["data"]:
+        job["metrics"] = json_list_value_caster(job["metrics"])
+    return response
+
+
+def json_data_list_value_caster(response):
+    response["data"] = json_list_value_caster(response["data"])
+    return response
+
+
+def json_list_value_caster(metric_lst):
+    return [json_value_caster(metric) for metric in metric_lst]
+
+
+def json_value_caster(json):
+    json["value"] = json["value"] if json["value"] is not None else float("nan")
+    return json

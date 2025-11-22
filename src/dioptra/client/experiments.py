@@ -27,6 +27,7 @@ from .drafts import (
     NewResourceDraftsSubCollectionClient,
     make_draft_fields_validator,
 )
+from .jobs import json_experiment_caster, metrics_wrapper
 from .snapshots import SnapshotsSubCollectionClient
 from .tags import TagsSubCollectionClient
 
@@ -767,4 +768,7 @@ class ExperimentsCollectionClient(CollectionClient[T]):
         if search is not None:
             params["search"] = search
 
-        return self._session.get(self.url, str(experiment_id), METRICS, params=params)
+        return metrics_wrapper(
+            self._session.get(self.url, str(experiment_id), METRICS, params=params),
+            json_experiment_caster,
+        )
