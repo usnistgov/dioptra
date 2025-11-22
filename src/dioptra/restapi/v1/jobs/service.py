@@ -16,6 +16,7 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform job endpoint operations."""
 
+import datetime
 from collections.abc import Iterable
 from typing import Any, Final, cast
 
@@ -36,7 +37,6 @@ from dioptra.restapi.errors import (
     JobInvalidParameterNameError,
     JobInvalidStatusTransitionError,
     JobMlflowRunAlreadySetError,
-    JobMlflowRunNotSetError,
     SortParameterValidationError,
 )
 from dioptra.restapi.v1 import utils
@@ -641,18 +641,13 @@ class JobIdMetricsService(object):
     """The service methods for retrieving the metrics of a job by unique id."""
 
     @inject
-    def __init__(
-        self,
-        job_id_mlflowrun_service: "JobIdMlflowrunService",
-        job_run_store: JobRunStoreProtocol,
-    ) -> None:
+    def __init__(self, job_id_service: JobIdService) -> None:
         """Initialize the job metrics service.
 
         All arguments are provided via dependency injection.
 
         """
-        self._job_id_mlflowrun_service = job_id_mlflowrun_service
-        self._job_run_store = job_run_store
+        self._job_id_service = job_id_service
 
     def get(
         self,
@@ -671,16 +666,26 @@ class JobIdMetricsService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get job metrics by id", job_id=job_id)
 
-        run_id: str | None = self._job_id_mlflowrun_service.get(job_id=job_id, log=log)
+        stmt = select(models.JobMetric).where(
+            models.JobMetric.is_latest, models.JobMetric.job_resource_id == job_id
+        )
+        job_metrics = list(db.session.scalars(stmt).all())
 
-        return self._job_run_store.get_metrics(run_id)
+        return [
+            {
+                "name": job_metric.name,
+                "value": job_metric.value,
+            }
+            for job_metric in job_metrics
+        ]
 
     def update(
         self,
         job_id: int,
         metric_name: str,
-        metric_value: float,
-        metric_step: int | None = None,
+        metric_value: float | None,
+        metric_step: int,
+        metric_timestamp: datetime.datetime | None,
         **kwargs,
     ) -> dict[str, Any]:
         """Update a job's metrics by its unique id.
@@ -695,14 +700,40 @@ class JobIdMetricsService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Update job metrics by id", job_id=job_id)
 
-        run_id: str | None = self._job_id_mlflowrun_service.get(job_id=job_id, log=log)
+        job_dict = self._job_id_service.get(job_id, error_if_not_found=True)
 
-        if run_id is None:
-            raise JobMlflowRunNotSetError
+        job = job_dict["job"]
 
-        self._job_run_store.log_metric(
-            run_id=run_id, name=metric_name, value=metric_value, step=metric_step
+        stmt = select(models.JobMetric).where(
+            models.JobMetric.step == metric_step,
+            models.JobMetric.job_resource_id == job_id,
+            models.JobMetric.name == metric_name,
         )
+
+        metric: models.JobMetric | None = db.session.scalars(stmt).first()
+
+        ts = (
+            metric_timestamp
+            if metric_timestamp is not None
+            else datetime.datetime.now(tz=datetime.timezone.utc)
+        )
+
+        if metric is None:
+            new_metric = models.JobMetric(
+                name=metric_name,
+                value=metric_value,
+                step=metric_step,
+                timestamp=ts,
+                job_resource=job.resource,
+            )
+
+            db.session.add(new_metric)
+        else:
+            metric.value = metric_value
+            metric.timestamp = ts
+
+        db.session.commit()
+
         return {"name": metric_name, "value": metric_value}
 
 
@@ -749,15 +780,25 @@ class JobIdMetricsSnapshotsService(object):
             metric_name=metric_name,
         )
 
-        run_id: str | None = self._job_id_mlflowrun_service.get(job_id=job_id, log=log)
-        if run_id is None:
-            raise JobMlflowRunNotSetError
-        return self._job_run_store.get_metric_history(
-            run_id=run_id,
-            name=metric_name,
-            page_index=page_index,
-            page_length=page_length,
+        job_metrics_stmt = select(models.JobMetric).where(
+            models.JobMetric.job_resource_id == job_id,
+            models.JobMetric.name == metric_name,
         )
+
+        history = list(db.session.scalars(job_metrics_stmt).unique().all())
+
+        metrics_page = [
+            {
+                "name": metric.name,
+                "value": metric.value,
+                "step": metric.step,
+                "timestamp": metric.timestamp,
+            }
+            for metric in history[
+                page_index * page_length : (page_index + 1) * page_length
+            ]
+        ]
+        return metrics_page, len(history)
 
 
 class ExperimentJobService(object):

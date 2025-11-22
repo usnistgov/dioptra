@@ -85,6 +85,13 @@ class MetricsSchema(Schema):
         required=False,
         load_default=0,
     )
+    timestamp = fields.DateTime(
+        attribute="timestamp",
+        metadata={"description": "A timestamp value for the metric"},
+        load_only=True,
+        required=False,
+        load_default=None,
+    )
 
 
 class MetricsSnapshotSchema(Schema):
@@ -100,9 +107,11 @@ class MetricsSnapshotSchema(Schema):
         attribute="step",
         metadata={"description": "The step value for the metric."},
     )
-    timestamp = fields.Integer(
+    timestamp = fields.DateTime(
         attribute="timestamp",
-        metadata={"description": "The timestamp of the metric in milliseconds."},
+        metadata={
+            "description": "The server timestamp for when the metric was last created/updated."
+        },
     )
 
 

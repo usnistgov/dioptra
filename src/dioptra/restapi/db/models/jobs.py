@@ -17,8 +17,17 @@
 import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, ForeignKey, ForeignKeyConstraint, Index, Text, select
-from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
+from sqlalchemy import (
+    Column,
+    ForeignKey,
+    ForeignKeyConstraint,
+    Index,
+    PrimaryKeyConstraint,
+    Text,
+    func,
+    select,
+)
+from sqlalchemy.orm import Mapped, aliased, column_property, mapped_column, relationship
 
 from dioptra.restapi.db.db import (
     bigint,
@@ -26,6 +35,7 @@ from dioptra.restapi.db.db import (
     db,
     guid,
     intpk,
+    optionaldouble_,
     text_,
 )
 
@@ -256,3 +266,37 @@ class JobLog(db.Model):  # type: ignore[name-defined]
     def __post_init__(self) -> None:
         timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
         self.created_on = timestamp
+
+
+class JobMetric(db.Model):  # type: ignore[name-defined]
+    __tablename__ = "job_metrics"
+
+    # Database fields
+
+    job_resource_id: Mapped[bigint] = mapped_column(
+        ForeignKey("resources.resource_id"), init=False
+    )
+    name: Mapped[text_]
+    value: Mapped[optionaldouble_]
+    step: Mapped[bigint]
+    timestamp: Mapped[datetimetz]
+
+    # Relationships
+    job_resource: Mapped["Resource"] = relationship()
+
+    # Additional settings
+    __table_args__ = (PrimaryKeyConstraint("job_resource_id", "name", "step"),)
+
+    @classmethod
+    def __declare_last__(cls) -> None:
+        job_metric_alias = aliased(cls)
+        cls.is_latest = column_property(
+            select(func.max(job_metric_alias.step))
+            .where(
+                job_metric_alias.job_resource_id == cls.job_resource_id,
+                job_metric_alias.name == cls.name,
+            )
+            .correlate_except(job_metric_alias)
+            .scalar_subquery()
+            == cls.step
+        )
