@@ -27,11 +27,9 @@ from structlog.stdlib import BoundLogger
 from dioptra.restapi.db import db, models
 from dioptra.restapi.db.models.constants import resource_lock_types
 from dioptra.restapi.errors import (
-    ArtifactTaskPluginTaskOverlapError,
     BackendDatabaseError,
     EntityDoesNotExistError,
     EntityExistsError,
-    PluginTaskArtifactTaskOverlapError,
     QueryParameterNotUniqueError,
     SortParameterValidationError,
 )
@@ -154,8 +152,6 @@ class EntrypointService(object):
         artifact_plugins = self._plugin_ids_service.get(
             artifact_plugin_ids, error_if_not_found=True
         )
-        # check this early
-        _ensure_no_plugin_task_overlap(plugin_ids, artifact_plugin_ids, True)
 
         resource = models.Resource(resource_type=RESOURCE_TYPE, owner=group)
 
@@ -194,9 +190,11 @@ class EntrypointService(object):
             artifact_plugin["plugin"].resource for artifact_plugin in artifact_plugins
         ]
         queue_resources = [queue.resource for queue in queues]
-        new_entrypoint.children.extend(
-            plugin_resources + queue_resources + artifact_plugin_resources
+        all_plugin_resources = _deduplicate_plugin_resources(
+            plugin_resources, artifact_plugin_resources
         )
+
+        new_entrypoint.children.extend(all_plugin_resources + queue_resources)
 
         if commit:
             db.session.commit()
@@ -511,9 +509,11 @@ class EntrypointIdService(object):
             target_entrypoint=new_entrypoint,
         )
         queue_resources = [queue.resource for queue in queues]
-        new_entrypoint.children = (
-            plugin_resources + queue_resources + artifact_plugin_resources
+        all_plugin_resources = _deduplicate_plugin_resources(
+            plugin_resources, artifact_plugin_resources
         )
+
+        new_entrypoint.children = all_plugin_resources + queue_resources
 
         if commit:
             db.session.commit()
@@ -753,19 +753,10 @@ class EntrypointIdPluginsService(object):
         entrypoint = self._entrypoint_id_service.get(entrypoint_id, log=log)[
             "entry_point"
         ]
-        # make sure the ids are unique
 
+        # make sure the ids are unique
         plugin_id_set = set(plugin_ids)
         plugin_ids = list(plugin_id_set)
-        # check this early
-        _ensure_no_plugin_task_overlap(
-            plugin_ids,
-            [
-                artifact_plugin.plugin.resource_id
-                for artifact_plugin in entrypoint.entry_point_artifact_plugins
-            ],
-            True,
-        )
 
         new_entrypoint = models.EntryPoint(
             name=entrypoint.name,
@@ -810,9 +801,11 @@ class EntrypointIdPluginsService(object):
             if resource.resource_type == "queue"
         ]
 
-        new_entrypoint.children = (
-            plugin_resources + queue_resources + artifact_plugin_resources
+        all_plugin_resources = _deduplicate_plugin_resources(
+            plugin_resources, artifact_plugin_resources
         )
+
+        new_entrypoint.children = all_plugin_resources + queue_resources
 
         if commit:
             db.session.commit()
@@ -952,9 +945,11 @@ class EntrypointIdPluginsIdService(object):
             if resource.resource_type == "queue"
         ]
 
-        new_entrypoint.children = (
-            plugin_resources + queue_resources + artifact_plugin_resources
+        all_plugin_resources = _deduplicate_plugin_resources(
+            plugin_resources, artifact_plugin_resources
         )
+
+        new_entrypoint.children = all_plugin_resources + queue_resources
 
         if commit:
             db.session.commit()
@@ -1046,11 +1041,6 @@ class EntrypointIdArtifactPluginsService(object):
 
         artifact_plugin_id_set = set(artifact_plugin_ids)
         artifact_plugin_ids = list(artifact_plugin_id_set)
-        _ensure_no_plugin_task_overlap(
-            [plugin.plugin.resource_id for plugin in entrypoint.entry_point_plugins],
-            artifact_plugin_ids,
-            False,
-        )
 
         new_entrypoint = models.EntryPoint(
             name=entrypoint.name,
@@ -1096,9 +1086,11 @@ class EntrypointIdArtifactPluginsService(object):
             if resource.resource_type == "queue"
         ]
 
-        new_entrypoint.children = (
-            plugin_resources + queue_resources + artifact_plugin_resources
+        all_plugin_resources = _deduplicate_plugin_resources(
+            plugin_resources, artifact_plugin_resources
         )
+
+        new_entrypoint.children = all_plugin_resources + queue_resources
 
         if commit:
             db.session.commit()
@@ -1248,9 +1240,11 @@ class EntrypointIdArtifactPluginsIdService(object):
             if resource.resource_type == "queue"
         ]
 
-        new_entrypoint.children = (
-            plugin_resources + queue_resources + artifact_plugin_resources
+        all_plugin_resources = _deduplicate_plugin_resources(
+            plugin_resources, artifact_plugin_resources
         )
+
+        new_entrypoint.children = all_plugin_resources + queue_resources
 
         if commit:
             db.session.commit()
@@ -1619,19 +1613,6 @@ def _get_entrypoint_artifact_plugin_snapshots(
     ]
 
 
-def _ensure_no_plugin_task_overlap(
-    plugins: list[int],
-    artifact_plugins: list[int],
-    addingPlugins: bool = True,
-):
-    intersection = set(plugins).intersection(artifact_plugins)
-    if len(intersection) > 0:
-        if addingPlugins:
-            raise PluginTaskArtifactTaskOverlapError(str(intersection))
-        else:
-            raise ArtifactTaskPluginTaskOverlapError(str(intersection))
-
-
 def _copy_plugins(
     plugins: Iterable[models.EntryPointPlugin], target_entrypoint: models.EntryPoint
 ) -> list[models.Resource]:
@@ -1667,6 +1648,24 @@ def _copy_artifact_plugins(
         {
             artifact_plugin.plugin.resource_id: artifact_plugin.plugin.resource
             for artifact_plugin in target_entrypoint.entry_point_artifact_plugins
+        }.values()
+    )
+
+
+def _deduplicate_plugin_resources(
+    plugin_resources: list[models.Resource],
+    artifact_plugin_resources: list[models.Resource],
+) -> list[models.Resource]:
+    """
+    De-duplicates two lists of Plugin resources and returns a combined list.
+
+    Returns:
+        A de-duplicated list of Plugin resources
+    """
+    return list(
+        {
+            resource.resource_id: resource
+            for resource in plugin_resources + artifact_plugin_resources
         }.values()
     )
 
