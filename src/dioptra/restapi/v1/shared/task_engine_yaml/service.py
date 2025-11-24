@@ -24,6 +24,7 @@ from structlog.stdlib import BoundLogger
 from yaml.parser import ParserError
 from yaml.scanner import ScannerError
 
+from dioptra.restapi.db.models.artifacts import ArtifactTask
 from dioptra.restapi.db.models.entry_points import (
     EntryPointArtifactOutputParameter,
     EntryPointParameterValue,
@@ -204,6 +205,10 @@ class TaskEngineYamlService(object):
             plugin_file = plugin_plugin_file.plugin_file
 
             for task in plugin_file.tasks:
+                # ignore artifact tasks
+                if isinstance(task, ArtifactTask):
+                    continue
+
                 input_parameters = sorted(
                     task.input_parameters, key=lambda x: x.parameter_number
                 )
