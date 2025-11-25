@@ -108,6 +108,14 @@ class ResourceSnapshotsService(object):
                 models.Resource.is_deleted == False,  # noqa: E712
             )
         )
+
+        output_params = kwargs.get("output_params")
+
+        if self._resource_type == "artifact" and output_params:
+            from dioptra.restapi.v1.artifacts.service import apply_output_params_filter
+
+            stmt = apply_output_params_filter(stmt, output_params)
+
         total_num_snapshots = db.session.scalars(stmt).unique().first()
 
         if total_num_snapshots is None:
@@ -133,6 +141,12 @@ class ResourceSnapshotsService(object):
             .offset(page_index)
             .limit(page_length)
         )
+
+        if self._resource_type == "artifact" and output_params:
+            from dioptra.restapi.v1.artifacts.service import apply_output_params_filter
+
+            stmt = apply_output_params_filter(stmt, output_params)
+
         snapshots = [
             {self._resource_type: snapshot, "has_draft": None}
             for snapshot in db.session.scalars(stmt).unique()
