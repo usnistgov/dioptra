@@ -90,7 +90,6 @@
                 }
             },
             "patternProperties": {
-                "^dependencies$": { "$ref": "#/$defs/step_dependencies" },
                 "^(?!\\?|dependencies$).*": { "type": "object"}
             },
             "minProperties": 1,
