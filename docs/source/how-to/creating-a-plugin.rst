@@ -40,45 +40,134 @@ Prerequisites
 Plugin Creation Workflow
 ------------------------
 
-Follow these steps to create and register a new plugin.
+Follow these steps to create and register a new plugin. You can perform these actions via the web GUI or programmatically using the Python Client.
 
 .. admonition:: Step 1: Prepare your Python Code
 
    Write your Python functions or Artifact classes in a local file. Ensure you have applied the necessary decorators or class inheritance.
-   
+
    * For standard functions, see :ref:`Code Example: Function Tasks <plugin_function_code>`.
    * For artifact handlers, see :ref:`Code Example: Artifact Tasks <plugin_artifact_code>`.
 
 .. admonition:: Step 2: Create the Plugin Container
 
-   In the Dioptra GUI, navigate to the **Plugins tab**. Click **Create a new plugin**. Enter a *name* and *description*, then confirm.
+   First, define the container that will hold your files.
+
+   .. tabs::
+
+      .. tab:: GUI
+
+         In the Dioptra GUI, navigate to the **Plugins tab**. Click **Create a new plugin**. Enter a *name* and *description*, then confirm.
+
+      .. tab:: Python Client
+
+         Use the client to create the plugin container.
+
+         **Client Method:**
+
+
+            .. automethod:: dioptra.client.plugins.PluginsCollectionClient.create
+
+         **Example:**
+
+         .. code-block:: python
+
+            # Set up
+            # from dioptra.client import connect_json_dioptra_client, select_files_in_directory
+            # DIOPTRA_REST_API_ADDRESS = "http://localhost:5000"
+            # DIOPTRA_REST_API_USER = "<user>"
+            # DIOPTRA_REST_API_PASS = "<password>"
+            # client = connect_json_dioptra_client(DIOPTRA_REST_API_ADDRESS)
+            # client.auth.login(DIOPTRA_REST_API_USER, DIOPTRA_REST_API_PASS)
+            
+            # Create the plugin container
+            plugin = client.plugins.create(group_id, "hello", "This is a Hello World Plugin")
 
 .. admonition:: Step 3: Create a Plugin File
 
-   Click into your newly created Plugin. Within the Plugin container, click the **"Create"** button in the Plugin Files window. In the Plugin file editor, provide a filename, a description, and paste or upload your Python code (from Step 1) into the code editor.
+   Next, add your Python code to the container.
 
-.. admonition:: Step 4: Register Tasks
+   .. tabs::
 
-   You must register the specific tasks defined in your code so Dioptra can see them. Use the **Task Form** on the right side of the file editor:
+      .. tab:: GUI
 
-   * **For Functions:** Click **"Import Function Tasks"** to auto-detect and register decorated functions (requires type annotations in Python code). Alternatively, register tasks manually:
-     
-     * **Task Name:** Must match the Python *Function Name* exactly.
-     * **Input Params:** Add parameters matching your function arguments exactly.
-     * **Output Params:** Define names for the returned values. See :ref:`Multiple Outputs <multiple_outputs_ref>` below for details on handling iterables.
+         Click into your newly created Plugin. Within the Plugin container, click the **"Create"** button in the Plugin Files window. 
 
-   * **For Artifacts:** You must **manually register** the task. 
-     
-     * **Task Name:** Must match the Python *Class Name* exactly.
-     * **Output Params:** Select the **Parameter Type** that corresponds to the object produced by the ``deserialize`` method.
+         In the Plugin file editor, provide a filename, a description, and paste or upload your Python code (from Step 1) into the code editor.
 
+      .. tab:: Python Client
 
-   All inputs and outputs require a **Parameter Type** for validation. See :ref:`Plugin Parameter Types <plugin_param_types_ref>` below.
+         Use the ``client.plugins.files.create()`` method to upload code and register tasks simultaneously.
+         
+         **Client Method:**
 
-.. admonition:: Step 5: Save and Confirm
+            .. automethod:: dioptra.client.plugins.PluginFilesSubCollectionClient.create
 
-   Once the tasks appear in the list, click **Save File**. Your plugin is now ready for use in experiments.
+         **Example:**
 
+         .. code-block:: python
+
+               # From Step 2:
+               # plugin = client.plugins.create(group_id, "hello", "This is a Hello World Plugin")
+
+               # Create files with Python code
+               file = client.plugins.files.create(
+                  plugin_id=plugin["id"],
+                  filename="hello.py",
+                  content=PYTHON_CONTENTS,
+                  tasks=[{
+                     "name": "hello_world",
+                     "inputParams": [
+                           {
+                              "name": "greeting",
+                              "parameterType": string_param_type_id,
+                              "required": True
+                           },
+                           {
+                              "name": "name",
+                              "parameterType": string_param_type_id,
+                              "required": True
+                           }
+                     ],
+                     "outputParams": [
+                           {
+                              "name": "message",
+                              "parameterType": string_param_type_id,
+                           }
+                     ]
+                  }]
+               )
+
+.. admonition:: Step 4: Register Tasks (GUI only)
+
+   Finally, register the tasks so they are visible to Dioptra.
+
+   .. tabs::
+
+      .. tab:: GUI
+
+         Use the **Task Form** on the right side of the file editor:
+
+         * **For Functions:** Click **"Import Function Tasks"** to auto-detect and register decorated functions (requires type annotations in Python code). Alternatively, register tasks manually:
+           
+           * **Task Name:** Must match the Python *Function Name* exactly.
+           * **Input Params:** Add parameters matching your function arguments exactly.
+           * **Output Params:** Define names for the returned values.
+
+         * **For Artifacts:** You must **manually register** the task. 
+           
+           * **Task Name:** Must match the Python *Class Name* exactly.
+           * **Output Params:** Select the **Parameter Type** that corresponds to the object produced by the ``deserialize`` method.
+
+         All inputs and outputs require a **Parameter Type** for validation. See :ref:`Plugin Parameter Types <plugin_param_types_ref>` below.
+
+      .. tab:: Python Client
+
+         This is done as part of ``create()`` method in step 3
+
+.. admonition:: Step 5: Save and Confirm (GUI only)
+
+   Once the tasks appear in the list (GUI) or the API call returns successfully (Python Client), your plugin is ready for use in experiments.
 ----
 
 .. _plugin_param_types_ref:
@@ -112,27 +201,6 @@ If your function returns a single value, you map it to a single output parameter
 
    See :ref:`Plugins - Reference <plugins-reference-return-values>` for more. 
 
-Register with REST API
-----------------------
-
-Using Python Client
-~~~~~~~~~~~~~~~~~~~~~~
-
-You can register plugins programmatically using the **Dioptra Python client**. This is essential for automated deployment pipelines.
-
-   .. automethod:: dioptra.client.plugins.PluginFilesSubCollectionClient.create
-      :no-docstring:
-
-See :ref:`Plugins - Reference <plugin-reference-python-client-registration>` for full code examples and workflow.
-
-With HTTP Requests
-~~~~~~~~~~~~~~~~~~~~~~
-
-Plugins can also be created and registered directly using **HTTP POST** requests.
-
-See the :http:post:`POST /api/v1/plugins </api/v1/plugins/>` endpoint documentation for payload requirements.
-
-----
 
 .. _plugin_function_code:
 
