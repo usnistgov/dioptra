@@ -1,7 +1,8 @@
 import json
 import pathlib
 
-SCHEMA_FILENAME = 'swappable_experiment_schema.json'
+SCHEMA_FILENAME = "swappable_experiment_schema.json"
+
 
 def get_json_schema(default: bool = False) -> dict:
     """
