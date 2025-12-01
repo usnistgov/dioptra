@@ -108,7 +108,7 @@ flask-sqlalchemy==3.1.1
     #   flask-migrate
 flatbuffers==24.3.25
     # via tensorflow
-fonttools==4.54.1
+fonttools==4.61.0
     # via matplotlib
 fsspec==2024.10.0
     # via dask
