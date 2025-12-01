@@ -302,6 +302,9 @@ class JobsCollectionClient(CollectionClient[T]):
         job_id: str | int,
         index: int = 0,
         page_length: int = 10,
+        sort_by: str | None = None,
+        descending: bool | None = None,
+        severity: list[str] | None = None,
     ) -> T:
         """
         Get log records for the given job resource. Records are returned in the order
@@ -311,6 +314,11 @@ class JobsCollectionClient(CollectionClient[T]):
             job_id: The resource ID of a job.
             index: Index of the first log record to return.
             page_length: Number of log records to return.
+            sort_by: The field to use to sort the returned list. Optional, defaults to
+                None.
+            descending: Sort the returned list in descending order. Optional, defaults
+                to None.
+            severity: list of severities to filter on
 
         Returns:
             The response from the Dioptra API.
@@ -320,6 +328,15 @@ class JobsCollectionClient(CollectionClient[T]):
             "index": index,
             "pageLength": page_length,
         }
+
+        if sort_by is not None:
+            params["sortBy"] = sort_by
+
+        if descending is not None:
+            params["descending"] = descending
+
+        if severity:
+            params["severity"] = severity
 
         return self._session.get(self.url, str(job_id), LOG, params=params)
 

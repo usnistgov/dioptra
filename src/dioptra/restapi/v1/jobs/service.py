@@ -85,6 +85,16 @@ SORTABLE_FIELDS: Final[dict[str, Any]] = {
     "entrypoint": models.EntryPoint.name,
     "queue": models.Queue.name,
 }
+SEARCHABLE_LOG_FIELDS: Final[dict[str, Any]] = {
+    "severity": lambda x: models.JobLog.severity.like(x),
+    "message": lambda x: models.JobLog.message.like(x),
+    "logger_name": lambda x: models.JobLog.logger_name.like(x),
+}
+SORTABLE_LOG_FIELDS: Final[dict[str, Any]] = {
+    "severity": models.JobLog.severity,
+    "logger_name": models.JobLog.logger_name,
+    "created_on": models.JobLog.created_on,
+}
 JOB_STATUS_TRANSITIONS: Final[dict[str, Any]] = {
     "queued": {"started", "deferred", "reset"},
     "started": {"finished", "failed", "reset"},
@@ -1396,6 +1406,10 @@ class JobLogService(object):
         job_resource_id: int,
         index: int,
         page_length: int,
+        search_string: str,
+        sort_by_string: str,
+        descending: bool,
+        severity: list[str] | None = None,
         **kwargs,
     ) -> tuple[list[dict[str, Any]], int]:
         """
@@ -1405,6 +1419,10 @@ class JobLogService(object):
             job_resource_id: The resource ID of a job
             index: Zero-based index of the first log record to return
             page_length: The number of records to return
+            search_string: A search string used to filter results.
+            sort_by_string: The name of the column to sort.
+            descending: Boolean indicating whether to sort by descending or not.
+            severity: list of severities to filter by
 
         Returns:
             A 2-tuple including (1) The list of records comprising this page,
@@ -1414,22 +1432,45 @@ class JobLogService(object):
 
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get job logs", job_id=job_resource_id)
+
+        filters = []
+
+        if search_string:
+            filters.append(
+                construct_sql_query_filters(search_string, SEARCHABLE_LOG_FIELDS)
+            )
+
         count_stmt = (
             select(func.count())
             .select_from(models.JobLog)
-            .where(models.JobLog.job_resource_id == job_resource_id)
+            .where(*filters, models.JobLog.job_resource_id == job_resource_id)
         )
+        if severity:
+            count_stmt = count_stmt.where(models.JobLog.severity.in_(severity))
         total_count = db.session.scalar(count_stmt)
         # "select count(*) ..." can't produce None
         assert total_count is not None
 
         page_stmt = (
             select(models.JobLog)
-            .where(models.JobLog.job_resource_id == job_resource_id)
-            .order_by(models.JobLog.id)
+            .where(*filters, models.JobLog.job_resource_id == job_resource_id)
             .offset(index)
             .limit(page_length)
         )
+
+        if severity:
+            page_stmt = page_stmt.where(models.JobLog.severity.in_(severity))
+
+        if sort_by_string and sort_by_string in SORTABLE_LOG_FIELDS:
+            sort_column = SORTABLE_LOG_FIELDS[sort_by_string]
+            sort_column = sort_column.desc() if descending else sort_column.asc()
+            # primary: user sort, secondary: id
+            page_stmt = page_stmt.order_by(sort_column, models.JobLog.id)
+        elif sort_by_string:
+            raise SortParameterValidationError(RESOURCE_TYPE, sort_by_string)
+        else:
+            # default: just by id
+            page_stmt = page_stmt.order_by(models.JobLog.id)
 
         log_objs = db.session.scalars(page_stmt)
 

@@ -243,12 +243,20 @@ export async function getJobMetrics(id: number) {
   return await axios.get(`/api/jobs/${id}/metrics`)
 }
 
-export async function getJobLogs(id: number, pagination: Pagination) {
+export async function getJobLogs(id: number, pagination: Pagination, severity?: string[]) {
   const res = await axios.get(`/api/jobs/${id}/log`, {
     params: {
       index: pagination.index,
       pageLength: pagination.rowsPerPage === 0 ? 100 : pagination.rowsPerPage,  // 0 means GET ALL
       search: pagination.search,
+      sortBy: pagination.sortBy,
+      descending: pagination.descending,
+      severity: severity ?? null,
+    },
+    paramsSerializer: {
+      // This makes arrays become: severity=INFO&severity=WARNING
+      // instead of severity[]=INFO&severity[]=WARNING
+      indexes: null,
     },
   })
 

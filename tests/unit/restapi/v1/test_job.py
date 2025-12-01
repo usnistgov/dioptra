@@ -1353,3 +1353,62 @@ def test_forward_job_logs_using_loggers(
         "first": f"/api/v1/jobs/{job_resource_id}/log?index=0&pageLength=10",
         "data": expected_log_records,
     }
+
+
+def test_get_logs_filtered_by_severity(
+    dioptra_client,
+    registered_jobs,
+    registered_job_logs,
+):
+    # Test that jobs logs can be filtered by severity
+
+    job = registered_jobs["job1"]
+    job_resource_id = job["id"]
+
+    resp = dioptra_client.jobs.get_logs_by_id(
+        job_resource_id,
+        severity=["CRITICAL"],
+    )
+    returned = resp.json()
+
+    # Validate that createdOn timestamps are present in the logs, then remove them for a
+    # predictable comparison.
+    for log in returned["data"]:
+        assert "createdOn" in log
+        del log["createdOn"]
+
+    expected = [log for log in registered_job_logs if log["severity"] == "CRITICAL"]
+
+    assert returned["data"] == expected
+
+
+@pytest.mark.parametrize(
+    "sortBy, descending , expected",
+    [
+        ("severity", True, ["WARNING", "INFO", "ERROR", "DEBUG", "CRITICAL"]),
+        ("severity", False, ["CRITICAL", "DEBUG", "ERROR", "INFO", "WARNING"]),
+    ],
+)
+def test_job_log_sort(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_jobs: dict[str, Any],
+    registered_job_logs,
+    sortBy: str,
+    descending: bool,
+    expected: list[str],
+) -> None:
+    # Test that jobs logs can be sorted by column, specifically severity.
+
+    job = registered_jobs["job1"]
+    job_resource_id = job["id"]
+
+    resp = dioptra_client.jobs.get_logs_by_id(
+        job_resource_id,
+        sort_by=sortBy,
+        descending=descending
+    )
+    returned = resp.json()
+    returned_severities = [log["severity"] for log in returned["data"]]
+
+    assert returned_severities == expected

@@ -429,8 +429,20 @@ class JobIdLogEndpoint(Resource):
     def get(self, id: int):
         index = request.parsed_query_params["index"]  # type: ignore
         page_length = request.parsed_query_params["page_length"]  # type: ignore
+        search_string = unquote(request.parsed_query_params["search"])  # type: ignore
+        severity = request.parsed_query_params.get("severity")  # type: ignore
+        sort_by_string = request.parsed_query_params["sort_by"]  # type: ignore
+        descending = request.parsed_query_params["descending"]  # type: ignore
 
-        records, total = self._job_log_service.get_logs(id, index, page_length)
+        records, total = self._job_log_service.get_logs(
+            job_resource_id=id,
+            index=index,
+            page_length=page_length,
+            search_string=search_string,
+            sort_by_string=sort_by_string,
+            descending=descending,
+            severity=severity,
+        )
 
         page = utils.build_paging_envelope(
             f"{V1_JOBS_ROUTE}/{id}/log",
@@ -442,6 +454,8 @@ class JobIdLogEndpoint(Resource):
             index=index,
             length=page_length,
             total_num_elements=total,
+            sort_by=sort_by_string,
+            descending=descending,
         )
 
         return page
