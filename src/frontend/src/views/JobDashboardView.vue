@@ -121,7 +121,6 @@
         :hideDeleteBtn="true"
         :disableSelect="true"
         :hideCreateBtn="true"
-        :hideSearch="true"
         style="margin-top: 0;"
         class="q-mb-lg"
         ref="tableRef"
@@ -146,19 +145,20 @@
             emit-value
             map-options
             dense
-            filled
+            outlined
             style="width: 175px"
             class="q-mr-lg"
           />
-          <!-- <q-select
+          <q-select
             label="Filter Severity"
             v-model="selectedSeverity"
-            :options="['INFO', 'WARNING', 'ERROR']"
+            :options="['DEBUG', 'INFO','WARNING', 'ERROR', 'CRITICAL']"
             multiple
-            style="width: 225px;"
-            filled
-            dense 
-            class="q-mr-lg" 
+            outlined
+            dense
+            use-chips 
+            class="q-mr-lg"
+            style="width: 485px;" 
           >
             <template v-slot:option="{ itemProps, opt, selected, toggleOption }">
               <q-item v-bind="itemProps">
@@ -175,7 +175,7 @@
                 </q-item-section>
               </q-item>
             </template>
-          </q-select> -->
+          </q-select>
         </template>
       </TableComponent>
     </div>
@@ -340,11 +340,11 @@ async function loadAllMetricHistories() {
 }
 
 const jobLogs = ref([])
-const filteredJobLogs = computed(() => {
-  return jobLogs.value.filter((log) => selectedSeverity.value.includes(log.severity))
-})
-const selectedSeverity = ref(['INFO', 'WARNING', 'ERROR'])
+const selectedSeverity = ref(['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'])
 watch(selectedSeverity, () => {
+  if(selectedSeverity.value.length === 0) {
+    selectedSeverity.value = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
+  }
   tableRef.value.refreshTable()
 })
 
@@ -352,11 +352,9 @@ const tableRef = ref(null)
 
 async function getLogs(pagination) {
   try {
-    const res = await api.getJobLogs(job.value.id, pagination)
+    const res = await api.getJobLogs(job.value.id, pagination, selectedSeverity.value)
     console.log('logs = ', res.data)
-    jobLogs.value = res.data.data.filter(log =>
-      selectedSeverity.value.includes(log.severity)
-    )
+    jobLogs.value = res.data.data
     logTotalNumber.value = res.data.totalNumResults
     tableRef.value.updateTotalRows(res.data.totalNumResults)
   } catch(err) {
@@ -402,7 +400,7 @@ async function setupLogsPolling() {
 
   if (tab.value !== 'logs') return
 
-  await getJob()
+  await getJob() // get job status
   if(job.value.status === 'finished' || job.value.status === 'failed') return
 
   // Ensure the table is rendered so tableRef is non-null
@@ -413,7 +411,7 @@ async function setupLogsPolling() {
 
   // Then start interval
   logsIntervalId = setInterval(async() => {
-    await getJob()
+    await getJob() // get job status
     if(job.value.status === 'finished' || job.value.status === 'failed') {
       clearLogsInterval()
       return
@@ -505,9 +503,9 @@ const metricColumns = [
 ]
 
 const logColumns = [
-  { name: 'severity', label: 'Severity', align: 'left', field: 'severity', sortable: false, classes: 'vertical-top' },
-  { name: 'loggerName', label: 'Logger Name', align: 'left', field: 'loggerName', sortable: false, classes: 'vertical-top', },
-  { name: 'createdOn', label: 'Received On', align: 'left', field: 'createdOn', sortable: false, classes: 'vertical-top', },
+  { name: 'severity', label: 'Severity', align: 'left', field: 'severity', sortable: true, classes: 'vertical-top' },
+  { name: 'logger_name', label: 'Logger Name', align: 'left', field: 'loggerName', sortable: true, classes: 'vertical-top', },
+  { name: 'created_on', label: 'Received On', align: 'left', field: 'createdOn', sortable: true, classes: 'vertical-top', },
   { name: 'message', label: 'Message', align: 'left', field: 'message', sortable: false, },
 ]
 

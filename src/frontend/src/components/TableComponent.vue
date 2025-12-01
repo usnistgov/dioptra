@@ -81,7 +81,7 @@
                 class="q-ml-xs"
               />
             </div>
-            <div v-else-if="col.name === 'createdOn' || col.name === 'lastModifiedOn'">
+            <div v-else-if="col.name === 'createdOn' || col.name === 'created_on' || col.name === 'lastModifiedOn'">
               {{ formatDate(col.value) }}
             </div>
             <div v-else-if="!Array.isArray(col.value)">

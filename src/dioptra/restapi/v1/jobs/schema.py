@@ -387,7 +387,18 @@ class JobLogRecordsPageSchema(BasePageSchema):
     )
 
 
-class JobLogGetQueryParameters(PagingQueryParametersSchema):
+class JobLogGetQueryParameters(
+    PagingQueryParametersSchema,
+    SortByGetQueryParametersSchema,
+    SearchQueryParametersSchema,
+):
     """
     The query parameters for the GET method of the /jobs/{id}/log endpoint.
     """
+
+    severity = fields.List(
+        fields.String(validate=validate.OneOf([e.name for e in JobLogSeverity])),
+        required=False,
+        allow_none=True,
+        metadata={"description": "List of severities to filter by"},
+    )
