@@ -30,8 +30,6 @@ from dioptra.restapi.utils import as_api_parser, as_parameters_schema_list
 from dioptra.restapi.v1.schemas import IdStatusResponseSchema
 
 from .schema import (
-    DynamicGlobalParametersRequestSchema,
-    DynamicGlobalParametersResponseSchema,
     ResourceImportSchema,
     SignatureAnalysisOutputSchema,
     SignatureAnalysisSchema,
@@ -40,7 +38,6 @@ from .schema import (
 )
 from .service import (
     DraftCommitService,
-    DynamicGlobalParametersService,
     ResourceImportService,
     SignatureAnalysisService,
     ValidateEntrypointService,
@@ -198,45 +195,4 @@ class ValidateEntrypointEndpoint(Resource):
             entrypoint_parameters=parameters,
             entrypoint_artifacts=artifact_parameters,
             log=log,
-        )
-
-
-@api.route("/dynamicGlobalParameters")
-class DynamicGlobalParametersEntrypoint(Resource):
-    @inject
-    def __init__(
-        self,
-        dynamic_global_parameters_service: DynamicGlobalParametersService,
-        *args,
-        **kwargs,
-    ) -> None:
-        """Initialize the workflow resource.
-
-        All arguments are provided via dependency injection.
-
-        Args:
-            entrypoint_validate_service: An EntrypointValidateService object.
-        """
-        self._dynamic_global_parameters_service = dynamic_global_parameters_service
-        super().__init__(*args, **kwargs)
-
-    @accepts(schema=DynamicGlobalParametersRequestSchema, api=api)
-    @responds(schema=DynamicGlobalParametersResponseSchema, api=api)
-    def post(self):
-        """Finds the global parameters for the given entrypoint + swap choice dictionary."""
-        log = LOGGER.new(
-            request_id=str(uuid.uuid4()),
-            resource="DynamicGlobalParameters",
-            request_type="POST",
-        )
-
-        parsed_obj = request.parsed_obj  # pyright: ignore
-        entrypoint_id = parsed_obj["entrypoint_id"]
-        entrypoint_snapshot_id = parsed_obj["entrypoint_snapshot_id"]
-        swap_choices = parsed_obj["swap_choices"]
-        return self._dynamic_global_parameters_service.get_params(
-            entrypoint_id=entrypoint_id,
-            entrypoint_snapshot_id=entrypoint_snapshot_id,
-            swaps=swap_choices,
-            logger=log,
         )

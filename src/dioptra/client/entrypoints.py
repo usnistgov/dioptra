@@ -64,6 +64,7 @@ CONFIG: Final[str] = "config"
 PLUGINS: Final[str] = "plugins"
 ARTIFACT_PLUGINS: Final[str] = "artifactPlugins"
 BUNDLE: Final[str] = "bundle"
+DYNAMIC_GLOBAL_PARAMETERS: Final[str] = "dynamicGlobalParameters"
 
 T = TypeVar("T")
 
@@ -895,3 +896,14 @@ class EntrypointsCollectionClient(CollectionClient[T]):
             The response from the Dioptra API.
         """
         return self._session.delete(self.url, str(entrypoint_id))
+
+    def task_graph_global_params(
+        self, entrypoint_id: int, entrypoint_snapshot_id: int, swaps: dict[str, str]
+    ) -> T:
+        json_ = {
+            "entrypointId": entrypoint_id,
+            "entrypointSnapshotId": entrypoint_snapshot_id,
+            "swapChoices": swaps,
+        }
+
+        return self._session.post(self.url, DYNAMIC_GLOBAL_PARAMETERS, json_=json_)

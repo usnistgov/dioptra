@@ -26,7 +26,6 @@ from dioptra.restapi.v1.entrypoints.schema import (
     EntrypointArtifactSchema,
     EntrypointParameterSchema,
 )
-from dioptra.restapi.v1.plugins.schema import PluginSnapshotRefSchema
 from dioptra.restapi.v1.schemas import FileDownloadParametersSchema
 from dioptra.task_engine.issues import ValidationIssue
 
@@ -328,55 +327,5 @@ class ValidateEntrypointResponseSchema(Schema):
         ValidateEntrypointIssueSchema,
         attribute="schema_issues",
         metadata={"description": "A list of validation issues detected in the schema."},
-        many=True,
-    )
-
-
-class DynamicGlobalParametersRequestSchema(Schema):
-    entrypointId = fields.Integer(
-        attribute="entrypoint_id",
-        metadata={"description": "An integer identifying a registered entry point."},
-        load_only=True,
-        required=True,
-    )
-    entrypointSnapshotId = fields.Integer(
-        attribute="entrypoint_snapshot_id",
-        metadata={
-            "description": "An integer identifying a registered entry point snapshot."
-        },
-        load_only=True,
-        required=True,
-    )
-    swapChoices = fields.Mapping(
-        attribute="swap_choices",
-        metadata={"description": "The chosen swaps for the given entrypoint graphs."},
-        required=False,
-    )
-
-
-class DynamicGlobalParametersResponseSchema(Schema):
-    globalParameters = fields.List(
-        fields.String(),
-        attribute="entrypoint_params",
-        data_key="entrypointParams",
-        metadata={
-            "description": (
-                "A list of global parameters used in the entrypoint task graph."
-            )
-        },
-    )
-    topologicalSort = fields.List(
-        fields.String(),
-        attribute="topological_sort",
-        data_key="topologicalSort",
-        metadata={
-            "description": ("A list of task names topologically sorted by dependency.")
-        },
-    )
-    activePlugins = fields.Nested(
-        PluginSnapshotRefSchema,
-        attribute="active_plugins",
-        data_key="activePlugins",
-        metadata={"description": ("A list of plugin objects used in the entrypoint.")},
         many=True,
     )
