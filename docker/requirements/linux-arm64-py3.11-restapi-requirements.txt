@@ -225,7 +225,7 @@ urllib3==2.2.3
     # via
     #   botocore
     #   requests
-werkzeug==3.0.6
+werkzeug==3.1.4
     # via
     #   dioptra (pyproject.toml)
     #   flask

@@ -190,7 +190,7 @@ urllib3==2.2.3
     #   botocore
     #   docker
     #   requests
-werkzeug==3.0.6
+werkzeug==3.1.4
     # via flask
 wrapt==1.16.0
     # via deprecated
