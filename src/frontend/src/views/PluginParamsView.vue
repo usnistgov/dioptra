@@ -3,15 +3,15 @@
   <TableComponent
     :rows="pluginParameterTypes"
     :columns="columns"
-    title="Plugin Param Types"
+    title="Plugin Parameter Types"
     v-model:selected="selected"
-    @edit="editing = true; editPluginParamType = selected[0]; showAddDialog = true"
+    @edit="router.push(`/pluginParams/${selected[0].id}`)"
     @delete="showDeleteDialog = true"
     @request="getPluginParameterTypes"
     ref="tableRef"
     :hideToggleDraft="true"
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
-    @create="showAddDialog = true"
+    @create="router.push('/pluginParams/new')"
     :loading="isLoading"
   >
     <template #body-cell-group="props">
@@ -19,12 +19,6 @@
     </template>
   </TableComponent>
 
-  <PluginParamsDialog 
-    v-model="showAddDialog"
-    @addPluginParamType="addPluginParamType"
-    @updatePluginParamType="updatePluginParamType"
-    :editPluginParamType="selected.length && editing ? selected[0] : ''"
-  />
   <DeleteDialog 
     v-model="showDeleteDialog"
     @submit="deletePlugin"
@@ -41,7 +35,6 @@
 
 <script setup>
   import TableComponent from '@/components/TableComponent.vue'
-  import PluginParamsDialog from '@/dialogs/PluginParamsDialog.vue'
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'
   import { ref, watch } from 'vue'
   import * as api from '@/services/dataApi'
@@ -49,10 +42,10 @@
   import PageTitle from '@/components/PageTitle.vue'
   import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
   import { useLoginStore } from '@/stores/LoginStore'
+  import { useRouter } from 'vue-router'
 
   const store = useLoginStore()
-
-  const editPluginParamType = ref({})
+  const router = useRouter()
 
   const selected = ref([])
   const showAddDialog = ref(false)
@@ -99,28 +92,6 @@
     { name: 'tags', label: 'Tags', align: 'left', sortable: false },
   ]
 
-  async function addPluginParamType(plugin) {
-    try {
-      console.log('plugin = ', plugin)
-      const res = await api.addItem('pluginParameterTypes', plugin)
-      notify.success(`Successfully created '${res.data.name}'`)
-      tableRef.value.refreshTable()
-    } catch(err) {
-      notify.error(err.response.data.message)
-    } 
-  }
-
-  async function updatePluginParamType(id, name, description, structure) {
-    try {
-      const res = await api.updateItem('pluginParameterTypes', id, {name, description, structure})
-      notify.success(`Successfully updated '${res.data.name}'`)
-      tableRef.value.refreshTable()
-      selected.value = []
-    } catch(err) {
-      notify.error(err.response.data.message)
-    } 
-  }
-
   async function deletePlugin() {
     try {
       await api.deleteItem('pluginParameterTypes', selected.value[0].id)
@@ -132,11 +103,6 @@
       notify.error(err.response.data.message);
     }
   }
-
-  const fileColumns = [
-    { name: 'filename', label: 'Filename', align: 'left', field: 'filename', sortable: true, },
-    { name: 'tasks', label: 'Number of Tasks', align: 'left', field: 'tasks', sortable: true, },
-  ]
 
   const tableRef = ref(null)
 

@@ -2,7 +2,7 @@
   <div class="row items-center justify-between">
     <div class="row items-center">
       <PageTitle 
-        :title="title"
+        :title="route.params.id === 'new' ? 'Create Entrypoint' : copyAtEditStart?.name"
       />
       <q-chip
         v-if="route.params.id !== 'new'"
@@ -590,7 +590,6 @@
         plugins: ep.plugins,
         artifactPlugins: ep.artifactPlugins
       }
-      title.value = `View ${entryPoint.value.name}`
     } else {
       getEntrypoint()
     }
@@ -689,12 +688,10 @@
     { name: 'add', label: 'Add to Artifact Output Graph', align: 'center', sortable: false, },
   ]
 
-  const title = ref('')
   const showReturnDialog = ref(false)
 
   async function getEntrypoint() {
     if(route.params.id === 'new') {
-      title.value = 'Create Entrypoint'
       if(store.savedForms?.entryPoint) {
         showReturnDialog.value = true
         await checkIfStillValid('queues')
@@ -710,7 +707,6 @@
       const res = await api.getItem('entrypoints', route.params.id)
       entryPoint.value = res.data
       copyAtEditStart.value = JSON.parse(JSON.stringify(entryPoint.value))
-      title.value = `Edit ${res.data.name}`
       console.log('entryPoint = ', entryPoint.value)
     } catch(err) {
       notify.error(err.response.data.message)
