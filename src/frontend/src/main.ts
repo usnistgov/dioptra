@@ -1,15 +1,17 @@
 import './assets/main.css'
 
-import { createApp } from 'vue'
+import { createApp, nextTick } from 'vue'
 import { createPinia } from 'pinia'
 import VueCodemirror from 'vue-codemirror'
 
 import { Quasar, AppFullscreen, Loading, Notify } from 'quasar'
 
 // Import icon libraries
-import '@quasar/extras/material-icons/material-icons.css'
-import '@quasar/extras/material-symbols-outlined/material-symbols-outlined.css'
-import '@quasar/extras/fontawesome-v6/fontawesome-v6.css'
+nextTick(async () => {
+  await import('@quasar/extras/material-icons/material-icons.css')
+  await import('@quasar/extras/material-symbols-outlined/material-symbols-outlined.css')
+  await import('@quasar/extras/fontawesome-v6/fontawesome-v6.css')
+})
 
 // Import Quasar css
 import 'quasar/src/css/index.sass'

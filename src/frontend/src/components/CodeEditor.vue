@@ -16,7 +16,7 @@
         'border': `${showError ? '2px solid red' : '2px solid black'}`
       }"
     />
-    <div v-if="code.split('\n').length > 10 && props.maxHeight">
+    <div v-if="code.split('\n').length > maxLines && props.maxHeight">
       <q-btn
         :label="`${expanded ? 'Collapse' : 'Expand'}`"
         :icon="`${expanded ? 'arrow_upward' : 'arrow_downward'}`"
@@ -27,7 +27,7 @@
     </div>
     <div
       :class="{ visibility: showError ? 'hidden' : '' }"
-      class="row text-caption q-ml-md text-negative"
+      class="row text-caption text-negative"
       role="alert"
       style="min-height: 20px;" 
     >
@@ -235,6 +235,12 @@ const dollarTriggerExtension = EditorView.updateListener.of((update) => {
       EditorView.lineWrapping,
       ...baseExtensions,
     ]
+  })
+
+  const maxLines = computed(() => {
+    const height = parseInt(props.maxHeight, 10)
+    if(height <= 215) return 10
+    if(height >= 216) return 22
   })
 </script>
 

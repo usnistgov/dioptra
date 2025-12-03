@@ -2,17 +2,17 @@
   <PageTitle title="Queues" />
   <TableComponent 
     :rows="queues"
-    :columns="showDrafts ? columns.slice(0, -2) : columns"
+    :columns="showDrafts ? draftColumns : columns"
     title="Queues"
     @delete="showDeleteDialog = true"
-    @edit="editing = true; showQueueDialog = true"
+    @edit="openQueue()"
     v-model:selected="selected"
     v-model:showDrafts="showDrafts"
     @request="getQueues"
     ref="tableRef"
     :showToggleDraft="true"
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
-    @create="showQueueDialog = true"
+    @create="router.push('/queues/new')"
     :loading="isLoading"
   >
     <template #body-cell-hasDraft="props">
@@ -21,24 +21,11 @@
         size="sm"
         :icon="props.row.hasDraft ? 'edit' : 'add'"
         :color="props.row.hasDraft ? 'primary' : 'grey-5'"
-        @click.stop="queueToDraft = props.row; showDraftDialog = true"
+        @click.stop="router.push(`/queues/${props.row.id}/resourceDraft/${props.row.hasDraft ? '' : 'new'}`)"
       />
     </template>
   </TableComponent>
 
-  <QueueDialog 
-    v-model="showQueueDialog"
-    @addQueue="addQueue"
-    @updateQueue="updateQueue"
-    @saveDraft="saveDraft"
-    :editQueue="selected.length && editing ? selected[0] : ''"
-  />
-  <QueueDraftDialog 
-    v-model="showDraftDialog"
-    @addQueue="addQueue"
-    @updateDraftLinkedToQueue="updateDraftLinkedToQueue"
-    :queueToDraft="queueToDraft"
-  />
   <DeleteDialog 
     v-model="showDeleteDialog"
     @submit="deleteQueue"
@@ -58,23 +45,21 @@
   import { ref, watch } from 'vue'
   import * as notify from '../notify'
   import TableComponent from '@/components/TableComponent.vue'
-  import QueueDialog from '@/dialogs/QueueDialog.vue'
-  import QueueDraftDialog from '@/dialogs/QueueDraftDialog.vue'
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'
   import { useLoginStore } from '@/stores/LoginStore'
   import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
   import PageTitle from '@/components/PageTitle.vue'
+  import { useRouter } from 'vue-router'
 
   const store = useLoginStore()
+  const router = useRouter()
 
-  const showQueueDialog = ref(false)
-  const showDraftDialog = ref(false)
   const showDeleteDialog = ref(false)
   const showTagsDialog = ref(false)
 
   const queues = ref([])
+
   const isLoading = ref(false)
-  const queueToDraft = ref(false)
 
   const tableRef = ref(null)
 
@@ -86,6 +71,14 @@
     { name: 'createdOn', label: 'Created On', align: 'left', field: 'createdOn', sortable: true },
     { name: 'lastModifiedOn', label: 'Last Modified', align: 'left', field: 'lastModifiedOn', sortable: true },
     { name: 'tags', label: 'Tags', align: 'left', field: 'tags', sortable: false },
+  ]
+
+  const draftColumns = [
+    { name: 'id', label: 'ID', align: 'left', field: 'id', sortable: false },
+    { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true },
+    { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true },
+    { name: 'createdOn', label: 'Created On', align: 'left', field: 'createdOn', sortable: true },
+    { name: 'lastModifiedOn', label: 'Last Modified', align: 'left', field: 'lastModifiedOn', sortable: true },
   ]
 
   const selected = ref([])
@@ -111,78 +104,6 @@
     }
   }
 
-  async function addQueue(name, description, id) {
-    console.log(name, description,id)
-    let params = {
-      name,
-      description,
-    }
-    if(!id) {
-      params.group = store.loggedInGroup.id
-    }
-    try {
-      if(id) await api.addDraft('queues', params, id)
-      else await api.addItem('queues', params)
-      notify.success(`Successfully created '${name}'`)
-      showQueueDialog.value = false
-      showDraftDialog.value = false
-      tableRef.value.refreshTable()
-    } catch(err) {
-      notify.error(err.response.data.message)
-    }
-  }
-
-  async function saveDraft(name, description, id) {
-    let params = {
-      name: name,
-      description: description,
-    }
-    if(!id) {
-      params.group = store.loggedInGroup.id
-    }
-    try {
-      await api.addDraft('queues', params, id)
-      notify.success(`Successfully created draft '${name}'`)
-      showQueueDialog.value = false
-      tableRef.value.refreshTable()
-    } catch(err) {
-      notify.error(err.response.data.message)
-    }
-  }
-
-  async function updateQueue(name, id, description, draft = false) {
-    try {
-      if(draft) {
-        await api.updateDraft('queues', id, { name, description })
-      } else {
-        await api.updateItem('queues', id, { name, description })
-      }
-      notify.success(`Successfully updated Queue '${name}'`)
-      showQueueDialog.value = false
-      showDraftDialog.value = false
-      selected.value = []
-      tableRef.value.refreshTable()
-    } catch(err) {
-      notify.error(err.response.data.message)
-    }
-  }
-
-  async function updateDraftLinkedToQueue(queueId, name, description, snapshotId) {
-    try {
-      await api.updateDraftLinkedtoQueue(queueId, name, description, snapshotId)
-      notify.success(`Successfully updated '${name}'`)
-      showDraftDialog.value = false
-    } catch(err) {
-      notify.error(err.response.data.message)
-    }
-  }
-
-  const editing = ref(false)
-
-  watch(showQueueDialog, (newVal) => {
-    if(!newVal) editing.value = false
-  })
-
   async function deleteQueue() {
     try {
       if(Object.hasOwn(selected.value[0], 'hasDraft')) {
@@ -203,9 +124,16 @@
 
   watch(() => store.triggerPopup, (newVal) => {
     if(newVal) {
-      showQueueDialog.value = true
       store.triggerPopup = false
     }
   })
+
+  function openQueue() {
+    if(selected.value[0].payload) {
+      router.push(`/queues/${selected.value[0].id}/draft`)
+    } else {
+      router.push(`/queues/${selected.value[0].id}`)
+    }
+  }
 
 </script>

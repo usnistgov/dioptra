@@ -1,8 +1,18 @@
 <template>
   <div>
-    <h1 class="q-mb-sm">
-      {{ title }}
-    </h1>
+    <div class="row items-baseline q-mb-sm">
+      <h1 class="q-mb-none">
+        {{ title }}
+      </h1>
+      <q-badge
+        v-if="props.draftLabel"
+        :label="draftLabel"
+        outline
+        color="primary"
+        class="q-ml-md"
+        :class="darkMode ? 'text-white' : ''"
+      />
+    </div>
     <nav aria-label="Breadcrumb" style="font-size: 1.2em;">
       <q-breadcrumbs class="text-grey">
         <template v-slot:separator>
@@ -40,10 +50,12 @@
 
 <script setup>
   import { useRoute } from 'vue-router'
-  import { ref, computed, watch } from 'vue'
+  import { ref, computed, inject } from 'vue'
   import * as api from '@/services/dataApi'
 
-  defineProps(['title'])
+  const props = defineProps(['title', 'draftLabel'])
+
+  const darkMode = inject('darkMode')
 
   const route = useRoute()
 

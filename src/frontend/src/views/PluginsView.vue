@@ -11,7 +11,7 @@
     @request="getPlugins"
     ref="tableRef"
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
-    @create="showPluginDialog = true"
+    @create="router.push('/plugins/new')"
     :loading="isLoading"
   >
 
@@ -22,13 +22,6 @@
       {{ props.row.files?.length }}
     </template>
   </TableComponent>
-
-  <PluginDialog 
-    v-model="showPluginDialog"
-    @addPlugin="addPlugin"
-    @updatePlugin="updatePlugin"
-    :editPlugin="selected.length && editing ? selected[0] : ''"
-  />
 
   <DeleteDialog 
     v-model="showDeleteDialog"
@@ -46,7 +39,6 @@
 
 <script setup>
   import TableComponent from '@/components/TableComponent.vue'
-  import PluginDialog from '@/dialogs/PluginDialog.vue'
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'
   import { ref, watch } from 'vue'
   import { useRouter } from 'vue-router'
@@ -61,14 +53,13 @@
   const router = useRouter()
 
   const selected = ref([])
-  const showPluginDialog = ref(false)
+
   const showDeleteDialog = ref(false)
   const showTagsDialog = ref(false)
   const editObjTags = ref({})
 
   watch(() => store.triggerPopup, (newVal) => {
     if(newVal) {
-      showPluginDialog.value = true
       store.triggerPopup = false
     }
   })
@@ -76,12 +67,6 @@
   const plugins = ref([])
 
   const isLoading = ref(false)
-
-  const editing = ref(false)
-
-  watch(showPluginDialog, (newVal) => {
-    if(!newVal) editing.value = false
-  })
 
   async function getPlugins(pagination) {
     isLoading.value = true
@@ -110,29 +95,6 @@
     { name: 'files', label: 'Number of Files', align: 'left', field: 'files', sortable: false },
     { name: 'tags', label: 'Tags', align: 'left', sortable: false },
   ]
-
-  async function addPlugin(plugin) {
-    try {
-      const res = await api.addItem('plugins', plugin)
-      notify.success(`Successfully created '${res.data.name}'`)
-      tableRef.value.refreshTable()
-    } catch(err) {
-      notify.error(err.response.data.message)
-    } 
-  }
-
-  async function updatePlugin(plugin, id) {
-    try {
-      const res = await api.updateItem('plugins', id, {
-        name: plugin.name,
-        description: plugin.description,
-      })
-      notify.success(`Successfully updated '${res.data.name}'`)
-      tableRef.value.refreshTable()
-    } catch(err) {
-      notify.error(err.response.data.message)
-    }  
-  }
 
   async function deletePlugin() {
     try {

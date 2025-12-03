@@ -274,7 +274,8 @@ export async function getJobLogs(id: number, pagination: Pagination, severity?: 
 }
 
 export async function getItem<T extends ItemType>(type: T, id: number, isDraft: boolean = false) {
-  const res =  await axios.get(`/api/${type}/${id}${isDraft ? '/draft' : ''}`)
+  // isDraft here means regular draft, not resource draft
+  const res =  await axios.get(`/api/${type}/${isDraft ? 'drafts/' : ''}${id}`)
   if(isDraft && res.data) {
     Object.assign(res.data, res.data.payload)
   }
@@ -282,8 +283,9 @@ export async function getItem<T extends ItemType>(type: T, id: number, isDraft: 
   return res
 }
 
-export async function getDraft<T extends ItemType>(type: T, id: number) {
+export async function getResourceDraft<T extends ItemType>(type: T, id: number) {
   const res = await axios.get(`/api/${type}/${id}/draft`)
+  Object.assign(res.data, res.data.payload)
   return res
 }
 
@@ -339,6 +341,14 @@ export async function deleteItem<T extends ItemType>(type: T, id: number) {
 
 export async function deleteDraft<T extends ItemType>(type: T, draftId: number) {
   return await axios.delete(`/api/${type}/drafts/${draftId}`)
+}
+
+export async function deleteResourceDraft<T extends ItemType>(type: T, id: number) {
+  return await axios.delete(`/api/${type}/${id}/draft`)
+}
+
+export async function convertToResource(id: number) {
+  return await axios.post(`/api/workflows/draftCommit/${id}`)
 }
 
 export async function getFiles(id: number, pagination: Pagination) {

@@ -60,6 +60,11 @@ const router = createRouter({
           name: 'plugins',
         },
         {
+          path: '/plugins/new',
+          component: () => import('../views/CreatePluginView.vue'),
+          meta: { type: 'plugins' }
+        },
+        {
           path: '/plugins/:id',
           component: () => import('../views/EditPluginView.vue'),
           name: 'editPlugin',
@@ -73,8 +78,23 @@ const router = createRouter({
     },
     {
       path: '/queues',
-      component: () => import('../views/QueuesView.vue'),
-      name: 'queues'
+      children: [
+        {
+          path: '',
+          component: () => import('../views/QueuesView.vue'),
+          name: 'queues',
+        },
+        {
+          path: '/queues/:id/:draftType/:newResourceDraft?',
+          component: () => import('../views/QueuesFormDraftView.vue'),
+          meta: { type: 'queues' }
+        },
+        {
+          path: '/queues/:id',
+          component: () => import('../views/QueuesFormView.vue'),
+          meta: { type: 'queues' }
+        },
+      ]
     },
     {
       path: '/jobs',
@@ -109,8 +129,18 @@ const router = createRouter({
     },
     {
       path: '/pluginParams',
-      component: () => import('../views/PluginParamsView.vue'),
-      name: 'pluginParams'
+      children: [
+        {
+          path: '',
+          component: () => import('../views/PluginParamsView.vue'),
+          name: 'pluginParams',
+        },
+        {
+          path: '/pluginParams/:id',
+          component: () => import('../views/PluginParamForm.vue'),
+          name: 'editPluginParam',
+        }
+      ]
     },
     {
       path: '/models',
