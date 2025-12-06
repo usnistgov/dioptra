@@ -298,7 +298,7 @@ async function createPluginParamType() {
   }
 }
 
-async function updatePluginParamType(id, name, description, structure) {
+async function updatePluginParamType() {
   try {
     const res = await api.updateItem('pluginParameterTypes', route.params.id, 
       {

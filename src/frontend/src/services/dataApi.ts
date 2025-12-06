@@ -480,3 +480,8 @@ export async function deleteUser(password: string) {
 export async function importResources(params: WorkflowParams['resourceImport']) {
   return await axios.postForm(`/api/workflows/resourceImport`, params, {formSerializer: { indexes: null }})
 }
+
+export async function getDioptraVersion() {
+  const res = await axios.get('/health')
+  return res.data?.version ?? 'unknown'
+}

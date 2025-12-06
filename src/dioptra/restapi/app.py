@@ -102,7 +102,7 @@ def create_app(env: Optional[str] = None, injector: Optional[Injector] = None) -
     def health():
         """An endpoint for monitoring if the REST API is responding to requests."""
         log = LOGGER.new(request_id=str(uuid.uuid4()))  # noqa: F841
-        return jsonify("healthy")
+        return jsonify({"status": "healthy", "version": DIOPTRA_VERSION})
 
     if not injector:
         modules: List[Callable[..., Any]] = [bind_dependencies]

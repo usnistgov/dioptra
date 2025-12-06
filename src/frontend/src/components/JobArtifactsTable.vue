@@ -7,6 +7,7 @@
     @edit="router.push(`/artifacts/${selected[0].id}`)"
     :hideDeleteBtn="true"
     :hideCreateBtn="true"
+    :loading="isLoading"
   >
     <template #body-cell-taskName="props">
       {{ props.row.task.name }}
@@ -40,6 +41,7 @@ import TableComponent from '@/components/TableComponent.vue'
 import { ref, onMounted } from 'vue'
 import * as api from '@/services/dataApi'
 import { useRouter, useRoute } from 'vue-router'
+import * as notify from '../notify'
 
 const router = useRouter()
 const route = useRoute()
@@ -52,17 +54,32 @@ onMounted(() => {
 })
 
 const artifacts = ref([])
+const isLoading = ref(false)
 
 async function getArtifacts() {
+  isLoading.value = true
+  const minLoadTimePromise = new Promise(resolve => setTimeout(resolve, 300))
+
   try {
-    for (let id of props.artifactIds) {
-      const res = await api.getItem('artifacts', id)
-      artifacts.value.push(res.data)
-    }
-  } catch(err) {
+    const artifactsPromise = Promise.all(
+      props.artifactIds.map(id => api.getItem('artifacts', id))
+    )
+
+    const [responses] = await Promise.all([
+      artifactsPromise,
+      minLoadTimePromise
+    ])
+
+    artifacts.value = responses.map(r => r.data)
+
+  } catch (err) {
     console.warn(err)
+    notify.error(err.response?.data?.message || 'Error loading artifacts')
+  } finally {
+    isLoading.value = false
   }
 }
+
 
 const columns = [
   { name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true },

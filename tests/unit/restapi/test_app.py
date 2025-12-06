@@ -18,6 +18,7 @@
 from flask import Flask, Response
 from flask.testing import FlaskClient
 
+from dioptra.restapi.__version__ import __version__ as DIOPTRA_VERSION
 
 def test_create_app(flask_app: Flask):
     assert isinstance(flask_app, Flask)
@@ -27,4 +28,4 @@ def test_app_healthy(client: FlaskClient):
     resp: Response = client.get("/health")
     assert resp.status_code == 200
     assert resp.is_json
-    assert resp.json == "healthy"
+    assert resp.json == {"status": "healthy", "version": DIOPTRA_VERSION}

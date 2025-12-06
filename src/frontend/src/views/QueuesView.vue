@@ -42,7 +42,7 @@
 
 <script setup>
   import * as api from '@/services/dataApi'
-  import { ref, watch } from 'vue'
+  import { ref } from 'vue'
   import * as notify from '../notify'
   import TableComponent from '@/components/TableComponent.vue'
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'
@@ -121,12 +121,6 @@
   }
 
   const editObjTags = ref({})
-
-  watch(() => store.triggerPopup, (newVal) => {
-    if(newVal) {
-      store.triggerPopup = false
-    }
-  })
 
   function openQueue() {
     if(selected.value[0].payload) {

@@ -249,7 +249,7 @@
   <fieldset class="q-px-lg q-mt-lg q-pt-lg" :class="history ? `disabled` : ``">
     <legend>Task Graph Info</legend>
     <div class="row" :style="{ 'pointer-events': history ? 'none' : '' }">
-      <div :class="`${isMobile ? 'col-12 q-mb-xl' : 'col-6'} q-mr-xl column`">
+      <div :class="`${isMobile ? 'col-12 q-mb-xl' : 'col-6'} q-mr-xl`">
         <h2>Task Graph</h2>
         <p class="text-caption q-mb-none text-grey-8 q-pl-xs">
           Use "Add to Task Graph" button in Plugin Tasks table to insert YAML, and 
@@ -262,6 +262,7 @@
           :showError="taskGraphError"
           :autocompletions="autocompletions"
           :readOnly="history"
+          style="min-height: 200px;"
         />  
         <q-btn
           label="Validate Inputs"
@@ -331,7 +332,7 @@
   <fieldset class="q-px-lg q-mt-lg q-pt-lg" :class="history ? `disabled` : ``">
     <legend>Artifact Info</legend>
     <div class="row" :style="{ 'pointer-events': history ? 'none' : '' }">
-      <div :class="`${isMobile ? 'col-12 q-mb-xl' : 'col-6'} q-mr-xl column`">
+      <div :class="`${isMobile ? 'col-12 q-mb-xl' : 'col-6'} q-mr-xl`">
         <h2>Artifact Output Graph</h2>
         <p class="text-caption q-mb-none text-grey-8 q-pl-xs">
           Use "Add to Artifact Output Graph" button in Artifact Tasks table to insert YAML, and 
@@ -344,6 +345,7 @@
           :autocompletions="autocompletions"
           placeholder="# task graph yaml file"
           :readOnly="history"
+          style="min-height: 200px;"
         />  
       </div>
       

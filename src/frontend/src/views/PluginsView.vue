@@ -40,7 +40,7 @@
 <script setup>
   import TableComponent from '@/components/TableComponent.vue'
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'
-  import { ref, watch } from 'vue'
+  import { ref } from 'vue'
   import { useRouter } from 'vue-router'
   import * as api from '@/services/dataApi'
   import * as notify from '../notify'
@@ -57,12 +57,6 @@
   const showDeleteDialog = ref(false)
   const showTagsDialog = ref(false)
   const editObjTags = ref({})
-
-  watch(() => store.triggerPopup, (newVal) => {
-    if(newVal) {
-      store.triggerPopup = false
-    }
-  })
 
   const plugins = ref([])
 
