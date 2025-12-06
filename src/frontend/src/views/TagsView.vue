@@ -126,11 +126,4 @@
     }
   }
 
-  watch(() => store.triggerPopup, (newVal) => {
-    if(newVal) {
-      showAddDialog.value = true
-      store.triggerPopup = false
-    }
-  })
-
 </script>

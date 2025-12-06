@@ -165,11 +165,4 @@ function formatDate(dateString) {
   return new Date(dateString).toLocaleString('en-US', options)
 }
 
-watch(() => store.triggerPopup, (newVal) => {
-  if(newVal) {
-    showAddEditDialog.value = true
-    store.triggerPopup = false
-  }
-})
-
 </script>

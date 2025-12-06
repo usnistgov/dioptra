@@ -1,5 +1,7 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory, START_LOCATION } from 'vue-router'
+import { useLoginStore } from '@/stores/LoginStore'
 import HomeView from '../views/HomeView.vue'
+import * as api from '@/services/dataApi'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -173,5 +175,44 @@ const router = createRouter({
     }
   ]
 })
+
+
+router.beforeEach(async (to, from) => {
+  const store = useLoginStore()
+
+  // on every route change, close snapshot drawer if open
+  if(store.showRightDrawer) {
+    store.showRightDrawer = false
+    store.selectedSnapshot = null
+  }
+
+  // check login status on mounted and reloads
+  if(from === START_LOCATION) {
+    await callGetLoginStatus()
+  }
+
+  const isAuthRoute = to.path === '/login' || to.path === '/register'
+  const isLoggedIn = !!store.loggedInUser
+
+  // redirect to login if logged out
+  if(!isLoggedIn && !isAuthRoute) {
+    return '/login'
+  }
+
+  // allow navigation
+  return true
+})
+
+async function callGetLoginStatus() {
+  const store = useLoginStore()
+  try {
+    const res = await api.getLoginStatus()
+    store.loggedInUser = res.data
+    store.groups = res.data.groups
+  } catch (err) {
+    store.loggedInUser = ''
+  }
+}
+
 
 export default router

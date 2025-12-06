@@ -124,6 +124,7 @@
         style="margin-top: 0;"
         class="q-mb-lg"
         ref="tableRef"
+        :loading="isLoading"
       >
         <template #body-cell-message="props">
           <CodeEditor
@@ -349,17 +350,26 @@ watch(selectedSeverity, () => {
 })
 
 const tableRef = ref(null)
+const isLoading = ref(false)
 
 async function getLogs(pagination) {
+  isLoading.value = true
+  const minLoadTimePromise = new Promise(resolve => setTimeout(resolve, 300)); 
+
   try {
-    const res = await api.getJobLogs(job.value.id, pagination, selectedSeverity.value)
-    console.log('logs = ', res.data)
+    const [res] = await Promise.all([
+      api.getJobLogs(job.value.id, pagination, selectedSeverity.value),
+      minLoadTimePromise
+    ])
+
     jobLogs.value = res.data.data
     logTotalNumber.value = res.data.totalNumResults
     tableRef.value.updateTotalRows(res.data.totalNumResults)
   } catch(err) {
     console.log('err = ', err)
     notify.error(err.response.data.message);
+  } finally {
+    isLoading.value = false;
   }
 }
 

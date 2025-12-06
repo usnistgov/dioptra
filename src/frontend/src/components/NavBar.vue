@@ -53,68 +53,130 @@
         <q-route-tab label="Plugins" to="/plugins" />
         <q-route-tab label="Plugin Parameters" to="/pluginParams" />
         <q-route-tab label="Queues" to="/queues" />
-        <q-route-tab label="Tags" to="/tags" />
       </q-tabs>
     </nav>
 
     <q-space />
-    <a href="https://github.com/usnistgov/dioptra" target="_blank" class="q-mr-md text-white">
-      <q-icon name="fa-brands fa-github" size="sm" />
-      <span class="sr-only">Source Repository</span>
-      <q-tooltip>
-        Source Repository
-      </q-tooltip>
-    </a>
-    <q-icon
-      v-if="!isMobile" 
-      name="sym_o_fullscreen" 
-      size="sm" 
-      @click="$q.fullscreen.toggle()"
-      @keyup.enter="$q.fullscreen.toggle()"
-      class="q-mr-md" 
-      style="cursor: pointer" 
-      tabindex="0" 
-      role="button"
-      aria-hidden="false"
-    >
-      <q-tooltip>
-        Toggle Fullscreen Mode
-      </q-tooltip>
-    </q-icon>
-    <q-icon 
-      :name="getIcon()" 
-      size="sm" 
-      @click="$q.dark.toggle(); setLightDarkPreference()"
-      @keyup.enter="$q.dark.toggle()"
-      class="q-mr-lg" 
-      style="cursor: pointer"
-      tabindex="0" 
-      role="button"
-      aria-hidden="false"
-      aria-label="Toggle light/dark mode"
-    >
-      <q-tooltip>
-        Toggle Light/Dark Mode
-      </q-tooltip>
-    </q-icon> 
-    <q-icon
-      name="upload"
-      size="sm"
-      @click="showImportDialog = true"
-      @keyup.enter="showImportDialog = true"
-      v-if="store.loggedInUser"
-      class="q-mr-md"
-      style="cursor: pointer"
-      tabindex="0"
-      role="button"
-      aria-hidden="false"
-    >
-      <q-tooltip>
-        Import resources
-      </q-tooltip>
-    </q-icon>
+
+    <q-btn round icon="sym_o_build" flat v-if="store.loggedInUser">
+      <q-menu>
+        <q-list class="noselect no-link-style">
+          <q-item 
+            tag="label" 
+            v-ripple 
+            @click="showImportDialog = true"
+            clickable 
+            v-close-popup
+          >
+            <q-item-section>
+              <q-item-label>Import Resources</q-item-label>
+            </q-item-section>
+            <q-item-section side>
+              <q-icon
+                name="upload"
+                size="sm"
+                @keyup.enter="showImportDialog = true"
+                style="cursor: pointer"
+                tabindex="0"
+                role="button"
+                aria-hidden="false"
+              />
+            </q-item-section>
+          </q-item>
+          <q-item to="/tags" exact clickable v-close-popup>
+            <q-item-section>
+              <q-item-label>Manage Tags</q-item-label>
+            </q-item-section>
+            <q-item-section side>
+              <q-icon name="sym_o_sell" size="sm" />
+            </q-item-section>
+          </q-item>
+        </q-list>
+      </q-menu>
+    </q-btn>
+
+    <q-btn round icon="settings" flat>
+      <q-menu>
+        <q-list class="noselect">
+          <q-item tag="label" v-ripple clickable>
+            <q-item-section>
+              <q-item-label>Light/Dark</q-item-label>
+            </q-item-section>
+            <q-item-section side>
+              <div>
+                <q-toggle color="blue" v-model="darkToggle" />
+                  <q-icon 
+                    :name="darkToggle ? 'sym_o_dark_mode' : 'sym_o_sunny'" 
+                    size="sm" 
+                    @keyup.enter="darkToggle = !darkToggle"
+                    style="cursor: pointer"
+                    tabindex="0" 
+                    role="button"
+                    aria-hidden="false"
+                    aria-label="Toggle light/dark mode"
+                  />
+              </div>
+            </q-item-section>
+          </q-item>
+          <q-separator />
+          <q-item tag="label" v-ripple clickable>
+            <q-item-section>
+              <q-item-label>Fullscreen</q-item-label>
+            </q-item-section>
+            <q-item-section side>
+              <div>
+                <q-toggle color="blue" v-model="fullscreenToggle" @click="$q.fullscreen.toggle()" />
+                  <q-icon 
+                    :name="fullscreenToggle ? 'fullscreen' : 'fullscreen_exit'" 
+                    size="sm" 
+                    @keyup.enter="fullscreenToggle = !fullscreenToggle"
+                    style="cursor: pointer"
+                    tabindex="0" 
+                    role="button"
+                    aria-hidden="false"
+                    aria-label="Toggle fullscreen mode"
+                  />
+              </div>
+            </q-item-section>
+          </q-item>
+        </q-list>
+      </q-menu>
+    </q-btn>
+
+    <q-btn round icon="sym_o_info" flat class="q-mr-xs">
+      <q-menu>
+        <q-list class="noselect no-link-style">
+          <q-item v-ripple href="https://pages.nist.gov/dioptra/" target="_blank" clickable v-close-popup>
+            <q-item-section>
+              <q-item-label>Dioptra Documentation</q-item-label>
+            </q-item-section>
+            <q-item-section side>
+              <q-icon name="sym_o_help" size="sm" />
+            </q-item-section>
+          </q-item>
+          <q-item v-ripple href="https://github.com/usnistgov/dioptra" target="_blank" clickable v-close-popup>
+            <q-item-section>
+              <q-item-label>GitHub Repository</q-item-label>
+            </q-item-section>
+            <q-item-section side>
+              <q-icon name="fa-brands fa-github" size="sm" />
+            </q-item-section>
+          </q-item>
+          <q-separator />
+          <q-item>
+            <q-item-section>
+              <q-item-label class="text-no-wrap">Dioptra Version {{ version }}</q-item-label>
+            </q-item-section>
+            <q-item-section side>
+              <q-icon name="tag" size="sm" />
+            </q-item-section>
+          </q-item>
+        </q-list>
+      </q-menu>
+    </q-btn>
+
     <q-separator vertical inset color="white" />
-    <q-tabs shrink no-caps class="header q-ml-sm">
+    <q-tabs shrink no-caps>
       <q-route-tab 
         v-if="!store.loggedInUser"
         :label="getLabel()" to="/login"
@@ -130,7 +192,6 @@
                 :key="i" 
                 clickable 
                 v-close-popup 
-                @click="console.log('Selected group = ', group)" 
                 :active="group.id === store.loggedInGroup.id"
                 active-class="bg-blue-3 text-bold"
               >
@@ -149,56 +210,58 @@
 
 <script setup>
   import { useQuasar } from 'quasar'
-  import { computed, inject, ref } from 'vue'
-  import { useRouter, START_LOCATION } from 'vue-router'
+  import { watch, inject, ref, onMounted } from 'vue'
   import { useLoginStore } from '@/stores/LoginStore'
   import * as api from '@/services/dataApi'
 
   import ImportResourcesDialog from '../dialogs/ImportResourcesDialog.vue';
   const showImportDialog = defineModel()
 
-  const router = useRouter()
-
   const store = useLoginStore()
-  // const { loggedInUser } = storeToRefs(store);
 
   const $q = useQuasar()
 
   const isMobile = inject('isMobile')
 
-  function getIcon() {
-    if($q.dark.mode === 'auto') return 'sym_o_routine'
-    if($q.dark.mode) return 'sym_o_dark_mode'
-    else return 'sym_o_sunny'
-  }
+  const darkToggle = ref($q.dark.isActive)
 
-  function setLightDarkPreference(){
-    localStorage.setItem('darkMode', $q.dark.mode)
-  }
+  watch(darkToggle, (val) => {
+    $q.dark.set(val)
+    localStorage.setItem('darkMode', val)
+  })
+
+  watch(() => $q.dark.isActive, (val) => {
+    // light/dark can be changed externally so double check
+    if(darkToggle.value !== val) {
+      darkToggle.value = val
+    }
+  })
+
+  const fullscreenToggle = ref($q.fullscreen.isActive)
+
+  watch(() => $q.fullscreen.isActive, (val) => {
+    // fullscreen can be exited with esc
+    if(!val) {
+      fullscreenToggle.value = false
+    }
+  })
 
   function getLabel() {
     if(!store.loggedInUser) return 'Sign In'
     else return `${store.loggedInUser}`
   }
 
-  router.beforeEach(async(to, from) => {
-    // check login status on mounted and reloads
-    if (from === START_LOCATION) {
-      await callGetLoginStatus()
-    }
-    // redirect to login if logged out
-    if(!store.loggedInUser && to.path !== '/login' && to.path !== '/register') {
-      router.push('/login')
-    }
+  const version = ref('')
+
+  onMounted(() => {
+    getDioptraVersion()
   })
 
-  async function callGetLoginStatus() {
+  async function getDioptraVersion() {
     try {
-      const res = await api.getLoginStatus()
-      store.loggedInUser = res.data
-      store.groups = res.data.groups
+      version.value = await api.getDioptraVersion()
     } catch(err) {
-      store.loggedInUser = ''
+      console.warn(err)
     }
   }
 

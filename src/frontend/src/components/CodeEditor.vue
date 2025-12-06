@@ -1,6 +1,6 @@
 <template>
   <div class="column" style="flex: 1; width: 100%;">
-    <codemirror
+    <Codemirror
       v-model="code"
       :placeholder="placeholder"
       :autofocus="false"
