@@ -1,0 +1,56 @@
+:root {
+  /* --- GRAYS & SURFACES (Light Mode Defaults) --- */
+  --dioptra-bg-0: #ffffff; 
+  --dioptra-bg-5: #f9f9f9; 
+  --dioptra-bg-10: #f5f5f5;
+  --dioptra-bg-20: #f3f3f3;
+  
+  --dioptra-border-10: #e8e8e8;
+  --dioptra-border-20: #cccccc;
+  --dioptra-line-connect: #4e4e4e;
+
+  --dioptra-text-muted: #cccccc;
+  --dioptra-shadow-card: 0 6px 8px rgba(46, 53, 124, 0.33);
+
+  /* --- GREEN ACCENTS --- */
+  --dioptra-green-bg: #e9f6ec;
+  --dioptra-green-border: #27ae60;
+  --dioptra-green-text-title: #3d4a40;
+  --dioptra-green-text-accent: #4d7e50;
+
+  /* --- BLUE ACCENTS --- */
+  --dioptra-blue-icon: #2980b9;
+
+  /* --- LANGUAGE SPECIFICS (Code Panels) --- */
+  --dioptra-lang-py-bg: #4b7eb3;
+  --dioptra-lang-py-border: #ffe873;
+  --dioptra-lang-py-text: #f7f7f7;
+
+  --dioptra-lang-yaml-bg: #9b7100;
+  --dioptra-lang-yaml-border: #553e00;
+  --dioptra-lang-yaml-text: #e8e8e8;
+
+  --dioptra-lang-console-bg: #1f1f1f;
+  --dioptra-lang-console-border: #6c6c6c;
+  --dioptra-lang-console-text: #cccccc;
+}
+
+/* --- DARK MODE INVERSIONS --- */
+html[data-theme="dark"] {
+  --dioptra-bg-0: var(--pst-color-surface); 
+  --dioptra-bg-5: rgba(255, 255, 255, 0.025);
+  --dioptra-bg-10: rgba(255, 255, 255, 0.05);
+  --dioptra-bg-20: rgba(255, 255, 255, 0.10);
+  
+  --dioptra-border-10: rgba(255, 255, 255, 0.2); 
+  --dioptra-border-20: rgba(255, 255, 255, 0.4); 
+  
+  --dioptra-shadow-card: 0 6px 8px rgba(0, 0, 0, 0.6);
+
+  --dioptra-green-bg: #1e3a29;
+  --dioptra-green-border: #27ae60;
+  --dioptra-green-text-title: #bcebc3;
+  --dioptra-green-text-accent: #8db18f;
+
+  --dioptra-blue-icon: #5dade2; 
+}

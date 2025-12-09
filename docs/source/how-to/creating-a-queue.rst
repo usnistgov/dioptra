@@ -19,7 +19,7 @@
 
 .. _how_to_create_a_queue:
 
-How-To: Create a Queue
+[OLD] How-To: Create a Queue
 ======================
 
 In Dioptra, jobs are submitted to queues, which represent a computing environment. This

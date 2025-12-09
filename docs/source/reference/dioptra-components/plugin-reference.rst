@@ -15,15 +15,17 @@
 .. ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 .. https://creativecommons.org/licenses/by/4.0/legalcode
 
-.. _plugins-reference:
+.. _reference-plugins:
 
-Plugins Reference
+Plugins
 =================
 
 
 .. contents:: Table of Contents
    :local:
    :depth: 2
+
+.. _reference-plugins-plugin-definition:
 
 Plugin Definition
 -----------------
@@ -39,7 +41,7 @@ A **Plugin** in Dioptra acts as a logical container for code, functionally simil
 * **Init File:** Unlike standard Python packages, an ``__init__.py`` file is **not** required.
 * **Content:** Files may contain **Function Task** definitions or **Artifact Task** definitions.
 
-.. _ref-plugin-function-tasks:
+.. _reference-plugins-plugin-function-tasks:
 
 Plugin Function Tasks
 ---------------------
@@ -51,14 +53,16 @@ Code Syntax
 
 To define a function task, you must write a standard Python function and decorate it with ``@pyplugs.register``.
 
-.. code-block:: python
+**Example Implementation**
 
-    from dioptra import pyplugs
+.. admonition:: Function Task Example
+   :class: code-panel python
 
-    # The decorator is required for Dioptra to recognize the task
-    @pyplugs.register
-    def task_name(param_1: float, param_2: int = 10) -> float:
-        return param_1 * param_2
+    .. literalinclude:: ../../../../extra/plugins/hello_world/tasks.py
+       :language: python
+       :start-after: # [reference-task]
+       :end-before: # [end-reference-task]
+
 
 **Type Hints**
 Type hints are strongly recommended. Dioptra uses them to automatically populate parameter types during registration imports.
@@ -68,7 +72,10 @@ Registration Configuration
 
 When registering a function task (via API or GUI), the configuration must match the code logic.
 
-**Parameter Mapping**
+.. _reference-plugins-parameter-mapping:
+
+Parameter Mapping
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * **Input Names:** The registered input parameter names must match the Python function argument names exactly.
 * **Order:** [INSERT EXPLANATION ABOUT POSITIONAL VS KEYWORD ARGUMENTS HERE]
@@ -76,16 +83,16 @@ When registering a function task (via API or GUI), the configuration must match 
 
 .. _plugins-reference-return-values:
 
-**Return Values & Multiple Outputs**
+Return Values & Multiple Outputs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 A function task may return a single value or multiple values (via a tuple or list).
-
-
 
 * **Single Return:** Maps to a single registered Output Parameter.
 * **Iterable Return (Tuple/List):** If the function returns an iterable, Dioptra maps the values to the registered Output Parameters in order (Index 0 to Output 1, Index 1 to Output 2).
 * **Partial Mapping:** If fewer output parameters are registered than values returned, Dioptra discards the excess trailing values.
 
-.. _ref-plugin-artifact-tasks:
+.. _reference-plugins-plugin-artifact-tasks:
 
 Plugin Artifact Tasks
 ---------------------
@@ -104,39 +111,31 @@ Artifact tasks must be defined as classes that inherit from the ``ArtifactTaskIn
 
 **Example Implementation**
     
-.. admonition:: Artifact Handler Class Definition Example 
+.. admonition:: Artifact Handler Example 
    :class: code-panel python
 
-   .. code-block:: python
+    **Import Parent Class**
 
-      from __future__ import annotations
-      from pathlib import Path
-      from typing import Any
-      import numpy as np
-      from dioptra.sdk.api.artifact import ArtifactTaskInterface
+    .. literalinclude:: ../../../../extra/plugins/artifacts/tasks.py
+       :language: python
+       :start-after: # [artifact-task-imports]
+       :end-before: # [end-artifact-task-imports]
 
-      class NumpyArrayArtifactTask(ArtifactTaskInterface):
-          @staticmethod
-          def serialize(working_dir: Path, name: str, contents: np.ndarray, **kwargs) -> Path:
-              path = (working_dir / name).with_suffix(".npy")
-              np.save(path, contents, allow_pickle=False)
-              return path
+    **Child Class Definition**
 
-          @staticmethod
-          def deserialize(working_dir: Path, path: str, **kwargs) -> np.ndarray:
-              return np.load(working_dir / path)
-
-          @staticmethod
-          def validation() -> dict[str, Any] | None:
-              return None
+    .. literalinclude:: ../../../../extra/plugins/artifacts/tasks.py
+       :language: python
+       :start-after: # [example-artifact-task]
+       :end-before: # [end-example-artifact-task]
 
 
+.. _reference-plugins-registration-interfaces:
 
 Registration Interfaces
 -----------------------
 
 Plugins can be created and tasks can be registered programmatically via the Python Client or the REST API.
-They can also be registered manually through the :ref:`guided user interface <how_to_create_a_plugin>`.
+They can also be registered manually through the :ref:`guided user interface <how-to-create-plugins-plugin-creation-workflow>`.
 
 .. _plugin-reference-python-client-registration:
 
@@ -151,37 +150,6 @@ Using Python Client
 
     .. automethod:: dioptra.client.plugins.PluginFilesSubCollectionClient.create
 
-**Example Payload**
-
-.. code-block:: python
-
-      plugin = client.plugins.create(group_id, "hello", "This is a Hello World Plugin")
-      file = client.plugins.files.create(
-          plugin_id=plugin["id"],
-          filename="hello.py",
-          content=PYTHON_CONTENTS,
-          tasks=[{
-              "name": "hello_world",
-              "inputParams": [
-                  {
-                      "name": "greeting",
-                      "parameterType": string_param_type_id,
-                      "required": True
-                  },
-                  {
-                      "name": "name",
-                      "parameterType": string_param_type_id,
-                      "required": True
-                  }
-              ],
-              "outputParams": [
-                  {
-                      "name": "message",
-                      "parameterType": string_param_type_id,
-                  }
-              ]
-          }]
-      )
 
 Using REST API
 ~~~~~~~~~~~~~~
@@ -196,7 +164,10 @@ See the :http:post:`POST /api/v1/plugins </api/v1/plugins/>` endpoint documentat
 
 See the :http:post:`/api/v1/plugins/{int:id}/files/` endpoint documentation for payload requirements.
 
-.. seealso::
+.. rst-class:: fancy-header header-seealso
+
+See Also 
+---------
    
-   * :ref:`What are Plugins? <plugins-explanation>` 
-   * :ref:`How to create a plugin <how_to_create_a_plugin>`
+* :ref:`What are Plugins? <explanation-plugins>` 
+* :ref:`How to create a plugin <how-to-create-plugins>`

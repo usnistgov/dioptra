@@ -15,7 +15,7 @@
 .. ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 .. https://creativecommons.org/licenses/by/4.0/legalcode
 
-.. _plugins-explanation:
+.. _explanation-plugins:
 
 Plugins
 ================
@@ -52,7 +52,7 @@ When chained together in an entrypoint, the output of one function task can flow
 Note that while Function Tasks process data, they generally do not save it to disk. To persist results, you must pass the output of a Function Task into the Artifact Task Graph and dictate which Artifact Task will save it disk.
 
 
-    See :ref:`Explanation - Entrypoints [ADD REF] <fix_missing_ref_placeholder>` to learn how tasks are chained and how default parameter values are set.
+    See :ref:`Entrypoints: explanation <explanation-entrypoints>` to learn how tasks are chained and how default parameter values are set.
 
 Function Task Registration
 -----------------
@@ -65,14 +65,14 @@ Registration defines:
 * **Input/Output Names:** This is how input arguments are set in entrypoints and how output objects are referenced
 * **Input/Output Types:** Defining the plugin parameter types for each input/output allows for entrypoint task graph validity
 
-When creating Python plugins, users manually register each function task. This can be done in the user interface or through the REST API. See detailed steps in :ref:`How To Create Plugins <how_to_create_a_plugin>`
+When creating Python plugins, users manually register each function task. This can be done in the user interface or through the REST API. See detailed steps in :ref:`How To Create Plugins <how-to-create-plugins>`
 
 
 
 .. note::
     
    In order for a Python function to be registrable, it must use the ``@pyplugs.register`` decorator. 
-   View :ref:`Reference - Plugins <plugins-reference>` to learn about the ``@pyplugs.register`` syntax for function plugin tasks.
+   View  :ref:`Plugins: reference <reference-plugins>`  to learn about the ``@pyplugs.register`` syntax for function plugin tasks.
 
 
 Plugin Artifact Tasks
@@ -88,7 +88,7 @@ Artifact Handlers are Python classes that define certain methods for I/O logic.
 
 .. note::
     
-    Artifact Handler classes must inherit from the parent class ``ArtifactTaskInterface``. See :ref:`Reference - Plugins <plugins-reference>` to learn about the syntax for creating artifact tasks. 
+    Artifact Handler classes must inherit from the parent class ``ArtifactTaskInterface``. See :ref:`Plugins: reference <reference-plugins>` to learn about the syntax for creating artifact tasks. 
 
 
 Artifact Task Registration
@@ -111,18 +111,17 @@ Function tasks are used in the entrypoint task graph. Artifact tasks are used in
 
 Entrypoints utilize the types that are declared in function tasks inputs / outputs to ensure the workflow is valid. 
 
-    See :ref:`Explanation - Entrypoints [ADD REF] <fix_missing_ref_placeholder>` to learn how plugins are used in entrypoints
+    See :ref:`Entrypoints: explanation <explanation-entrypoints>` to learn how plugins are used in entrypoints
 
-.. _fix_missing_ref_placeholder:
 
-.. seealso::
+
+.. rst-class:: fancy-header header-seealso
+
+See Also 
+---------
    
-   * :ref:`Dioptra experiment overview <experiment-overview-explanation>` - How plugins fit into Dioptra experiments
-   * :ref:`how_to_create_a_plugin` - Step-by-step guide on building plugins
-   * :ref:`Reference - Plugins <plugins-reference>` - Detailed syntax for decorators and type annotations
+* :ref:`Dioptra experiment overview <explanation-experiment-overview>` - How plugins fit into Dioptra experiments
+* :ref:`how-to-create-plugins` - Step-by-step guide on building plugins
+* :ref:`Plugins: reference <reference-plugins>` - Detailed syntax for decorators and type annotations
 
 
-Missing References Placeholder
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-This is an empty section to serve as a destination link for any references that don't exist yet.

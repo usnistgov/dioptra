@@ -15,10 +15,10 @@
 .. ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 .. https://creativecommons.org/licenses/by/4.0/legalcode
 
-.. _reference-resource-search-language-reference:
+.. _reference-resource-search-language-syntax:
 
 ====================================
- Resource Search Language Reference
+Resource Search Language Syntax
 ====================================
 
 This document describes the language used to search for resources when using GET queries.

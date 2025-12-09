@@ -19,7 +19,7 @@
 
 .. _how_to_create_a_user:
 
-How-To: Create a User
+[OLD] How-To: Create a User
 =====================
 
 Before you can create plugins, run experiments, or view jobs, a user
