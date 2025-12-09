@@ -19,20 +19,3 @@
 
 System Requirements
 =================
-
-A reference page for system requirments. 
-
-
-
-Prior Documentation Snippets
-----------------------------
-
-.. note:: 
-    The following material is from previous document pages. It needs to be refactored. It is included below as a placeholder and for reference. 
-
-Most of the built-in demonstrations in the testbed assume the testbed is deployed on Unix-based operating systems (e.g., Linux, macOS).
-Those familiar with the Windows Subsystem for Linux (WSL) should be able to deploy it on Windows, but this mode is not explicitly supported at this time.
-Most included demos perform computationally intensive calculations requiring access to significant computational resources such as Graphics Processing Units (GPUs).
-The architecture has been tested on a :term:`NVIDIA DGX` server with 4 GPUs.
-The demonstrations also rely on publicly available datasets such as :term:`MNIST` handwritten digits, ImageNet, and Fruits360 that are not part of the testbed distribution.
-The built-in demonstrations assume that relevant datasets have already been obtained and saved in the testbed's Data Storage container.

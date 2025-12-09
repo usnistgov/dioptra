@@ -27,13 +27,9 @@ In the last section, you learned how to save task outputs as artifacts. Now, we 
 
 This is done through **artifact parameters**. They behave like Entrypoint parameters, but instead of being set at job creation, they are **loaded from disk**. You can then reference them throughout the task graph.
 
-
-Using Saved Artifacts in an Entrypoint Task Graph 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 In this example, we will build a new workflow that:
 
-- **Loads** a saved NumPy array **artifact** that was saved from :ref:`tutorial-saving-artifacts`
+- **Loads** a saved NumPy array **artifact** from Entrypoint 4
 - Applies **multiple rescaling methods**
 - **Visualizes** the results with Matplotlib
 - **Saves** the resulting **figure as a new artifact**
@@ -64,21 +60,21 @@ We'll use the python ``dict`` type in our next plugin, so let's add it.
 
 .. rst-class:: header-on-a-card header-steps
 
-Step 2: Create the "rescale_and_graph_array" Plugin
+Step 2: Create a Rescaling Plugin
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 We want to create a plugin that utilizes a saved numpy array as an *input*.
 
 1. Go to the **Plugins** tab and click **Create Plugin**.
-2. Name it ``rescale_and_graph_array`` and add a short description.
-3. Create a new file named ``rescale_and_graph_array.py``.
+2. Name it ``rescaling_plugin`` and add a short description.
+3. Create a new file named ``plugin_4.py``.
 4. Copy and paste the code below.
 5. Import the functions via **Import Function Tasks**. Fix any Types as needed.
 
-.. admonition:: rescale_and_graph_array.py
+.. admonition:: plugin_4.py
     :class: code-panel python
 
-    .. literalinclude:: ../../../../docs/source/documentation_code/plugins/essential_workflows_tutorial/rescale_and_graph_array.py
+    .. literalinclude:: ../../../../examples/tutorials/tutorial_1/plugin_4.py
        :language: python
 
 .. note::
@@ -94,30 +90,39 @@ Step 3: Add Another Artifact Task
 
 Our second plugin task outputs a Matplotlib figure. To view this output, we need to save it as an artifact. We will add a new artifact plugin task that serializes a matplotlib object as a png.
 
-1. Open your ``artifacts`` from the previous tutorial :ref:`step <tutorial-saving-artifacts-step-1-create-an-artifact-plugin>`.
-2. Add the new Artifact Plugin class code to the bottom of the file to define ``MatplotlibArtifactTask``.
-3. Register it in our Plugin the same way as the ``NumpyArrayArtifactTask`` (see :ref:`tutorial-1-part-4-register-artifact-task`).
+1. Open your ``artifact_plugin`` from the previous tutorial step (see :ref:`tutorial-saving-artifacts-step-1-create-an-artifact-plugin`).
+2. Add the new imports to the top of the file.
+3. Add the new Artifact Plugin class code to the bottom of the file to define ``MatplotlibArtifactTask``.
+4. Register it in our Plugin the same way as the ``NumpyArrayArtifactTask`` (see :ref:`tutorial-1-part-4-register-artifact-task`).
 
+**Add these imports to the top of the file:**
+
+.. admonition:: New Imports
+    :class: code-panel python
+
+    .. literalinclude:: ../../../../examples/tutorials/tutorial_1/matplotlib_fig_artifact_plugin.py
+       :language: python
+       :start-after: # [new-imports]
+       :end-before: # [end-new-imports]
 
 **Add this class to the bottom of the file:**
 
-.. admonition:: artifacts.py (add to bottom)
+.. admonition:: Artifact Plugin Class
     :class: code-panel python
 
-    .. literalinclude:: ../../../../docs/source/documentation_code/plugins/essential_workflows_tutorial/artifacts.py
+    .. literalinclude:: ../../../../examples/tutorials/tutorial_1/matplotlib_fig_artifact_plugin.py
        :language: python
-       :start-after: # [matplotlib-plugin-definition]
-       :end-before: # [end-matplotlib-plugin-definition]
+       :start-after: # [Plugin-definition]
 
 .. rst-class:: header-on-a-card header-steps
 
-Step 4: Create "rescale_and_graph_array" Entrypoint
+Step 4: Create Entrypoint 5
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Now let’s define a new Entrypoint that loads the array, transforms it, and saves the plot.
 
 1. Go to the **Entrypoints** tab and click **Create Entrypoint**.
-2. Name it ``rescale_and_graph_array_ep``.
+2. Name it ``entrypoint_5``.
 
 **Add Parameters:**
 
@@ -134,7 +139,7 @@ Now let’s define a new Entrypoint that loads the array, transforms it, and sav
    - **Output parameter type:** ``NumpyArray``
 
 .. figure:: _static/screenshots/entrypoint_5_params_and_artifact_params.png
-   :alt: Screenshot showing artifact parameter input in Entrypoint rescale_and_graph_array_ep.
+   :alt: Screenshot showing artifact parameter input in Entrypoint 5.
    :width: 100%
    :figclass:  border-image clickable-image
 
@@ -148,10 +153,10 @@ Now let’s define a new Entrypoint that loads the array, transforms it, and sav
 5. In the **Task Plugins** and **Artifact Task Plugins** windows, select the relevant plugins.
 6. Copy the **Task Graph** YAML below into the editor. It rescales our artifact input parameter in three different ways and plots the results.
 
-.. admonition:: rescale_and_graph_array_ep: Task Graph YAML
+.. admonition:: Task Graph YAML
     :class: code-panel yaml
 
-    .. literalinclude:: ../../../../docs/source/documentation_code/task_graphs/essential_workflows_tutorial/rescale_and_graph_array.yaml
+    .. literalinclude:: ../../../../examples/tutorials/tutorial_1/entrypoint_5_task_graph.yaml
        :language: yaml
 
 .. note::
@@ -161,7 +166,7 @@ Now let’s define a new Entrypoint that loads the array, transforms it, and sav
 
 7. Copy the **Artifact Output Graph** YAML below. It saves the generated matplotlib figure from step 2.
 
-.. admonition:: rescale_and_graph_array: Artifact Output Task Graph YAML
+.. admonition:: Artifact Output Task Graph YAML
     :class: code-panel yaml
 
     .. literalinclude:: ../../../../examples/tutorials/tutorial_1/entrypoint_5_artifact_output_task_graph.yaml
@@ -184,10 +189,10 @@ Step 5: Create Experiment and Job
 
 Finally, let’s test it out.
 
-1. Create a new Experiment named ``Rescale and Graph Array exp``.
-2. Add **rescale_and_graph_array_ep**.
+1. Create a new Experiment named ``experiment_5``.
+2. Add **Entrypoint 5**.
 3. Create a new Job.
-4. When configuring the job, use the **Artifacts** dropdown to select the artifact snapshot created in :ref:`the previous step <tutorial-saving-artifacts>`.
+4. When configuring the job, use the **Artifacts** dropdown to select the artifact snapshot created in Part 4.
 5. Click **Submit Job**.
 
 .. figure:: _static/screenshots/job_select_artifact.png
@@ -204,16 +209,16 @@ Step 6: Inspect Results
 
 After running the job, open the logs and artifact view.
 
-The original NumPy array artifact from the :ref:`the previous workflow <tutorial-saving-artifacts>` ranged from roughly 0 to 500+. Here’s how the three scaling methods reshape it:
+The original NumPy array from Entrypoint 4 ranged from roughly 0 to 500+. Here’s how the three scaling methods reshape it:
 
 - **Min–Max Scaling**: Linearly maps values into [0,1], preserving relative spacing.
 - **Z-Score Scaling**: Centers data at 0 with unit variance; shows distance from the mean.
 - **Log1p Scaling**: Nonlinear compression; reduces the impact of large values and outliers.
 
-**Artifact Output from rescale_and_graph_array_ep**
+**Artifact Output from Entrypoint 5**
 
 .. figure:: _static/screenshots/entrypoint_5_artifact_visualization.png
-   :alt: The Matplotlib Figure created from rescale_and_graph_array_ep showing three scatter plots of rescaled data.
+   :alt: The Matplotlib Figure created from Entrypoint 5 showing three scatter plots of rescaled data.
    :width: 100%
    :figclass:  border-image clickable-image
 

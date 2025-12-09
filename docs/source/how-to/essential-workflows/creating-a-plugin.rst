@@ -66,7 +66,7 @@ First, define the container that will hold your files.
 
    .. group-tab:: GUI
 
-      In the Dioptra GUI, navigate to the **Plugins tab**. Click **CREATE**. Enter a *name* and *description*, then click **SUBMIT**.
+      In the Dioptra GUI, navigate to the **Plugins tab**. Click **Create a new plugin**. Enter a *name* and *description*, then confirm.
 
    .. group-tab:: Python Client
 

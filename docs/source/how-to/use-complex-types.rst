@@ -17,9 +17,9 @@
 .. https://creativecommons.org/licenses/by/4.0/legalcode
 
 
-.. _how_to_create_a_user:
+.. _how-to-use-complex-types:
 
-How-To: Use Complex Plugin Parameter Types
+[OLD] How-To: Use Complex Plugin Parameter Types
 =====================
 
 Simple Types

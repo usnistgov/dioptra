@@ -20,14 +20,13 @@
 Motivation for Dioptra
 ===============================
 
+Why use Dioptra? Who should use Dioptra?
 
-.. container:: wide-lightly-shaded
-      
-   .. toctree::
-      :maxdepth: 1
-      :titlesonly:
+.. toctree::
+   :maxdepth: -1
 
-      why-dioptra 
-      design-principles 
-      audience 
-      
+   why-dioptra 
+   design-principles 
+   audience 
+   mlops-comparison 
+   

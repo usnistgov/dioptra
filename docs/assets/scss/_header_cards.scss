@@ -78,8 +78,6 @@
   font-weight: 600;
   color: var(--pst-color-muted);
   border-bottom: 1px solid var(--dioptra-border-10);
-  margin-top: .25rem;
-  padding-bottom: .5rem;
 }
 
 .header-steps > h2 { font-size: 1.5rem; }
@@ -103,14 +101,14 @@
       across that empty gap.
 */
 .header-steps + .header-steps {
-  margin-top: 50px; 
+  margin-top: 100px; 
   position: relative;
 }
 
 .header-steps + .header-steps::before {
   content: "";
   position: absolute;
-  top: -20px; 
+  top: -50px; 
   left: 0;
   right: 0;
   height: 2px;

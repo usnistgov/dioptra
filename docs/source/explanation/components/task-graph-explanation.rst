@@ -19,6 +19,3 @@
 
 Task Graph
 ================
-
-
-[Todo] Insert an explanation about the task graph.

@@ -15,7 +15,7 @@ ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 https://creativecommons.org/licenses/by/4.0/legalcode */
 
 figure.big-image {
-  width: #{"min(1100px, calc(calc(100vw) - 350px - 2rem))"} !important; /*wrap calculations in # to prevent scss compiling errors*/
+  width: #{"min(1100px, calc(calc(100vw) - 350px - 2rem))"} !important;
   margin-left: 0;
   margin-right: auto;
 }

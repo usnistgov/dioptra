@@ -15,10 +15,10 @@
 .. ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 .. https://creativecommons.org/licenses/by/4.0/legalcode
 
-.. _explanation-why-use-dioptra:
+.. _explanation-comparison-to-other-mlops-tools:
 
 
-Why Use Dioptra?
+Comparison to Other MLops Tools
 ================
 
-Explaining when Dioptra is appropriate to use and what it's value add is. 
+Explaining how Dioptra is different from other common MLops tools.

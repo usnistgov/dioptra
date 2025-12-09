@@ -47,7 +47,7 @@
   font-size: 0.85em !important;
 }
 
-/* Important: Clear theme defaults. 
+/* Important: Nuke theme defaults. 
    Themes often inject a bell/info icon via ::before/::after. 
    We must force 'content: none' to strip the default icon 
    so we can insert our own language-specific prompts later.

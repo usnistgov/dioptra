@@ -34,7 +34,7 @@ Client Setup Workflow
 ------------------------
 
 
-.. rst-class:: header-on-a-card header-steps
+.. rst-class:: fancy-header header-steps
 
 Step 1: Start Docker Containers
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -42,15 +42,25 @@ Step 1: Start Docker Containers
 - Navigate to deployment folder 
 - Run ``docker compose up``
 
-.. rst-class:: header-on-a-card header-steps
+.. rst-class:: fancy-header header-steps
 
 Step 2: Initialize Client and Log In
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In your Jupyter notebook, run the following code: 
         
-.. admonition:: Setup Python Client
-    :class: code-panel python
+.. code-block:: python 
 
-    .. literalinclude:: ../../../../docs/source/documentation_code/client_workflows/client_setup.py
-       :language: python
+    from dioptra.client import connect_json_dioptra_client
+
+    DIOPTRA_REST_API_ADDRESS = "http://localhost:5000"
+    DIOPTRA_REST_API_USER = "<user>"
+    DIOPTRA_REST_API_PASS = "<password>"
+
+    client = connect_json_dioptra_client(DIOPTRA_REST_API_ADDRESS)
+
+    # if you have not yet registered a user, uncomment the following line and adjust the parameters as desired to register a user first
+    # client.users.create(DIOPTRA_REST_API_USER, email=f"{DIOPTRA_REST_API_USER}@localhost", password=DIOPTRA_REST_API_PASS)
+
+    client.auth.login(DIOPTRA_REST_API_USER, DIOPTRA_REST_API_PASS)
+

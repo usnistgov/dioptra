@@ -15,26 +15,9 @@
 .. ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 .. https://creativecommons.org/licenses/by/4.0/legalcode
 
-Getting Started Tutorial
-=================
+.. _how-to-connecting-external-hardware-gpus:
 
-In this tutorial, you will create reusable workflows in Dioptra of increasing complexity. 
-Each step will iterate on the previous step, incorporating more features and functionality from Dioptra. 
+Connecting External Hardware / GPUs
+=====================
 
-.. toctree::
-   :caption: Steps
-   :maxdepth: 1
-
-   part-0
-   part-1
-   part-2
-   part-3
-   part-4
-   part-5
-   part-6
-
-**By the end of this tutorial, you will have:**
-
-- Loaded in Python files and registered their functions as Dioptra Plugin Tasks
-- Created workflows from those Plugin tasks to simulate data, modify that data, and visualize your results
-- Defined custom types and their associated saving/loading behavior to export your generated data and results into new entrypoints and out of Dioptra
+This how to guide explains how to connect external hardware / GPUs.

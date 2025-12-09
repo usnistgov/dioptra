@@ -19,6 +19,3 @@
 
 Users and Groups
 ================
-
-
-[Todo] Insert an explanation about users/groups.

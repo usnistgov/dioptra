@@ -15,10 +15,10 @@
 .. ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 .. https://creativecommons.org/licenses/by/4.0/legalcode
 
-.. _explanation-why-use-dioptra:
+.. _explanation-dioptra-workflows:
 
 
-Why Use Dioptra?
+Dioptra Workflows 
 ================
 
-Explaining when Dioptra is appropriate to use and what it's value add is. 
+Explainer on various workflows supported by Dioptra (i.e. GUI, Python Client, etc)

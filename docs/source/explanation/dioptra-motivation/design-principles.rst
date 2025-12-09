@@ -22,27 +22,3 @@ Design Principles
 ================
 
 Explaining design principles of Dioptra. 
-
-
-
-Prior Documentation Snippets
-----------------------------
-
-.. note:: 
-    The following material is from previous document pages. It needs to be refactored. It is included below as a placeholder and for reference. 
-
-From overview/executive-summary.rst:
-
-**Key Properties**
-
-
-Dioptra strives for the following key properties:
-
-* Reproducible: Dioptra automatically creates snapshots of resources so experiments can be reproduced and validated
-* Traceable: The full history of experiments and their inputs are tracked
-* Extensible: Support for expanding functionality and importing existing Python packages via a plugin system
-* Interoperable: A type system promotes interoperability between plugins
-* Modular: New experiments can be composed from modular components in a simple yaml file
-* Secure: Dioptra provides user authentication with access controls coming soon
-* Interactive: Users can interact with Dioptra via an intuitive web interface
-* Shareable and Reusable: Dioptra can be deployed in a multi-tenant environment so users can share and reuse components

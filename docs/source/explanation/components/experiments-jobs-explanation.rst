@@ -19,5 +19,3 @@
 
 Experiments and Jobs
 ================
-
-[Todo] Insert an explanation about experiments/jobs.
