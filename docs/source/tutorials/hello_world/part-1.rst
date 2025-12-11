@@ -43,19 +43,10 @@ First, we need the Python code that defines our task. We will use the ``structlo
 
 
 .. admonition:: hello_world.py
-   :class: code-panel python
+    :class: code-panel python
 
-   .. code-block:: python
-      :linenos:
-
-      import structlog
-      from dioptra import pyplugs
-
-      logger = structlog.get_logger(__name__)
-
-      @pyplugs.register
-      def hello_world():
-          logger.info("Hello, World! Welcome to Dioptra.")
+    .. literalinclude:: ../../../../examples/documentation_code/plugins/hello_world_tutorial/hello_world.py
+       :language: python
 
 Copy the code above (you will paste it into the GUI in the next step).
 

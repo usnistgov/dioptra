@@ -44,14 +44,14 @@ Step 1: Add Metrics Task to Plugin 3
 
 Let's create the new plugin task that uses Dioptra's metric logging.
 
-1. Go to the **Plugins** tab and open **plugin_3** from the previous step.
-2. Navigate to the ``plugin_3.py`` file you created.
+1. Go to the **Plugins** tab and open **sample_and_transform** from the previous step.
+2. Navigate to the ``sample_and_transform.py`` file you created.
 3. Copy the following new plugin task and paste it at the bottom of the file.
 
-.. admonition:: plugin_3.py (Append this code)
+.. admonition:: sample_and_transform_w_metrics.py (Append this code)
     :class: code-panel python
 
-    .. literalinclude:: ../../../../examples/tutorials/tutorial_1/plugin_3_w_metrics.py
+    .. literalinclude:: ../../../../examples/documentation_code/plugins/essential_workflows_tutorial/sample_and_transform_w_metrics.py
        :language: python
        :start-after: # [new-plugin-definition]
 

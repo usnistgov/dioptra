@@ -24,9 +24,9 @@ Saving Artifacts
 Overview
 --------
 
-In the last two sections, you created a multi-step workflow and watched how data evolved across chained tasks. Now, you will learn how to **save task outputs as artifacts**.
+In the last section, you created a multi-step workflow and watched how data evolved across chained tasks. Now, you will learn how to **save task outputs as artifacts**.
 
-We will build on **Experiment 3**, **Plugin 3**, and **Entrypoint 3**, adding artifact-saving logic.
+We will build on :ref:`tutorial-building-a-multi-step-workflow`, adding artifact-saving logic.
 
 .. admonition:: Learn More 
 
@@ -49,15 +49,17 @@ Before Dioptra can save objects to disk, it needs to know how to serialize and d
 Just like before, we will create a new plugin, but this time we'll define **artifact tasks**.
 
 1. Go to the **Plugins** tab and click **Create Plugin**.
-2. Name it ``artifact_plugin`` and add a short description.
+2. Name it ``artifacts`` and add a short description.
 3. Create a new Python file in the plugin.
 4. Copy and paste the code below.
 
-.. admonition:: numpy_artifact_plugin.py
+.. admonition:: artifacts.py
     :class: code-panel python
 
-    .. literalinclude:: ../../../../examples/tutorials/tutorial_1/numpy_artifact_plugin.py
+    .. literalinclude:: ../../../../examples/documentation_code/plugins/essential_workflows_tutorial/artifacts.py
        :language: python
+       :start-after: # [numpy-plugin-definition]
+       :end-before: # [end-numpy-plugin-definition]
 
 .. note::
    This plugin defines an artifact task: ``NumpyArrayArtifactTask``.
@@ -108,10 +110,10 @@ Now we must register the class we just created.
 Step 3: Modify Entrypoint to Save Artifacts
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Next, we will modify **Entrypoint 3** to include an artifact-saving task. Nothing about **Plugin 3** itself needs to change.
+Next, we will modify **sample_and_transform_ep** to include an artifact-saving task. Nothing about **Plugin 3** itself needs to change.
 
-1. Open **Entrypoint 3**.
-2. In the **Artifact Info** window, add our new ``artifact_plugin``.
+1. Open **sample_and_transform_ep**.
+2. In the **Artifact Info** window, add our new ``artifacts``.
 3. Click **Add to Output Graph**.
 4. Rename the step to ``save_numpy_artifact``.
 5. Set the contents equal to the output from the final step of your task graph (e.g., ``$transform_step`` or whatever the last step was named).

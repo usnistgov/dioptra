@@ -1,21 +1,37 @@
+# [numpy-plugin-definition]
 from __future__ import annotations
-
 from pathlib import Path
 from typing import Any
-import structlog
-from structlog.stdlib import BoundLogger
-# [new-imports]
 import os
-import pickle
-import io
-# [end-new-imports]
 
+import numpy as np
+import structlog
+
+LOGGER = structlog.get_logger()
 from dioptra.sdk.api.artifact import ArtifactTaskInterface
+
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
+# Defining serialize and deserialize methods for ArtifactTaskMethod is required
+class NumpyArrayArtifactTask(ArtifactTaskInterface):
+    @staticmethod
+    def serialize(working_dir: Path, name: str, contents: np.ndarray, **kwargs) -> Path:
+        path = (working_dir / name).with_suffix(".npy")
+        np.save(path, contents, allow_pickle=False)
+        return path
 
-# [Plugin-definition]
+    @staticmethod
+    def deserialize(working_dir: Path, path: str, **kwargs) -> np.ndarray:
+        return np.load(working_dir / path)
+
+    @staticmethod
+    def validation() -> dict[str, Any] | None:
+        return None
+# [end-numpy-plugin-definition]
+
+# [matplotlib-plugin-definition]
+# Paste this after the definition of 'NumpyArrayArtifactTask'
 class MatplotlibArtifactTask(ArtifactTaskInterface):
     """Save PNG in working_dir and return the PNG path. Deserialize returns PNG bytes."""
 
@@ -36,3 +52,4 @@ class MatplotlibArtifactTask(ArtifactTaskInterface):
     @staticmethod
     def validation() -> dict[str, Any] | None:
         return None
+# [end-matplotlib-plugin-definition]
