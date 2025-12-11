@@ -40,10 +40,10 @@ Workflow
 
 .. rst-class:: header-on-a-card header-steps
 
-Step 1: Make Plugin 3
+Step 1: Make "sample_and_transform" Plugin
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Plugin 3 will include multiple functions, each registered as a Plugin Task.
+The ``sample_and_transform`` plugin will include multiple functions, each registered as a Plugin Task.
 Other than containing more functions, we create the plugin the same way as before.
 
 The tasks include:
@@ -56,22 +56,22 @@ The tasks include:
 **Steps** 
 
 1. Go to the **Plugins** tab and click **Create Plugin**.
-2. Name it ``plugin_3`` and add a short description.
-3. Add a new file named ``plugin_3.py`` and paste the code below.
+2. Name it ``sample_and_transform`` and add a short description.
+3. Add a new file named ``sample_and_transform.py`` and paste the code below.
 4. Import functions via **Import Function Tasks** (same as in :ref:`tutorial-1-part-2-register-the-task`).
 
-.. admonition:: plugin_3.py
+.. admonition:: sample_and_transform.py
     :class: code-panel python
 
-    .. literalinclude:: ../../../../examples/tutorials/tutorial_1/plugin_3.py
+    .. literalinclude:: ../../../../examples/documentation_code/plugins/essential_workflows_tutorial/sample_and_transform.py
        :language: python
 
 .. rst-class:: header-on-a-card header-steps
 
-Step 2: Create Entrypoint 3
+Step 2: Create "sample_and_transform" entrypoint
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Entrypoint 3 will demonstrate a **multi-step task graph**. We will pass arrays from one task to the next and re-use the ``print_stats`` task multiple times.
+The ``sample_and_transform_ep`` entrypoint will demonstrate a **multi-step task graph**. We will pass arrays from one task to the next and re-use the ``print_stats`` task multiple times.
 
 Parameters for this Entrypoint:
 
@@ -82,11 +82,11 @@ Parameters for this Entrypoint:
 
 **Steps** 
 
-1. Create a new Entrypoint named ``entrypoint_3``.
+1. Create a new Entrypoint named ``sample_and_transform_ep``.
 2. Under the **Entrypoint Parameters** window, add the four parameters listed above, ensuring you select the correct types (``int``, ``float``, ``float``, ``string``).
 
 .. figure:: _static/screenshots/entrypoint_3_add_params.png
-   :alt: Screenshot of Entrypoint 3 parameters window.
+   :alt: Screenshot of the sample_and_transform_ep parameters window.
    :width: 900px
    :figclass: border-image clickable-image
 
@@ -114,13 +114,13 @@ Key ideas:
 **Steps** 
 
 1. Go to **Task Graph Info**.
-2. Select ``plugin_3`` in the plugins list.
+2. Select ``sample_and_transform`` in the plugins list.
 3. Paste the following YAML code into the editor:
 
-.. admonition:: Entrypoint 3 Task Graph YAML
+.. admonition:: Sample and Transform: Task Graph YAML
     :class: code-panel yaml
 
-    .. literalinclude:: ../../../../examples/tutorials/tutorial_1/entrypoint_3_task_graph.yaml
+    .. literalinclude:: ../../../../examples/documentation_code/task_graphs/essential_workflows_tutorial/sample_and_transform.yaml
        :language: yaml
 
 .. note::
@@ -149,8 +149,8 @@ Because this workflow is conceptually different, let’s make a new experiment.
 **Steps** 
 
 1. Navigate to **Experiments** and click **Create Experiment**.
-2. Name it ``experiment_3``.
-3. Add **Entrypoint 3** to the experiment.
+2. Name it ``Sample and Transform Exp``.
+3. Add the **sample_and_transform_ep** entrypoint to the experiment.
 4. Click **Submit Experiment**.
 
 .. rst-class:: header-on-a-card header-steps
@@ -161,7 +161,7 @@ Step 5: Run a Job
 Let’s execute the multi-step workflow.
 
 1. Go to the **Jobs** tab and click **Create Job**.
-2. Select **experiment_3** and **entrypoint_3**.
+2. Select **Sample and Transform Exp** and **sample_and_transform_ep**.
 3. Choose parameter values, for example:
 
    - ``sample_size`` = 1000

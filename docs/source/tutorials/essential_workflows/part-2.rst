@@ -71,14 +71,14 @@ Step 2: Create the Plugin
 We will now create a new plugin with one task. This task accepts parameters (``random_seed``, ``sample_size``, ``mean``, ``var``), samples a normal distribution, logs the mean, and returns the array.
 
 1. Go to the **Plugins** tab and click **Create Plugin**.
-2. Name it ``plugin_2`` and add a short description.
-3. Click the **file icon** and add a new Python file named ``plugin_2.py``.
+2. Name it ``sample_normal`` and add a short description.
+3. Click the **file icon** and add a new Python file named ``sample_normal.py``.
 4. Paste the code below into the editor.
 
-.. admonition:: plugin_2.py
+.. admonition:: sample_normal.py
     :class: code-panel python
 
-    .. literalinclude:: ../../../../examples/tutorials/tutorial_1/plugin_2.py
+    .. literalinclude:: ../../../../examples/documentation_code/plugins/essential_workflows_tutorial/sample_normal.py
        :language: python
 
 .. rst-class:: header-on-a-card header-steps
@@ -90,7 +90,7 @@ Step 3: Register the Task
 
 Unlike last time, we must specify input and output types. We will use Dioptra's autodetect functionality to help us.
 
-1. Click **Import Function Tasks** (top right of the editor) to auto-detect functions from ``plugin_2.py``.
+1. Click **Import Function Tasks** (top right of the editor) to auto-detect functions from ``sample_normal.py``.
 
 .. figure:: _static/screenshots/import_plugin_tasks.png
    :alt: Screenshot of the "Import Function Tasks" button.
@@ -131,7 +131,7 @@ Step 4: Create Entrypoint Parameters
 We will create an entrypoint that accepts a parameter, allowing us to change the sample size without changing the code.
 
 1. Navigate to **Entrypoints** and click **Create Entrypoint**.
-2. Name it ``entrypoint_2``.
+2. Name it ``sample_normal_ep``.
 3. In the **Entrypoint Parameters** window, click **Add Parameter**:
 
    - **Name:** ``sample_size``
@@ -152,11 +152,11 @@ Step 5: Define Task Graph
 
 Now we add the task to the graph and bind the parameters.
 
-1. In the **Task Plugins** window, select ``plugin_2``.
+1. In the **Task Plugins** window, select ``sample_normal``.
 2. Click **Add to Task Graph**. This auto-populates the YAML with default structure.
 
 .. figure:: _static/screenshots/entrypoint_2_add_to_task_graph.png
-   :alt: Screenshot of adding plugin_2 to Entrypoint 2.
+   :alt: Screenshot of adding sample_normal to Entrypoint 2.
    :width: 900px
    :figclass: border-image clickable-image
 
@@ -182,10 +182,10 @@ Step 6: Run Jobs
 
 We will reuse our existing experiment to run two jobs with different parameters.
 
-1. Navigate to **Experiment 1**.
-2. In the **Entrypoints** list, verify ``entrypoint_2`` is available (if not, add it).
+1. Navigate to **Sample Normal**.
+2. In the **Entrypoints** list, verify ``sample_normal_ep`` is available (if not, add it).
 3. Click **Create Job**.
-4. Select ``entrypoint_2``.
+4. Select ``sample_normal_ep``.
 5. Set the ``sample_size`` parameter to ``10000``.
 6. Click **Submit Job**.
 
@@ -196,7 +196,7 @@ We will reuse our existing experiment to run two jobs with different parameters.
 
    Setting the sample size parameter for a job to 10,000.
 
-7. Create a **second job** using ``entrypoint_2``, but this time leave ``sample_size`` at the default ``100``.
+7. Create a **second job** using ``sample_normal_ep``, but this time leave ``sample_size`` at the default ``100``.
 
 .. figure:: _static/screenshots/entrypoint_2_showing_all_jobs.png
    :alt: Screenshot showing multiple jobs created with different sample sizes.

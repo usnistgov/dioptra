@@ -90,7 +90,7 @@ We now attach code to the Plugin.
 .. admonition:: Plugin 1
     :class: code-panel python
 
-    .. literalinclude:: ../../../../examples/tutorials/tutorial_1/plugin_1.py
+    .. literalinclude:: ../../../../examples/documentation_code/plugins/essential_workflows_tutorial/sample_normal_no_inputs.py
        :language: python
 
 
@@ -148,14 +148,14 @@ Entrypoints define workflows made of tasks. Ours will be a single-task workflow.
 .. admonition:: Task Graph
     :class: code-panel yaml
 
-    .. literalinclude:: ../../../../examples/tutorials/tutorial_1/entrypoint_1_task_graph.yaml
+    .. literalinclude:: ../../../../examples/documentation_code/task_graphs/essential_workflows_tutorial/sample_normal_no_inputs.yaml
        :language: yaml
 
 
 .. figure:: _static/screenshots/entrypoint_1_task_graph.png
    :alt: Screenshot of the Entrypoint task graph editor with YAML pasted in.
    :width: 900px
-   :figclass: big-image border-image clickable-image
+   :figclass:  border-image clickable-image
 
    Defining the Entrypoint task graph in the UI
 
