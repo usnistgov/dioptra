@@ -507,6 +507,16 @@ class EntrypointsSnapshotCollectionClient(SnapshotsSubCollectionClient[T]):
             params=params,
         )
 
+    def task_graph_global_params(
+        self, entrypoint_id: int, entrypoint_snapshot_id: int, swaps: dict[str, str]
+    ) -> T:
+        return self._session.get(
+            self.build_sub_collection_url(entrypoint_id),
+            str(entrypoint_snapshot_id),
+            DYNAMIC_GLOBAL_PARAMETERS,
+            params={"swaps": ",".join([f"{k}={v}" for k, v in swaps.items()])},
+        )
+
 
 class EntrypointsCollectionClient(CollectionClient[T]):
     """The client for managing Dioptra's /entrypoints collection.
@@ -896,14 +906,3 @@ class EntrypointsCollectionClient(CollectionClient[T]):
             The response from the Dioptra API.
         """
         return self._session.delete(self.url, str(entrypoint_id))
-
-    def task_graph_global_params(
-        self, entrypoint_id: int, entrypoint_snapshot_id: int, swaps: dict[str, str]
-    ) -> T:
-        json_ = {
-            "entrypointId": entrypoint_id,
-            "entrypointSnapshotId": entrypoint_snapshot_id,
-            "swapChoices": swaps,
-        }
-
-        return self._session.post(self.url, DYNAMIC_GLOBAL_PARAMETERS, json_=json_)

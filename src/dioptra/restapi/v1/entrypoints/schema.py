@@ -17,6 +17,7 @@
 """The schemas for serializing/deserializing Entrypoint resources."""
 
 from marshmallow import Schema, fields, validate
+from marshmallow.exceptions import ValidationError
 
 from dioptra.restapi.v1.plugins.schema import (
     ALLOWED_PLUGIN_TASK_PARAMETER_REGEX,
@@ -325,25 +326,41 @@ class EntrypointGetQueryParameters(
     """The query parameters for the GET method of the /entrypoints endpoint."""
 
 
+class DelimitedKeyValuePairs(fields.Field):
+    def __init__(
+        self,
+        *,
+        delimiter: str = ",",
+        equality: str = "=",
+        **additional_metadata,
+    ) -> None:
+        super().__init__(**additional_metadata)
+        self.delimiter = delimiter
+        self.equality = equality
+
+    def _deserialize(self, value, attr, data, **kwargs) -> dict[str, str]:
+        try:
+            if value == "":
+                return {}
+            return {
+                str(pair.split(self.equality)[0]): str(pair.split(self.equality)[1])
+                for pair in value.split(self.delimiter)
+            }
+        except Exception as e:
+            raise ValidationError(
+                f"{attr} is not a delimited list {value}. List format should be key=value,key2=value2,key3=value3."
+            ) from e
+
+
 class DynamicGlobalParametersRequestSchema(Schema):
-    entrypointId = fields.Integer(
-        attribute="entrypoint_id",
-        metadata={"description": "An integer identifying a registered entry point."},
-        load_only=True,
-        required=True,
-    )
-    entrypointSnapshotId = fields.Integer(
-        attribute="entrypoint_snapshot_id",
+    swaps = DelimitedKeyValuePairs(
+        attribute="swaps",
+        data_key="swaps",
         metadata={
-            "description": "An integer identifying a registered entry point snapshot."
+            "description": (
+                "A list of swap choices to be applied to the entrypoint task graph."
+            )
         },
-        load_only=True,
-        required=True,
-    )
-    swapChoices = fields.Mapping(
-        attribute="swap_choices",
-        metadata={"description": "The chosen swaps for the given entrypoint graphs."},
-        required=False,
     )
 
 

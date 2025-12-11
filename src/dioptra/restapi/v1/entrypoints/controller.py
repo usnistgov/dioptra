@@ -711,7 +711,9 @@ class EntrypointIdQueuesId(Resource):
         return self._entrypoint_id_queues_id_service.delete(id, queueId, log=log)
 
 
-@api.route("/dynamicGlobalParameters")
+@api.route("/<int:id>/snapshots/<int:snapshotId>/dynamicGlobalParameters")
+@api.param("id", "ID for the Entrypoint resource.")
+@api.param("snapshotId", "Snapshot ID for the Entrypoint snapshot.")
 class DynamicGlobalParametersEntrypoint(Resource):
     @inject
     def __init__(
@@ -730,20 +732,21 @@ class DynamicGlobalParametersEntrypoint(Resource):
         self._dynamic_global_parameters_service = dynamic_global_parameters_service
         super().__init__(*args, **kwargs)
 
-    @accepts(schema=DynamicGlobalParametersRequestSchema, api=api)
+    @login_required
+    @accepts(query_params_schema=DynamicGlobalParametersRequestSchema, api=api)
     @responds(schema=DynamicGlobalParametersResponseSchema, api=api)
-    def post(self):
+    def get(self, id: int, snapshotId: int):
         """Finds the global parameters for the given entrypoint + swap choice dictionary."""
         log = LOGGER.new(
             request_id=str(uuid.uuid4()),
             resource="DynamicGlobalParameters",
-            request_type="POST",
+            request_type="GET",
         )
 
-        parsed_obj = request.parsed_obj  # pyright: ignore
-        entrypoint_id = parsed_obj["entrypoint_id"]
-        entrypoint_snapshot_id = parsed_obj["entrypoint_snapshot_id"]
-        swap_choices = parsed_obj["swap_choices"]
+        entrypoint_id = id
+        entrypoint_snapshot_id = snapshotId
+        swap_choices = request.parsed_query_params["swaps"] # type: ignore
+
         return self._dynamic_global_parameters_service.get_params(
             entrypoint_id=entrypoint_id,
             entrypoint_snapshot_id=entrypoint_snapshot_id,

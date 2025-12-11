@@ -266,7 +266,7 @@ def test_entrypoint_swaps_endpoint(
             expected_sort_order = case["sort_order"]
             expected_active_plugins = case["active_plugins"]
 
-            evaluated = dioptra_client.entrypoints.task_graph_global_params(
+            evaluated = dioptra_client.entrypoints.snapshots.task_graph_global_params(
                 entrypoint_id=registered_swap_entrypoints[file]["id"],
                 entrypoint_snapshot_id=registered_swap_entrypoints[file]["snapshot"],
                 swaps=swaps
@@ -280,7 +280,7 @@ def test_entrypoint_swaps_endpoint(
 
             if swaps != {}:
                 # this test is N/A if the entrypoint has no swaps
-                forgot_swaps = dioptra_client.entrypoints.task_graph_global_params(
+                forgot_swaps = dioptra_client.entrypoints.snapshots.task_graph_global_params(
                     entrypoint_id=registered_swap_entrypoints[file]["id"],
                     entrypoint_snapshot_id=registered_swap_entrypoints[file]["snapshot"],
                     swaps={}
@@ -290,7 +290,7 @@ def test_entrypoint_swaps_endpoint(
             too_many = swaps
             too_many['extra'] = 'task10'
 
-            too_many_swaps = dioptra_client.entrypoints.task_graph_global_params(
+            too_many_swaps = dioptra_client.entrypoints.snapshots.task_graph_global_params(
                 entrypoint_id=registered_swap_entrypoints[file]["id"],
                 entrypoint_snapshot_id=registered_swap_entrypoints[file]["snapshot"],
                 swaps=swaps
@@ -301,7 +301,7 @@ def test_entrypoint_swaps_endpoint(
             imaginary = swaps
             imaginary['step3_choice'] = "doesnt_exist2"
 
-            imaginary_tasks = dioptra_client.entrypoints.task_graph_global_params(
+            imaginary_tasks = dioptra_client.entrypoints.snapshots.task_graph_global_params(
                 entrypoint_id=registered_swap_entrypoints[file]["id"],
                 entrypoint_snapshot_id=registered_swap_entrypoints[file]["snapshot"],
                 swaps=swaps
