@@ -348,7 +348,7 @@ class DelimitedKeyValuePairs(fields.Field):
             }
         except Exception as e:
             raise ValidationError(
-                f"{attr} is not a delimited list {value}. List format should be key=value,key2=value2,key3=value3."
+                f"{attr} is not a delimited list {value}. List format should be key{self.equality}value{self.delimiter}key2{self.equality}value2{self.delimiter}key3{self.equality}value3."
             ) from e
 
 
