@@ -100,11 +100,14 @@ Within this directory:
 
    examples/documentation_code/
    ├── client_workflows/
-   │   └── client_setup.py     # Scripts for Python Client demonstrations
-   └── tutorials/
-       ├── artifact_task_graphs/
-       ├── plugins/            # Python plugin files
-       └── task_graphs/        # YAML task graphs
+   │   ├── import_plugins.py   
+   │   └── client_setup.py     
+   ├── artifact_task_graphs/
+   ├── task_graphs/ 
+   └── plugins/ 
+       ├── essential_workflows_tutorial
+       └── hello_world_tutorial
+
 
 
 Diátaxis content types
