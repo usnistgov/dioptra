@@ -530,9 +530,9 @@ Use ``literalinclude`` to pull code from the repo instead of pasting it:
 
    .. tab:: Rendered
 
-      **Plugin 1:**
+      **hello_world.py**:
 
-      .. literalinclude:: ../../../examples/tutorials/tutorial_1/plugin_1.py
+      .. literalinclude:: ../../../examples/documentation_code/plugins/hello_world_tutorial/hello_world.py 
          :language: python
          :linenos:
 
@@ -541,9 +541,9 @@ Use ``literalinclude`` to pull code from the repo instead of pasting it:
 
       .. code-block:: rst
 
-         **Plugin 1:**
+         **hello_world.py**:
 
-         .. literalinclude:: ../../../examples/tutorials/tutorial_1/plugin_1.py
+         .. literalinclude:: ../../../examples/documentation_code/plugins/hello_world_tutorial/hello_world.py
             :language: python
             :linenos:
 
@@ -571,14 +571,14 @@ Use the following classes with an ``.. admonition::`` block:
       .. admonition:: <My Python LiteralInclude>
          :class: code-panel python
          
-            .. literalinclude:: ../../../examples/tutorials/tutorial_1/plugin_1.py
+            .. literalinclude:: ../../../examples/documentation_code/plugins/essential_workflows_tutorial/sample_normal.py
                :language: python
                :linenos:
 
       .. admonition:: <My YAML LiteralInclude>
          :class: code-panel yaml
 
-         .. literalinclude:: ../../../examples/tutorials/tutorial_1/entrypoint_1_task_graph.yaml
+         .. literalinclude:: ../../../examples/documentation_code/task_graphs/essential_workflows_tutorial/sample_and_transform.yaml 
             :language: yaml
 
       .. admonition:: <My Console Input/Output>
@@ -596,14 +596,14 @@ Use the following classes with an ``.. admonition::`` block:
          .. admonition:: <My Python LiteralInclude>
             :class: code-panel python
 
-            .. literalinclude:: ../../../examples/tutorials/tutorial_1/plugin_1.py
+            .. literalinclude:: ../../../examples/documentation_code/plugins/essential_workflows_tutorial/sample_normal.py
                :language: python
                :linenos:
 
          .. admonition:: <My YAML LiteralInclude>
             :class: code-panel yaml
 
-            .. literalinclude:: ../../../examples/tutorials/tutorial_1/entrypoint_1_task_graph.yaml
+            .. literalinclude:: ../../../examples/documentation_code/task_graphs/essential_workflows_tutorial/sample_and_transform.yaml 
                :language: yaml
 
          .. admonition:: <My Console Input/Output>
@@ -830,7 +830,7 @@ Collapsible admonitions could be used for long sections of code or optional cont
       .. admonition:: Python Plugin Code (long)
          :class: dropdown code-panel python
 
-         .. literalinclude:: ../../../examples/tutorials/tutorial_1/plugin_3.py
+         .. literalinclude:: ../../../examples/documentation_code/plugins/essential_workflows_tutorial/sample_normal.py
             :language: python
             :linenos:
 
@@ -841,7 +841,7 @@ Collapsible admonitions could be used for long sections of code or optional cont
          .. admonition:: Python Plugin Code (long)
             :class: dropdown code-panel python
 
-            .. literalinclude:: ../../../examples/tutorials/tutorial_1/plugin_3.py
+            .. literalinclude:: ../../../examples/documentation_code/plugins/essential_workflows_tutorial/sample_normal.py
                :language: python
                :linenos:
 
