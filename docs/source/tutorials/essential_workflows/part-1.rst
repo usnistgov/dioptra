@@ -90,7 +90,7 @@ We now attach code to the Plugin.
 .. admonition:: Plugin 1
     :class: code-panel python
 
-    .. literalinclude:: ../../../../examples/documentation_code/plugins/essential_workflows_tutorial/sample_normal_no_inputs.py
+    .. literalinclude:: ../../../../docs/source/documentation_code/plugins/essential_workflows_tutorial/sample_normal_no_inputs.py
        :language: python
 
 
@@ -148,7 +148,7 @@ Entrypoints define workflows made of tasks. Ours will be a single-task workflow.
 .. admonition:: Task Graph
     :class: code-panel yaml
 
-    .. literalinclude:: ../../../../examples/documentation_code/task_graphs/essential_workflows_tutorial/sample_normal_no_inputs.yaml
+    .. literalinclude:: ../../../../docs/source/documentation_code/task_graphs/essential_workflows_tutorial/sample_normal_no_inputs.yaml
        :language: yaml
 
 

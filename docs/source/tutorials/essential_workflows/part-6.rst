@@ -78,7 +78,7 @@ We want to create a plugin that utilizes a saved numpy array as an *input*.
 .. admonition:: rescale_and_graph_array.py
     :class: code-panel python
 
-    .. literalinclude:: ../../../../examples/documentation_code/plugins/essential_workflows_tutorial/rescale_and_graph_array.py
+    .. literalinclude:: ../../../../docs/source/documentation_code/plugins/essential_workflows_tutorial/rescale_and_graph_array.py
        :language: python
 
 .. note::
@@ -104,7 +104,7 @@ Our second plugin task outputs a Matplotlib figure. To view this output, we need
 .. admonition:: artifacts.py (add to bottom)
     :class: code-panel python
 
-    .. literalinclude:: ../../../../examples/documentation_code/plugins/essential_workflows_tutorial/artifacts.py
+    .. literalinclude:: ../../../../docs/source/documentation_code/plugins/essential_workflows_tutorial/artifacts.py
        :language: python
        :start-after: # [matplotlib-plugin-definition]
        :end-before: # [end-matplotlib-plugin-definition]
@@ -151,7 +151,7 @@ Now let’s define a new Entrypoint that loads the array, transforms it, and sav
 .. admonition:: rescale_and_graph_array_ep: Task Graph YAML
     :class: code-panel yaml
 
-    .. literalinclude:: ../../../../examples/documentation_code/task_graphs/essential_workflows_tutorial/rescale_and_graph_array.yaml
+    .. literalinclude:: ../../../../docs/source/documentation_code/task_graphs/essential_workflows_tutorial/rescale_and_graph_array.yaml
        :language: yaml
 
 .. note::

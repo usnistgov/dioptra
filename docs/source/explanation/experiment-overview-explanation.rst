@@ -23,7 +23,7 @@ Experiment Overview
 
 Overview of how all high level components fit into a Dioptra experiment. 
 
-.. figure:: ../images/dioptra_workflow.png
+.. figure:: ../images/figures/dioptra_workflow.png
    :alt: Diagram showing steps needed to run Python functions in Dioptra.
    :figclass: border-image clickable-image
 

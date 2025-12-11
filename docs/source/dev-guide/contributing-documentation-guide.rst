@@ -21,13 +21,11 @@
 Guidelines for Documentation
 ============================
 
-Dioptra documentation uses **reStructuredText (.rst)** with Sphinx.
+This is a guide for Dioptra developers that details **style and content guidelines** for Sphinx documentation pages.  
 
+Dioptra documentation uses **reStructuredText (.rst)** with Sphinx. The documentation pages are located in ``/docs/source/`` 
+and are built using the command ``uvx tox run -e web-compile, docs``.
 
-.. note::
-
-   This guide will be removed from the sidebar before the V1.1 release. 
-   To remove this page from the sidebar, delete it from ``docs/index.rst``.
 
 Exemplar Documentation Pages
 -----------------
@@ -45,8 +43,7 @@ Documentation goals
 - **Brevity & placement.** Put content where it belongs; avoid duplication across types.
 - **Single purpose per page.** Don’t mix a tutorial with reference or explanation on the same page.
 - **Source of truth lives in code dirs.** Bring example code in with ``literalinclude``.
-  A future script will copy code into the ``docs/`` folder. 
-- **Cross Reference Documentation** as appropriate to guide users to relevant complimentary materials. 
+- **Cross Reference Documentation.** Don't repeat information across pages - reference relevant complimentary materials using sphinx cross references instead. 
 
 Documentation File Placement
 --------------------------------------
@@ -58,10 +55,12 @@ Image Files
 
 All images should be stored in ``docs/source/images/``. Avoid storing images inside the specific documentation folders (e.g., avoid ``docs/source/tutorials/images``).
 
+**Directory Structure**
 
 * **GUI Screenshots:** Store screenshots in ``docs/source/images/GUI_screenshots/``.
-    * Organize these sub-folders roughly by the **Vue page** they represent (e.g., `jobs`, `plugins`, `experiments`).
+    * Organize these sub-folders roughly by the **Vue/Quasar page** they represent (e.g., `jobs`, `plugins`, `experiments`).
     * This structure allows screenshots to potentially be reused across different content types (e.g., using the same "Login" screenshot in both a *Tutorial* and a *How-to*).
+    * It also makes identifying screenshots that require updates easier once a Quasar page changes.
 * **Figures:** Store conceptual diagrams, architecture flows, and non-GUI visuals in ``docs/source/images/figures/``.
 
 .. code-block:: text
@@ -82,23 +81,25 @@ All images should be stored in ``docs/source/images/``. Avoid storing images ins
 Documentation Code Snippets
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Code will ideally never be written inline. Whenever appropriate, the documentation should reference the doc strings for methods and classes.
-When bespoke code snippets are needed (i.e. for tutorial workflows, etc), place the code in the examples directory and use ``.. literalinclude::`` to pull it in.
+Code will ideally never be written inline on .rst pages. Whenever appropriate, the documentation should reference the doc strings for methods and classes.
+When bespoke code snippets are needed (i.e. for tutorial workflows, etc), place the code in the docs directory and use ``.. literalinclude::`` to pull it in.
 
 **Directory Structure**
 
-Documentation code lives in ``examples/documentation_code/``.
+Documentation code that is not meant to be run in production or in a standalone manner lives in ``docs/source/documentation_code/``.
 
 Within this directory: 
 
 * **Client Workflows:** Python scripts demonstrating the Python Client API (e.g., connecting, authenticating, submitting jobs).
-* **Tutorials:** Assets required for tutorial walkthroughs, separated by component type.
+* **Plugins:** Python files with plugin tasks and artifact tasks. 
+* **Artifact Task Graphs:** YAML files with artifact task graphs 
+* **Task Graphs:** YAML files with entrypoint task graphs
 
 **Current Directory Structure**:
 
 .. code-block:: text
 
-   examples/documentation_code/
+   docs/source/documentation_code/
    ├── client_workflows/
    │   ├── import_plugins.py   
    │   └── client_setup.py     
@@ -162,7 +163,7 @@ Each documentation page should align with one of these types.
 * "**Set Up**" →  How To
 * "**Explainers**" →  Explanation 
 * "**Tutorials**" →  Tutorials 
-* "**Workflows**" →  How To 
+* "**How Tos**" →  How To 
 * "**Reference**" →  Reference 
 
 Style guide for RST documents
@@ -532,7 +533,7 @@ Use ``literalinclude`` to pull code from the repo instead of pasting it:
 
       **hello_world.py**:
 
-      .. literalinclude:: ../../../examples/documentation_code/plugins/hello_world_tutorial/hello_world.py 
+      .. literalinclude:: ../../../docs/source/documentation_code/plugins/hello_world_tutorial/hello_world.py 
          :language: python
          :linenos:
 
@@ -543,7 +544,7 @@ Use ``literalinclude`` to pull code from the repo instead of pasting it:
 
          **hello_world.py**:
 
-         .. literalinclude:: ../../../examples/documentation_code/plugins/hello_world_tutorial/hello_world.py
+         .. literalinclude:: ../../../docs/source/documentation_code/plugins/hello_world_tutorial/hello_world.py
             :language: python
             :linenos:
 
@@ -570,15 +571,15 @@ Use the following classes with an ``.. admonition::`` block:
 
       .. admonition:: <My Python LiteralInclude>
          :class: code-panel python
-         
-            .. literalinclude:: ../../../examples/documentation_code/plugins/essential_workflows_tutorial/sample_normal.py
-               :language: python
-               :linenos:
+      
+         .. literalinclude:: ../../../docs/source/documentation_code/plugins/essential_workflows_tutorial/sample_normal.py
+            :language: python
+            :linenos:
 
       .. admonition:: <My YAML LiteralInclude>
          :class: code-panel yaml
 
-         .. literalinclude:: ../../../examples/documentation_code/task_graphs/essential_workflows_tutorial/sample_and_transform.yaml 
+         .. literalinclude:: ../../../docs/source/documentation_code/task_graphs/essential_workflows_tutorial/sample_and_transform.yaml 
             :language: yaml
 
       .. admonition:: <My Console Input/Output>
@@ -596,14 +597,14 @@ Use the following classes with an ``.. admonition::`` block:
          .. admonition:: <My Python LiteralInclude>
             :class: code-panel python
 
-            .. literalinclude:: ../../../examples/documentation_code/plugins/essential_workflows_tutorial/sample_normal.py
+            .. literalinclude:: ../../../docs/source/documentation_code/plugins/essential_workflows_tutorial/sample_normal.py
                :language: python
                :linenos:
 
          .. admonition:: <My YAML LiteralInclude>
             :class: code-panel yaml
 
-            .. literalinclude:: ../../../examples/documentation_code/task_graphs/essential_workflows_tutorial/sample_and_transform.yaml 
+            .. literalinclude:: ../../../docs/source/documentation_code/task_graphs/essential_workflows_tutorial/sample_and_transform.yaml 
                :language: yaml
 
          .. admonition:: <My Console Input/Output>
@@ -830,7 +831,7 @@ Collapsible admonitions could be used for long sections of code or optional cont
       .. admonition:: Python Plugin Code (long)
          :class: dropdown code-panel python
 
-         .. literalinclude:: ../../../examples/documentation_code/plugins/essential_workflows_tutorial/sample_normal.py
+         .. literalinclude:: ../../../docs/source/documentation_code/plugins/essential_workflows_tutorial/sample_normal.py
             :language: python
             :linenos:
 
@@ -841,7 +842,7 @@ Collapsible admonitions could be used for long sections of code or optional cont
          .. admonition:: Python Plugin Code (long)
             :class: dropdown code-panel python
 
-            .. literalinclude:: ../../../examples/documentation_code/plugins/essential_workflows_tutorial/sample_normal.py
+            .. literalinclude:: ../../../docs/source/documentation_code/plugins/essential_workflows_tutorial/sample_normal.py
                :language: python
                :linenos:
 

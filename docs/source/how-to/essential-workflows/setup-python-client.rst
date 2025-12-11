@@ -34,7 +34,7 @@ Client Setup Workflow
 ------------------------
 
 
-.. rst-class:: fancy-header header-steps
+.. rst-class:: header-on-a-card header-steps
 
 Step 1: Start Docker Containers
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -42,7 +42,7 @@ Step 1: Start Docker Containers
 - Navigate to deployment folder 
 - Run ``docker compose up``
 
-.. rst-class:: fancy-header header-steps
+.. rst-class:: header-on-a-card header-steps
 
 Step 2: Initialize Client and Log In
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -52,5 +52,5 @@ In your Jupyter notebook, run the following code:
 .. admonition:: Setup Python Client
     :class: code-panel python
 
-    .. literalinclude:: ../../../../examples/documentation_code/client_workflows/client_setup.py
+    .. literalinclude:: ../../../../docs/source/documentation_code/client_workflows/client_setup.py
        :language: python

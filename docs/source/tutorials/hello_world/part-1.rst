@@ -45,7 +45,7 @@ First, we need the Python code that defines our task. We will use the ``structlo
 .. admonition:: hello_world.py
     :class: code-panel python
 
-    .. literalinclude:: ../../../../examples/documentation_code/plugins/hello_world_tutorial/hello_world.py
+    .. literalinclude:: ../../../../docs/source/documentation_code/plugins/hello_world_tutorial/hello_world.py
        :language: python
 
 Copy the code above (you will paste it into the GUI in the next step).

@@ -56,7 +56,7 @@ Just like before, we will create a new plugin, but this time we'll define **arti
 .. admonition:: artifacts.py
     :class: code-panel python
 
-    .. literalinclude:: ../../../../examples/documentation_code/plugins/essential_workflows_tutorial/artifacts.py
+    .. literalinclude:: ../../../../docs/source/documentation_code/plugins/essential_workflows_tutorial/artifacts.py
        :language: python
        :start-after: # [numpy-plugin-definition]
        :end-before: # [end-numpy-plugin-definition]

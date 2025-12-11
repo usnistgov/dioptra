@@ -32,6 +32,5 @@ How to guides on configuring and running Dioptra.
    adding-certificates
    building-the-containers
    running-dioptra
-   additional-configuration
 
-Note - we need to break these up and reorganize them
+

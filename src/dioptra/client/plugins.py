@@ -313,6 +313,40 @@ class PluginFilesSubCollectionClient(SubCollectionClient[T]):
             description: The description of the new plugin file. Optional, defaults to
                 None.
 
+        Example:
+
+            Attach Python code embedded in a string to a Plugin, and register a task with 
+            two input parameters and one output parameter. 
+
+            .. code-block:: python
+
+                file = client.plugins.files.create(
+                    plugin_id=plugin["id"],
+                    filename="hello.py",
+                    content=PYTHON_CONTENTS,
+                    tasks=[{
+                        "name": "hello_world",
+                        "inputParams": [
+                                {
+                                "name": "greeting",
+                                "parameterType": string_param_type_id,
+                                "required": True
+                                },
+                                {
+                                "name": "name",
+                                "parameterType": string_param_type_id,
+                                "required": True
+                                }
+                        ],
+                        "outputParams": [
+                                {
+                                "name": "message",
+                                "parameterType": string_param_type_id,
+                                }
+                        ]
+                    }]
+                    )
+
         Returns:
             The response from the Dioptra API.
         """
@@ -681,6 +715,15 @@ class PluginsCollectionClient(CollectionClient[T]):
             group_id: The id of the group that will own the plugin.
             name: The name of the new plugin.
             description: The description of the new plugin. Optional, defaults to None.
+
+        Example:
+            Create a plugin called "hello" with a description.
+
+            .. code-block:: python
+
+                plugin = client.plugins.create(group_id, 
+                                                "hello", 
+                                                "This is a Hello World Plugin")
 
         Returns:
             The response from the Dioptra API.

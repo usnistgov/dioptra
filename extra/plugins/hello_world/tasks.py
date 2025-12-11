@@ -14,6 +14,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+# [reference-task]
 import structlog
 from dioptra import pyplugs
 
@@ -25,7 +26,7 @@ def hello(name: str) -> str:
     message = f"Hello, {name}"
     LOGGER.info(message)
     return message
-
+# [end-reference-task]
 
 @pyplugs.register
 def greet(greeting: str, name: str) -> str:
