@@ -48,6 +48,64 @@ Documentation goals
   A future script will copy code into the ``docs/`` folder. 
 - **Cross Reference Documentation** as appropriate to guide users to relevant complimentary materials. 
 
+Documentation File Placement
+--------------------------------------
+
+This is the current proposed structure for storing documentation static assets. 
+
+Image Files
+~~~~~~~~~~~~~
+
+All images should be stored in ``docs/source/images/``. Avoid storing images inside the specific documentation folders (e.g., avoid ``docs/source/tutorials/images``).
+
+
+* **GUI Screenshots:** Store screenshots in ``docs/source/images/GUI_screenshots/``.
+    * Organize these sub-folders roughly by the **Vue page** they represent (e.g., `jobs`, `plugins`, `experiments`).
+    * This structure allows screenshots to potentially be reused across different content types (e.g., using the same "Login" screenshot in both a *Tutorial* and a *How-to*).
+* **Figures:** Store conceptual diagrams, architecture flows, and non-GUI visuals in ``docs/source/images/figures/``.
+
+.. code-block:: text
+
+   docs/source/images/
+   ├── GUI_screenshots/
+   │   ├── entrypoints/
+   │   ├── experiments/
+   │   ├── jobs/
+   │   ├── login/
+   │   ├── plugins/
+   │   └── ...
+   └── figures/
+       ├── entrypoint_diagram.png
+       ├── experiment_overview.png
+       └── ...
+
+Documentation Code Snippets
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Code will ideally never be written inline. Whenever appropriate, the documentation should reference the doc strings for methods and classes.
+When bespoke code snippets are needed (i.e. for tutorial workflows, etc), place the code in the examples directory and use ``.. literalinclude::`` to pull it in.
+
+**Directory Structure**
+
+Documentation code lives in ``examples/documentation_code/``.
+
+Within this directory: 
+
+* **Client Workflows:** Python scripts demonstrating the Python Client API (e.g., connecting, authenticating, submitting jobs).
+* **Tutorials:** Assets required for tutorial walkthroughs, separated by component type.
+
+**Current Directory Structure**:
+
+.. code-block:: text
+
+   examples/documentation_code/
+   ├── client_workflows/
+   │   └── client_setup.py     # Scripts for Python Client demonstrations
+   └── tutorials/
+       ├── artifact_task_graphs/
+       ├── plugins/            # Python plugin files
+       └── task_graphs/        # YAML task graphs
+
 
 Diátaxis content types
 ----------------------
