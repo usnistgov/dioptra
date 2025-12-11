@@ -50,8 +50,8 @@ or by directly making calls to REST API.
 
 .. admonition:: Learn More 
       
-   - :ref:`See the system requirements <reference-system-reqs>`
-   - :ref:`Follow the quick set up guide <setup-quick-setup>`
+   - :ref:`See the system requirements <reference-system-requirements>`
+   - :ref:`Follow the quick set up guide <how-to-quick-setup>`
 
 
 Dioptra Documentation
@@ -65,27 +65,27 @@ Below are some useful guides to help get you started. To see the entire list of 
 Understand Dioptra
 ^^^^^^^^^^^^^^^^^^^
 
-- :ref:`Motivation for Dioptra <dioptra-motivation-explanation>` - Why is Dioptra for and how does it compare to other tools?
-- :ref:`What is a Dioptra experiment? <experiment-overview-explanation>` - Learn about the various components that comprise the Dioptra experiment
+- :ref:`Motivation for Dioptra <explanation-motivation-for-dioptra>` - Why is Dioptra for and how does it compare to other tools?
+- :ref:`What is a Dioptra experiment? <explanation-experiment-overview>` - Learn about the various components that comprise the Dioptra experiment
 
 .. rst-class:: header-on-a-card 
 
 Use Dioptra
 ^^^^^^^^^^^^^^^^^^^
 
-- :ref:`See the system requirements <reference-system-reqs>` before getting set up
-- :ref:`Follow the set up guide <set-up-index>` to build the Docker containers and start the services 
-- :ref:`Run the Hello World tutorial <tutorial-0-index>` to make sure things are set up correctly 
+- :ref:`See the system requirements <reference-system-requirements>` before getting set up
+- :ref:`Follow the set up guide <how-to-quick-setup>` to build the Docker containers and start the services 
+- :ref:`Run the Hello World tutorial <tutorial-hello-world-in-dioptra>` to make sure things are set up correctly 
 
 .. rst-class:: header-on-a-card 
    
 Dive Into the Details
 ^^^^^^^^^^^^^^^^^^^
 
-- :ref:`Read through the Dioptra component explainers<dioptra-components-explanation>` to dive deeper on each part of an experiment.
-- Learn how to :ref:`customize your Dioptra deployment<set-up-index>`
-- Reference the :ref:`API endpoints <user-guide-api-reference-restapi>` and learn how to use the :ref:`Python client <dioptra-workflows-explanation>`
-- :ref:`Progress through the intermediate tutorial <tutorial-1-index>` to learn about complex workflows, artifacts, and more
+- :ref:`Read through the Dioptra component explainers<explanation-dioptra-components>` to dive deeper on each part of an experiment.
+- Learn how to :ref:`customize your Dioptra deployment<how-to-setup-options>`
+- Reference the :ref:`API endpoints <reference-testbed-rest-api-reference>` and learn how to use the :ref:`Python client <explanation-dioptra-workflows>`
+- :ref:`Progress through the intermediate tutorial <tutorial-learning-the-essentials>` to learn about complex workflows, artifacts, and more
 
 About
 ---------
