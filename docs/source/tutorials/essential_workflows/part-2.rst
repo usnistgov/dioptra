@@ -78,7 +78,7 @@ We will now create a new plugin with one task. This task accepts parameters (``r
 .. admonition:: sample_normal.py
     :class: code-panel python
 
-    .. literalinclude:: ../../../../examples/documentation_code/plugins/essential_workflows_tutorial/sample_normal.py
+    .. literalinclude:: ../../../../docs/source/documentation_code/plugins/essential_workflows_tutorial/sample_normal.py
        :language: python
 
 .. rst-class:: header-on-a-card header-steps

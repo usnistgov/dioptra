@@ -58,10 +58,10 @@ To define a function task, you must write a standard Python function and decorat
 .. admonition:: Function Task Example
    :class: code-panel python
 
-    .. literalinclude:: ../../../../extra/plugins/hello_world/tasks.py
-       :language: python
-       :start-after: # [reference-task]
-       :end-before: # [end-reference-task]
+   .. literalinclude:: ../../../../extra/plugins/hello_world/tasks.py
+      :language: python
+      :start-after: # [reference-task]
+      :end-before: # [end-reference-task]
 
 
 **Type Hints**
@@ -114,19 +114,19 @@ Artifact tasks must be defined as classes that inherit from the ``ArtifactTaskIn
 .. admonition:: Artifact Handler Example 
    :class: code-panel python
 
-    **Import Parent Class**
+   **Import Parent Class**
 
-    .. literalinclude:: ../../../../extra/plugins/artifacts/tasks.py
-       :language: python
-       :start-after: # [artifact-task-imports]
-       :end-before: # [end-artifact-task-imports]
+   .. literalinclude:: ../../../../extra/plugins/artifacts/tasks.py
+      :language: python
+      :start-after: # [artifact-task-imports]
+      :end-before: # [end-artifact-task-imports]
 
-    **Child Class Definition**
+   **Child Class Definition**
 
-    .. literalinclude:: ../../../../extra/plugins/artifacts/tasks.py
-       :language: python
-       :start-after: # [example-artifact-task]
-       :end-before: # [end-example-artifact-task]
+   .. literalinclude:: ../../../../extra/plugins/artifacts/tasks.py
+      :language: python
+      :start-after: # [example-artifact-task]
+      :end-before: # [end-example-artifact-task]
 
 
 .. _reference-plugins-registration-interfaces:

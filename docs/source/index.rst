@@ -94,13 +94,6 @@ Dioptra is open-source software developed by the National Institute of Standards
 You can find the source code, license information, and more on the NIST `GitHub repository <https://github.com/usnistgov/dioptra>`__.
 
 
-.. toctree::
-   :maxdepth: -1
-   :caption: Temp for developers
-   :hidden:     
-   :titlesonly:
-
-   dev-guide/contributing-documentation-guide
 
 .. toctree::
    :maxdepth: -1
@@ -140,7 +133,7 @@ You can find the source code, license information, and more on the NIST `GitHub 
 
 .. toctree::
    :maxdepth: 1
-   :caption: Workflows      
+   :caption: How Tos      
    :hidden:
 
    how-to/essential-workflows/index.rst
@@ -160,6 +153,7 @@ You can find the source code, license information, and more on the NIST `GitHub 
    reference/resource-import-reference
    reference/resource-search-language-reference
    reference/task-engine-reference
+   dev-guide/contributing-documentation-guide
 .. reference/api-reference-sdk
    reference/api-reference-client
 

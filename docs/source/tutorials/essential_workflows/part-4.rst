@@ -51,7 +51,7 @@ Let's create the new plugin task that uses Dioptra's metric logging.
 .. admonition:: sample_and_transform_w_metrics.py (Append this code)
     :class: code-panel python
 
-    .. literalinclude:: ../../../../examples/documentation_code/plugins/essential_workflows_tutorial/sample_and_transform_w_metrics.py
+    .. literalinclude:: ../../../../docs/source/documentation_code/plugins/essential_workflows_tutorial/sample_and_transform_w_metrics.py
        :language: python
        :start-after: # [new-plugin-definition]
 

@@ -63,7 +63,7 @@ The tasks include:
 .. admonition:: sample_and_transform.py
     :class: code-panel python
 
-    .. literalinclude:: ../../../../examples/documentation_code/plugins/essential_workflows_tutorial/sample_and_transform.py
+    .. literalinclude:: ../../../../docs/source/documentation_code/plugins/essential_workflows_tutorial/sample_and_transform.py
        :language: python
 
 .. rst-class:: header-on-a-card header-steps
@@ -120,7 +120,7 @@ Key ideas:
 .. admonition:: Sample and Transform: Task Graph YAML
     :class: code-panel yaml
 
-    .. literalinclude:: ../../../../examples/documentation_code/task_graphs/essential_workflows_tutorial/sample_and_transform.yaml
+    .. literalinclude:: ../../../../docs/source/documentation_code/task_graphs/essential_workflows_tutorial/sample_and_transform.yaml
        :language: yaml
 
 .. note::
