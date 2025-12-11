@@ -514,7 +514,7 @@ class EntrypointsSnapshotCollectionClient(SnapshotsSubCollectionClient[T]):
             self.build_sub_collection_url(entrypoint_id),
             str(entrypoint_snapshot_id),
             DYNAMIC_GLOBAL_PARAMETERS,
-            params={"swaps": ",".join([f"{k}={v}" for k, v in swaps.items()])},
+            params={"swaps": ",".join([f"{k}:{v}" for k, v in swaps.items()])},
         )
 
 

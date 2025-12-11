@@ -331,7 +331,7 @@ class DelimitedKeyValuePairs(fields.Field):
         self,
         *,
         delimiter: str = ",",
-        equality: str = "=",
+        equality: str = ":",
         **additional_metadata,
     ) -> None:
         super().__init__(**additional_metadata)
