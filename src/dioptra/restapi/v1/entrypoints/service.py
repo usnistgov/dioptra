@@ -32,6 +32,7 @@ from dioptra.restapi.errors import (
     EntityDoesNotExistError,
     EntityExistsError,
     EntrypointSwapsRenderError,
+    PluginTaskArtifactTaskOverlapError,
     QueryParameterNotUniqueError,
     SortParameterValidationError,
 )
