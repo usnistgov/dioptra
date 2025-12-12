@@ -1502,3 +1502,190 @@ def test_create_entrypoint_with_none_queues_plugins_params(
         entry_point=none_entry_point,
         assert_message="Failed to create EntryPoint with 3 None entities: [queues=None, plugins=None, parameters=None]",
     )
+
+
+test_cases_for_file = {}
+
+test_cases_for_file["no_swap_test"] = [
+    {
+        "swaps": {},
+        "globals": ["global1", "global6", "global12"],
+        "sort_order": [
+            ["step1", "step3", "step4", "step2"],
+        ],
+        "active_plugins": ["plugin1", "plugin9", "plugin13"],
+    },
+]
+
+test_cases_for_file["swap_test"] = [
+    {
+        "swaps": {"step2_choice": "task2", "step3_choice": "task1"},
+        "globals": ["global1", "global3", "global6", "global9"],
+        "sort_order": [  # it can be any of these three orders
+            ["step1", "step2", "step3", "step4"],
+            ["step1", "step3", "step2", "step4"],
+            ["step1", "step3", "step4", "step2"],
+        ],
+        "active_plugins": ["plugin1", "plugin9"],
+    },
+    {
+        "swaps": {"step2_choice": "task2", "step3_choice": "task2"},
+        "globals": ["global1", "global3", "global6", "global12"],
+        "sort_order": [["step1", "step2", "step3", "step4"]],
+        "active_plugins": ["plugin1", "plugin9"],
+    },
+    {
+        "swaps": {"step2_choice": "task10", "step3_choice": "task1"},
+        "globals": ["global1", "global6", "global9"],
+        "sort_order": [["step1", "step3", "step4", "step2"]],
+        "active_plugins": ["plugin1", "plugin9", "plugin13"],
+    },
+    {
+        "swaps": {"step2_choice": "task10", "step3_choice": "task2"},
+        "globals": ["global1", "global6", "global12"],
+        "sort_order": [["step1", "step3", "step4", "step2"]],
+        "active_plugins": ["plugin1", "plugin9", "plugin13"],
+    },
+]
+
+def _test_dynamic_globals_endpoint(    
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_swap_entrypoints: dict[str, Any],
+    file: str,
+):
+    test_cases = test_cases_for_file[file]
+
+    for case in test_cases:
+        swaps = case["swaps"]
+
+        expected_globals = case["globals"]
+        expected_sort_order = case["sort_order"]
+        expected_active_plugins = case["active_plugins"]
+    
+        evaluated = (
+            dioptra_client.entrypoints.snapshots.get_task_graph_global_params(
+                entrypoint_id=registered_swap_entrypoints[file]["id"],
+                entrypoint_snapshot_id=registered_swap_entrypoints[file][
+                    "snapshot"
+                ],
+                swaps=swaps,
+            ).json()
+        )
+
+        assert set(expected_globals) == set(evaluated["entrypointParams"])
+        assert evaluated["topologicalSort"] in expected_sort_order
+        assert len(expected_active_plugins) == len(evaluated["activePlugins"])
+        for plugin in evaluated["activePlugins"]:
+            assert plugin["name"] in expected_active_plugins
+
+def test_dynamic_globals_endpoint_swaps(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_swap_entrypoints: dict[str, Any],
+):
+    _test_dynamic_globals_endpoint(
+        dioptra_client=dioptra_client, 
+        auth_account=auth_account, 
+        registered_swap_entrypoints=registered_swap_entrypoints, 
+        file="swap_test"
+    )
+
+def test_dynamic_globals_endpoint_with_swaps(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_swap_entrypoints: dict[str, Any],
+):
+    _test_dynamic_globals_endpoint(
+        dioptra_client=dioptra_client, 
+        auth_account=auth_account, 
+        registered_swap_entrypoints=registered_swap_entrypoints, 
+        file="no_swap_test"
+    )
+
+def test_dynamic_globals_endpoint_forgot_swaps(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_swap_entrypoints: dict[str, Any],
+):
+    forgot_swaps = (
+        dioptra_client.entrypoints.snapshots.get_task_graph_global_params(
+            entrypoint_id=registered_swap_entrypoints["swap_test"]["id"],
+            entrypoint_snapshot_id=registered_swap_entrypoints["swap_test"][
+                "snapshot"
+            ],
+            swaps={},
+        )
+    )
+    assert forgot_swaps.status_code == HTTPStatus.BAD_REQUEST
+
+def test_dynamic_globals_endpoint_without_swaps(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_swap_entrypoints: dict[str, Any],
+):
+    _test_dynamic_globals_endpoint(
+        dioptra_client=dioptra_client, 
+        auth_account=auth_account, 
+        registered_swap_entrypoints=registered_swap_entrypoints, 
+        file="no_swap_test"
+    )
+
+def test_dynamic_globals_endpoint_too_many_swaps(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_swap_entrypoints: dict[str, Any],
+):
+    file = "swap_test"
+
+    test_cases = test_cases_for_file[file]
+
+    for case in test_cases:
+        swaps = case["swaps"]
+
+
+
+        too_many = swaps
+        too_many["extra"] = "task10"
+
+        too_many_swaps = (
+            dioptra_client.entrypoints.snapshots.get_task_graph_global_params(
+                entrypoint_id=registered_swap_entrypoints[file]["id"],
+                entrypoint_snapshot_id=registered_swap_entrypoints[file][
+                    "snapshot"
+                ],
+                swaps=swaps,
+            )
+        )
+
+        assert too_many_swaps.status_code == HTTPStatus.BAD_REQUEST
+
+def test_dynamic_globals_endpoint_nonexistent_swaps(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_swap_entrypoints: dict[str, Any],
+):
+    file = "swap_test"
+    test_cases = test_cases_for_file[file]
+
+    for case in test_cases:
+        swaps = case["swaps"]
+
+
+        imaginary = swaps
+        imaginary["step3_choice"] = "doesnt_exist2"
+
+        imaginary_tasks = (
+            dioptra_client.entrypoints.snapshots.get_task_graph_global_params(
+                entrypoint_id=registered_swap_entrypoints[file]["id"],
+                entrypoint_snapshot_id=registered_swap_entrypoints[file][
+                    "snapshot"
+                ],
+                swaps=swaps,
+            )
+        )
+
+        assert imaginary_tasks.status_code == HTTPStatus.BAD_REQUEST
+
+
+
