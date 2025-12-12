@@ -264,7 +264,7 @@ def test_entrypoint_swaps_endpoint(
             imaginary["step3_choice"] = "doesnt_exist2"
 
             imaginary_tasks = (
-                dioptra_client.entrypoints.snapshots.task_graph_global_params(
+                dioptra_client.entrypoints.snapshots.get_task_graph_global_params(
                     entrypoint_id=registered_swap_entrypoints[file]["id"],
                     entrypoint_snapshot_id=registered_swap_entrypoints[file][
                         "snapshot"
