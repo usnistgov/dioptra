@@ -48,7 +48,7 @@ Follow these steps to create and register a new queue. You can perform these act
 .. rst-class:: header-on-a-card header-steps
 
 
-Step 1: Create the User
+Step 1: Create the Queue
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 Register a queue for a specific group, with a name and a description.
@@ -57,7 +57,7 @@ Register a queue for a specific group, with a name and a description.
 
    .. group-tab:: GUI
 
-      In the Dioptra GUI, navigate to the **Queues tab**. Click **Create**. Enter a *name* and *description*, select a group for the queue, then click **confirm**.
+      In the Dioptra GUI, navigate to the **Queues tab**. Click **Create**. Enter a *name* and *description*, select a *group* for the queue, then click **Confirm**.
 
    .. group-tab:: Python Client
 
@@ -65,7 +65,7 @@ Register a queue for a specific group, with a name and a description.
 
       Use the client to create the queue.
 
-      .. automethod:: dioptra.client.users.QueueCollectionsClient.create
+      .. automethod:: dioptra.client.queues.QueuesCollectionsClient.create
 
 See Also 
 ---------

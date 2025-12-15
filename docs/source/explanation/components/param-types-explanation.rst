@@ -18,4 +18,4 @@
 .. _explanation-plugin-parameter-types:
 
 Plugin Parameter Types
-================
+======================
