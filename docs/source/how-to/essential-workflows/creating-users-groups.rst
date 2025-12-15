@@ -38,7 +38,7 @@ Prerequisites
       * :ref:`getting-started-running-dioptra` -  A deployment of Dioptra is required.
       * :ref:`how-to-set-up-the-python-client` - Connect to the Python Client in a Jupyter Notebook.
 
-.. _how-to-create-plugins-plugin-creation-workflow:
+.. _how-to-create-users-user-creation-workflow:
 
 User Creation Workflow
 ----------------------
@@ -73,4 +73,7 @@ Register a user with a username, email address, and password to be able to creat
 
       .. automethod:: dioptra.client.users.UsersCollectionClient.create
 
+See Also 
+---------
 
+* :ref:`Users and Groups <users-groups-explanation>` - Understand what users and groups are for.

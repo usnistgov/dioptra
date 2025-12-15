@@ -20,4 +20,54 @@
 Create Queues
 ========================
 
-This how-to explains how to build :ref:`Queues <queues-explanation>` in Dioptra. 
+This how-to explains how to build :ref:`Queues <queues-explanation>` in Dioptra.
+
+
+Prerequisites
+-------------
+
+.. tabs:: 
+
+   .. group-tab:: GUI
+
+      * :ref:`getting-started-running-dioptra` - A deployment of Dioptra is required.
+      * :ref:`tutorial-setup-dioptra-in-the-gui` - Access Dioptra services in the GUI, create a user, and login.
+
+   .. group-tab:: Python Client
+
+      * :ref:`getting-started-running-dioptra` -  A deployment of Dioptra is required.
+      * :ref:`how-to-set-up-the-python-client` - Connect to the Python Client in a Jupyter Notebook.
+
+.. _how-to-create-queues-queue-creation-workflow:
+
+Queue Creation Workflow
+----------------------
+
+Follow these steps to create and register a new queue. You can perform these actions via the Guided User Interface (GUI) or programmatically using the Python Client.
+
+.. rst-class:: header-on-a-card header-steps
+
+
+Step 1: Create the User
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Register a queue for a specific group, with a name and a description.
+
+.. tabs::
+
+   .. group-tab:: GUI
+
+      In the Dioptra GUI, navigate to the **Queues tab**. Click **Create**. Enter a *name* and *description*, select a group for the queue, then click **confirm**.
+
+   .. group-tab:: Python Client
+
+      **Client Method:**
+
+      Use the client to create the queue.
+
+      .. automethod:: dioptra.client.users.QueueCollectionsClient.create
+
+See Also 
+---------
+
+* :ref:`Queues and Workers <queues-workers-explanation>` - Understand what queues and workers are for.
