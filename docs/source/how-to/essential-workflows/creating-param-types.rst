@@ -71,4 +71,4 @@ Register a parameter type for use in dioptra.
 See Also 
 ---------
 
-* :ref:`Parameter Types <param-types-explanation>` - Understand how to use parameter type structures and their role in dioptra.
+* :ref:`Parameter Types <param-types-explanation>` - Understand parameter types, structures, and their role in dioptra.
