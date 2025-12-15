@@ -48,11 +48,16 @@
     return $q.screen.md || $q.screen.sm || $q.screen.xs
   })
 
+  const isLarge = computed(() => {
+    return $q.screen.lg || $q.screen.md || $q.screen.sm || $q.screen.xs
+  })
+
   const darkMode = computed(() => {
     return $q.dark.isActive
   })
   
   provide('isMobile', isMobile)
+  provide('isLarge', isLarge)
   provide('isMedium', isMedium)
   provide('isExtraSmall', isExtraSmall)
   provide('darkMode', darkMode)

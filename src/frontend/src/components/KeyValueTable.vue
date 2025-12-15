@@ -4,7 +4,7 @@
     :class="{ 'no-pointer': disabled }"
   >
     <tr v-for="(row, index) in rows" :key="index" :class="{ 'disabled': disabled }">
-      <td>{{ row.label }}</td>
+      <td class="text-bold" :style="{ 'min-width': firstColumnMinWidth }">{{ row.label }}</td>
       <td :style="secondColumnFullWidth ? { width: '100%' } : {}">
         <!-- Render as plain text OR use a custom slot -->
         <slot :name="row.slot" v-bind="row.props">
@@ -25,6 +25,10 @@ defineProps({
     type: Boolean,
     default: false
   },
+  firstColumnMinWidth: {
+    type: String,
+    default: '150px'
+  },
   secondColumnFullWidth: {
     type: Boolean,
     default: false
@@ -43,11 +47,6 @@ defineProps({
 
   td {
     padding: 10px;
-  }
-
-  td:first-child {
-    font-weight: bold;
-    min-width: 150px;
   }
 
   td:nth-child(2) {

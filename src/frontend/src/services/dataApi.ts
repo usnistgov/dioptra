@@ -411,6 +411,38 @@ export async function addArtifact(expId: string, jobId: string, params: Artifact
   return await axios.post(`/api/experiments/${expId}/jobs/${jobId}/artifacts`, params)
 }
 
+export async function getArtifactFiles(id: string) {
+  return await axios.get(`/api/artifacts/${id}/files`)
+}
+
+export async function downloadFile(url: string, filename: string,
+  {
+    withCredentials = true,
+    headers = {},
+  }: {
+    withCredentials?: boolean
+    headers?: Record<string, string>
+  } = {}
+) {
+  const res = await axios.get(url, {
+    responseType: 'blob',
+    withCredentials,
+    headers,
+  })
+
+  const blob = res.data
+  const objectUrl = URL.createObjectURL(blob)
+
+  const a = document.createElement('a')
+  a.href = objectUrl
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+
+  URL.revokeObjectURL(objectUrl)
+}
+
 export async function addPluginsToEntrypoint(id: string, plugins: number[], pluginType: string) {
   return await axios.post(`/api/entrypoints/${id}/${pluginType}`, {[pluginType]: plugins})
 }

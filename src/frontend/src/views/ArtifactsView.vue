@@ -38,13 +38,12 @@
     </template>
     <template #body-cell-download="props">
       <q-btn
-        :href="props.row.fileUrl"
-        :download="`artifact-${props.row?.id}`"
         color="primary"
         round
         icon="download"
         size="sm"
-        @click.stop
+        @click.stop="downloadFile(props.row.fileUrl, `artifact-${props.row?.id}`, props.row.id)"
+        :loading="downloadingId === props.row.id"
       />
     </template>
   </TableComponent>
@@ -191,6 +190,21 @@ async function submitTags(selectedTagIDs) {
   } catch(err) {
     console.log('err = ', err)
     notify.error(err.response.data.message);
+  }
+}
+
+const downloadingId = ref(null)
+
+async function downloadFile(url, filename, id) {
+  downloadingId.value = id
+  try {
+    await api.downloadFile(url, filename);
+    notify.success(`Successfully downloaded file: ${filename}`);
+  } catch (err) {
+    console.warn(err);
+    notify.error(`Error downloading file ${filename}`);
+  } finally {
+    downloadingId.value = null
   }
 }
 
