@@ -56,7 +56,7 @@ Register a parameter type for use in dioptra.
 
    .. group-tab:: GUI
 
-      In the Dioptra GUI, navigate to the **Plugin Parameters tab**. Click **Create**. 
+      In the Dioptra GUI, navigate to the **Plugin Parameters** tab. Click **Create**. 
       
       Enter a *name*, *description*, select a *group* for the type, enter a *structure* if applicable, then click **Confirm**.
 
