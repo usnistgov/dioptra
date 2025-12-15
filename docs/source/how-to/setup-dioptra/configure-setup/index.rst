@@ -30,6 +30,8 @@ How to guides on configuring and running Dioptra.
    cloud-deployments
    connect-external-hardware
    adding-certificates
+   enabling-ssl-tls
+   integrating-custom-containers
    building-the-containers
    running-dioptra
 

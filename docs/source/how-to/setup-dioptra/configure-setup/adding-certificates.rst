@@ -21,3 +21,26 @@ Adding Certificates
 =====================
 
 This how to guide explains how to add certifications.
+
+
+Prior Documentation Snippets
+----------------------------
+
+.. note:: 
+    The following material is from previous document pages. It needs to be refactored. It is included below as a placeholder and for reference. 
+
+
+Adding extra CA certificates
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The deployment initialization scripts will look for extra CA certificates in the ``ssl/ca-certificates/`` folder and copy and bundle them into named volumes so they are available at runtime.
+Only CA certificate files copied into the ``ssl/ca-certificates/`` folder that meet the following criteria will be bundled:
+
+- Each CA certificate file must be in the PEM format.
+  The PEM format encodes the certificate using base64 and stores it in a plain text file between two lines, ``-----BEGIN CERTIFICATE-----`` and ``-----END CERTIFICATE-----``.
+- Each file should include one, and only one, CA certificate.
+  Do not bundle multiple CA certificates together.
+- Each PEM-formatted CA certificate file **must** have the file extension ``crt``, for example ``ca-root.crt``.
+  If your CA certificate has a different file extension (such as ``pem``), rename it to ``crt`` after copying to this folder.
+
+For further information about including extra CA certificates, please see the ``README.md`` file in the ``ssl/ca-certificates/`` folder.

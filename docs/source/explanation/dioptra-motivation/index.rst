@@ -23,7 +23,8 @@ Motivation for Dioptra
 Why use Dioptra? Who should use Dioptra?
 
 .. toctree::
-   :maxdepth: -1
+   :maxdepth: 1
+   :titlesonly:
 
    why-dioptra 
    design-principles 

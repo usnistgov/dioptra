@@ -24,7 +24,7 @@ Guidelines for Documentation
 This is a guide for Dioptra developers that details **style and content guidelines** for Sphinx documentation pages.  
 
 Dioptra documentation uses **reStructuredText (.rst)** with Sphinx. The documentation pages are located in ``/docs/source/`` 
-and are built using the command ``uvx tox run -e web-compile, docs``.
+and are built using the command ``uvx tox run -e web-compile,docs``.
 
 
 Exemplar Documentation Pages

@@ -21,3 +21,31 @@ Connecting External Hardware / GPUs
 =====================
 
 This how to guide explains how to connect external hardware / GPUs.
+
+
+Prior Documentation Snippets
+----------------------------
+
+
+.. note:: 
+    The following material is from previous document pages. It needs to be refactored. It is included below as a placeholder and for reference. 
+
+
+Assigning multiple GPUs per worker
+##################################
+
+To assign multiple GPUs to a worker, edit your ``docker-compose.override.yml`` file to change the ``NVIDIA_VISIBLE_DEVICES`` environment variable in the **tfgpu** and **pytorch-gpu** container blocks:
+
+.. code:: yaml
+
+   dioptra-deployment-tfcpu-01:
+     environment:
+       NVIDIA_VISIBLE_DEVICES: 0,1
+
+To allow a worker to use all available GPUs, set ``NVIDIA_VISIBLE_DEVICES`` to ``all``:
+
+.. code:: yaml
+
+   dioptra-deployment-tfcpu-01:
+     environment:
+       NVIDIA_VISIBLE_DEVICES: all

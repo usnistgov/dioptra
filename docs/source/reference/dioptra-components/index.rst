@@ -26,6 +26,7 @@ Reference material for Dioptra building blocks: Plugins, entrypoints, experiment
    :maxdepth: 1
 
    dioptra-component-glossary
+   experiments-reference
    param-types-reference
    plugin-reference
    entrypoints-reference

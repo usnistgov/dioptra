@@ -139,6 +139,7 @@ You can find the source code, license information, and more on the NIST `GitHub 
    how-to/essential-workflows/index.rst
    how-to/import-content/index.rst
    how-to/advanced/index.rst
+   how-to/managing-containers.rst
 
 
 .. toctree::

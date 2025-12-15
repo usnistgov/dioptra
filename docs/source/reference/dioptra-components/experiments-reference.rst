@@ -15,15 +15,10 @@
 .. ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 .. https://creativecommons.org/licenses/by/4.0/legalcode
 
-.. _explanation-design-principles:
+.. _reference-experiments:
 
-
-Design Principles
-================
-
-Explaining design principles of Dioptra. 
-
-
+Experiments
+=================
 
 Prior Documentation Snippets
 ----------------------------
@@ -31,18 +26,57 @@ Prior Documentation Snippets
 .. note:: 
     The following material is from previous document pages. It needs to be refactored. It is included below as a placeholder and for reference. 
 
-From overview/executive-summary.rst:
 
-**Key Properties**
+Structure Description
+=====================
+
+The top level of the data structure is a mapping with a few prescribed keys,
+which provide the basic ingredients for the experiment: types, parameters, artifact
+input parameters, tasks, a graph which links task invocations together, and the artifact
+output declaration:
+
+.. code:: YAML
+
+    types:
+        "<type definitions here>"
+
+    parameters:
+        "<parameters here>"
+
+    artifact_inputs:
+        "<artifact input parameters here>"
+
+    tasks:
+        "<tasks here>"
+
+    graph:
+        "<graph here>"
+
+    artifact_outputs:
+        "artifact output declaration here"
 
 
-Dioptra strives for the following key properties:
+The rest of the structural description describes what goes in each of those six places.
 
-* Reproducible: Dioptra automatically creates snapshots of resources so experiments can be reproduced and validated
-* Traceable: The full history of experiments and their inputs are tracked
-* Extensible: Support for expanding functionality and importing existing Python packages via a plugin system
-* Interoperable: A type system promotes interoperability between plugins
-* Modular: New experiments can be composed from modular components in a simple yaml file
-* Secure: Dioptra provides user authentication with access controls coming soon
-* Interactive: Users can interact with Dioptra via an intuitive web interface
-* Shareable and Reusable: Dioptra can be deployed in a multi-tenant environment so users can share and reuse components
+
+
+
+Graph
+-----
+
+The ``graph`` section is where you describe invocations of the aforementioned
+task plugins, and connect the outputs of some to the inputs of others, creating
+the graph structure.
+
+Graphs are composed of *steps*, and the value of the ``graph`` property is a
+mapping from a step name to a description of the step.  Each step invokes a
+task plugin, so the step description describes which plugin to invoke and how
+to invoke it:
+
+.. code:: YAML
+
+    graph:
+        step1:
+            "step 1 description"
+        step2:
+            "step 2 description"
