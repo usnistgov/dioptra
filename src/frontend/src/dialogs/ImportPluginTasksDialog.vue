@@ -1,6 +1,6 @@
 <template>
   <q-dialog v-model="showDialog">
-    <q-card>
+    <q-card style="display: inline-block; width: auto; max-width: 800px;">
       <q-card-section class="bg-primary text-white text-h6">
         Import Plugin Tasks
       </q-card-section>
