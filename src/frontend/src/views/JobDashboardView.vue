@@ -254,7 +254,7 @@
       <q-btn
         outline  
         label="Return to Jobs"
-        @click="router.back()"
+        @click="store.initialPage ? router.push('/jobs') : router.back()"
         class="cancel-btn q-mt-lg"
         color="primary"
       />
@@ -289,6 +289,9 @@ import * as notify from '../notify'
 import PlotlyGraph from '@/components/PlotlyGraph.vue'
 import CodeEditor from '@/components/CodeEditor.vue'
 import JobArtifactsTable from '@/components/JobArtifactsTable.vue'
+import { useLoginStore } from '@/stores/LoginStore.ts'
+
+const store = useLoginStore()
 
 const route = useRoute()
 const router = useRouter()

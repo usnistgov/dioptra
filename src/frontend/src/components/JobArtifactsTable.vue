@@ -4,7 +4,10 @@
     :columns="columns"
     :title="`Artifacts Created by Job ${route.params.id}`"
     v-model:selected="selected"
-    @edit="router.push(`/artifacts/${selected[0].id}`)"
+    @open="openTab => (openTab
+      ? openWindow.open(`/artifacts/${selected[0].id}`, '_blank')
+      : router.push(`/artifacts/${selected[0].id}`)
+    )"
     :hideDeleteBtn="true"
     :hideCreateBtn="true"
     :loading="isLoading"
@@ -43,6 +46,7 @@ import * as api from '@/services/dataApi'
 import { useRouter, useRoute } from 'vue-router'
 import * as notify from '../notify'
 
+const openWindow = window
 const router = useRouter()
 const route = useRoute()
 
@@ -82,6 +86,7 @@ async function getArtifacts() {
 
 
 const columns = [
+  { name: 'id', label: 'ID', field: 'id', align: 'left', sortable: true },
   { name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true },
   { name: 'taskName', label: 'Task Name', align: 'left' },
   { name: 'taskOutputParams', label: 'Task Output Params', align: 'left' },

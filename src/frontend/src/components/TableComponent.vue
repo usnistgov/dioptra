@@ -31,15 +31,40 @@
       <q-tr 
         :class="`${getSelectedColor(props.selected)} cursor-pointer ${highlightRow(props)} ${disableRow(props)}` " 
         :props="props"
-        @click="openResource(props); selectResource(props)"
+        @click="openResource(props, $event); selectResource(props)"
+        @auxclick="onAuxClick(props, $event)"
       >
         <q-td v-for="col in props.cols" :key="col.name" :props="props" :style="props.expand ? {'border-bottom': 'none'} : {}">
+          <q-menu
+            v-if="selection !== 'multiple'"
+            context-menu
+            @show="props.selected = true"
+          >
+            <q-list dense>
+              <q-item clickable v-close-popup @click="openResource(props)">
+                <q-item-section>Open</q-item-section>
+              </q-item>
+              <q-item clickable v-close-popup @click="openResource(props, null, true)">
+                <q-item-section>Open In New Tab</q-item-section>
+              </q-item>
+            </q-list>
+          </q-menu>
           <slot v-bind="props" :name="`body-cell-${col.name}`">
             <div v-if="typeof(col.value) === 'boolean'" class="text-body1">
               {{ col.value ? '✅' : 	'❌'}}
             </div>
             <div v-else-if="col.name === 'id'">
               <span class="link">{{ props.row.id }}</span>
+              <q-icon
+                name="open_in_new"
+                size="sm"
+                class="q-ml-sm"
+                @click.stop="openResource(props, $event, true)"
+              >
+                <q-tooltip>
+                  Open In New Tab
+                </q-tooltip>
+              </q-icon>
             </div>
             <div v-else-if="col.name === 'name'">
               {{ truncateString(props.row.name, 20) }}
@@ -85,14 +110,6 @@
               <!-- if value is an array, then render it with a custom slot -->
               {{ col.value }}
             </div>
-            <!-- <q-btn
-              v-if="col.name === 'open'"
-              round
-              color="primary"
-              icon="edit"
-              size="sm"
-              @click.stop="openResource(props)"
-            /> -->
             <q-btn
               v-if="col.name === 'delete'"
               round
@@ -191,7 +208,7 @@
   },
 })
   const emit = defineEmits([
-    'edit', 
+    'open', 
     'delete', 
     'request', 
     'expand', 
@@ -244,10 +261,21 @@
     else tableProps.selected = !tableProps.selected
   }
 
-  function openResource(tableProps) {
+  function openResource(tableProps, event = null, openTab = false) {
     if(props.disableSelect || props.selection === 'multiple') return
     tableProps.selected = true
-    emit('edit')
+    // ⌘ on macOS or Ctrl on windows should open new tab
+    if(event?.metaKey || event?.ctrlKey) {
+      emit('open', true)
+    } else {
+      emit('open', openTab)
+    }
+  }
+
+  function onAuxClick(tableProps, event) {
+    if (event.button === 1) {   // mouse wheel click only
+      openResource(tableProps, event , true)
+    }
   }
 
   function deleteResource(tableProps) {
@@ -384,7 +412,7 @@
       selected.value = [nextRow]
     }
   } else if(event.key === 'Enter') {
-    emit('edit')
+    emit('open')
   }
 }
 

@@ -7,7 +7,10 @@
     :columns="columns"
     title="Entrypoints"
     v-model:selected="selected"
-    @edit="router.push(`/entrypoints/${selected[0].id}`)"
+    @open="openTab => (openTab
+      ? openWindow.open(`/entrypoints/${selected[0].id}`, '_blank')
+      : router.push(`/entrypoints/${selected[0].id}`)
+    )"
     @delete="showDeleteDialog = true"
     @request="getEntrypoints"
     ref="tableRef"
@@ -156,6 +159,7 @@
   import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
   import AssignPluginsDialog from '@/dialogs/AssignPluginsDialog.vue'
 
+  const openWindow = window
   const router = useRouter()
 
   const columns = [

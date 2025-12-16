@@ -101,7 +101,10 @@
     :columns="fileColumns"
     title="Plugin Files"
     v-model:selected="selected"
-    @edit="router.push(`/plugins/${route.params.id}/files/${selected[0].id}`)"
+    @open="openTab => (openTab
+      ? openWindow.open(`/plugins/${route.params.id}/files/${selected[0].id}`, '_blank')
+      : router.push(`/plugins/${route.params.id}/files/${selected[0].id}`)
+    )"
     @delete="showDeleteDialog = true"
     @request="getFiles"
     ref="tableRef"
@@ -148,6 +151,7 @@ import TableComponent from '@/components/TableComponent.vue'
 import DeleteDialog from '@/dialogs/DeleteDialog.vue'
 import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
 
+const openWindow = window
 const route = useRoute()
 const router = useRouter()
 

@@ -90,7 +90,7 @@
           color="primary" 
           label="Cancel"
           class="q-mr-lg cancel-btn"
-          @click="confirmLeave = true; router.back()"
+          @click="confirmLeave = true; store.initialPage ? router.push('/queues') : router.back()"
           :disable="history"
         />
         <q-btn  

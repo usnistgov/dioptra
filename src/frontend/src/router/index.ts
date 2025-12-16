@@ -188,7 +188,10 @@ router.beforeEach(async (to, from) => {
 
   // check login status on mounted and reloads
   if(from === START_LOCATION) {
+    store.initialPage = true
     await callGetLoginStatus()
+  } else {
+    store.initialPage = false
   }
 
   const isAuthRoute = to.path === '/login' || to.path === '/register'
