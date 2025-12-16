@@ -14,7 +14,10 @@
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
     @create="pushToJobRoute"
     :hideOpenBtn="true"
-    @edit="router.push(`/jobs/${selected[0].id}`)"
+    @open="openTab => (openTab
+      ? openWindow.open(`/jobs/${selected[0].id}`, '_blank')
+      : router.push(`/jobs/${selected[0].id}`)
+    )"
     :loading="isLoading"
   >
     <template #body-cell-experiment="props">
@@ -66,6 +69,7 @@
   import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
   import JobStatus from '@/components/JobStatus.vue'
 
+  const openWindow = window
   const route = useRoute()
   const router = useRouter()
 

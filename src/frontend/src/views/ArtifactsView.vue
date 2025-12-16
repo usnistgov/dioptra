@@ -5,7 +5,10 @@
     :columns="columns"
     title="Artifacts"
     v-model:selected="selected"
-    @edit="router.push(`/artifacts/${selected[0].id}`)"
+    @open="openTab => (openTab
+      ? openWindow.open(`/artifacts/${selected[0].id}`, '_blank')
+      : router.push(`/artifacts/${selected[0].id}`)
+    )"
     @delete="showDeleteDialog = true"
     @request="getArtifacts"
     ref="tableRef"
@@ -76,6 +79,7 @@ import PageTitle from '@/components/PageTitle.vue'
 import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
 import { useRouter } from 'vue-router'
 
+const openWindow = window
 const router = useRouter()
 
 const selected = ref([])

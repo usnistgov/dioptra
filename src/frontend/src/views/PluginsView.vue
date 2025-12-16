@@ -6,7 +6,10 @@
     :columns="columns"
     title="Plugins"
     v-model:selected="selected"  
-    @edit="router.push(`/plugins/${selected[0].id}`)"
+    @open="openTab => (openTab
+      ? openWindow.open(`/plugins/${selected[0].id}`, '_blank')
+      : router.push(`/plugins/${selected[0].id}`)
+    )"
     @delete="showDeleteDialog = true"
     @request="getPlugins"
     ref="tableRef"
@@ -46,9 +49,8 @@
   import * as notify from '../notify'
   import PageTitle from '@/components/PageTitle.vue'
   import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
-  import { useLoginStore } from '@/stores/LoginStore.ts'
 
-  const store = useLoginStore()
+  const openWindow = window
 
   const router = useRouter()
 

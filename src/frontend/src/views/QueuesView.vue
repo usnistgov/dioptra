@@ -5,7 +5,7 @@
     :columns="showDrafts ? draftColumns : columns"
     title="Queues"
     @delete="showDeleteDialog = true"
-    @edit="openQueue()"
+    @open="openQueue($event)"
     v-model:selected="selected"
     v-model:showDrafts="showDrafts"
     @request="getQueues"
@@ -46,12 +46,10 @@
   import * as notify from '../notify'
   import TableComponent from '@/components/TableComponent.vue'
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'
-  import { useLoginStore } from '@/stores/LoginStore'
   import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
   import PageTitle from '@/components/PageTitle.vue'
   import { useRouter } from 'vue-router'
 
-  const store = useLoginStore()
   const router = useRouter()
 
   const showDeleteDialog = ref(false)
@@ -122,12 +120,13 @@
 
   const editObjTags = ref({})
 
-  function openQueue() {
-    if(selected.value[0].payload) {
-      router.push(`/queues/${selected.value[0].id}/draft`)
-    } else {
-      router.push(`/queues/${selected.value[0].id}`)
-    }
+  function openQueue(openTab) {
+    const url = selected.value[0].payload
+      ? `/queues/${selected.value[0].id}/draft`
+      : `/queues/${selected.value[0].id}`
+
+    if(openTab) window.open(url, '_blank', 'noopener,noreferrer')
+    else router.push(url)
   }
 
 </script>

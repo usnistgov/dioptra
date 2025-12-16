@@ -167,7 +167,7 @@
       color="primary" 
       label="Cancel"
       class="q-mr-lg cancel-btn"
-      @click="router.back()"
+      @click="store.initialPage ? router.push('/artifacts') : router.back()"
     />
     <q-btn  
       @click="submit()" 

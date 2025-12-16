@@ -5,7 +5,10 @@
     :columns="columns"
     title="Plugin Parameter Types"
     v-model:selected="selected"
-    @edit="router.push(`/pluginParams/${selected[0].id}`)"
+    @open="openTab => (openTab
+      ? openWindow.open(`/pluginParams/${selected[0].id}`, '_blank')
+      : router.push(`/pluginParams/${selected[0].id}`)
+    )"
     @delete="showDeleteDialog = true"
     @request="getPluginParameterTypes"
     ref="tableRef"
@@ -41,10 +44,9 @@
   import * as notify from '../notify'
   import PageTitle from '@/components/PageTitle.vue'
   import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
-  import { useLoginStore } from '@/stores/LoginStore'
   import { useRouter } from 'vue-router'
 
-  const store = useLoginStore()
+  const openWindow = window
   const router = useRouter()
 
   const selected = ref([])

@@ -5,7 +5,10 @@
     :columns="columns"
     title="Experiments"
     v-model:selected="selected"
-    @edit="router.push(`/experiments/${selected[0].id}`)"
+    @open="openTab => (openTab
+      ? openWindow.open(`/experiments/${selected[0].id}`, '_blank')
+      : router.push(`/experiments/${selected[0].id}`)
+    )"
     @delete="showDeleteDialog = true"
     @request="getExperiments"
     ref="tableRef"
@@ -40,7 +43,6 @@
 </template>
 
 <script setup>
-
   import TableComponent from '@/components/TableComponent.vue'
   import { ref } from 'vue'
   import { useRouter } from 'vue-router'
@@ -51,6 +53,7 @@
   import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
   
   const router = useRouter()
+  const openWindow = window
 
   const showDeleteDialog = ref(false)
   const showTagsDialog = ref(false)

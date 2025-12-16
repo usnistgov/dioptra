@@ -49,10 +49,12 @@ export const useLoginStore = defineStore('login', () => {
   const showRightDrawer = ref(false)
   const selectedSnapshot = ref()
 
+  const initialPage = ref(false)
+
   // computed()'s are getters
 
   // function()'s are actions
   
 
-  return { loggedInUser, loggedInGroup, groups, users, savedForms, showRightDrawer, selectedSnapshot, triggerPopup };
+  return { loggedInUser, loggedInGroup, groups, users, savedForms, showRightDrawer, selectedSnapshot, triggerPopup, initialPage };
 })
