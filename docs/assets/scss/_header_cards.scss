@@ -103,14 +103,14 @@
       across that empty gap.
 */
 .header-steps + .header-steps {
-  margin-top: 100px; 
+  margin-top: 50px; 
   position: relative;
 }
 
 .header-steps + .header-steps::before {
   content: "";
   position: absolute;
-  top: -50px; 
+  top: -20px; 
   left: 0;
   right: 0;
   height: 2px;
