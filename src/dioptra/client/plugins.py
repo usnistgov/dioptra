@@ -315,8 +315,8 @@ class PluginFilesSubCollectionClient(SubCollectionClient[T]):
 
         Example:
 
-            Attach Python code embedded in a string to a Plugin, and register a task with 
-            two input parameters and one output parameter. 
+            Attach Python code embedded in a string to a Plugin, and register a task with
+            two input parameters and one output parameter.
 
             .. code-block:: python
 
@@ -324,28 +324,30 @@ class PluginFilesSubCollectionClient(SubCollectionClient[T]):
                     plugin_id=plugin["id"],
                     filename="hello.py",
                     content=PYTHON_CONTENTS,
-                    tasks=[{
-                        "name": "hello_world",
-                        "inputParams": [
+                    tasks=[
+                        {
+                            "name": "hello_world",
+                            "inputParams": [
                                 {
-                                "name": "greeting",
-                                "parameterType": string_param_type_id,
-                                "required": True
+                                    "name": "greeting",
+                                    "parameterType": string_param_type_id,
+                                    "required": True,
                                 },
                                 {
-                                "name": "name",
-                                "parameterType": string_param_type_id,
-                                "required": True
-                                }
-                        ],
-                        "outputParams": [
+                                    "name": "name",
+                                    "parameterType": string_param_type_id,
+                                    "required": True,
+                                },
+                            ],
+                            "outputParams": [
                                 {
-                                "name": "message",
-                                "parameterType": string_param_type_id,
+                                    "name": "message",
+                                    "parameterType": string_param_type_id,
                                 }
-                        ]
-                    }]
-                    )
+                            ],
+                        }
+                    ],
+                )
 
         Returns:
             The response from the Dioptra API.
@@ -721,9 +723,9 @@ class PluginsCollectionClient(CollectionClient[T]):
 
             .. code-block:: python
 
-                plugin = client.plugins.create(group_id, 
-                                                "hello", 
-                                                "This is a Hello World Plugin")
+                plugin = client.plugins.create(
+                    group_id, "hello", "This is a Hello World Plugin"
+                )
 
         Returns:
             The response from the Dioptra API.
