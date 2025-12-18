@@ -35,8 +35,7 @@ Plugins hold the Python files that define the logic for your experiments. Within
 
 2. **Plugin Artifact Tasks:** These handle the interface between memory and disk storage (I/O).
    
-   * *Example:* A task that serializes a trained model object to a .pt (PyTorch) file and handles the 
-    subsequent deserialization back into memory for potential downstream tasks.
+   * *Example:* A task that serializes a trained model object to a .pt (PyTorch) file and handles the subsequent deserialization back into memory for potential downstream tasks.
 
 Plugin Function Tasks
 ---------------------

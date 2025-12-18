@@ -19,3 +19,6 @@
 
 Plugin Parameter Types
 ================
+
+
+[Todo] Insert an explanation about parameter types.

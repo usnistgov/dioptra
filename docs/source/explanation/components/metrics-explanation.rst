@@ -20,4 +20,5 @@
 Metrics
 ================
 
-Insert an explanation about Dioptra metrics.
+
+[Todo] Insert an explanation about metrics.

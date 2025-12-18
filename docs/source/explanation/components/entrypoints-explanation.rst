@@ -19,3 +19,6 @@
 
 Entrypoints
 ================
+
+
+[Todo] Insert an explanation about entrypoints.

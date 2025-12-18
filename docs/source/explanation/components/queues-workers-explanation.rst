@@ -19,3 +19,6 @@
 
 Queues and Workers
 ================
+
+
+[Todo] Insert an explanation about queues/workers.

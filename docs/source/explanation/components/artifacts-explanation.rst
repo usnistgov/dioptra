@@ -19,3 +19,5 @@
 
 Artifacts
 ================
+
+[Todo] Insert an explanation about artifacts.

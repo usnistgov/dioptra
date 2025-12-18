@@ -21,7 +21,7 @@ Plugins
 =================
 
 
-.. contents:: Table of Contents
+.. contents:: Contents
    :local:
    :depth: 2
 
