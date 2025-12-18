@@ -24,8 +24,11 @@ Getting Involved / Contributing
 
 Please follow the guidelines linked below when contributing to this project.
 
-.. toctree::
-   :maxdepth: -1
+.. container:: wide-lightly-shaded
+      
+   .. toctree::
+      :maxdepth: -1
+      :caption: Table of Contents
 
-   contributing-merge-request-guidelines
-   contributing-commit-styleguide
+      contributing-merge-request-guidelines
+      contributing-commit-styleguide

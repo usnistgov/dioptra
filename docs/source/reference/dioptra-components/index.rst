@@ -20,14 +20,15 @@
 Dioptra Components
 ===================
 
-Reference material for Dioptra building blocks: Plugins, entrypoints, experiments, etc.
+.. container:: wide-lightly-shaded
 
-.. toctree::
-   :maxdepth: 1
+   .. toctree::
+      :maxdepth: 2
+      :caption: Table of Contents
 
-   dioptra-component-glossary
-   experiments-reference
-   param-types-reference
-   plugin-reference
-   entrypoints-reference
+      dioptra-component-glossary
+      experiments-reference
+      param-types-reference
+      plugin-reference
+      entrypoints-reference
 

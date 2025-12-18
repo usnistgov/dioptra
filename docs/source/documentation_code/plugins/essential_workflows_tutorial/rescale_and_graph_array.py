@@ -13,10 +13,8 @@ def _as_1d_float_array(arr) -> np.ndarray:
     return a
 
 @pyplugs.register
-def scale_array(
-    input_array: np.ndarray,
-) -> dict:
-    """Return a dict of rescaled arrays using z-score, min-max, and log1p methods."""\
+def scale_array(input_array: np.ndarray) -> dict:
+    """Return a dict of rescaled arrays using z-score, min-max, and log1p methods."""
 
     x = _as_1d_float_array(input_array)
     out = {}
@@ -48,9 +46,9 @@ def visualize_rescaling_multi(
     original_array: np.ndarray,
     rescaled_dict: dict,
     title: str = "Original vs Multiple Rescalings",
-):
-    """Compare multiple rescaling methods with scatterplots and stats."""\
-
+) -> None:
+    """Compare multiple rescaling methods with scatterplots and stats."""
+    
     x = _as_1d_float_array(original_array)
 
     # Reorder dict to put minmax first if present
@@ -87,13 +85,15 @@ def visualize_rescaling_multi(
         ax.plot(xx, yy, color="black", lw=1.2, label="regression")
 
         # Stats
-        stats = f"""n_obs: {n}
-min: {np.min(x_plot):.2f} → {np.min(y_plot):.2f}
-max: {np.max(x_plot):.2f} → {np.max(y_plot):.2f}
-mean: {np.mean(x_plot):.2f} → {np.mean(y_plot):.2f}
-median: {np.median(x_plot):.2f} → {np.median(y_plot):.2f}
-std dev: {np.std(x_plot):.2f} → {np.std(y_plot):.2f}
-regression: y = {slope:.3f}·x + {intercept:.3f}""".strip()
+        stats = (
+            f"n_obs: {n}\n"
+            f"min: {np.min(x_plot):.2f} → {np.min(y_plot):.2f}\n"
+            f"max: {np.max(x_plot):.2f} → {np.max(y_plot):.2f}\n"
+            f"mean: {np.mean(x_plot):.2f} → {np.mean(y_plot):.2f}\n"
+            f"median: {np.median(x_plot):.2f} → {np.median(y_plot):.2f}\n"
+            f"std dev: {np.std(x_plot):.2f} → {np.std(y_plot):.2f}\n"
+            f"regression: y = {slope:.3f}·x + {intercept:.3f}"
+        )
 
         ax.set_xlabel("Original")
         ax.set_ylabel(method)

@@ -1,1 +1,0 @@
-@pyplugs.register

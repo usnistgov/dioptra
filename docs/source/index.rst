@@ -120,7 +120,7 @@ You can find the source code, license information, and more on the NIST `GitHub 
 
    explanation/experiment-overview-explanation
    explanation/components/index.rst
-   explanation/workflows-explanation
+   explanation/usage-modes
 
 .. toctree::
    :maxdepth: 1

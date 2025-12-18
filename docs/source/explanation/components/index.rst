@@ -20,18 +20,19 @@
 Dioptra Components
 ================
 
+.. container:: wide-lightly-shaded
 
-Explaining key components of Dioptra.
 
-.. toctree::
-   :maxdepth: 1
+   .. toctree::
+      :maxdepth: 2
+      :caption: Table of Contents
 
-   queues-workers-explanation 
-   users-groups-explanation
-   param-types-explanation 
-   plugin-explanation
-   entrypoints-explanation
-   task-graph-explanation 
-   artifacts-explanation 
-   metrics-explanation
-   experiments-jobs-explanation 
+      queues-workers-explanation 
+      users-groups-explanation
+      param-types-explanation 
+      plugin-explanation
+      entrypoints-explanation
+      task-graph-explanation 
+      artifacts-explanation 
+      metrics-explanation
+      experiments-jobs-explanation 

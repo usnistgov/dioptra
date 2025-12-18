@@ -20,19 +20,21 @@
 Setup Options
 ===================
 
-How to guides on configuring and running Dioptra.
 
-.. toctree::
-   :maxdepth: 1
+.. container:: wide-lightly-shaded
 
-   customize-deployments
-   data-mounts
-   cloud-deployments
-   connect-external-hardware
-   adding-certificates
-   enabling-ssl-tls
-   integrating-custom-containers
-   building-the-containers
-   running-dioptra
+   .. toctree::
+      :maxdepth: 1
+      :caption: Table of Contents
+
+      customize-deployments
+      data-mounts
+      gpu-enabled-workers
+      adding-certificates
+      enabling-ssl-tls
+      integrating-custom-containers
+      building-the-containers
+      running-dioptra
+   .. cloud-deployments
 
 

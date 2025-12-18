@@ -15,10 +15,37 @@
 .. ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 .. https://creativecommons.org/licenses/by/4.0/legalcode
 
-.. _explanation-comparison-to-other-mlops-tools:
+.. _how-to-gpu-enabled-workers:
+
+GPU Enabled Workers
+=====================
+
+This how to guide explains how to connect GPUs to Dioptra workers.
 
 
-Comparison to Other MLops Tools
-================
+Prior Documentation Snippets
+----------------------------
 
-Explaining how Dioptra is different from other common MLops tools.
+
+.. note:: 
+    The following material is from previous document pages. It needs to be refactored. It is included below as a placeholder and for reference. 
+
+
+Assigning multiple GPUs per worker
+##################################
+
+To assign multiple GPUs to a worker, edit your ``docker-compose.override.yml`` file to change the ``NVIDIA_VISIBLE_DEVICES`` environment variable in the **tfgpu** and **pytorch-gpu** container blocks:
+
+.. code:: yaml
+
+   dioptra-deployment-tfcpu-01:
+     environment:
+       NVIDIA_VISIBLE_DEVICES: 0,1
+
+To allow a worker to use all available GPUs, set ``NVIDIA_VISIBLE_DEVICES`` to ``all``:
+
+.. code:: yaml
+
+   dioptra-deployment-tfcpu-01:
+     environment:
+       NVIDIA_VISIBLE_DEVICES: all

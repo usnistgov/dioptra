@@ -21,11 +21,16 @@
 Guidelines for Documentation
 ============================
 
-This is a guide for Dioptra developers that details **style and content guidelines** for Sphinx documentation pages.  
 
-Dioptra documentation uses **reStructuredText (.rst)** with Sphinx. The documentation pages are located in ``/docs/source/`` 
+This is a guide for Dioptra developers that details **style and content guidelines** for `Sphinx <https://www.sphinx-doc.org/en/master/index.html>`__ documentation pages.  
+
+Dioptra documentation uses `reStructuredText (.rst) <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html#rst-primer>`__ with Sphinx. The documentation pages are located in ``docs/source/`` 
 and are built using the command ``uvx tox run -e web-compile,docs``.
 
+
+.. contents:: Page Contents
+   :local:
+   :depth: 1
 
 Exemplar Documentation Pages
 -----------------
@@ -43,7 +48,7 @@ Documentation goals
 - **Brevity & placement.** Put content where it belongs; avoid duplication across types.
 - **Single purpose per page.** Don’t mix a tutorial with reference or explanation on the same page.
 - **Source of truth lives in code dirs.** Bring example code in with ``literalinclude``.
-- **Cross Reference Documentation.** Don't repeat information across pages - reference relevant complimentary materials using sphinx cross references instead. 
+- **Cross Reference Documentation.** Don't repeat information across pages - reference relevant complimentary materials using Sphinx cross references instead. 
 
 Documentation File Placement
 --------------------------------------
@@ -57,7 +62,7 @@ All images should be stored in ``docs/source/images/``. Avoid storing images ins
 
 **Directory Structure**
 
-* **GUI Screenshots:** Store screenshots in ``docs/source/images/GUI_screenshots/``.
+* **Screenshots:** Store screenshots in ``docs/source/images/screenshots/``.
     * Organize these sub-folders roughly by the **Vue/Quasar page** they represent (e.g., `jobs`, `plugins`, `experiments`).
     * This structure allows screenshots to potentially be reused across different content types (e.g., using the same "Login" screenshot in both a *Tutorial* and a *How-to*).
     * It also makes identifying screenshots that require updates easier once a Quasar page changes.
@@ -66,7 +71,7 @@ All images should be stored in ``docs/source/images/``. Avoid storing images ins
 .. code-block:: text
 
    docs/source/images/
-   ├── GUI_screenshots/
+   ├── screenshots/
    │   ├── entrypoints/
    │   ├── experiments/
    │   ├── jobs/
@@ -82,7 +87,7 @@ Documentation Code Snippets
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Code will ideally never be written inline on .rst pages. Whenever appropriate, the documentation should reference the doc strings for methods and classes.
-When bespoke code snippets are needed (i.e. for tutorial workflows, etc), place the code in the docs directory and use ``.. literalinclude::`` to pull it in.
+When bespoke code snippets are needed (i.e. for tutorial workflows, etc), place the code in the appropriate subdirectory directory under docs and use ``.. literalinclude::`` to pull it in.
 
 **Directory Structure**
 
@@ -228,39 +233,8 @@ Custom CSS classes:
 * ``header-steps`` - Adds the blue clipboard to the header and the bottom border, and adjusts the header font size
 
 
-Example Steps (Rendered)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. rst-class:: header-on-a-card header-steps
-
-Example Step 1: Create the Plugin Container
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-1. Open **Plugins**.
-2. Click **Create Plugin**.
-3. Name it and **Save**.
-
-   .. note:: Make sure you click save. 
-
-.. rst-class:: header-on-a-card header-steps
-
-Example Step 2: Add a file
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-1. Click on the Plugin
-2. Click **Add a File**
-3. Click **Register Task** and create these inputs:
-
-      * ``sample_size`` : int 
-      * ``mean`` : float
-
-4. Click **Save** 
-
-.. admonition:: Learn More
-
-   * :ref:`plugins-explanation` - Learn about plugins
-
-RST Source (for above example)
+RST Syntax: Steps
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: rst
@@ -295,8 +269,44 @@ RST Source (for above example)
 
       * :ref:`plugins-explanation` - Learn about plugins
 
+Rendered Example: Steps
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-**Note the following:**
+The above RST code is rendered below:
+
+.. rst-class:: header-on-a-card header-steps
+
+Example Step 1: Create the Plugin Container
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+1. Open **Plugins**.
+2. Click **Create Plugin**.
+3. Name it and **Save**.
+
+   .. note:: Make sure you click save. 
+
+.. rst-class:: header-on-a-card header-steps
+
+Example Step 2: Add a file
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+1. Click on the Plugin
+2. Click **Add a File**
+3. Click **Register Task** and create these inputs:
+
+      * ``sample_size`` : int 
+      * ``mean`` : float
+
+4. Click **Save** 
+
+.. admonition:: Learn More
+
+   * :ref:`plugins-explanation` - Learn about plugins
+
+Notes for "Steps" styling
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Note the following stylistic conventions when rendering steps:
 
 - Use of **bold** to emphasize the concrete actions within a step (corresponds to buttons, etc)
 - The creation of separating lines between **header-steps** classes is automatically done through a CSS rule 
@@ -304,7 +314,7 @@ RST Source (for above example)
    Items commonly nested on cards include:
 
    - ``.. admonition:: Learn More`` - Custom "learn more" override of the admonition box 
-   - ``.. note::`` - Built in sphinx blue sphinx box that says "Note" 
+   - ``.. note::`` - Built in Sphinx blue Sphinx box that says "Note" 
    - Indentation to create a block quote 
 
 
@@ -321,22 +331,8 @@ To create a prominent section of additional reading material, use the custom RST
 a lightly indented card with a green header that also has an anchor link and appears in the HTML 
 sidebar. 
 
-Example of See Also Card Header (Rendered)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. rst-class:: header-on-a-card header-seealso
-
-See Also 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-This is a hands-on tutorial intended to walk a user through the procedural steps required to 
-use Dioptra. The following resources are complimentary and provide high level explanations on Dioptra's 
-design and motivation. 
-
-* :ref:`Overview of Experiments <experiment-overview-explanation>` - A summary of how Dioptra components interact to create an experiment
-* :ref:`Why Dioptra? <why-dioptra-explanation>` - An explanation of what Dioptra was built for
-
-
-RST Source
+RST syntax: See Also
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: rst
@@ -349,8 +345,23 @@ RST Source
    use Dioptra. The following resources are complimentary and provide high level explanations on Dioptra's 
    design and motivation. 
 
-   * :ref:`Overview of Experiments <experiment-overview-explanation>` - A summary of how Dioptra components interact to create an experiment
-   * :ref:`Why Dioptra? <why-dioptra-explanation>` - An explanation of what Dioptra was built for
+   * :ref:`Overview of Experiments <explanation-experiment-overview>` - A summary of how Dioptra components interact to create an experiment
+   * :ref:`Why Dioptra? <explanation-why-use-dioptra>` - An explanation of what Dioptra was built for
+
+
+Rendered Example: See Also
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. rst-class:: header-on-a-card header-seealso
+
+See Also 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+This is a hands-on tutorial intended to walk a user through the procedural steps required to 
+use Dioptra. The following resources are complementary and provide high level explanations on Dioptra's 
+design and motivation. 
+
+* :ref:`Overview of Experiments <explanation-experiment-overview>` - A summary of how Dioptra components interact to create an experiment
+* :ref:`Why Dioptra? <explanation-why-use-dioptra>` - An explanation of what Dioptra was built for
 
 
 
@@ -359,7 +370,7 @@ Notes, warnings, important, and "see also"
 ~~~~~~~~~~~~~~~~~~
 
 To caveat steps or reference explanation/reference material elsewhere, use notes, warnings, and the important flag. 
-These divs are built in to sphinx. While visually distinct, they utilize significant padding to indicate optional content.
+These divs are built in to Sphinx. While visually distinct, they utilize significant padding to indicate optional content.
 Use them sparingly for information that is not required reading. 
 
 .. tabs::
@@ -434,7 +445,7 @@ in the margins. On narrow screens, these elements are hidden and require horizon
 
 Custom CSS rules were created to define a minimalistic presentation for extra information.
 This class overrides the admonition box when the title "Learn More" is added. 
-The use of this class is preferred to the ``.. seealso::`` built in sphinx element when used inside 
+The use of this class is preferred to the ``.. seealso::`` built in Sphinx element when used inside 
 another element. 
 
 .. tabs::
@@ -453,8 +464,83 @@ another element.
 
             View the :ref:`plugins-explanation` for more information. 
 
-This is similar to the ``.. seealso::`` built in sphinx box, but it has more minimal padding and is more appropriate 
+This is similar to the ``.. seealso::`` built in Sphinx box, but it has more minimal padding and is more appropriate 
 to use nested inside other elements. 
+
+
+Shaded container for Table of Contents
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Custom CSS rules were created to define a lightly shaded container
+with a larger width. This container is used for table of contents (TOC) elements in index pages, 
+but could be reused for other elements as well. 
+
+.. tabs::
+
+   .. tab:: Rendered
+
+      .. container:: wide-lightly-shaded
+
+         **Table of Contents:**
+
+         * :doc:`/dev-guide/contributing-documentation-guide`
+         * :doc:`/dev-guide/contributing-merge-request-guidelines`
+         * :doc:`/dev-guide/contributing-commit-styleguide`
+            
+
+
+   .. tab:: RST Source
+
+      In production documentation pages, use ``.. toctree::`` to incorporate 
+      the TOC into the global navigation system.
+
+      .. code-block:: rst
+
+         .. container:: wide-lightly-shaded
+                  
+            .. toctree::
+               :maxdepth: 1
+               :titlesonly:
+               :caption: Table of Contents
+
+               /dev-guide/contributing-documentation-guide
+               /dev-guide/contributing-merge-request-guidelines
+               /dev-guide/contributing-commit-styleguide
+         
+      In this example, however, doc references were used to avoid actually adding these pages to the global navigation.
+
+      .. code-block:: rst
+
+         **Table of Contents:**
+
+         * :doc:`/dev-guide/contributing-documentation-guide`
+         * :doc:`/dev-guide/contributing-merge-request-guidelines`
+         * :doc:`/dev-guide/contributing-commit-styleguide`
+
+Page Contents / Local ToC
+~~~~~~~~~~~~~~~~
+
+To preview the contents on a page in a Table of Contents container, use the ``.. contents::`` component. 
+
+
+.. tabs::
+
+   .. tab:: Rendered
+
+      View the :ref:`top of this page <reference-guidelines-for-documentation>` to see this rendered.
+
+
+   .. tab:: RST Source
+
+      .. code-block:: rst
+
+         .. contents:: Page Contents
+            :local:
+            :depth: 1
+
+
+
+
 
 Figures (screenshots)
 ~~~~~~~~~~~~~~~~~~~~~
@@ -470,31 +556,17 @@ To apply this styling, use one or more of the following figure classes with ``:f
 - ``big-image`` → Allows images to grow wider than the text column (experimental; CSS overrides may conflict with sidebar/layout changes — use sparingly)
 
 .. note::
-   Modals are included by through the addition of a ``div`` element in the ``layout.html`` footer.
+   Modals are included by default through the addition of a ``div`` element in the ``layout.html`` footer.
+
+
+
+
+RST Syntax: Image Classes
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Screenshots that use combinations of these three CSS classes**
 
 *On click, JavaScript shows the modal* ``div`` *element. *
-
-**Using** ``border-image`` **and** ``clickable-image``:
-
-.. figure:: ../tutorials/hello_world/_static/screenshots/login_dioptra.png
-   :alt: Dioptra login screen
-   :figclass: border-image clickable-image 
-
-   Using the custom image class - clicking the image opens a modal.
-
-**Using** ``big-image``, ``border-image`` **and** ``clickable-image``:
-
-.. figure:: ../tutorials/hello_world/_static/screenshots/register_hello_world_task.png
-   :alt: Dioptra login screen
-   :figclass: border-image clickable-image big-image
-
-   Using the ``big-image`` figclass - not recommended because it interferes 
-   with the HTML sidebar.
-
-
-**RST Source code**
 
 .. code-block:: rst
       
@@ -515,6 +587,26 @@ To apply this styling, use one or more of the following figure classes with ``:f
       Using the ``big-image`` figclass - not recommended because it interferes 
       with the HTML sidebar.
 
+
+Rendered Examples: Image Classes
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Using** ``border-image`` **and** ``clickable-image``:
+
+.. figure:: ../tutorials/hello_world/_static/screenshots/login_dioptra.png
+   :alt: Dioptra login screen
+   :figclass: border-image clickable-image 
+
+   Using the custom image class - clicking the image opens a modal.
+
+**Using** ``big-image``, ``border-image`` **and** ``clickable-image``:
+
+.. figure:: ../tutorials/hello_world/_static/screenshots/register_hello_world_task.png
+   :alt: Dioptra login screen
+   :figclass: border-image clickable-image big-image
+
+   Using the ``big-image`` figclass - not recommended because it interferes 
+   with the HTML sidebar.
 
 .. warning::
    Making images larger than the text column with ``big-image`` is potentially **fragile** and relies on CSS workarounds.
@@ -804,12 +896,12 @@ title but can be overridden using the ``<>`` syntax (see example).
 
    ``_{tutorial}-{running-hello-world}-{step-2-create-a-plugin}``
 
-   Examples: 
+   **Examples: **
 
-      * ``_how-to-create-plugins`` 
-      * ``_tutorial-adding-inputs-and-outputs``
-      * ``_reference-plugins``
-      * ``_reference-plugins-plugin-function-tasks`` → includes header_title
+   * ``_how-to-create-plugins`` 
+   * ``_tutorial-adding-inputs-and-outputs``
+   * ``_reference-plugins``
+   * ``_reference-plugins-plugin-function-tasks`` → includes header_title
 
    Notice that we only use dashes, no underscores. Use the page type in the singular, e.g. ``explanation``, ``reference``, 
    ``how-to``, ``tutorial``. 

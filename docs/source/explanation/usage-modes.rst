@@ -15,10 +15,10 @@
 .. ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 .. https://creativecommons.org/licenses/by/4.0/legalcode
 
-.. _explanation-dioptra-workflows:
+.. _explanation-usage-modes:
 
 
-Dioptra Workflows 
+Usage Modes
 ================
 
 Dioptra utilizes a microservices architecture coordinated by a :ref:`REST API <reference-glossary>` to manage job execution and resource tracking.
@@ -54,7 +54,7 @@ The GUI is a web-based application built using the `Quasar Framework (VueJS) <ht
     * Job execution, including easy insights into produced metrics, logs and artifacts
     * Creation, importing and editing of Python and YAML code for Plugins and Entrypoints
 
-.. figure:: ../images/GUI_screenshots/jobs/hello_world_create_job.png
+.. figure:: ../images/screenshots/jobs/hello_world_create_job.png
    :alt: Screenshot of the Job submission modal.
    :width: 900px
    :figclass:  border-image clickable-image
