@@ -17,15 +17,18 @@
 import pickle
 import tarfile
 from collections.abc import ByteString
-from pathlib import Path
-from typing import Any, Callable, Dict, Literal, Optional
+from typing import Callable, Dict, Literal, Optional
 
 import numpy as np
 import pandas as pd
 import structlog
 from structlog.stdlib import BoundLogger
 
+# [artifact-task-imports]
 from dioptra.sdk.api.artifact import ArtifactTaskInterface
+from pathlib import Path
+from typing import Any
+# [end-artifact-task-imports]
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -41,7 +44,7 @@ class UnsupportedDataFrameFileFormatError(Exception):
 class UnsupportedTarFileFormatError(Exception):
     """The tar file format was unexpected."""
 
-
+# [example-artifact-task]
 class StringArtifactTask(ArtifactTaskInterface):
     @staticmethod
     def serialize(
@@ -58,7 +61,7 @@ class StringArtifactTask(ArtifactTaskInterface):
     @staticmethod
     def validation() -> dict[str, Any] | None:
         return {"type": {"type": "string"}}
-
+# [end-example-artifact-task]
 
 class BytesArtifactTask(ArtifactTaskInterface):
     @staticmethod

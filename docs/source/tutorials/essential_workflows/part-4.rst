@@ -1,0 +1,106 @@
+.. This Software (Dioptra) is being made available as a public service by the
+.. National Institute of Standards and Technology (NIST), an Agency of the United
+.. States Department of Commerce. This software was developed in part by employees of
+.. NIST and in part by NIST contractors. Copyright in portions of this software that
+.. were developed by NIST contractors has been licensed or assigned to NIST. Pursuant
+.. to Title 17 United States Code Section 105, works of NIST employees are not
+.. subject to copyright protection in the United States. However, NIST may hold
+.. international copyright in software created by its employees and domestic
+.. copyright (or licensing rights) in portions of software that were assigned or
+.. licensed to NIST. To the extent that NIST holds copyright in this software, it is
+.. being made available under the Creative Commons Attribution 4.0 International
+.. license (CC BY 4.0). The disclaimers of the CC BY 4.0 license apply to all parts
+.. of the software developed or licensed by NIST.
+..
+.. ACCESS THE FULL CC BY 4.0 LICENSE HERE:
+.. https://creativecommons.org/licenses/by/4.0/legalcode
+
+
+.. _tutorial-utilizing-metric-logging:
+
+Utilizing Metric Logging
+========================
+
+Overview
+--------
+
+In the last tutorial, you built a multi-step workflow that transformed a numpy array multiple times. After each step, you printed summary stats and then viewed those in the logs.
+
+Instead of printing values in the logs, we will record them using **metrics**. This will produce time-series visualizations for us. This is useful for tracking a metric across various steps, both within and across plugins. Metrics are stored at the job level.
+
+We will replace our prior ``print_stats`` plugin task with a new ``log_metrics`` task.
+
+.. warning::
+   This part of the tutorial will not work properly until new changes from DIOPTRA-OPTIC branch are merged in for metric logging.
+
+
+Workflow
+--------
+
+.. rst-class:: header-on-a-card header-steps
+
+Step 1: Add Metrics Task to Plugin 3
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Let's create the new plugin task that uses Dioptra's metric logging.
+
+1. Go to the **Plugins** tab and open **sample_and_transform** from the previous step.
+2. Navigate to the ``sample_and_transform.py`` file you created.
+3. Copy the following new plugin task and paste it at the bottom of the file.
+
+.. admonition:: sample_and_transform_w_metrics.py (Append this code)
+    :class: code-panel python
+
+    .. literalinclude:: ../../../../docs/source/documentation_code/plugins/essential_workflows_tutorial/sample_and_transform_w_metrics.py
+       :language: python
+       :start-after: # [new-plugin-definition]
+
+4. Click **Import Function Tasks** again to register the new plugin task.
+
+.. note::
+   Metrics are appended to a job. They are identified by the **metric name**, and they also require a **value** and a **step name**.
+
+.. admonition:: Learn More 
+
+   More details about Dioptra metrics are available at :ref:`Metrics - Explainer <explanation-metrics>`
+
+.. rst-class:: header-on-a-card header-steps
+
+Step 2: Modify Entrypoint 3
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Now let's edit Entrypoint 3 to use this new Plugin task. We will change the task graph to utilize ``log_metrics`` instead of ``print_stats``.
+
+1. Navigate to **Entrypoints** and open **Entrypoint 3**.
+2. In the **Task Graph YAML** editor, find every reference to the task ``print_stats`` and replace it with ``log_metrics``.
+3. Click **Submit Entrypoint**.
+
+.. rst-class:: header-on-a-card header-steps
+
+Step 3: Re-run Entrypoint 3
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Now let's re-run this entrypoint and see if our metrics get logged.
+
+1. Go to **Experiment 3** (the experiment you created in the last step).
+2. Create a new job using **Entrypoint 3**.
+3. Click **Submit Job**.
+
+.. rst-class:: header-on-a-card header-steps
+
+Step 4: Inspect Metrics
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Let's view our results.
+
+1. Go to the **Job Details** page for the job you just ran.
+2. Click the **Metrics** tab.
+
+You should now see visualizations (graphs) of the metrics collected during the job execution, rather than just text logs.
+
+Conclusion
+----------
+
+You now know how to log metrics within a plugin task!
+
+Next, we will save outputs from plugin tasks as **artifacts**.

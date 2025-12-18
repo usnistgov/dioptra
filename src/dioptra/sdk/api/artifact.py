@@ -83,11 +83,13 @@ class ArtifactTaskInterface(abc.ABCMeta):
         Example:
             The following dictionary specifies three extra keyword arguments of
             `foo`, `bar`, and `baz` and their types.
-                - `foo` is a string.
-                - `bar` is an enumerated value with three possible values.
-                - `baz` is an integer.
+
+            - `foo` is a string.
+            - `bar` is an enumerated value with three possible values.
+            - `baz` is an integer.
 
             .. code-block:: python
+
                 {
                     "foo": {"type": "string"},
                     "bar": {"enum": ["value1", "value2", "value3"]},
