@@ -178,6 +178,7 @@ docs = [
     "sphinxcontrib-openapi>=0.7.0",
     "sphinxcontrib-qthelp<=1.0.3",
     "sphinxcontrib-serializinghtml<=1.1.5",
+    "sphinx-tabs",
     "typing-extensions>=3.7.4.0",
     "web-compile>=0.2.3",
 ]

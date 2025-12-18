@@ -15,10 +15,10 @@
 .. ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 .. https://creativecommons.org/licenses/by/4.0/legalcode
 
-.. _reference-resource-import-reference:
+.. _reference-resource-import-syntax:
 
 ===========================
- Resource Import Reference
+Resource Import Syntax
 ===========================
 
 This document describes the contract for importing resources into a Dioptra instance.

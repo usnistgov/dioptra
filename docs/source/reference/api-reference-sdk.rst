@@ -15,7 +15,7 @@
 .. ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 .. https://creativecommons.org/licenses/by/4.0/legalcode
 
-.. _user-guide-api-reference-sdk:
+.. _reference-testbed-sdk-api-reference:
 
 Testbed SDK API Reference
 =========================

@@ -1,5 +1,7 @@
+.. _reference-declarative-experiment-description:
+
 ====================================
- Declarative Experiment Description
+ [OLD] Declarative Experiment Description
 ====================================
 
 This document describes the data structure used to represent an experiment.
@@ -98,6 +100,8 @@ output declaration:
 
 
 The rest of the structural description describes what goes in each of those six places.
+
+.. _type_reference:
 
 Types
 -----

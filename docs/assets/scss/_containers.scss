@@ -1,0 +1,15 @@
+/* lightly shaded, rounded div to hold toctrees */ 
+/* Usage: .. container:: toctree-inline */
+
+.wide-lightly-shaded{
+    border: 1px grey solid;
+    padding: 10px !important;
+    border-radius: 5px;
+    background: var(--dioptra-bg-5);
+    width: 600px !important;
+    box-sizing: border-box;
+    max-width: 100% !important;
+    margin-top:2rem;
+    margin-bottom:2rem;
+    box-shadow: 0 .2rem .5rem var(--pst-color-shadow), 0 0 .0625rem var(--pst-color-shadow) !important;
+}

@@ -15,60 +15,146 @@
 .. ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 .. https://creativecommons.org/licenses/by/4.0/legalcode
 
-What is Dioptra?
-================
+Dioptra Overview
+==========================
 
-.. include:: /_glossary_note.rst
+Dioptra is a software test platform for assessing the trustworthy characteristics of Artificial Intelligence (AI) models.
 
-.. include:: overview/executive-summary.rst
+Dioptra is a modular, microservice-based environment for creating **reproducible, trackable, and reusable ML workflows**.
+Unlike many MLOps platforms focused on training and deployment, **Dioptra is specialized as a testbed for evaluation**. 
+It is designed to **measure, analyze, and track AI risks**, making it particularly useful for addressing the "combinatorial explosion" of testing possibilities across attacks, defenses, datasets, and models.
 
-Points of Contact
------------------
 
-Email us: dioptra@nist.gov
+Audience
+-----------------------
+
+Dioptra is designed for: 
+
+- **Developers and Analysts** testing models during development or acquisition.
+- **Researchers** tracking complex experiments and benchmarking results.
+- **Auditors and Red Teams** assessing model security and compliance in a controlled environment.
+
+
+Getting Up and Running
+------------------------------
+
+Dioptra runs as a set of Docker containers built on a microservices architecture. Users can interact with Dioptra through a graphical user interface (GUI), through a Python Client, 
+or by directly making calls to REST API.
+
+**The basic setup process is:**
+
+1. Ensure you have access to a Unix based OS (Mac, Linux, WSL2), Docker, and UV
+2. Clone the repository and build the Docker containers.
+3. Configure the environment by applying templates and setting up data mounts.
+4. Run ``docker compose up`` to start all services.
+
+.. admonition:: Learn More 
+      
+   - :ref:`See the system requirements <reference-system-requirements>`
+   - :ref:`Follow the quick set up guide <how-to-quick-setup>`
+
+
+Dioptra Documentation
+------------------------------
+
+Below are some useful guides to help get you started. To see the entire list of documentation topics, view the table of contents on the left sidebar.
+
+
+.. rst-class:: header-on-a-card
+
+Understand Dioptra
+^^^^^^^^^^^^^^^^^^^
+
+- :ref:`Motivation for Dioptra <explanation-motivation-for-dioptra>` - Why is Dioptra for and how does it compare to other tools?
+- :ref:`What is a Dioptra experiment? <explanation-experiment-overview>` - Learn about the various components that comprise the Dioptra experiment
+
+.. rst-class:: header-on-a-card 
+
+Use Dioptra
+^^^^^^^^^^^^^^^^^^^
+
+- :ref:`See the system requirements <reference-system-requirements>` before getting set up
+- :ref:`Follow the set up guide <how-to-quick-setup>` to build the Docker containers and start the services 
+- :ref:`Run the Hello World tutorial <tutorial-hello-world-in-dioptra>` to make sure things are set up correctly 
+
+.. rst-class:: header-on-a-card 
+   
+Dive Into the Details
+^^^^^^^^^^^^^^^^^^^
+
+- :ref:`Read through the Dioptra component explainers<explanation-dioptra-components>` to dive deeper on each part of an experiment.
+- Learn how to :ref:`customize your Dioptra deployment<how-to-setup-options>`
+- Reference the :ref:`API endpoints <reference-testbed-rest-api-reference>` and learn how to use the :ref:`Python client <explanation-dioptra-workflows>`
+- :ref:`Progress through the intermediate tutorial <tutorial-learning-the-essentials>` to learn about complex workflows, artifacts, and more
+
+About
+---------
+
+Dioptra is open-source software developed by the National Institute of Standards and Technology (NIST). Contributions and feedback are welcome from the community.
+You can find the source code, license information, and more on the NIST `GitHub repository <https://github.com/usnistgov/dioptra>`__.
+
 
 
 .. toctree::
-   :hidden:
    :maxdepth: -1
+   :caption: What is Dioptra?      
+   :hidden:     
+   :titlesonly:
 
-   glossary
+   explanation/dioptra-motivation/index 
+   explanation/architecture-overview
 
 .. toctree::
+   :maxdepth: 2
+   :caption: Set Up 
    :hidden:
-   :maxdepth: -1
-   :caption: Getting Started
+   :titlesonly:
 
-   getting-started/building-the-containers
-   getting-started/running-dioptra
-   getting-started/acquiring-datasets
-   getting-started/additional-configuration
-.. getting-started/examples-setup
-   getting-started/installation
+   how-to/setup-dioptra/quick-setup.rst 
+   how-to/setup-dioptra/configure-setup/index.rst
 
 .. toctree::
+   :maxdepth: 1
+   :caption: Explainers      
    :hidden:
-   :maxdepth: -1
-   :caption: User Guide
 
-   user-guide/the-web-frontend
-.. user-guide/the-basics
-   user-guide/entry-points
-   user-guide/task-plugins
-   user-guide/custom-entry-points
-   user-guide/custom-task-plugins
-   user-guide/generics-plugin-system
-   user-guide/task-plugins-collection
+   explanation/experiment-overview-explanation
+   explanation/components/index.rst
+   explanation/usage-modes
 
 .. toctree::
+   :maxdepth: 1
+   :caption: Tutorials      
    :hidden:
-   :maxdepth: -1
-   :caption: Reference
 
-   reference/task-engine-reference
+   tutorials/hello_world/index.rst
+   tutorials/essential_workflows/index.rst
+   tutorials/OPTIC/index.rst
+
+.. toctree::
+   :maxdepth: 1
+   :caption: How Tos      
+   :hidden:
+
+   how-to/essential-workflows/index.rst
+   how-to/import-content/index.rst
+   how-to/advanced/index.rst
+   how-to/managing-containers.rst
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Reference      
+   :hidden:
+
+   reference/system-reqs 
+   reference/glossary
+   reference/dioptra-components/index.rst
+   reference/api-reference-restapi
    reference/resource-import-reference
    reference/resource-search-language-reference
-   reference/api-reference-restapi
+   reference/task-engine-reference
+   dev-guide/contributing-documentation-guide
 .. reference/api-reference-sdk
    reference/api-reference-client
 
@@ -79,3 +165,4 @@ Email us: dioptra@nist.gov
 
    deployment-guide/system-requirements
    deployment-guide/docker-images-list-and-settings
+  
