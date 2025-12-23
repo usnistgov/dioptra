@@ -21,3 +21,54 @@ Create Parameter Types
 ========================
 
 This how-to explains how to build custom :ref:`Plugin Param Types <param-types-explanation>` in Dioptra. 
+
+
+Prerequisites
+-------------
+
+.. tabs:: 
+
+   .. group-tab:: GUI
+
+      * :ref:`getting-started-running-dioptra` - A deployment of Dioptra is required.
+
+   .. group-tab:: Python Client
+
+      * :ref:`getting-started-running-dioptra` -  A deployment of Dioptra is required.
+      * :ref:`how-to-set-up-the-python-client` - Connect to the Python Client in a Jupyter Notebook.
+
+.. _how-to-create-param-types-param-type-creation-workflow:
+
+Parameter Type Creation Workflow
+--------------------------------
+
+Follow these steps to create and register a new parameter type. You can perform these actions via the Guided User Interface (GUI) or programmatically using the Python Client.
+
+.. rst-class:: header-on-a-card header-steps
+
+
+Step 1: Create the Parameter Type
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Register a parameter type for use in dioptra.
+
+.. tabs::
+
+   .. group-tab:: GUI
+
+      In the Dioptra GUI, navigate to the **Plugin Parameters** tab. Click **Create**. 
+      
+      Enter a *name*, *description*, select a *group* for the type, enter a *structure* if applicable, then click **Confirm**.
+
+   .. group-tab:: Python Client
+
+      **Client Method:**
+
+      Use the client to create the parameter type.
+
+      .. automethod:: dioptra.client.plugin_parameter_types.PluginParameterTypesCollectionClient.create
+
+See Also 
+---------
+
+* :ref:`Parameter Types <param-types-explanation>` - Understand parameter types, structures, and their role in dioptra.
