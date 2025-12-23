@@ -17,7 +17,7 @@
 import pickle
 import tarfile
 from collections.abc import ByteString
-from typing import Callable, Dict, Literal, Optional
+from typing import Callable, Dict, Literal, Optional, Sequence
 
 import numpy as np
 import pandas as pd
@@ -258,12 +258,39 @@ class NumpyArrayArtifactTask(ArtifactTaskInterface):
     @staticmethod
     def serialize(working_dir: Path, name: str, contents: np.ndarray, **kwargs) -> Path:
         path = (working_dir / name).with_suffix(".npy")
-        np.save(path, contents, allow_pickle=False)
+        np.save(path, contents, allow_pickle=False, **kwargs)
         return path
 
     @staticmethod
     def deserialize(working_dir: Path, path: str, **kwargs) -> np.ndarray:
-        return np.load(working_dir / path)
+        return np.load(working_dir / path, **kwargs)
+
+    @staticmethod
+    def validation() -> dict[str, Any] | None:
+        return None
+
+
+class NumpyArraysArtifactTask(ArtifactTaskInterface):
+    @staticmethod
+    def serialize(
+        working_dir: Path,
+        name: str,
+        contents: Sequence[np.ndarray],
+        names: Sequence[str] | None = None,
+        **kwargs,
+    ) -> Path:
+        path = (working_dir / name).with_suffix(".npy")
+        if names is not None and len(names) == len(contents):
+            np.savez(
+                path, **dict(list(zip(names, contents))), allow_pickle=False, **kwargs
+            )
+        else:
+            np.savez(path, *contents, allow_pickle=False)
+        return path
+
+    @staticmethod
+    def deserialize(working_dir: Path, path: str, **kwargs) -> dict[str, np.ndarray]:
+        return dict(list(np.load(working_dir / path, **kwargs).items()))
 
     @staticmethod
     def validation() -> dict[str, Any] | None:
@@ -275,13 +302,13 @@ class PickleArtifactTask(ArtifactTaskInterface):
     def serialize(working_dir: Path, name: str, contents: Any, **kwargs) -> Path:
         path = (working_dir / name).with_suffix(".pkl")
         with open(path, "wb") as f:
-            pickle.dump(contents, f)
+            pickle.dump(contents, f, **kwargs)
         return path
 
     @staticmethod
     def deserialize(working_dir: Path, path: str, **kwargs) -> Path:
         with open(working_dir / path, "wb") as f:
-            return pickle.load(f)
+            return pickle.load(f, **kwargs)
 
     @staticmethod
     def validation() -> dict[str, Any] | None:
