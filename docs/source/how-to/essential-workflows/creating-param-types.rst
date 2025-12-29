@@ -58,7 +58,7 @@ Register a parameter type for use in dioptra.
 
       In the Dioptra GUI, navigate to the **Plugin Parameters** tab. Click **Create**. 
       
-      Enter a *name*, *description*, select a *group* for the type, enter a *structure* if applicable, then click **Confirm**.
+      Enter a *name*, *description*, select a *group* for the type, enter a *structure* (see :ref:`Parameter Type Structures <explanation-plugin-parameter-types-structures>`) if applicable, then click **Confirm**.
 
    .. group-tab:: Python Client
 
@@ -71,4 +71,4 @@ Register a parameter type for use in dioptra.
 See Also 
 ---------
 
-* :ref:`Parameter Types <param-types-explanation>` - Understand parameter types, structures, and their role in dioptra.
+* :ref:`Parameter Types <explanation-plugin-parameter-types>` - Understand parameter types, structures, and their role in dioptra.

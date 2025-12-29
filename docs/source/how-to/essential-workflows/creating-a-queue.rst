@@ -57,7 +57,7 @@ Register a queue for a specific group, with a name and a description.
 
    .. group-tab:: GUI
 
-      In the Dioptra GUI, navigate to the **Queues** tab. Click **Create**. Enter a *name* and *description*, select a *group* for the queue, then click **Confirm**.
+      In the Dioptra GUI, navigate to the **Queues** tab. Click **Create**. Enter a *name* and, optionally, a *description*, select a *group* for the queue, then click **Confirm**.
 
    .. group-tab:: Python Client
 
@@ -65,9 +65,9 @@ Register a queue for a specific group, with a name and a description.
 
       Use the client to create the queue.
 
-      .. automethod:: dioptra.client.queues.QueuesCollectionsClient.create
+      .. automethod:: dioptra.client.queues.QueuesCollectionClient.create
 
 See Also 
 ---------
 
-* :ref:`Queues and Workers <queues-workers-explanation>` - Understand what queues and workers are for.
+* :ref:`Queues and Workers <explanation-queues-and-workers>` - Understand what queues and workers are for.

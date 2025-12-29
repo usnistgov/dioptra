@@ -29,6 +29,9 @@ from the list of registered types. Similarly, each output of the function is ass
 parameter types. During validation of an entrypoint, these types are used to verify
 compatibility between the inputs and outputs of different steps.
 
+
+.. _explanation-plugin-parameter-types-structures:
+
 Parameter Type Structures
 -------------------------
 
@@ -227,4 +230,4 @@ plugin task.
 See Also 
 ---------
 
-* :ref:`Creating Parameter Types <creating-param-types>` - Learn how to create parameter types.
+* :ref:`Creating Parameter Types <how-to-create-parameter-types>` - Learn how to create parameter types.

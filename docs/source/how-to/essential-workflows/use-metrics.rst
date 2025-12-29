@@ -85,3 +85,7 @@ Retrieve metrics from a job or view them in the GUI.
       Alternatively, you can retrieve the full metric history for a job.
 
       .. automethod:: dioptra.client.jobs.JobsCollectionClient.get_metrics_snapshots_by_id
+
+      It is also possible to retrieve the metrics across all jobs in an experiment.
+
+      .. automethod:: dioptra.client.experiments.ExperimentsCollectionClient.get_metrics_by_id

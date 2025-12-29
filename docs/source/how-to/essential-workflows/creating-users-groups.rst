@@ -76,4 +76,4 @@ Register a user with a username, email address, and password to be able to creat
 See Also 
 ---------
 
-* :ref:`Users and Groups <users-groups-explanation>` - Understand what users and groups are for.
+* :ref:`Users and Groups <explanation-users-and-groups>` - Understand what users and groups are for.
