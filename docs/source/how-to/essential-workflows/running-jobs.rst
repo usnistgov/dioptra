@@ -39,7 +39,7 @@ Prerequisites
 
       * :ref:`getting-started-running-dioptra` -  A deployment of Dioptra is required.
       * :ref:`how-to-set-up-the-python-client` - Connect to the Python Client in a Jupyter Notebook.
-      * :ref:`hot-to-create-queues` - A queue and a worker on which to run the job are required.
+      * :ref:`how-to-create-queues` - A queue and a worker on which to run the job are required.
       * :ref:`how-to-create-entrypoints` - An entrypoint describing the job and the plugins required for those entrypoints are required.
       * :ref:`how-to-create-experiments` - An experiment containing the entrypoint to be used is needed.
 
