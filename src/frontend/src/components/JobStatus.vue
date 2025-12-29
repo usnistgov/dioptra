@@ -5,7 +5,7 @@
     :icon-right="statusStyles[status].icon"
     :color="statusStyles[status].color"
     :text-color="statusStyles[status].textColor"
-    class="text-capitalize q-my-none"
+    class="text-capitalize q-my-none q-mx-none"
     :ripple="false"
     :style="statusStyles[status].style"
     style="cursor: default; margin-top: -4px; margin-bottom: -3px;"

@@ -245,9 +245,9 @@
   }
 
   function openResource(tableProps) {
-    if(props.disableSelect || props.selection === 'multiple') return
+    if (props.disableSelect || props.selection === 'multiple') return
     tableProps.selected = true
-    emit('edit')
+    emit('edit', tableProps.row) 
   }
 
   function deleteResource(tableProps) {
