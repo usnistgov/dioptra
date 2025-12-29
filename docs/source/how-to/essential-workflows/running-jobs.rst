@@ -31,7 +31,7 @@ Prerequisites
 
       * :ref:`getting-started-running-dioptra` - A deployment of Dioptra is required.
       * :ref:`tutorial-setup-dioptra-in-the-gui` - Access Dioptra services in the GUI, create a user, and login.
-      * :ref:`hot-to-create-queues` - A queue and a worker on which to run the job are required, and must be associated with the entrypoint being used.
+      * :ref:`how-to-create-queues` - A queue and a worker on which to run the job are required, and must be associated with the entrypoint being used.
       * :ref:`how-to-create-entrypoints` - An entrypoint describing the job and the plugins required for those entrypoints are required.
       * :ref:`how-to-create-experiments` - An experiment containing the entrypoint to be used is needed.
 
