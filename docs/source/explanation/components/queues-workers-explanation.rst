@@ -34,6 +34,7 @@ In order to accomplish this the worker must be able to communicate with the REST
 The following environment variables are required to be set and accessible in the worker environment.
 
 .. code-block::
+    
     MLFLOW_S3_ENDPOINT_URL=
     MLFLOW_TRACKING_URI=
     DIOPTRA_WORKER_USERNAME=
