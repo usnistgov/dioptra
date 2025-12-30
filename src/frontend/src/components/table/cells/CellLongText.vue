@@ -1,7 +1,6 @@
 <template>
   <div 
-    class="text-grey-8" 
-    :class="[textTypeClass, 'text-wrap-style']"
+    :class="[textColor, textTypeClass, 'text-wrap-style']"
     :style="{ maxWidth: maxWidth }"
   >
     {{ formattedDisplayValue }}
@@ -15,11 +14,12 @@
 <script setup>
 import { computed } from 'vue'
 
+
 const props = defineProps({
   text: [String, Number],
   maxLength: {
     type: Number,
-    default: 150 // Increase default if you want more text before the '...'
+    default: 150
   },
   maxWidth: {
     type: String,
@@ -32,8 +32,14 @@ const props = defineProps({
   textType: {
     type: String, 
     default: "none" 
+  },
+  // NEW PROP: Allows overriding the default grey color
+  textColor: {
+    type: String,
+    default: 'text-grey-8' 
   }
 })
+
 
 const applyTransformation = (val) => {
   if (!val || typeof val !== 'string') return val

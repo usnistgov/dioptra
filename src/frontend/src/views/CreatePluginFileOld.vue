@@ -75,12 +75,11 @@
         />
       </div>
     </fieldset>
-<fieldset :class="`${isMobile ? 'col-12' : 'col q-ml-md'}`">
+    <fieldset :class="`${isMobile ? 'col-12' : 'col q-ml-md'}`">
       <legend>Plugin Tasks</legend>
-      
       <TableComponent
         :rows="pluginFile.tasks.functions"
-        :columns="computedFunctionTaskColumns"
+        :columns="functionTaskColumns"
         title="Plugin Function Tasks"
         :hideToggleDraft="true"
         :hideSearch="true"
@@ -91,87 +90,97 @@
         @create="showTaskDialog=true; taskType='functions'"
       >
         <template #body-cell-name="props">
-          <div class="row items-center cursor-pointer group">
-            <span class="text-indigo-10 text-weight-bold text-subtitle2">
-              {{ props.row.name }}
-            </span>
-            <q-icon name="edit" size="xs" color="primary" class="q-ml-sm invisible group-hover:visible" />
-            
-            <q-popup-edit v-model="props.row.name" v-slot="scope">
-              <q-input v-model="scope.value" dense autofocus counter @keyup.enter="scope.set" />
-            </q-popup-edit>
-          </div>
+        <div style="font-size: 18px;">
+          {{ props.row.name }}
+          <q-btn icon="edit" round size="sm" color="primary" flat />
+        </div>
+          <q-popup-edit v-model="props.row.name" v-slot="scope">
+            <q-input v-model="scope.value" dense autofocus counter @keyup.enter="scope.set" />
+          </q-popup-edit>
         </template>
-
         <template #body-cell-inputParams="props">
-          <div class="row justify-end q-gutter-xs">
-            <template v-for="(param, i) in props.row.inputParams" :key="i">
-              <q-chip
-                color="indigo"
-                text-color="white"
-                size="sm"
-                outline square clickable removable
-                @remove="pluginFile.tasks.functions[props.rowIndex].inputParams.splice(i, 1)"
-                @click="handleSelectedParam('edit', props, i, 'inputParams', 'functions'); showEditParamDialog = true"
-              >
-                <span class="text-weight-bold">{{ param.name }}</span>
-                <span v-if="param.required" class="text-red q-ml-xs">*</span>
-                <span class="q-ml-xs text-grey-6" style="font-size: 10px;">
-                  : {{ pluginParameterTypes.find(t => t.id === param.parameterType.id)?.name || '?' }}
-                </span>
-              </q-chip>
-              
+          <div v-for="(param, i) in props.row.inputParams" :key="i">
+            <q-chip
+              color="indigo"
+              text-color="white"
+              dense
+              clickable
+              removable
+              @remove="pluginFile.tasks.functions[props.rowIndex].inputParams.splice(i, 1)"
+              @click="handleSelectedParam('edit', props, i, 'inputParams', 'functions'); showEditParamDialog = true"
+            >
+              {{ `${param.name}` }}
+              <span v-if="param.required" class="text-red">*</span>
+              {{ `: ${pluginParameterTypes.filter((type) => type.id === param.parameterType.id)[0]?.name}` }}
+            </q-chip>
+            <div>
               <q-chip 
-                v-if="!pluginParameterTypes.find(t => t.id === param.parameterType.id)?.name"
-                color="negative" text-color="white" size="xs" square dense icon="warning"
-              >
-                <q-tooltip>Resolve missing type</q-tooltip>
-              </q-chip>
-            </template>
-
-            <q-btn
-              round size="xs" icon="add" color="indigo-1" text-color="indigo" unelevated
-              @click="handleSelectedParam('create', props, i, 'inputParams', 'functions'); showEditParamDialog = true"
-            />
-          </div>
-        </template>
-
-        <template #body-cell-outputParams="props">
-          <div class="row justify-end q-gutter-xs">
-            <div v-for="(param, i) in props.row.outputParams" :key="i">
-              <q-chip
-                color="purple"
+                v-if="!pluginParameterTypes.filter((type) => type.id === param.parameterType.id)[0]?.name"
+                color="red"
                 text-color="white"
-                size="sm"
-                outline square clickable removable
-                @click="handleSelectedParam('edit', props, i, 'outputParams', 'functions'); showEditParamDialog = true"
-                @remove="pluginFile.tasks.functions[props.rowIndex].outputParams.splice(i, 1)"
+                square
               >
-                <span class="text-weight-bold">{{ param.name }}</span>
-                <span class="q-ml-xs text-grey-6" style="font-size: 10px;">
-                  : {{ param.parameterType.name }}
-                </span>
+                Resolve missing type above
               </q-chip>
             </div>
-            <q-btn
-              round size="xs" icon="add" color="purple-1" text-color="purple" unelevated
-              @click="handleSelectedParam('create', props, i, 'outputParams', 'functions'); showEditParamDialog = true"
-            />
           </div>
+          <q-btn
+            round
+            size="xs"
+            icon="add"
+            color="grey-5"
+            text-color="black"
+            class="q-mr-xs q-my-xs"
+            @click="handleSelectedParam('create', props, i, 'inputParams', 'functions'); showEditParamDialog = true"
+          />
         </template>
-
+        <template #body-cell-outputParams="props">
+          <div v-for="(param, i) in props.row.outputParams" :key="i">
+            <q-chip
+              color="purple"
+              text-color="white"
+              dense
+              clickable
+              removable
+              @click="handleSelectedParam('edit', props, i, 'outputParams', 'functions'); showEditParamDialog = true"
+              @remove="pluginFile.tasks.functions[props.rowIndex].outputParams.splice(i, 1)"
+              :label="`${param.name}: ${param.parameterType.name}`"
+            />
+            <div>
+              <q-chip 
+                v-if="!pluginParameterTypes.filter((type) => type.id === param.parameterType.id)[0]?.name"
+                color="red"
+                text-color="white"
+                square
+              >
+                Resolve missing type above
+              </q-chip>
+            </div>
+          </div>
+          <q-btn
+            round
+            size="xs"
+            icon="add"
+            color="grey-5"
+            text-color="black"
+            class="q-mr-xs q-my-xs"
+            @click="handleSelectedParam('create', props, i, 'outputParams', 'functions'); showEditParamDialog = true"
+          />
+        </template>
         <template #body-cell-actions="props">
           <q-btn
             icon="sym_o_delete"
-            round size="sm" color="negative" flat
+            round
+            size="md"
+            color="negative"
+            flat
             @click="selectedTaskProps = props; selectedTaskProps.taskType = 'functions'; showDeleteDialog = true"
           />
         </template>
       </TableComponent>
-
       <TableComponent
         :rows="pluginFile.tasks.artifacts"
-        :columns="computedArtifactTaskColumns"
+        :columns="artifactTaskColumns"
         title="Plugin Artifact Tasks"
         :hideToggleDraft="true"
         :hideSearch="true"
@@ -179,49 +188,49 @@
         :hideOpenBtn="true"
         :hideDeleteBtn="true"
         rightCaption="*Click parameter to edit, or X to delete"
-        class="q-mt-md"
         @create="showTaskDialog=true; taskType='artifacts'"
       >
         <template #body-cell-name="props">
-          <div class="row items-center cursor-pointer group">
-            <span class="text-indigo-10 text-weight-bold text-subtitle2">
-              {{ props.row.name }}
-            </span>
-            <q-icon name="edit" size="xs" color="primary" class="q-ml-sm invisible group-hover:visible" />
-            <q-popup-edit v-model="props.row.name" v-slot="scope">
-              <q-input v-model="scope.value" dense autofocus counter @keyup.enter="scope.set" />
-            </q-popup-edit>
-          </div>
+        <div style="font-size: 18px;">
+          {{ props.row.name }}
+          <q-btn icon="edit" round size="sm" color="primary" flat />
+        </div>
+          <q-popup-edit v-model="props.row.name" v-slot="scope">
+            <q-input v-model="scope.value" dense autofocus counter @keyup.enter="scope.set" />
+          </q-popup-edit>
         </template>
-
         <template #body-cell-outputParams="props">
-          <div class="row justify-end q-gutter-xs">
-            <template v-for="(param, i) in props.row.outputParams" :key="i">
-              <q-chip
-                color="purple"
-                text-color="white"
-                size="sm"
-                outline square clickable removable
-                @click="handleSelectedParam('edit', props, i, 'outputParams', 'artifacts'); showEditParamDialog = true"
-                @remove="pluginFile.tasks.artifacts[props.rowIndex].outputParams.splice(i, 1)"
-              >
-                <span class="text-weight-bold">{{ param.name }}</span>
-                <span class="q-ml-xs text-grey-6" style="font-size: 10px;">
-                  : {{ param.parameterType.name }}
-                </span>
-              </q-chip>
-            </template>
-            <q-btn
-              round size="xs" icon="add" color="purple-1" text-color="purple" unelevated
-              @click="handleSelectedParam('create', props, i, 'outputParams', 'artifacts'); showEditParamDialog = true"
+          <div v-for="(param, i) in props.row.outputParams" :key="i">
+            <q-chip
+              color="purple"
+              text-color="white"
+              dense
+              clickable
+              removable
+              @click="handleSelectedParam('edit', props, i, 'outputParams', 'artifacts'); showEditParamDialog = true; console.log('param = ', param)"
+              @remove="pluginFile.tasks.artifacts[props.rowIndex].outputParams.splice(i, 1)"
+              :label="`${param.name}: ${param.parameterType.name}`"
             />
+            <div v-if="!param.parameterType" class="text-white q-mr-sm q-my-xs bg-red q-pa-xs rounded-borders">
+              Resolve missing type above
+            </div>
           </div>
+          <q-btn
+            round
+            size="xs"
+            icon="add"
+            color="grey-5"
+            text-color="black"
+            class="q-mr-xs q-my-xs"
+            @click="handleSelectedParam('create', props, i, 'outputParams', 'artifacts'); showEditParamDialog = true"
+          />
         </template>
-
         <template #body-cell-actions="props">
           <q-btn 
             icon="sym_o_delete"
-            round size="sm" color="negative" flat
+            round size="md"
+            color="negative"
+            flat
             @click="selectedTaskProps = props; selectedTaskProps.taskType = 'artifacts'; showDeleteDialog = true"
           />
         </template>
@@ -230,14 +239,14 @@
       <q-expansion-item
         :label="`${showParamTypes ? 'Hide' : 'Show'} Plugin Parameter Types`"
         v-model="showParamTypes"
-        header-class="text-bold shadow-2 bg-grey-2"
+        header-class="text-bold shadow-2"
         class="q-mb-md q-mt-lg"
         ref="expansionItem"
         @after-show="scroll"
       >
         <TableComponent
           :rows="pluginParameterTypes"
-          :columns="computedParamTypeColumns"
+          :columns="columns"
           title="Plugin Parameter Types"
           @request="getPluginParameterTypes"
           :hideToggleDraft="true"
@@ -250,13 +259,10 @@
         >
           <template #body-cell-view="props">
             <q-btn
-              flat dense round
-              icon="data_object"
+              label="View"
               color="primary"
               @click.stop="structure = JSON.stringify(props.row.structure, null, 2); displayStructure = true;"
-            >
-              <q-tooltip>View Structure</q-tooltip>
-            </q-btn>
+            />
           </template>
         </TableComponent>
       </q-expansion-item>
@@ -566,92 +572,19 @@
   ]
 
   const basicInfoForm = ref(null)
-// 1. Parameter Types Columns (Fully Refactored)
-const computedParamTypeColumns = computed(() => [
-  { 
-    name: 'name', 
-    label: 'Name', 
-    align: 'left', 
-    field: 'name', 
-    styleType: 'resource-name', // Use system style
-    conceptType: 'parameter-type',
-    textType: 'capitalize' 
-  },
-  { 
-    name: 'description', 
-    label: 'Description', 
-    field: 'description', 
-    align: 'left', 
-    styleType: 'long-text', 
-    maxWidth: '350px' 
-  },
-  { 
-    name: 'view', 
-    label: 'Structure', 
-    align: 'center',
-    headerStyle: 'width: 100px'
-  },
-])
 
-// 2. Function Tasks Columns (Style Match)
-const computedFunctionTaskColumns = computed(() => [
-  { 
-    name: 'name', 
-    label: 'Name', 
-    align: 'left', 
-    field: 'name', 
-    classes: 'vertical-top',
-    style: 'width: 200px'
-  },
-  { 
-    name: 'inputParams', 
-    label: 'Input Parameters', 
-    field: 'inputParams', 
-    align: 'right', 
-    classes: 'vertical-top',
-    style: 'white-space: normal; min-width: 250px' 
-  },
-  { 
-    name: 'outputParams', 
-    label: 'Output Parameters', 
-    field: 'outputParams', 
-    align: 'right', 
-    classes: 'vertical-top',
-    style: 'white-space: normal; min-width: 250px'
-  },
-  { 
-    name: 'actions', 
-    label: 'Actions', 
-    align: 'center', 
-    style: 'width: 50px' 
-  },
-])
+  const functionTaskColumns = [
+    { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: false, classes: 'vertical-top', },
+    { name: 'inputParams', label: 'Input Parameters', field: 'inputParams', align: 'right', sortable: false, classes: 'vertical-top', },
+    { name: 'outputParams', label: 'Output Parameters', field: 'outputParams', align: 'right', sortable: false, classes: 'vertical-top', },
+    { name: 'actions', label: 'Actions', align: 'center', },
+  ]
 
-// 3. Artifact Tasks Columns (Style Match)
-const computedArtifactTaskColumns = computed(() => [
-  { 
-    name: 'name', 
-    label: 'Name', 
-    align: 'left', 
-    field: 'name', 
-    classes: 'vertical-top',
-    style: 'width: 200px'
-  },
-  { 
-    name: 'outputParams', 
-    label: 'Output Parameters', 
-    field: 'outputParams', 
-    align: 'right', 
-    classes: 'vertical-top',
-    style: 'white-space: normal; min-width: 250px'
-  },
-  { 
-    name: 'actions', 
-    label: 'Actions', 
-    align: 'center', 
-    style: 'width: 50px'
-  },
-])
+    const artifactTaskColumns = [
+    { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: false, classes: 'vertical-top', },
+    { name: 'outputParams', label: 'Output Parameters', field: 'outputParams', align: 'right', sortable: false, classes: 'vertical-top', },
+    { name: 'actions', label: 'Actions', align: 'center', },
+  ]
 
   async function getPluginParameterTypes(pagination) {
     pagination.rowsPerPage = 0 // get all

@@ -75,7 +75,8 @@ const computedColumns = computed(() => [
   
   textType: 'capitalize',
   maxWidth: '250px',
-  includeIcon: false
+  includeIcon: false,
+  sortable: true
   },
 
   { 
@@ -86,14 +87,15 @@ const computedColumns = computed(() => [
     styleType: 'long-text',
     maxWidth: '300px',
     maxLength: 100,
-    useQuotes: true
+    useQuotes: true,
+  sortable: true
   },
   { 
     name: 'entrypoints', 
     label: 'Entry Points', 
     field: 'entrypoints', 
     align: 'left',
-    styleType: 'multi-badge',  // <--- NEW STYLE
+    styleType: 'multi-badge',  
     conceptType: 'entrypoint' 
   },
   { 

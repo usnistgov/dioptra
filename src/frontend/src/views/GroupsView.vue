@@ -1,77 +1,161 @@
 <template>
   <PageTitle title="Groups" />
+  
   <TableComponent 
-    :rows="userGroups"
-    :columns="columns"
-    title="Groups"
-    @delete="showDeleteDialog = true"
-    @edit="router.push('/groups/admin')"
-    v-model:selected="selected"
-    @request="getUserGroups"
     ref="tableRef"
+    :rows="userGroups"
+    :columns="computedColumns"
+    title="Groups"
+    v-model:selected="selected"
+    :loading="isLoading"
     :hideCreateBtn="true"
-  >
-    <template #body-cell="props">
-      <q-td :props="props">
-        <q-badge color="blue" :label="props.value" />
-      </q-td>
-    </template>
-  </TableComponent>
+    
+    @request="getUserGroups"
+    @edit="router.push('/groups/admin')"
+    @delete="showDeleteDialog = true"
+  />
+
+  <DeleteDialog 
+    v-model="showDeleteDialog"
+    @submit="deleteGroup"
+    type="Group"
+    :name="selected[0]?.name || ''"
+  />
 </template>
 
 <script setup>
-  import * as api from '@/services/dataApi'
-  import { ref, computed } from 'vue'
-  import * as notify from '../notify';
-  import TableComponent from '@/components/TableComponent.vue'
-  import { useLoginStore } from '@/stores/LoginStore'
-  import { useRouter } from 'vue-router'
-  import PageTitle from '@/components/PageTitle.vue'
+import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { useLoginStore } from '@/stores/LoginStore'
+import * as api from '@/services/dataApi'
+import * as notify from '../notify'
 
-  const router = useRouter()
+// Components
+import TableComponent from '@/components/table/TableComponent.vue'
+import PageTitle from '@/components/PageTitle.vue'
+import DeleteDialog from '@/dialogs/DeleteDialog.vue'
 
-  const store = useLoginStore()
+const router = useRouter()
+const store = useLoginStore()
+const tableRef = ref(null)
 
-  const tableRef = ref(null)
+// State
+const userGroups = ref([])
+const selected = ref([])
+const isLoading = ref(false)
+const showDeleteDialog = ref(false)
 
-  const columns = [
-    { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true },
-    { name: 'read', label: 'Read', align: 'left', field: 'read', sortable: true },
-    { name: 'write', label: 'Write', align: 'left', field: 'write', sortable: true },
-    { name: 'shareRead', label: 'Share Read', align: 'left', field: 'shareRead', sortable: true, style: 'width: 200px' },
-    { name: 'shareWrite', label: 'Share Write', align: 'left', field: 'shareWrite', sortable: true, style: 'width: 200px' },
-    { name: 'admin', label: 'Admin', align: 'left', field: 'admin', sortable: true },
-    { name: 'owner', label: 'Owner', align: 'left', field: 'owner', sortable: true },
-  ]
+// Columns
+const computedColumns = computed(() => [
+  { 
+    name: 'name', 
+    label: 'Name', 
+    field: 'name', 
+    align: 'left', 
+    styleType: 'resource-name', // Use the standard bold/blue style
+    conceptType: 'group',       // Triggers the group icon
+    includeIcon: true
+  },
+  { 
+    name: 'read', 
+    label: 'Read', 
+    field: 'read', 
+    align: 'center', 
+    // TableComponent automatically renders booleans as ✅/❌
+  },
+  { 
+    name: 'write', 
+    label: 'Write', 
+    field: 'write', 
+    align: 'center',
+  },
+  { 
+    name: 'shareRead', 
+    label: 'Share Read', 
+    field: 'shareRead', 
+    align: 'center', 
+    style: 'width: 150px' 
+  },
+  { 
+    name: 'shareWrite', 
+    label: 'Share Write', 
+    field: 'shareWrite', 
+    align: 'center', 
+    style: 'width: 150px' 
+  },
+  { 
+    name: 'admin', 
+    label: 'Admin', 
+    field: 'admin', 
+    align: 'center',
+  },
+  { 
+    name: 'owner', 
+    label: 'Owner', 
+    field: 'owner', 
+    align: 'center',
+  },
+])
 
-  const userGroupsIds = computed(() => {
-    if(store.loggedInUser) {
-      return store.loggedInUser.groups.map((group) => group.id)
-    }
-    return []
-  })
+// Helpers
+const userGroupsIds = computed(() => {
+  if(store.loggedInUser && store.loggedInUser.groups) {
+    return store.loggedInUser.groups.map((group) => group.id)
+  }
+  return []
+})
 
-  const userGroups = ref([])
-
-  async function getUserGroups(pagination) {
-    if(userGroupsIds.value.length === 0) {
-      notify.error('Please login to view user groups.')
-      return
-    }
-    const res = await api.getData('groups', pagination)
-      const groups = res.data.data
-      groups.forEach((group) => {
-        group.members.forEach((member) => {
-          if(member.user.id === store.loggedInUser.id) {
-            userGroups.value.push({
-              name: member.group.name,
-              ...member.permissions
-            })
-          }
-        })
-      })
+// Actions
+async function getUserGroups(pagination) {
+  if(userGroupsIds.value.length === 0) {
+    // Optional: Only show notification if user actually expects groups
+    // notify.error('Please login to view user groups.') 
+    return
   }
 
-  const selected = ref([])
+  isLoading.value = true
+  // Reset array to avoid duplicates on refresh
+  userGroups.value = [] 
 
+  try {
+    const res = await api.getData('groups', pagination)
+    const groups = res.data.data
+    
+    // Filter logic from original code
+    groups.forEach((group) => {
+      group.members.forEach((member) => {
+        if(member.user.id === store.loggedInUser.id) {
+          userGroups.value.push({
+            id: group.id, // Ensure we pass ID for routing/selection
+            name: member.group.name,
+            ...member.permissions
+          })
+        }
+      })
+    })
+    
+    // Update total rows based on filtered result
+    if(tableRef.value) {
+      tableRef.value.updateTotalRows(userGroups.value.length)
+    }
+  } catch(err) {
+    notify.error(err.response?.data?.message || 'Failed to fetch groups')
+  } finally {
+    isLoading.value = false
+  }
+}
+
+async function deleteGroup() {
+  try {
+    // Assuming you have an ID from the mapping above
+    const id = selected.value[0].id 
+    await api.deleteItem('groups', id)
+    notify.success(`Successfully deleted '${selected.value[0].name}'`)
+    showDeleteDialog.value = false
+    selected.value = []
+    tableRef.value.refreshTable()
+  } catch(err) {
+    notify.error(err.response?.data?.message || 'Delete failed')
+  }
+}
 </script>

@@ -11,14 +11,27 @@
     :rows-per-page-options="props.showAll ? [0] : [5,10,15,20,25,50,0]"
     flat bordered dense
     class="q-mt-lg"
+    
+    :tabindex="props.disableSelect ? '' : '0'"
+    @keydown="keydown"
   >
     <template v-slot:header="props">
       <q-tr :props="props">
-        <q-th v-for="col in props.cols" :key="col.name" :props="props" >
-          <CellHeader :col="col" />
+        <q-th 
+          v-for="col in props.cols" 
+          :key="col.name" 
+          :class="col.__thClass"
+          @click="col.sortable ? props.sort(col) : null"
+        >
+          <CellHeader 
+            :col="col" 
+            :sorted="pagination.sortBy === col.name"
+            :descending="pagination.descending"
+          />
         </q-th>
       </q-tr>
-    </template> 
+    </template>
+      
 
     <template v-slot:body="props">
       <q-tr 
@@ -72,7 +85,8 @@
               :max-width="col.maxWidth"
               :use-quotes="col.useQuotes"
               :text-type="col.textType"
-            />
+              :text-color="col.textColor"  
+              />
 
             <ParameterList
               v-else-if="col.styleType === 'parameter-list'"
@@ -87,7 +101,11 @@
               @add="(row) => emit('editTags', row)"
             />
 
-            <div v-else-if="col.styleType === 'date'" class="text-grey-8" style="font-size: 13px">
+            <div 
+              v-else-if="col.styleType === 'date'" 
+              :class="col.textColor || 'text-grey-8'" 
+              style="font-size: 13px"
+            >
               {{ formatDate(col.value) }}
             </div>
 
@@ -226,7 +244,35 @@ const pagination = ref({
   sortBy: '',
   descending: false,
 })
+function keydown(event) {
+  // Exit if no rows or selection disabled
+  if(!props.rows || props.rows.length === 0) return
+  if(props.disableSelect) return
 
+  // Get the current index of the selected row
+  const currentIndex = props.rows.findIndex(row => row[props.rowKey] === selected.value[0]?.[props.rowKey])
+  
+  if(event.key === 'ArrowUp') {
+    event.preventDefault() // Prevent scrolling the page
+    // Navigate to the previous row
+    if(currentIndex > 0) {
+      const prevRow = props.rows[currentIndex - 1]
+      selected.value = [prevRow]
+    }
+  } else if(event.key === 'ArrowDown') {
+    event.preventDefault() // Prevent scrolling the page
+    // Navigate to the next row
+    if (currentIndex < props.rows.length - 1) {
+      const nextRow = props.rows[currentIndex + 1]
+      selected.value = [nextRow]
+    }
+  } else if(event.key === 'Enter') {
+    // If a row is selected, trigger the edit/open event
+    if(selected.value.length > 0) {
+      emit('edit', selected.value[0])
+    }
+  }
+}
 const tableRef = ref()
 onMounted(() => {
   tableRef.value.requestServerInteraction()
@@ -283,7 +329,7 @@ function updateTotalRows(totalRows) {
 
 // --- HELPERS ---
 function getLabel(val) {
-  if (!val) return '-'
+  if (val === null || val === undefined) return '-'
   return typeof val === 'object' ? val.name : val
 }
 
