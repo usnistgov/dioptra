@@ -19,6 +19,12 @@ export const CONCEPT_STYLES = {
     color: 'teal-7', 
     basePath: 'plugins' 
   },
+  file: {
+    icon: 'file_copy',
+    color: 'green-9',
+    basePath: 'plugins'
+  },
+
   job: { 
     icon: 'outbound', 
     color: 'indigo-6', 
@@ -38,6 +44,16 @@ export const CONCEPT_STYLES = {
     icon: 'functions', //brick ? function?
     color: 'black',
     basePath: 'plugin',
+  },
+  tag:{
+    icon: 'tag', //brick ? function?
+    color: 'grey-9',
+    basePath: 'tags',
+  },
+  parameterType:{
+    icon: 'shape_line',
+    color: 'red-11',
+    basePath: 'pluginParams'
   },
   default: { 
     icon: 'help_outline', 

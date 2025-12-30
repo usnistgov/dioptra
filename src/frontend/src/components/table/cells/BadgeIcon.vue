@@ -10,7 +10,7 @@
     class="text-weight-bold q-py-md q-px-sm"
   >
     <span 
-      class="font-mono ellipsis" 
+      class="font-mono ellipsis q-ml-xs" 
       :class="{ 'text-uppercase': uppercase }"
       style="font-size: 12px; font-weight:500; max-width:200px"
     > 

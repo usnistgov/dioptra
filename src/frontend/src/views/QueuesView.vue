@@ -1,6 +1,8 @@
 <template>
-  <PageTitle title="Queues" />
+  <PageTitle title="Groups" />
+  
   <TableComponent 
+<<<<<<< HEAD
     :rows="queues"
     :columns="showDrafts ? draftColumns : columns"
     title="Queues"
@@ -9,38 +11,31 @@
     v-model:selected="selected"
     v-model:showDrafts="showDrafts"
     @request="getQueues"
+=======
+>>>>>>> ff3f9670 (feat: update table styling, work in progress)
     ref="tableRef"
-    :showToggleDraft="true"
-    @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
-    @create="router.push('/queues/new')"
+    :rows="userGroups"
+    :columns="computedColumns"
+    title="Groups"
+    v-model:selected="selected"
     :loading="isLoading"
-  >
-    <template #body-cell-hasDraft="props">
-      <q-btn
-        round
-        size="sm"
-        :icon="props.row.hasDraft ? 'edit' : 'add'"
-        :color="props.row.hasDraft ? 'primary' : 'grey-5'"
-        @click.stop="router.push(`/queues/${props.row.id}/resourceDraft/${props.row.hasDraft ? '' : 'new'}`)"
-      />
-    </template>
-  </TableComponent>
+    :hideCreateBtn="true"
+    
+    @request="getUserGroups"
+    @edit="router.push('/groups/admin')"
+    @delete="showDeleteDialog = true"
+  />
 
   <DeleteDialog 
     v-model="showDeleteDialog"
-    @submit="deleteQueue"
-    type="Queue"
-    :name="selected.length ? selected[0].name : ''"
-  />
-  <AssignTagsDialog 
-    v-model="showTagsDialog"
-    :editObj="editObjTags"
-    type="queues"
-    @refreshTable="tableRef.refreshTable()"
+    @submit="deleteGroup"
+    type="Group"
+    :name="selected[0]?.name || ''"
   />
 </template>
 
 <script setup>
+<<<<<<< HEAD
   import * as api from '@/services/dataApi'
   import { ref } from 'vue'
   import * as notify from '../notify'
@@ -51,73 +46,145 @@
   import { useRouter } from 'vue-router'
 
   const router = useRouter()
+=======
+import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { useLoginStore } from '@/stores/LoginStore'
+import * as api from '@/services/dataApi'
+import * as notify from '../notify'
 
-  const showDeleteDialog = ref(false)
-  const showTagsDialog = ref(false)
+// Components
+import TableComponent from '@/components/table/TableComponent.vue'
+import PageTitle from '@/components/PageTitle.vue'
+import DeleteDialog from '@/dialogs/DeleteDialog.vue'
+>>>>>>> ff3f9670 (feat: update table styling, work in progress)
 
-  const queues = ref([])
+const router = useRouter()
+const store = useLoginStore()
+const tableRef = ref(null)
 
-  const isLoading = ref(false)
+// State
+const userGroups = ref([])
+const selected = ref([])
+const isLoading = ref(false)
+const showDeleteDialog = ref(false)
 
-  const tableRef = ref(null)
+// Columns
+const computedColumns = computed(() => [
+  { 
+    name: 'id', 
+    label: 'Group ID', 
+    field: 'id', 
+    align: 'left', 
+    styleType: 'icon-badge',
+    conceptType: 'group',       // Triggers the group icon
+    formatLabel: '#{label}',
+    includeIcon: true,
+    sortable: false
+  },
+  { 
+    name: 'name', 
+    label: 'Name', 
+    field: 'name', 
+    align: 'left', 
+    styleType: 'resource-name', // Use the standard bold/blue style
+    conceptType: 'group',       // Triggers the group icon
+    includeIcon: true,
+    sortable: true
+  },
+  { 
+    name: 'read', 
+    label: 'Read', 
+    field: 'read', 
+    align: 'center', 
+    sortable: true
+    // TableComponent automatically renders booleans as ✅/❌
+  },
+  { 
+    name: 'write', 
+    label: 'Write', 
+    field: 'write', 
+    align: 'center',
+  },
+  { 
+    name: 'shareRead', 
+    label: 'Share Read', 
+    field: 'shareRead', 
+    align: 'center', 
+    style: 'width: 150px' ,
+    sortable: true
+  },
+  { 
+    name: 'shareWrite', 
+    label: 'Share Write', 
+    field: 'shareWrite', 
+    align: 'center', 
+    style: 'width: 150px' ,
+    sortable: true
+  },
+  { 
+    name: 'admin', 
+    label: 'Admin', 
+    field: 'admin', 
+    align: 'center',
+  },
+  { 
+    name: 'owner', 
+    label: 'Owner', 
+    field: 'owner', 
+    align: 'center',
+  },
+])
 
-  const columns = [
-    { name: 'id', label: 'ID', align: 'left', field: 'id', sortable: false },
-    { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true },
-    { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true },
-    { name: 'hasDraft', label: 'hasDraft', align: 'left', field: 'hasDraft', sortable: false },
-    { name: 'createdOn', label: 'Created On', align: 'left', field: 'createdOn', sortable: true },
-    { name: 'lastModifiedOn', label: 'Last Modified', align: 'left', field: 'lastModifiedOn', sortable: true },
-    { name: 'tags', label: 'Tags', align: 'left', field: 'tags', sortable: false },
-  ]
+// Helpers
+const userGroupsIds = computed(() => {
+  if(store.loggedInUser && store.loggedInUser.groups) {
+    return store.loggedInUser.groups.map((group) => group.id)
+  }
+  return []
+})
 
-  const draftColumns = [
-    { name: 'id', label: 'ID', align: 'left', field: 'id', sortable: false },
-    { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true },
-    { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true },
-    { name: 'createdOn', label: 'Created On', align: 'left', field: 'createdOn', sortable: true },
-    { name: 'lastModifiedOn', label: 'Last Modified', align: 'left', field: 'lastModifiedOn', sortable: true },
-  ]
-
-  const selected = ref([])
-  const showDrafts = ref(false)
-
-  async function getQueues(pagination, showDrafts) {
-    isLoading.value = true
-    const minLoadTimePromise = new Promise(resolve => setTimeout(resolve, 300)); 
-
-    try {
-      const [res] = await Promise.all([
-        api.getData('queues', pagination, showDrafts),
-        minLoadTimePromise
-      ]);
-        
-      queues.value = res.data.data;
-      tableRef.value.updateTotalRows(res.data.totalNumResults);
-    } catch(err) {
-      console.log('err = ', err);
-      notify.error(err.response.data.message);
-    } finally {
-      isLoading.value = false;
-    }
+// Actions
+async function getUserGroups(pagination) {
+  if(userGroupsIds.value.length === 0) {
+    // Optional: Only show notification if user actually expects groups
+    // notify.error('Please login to view user groups.') 
+    return
   }
 
-  async function deleteQueue() {
-    try {
-      if(Object.hasOwn(selected.value[0], 'hasDraft')) {
-        await api.deleteItem('queues', selected.value[0].id)
-      } else {
-        await api.deleteDraft('queues', selected.value[0].id)
-      }
-      notify.success(`Successfully deleted Queue '${selected.value[0].name}'`)
-      showDeleteDialog.value = false
-      selected.value = []
-      tableRef.value.refreshTable()
-    } catch(err) {
-      notify.error(err.response.data.message);
-    }
-  }
+  isLoading.value = true
+  // Reset array to avoid duplicates on refresh
+  userGroups.value = [] 
 
+  try {
+    const res = await api.getData('groups', pagination)
+    const groups = res.data.data
+    
+    // Filter logic from original code
+    groups.forEach((group) => {
+      group.members.forEach((member) => {
+        if(member.user.id === store.loggedInUser.id) {
+          userGroups.value.push({
+            id: group.id, // Ensure we pass ID for routing/selection
+            name: member.group.name,
+            ...member.permissions
+          })
+        }
+      })
+    })
+    
+    // Update total rows based on filtered result
+    if(tableRef.value) {
+      tableRef.value.updateTotalRows(userGroups.value.length)
+    }
+  } catch(err) {
+    notify.error(err.response?.data?.message || 'Failed to fetch groups')
+  } finally {
+    isLoading.value = false
+  }
+}
+
+<<<<<<< HEAD
   const editObjTags = ref({})
 
   function openQueue(openTab) {
@@ -127,6 +194,19 @@
 
     if(openTab) window.open(url, '_blank', 'noopener,noreferrer')
     else router.push(url)
+=======
+async function deleteGroup() {
+  try {
+    // Assuming you have an ID from the mapping above
+    const id = selected.value[0].id 
+    await api.deleteItem('groups', id)
+    notify.success(`Successfully deleted '${selected.value[0].name}'`)
+    showDeleteDialog.value = false
+    selected.value = []
+    tableRef.value.refreshTable()
+  } catch(err) {
+    notify.error(err.response?.data?.message || 'Delete failed')
+>>>>>>> ff3f9670 (feat: update table styling, work in progress)
   }
-
+}
 </script>

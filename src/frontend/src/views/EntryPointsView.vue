@@ -23,14 +23,15 @@
       <q-btn
         v-if="props.row.taskGraph && props.row.taskGraph.length"
         outline dense no-caps color="primary" 
-        label="View YAML"
+        label="YAML"
         icon="code"
-        size="sm"
+        size="xs"
         class="q-px-xs q-py-sm"
         style="font-size:12px; font-weight:bold"
         @click.stop="displayYaml = props.row.taskGraph; showTaskGraphDialog = true;"
       />
       <span v-else class="text-grey-5 text-caption">Empty</span>
+      <q-tooltip>View '{{ props.row.name || "Entrypoint" }}' Task Graph YAML</q-tooltip>
     </template>
 
 <template #body-cell-plugins="props">
@@ -59,10 +60,14 @@
               <span class="font-mono ellipsis" style="font-size: 11px; font-weight:500; max-width:180px">
                 {{ plugin.name }}
               </span>
-              <q-badge v-if="!plugin.latestSnapshot" floating rounded color="red" style="top: 2px; right: 2px; border: 1px solid white;" />
-              <q-tooltip>ID: {{ plugin.id }}</q-tooltip>
             </q-chip>
+            <div class='row items-center no-wrap'>
+              <q-badge v-if="!plugin.latestSnapshot" rounded color="warning" class="items-center" style="top: 2px; right: 2px; border: 1px solid white;">
+                <q-icon name="warning" color="white" />
+              </q-badge>
+              <q-tooltip>Warning: Plugin "{{ plugin.name}}" ({{ plugin.id }}) is out of date</q-tooltip>
             <q-btn v-if="!plugin.latestSnapshot" flat round size="xs" color="red" icon="sync" class="q-ml-xs" @click.stop="syncPlugin(props.row.id, plugin.id, plugin.name, 'plugins')" />
+            </div>
           </div>
         </template>
 
@@ -128,11 +133,16 @@
               <span class="font-mono ellipsis" style="font-size: 11px; font-weight:500; max-width:180px">
                 {{ plugin.name }}
               </span>
-              <q-badge v-if="!plugin.latestSnapshot" floating rounded color="red" style="top: 2px; right: 2px; border: 1px solid white;" />
               <q-tooltip>ID: {{ plugin.id }}</q-tooltip>
             </q-chip>
+            <div class='row items-center no-wrap'>
+              <q-badge v-if="!plugin.latestSnapshot" rounded color="warning" class="items-center" style="top: 2px; right: 2px; border: 1px solid white;">
+                <q-icon name="warning" color="white" />
+              </q-badge>
+              <q-tooltip>Warning: Plugin "{{ plugin.name}}" ({{ plugin.id }}) is out of date</q-tooltip>
             <q-btn v-if="!plugin.latestSnapshot" flat round size="xs" color="red" icon="sync" class="q-ml-xs" @click.stop="syncPlugin(props.row.id, plugin.id, plugin.name, 'artifactPlugins')" />
-          </div>
+            </div>
+             </div>
         </template>
 
         <div v-if="props.row.artifactPlugins.length > 3">
@@ -262,7 +272,7 @@ const displayYaml = ref('')
 const computedColumns = computed(() => [
   { 
     name: 'id', 
-    label: 'ID', 
+    label: 'Entrypoint ID', 
     field: 'id', 
     align: 'left', 
     styleType: 'icon-id', 

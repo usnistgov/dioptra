@@ -1,149 +1,191 @@
 <template>
   <PageTitle title="Groups Admin" />
+  
   <div :class="`row q-mt-lg ${isMobile ? '' : 'q-mx-xl'} q-mb-lg `">
     <div :class="`${isMobile ? 'col-12' : 'col-5'} q-mr-xl`">
+      
       <fieldset class="q-pa-lg">
         <legend>Basic Info</legend>
-        <div class="row items-center">
-          <div class="col-9">
-            <q-input 
-              outlined 
-              dense 
-              v-model.trim="name"
-              :rules="[requiredRule]"
-              class="q-mb-sm"
-              aria-required="true"
-            >
-              <template v-slot:before>
-                <label :class="`field-label`">Group Name:</label>
-              </template>
-            </q-input>
-          </div>
-          <div class="col">
-            <q-btn 
-              label="Save Name"
-              color="primary"
-              class="float-right q-mb-lg"
-            />
-          </div>
+        <div class="row items-center q-gutter-x-md">
+          <q-input 
+            outlined dense 
+            v-model.trim="name" 
+            :rules="[requiredRule]" 
+            class="col-grow"
+            bg-color="white"
+          >
+            <template v-slot:before>
+              <label class="field-label text-weight-medium">Group Name:</label>
+            </template>
+          </q-input>
+          <q-btn label="Save" color="primary" class="q-mb-md" />
         </div>
       </fieldset>
 
-      <fieldset class="q-mt-xl q-pa-lg">
-        <legend>Owner Only Options</legend>
-        <q-list bordered>
+      <fieldset class="q-mt-lg q-pa-lg">
+        <legend class="text-negative">Owner Options</legend>
+        <q-list separator>
           <q-item>
             <q-item-section>
               <q-item-label class="text-bold">Delete Group</q-item-label>
-              <q-item-label caption >Once you delete a group it CAN NOT be undone.</q-item-label>
+              <q-item-label caption class="text-red">
+                Action is permanent and cannot be undone.
+              </q-item-label>
             </q-item-section>
-
             <q-item-section side>
-              <q-btn 
-                label="Delete Group"
-                color="negative"
-              />
+              <q-btn label="Delete" color="negative" outline icon="delete_forever" />
             </q-item-section>
           </q-item>
         </q-list>
       </fieldset>
 
-      <fieldset class="q-mt-xl q-pa-lg">
+      <fieldset class="q-mt-lg q-pa-lg">
         <legend>Add User</legend>
-        <div class="row items-center">
-          <div class="col-9">
-            <q-input 
-              outlined 
-              dense 
-              v-model.trim="name"
-              :rules="[requiredRule]"
-              class="q-mb-sm "
-              aria-required="true"
-            >
-              <template v-slot:before>
-                <label :class="`field-label`">Search User:</label>
-              </template>
-              <template v-slot:append>
-                <q-icon name="search" />
-              </template>
-            </q-input>
-          </div>
-          <div class="col">
-            <q-btn 
-              label="Search"
-              color="primary"
-              class="float-right q-mb-lg"
-            />
-          </div>
+        <div class="row items-center q-gutter-x-md q-mb-md">
+          <q-input 
+            outlined dense 
+            v-model.trim="searchQuery" 
+            placeholder="Search by name..."
+            class="col-grow"
+            bg-color="white"
+            @keyup.enter="performSearch"
+          >
+            <template v-slot:append>
+              <q-icon name="search" class="cursor-pointer" @click="performSearch" />
+            </template>
+          </q-input>
+          <q-btn label="Search" color="primary" @click="performSearch" />
         </div>
-        <q-card flat bordered class="my-card">
-          <q-card-section>
-            <div class="">Search Results</div>
-          </q-card-section>
 
-          <q-card-section class="q-pt-none overflow-auto">
-            <q-list dense style="max-height: 10vh;">
-              <q-item v-for="(user, i) in searchResults" :key="i" style="border: 1px solid lightgray;">
+        <q-card flat bordered v-if="searchResults.length > 0">
+          <q-card-section class="bg-grey-2 q-py-xs text-caption text-bold">
+            Results
+          </q-card-section>
+          <q-scroll-area style="height: 150px;">
+            <q-list separator dense>
+              <q-item v-for="(user, i) in searchResults" :key="i" clickable v-ripple>
+                <q-item-section avatar>
+                  <q-avatar size="sm" color="primary" text-color="white">{{ user.charAt(0) }}</q-avatar>
+                </q-item-section>
                 <q-item-section>
-                  <q-item-label class="text-bold">{{ user }}</q-item-label>
+                  <q-item-label class="text-weight-medium">{{ user }}</q-item-label>
                 </q-item-section>
                 <q-item-section side>
-                  <q-btn
-                    round
-                    icon="add"
-                    color="secondary"
-                    size="xs"
-                  />
+                  <q-btn round flat icon="person_add" color="secondary" size="sm">
+                    <q-tooltip>Add to Group</q-tooltip>
+                  </q-btn>
                 </q-item-section>
               </q-item>
             </q-list>
-          </q-card-section>
-
+          </q-scroll-area>
         </q-card>
-
       </fieldset>
-
     </div>
-    <fieldset :class="`${isMobile ? 'col-12 q-mt-lg' : 'col'} overflow-auto`" >
+
+    <fieldset :class="`${isMobile ? 'col-12 q-mt-lg' : 'col'}`" style="display: flex; flex-direction: column;">
       <legend>Group Members</legend>
-      <BasicTable
-        :columns="columns"
+      
+      <TableComponent
         :rows="store.users"
-        :hideEditRow="true"
-        @edit="(param, i) => {selectedParam = param; selectedParamIndex = i; showEditParamDialog = true}"
-        @delete="(param) => {selectedParam = param; showDeleteDialog = true}"
-        style="max-height: 500px;"
-        class="q-mt-xl"
-      />
+        :columns="memberColumns"
+        title="Members"
+        :hideToggleDraft="true"
+        :hideCreateBtn="true"
+        :hideSearch="true"
+        :disableSelect="true"
+        :hideOpenBtn="true"
+        :hideDeleteBtn="true"
+        class="full-height"
+      >
+        <template #body-cell-actions="props">
+          <div class="row justify-center q-gutter-x-sm">
+            <q-btn 
+              icon="edit" round flat size="sm" color="primary" 
+              @click="selectedMember = props.row; showEditParamDialog = true"
+            >
+              <q-tooltip>Edit Permissions</q-tooltip>
+            </q-btn>
+            <q-btn 
+              icon="person_remove" round flat size="sm" color="negative" 
+              @click="selectedMember = props.row; showDeleteDialog = true"
+            >
+              <q-tooltip>Remove User</q-tooltip>
+            </q-btn>
+          </div>
+        </template>
+      </TableComponent>
     </fieldset>
   </div>
 </template>
 
 <script setup>
-  import { ref, inject } from 'vue'
-  import BasicTable from '@/components/BasicTable.vue'
-  import { useLoginStore } from '@/stores/LoginStore'
-  import PageTitle from '@/components/PageTitle.vue'
+import { ref, inject, computed } from 'vue'
+import { useLoginStore } from '@/stores/LoginStore'
+import PageTitle from '@/components/PageTitle.vue'
+import TableComponent from '@/components/table/TableComponent.vue'
 
-  const isMobile = inject('isMobile')
+const isMobile = inject('isMobile')
+const store = useLoginStore()
 
-  const store = useLoginStore()
+const name = ref('')
+const searchQuery = ref('')
+const searchResults = ref([]) // Start empty for cleaner UI
 
-  const name = ref('')
+// Validation
+const requiredRule = (val) => (val && val.length > 0) || "This field is required"
 
-  const requiredRule = (val) => (val && val.length > 0) || "This field is required"
+// Table Configuration
+const memberColumns = computed(() => [
+  { 
+    name: 'name', 
+    label: 'User Name', 
+    align: 'left', 
+    field: 'name', 
+    styleType: 'resource-name', // Use standard name style
+    includeIcon: false,         // Or true if you want a user icon
+    conceptType: 'user'         // You can define a 'user' concept in tableStyles
+  },
+  { 
+    name: 'read', label: 'Read', field: 'read', align: 'center' 
+    // Auto-boolean rendering (✅/❌)
+  },
+  { 
+    name: 'write', label: 'Write', field: 'write', align: 'center' 
+  },
+  { 
+    name: 'shareRead', label: 'Share Read', field: 'shareRead', align: 'center', style: 'width: 100px' 
+  },
+  { 
+    name: 'shareWrite', label: 'Share Write', field: 'shareWrite', align: 'center', style: 'width: 100px' 
+  },
+  { 
+    name: 'admin', label: 'Admin', field: 'admin', align: 'center' 
+  },
+  { 
+    name: 'owner', label: 'Owner', field: 'owner', align: 'center' 
+  },
+  { 
+    name: 'actions', label: 'Actions', align: 'center', style: 'width: 100px'
+  },
+])
 
-  const columns = [
-    { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true },
-    { name: 'read', label: 'Read', align: 'left', field: 'read', sortable: true },
-    { name: 'write', label: 'Write', align: 'left', field: 'write', sortable: true },
-    { name: 'shareRead', label: 'Share Read', align: 'left', field: 'shareRead', sortable: true, style: 'width: 100px' },
-    { name: 'shareWrite', label: 'Share Write', align: 'left', field: 'shareWrite', sortable: true, style: 'width: 100px' },
-    { name: 'admin', label: 'Admin', align: 'left', field: 'admin', sortable: true },
-    { name: 'owner', label: 'Owner', align: 'left', field: 'owner', sortable: true },
-    { name: 'actions', label: 'Actions', align: 'center',  },
-  ]
+// Actions
+function performSearch() {
+  // Mock search logic - replace with API call
+  if (!searchQuery.value) return
+  searchResults.value = ['Henry', 'Bob', 'Joe', 'Larry', 'John', 'Dan'].filter(
+    u => u.toLowerCase().includes(searchQuery.value.toLowerCase())
+  )
+}
 
-  const searchResults = ref(['Henry', 'Bob', 'Joe', 'Larry', 'John', 'Dan'])
-
+const selectedMember = ref(null)
+const showDeleteDialog = ref(false)
+const showEditParamDialog = ref(false)
 </script>
+
+<style scoped>
+.field-label {
+  font-size: 14px;
+  color: #546e7a; /* Blue Grey 7 */
+}
+</style>

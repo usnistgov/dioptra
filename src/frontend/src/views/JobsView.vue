@@ -65,7 +65,8 @@ const computedColumns = computed(() => {
     includeIcon: true,
     size:'md',
     uppercase:false,
-    formatLabel: 'Job #{label}'
+    formatLabel: 'Job #{label}',
+  sortable: true
   },
     { 
       name: 'description', 
@@ -77,7 +78,8 @@ const computedColumns = computed(() => {
       maxWidth: '300px',
       align: 'left',
       useQuotes: true, 
-      textType: 'capitalize'
+      textType: 'capitalize',
+  sortable: true
     },
     { 
       name: 'entrypoint', 
@@ -85,7 +87,8 @@ const computedColumns = computed(() => {
       field: 'entrypoint', 
       styleType: 'icon-badge', 
       conceptType: 'entrypoint' , 
-      align: 'left'
+      align: 'left',
+  sortable: true
     },
     { 
       name: 'queue', 
@@ -93,10 +96,11 @@ const computedColumns = computed(() => {
       field: 'queue', 
       styleType: 'icon-badge',
       conceptType: 'queue', 
-      align: 'left'
+      align: 'left',
+  sortable: true
     },
 
-    { name: 'status', label: 'Status', field: 'status' ,align: 'left'}, 
+    { name: 'status', label: 'Status', field: 'status' ,align: 'left', sortable: true}, 
     { 
       name: 'tags', 
       label: 'Tags', 
@@ -114,7 +118,8 @@ const computedColumns = computed(() => {
       field: 'experiment', 
       styleType: 'icon-badge',
       conceptType: 'experiment', 
-      align: 'left'
+      align: 'left',
+  sortable: true
     })
   }
   return baseCols

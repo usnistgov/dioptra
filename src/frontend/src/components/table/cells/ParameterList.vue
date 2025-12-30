@@ -2,11 +2,11 @@
   <div class="column q-gutter-y-xs">
     
     <template v-for="(param, i) in items.slice(0, 3)" :key="i">
-      <div class="row items-center no-wrap q-gutter-x-sm">
+      <div class="row no-wrap q-gutter-x-sm">
         
         <div 
           class="rounded-borders shrink-0" 
-          :style="{ width: '6px', height: '6px', backgroundColor: styles.hexColor }"
+          :style="{ marginTop: '6px', width: '6px', height: '6px', backgroundColor: styles.textColor }"
         ></div>
 
         <div class="column items-baseline no-wrap q-gutter-x-sm">
@@ -15,7 +15,7 @@
             class="text-weight-bold" 
             :style="{ 
               color: styles.textColor,
-              borderBottom: `1.5px solid ${styles.hexColor}`, 
+              borderBottom: `1.5px solid ${styles.textColor}`, 
               lineHeight: '1.3' 
             }"
           >
@@ -39,12 +39,17 @@
       </div>
     </template>
 
-    <div v-if="items.length > 3">
+    <div v-if="items.length > 3" class="row no-wrap q-gutter-x-md">
+        <div 
+          class="rounded-borders shrink-0" 
+          :style="{ marginTop: '6px', width: '6px', height: '6px', opacity: 1}"
+        ></div>
       <q-chip
         dense clickable
         color="grey-2" text-color="grey-8"
-        class="text-weight-bold q-ma-none"
+        class="text-weight-bold"
         style="font-size: 10px; height: 20px;"
+        @click.stop
       >
         +{{ items.length - 3 }} more
         

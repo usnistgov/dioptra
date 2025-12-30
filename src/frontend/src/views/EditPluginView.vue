@@ -1,6 +1,6 @@
 <template>
   <div class="row items-center justify-between">
-    <PageTitle :title="ORIGINAL_PLUGIN?.name"/>
+    <PageTitle :title="ORIGINAL_PLUGIN?.name" />
     <q-btn 
       color="negative"
       icon="sym_o_delete" 
@@ -9,14 +9,13 @@
     />
   </div>
 
-    <q-expansion-item
+  <q-expansion-item
     v-model="showMetadata"
     class="shadow-1 overflow-hidden q-mt-lg"
-    style="border-radius: 10px; width: 40%"
+    style="border-radius: 10px; width: 45%"
     header-style="font-size: 22px"
     header-class="bg-primary text-white"
     expand-icon-class="text-white"
-    :label="`${showMetadata ? 'Hide' : 'Edit'} Plugin Metadata`"
   >
     <template #header>
       <q-item-section avatar>
@@ -26,104 +25,82 @@
         <q-item-label>
           {{ showMetadata ? 'Hide' : 'Show' }} "{{ ORIGINAL_PLUGIN.name }}" Metadata
         </q-item-label>
-        <q-item-label caption class="text-white" v-if="ORIGINAL_PLUGIN.description" >
+        <q-item-label caption class="text-white" v-if="ORIGINAL_PLUGIN.description">
           {{ truncateString(ORIGINAL_PLUGIN.description, 100) }}
         </q-item-label>
       </q-item-section>
     </template>
+
     <q-card class="q-pa-md">
       <KeyValueTable :rows="pluginRows" :secondColumnFullWidth="true">
-        <template #name="{ }">
-          {{ name }}
-          <q-btn icon="edit" round size="sm" color="primary" flat />
-          <q-popup-edit
-            v-model="name" 
-            auto-save 
-            v-slot="scope"
-            :validate="requiredRule"
-          >
-            <q-input 
-              v-model.trim="scope.value"
-              dense
-              autofocus
-              counter
-              @keyup.enter="scope.set"
-              :error="invalidName"
-              :error-message="nameError"
-              @update:model-value="checkName"
-            />
-          </q-popup-edit>
-        </template>
-        <template #description="{ }">
-          <div class="row items-center no-wrap">
-            <div style="white-space: pre-line; overflow-wrap: break-word; ">
-              {{ description }}
-            </div>
-            <q-btn icon="edit" round size="sm" color="primary" flat class="q-ml-xs" />
+        <template #name>
+          <div class="row items-center cursor-pointer">
+            {{ name }}
+            <q-icon name="edit" size="xs" color="primary" class="q-ml-sm" />
+            <q-popup-edit v-model="name" auto-save v-slot="scope" :validate="requiredRule">
+              <q-input 
+                v-model.trim="scope.value" 
+                dense autofocus counter 
+                @keyup.enter="scope.set"
+                :error="invalidName"
+                :error-message="nameError"
+                @update:model-value="checkName"
+              />
+            </q-popup-edit>
           </div>
-          <q-popup-edit v-model.trim="description" auto-save v-slot="scope" buttons>
-            <q-input
-              v-model="scope.value"
-              dense
-              autofocus
-              counter
-              type="textarea"
-              @keyup.enter.stop
-            />
-          </q-popup-edit>
+        </template>
+
+        <template #description>
+          <div class="row items-center no-wrap cursor-pointer">
+            <div style="white-space: pre-line; overflow-wrap: break-word;">
+              {{ description || 'No description provided' }}
+            </div>
+            <q-icon name="edit" size="xs" color="primary" class="q-ml-sm" />
+            <q-popup-edit v-model.trim="description" auto-save v-slot="scope" buttons>
+              <q-input v-model="scope.value" dense autofocus counter type="textarea" />
+            </q-popup-edit>
+          </div>
         </template>
       </KeyValueTable>
-      <div class="float-right q-my-sm">
-        <q-btn
-          outline  
-          color="primary" 
-          label="Revert"
-          class="q-mr-lg cancel-btn"
-          @click="revertValues"
-          :disable="!valuesChanged"
-        />
-        <q-btn
-          label="Save"
-          color="primary"
-          @click="updatePlugin"
-          :disable="!valuesChanged"
-        >
-          <q-tooltip v-if="!valuesChanged">
-            No changes detected — nothing to save
-          </q-tooltip>
+
+      <div class="row justify-end q-mt-md q-gutter-x-md">
+        <q-btn outline color="primary" label="Revert" @click="revertValues" :disable="!valuesChanged" />
+        <q-btn color="primary" label="Save" @click="updatePlugin" :disable="!valuesChanged">
+          <q-tooltip v-if="!valuesChanged">No changes detected</q-tooltip>
         </q-btn>
       </div>
     </q-card>
   </q-expansion-item>
 
   <TableComponent 
+    ref="tableRef"
     :rows="files"
     :columns="fileColumns"
     title="Plugin Files"
     v-model:selected="selected"
+<<<<<<< HEAD
     @open="openTab => (openTab
       ? openWindow.open(`/plugins/${route.params.id}/files/${selected[0].id}`, '_blank')
       : router.push(`/plugins/${route.params.id}/files/${selected[0].id}`)
     )"
     @delete="showDeleteDialog = true"
+=======
+    :loading="isLoading"
+    
+>>>>>>> ff3f9670 (feat: update table styling, work in progress)
     @request="getFiles"
-    ref="tableRef"
-    @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
     @create="router.push(`/plugins/${route.params.id}/files/new`)"
-  >
-    <template #body-cell-functionTasks="props">
-      {{ props.row.tasks.functions.length }}
-    </template>
-    <template #body-cell-artifactTasks="props">
-      {{ props.row.tasks.artifacts.length }}
-    </template>
-  </TableComponent>
+    @edit="(row) => router.push(`/plugins/${route.params.id}/files/${row.id}`)"
+    
+    @delete="(row) => { selected = [row]; showDeleteDialog = true }"
+    @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
+  />
 
   <DeleteDialog 
     v-model="showDeleteDialog"
     @submit="deleteFile"
     type="Plugin File"
-    :name="selected.length ? selected[0].filename : ''"
+    :name="selected[0]?.filename || ''"
   />
   <DeleteDialog
     v-model="showDeletePluginDialog"
@@ -131,7 +108,6 @@
     type="Plugin"
     :name="name"
   />
-
   <AssignTagsDialog 
     v-model="showTagsDialog"
     :editObj="editObjTags"
@@ -141,78 +117,144 @@
 </template>
 
 <script setup>
+import { ref, computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import * as api from '@/services/dataApi'
 import * as notify from '../notify'
-import { useRoute, useRouter } from 'vue-router'
+
+// Components
 import PageTitle from '@/components/PageTitle.vue'
-import { ref, computed, onMounted } from 'vue'
 import KeyValueTable from '@/components/KeyValueTable.vue'
-import TableComponent from '@/components/TableComponent.vue'
+import TableComponent from '@/components/table/TableComponent.vue'
 import DeleteDialog from '@/dialogs/DeleteDialog.vue'
 import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
 
 const openWindow = window
 const route = useRoute()
 const router = useRouter()
+const tableRef = ref(null)
 
-const plugin = ref()
-
+// Plugin State
 const name = ref('')
 const description = ref('')
+const ORIGINAL_PLUGIN = ref({ name: '', description: '' })
+const showMetadata = ref(false)
+
+// Files Table State
+const files = ref([])
+const isLoading = ref(false)
+const selected = ref([])
+const showDeleteDialog = ref(false)
+const showDeletePluginDialog = ref(false)
+const showTagsDialog = ref(false)
+const editObjTags = ref({})
+
+const fileColumns = computed(() => [
+  { 
+    name: 'id', 
+    label: 'File ID', 
+    field: 'id', 
+    align: 'left', 
+    styleType: 'icon-id', 
+    conceptType: 'file',
+    includeIcon: true 
+  },
+  { 
+    name: 'filename', 
+    label: 'Filename', 
+    field: 'filename', 
+    align: 'left', 
+    styleType: 'resource-name', 
+    conceptType: 'file',
+    maxWidth: '250px'
+  },
+  { 
+    name: 'description', 
+    label: 'Description', 
+    field: 'description', 
+    align: 'left', 
+    styleType: 'long-text',
+    maxWidth: '300px',
+    maxLength: 80 
+  },
+  { 
+    name: 'functionTasks', 
+    label: 'Function Tasks', 
+    field: row => row.tasks?.functions?.length || 0,
+    align: 'left', 
+    styleType: 'icon-badge',
+    conceptType: 'task',
+    formatLabel: '{label} Tasks'
+  },
+  { 
+    name: 'artifactTasks', 
+    label: 'Artifact Tasks', 
+    field: row => row.tasks?.artifacts?.length || 0, 
+    align: 'left', 
+    styleType: 'icon-badge',
+    conceptType: 'task',
+    formatLabel: '{label} Tasks'
+  },
+  { 
+    name: 'tags', 
+    label: 'Tags', 
+    field: 'tags', 
+    align: 'left', 
+    styleType: 'tag-list' 
+  }
+])
 
 onMounted(() => {
   getPlugin()
 })
 
-const ORIGINAL_PLUGIN = ref({
-  name: '',
-  description: ''
-})
-
 async function getPlugin() {
   try {
     const res = await api.getItem('plugins', route.params.id)
-    plugin.value = res.data
     name.value = res.data.name
     description.value = res.data.description
-    ORIGINAL_PLUGIN.value = JSON.parse(JSON.stringify(plugin.value))
+    ORIGINAL_PLUGIN.value = JSON.parse(JSON.stringify(res.data))
   } catch(err) {
-    console.warn(err)
+    notify.error('Failed to load plugin details')
   }
 }
 
-const pluginRows = computed(() => [
-  { label: 'Name', slot: 'name' },
-  { label: 'Description', slot: 'description' },
-])
+async function getFiles(pagination) {
+  isLoading.value = true
+  try {
+    const res = await api.getFiles(route.params.id, pagination)
+    files.value = res.data.data
+    tableRef.value.updateTotalRows(res.data.totalNumResults)
+  } catch(err) {
+    notify.error('Failed to load plugin files')
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// Logic helpers
+const valuesChanged = computed(() => {
+  return name.value !== ORIGINAL_PLUGIN.value?.name || description.value !== ORIGINAL_PLUGIN.value?.description
+})
+
+const pluginRows = [{ label: 'Name', slot: 'name' }, { label: 'Description', slot: 'description' }]
 
 const invalidName = ref(false)
 const nameError = ref('')
 
 function requiredRule(val) {
-  if(!val || val.length === 0) {
-    invalidName.value = true
-    nameError.value = 'Name is required'
-    return false
-  }
-  invalidName.value = false
-  nameError.value = ''
-  return true
+  invalidName.value = !val || val.length === 0
+  nameError.value = invalidName.value ? 'Name is required' : ''
+  return !invalidName.value
 }
 
 function checkName(val) {
-  if(val.length === 0) {
-    invalidName.value = true
-    nameError.value = 'Name is required'
-  } else {
-    invalidName.value = false
-    nameError.value = ''
-  }
+  requiredRule(val)
 }
 
 function revertValues() {
-  name.value = JSON.parse(JSON.stringify(ORIGINAL_PLUGIN.value.name))
-  description.value = JSON.parse(JSON.stringify(ORIGINAL_PLUGIN.value.description))
+  name.value = ORIGINAL_PLUGIN.value.name
+  description.value = ORIGINAL_PLUGIN.value.description
 }
 
 async function updatePlugin() {
@@ -224,45 +266,8 @@ async function updatePlugin() {
     getPlugin()
     notify.success(`Successfully updated '${res.data.name}'`)
   } catch(err) {
-    notify.error(err.response.data.message)
-  }  
-}
-
-const valuesChanged = computed(() => {
-  if(name.value !== ORIGINAL_PLUGIN.value?.name || description.value !== ORIGINAL_PLUGIN.value?.description) {
-    return true
-  }
-  return false
-})
-
-/*
-  Plugin Files Table 
-*/
-const files = ref([])
-const selected = ref([])
-const showDeleteDialog = ref(false)
-const showTagsDialog = ref(false)
-const editObjTags = ref({})
-const tableRef = ref(null)
-
-const fileColumns = [
-  { name: 'id', label: 'ID', align: 'left', field: 'id', sortable: false, },
-  { name: 'filename', label: 'Filename', align: 'left', field: 'filename', sortable: true, },
-  { name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true },
-  { name: 'functionTasks', label: 'Function Tasks', align: 'left', sortable: false, },
-  { name: 'artifactTasks', label: 'Artifact Tasks', align: 'left', sortable: false, },
-  { name: 'tags', label: 'Tags', align: 'left', field: 'tags', sortable: false },
-]
-
-async function getFiles(pagination) {
-  try {
-    const res = await api.getFiles(route.params.id, pagination)
-    console.log('getFiles = ', res)
-    files.value = res.data.data
-    tableRef.value.updateTotalRows(res.data.totalNumResults)
-  } catch(err) {
-    notify.error(err.response.data.message)
-  } 
+    notify.error(err.response?.data?.message || 'Update failed')
+  }   
 }
 
 async function deleteFile() {
@@ -273,28 +278,22 @@ async function deleteFile() {
     selected.value = []
     tableRef.value.refreshTable()
   } catch(err) {
-    notify.error(err.response.data.message);
+    notify.error(err.response?.data?.message || 'Delete failed')
   }
 }
-
-const showDeletePluginDialog = ref(false)
 
 async function deletePlugin() {
   try {
     await api.deleteItem('plugins', route.params.id)
-    notify.success(`Successfully deleted '${name}'`)
+    notify.success(`Successfully deleted plugin`)
     router.push(`/plugins`)
   } catch(err) {
-    notify.error(err.response.data.message);
+    notify.error(err.response?.data?.message || 'Delete failed')
   }
 }
 
-const showMetadata = ref(false)
-
 function truncateString(str, limit) { 
   if(!str) return ''
-  if(str?.length < limit) return str 
-  return str?.slice(0, limit > 3 ? limit - 3 : limit) + '...'; 
+  return str.length > limit ? str.slice(0, limit - 3) + '...' : str
 }
-
 </script>
