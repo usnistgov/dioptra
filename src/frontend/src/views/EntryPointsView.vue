@@ -1,5 +1,9 @@
 <template>
-  <PageTitle title="Entrypoints" />
+  <PageTitle 
+    title="Entrypoints" 
+    caption="Reusable workflows composed of Tasks"
+    conceptType="entrypoint" 
+  />
   
   <TableComponent 
     ref="tableRef"
@@ -20,11 +24,11 @@
     <template #body-cell-taskGraph="props">
       <q-btn
         v-if="props.row.taskGraph && props.row.taskGraph.length"
-        outline dense no-caps color="primary" 
+        outline dense no-caps color="grey-8" 
         label="YAML"
         icon="code"
         size="xs"
-        class="q-px-xs q-py-sm"
+        class="q-px-sm q-py-xs"
         style="font-size:12px; font-weight:bold"
         @click.stop="displayYaml = props.row.taskGraph; showTaskGraphDialog = true;"
       />
@@ -46,10 +50,10 @@
       <template v-if="props.row.plugins.length > 0">
         <template v-for="(plugin, i) in props.row.plugins.slice(0, 3)" :key="i">
           <div class="row items-center no-wrap bg-white q-pa-none shadow-1" style="border-radius: 4px; border: 1px solid #eeeeee; width:fit-content; max-width:180px">
+            <!-- :icon="getConceptStyle('plugin').icon" -->
             <q-chip
               :color="getConceptStyle('plugin').color" 
               text-color="white"
-              :icon="getConceptStyle('plugin').icon"
               size="sm" outline square clickable
               class="text-weight-bold q-py-sm q-pr-md q-ma-none no-border"
               style="max-width:180px; width:100%"
@@ -119,10 +123,10 @@
       <template v-if="props.row.artifactPlugins.length > 0">
         <template v-for="(plugin, i) in props.row.artifactPlugins.slice(0, 3)" :key="i">
           <div class="row items-center no-wrap bg-white q-pa-none shadow-1" style="border-radius: 4px; border: 1px solid #eeeeee; width:fit-content; max-width:180px">
+            <!-- :icon="getConceptStyle('plugin').icon" -->
             <q-chip
               :color="getConceptStyle('plugin').color" 
               text-color="white"
-              :icon="getConceptStyle('plugin').icon"
               size="sm" outline square clickable
               class="text-weight-bold q-py-sm q-pr-md q-ma-none no-border"
               style="max-width:180px; width:100%"
@@ -157,9 +161,9 @@
                 <div class="text-caption text-grey-7 q-mb-xs text-weight-bold">Additional Artifact Plugins</div>
                 <template v-for="(plugin, i) in props.row.artifactPlugins.slice(3)" :key="i">
                   <div class="row items-center justify-between no-wrap bg-grey-1 q-pa-xs border-radius-inherit">
+                    <!-- text-color="white" :icon="getConceptStyle('plugin').icon" -->
                     <q-chip
                       :color="getConceptStyle('plugin').color" 
-                      text-color="white" :icon="getConceptStyle('plugin').icon"
                       size="sm" outline square clickable class="text-weight-bold q-my-none"
                       @click.stop="openPluginDialog(props.row, 'artifactPlugins')"
                     >
@@ -322,7 +326,8 @@ const computedColumns = computed(() => [
     field: 'group', 
     align: 'left', 
     styleType: 'icon-badge',
-    conceptType: 'group'
+    conceptType: 'group',
+    showIcon: false
   },
   { 
     name: 'tags', 

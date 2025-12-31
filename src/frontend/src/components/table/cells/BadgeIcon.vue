@@ -1,17 +1,25 @@
 <template>
   <q-chip
-    v-if="type"
+    v-if="styles"
     :color="styles.color"
     text-color="white"
-    :icon="styles.icon"
     :size="size"
     :outline="chipType === 'outline'"
     square
     class="text-weight-bold q-py-md q-px-sm"
   >
+    <q-icon
+      v-if="showIcon && styles.icon"
+      :name="styles.icon"
+      size="xs"
+    />
+    
     <span 
-      class="font-mono ellipsis q-ml-xs" 
-      :class="{ 'text-uppercase': uppercase }"
+      class="font-mono ellipsis" 
+      :class="[
+        { 'text-uppercase': uppercase },
+        showIcon ? 'q-ml-xs' : '' 
+      ]"
       style="font-size: 12px; font-weight:500; max-width:200px"
     > 
       {{ displayValue }} 
@@ -44,30 +52,29 @@ const props = defineProps({
   },
   formatLabel: {
     type: String,
-    default: '' // e.g., "Job ID was {label}"
+    default: '' 
+  },
+  showIcon: {
+    type: Boolean,
+    default: true
   }
 })
 
-// Fallback to a neutral style if the type is unknown to avoid crashes
 const styles = computed(() => {
   return getConceptStyle(props.type) || { color: 'grey-7', icon: 'help' }
 })
 
 const displayValue = computed(() => {
-  // Use "NA" if label is null/undefined/empty, otherwise use the label
   const labelVal = (props.label !== undefined && props.label !== null && props.label !== '') 
     ? props.label 
     : 'NA'
   
   const typeVal = props.type || ''
 
-  // If no format string is provided, use the label or fall back to the type
   if (!props.formatLabel) {
     return labelVal !== 'NA' ? labelVal : typeVal
   }
   
-  // Inject values into the format string
-  // Replaces {label} with the label (or NA) and {type} with the concept type
   return props.formatLabel
     .replace(/{label}/g, labelVal)
     .replace(/{type}/g, typeVal)

@@ -1,5 +1,8 @@
 <template>
-  <PageTitle title="Groups" />
+  <PageTitle 
+    title="Groups" 
+    conceptType="group" 
+  />
   
   <TableComponent 
     ref="tableRef"

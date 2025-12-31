@@ -1,5 +1,9 @@
 <template>
-  <PageTitle title="Plugin Parameter Types" />
+  <PageTitle 
+    title="Plugin Parameter Types" 
+    caption="Used for type validation in Entrypoints and Artifacts"
+    conceptType="parameterType" 
+  />
   
   <TableComponent
     ref="tableRef"

@@ -1,5 +1,9 @@
 <template>
-  <PageTitle v-if="route.name !== 'experimentJobs'" :title="title" />
+  <PageTitle 
+    title="Jobs" 
+    conceptType="job",
+    caption="Runs of Entrypoints"
+  />
 
   <TableComponent 
     ref="tableRef"

@@ -1,5 +1,9 @@
 <template>
-  <PageTitle title="Plugins" />
+  <PageTitle 
+    title="Plugins" 
+    caption="Containers for Tasks and Files"
+    conceptType="plugin" 
+  />
   
   <TableComponent 
     ref="tableRef"

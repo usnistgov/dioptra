@@ -1,7 +1,10 @@
 <template>
   <div class="row items-center justify-between">
-    <div class="row items-center">
-      <PageTitle :title="ORIGINAL_EXPERIMENT?.name" />
+    <div class="row items-center">      
+      <PageTitle 
+        :subtitle="ORIGINAL_EXPERIMENT?.name"
+        conceptType="experiment" 
+      />
       <q-chip
         v-if="route.params.id !== 'new'"
         class="q-ml-lg"

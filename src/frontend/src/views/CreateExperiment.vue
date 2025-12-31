@@ -1,5 +1,8 @@
 <template>
-  <PageTitle :title="title" />
+      <PageTitle 
+        subtitle="Create Experiment"
+        conceptType="experiment" 
+      />
   <div :class="`row q-my-lg`">
     <div :class="`${isMobile ? 'col-12' : 'col-5'} q-mr-xl`">
       <fieldset>

@@ -1,11 +1,7 @@
 <template>
   <div class="column" style="min-height: calc(100vh - 100px);">
     <div class="row items-center justify-between">
-      <PageTitle 
-        title="Jobs" 
-        :subtitle="`Job ${$route.params.id} Dashboard`""
-        conceptType="job" 
-      />
+      <PageTitle :title="`Job ${$route.params.id} Dashboard`" />
       <q-btn 
         color="negative" 
         icon="sym_o_delete" 
