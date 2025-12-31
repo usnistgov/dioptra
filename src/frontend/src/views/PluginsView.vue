@@ -69,7 +69,7 @@ const computedColumns = computed(() => [
     align: 'left', 
     styleType: 'icon-id', 
     conceptType: 'plugin',
-    includeIcon: true,
+    includeIcon: true
   },
   { 
     name: 'name', 

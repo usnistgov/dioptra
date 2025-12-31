@@ -77,7 +77,7 @@ const showDeleteDialog = ref(false)
 const computedColumns = computed(() => [
   { 
     name: 'id', 
-    label: 'Group ID', 
+    label: 'Queue ID', 
     field: 'id', 
     align: 'left', 
     styleType: 'icon-badge',

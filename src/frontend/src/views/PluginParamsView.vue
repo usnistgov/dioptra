@@ -104,7 +104,8 @@ const computedColumns = computed(() => [
     styleType: 'resource-name', 
     conceptType: 'parameterType',
     textType: 'capitalize',
-    maxWidth: '200px'
+    maxWidth: '200px',
+    sortable: true
   },
   { 
     name: 'description', 
@@ -114,6 +115,7 @@ const computedColumns = computed(() => [
     styleType: 'long-text', 
     maxWidth: '300px',
     maxLength: 100,
+    sortable: true
   },
   { 
     name: 'createdOn', 
@@ -121,7 +123,8 @@ const computedColumns = computed(() => [
     field: 'createdOn', 
     align: 'left', 
     styleType: 'date',
-    textColor: 'text-grey-10'
+    textColor: 'text-grey-10',
+    sortable: true
   },
   { 
     name: 'lastModifiedOn', 
