@@ -1,11 +1,7 @@
 <template>
   <div class="column" style="min-height: calc(100vh - 100px);">
     <div class="row items-center justify-between">
-      <PageTitle 
-        title="Jobs" 
-        :subtitle="`Job ${$route.params.id} Dashboard`""
-        conceptType="job" 
-      />
+      <PageTitle :title="`Job ${$route.params.id} Dashboard`" />
       <q-btn 
         color="negative" 
         icon="sym_o_delete" 
@@ -258,7 +254,7 @@
       <q-btn
         outline  
         label="Return to Jobs"
-        @click="store.initialPage ? router.push('/jobs') : router.back()"
+        @click="router.back()"
         class="cancel-btn q-mt-lg"
         color="primary"
       />
@@ -293,9 +289,6 @@ import * as notify from '../notify'
 import PlotlyGraph from '@/components/PlotlyGraph.vue'
 import CodeEditor from '@/components/CodeEditor.vue'
 import JobArtifactsTable from '@/components/JobArtifactsTable.vue'
-import { useLoginStore } from '@/stores/LoginStore.ts'
-
-const store = useLoginStore()
 
 const route = useRoute()
 const router = useRouter()

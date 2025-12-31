@@ -1,6 +1,7 @@
 <template>
   <PageTitle 
-    title="Create Job"
+    subtitle="Create Job" 
+    conceptType="job" 
   />
   <div :class="`row q-my-lg`">
     <div :class="`${isMobile ? 'col-12' : 'col-5'} q-mr-xl`">

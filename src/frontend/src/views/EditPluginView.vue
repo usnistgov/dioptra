@@ -1,6 +1,9 @@
 <template>
   <div class="row items-center justify-between">
-    <PageTitle :title="ORIGINAL_PLUGIN?.name" />
+    <PageTitle 
+      :subtitle="ORIGINAL_PLUGIN?.name"
+      conceptType="plugin" 
+    />
     <q-btn 
       color="negative"
       icon="sym_o_delete" 

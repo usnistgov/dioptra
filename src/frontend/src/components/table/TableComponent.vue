@@ -69,13 +69,15 @@
               :size="col.size"
               :chipType="col.chipType"
               :uppercase="col.uppercase"
-              :formatLabel="col.formatLabel"
+              :formatLabel="col.formatLabel",
+              :showIcon="col.showIcon"
             />
 
             <MultiBadgeIcon
               v-else-if="col.styleType === 'multi-badge'"
               :items="col.value"
-              :concept-type="col.conceptType"
+              :concept-type="col.conceptType",
+              :showIcon="col.showIcon"
             />
 
             <CellLongText

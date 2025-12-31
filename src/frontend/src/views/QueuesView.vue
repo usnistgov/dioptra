@@ -1,5 +1,9 @@
 <template>
-  <PageTitle title="Groups" />
+  <PageTitle 
+    title="Queues" 
+    caption="Queues to manage running Jobs within a given Worker"
+    conceptType="queue" 
+  />
   
   <TableComponent 
 <<<<<<< HEAD

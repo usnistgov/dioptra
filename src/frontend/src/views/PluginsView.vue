@@ -1,19 +1,9 @@
 <template>
-  <PageTitle title="Plugins" />
-<<<<<<< HEAD
-
-  <TableComponent
-    :rows="plugins"
-    :columns="columns"
-    title="Plugins"
-    v-model:selected="selected"  
-    @open="openTab => (openTab
-      ? openWindow.open(`/plugins/${selected[0].id}`, '_blank')
-      : router.push(`/plugins/${selected[0].id}`)
-    )"
-    @delete="showDeleteDialog = true"
-    @request="getPlugins"
-=======
+  <PageTitle 
+    title="Plugins" 
+    caption="Containers for Tasks and Files"
+    conceptType="plugin" 
+  />
   
   <TableComponent 
 >>>>>>> ff3f9670 (feat: update table styling, work in progress)
@@ -48,18 +38,8 @@
 </template>
 
 <script setup>
-<<<<<<< HEAD
-  import TableComponent from '@/components/TableComponent.vue'
-  import DeleteDialog from '@/dialogs/DeleteDialog.vue'
-  import { ref } from 'vue'
-  import { useRouter } from 'vue-router'
-  import * as api from '@/services/dataApi'
-  import * as notify from '../notify'
-  import PageTitle from '@/components/PageTitle.vue'
-  import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
 
-  const openWindow = window
-=======
+const openWindow = window
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import TableComponent from '@/components/table/TableComponent.vue'
@@ -71,7 +51,6 @@ import * as notify from '../notify'
 
 const router = useRouter()
 const tableRef = ref(null)
->>>>>>> ff3f9670 (feat: update table styling, work in progress)
 
 // State
 const plugins = ref([])

@@ -1,5 +1,8 @@
 <template>
-  <PageTitle title="Tags" />
+  <PageTitle 
+    title="Tags" 
+    conceptType="tag" 
+  />
   
   <TableComponent 
     ref="tableRef"

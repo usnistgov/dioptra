@@ -1,86 +1,210 @@
 <template>
-  <div>
-    <div class="row items-baseline q-mb-sm">
-      <h1 class="q-mb-none">
-        {{ title }}
-      </h1>
-      <q-badge
-        v-if="props.draftLabel"
-        :label="draftLabel"
-        outline
-        color="primary"
-        class="q-ml-md"
-        :class="darkMode ? 'text-white' : ''"
-      />
-    </div>
-    <nav aria-label="Breadcrumb" style="font-size: 1.2em;">
-      <q-breadcrumbs class="text-grey">
-        <template v-slot:separator>
-          <q-icon
-            name="arrow_forward"
+  <div class="row q-mb-lg">
+    <div 
+      class="page-title-card q-pa-md"
+      :style="cardStyles"
+    >
+      <div v-if="subtitle" class="column q-mb-xs">
+        <div 
+          class="row items-center q-gutter-x-xs text-uppercase text-weight-bold resource-link cursor-pointer" 
+          :style="{ color: hexColor, fontSize: '0.85rem', letterSpacing: '1.5px' }"
+          @click="navigateBack"
+        >
+          <q-icon :name="styles.icon" size="16px" />
+          <span>{{ conceptType || path[0] || 'Resource' }}</span>
+          <q-icon name="arrow_outward" size="12px" style="opacity: 0.7;" />
+        </div>
+        
+        <div class="row items-baseline q-mt-sm">
+          <h1 
+            class="text-h4 q-my-none text-weight-medium subtitle-header"
+            :style="subtitleDecoration"
+            :class="darkMode ? 'text-grey-5' : 'text-grey-8'"
+          >
+            {{ subtitle }}
+          </h1>
+          
+          <q-badge
+            v-if="props.draftLabel"
+            :label="draftLabel"
+            outline
+            :style="{ color: hexColor, borderColor: hexColor }"
+            class="q-ml-md self-center"
           />
-        </template>
-        <q-breadcrumbs-el label="Home" icon="home" to="/" />
-        <q-breadcrumbs-el 
-          :label="path[0] === 'pluginParams' ? 'Plugin Parameters' : path[0]" 
-          :to="path[1] ? `/${path[0]}` : ''" 
-          :aria-current="`${path.length === 1 ? 'true' : 'false'}`"
-          class="text-capitalize"
-        />
-        <q-breadcrumbs-el
-          v-if="route.name === 'pluginFile'"
-          :label="`${objName}`"
-          :to="`/plugins/${route.params.id}`"
-        />
-        <q-breadcrumbs-el
-          v-if="route.name === 'createExperimentJob'"
-          :label="`${objName}`"
-          :to="`/experiments/${route.params.id}`"
-        />
-        <q-breadcrumbs-el
-          v-if="path[1]"
-          :label="title"
-          aria-disabled="true"
-          aria-current="page"
-        />
-      </q-breadcrumbs>
-    </nav>
+        </div>
+      </div>
+
+      <div v-else class="column">
+        <div class="row items-center q-gutter-x-md q-mb-sm"> 
+          <q-avatar 
+            :style="{ backgroundColor: hexColor, boxShadow: `0 4px 12px ${hexColor}66` }"
+            text-color="white" 
+            size="52px" 
+            font-size="28px"
+          >
+            <q-icon :name="styles.icon" size="lg" />
+          </q-avatar>
+          
+          <div class="row items-center">
+            <h1 
+              class="text-h3 q-my-none text-weight-bolder" 
+              style="line-height: 1;"
+              :class="darkMode ? 'text-white' : 'text-dark'"
+            >
+              {{ title }}
+            </h1>
+
+            <q-badge
+              v-if="props.draftLabel"
+              :label="draftLabel"
+              outline
+              color="primary"
+              class="q-ml-md"
+              :class="darkMode ? 'text-white' : ''"
+            />
+          </div>
+        </div>
+        <div v-if="caption" class="text-grey-7 q-mt-xs">
+          {{caption}}
+        </div>
+
+      </div>
+
+      <nav aria-label="Breadcrumb" class="q-mt-md">
+        <q-breadcrumbs class="text-grey-7" style="font-size: 0.95em;">
+          <template v-slot:separator>
+            <q-icon name="chevron_right" size="1.4em" color="grey-4" />
+          </template>
+          
+          <q-breadcrumbs-el label="Home" icon="home" to="/" />
+          
+          <q-breadcrumbs-el 
+            :label="path[0] === 'pluginParams' ? 'Plugin Parameters' : path[0]" 
+            :to="path[1] ? `/${path[0]}` : ''" 
+            :aria-current="`${path.length === 1 ? 'true' : 'false'}`"
+            class="text-capitalize"
+          />
+
+          <q-breadcrumbs-el
+            v-if="route.name === 'pluginFile'"
+            :label="`${objName}`"
+            :to="`/plugins/${route.params.id}`"
+          />
+
+          <q-breadcrumbs-el
+            v-if="route.name === 'createExperimentJob'"
+            :label="`${objName}`"
+            :to="`/experiments/${route.params.id}`"
+          />
+
+          <q-breadcrumbs-el
+            v-if="path[1]"
+            :label="subtitle || title"
+            aria-disabled="true"
+            aria-current="page"
+            class="text-weight-medium text-primary"
+          />
+        </q-breadcrumbs>
+      </nav>
+
+    </div>
   </div>
 </template>
 
 <script setup>
-  import { useRoute } from 'vue-router'
-  import { ref, computed, inject } from 'vue'
-  import * as api from '@/services/dataApi'
+import { ref, computed, inject } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import * as api from '@/services/dataApi'
+import { getConceptStyle, getConceptColorHex } from '@/constants/tableStyles'
 
-  const props = defineProps(['title', 'draftLabel'])
+const props = defineProps({
+  title: String,
+  draftLabel: String,
+  subtitle: String,
+  caption: String,
+  conceptType: String
+})
 
-  const darkMode = inject('darkMode')
+const darkMode = inject('darkMode')
+const route = useRoute()
+const router = useRouter()
 
-  const route = useRoute()
+const styles = computed(() => {
+  return getConceptStyle(props.conceptType) || { color: 'grey-8', icon: 'layers' }
+})
 
-  const path = computed(() => {
-    return route.path.split('/').slice(1)
-  })
+const hexColor = computed(() => {
+  return getConceptColorHex(props.conceptType, darkMode.value)
+})
 
+// Dynamic container styles
+const cardStyles = computed(() => ({
+  // border: '1px solid #e0e0e0', // Uniform border
+   borderRadius: '10px',
+  minWidth: '400px',
+  width: 'fit-content',
+  backgroundColor: darkMode.value ? '#1d1d1d' : 'white',
+  // Shadow is tinted with the hex color. '40' at end adds transparency.
+  boxShadow: `0 4px 175px -20px ${hexColor.value}80` ,
+  backgroundColor: `${hexColor.value}10`
+}))
 
-  const objName = ref('')
+// Dynamic text decoration for subtitle
+const subtitleDecoration = computed(() => ({
+  textDecoration: 'underline',
+  textDecorationColor: hexColor.value,
+  textDecorationThickness: '3px',
+  textUnderlineOffset: '16px',
+  textDecorationSkipInk: 'none'
+}))
 
-  if(route.name === 'pluginFile') {
-    getName('plugins')
+// --- Navigation ---
+function navigateBack() {
+  if (path.value[0]) {
+    router.push(`/${path.value[0]}`)
+  } else {
+    router.back()
   }
-  if(route.name === 'createExperimentJob') {
-    getName('experiments')
-  }
+}
 
-  async function getName(type) {
-    try {
-      const res = await api.getItem(type, route.params.id)
-      objName.value = res.data.name
-    } catch(err) {
-      console.log(err)
-    } 
-  }
+// --- Path Logic ---
+const path = computed(() => {
+  return route.path.split('/').slice(1)
+})
 
+// --- API Fetch Logic ---
+const objName = ref('')
 
+if(route.name === 'pluginFile') {
+  getName('plugins')
+}
+if(route.name === 'createExperimentJob') {
+  getName('experiments')
+}
+
+async function getName(type) {
+  try {
+    const res = await api.getItem(type, route.params.id)
+    objName.value = res.data.name
+  } catch(err) {
+    console.log(err)
+  } 
+}
 </script>
+
+<style scoped>
+.page-title-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Resource Link Hover Effects */
+.resource-link {
+  opacity: 0.85;
+  transition: all 0.2s ease-in-out;
+}
+
+.resource-link:hover {
+  opacity: 1;
+  transform: translateX(2px);
+}
+</style>

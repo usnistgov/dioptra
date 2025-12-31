@@ -1,5 +1,9 @@
 <template>
-  <PageTitle title="Artifacts" />
+  <PageTitle 
+    title="Artifacts"
+    caption="Objects saved from Jobs"
+    conceptType="artifact" 
+  />
   
   <TableComponent 
     ref="tableRef"

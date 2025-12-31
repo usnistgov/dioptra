@@ -1,5 +1,9 @@
 <template>
-  <PageTitle title="Experiments" />
+  <PageTitle 
+    title="Experiments" 
+    caption="Containers for Job runs"
+    conceptType="experiment" 
+  />
   
   <TableComponent 
     ref="tableRef"
