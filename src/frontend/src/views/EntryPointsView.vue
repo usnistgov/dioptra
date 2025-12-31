@@ -288,7 +288,8 @@ const computedColumns = computed(() => [
     styleType: 'resource-name', 
     conceptType: 'entrypoint',
     textType: 'capitalize',
-    maxWidth: '180px'
+    maxWidth: '180px',
+    sortable: true
   },
   { 
     name: 'description', 
@@ -299,7 +300,8 @@ const computedColumns = computed(() => [
     maxWidth: '150px',
     maxLength: 60,
     useQuotes: false,
-    style: 'max-width: 300px;'
+    style: 'max-width: 300px;',
+    sortable: true
   },
   { 
     name: 'taskGraph', 

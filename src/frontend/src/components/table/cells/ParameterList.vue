@@ -9,7 +9,7 @@
           :style="{ marginTop: '6px', width: '6px', height: '6px', backgroundColor: styles.textColor }"
         ></div>
 
-        <div class="column items-baseline no-wrap q-gutter-x-sm">
+        <div class="row items-baseline no-wrap q-gutter-x-sm">
           
           <div 
             class="text-weight-bold" 
@@ -19,7 +19,7 @@
               lineHeight: '1.3' 
             }"
           >
-            {{ param.name }}
+            {{ param.name }} :
           </div>
 
           <div class="row">

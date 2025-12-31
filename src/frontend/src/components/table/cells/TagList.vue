@@ -48,14 +48,14 @@
               <q-chip
                 v-for="(tag, i) in hiddenTags"
                 :key="i"
-                color="blue-grey-1" 
-                text-color="blue-grey-9"
+                color="blue-grey-7" 
+                text-color="blue-grey-10"
                 dense
                 outline
                 square
                 size="10px"
               >
-                {{ tag.name }}
+                # <span style="font-weight:550; letter-spacing: .6px; padding-left:2px" class="ellipsis"> {{ tag.name }}</span>
               </q-chip>
             </div>
           </div>

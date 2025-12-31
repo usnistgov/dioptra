@@ -119,7 +119,8 @@ const computedColumns = computed(() => [
     styleType: 'long-text',
     maxWidth: '250px',
     maxLength: 80,
-    useQuotes: true
+    useQuotes: true,
+    sortable: true
   },
   { 
     name: 'job', 
@@ -128,7 +129,8 @@ const computedColumns = computed(() => [
     align: 'left', 
     styleType: 'icon-badge', // "icon badge" per request
     conceptType: 'job',
-    size:'md'
+    size:'md',
+    sortable: true
   },
   { 
     name: 'taskName', 

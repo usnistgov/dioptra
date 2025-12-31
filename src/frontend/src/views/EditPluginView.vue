@@ -160,7 +160,8 @@ const fileColumns = computed(() => [
     align: 'left', 
     styleType: 'resource-name', 
     conceptType: 'file',
-    maxWidth: '250px'
+    maxWidth: '250px',
+    sortable: true
   },
   { 
     name: 'description', 
@@ -169,7 +170,8 @@ const fileColumns = computed(() => [
     align: 'left', 
     styleType: 'long-text',
     maxWidth: '300px',
-    maxLength: 80 
+    maxLength: 80 ,
+    sortable: true
   },
   { 
     name: 'functionTasks', 
