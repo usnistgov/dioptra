@@ -32,18 +32,15 @@ The task graph consists of a list of step descriptions. These descriptions can b
 invocation styles: positional, keyword, and mixed.
 
 In each of these invocation styles, you'll notice some commonalities:
-    * ``step1`` and ``step2`` refer to the names of steps, and also to the *location in which the output of that step is stored*. 
-    The variable ``$step1`` contains the output of the task that was run in that step.
+    * ``step1`` and ``step2`` refer to the names of steps, and also to the *location in which the output of that step is stored*. The variable ``$step1`` contains the output of the task that was run in that step.
 
-    * ``task1`` and ``task2`` refer to the names of plugin function tasks. Each step in the graph represents an invocation of 
-    a function task.
+    * ``task1`` and ``task2`` refer to the names of plugin function tasks. Each step in the graph represents an invocation of a function task.
 
     * ``arg1``, ``arg2``, ``arg3``, and ``arg4`` are arguments provided to the function tasks.
 
     * ``keyword1``, ``keyword2``, ``keyword3``, and ``keyword4`` are the parameter names for that particular function.
 
-    * The ``graph:`` keyword designates this section of the full entrypoint YAML dictionary as the task graph. If creating entrypoints
-    through the UI, this keyword is unnecessary and is provided to the RESTAPI automatically.
+    * The ``graph:`` keyword designates this section of the full entrypoint YAML dictionary as the task graph. If creating entrypoints through the UI, this keyword is unnecessary and is provided to the RESTAPI automatically.
 
 
 Positional Style Invocation
