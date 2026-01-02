@@ -34,10 +34,14 @@ invocation styles: positional, keyword, and mixed.
 In each of these invocation styles, you'll notice some commonalities:
     * ``step1`` and ``step2`` refer to the names of steps, and also to the *location in which the output of that step is stored*. 
     The variable ``$step1`` contains the output of the task that was run in that step.
+
     * ``task1`` and ``task2`` refer to the names of plugin function tasks. Each step in the graph represents an invocation of 
     a function task.
+
     * ``arg1``, ``arg2``, ``arg3``, and ``arg4`` are arguments provided to the function tasks.
+
     * ``keyword1``, ``keyword2``, ``keyword3``, and ``keyword4`` are the parameter names for that particular function.
+
     * The ``graph:`` keyword designates this section of the full entrypoint YAML dictionary as the task graph. If creating entrypoints
     through the UI, this keyword is unnecessary and is provided to the RESTAPI automatically.
 
@@ -147,7 +151,7 @@ Here is an example of using the output of a function task.
 
 This passes the output of the step named ``step1`` as input to the first parameter of the function task named ``task2``.
 
-It is possible for function tasks to have multiple outputs. See :ref:`<_explanation-plugins>` for more details. Each output
+It is possible for function tasks to have multiple outputs. See :ref:`explanation-plugins` for more details. Each output
 is given a name when registered. In an example where ``task1`` is registered to have two separate outputs, ``output1`` and 
 ``output2``, these can be referenced as follows:
 
@@ -169,7 +173,7 @@ at job runtime, either as a default or by the user running the job.
 Note that this applies to *both* entrypoint parameters and artifact parameters. From the perspective of the task 
 graph, the usage is equivalent, though the parameters are supplied separately at runtime.
 
-See :ref:`<explanation-entrypoints>` and :ref:`<explanation-artifacts>` for more details.
+See :ref:`explanation-entrypoints` and :ref:`explanation-artifacts` for more details.
 
 .. code-block:: yaml
 
@@ -179,3 +183,11 @@ See :ref:`<explanation-entrypoints>` and :ref:`<explanation-artifacts>` for more
         step2:
             task2: [$myparam, $step1.output2]
 
+.. rst-class:: fancy-header header-seealso
+
+See Also 
+---------
+   
+* :ref:`explanation-entrypoints` - Entrypoints explanation, of which task graphs are a component
+* :ref:`how-to-create-plugins` - Step-by-step guide on building plugins
+* :ref:`how-to-create-entrypoints` - Step-by-step guide on building entrypoints
