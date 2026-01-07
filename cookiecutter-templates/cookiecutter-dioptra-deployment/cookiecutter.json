@@ -96,7 +96,7 @@
         "nodejs": {
             "image": "node",
             "namespace": "",
-            "tag": "18",
+            "tag": "22-bullseye",
             "registry": ""
         },
         "redis": {
