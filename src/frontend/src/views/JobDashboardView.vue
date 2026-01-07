@@ -1,121 +1,142 @@
 <template>
   <div class="column" style="min-height: calc(100vh - 100px);">
+    
     <div class="row items-center justify-between">
       <PageTitle 
         title="Jobs" 
-        :subtitle="`Job ${$route.params.id} Dashboard`""
+        :subtitle="`Job ${$route.params.id} Dashboard`"
         conceptType="job" 
       />
       <q-btn 
         color="negative" 
         icon="sym_o_delete" 
         label="Delete Job" 
+        outline
         @click="showDeleteDialog = true"
       />
     </div>
+
     <div class="q-my-lg">
       <q-tabs
-          v-model="tab"
-          indicator-color="primary"
-          dense
-          no-caps
-          align="left"
-        >
-          <q-tab name="overview" label="Overview" />
-          <q-tab name="logs" :label="`Logs ${logTotalNumber ? `(${logTotalNumber})` : ''}`" />
-          <q-tab name="metrics" :label="`Metrics ${metrics.length ? `(${metrics.length})` : ''}`" />
-          <q-tab name="artifacts" :label="`Output Artifacts ${job?.artifacts.length ? `(${job?.artifacts.length})` : ''}`" />
-        </q-tabs>
-        <q-separator />
+        v-model="tab"
+        indicator-color="primary"
+        dense
+        no-caps
+        align="left"
+        class="text-grey-8"
+        active-color="primary"
+      >
+        <q-tab name="overview" label="Overview" />
+        <q-tab name="logs" :label="`Logs ${logTotalNumber ? `(${logTotalNumber})` : ''}`" />
+        <q-tab name="metrics" :label="`Metrics ${metrics.length ? `(${metrics.length})` : ''}`" />
+        <q-tab name="artifacts" :label="`Output Artifacts ${job?.artifacts.length ? `(${job?.artifacts.length})` : ''}`" />
+      </q-tabs>
+      <q-separator />
     </div>
-    <div 
-      v-if="tab === 'overview'"
-      class="row q-gutter-lg"
-    >
-      <div class="col" :class="`${isMedium ? 'col-12' : 'col'}`">
-        <h2>Details</h2>
+
+    <div v-if="tab === 'overview'" class="row q-col-gutter-lg">
+      
+      <div class="col-12 col-md-6">
+        <h2 class="text-h6 q-mt-none">Details</h2>
+        
         <KeyValueTable :rows="overviewRows">
-          <template #tags="{ tags = [] }">
-            <div style="margin-top: -5px; margin-bottom: -5px;">
-              <q-chip
-                v-for="(tag, i) in tags"
-                :key="i"
-                color="primary" 
-                text-color="white"
-                class="q-my-none"
-              >
-                {{ tag.name.length <= 18 ? tag.name : tag.name.replace(/(.{17})..+/, "$1…") }}
-                <q-tooltip v-if="tag.name.length > 18" max-width="30vw" style="overflow-wrap: break-word">
-                  {{ tag.name }}
-                </q-tooltip>
-              </q-chip>
-              <q-btn
-                round
-                size="xs"
-                icon="add"
-                @click="showTagsDialog = true"
-                color="grey-5"
-                text-color="black"
-                class="q-ml-xs"
-              />
-            </div>
+          <template #id>
+            <ResourceName :text="job?.id" conceptType="job" :includeIcon="true" />
           </template>
-          <template #experiment="{ name = '', id, snapshotId }">
-            <RouterLink :to="`/experiments/${id}?snapshotId=${snapshotId}`">
-              {{ name.length < 18 ? name : name.replace(/(.{18})..+/, "$1…") }}
-              <q-tooltip v-if="name.length > 18" max-width="30vw" style="overflow-wrap: break-word">
-                {{ name }}
-              </q-tooltip>
+
+          <template #description>
+            <CellLongText :text="job?.description" :maxLength="100" />
+          </template>
+
+          <template #status>
+            <JobStatus :status="job?.status" />
+          </template>
+
+          <template #experiment>
+            <RouterLink 
+              v-if="job?.experiment"
+              :to="`/experiments/${job.experiment.id}?snapshotId=${job.experiment.snapshotId}`"
+              style="text-decoration: none;"
+            >
+              <BadgeIcon type="experiment" :label="job.experiment.name" :showIcon="true" />
             </RouterLink>
+            <span v-else>-</span>
           </template>
-          <template #entrypoint="{ name = '', id, snapshotId }">
-            <RouterLink :to="`/entrypoints/${id}?snapshotId=${snapshotId}`">
-              {{ name.length < 18 ? name : name.replace(/(.{18})..+/, "$1…") }}
-              <q-tooltip v-if="name.length > 18" max-width="30vw" style="overflow-wrap: break-word">
-                {{ name }}
-              </q-tooltip>
+
+          <template #entrypoint>
+            <RouterLink 
+              v-if="job?.entrypoint"
+              :to="`/entrypoints/${job.entrypoint.id}?snapshotId=${job.entrypoint.snapshotId}`"
+              style="text-decoration: none;"
+            >
+              <BadgeIcon type="entrypoint" :label="job.entrypoint.name" :showIcon="true" />
             </RouterLink>
+            <span v-else>-</span>
           </template>
-          <template #status="{ status = '' }">
-            <JobStatus
-              :status="status"
+
+          <template #queue>
+             <BadgeIcon v-if="job?.queue" type="queue" :label="job.queue.name" :showIcon="true" />
+             <span v-else>-</span>
+          </template>
+
+          <template #tags>
+            <TagList 
+              :tags="job?.tags" 
+              :row="job" 
+              @add="showTagsDialog = true" 
             />
           </template>
         </KeyValueTable>
+
         <q-btn
-          color="light-blue" 
-          icon="update" 
+          color="primary" 
+          icon="replay" 
           label="Re-Run Job" 
           class="q-mt-lg" 
           @click="reRunJob()"
         />
       </div>
-      <div class="col">
-        <h2>Entrypoint Parameters</h2>
-        <TableComponent
-          :columns="parametersColumns"
-          :rows="paramRows"
-          @request="getJob"
-          v-model:selected="selectedParam"
-          rowKey="parameter"
-          :hideCreateBtn="true"
-          :hideDeleteBtn="true"
-          style="margin-top: 0px;"
-        />
-      </div>
-      <div class="col">
-        <h2>Artifact Parameters</h2>
-        <TableComponent
-          :columns="artifactsUsedColumns"
-          v-model:selected="selectedUsedArtifact"
-          :rows="artifactsUsed"
-          :hideCreateBtn="true"
-          :hideDeleteBtn="true"
-          style="margin-top: 0px;"
-          @edit="router.push(`/artifacts/${selectedUsedArtifact[0].id}?snapshotId=${selectedUsedArtifact[0].snapshotId}`)"
-        />
+
+      <div class="col-12 col-md-6 column q-gutter-y-lg">
+        
+        <div>
+          <h2 class="text-h6 q-mt-none">Entrypoint Parameters</h2>
+          <TableComponent
+            :columns="parametersColumns"
+            :rows="paramRows"
+            rowKey="parameter"
+            :hideCreateBtn="true"
+            :hideDeleteBtn="true"
+            :hideSearch="true"
+            :hideBottom="true"
+            class="q-mt-none"
+          />
+        </div>
+
+        <div>
+          <h2 class="text-h6 q-mt-none">Artifact Parameters</h2>
+          <TableComponent
+            :columns="artifactsUsedColumns"
+            :rows="artifactsUsed"
+            rowKey="id"
+            :hideCreateBtn="true"
+            :hideDeleteBtn="true"
+            :hideSearch="true"
+            :hideBottom="true"
+            class="q-mt-none"
+            @edit="(row) => router.push(`/artifacts/${row.id}?snapshotId=${row.snapshotId}`)"
+          >
+             <template #body-cell-id="props">
+                <RouterLink :to="`/artifacts/${props.row.id}`" style="text-decoration: none">
+                   <BadgeIcon type="artifact" :label="props.row.id" :showIcon="true" />
+                </RouterLink>
+             </template>
+          </TableComponent>
+        </div>
+
       </div>
     </div>
+
     <div v-if="tab === 'logs'">
       <TableComponent
         title="Job Logs"
@@ -125,8 +146,6 @@
         :hideDeleteBtn="true"
         :disableSelect="true"
         :hideCreateBtn="true"
-        style="margin-top: 0;"
-        class="q-mb-lg"
         ref="tableRef"
         :loading="isLoading"
       >
@@ -139,92 +158,67 @@
             class="code-cell"
           />
         </template>
+
         <template #jobLogSlot>
-          <q-select
-            v-if="job.status !== 'finished' && job.status !== 'failed'"
-            v-model="selectedFrequency"
-            label="Refresh Frequency"
-            :options="refreshOptions"
-            option-value="value"
-            option-label="label"
-            emit-value
-            map-options
-            dense
-            outlined
-            style="width: 175px"
-            class="q-mr-lg"
-          />
-          <q-select
-            label="Filter Severity"
-            v-model="selectedSeverity"
-            :options="['DEBUG', 'INFO','WARNING', 'ERROR', 'CRITICAL']"
-            multiple
-            outlined
-            dense
-            use-chips 
-            class="q-mr-lg"
-            style="width: 485px;" 
-          >
-            <template v-slot:option="{ itemProps, opt, selected, toggleOption }">
-              <q-item v-bind="itemProps">
-                <q-item-section>
-                  <q-item-label>
-                    {{ opt }}
-                  </q-item-label>
-                </q-item-section>
-                <q-item-section side>
-                  <q-checkbox
-                    v-model="selectedSeverity"
-                    :val="opt"
-                  />
-                </q-item-section>
-              </q-item>
-            </template>
-          </q-select>
+          <div class="row items-center q-gutter-x-md">
+            <q-select
+              v-if="job?.status !== 'finished' && job?.status !== 'failed'"
+              v-model="selectedFrequency"
+              label="Refresh"
+              :options="refreshOptions"
+              emit-value map-options
+              dense outlined
+              style="width: 140px"
+            />
+            
+            <q-select
+              label="Severity"
+              v-model="selectedSeverity"
+              :options="['DEBUG', 'INFO','WARNING', 'ERROR', 'CRITICAL']"
+              multiple outlined dense use-chips
+              style="min-width: 250px; max-width: 400px;" 
+            />
+          </div>
         </template>
       </TableComponent>
     </div>
-    <div v-if="tab === 'metrics'" class="row q-col-gutter-x-lg q-col-gutter-y-lg">
+
+    <div v-if="tab === 'metrics'" class="row q-col-gutter-lg">
       <div class="col-12">
-        <!-- @request="getJobMetrics" is not needed because getJobMetrics is run by loadAllMetricHistories -->
         <TableComponent
-          title="Job Metrics Latest Values"
+          title="Job Metrics (Latest)"
           :columns="metricColumns"
           :rows="metrics"
-          v-model:selected="selectedMetric"
           rowKey="name"
           :hideCreateBtn="true"
           :hideDeleteBtn="true"
-          style="margin-top: 0px;"
-          class="q-mb-lg"
           v-model:filter="filter"
         />
-        <div class="row items-center">
+        
+        <div class="row items-center q-mt-md justify-between">
           <q-input 
             v-model="filter" 
-            debounce="300" 
-            dense 
-            placeholder="Search metric charts" 
-            outlined
-            class="col-grow"
-            clearable
+            debounce="300" dense outlined
+            placeholder="Search metric charts..." 
+            class="col-grow" clearable
+            style="max-width: 400px;"
           >
-            <template #prepend>
-              <q-icon name="search" />
-            </template>
+            <template #prepend><q-icon name="search" /></template>
           </q-input>
+          
           <q-btn
-            label="Refresh"
+            label="Refresh Charts"
             color="primary"
             icon="refresh"
-            class="q-ml-lg"
+            outline
             @click="loadAllMetricHistories"
           />
         </div>
       </div>
+
       <div
         :class="graphClass" 
-        v-for="(metric, i) in filteredMetrics"
+        v-for="(metric) in filteredMetrics"
         :key="metric.name"
       >
         <PlotlyGraph
@@ -233,33 +227,30 @@
           :graphClass="graphClass"
         />
       </div>
-      <div
-        v-if="filteredMetrics.length === 0" 
-        class="row items-center q-mt-lg" 
-      >
-        <q-icon
-          name="sym_o_info"
-          size="2.5em"
-          color="grey-7"
-          class="q-mr-sm"
-        />
-        <div style="opacity: 0.7">No metrics found</div>
+
+      <div v-if="filteredMetrics.length === 0" class="col-12 row justify-center q-mt-xl text-grey">
+        <div class="column items-center">
+           <q-icon name="bar_chart" size="4em" color="grey-4" />
+           <div class="text-h6 text-grey-5 q-mt-sm">No metrics available</div>
+        </div>
       </div>
     </div>
+
     <div v-if="tab === 'artifacts'">
       <JobArtifactsTable 
-        :artifactIds="job.artifacts.map((artifact) => artifact.id)"
+        v-if="job?.artifacts"
+        :artifactIds="job.artifacts.map((a) => a.id)"
         style="margin-top: 0px"
       />
     </div>
 
     <q-space />
-    <div class="row justify-end">
+    
+    <div class="row justify-end q-mt-lg">
       <q-btn
-        outline  
+        outline 
         label="Return to Jobs"
         @click="router.back()"
-        class="cancel-btn q-mt-lg"
         color="primary"
       />
     </div>
@@ -281,189 +272,99 @@
 
 <script setup>
 import { ref, computed, inject, watch, nextTick, onMounted } from 'vue'
-import PageTitle from '@/components/PageTitle.vue'
-import * as api from '@/services/dataApi'
 import { useRoute, useRouter } from 'vue-router'
-import KeyValueTable from '@/components/KeyValueTable.vue'
-import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
-import JobStatus from '@/components/JobStatus.vue'
-import TableComponent from '@/components/TableComponent.vue'
-import DeleteDialog from '@/dialogs/DeleteDialog.vue'
+import * as api from '@/services/dataApi'
 import * as notify from '../notify'
-import PlotlyGraph from '@/components/PlotlyGraph.vue'
+
+// Components
+import PageTitle from '@/components/PageTitle.vue'
+import KeyValueTable from '@/components/KeyValueTable.vue'
+import TableComponent from '@/components/table/TableComponent.vue'
+import JobStatus from '@/components/JobStatus.vue'
 import CodeEditor from '@/components/CodeEditor.vue'
+import PlotlyGraph from '@/components/PlotlyGraph.vue'
 import JobArtifactsTable from '@/components/JobArtifactsTable.vue'
+import DeleteDialog from '@/dialogs/DeleteDialog.vue'
+import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
+
+// Table Cell Subcomponents
+import ResourceName from '@/components/table/cells/ResourceName.vue'
+import BadgeIcon from '@/components/table/cells/BadgeIcon.vue'
+import CellLongText from '@/components/table/cells/CellLongText.vue'
+import TagList from '@/components/table/cells/TagList.vue'
+import ParameterList from '@/components/table/cells/ParameterList.vue'
 
 const route = useRoute()
 const router = useRouter()
-
-const tab = ref('overview')
 const isMedium = inject('isMedium')
 const isMobile = inject('isMobile')
 
-const job = ref()
+// --- State ---
+const tab = ref('overview')
+const job = ref(null) // Initialize as null to safely check v-if="job"
 const showTagsDialog = ref(false)
 const showDeleteDialog = ref(false)
-const selectedParam = ref([])
-const selectedUsedArtifact = ref([])
-const selectedMetric = ref([])
-const metrics = ref([])
-
-async function getJob() {
-  try {
-    const res = await api.getItem('jobs', route.params.id)
-    job.value = res.data
-  } catch(err) {
-    console.log(err)
-  }
-}
-
-onMounted(() => {
-  // to get tab counts
-  getLogNumber()
-  getJobMetrics()
-})
-
-const metricNames = computed(() => {
-  return metrics.value.map(metric => metric.name)
-})
-
-watch(tab, async (newVal) => {
-  if(newVal === 'metrics') {
-    await loadAllMetricHistories()
-  }
-})
-
-async function loadAllMetricHistories() {
-  metricsData.value = []
-  await getJobMetrics()
-  const promises = metricNames.value.map(name =>
-    getJobMetricHistory(route.params.id, name)
-  )
-  const results = await Promise.all(promises)
-  metricsData.value = results
-}
-
-const jobLogs = ref([])
-const selectedSeverity = ref(['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'])
-watch(selectedSeverity, () => {
-  if(selectedSeverity.value.length === 0) {
-    selectedSeverity.value = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
-  }
-  tableRef.value.refreshTable()
-})
-
-const tableRef = ref(null)
 const isLoading = ref(false)
+const metrics = ref([])
+const metricsData = ref([])
+const jobLogs = ref([])
+const logTotalNumber = ref(0)
+const tableRef = ref(null)
+const filter = ref('')
 
-async function getLogs(pagination) {
-  isLoading.value = true
-  const minLoadTimePromise = new Promise(resolve => setTimeout(resolve, 300)); 
-
-  try {
-    const [res] = await Promise.all([
-      api.getJobLogs(job.value.id, pagination, selectedSeverity.value),
-      minLoadTimePromise
-    ])
-
-    jobLogs.value = res.data.data
-    logTotalNumber.value = res.data.totalNumResults
-    tableRef.value.updateTotalRows(res.data.totalNumResults)
-  } catch(err) {
-    console.log('err = ', err)
-    notify.error(err.response.data.message);
-  } finally {
-    isLoading.value = false;
-  }
-}
-
-const logTotalNumber = ref()
-
-async function getLogNumber() {
-  try {
-    const res = await api.getJobLogs(route.params.id, {
-      index: 0,
-      pageLength: 1,
-      search: ''
-    })
-    logTotalNumber.value = res.data.totalNumResults
-  } catch(err) {
-    console.warn(err)
-  }
-}
-
-const selectedFrequency = ref(5)
-const refreshOptions = [
-  {label: '5 Seconds', value: 5},
-  {label: '10 Seconds', value: 10},
-  {label: '15 Seconds', value: 15},
-  {label: '30 Seconds', value: 30}
+// --- Columns ---
+const parametersColumns = [
+  { name: 'parameter', label: 'Parameter', align: 'left', field: 'parameter', sortable: true },
+  { name: 'value', label: 'Value', align: 'left', field: 'value', sortable: false },
 ]
 
-let logsIntervalId = null
+const artifactsUsedColumns = [
+  { name: 'id', label: 'ID', align: 'left', field: 'id', styleType: 'icon-badge', conceptType: 'artifact', showIcon: true, sortable: true },
+  { name: 'snapshotId', label: 'Snapshot ID', align: 'left', field: 'snapshotId', sortable: false },
+  { name: 'artifactParamName', label: 'Parameter Name', align: 'left', field: 'artifactParamName', sortable: true },
+]
 
-function clearLogsInterval() {
-  if (logsIntervalId) {
-    clearInterval(logsIntervalId)
-    logsIntervalId = null
-  }
-}
+const metricColumns = [
+  { name: 'metric', label: 'Metric', align: 'left', field: 'name', sortable: true },
+  { name: 'value', label: 'Value', align: 'left', field: 'value', sortable: false },
+]
 
-async function setupLogsPolling() {
-  clearLogsInterval()
+const logColumns = [
+  { name: 'severity', label: 'Severity', align: 'left', field: 'severity', sortable: true, classes: 'vertical-top', style: 'width: 100px' },
+  { name: 'logger_name', label: 'Logger Name', align: 'left', field: 'loggerName', sortable: true, classes: 'vertical-top', style: 'width: 150px' },
+  { name: 'created_on', label: 'Time', align: 'left', field: 'createdOn', styleType: 'date', sortable: true, classes: 'vertical-top', style: 'width: 180px' },
+  { name: 'message', label: 'Message', align: 'left', field: 'message', sortable: false },
+]
 
-  if (tab.value !== 'logs') return
+// --- Computed Rows for Overview ---
+const overviewRows = computed(() => [
+  { label: 'ID', slot: 'id' },
+  { label: 'Description', slot: 'description' },
+  { label: 'Status', slot: 'status' },
+  { label: 'Created On', value: formatDate(job.value?.createdOn) },
+  { label: 'Created By', value: job.value?.user?.username || 'System' },
+  { label: 'Experiment', slot: 'experiment' },
+  { label: 'Entrypoint', slot: 'entrypoint' },
+  { label: 'Queue', slot: 'queue' },
+  { label: 'Timeout', value: job.value?.timeout ? `${job.value.timeout}s` : '-' },
+  { label: 'Tags', slot: 'tags' },
+])
 
-  await getJob() // get job status
-  if(job.value.status === 'finished' || job.value.status === 'failed') return
+const paramRows = computed(() => {
+  if(!job.value?.values) return []
+  return Object.entries(job.value?.values).map(([key, value]) => ({
+    parameter: key,
+    value: value,
+  }))
+})
 
-  // Ensure the table is rendered so tableRef is non-null
-  await nextTick()
-
-  // Guard if the ref/method isn't ready yet
-  if (!tableRef.value?.refreshTable) return
-
-  // Then start interval
-  logsIntervalId = setInterval(async() => {
-    await getJob() // get job status
-    if(job.value.status === 'finished' || job.value.status === 'failed') {
-      clearLogsInterval()
-      return
-    }
-    tableRef.value?.refreshTable()
-  }, selectedFrequency.value * 1000)
-}
-
-// React to BOTH tab changes and frequency changes
-watch([tab, selectedFrequency], setupLogsPolling, { immediate: true })
-
-async function getJobMetrics() {
-  try {
-    const res = await api.getJobMetrics(route.params.id)
-    metrics.value = res.data
-  } catch(err) {
-    console.log(err)
-  }
-}
-
-const metricsData = ref([])
-
-async function getJobMetricHistory(id, name) {
-  const res = await api.getJobMetricHistory(id, name)
-  
-  return {
-    name,
-    type: 'scatter',
-    data: [
-      {
-        x: res.data.data.map(obj => obj.step),
-        y: res.data.data.map(obj => obj.value)
-      }
-    ]
-  }
-}
-
-const filter = ref('')
+const artifactsUsed = computed(() => {
+  return Object.entries(job.value?.artifactValues ?? {}).map(([key, value]) => ({
+    artifactParamName: key,
+    id: value.id,
+    snapshotId: value.snapshotId,
+  }))
+})
 
 const filteredMetrics = computed(() => {
   if (!filter.value) return metricsData.value
@@ -478,70 +379,130 @@ const graphClass = computed(() => {
   return 'col-4'
 })
 
-function formatDate(dateString) {
-  const options = { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: true }
-  return new Date(dateString).toLocaleString('en-US', options)
-}
+// --- Data Fetching ---
 
-const overviewRows = computed(() => [
-  { label: 'ID', value: job.value?.id },
-  { label: 'Description', value: job.value?.description },
-  { label: 'Status', slot: 'status', props: { status: job.value?.status} },
-  { label: 'Created On', value: formatDate(job.value?.createdOn) },
-  { label: 'Created by', value: job.value?.user.username },
-  { label: 'Experiment', slot: 'experiment', 
-    props: { name: job.value?.experiment.name, id: job.value?.experiment.id, snapshotId: job.value?.experiment.snapshotId }
-  },
-  { label: 'Entrypoint', slot: 'entrypoint',
-    props: { name: job.value?.entrypoint.name, id: job.value?.entrypoint.id, snapshotId: job.value?.entrypoint.snapshotId }
-  },
-  { label: 'Queue', value: job.value?.queue.name },
-  { label: 'Timeout', value: job.value?.timeout },
-  { label: 'Tags', slot: 'tags', props: { tags: job.value?.tags }  },
-])
-
-const parametersColumns = [
-  { name: 'parameter', label: 'Parameter', align: 'left', field: 'parameter', sortable: true, },
-  { name: 'value', label: 'Value', align: 'left', field: 'value', sortable: false, },
-]
-
-const artifactsUsedColumns = [
-  { name: 'id', label: 'ID', align: 'left', field: 'id', sortable: true, },
-  { name: 'snapshotId', label: 'Snapshot Id', align: 'left', field: 'snapshotId', sortable: false, },
-  { name: 'artifactParamName', label: 'Parameter Name', align: 'left', field: 'artifactParamName', sortable: true, },
-]
-
-const metricColumns = [
-  { name: 'metric', label: 'Metric', align: 'left', field: 'name', sortable: true, },
-  { name: 'value', label: 'Value', align: 'left', field: 'value', sortable: false, },
-]
-
-const logColumns = [
-  { name: 'severity', label: 'Severity', align: 'left', field: 'severity', sortable: true, classes: 'vertical-top' },
-  { name: 'logger_name', label: 'Logger Name', align: 'left', field: 'loggerName', sortable: true, classes: 'vertical-top', },
-  { name: 'created_on', label: 'Received On', align: 'left', field: 'createdOn', sortable: true, classes: 'vertical-top', },
-  { name: 'message', label: 'Message', align: 'left', field: 'message', sortable: false, },
-]
-
-const paramRows = computed(() => {
-  if(!job.value?.values) return []
-  return Object.entries(job.value?.values).map(([key, value]) => ({
-    parameter: key,
-    value: value,
-  }))
+onMounted(async () => {
+  await getJob()
+  getLogNumber()
+  getJobMetrics()
 })
 
-async function deleteJob() {
+async function getJob() {
   try {
-    await api.deleteItem('jobs', route.params.id)
-    notify.success(`Successfully deleted job ID: ${route.params.id}`)
-    showDeleteDialog.value = false
-    router.back()
+    const res = await api.getItem('jobs', route.params.id)
+    job.value = res.data
   } catch(err) {
-    notify.error(err.response.data.message);
+    console.error(err)
   }
 }
 
+async function getLogs(pagination) {
+  isLoading.value = true
+  // Safety check if tableRef exists
+  if (!tableRef.value) return 
+
+  try {
+    const minLoadTimePromise = new Promise(resolve => setTimeout(resolve, 300)); 
+    const [res] = await Promise.all([
+      api.getJobLogs(job.value.id, pagination, selectedSeverity.value),
+      minLoadTimePromise
+    ])
+
+    jobLogs.value = res.data.data
+    logTotalNumber.value = res.data.totalNumResults
+    tableRef.value.updateTotalRows(res.data.totalNumResults)
+  } catch(err) {
+    console.warn(err)
+    notify.error('Failed to fetch logs')
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+async function getLogNumber() {
+  try {
+    const res = await api.getJobLogs(route.params.id, { index: 0, pageLength: 1, search: '' })
+    logTotalNumber.value = res.data.totalNumResults
+  } catch(err) { console.warn(err) }
+}
+
+async function getJobMetrics() {
+  try {
+    const res = await api.getJobMetrics(route.params.id)
+    metrics.value = res.data
+  } catch(err) { console.warn(err) }
+}
+
+async function loadAllMetricHistories() {
+  metricsData.value = []
+  await getJobMetrics()
+  const metricNames = metrics.value.map(metric => metric.name)
+  const promises = metricNames.map(name => getJobMetricHistory(route.params.id, name))
+  const results = await Promise.all(promises)
+  metricsData.value = results
+}
+
+async function getJobMetricHistory(id, name) {
+  const res = await api.getJobMetricHistory(id, name)
+  return {
+    name,
+    type: 'scatter',
+    data: [{
+      x: res.data.data.map(obj => obj.step),
+      y: res.data.data.map(obj => obj.value)
+    }]
+  }
+}
+
+// --- Log Polling Logic ---
+const selectedSeverity = ref(['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'])
+const selectedFrequency = ref(5)
+const refreshOptions = [
+  {label: '5s', value: 5},
+  {label: '10s', value: 10},
+  {label: '15s', value: 15},
+  {label: '30s', value: 30}
+]
+let logsIntervalId = null
+
+function clearLogsInterval() {
+  if (logsIntervalId) {
+    clearInterval(logsIntervalId)
+    logsIntervalId = null
+  }
+}
+
+async function setupLogsPolling() {
+  clearLogsInterval()
+  if (tab.value !== 'logs') return
+
+  if (!job.value) await getJob()
+  if(job.value?.status === 'finished' || job.value?.status === 'failed') return
+
+  await nextTick()
+  if (!tableRef.value?.refreshTable) return
+
+  logsIntervalId = setInterval(async() => {
+    await getJob() 
+    if(job.value.status === 'finished' || job.value.status === 'failed') {
+      clearLogsInterval()
+      return
+    }
+    tableRef.value?.refreshTable()
+  }, selectedFrequency.value * 1000)
+}
+
+// Watchers
+watch([tab, selectedFrequency], setupLogsPolling, { immediate: true })
+watch(selectedSeverity, () => {
+  if(selectedSeverity.value.length === 0) selectedSeverity.value = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
+  tableRef.value?.refreshTable()
+})
+watch(() => tab.value, async (newVal) => {
+  if(newVal === 'metrics') await loadAllMetricHistories()
+})
+
+// --- Actions ---
 function reRunJob() {
   router.push({
     path: '/jobs/new',
@@ -549,25 +510,28 @@ function reRunJob() {
   })
 }
 
-const artifactsUsed = computed(() => {
-  return Object.entries(job.value?.artifactValues ?? {}).map(([key, value]) => ({
-    artifactParamName: key,
-    id: value.id,
-    snapshotId: value.snapshotId,
-  }))
-})
+async function deleteJob() {
+  try {
+    await api.deleteItem('jobs', route.params.id)
+    notify.success(`Deleted job ${route.params.id}`)
+    showDeleteDialog.value = false
+    router.back()
+  } catch(err) {
+    notify.error(err.response?.data?.message || 'Delete failed')
+  }
+}
 
+function formatDate(dateString) {
+  if(!dateString) return '-'
+  const options = { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: true }
+  return new Date(dateString).toLocaleString('en-US', options)
+}
 </script>
 
 <style scoped>
-  :deep(.q-table .code-cell .cm-editor),
-  :deep(.q-table .code-cell .cm-content),
-  :deep(.q-table .code-cell .cm-scroller),
-  :deep(.q-table .code-cell .cm-line) {
-    cursor: text !important;
-  }
-
-  :deep(.q-table .code-cell .cm-gutters) {
-    cursor: default !important;
-  }
+/* Keep existing code editor style overrides */
+:deep(.q-table .code-cell .cm-editor),
+:deep(.q-table .code-cell .cm-content) {
+  cursor: text !important;
+}
 </style>

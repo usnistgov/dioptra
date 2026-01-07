@@ -49,27 +49,40 @@
 
       <template v-if="props.row.plugins.length > 0">
         <template v-for="(plugin, i) in props.row.plugins.slice(0, 3)" :key="i">
-          <div class="row items-center no-wrap bg-white q-pa-none shadow-1" style="border-radius: 4px; border: 1px solid #eeeeee; width:fit-content; max-width:180px">
-            <!-- :icon="getConceptStyle('plugin').icon" -->
+          <div class="row items-center no-wrap bg-white q-pa-none shadow-1" style="border-radius: 4px; border: 1px solid #eeeeee; width:fit-content; max-width:220px">
+            
             <q-chip
               :color="getConceptStyle('plugin').color" 
               text-color="white"
               size="sm" outline square clickable
-              class="text-weight-bold q-py-sm q-pr-md q-ma-none no-border"
-              style="max-width:180px; width:100%"
+              class="text-weight-bold q-py-sm q-pr-sm q-ma-none no-border full-width"
               @click.stop="openPluginDialog(props.row, 'plugins')"
             >
-              <span class="font-mono ellipsis" style="font-size: 11px; font-weight:500; max-width:180px">
+              <span class="font-mono ellipsis" style="font-size: 11px; font-weight:500; max-width:140px">
                 {{ plugin.name }}
               </span>
+
+              <template v-if="!plugin.latestSnapshot">
+                <div style="height: 12px; width: 1px; background-color: #ddd; margin: 0 6px;"></div>
+
+                <q-badge rounded color="warning" class="q-mr-xs" style="padding: 2px;">
+                  <q-icon name="warning" color="white" size="10px" />
+                  <q-tooltip anchor="center right">Plugin out of date</q-tooltip>
+                </q-badge>
+
+                <q-btn 
+                  flat round dense 
+                  size="xs" 
+                  color="red" 
+                  icon="sync" 
+                  @click.stop="syncPlugin(props.row.id, plugin.id, plugin.name, 'plugins')"
+                >
+                  <q-tooltip anchor="center right">Sync to latest</q-tooltip>
+                </q-btn>
+              </template>
+
+              <q-tooltip>ID: {{ plugin.id }}</q-tooltip>
             </q-chip>
-            <div class='row items-center no-wrap'>
-              <q-badge v-if="!plugin.latestSnapshot" rounded color="warning" class="items-center" style="top: 2px; right: 2px; border: 1px solid white;">
-                <q-icon name="warning" color="white" />
-              </q-badge>
-              <q-tooltip>Warning: Plugin "{{ plugin.name}}" ({{ plugin.id }}) is out of date</q-tooltip>
-            <q-btn v-if="!plugin.latestSnapshot" flat round size="xs" color="red" icon="sync" class="q-ml-xs" @click.stop="syncPlugin(props.row.id, plugin.id, plugin.name, 'plugins')" />
-            </div>
           </div>
         </template>
 
@@ -122,29 +135,41 @@
 
       <template v-if="props.row.artifactPlugins.length > 0">
         <template v-for="(plugin, i) in props.row.artifactPlugins.slice(0, 3)" :key="i">
-          <div class="row items-center no-wrap bg-white q-pa-none shadow-1" style="border-radius: 4px; border: 1px solid #eeeeee; width:fit-content; max-width:180px">
-            <!-- :icon="getConceptStyle('plugin').icon" -->
+          <div class="row items-center no-wrap bg-white q-pa-none shadow-1" style="border-radius: 4px; border: 1px solid #eeeeee; width:fit-content; max-width:220px">
+            
             <q-chip
               :color="getConceptStyle('plugin').color" 
               text-color="white"
               size="sm" outline square clickable
-              class="text-weight-bold q-py-sm q-pr-md q-ma-none no-border"
-              style="max-width:180px; width:100%"
+              class="text-weight-bold q-py-sm q-pr-sm q-ma-none no-border full-width"
               @click.stop="openPluginDialog(props.row, 'artifactPlugins')"
             >
-              <span class="font-mono ellipsis" style="font-size: 11px; font-weight:500; max-width:180px">
+              <span class="font-mono ellipsis" style="font-size: 11px; font-weight:500; max-width:140px">
                 {{ plugin.name }}
               </span>
-              <q-tooltip>ID: {{ plugin.id }}</q-tooltip>
+
+              <template v-if="!plugin.latestSnapshot">
+                <div style="height: 12px; width: 1px; background-color: #ddd; margin: 0 6px;"></div>
+
+                <q-badge rounded color="warning" class="q-mr-xs" style="padding: 2px;">
+                   <q-icon name="warning" color="white" size="10px" />
+                   <q-tooltip anchor="center right">Plugin out of date</q-tooltip>
+                </q-badge>
+
+                <q-btn 
+                  flat round dense 
+                  size="xs" 
+                  color="red" 
+                  icon="sync" 
+                  @click.stop="syncPlugin(props.row.id, plugin.id, plugin.name, 'artifactPlugins')"
+                >
+                  <q-tooltip anchor="center right">Sync to latest</q-tooltip>
+                </q-btn>
+              </template>
+
+              <q-tooltip>Plugin ID: {{ plugin.id }}</q-tooltip>
             </q-chip>
-            <div class='row items-center no-wrap'>
-              <q-badge v-if="!plugin.latestSnapshot" rounded color="warning" class="items-center" style="top: 2px; right: 2px; border: 1px solid white;">
-                <q-icon name="warning" color="white" />
-              </q-badge>
-              <q-tooltip>Warning: Plugin "{{ plugin.name}}" ({{ plugin.id }}) is out of date</q-tooltip>
-            <q-btn v-if="!plugin.latestSnapshot" flat round size="xs" color="red" icon="sync" class="q-ml-xs" @click.stop="syncPlugin(props.row.id, plugin.id, plugin.name, 'artifactPlugins')" />
-            </div>
-             </div>
+          </div>
         </template>
 
         <div v-if="props.row.artifactPlugins.length > 3">
@@ -161,13 +186,14 @@
                 <div class="text-caption text-grey-7 q-mb-xs text-weight-bold">Additional Artifact Plugins</div>
                 <template v-for="(plugin, i) in props.row.artifactPlugins.slice(3)" :key="i">
                   <div class="row items-center justify-between no-wrap bg-grey-1 q-pa-xs border-radius-inherit">
-                    <!-- text-color="white" :icon="getConceptStyle('plugin').icon" -->
                     <q-chip
                       :color="getConceptStyle('plugin').color" 
+                      text-color="white" :icon="getConceptStyle('plugin').icon"
                       size="sm" outline square clickable class="text-weight-bold q-my-none"
                       @click.stop="openPluginDialog(props.row, 'artifactPlugins')"
                     >
                       {{ plugin.name }}
+                      <q-tooltip>ID: {{ plugin.id }}</q-tooltip>
                     </q-chip>
                     <q-btn v-if="!plugin.latestSnapshot" flat round size="xs" color="red" icon="sync" @click.stop="syncPlugin(props.row.id, plugin.id, plugin.name, 'artifactPlugins')" />
                   </div>
