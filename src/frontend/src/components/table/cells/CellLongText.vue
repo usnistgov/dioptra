@@ -1,7 +1,7 @@
 <template>
   <div 
     :class="[textColor, textTypeClass, 'text-wrap-style']"
-    :style="{ maxWidth: maxWidth }"
+    :style="{ maxWidth: maxWidth, width: 'fit-content' }"
   >
     {{ formattedDisplayValue }}
     

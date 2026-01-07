@@ -6,7 +6,6 @@
   />
   
   <TableComponent 
->>>>>>> ff3f9670 (feat: update table styling, work in progress)
     ref="tableRef"
     :rows="plugins"
     :columns="computedColumns"
