@@ -97,7 +97,17 @@ const layout = computed(() => {
 const chart = ref(null)
 
 onMounted(() => {
-  Plotly.newPlot(chart.value, props.data, layout.value, { responsive: true })
+  // Plotly.newPlot(chart.value, props.data, layout.value, { responsive: true })
+
+  Plotly.newPlot(
+    chart.value,
+    props.data,
+    {
+      ...layout.value,
+      annotations: invalidAnnotations.value
+    },
+    { responsive: true }
+  )
 })
 
 watch(() => props.data, (newVal) => {
@@ -132,6 +142,29 @@ watch(() => $q.dark.isActive, () => {
   }
 
   Plotly.relayout(chart.value, layoutUpdate)
+})
+
+const invalidAnnotations = computed(() => {
+  if(!props.data) return []
+  let coords = props.data[0]
+  let invalidPoints = []
+  coords.y.forEach((dataPoint, index) => {
+    if(!Number.isFinite(dataPoint)) {
+      invalidPoints.push({x: coords.x[index], y: dataPoint})
+    }
+  })
+
+  return invalidPoints.map(invalidPoint => ({
+    x: invalidPoint.x,
+    y: -.15,
+    xref: 'x',
+    yref: 'paper',
+    text: '✕',
+    showarrow: false,
+    font: { color: 'red', size: 18 },
+    hovertext: `Invalid Value: (${invalidPoint.x}, ${invalidPoint.y})`,
+    hoverlabel: { bgcolor: 'red', font: { color: 'white' } },
+  }))
 })
 
 </script>
