@@ -23,24 +23,24 @@ Plugins
 Summary: What is a Plugin?
 --------------------------
 
-A **Plugin** is a logical container used to organize Python code within Dioptra. 
+A **Plugin** is a logical container used to organize Python code within Dioptra.
 
 
 
 Plugins hold the Python files that define the logic for your experiments. Within these files, you define **Tasks**—the individual units of work that the Dioptra engine executes. There are two distinct types of tasks within a plugin:
 
 1. **Plugin Function Tasks:** These act as the computational steps in a workflow.
-   
+
    * *Example:* A task that accepts a training dataset and returns a trained ML model.
 
 2. **Plugin Artifact Tasks:** These handle the interface between memory and disk storage (I/O).
-   
+
    * *Example:* A task that serializes a trained model object to a .pt (PyTorch) file and handles the subsequent deserialization back into memory for potential downstream tasks.
 
 Plugin Function Tasks
 ---------------------
 
-Plugin Function Tasks are Python functions that have been registered with Dioptra. They serve as the fundamental "verbs" or actions in your entrypoint workflow graphs. 
+Plugin Function Tasks are Python functions that have been registered with Dioptra. They serve as the fundamental "verbs" or actions in your entrypoint workflow graphs.
 
 These tasks perform specific units of work, such as training a model, calculating a metric, or transforming data. Like standard Python functions, they accept inputs (arguments) and produce return values.
 
@@ -70,8 +70,8 @@ When creating Python plugins, users manually register each function task. This c
 
 
 .. note::
-    
-   In order for a Python function to be registrable, it must use the ``@pyplugs.register`` decorator. 
+
+   In order for a Python function to be registrable, it must use the ``@pyplugs.register`` decorator.
    View  :ref:`Plugins: reference <reference-plugins>`  to learn about the ``@pyplugs.register`` syntax for function plugin tasks.
 
 
@@ -83,33 +83,33 @@ Plugin Artifact Tasks manage data persistence. Because complex Python objects (l
 By isolating I/O logic in Artifact Tasks, the main computational workflow (Function Tasks) remains decoupled from file system operations, making your code cleaner and more portable.
 
 
-Artifact Handlers are Python classes that define certain methods for I/O logic. 
-  
+Artifact Handlers are Python classes that define certain methods for I/O logic.
+
 
 .. note::
-    
-    Artifact Handler classes must inherit from the parent class ``ArtifactTaskInterface``. See :ref:`Plugins: reference <reference-plugins>` to learn about the syntax for creating artifact tasks. 
+
+    Artifact Handler classes must inherit from the parent class ``ArtifactTaskInterface``. See :ref:`Plugins: reference <reference-plugins>` to learn about the syntax for creating artifact tasks.
 
 
 Artifact Task Registration
 -----------------
 
-Artifact tasks are registered similarly to function tasks. 
+Artifact tasks are registered similarly to function tasks.
 
 When an artifact task is registered, the user defines:
 
 * **The Artifact Task Name:** Always equal to the name of the Python class that defines the Artifact Handling logic
-* **Output Parameters:** The name and the type of the return object from the **deserialize** method 
+* **Output Parameters:** The name and the type of the return object from the **deserialize** method
 
 
-Using Function Tasks and Artifact Tasks 
+Using Function Tasks and Artifact Tasks
 ----------------------------
 
 Plugins create the "vocabulary" of tasks available to an experiment. To utilize these tasks, you must attach the relevant Plugin to an **Entrypoint**.
 
 Function tasks are used in the entrypoint task graph. Artifact tasks are used in the artifact output graph to save artifacts, and in the artifact input parameters to make saved artifacts available to an entrypoint task graph.
 
-Entrypoints utilize the types that are declared in function tasks inputs / outputs to ensure the workflow is valid. 
+Entrypoints utilize the types that are declared in function tasks inputs / outputs to ensure the workflow is valid.
 
     See :ref:`Entrypoints: explanation <explanation-entrypoints>` to learn how plugins are used in entrypoints
 
@@ -117,11 +117,9 @@ Entrypoints utilize the types that are declared in function tasks inputs / outpu
 
 .. rst-class:: fancy-header header-seealso
 
-See Also 
+See Also
 ---------
-   
-* :ref:`Dioptra experiment overview <explanation-experiment-overview>` - How plugins fit into Dioptra experiments
+
+* :ref:`Workflow Architecture <explanation-workflow-architecture>` - How plugins fit into Dioptra's workflow architecture
 * :ref:`how-to-create-plugins` - Step-by-step guide on building plugins
 * :ref:`Plugins: reference <reference-plugins>` - Detailed syntax for decorators and type annotations
-
-
