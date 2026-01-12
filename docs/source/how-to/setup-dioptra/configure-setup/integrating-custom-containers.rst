@@ -17,32 +17,58 @@
 
 .. _how-to-integrating-custom-containers:
 
-Integrating Custom Containers
-=====================
+Integrate Custom Containers
+===========================
 
-This how to guide explains how to integrate custom contianers. 
+This guide explains how to integrate custom Docker containers into your Dioptra deployment, enabling the use of specialized worker images or additional services.
 
+Prerequisites
+-------------
 
+* :ref:`how-to-prepare-deployment` - A configured Dioptra deployment
+* :ref:`how-to-using-docker-compose-overrides` - Override file created
+* Custom container image built and available locally or in a registry
+* Understanding of Docker Compose file structure
 
-Prior Documentation Snippets
-----------------------------
+Integration Steps
+-----------------
 
-.. note:: 
-    The following material is from previous document pages. It needs to be refactored. It is included below as a placeholder and for reference. 
+.. rst-class:: header-on-a-card header-steps
 
-Integrating custom containers
-#############################
+Step 1: Prepare Your Custom Container
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In some instances, you may want to utilize custom containers in the Dioptra environment.
-For this example, let's assume you have a container named ``custom-container`` that has a ``dev`` tag associated with it.
-To add this container to the deployment, nest the following code block in the ``services:`` section before the **top-level** ``volumes:`` section of the to the ``docker-compose.override.yml`` file:
+Ensure your custom container image is built and available. You can verify it with:
+
+.. code:: sh
+
+   docker images | grep custom-container
+
+If your container is in a remote registry, ensure Docker has access to pull it.
+
+.. rst-class:: header-on-a-card header-steps
+
+Step 2: Add the Container Service Definition
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Open ``docker-compose.override.yml`` and add your custom container definition in the ``services:`` section.
+
+Below is a template for a custom worker container that integrates with Dioptra's services:
 
 .. code:: yaml
 
+   services:
      custom-container:
+       # Container image name and tag
        image: custom-container:dev
+
+       # Restart policy
        restart: always
+
+       # Hostname for internal DNS resolution
        hostname: custom-container
+
+       # Health check configuration
        healthcheck:
          test:
            - CMD
@@ -51,29 +77,93 @@ To add this container to the deployment, nest the following code block in the ``
          timeout: 60s
          retries: 5
          start_period: 80s
+
+       # Environment variables for Dioptra integration
        environment:
          AWS_ACCESS_KEY_ID: ${WORKER_AWS_ACCESS_KEY_ID}
          AWS_SECRET_ACCESS_KEY: ${WORKER_AWS_SECRET_ACCESS_KEY}
          DIOPTRA_RESTAPI_DATABASE_URI: ${DIOPTRA_RESTAPI_DATABASE_URI}
+
+       # Wait for dependent services before starting
        command:
          - --wait-for
-         - dioptra-deployment-redis:6379
+         - <deployment-name>-redis:6379
          - --wait-for
-         - dioptra-deployment-minio:9001
+         - <deployment-name>-minio:9001
          - --wait-for
-         - dioptra-deployment-db:5432
+         - <deployment-name>-db:5432
          - --wait-for
-         - dioptra-deployment-mlflow-tracking:5000
+         - <deployment-name>-mlflow-tracking:5000
          - --wait-for
-         - dioptra-deployment-restapi:5000
+         - <deployment-name>-restapi:5000
          - tensorflow_cpu
+
+       # Environment files to load
        env_file:
          - ./envs/ca-certificates.env
-         - ./envs/dioptra-deployment-worker.env
-         - ./envs/dioptra-deployment-worker-cpu.env
+         - ./envs/<deployment-name>-worker.env
+         - ./envs/<deployment-name>-worker-cpu.env
+
+       # Network to join
        networks:
          - dioptra
+
+       # Volume mounts
        volumes:
          - "worker-ca-certificates:/usr/local/share/ca-certificates:rw"
          - "worker-etc-ssl:/etc/ssl:rw"
-         - "/local/path/to/data:/dioptra/data:ro"
+         - "<host-data-path>:/dioptra/data:ro"
+
+.. note::
+
+   Replace ``<deployment-name>`` with your deployment's slugified name (default: ``dioptra-deployment``) and ``<host-data-path>`` with the absolute path to your data directory.
+
+.. rst-class:: header-on-a-card header-steps
+
+Step 3: Configure Environment and Volumes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Customize the container definition for your needs:
+
+**Environment Variables:**
+Add any additional environment variables your container needs in the ``environment:`` section.
+
+**Volume Mounts:**
+Add volume mounts to provide access to data or configuration files. See :ref:`how-to-data-mounts` for more details.
+
+**GPU Support:**
+If your container needs GPU access, add the GPU configuration. See :ref:`how-to-gpu-enabled-workers` for details.
+
+.. rst-class:: header-on-a-card header-steps
+
+Step 4: Start the Deployment
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Apply your changes by starting or restarting the deployment:
+
+.. code:: sh
+
+   docker compose up -d
+
+Verify your custom container is running:
+
+.. code:: sh
+
+   docker compose ps
+
+Check the logs if needed:
+
+.. code:: sh
+
+   docker compose logs custom-container
+
+.. rst-class:: header-on-a-card header-seealso
+
+See Also
+--------
+
+* :ref:`how-to-using-docker-compose-overrides` - Docker Compose override file basics
+* :ref:`how-to-prepare-deployment` - Full deployment customization
+* :ref:`how-to-data-mounts` - Mount data volumes into containers
+* :ref:`how-to-gpu-enabled-workers` - Configure GPU support
+* `Docker Compose specification <https://docs.docker.com/compose/compose-file/>`__ - Full reference for compose files

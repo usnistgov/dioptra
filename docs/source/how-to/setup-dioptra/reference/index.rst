@@ -15,42 +15,22 @@
 .. ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 .. https://creativecommons.org/licenses/by/4.0/legalcode
 
-.. _how-to-set-up-the-python-client:
+.. _reference-setup:
 
-Set Up the Python Client
-========================
+Setup Reference
+===============
 
-This how-to explains how to initialize the Dioptra Python Client in a Jupyter notebook and login. 
+This section contains technical reference documentation for Dioptra deployment configuration.
+Use these documents for quick lookup of configuration options, folder structures, script parameters, and common commands.
 
+.. container:: wide-lightly-shaded
 
-Prerequisites
--------------
+   .. toctree::
+      :maxdepth: 1
+      :caption: Table of Contents
 
-* :ref:`how-to-prepare-deployment` - You need access to a Dioptra deployment.
+      deployment-template-reference
+      deployment-folder-reference
+      init-deployment-script-reference
+      deployment-commands-reference
 
-.. _setup_python_client_recipe:
-
-Client Setup Workflow
-------------------------
-
-
-.. rst-class:: header-on-a-card header-steps
-
-Step 1: Start Docker Containers
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-- Navigate to deployment folder 
-- Run ``docker compose up``
-
-.. rst-class:: header-on-a-card header-steps
-
-Step 2: Initialize Client and Log In
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-In your Jupyter notebook, run the following code: 
-        
-.. admonition:: Setup Python Client
-    :class: code-panel python
-
-    .. literalinclude:: ../../../../docs/source/documentation_code/client_workflows/client_setup.py
-       :language: python

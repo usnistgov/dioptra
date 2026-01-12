@@ -65,7 +65,7 @@ Dataset Placement
 .. highlight:: text
 
 The datasets should be downloaded and organized in the same directory on the host machine that is running Dioptra.
-This folder can be stored anywhere on your host machine's filesystem (:ref:`this folder will then need to be mounted into the worker containers <running-dioptra-mounting-folders-in-the-worker-containers>`).
+This folder can be stored anywhere on your host machine's filesystem (:ref:`this folder will then need to be mounted into the worker containers <how-to-data-mounts>`).
 For the sake of this documentation, we assume that the datasets are stored in the ``/dioptra/data`` directory so that it matches with the filepath also used in the examples.
 
 To use the aforementioned datasets with the Dioptra examples, they will need to be organized in the ``/dioptra/data`` folder in a specific way, which the `download_data.py <https://github.com/usnistgov/dioptra/blob/main/examples/scripts/download_data.py>`_ script will handle automatically for you.
