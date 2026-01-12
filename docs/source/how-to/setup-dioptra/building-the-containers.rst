@@ -102,6 +102,8 @@ Use the Makefile to build the container images:
 
 .. rst-class:: header-on-a-card header-steps
 
+.. _how-to-build-containers-build-gpu-images:
+
 Step 4: Build GPU Images (Optional)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -145,7 +145,7 @@ Once the tasks appear in the list (GUI) or the API call returns successfully (Py
 See Also 
 ---------
 
-* :ref:`Overview of Experiments <explanation-experiment-overview>` - Understand how plugins fit into experiments.
+* :ref:`Overview of Experiments <explanation-workflow-architecture>` - Understand how plugins fit into experiments.
 * :ref:`Artifacts: explanation <explanation-artifacts>` - Learn about artifacts.
 * :ref:`Learning the Essentials Tutorial: Saving Artifacts <tutorial-saving-artifacts>` - See artifacts used in a data science workflow.
 * :ref:`Plugins: reference <reference-plugins>` - More information on syntax requirements for Plugins
