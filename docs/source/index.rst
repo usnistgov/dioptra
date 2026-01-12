@@ -51,7 +51,7 @@ or by directly making calls to REST API.
 .. admonition:: Learn More 
       
    - :ref:`See the system requirements <reference-system-requirements>`
-   - :ref:`Follow the quick set up guide <how-to-quick-setup>`
+   - :ref:`Follow the quick setup guide <how-to-quick-setup>`
 
 
 Dioptra Documentation
@@ -74,7 +74,7 @@ Use Dioptra
 ^^^^^^^^^^^^^^^^^^^
 
 - :ref:`See the system requirements <reference-system-requirements>` before getting set up
-- :ref:`Follow the set up guide <how-to-quick-setup>` to build the Docker containers and start the services 
+- :ref:`Follow the setup guide <how-to-quick-setup>` to build the Docker containers and start the services 
 - :ref:`Run the Hello World tutorial <tutorial-hello-world-in-dioptra>` to make sure things are set up correctly 
 
 .. rst-class:: header-on-a-card 
@@ -106,12 +106,16 @@ You can find the source code, license information, and more on the NIST `GitHub 
 
 .. toctree::
    :maxdepth: 2
-   :caption: Set Up 
+   :caption: Setup
    :hidden:
    :titlesonly:
 
-   how-to/setup-dioptra/quick-setup.rst 
+   how-to/setup-dioptra/quick-setup.rst
+   how-to/setup-dioptra/building-the-containers.rst
+   how-to/setup-dioptra/prepare-deployment.rst
+   how-to/setup-dioptra/update-deployment.rst
    how-to/setup-dioptra/configure-setup/index.rst
+   how-to/setup-dioptra/reference/index.rst
 
 .. toctree::
    :maxdepth: 1
@@ -139,15 +143,14 @@ You can find the source code, license information, and more on the NIST `GitHub 
    how-to/essential-workflows/index.rst
    how-to/import-content/index.rst
    how-to/advanced/index.rst
-   how-to/managing-containers.rst
 
 
 .. toctree::
    :maxdepth: 1
-   :caption: Reference      
+   :caption: Reference
    :hidden:
 
-   reference/system-reqs 
+   reference/system-reqs
    reference/glossary
    reference/dioptra-components/index.rst
    reference/api-reference-restapi

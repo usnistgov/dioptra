@@ -27,7 +27,7 @@ Start the Dioptra Services
 
 .. note:: 
    If you have not already built the Dioptra Docker containers, you need to do that first.
-   See :ref:`getting-started-building-the-containers`
+   See :ref:`how-to-build-containers`
 
 Make sure the Dioptra Docker containers are running:
 

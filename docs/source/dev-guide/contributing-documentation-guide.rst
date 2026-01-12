@@ -164,8 +164,8 @@ Each documentation page should align with one of these types.
 
 **The Table of Contents headers reflect these types:**
 
-* "**What is Dioptra**" →  Explanation 
-* "**Set Up**" →  How To
+* "**What is Dioptra**" →  Explanation
+* "**Setup**" →  How To
 * "**Explainers**" →  Explanation 
 * "**Tutorials**" →  Tutorials 
 * "**How Tos**" →  How To 
@@ -837,20 +837,20 @@ title but can be overridden using the ``<>`` syntax (see example).
 
    .. tab:: Rendered
 
-      See more about :ref:`getting-started-running-dioptra`  
+      See more about :ref:`how-to-prepare-deployment`
       in the dedicated page.
 
-      See more about :ref:`My custom reference name for the same page <getting-started-running-dioptra>`
+      See more about :ref:`My custom reference name for the same page <how-to-prepare-deployment>`
       in the dedicated page. 
 
    .. tab:: RST Source
 
       .. code-block:: rst
 
-         See more about :ref:`getting-started-running-dioptra`  
+         See more about :ref:`how-to-prepare-deployment`
          in the dedicated page.
 
-         See more about :ref:`My custom reference name for the same page <getting-started-running-dioptra>`
+         See more about :ref:`My custom reference name for the same page <how-to-prepare-deployment>`
          in the dedicated page. 
          
 .. note::
@@ -961,7 +961,7 @@ Cards, grids, and callouts
       .. grid:: 2
 
          .. grid-item-card:: **Run Dioptra**
-            :link: getting-started-running-dioptra
+            :link: how-to-prepare-deployment
             :link-type: ref
 
             Step-by-step instructions for running Dioptra.
@@ -973,7 +973,7 @@ Cards, grids, and callouts
             How to install Dioptra locally.
 
          .. grid-item-card:: **Build Containers**
-            :link: getting-started-building-the-containers
+            :link: how-to-build-containers
             :link-type: ref
 
             Instructions for building container images.
@@ -1003,7 +1003,7 @@ Cards, grids, and callouts
                How to install Dioptra locally.
 
             .. grid-item-card:: **Build Containers**
-               :link: getting-started-building-the-containers
+               :link: how-to-build-containers
                :link-type: ref
 
                Instructions for building container images.
