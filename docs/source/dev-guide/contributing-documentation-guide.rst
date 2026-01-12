@@ -22,9 +22,9 @@ Guidelines for Documentation
 ============================
 
 
-This is a guide for Dioptra developers that details **style and content guidelines** for `Sphinx <https://www.sphinx-doc.org/en/master/index.html>`__ documentation pages.  
+This is a guide for Dioptra developers that details **style and content guidelines** for `Sphinx <https://www.sphinx-doc.org/en/master/index.html>`__ documentation pages.
 
-Dioptra documentation uses `reStructuredText (.rst) <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html#rst-primer>`__ with Sphinx. The documentation pages are located in ``docs/source/`` 
+Dioptra documentation uses `reStructuredText (.rst) <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html#rst-primer>`__ with Sphinx. The documentation pages are located in ``docs/source/``
 and are built using the command ``uvx tox run -e web-compile,docs``.
 
 
@@ -48,12 +48,12 @@ Documentation goals
 - **Brevity & placement.** Put content where it belongs; avoid duplication across types.
 - **Single purpose per page.** Don’t mix a tutorial with reference or explanation on the same page.
 - **Source of truth lives in code dirs.** Bring example code in with ``literalinclude``.
-- **Cross Reference Documentation.** Don't repeat information across pages - reference relevant complimentary materials using Sphinx cross references instead. 
+- **Cross Reference Documentation.** Don't repeat information across pages - reference relevant complimentary materials using Sphinx cross references instead.
 
 Documentation File Placement
 --------------------------------------
 
-This is the current proposed structure for storing documentation static assets. 
+This is the current proposed structure for storing documentation static assets.
 
 Image Files
 ~~~~~~~~~~~~~
@@ -93,11 +93,11 @@ When bespoke code snippets are needed (i.e. for tutorial workflows, etc), place 
 
 Documentation code that is not meant to be run in production or in a standalone manner lives in ``docs/source/documentation_code/``.
 
-Within this directory: 
+Within this directory:
 
 * **Client Workflows:** Python scripts demonstrating the Python Client API (e.g., connecting, authenticating, submitting jobs).
-* **Plugins:** Python files with plugin tasks and artifact tasks. 
-* **Artifact Task Graphs:** YAML files with artifact task graphs 
+* **Plugins:** Python files with plugin tasks and artifact tasks.
+* **Artifact Task Graphs:** YAML files with artifact task graphs
 * **Task Graphs:** YAML files with entrypoint task graphs
 
 **Current Directory Structure**:
@@ -106,11 +106,11 @@ Within this directory:
 
    docs/source/documentation_code/
    ├── client_workflows/
-   │   ├── import_plugins.py   
-   │   └── client_setup.py     
+   │   ├── import_plugins.py
+   │   └── client_setup.py
    ├── artifact_task_graphs/
-   ├── task_graphs/ 
-   └── plugins/ 
+   ├── task_graphs/
+   └── plugins/
        ├── essential_workflows_tutorial
        └── hello_world_tutorial
 
@@ -166,10 +166,10 @@ Each documentation page should align with one of these types.
 
 * "**What is Dioptra**" →  Explanation
 * "**Setup**" →  How To
-* "**Explainers**" →  Explanation 
-* "**Tutorials**" →  Tutorials 
-* "**How Tos**" →  How To 
-* "**Reference**" →  Reference 
+* "**Explainers**" →  Explanation
+* "**Tutorials**" →  Tutorials
+* "**How Tos**" →  How To
+* "**Reference**" →  Reference
 
 Style guide for RST documents
 -----------------------------
@@ -178,14 +178,14 @@ The following collection details styling components—custom-defined or provided
 
 .. note:: **Custom CSS**
 
-   Custom CSS classes are defined in files in ``docs/assets/scss/`` and imported into ``dioptra.scss``. These scss files are compiled 
-   when the docs are built with ``uvx tox run -e web-compile,docs`` and create the resulting ``docs/source/_static/dioptra.css`` file. 
+   Custom CSS classes are defined in files in ``docs/assets/scss/`` and imported into ``dioptra.scss``. These scss files are compiled
+   when the docs are built with ``uvx tox run -e web-compile,docs`` and create the resulting ``docs/source/_static/dioptra.css`` file.
 
 .. note:: **Custom JavaScript**
-   
+
    Custom javascript code exists in ``docs/source/_static/``.
-   These assets are loaded via ``docs/conf.py`` using ``html_css_files`` and ``html_js_files`` to point to CSS and JS code in the ``_static`` directory. 
-  
+   These assets are loaded via ``docs/conf.py`` using ``html_css_files`` and ``html_js_files`` to point to CSS and JS code in the ``_static`` directory.
+
 Section hierarchy
 ~~~~~~~~~~~~~~~~
 
@@ -196,40 +196,40 @@ Headings should be nested consistently.
 - ``~`` for H3
 - ``^`` for H4
 
-Put these symbols under text to create a heading. The heading is automatically included in the 
-right side table of contents. 
+Put these symbols under text to create a heading. The heading is automatically included in the
+right side table of contents.
 
-**Header Example:** 
+**Header Example:**
 
 .. code-block:: rst
 
    .. _doc-type-doc-title-my-example-header:
 
-   My Example Header 
+   My Example Header
    -------------------
 
    Section contents...
 
    .. _doc-type-doc-title-my-example-subheader:
 
-   My Example Subheader 
+   My Example Subheader
    ~~~~~~~~~~~~~~~~~~~~
 
    Section contents .. (nested under "My Example Header" in ToC)
 
-.. seealso:: 
+.. seealso::
 
-   See :ref:`cross-references <reference-guidelines-for-documentation-cross-references>` section below to understand cross reference labels used in this example. 
+   See :ref:`cross-references <reference-guidelines-for-documentation-cross-references>` section below to understand cross reference labels used in this example.
 
 Steps (Linkable Headers on a Card)
 ~~~~~~~~~~~~~~~~~~~~
 
-When documenting steps for a tutorial or how-to guide, make the step name a header and use two CSS classes to place 
-the steps onto a card. This makes them linkable and easy to visually distinguish. 
+When documenting steps for a tutorial or how-to guide, make the step name a header and use two CSS classes to place
+the steps onto a card. This makes them linkable and easy to visually distinguish.
 
-Custom CSS classes: 
+Custom CSS classes:
 
-* ``header-on-a-card`` - puts the entire section on a card with slight padding and box shadow 
+* ``header-on-a-card`` - puts the entire section on a card with slight padding and box shadow
 * ``header-steps`` - Adds the blue clipboard to the header and the bottom border, and adjusts the header font size
 
 
@@ -249,7 +249,7 @@ RST Syntax: Steps
    2. Click **Create Plugin**.
    3. Name it and **Save**.
 
-      .. note:: Make sure you click save. 
+      .. note:: Make sure you click save.
 
    .. rst-class:: header-on-a-card header-steps
 
@@ -260,11 +260,11 @@ RST Syntax: Steps
    2. Click **Add a File**
    3. Click **Register Task** and create these inputs:
 
-         * ``sample_size`` : int 
+         * ``sample_size`` : int
          * ``mean`` : float
 
-   4. Click **Save** 
-      
+   4. Click **Save**
+
    .. admonition:: Learn More
 
       * :ref:`plugins-explanation` - Learn about plugins
@@ -283,7 +283,7 @@ Example Step 1: Create the Plugin Container
 2. Click **Create Plugin**.
 3. Name it and **Save**.
 
-   .. note:: Make sure you click save. 
+   .. note:: Make sure you click save.
 
 .. rst-class:: header-on-a-card header-steps
 
@@ -294,10 +294,10 @@ Example Step 2: Add a file
 2. Click **Add a File**
 3. Click **Register Task** and create these inputs:
 
-      * ``sample_size`` : int 
+      * ``sample_size`` : int
       * ``mean`` : float
 
-4. Click **Save** 
+4. Click **Save**
 
 .. admonition:: Learn More
 
@@ -309,27 +309,27 @@ Notes for "Steps" styling
 Note the following stylistic conventions when rendering steps:
 
 - Use of **bold** to emphasize the concrete actions within a step (corresponds to buttons, etc)
-- The creation of separating lines between **header-steps** classes is automatically done through a CSS rule 
-- You can nest other classes / structures within the **header-steps** & **header-on-a-card** class, but use sparingly. 
+- The creation of separating lines between **header-steps** classes is automatically done through a CSS rule
+- You can nest other classes / structures within the **header-steps** & **header-on-a-card** class, but use sparingly.
    Items commonly nested on cards include:
 
-   - ``.. admonition:: Learn More`` - Custom "learn more" override of the admonition box 
-   - ``.. note::`` - Built in Sphinx blue Sphinx box that says "Note" 
-   - Indentation to create a block quote 
+   - ``.. admonition:: Learn More`` - Custom "learn more" override of the admonition box
+   - ``.. note::`` - Built in Sphinx blue Sphinx box that says "Note"
+   - Indentation to create a block quote
 
 
-.. warning:: 
-   Once you use a custom **header-on-a-card** class, the card container will continue until the next header. 
-   This is how  ``.. rst-class:: header-on-a-card header-steps`` works - the styling wraps the entire next 
-   header in a styled div that continues until the next header. 
+.. warning::
+   Once you use a custom **header-on-a-card** class, the card container will continue until the next header.
+   This is how  ``.. rst-class:: header-on-a-card header-steps`` works - the styling wraps the entire next
+   header in a styled div that continues until the next header.
 
 "See Also" (Linkable Headers on a Card)
 ~~~~~~~~~~~~~~~~
 
 To create a prominent section of additional reading material, use the custom RST classes
-``header-on-a-card`` combined with ``header-seealso``. This will create 
-a lightly indented card with a green header that also has an anchor link and appears in the HTML 
-sidebar. 
+``header-on-a-card`` combined with ``header-seealso``. This will create
+a lightly indented card with a green header that also has an anchor link and appears in the HTML
+sidebar.
 
 
 RST syntax: See Also
@@ -339,13 +339,14 @@ RST syntax: See Also
 
    .. rst-class:: header-on-a-card header-seealso
 
-   See Also 
+   See Also
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-   This is a hands-on tutorial intended to walk a user through the procedural steps required to 
-   use Dioptra. The following resources are complimentary and provide high level explanations on Dioptra's 
-   design and motivation. 
+   This is a hands-on tutorial intended to walk a user through the procedural steps required to
+   use Dioptra. The following resources are complimentary and provide high level explanations on Dioptra's
+   design and motivation.
 
-   * :ref:`Overview of Experiments <explanation-experiment-overview>` - A summary of how Dioptra components interact to create an experiment
+   * :ref:`Overview of Experiments <explanation-workflow-architecture>` - A summary of how Dioptra components interact to create an experiment
+   * :ref:`Workflow Architecture <explanation-workflow-architecture>` - An overview of how all the high level Dioptra components orchestrate together to execute jobs.
    * :ref:`Why Dioptra? <explanation-why-use-dioptra>` - An explanation of what Dioptra was built for
 
 
@@ -354,13 +355,13 @@ Rendered Example: See Also
 
 .. rst-class:: header-on-a-card header-seealso
 
-See Also 
+See Also
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-This is a hands-on tutorial intended to walk a user through the procedural steps required to 
-use Dioptra. The following resources are complementary and provide high level explanations on Dioptra's 
-design and motivation. 
+This is a hands-on tutorial intended to walk a user through the procedural steps required to
+use Dioptra. The following resources are complementary and provide high level explanations on Dioptra's
+design and motivation.
 
-* :ref:`Overview of Experiments <explanation-experiment-overview>` - A summary of how Dioptra components interact to create an experiment
+* :ref:`Workflow Architecture <explanation-workflow-architecture>` - An overview of how all the high level Dioptra components orchestrate together to execute jobs.
 * :ref:`Why Dioptra? <explanation-why-use-dioptra>` - An explanation of what Dioptra was built for
 
 
@@ -369,9 +370,9 @@ design and motivation.
 Notes, warnings, important, and "see also"
 ~~~~~~~~~~~~~~~~~~
 
-To caveat steps or reference explanation/reference material elsewhere, use notes, warnings, and the important flag. 
+To caveat steps or reference explanation/reference material elsewhere, use notes, warnings, and the important flag.
 These divs are built in to Sphinx. While visually distinct, they utilize significant padding to indicate optional content.
-Use them sparingly for information that is not required reading. 
+Use them sparingly for information that is not required reading.
 
 .. tabs::
 
@@ -403,14 +404,14 @@ Use them sparingly for information that is not required reading.
             In YAML, null is interpreted as the null value. Therefore, it does not name the null type!
 
          .. seealso::
-            View the :ref:`plugins-explanation` for more information. 
+            View the :ref:`plugins-explanation` for more information.
 
 Nesting these elements in other cards or containers can result in visual clutter.
-Overusing these elements can result in visual clutter as well. These elements 
-don't provide anchor links, so don't use them for major sections as they won't be embedded in the table of contents. 
+Overusing these elements can result in visual clutter as well. These elements
+don't provide anchor links, so don't use them for major sections as they won't be embedded in the table of contents.
 
 
-Placing items in the margin 
+Placing items in the margin
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Important, note, warning and "see also" boxes can be placed in the margin with the following syntax.
@@ -437,16 +438,16 @@ Important, note, warning and "see also" boxes can be placed in the margin with t
          **Do not delete these surrounding lines in your actual file!**
 
 
-The Sphinx table of contents sidebar automatically collapses when it would be interfering with a box 
-in the margins. On narrow screens, these elements are hidden and require horizontal scrolling. 
+The Sphinx table of contents sidebar automatically collapses when it would be interfering with a box
+in the margins. On narrow screens, these elements are hidden and require horizontal scrolling.
 
 "Learn More" - Minimalistic div for more information
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Custom CSS rules were created to define a minimalistic presentation for extra information.
-This class overrides the admonition box when the title "Learn More" is added. 
-The use of this class is preferred to the ``.. seealso::`` built in Sphinx element when used inside 
-another element. 
+This class overrides the admonition box when the title "Learn More" is added.
+The use of this class is preferred to the ``.. seealso::`` built in Sphinx element when used inside
+another element.
 
 .. tabs::
 
@@ -454,7 +455,7 @@ another element.
 
       .. admonition:: Learn More
 
-         View the :ref:`plugins-explanation` for more information. 
+         View the :ref:`plugins-explanation` for more information.
 
    .. tab:: RST Source
 
@@ -462,18 +463,18 @@ another element.
 
          .. admonition:: Learn More
 
-            View the :ref:`plugins-explanation` for more information. 
+            View the :ref:`plugins-explanation` for more information.
 
-This is similar to the ``.. seealso::`` built in Sphinx box, but it has more minimal padding and is more appropriate 
-to use nested inside other elements. 
+This is similar to the ``.. seealso::`` built in Sphinx box, but it has more minimal padding and is more appropriate
+to use nested inside other elements.
 
 
 Shaded container for Table of Contents
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Custom CSS rules were created to define a lightly shaded container
-with a larger width. This container is used for table of contents (TOC) elements in index pages, 
-but could be reused for other elements as well. 
+with a larger width. This container is used for table of contents (TOC) elements in index pages,
+but could be reused for other elements as well.
 
 .. tabs::
 
@@ -486,18 +487,18 @@ but could be reused for other elements as well.
          * :doc:`/dev-guide/contributing-documentation-guide`
          * :doc:`/dev-guide/contributing-merge-request-guidelines`
          * :doc:`/dev-guide/contributing-commit-styleguide`
-            
+
 
 
    .. tab:: RST Source
 
-      In production documentation pages, use ``.. toctree::`` to incorporate 
+      In production documentation pages, use ``.. toctree::`` to incorporate
       the TOC into the global navigation system.
 
       .. code-block:: rst
 
          .. container:: wide-lightly-shaded
-                  
+
             .. toctree::
                :maxdepth: 1
                :titlesonly:
@@ -506,7 +507,7 @@ but could be reused for other elements as well.
                /dev-guide/contributing-documentation-guide
                /dev-guide/contributing-merge-request-guidelines
                /dev-guide/contributing-commit-styleguide
-         
+
       In this example, however, doc references were used to avoid actually adding these pages to the global navigation.
 
       .. code-block:: rst
@@ -520,7 +521,7 @@ but could be reused for other elements as well.
 Page Contents / Local ToC
 ~~~~~~~~~~~~~~~~
 
-To preview the contents on a page in a Table of Contents container, use the ``.. contents::`` component. 
+To preview the contents on a page in a Table of Contents container, use the ``.. contents::`` component.
 
 
 .. tabs::
@@ -545,14 +546,14 @@ To preview the contents on a page in a Table of Contents container, use the ``..
 Figures (screenshots)
 ~~~~~~~~~~~~~~~~~~~~~
 
-Screenshots should be cropped and zoomed for readability. Always include ``:alt:`` text.  
+Screenshots should be cropped and zoomed for readability. Always include ``:alt:`` text.
 
 **Custom CSS and JavaScript** are available for images.
 
 To apply this styling, use one or more of the following figure classes with ``:figclass:``:
 
-- ``border-image`` → Adds a light border, shadow, and background  
-- ``clickable-image`` → Makes the image interactive with cursor + modal support  
+- ``border-image`` → Adds a light border, shadow, and background
+- ``clickable-image`` → Makes the image interactive with cursor + modal support
 - ``big-image`` → Allows images to grow wider than the text column (experimental; CSS overrides may conflict with sidebar/layout changes — use sparingly)
 
 .. note::
@@ -569,12 +570,12 @@ RST Syntax: Image Classes
 *On click, JavaScript shows the modal* ``div`` *element. *
 
 .. code-block:: rst
-      
+
    **Using** ``border-image`` **and** ``clickable-image``:
 
    .. figure:: ../tutorials/hello_world/_static/screenshots/login_dioptra.png
       :alt: Dioptra login screen
-      :figclass: border-image clickable-image 
+      :figclass: border-image clickable-image
 
       Using the custom image class - clicking the image opens a modal.
 
@@ -584,7 +585,7 @@ RST Syntax: Image Classes
       :alt: Dioptra login screen
       :figclass: border-image clickable-image big-image
 
-      Using the ``big-image`` figclass - not recommended because it interferes 
+      Using the ``big-image`` figclass - not recommended because it interferes
       with the HTML sidebar.
 
 
@@ -595,7 +596,7 @@ Rendered Examples: Image Classes
 
 .. figure:: ../tutorials/hello_world/_static/screenshots/login_dioptra.png
    :alt: Dioptra login screen
-   :figclass: border-image clickable-image 
+   :figclass: border-image clickable-image
 
    Using the custom image class - clicking the image opens a modal.
 
@@ -605,7 +606,7 @@ Rendered Examples: Image Classes
    :alt: Dioptra login screen
    :figclass: border-image clickable-image big-image
 
-   Using the ``big-image`` figclass - not recommended because it interferes 
+   Using the ``big-image`` figclass - not recommended because it interferes
    with the HTML sidebar.
 
 .. warning::
@@ -625,11 +626,11 @@ Use ``literalinclude`` to pull code from the repo instead of pasting it:
 
       **hello_world.py**:
 
-      .. literalinclude:: ../../../docs/source/documentation_code/plugins/hello_world_tutorial/hello_world.py 
+      .. literalinclude:: ../../../docs/source/documentation_code/plugins/hello_world_tutorial/hello_world.py
          :language: python
          :linenos:
 
-   
+
    .. tab:: RST Source
 
       .. code-block:: rst
@@ -644,8 +645,8 @@ Use ``literalinclude`` to pull code from the repo instead of pasting it:
 Custom Code Block Styling
 ~~~~~~~~~~~~~~~~
 
-Custom CSS classes are available to style code blocks for improved visual separation and language-specific branding. 
-Font size is also reduced to save space for long code blocks. 
+Custom CSS classes are available to style code blocks for improved visual separation and language-specific branding.
+Font size is also reduced to save space for long code blocks.
 Apply these classes using the standard Sphinx admonition directive.
 
 **Available Classes**
@@ -663,7 +664,7 @@ Use the following classes with an ``.. admonition::`` block:
 
       .. admonition:: <My Python LiteralInclude>
          :class: code-panel python
-      
+
          .. literalinclude:: ../../../docs/source/documentation_code/plugins/essential_workflows_tutorial/sample_normal.py
             :language: python
             :linenos:
@@ -671,7 +672,7 @@ Use the following classes with an ``.. admonition::`` block:
       .. admonition:: <My YAML LiteralInclude>
          :class: code-panel yaml
 
-         .. literalinclude:: ../../../docs/source/documentation_code/task_graphs/essential_workflows_tutorial/sample_and_transform.yaml 
+         .. literalinclude:: ../../../docs/source/documentation_code/task_graphs/essential_workflows_tutorial/sample_and_transform.yaml
             :language: yaml
 
       .. admonition:: <My Console Input/Output>
@@ -681,7 +682,7 @@ Use the following classes with an ``.. admonition::`` block:
 
             Plugin 1 was successfully completed. Output value was .7432 with parameter "random".
 
-   
+
    .. tab:: RST Source
 
       .. code-block:: rst
@@ -696,16 +697,16 @@ Use the following classes with an ``.. admonition::`` block:
          .. admonition:: <My YAML LiteralInclude>
             :class: code-panel yaml
 
-            .. literalinclude:: ../../../docs/source/documentation_code/task_graphs/essential_workflows_tutorial/sample_and_transform.yaml 
+            .. literalinclude:: ../../../docs/source/documentation_code/task_graphs/essential_workflows_tutorial/sample_and_transform.yaml
                :language: yaml
 
          .. admonition:: <My Console Input/Output>
             :class: code-panel console
 
             .. code-block:: console
-               
+
                Plugin 1 was successfully completed. Output value was .7432 with parameter "random".
-               
+
 .. note::
    Use unique comments, such as ``# [docs:start]`` and ``# [docs:end]``, in Python files
    (or the appropriate comment style for other languages)
@@ -740,7 +741,7 @@ Tabs can be used for alternate instructions (e.g., GUI vs. Python client), as de
                :figclass: border-image
 
          .. group-tab:: Python Client
-            Login using the Python client API 
+            Login using the Python client API
 
             .. code-block:: python
 
@@ -761,7 +762,7 @@ Tabs can be used for alternate instructions (e.g., GUI vs. Python client), as de
                :figclass: border-image
 
          .. group-tab:: Python Client
-            Create a plugin using the Python client. 
+            Create a plugin using the Python client.
 
             .. code-block:: python
 
@@ -785,7 +786,7 @@ Tabs can be used for alternate instructions (e.g., GUI vs. Python client), as de
                   :figclass: border-image
 
             .. group-tab:: Python Client
-               Login using the Python client API 
+               Login using the Python client API
 
                .. code-block:: python
 
@@ -806,7 +807,7 @@ Tabs can be used for alternate instructions (e.g., GUI vs. Python client), as de
                   :figclass: border-image
 
             .. group-tab:: Python Client
-               Create a plugin using the Python client. 
+               Create a plugin using the Python client.
 
                .. code-block:: python
 
@@ -816,19 +817,19 @@ Tabs can be used for alternate instructions (e.g., GUI vs. Python client), as de
 
 .. note::
 
-   To have tabs synchronize together (like above example), use the ``.. group-tab::`` syntax 
-   and make sure the tabs are named the exact same thing across iterations, i.e. ``.. group-tab:: Python Client`` 
+   To have tabs synchronize together (like above example), use the ``.. group-tab::`` syntax
+   and make sure the tabs are named the exact same thing across iterations, i.e. ``.. group-tab:: Python Client``
    wil be synchronized with another instanced of ``.. group-tab:: Python Client``. If synchronization is not required, replace
-   ``group-tab`` with ``tab``. 
+   ``group-tab`` with ``tab``.
 
-.. _reference-guidelines-for-documentation-cross-references: 
+.. _reference-guidelines-for-documentation-cross-references:
 
 Cross-references
 ~~~~~~~~~~~~~~~~
 
-Use explicit references (``.. _label-name:``) together with ``:ref:``.  
-This is the most reliable way to link between pages, since it does not  
-depend on the document being in a ``.. toctree::``. Note that displayed link text is equal to the page 
+Use explicit references (``.. _label-name:``) together with ``:ref:``.
+This is the most reliable way to link between pages, since it does not
+depend on the document being in a ``.. toctree::``. Note that displayed link text is equal to the page
 title but can be overridden using the ``<>`` syntax (see example).
 
 
@@ -841,7 +842,7 @@ title but can be overridden using the ``<>`` syntax (see example).
       in the dedicated page.
 
       See more about :ref:`My custom reference name for the same page <how-to-prepare-deployment>`
-      in the dedicated page. 
+      in the dedicated page.
 
    .. tab:: RST Source
 
@@ -851,8 +852,8 @@ title but can be overridden using the ``<>`` syntax (see example).
          in the dedicated page.
 
          See more about :ref:`My custom reference name for the same page <how-to-prepare-deployment>`
-         in the dedicated page. 
-         
+         in the dedicated page.
+
 .. note::
 
    To make a ``:ref:`` work, the target document must define a label
@@ -880,10 +881,10 @@ title but can be overridden using the ``<>`` syntax (see example).
 
    .. code-block:: rst
 
-      :ref:`tutorial-1` 
+      :ref:`tutorial-1`
       :ref:`tutorial-1-header-2`
 
-   Notice that the leading underscore is omitted when using a ``:ref:``. 
+   Notice that the leading underscore is omitted when using a ``:ref:``.
 
 
 .. important::
@@ -898,13 +899,13 @@ title but can be overridden using the ``<>`` syntax (see example).
 
    **Examples: **
 
-   * ``_how-to-create-plugins`` 
+   * ``_how-to-create-plugins``
    * ``_tutorial-adding-inputs-and-outputs``
    * ``_reference-plugins``
    * ``_reference-plugins-plugin-function-tasks`` → includes header_title
 
-   Notice that we only use dashes, no underscores. Use the page type in the singular, e.g. ``explanation``, ``reference``, 
-   ``how-to``, ``tutorial``. 
+   Notice that we only use dashes, no underscores. Use the page type in the singular, e.g. ``explanation``, ``reference``,
+   ``how-to``, ``tutorial``.
 
 Additional Sphinx Elements
 ---------------------------------------
@@ -914,7 +915,7 @@ The following elements are currently unused but available for documentation.
 Collapsible content
 ~~~~~~~~~~~~~~~~
 
-Collapsible admonitions could be used for long sections of code or optional context. 
+Collapsible admonitions could be used for long sections of code or optional context.
 
 .. tabs::
 
@@ -951,7 +952,7 @@ Sphinx Page Options
 Cards, grids, and callouts
 ~~~~~~~~~~~~~~~~
 
-`sphinx-design` provides cards and grids for menus or callouts.  
+`sphinx-design` provides cards and grids for menus or callouts.
 
 
 .. tabs::
@@ -1013,6 +1014,3 @@ Cards, grids, and callouts
                :link-type: ref
 
                Optional configuration steps after setup.
-
-
-
