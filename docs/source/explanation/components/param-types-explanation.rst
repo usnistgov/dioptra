@@ -55,7 +55,7 @@ Some builtin types are provided:
    * ``any`` - allows any type to be passed
    * ``integer`` - represents an ``int`` type in python
    * ``number`` - represents a  ``float`` type in python
-   * ``boolean`` - represents a ``bool``type in python
+   * ``boolean`` - represents a ``bool`` type in python
 
 Simple types can also represent declared classes. For example, it is possible
 to represent a ``numpy`` array  as a type, and give it a name like ``nparray``
@@ -273,7 +273,9 @@ We didn't have to define these subtypes, we could have instead simply defined th
 
  
 but by defining these subtypes as their own types, we can potentially use them to define other complex types
-or for other plugin task definitions. It may be desirable to structure a type like this, for example, if one
+or for other plugin task definitions. 
+
+It may be desirable to structure a type like this, for example, if one
 plugin task returns a ``string``, and another task returns a ``dict[str, list[np.ndarray]]``. By defining the
 type as above, the validation checker will properly allow the output of both of those tasks to be used as input
 to this plugin task.
