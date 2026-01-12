@@ -15,17 +15,30 @@
 .. ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 .. https://creativecommons.org/licenses/by/4.0/legalcode
 
-.. _setup-building-the-containers:
+.. _how-to-build-containers:
 
-[OLD] Building the Containers
-=======================
+Build the Container Images
+==========================
 
-.. include:: /_glossary_note.rst
+This guide explains how to build the Dioptra container images from the source repository.
+After completing these steps, you will have local container images ready for deployment.
 
-You will need to build several container images using the Dockerfiles in the Dioptra GitHub repository before you can run Dioptra for the first time.
-This guide will walk you through the steps for building these images.
+Prerequisites
+-------------
 
-To begin, open a Terminal and clone the GitHub repository if you have not already done so.
+* `Docker Engine <https://docs.docker.com/engine/install/>`__ installed and running
+* `Git <https://git-scm.com/downloads>`__ installed
+* A terminal with access to Docker commands
+
+Building the Images
+-------------------
+
+.. rst-class:: header-on-a-card header-steps
+
+Step 1: Clone the Repository
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Clone the Dioptra GitHub repository if you have not already done so.
 
 .. tab-set::
 
@@ -41,49 +54,95 @@ To begin, open a Terminal and clone the GitHub repository if you have not alread
 
          git clone git@github.com:usnistgov/dioptra.git
 
-Optionally, if you want to build the latest versions of the containers, you should first switch to the ``dev`` branch.
+Change into the cloned repository directory:
 
 .. code:: sh
 
-   # OPTIONAL: switch to the dev branch to get the latest container images
-   git checkout -b dev origin/dev
+   cd dioptra
 
-Next, if you have extra CA certificates that you want to include during the build process, copy them into the ``docker/ca-certificates/`` folder.
-This is something you may need to do if you are building the containers in a corporate environment that has its own certificate authority.
+.. note::
+
+   To build the latest development versions of the containers, switch to the ``dev`` branch:
+
+   .. code:: sh
+
+      git checkout -b dev origin/dev
+
+.. rst-class:: header-on-a-card header-steps
+
+Step 2: Add CA Certificates (Optional)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you are building the containers in a corporate environment that uses its own certificate authority, copy your CA certificates into the ``docker/ca-certificates/`` folder before building.
+
+.. code:: sh
+
+   cp /path/to/your/ca-certificate.crt docker/ca-certificates/
+
 See the `docker/ca-certificates/README.md <https://github.com/usnistgov/dioptra/blob/main/docker/ca-certificates/README.md>`__ file for additional information.
 
-Next, use the Makefile to build the container images.
+.. rst-class:: header-on-a-card header-steps
+
+Step 3: Build the Container Images
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Use the Makefile to build the container images:
 
 .. code:: sh
 
-   # NOTE: if make cannot find your python executable, you can specify it manually by
-   #       prepending PY=/path/to/python3 to the command below
-   # NOTE: the PyTorch and Tensorflow images may take a while to build
    make build-nginx build-mlflow-tracking build-restapi build-pytorch-cpu build-tensorflow-cpu
 
-If you are running Dioptra on a host machine that has one or more CUDA-compatible GPUs, then it is recommended that you also build the GPU-enabled images:
+.. note::
+
+   The PyTorch and TensorFlow images may take a while to build.
+
+.. tip::
+
+   If ``make`` cannot find your Python executable, specify it manually by prepending ``PY=/path/to/python3`` to the command.
+
+.. rst-class:: header-on-a-card header-steps
+
+Step 4: Build GPU Images (Optional)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you plan to run GPU-accelerated workers, build the GPU-enabled images.
+These images require a host machine with CUDA-compatible GPUs and the `NVIDIA Container Toolkit <https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html>`__ to be useful.
 
 .. code:: sh
 
-   # NOTE: the PyTorch and Tensorflow images may take a while to build
    make build-pytorch-gpu build-tensorflow-gpu
 
-Finally, run ``docker images`` to verify that the container images are now available with the ``dev`` tag.
-You should see output that looks like the following,
+.. rst-class:: header-on-a-card header-steps
 
-.. margin::
+Step 5: Verify the Images
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   .. note::
+Run ``docker images`` to verify that the container images are available with the ``dev`` tag:
 
-      The ``IMAGE ID``, ``CREATED``, and ``SIZE`` fields in the ``docker images`` output will likely be different.
+.. code:: sh
+
+   docker images | grep dioptra
+
+You should see output similar to the following:
 
 .. code:: text
 
-   REPOSITORY                           TAG       IMAGE ID       CREATED         SIZE
-   dioptra/nginx                        dev       17235f76d81c   3 weeks ago     243MB
-   dioptra/restapi                      dev       f7e59af397ae   3 weeks ago     1.16GB
-   dioptra/mlflow-tracking              dev       56c574822dad   3 weeks ago     1.04GB
-   dioptra/pytorch-cpu                  dev       5309d66defd5   3 weeks ago     3.74GB
-   dioptra/tensorflow2-cpu              dev       13c4784dd4f0   3 weeks ago     3.73GB
+   REPOSITORY                  TAG       IMAGE ID       CREATED         SIZE
+   dioptra/nginx               dev       17235f76d81c   3 weeks ago     243MB
+   dioptra/restapi             dev       f7e59af397ae   3 weeks ago     1.16GB
+   dioptra/mlflow-tracking     dev       56c574822dad   3 weeks ago     1.04GB
+   dioptra/pytorch-cpu         dev       5309d66defd5   3 weeks ago     3.74GB
+   dioptra/tensorflow2-cpu     dev       13c4784dd4f0   3 weeks ago     3.73GB
 
-Your ``REPOSITORY`` and ``TAG`` columns should match up with the above list.
+.. note::
+
+   The ``IMAGE ID``, ``CREATED``, and ``SIZE`` fields will vary. Verify that the ``REPOSITORY`` and ``TAG`` columns match.
+
+.. rst-class:: header-on-a-card header-seealso
+
+See Also
+--------
+
+* :ref:`how-to-prepare-deployment` - Set up a deployment using your built images
+* :ref:`how-to-adding-certificates` - Add CA certificates to a running deployment
+* :ref:`how-to-gpu-enabled-workers` - Configure GPU workers in your deployment

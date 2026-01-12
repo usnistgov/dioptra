@@ -24,15 +24,13 @@ The Web Frontend User's Guide
 
 Dioptra provides a web-based user interface for running, tracking, and organizing machine learning experiments using the open-source technologies and architectures found in real-world AI applications. A demonstration of a simple Hello World example will be shown here.
 
-**Please make sure to have completed these prerequisites for using the front end**: :doc:`/getting-started/building-the-containers`, :doc:`/getting-started/running-dioptra`, and :doc:`/getting-started/additional-configuration`
+**Please make sure to have completed these prerequisites for using the front end**: :ref:`how-to-build-containers`, :ref:`how-to-prepare-deployment`, and :ref:`how-to-using-docker-compose-overrides`
 
 
 Using Dioptra (Hello World Example)
 ===================================
 
-This guide is a walk-through for setting up and executing a simple “Hello World” example in the Dioptra frontend. It will familiarize the reader with some of the core concepts behind Dioptra. It assumes that the steps to configure and instantiate a Dioptra deployment have already been followed as outlined in the `Getting Started`_ section of the documentation.
-
-.. _Getting Started: ../getting-started/building-the-containers
+This guide is a walk-through for setting up and executing a simple "Hello World" example in the Dioptra frontend. It will familiarize the reader with some of the core concepts behind Dioptra. It assumes that the steps to configure and instantiate a Dioptra deployment have already been followed as outlined in the :ref:`Setup <how-to-quick-setup>` section of the documentation.
 
 Create a Plugin
 _______________

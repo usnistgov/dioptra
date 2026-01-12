@@ -17,30 +17,77 @@
 
 .. _how-to-adding-certificates:
 
+Add Custom CA Certificates
+==========================
+
+This guide explains how to add custom Certificate Authority (CA) certificates to your Dioptra deployment. This is necessary when operating in environments with internal certificate authorities or when connecting to services that use certificates signed by non-public CAs.
+
+Prerequisites
+-------------
+
+* :ref:`how-to-prepare-deployment` - A configured Dioptra deployment (before running ``init-deployment.sh``)
+* CA certificate file(s) in PEM format
+
 Adding Certificates
-=====================
+-------------------
 
-This how to guide explains how to add certifications.
+.. rst-class:: header-on-a-card header-steps
 
+Step 1: Prepare Certificate Files
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Prior Documentation Snippets
-----------------------------
+Ensure your CA certificate files meet the following requirements:
 
-.. note:: 
-    The following material is from previous document pages. It needs to be refactored. It is included below as a placeholder and for reference. 
+- **PEM format**: Each certificate must be encoded using base64 and stored in a plain text file between ``-----BEGIN CERTIFICATE-----`` and ``-----END CERTIFICATE-----`` lines.
 
+- **One certificate per file**: Each file should contain only one CA certificate. Do not bundle multiple CA certificates together.
 
-Adding extra CA certificates
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- **File extension**: Each file **must** have the ``.crt`` extension (e.g., ``ca-root.crt``). If your certificate has a different extension (such as ``.pem``), rename it to ``.crt``.
 
-The deployment initialization scripts will look for extra CA certificates in the ``ssl/ca-certificates/`` folder and copy and bundle them into named volumes so they are available at runtime.
-Only CA certificate files copied into the ``ssl/ca-certificates/`` folder that meet the following criteria will be bundled:
+.. rst-class:: header-on-a-card header-steps
 
-- Each CA certificate file must be in the PEM format.
-  The PEM format encodes the certificate using base64 and stores it in a plain text file between two lines, ``-----BEGIN CERTIFICATE-----`` and ``-----END CERTIFICATE-----``.
-- Each file should include one, and only one, CA certificate.
-  Do not bundle multiple CA certificates together.
-- Each PEM-formatted CA certificate file **must** have the file extension ``crt``, for example ``ca-root.crt``.
-  If your CA certificate has a different file extension (such as ``pem``), rename it to ``crt`` after copying to this folder.
+Step 2: Copy Certificates to the Deployment
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-For further information about including extra CA certificates, please see the ``README.md`` file in the ``ssl/ca-certificates/`` folder.
+Copy your CA certificate files into the ``ssl/ca-certificates/`` folder in your deployment directory:
+
+.. code:: sh
+
+   cp /path/to/your/ca-certificate.crt ./ssl/ca-certificates/
+
+You can add multiple CA certificates by copying additional files:
+
+.. code:: sh
+
+   cp /path/to/another-ca.crt ./ssl/ca-certificates/
+
+.. rst-class:: header-on-a-card header-steps
+
+Step 3: Run the Initialization Script
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The deployment initialization scripts will automatically look for extra CA certificates in the ``ssl/ca-certificates/`` folder and copy and bundle them into named volumes so they are available at runtime.
+
+Run the initialization script:
+
+.. code:: sh
+
+   ./init-deployment.sh --branch <branch-name>
+
+.. note::
+
+   Replace ``<branch-name>`` with the Dioptra branch that matches your container images (e.g., ``main`` for releases, ``dev`` for development builds).
+
+The script will process all ``.crt`` files in the ``ssl/ca-certificates/`` folder and make them available to all containers.
+
+.. admonition:: Learn More
+
+   See the ``README.md`` file in the ``ssl/ca-certificates/`` folder for additional details.
+
+.. rst-class:: header-on-a-card header-seealso
+
+See Also
+--------
+
+* :ref:`how-to-enabling-ssl-tls` - Enable SSL/TLS for NGINX and Postgres
+* :ref:`how-to-prepare-deployment` - Full deployment customization

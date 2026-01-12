@@ -17,9 +17,11 @@
 
 .. _how-to-setup-options:
 
-Setup Options
-===================
+Customize Your Setup
+====================
 
+These guides explain optional customizations for your Dioptra deployment.
+Apply these after completing the :ref:`how-to-prepare-deployment` guide.
 
 .. container:: wide-lightly-shaded
 
@@ -27,14 +29,11 @@ Setup Options
       :maxdepth: 1
       :caption: Table of Contents
 
-      customize-deployments
+      using-docker-compose-overrides
       data-mounts
       gpu-enabled-workers
       adding-certificates
       enabling-ssl-tls
       integrating-custom-containers
-      building-the-containers
-      running-dioptra
-   .. cloud-deployments
 
 
