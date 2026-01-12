@@ -38,8 +38,9 @@ group are available to users who are part of that group. Currently, there is a s
 which all resources are created under - this will change in a future release of Dioptra.
 
 .. note::
-Currently, additional groups cannot be created in dioptra. As a result, all other resources should be considered public
-as all users and resources will be created under the same group.
+
+    Currently, additional groups cannot be created in dioptra. As a result, all other resources should be considered public
+    as all users and resources will be created under the same group.
 
 .. rst-class:: fancy-header header-seealso
 

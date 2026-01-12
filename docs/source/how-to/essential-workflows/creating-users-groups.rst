@@ -76,7 +76,7 @@ Group Creation Workflow
 -----------------------
 
 .. note::
-Dioptra does not currently support the creation of additional groups. All resources are under the same default public group.
+    Dioptra does not currently support the creation of additional groups. All resources are under the same default public group.
 
 .. rst-class:: fancy-header header-seealso
 
