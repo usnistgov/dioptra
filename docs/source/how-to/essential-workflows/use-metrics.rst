@@ -20,7 +20,7 @@
 Logging Metrics
 ===============
 
-This how-to explains how to run :ref:`Metrics <explanation-metrics>` in Dioptra. 
+This how-to explains how to log :ref:`Metrics <explanation-metrics>` in Dioptra. 
 
 Prerequisites
 -------------
@@ -40,6 +40,10 @@ Metric Logging Workflow
 Metrics can be logged as part of a plugin, during the execution of a job,
 by using the python client, and can be retrieved via the API or viewed 
 through the Job details page.
+
+.. note:: 
+   This guide only explains how to log metrics through the client, and not how to incorporate metric
+   logging into your custom plugin tasks.
 
 .. rst-class:: header-on-a-card header-steps
 

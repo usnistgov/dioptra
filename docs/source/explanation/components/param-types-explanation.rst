@@ -22,12 +22,16 @@ Plugin Parameter Types
 
 Plugin Parameter Types are used primarily to validate that the outputs 
 of a plugin are compatible with the inputs of another plugin in which its
-outputs are used. 
+outputs are used. Plugin Parameter types are effectively a way of ensuring 
+compatibility among plugins and artifacts, similarly to how types are used 
+in modern programming languages to ensure that the parameters to a function
+are compatible with the object being passed in.
 
 When plugin function tasks are created, each parameter is assigned a parameter type 
 from the list of registered types. Similarly, each output of the function is assigned
 parameter types. During validation of an entrypoint, these types are used to verify
-compatibility between the inputs and outputs of different steps.
+compatibility between the inputs and outputs of different steps, including artifact loading
+and usage.
 
 
 .. _explanation-plugin-parameter-types-structures:
@@ -41,14 +45,21 @@ validation of plugin inputs and outputs within an endpoint.
 Simple Types
 ~~~~~~~~~~~~
 
-Dioptra supports structured plugin parameter types. Some builtin types are 
-provided, such as ``null``, ``string``, ``any``, ``integer``, ``number``, and
-``boolean``.
+Simple types are types which do not have a structure - they act as an atomic
+unit to build structured types on, but can also be used as types themselves.
+
+Some builtin types are provided:
+
+   * ``null`` - represents a ``None`` type in python
+   * ``string`` - represents a ``str`` type in python
+   * ``any`` - allows any type to be passed
+   * ``integer`` - represents an ``int`` type in python
+   * ``number`` - represents a  ``float`` type in python
+   * ``boolean`` - represents a ``bool``type in python
 
 Simple types can also represent declared classes. For example, it is possible
 to represent a ``numpy`` array  as a type, and give it a name like ``nparray``
-without a structure. This  acts effectively as a placeholder for the class and
-the validation checker will not attempt to expand the type further.
+without a structure.
 
 
 Lists
@@ -65,9 +76,9 @@ For example, we can represent the type of the parameter to this function:
 
 as
 
-.. code-block:: yaml
+.. code-block:: json
    
-   list: integer
+   { "list": "integer" }
 
 A structure defined like this will represent a list of integers. 
 
@@ -89,9 +100,9 @@ For example, we can represent the type of the output of this function:
 
 as
 
-.. code-block:: yaml
+.. code-block:: json
    
-   tuple: [integer, number, string]
+   { "tuple": ["integer", "number", "string"] }
 
 A structure defined like this will represent a tuple containing three elements, 
 an integer, a floating point value, and a string.
@@ -116,11 +127,14 @@ For example, we can represent the output of this function:
 
 as
 
-.. code-block:: yaml
-   
-   mapping:
-      name: string
-      value: number
+.. code-block:: json
+
+   { 
+      "mapping": {
+         "name": "string",
+         "value": "number"
+      }
+   }
 
 A type like this represents a mapping which specifically has two fields, ``name``
 and ``value``, and defines the ``name`` field as a string, and the ``value`` field
@@ -136,9 +150,14 @@ Alternatively, we can represent the output of this function:
 
 as
 
-.. code-block:: yaml
+.. code-block:: json
 
-   mapping: [string, integer]
+   { 
+      "mapping": [
+         "string",
+         "integer"
+      ]
+   }
 
 This mapping structure indicates that the keys of the mapping should always be strings,
 and the values of the mapping should always be integers.
@@ -159,9 +178,9 @@ We can represent the input to this function:
 
 as
 
-.. code-block:: yaml
+.. code-block:: json
 
-   union: [string, integer, null]
+   { "union": ["string", "integer", "null"] }
 
 A definition such as this represents a type that can be either a string, an integer, or ``None``
 value.
@@ -185,19 +204,22 @@ For example, we can represent the input to this function:
       return np.array(float(np.sum(my_array)))
 
 
-as
+as two separate types.
 
-.. code-block:: yaml
+The first, ``nparray`` with no structure.
 
-   nparray:
-   list_of_nparray:
-      list: [nparray]
+And the second, ``list_of_nparray`` with the following structure:
+
+.. code-block:: json
+
+   { "list" : ["nparray"] }
+
 
 Note that as a simple type, ``nparray`` has no defined structure, and is just a placeholder
 for the ``np.ndarray`` class.
 
 Furthermore, it is not necessary that every type be used in an entrypoint - some types can 
-exist just to hold a structure and be referenced by other types.
+exist just to hold a structure or be referenced by other types.
 
 The input to this function:
 
@@ -207,25 +229,56 @@ The input to this function:
       return len(arrs) if isinstance(arr, str) else len(arrs["arr"])
 
 
-can be represented as
+can be represented with the following types.
+
+* ``nparray`` with no structure.
+* ``list_of_nparray`` with the structure:
+
+.. code-block:: json
+
+   { "list" : ["nparray"] }
+
+* ``nparry_dict`` with the structure:
+
+.. code-block:: json
+
+   { "mapping" : ["string", "list_of_nparray"] }
+
+* ``nparry_dict_or_string`` with the structure:
+
+.. code-block:: json
+
+   { "union" : ["nparray_dict", "string"] }
 
 
-.. code-block:: yaml
+Note that the Python function uses a complex union type, ``dict[str, list[np.ndarray]] | str``. In our example we 
+not only define that complex type, but also explicitly define the subtypes of it, including the 
+``list_of_nparray`` (``list[np.ndarray]``) and ``nparray_dict``(``dict[str, list[np.ndarray]]``) as their own types.
+We didn't have to define these subtypes, we could have instead simply defined the ``nparray_dict_or_str`` as follows:
 
-   nparray: 
-   list_of_nparray:
-      list: [nparray]
-   nparray_dict:
-      mapping: [str, list_of_nparray]
-   nparray_dict_or_str:
-      union: [nparray_dict, string]
+.. code-block:: json
 
-In this example we represent ``dict[str, list[np.ndarray]] | str`` as a type, but also represent
-``np.ndarray``, ``list[np.ndarray]`` and ``dict[str, list[np.ndarray]]`` as their own types.
-It may be desirable to structure a type like this, for example, if one plugin task returns a ``string``,
-and another task returns a ``dict[str, list[np.ndarray]]``. By defining the type as above, the 
-validation checker will properly allow the output of both of those tasks to be used as input to this
-plugin task.
+   { 
+      "union" : [
+         { 
+            "mapping" : [
+               "string", 
+               { "list" : ["nparray"] }
+            ]
+         }, 
+         "string"
+      ]
+   }
+
+
+ 
+but by defining these subtypes as their own types, we can potentially use them to define other complex types
+or for other plugin task definitions. It may be desirable to structure a type like this, for example, if one
+plugin task returns a ``string``, and another task returns a ``dict[str, list[np.ndarray]]``. By defining the
+type as above, the validation checker will properly allow the output of both of those tasks to be used as input
+to this plugin task.
+
+.. rst-class:: fancy-header header-seealso
 
 See Also 
 ---------

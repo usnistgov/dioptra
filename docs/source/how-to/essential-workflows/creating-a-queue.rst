@@ -20,7 +20,9 @@
 Create Queues
 ========================
 
-This how-to explains how to build :ref:`Queues <queues-explanation>` in Dioptra.
+This how-to explains how to build :ref:`Queues <queues-explanation>` in Dioptra. Queues logically represent a 
+queue of jobs for workers to pull from. In order for a queue to be effective, :ref:`Workers <explanation-queues-and-workers>`
+which listen on that queue are necessary.
 
 
 Prerequisites
@@ -58,6 +60,7 @@ Register a queue for a specific group, with a name and a description.
    .. group-tab:: GUI
 
       In the Dioptra GUI, navigate to the **Queues** tab. Click **Create**. Enter a *name* and, optionally, a *description*, select a *group* for the queue, then click **Confirm**.
+      *Note: currently there is only one group available and additional groups cannot be created. This will change in a future version of Dioptra.*
 
    .. group-tab:: Python Client
 
@@ -67,7 +70,10 @@ Register a queue for a specific group, with a name and a description.
 
       .. automethod:: dioptra.client.queues.QueuesCollectionClient.create
 
+.. rst-class:: fancy-header header-seealso
+
+
 See Also 
----------
+--------
 
 * :ref:`Queues and Workers <explanation-queues-and-workers>` - Understand what queues and workers are for.

@@ -20,9 +20,8 @@
 Create Users and Groups
 ========================
 
-Currently, groups cannot be created in Dioptra - the users all share a single group.
-
 This how-to explains how to create :ref:`Users <users-groups-explanation>` in Dioptra. 
+
 
 Prerequisites
 -------------
@@ -72,6 +71,14 @@ Register a user with a username, email address, and password to be able to creat
       Use the client to create the user.
 
       .. automethod:: dioptra.client.users.UsersCollectionClient.create
+
+Group Creation Workflow
+-----------------------
+
+.. note::
+Dioptra does not currently support the creation of additional groups. All resources are under the same default public group. T
+
+.. rst-class:: fancy-header header-seealso
 
 See Also 
 ---------

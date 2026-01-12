@@ -68,6 +68,8 @@ Register a parameter type for use in dioptra.
 
       .. automethod:: dioptra.client.plugin_parameter_types.PluginParameterTypesCollectionClient.create
 
+.. rst-class:: fancy-header header-seealso
+
 See Also 
 ---------
 
