@@ -39,8 +39,7 @@ which all resources are created under - this will change in a future release of 
 
 .. note::
 
-    Currently, additional groups cannot be created in dioptra. As a result, all other resources should be considered public
-    as all users and resources will be created under the same group.
+    Dioptra does not currently support the creation of additional groups. All resources are under the same default public group.
 
 .. rst-class:: fancy-header header-seealso
 
