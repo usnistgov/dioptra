@@ -802,6 +802,42 @@ class EntrypointsCollectionClient(CollectionClient[T]):
             artifact_plugins: A list of artifact plugin ids to associate with the new
                 entrypoint. Optional, defaults to None.
 
+        Example:
+            Create an entrypoint called "hello_world" with artifact input parameters and artifact output graph.
+
+            .. code-block:: python
+
+                entrypoint = client.entrypoints.create(
+                    group_id=GROUP_ID,
+                    name="hello_world",
+                    task_graph=TASK_GRAPH_YAML_STR,
+                    artifact_graph=ARTIFACT_TASK_GRAPH_YAML_STR,
+                    description="An entrypoint to run hello world task",
+                    parameters=[
+                        {
+                            "name": "greeting",
+                            "defaultValue": "Hello",
+                            "parameterType": "string",
+                        },
+                        {
+                            "name": "name",
+                            "defaultValue": "World",
+                            "parameterType": "string",
+                        },
+                    ],
+                    artifact_parameters=[
+                        {
+                            "name": "artifact_name",
+                            "outputParams": [
+                                {"name": "value", "parameterType": STRING_PARAM_TYPE_ID}
+                            ],
+                        }
+                    ],
+                    queues=[QUEUE_ID_1],
+                    plugins=[PLUGIN_ID_1],
+                    artifact_plugins=[PLUGIN_ID_2],
+                )
+
         Returns:
             The response from the Dioptra API.
         """
