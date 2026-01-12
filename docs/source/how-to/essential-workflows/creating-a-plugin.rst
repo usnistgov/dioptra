@@ -29,12 +29,12 @@ Prerequisites
 
    .. group-tab:: GUI
 
-      * :ref:`getting-started-running-dioptra` - A deployment of Dioptra is required.
+      * :ref:`how-to-prepare-deployment` - A deployment of Dioptra is required.
       * :ref:`tutorial-setup-dioptra-in-the-gui` - Access Dioptra services in the GUI, create a user, and login.
 
    .. group-tab:: Python Client
 
-      * :ref:`getting-started-running-dioptra` -  A deployment of Dioptra is required.
+      * :ref:`how-to-prepare-deployment` -  A deployment of Dioptra is required.
       * :ref:`how-to-set-up-the-python-client` - Connect to the Python Client in a Jupyter Notebook.
 
 .. _how-to-create-plugins-plugin-creation-workflow:

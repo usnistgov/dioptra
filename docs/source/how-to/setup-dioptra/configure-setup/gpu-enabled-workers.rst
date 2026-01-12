@@ -17,35 +17,112 @@
 
 .. _how-to-gpu-enabled-workers:
 
-GPU Enabled Workers
+Configure GPU Workers
 =====================
 
-This how to guide explains how to connect GPUs to Dioptra workers.
+This guide explains how to assign one or more GPUs to Dioptra worker containers for GPU-accelerated machine learning workloads.
 
+Prerequisites
+-------------
 
-Prior Documentation Snippets
-----------------------------
+* :ref:`how-to-prepare-deployment` - A configured Dioptra deployment with GPU workers enabled
+* :ref:`how-to-using-docker-compose-overrides` - Override file created (for custom GPU assignments)
+* NVIDIA GPU(s) with drivers installed on the host machine
+* `NVIDIA Container Toolkit <https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html>`__ installed
+* GPU worker containers built (see :ref:`how-to-build-containers`)
 
+.. note::
 
-.. note:: 
-    The following material is from previous document pages. It needs to be refactored. It is included below as a placeholder and for reference. 
+   GPU workers are configured during template creation using the ``num_tensorflow_gpu_workers`` and ``num_pytorch_gpu_workers`` variables.
+   By default, each GPU worker is assigned a dedicated GPU.
 
+GPU Configuration
+-----------------
 
-Assigning multiple GPUs per worker
-##################################
+.. rst-class:: header-on-a-card header-steps
 
-To assign multiple GPUs to a worker, edit your ``docker-compose.override.yml`` file to change the ``NVIDIA_VISIBLE_DEVICES`` environment variable in the **tfgpu** and **pytorch-gpu** container blocks:
+Step 1: Verify GPU Availability
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Verify that the host machine has GPUs available and the NVIDIA drivers are installed:
+
+.. code:: sh
+
+   nvidia-smi
+
+This should display information about your GPU(s). Note the GPU indices (0, 1, 2, etc.) for use in configuration.
+
+.. rst-class:: header-on-a-card header-steps
+
+Step 2: Assign GPUs to Workers
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To customize GPU assignments beyond the default one-GPU-per-worker configuration, open ``docker-compose.override.yml`` and add blocks for the GPU worker containers.
+GPU worker names include **tfgpu** or **pytorchgpu**.
+
+.. note::
+
+   In the examples below, replace ``<deployment-name>`` with your deployment's slugified name (default: ``dioptra-deployment``).
+
+**To assign specific GPUs to a worker:**
 
 .. code:: yaml
 
-   dioptra-deployment-tfcpu-01:
-     environment:
-       NVIDIA_VISIBLE_DEVICES: 0,1
+   services:
+     <deployment-name>-tfgpu-01:
+       environment:
+         NVIDIA_VISIBLE_DEVICES: 0
 
-To allow a worker to use all available GPUs, set ``NVIDIA_VISIBLE_DEVICES`` to ``all``:
+     <deployment-name>-pytorchgpu-01:
+       environment:
+         NVIDIA_VISIBLE_DEVICES: 1
+
+**To assign multiple GPUs to a single worker:**
 
 .. code:: yaml
 
-   dioptra-deployment-tfcpu-01:
-     environment:
-       NVIDIA_VISIBLE_DEVICES: all
+   services:
+     <deployment-name>-tfgpu-01:
+       environment:
+         NVIDIA_VISIBLE_DEVICES: 0,1
+
+**To allow a worker to use all available GPUs:**
+
+.. code:: yaml
+
+   services:
+     <deployment-name>-tfgpu-01:
+       environment:
+         NVIDIA_VISIBLE_DEVICES: all
+
+.. warning::
+
+   The combined number of TensorFlow and PyTorch GPU workers cannot be greater than the number of GPUs available on the host machine (unless you assign the same GPU to multiple workers, which may cause resource contention).
+
+.. rst-class:: header-on-a-card header-steps
+
+Step 3: Restart the Deployment
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Apply your changes by restarting the deployment:
+
+.. code:: sh
+
+   docker compose down
+   docker compose up -d
+
+Verify that the GPU workers started correctly:
+
+.. code:: sh
+
+   docker compose ps
+
+.. rst-class:: header-on-a-card header-seealso
+
+See Also
+--------
+
+* :ref:`how-to-using-docker-compose-overrides` - Docker Compose override file basics
+* :ref:`how-to-prepare-deployment` - Full deployment customization
+* :ref:`how-to-data-mounts` - Mount data volumes into worker containers
+* :ref:`how-to-integrating-custom-containers` - Add custom containers

@@ -15,110 +15,140 @@
 .. ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 .. https://creativecommons.org/licenses/by/4.0/legalcode
 
-.. _how-to-enabling-ssl-tls-in-nginx-and-postgres:
+.. _how-to-enabling-ssl-tls:
 
-Enabling SSL/TLS in NGINX and Postgres
-=====================
+Enable SSL/TLS in NGINX and Postgres
+====================================
 
-This how to guide explains how to enable SSL / TLS in NGINX / Postgres. 
+This guide explains how to enable SSL/TLS encryption for the NGINX reverse proxy and PostgreSQL database services in your Dioptra deployment.
 
+Prerequisites
+-------------
 
-Prior Documentation Snippets
-----------------------------
+* :ref:`how-to-prepare-deployment` - A configured Dioptra deployment (before running ``init-deployment.sh``)
+* :ref:`how-to-using-docker-compose-overrides` - Override file created
+* SSL certificate and private key files for each service you want to secure
+* (Optional) :ref:`how-to-adding-certificates` - If using an internal CA
 
-.. note:: 
-    The following material is from previous document pages. It needs to be refactored. It is included below as a placeholder and for reference. 
+SSL/TLS Configuration
+---------------------
 
+.. rst-class:: header-on-a-card header-steps
 
-.. _running-dioptra-enabling-ssl-tls-in-nginx-and-postgres:
+Step 1: Obtain Certificate Files
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Enabling SSL/TLS in NGINX and Postgres
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+You will need a server certificate (``server.crt``) and private key (``server.key``) for each service.
+These can be:
 
-When the deployment initialization scripts are directed to enable SSL/TLS in the NGINX and/or Postgres services, it will scan the ``ssl/db/`` and ``ssl/nginx/`` folders for server certificate(s) and private key(s).
-The server certificate must be named ``server.crt`` and the private key must be named ``server.key`` when copying them into the ``ssl/db/`` and ``ssl/nginx/`` folders.
-This applies even when you are using a different certificate-key pair for each service.
-As an example, if the certificate and key files start in the folder ``/home/username/certs`` with different names, you would copy the files as follows,
+- Obtained from a certificate authority (CA)
+- Generated using Let's Encrypt
+- Self-signed certificates (for testing only)
+
+.. rst-class:: header-on-a-card header-steps
+
+Step 2: Copy Certificates to the Deployment
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The certificate and key files **must** be named ``server.crt`` and ``server.key`` when copying them to the deployment directories.
+
+**For NGINX:**
 
 .. code:: sh
 
-   # These commands assume you are in the folder you just created using cookiecutter.
-   cp /home/username/certs/db.crt ./ssl/db/server.crt
-   cp /home/username/certs/db.key ./ssl/db/server.key
-   cp /home/username/certs/nginx.crt ./ssl/nginx/server.crt
-   cp /home/username/certs/nginx.key ./ssl/nginx/server.key
+   cp /path/to/your/nginx-certificate.crt ./ssl/nginx/server.crt
+   cp /path/to/your/nginx-private-key.key ./ssl/nginx/server.key
 
-.. margin::
+**For Postgres:**
 
-   .. important::
+.. code:: sh
 
-      The NGINX SSL/TLS disabled and enabled tabs are just snippets.
-      The snippets omit the lines that come both before and after the ``healthcheck:`` and ``ports:`` sections.
-      **Do not delete these surrounding lines in your actual file!**
+   cp /path/to/your/db-certificate.crt ./ssl/db/server.crt
+   cp /path/to/your/db-private-key.key ./ssl/db/server.key
 
-If you are enabling SSL/TLS in the NGINX service, you will also need to comment/uncomment a few lines in the ``docker-compose.yml`` file that configure the NGINX service's published ports and health check test.
-Open the file in a text editor, find the block for the NGINX service (the block starts with ``dioptra-deployment-nginx:`` if you used the default value for **deployment_name**), and edit its ports and health check test to match the appropriate YAML snippet below.
+You can use different certificate-key pairs for each service.
 
-.. tab-set::
+.. rst-class:: header-on-a-card header-steps
 
-   .. tab-item:: NGINX SSL/TLS disabled
+Step 3: Configure NGINX for SSL/TLS
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-      .. code:: yaml
+If you are enabling SSL/TLS in NGINX, add the SSL port and update the health check in ``docker-compose.override.yml``.
 
-         dioptra-deployment-nginx:
-           healthcheck:
-             test:
-               [
-                 "CMD",
-                 "/usr/local/bin/healthcheck.sh",
-                 "http://localhost:30080",
-                 "http://localhost:35000",
-                 "http://localhost:35050/login",
-                 "http://localhost:39000",
-                 "http://localhost:39001",
-                 # "https://localhost:30443",
-                 # "https://localhost:35000",
-                 # "https://localhost:35050/login",
-                 # "https://localhost:39000",
-                 # "https://localhost:39001",
-               ]
-           ports:
-             - 127.0.0.1:80:30080/tcp
-             # - 127.0.0.1:443:30443/tcp
-             - 127.0.0.1:35432:5432/tcp
-             - 127.0.0.1:35000:35000/tcp
-             - 127.0.0.1:35050:35050/tcp
-             - 127.0.0.1:39000:39000/tcp
-             - 127.0.0.1:39001:39001/tcp
+Open ``docker-compose.override.yml`` and add the following configuration for the NGINX service:
 
-   .. tab-item:: NGINX SSL/TLS enabled
+.. code:: yaml
 
-      .. code:: yaml
+   services:
+     <deployment-name>-nginx:
+       healthcheck:
+         test:
+           [
+             "CMD",
+             "/usr/local/bin/healthcheck.sh",
+             "http://localhost:30080",
+             "https://localhost:30443",
+             "https://localhost:35000",
+             "https://localhost:35050/login",
+             "https://localhost:39000",
+             "https://localhost:39001",
+           ]
+       ports:
+         - "127.0.0.1:443:30443/tcp"
 
-         dioptra-deployment-nginx:
-           healthcheck:
-             test:
-               [
-                 "CMD",
-                 "/usr/local/bin/healthcheck.sh",
-                 "http://localhost:30080",
-                 # "http://localhost:35000",
-                 # "http://localhost:35050/login",
-                 # "http://localhost:39000",
-                 # "http://localhost:39001",
-                 "https://localhost:30443",
-                 "https://localhost:35000",
-                 "https://localhost:35050/login",
-                 "https://localhost:39000",
-                 "https://localhost:39001",
-               ]
-           ports:
-             - 127.0.0.1:80:30080/tcp
-             - 127.0.0.1:443:30443/tcp
-             - 127.0.0.1:35432:5432/tcp
-             - 127.0.0.1:35000:35000/tcp
-             - 127.0.0.1:35050:35050/tcp
-             - 127.0.0.1:39000:39000/tcp
-             - 127.0.0.1:39001:39001/tcp
+.. note::
 
-For further information about adding the certificate-key pairs, please see the ``README.md`` files in the ``ssl/db`` and ``ssl/nginx/`` folders.
+   Replace ``<deployment-name>`` with your deployment's slugified name (default: ``dioptra-deployment``).
+
+.. note::
+
+   The ``ports:`` list in the override file **appends** to the existing ports in ``docker-compose.yml``.
+   You only need to specify the new HTTPS port (443:30443).
+   The ``healthcheck:`` configuration **replaces** the existing health check to use HTTPS endpoints.
+
+.. rst-class:: header-on-a-card header-steps
+
+Step 4: Run the Initialization Script with SSL Flags
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Run the initialization script with the appropriate SSL flags:
+
+**Enable NGINX SSL only:**
+
+.. code:: sh
+
+   ./init-deployment.sh --branch <branch-name> --enable-nginx-ssl
+
+**Enable Postgres SSL only:**
+
+.. code:: sh
+
+   ./init-deployment.sh --branch <branch-name> --enable-postgres-ssl
+
+**Enable both NGINX and Postgres SSL:**
+
+.. code:: sh
+
+   ./init-deployment.sh --branch <branch-name> --enable-nginx-ssl --enable-postgres-ssl
+
+.. important::
+
+   You must specify the ``--enable-nginx-ssl`` and ``--enable-postgres-ssl`` options **each time** you run the ``init-deployment.sh`` script.
+   If you omit them on a subsequent run, SSL/TLS will be disabled for the services.
+
+.. note::
+
+   Replace ``<branch-name>`` with the Dioptra branch that matches your container images (e.g., ``main`` for releases, ``dev`` for development builds).
+
+.. admonition:: Learn More
+
+   See the ``README.md`` files in the ``ssl/db/`` and ``ssl/nginx/`` folders for additional details about certificate requirements.
+
+.. rst-class:: header-on-a-card header-seealso
+
+See Also
+--------
+
+* :ref:`how-to-using-docker-compose-overrides` - Docker Compose override file basics
+* :ref:`how-to-adding-certificates` - Add custom CA certificates
+* :ref:`how-to-prepare-deployment` - Full deployment customization

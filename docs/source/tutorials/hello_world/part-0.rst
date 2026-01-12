@@ -67,7 +67,7 @@ The Dioptra login screen should appear.
 
 .. admonition:: Learn More
 
-   * :ref:`how-to-customizing-the-deployment` - Learn about the deployment configuration options 
+   * :ref:`how-to-prepare-deployment` - Learn about the deployment configuration options 
 
 .. rst-class:: header-on-a-card header-steps
 
