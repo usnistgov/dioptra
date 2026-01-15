@@ -172,10 +172,30 @@ See :ref:`explanation-entrypoints` and :ref:`explanation-artifacts` for more det
         step2:
             task2: [$myparam, $step1.output2]
 
+
+Additional Dependencies
+-----------------------
+
+Explicit dependencies between steps can be added via the ``dependencies`` keyword. Dependencies between steps are
+automatically created when a step uses the output of another step as a parameter, but sometimes a dependency is 
+needed without the presence of output. In this example, ``step2`` will always be executed after the completion of ``step1``.
+
+.. code-block:: yaml
+
+    graph:
+        step1:
+            task1: [arg1, arg2]
+        step2:
+            task2: [$param1, $param2]
+            dependencies: [step1]
+
+
+
 .. rst-class:: fancy-header header-seealso
 
 See Also 
 ---------
    
+* :ref:`Task Graph Explanation <explanation-task-graph>`
 * :ref:`What are Plugins? <explanation-plugins>` 
 * :ref:`How to create a plugin <how-to-create-plugins>`
