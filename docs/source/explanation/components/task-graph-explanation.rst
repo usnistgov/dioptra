@@ -36,7 +36,7 @@ with a given set of parameters. A single step has several components:
     * a **task name**, which references the plugin task to invoke by name. At runtime, plugins associated with the entrypoint will be searched for a matching task.
     * a **list of parameters**, which are passed to the referenced plugin task during invocation.
 
-.. figure:: ../images/step-anatomy.png
+.. figure:: /images/step-anatomy.png
    :alt: Anatomy of a task graph step.
    :figclass: border-image clickable-image 
 
@@ -72,7 +72,7 @@ desirable to have a step always run after another step. For example, system conf
 or designating the worker as GPU enabled may not produce an output, but may still be required for multiple other steps
 in the task graph.
 
-.. figure:: ../images/DAG.png
+.. figure:: /images/DAG.png
    :alt: Generated directed acyclic graph based on dependencies within the task graph.
    :figclass: border-image clickable-image 
 
