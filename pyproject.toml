@@ -254,7 +254,7 @@ exclude = '''
 
 [tool.bumpver]
 current_version = "1.1.0-dev"
-version_pattern = "MAJOR.MINOR.PATCH[-TAG]"
+version_pattern = "MAJOR.MINOR.PATCH[-TAG][NUM]"
 commit_message = "release {old_version} → {new_version}"
 commit = true
 tag = false
