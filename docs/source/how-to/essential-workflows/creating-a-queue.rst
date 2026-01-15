@@ -21,8 +21,16 @@ Create Queues
 ========================
 
 This how-to explains how to build :ref:`Queues <queues-explanation>` in Dioptra. Queues logically represent a 
-queue of jobs for workers to pull from. In order for a queue to be effective, :ref:`Workers <explanation-queues-and-workers>`
-which listen on that queue are necessary.
+queue of jobs for workers to pull from. 
+
+.. note::
+   In order for a queue to be effective, :ref:`Workers <explanation-queues-and-workers>`
+   which listen on that queue are necessary.
+
+   If the worker is already created or running, check what queue name it is using and create if it doesn't exist.
+
+   If the queue you created has no worker, then you will need to start one, as the jobs sent to that queue will not be
+   processed without a worker.
 
 
 Prerequisites
@@ -74,6 +82,29 @@ Register a queue for a specific group, with a name and a description.
 
 .. rst-class:: fancy-header header-seealso
 
+Step 2: Associate your Queue with Existing Entrypoints
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. tabs::
+
+   .. group-tab:: GUI
+
+      In the Dioptra GUI, navigate to the **Entrypoints** tab. Click one
+      of the existing entrypoints to add the newly created queue to.
+      
+      Under **Basic Info**, select the queue you just created for **Queues**.
+      Click **Submit Entrypoint** when finished.
+
+   .. group-tab:: Python Client
+
+      **Client Method:**
+
+      Use the client to update the entrypoint with the id of the queue.
+
+      .. automethod:: dioptra.client.entrypoints.EntrypointsCollectionClient.modify_by_id
+
+
+.. rst-class:: fancy-header header-seealso
 
 See Also 
 --------

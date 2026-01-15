@@ -37,6 +37,10 @@ A group controls access to other resources. Plugins/entrypoints/jobs/etc. create
 group are available to users who are part of that group. Currently, there is a single public group
 which all resources are created under - this will change in a future release of Dioptra.
 
+Resources in one group cannot be seen or accessed from users in another group. 
+The only way for a user to access those resources is for them to be added to the respective group.
+
+
 .. note::
 
     Dioptra does not currently support the creation of additional groups. All resources are under the same default public group.
