@@ -80,7 +80,6 @@ Register a queue for a specific group, with a name and a description.
 
       .. automethod:: dioptra.client.queues.QueuesCollectionClient.create
 
-.. rst-class:: fancy-header header-seealso
 
 Step 2: Associate your Queue with Existing Entrypoints
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
