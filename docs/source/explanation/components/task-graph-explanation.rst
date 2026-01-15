@@ -40,7 +40,18 @@ with a given set of parameters. A single step has several components:
    :alt: Anatomy of a task graph step.
    :figclass: border-image clickable-image 
 
+   In this example, there are two steps, named ``trained_model`` and ``predictions``.
 
+   The keyword ``train`` under ``trained_model`` refers to a plugin task associated with the entrypoint, with the name ``train``.
+   ``model``, ``dataset``, and ``epochs`` refer to the parameter names of that plugin task, and map inputs to those parameters.
+
+   ``$model_artifact`` and ``$training_ds`` refer to artifact parameters provided to the entrypoint at job creation.
+
+   ``$num_epochs`` refers to an entrypoint parameter provided to the entrypoint at job creation.
+
+   ``$trained_model.model`` refers to one of the outputs (named ``model``) of the first step (named ``trained_model``). 
+   Since this plugin has multiple outputs, when registering it, it is useful to explicitly name those outputs so
+   that they can be accessed by name in the entrypoint.
 
 Variables
 ~~~~~~~~~
