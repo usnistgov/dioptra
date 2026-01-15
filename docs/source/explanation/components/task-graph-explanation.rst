@@ -24,8 +24,8 @@ Summary: What is a Task Graph?
 ------------------------------
 The **task graph** is the component of an entrypoint description which describes the steps of the 
 workflow between plugin function tasks used by the entrypoint, as well as the parameter inputs to
-each of those tasks. A dependency graph between the various steps is constructed to ensure that the
-steps are executed in the correct order.
+each of those tasks. A directed acyclic graph (DAG) representing the dependencies between the 
+various steps is constructed to ensure that the steps are executed in the correct order.
 
 Summary: What is a step?
 ------------------------
@@ -64,6 +64,22 @@ Entrypoints can also have artifact parameters, which are referenced in the same 
 the output of an artifact deserialization plugin task, and the entire artifact can then be used as input to a plugin
 task. 
 
+Explicit dependencies and DAG creation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+While a dependency on a variable will automatically be represented in the DAG, there are some cases where it may be
+desirable to have a step always run after another step. For example, system configurations such as setting RNG seeds
+or designating the worker as GPU enabled may not produce an output, but may still be required for multiple other steps
+in the task graph.
+
+.. figure:: ../images/DAG.png
+   :alt: Generated directed acyclic graph based on dependencies within the task graph.
+   :figclass: border-image clickable-image 
+
+   In the above graph, dependencies are specified on the ``rng`` step. Additional variable dependencies result in a single
+   possible execution order that maintains all the dependencies. In some cases, there may be multiple possible execution
+   orders. In this example, if ``trained_model`` was not dependent on ``rng``, the task engine could start with either
+   ``trained_model`` or ``rng`` when executing the graph..
 
 See Also 
 ---------
