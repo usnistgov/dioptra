@@ -259,6 +259,7 @@ commit_message = "release {old_version} → {new_version}"
 commit = true
 tag = false
 push = false
+tag_scope = "branch"
 
 [tool.bumpver.file_patterns]
 "README.md" = [
@@ -284,6 +285,12 @@ push = false
     "{pep440_version}",
 ]
 "src/dioptra/sdk/__version__.py" = [
+    "{pep440_version}",
+]
+"src/dioptra/task_engine/__version__.py" = [
+    "{pep440_version}",
+]
+"src/dioptra/worker/__version__.py" = [
     "{pep440_version}",
 ]
 
