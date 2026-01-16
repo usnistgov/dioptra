@@ -340,6 +340,24 @@ omit = [
 [tool.doc8]
 ignore = ["D001"]
 
+[tool.hatch.build.targets.sdist]
+only-include = [
+    "docs/make.bat",
+    "docs/Makefile",
+    "docs/source",
+    "docs/assets",
+    "src/dioptra",
+    "tests/*.py",
+    "tests/unit",
+    "LICENSE",
+    "pyproject.toml",
+    "README.md",
+    "tox.ini",
+    "uv.lock",
+    "web-compile-config.yml",
+    "wsgi.py",
+]
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/dioptra"]
 
