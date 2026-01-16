@@ -31,7 +31,7 @@ CREATED_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 REVISION="$(git log -1 --pretty=%H)"
 REPO_URL="https://github.com/usnistgov/dioptra"
 DOCS_URL="https://pages.nist.gov/dioptra"
-IMAGE_AUTHORS="NCCoE Artificial Intelligence Team <dioptra@nist.gov>, James Glasbrenner <jglasbrenner@mitre.org>, Harold Booth <harold.booth@nist.gov>, Keith Manville <kmanville@mitre.org>, Julian Sexton <jtsexton@mitre.org>, Michael Andy Chisholm, Henry Choy <hchoy@mitre.org>, Andrew Hand <ahand@mitre.org>, Bronwyn Hodges <bhodges@mitre.org>, Paul Scemama, Dmitry Cousin <dmitry.cousin@nist.gov>, Eric Trapnell <eric.trapnell@nist.gov>, Mark Trapnell <mark.trapnell@nist.gov>, Howard Huang <hhuang@mitre.org>, Paul Rowe <prowe@mitre.org>, Alexander Byrne <alexanderbyrne@mitre.org>, Luke Barner, Cory Miniter"
+IMAGE_AUTHORS="NCCoE Artificial Intelligence Team <dioptra@nist.gov>, Harold Booth <harold.booth@nist.gov>, James Glasbrenner <jglasbrenner@mitre.org>, Keith Manville <kmanville@mitre.org>, Julian Sexton <jtsexton@mitre.org>, Michael Andy Chisholm, Henry Choy <hchoy@mitre.org>, Andrew Hand, Bronwyn Hodges <bhodges@mitre.org>, Paul Scemama, Dmitry Cousin <dmitry.cousin@nist.gov>, Eric Trapnell <eric.trapnell@nist.gov>, Mark Trapnell <mark.trapnell@nist.gov>, Colton Lapp <colton.lapp@nist.gov>, Howard Huang <hhuang@mitre.org>, Paul Rowe <prowe@mitre.org>, Alexander Byrne, Luke Barner, Cory Miniter"
 IMAGE_VENDOR="National Institute of Standards and Technology"
 IMAGE_LICENSE="NIST-PD OR CC-BY-4.0"
 

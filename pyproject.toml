@@ -22,28 +22,29 @@ build-backend = "hatchling.build"
 name = "dioptra-platform"
 version = "1.1.0dev0"
 authors = [
-    { name="James Glasbrenner", email="jglasbrenner@mitre.org" },
     { name="Harold Booth", email="harold.booth@nist.gov" },
+    { name="James Glasbrenner", email="jglasbrenner@mitre.org" },
     { name="Keith Manville", email="kmanville@mitre.org" },
     { name="Julian Sexton", email="jtsexton@mitre.org" },
     { name="Michael Andy Chisholm" },
     { name="Henry Choy", email="hchoy@mitre.org" },
-    { name="Andrew Hand", email="ahand@mitre.org" },
+    { name="Andrew Hand" },
     { name="Bronwyn Hodges", email="bhodges@mitre.org" },
     { name="Paul Scemama" },
     { name="Dmitry Cousin", email="dmitry.cousin@nist.gov" },
     { name="Eric Trapnell", email="eric.trapnell@nist.gov" },
     { name="Mark Trapnell", email="mark.trapnell@nist.gov" },
+    { name="Colton Lapp", email="colton.lapp@nist.gov" },
     { name="Howard Huang", email="hhuang@mitre.org" },
-    { name="Paul Rowe" },
-    { name="Alexander Byrne", email="alexanderbyrne@mitre.org" },
+    { name="Paul Rowe", email="prowe@mitre.org" },
+    { name="Alexander Byrne" },
     { name="Luke Barber" },
     { name="Cory Miniter" },
 ]
 maintainers = [
+    { name="Harold Booth", email="harold.booth@nist.gov" },
     { name="James Glasbrenner", email="jglasbrenner@mitre.org" },
     { name="Keith Manville", email="kmanville@mitre.org" },
-    { name="Harold Booth", email="harold.booth@nist.gov" },
 ]
 description = "Dioptra is a software test platform for assessing the trustworthy characteristics of artificial intelligence (AI)."
 readme = "README.md"
