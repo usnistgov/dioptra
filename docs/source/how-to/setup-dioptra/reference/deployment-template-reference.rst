@@ -47,9 +47,13 @@ container_registry
 
 **Default:** *empty string*
 
-This is only needed if you are building and pushing Dioptra container images to your own Docker registry.
-As an example, if you are using a Docker registry `hosted on a JFrog Artifactory instance <https://www.jfrog.com/confluence/display/JFROG/Getting+Started+with+Artifactory+as+a+Docker+Registry>`__ at the URL ``acme-dockerv2-virtual.jfrog.io``, then you would answer ``acme-dockerv2-virtual.jfrog.io``.
+This is needed if you want to use the Dioptra container images from a container registry.
+If you wish to use the prebuilt Dioptra images published to GitHub, then you would answer ``ghcr.io/usnistgov``.
 Otherwise, leave this blank.
+
+.. seealso::
+
+   See :ref:`how-to-get-container-images-registry-prefix` for details on registry prefixes and their implications when choosing between downloaded and locally built images.
 
 container_tag
 ~~~~~~~~~~~~~

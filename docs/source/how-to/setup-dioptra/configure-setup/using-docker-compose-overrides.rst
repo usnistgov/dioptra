@@ -130,6 +130,23 @@ Open ``docker-compose.override.yml`` in a text editor and add your customization
        environment:
          NVIDIA_VISIBLE_DEVICES: 0
 
+**Example: Using a custom-built image for a specific worker**
+
+If you are using downloaded images but need to use a custom-built image for a specific worker (e.g., a modified GPU worker), you can override the image for that service.
+This is useful because downloaded and locally built images have different registry prefixes.
+See :ref:`how-to-get-container-images-registry-prefix` for more details.
+
+.. code:: yaml
+
+   services:
+     # Override image for a custom-built worker
+     <deployment-name>-tfgpu-01:
+       image: dioptra/tensorflow2-gpu:dev
+
+.. note::
+
+   Replace ``dioptra/tensorflow2-gpu:dev`` with the name and tag of your custom-built image.
+
 **Example: Multiple customizations in one file**
 
 You can combine multiple customizations in a single override file:

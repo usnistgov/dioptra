@@ -116,7 +116,7 @@ Additionally, you'll have to set up the following infrastructure before you can 
 
 1. A :ref:`worker <explanation-queues-and-workers>`, which executes jobs, needs to be running and connected to a :ref:`queue <explanation-queues-and-workers>`
 
-   - **Note:** Dioptra automatically establishes two workers out of the box: ``tensorflow-cpu`` and ``pytorch-cpu``. These workers are built as standalone Docker containers. :ref:`GPU workers can also be built <how-to-build-containers-build-gpu-images>` for users with GPU access, and :ref:`custom workers <how-to-using-custom-workers>` can be deployed as well
+   - **Note:** Dioptra automatically establishes two workers out of the box: ``tensorflow-cpu`` and ``pytorch-cpu``. These workers are built as standalone Docker containers. :ref:`GPU workers can also be built <how-to-build-container-images-gpu>` for users with GPU access, and :ref:`custom workers <how-to-using-custom-workers>` can be deployed as well
 
 2. A :ref:`user profile and user group <how-to-create-users-and-groups>` need to be defined for permissions access to Dioptra resources
 
