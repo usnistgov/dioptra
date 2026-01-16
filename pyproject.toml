@@ -19,7 +19,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "dioptra"
+name = "dioptra-platform"
 version = "1.1.0dev0"
 authors = [
     { name="James Glasbrenner", email="jglasbrenner@mitre.org" },
@@ -45,7 +45,7 @@ maintainers = [
     { name="Keith Manville", email="kmanville@mitre.org" },
     { name="Harold Booth", email="harold.booth@nist.gov" },
 ]
-description = "Dioptra provides Machine Learning Security researchers with an environment for organizing and running experiments."
+description = "Dioptra is a software test platform for assessing the trustworthy characteristics of artificial intelligence (AI)."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -103,7 +103,6 @@ classifiers = [
 [project.urls]
 repository = "https://github.com/usnistgov/dioptra"
 documentation = "https://pages.nist.gov/dioptra"
-Changelog = "https://github.com/usnistgov/dioptra/blob/main/CHANGELOG.md"
 "Issue Tracker" = "https://github.com/usnistgov/dioptra/issues"
 
 [project.scripts]
