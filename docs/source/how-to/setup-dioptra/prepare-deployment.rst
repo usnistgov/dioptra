@@ -28,7 +28,7 @@ Prerequisites
 
 * Python 3.11+ virtual environment with the ``cruft`` package installed (``pip install cruft``)
 * `Docker Engine <https://docs.docker.com/engine/install/>`__ and `Docker Compose <https://docs.docker.com/compose/install/>`__ installed
-* :ref:`how-to-build-containers` - Container images built
+* :ref:`how-to-get-container-images` - Container images available (downloaded or built)
 * A terminal with access to the deployment target directory
 
 Deployment Setup
@@ -102,6 +102,7 @@ In most cases, the default value is appropriate.
 Key variables include:
 
 - **deployment_name:** A name to associate with the deployment (default: ``Dioptra deployment``)
+- **container_registry:** Set to ``ghcr.io/usnistgov`` if using downloaded images, or leave empty for locally built images. See :ref:`how-to-get-container-images-registry-prefix` for details. (default: *empty*)
 - **container_tag:** Should match the tags of your Dioptra container images (default: ``dev``)
 - **nginx_server_name:** Domain name, IP address, or ``_`` for local deployments (default: ``dioptra.example.org``)
 - **num_tensorflow_cpu_workers / num_pytorch_cpu_workers:** Number of CPU workers (default: ``1`` each)

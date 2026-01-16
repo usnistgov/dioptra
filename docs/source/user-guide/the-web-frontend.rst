@@ -24,7 +24,7 @@ The Web Frontend User's Guide
 
 Dioptra provides a web-based user interface for running, tracking, and organizing machine learning experiments using the open-source technologies and architectures found in real-world AI applications. A demonstration of a simple Hello World example will be shown here.
 
-**Please make sure to have completed these prerequisites for using the front end**: :ref:`how-to-build-containers`, :ref:`how-to-prepare-deployment`, and :ref:`how-to-using-docker-compose-overrides`
+**Please make sure to have completed these prerequisites for using the front end**: :ref:`how-to-get-container-images`, :ref:`how-to-prepare-deployment`, and :ref:`how-to-using-docker-compose-overrides`
 
 
 Using Dioptra (Hello World Example)
