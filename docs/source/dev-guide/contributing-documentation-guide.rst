@@ -973,11 +973,11 @@ Cards, grids, and callouts
 
             How to install Dioptra locally.
 
-         .. grid-item-card:: **Build Containers**
-            :link: how-to-build-containers
+         .. grid-item-card:: **Get Container Images**
+            :link: how-to-get-container-images
             :link-type: ref
 
-            Instructions for building container images.
+            Download or build container images.
 
          .. grid-item-card:: **Additional Configuration**
             :link: getting-started-additional-configuration
@@ -1003,11 +1003,11 @@ Cards, grids, and callouts
 
                How to install Dioptra locally.
 
-            .. grid-item-card:: **Build Containers**
-               :link: how-to-build-containers
+            .. grid-item-card:: **Get Container Images**
+               :link: how-to-get-container-images
                :link-type: ref
 
-               Instructions for building container images.
+               Download or build container images.
 
             .. grid-item-card:: **Additional Configuration**
                :link: getting-started-additional-configuration

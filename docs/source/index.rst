@@ -111,7 +111,7 @@ You can find the source code, license information, and more on the NIST `GitHub 
    :titlesonly:
 
    how-to/setup-dioptra/quick-setup.rst
-   how-to/setup-dioptra/building-the-containers.rst
+   how-to/setup-dioptra/get-container-images/index.rst
    how-to/setup-dioptra/prepare-deployment.rst
    how-to/setup-dioptra/update-deployment.rst
    how-to/setup-dioptra/configure-setup/index.rst

@@ -15,13 +15,24 @@
 .. ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 .. https://creativecommons.org/licenses/by/4.0/legalcode
 
-.. _how-to-build-containers:
+.. _how-to-build-container-images:
 
 Build the Container Images
 ==========================
 
 This guide explains how to build the Dioptra container images from the source repository.
 After completing these steps, you will have local container images ready for deployment.
+
+.. note::
+
+   **Most users do not need to build images manually.**
+   Pre-built images (including GPU workers) are available for download from the GitHub Container Registry.
+   See :ref:`how-to-download-container-images` for the faster approach.
+
+   Build images locally only if you need:
+
+   - Custom modifications to the container images
+   - To work in an environment without access to the GitHub Container Registry
 
 Prerequisites
 -------------
@@ -102,7 +113,7 @@ Use the Makefile to build the container images:
 
 .. rst-class:: header-on-a-card header-steps
 
-.. _how-to-build-containers-build-gpu-images:
+.. _how-to-build-container-images-gpu:
 
 Step 4: Build GPU Images (Optional)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -140,6 +151,11 @@ You should see output similar to the following:
 
    The ``IMAGE ID``, ``CREATED``, and ``SIZE`` fields will vary. Verify that the ``REPOSITORY`` and ``TAG`` columns match.
 
+.. warning::
+
+   Locally built images have a different registry prefix than downloaded images.
+   See :ref:`how-to-get-container-images-registry-prefix` for implications when configuring your deployment.
+
 .. rst-class:: header-on-a-card header-seealso
 
 See Also
@@ -148,3 +164,4 @@ See Also
 * :ref:`how-to-prepare-deployment` - Set up a deployment using your built images
 * :ref:`how-to-adding-certificates` - Add CA certificates to a running deployment
 * :ref:`how-to-gpu-enabled-workers` - Configure GPU workers in your deployment
+* :ref:`how-to-get-container-images-registry-prefix` - Understanding registry prefixes

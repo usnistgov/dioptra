@@ -29,7 +29,7 @@ Prerequisites
 * :ref:`how-to-using-docker-compose-overrides` - Override file created (for custom GPU assignments)
 * NVIDIA GPU(s) with drivers installed on the host machine
 * `NVIDIA Container Toolkit <https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html>`__ installed
-* GPU worker containers built (see :ref:`how-to-build-containers`)
+* GPU worker containers built (see :ref:`how-to-build-container-images-gpu`)
 
 .. note::
 

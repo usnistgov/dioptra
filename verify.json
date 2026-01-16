@@ -1,0 +1,4 @@
+{
+    "description": "This file contains the path to the current key file needed to verify Dioptra container image signatures via cosign.",
+    "key_path": "keys/dioptra.pub"
+}
