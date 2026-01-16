@@ -369,7 +369,7 @@ pyarrow==17.0.0
     # via
     #   dioptra (pyproject.toml)
     #   mlflow
-pyasn1==0.6.1
+pyasn1==0.6.2
     # via
     #   pyasn1-modules
     #   rsa
