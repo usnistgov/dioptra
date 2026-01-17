@@ -4,15 +4,15 @@ This guide provides step-by-step instructions for creating a version release on 
 
 - [Prerequisites](#prerequisites)
 - [Scenario 1: After a Minor or Major Release to Main](#scenario-1-after-a-minor-or-major-release-to-main)
-    - [Step 1: Run the bumpver command](#step-1-run-the-bumpver-command)
-    - [Step 2: Update uv.lock](#step-2-update-uvlock)
-    - [Step 3: Amend the release commit](#step-3-amend-the-release-commit)
-    - [Step 4: Verify the result](#step-4-verify-the-result)
+  - [Step 1: Run the bumpver command](#step-1-run-the-bumpver-command)
+  - [Step 2: Update uv.lock](#step-2-update-uvlock)
+  - [Step 3: Amend the release commit](#step-3-amend-the-release-commit)
+  - [Step 4: Verify the result](#step-4-verify-the-result)
 - [Scenario 2: Incrementing the Dev Tag](#scenario-2-incrementing-the-dev-tag)
-    - [Step 1: Run the bumpver command](#step-1-run-the-bumpver-command-1)
-    - [Step 2: Update uv.lock](#step-2-update-uvlock-1)
-    - [Step 3: Amend the release commit](#step-3-amend-the-release-commit-1)
-    - [Step 4: Verify the result](#step-4-verify-the-result-1)
+  - [Step 1: Run the bumpver command](#step-1-run-the-bumpver-command-1)
+  - [Step 2: Update uv.lock](#step-2-update-uvlock-1)
+  - [Step 3: Amend the release commit](#step-3-amend-the-release-commit-1)
+  - [Step 4: Verify the result](#step-4-verify-the-result-1)
 - [After Bumping the Version](#after-bumping-the-version)
 
 ## Prerequisites
