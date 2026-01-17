@@ -1,0 +1,101 @@
+# This Software (Dioptra) is being made available as a public service by the
+# National Institute of Standards and Technology (NIST), an Agency of the United
+# States Department of Commerce. This software was developed in part by employees of
+# NIST and in part by NIST contractors. Copyright in portions of this software that
+# were developed by NIST contractors has been licensed or assigned to NIST. Pursuant
+# to Title 17 United States Code Section 105, works of NIST employees are not
+# subject to copyright protection in the United States. However, NIST may hold
+# international copyright in software created by its employees and domestic
+# copyright (or licensing rights) in portions of software that were assigned or
+# licensed to NIST. To the extent that NIST holds copyright in this software, it is
+# being made available under the Creative Commons Attribution 4.0 International
+# license (CC BY 4.0). The disclaimers of the CC BY 4.0 license apply to all parts
+# of the software developed or licensed by NIST.
+#
+# ACCESS THE FULL CC BY 4.0 LICENSE HERE:
+# https://creativecommons.org/licenses/by/4.0/legalcode
+name: Publish dioptra-platform package to PyPI
+
+on:
+  push:
+    tags:
+      - "*.*.*"
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: install English words dictionary
+        if: ${{ matrix.os == 'ubuntu-22.04' }}
+        run: sudo apt install -y wamerican
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Set up Python
+        run: uv python install
+
+      - name: Run unit tests to prevent broken packages from publishing
+        run: uvx tox run -e pytest
+
+  validate:
+    runs-on: ubuntu-22.04
+    outputs:
+      version: ${{ steps.validate.outputs.version }}
+      is-prerelease: ${{ steps.validate.outputs.is-prerelease }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: "Set up Python"
+        uses: actions/setup-python@v6
+        with:
+          python-version-file: ".python-version"
+
+      - name: Validate release tag
+        id: validate
+        uses: ./.github/actions/validate-release-tag
+        with:
+          tag: ${{ github.ref_name }}
+
+  publish:
+    needs:
+      - test
+      - validate
+    runs-on: ubuntu-22.04
+    environment:
+      name: ${{ needs.validate.outputs.is-prerelease == 'true' && 'testpypi' || 'pypi' }}
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version-file: ".python-version"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Build package
+        run: uv build
+
+      - name: Store the distribution packages
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-package-distributions
+          path: dist/
+
+      - name: Publish to TestPyPI
+        if: needs.validate.outputs.is-prerelease == 'true'
+        run: uv publish --index testpypi
+
+      - name: Publish to PyPI
+        if: needs.validate.outputs.is-prerelease == 'false'
+        run: uv publish

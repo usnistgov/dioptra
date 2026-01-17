@@ -4,14 +4,14 @@ This document explains the versioning philosophy and release model used in the D
 
 - [Semantic Versioning](#semantic-versioning)
 - [The Two-Branch Model](#the-two-branch-model)
-    - [The `main` Branch](#the-main-branch)
-    - [The `dev` Branch](#the-dev-branch)
+  - [The `main` Branch](#the-main-branch)
+  - [The `dev` Branch](#the-dev-branch)
 - [When Releases Happen](#when-releases-happen)
-    - [Main Branch Releases](#main-branch-releases)
-    - [Dev Branch Releases](#dev-branch-releases)
-        - [Scenario 1 - After a minor or major release to main](#scenario-1---after-a-minor-or-major-release-to-main)
-        - [Scenario 2 - After a patch release to main with corresponding changes to dev](#scenario-2---after-a-patch-release-to-main-with-corresponding-changes-to-dev)
-        - [Scenario 3 - When substantial new content warrants a dev release](#scenario-3---when-substantial-new-content-warrants-a-dev-release)
+  - [Main Branch Releases](#main-branch-releases)
+  - [Dev Branch Releases](#dev-branch-releases)
+    - [Scenario 1 - After a minor or major release to main](#scenario-1---after-a-minor-or-major-release-to-main)
+    - [Scenario 2 - After a patch release to main with corresponding changes to dev](#scenario-2---after-a-patch-release-to-main-with-corresponding-changes-to-dev)
+    - [Scenario 3 - When substantial new content warrants a dev release](#scenario-3---when-substantial-new-content-warrants-a-dev-release)
 - [How Version Numbers Flow](#how-version-numbers-flow)
 - [Downstream Artifacts](#downstream-artifacts)
 - [Version Format Variations](#version-format-variations)
@@ -88,14 +88,14 @@ Even without a corresponding main branch release, there are times when significa
 The relationship between `main` and `dev` versions follows a predictable pattern, with `dev` always one minor version ahead of `main`:
 
 ```text
-main: 1.0.0 ─────────────────────────> 1.1.0 ─────────────> 1.1.1 ─────────────> 2.0.0
-                                         │                    │                    │
+main: 1.0.0 ──────────────────────────────> 1.1.0 ────────────────> 1.1.1 ────> 2.0.0
+                                              │                       │           │
 dev:  1.1.0dev0 → 1.1.0dev1 → 1.1.0dev2 → 1.2.0dev0 → 1.2.0dev1 → 1.2.0dev2 → 2.1.0dev0
-                                         ↑                    ↑                    ↑
-                               minor release to main    patch to main       major release
-                               triggers minor bump      triggers dev        triggers bump to
-                               and dev tag reset        tag increment       next minor of
-                                                                            new major
+                                              ↑                       ↑           ↑
+                                    minor release to main      patch to main  major release
+                                    triggers minor bump        triggers dev   triggers bump to
+                                    and dev tag reset          tag increment  next minor of
+                                                                              new major
 ```
 
 The dev branch version always indicates what the *next* release will be. When `dev` shows `1.2.0dev3`, it means the next minor release will be `1.2.0` (or the version will increment further if scope changes).
