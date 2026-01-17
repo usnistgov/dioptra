@@ -92,7 +92,7 @@ try:
     from typing import Protocol
 
 except ImportError:  # pragma: nocover
-    from typing_extensions import Protocol  # type: ignore
+    from typing_extensions import Protocol
 
 if TYPE_CHECKING:
     from prefect.tasks.core.function import FunctionTask

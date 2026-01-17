@@ -486,16 +486,16 @@ class ArtifactIdService(object):
 
         artifact_dict = self.get(artifact_id, log=log)
 
-        artifact = cast(models.Artifact, artifact_dict.get("artifact"))
+        artifact = artifact_dict.get("artifact")
         has_draft = cast(bool, artifact_dict.get("has_draft"))
 
         new_artifact = models.Artifact(
-            uri=artifact.uri,
-            description=description,
-            resource=artifact.resource,
-            is_dir=artifact.is_dir,
-            file_size=artifact.file_size,
-            creator=current_user,
+            uri=artifact.uri,  # pyright: ignore
+            description=description,  # pyright: ignore
+            resource=artifact.resource,  # pyright: ignore
+            is_dir=artifact.is_dir,  # pyright: ignore
+            file_size=artifact.file_size,  # pyright: ignore
+            creator=current_user,  # pyright: ignore
         )
         self._artifact_task_helper.associate_task(
             artifact=new_artifact,
