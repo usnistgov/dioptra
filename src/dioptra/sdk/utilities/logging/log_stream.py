@@ -63,7 +63,7 @@ class StdoutLogStream(LogStream):
         self.name = self.logger.name
         self.level = logging.INFO
         self._as_json = as_json
-        self._redirector = contextlib.redirect_stdout(self)  # type: ignore
+        self._redirector = contextlib.redirect_stdout(self)  # pyright:ignore
 
     def close(self):
         pass
@@ -78,7 +78,7 @@ class StderrLogStream(LogStream):
         self.name = self.logger.name
         self.level = logging.INFO
         self._as_json = as_json
-        self._redirector = contextlib.redirect_stderr(self)  # type: ignore
+        self._redirector = contextlib.redirect_stderr(self)  # pyright: ignore
 
     def close(self):
         pass
