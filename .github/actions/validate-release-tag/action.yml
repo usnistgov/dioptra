@@ -14,44 +14,30 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-name: Sphinx documentation
-
-on:
-  push:
-    branches:
-      - "**"
-    tags:
-      - "*.*.*"
-
-jobs:
-  docs:
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
-        with:
-          enable-cache: true
-          cache-dependency-glob: "uv.lock"
-          python-version: "3.11"
-
-      - name: build the documentation
-        run: uvx -p "3.11" tox run -e docs
-
-      - name: archive the documentation
-        uses: actions/upload-artifact@v5
-        with:
-          name: docs-build
-          path: docs/build
-
-      - name: deploy documentation to github pages
-        uses: peaceiris/actions-gh-pages@v4
-        if: ${{ github.ref == 'refs/heads/main' }}
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: docs/build
-          publish_branch: nist-pages
-          user_name: "github-actions[bot]"
-          user_email: "github-actions[bot]@users.noreply.github.com"
-          commit_message: ${{ github.event.head_commit.message }}
+name: "validate-release-tag"
+description: Validates that the git tag matches the version in pyproject.toml
+inputs:
+  tag:
+    description: Git tag to validate (e.g., from github.ref_name)
+    required: true
+  strip-v-prefix:
+    description: Whether to strip "v" prefix from tag before comparison
+    required: false
+    default: 'true'
+outputs:
+  version:
+    description: The validated version string from pyproject.toml
+    value: ${{ steps.validate.outputs.version }}
+  is-prerelease:
+    description: Whether this is a pre-release version (dev, rc, alpha, beta)
+    value: ${{ steps.validate.outputs.is_prerelease }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Validate tag against pyproject.toml
+      id: validate
+      shell: bash
+      run: |
+        python "${{ github.action_path }}/validate.py" \
+          --tag "${{ inputs.tag }}" \
+          ${{ inputs.strip-v-prefix == 'true' && '--strip-v-prefix' || '' }}
