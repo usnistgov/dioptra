@@ -85,6 +85,8 @@ jobs:
         with:
           images: |
             ${{ env.REGISTRY_IMAGE }}/${{ matrix.dioptra-app }}
+          flavor: |
+            latest=${{ github.ref_type == 'tag' && !contains(github.ref_name, 'dev') && !contains(github.ref_name, 'rc') && !contains(github.ref_name, 'a') && !contains(github.ref_name, 'b') }}
           tags: |
             type=schedule,pattern=weekly
             type=schedule,prefix=weekly-,pattern={{date 'YYYYMMDD'}}
@@ -201,6 +203,8 @@ jobs:
         with:
           images: |
             ${{ env.REGISTRY_IMAGE }}/${{ matrix.dioptra-app }}
+          flavor: |
+            latest=${{ github.ref_type == 'tag' && !contains(github.ref_name, 'dev') && !contains(github.ref_name, 'rc') && !contains(github.ref_name, 'a') && !contains(github.ref_name, 'b') }}
           tags: |
             type=schedule,pattern=weekly
             type=schedule,prefix=weekly-,pattern={{date 'YYYYMMDD'}}
