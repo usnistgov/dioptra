@@ -36,22 +36,14 @@ with a given set of parameters. A single step has several components:
     * a **task name**, which references the plugin task to invoke by name. At runtime, plugins associated with the entrypoint will be searched for a matching task.
     * a **list of parameters**, which are passed to the referenced plugin task during invocation.
 
-.. figure:: /images/step-anatomy.png
+.. figure:: /images/task-graph-function.png
    :alt: Anatomy of a task graph step.
    :figclass: border-image clickable-image 
 
-   In this example, there are two steps, named ``trained_model`` and ``predictions``.
+   The primary function of the task graph is to describe the relationship between variables and plugins within an entrypoint.
+   It describes dependencies between the various steps, as well as how the outputs, global variables, and artifacts fit in as 
+   input to the plugins invoked in each step.
 
-   The keyword ``train`` under ``trained_model`` refers to a plugin task associated with the entrypoint, with the name ``train``.
-   ``model``, ``dataset``, and ``epochs`` refer to the parameter names of that plugin task, and map inputs to those parameters.
-
-   ``$model_artifact`` and ``$training_ds`` refer to artifact parameters provided to the entrypoint at job creation.
-
-   ``$num_epochs`` refers to an entrypoint parameter provided to the entrypoint at job creation.
-
-   ``$trained_model.model`` refers to one of the outputs (named ``model``) of the first step (named ``trained_model``). 
-   Since this plugin has multiple outputs, when registering it, it is useful to explicitly name those outputs so
-   that they can be accessed by name in the entrypoint.
 
 Variables
 ~~~~~~~~~
