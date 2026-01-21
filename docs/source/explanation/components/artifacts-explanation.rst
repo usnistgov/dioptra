@@ -18,6 +18,30 @@
 .. _explanation-artifacts:
 
 Artifacts
-================
+=========
 
-[Todo] Insert an explanation about artifacts.
+Summary: What is an artifact?
+-----------------------------
+
+An **artifact** refers to the stored outputs of jobs. A job can produce multiple artifacts,
+and artifacts produced by a job can be used as inputs to another job. How the artifact is used
+is specified in the entrypoint associated with the job, but the artifact itself is provided at
+runtime as an input to the job.
+
+
+Artifact Tasks
+--------------
+
+**Artifact tasks** are a type of plugin task which primarily serve to detail the serialization
+and deserialization of a given artifact type. When an output of a function task is designated to be 
+saved as an artifact, it is passed to its corresponding serialization function within the artifact task.
+Similarly, when an artifact is loaded, its deserialization function is used to load it as an object in memory.
+
+Because the serialization input and deserialization output types must be the same, passing artifacts between
+entrypoints is effectively transparent to the entrypoint - the entrypoint can handle those artifacts
+as if they are an object loaded into memory, and ignore the details of reading/writing, as long as artifact
+tasks for that type exist.
+
+Note that when artifacts are created, they are associated with a snapshot of the artifact task that they were 
+created with. Since the artifact task contains both serialization and deserialization, the same snapshot is used
+for deserialization. 
