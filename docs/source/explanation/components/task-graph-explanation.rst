@@ -75,14 +75,47 @@ desirable to have a step always run after another step. For example, system conf
 or designating the worker as GPU enabled may not produce an output, but may still be required for multiple other steps
 in the task graph.
 
+Consider the following example task graph as a candidate for the DAG - explicit dependencies are declared for the ``defended_model``, 
+``predictions`` and ``trained_model`` steps on the ``configure_rng`` step. Additionally, the ``defended_model`` step has an implicit
+dependency on the ``trained_model`` step, and the ``predictions`` step has an implicit dependency on the ``defended_model`` step (by using
+the output of those steps).
+
+.. code:: yaml
+   
+   rng:
+      configure_rng:
+         seed: 1234
+
+   trained_model:
+      train:
+         model: $model_artifact
+         dataset: $training_ds
+         epochs: $num_epochs
+      dependencies: [rng]
+
+   predictions:
+      predict:
+         model: $defended_model
+         dataset: $testing_ds
+         samples: $num_samples
+      dependencies: [rng]
+
+   defended_model:
+      adversarial_training:
+         model: $trained_model.model
+         dataset: $adversarial_ds
+         split: 0.5
+      dependencies: [rng]
+
+   metrics: 
+      run_metrics:
+         predictions: $predictions
+
 .. figure:: /images/DAG.png
    :alt: Generated directed acyclic graph based on dependencies within the task graph.
    :figclass: border-image clickable-image 
 
-   In the above graph, dependencies are specified on the ``rng`` step. Additional variable dependencies result in a single
-   possible execution order that maintains all the dependencies. In some cases, there may be multiple possible execution
-   orders. In this example, if ``trained_model`` was not dependent on ``rng``, the task engine could start with either
-   ``trained_model`` or ``rng`` when executing the graph..
+   The DAG generated from the above task graph.
 
 See Also 
 ---------
