@@ -714,7 +714,7 @@ def add_resource_lock_types(
 def get_by_filters_paged(
     session: CompatibleSession[S],
     snap_class: typing.Type[ResourceT],
-    sortable_fields: dict[str, str],
+    sortable_fields: dict[str, typing.Any],
     searchable_fields: dict[str, typing.Any],
     group: m.Group | int | None,
     filters: list[dict],
@@ -733,8 +733,7 @@ def get_by_filters_paged(
             of resource to get
         sortable_fields: Determines the legal values for the "sort_by"
             argument.  This is a dict which maps a legal sort_by value to
-            the name of an attribute of the "snap_class" argument.  The
-            attribute value corresponds to a table column to sort by.
+            an attribute corresponding to a table column to sort by.
         searchable_fields: Determines the legal filters in the "filters"
             argument.  This is a dict which maps from a search field name to a
             function of one argument which transforms a query string to an
@@ -765,11 +764,8 @@ def get_by_filters_paged(
         EntityDeletedError: if the given group is deleted
     """
     sql_filter = construct_sql_query_filters(filters, searchable_fields)
-    if sort_by:
-        if sort_by in sortable_fields:
-            sort_by = sortable_fields[sort_by]
-        else:
-            raise e.SortParameterValidationError("resource", sort_by)
+    if sort_by and sort_by not in sortable_fields:
+        raise e.SortParameterValidationError("resource", sort_by)
     group_id = None if group is None else get_group_id(group)
 
     if group_id is not None:
@@ -813,7 +809,7 @@ def get_by_filters_paged(
         page_stmt = apply_resource_deletion_policy(page_stmt, deletion_policy)
 
         if sort_by:
-            sort_criteria = getattr(snap_class, sort_by)
+            sort_criteria = sortable_fields[sort_by]
             if descending:
                 sort_criteria = sort_criteria.desc()
         else:
