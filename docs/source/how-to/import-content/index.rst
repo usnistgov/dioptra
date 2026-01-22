@@ -25,7 +25,6 @@ How to guides on Importing Content
 .. toctree::
    :maxdepth: 1
 
-   download-data
+   add-a-dataset
    import-plugins
-   acquiring-datasets
 
