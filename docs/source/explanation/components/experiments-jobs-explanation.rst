@@ -52,6 +52,6 @@ and generated artifacts for all jobs.
 See Also
 ---------
 
+* :ref:`how-to-create-experiments` - Step-by-step guide on creating an experiment
 * :ref:`Entrypoints Explanation <explanation-entrypoints>` - Explanation of entrypoints
 * :ref:`how-to-running-jobs` - Step-by-step guide on running a job
-* :ref:`Plugins: reference <reference-plugins>` - Detailed syntax for decorators and type annotations
