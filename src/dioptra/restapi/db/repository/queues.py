@@ -22,7 +22,7 @@ from collections.abc import Iterable, Sequence
 from typing import Any, Final, overload
 
 import dioptra.restapi.db.repository.utils as utils
-from dioptra.restapi.db.models import Group, Queue, Tag
+from dioptra.restapi.db.models import Group, Queue, Resource, Tag
 
 
 class QueueRepository:
@@ -32,12 +32,12 @@ class QueueRepository:
         "tag": lambda x: Queue.tags.any(Tag.name.like(x, escape="/")),
     }
 
-    # Maps a general sort criterion name to a Queue attribute name
-    SORTABLE_FIELDS: Final[dict[str, str]] = {
-        "name": "name",
-        "createdOn": "created_on",
-        "lastModifiedOn": "last_modified_on",
-        "description": "description",
+    # Maps a general sort criterion name to a Queue attribute
+    SORTABLE_FIELDS: Final[dict[str, Any]] = {
+        "name": Queue.name,
+        "createdOn": Queue.created_on,
+        "lastModifiedOn": Resource.last_modified_on,
+        "description": Queue.description,
     }
 
     def __init__(self, session: utils.CompatibleSession[utils.S]):
