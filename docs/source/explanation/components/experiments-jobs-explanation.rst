@@ -18,6 +18,40 @@
 .. _explanation-experiments-and-jobs:
 
 Experiments and Jobs
-================
+====================
 
-[Todo] Insert an explanation about experiments/jobs.
+Summary: What is an Experiment?
+-------------------------------
+
+An **experiment** is a resource in Dioptra which is effectively a namespace for jobs. An experiment can have
+a number of entrypoints associated with it, from which jobs under that experiment can be created. Experiments
+as a resource are largely organizational, and can make it easier to filter jobs, provide access to users via 
+groups, and reduce the number of entrypoints to sift through at job creation.
+
+Summary: What is a Job?
+-----------------------
+
+A **job** in Dioptra is essentially an instance of an entrypoint. When creating a job, a user provides parameters
+and artifact parameters specified as necessary by an entrypoint, and this set of workflow instructions (the :ref:`entrypoint <explanation-entrypoints>`), 
+any parameter values, and any artifacts being passed as parameters, get sent to a queue, also selected by the user
+at job creation.
+
+When a worker listening to that queue claims the job, it attempts to execute the provided entrypoint using the 
+parameter and artifact parameter values passed along with the entrypoint within the worker environment. 
+
+Any logs generated during the lifetime of the job, along with any :ref:`metrics <explanation-metrics>` and artifacts created during one of the
+steps of the job, are uploaded to the Dioptra RESTAPI and associated with the job (and are viewable from the **Job
+Dashboard** page.)
+
+Dioptra maintains a job history, recording the experiment, entrypoint, parameters, artifact parameters, logs, metrics
+and generated artifacts for all jobs.
+
+
+.. rst-class:: fancy-header header-seealso
+
+See Also
+---------
+
+* :ref:`Entrypoints Explanation <explanation-entrypoints>` - Explanation of entrypoints
+* :ref:`how-to-running-jobs` - Step-by-step guide on running a job
+* :ref:`Plugins: reference <reference-plugins>` - Detailed syntax for decorators and type annotations
