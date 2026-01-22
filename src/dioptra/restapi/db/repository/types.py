@@ -25,6 +25,7 @@ import dioptra.restapi.db.repository.utils as utils
 from dioptra.restapi.db.models import (
     Group,
     PluginTaskParameterType,
+    Resource,
     Tag,
 )
 
@@ -38,11 +39,12 @@ class TypeRepository:
         "tag": lambda x: PluginTaskParameterType.tags.any(Tag.name.like(x, escape="/")),
     }
 
+    # Maps a general sort criterion name to an PluginTaskParameterType attribute
     SORTABLE_FIELDS: Final[dict[str, Any]] = {
-        "name": "name",
-        "createdOn": "created_on",
-        "lastModifiedOn": "last_modified_on",
-        "description": "description",
+        "name": PluginTaskParameterType.name,
+        "createdOn": PluginTaskParameterType.created_on,
+        "lastModifiedOn": Resource.last_modified_on,
+        "description": PluginTaskParameterType.description,
     }
 
     def __init__(self, session: utils.CompatibleSession[utils.S]):
