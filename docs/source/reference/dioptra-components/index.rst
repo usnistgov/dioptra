@@ -31,4 +31,4 @@ Dioptra Components
       param-types-reference
       plugin-reference
       entrypoints-reference
-
+      task-graph-reference

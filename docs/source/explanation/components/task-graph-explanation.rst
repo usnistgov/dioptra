@@ -27,6 +27,9 @@ workflow between plugin function tasks used by the entrypoint, as well as the pa
 each of those tasks. A directed acyclic graph (DAG) representing the dependencies between the 
 various steps is constructed to ensure that the steps are executed in the correct order.
 
+
+
+
 Summary: What is a step?
 ------------------------
 
@@ -37,12 +40,46 @@ with a given set of parameters. A single step has several components:
     * a **list of parameters**, which are passed to the referenced plugin task during invocation.
 
 .. figure:: /images/task-graph-function.png
-   :alt: Anatomy of a task graph step.
+   :alt: Task graph purpose.
    :figclass: border-image clickable-image 
 
    The primary function of the task graph is to describe the relationship between variables and plugins within an entrypoint.
    It describes dependencies between the various steps, as well as how the outputs, global variables, and artifacts fit in as 
    input to the plugins invoked in each step.
+
+
+Below is an example task graph. In the first step, the step name is ``rng``, the task name is ``configure_rng`` and the list of parameters contains
+a single member named ``seed`` which is being passed a value of ``1234``.
+.. code:: yaml
+   
+   rng:
+      configure_rng:
+         seed: 1234
+
+   trained_model:
+      train:
+         model: $model_artifact
+         dataset: $training_ds
+         epochs: $num_epochs
+      dependencies: [rng]
+
+   predictions:
+      predict:
+         model: $defended_model
+         dataset: $testing_ds
+         samples: $num_samples
+      dependencies: [rng]
+
+   defended_model:
+      adversarial_training:
+         model: $trained_model.model
+         dataset: $adversarial_ds
+         split: 0.5
+      dependencies: [rng]
+
+   metrics: 
+      run_metrics:
+         predictions: $predictions
 
 
 Variables
@@ -80,42 +117,14 @@ Consider the following example task graph as a candidate for the DAG - explicit 
 dependency on the ``trained_model`` step, and the ``predictions`` step has an implicit dependency on the ``defended_model`` step (by using
 the output of those steps).
 
-.. code:: yaml
-   
-   rng:
-      configure_rng:
-         seed: 1234
-
-   trained_model:
-      train:
-         model: $model_artifact
-         dataset: $training_ds
-         epochs: $num_epochs
-      dependencies: [rng]
-
-   predictions:
-      predict:
-         model: $defended_model
-         dataset: $testing_ds
-         samples: $num_samples
-      dependencies: [rng]
-
-   defended_model:
-      adversarial_training:
-         model: $trained_model.model
-         dataset: $adversarial_ds
-         split: 0.5
-      dependencies: [rng]
-
-   metrics: 
-      run_metrics:
-         predictions: $predictions
 
 .. figure:: /images/DAG.png
    :alt: Generated directed acyclic graph based on dependencies within the task graph.
    :figclass: border-image clickable-image 
 
    The DAG generated from the above task graph.
+
+.. rst-class:: fancy-header header-seealso
 
 See Also 
 ---------
