@@ -548,7 +548,7 @@ werkzeug==3.0.6
     #   flask-login
     #   flask-restx
     #   tensorboard
-wheel==0.44.0
+wheel==0.46.2
     # via astunparse
 wrapt==1.16.0
     # via
