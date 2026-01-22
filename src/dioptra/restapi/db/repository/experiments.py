@@ -26,6 +26,7 @@ from dioptra.restapi.db.models import (
     EntryPoint,
     Experiment,
     Group,
+    Resource,
     Tag,
 )
 
@@ -37,12 +38,12 @@ class ExperimentRepository:
         "tag": lambda x: Experiment.tags.any(Tag.name.like(x, escape="/")),
     }
 
-    # Maps a general sort criterion name to an Experiment attribute name
-    SORTABLE_FIELDS: Final[dict[str, str]] = {
-        "name": "name",
-        "createdOn": "created_on",
-        "lastModifiedOn": "last_modified_on",
-        "description": "description",
+    # Maps a general sort criterion name to an Experiment attribute
+    SORTABLE_FIELDS: Final[dict[str, Any]] = {
+        "name": Experiment.name,
+        "createdOn": Experiment.created_on,
+        "lastModifiedOn": Resource.last_modified_on,
+        "description": Experiment.description,
     }
 
     def __init__(self, session: utils.CompatibleSession[utils.S]):
