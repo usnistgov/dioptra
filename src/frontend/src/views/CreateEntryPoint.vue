@@ -152,6 +152,25 @@
           @create="selectedParam = null; showEntrypointParamDialog = true;"
           style="margin-top: 0;"
         >
+          <template #body-cell-defaultValue="props">
+            <q-chip
+              v-if="props.row.defaultValue === null"
+              label="Null"
+              color="negative"
+              text-color="white"
+            />
+            <div v-else>
+              {{ props.row.defaultValue }}
+            </div>
+          </template>
+          <template #body-cell-null="props">
+            <q-checkbox
+              :model-value="props.row.defaultValue === null"
+              @update:model-value="val => {
+                props.row.defaultValue = val ? null : ''
+              }"
+            />
+          </template>
           <template #body-cell-actions="props">
             <q-btn 
               icon="edit"
@@ -666,6 +685,7 @@
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, },
     { name: 'type', label: 'Type', align: 'left', field: 'parameterType', sortable: true, },
     { name: 'defaultValue', label: 'Default Value (optional)', align: 'left', field: 'defaultValue', sortable: true, },
+    { name: 'null', label: 'Null Value', align: 'center', },
     { name: 'actions', label: 'Actions', align: 'center', },
   ]
 
@@ -979,6 +999,7 @@
   async function deleteEntrypoint() {
     try {
       await api.deleteItem('entrypoints', objectForDeletion.value.id)
+      confirmLeave.value = true
       notify.success(`Successfully deleted '${objectForDeletion.value.name}'`)
       showDeleteDialogEntrypoint.value = false
       router.push(`/entrypoints`)

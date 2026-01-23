@@ -189,7 +189,17 @@
       >
         <template #body-cell-value="props">
           <div style="font-size: 18px;">
-            {{ props.row.value }}
+            <span v-if="props.row.value === null">
+              <q-chip
+                label="Null"
+                color="negative"
+                text-color="white"
+                class="q-ml-none"
+              />
+            </span>
+            <span v-else>
+              {{ props.row.value }}
+            </span>
             <q-btn icon="edit" round size="sm" color="primary" flat />
           </div>
           <q-popup-edit v-model="props.row.value" v-slot="scope">
@@ -569,7 +579,16 @@
     } catch(err) {
       // error shows when redis isn't installed, but job is still created
       store.savedForms.jobs[expJobOrAllJobs.value] = null
-      notify.error(err.response.data.message)
+      if(err.response.data.message) {
+        notify.error(err.response.data.message)
+      }
+      if(err.response?.data?.errors?.values &&
+        Object.keys(err.response.data.errors.values).length > 0) {
+          for (const [key, value] of Object.entries(err.response.data.errors.values)) {
+            notify.error(`${key}: ${value.value}`)
+          }
+      }
+      console.log(err)
     }
   }
 

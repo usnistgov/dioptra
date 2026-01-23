@@ -30,22 +30,48 @@
       aria-required="true"
       class="q-mb-sm"
     >
-    <template v-slot:before>
-      <label :class="`field-label`">Type:</label>
-    </template>
+      <template v-slot:before>
+        <label :class="`field-label`">Type:</label>
+      </template>
     </q-select>
-    <q-input 
+    <div v-if="parameter.defaultValue === null">
+      Default Value:
+      <q-chip
+        label="Null"
+        color="negative"
+        text-color="white"
+        class="q-ml-md"
+      />
+    </div>
+    <q-input
+      v-else
       outlined 
       dense 
       v-model.trim="parameter.defaultValue"
       class="q-mb-sm"
       aria-required="false"
       hint="Optional"
+      :disable="parameter.defaultValue === null"
     >
       <template v-slot:before>
-        <label :class="`field-label`">Default Value:</label>
+        <label
+          class="field-label"
+          :class="{ 'text-grey-6': parameter.defaultValue === null }"
+        >
+          Default Value:
+        </label>
       </template>
     </q-input>
+    <div class="q-mt-md">
+      Null Value:
+      <q-checkbox
+        class="q-ml-lg"
+        :model-value="parameter.defaultValue === null"
+        @update:model-value="(val) => {
+          parameter.defaultValue = val ? null : ''
+        }"
+      />
+    </div>
   </DialogComponent>
 </template>
 
