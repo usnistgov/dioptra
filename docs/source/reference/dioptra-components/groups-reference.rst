@@ -15,9 +15,9 @@
 .. ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 .. https://creativecommons.org/licenses/by/4.0/legalcode
 
-.. _reference-entrypoints:
+.. _reference-groups:
 
-Entrypoints
+Groups
 =================
 
 
@@ -25,52 +25,47 @@ Entrypoints
    :local:
    :depth: 2
 
-.. _reference-entrypoints-definition:
+.. _reference-groups-definition:
 
-Entrypoint Definition
+Group Definition
 ---------------------
 
-.. _reference-entrypoints-attributes:
+.. _reference-groups-attributes:
 
-Entrypoint Attributes
+Group Attributes
 ---------------------
 
-.. _reference-entrypoints-required-attributes:
+.. _reference-groups-required-attributes:
 
 Required Attributes
 ~~~~~~~~~~~~~~~~~~~
 
-.. _reference-entrypoints-optional-attributes:
-
-Optional Attributes
-~~~~~~~~~~~~~~~~~~~
-
-.. _reference-entrypoints-system-generated-attributes:
+.. _reference-groups-system-generated-attributes:
 
 System-Generated Attributes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. _reference-entrypoints-task-graph-syntax:
+.. _reference-groups-membership:
 
-Task Graph Syntax
-~~~~~~~~~~~~~~~~~
+Group Membership
+---------------------
 
-.. _reference-entrypoints-artifact-output-graph-syntax:
+.. _reference-groups-member-permissions:
 
-Artifact Output Graph Syntax
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Member Permissions
+~~~~~~~~~~~~~~~~~~
 
-.. _reference-entrypoints-registration-interfaces:
+.. _reference-groups-manager-roles:
+
+Manager Roles
+~~~~~~~~~~~~~~~~~~
+
+.. _reference-groups-registration-interfaces:
 
 Registration Interfaces
 -----------------------
 
-.. _reference-entrypoints-python-client:
-
-Using Python Client
-~~~~~~~~~~~~~~~~~~~
-
-.. _reference-entrypoints-rest-api:
+.. _reference-groups-rest-api:
 
 Using REST API
 ~~~~~~~~~~~~~~
