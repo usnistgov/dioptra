@@ -794,15 +794,20 @@ class ResourceImportService(object):
             artifact_params = ResourceImportService._build_artifacts_params_list(
                 entrypoint.get("artifact_params", []), param_types
             )
-            try:
-                plugin_ids = [
-                    plugins[plugin].resource_id for plugin in entrypoint.get("plugins", [])
-                ]
-            except KeyError as error:
+
+            errors = []
+            plugin_ids = []
+            for plugin in entrypoint.get("plugins", []):
+                try:
+                    plugin_ids.append(plugins[plugin].resource_id)
+                except KeyError:
+                    errors += ["plugin"]
+            if len(errors) > 0:
                 raise ImportFailedError(
-                    f"Plugin "{plugin}"",
+                    f"Plugins {errors}",
                     reason="Plugin used but undeclared.",
-                ) from error
+                )
+
             artifact_plugin_ids = [
                 plugins[plugin].resource_id
                 for plugin in entrypoint.get("artifact_plugins", [])
