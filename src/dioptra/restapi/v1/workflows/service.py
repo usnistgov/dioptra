@@ -1277,7 +1277,7 @@ class ValidateEntrypointService(object):
         type_ids = [
             parameter["parameter_type_id"]
             for artifact in entrypoint_artifacts
-            for parameter in artifact["output_parameters"]
+            for parameter in artifact["output_params"]
         ]
         id_type_map = get_plugin_task_parameter_types_by_id(ids=type_ids, log=log)
         entrypoint = EntryPointDataAdapter(
@@ -1300,7 +1300,7 @@ class ValidateEntrypointService(object):
                             parameter_number=p,
                             parameter_type=id_type_map[param["parameter_type_id"]],
                         )
-                        for p, param in enumerate(entrypoint_parameters)
+                        for p, param in enumerate(artifact["output_params"])
                     ],
                 )
                 for artifact in entrypoint_artifacts
