@@ -26,7 +26,7 @@ This how-to explains how to initialize the Dioptra Python Client in a Jupyter no
 Prerequisites
 -------------
 
-* :ref:`how-to-prepare-deployment` - You need access to a Dioptra deployment.
+* :ref:`how-to-prepare-deployment` -  A deployment of Dioptra is required.
 
 .. _setup_python_client_recipe:
 
@@ -36,21 +36,77 @@ Client Setup Workflow
 
 .. rst-class:: header-on-a-card header-steps
 
-Step 1: Start Docker Containers
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Step 1: Configure the Client
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- Navigate to deployment folder 
-- Run ``docker compose up``
+Set environment variables with the proper values for *host*, *port*, *user*, and *password*.
+
+.. code-block:: bash
+
+    DIOPTRA_REST_API_ADDRESS = "<host>:<port>"
+    DIOPTRA_REST_API_USER = "<user>"
+    DIOPTRA_REST_API_PASS = "<password>"
 
 .. rst-class:: header-on-a-card header-steps
 
-Step 2: Initialize Client and Log In
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Step 2: Initialize Client
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In your Jupyter notebook, run the following code: 
+There are two Dioptra clients to choose from: the JSON client with returns dictionaries and will raise an exception if a non-200 response is recived, and the Response client which returns Response objects and does not raise exceptions.
+
+Choose your preferred client, then in your python interpreter, run the following code: 
+
+.. tabs::
+
+   .. group-tab:: JSON Client
+
+        .. admonition:: Initialize Client
+            :class: code-panel python
+
+                from dioptra.client import connect_json_dioptra_client
+
+                client = connect_json_dioptra_client(DIOPTRA_REST_API_ADDRESS)
+
+   .. group-tab:: Response Client
+
+        .. admonition:: Initialize Client
+            :class: code-panel python
+
+                from dioptra.client import connect_response_dioptra_client
+
+                client = connect_response_dioptra_client(DIOPTRA_REST_API_ADDRESS)
+
+
+
+Step 3: Register User
+~~~~~~~~~~~~~~~~~~~~~
+
+In your python interpreter, run the following code: 
         
-.. admonition:: Setup Python Client
-    :class: code-panel python
+.. tabs::
 
-    .. literalinclude:: ../../../../docs/source/documentation_code/client_workflows/client_setup.py
-       :language: python
+    .. group-tab:: JSON Client
+        .. admonition:: Register User
+            :class: code-panel python
+
+                client.users.create(DIOPTRA_REST_API_USER, email=f"{DIOPTRA_REST_API_USER}@localhost", password=DIOPTRA_REST_API_PASS)
+
+        You should see a successful response similar to the below:
+
+        .. code-block:: bash
+
+            { "json": 1 }
+
+    .. group-tab:: Response Client
+
+        todo
+
+
+Step 4: Log In
+~~~~~~~~~~~~~~
+
+In your python interpreter, run the following code: 
+        
+.. code-block:: python3
+
+    client.auth.login(DIOPTRA_REST_API_USER, DIOPTRA_REST_API_PASS)
