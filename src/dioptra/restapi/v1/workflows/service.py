@@ -801,17 +801,26 @@ class ResourceImportService(object):
                 try:
                     plugin_ids.append(plugins[plugin].resource_id)
                 except KeyError:
-                    errors += ["plugin"]
+                    errors += [plugin]
             if len(errors) > 0:
                 raise ImportFailedError(
                     f"Plugins {errors}",
                     reason="Plugin used but undeclared.",
                 )
+            
+            errors = []
+            artifact_plugin_ids = []
+            for plugin in entrypoint.get("artifact_plugins", []):
+                try:
+                    plugin_ids.append(plugins[plugin].resource_id)
+                except KeyError:
+                    errors += [plugin]
+            if len(errors) > 0:
+                raise ImportFailedError(
+                    f"Artifact plugins {errors}",
+                    reason="Artifact plugin used but undeclared.",
+                )
 
-            artifact_plugin_ids = [
-                plugins[plugin].resource_id
-                for plugin in entrypoint.get("artifact_plugins", [])
-            ]
 
             if conflict_strat == ResourceImportResolveNameConflictsStrategy.FAIL:
                 entrypoint_dict = self._entrypoint_service.create(
