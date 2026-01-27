@@ -796,7 +796,7 @@ class ResourceImportService(object):
             )
 
             errors = []
-            plugin_ids = []
+            plugin_ids: list[int] = []
             for plugin in entrypoint.get("plugins", []):
                 try:
                     plugin_ids.append(plugins[plugin].resource_id)
@@ -809,7 +809,7 @@ class ResourceImportService(object):
                 )
 
             errors = []
-            artifact_plugin_ids = []
+            artifact_plugin_ids: list[int] = []
             for plugin in entrypoint.get("artifact_plugins", []):
                 try:
                     plugin_ids.append(plugins[plugin].resource_id)
