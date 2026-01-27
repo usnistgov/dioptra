@@ -20,10 +20,14 @@
 Notebook Tutorials
 ==================
 
-The following tutorials are captured in Jupyter notebooks and are distributed as part of the dioptra git repository in the `examples folder <https://github.com/usnistgov/dioptra/tree/main/examples>`__.
+The following tutorials are captured in Jupyter notebooks and are distributed as part of the dioptra git repository in the `examples folder <https://github.com/usnistgov/dioptra/tree/main/examples>`__. These tutorials use the Python client and can be run interactively from the provided notebook files.
 
-+-------+-------------+
-| Name  | Description |
-+=======+=============+
-| `Adversarial ML with OPTIC <https://github.com/usnistgov/dioptra/blob/dev/examples/mnist_demo.ipynb>`__ | This tutorial demonstrates how the OPTIC (Open Perturbation Testing for Image Classifers) plugin can be used to evaluate adversarial attacks and defenses on a model trained to recognize handwritten digits. |
-+-------+-------------+
+.. list-table:: Notebook Tutorials
+  :widths: 20 80
+  :header-rows: 1
+
+  * - Name
+    - Description
+  * - `Adversarial ML with OPTIC <https://github.com/usnistgov/dioptra/blob/dev/examples/mnist_demo.ipynb>`__
+    - This tutorial demonstrates how the OPTIC (Open Perturbation Testing for Image Classifers) plugin can be used to
+      evaluate adversarial attacks and defenses on a model trained to recognize handwritten digits.
