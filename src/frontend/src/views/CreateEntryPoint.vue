@@ -993,7 +993,7 @@
 
       let artifactValidation = entryPoint.value.artifactParameters.map(param => {
         param.outputParams = param.outputParams.map(outputParam => {
-          outputParam.parameterTypeId = outputParam.parameterType.id
+          outputParam.parameterType = outputParam.parameterType.id
           return outputParam
         })
         return param
