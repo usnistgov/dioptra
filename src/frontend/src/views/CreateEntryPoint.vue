@@ -991,20 +991,19 @@
   async function validateInputs() {
     try {
 
-      let artifactValidation = entryPoint.value.artifactParameters.map(param => {
-        param.outputParams = param.outputParams.map(outputParam => {
-          outputParam.parameterType = outputParam.parameterType.id
-          return outputParam
-        })
-        return param
-      })
-
       const res = await api.validateEntrypoint({
         group: entryPoint.value.group.id || entryPoint.value.group,
         taskGraph: entryPoint.value.taskGraph,
         pluginSnapshots: entryPoint.value.plugins.map(plugin => plugin.snapshotId || plugin.snapshot),
         parameters: entryPoint.value.parameters,
-        artifacts: artifactValidation
+        artifacts: entryPoint.value.artifactParameters.map((param) => ({
+            ...param,
+            outputParams: param.outputParams.map((oParam) => ({
+              ...oParam,
+              parameterType: oParam.parameterType.id
+            }))
+
+          }))
       })
       if(res?.data?.schemaValid && !taskGraphPlaceholderError.value) {
         notify.success(`Entrypoint inputs are valid!`)
