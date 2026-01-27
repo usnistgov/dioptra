@@ -994,7 +994,7 @@
         taskGraph: entryPoint.value.taskGraph,
         pluginSnapshots: entryPoint.value.plugins.map(plugin => plugin.snapshotId || plugin.snapshot),
         parameters: entryPoint.value.parameters,
-        artifact_parameters: entryPoint.value.artifactParameters
+        artifactParameters: entryPoint.value.artifactParameters
       })
       if(res?.data?.schemaValid && !taskGraphPlaceholderError.value) {
         notify.success(`Entrypoint inputs are valid!`)
