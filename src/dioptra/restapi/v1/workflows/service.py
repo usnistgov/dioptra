@@ -725,7 +725,7 @@ class ResourceImportService(object):
                     log=log,
                 )
 
-    def _register_entrypoints(
+    def _register_entrypoints(  # noqa: C901
         self,
         group_id: int,
         entrypoints_config: list[dict[str, Any]],
@@ -807,7 +807,7 @@ class ResourceImportService(object):
                     f"Plugins {errors}",
                     reason="Plugin used but undeclared.",
                 )
-            
+
             errors = []
             artifact_plugin_ids = []
             for plugin in entrypoint.get("artifact_plugins", []):
@@ -820,7 +820,6 @@ class ResourceImportService(object):
                     f"Artifact plugins {errors}",
                     reason="Artifact plugin used but undeclared.",
                 )
-
 
             if conflict_strat == ResourceImportResolveNameConflictsStrategy.FAIL:
                 entrypoint_dict = self._entrypoint_service.create(
