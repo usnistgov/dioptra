@@ -991,7 +991,7 @@
   async function validateInputs() {
     try {
 
-      artifactValidation = entryPoint.value.artifactParameters.map(param => {
+      let artifactValidation = entryPoint.value.artifactParameters.map(param => {
         param.outputParams = param.outputParams.map(outputParam => {
           outputParam.parameterTypeId = outputParam.parameterType.id
           return outputParam
@@ -1004,7 +1004,7 @@
         taskGraph: entryPoint.value.taskGraph,
         pluginSnapshots: entryPoint.value.plugins.map(plugin => plugin.snapshotId || plugin.snapshot),
         parameters: entryPoint.value.parameters,
-        artifacts: entryPoint.value.artifactParameters
+        artifacts: artifactValidation
       })
       if(res?.data?.schemaValid && !taskGraphPlaceholderError.value) {
         notify.success(`Entrypoint inputs are valid!`)
