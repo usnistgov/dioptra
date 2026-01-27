@@ -785,6 +785,7 @@
         ...oParam,
         parameterType: oParam.parameterType.id
       }))
+
     }))
     try {
       if (route.params.id === 'new') {
@@ -989,6 +990,15 @@
 
   async function validateInputs() {
     try {
+
+      artifactValidation = entryPoint.value.artifactParameters.map(param => {
+        param.outputParams = param.outputParams.map(outputParam => {
+          outputParam.parameterTypeId = outputParam.parameterType.id
+          return outputParam
+        })
+        return param
+      })
+
       const res = await api.validateEntrypoint({
         group: entryPoint.value.group.id || entryPoint.value.group,
         taskGraph: entryPoint.value.taskGraph,
