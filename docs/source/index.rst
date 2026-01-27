@@ -133,7 +133,7 @@ You can find the source code, license information, and more on the NIST `GitHub 
 
    tutorials/hello_world/index.rst
    tutorials/essential_workflows/index.rst
-   tutorials/OPTIC/index.rst
+   tutorials/notebooks/index.rst
 
 .. toctree::
    :maxdepth: 1

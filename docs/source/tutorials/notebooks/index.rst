@@ -15,23 +15,15 @@
 .. ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 .. https://creativecommons.org/licenses/by/4.0/legalcode
 
+.. _tutorial-notebooks:
 
-.. _tutorial-optic-adversarial-ml:
+Notebook Tutorials
+==================
 
-OPTIC: Adversarial ML
-=======================
+The following tutorials are captured in Jupyter notebooks and are distributed as part of the dioptra git repository in the `examples folder <https://github.com/usnistgov/dioptra/tree/main/examples>`__.
 
-In this tutorial, you will see a sophisticated use of Dioptra regarding ML attacks and defenses.
-
-.. toctree::
-   :caption: Steps
-   :maxdepth: 1
-
-   part-0
-   part-1 
-
-**By the end of this tutorial, you will have...:**
-
-- Accomplishment 1
-- Accomplishment 2
-- Accomplishment 3
++-------+-------------+
+| Name  | Description |
++=======+=============+
+| `Adversarial ML with OPTIC <https://github.com/usnistgov/dioptra/blob/dev/examples/mnist_demo.ipynb>`__ | This tutorial demonstrates how the OPTIC (Open Perturbation Testing for Image Classifers) plugin can be used to evaluate adversarial attacks and defenses on a model trained to recognize handwritten digits. |
++-------+-------------+
