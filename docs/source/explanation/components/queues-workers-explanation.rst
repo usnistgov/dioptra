@@ -23,8 +23,10 @@ Queues and Workers
 Summary: What is a Worker?
 --------------------------
 
-A **worker** is an environment in which a job can be executed. A worker should contain all of the requirements needed for a given
-entrypoint, such as any local files, python packages, or executables needed as part of the job. Each worker listens to a single named
+A **worker** is an environment in which a job can be executed. 
+
+A worker should contain all of the requirements needed for a given entrypoint, such as any local files, 
+python packages, or executables needed as part of the job. Each worker listens to a single named
 queue, and multiple workers can listen to the same queue.
 
 By default, Dioptra provides several default worker environments which can be enabled during setup:
@@ -44,8 +46,11 @@ Summary: What is a Queue?
 -------------------------
 
 A **queue** is a resource in Dioptra which represents a logical job queue for workers watching that queue to take from. Entrypoints can
-be assigned a number of queues they are compatible with, and at job creation, a specific queue is selected for the job to be added to.
-Any workers watching that queue can take and execute the job.
+be assigned a number of queues they are compatible with.
+
+When a job is submitted, a queue is selected for that job to be added to. Any worker listening to that queue can claim the job from the
+queue, and execute the job in its environment.
+
 
 .. rst-class:: fancy-header header-seealso
 
