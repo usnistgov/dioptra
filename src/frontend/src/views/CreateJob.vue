@@ -202,8 +202,22 @@
             </span>
             <q-btn icon="edit" round size="sm" color="primary" flat />
           </div>
-          <q-popup-edit v-model="props.row.value" v-slot="scope">
-            <q-input v-model="scope.value" dense autofocus counter @keyup.enter="scope.set" />
+          <q-popup-edit v-model="props.row.value" v-slot="scope" buttons>
+            <div v-if="scope.value === null">
+              <q-chip
+                label="Null"
+                color="negative"
+                text-color="white"
+              />    
+            </div>
+            <q-input v-else v-model="scope.value" dense autofocus counter @keyup.enter="scope.set" />
+            Null Value:
+            <q-checkbox
+              :model-value="scope.value === null"
+              @update:model-value="val => {
+                scope.value = val ? null : ''
+              }"
+            />
           </q-popup-edit>
         </template>
       </TableComponent>
