@@ -20,4 +20,67 @@
 Create Users and Groups
 ========================
 
-This how-to explains how to create :ref:`Users and Groups <users-groups-explanation>` in Dioptra. 
+This how-to explains how to create :ref:`Users <users-groups-explanation>` in Dioptra. 
+
+
+Prerequisites
+-------------
+
+.. tabs:: 
+
+   .. group-tab:: GUI
+
+      * :ref:`how-to-prepare-deployment` - A deployment of Dioptra is required.
+
+   .. group-tab:: Python Client
+
+      * :ref:`how-to-prepare-deployment` -  A deployment of Dioptra is required.
+      * :ref:`how-to-set-up-the-python-client` - Connect to the Python Client in a Jupyter Notebook.
+
+.. _how-to-create-users-user-creation-workflow:
+
+User Creation Workflow
+----------------------
+
+Follow these steps to create and register a new user. You can perform these actions via the Guided User Interface (GUI) or programmatically using the Python Client.
+
+.. rst-class:: header-on-a-card header-steps
+
+
+Step 1: Create the User
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Register a user with a username, email address, and password to be able to create and access resources.
+
+.. tabs::
+
+   .. group-tab:: GUI
+
+      In the Dioptra GUI, if you are not logged in, the front page will display a login screen. If you are logged in,
+      click your username in the top right corner of the interface, and then click **LOG OUT** to log out.
+      
+      Click **Signup** and 
+      enter the username, email address, and password for the user.
+
+      Click **Register** when finished to create the user.
+
+   .. group-tab:: Python Client
+
+      **Client Method:**
+
+      Use the client to create the user.
+
+      .. automethod:: dioptra.client.users.UsersCollectionClient.create
+
+Group Creation Workflow
+-----------------------
+
+.. note::
+    Dioptra does not currently support the creation of additional groups. All resources are under the same default public group.
+
+.. rst-class:: fancy-header header-seealso
+
+See Also 
+---------
+
+* :ref:`Users and Groups <explanation-users-and-groups>` - Understand what users and groups are for.

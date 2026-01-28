@@ -20,5 +20,34 @@
 Users and Groups
 ================
 
+Summary: What is a User?
+------------------------
 
-[Todo] Insert an explanation about users/groups.
+A user is an account which provides access to other resources (entrypoints, plugins, jobs, experiments, etc.). Users
+of Dioptra must be logged in to be able to read and write to the various resources. Users are useful for segregating
+permissions and providing attribution for actions taken within dioptra. 
+
+Currently, only password authentication is supported.
+
+
+Summary: What is a Group?
+-------------------------
+
+A group controls access to other resources. Plugins/entrypoints/jobs/etc. created under a single
+group are available to users who are part of that group. Currently, there is a single public group
+which all resources are created under - this will change in a future release of Dioptra.
+
+Resources in one group cannot be seen or accessed from users in another group. 
+The only way for a user to access those resources is for them to be added to the respective group.
+
+
+.. note::
+
+    Dioptra does not currently support the creation of additional groups. All resources are under the same default public group.
+
+.. rst-class:: fancy-header header-seealso
+
+See Also 
+---------
+   
+* :ref:`how-to-create-users-and-groups` - Step-by-step guide on creating users.
