@@ -48,7 +48,7 @@ Prerequisites
 Job Creation Workflow
 ------------------------
 
-Follow these steps to create and run a job. You can perform these actions via the Guided User Interface (GUI) or programmatically using the Python Client.
+Follow these steps to create and run a job. You can perform these actions via the Graphical User Interface (GUI) or programmatically using the Python Client.
 
 .. rst-class:: header-on-a-card header-steps
 
@@ -61,7 +61,12 @@ Step 1: Prepare the experiment, entrypoint, and queue for the job
 
       In the Dioptra GUI, navigate to the **Jobs** tab. Click **Create**. Select an *experiment*, an *entrypoint*, and a *queue* for the job.
 
-      Enter a *timeout* using a human readable string (e.g. "24h", "30m", "4d"). Note that the job will be stopped after this timeout is reached.
+      Enter a *timeout* using a human readable string (e.g. "24h", "30m", "30s").
+      
+      The default unit for the timeout is seconds (``s``), and is based on the `rq <https://python-rq.org/docs/>` package. Alternatively, ``h`` can represent
+      hours, and ``m`` can represent minutes.
+
+      Note that the job will be stopped after this timeout is reached.
 
       Optionally, enter a *description* for the job.
 
@@ -96,7 +101,7 @@ Entrypoints are parameterizable, and jobs can populate these parameters with val
 
    .. group-tab:: Python Client
 
-      The parameter values are provided as a dictionary during job creation.
+      The parameter values are provided as a dictionary during job creation (step 4).
 
 
 Step 3: Select any needed artifacts for the job
@@ -117,7 +122,7 @@ artifact input.
 
       **Client Method:**
 
-      Use the client to select the artifact.
+      Use the client to retrieve the IDs of artifacts.
 
       .. automethod:: dioptra.client.artifacts.ArtifactsCollectionClient.get
 
@@ -126,7 +131,7 @@ artifact input.
 
 
 
-Step 3: Run the job
+Step 4: Run the job
 ~~~~~~~~~~~~~~~~~~~
 
 Once all the inputs are prepared, run the job.
@@ -151,7 +156,6 @@ Once all the inputs are prepared, run the job.
 See Also 
 ---------
 
-* :ref:`Experiments and Jobs <explanation-experiments-and-jobs>` - Understand how plugins fit into experiments.
+* :ref:`Experiments and Jobs <explanation-experiments-and-jobs>` - Explanation of the purpose of experiments and jobs and how they relate to each other.
 * :ref:`Artifacts: explanation <explanation-artifacts>` - Learn about artifacts.
-* :ref:`Plugins: reference <reference-plugins>` - More information on syntax requirements for Plugins
 

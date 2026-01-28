@@ -287,6 +287,26 @@ class ExperimentJobsSubCollectionClient(SubCollectionClient[T]):
 
         Returns:
             The response from the Dioptra API.
+
+        Example:
+            Create a job and provide default values.
+
+            .. code-block:: python
+
+                plugin = client.experiments.jobs.create(
+                    experiment_id=experiment_id,
+                    entrypoint_id=entrypoint_id,
+                    queue_id=queue_id,
+                    values={
+                        "seed": "1024",
+                        "iterations": "10000",
+                    },
+                    artifact_values={
+                        "dataset": dataset_artifact,
+                    }
+                    timeout="24h",
+                    description="job description"
+                )
         """
         json_: dict[str, Any] = {"entrypoint": entrypoint_id, "queue": queue_id}
 
