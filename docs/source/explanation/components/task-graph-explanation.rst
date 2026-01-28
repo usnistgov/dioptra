@@ -28,17 +28,6 @@ each of those tasks. A directed acyclic graph (DAG) representing the dependencie
 various steps is constructed to ensure that the steps are executed in the correct order.
 
 
-
-
-Summary: What is a step?
-------------------------
-
-A **step** is one component of the task graph, which correlates, essentially, to a plugin task invocation
-with a given set of parameters. A single step has several components:
-    * a **step name**, which functions as a variable storage for the output of the invoked task,
-    * a **task name**, which references the plugin task to invoke by name. At runtime, plugins associated with the entrypoint will be searched for a matching task.
-    * a **list of parameters**, which are passed to the referenced plugin task during invocation.
-
 .. figure:: /images/task-graph-function.png
    :alt: Task graph purpose.
    :figclass: border-image clickable-image 
@@ -48,8 +37,21 @@ with a given set of parameters. A single step has several components:
    input to the plugins invoked in each step.
 
 
+Summary: What is a step?
+------------------------
+
+A **step** is one component of the task graph, which correlates, essentially, to a plugin task invocation
+with a given set of parameters. A single step has several components:
+
+* a **step name**, which functions as a variable storage for the output of the invoked task,
+* a **task name**, which references the plugin task to invoke by name. At runtime, plugins associated with the entrypoint will be searched for a matching task.
+* a **list of parameters**, which are passed to the referenced plugin task during invocation.
+
+
 Below is an example task graph. In the first step, the step name is ``rng``, the task name is ``configure_rng`` and the list of parameters contains
 a single member named ``seed`` which is being passed a value of ``1234``.
+
+
 .. code:: yaml
    
    rng:
@@ -87,15 +89,18 @@ Variables
 
 You can reference the output of steps by referencing the step name. This is useful for passing the
 output of one step as a parameter to another. For example: ``$trained_model`` will take the output stored in the
-step with the name ``trained_model``. Alternatively, if the plugin task has named output (perhaps named ``model``,
-it can be accessed with ``$trained_model.model``).
+step with the name ``trained_model``. 
+
+Alternatively, if the plugin task has named output (perhaps named ``model``, it can be accessed with 
+``$trained_model.model``). The names of these outputs are defined at plugin task registration, and the number
+of outputs of the registered task should match the number of outputs of the function it is associated with.
 
 
 Global variables
 ~~~~~~~~~~~~~~~~
 
-Entrypoints are parameterizable, and you can also reference these parameters as variables. So, for example,
-``$num_samples`` could reference an entrypoint parameter, and be used as input to a task.
+Entrypoints are parameterizable, and you can reference these parameters the same way variables are referenced. So, for example,
+``$num_samples`` could reference an entrypoint parameter, and be used as an input to a task.
 
 Artifact variables
 ~~~~~~~~~~~~~~~~~~
@@ -122,7 +127,9 @@ the output of those steps).
    :alt: Generated directed acyclic graph based on dependencies within the task graph.
    :figclass: border-image clickable-image 
 
-   The DAG generated from the above task graph.
+   The DAG generated from the above task graph. Dioptra creates dependencies in the DAG only based off the input/output
+   chaining of plugin tasks. If a user wants to add additional explicit dependencies in the task graph, this can be done.
+   See `reference-task-graph` for more details on this.
 
 .. rst-class:: fancy-header header-seealso
 
