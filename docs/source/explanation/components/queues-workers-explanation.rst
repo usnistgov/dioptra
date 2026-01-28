@@ -24,30 +24,14 @@ Summary: What is a Worker?
 --------------------------
 
 A **worker** is an environment in which a job can be executed. A worker should contain all of the requirements needed for a given
-entrypoint, such as any local files, python packages, or executables needed as part of the job.
-
-A worker must run the ``dioptra-worker-v1`` executable, which will watch a named queue in the Dioptra RESTAPI for jobs. When a new
-job is added to the queue being watched by the worker, the worker will take the job from the queue and attempt to execute it. Upon finishing
-the job, the worker will update the job status in the RESTAPI.
-
-In order to accomplish this the worker must be able to communicate with the RESTAPI and with MLFlow for experiment tracking and job status updates.
-The following environment variables are required to be set and accessible in the worker environment.
-
-.. code-block::
-    
-    MLFLOW_S3_ENDPOINT_URL=
-    MLFLOW_TRACKING_URI=
-    DIOPTRA_WORKER_USERNAME=
-    DIOPTRA_WORKER_PASSWORD=
-    DIOPTRA_API=
-
-The username and password mentioned here must provide access to a valid account for the worker to interact with the Dioptra RESTAPI.
+entrypoint, such as any local files, python packages, or executables needed as part of the job. Each worker listens to a single named
+queue, and multiple workers can listen to the same queue.
 
 By default, Dioptra provides several default worker environments which can be enabled during setup:
-    * tensorflow_cpu
-    * tensorflow_gpu
-    * pytorch_cpu
-    * pytorch_gpu
+    * tensorflow_cpu - for systems which do not have a GPU present, which contains Tensorflow and ART as dependencies
+    * tensorflow_gpu - for systems which do have a GPU present, which contains Tensorflow and ART as dependencies
+    * pytorch_cpu - for systems which do not have a GPU present, which contains PyTorch and ART as dependencies
+    * pytorch_gpu - for systems which do have a GPU present, which contains PyTorch and ART as dependencies
 
 Creating queues with these names, as long as the corresponding worker is enabled, will allow jobs to be run in these worker containers.
 
