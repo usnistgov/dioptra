@@ -53,7 +53,7 @@ Prerequisites
 Queue Creation Workflow
 ----------------------
 
-Follow these steps to create and register a new queue. You can perform these actions via the Guided User Interface (GUI) or programmatically using the Python Client.
+Follow these steps to create and register a new queue. You can perform these actions via the Graphical User Interface (GUI) or programmatically using the Python Client.
 
 .. rst-class:: header-on-a-card header-steps
 
