@@ -890,12 +890,10 @@
 
   function addToTaskGraph(task) {
     console.log('task = ', task)
-    let string = `<step-name>:\n`
-    if(task.inputParams.length === 0) {
-      // task with no params should use mixed style invocation
-      string += `  task: ${task.name}`
-    } else {
-      string += `  ${task.name}:`
+    // always use Mixed Style Invocation
+    let string = `<step-name>:\n  task: ${task.name}`
+    if(task.inputParams.length > 0) {
+      string += `\n  kwargs:`
       task.inputParams.forEach((param) => {
         string += `\n    ${param.name}: <input-value>`
       })
