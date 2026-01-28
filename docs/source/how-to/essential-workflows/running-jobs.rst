@@ -29,7 +29,7 @@ Prerequisites
 
    .. group-tab:: GUI
 
-      * :ref:`getting-started-running-dioptra` - A deployment of Dioptra is required.
+      * :ref:`how-to-prepare-deployment` - A deployment of Dioptra is required.
       * :ref:`tutorial-setup-dioptra-in-the-gui` - Access Dioptra services in the GUI, create a user, and login.
       * :ref:`how-to-create-queues` - A queue and a worker on which to run the job are required, and must be associated with the entrypoint being used.
       * :ref:`how-to-create-entrypoints` - An entrypoint describing the job and the plugins required for those entrypoints are required.
@@ -37,7 +37,7 @@ Prerequisites
 
    .. group-tab:: Python Client
 
-      * :ref:`getting-started-running-dioptra` -  A deployment of Dioptra is required.
+      * :ref:`how-to-prepare-deployment` -  A deployment of Dioptra is required.
       * :ref:`how-to-set-up-the-python-client` - Connect to the Python Client in a Jupyter Notebook.
       * :ref:`how-to-create-queues` - A queue and a worker on which to run the job are required.
       * :ref:`how-to-create-entrypoints` - An entrypoint describing the job and the plugins required for those entrypoints are required.
