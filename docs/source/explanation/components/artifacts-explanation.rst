@@ -59,10 +59,8 @@ This interface supports three methods:
 The functions ``serialize`` and ``deserialize`` both support passing additional keyword arguments. This can be useful
 for selecting file types or configuring other settings when saving an artifact.
 
-Because the serialization input and deserialization output types must be the same, passing artifacts between
-entrypoints is effectively transparent to the entrypoint - the entrypoint can handle those artifacts
-as if they are an object loaded into memory, and ignore the details of reading/writing, as long as artifact
-tasks for that type exist.
+Entrypoints can designate the output of a function task as an artifact by referencing an artifact task for serialization. 
+When used as a parameter to another entrypoint, the deserialization function of that artifact task will be used. 
 
 Note that when artifacts are created, they are associated with a snapshot of the artifact task that they were 
 created with. Since the artifact task contains both serialization and deserialization, the same snapshot is used
@@ -78,5 +76,5 @@ See Also
 
 * :ref:`Entrypoints: explanation <explanation-entrypoints>` - Explanation of Entrypoints, including the Artifact Task Graph.
 * :ref:`Entrypoints: reference <reference-entrypoints>` - Complete YAML syntax guide for entrypoint files and task graphs.
-* :ref:`Task Graphs: explanation <explanation-task-graph>` - Detailed explanation of workflow logic.
+* :ref:`Artifact Graphs: explanation <explanation-artifact-graph>` - Detailed explanation of artifact graph.
 * :ref:`Plugins: explanation <explanation-plugins>` - Explanation of Plugins, Function Tasks and Artifact Tasks
