@@ -27,7 +27,7 @@ queue of jobs for workers to pull from.
    In order for a queue to be effective, :ref:`Workers <explanation-queues-and-workers>`
    which listen on that queue are necessary.
 
-   If the worker is already created or running, check what queue name it is using and create if it doesn't exist.
+   If the worker is already created and running, check what queue name it is using and create if it doesn't exist.
 
    If the queue you created has no worker, then you will need to start one, as the jobs sent to that queue will not be
    processed without a worker.

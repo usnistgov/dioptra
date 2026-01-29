@@ -23,7 +23,7 @@ Plugin Parameter Types
 Plugin Parameter Types are used primarily to validate that the outputs 
 of a plugin are compatible with the inputs of another plugin in which its
 outputs are used. Plugin Parameter types are effectively a way of ensuring 
-compatibility among plugins and artifacts, similarly to how types are used 
+compatibility among plugins and artifacts, similar to how types are used 
 in modern programming languages to ensure that the parameters to a function
 are compatible with the object being passed in.
 
@@ -174,7 +174,7 @@ We can represent the input to this function:
 .. code-block:: python
    
    def stringify_or_zero(something: str | int | None) -> str:
-      return str(something) if sometihng is not None else "0"
+      return str(something) if something is not None else "0"
 
 as
 
