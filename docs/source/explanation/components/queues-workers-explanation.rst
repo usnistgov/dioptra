@@ -20,5 +20,45 @@
 Queues and Workers
 ================
 
+Summary: What is a Queue?
+-------------------------
 
-[Todo] Insert an explanation about queues/workers.
+A **queue** is a resource in Dioptra which represents a logical job queue for workers watching that queue to take from. Entrypoints can
+be assigned a number of queues they are compatible with.
+
+When a job is submitted, a queue is selected for that job to be added to. Any worker listening to that queue can claim the job from the
+queue, and execute the job in its environment.
+
+Summary: What is a Worker?
+--------------------------
+
+A **worker** is an environment in which a job can be executed. 
+
+A worker should contain all of the requirements needed for a given entrypoint, such as any local files, 
+python packages, or executables needed as part of the job. Each worker listens to a single named
+queue, and multiple workers can listen to the same queue.
+
+By default, Dioptra provides several default worker environments which can be enabled during setup:
+    * tensorflow_cpu - for systems which do not have a GPU present, which contains Tensorflow and ART as dependencies
+    * tensorflow_gpu - for systems which do have a GPU present, which contains Tensorflow and ART as dependencies
+    * pytorch_cpu - for systems which do not have a GPU present, which contains PyTorch and ART as dependencies
+    * pytorch_gpu - for systems which do have a GPU present, which contains PyTorch and ART as dependencies
+
+Creating queues with these names, as long as the corresponding worker is enabled, will allow jobs to be run in these worker containers.
+
+Additionally, custom workers can be created which watch queues of other names and provide different environments for the jobs to run in,
+allowing for additional requirements and packages to be included.
+
+See :ref:`how-to-using-custom-workers` for more information.
+
+
+.. rst-class:: fancy-header header-seealso
+
+See Also 
+---------
+   
+* :ref:`how-to-using-custom-workers` - Guide for creating custom workers
+* :ref:`how-to-create-queues` - Step-by-step guide on creating queues
+
+
+
