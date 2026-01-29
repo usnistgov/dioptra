@@ -26,13 +26,18 @@ Summary: What is an artifact?
 An **artifact** refers to the stored outputs of jobs. A job can produce multiple artifacts,
 and artifacts produced by a job can be used as inputs to another job. How the artifact is used
 is specified in the entrypoint associated with the job, but the artifact itself is provided at
-runtime as an input to the job.
+runtime as an input to the job. 
+
+Artifacts are used in entrypoints through ``Artifact Parameters``. When an artifact is designated as 
+an input parameter, it can be referenced in the task graph in the exact same way any regular
+entrypoint parameter or task output can be. The artifact is loaded into memory at the start of the
+job execution and then is available for any tasks that reference it.
 
 
 Artifact Tasks
 --------------
 
-**Artifact tasks** are a type of plugin task which primarily serve to detail the serialization
+**Artifact tasks** are a type of plugin task which detail the serialization
 and deserialization of a given artifact type. When an output of a function task is designated to be 
 saved as an artifact, it is passed to its corresponding serialization function within the artifact task.
 Similarly, when an artifact is loaded, its deserialization function is used to load it as an object in memory.
