@@ -63,8 +63,8 @@ Step 1: Prepare the experiment, entrypoint, and queue for the job
 
       Enter a *timeout* using a human readable string (e.g. "24h", "30m", "30s").
       
-      The default unit for the timeout is seconds (``s``), and is based on the `rq <https://python-rq.org/docs/>`__ package. Alternatively, ``h`` can represent
-      hours, and ``m`` can represent minutes.
+      The default unit for the timeout is seconds (``s``) if not specified, and is based on the `rq <https://python-rq.org/docs/>`__ package. 
+      Alternatively, ``h`` can be used to represent hours, and ``m`` can be used to represent minutes.
 
       Note that the job will be stopped after this timeout is reached.
 
