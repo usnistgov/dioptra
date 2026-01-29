@@ -32,7 +32,7 @@ Prerequisites
 -------------
 Before starting, ensure you have setup Dioptra and completed the :ref:`Hello World Tutorial <tutorial-hello-world-in-dioptra>`.
 
-* :ref:`how-to-quick-setup` - Build the Dioptra containers and initialize a deployment
+* :ref:`explanation-install-dioptra` - Obtain the Dioptra containers and create a deployment
 * :ref:`tutorial-setup-dioptra-in-the-gui` - Create a user and queue in the GUI
 
 
