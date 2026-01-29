@@ -24,16 +24,16 @@ Summary: What is an Experiment?
 -------------------------------
 
 An **experiment** is a resource in Dioptra which is effectively a namespace for jobs. An experiment can have
-a number of entrypoints associated with it, from which jobs under that experiment can be created. Experiments
+a number of entrypoints associated with it, and within that experiment those entrypoints can be run as jobs. Experiments
 as a resource are largely organizational, and can make it easier to filter jobs, provide access to users via 
 groups, and reduce the number of entrypoints to sift through at job creation.
 
 Summary: What is a Job?
 -----------------------
 
-A **job** in Dioptra is essentially an instance of an entrypoint. When creating a job, a user provides parameters
-and artifact parameters specified as necessary by an entrypoint, and this set of workflow instructions (the :ref:`entrypoint <explanation-entrypoints>`), 
-any parameter values, and any artifacts being passed as parameters, get sent to a queue, also selected by the user
+A **job** in Dioptra is essentially a parameterized execution of an entrypoint. When creating a job, a user provides parameters
+and artifact parameters specified as necessary by an entrypoint. This set of workflow instructions (the :ref:`entrypoint <explanation-entrypoints>`), 
+any parameter values, and any artifacts being passed as parameters, are sent to a queue which is selected by the user
 at job creation.
 
 When a worker listening to that queue claims the job, it attempts to execute the provided entrypoint using the 
@@ -44,7 +44,8 @@ steps of the job, are uploaded to the Dioptra RESTAPI and associated with the jo
 Dashboard** page.)
 
 Dioptra maintains a job history, recording the experiment, entrypoint, parameters, artifact parameters, logs, metrics
-and generated artifacts for all jobs.
+and generated artifacts for all jobs. Even if a user deletes or changes an entrypoint or plugin associated with a job, 
+Dioptra retains the executed version as a snapshot
 
 
 .. rst-class:: fancy-header header-seealso
