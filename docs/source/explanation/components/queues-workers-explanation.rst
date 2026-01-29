@@ -20,6 +20,15 @@
 Queues and Workers
 ================
 
+Summary: What is a Queue?
+-------------------------
+
+A **queue** is a resource in Dioptra which represents a logical job queue for workers watching that queue to take from. Entrypoints can
+be assigned a number of queues they are compatible with.
+
+When a job is submitted, a queue is selected for that job to be added to. Any worker listening to that queue can claim the job from the
+queue, and execute the job in its environment.
+
 Summary: What is a Worker?
 --------------------------
 
@@ -41,15 +50,6 @@ Additionally, custom workers can be created which watch queues of other names an
 allowing for additional requirements and packages to be included.
 
 See :ref:`how-to-using-custom-workers` for more information.
-
-Summary: What is a Queue?
--------------------------
-
-A **queue** is a resource in Dioptra which represents a logical job queue for workers watching that queue to take from. Entrypoints can
-be assigned a number of queues they are compatible with.
-
-When a job is submitted, a queue is selected for that job to be added to. Any worker listening to that queue can claim the job from the
-queue, and execute the job in its environment.
 
 
 .. rst-class:: fancy-header header-seealso
