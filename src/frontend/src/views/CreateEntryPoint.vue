@@ -906,7 +906,7 @@
   }
 
   function addToArtifactGraph(task) {
-    let string = `<output-name>:\n  contents: <contents>\n  task:\n    args:\n    name: ${task.name}`
+    let string = `<output-name>:\n  contents: <contents>\n  task:\n    name: ${task.name}`
     if(entryPoint.value.artifactGraph.trim().length === 0) {
       entryPoint.value.artifactGraph = string
     } else {
