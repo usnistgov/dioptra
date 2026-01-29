@@ -33,6 +33,10 @@ an input parameter, it can be referenced in the task graph in the exact same way
 entrypoint parameter or task output can be. The artifact is loaded into memory at the start of the
 job execution and then is available for any tasks that reference it.
 
+To use an artifact as an entrypoint input parameter, the types from the deserialize method must match up
+with the type from the artifact input parameter. You will not be able to select an artifact for the
+job if these types don't align.
+
 
 Artifact Tasks
 --------------
@@ -42,6 +46,19 @@ and deserialization of a given artifact type. When an output of a function task 
 saved as an artifact, it is passed to its corresponding serialization function within the artifact task.
 Similarly, when an artifact is loaded, its deserialization function is used to load it as an object in memory.
 
+When serialized, Diotpra takes the serialized file and stores it in the backend data storage (S3 by default). The URL
+of the artifact is stored in the database, and retrieved by ID when the artifact is used or downloaded from the GUI.
+
+An artifact task consists of a class which implements the ``ArtifactTaskInterface`` interface.
+This interface supports three methods:
+
+* ``serialize`` - used to save the contents of an artifact with a given name to the specified directory
+* ``deserialize`` - used to read the contents of an artifact with a given path relative to the specified directory
+* ``validation`` - used to validate any keyword arguments passed into ``serialize()``
+
+The functions ``serialize`` and ``deserialize`` both support passing additional keyword arguments. This can be useful
+for selecting file types or configuring other settings when saving an artifact.
+
 Because the serialization input and deserialization output types must be the same, passing artifacts between
 entrypoints is effectively transparent to the entrypoint - the entrypoint can handle those artifacts
 as if they are an object loaded into memory, and ignore the details of reading/writing, as long as artifact
@@ -50,6 +67,9 @@ tasks for that type exist.
 Note that when artifacts are created, they are associated with a snapshot of the artifact task that they were 
 created with. Since the artifact task contains both serialization and deserialization, the same snapshot is used
 for deserialization. 
+
+Artifact tasks are registered similarly to function tasks. See :ref:`explanation-plugins` for more details.
+
 
 .. rst-class:: fancy-header header-seealso
 
