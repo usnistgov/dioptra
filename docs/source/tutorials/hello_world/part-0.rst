@@ -27,9 +27,9 @@ Before running your first plugin task, we need to prepare the environment.
 
 Prerequisites
 -------------
-Before completing this tutorial, ensure you have cloned the Dioptra resources and created a deployment. 
+Before completing this tutorial, ensure you have installed Dioptra and created a deployment. 
 
-* :ref:`Setup Dioptra <how-to-quick-setup>`
+* :ref:`explanation-install-dioptra`
 
 Setup Dioptra Workflow
 ----------------------

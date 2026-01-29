@@ -26,7 +26,7 @@ This tutorial explains how to run a simple "Hello World" workflow in Dioptra usi
 
 Prerequisites
 -------------
-Before starting, ensure you have :ref:`setup Dioptra <how-to-quick-setup>` and completed the :ref:`setup step <tutorial-setup-dioptra-in-the-gui>` of this tutorial.
+Before starting, ensure you have :ref:`installed Dioptra <explanation-install-dioptra>` and completed the :ref:`setup step <tutorial-setup-dioptra-in-the-gui>` of this tutorial.
 
 
 Hello World Workflow
