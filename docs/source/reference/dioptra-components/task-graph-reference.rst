@@ -34,6 +34,8 @@ In each of these invocation styles, you'll notice some commonalities:
 
     * The ``graph:`` keyword designates this section of the full entrypoint YAML dictionary as the task graph. If creating entrypoints through the UI, this keyword is unnecessary and is provided to the RESTAPI automatically.
 
+Invocation Styles
+-----------------
 
 Positional Style Invocation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
