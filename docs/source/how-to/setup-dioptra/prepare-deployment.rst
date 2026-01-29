@@ -157,6 +157,12 @@ Verify all services are running:
 
    See :ref:`reference-deployment-commands` for the full suite of commands to manage your deployment (stop, restart, view logs, etc.).
 
+Next Steps
+------------
+
+To test that Dioptra is working, consider progressing through the :ref:`Hello World Tutorial<tutorial-hello-world-in-dioptra>`.
+
+
 .. rst-class:: header-on-a-card header-seealso
 
 See Also

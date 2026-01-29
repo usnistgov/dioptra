@@ -156,6 +156,13 @@ You should see output similar to the following:
    Locally built images have a different registry prefix than downloaded images.
    See :ref:`how-to-get-container-images-registry-prefix` for implications when configuring your deployment.
 
+
+
+Next Steps 
+------------
+
+Once you have finished building the container images, move onto the next step: :ref:`how-to-prepare-deployment`
+
 .. rst-class:: header-on-a-card header-seealso
 
 See Also

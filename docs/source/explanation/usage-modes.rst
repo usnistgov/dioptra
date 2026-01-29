@@ -64,7 +64,7 @@ The GUI is a web-based application built using the `Quasar Framework (VueJS) <ht
 Using the GUI
 ~~~~~~~~~~~~~~~~~~~~~~
 
-To learn how to set up the GUI, ensure you have :ref:`built the Docker containers <how-to-quick-setup>`,
+To learn how to set up the GUI, ensure you have :ref:`installed Dioptra <explanation-install-dioptra>`,
 and then follow the :ref:`Hello World Tutorial <tutorial-hello-world-in-dioptra>`, which instructs users 
 how to get up and running in the GUI.
 

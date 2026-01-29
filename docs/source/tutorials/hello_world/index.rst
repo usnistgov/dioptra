@@ -43,10 +43,9 @@ the GUI and also as a check that the microservices are properly configured and c
 Prerequisites
 -------------
 
-Before progressing through this tutorial, ensure that you have downloaded and deployed Dioptra. 
+Before progressing through this tutorial, ensure that you have installed Dioptra
 
-* :ref:`reference-system-requirements` - Check that you meet the system requirements for running Dioptra
-* :ref:`Setup Dioptra <how-to-quick-setup>` - Clone Dioptra and create a deployment
+* :ref:`Setup Dioptra <explanation-install-dioptra>` - Clone Dioptra and create a deployment
 
 
 .. rst-class:: fancy-header header-seealso

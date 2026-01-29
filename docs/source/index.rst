@@ -50,8 +50,7 @@ or by directly making calls to REST API.
 
 .. admonition:: Learn More
 
-   - :ref:`See the system requirements <reference-system-requirements>`
-   - :ref:`Follow the quick setup guide <how-to-quick-setup>`
+   - :ref:`Install Dioptra <explanation-install-dioptra>`
 
 
 Dioptra Documentation
@@ -73,8 +72,7 @@ Understand Dioptra
 Use Dioptra
 ^^^^^^^^^^^^^^^^^^^
 
-- :ref:`See the system requirements <reference-system-requirements>` before getting set up
-- :ref:`Follow the setup guide <how-to-quick-setup>` to build the Docker containers and start the services
+- :ref:`Follow the installation guide <explanation-install-dioptra>` to build the Docker containers and start the services
 - :ref:`Run the Hello World tutorial <tutorial-hello-world-in-dioptra>` to make sure things are set up correctly
 
 .. rst-class:: header-on-a-card
@@ -110,10 +108,7 @@ You can find the source code, license information, and more on the NIST `GitHub 
    :hidden:
    :titlesonly:
 
-   how-to/setup-dioptra/quick-setup.rst
-   how-to/setup-dioptra/get-container-images/index.rst
-   how-to/setup-dioptra/prepare-deployment.rst
-   how-to/setup-dioptra/update-deployment.rst
+   how-to/setup-dioptra/install-dioptra-explanation.rst
    how-to/setup-dioptra/configure-setup/index.rst
    how-to/setup-dioptra/reference/index.rst
 
@@ -150,7 +145,6 @@ You can find the source code, license information, and more on the NIST `GitHub 
    :caption: Reference
    :hidden:
 
-   reference/system-reqs
    reference/glossary
    reference/dioptra-components/index.rst
    reference/api-reference-restapi
