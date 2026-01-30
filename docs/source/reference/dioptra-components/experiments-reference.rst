@@ -20,63 +20,85 @@
 Experiments
 =================
 
-Prior Documentation Snippets
-----------------------------
 
-.. note:: 
-    The following material is from previous document pages. It needs to be refactored. It is included below as a placeholder and for reference. 
+.. contents:: Contents
+   :local:
+   :depth: 2
 
+.. _reference-experiments-definition:
 
-Structure Description
-=====================
+Experiment Definition
+---------------------
 
-The top level of the data structure is a mapping with a few prescribed keys,
-which provide the basic ingredients for the experiment: types, parameters, artifact
-input parameters, tasks, a graph which links task invocations together, and the artifact
-output declaration:
+An **Experiment** in Dioptra is a logical container that defines the scope of workflows that can be executed. The Experiment declares which Entrypoints can be used to execute workflows within this scope. Users create and submit Jobs within an Experiment using one of its declared Entrypoints, and the Experiment serves as the container for those Jobs.
 
-.. code:: YAML
+.. _reference-experiments-attributes:
 
-    types:
-        "<type definitions here>"
+Experiment Attributes
+---------------------
 
-    parameters:
-        "<parameters here>"
+This section describes the attributes that define an Experiment.
 
-    artifact_inputs:
-        "<artifact input parameters here>"
+.. _reference-experiments-required-attributes:
 
-    tasks:
-        "<tasks here>"
+Required Attributes
+~~~~~~~~~~~~~~~~~~~
 
-    graph:
-        "<graph here>"
+- **Name**: (string) The display name for the Experiment. Must be unique within the owning Group.
+- **Group**: (integer ID) The Group that owns this Experiment and controls access permissions.
 
-    artifact_outputs:
-        "artifact output declaration here"
+.. _reference-experiments-optional-attributes:
 
+Optional Attributes
+~~~~~~~~~~~~~~~~~~~
 
-The rest of the structural description describes what goes in each of those six places.
+- **Description**: (string, optional) A text description of the Experiment's purpose or scope. Defaults to empty.
+- **Entrypoints**: (list of integer IDs, optional) A list of Entrypoint resources to associate with this Experiment. Jobs can only be created using Entrypoints that are associated with the Experiment.
 
+.. _reference-experiments-system-generated-attributes:
 
+System-Generated Attributes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+The following attributes are automatically assigned by the system and cannot be set directly by the user.
 
-Graph
------
+- **ID**: Unique identifier assigned upon creation.
+- **Created On**: Timestamp indicating when the Experiment was created.
+- **Last Modified On**: Timestamp indicating when the Experiment was last modified.
+- **Jobs**: List of Jobs that have been executed within this Experiment.
 
-The ``graph`` section is where you describe invocations of the aforementioned
-task plugins, and connect the outputs of some to the inputs of others, creating
-the graph structure.
+.. _reference-experiments-registration-interfaces:
 
-Graphs are composed of *steps*, and the value of the ``graph`` property is a
-mapping from a step name to a description of the step.  Each step invokes a
-task plugin, so the step description describes which plugin to invoke and how
-to invoke it:
+Registration Interfaces
+-----------------------
 
-.. code:: YAML
+Experiments can be created programmatically via the Python Client or the REST API.
+They can also be created through the web interface.
 
-    graph:
-        step1:
-            "step 1 description"
-        step2:
-            "step 2 description"
+.. _reference-experiments-python-client:
+
+Using Python Client
+~~~~~~~~~~~~~~~~~~~
+
+**Create an Experiment**
+
+    .. automethod:: dioptra.client.experiments.ExperimentsCollectionClient.create
+
+.. _reference-experiments-rest-api:
+
+Using REST API
+~~~~~~~~~~~~~~
+
+Experiments can be created directly via the HTTP API.
+
+**Create Experiments**
+
+See the :http:post:`POST /api/v1/experiments </api/v1/experiments/>` endpoint documentation for payload requirements.
+
+.. rst-class:: fancy-header header-seealso
+
+See Also
+---------
+
+* :ref:`Entrypoints <reference-entrypoints>`
+* :ref:`Plugins <reference-plugins>`

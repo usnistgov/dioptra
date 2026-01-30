@@ -27,8 +27,15 @@ Dioptra Components
       :caption: Table of Contents
 
       dioptra-component-glossary
-      experiments-reference
+      users-reference
+      groups-reference
+      queues-reference
       param-types-reference
       plugin-reference
       entrypoints-reference
+      experiments-reference
+      jobs-reference
+      artifacts-reference
+      metrics-reference
+      workers-reference
       task-graph-reference

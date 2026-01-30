@@ -15,9 +15,9 @@
 .. ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 .. https://creativecommons.org/licenses/by/4.0/legalcode
 
-.. _reference-entrypoints:
+.. _reference-queues:
 
-Entrypoints
+Queues
 =================
 
 
@@ -25,52 +25,42 @@ Entrypoints
    :local:
    :depth: 2
 
-.. _reference-entrypoints-definition:
+.. _reference-queues-definition:
 
-Entrypoint Definition
+Queue Definition
 ---------------------
 
-.. _reference-entrypoints-attributes:
+.. _reference-queues-attributes:
 
-Entrypoint Attributes
+Queue Attributes
 ---------------------
 
-.. _reference-entrypoints-required-attributes:
+.. _reference-queues-required-attributes:
 
 Required Attributes
 ~~~~~~~~~~~~~~~~~~~
 
-.. _reference-entrypoints-optional-attributes:
+.. _reference-queues-optional-attributes:
 
 Optional Attributes
 ~~~~~~~~~~~~~~~~~~~
 
-.. _reference-entrypoints-system-generated-attributes:
+.. _reference-queues-system-generated-attributes:
 
 System-Generated Attributes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. _reference-entrypoints-task-graph-syntax:
-
-Task Graph Syntax
-~~~~~~~~~~~~~~~~~
-
-.. _reference-entrypoints-artifact-output-graph-syntax:
-
-Artifact Output Graph Syntax
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. _reference-entrypoints-registration-interfaces:
+.. _reference-queues-registration-interfaces:
 
 Registration Interfaces
 -----------------------
 
-.. _reference-entrypoints-python-client:
+.. _reference-queues-python-client:
 
 Using Python Client
 ~~~~~~~~~~~~~~~~~~~
 
-.. _reference-entrypoints-rest-api:
+.. _reference-queues-rest-api:
 
 Using REST API
 ~~~~~~~~~~~~~~

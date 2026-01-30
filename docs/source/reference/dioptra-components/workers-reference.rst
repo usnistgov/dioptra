@@ -15,9 +15,9 @@
 .. ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 .. https://creativecommons.org/licenses/by/4.0/legalcode
 
-.. _reference-entrypoints:
+.. _reference-workers:
 
-Entrypoints
+Workers
 =================
 
 
@@ -25,55 +25,25 @@ Entrypoints
    :local:
    :depth: 2
 
-.. _reference-entrypoints-definition:
+.. _reference-workers-definition:
 
-Entrypoint Definition
+Worker Definition
 ---------------------
 
-.. _reference-entrypoints-attributes:
+.. _reference-workers-configuration:
 
-Entrypoint Attributes
+Worker Configuration
 ---------------------
 
-.. _reference-entrypoints-required-attributes:
+.. _reference-workers-required-configuration:
 
-Required Attributes
-~~~~~~~~~~~~~~~~~~~
+Required Configuration
+~~~~~~~~~~~~~~~~~~~~~~
 
-.. _reference-entrypoints-optional-attributes:
+.. _reference-workers-optional-configuration:
 
-Optional Attributes
-~~~~~~~~~~~~~~~~~~~
-
-.. _reference-entrypoints-system-generated-attributes:
-
-System-Generated Attributes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. _reference-entrypoints-task-graph-syntax:
-
-Task Graph Syntax
-~~~~~~~~~~~~~~~~~
-
-.. _reference-entrypoints-artifact-output-graph-syntax:
-
-Artifact Output Graph Syntax
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. _reference-entrypoints-registration-interfaces:
-
-Registration Interfaces
------------------------
-
-.. _reference-entrypoints-python-client:
-
-Using Python Client
-~~~~~~~~~~~~~~~~~~~
-
-.. _reference-entrypoints-rest-api:
-
-Using REST API
-~~~~~~~~~~~~~~
+Optional Configuration
+~~~~~~~~~~~~~~~~~~~~~~
 
 .. rst-class:: fancy-header header-seealso
 
