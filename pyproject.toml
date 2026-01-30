@@ -181,6 +181,9 @@ docs = [
     "sphinxcontrib-qthelp<=1.0.3",
     "sphinxcontrib-serializinghtml<=1.1.5",
     "sphinx-tabs",
+    "nbsphinx",
+    "lxml-html-clean", # to work with nbsphinx
+    "pandoc>=2.4", # to work with nbsphinx
     "typing-extensions>=3.7.4.0",
     "web-compile>=0.2.3",
 ]

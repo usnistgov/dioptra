@@ -31,3 +31,15 @@ The following tutorials are captured in Jupyter notebooks and are distributed as
   * - `Adversarial ML with OPTIC <https://github.com/usnistgov/dioptra/blob/dev/examples/mnist_demo.ipynb>`__
     - This tutorial demonstrates how the OPTIC (Open Perturbation Testing for Image Classifers) plugin can be used to
       evaluate adversarial attacks and defenses on a model trained to recognize handwritten digits.
+
+View Notebook Tutorials in browser:
+-----------------------------------
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Notebooks 
+
+   mnist_demo 
+
+.. Symlink created for notebook:  cd dioptra/docs/source/tutorials/notebooks/
+..  ln -s ../../../../examples/mnist_demo.ipynb mnist_demo.ipynb

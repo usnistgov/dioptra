@@ -58,6 +58,7 @@ extensions = [
     "sphinxcontrib.httpdomain",
     "sphinxcontrib.openapi",
     "sphinx_tabs.tabs",
+    "nbsphinx"
 ]
 
 # Add any paths that contain templates here, relative to this directory.
