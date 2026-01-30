@@ -15,9 +15,9 @@
 .. ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 .. https://creativecommons.org/licenses/by/4.0/legalcode
 
-.. _reference-entrypoints:
+.. _reference-jobs:
 
-Entrypoints
+Jobs
 =================
 
 
@@ -25,52 +25,42 @@ Entrypoints
    :local:
    :depth: 2
 
-.. _reference-entrypoints-definition:
+.. _reference-jobs-definition:
 
-Entrypoint Definition
+Job Definition
 ---------------------
 
-.. _reference-entrypoints-attributes:
+.. _reference-jobs-attributes:
 
-Entrypoint Attributes
+Job Attributes
 ---------------------
 
-.. _reference-entrypoints-required-attributes:
+.. _reference-jobs-required-attributes:
 
 Required Attributes
 ~~~~~~~~~~~~~~~~~~~
 
-.. _reference-entrypoints-optional-attributes:
+.. _reference-jobs-optional-attributes:
 
 Optional Attributes
 ~~~~~~~~~~~~~~~~~~~
 
-.. _reference-entrypoints-system-generated-attributes:
+.. _reference-jobs-system-generated-attributes:
 
 System-Generated Attributes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. _reference-entrypoints-task-graph-syntax:
-
-Task Graph Syntax
-~~~~~~~~~~~~~~~~~
-
-.. _reference-entrypoints-artifact-output-graph-syntax:
-
-Artifact Output Graph Syntax
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. _reference-entrypoints-registration-interfaces:
+.. _reference-jobs-registration-interfaces:
 
 Registration Interfaces
 -----------------------
 
-.. _reference-entrypoints-python-client:
+.. _reference-jobs-python-client:
 
 Using Python Client
 ~~~~~~~~~~~~~~~~~~~
 
-.. _reference-entrypoints-rest-api:
+.. _reference-jobs-rest-api:
 
 Using REST API
 ~~~~~~~~~~~~~~

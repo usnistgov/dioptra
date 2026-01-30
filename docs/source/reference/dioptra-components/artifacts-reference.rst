@@ -15,9 +15,9 @@
 .. ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 .. https://creativecommons.org/licenses/by/4.0/legalcode
 
-.. _reference-entrypoints:
+.. _reference-artifacts:
 
-Entrypoints
+Artifacts
 =================
 
 
@@ -25,52 +25,32 @@ Entrypoints
    :local:
    :depth: 2
 
-.. _reference-entrypoints-definition:
+.. _reference-artifacts-definition:
 
-Entrypoint Definition
+Artifact Definition
 ---------------------
 
-.. _reference-entrypoints-attributes:
+.. _reference-artifacts-attributes:
 
-Entrypoint Attributes
+Artifact Attributes
 ---------------------
 
-.. _reference-entrypoints-required-attributes:
-
-Required Attributes
-~~~~~~~~~~~~~~~~~~~
-
-.. _reference-entrypoints-optional-attributes:
-
-Optional Attributes
-~~~~~~~~~~~~~~~~~~~
-
-.. _reference-entrypoints-system-generated-attributes:
+.. _reference-artifacts-system-generated-attributes:
 
 System-Generated Attributes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. _reference-entrypoints-task-graph-syntax:
+.. _reference-artifacts-retrieval-interfaces:
 
-Task Graph Syntax
-~~~~~~~~~~~~~~~~~
-
-.. _reference-entrypoints-artifact-output-graph-syntax:
-
-Artifact Output Graph Syntax
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. _reference-entrypoints-registration-interfaces:
-
-Registration Interfaces
+Retrieval Interfaces
 -----------------------
 
-.. _reference-entrypoints-python-client:
+.. _reference-artifacts-python-client:
 
 Using Python Client
 ~~~~~~~~~~~~~~~~~~~
 
-.. _reference-entrypoints-rest-api:
+.. _reference-artifacts-rest-api:
 
 Using REST API
 ~~~~~~~~~~~~~~
