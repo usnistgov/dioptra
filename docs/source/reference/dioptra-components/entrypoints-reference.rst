@@ -30,10 +30,17 @@ Entrypoints
 Entrypoint Definition
 ---------------------
 
-.. _reference-entrypoints-attributes:
+An **Entrypoint** in Dioptra is a repeatable workflow that can be executed as a Job. Entrypoints execute the function tasks defined in the task graph upon job submission. 
+Entrypoint parameters and Artifact Input Parameters can optionally be attached to entrypoints and then used in the Task Graph. The outputs from Function Tasks 
+can be saved as Artifacts, and the logic for this is defined in the Artifact Task Graph. 
+
+.. _reference-experiments-attributes:
+
 
 Entrypoint Attributes
 ---------------------
+
+This section describes the attributes that define an Entrypoint.
 
 .. _reference-entrypoints-required-attributes:
 
@@ -42,13 +49,33 @@ Required Attributes
 
 .. _reference-entrypoints-optional-attributes:
 
+- **Name**: (string) The display name for the Entrypoint. 
+- **Group**: (integer ID) The Group that owns this Experiment and controls access permissions.
+- **Task Graph**: (YAML string) The task graph for entrypoint, which as a YAML-formatted string that defines the core workflow (technically, a Directed Acyclical Graph). Composed of function task invocations and their input arguments. 
+
+
 Optional Attributes
 ~~~~~~~~~~~~~~~~~~~
+
+- **Description**: (string, optional) A text description of the Entrypoint's purpose or scope. Defaults to empty.
+- **Plugins**: (list of Plugin IDs, optional) A list of Plugin containers to attach to the entrypoint - the associated Plugin Function Tasks are then made available to the Entrypoint Task Graph. Defaults to empty.
+- **Artifact Plugins**:  (list of Plugin IDs, optional) A list of Plugin containers to attach to the entrypoint - the associated Plugin Artifact Tasks are then made available to the Artifact Output Task Graph. Defaults to empty.
+- **Parameters**: (list of Dicts, optional) Global parameters that can be used in the Entrypoint Task Graph and Artifact Task Graph. Each Parameter has a type and can optionally have a default value. Parameter values are set at Job runtime. Defaults to empty.
+- **Artifact Parameters**: (list of Dicts, optional) Global objects, loaded from disk at Job execution, can be used in the Entrypoint Task Graph and Artifact Task Graph. User selects which specific artifact snapshot to load into the Artifact Parameter at Job Runtime. Defaults to empty.
+- **Artifact Task Graph**: (YAML string, optional) The artifact task graph for entrypoint, which as a YAML-formatted string that defines the artifact serialization logic. Artifact Tasks are called once the main Task Graph execution is completed. Defaults to empty.
+- **Queues**: (list of integer IDs, optional) A list of the queues that can pick up Job submissions of this entrypoint and carry out their execution. Job will not be runnable without at least one attached Queue. Defaults to empty.
 
 .. _reference-entrypoints-system-generated-attributes:
 
 System-Generated Attributes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- **ID**: Unique identifier assigned upon creation.
+- **Created On**: Timestamp indicating when the Entrypoint was created.
+- **Last Modified On**: Timestamp indicating when the Entrypoint was last modified.
+
+- Snapshot? 
+- Jobs?
 
 .. _reference-entrypoints-task-graph-syntax:
 
@@ -69,6 +96,10 @@ Registration Interfaces
 
 Using Python Client
 ~~~~~~~~~~~~~~~~~~~
+
+**Create an Entrypoint**
+
+    .. automethod:: dioptra.client.entrypoints.EntrypointsCollectionClient.create
 
 .. _reference-entrypoints-rest-api:
 
