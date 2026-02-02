@@ -23,7 +23,7 @@ Artifacts
 Summary: What is an artifact?
 -----------------------------
 
-An **artifact** refers to the stored outputs of jobs. A job can produce multiple artifacts,
+An **artifact** refers to a stored output of a job that is managed by Dioptra. A job can produce multiple artifacts,
 and artifacts produced by a job can be used as inputs to another job. How the artifact is used
 is specified in the entrypoint associated with the job, but the artifact itself is provided at
 runtime as an input to the job. 
@@ -56,7 +56,7 @@ This interface supports three methods:
 * ``deserialize`` - used to read the contents of an artifact with a given path relative to the specified directory
 * ``validation`` - used to validate any keyword arguments passed into ``serialize()``
 
-The functions ``serialize`` and ``deserialize`` both support passing additional keyword arguments. This can be useful
+The ``serialize`` function both supports passing additional keyword arguments. This can be useful
 for selecting file types or configuring other settings when saving an artifact.
 
 Entrypoints can designate the output of a function task as an artifact by referencing an artifact task for serialization. 
@@ -76,5 +76,6 @@ See Also
 
 * :ref:`Entrypoints: explanation <explanation-entrypoints>` - Explanation of Entrypoints, including the Artifact Task Graph.
 * :ref:`Entrypoints: reference <reference-entrypoints>` - Complete YAML syntax guide for entrypoint files and task graphs.
+* :ref:`Artifacts: reference <reference-artifacts>` - Complete reference for Artifacts.
 * :ref:`Artifact Graphs: reference <reference-artifact-graph>` - YAML syntax for artifact graph.
 * :ref:`Plugins: explanation <explanation-plugins>` - Explanation of Plugins, Function Tasks and Artifact Tasks
