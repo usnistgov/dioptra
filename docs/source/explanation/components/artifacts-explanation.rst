@@ -76,5 +76,5 @@ See Also
 
 * :ref:`Entrypoints: explanation <explanation-entrypoints>` - Explanation of Entrypoints, including the Artifact Task Graph.
 * :ref:`Entrypoints: reference <reference-entrypoints>` - Complete YAML syntax guide for entrypoint files and task graphs.
-* :ref:`Artifact Graphs: explanation <explanation-artifact-graph>` - Detailed explanation of artifact graph.
+* :ref:`Artifact Graphs: reference <reference-artifact-graph>` - YAML syntax for artifact graph.
 * :ref:`Plugins: explanation <explanation-plugins>` - Explanation of Plugins, Function Tasks and Artifact Tasks
