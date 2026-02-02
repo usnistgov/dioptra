@@ -15,31 +15,47 @@
 .. ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 .. https://creativecommons.org/licenses/by/4.0/legalcode
 
-.. _tutorial-notebooks:
+.. _tutorial-advanced-tutorials:
 
-Notebook Tutorials
+Advanced Tutorials
 ==================
 
-The following tutorials are captured in Jupyter notebooks and are distributed as part of the dioptra git repository in the `examples folder <https://github.com/usnistgov/dioptra/tree/main/examples>`__. These tutorials use the Python client and can be run interactively from the provided notebook files.
+The following tutorials are captured in Jupyter notebooks and are distributed as part of the dioptra git repository in the `examples folder <https://github.com/usnistgov/dioptra/tree/main/examples>`__. 
+These tutorials use the Python client and can be run interactively from the provided notebook files. 
 
-.. list-table:: Notebook Tutorials
-  :widths: 20 80
+
+.. toctree::
+  :hidden:
+
+  mnist_demo 
+
+.. Symlink created for notebook:  cd dioptra/docs/source/tutorials/notebooks/
+..  ln -s ../../../../examples/mnist_demo.ipynb mnist_demo.ipynb
+.. Note that building notebook pages with nbsphinx requires installation of pandoc
+
+View the Tutorials
+------------------
+Click any of the links below to view the Jupyter notebook tutorials rendered in HTML. 
+
+.. list-table::
+  :widths: 25 75
   :header-rows: 1
 
   * - Name
     - Description
-  * - `Adversarial ML with OPTIC <https://github.com/usnistgov/dioptra/blob/dev/examples/mnist_demo.ipynb>`__
+  * - :ref:`Adversarial ML with OPTIC </tutorials/notebooks/mnist_demo.ipynb>`
     - This tutorial demonstrates how the OPTIC (Open Perturbation Testing for Image Classifers) plugin can be used to
       evaluate adversarial attacks and defenses on a model trained to recognize handwritten digits.
 
-View Notebook Tutorials in browser:
------------------------------------
 
-.. toctree::
-   :maxdepth: 1
-   :caption: Notebooks 
 
-   mnist_demo 
+Run the Tutorials in a Local Deployment 
+---------------------------------------------
 
-.. Symlink created for notebook:  cd dioptra/docs/source/tutorials/notebooks/
-..  ln -s ../../../../examples/mnist_demo.ipynb mnist_demo.ipynb
+To run the tutorials in a local deployment, you'll need to do the following:
+
+- :ref:`Install Dioptra <how-to-install-dioptra>`: Ensure you have access to a Dioptra deployment
+- :ref:`Setup the Python Client <how-to-set-up-the-python-client>`: Set up the Python Client 
+
+After doing this, open any of the Jupyter Notebook tutorials locally (they are located at `dioptra/examples <https://github.com/usnistgov/dioptra/tree/main/examples>`__). 
+Select the Python environment that was created during installation. Download any datasets as needed in the instructions and then execute the code cells. 
