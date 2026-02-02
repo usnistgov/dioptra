@@ -19,7 +19,7 @@
 .. _tutorial-setup-dioptra-in-the-gui:
 
 
-Setup Dioptra in the GUI
+Set Up Dioptra in the GUI
 =====================
 
 Before running your first plugin task, we need to prepare the environment.
@@ -31,7 +31,7 @@ Before completing this tutorial, ensure you have installed Dioptra and created a
 
 * :ref:`explanation-install-dioptra`
 
-Setup Dioptra Workflow
+Dioptra Workflow Setup
 ----------------------
 
 .. rst-class:: header-on-a-card header-steps

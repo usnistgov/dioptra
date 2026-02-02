@@ -49,7 +49,7 @@ These tasks perform specific units of work, such as training a model, calculatin
 
 When chained together in an entrypoint, the output of one function task can flow automatically into the input of other function tasks. These tasks operate primarily on in-memory objects (such as DataFrames, integers, or model objects).
 
-Note that while Function Tasks process data, they generally do not save it to disk. To persist results, you must pass the output of a Function Task into the Artifact Task Graph and dictate which Artifact Task will save it disk.
+Note that while Function Tasks process data, they generally do not save it to disk. To persist results, you must pass the output of a Function Task into the Artifact Task Graph and dictate which Artifact Task will save it to disk.
 
 
     See :ref:`Entrypoints: explanation <explanation-entrypoints>` to learn how tasks are chained and how default parameter values are set.

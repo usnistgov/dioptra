@@ -39,7 +39,7 @@ To prepare your environment for running the examples_, follow the linked instruc
 7. `Register the queues for Dioptra's examples and demos <https://github.com/usnistgov/dioptra/blob/main/examples/README.md#registering-queues>`_
 8. `Start JupyterLab and open the demo Jupyter notebook (ipynb file extension) <https://github.com/usnistgov/dioptra/blob/main/examples/README.md#starting-jupyter-lab>`_
 
-Steps 1–3 and 6–7 only need to be run once.
+Steps 1-3 and 6-7 only need to be run once.
 Returning users only need to repeat Steps 4 (if you stopped Dioptra using ``docker compose down``) and 8 (if you stopped the ``jupyter lab`` process).
 
 List of Examples

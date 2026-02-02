@@ -20,7 +20,7 @@
 Hello World in Dioptra
 =================
 
-This tutorial will guide you through setting up Dioptra in the guided user interface (GUI) and running 
+This tutorial will guide you through setting up Dioptra in the Graphical User Interface (GUI) and running 
 a simple plugin task. This tutorial serves as a first introduction to using 
 the GUI and also as a check that the microservices are properly configured and connected together. 
 
@@ -34,7 +34,7 @@ the GUI and also as a check that the microservices are properly configured and c
 
 **By the end of this tutorial, you will have:**
 
-- **Accessed Dioptra** through the Guided User Interface (GUI)
+- **Accessed Dioptra** through the Graphical User Interface (GUI)
 - Created a **user profile** and logged in 
 - Created your **first simple workflow**, including a plugin, entrypoint, and an experiment to run "Hello World"
 - Run your **first job** and observed the output

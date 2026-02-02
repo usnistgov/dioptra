@@ -23,14 +23,14 @@ Adding Inputs and Outputs
 Overview
 --------
 
-In the :ref:`Hello World Tutorial <tutorial-hello-world-in-dioptra>`, you created a plugin with one task and ran it through an Entrypoint and Experiment. Now, you will extend that idea to include **task inputs**, **task outputs**, and **entrypoint parameters**.
+In the :ref:`Hello World Tutorial <tutorial-hello-world-in-dioptra>`, you created a plugin with one task and ran it through an entrypoint and experiment. Now, you will extend that idea to include **task inputs**, **task outputs**, and **entrypoint parameters**.
 
-This will let you parameterize **input parameters** for a Plugin Task when running a job. After running multiple jobs, 
-you will compare outputs and observe how different **sample sizes** impact the observed sample mean's relationship to it's underlying distribution.
+This will let you parameterize **input parameters** for a plugin task when running a job. After running multiple jobs, 
+you will compare outputs and observe how different **sample sizes** impact the observed sample mean's relationship to its underlying distribution.
 
 Prerequisites
 -------------
-Before starting, ensure you have setup Dioptra and completed the :ref:`Hello World Tutorial <tutorial-hello-world-in-dioptra>`.
+Before starting, ensure you have set up Dioptra and completed the :ref:`Hello World Tutorial <tutorial-hello-world-in-dioptra>`.
 
 * :ref:`explanation-install-dioptra` - Obtain the Dioptra containers and create a deployment
 * :ref:`tutorial-setup-dioptra-in-the-gui` - Create a user and queue in the GUI
@@ -44,7 +44,7 @@ Workflow
 Step 1: Create a New Type
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Our Plugin Task will output a Numpy array. Before we register this output in our Plugin Task, we need to define the type in Dioptra.
+Your plugin task will output a Numpy array. Before registering this output in your plugin task, you need to define the type in Dioptra.
 
 1. Navigate to the **Plugin-Params** tab.
 2. Click **Create**.
@@ -68,7 +68,7 @@ Our Plugin Task will output a Numpy array. Before we register this output in our
 Step 2: Create the Plugin
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-We will now create a new plugin with one task. This task accepts parameters (``random_seed``, ``sample_size``, ``mean``, ``var``), samples a normal distribution, logs the mean, and returns the array.
+You will now create a new plugin with one task. This task accepts parameters (``random_seed``, ``sample_size``, ``mean``, ``var``), samples a normal distribution, logs the mean, and returns the array.
 
 1. Go to the **Plugins** tab and click **Create Plugin**.
 2. Name it ``sample_normal`` and add a short description.
@@ -88,7 +88,7 @@ We will now create a new plugin with one task. This task accepts parameters (``r
 Step 3: Register the Task
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Unlike last time, we must specify input and output types. We will use Dioptra's autodetect functionality to help us.
+Unlike last time, you must specify input and output types. Using Dioptra's autodetect functionality will help here.
 
 1. Click **Import Function Tasks** (top right of the editor) to auto-detect functions from ``sample_normal.py``.
 
@@ -97,19 +97,19 @@ Unlike last time, we must specify input and output types. We will use Dioptra's 
    :width: 900px
    :figclass: border-image clickable-image
 
-   Using "Import Tasks" to automatically detect and register Plugin Tasks.
+   Using "Import Tasks" to automatically detect and register plugin tasks.
 
 .. note::
    Input and output types are auto-detected from **Python type hints** and the **return annotation** (``->``).
 
-2. You may see an error under **Plugin Tasks**: *Resolve missing Type* for the ``np_ndarray`` output. This is because we called our custom type ``NumpyArray``, not ``np_ndarray`` which is the default name inferred form the return type.
+2. You may see an error under **Plugin Tasks**: *Resolve missing type* for the ``np_ndarray`` output. This is because the custom type is called ``NumpyArray``, not ``np_ndarray``, which is the default name inferred from the return type.
 
 .. figure:: _static/screenshots/resolve_missing_type.png
    :alt: Screenshot of a missing type error in Plugin Task registration.
    :width: 900px
    :figclass: border-image clickable-image
 
-   The output type was detected as np_ndarray, but our type is called NumpyArray.
+   The output type was detected as np_ndarray, but the type you created is called NumpyArray.
 
 **Fix the mismatched param type**:
 
@@ -128,7 +128,7 @@ Once you've corrected the errors, **save** the plugin file.
 Step 4: Create Entrypoint Parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-We will create an entrypoint that accepts a parameter, allowing us to change the sample size without changing the code.
+You will create an entrypoint that accepts a parameter, allowing you to change the sample size without changing the code.
 
 1. Navigate to **Entrypoints** and click **Create Entrypoint**.
 2. Name it ``sample_normal_ep``.
@@ -150,7 +150,7 @@ We will create an entrypoint that accepts a parameter, allowing us to change the
 Step 5: Define Task Graph
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Now we add the task to the graph and bind the parameters.
+Now add the task to the graph and bind the parameters.
 
 1. In the **Task Plugins** window, select ``sample_normal``.
 2. Click **Add to Task Graph**. This auto-populates the YAML with default structure.
@@ -162,7 +162,7 @@ Now we add the task to the graph and bind the parameters.
 
    Using "Add To Task Graph" to automatically populate the YAML editor.
 
-3. Edit the YAML to bind the parameters. We will map ``sample_size`` to our entrypoint parameter (``$sample_size``) and hardcode the others.
+3. Edit the YAML to bind the parameters. Map ``sample_size`` to the entrypoint parameter (``$sample_size``) and hardcode the others.
 
 
 .. figure:: _static/screenshots/entrypoint_2_edit_task_graph.png
@@ -180,7 +180,7 @@ Now we add the task to the graph and bind the parameters.
 Step 6: Run Jobs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-We will reuse our existing experiment to run two jobs with different parameters.
+You will reuse the existing experiment to run two jobs with different parameters.
 
 1. Navigate to **Sample Normal**.
 2. In the **Entrypoints** list, verify ``sample_normal_ep`` is available (if not, add it).
@@ -244,4 +244,4 @@ You now know how to:
 - Register Plugin Tasks with inputs and outputs
 - Run Entrypoints and Jobs with parameters
 
-Next, :ref:`we’ll chain multiple tasks together <tutorial-building-a-multi-step-workflow>` into a single workflow.
+Next, :ref:`you'll chain multiple tasks together <tutorial-building-a-multi-step-workflow>` into a single workflow.
