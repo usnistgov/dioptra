@@ -20,79 +20,46 @@
 Artifact Graph
 ==============
 
-Artifact outputs allow you to designate the contents of a variable as an :ref:`artifact <explanation-artifacts>`.
+The artifact graph allows you to capture outputs from the task graph as :ref:`Artifacts <explanation-artifacts>`.
 
-The ``artifacts`` section contains a list of artifact names. In the graph below, two artifact outputs are defined - ``saved_model`` and
-``saved_predictions``.
-
-.. note::
-
-    When using the UI, the ``artifacts`` section will be separate from the ``graph`` section, and there is no
-    need to use either keyword. However, when using the python client, a single file is assumed and both of
-    these keywords are necessary.
-
+For example, if we have a task graph that loads a dataset, uses it to train a model, and runs inference on a test set:
 
 .. code:: yaml
 
-    artifacts:
-        saved_predictions:
-            contents: $predictions
-            task:
-                name: DataframeArtifactTask
-                args:
-                    format: csv
-        saved_model:
-            contents: $trained_model
-            task:
-                name: ModelArtifactTask
+    dataset:
+        load_from_disk:
+            location: $location
 
-    graph:
-        dataset:
-            load_from_disk:
-                location: $location
+    trained_model:
+        train:
+            architecture: le_net
+            dataset: $dataset.training
 
-        trained_model:
-            train:
-                architecture: le_net
-                dataset: $dataset.training
+    predictions:
+        predict:
+            model: $train
+            dataset: $dataset.testing
 
-        predictions:
-            predict:
-                model: $train
-                dataset: $dataset.testing
+Then, we may want to capture the model and the predictions as artifacts with the following artifact graph:
 
+.. code:: yaml
 
-The ``task`` section of each artifact references the artifact task which should be used to serialize and deserialize the artifact.
+    saved_predictions:
+        contents: $predictions
+        task:
+            name: DataframeArtifactTask
+            args:
+                format: csv
+    saved_model:
+        contents: $trained_model
+        task:
+            name: ModelArtifactTask
 
-Below is an example artifact task which serializes dataframes.
-
-* The input to the ``name`` parameter in ``serialize()`` for the above YAML will be ``saved_predictions``.
-* The input to the ``contents`` parameter will be the value stored in ``$predictions`` (the output of the ``predict`` task plugin).
-* Any additional arguments provided under the ``args`` keyword will be passed to the function. In this example, the ``format`` argument is used to specify the output format of the dataframe.
-
-When used in another entrypoint, the deserialize function is called with the location of the artifact to turn the file back into a Python object of the specified type.
-
-.. code:: python
-
-    class DataframeArtifactTask(ArtifactTaskInterface):
-        @staticmethod
-        def serialize(
-            working_dir: Path,
-            name: str,
-            contents: pd.DataFrame,
-            format: str = "json",
-            **kwargs,
-        ) -> Path:
-            ...
-
-        @staticmethod
-        def deserialize(working_dir: Path, path: str, **kwargs) -> pd.DataFrame:
-            ...
-
-        @staticmethod
-        def validation() -> dict[str, Any]:
-            ...
-
+* The top level field names define the artifact names (``saved_predictions`` and ``saved_model``).
+* The value of the ``contents`` field corresponds to a step name in the task graph (``predictions`` and ``trained_model``) and denotes which outputs should be saved in the artifact.
+* The value of the ``task`` field specifies the :ref:`Artifact Task <explanation-artifacts-artifact-tasks>` which defines how the artifact is serialzed and deserialized.
+    * The ``name`` field is the artifact task name (``DataFrameArtifactTask`` and ``ModelArtifactTask``)
+    * The ``args`` field allows addtional keyword arguments to be passed to the function. In this example, the ``format`` argument is used to specify the output format of the dataframe.
 
 .. rst-class:: fancy-header header-seealso
 
