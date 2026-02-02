@@ -59,7 +59,7 @@ Metrics do not have additional system generated attributes.
 Retrieval Interfaces
 -----------------------
 
-Metrics can be retrieved using the python client or the RESTAPI. Alternatively, the :ref:`Job Dashboard <how-to-use-metrics>` page in the UI can 
+Metrics can be retrieved using the python client or the RESTAPI. Alternatively, the :ref:`Job Dashboard <how-to-logging-metrics>` page in the UI can 
 show an overview of metrics for the job.
 
 .. _reference-metrics-python-client:
