@@ -18,6 +18,64 @@
 .. _explanation-artifacts:
 
 Artifacts
-================
+=========
 
-[Todo] Insert an explanation about artifacts.
+Summary: What is an artifact?
+-----------------------------
+
+An **artifact** refers to a stored output of a job that is managed by Dioptra. A job can produce multiple artifacts,
+and artifacts produced by a job can be used as inputs to another job. How the artifact is used
+is specified in the entrypoint associated with the job, but the artifact itself is provided at
+runtime as an input to the job. 
+
+Artifacts are used in entrypoints through ``Artifact Parameters``. When an artifact is designated as 
+an input parameter, it can be referenced in the task graph in the exact same way any regular
+entrypoint parameter or task output can be. The artifact is loaded into memory at the start of the
+job execution and then is available for any tasks that reference it.
+
+To use an artifact as an entrypoint input parameter, the types from the deserialize method must match up
+with the type from the artifact input parameter. You will not be able to select an artifact for the
+job if these types don't align.
+
+
+Artifact Tasks
+--------------
+
+**Artifact tasks** are a type of plugin task which detail the serialization
+and deserialization of a given artifact type. When an output of a function task is designated to be 
+saved as an artifact, it is passed to its corresponding serialization function within the artifact task.
+Similarly, when an artifact is loaded, its deserialization function is used to load it as an object in memory.
+
+When serialized, Diotpra takes the serialized file and stores it in the backend data storage (S3 by default). The URL
+of the artifact is stored in the database, and retrieved by ID when the artifact is used or downloaded from the GUI.
+
+An artifact task consists of a class which implements the ``ArtifactTaskInterface`` interface.
+This interface supports three methods:
+
+* ``serialize`` - used to save the contents of an artifact with a given name to the specified directory
+* ``deserialize`` - used to read the contents of an artifact with a given path relative to the specified directory
+* ``validation`` - used to validate any keyword arguments passed into ``serialize()``
+
+The ``serialize`` function both supports passing additional keyword arguments. This can be useful
+for selecting file types or configuring other settings when saving an artifact.
+
+Entrypoints can designate the output of a function task as an artifact by referencing an artifact task for serialization. 
+When used as a parameter to another entrypoint, the deserialization function of that artifact task will be used. 
+
+Note that when artifacts are created, they are associated with a snapshot of the artifact task that they were 
+created with. Since the artifact task contains both serialization and deserialization, the same snapshot is used
+for deserialization. 
+
+Artifact tasks are registered similarly to function tasks. See :ref:`explanation-plugins` for more details.
+
+
+.. rst-class:: fancy-header header-seealso
+
+See Also
+--------
+
+* :ref:`Entrypoints: explanation <explanation-entrypoints>` - Explanation of Entrypoints, including the Artifact Task Graph.
+* :ref:`Entrypoints: reference <reference-entrypoints>` - Complete YAML syntax guide for entrypoint files and task graphs.
+* :ref:`Artifacts: reference <reference-artifacts>` - Complete reference for Artifacts.
+* :ref:`Artifact Graphs: reference <reference-artifact-graph>` - YAML syntax for artifact graph.
+* :ref:`Plugins: explanation <explanation-plugins>` - Explanation of Plugins, Function Tasks and Artifact Tasks
