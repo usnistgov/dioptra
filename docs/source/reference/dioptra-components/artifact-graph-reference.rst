@@ -22,12 +22,12 @@ Artifact Graph
 
 Artifact outputs allow you to designate the contents of a variable as an :ref:`artifact <explanation-artifacts>`.
 
-The ``artifacts`` section contains a list of artifact names. In the graph below, two artifact outputs are defined - ``saved_model`` and 
-``saved_predictions``. 
+The ``artifacts`` section contains a list of artifact names. In the graph below, two artifact outputs are defined - ``saved_model`` and
+``saved_predictions``.
 
-.. note:: 
-    
-    When using the UI, the ``artifacts`` section will be separate from the ``graph`` section, and there is no 
+.. note::
+
+    When using the UI, the ``artifacts`` section will be separate from the ``graph`` section, and there is no
     need to use either keyword. However, when using the python client, a single file is assumed and both of
     these keywords are necessary.
 
@@ -64,9 +64,9 @@ The ``artifacts`` section contains a list of artifact names. In the graph below,
 
 The ``task`` section of each artifact references the artifact task which should be used to serialize and deserialize the artifact.
 
-Below is an example artifact task which serializes dataframes. 
+Below is an example artifact task which serializes dataframes.
 
-* The input to the ``name`` parameter in ``serialize()`` for the above YAML will be ``saved_predictions``. 
+* The input to the ``name`` parameter in ``serialize()`` for the above YAML will be ``saved_predictions``.
 * The input to the ``contents`` parameter will be the value stored in ``$predictions`` (the output of the ``predict`` task plugin).
 * Any additional arguments provided under the ``args`` keyword will be passed to the function. In this example, the ``format`` argument is used to specify the output format of the dataframe.
 
@@ -84,7 +84,7 @@ When used in another entrypoint, the deserialize function is called with the loc
             **kwargs,
         ) -> Path:
             ...
-        
+
         @staticmethod
         def deserialize(working_dir: Path, path: str, **kwargs) -> pd.DataFrame:
             ...
@@ -96,10 +96,10 @@ When used in another entrypoint, the deserialize function is called with the loc
 
 .. rst-class:: fancy-header header-seealso
 
-See Also 
----------
-   
+See Also
+--------
+
 * :ref:`Task Graph Explanation <explanation-task-graph>`
 * :ref:`What are Artifacts? <explanation-artifacts>`
-* :ref:`What are Plugins? <explanation-plugins>` 
+* :ref:`What are Plugins? <explanation-plugins>`
 * :ref:`How to create a plugin <how-to-create-plugins>`
