@@ -725,7 +725,7 @@ class ResourceImportService(object):
                     log=log,
                 )
 
-    def _register_entrypoints(
+    def _register_entrypoints(  # noqa: C901
         self,
         group_id: int,
         entrypoints_config: list[dict[str, Any]],
