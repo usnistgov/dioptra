@@ -51,7 +51,7 @@ Required Attributes
 
 - **Name**: (string) The display name for the Entrypoint. 
 - **Group**: (integer ID) The Group that owns this Experiment and controls access permissions.
-- **Task Graph**: (YAML string) The task graph for entrypoint, which as a YAML-formatted string that defines the core workflow (technically, a Directed Acyclical Graph). Composed of function task invocations and their input arguments. (See: :ref:`syntax requirements <reference-entrypoints-task-graph-syntax>`)
+- **Task Graph**: (YAML string) The task graph for entrypoint, which as a YAML-formatted string that defines the core workflow (technically, a Directed Acyclical Graph). Composed of function task invocations and their input arguments. (See: :ref:`Task Graph Syntax Requirements <reference-entrypoints-task-graph-syntax>`)
 
 Optional Attributes
 ~~~~~~~~~~~~~~~~~~~
@@ -66,9 +66,9 @@ Optional Attributes
 - **Artifact Parameters**: (list of Dicts, optional) Global objects, loaded from disk at Job execution, can be used in the Entrypoint Task Graph and Artifact Task Graph. User selects which specific artifact snapshot to load into the Artifact Parameter at Job Runtime. Defaults to empty.
     - **Name** (string) The Name of the Artifact Parameter, used to access the Object(s) in the Task Graphs 
     - **Output Parameters** (List of Outputs) List of outputs that the deserialize method of an artifact task is expected to produce
-- **Artifact Task Graph**: (YAML string, optional) The artifact task graph for entrypoint, which as a YAML-formatted string that defines the artifact serialization logic. Artifact Tasks are called once the main Task Graph execution is completed. Defaults to empty. (See: :ref:`syntax requirements <reference-entrypoints-artifact-output-graph-syntax>`)
+- **Artifact Output Graph**: (YAML string, optional) A YAML-formatted string that defines the artifact serialization logic. Artifact Tasks referenced in the Artifact Output Graph are called once the main Task Graph execution is completed. Defaults to empty. (See: :ref:`Artifact Output Graph Syntax Requirements <reference-entrypoints-artifact-output-graph-syntax>`)
 - **Queues**: (list of integer IDs, optional) A list of the queues that can pick up Job submissions of this entrypoint and carry out their execution. Job will not be runnable without at least one attached Queue. Defaults to empty. (See: :ref:`Queues Reference <reference-queues>`)
-- **Tags**: (list of Tag Objects, optional) A list of tags for organizational purposes 
+- **Tags**: (list of Tag Objects, optional) A list of tags for organizational purposes. 
 
 .. _reference-entrypoints-system-generated-attributes:
 
@@ -76,9 +76,9 @@ System-Managed State
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - **ID**: (integer) Unique identifier assigned upon creation.
-- **Last Modified On**: (timestamp) The time when the Entrypoint last modified, or in the case of no modifications, when the Entrypoint was originally created. Upon modification, the old configuration is saved as a snapshot and added to the Version History. 
-- **Version History**: (list of objects, optional) An ordered list of past Entrypoint snapshots, automatically created by Dioptra each time the Entrypoint is modified. View prior snapshots by clicking the **Show History** toggle. Contains the following attributes:
-    - **Snapshot Created On**: (timestamp) When the Entrypoint state was saved as a snapshot  
+- **Last Modified On**: (timestamp) The time when the Entrypoint was last modified. If any entrypoint has not yet been modified, then this is equal to the timestamp when the entrypoint was originally created. Upon modification, the old configuration is saved as a Snapshot and added to the Version History. 
+- **Version History**: (list of Snapshot Objects, optional) An ordered list of past Entrypoint Snapshots, automatically created by Dioptra each time the Entrypoint is modified. View prior snapshots by clicking the **Show History** toggle. Contains the following attributes:
+    - **Created On**: (timestamp) When the Entrypoint state was saved as a snapshot . 
     - *Every other required and optional attribute listed above*
 
 
