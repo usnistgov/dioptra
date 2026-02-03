@@ -725,7 +725,7 @@ class ResourceImportService(object):
                     log=log,
                 )
 
-    def _register_entrypoints(
+    def _register_entrypoints(  # noqa: C901
         self,
         group_id: int,
         entrypoints_config: list[dict[str, Any]],
@@ -794,13 +794,32 @@ class ResourceImportService(object):
             artifact_params = ResourceImportService._build_artifacts_params_list(
                 entrypoint.get("artifact_params", []), param_types
             )
-            plugin_ids = [
-                plugins[plugin].resource_id for plugin in entrypoint.get("plugins", [])
-            ]
-            artifact_plugin_ids = [
-                plugins[plugin].resource_id
-                for plugin in entrypoint.get("artifact_plugins", [])
-            ]
+
+            errors = []
+            plugin_ids = []
+            for plugin in entrypoint.get("plugins", []):
+                if plugin in plugins:
+                    plugin_ids.append(plugins[plugin].resource_id)
+                else:
+                    errors.append(plugin)
+            if len(errors) > 0:
+                raise ImportFailedError(
+                    f"Plugins {errors} used but not declared.",
+                    reason="Plugin used but undeclared.",
+                )
+
+            errors = []
+            artifact_plugin_ids = []
+            for plugin in entrypoint.get("artifact_plugins", []):
+                if plugin in plugins:
+                    artifact_plugin_ids.append(plugins[plugin].resource_id)
+                else:
+                    errors.append(plugin)
+            if len(errors) > 0:
+                raise ImportFailedError(
+                    f"Artifact plugins {errors} used but not declared.",
+                    reason="Artifact plugin used but undeclared.",
+                )
 
             if conflict_strat == ResourceImportResolveNameConflictsStrategy.FAIL:
                 entrypoint_dict = self._entrypoint_service.create(
