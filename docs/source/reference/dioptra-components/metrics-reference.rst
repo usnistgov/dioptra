@@ -67,6 +67,10 @@ show an overview of metrics for the job.
 Using Python Client
 ~~~~~~~~~~~~~~~~~~~
 
+**Post metrics for a job.**
+
+   .. automethod:: dioptra.client.jobs.JobsCollectionClient.append_metric_by_id
+
 **Retrieve the metrics with the highest step number for the job.**
 
    .. automethod:: dioptra.client.jobs.JobsCollectionClient.get_metrics_by_id
