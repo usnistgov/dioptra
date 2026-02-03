@@ -52,35 +52,36 @@ Required Attributes
 - **Name**: (string) The display name for the Entrypoint. 
 - **Group**: (integer ID) The Group that owns this Experiment and controls access permissions.
 - **Task Graph**: (YAML string) The task graph for entrypoint, which as a YAML-formatted string that defines the core workflow (technically, a Directed Acyclical Graph). Composed of function task invocations and their input arguments. (See: :ref:`syntax requirements <reference-entrypoints-task-graph-syntax>`)
-- **Drafts**: ?
 
 Optional Attributes
 ~~~~~~~~~~~~~~~~~~~
 
 - **Description**: (string, optional) A text description of the Entrypoint's purpose or scope. Defaults to empty.
-- **Plugins**: (list of Plugin IDs, optional) A list of Plugin containers to attach to the entrypoint - the associated Plugin Function Tasks are then made available to the Entrypoint Task Graph. Defaults to empty.
-- **Artifact Plugins**:  (list of Plugin IDs, optional) A list of Plugin containers to attach to the entrypoint - the associated Plugin Artifact Tasks are then made available to the Artifact Output Task Graph. Defaults to empty.
+- **Plugins**: (list of Plugin IDs, optional) A list of Plugin containers to attach to the entrypoint - the associated Plugin Function Tasks are then made available to the Entrypoint Task Graph. Defaults to empty. (See: :ref:`Plugins Reference <reference-plugins>`)
+- **Artifact Plugins**:  (list of Plugin IDs, optional) A list of Plugin containers to attach to the entrypoint - the associated Plugin Artifact Tasks are then made available to the Artifact Output Task Graph. Defaults to empty. (See: :ref:`Plugins Reference <reference-plugins>`)
 - **Parameters**: (list of Dicts, optional) Global parameters that can be used in the Entrypoint Task Graph and Artifact Task Graph. Each Parameter has a type and can optionally have a default value. Parameter values are set at Job runtime. Defaults to empty.
     - **Name** (string) The Name of the Entrypoint Parameter, used to access the Parameter in the Task Graphs 
-    - **Type** (Plugin Parameter Type ID) The type for the parameter, used for type validation 
+    - **Type** (Plugin Parameter Type ID) The type for the parameter, used for type validation. (See: :ref:`Plugin Parameter Types <reference-plugin-parameter-types>`) 
     - **Default Value** (String, Optional) An optional default value for the parameter which can be overwritten during job execution. Gets type converted during job execution time. 
 - **Artifact Parameters**: (list of Dicts, optional) Global objects, loaded from disk at Job execution, can be used in the Entrypoint Task Graph and Artifact Task Graph. User selects which specific artifact snapshot to load into the Artifact Parameter at Job Runtime. Defaults to empty.
     - **Name** (string) The Name of the Artifact Parameter, used to access the Object(s) in the Task Graphs 
     - **Output Parameters** (List of Outputs) List of outputs that the deserialize method of an artifact task is expected to produce
 - **Artifact Task Graph**: (YAML string, optional) The artifact task graph for entrypoint, which as a YAML-formatted string that defines the artifact serialization logic. Artifact Tasks are called once the main Task Graph execution is completed. Defaults to empty. (See: :ref:`syntax requirements <reference-entrypoints-artifact-output-graph-syntax>`)
-- **Queues**: (list of integer IDs, optional) A list of the queues that can pick up Job submissions of this entrypoint and carry out their execution. Job will not be runnable without at least one attached Queue. Defaults to empty.
-- **Snapshot**: ? 
+- **Queues**: (list of integer IDs, optional) A list of the queues that can pick up Job submissions of this entrypoint and carry out their execution. Job will not be runnable without at least one attached Queue. Defaults to empty. (See: :ref:`Queues Reference <reference-queues>`)
+- **Tags**: (list of Tag Objects, optional) A list of tags for organizational purposes 
 
 .. _reference-entrypoints-system-generated-attributes:
 
-System-Generated Attributes
+System-Managed State
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- **ID**: Unique identifier assigned upon creation.
-- **Created On**: Timestamp indicating when the Entrypoint was created.
-- **Last Modified On**: Timestamp indicating when the Entrypoint was last modified.
-- **Jobs**: ?
-- **Experiments**: ?
+- **ID**: (integer) Unique identifier assigned upon creation.
+- **Last Modified On**: (timestamp) The time when the Entrypoint last modified, or in the case of no modifications, when the Entrypoint was originally created. Upon modification, the old configuration is saved as a snapshot and added to the Version History. 
+- **Version History**: (list of objects, optional) An ordered list of past Entrypoint snapshots, automatically created by Dioptra each time the Entrypoint is modified. View prior snapshots by clicking the **Show History** toggle. Contains the following attributes:
+    - **Snapshot Created On**: (timestamp) When the Entrypoint state was saved as a snapshot  
+    - *Every other required and optional attribute listed above*
+
+
 
 .. _reference-entrypoints-task-graph-syntax:
 
@@ -121,35 +122,75 @@ these arguments are passed into the Python function without names in order.
         The ``graph:`` keyword that starts the YAML code blocks below does not need to be included in the task graph definition in the Graphical User Interface (GUI). When defining an entire entrypoint via YAML, this word is used to designate the task graph section of the file (as distinct from the parameter definitions, the artifact task graph, etc.)
 
 
-.. admonition:: Task Graph - Positional Style Invocation
-    :class: code-panel yaml
 
-    .. code-block:: yaml
+.. tabs::
 
-        graph:
-            step1:
-                task1: [arg1, arg2]
-            step2:
-                task2: [arg3, arg4]
+   .. group-tab:: Entrypoint defined in a TOML file
+
+        .. admonition:: Task Graph - Positional Style Invocation
+            :class: code-panel yaml
+
+            .. code-block:: yaml
+
+                graph:
+                    step1:
+                        task1: [arg1, arg2]
+                    step2:
+                        task2: [arg3, arg4]
+
+   .. group-tab:: Entrypoint defined in the GUI / Standalone component
+
+        .. admonition:: Task Graph - Positional Style Invocation
+            :class: code-panel yaml
+
+            .. code-block:: yaml
+
+                step1:
+                    task1: [arg1, arg2]
+                step2:
+                    task2: [arg3, arg4]
 
 **Keyword Style Invocation**
 
 The keywords correspond to the names of the Function Task parameters. Upon function execution, these values are passed in as named arguments to the Python function. 
 
-.. admonition:: Task Graph - Keyword Style Invocation
-    :class: code-panel yaml
-    
-    .. code-block:: yaml
 
-        graph:
-            step1:
-                task1:
-                    keyword1: arg1
-                    keyword2: arg2
-            step2:
-                task2:
-                    keyword3: arg3
-                    keyword4: arg4
+.. tabs::
+
+   .. group-tab:: Entrypoint defined in a TOML file
+
+        .. admonition:: Task Graph - Keyword Style Invocation
+            :class: code-panel yaml
+            
+            .. code-block:: yaml
+
+                graph:
+                    step1:
+                        task1:
+                            keyword1: arg1
+                            keyword2: arg2
+                    step2:
+                        task2:
+                            keyword3: arg3
+                            keyword4: arg4
+
+   .. group-tab:: Entrypoint defined in the GUI / Standalone component
+
+        .. admonition:: Task Graph - Keyword Style Invocation
+            :class: code-panel yaml
+            
+            .. code-block:: yaml
+
+                step1:
+                    task1:
+                        keyword1: arg1
+                        keyword2: arg2
+                step2:
+                    task2:
+                        keyword3: arg3
+                        keyword4: arg4
+
+
 
 **Mixed Style Invocation**
 
@@ -157,25 +198,51 @@ Combines positional arguments with named arguments. The positional arguments are
 keyword arguments must match one of the names of the function task arguments that does not correspond to any of those claimed by the positional arguments. Upon task execution, 
 the positional arguments are passed into the Python function without names in order, and then the keyword arguments are passed in with their corresponding names. 
 
+.. tabs::
 
-.. admonition:: Task Graph - Mixed Style Invocation
-    :class: code-panel yaml
-    
-    .. code-block:: yaml
+   .. group-tab:: Entrypoint defined in a TOML file
 
-        graph:
-            step1:
-                task: task1
-                args: [posarg1, posarg2]
-                kwargs:
-                    keyword1: arg1
-                    keyword2: arg2
-            step2:
-                task: task2
-                args: [posarg3, posarg4]
-                kwargs:
-                    keyword3: arg3
-                    keyword4: arg4
+        .. admonition:: Task Graph - Mixed Style Invocation
+            :class: code-panel yaml
+            
+            .. code-block:: yaml
+
+                graph:
+                    step1:
+                        task: task1
+                        args: [posarg1, posarg2]
+                        kwargs:
+                            keyword1: arg1
+                            keyword2: arg2
+                    step2:
+                        task: task2
+                        args: [posarg3, posarg4]
+                        kwargs:
+                            keyword3: arg3
+                            keyword4: arg4
+
+   .. group-tab:: Entrypoint defined in the GUI / Standalone component
+
+
+        .. admonition:: Task Graph - Mixed Style Invocation
+            :class: code-panel yaml
+            
+            .. code-block:: yaml
+
+                step1:
+                    task: task1
+                    args: [posarg1, posarg2]
+                    kwargs:
+                        keyword1: arg1
+                        keyword2: arg2
+                step2:
+                    task: task2
+                    args: [posarg3, posarg4]
+                    kwargs:
+                        keyword3: arg3
+                        keyword4: arg4
+
+
 
 Argument Structure
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -184,47 +251,98 @@ Though the above examples provide strings (such as ``arg1`` or ``arg2``) as argu
 arguments with structure. For example, a list of strings (in this case ``["arg1", "arg11", "arg111"]``) could be provided
 as an argument to the ``keyword1`` parameter as follows:
 
+.. tabs::
 
-.. admonition:: Task Graph - Lists of Arguments
-    :class: code-panel yaml
-    
-    .. code-block:: yaml
+   .. group-tab:: Entrypoint defined in a TOML file
 
-        graph:
-            step1:
-                task1:
-                    keyword1: 
-                        - arg1
-                        - arg11
-                        - arg111
-                    keyword2: arg2
-            step2:
-                task2:
-                    keyword3: arg3
-                    keyword4: arg4
+        .. admonition:: Task Graph - Lists of Arguments
+            :class: code-panel yaml
+            
+            .. code-block:: yaml
+
+                graph:
+                    step1:
+                        task1:
+                            keyword1: 
+                                - arg1
+                                - arg11
+                                - arg111
+                            keyword2: arg2
+                    step2:
+                        task2:
+                            keyword3: arg3
+                            keyword4: arg4
+
+   .. group-tab:: Entrypoint defined in the GUI / Standalone component
+
+
+        .. admonition:: Task Graph - Lists of Arguments
+            :class: code-panel yaml
+            
+            .. code-block:: yaml
+
+                step1:
+                    task1:
+                        keyword1: 
+                            - arg1
+                            - arg11
+                            - arg111
+                        keyword2: arg2
+                step2:
+                    task2:
+                        keyword3: arg3
+                        keyword4: arg4
+
+
 
 
 Alternatively, a mapping (in this case ``{"k1":"arg1", "k2":"arg11", "k3":"arg111"}``) can also be provided 
 as an argument to the ``keyword1`` parameter if needed:
 
 
-.. admonition:: Task Graph - Mapping Arguments
-    :class: code-panel yaml
-    
-    .. code-block:: yaml
+.. tabs::
 
-        graph:
-            step1:
-                task1:
-                    keyword1: 
-                        - k1: arg1
-                        - k2: arg11
-                        - k3: arg111
-                    keyword2: [arg2, arg22]
-            step2:
-                task2:
-                    - keyword3: arg3
-                    - keyword4: arg4
+   .. group-tab:: Entrypoint defined in a TOML file
+
+        .. admonition:: Task Graph - Mapping Arguments
+            :class: code-panel yaml
+            
+            .. code-block:: yaml
+
+                graph:
+                    step1:
+                        task1:
+                            keyword1: 
+                                - k1: arg1
+                                - k2: arg11
+                                - k3: arg111
+                            keyword2: [arg2, arg22]
+                    step2:
+                        task2:
+                            - keyword3: arg3
+                            - keyword4: arg4
+
+   .. group-tab:: Entrypoint defined in the GUI / Standalone component
+
+
+        .. admonition:: Task Graph - Mapping Arguments
+            :class: code-panel yaml
+            
+            .. code-block:: yaml
+
+                step1:
+                    task1:
+                        keyword1: 
+                            - k1: arg1
+                            - k2: arg11
+                            - k3: arg111
+                        keyword2: [arg2, arg22]
+                step2:
+                    task2:
+                        - keyword3: arg3
+                        - keyword4: arg4
+
+
 
 
 References Within a Task Graph
@@ -235,17 +353,37 @@ can be used in other steps.
 
 Here is an example of using the output of a function task.
 
+.. tabs::
 
-.. admonition:: Task Graph - Referencing Task Outputs
-    :class: code-panel yaml
-    
-    .. code-block:: yaml
+   .. group-tab:: Entrypoint defined in a TOML file
 
-        graph:
-            step1:
-                task1: [arg1, arg2]
-            step2:
-                task2: [$step1, arg4]
+        .. admonition:: Task Graph - Referencing Task Outputs
+            :class: code-panel yaml
+            
+            .. code-block:: yaml
+
+                graph:
+                    step1:
+                        task1: [arg1, arg2]
+                    step2:
+                        task2: [$step1, arg4]
+
+
+   .. group-tab:: Entrypoint defined in the GUI / Standalone component
+
+
+        .. admonition:: Task Graph - Referencing Task Outputs
+            :class: code-panel yaml
+            
+            .. code-block:: yaml
+
+                step1:
+                    task1: [arg1, arg2]
+                step2:
+                    task2: [$step1, arg4]
+
+
+
 
 This passes the output of the step named ``step1`` as input to the first parameter of the function task named ``task2``.
 
@@ -253,17 +391,33 @@ It is possible for function tasks to have multiple outputs. See :ref:`explanatio
 is given a name when registered. In an example where ``task1`` is registered to have two separate outputs, ``output1`` and 
 ``output2``, these can be referenced as follows:
 
+.. tabs::
 
-.. admonition:: Task Graph - Referencing Outputs from Task with Multiple Outputs
-    :class: code-panel yaml
-    
-    .. code-block:: yaml
+   .. group-tab:: Entrypoint defined in a TOML file
 
-        graph:
-            step1:
-                task1: [arg1, arg2]
-            step2:
-                task2: [$step1.output1, $step1.output2]
+        .. admonition:: Task Graph - Referencing Outputs from Task with Multiple Outputs
+            :class: code-panel yaml
+            
+            .. code-block:: yaml
+
+                graph:
+                    step1:
+                        task1: [arg1, arg2]
+                    step2:
+                        task2: [$step1.output1, $step1.output2]
+
+
+   .. group-tab:: Entrypoint defined in the GUI / Standalone component
+
+        .. admonition:: Task Graph - Referencing Outputs from Task with Multiple Outputs
+            :class: code-panel yaml
+            
+            .. code-block:: yaml
+
+                step1:
+                    task1: [arg1, arg2]
+                step2:
+                    task2: [$step1.output1, $step1.output2]
 
 Task Graph Parameters
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -277,17 +431,35 @@ graph, the usage is equivalent, though the parameters are supplied separately at
 
 See :ref:`explanation-entrypoints` and :ref:`explanation-artifacts` for more details.
 
+.. tabs::
 
-.. admonition:: Task Graph - Referencing Entrypoint Parameters
-    :class: code-panel yaml
-    
-    .. code-block:: yaml
+   .. group-tab:: Entrypoint defined in a TOML file
 
-        graph:
-            step1:
-                task1: [arg1, arg2]
-            step2:
-                task2: [$myparam, $step1.output2]
+        .. admonition:: Task Graph - Referencing Entrypoint Parameters
+            :class: code-panel yaml
+            
+            .. code-block:: yaml
+
+                graph:
+                    step1:
+                        task1: [arg1, arg2]
+                    step2:
+                        task2: [$myparam, $step1.output2]
+
+
+   .. group-tab:: Entrypoint defined in the GUI / Standalone component
+
+        .. admonition:: Task Graph - Referencing Entrypoint Parameters
+            :class: code-panel yaml
+            
+            .. code-block:: yaml
+
+                graph:
+                    step1:
+                        task1: [arg1, arg2]
+                    step2:
+                        task2: [$myparam, $step1.output2]
+
 
 
 Additional Dependencies - Managing Dependencies
@@ -297,18 +469,35 @@ Explicit dependencies between steps can be added via the ``dependencies`` keywor
 automatically created when a step uses the output of another step as a parameter, but sometimes a dependency is 
 needed without the presence of output. In this example, ``step2`` will always be executed after the completion of ``step1``.
 
+.. tabs::
 
-.. admonition:: Task Graph
-    :class: code-panel yaml
-    
-    .. code-block:: yaml
+   .. group-tab:: Entrypoint defined in a TOML file
 
-        graph:
-            step1:
-                task1: [arg1, arg2]
-            step2:
-                task2: [$param1, $param2]
-                dependencies: [step1]
+        .. admonition:: Task Graph
+            :class: code-panel yaml
+            
+            .. code-block:: yaml
+
+                graph:
+                    step1:
+                        task1: [arg1, arg2]
+                    step2:
+                        task2: [$param1, $param2]
+                        dependencies: [step1]
+
+
+   .. group-tab:: Entrypoint defined in the GUI / Standalone component
+
+        .. admonition:: Task Graph
+            :class: code-panel yaml
+            
+            .. code-block:: yaml
+
+                step1:
+                    task1: [arg1, arg2]
+                step2:
+                    task2: [$param1, $param2]
+                    dependencies: [step1]
 
 
 
@@ -338,20 +527,42 @@ There are many similarities between invoking artifact tasks and function tasks:
         
         The ``artifact_outputs:`` keyword that starts the YAML code blocks below does not need to be included in the artifact task graph definition in the Graphical User Interface (GUI). When defining an entire entrypoint via YAML, this word is used to designate the artifact output graph section of the file (as distinct from the parameter definitions, the task graph, etc.)
 
-.. admonition:: Artifact Output Graph
-    :class: code-panel yaml
-    
-    .. code-block:: yaml
+.. tabs::
 
-        artifact_outputs:
-            artifactStep1:
-                contents: taskGraphStep1$output # assumes the name of output from task graph step "taskGraphStep1" is "output"
-                task:
-                    name: artifactHandler1
-            artifactStep2:
-                contents: taskGraphStep2 # If a function task only has one output, then only the step name is required
-                task:
-                    name: artifactHandler2
+   .. group-tab:: Entrypoint defined in a TOML file
+
+
+        .. admonition:: Artifact Output Graph
+            :class: code-panel yaml
+            
+            .. code-block:: yaml
+
+                artifact_outputs:
+                    artifactStep1:
+                        contents: taskGraphStep1$output # assumes the name of output from task graph step "taskGraphStep1" is "output"
+                        task:
+                            name: artifactHandler1
+                    artifactStep2:
+                        contents: taskGraphStep2 # If a function task only has one output, then only the step name is required
+                        task:
+                            name: artifactHandler2
+
+
+   .. group-tab:: Entrypoint defined in the GUI / Standalone component
+
+        .. admonition:: Artifact Output Graph
+            :class: code-panel yaml
+            
+            .. code-block:: yaml
+
+                artifactStep1:
+                    contents: taskGraphStep1$output # assumes the name of output from task graph step "taskGraphStep1" is "output"
+                    task:
+                        name: artifactHandler1
+                artifactStep2:
+                    contents: taskGraphStep2 # If a function task only has one output, then only the step name is required
+                    task:
+                        name: artifactHandler2
 
 Invocation Styles 
 ~~~~~~~~~~~~~~~~
@@ -364,52 +575,118 @@ These arguments are used in the ``serialization`` method of the Artifact Handler
 **Positional Style Invocation**
 
 
-.. admonition:: Artifact Output Graph - Positional Style Invocation
-    :class: code-panel yaml
-    
-    .. code-block:: yaml
+.. tabs::
 
-        artifact_outputs:
-            artifactStep1:
-                contents: taskGraphStep1$output
-                task:
-                    name: artifactHandler1
-                    args: [arg1, arg2]
+   .. group-tab:: Entrypoint defined in a TOML file
+
+
+        .. admonition:: Artifact Output Graph - Positional Style Invocation
+            :class: code-panel yaml
+            
+            .. code-block:: yaml
+
+                artifact_outputs:
+                    artifactStep1:
+                        contents: taskGraphStep1$output
+                        task:
+                            name: artifactHandler1
+                            args: [arg1, arg2]
+
+   .. group-tab:: Entrypoint defined in the GUI / Standalone component
+
+        .. admonition:: Artifact Output Graph - Positional Style Invocation
+            :class: code-panel yaml
+            
+            .. code-block:: yaml
+
+                artifactStep1:
+                    contents: taskGraphStep1$output
+                    task:
+                        name: artifactHandler1
+                        args: [arg1, arg2]
+
+
 
 
 **Keyword Style Invocation**
 
 
-.. admonition:: Artifact Output Graph - Keyword Style Invocation
-    :class: code-panel yaml
-    
-    .. code-block:: yaml
+.. tabs::
 
-        artifact_outputs:
-            artifactStep1:
-                contents: taskGraphStep1$output
-                task:
-                    name: artifactHandler1
-                    args:
-                        - keyword1: arg1
-                        - keyword 2: arg2 
+   .. group-tab:: Entrypoint defined in a TOML file
+
+        .. admonition:: Artifact Output Graph - Keyword Style Invocation
+            :class: code-panel yaml
+            
+            .. code-block:: yaml
+
+                artifact_outputs:
+                    artifactStep1:
+                        contents: taskGraphStep1$output
+                        task:
+                            name: artifactHandler1
+                            args:
+                                - keyword1: arg1
+                                - keyword2: arg2 
+
+   .. group-tab:: Entrypoint defined in the GUI / Standalone component
+
+        .. admonition:: Artifact Output Graph - Keyword Style Invocation
+            :class: code-panel yaml
+            
+            .. code-block:: yaml
+
+                artifactStep1:
+                    contents: taskGraphStep1$output
+                    task:
+                        name: artifactHandler1
+                        args:
+                            - keyword1: arg1
+                            - keyword2: arg2 
+
+
 
 **Mixed Style Invocation**
 
 
-.. admonition:: Artifact Output Graph - Mixed Style Invocation
-    :class: code-panel yaml
-    
-    .. code-block:: yaml
+.. tabs::
 
-        artifact_outputs:
-            artifactStep1:
-                contents: taskGraphStep1$output
-                task:
-                    name: artifactHandler1
-                    args: [arg1]
-                    kwargs:
-                        - keyword 2: arg2 
+   .. group-tab:: Entrypoint defined in a TOML file
+
+
+        .. admonition:: Artifact Output Graph - Mixed Style Invocation
+            :class: code-panel yaml
+            
+            .. code-block:: yaml
+
+                artifact_outputs:
+                    artifactStep1:
+                        contents: taskGraphStep1$output
+                        task:
+                            name: artifactHandler1
+                            args: [arg1]
+                            kwargs:
+                                - keyword2: arg2 
+
+
+   .. group-tab:: Entrypoint defined in the GUI / Standalone component
+
+
+        .. admonition:: Artifact Output Graph - Mixed Style Invocation
+            :class: code-panel yaml
+            
+            .. code-block:: yaml
+
+                artifactStep1:
+                    contents: taskGraphStep1$output
+                    task:
+                        name: artifactHandler1
+                        args: [arg1]
+                        kwargs:
+                            - keyword2: arg2 
+
+
+
 
 
 Artifact Output Graph Parameters
@@ -420,18 +697,41 @@ artifact task graph using the same syntax as the task graph.
 
 For example, if an entrypoint parameter had the named ``dataFrameFileFormat``, then it could be referenced in the following way:
 
-.. admonition:: Artifact Output Graph - Using Entrypoint Parameters
-    :class: code-panel yaml
-    
-    .. code-block:: yaml
 
-        artifact_outputs:
-            saveDataFrame:
-                contents: createDataFrame$output
-                task:
-                    name: dataFrameHandler
-                    kwargs:
-                        - format: $dataFrameFileFormat 
+.. tabs::
+
+   .. group-tab:: Entrypoint defined in a TOML file
+
+
+        .. admonition:: Artifact Output Graph - Using Entrypoint Parameters
+            :class: code-panel yaml
+            
+            .. code-block:: yaml
+
+                artifact_outputs:
+                    saveDataFrame:
+                        contents: createDataFrame$output
+                        task:
+                            name: dataFrameHandler
+                            kwargs:
+                                - format: $dataFrameFileFormat 
+
+
+   .. group-tab:: Entrypoint defined in the GUI / Standalone component
+
+        .. admonition:: Artifact Output Graph - Using Entrypoint Parameters
+            :class: code-panel yaml
+            
+            .. code-block:: yaml
+
+                saveDataFrame:
+                    contents: createDataFrame$output
+                    task:
+                        name: dataFrameHandler
+                        kwargs:
+                            - format: $dataFrameFileFormat 
+
+
 
 
 Again, this applies to *both* entrypoint parameters and artifact parameters.
@@ -439,7 +739,7 @@ Again, this applies to *both* entrypoint parameters and artifact parameters.
 
 .. _reference-entrypoints-registration-interfaces:
 
-Registration Interfaces
+Resource Creation and Manipulation
 -----------------------
 
 .. _reference-entrypoints-python-client:
@@ -447,20 +747,55 @@ Registration Interfaces
 Using Python Client
 ~~~~~~~~~~~~~~~~~~~
 
-**Create an Entrypoint**
+.. tabs::
 
-    .. automethod:: dioptra.client.entrypoints.EntrypointsCollectionClient.create
+   .. group-tab:: Create
+      
+      .. automethod:: dioptra.client.entrypoints.EntrypointsCollectionClient.create
+
+   .. group-tab:: Get
+      
+      .. automethod:: dioptra.client.entrypoints.EntrypointsCollectionClient.get
+
+   .. group-tab:: Modify
+
+      .. automethod:: dioptra.client.entrypoints.EntrypointsCollectionClient.modify_by_id
+
+   .. group-tab:: Delete
+      
+      .. automethod:: dioptra.client.entrypoints.EntrypointsCollectionClient.delete_by_id
+
+
+
 
 .. _reference-entrypoints-rest-api:
 
 Using REST API
 ~~~~~~~~~~~~~~
 
-Entrypoints can be created directly via the HTTP API.
+Entrypoints can be created and manipulated directly via the HTTP API.
+
+.. tabs::
+
+   .. group-tab:: Create
+      
+      See the :http:post:`POST /api/v1/entrypoints </api/v1/entrypoints/>` endpoint documentation for payload requirements.
+
+   .. group-tab:: Get
+      
+      See the :http:get:`GET /api/v1/entrypoints </api/v1/entrypoints/>` endpoint documentation for payload requirements.
+
+   .. group-tab:: Modify
+
+      See the :http:put:`PUT /api/v1/entrypoints </api/v1/entrypoints/{id}>` endpoint documentation for payload requirements.
+
+   .. group-tab:: Delete
+      
+      See the :http:delete:`DELETE /api/v1/entrypoints </api/v1/entrypoints/{id}>` endpoint documentation for payload requirements.
 
 **Create Entrypoints**
 
-See the :http:post:`POST /api/v1/entrypoints </api/v1/entrypoints/>` endpoint documentation for payload requirements.
+
 
 
 
