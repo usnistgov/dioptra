@@ -59,8 +59,8 @@ Then, we may want to capture the model and the predictions as artifacts with the
 * The value of the ``contents`` field corresponds to a step name in the task graph (``predictions`` and ``trained_model``) and denotes which outputs should be saved in the artifact.
 * The value of the ``task`` field specifies the :ref:`Artifact Task <explanation-artifacts-artifact-tasks>` which defines how the artifact is serialized and deserialized.
   
-    * The ``name`` field is the artifact task name (``DataFrameArtifactTask`` and ``ModelArtifactTask``)
-    * The ``args`` field allows addtional keyword arguments to be passed to the function. In this example, the ``format`` argument is used to specify the output format of the dataframe.
+    - The ``name`` field is the artifact task name (``DataFrameArtifactTask`` and ``ModelArtifactTask``)
+    - The ``args`` field allows addtional keyword arguments to be passed to the function. In this example, the ``format`` argument is used to specify the output format of the dataframe.
 
 .. rst-class:: fancy-header header-seealso
 
