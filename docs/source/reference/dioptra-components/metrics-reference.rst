@@ -39,21 +39,21 @@ Metric Attributes
 
 A metric has the following attributes. Note that the ``name`` and ``step`` values together form a primary key for metrics.
 
-* **name** - the name associated with the metric.
-* **value** - the value of the metric. Can be a float, NaN, Infinity, or -Infinity. When sent to the API, the following values will be converted:
+* **Name**: (string) The name associated with the metric.
+* **Value**: (float or string) The value of the metric. Can be a float, NaN, Infinity, or -Infinity. When sent to the API, the following values will be converted:
    - ``NaN`` will become ``"nan"``
    - ``Infinity`` will become ``"inf"``
    - ``-Infinity`` will become ``"-inf"``
-* **step** - an optional value which can be used to track the change of a metric over time (using sequentially increasing integers). Defaults to 0.
-* **timestamp** - a timestamp value to associate with the metric. If not provided, defaults to the server time when the metric is logged.
 
-.. _reference-metrics-system-generated-attributes:
+.. _reference-experiments-optional-attributes:
 
-System-Generated Attributes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Optional Attributes
+~~~~~~~~~~~~~~~~~~~
 
-Metrics do not have additional system generated attributes.
-  
+* **Step**: (integer, optional) an optional value which can be used to track the change of a metric over time (using sequentially increasing integers). Defaults to 0.
+* **Timestamp**: (datetime or string, optional) - a timestamp value to associate with the metric. If not provided, defaults to the server time when the metric is logged.
+
+
 .. _reference-metrics-retrieval-interfaces:
 
 Retrieval Interfaces
