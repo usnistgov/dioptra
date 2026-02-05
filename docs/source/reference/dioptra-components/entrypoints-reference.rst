@@ -30,9 +30,9 @@ Entrypoints
 Entrypoint Definition
 ---------------------
 
-An **Entrypoint** in Dioptra is a repeatable workflow that can be executed as a Job. Entrypoints execute the function tasks defined in the task graph upon job submission. 
+An **Entrypoint** in Dioptra is a repeatable workflow that can be executed as a Job. Entrypoints execute the function tasks defined in the Task Graph upon job submission. 
 Entrypoint parameters and Artifact Input Parameters can optionally be attached to entrypoints and then used in the Task Graphs. The outputs from Function Tasks 
-can be saved as Artifacts, and the logic for this is defined in the Artifact Task Graph. 
+can be saved as Artifacts, and the logic for this is defined in the Artifact Output Graph. 
 
 .. _reference-experiments-attributes:
 
@@ -47,23 +47,23 @@ This section describes the attributes that define an Entrypoint.
 Required Attributes
 ~~~~~~~~~~~~~~~~~~~
 
-.. _reference-entrypoints-optional-attributes:
-
 - **Name**: (string) The display name for the Entrypoint. 
 - **Group**: (integer ID) The Group that owns this Experiment and controls access permissions.
-- **Task Graph**: (YAML string) The task graph for entrypoint, which as a YAML-formatted string that defines the core workflow (technically, a Directed Acyclical Graph). Composed of function task invocations and their input arguments. (See: :ref:`Task Graph Syntax Requirements <reference-entrypoints-task-graph-syntax>`)
+- **Task Graph**: (YAML string) The Task Graph for the entrypoint, which is a YAML-formatted string that defines the core workflow (technically, a Directed Acyclic Graph, or DAG). Composed of function task invocations and their input arguments. (See: :ref:`Task Graph Syntax Requirements <reference-entrypoints-task-graph-syntax>`)
+
+.. _reference-entrypoints-optional-attributes:
 
 Optional Attributes
 ~~~~~~~~~~~~~~~~~~~
 
 - **Description**: (string, optional) A text description of the Entrypoint's purpose or scope. Defaults to empty.
 - **Plugins**: (list of Plugin IDs, optional) A list of Plugin containers to attach to the entrypoint - the associated Plugin Function Tasks are then made available to the Entrypoint Task Graph. Defaults to empty. (See: :ref:`Plugins Reference <reference-plugins>`)
-- **Artifact Plugins**:  (list of Plugin IDs, optional) A list of Plugin containers to attach to the entrypoint - the associated Plugin Artifact Tasks are then made available to the Artifact Output Task Graph. Defaults to empty. (See: :ref:`Plugins Reference <reference-plugins>`)
-- **Parameters**: (list of Dicts, optional) Global parameters that can be used in the Entrypoint Task Graph and Artifact Task Graph. Each Parameter has a type and can optionally have a default value. Parameter values are set at Job runtime. Defaults to empty.
+- **Artifact Plugins**:  (list of Plugin IDs, optional) A list of Plugin containers to attach to the entrypoint - the associated Plugin Artifact Tasks are then made available to the Artifact Output Graph. Defaults to empty. (See: :ref:`Plugins Reference <reference-plugins>`)
+- **Parameters**: (list of Dicts, optional) Global parameters that can be used in the Entrypoint Task Graph and Artifact Output Graph. Each Parameter has a type and can optionally have a default value. Parameter values are set at Job runtime. Defaults to empty.
     - **Name** (string) The Name of the Entrypoint Parameter, used to access the Parameter in the Task Graphs 
     - **Type** (Plugin Parameter Type ID) The type for the parameter, used for type validation. (See: :ref:`Plugin Parameter Types <reference-plugin-parameter-types>`) 
     - **Default Value** (String, Optional) An optional default value for the parameter which can be overwritten during job execution. Gets type converted during job execution time. 
-- **Artifact Parameters**: (list of Dicts, optional) Global objects, loaded from disk at Job execution, can be used in the Entrypoint Task Graph and Artifact Task Graph. User selects which specific artifact snapshot to load into the Artifact Parameter at Job Runtime. Defaults to empty.
+- **Artifact Parameters**: (list of Dicts, optional) Global objects, loaded from disk at Job execution, can be used in the Entrypoint Task Graph and Artifact Output Graph. User selects which specific artifact snapshot to load into the Artifact Parameter at Job Runtime. Defaults to empty.
     - **Name** (string) The Name of the Artifact Parameter, used to access the Object(s) in the Task Graphs 
     - **Output Parameters** (List of Outputs) List of outputs that the deserialize method of an artifact task is expected to produce
 - **Artifact Output Graph**: (YAML string, optional) A YAML-formatted string that defines the artifact serialization logic. Artifact Tasks referenced in the Artifact Output Graph are called once the main Task Graph execution is completed. Defaults to empty. (See: :ref:`Artifact Output Graph Syntax Requirements <reference-entrypoints-artifact-output-graph-syntax>`)
@@ -76,7 +76,7 @@ System-Managed State
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - **ID**: (integer) Unique identifier assigned upon creation.
-- **Last Modified On**: (timestamp) The time when the Entrypoint was last modified. If any entrypoint has not yet been modified, then this is equal to the timestamp when the entrypoint was originally created. Upon modification, the old configuration is saved as a Snapshot and added to the Version History. 
+- **Last Modified On**: (timestamp) The time when the Entrypoint was last modified. If any entrypoint has not yet been modified, then this equals the timestamp when the entrypoint was originally created. Upon modification, the old configuration is saved as a Snapshot and added to the Version History. 
 - **Version History**: (list of Snapshot Objects, optional) An ordered list of past Entrypoint Snapshots, automatically created by Dioptra each time the Entrypoint is modified. View prior snapshots by clicking the **Show History** toggle. Contains the following attributes:
     - **Created On**: (timestamp) When the Entrypoint state was saved as a snapshot . 
     - *Every other required and optional attribute listed above*
@@ -88,8 +88,8 @@ System-Managed State
 Task Graph Syntax
 ------------------
 
-The task graph consists of a list of step descriptions. Each step corresponds to the execution of a function task.
-The task graph is defined in YAML, and each function task can be invoked using one of three invocation styles:
+The Task Graph consists of a list of step descriptions. Each step corresponds to the execution of a function task.
+The Task Graph is defined in YAML, and each function task can be invoked using one of three invocation styles:
 
 - Positional
 - Keyword  
@@ -110,6 +110,8 @@ There are similarities across all three invocation styles:
 Invocation Styles
 ~~~~~~~~~~~~~~~~~~~~~~
 
+.. _reference-entrypoints-task-graph-syntax-positional-style-invocation:
+
 **Positional Style Invocation**
 
 All task arguments are passed in as positional arguments. These positional arguments are assumed to correspond to the ordering of plugin input parameters for the task. Upon task execution, 
@@ -119,9 +121,13 @@ these arguments are passed into the Python function without names in order.
 
     .. note::
         
-        The ``graph:`` keyword that starts the YAML code blocks below does not need to be included in the task graph definition in the Graphical User Interface (GUI). When defining an entire entrypoint via YAML, this word is used to designate the task graph section of the file (as distinct from the parameter definitions, the artifact task graph, etc.)
+        The ``graph:`` keyword that starts the YAML code blocks below does not need to be included in the Task Graph definition in the Graphical User Interface (GUI). When defining an entire entrypoint via YAML, this word is used to designate the Task Graph section of the file (as distinct from the parameter definitions, the Artifact Output Graph, etc.)
 
+.. margin::
+        
+    .. important:: 
 
+        If your Plugin Task does not have any input parameters, then you should use :ref:`the mixed style invocation syntax<reference-entrypoints-task-graph-syntax-mixed-style-invocation>`, deleting both of the lines for args and kwargs. 
 
 .. tabs::
 
@@ -149,6 +155,8 @@ these arguments are passed into the Python function without names in order.
                     task1: [arg1, arg2]
                 step2:
                     task2: [arg3, arg4]
+
+.. _reference-entrypoints-task-graph-syntax-keyword-style-invocation:
 
 **Keyword Style Invocation**
 
@@ -190,7 +198,7 @@ The keywords correspond to the names of the Function Task parameters. Upon funct
                         keyword3: arg3
                         keyword4: arg4
 
-
+.. _reference-entrypoints-task-graph-syntax-mixed-style-invocation:
 
 **Mixed Style Invocation**
 
@@ -242,8 +250,32 @@ the positional arguments are passed into the Python function without names in or
                         keyword3: arg3
                         keyword4: arg4
 
+The mixed style invocation method can be used to call a **function task that has no inputs**:
+
+.. tabs::
+
+   .. group-tab:: Entrypoint defined in a TOML file
+
+        .. admonition:: Task Graph - Mixed Style Invocation With No Inputs
+            :class: code-panel yaml
+            
+            .. code-block:: yaml
+
+                graph:
+                    step1:
+                        task: task1 # Assuming task1 has no inputs
+
+   .. group-tab:: Entrypoint defined in the GUI / Standalone component
 
 
+        .. admonition::  Task Graph - Mixed Style Invocation With No Inputs
+            :class: code-panel yaml
+            
+            .. code-block:: yaml
+
+                step1:
+                    task: task1 # Assuming task1 has no inputs
+    
 Argument Structure
 ~~~~~~~~~~~~~~~~~~~~~~
 
@@ -422,7 +454,7 @@ is given a name when registered. In an example where ``task1`` is registered to 
 Task Graph Parameters
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Parameters to the task graph are simply variables assumed to be provided by the job at runtime. In the following example, 
+Parameters to the Task Graph are simply variables assumed to be provided by the job at runtime. In the following example, 
 ``$myparam`` clearly does not reference a step name. As a result, this is a parameter which needs to be provided
 at job runtime, either as a default or by the user running the job.
 
@@ -506,12 +538,12 @@ needed without the presence of output. In this example, ``step2`` will always be
 Artifact Output Graph Syntax
 --------------------------------
 
-Upon successful completion of the artifact task graph within a Job execution, the artifact output graph will then execute (if it is defined) to save any designated task outputs 
+Upon successful completion of the Artifact Output Graph within a Job execution, the artifact output graph will then execute (if it is defined) to save any designated task outputs 
 as artifacts. 
 
 There are many similarities between invoking artifact tasks and function tasks:
 
-    * **Step Names**: ``artifactStep1`` and ``artifactStep2`` refer to the names of steps in the artifact graph. ``taskGraphStep1`` and ``taskGraphStep2`` refer to step names from the task graph. 
+    * **Step Names**: ``artifactStep1`` and ``artifactStep2`` refer to the names of steps in the artifact graph. ``taskGraphStep1`` and ``taskGraphStep2`` refer to step names from the Task Graph. 
 
     * **Artifact Task Names**: ``artifactHandler1`` and ``artifactHandler2`` refer to the registered names of artifact function tasks (and also the name of the corresponding Python classes). Each step in the graph represents an invocation of the ``serialize()`` method of an artifact handler. 
 
@@ -525,7 +557,7 @@ There are many similarities between invoking artifact tasks and function tasks:
 
     .. note::
         
-        The ``artifact_outputs:`` keyword that starts the YAML code blocks below does not need to be included in the artifact task graph definition in the Graphical User Interface (GUI). When defining an entire entrypoint via YAML, this word is used to designate the artifact output graph section of the file (as distinct from the parameter definitions, the task graph, etc.)
+        The ``artifact_outputs:`` keyword that starts the YAML code blocks below does not need to be included in the Artifact Output Graph definition in the Graphical User Interface (GUI). When defining an entire entrypoint via YAML, this word is used to designate the artifact output graph section of the file (as distinct from the parameter definitions, the Task Graph, etc.)
 
 .. tabs::
 
@@ -539,11 +571,11 @@ There are many similarities between invoking artifact tasks and function tasks:
 
                 artifact_outputs:
                     artifactStep1:
-                        contents: taskGraphStep1$output # assumes the name of output from task graph step "taskGraphStep1" is "output"
+                        contents: $taskGraphStep1.output # assumes the name of output from Task Graph step "taskGraphStep1" is "output"
                         task:
                             name: artifactHandler1
                     artifactStep2:
-                        contents: taskGraphStep2 # If a function task only has one output, then only the step name is required
+                        contents: $taskGraphStep2 # If a function task only has one output, then only the step name is required
                         task:
                             name: artifactHandler2
 
@@ -556,11 +588,11 @@ There are many similarities between invoking artifact tasks and function tasks:
             .. code-block:: yaml
 
                 artifactStep1:
-                    contents: taskGraphStep1$output # assumes the name of output from task graph step "taskGraphStep1" is "output"
+                    contents: $taskGraphStep1.output # assumes the name of output from Task Graph step "taskGraphStep1" is "output"
                     task:
                         name: artifactHandler1
                 artifactStep2:
-                    contents: taskGraphStep2 # If a function task only has one output, then only the step name is required
+                    contents: $taskGraphStep2 # If a function task only has one output, then only the step name is required
                     task:
                         name: artifactHandler2
 
@@ -568,7 +600,7 @@ Invocation Styles
 ~~~~~~~~~~~~~~~~
 
 Some artifact tasks define task inputs to customize the serialization logic (for example, specifying a file format). 
-Similar to the task graph, the arguments for artifact tasks can be passed in in a variety of ways.
+Similar to the Task Graph, the arguments for artifact tasks can be passed in in a variety of ways.
 These arguments are used in the ``serialization`` method of the Artifact Handler, as well as the ``validate`` method (if it is defined).
 
 
@@ -587,7 +619,7 @@ These arguments are used in the ``serialization`` method of the Artifact Handler
 
                 artifact_outputs:
                     artifactStep1:
-                        contents: taskGraphStep1$output
+                        contents: $taskGraphStep1.output
                         task:
                             name: artifactHandler1
                             args: [arg1, arg2]
@@ -600,7 +632,7 @@ These arguments are used in the ``serialization`` method of the Artifact Handler
             .. code-block:: yaml
 
                 artifactStep1:
-                    contents: taskGraphStep1$output
+                    contents: $taskGraphStep1.output
                     task:
                         name: artifactHandler1
                         args: [arg1, arg2]
@@ -622,7 +654,7 @@ These arguments are used in the ``serialization`` method of the Artifact Handler
 
                 artifact_outputs:
                     artifactStep1:
-                        contents: taskGraphStep1$output
+                        contents: $taskGraphStep1.output
                         task:
                             name: artifactHandler1
                             args:
@@ -637,7 +669,7 @@ These arguments are used in the ``serialization`` method of the Artifact Handler
             .. code-block:: yaml
 
                 artifactStep1:
-                    contents: taskGraphStep1$output
+                    contents: $taskGraphStep1.output
                     task:
                         name: artifactHandler1
                         args:
@@ -661,7 +693,7 @@ These arguments are used in the ``serialization`` method of the Artifact Handler
 
                 artifact_outputs:
                     artifactStep1:
-                        contents: taskGraphStep1$output
+                        contents: $taskGraphStep1.output
                         task:
                             name: artifactHandler1
                             args: [arg1]
@@ -678,7 +710,7 @@ These arguments are used in the ``serialization`` method of the Artifact Handler
             .. code-block:: yaml
 
                 artifactStep1:
-                    contents: taskGraphStep1$output
+                    contents: $taskGraphStep1.output
                     task:
                         name: artifactHandler1
                         args: [arg1]
@@ -693,9 +725,9 @@ Artifact Output Graph Parameters
 ~~~~~~~~~~~~~~~~~~~~~~
 
 Similar to the Task Graph, the Artifact Output Graph also has access to global entrypoint parameters. Entrypoint parameters can be referenced in the 
-artifact task graph using the same syntax as the task graph. 
+Artifact Output Graph using the same syntax as the Task Graph. 
 
-For example, if an entrypoint parameter had the named ``dataFrameFileFormat``, then it could be referenced in the following way:
+For example, if an entrypoint parameter was named ``dataFrameFileFormat``, then it could be referenced in the following way:
 
 
 .. tabs::
