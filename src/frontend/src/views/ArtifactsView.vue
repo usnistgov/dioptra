@@ -9,7 +9,6 @@
     ref="tableRef"
     :rows="artifacts"
     :columns="computedColumns"
-    title="Artifacts"
     v-model:selected="selected"
     :loading="isLoading"
     :hideCreateBtn="true"

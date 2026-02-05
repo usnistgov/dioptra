@@ -9,7 +9,6 @@
     ref="tableRef"
     :rows="pluginParameterTypes"
     :columns="computedColumns"
-    title="Plugin Parameter Types"
     v-model:selected="selected"
     :loading="isLoading"
     :hideToggleDraft="true"

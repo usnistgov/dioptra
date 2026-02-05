@@ -164,18 +164,27 @@
       </caption>
     </template>
 
-    <template v-slot:top-left v-if="showToggleDraft">
-      <q-btn-toggle
-        v-model="showDrafts"
-        toggle-color="primary"
-        push
-        style="box-shadow: 0 0 0 0.5px grey"
-        :options="[
-          {label: title, value: false},
-          {label: 'Drafts', value: true},
-        ]"
-        @click="refreshTable"
-      />
+    <template v-slot:top-left>
+      <div class="row items-center q-gutter-x-md">
+        
+        <div v-if="props.title" class="text-h6 q-mb-lg q-mt-md q-mx-lg text-grey-8">
+          {{ props.title }}
+        </div>
+
+        <q-btn-toggle
+          v-if="showToggleDraft"
+          v-model="showDrafts"
+          toggle-color="primary"
+          push
+          dense
+          style="box-shadow: 0 0 0 0.5px grey"
+          :options="[
+            {label: 'Active', value: false},
+            {label: 'Drafts', value: true},
+          ]"
+          @click="refreshTable"
+        />
+      </div>
     </template>
 
   </q-table>
