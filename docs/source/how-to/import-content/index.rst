@@ -22,9 +22,11 @@ Importing Content
 
 How to guides on Importing Content
 
-.. toctree::
-   :maxdepth: 1
+.. container:: wide-lightly-shaded
 
-   add-a-dataset
-   import-plugins
+   .. toctree::
+      :maxdepth: 1
+
+      add-a-dataset
+      import-plugins
 

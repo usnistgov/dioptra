@@ -24,13 +24,14 @@ This tutorial will guide you through setting up Dioptra in the guided user inter
 a simple plugin task. This tutorial serves as a first introduction to using 
 the GUI and also as a check that the microservices are properly configured and connected together. 
 
+.. container:: wide-lightly-shaded
 
-.. toctree::
-   :caption: Tutorial Contents
-   :maxdepth: 1
+   .. toctree::
+      :caption: Tutorial Contents
+      :maxdepth: 1
 
-   part-0
-   part-1 
+      part-0
+      part-1 
 
 **By the end of this tutorial, you will have:**
 
