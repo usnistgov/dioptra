@@ -134,11 +134,11 @@ See the :http:get:`GET /api/v1/artifacts </api/v1/artifacts/>` endpoint document
 
 **Download the contents of an Artifact**
 
-See the :http:get:`GET /api/v1/artifacts/{id}/contents </api/v1/artifacts/{id}/contents>` endpoint documentation for payload requirements.
+See the :http:get:`GET /api/v1/artifacts/{int:id}/contents </api/v1/artifacts/{int:id}/contents>` endpoint documentation for payload requirements.
 
 **Get a list of all files associated with an Artifact**
 
-See the :http:get:`GET /api/v1/artifacts/{id}/files </api/v1/artifacts/{id}/files>` endpoint documentation for payload requirements.
+See the :http:get:`GET /api/v1/artifacts/{int:id}/files </api/v1/artifacts/{int:id}/files>` endpoint documentation for payload requirements.
 
 
 Registration Interfaces
