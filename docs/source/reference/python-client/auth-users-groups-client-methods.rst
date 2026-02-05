@@ -17,5 +17,5 @@
 
 .. _reference-auth-client-methods:
 
-Auth Client Methods
+Auth, Users, and Groups Client Methods
 =================

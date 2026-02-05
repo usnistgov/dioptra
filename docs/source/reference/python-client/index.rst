@@ -26,8 +26,7 @@ Python Client Methods
       :maxdepth: 1
       :caption: Table of Contents
 
-      auth-client-methods
-      groups-client-methods
+      auth-users-groups-client-methods
       queues-client-methods
       param-types-client-methods
       plugin-client-methods
