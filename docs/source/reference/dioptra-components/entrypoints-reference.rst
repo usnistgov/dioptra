@@ -739,7 +739,7 @@ Again, this applies to *both* entrypoint parameters and artifact parameters.
 
 .. _reference-entrypoints-registration-interfaces:
 
-Resource Creation and Manipulation
+Registration Interfaces
 -----------------------
 
 .. _reference-entrypoints-python-client:
@@ -747,25 +747,9 @@ Resource Creation and Manipulation
 Using Python Client
 ~~~~~~~~~~~~~~~~~~~
 
-.. tabs::
 
-   .. group-tab:: Create
       
-      .. automethod:: dioptra.client.entrypoints.EntrypointsCollectionClient.create
-
-   .. group-tab:: Get
-      
-      .. automethod:: dioptra.client.entrypoints.EntrypointsCollectionClient.get
-
-   .. group-tab:: Modify
-
-      .. automethod:: dioptra.client.entrypoints.EntrypointsCollectionClient.modify_by_id
-
-   .. group-tab:: Delete
-      
-      .. automethod:: dioptra.client.entrypoints.EntrypointsCollectionClient.delete_by_id
-
-
+    .. automethod:: dioptra.client.entrypoints.EntrypointsCollectionClient.create
 
 
 .. _reference-entrypoints-rest-api:
@@ -773,29 +757,12 @@ Using Python Client
 Using REST API
 ~~~~~~~~~~~~~~
 
-Entrypoints can be created and manipulated directly via the HTTP API.
+Entrypoints can be created directly via the HTTP API.
 
-.. tabs::
-
-   .. group-tab:: Create
-      
-      See the :http:post:`POST /api/v1/entrypoints </api/v1/entrypoints/>` endpoint documentation for payload requirements.
-
-   .. group-tab:: Get
-      
-      See the :http:get:`GET /api/v1/entrypoints </api/v1/entrypoints/>` endpoint documentation for payload requirements.
-
-   .. group-tab:: Modify
-
-      See the :http:put:`PUT /api/v1/entrypoints </api/v1/entrypoints/{id}>` endpoint documentation for payload requirements.
-
-   .. group-tab:: Delete
-      
-      See the :http:delete:`DELETE /api/v1/entrypoints </api/v1/entrypoints/{id}>` endpoint documentation for payload requirements.
 
 **Create Entrypoints**
-
-
+ 
+See the :http:post:`POST /api/v1/entrypoints </api/v1/entrypoints/>` endpoint documentation for payload requirements.
 
 
 
