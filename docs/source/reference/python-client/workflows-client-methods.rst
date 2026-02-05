@@ -15,28 +15,7 @@
 .. ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 .. https://creativecommons.org/licenses/by/4.0/legalcode
 
-.. _reference-python-client-methods:
+.. _reference-workflows-client-methods:
 
-Python Client Methods
-===================
-
-.. container:: wide-lightly-shaded
-
-   .. toctree::
-      :maxdepth: 1
-      :caption: Table of Contents
-
-      auth-client-methods
-      groups-client-methods
-      queues-client-methods
-      param-types-client-methods
-      plugin-client-methods
-      entrypoints-client-methods
-      experiments-client-methods
-      jobs-client-methods
-      artifacts-client-methods
-      metrics-client-methods
-      tags-client-methods
-      snapshots-client-methods
-      workflows-client-methods
-
+Workflows Client Methods
+=================
