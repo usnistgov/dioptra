@@ -57,7 +57,7 @@ Optional Attributes
 .. _reference-metrics-retrieval-interfaces:
 
 Retrieval Interfaces
------------------------
+--------------------
 
 Metrics can be retrieved using the python client or the RESTAPI. Alternatively, the :ref:`Job Dashboard <how-to-logging-metrics>` page in the UI can 
 show an overview of metrics for the job.
@@ -66,10 +66,6 @@ show an overview of metrics for the job.
 
 Using Python Client
 ~~~~~~~~~~~~~~~~~~~
-
-**Post metrics for a job.**
-
-   .. automethod:: dioptra.client.jobs.JobsCollectionClient.append_metric_by_id
 
 **Retrieve the metrics with the highest step number for the job.**
 
@@ -89,11 +85,7 @@ Using Python Client
 Using REST API
 ~~~~~~~~~~~~~~
 
-Metrics can be logged and retrieved directly via the HTTP API.
-
-**Log Metrics**
-
-See the :http:post:`/api/v1/jobs/{int:id}/metrics` endpoint documentation for payload requirements.
+Metrics can be retrieved directly via the HTTP API.
 
 **Retrieve Latest Metrics for a Job**
 
@@ -107,6 +99,34 @@ See the :http:get:`/api/v1/jobs/{int:id}/metrics/{str:name}/snapshots` endpoint 
 
 See the :http:get:`/api/v1/experiments/{int:id}/metrics` endpoint documentation for payload requirements.
 
+
+.. _reference-metrics-registration-interfaces:
+
+Registration Interfaces
+-----------------------
+
+Metrics can be logged to a job using either the python client or the REST API.
+
+.. _reference-metrics-registration-python-client:
+
+Using Python Client
+~~~~~~~~~~~~~~~~~~~
+
+**Post metrics for a job.**
+
+   .. automethod:: dioptra.client.jobs.JobsCollectionClient.append_metric_by_id
+
+
+.. _reference-metrics-registration-rest-api:
+
+Using REST API
+~~~~~~~~~~~~~~
+
+Metrics can be logged using the RESTAPI.
+
+**Log Metrics**
+
+See the :http:post:`/api/v1/jobs/{int:id}/metrics` endpoint documentation for payload requirements.
 
 
 .. rst-class:: fancy-header header-seealso
