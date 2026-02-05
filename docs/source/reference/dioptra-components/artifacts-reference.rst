@@ -63,7 +63,7 @@ Below is an example of an artifact task.
 * Similarly the ``deserialize()`` function is used to load artifacts when they are provided as an artifact parameter to an entrypoint. 
 * The ``validation()`` function should provide a schema for validating any additional keyword arguments to the ``serialize()`` function. The validation function provides a specification of this usage:
 
-   .. automethod:: dioptra.sdk.api.ArtifactTaskInterface.validation
+   .. automethod:: dioptra.sdk.api.artifact.ArtifactTaskInterface.validation
 
 .. _reference-artifacts-attributes:
 
@@ -130,15 +130,15 @@ Using REST API
 
 **Get a list of Artifacts**
 
-See the :http:post:`GET /api/v1/artifacts </api/v1/artifacts/>` endpoint documentation for payload requirements.
+See the :http:get:`GET /api/v1/artifacts </api/v1/artifacts/>` endpoint documentation for payload requirements.
 
 **Download the contents of an Artifact**
 
-See the :http:post:`GET /api/v1/artifacts/{int:id}/contents </api/v1/artifacts/{int:id}/contents>` endpoint documentation for payload requirements.
+See the :http:get:`GET /api/v1/artifacts/{id}/contents </api/v1/artifacts/{id}/contents>` endpoint documentation for payload requirements.
 
 **Get a list of all files associated with an Artifact**
 
-See the :http:post:`GET /api/v1/artifacts/{int:id}/files </api/v1/artifacts/{int:id}/files>` endpoint documentation for payload requirements.
+See the :http:get:`GET /api/v1/artifacts/{id}/files </api/v1/artifacts/{id}/files>` endpoint documentation for payload requirements.
 
 
 Registration Interfaces
