@@ -58,6 +58,7 @@ Then, we may want to capture the model and the predictions as artifacts with the
 * The top level field names define the artifact names (``saved_predictions`` and ``saved_model``). Note that the name provided here is passed as the name parameter to the ``serialize()`` function of the artifact task. See the :ref:`artifact reference <reference-artifacts>` for more details. 
 * The value of the ``contents`` field corresponds to a step name in the task graph (``predictions`` and ``trained_model``) and denotes which outputs should be saved in the artifact.
 * The value of the ``task`` field specifies the :ref:`Artifact Task <explanation-artifacts-artifact-tasks>` which defines how the artifact is serialized and deserialized.
+
   - The ``name`` field is the artifact task name (``DataFrameArtifactTask`` and ``ModelArtifactTask``)
   - The ``args`` field allows addtional keyword arguments to be passed to the function. In this example, the ``format`` argument is used to specify the output format of the dataframe.
 
