@@ -1,15 +1,18 @@
 <template>
   <PageTitle 
+    v-if="!embedded"
     title="Jobs" 
-    conceptType="job",
+    conceptType="job"
     caption="Runs of Entrypoints"
   />
+  <div v-else class="q-mt-lg">
+  </div>
 
   <TableComponent 
     ref="tableRef"
     :rows="jobs"
     :columns="computedColumns"
-    title="Jobs"
+    :title="embedded ? 'Experiment Jobs' : ''"
     v-model:selected="selected"
     :hideOpenBtn="true"
     @open="openTab => (openTab
@@ -56,6 +59,13 @@ const showDeleteDialog = ref(false)
 const showTagsDialog = ref(false)
 const editObjTags = ref({})
 const tableRef = ref(null)
+
+const props = defineProps({
+  embedded: {
+    type: Boolean,
+    default: false
+  }
+})
 
 const computedColumns = computed(() => {
   const baseCols = [

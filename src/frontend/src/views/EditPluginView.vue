@@ -79,7 +79,6 @@
     ref="tableRef"
     :rows="files"
     :columns="fileColumns"
-    title="Plugin Files"
     v-model:selected="selected"
 <<<<<<< HEAD
     @open="openTab => (openTab

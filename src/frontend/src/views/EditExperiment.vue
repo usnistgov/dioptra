@@ -182,7 +182,7 @@
     </q-card>
   </q-expansion-item>
 
-  <JobsView /> 
+  <JobsView embedded /> 
 
   <DeleteDialog
     v-model="showDeleteDialog"

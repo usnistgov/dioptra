@@ -90,7 +90,6 @@
       <TableComponent
         :rows="store.users"
         :columns="memberColumns"
-        title="Members"
         :hideToggleDraft="true"
         :hideCreateBtn="true"
         :hideSearch="true"

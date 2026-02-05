@@ -9,7 +9,6 @@
     ref="tableRef"
     :rows="experiments"
     :columns="computedColumns"
-    title="Experiments"
     v-model:selected="selected"
     @open="openTab => (openTab
       ? openWindow.open(`/experiments/${selected[0].id}`, '_blank')
@@ -121,7 +120,7 @@ const computedColumns = computed(() => [
 async function getExperiments(pagination) {
   isLoading.value = true
   try {
-    // Artificial delay to prevent flicker (from your original code)
+    // Artificial delay to prevent flicker
     const minLoadTimePromise = new Promise(resolve => setTimeout(resolve, 300))
     
     const [res] = await Promise.all([

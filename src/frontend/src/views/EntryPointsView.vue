@@ -9,7 +9,6 @@
     ref="tableRef"
     :rows="entrypoints"
     :columns="computedColumns"
-    title="Entrypoints"
     v-model:selected="selected"
     @open="openTab => (openTab
       ? openWindow.open(`/entrypoints/${selected[0].id}`, '_blank')
@@ -351,15 +350,15 @@ const computedColumns = computed(() => [
     field: 'artifactPlugins', 
     align: 'left',
   },
-  { 
-    name: 'group', 
-    label: 'Group', 
-    field: 'group', 
-    align: 'left', 
-    styleType: 'icon-badge',
-    conceptType: 'group',
-    showIcon: false
-  },
+  // { 
+  //   name: 'group', 
+  //   label: 'Group', 
+  //   field: 'group', 
+  //   align: 'left', 
+  //   styleType: 'icon-badge',
+  //   conceptType: 'group',
+  //   showIcon: false
+  // },
   { 
     name: 'tags', 
     label: 'Tags', 

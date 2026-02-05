@@ -9,7 +9,6 @@
     ref="tableRef"
     :rows="artifacts"
     :columns="computedColumns"
-    title="Artifacts"
     v-model:selected="selected"
     @open="openTab => (openTab
       ? openWindow.open(`/artifacts/${selected[0].id}`, '_blank')

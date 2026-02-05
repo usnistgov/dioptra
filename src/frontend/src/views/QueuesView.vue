@@ -20,7 +20,6 @@
     ref="tableRef"
     :rows="userGroups"
     :columns="computedColumns"
-    title="Groups"
     v-model:selected="selected"
     :loading="isLoading"
     :hideCreateBtn="true"
