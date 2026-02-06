@@ -114,7 +114,7 @@ See the :http:get:`GET /api/v1/groups </api/v1/groups/>` endpoint documentation 
 
 **Get a specific Group by ID**
 
-See the :http:get:`POST /api/v1/groups/{int:id} </api/v1/groups/{int:id}>` endpoint documentation for payload requirements.
+See the :http:get:`GET /api/v1/groups/{int:id} </api/v1/groups/{int:id}>` endpoint documentation for payload requirements.
 
 
 .. rst-class:: fancy-header header-seealso
