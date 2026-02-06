@@ -111,7 +111,7 @@ Using Python Client
 
     .. automethod:: dioptra.client.users.UsersCollectionClient.get_current
 
-**Get a specific user by ID**
+**Get a specific User by ID**
 
     .. automethod:: dioptra.client.users.UsersCollectionClient.get_by_id
 
