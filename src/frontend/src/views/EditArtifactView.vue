@@ -1,8 +1,8 @@
 <template>
   <div class="row items-center">
-    <PageTitle 
-      :subtitle="`Artifact ${route.params.id}`" 
-      conceptType="artifact" 
+    <PageTitle
+      :subtitle="`Artifact ${route.params.id}`"
+      conceptType="artifact"
     />
     <q-chip
       v-if="route.params.id !== 'new'"
@@ -18,27 +18,38 @@
   </div>
 
   <h2 class="q-mt-lg text-h6">Details</h2>
-  
+
   <KeyValueTable :rows="rows" :disabled="showHistory">
-    
     <template #id>
-      <ResourceName conceptType="artifact" :text="artifact.id", includeIcon="true" />
+      <ResourceName
+        conceptType="artifact"
+        :text="artifact.id"
+        ,
+        includeIcon="true"
+      />
     </template>
 
     <template #description>
       <div class="row items-center justify-start">
-        <CellLongText 
-          :text="artifact.description" 
+        <CellLongText
+          :text="artifact.description"
           max-width="800px"
           class="col-auto"
         />
-        
+
         <q-btn icon="edit" round size="sm" color="primary" flat class="q-ml-sm">
-           <q-tooltip>Edit Description</q-tooltip>
+          <q-tooltip>Edit Description</q-tooltip>
         </q-btn>
-        
+
         <q-popup-edit v-model="artifact.description" auto-save v-slot="scope">
-          <q-input v-model="scope.value" dense autofocus counter @keyup.enter="scope.set" label="Description" />
+          <q-input
+            v-model="scope.value"
+            dense
+            autofocus
+            counter
+            @keyup.enter="scope.set"
+            label="Description"
+          />
         </q-popup-edit>
       </div>
     </template>
@@ -52,24 +63,25 @@
         icon="download"
         size="sm"
         class="q-my-sm q-py-sm"
-        
       />
     </template>
 
     <template #job>
-      <RouterLink :to="`/jobs/${artifact?.job}`" style="text-decoration: none;">
+      <RouterLink :to="`/jobs/${artifact?.job}`" style="text-decoration: none">
         <BadgeIcon type="job" :label="artifact.job" :showIcon="true" />
       </RouterLink>
     </template>
 
     <template #plugin="{ plugin = {} }">
       <div class="column">
-        
-        <div v-if="Object.keys(plugin).length === 0 && !isLoading" class="text-red q-mb-xs">
+        <div
+          v-if="Object.keys(plugin).length === 0 && !isLoading"
+          class="text-red q-mb-xs"
+        >
           <q-icon name="sym_o_warning" size="1.5em" class="q-mr-xs" />
           The attached plugin has been deleted.
         </div>
-        
+
         <q-select
           label="Attached Plugin"
           v-model="artifact.plugin"
@@ -77,148 +89,206 @@
           :options="plugins"
           option-label="name"
           input-debounce="100"
-          outlined use-input
+          outlined
+          use-input
           class="col"
           style="max-width: 400px"
         >
           <template v-slot:option="scope">
             <q-item v-bind="scope.itemProps">
               <q-item-section avatar>
-                 <q-icon :name="getConceptStyle('plugin').icon" :color="getConceptStyle('plugin').color" />
+                <q-icon
+                  :name="getConceptStyle('plugin').icon"
+                  :color="getConceptStyle('plugin').color"
+                />
               </q-item-section>
               <q-item-section>
                 <q-item-label>{{ scope.opt.name }}</q-item-label>
-                <q-item-label caption>Files: {{ scope.opt.files.length }} | Tasks: {{ countTasks(scope.opt) }}</q-item-label>
+                <q-item-label caption
+                  >Files: {{ scope.opt.files.length }} | Tasks:
+                  {{ countTasks(scope.opt) }}</q-item-label
+                >
               </q-item-section>
             </q-item>
           </template>
 
           <template v-slot:selected-item="scope">
-             <div class="q-py-xs">
-                <div class="row items-center q-px-sm no-wrap bg-white shadow-1" style="border-radius: 4px; border: 1px solid #eeeeee; width:fit-content;">
-                 
+            <div class="q-py-xs">
+              <div
+                class="row items-center q-px-sm no-wrap bg-white shadow-1"
+                style="
+                  border-radius: 4px;
+                  border: 1px solid #eeeeee;
+                  width: fit-content;
+                "
+              >
+                <q-icon
+                  :name="getConceptStyle('plugin').icon"
+                  :color="getConceptStyle('plugin').color"
+                  size="xs"
+                />
 
-                  <q-icon :name="getConceptStyle('plugin').icon" :color="getConceptStyle('plugin').color" size="xs" />
-
-                  <q-chip
-                    :color="getConceptStyle('plugin').color"
-                    text-color="white"
-                    size="sm" outline square clickable
-                    class="text-weight-bold no-border q-mx-none "
+                <q-chip
+                  :color="getConceptStyle('plugin').color"
+                  text-color="white"
+                  size="sm"
+                  outline
+                  square
+                  clickable
+                  class="text-weight-bold no-border q-mx-none"
+                >
+                  <span
+                    class="font-mono ellipsis"
+                    style="font-size: 14px; font-weight: 500"
                   >
+                    {{ scope.opt.name }}
+                  </span>
 
-                    <span class="font-mono ellipsis" style="font-size: 14px; font-weight:500;">
-                      {{ scope.opt.name }}
-                    </span>
+                  <template v-if="!scope.opt.latestSnapshot">
+                    <div
+                      style="
+                        height: 12px;
+                        width: 1px;
+                        background-color: #ddd;
+                        margin: 0 6px;
+                      "
+                    ></div>
 
-                    <template v-if="!scope.opt.latestSnapshot">
-                      <div style="height: 12px; width: 1px; background-color: #ddd; margin: 0 6px;"></div>
-                      
-                      <q-badge rounded color="warning" class="q-mr-xs" style="padding: 2px;">
-                        <q-icon name="warning" color="white" size="10px" />
-                      </q-badge>
+                    <q-badge
+                      rounded
+                      color="warning"
+                      class="q-mr-xs"
+                      style="padding: 2px"
+                    >
+                      <q-icon name="warning" color="white" size="10px" />
+                    </q-badge>
 
-                      <q-btn 
-                        flat round dense size="xs" color="red" icon="sync"
-                        @click.stop="syncPlugin(scope.opt.id)"
-                      >
-                        <q-tooltip>Sync to latest</q-tooltip>
-                      </q-btn>
-                    </template>
-                  </q-chip>
-                </div>
-             </div>
+                    <q-btn
+                      flat
+                      round
+                      dense
+                      size="xs"
+                      color="red"
+                      icon="sync"
+                      @click.stop="syncPlugin(scope.opt.id)"
+                    >
+                      <q-tooltip>Sync to latest</q-tooltip>
+                    </q-btn>
+                  </template>
+                </q-chip>
+              </div>
+            </div>
           </template>
         </q-select>
       </div>
-  <q-select
-    dense outlined
-    v-model="selectedArtifactTask"
-    :options="artifactTaskOptions"
-    option-label="name"
-    label="Artifact Task"
-    class="q-mt-sm"
-    style="width: fit-content;" 
-    :disable="artifactTaskOptions.length === 0"
-  >
-    <template #before>
-      <q-icon name="subdirectory_arrow_right" color="grey-7" />
-    </template>
-    
-    <template v-slot:option="scope">
-      <q-item v-bind="scope.itemProps">
-        <q-item-section>
-          <q-item-label class="text-weight-bold">{{ scope.opt.name }}</q-item-label>
-          
-          <q-item-label caption v-if="scope.opt.outputParams?.length">
-            <div class="row wrap q-mt-xs text-caption">
-              <span class="text-grey-12 text-weight-medium">Outputs:</span>
-              <div 
-                v-for="(param, i) in scope.opt.outputParams" 
-                :key="param.name"
-                class="row items-baseline no-wrap q-gutter-x-xs"
-              >
-                <span 
-                  class="text-grey-9 "
-                  style="border-bottom: 2px solid #ab47bc; line-height: 1.1;"
-                >
-                  {{ param.name }}
-                </span>
-                <span class="text-grey-7">:</span>
-                <span class="text-grey-6 font-mono" style="font-size: 0.9em">
-                  {{ param.parameterType.name }}
-                </span>
-                <span v-if="i < scope.opt.outputParams.length - 1" class="text-grey-5 q-mr-xs">,</span>
-              </div>
-            </div>
-          </q-item-label>
-        </q-item-section>
-      </q-item>
-    </template>
-    
-    <template v-slot:selected-item="scope">
-      <div v-if="scope.opt" class="column q-py-xs q-mt-xs">
-        
-        <BadgeIcon 
-          :label="scope.opt.name"
-          :uppercase= false
-          type="task" 
-          :includeIcon=true
-          class="q-mb-sm  q-pr-lg",
-          style="width: fit-content";
-        />
+      <q-select
+        dense
+        outlined
+        v-model="selectedArtifactTask"
+        :options="artifactTaskOptions"
+        option-label="name"
+        label="Artifact Task"
+        class="q-mt-sm"
+        style="width: fit-content"
+        :disable="artifactTaskOptions.length === 0"
+      >
+        <template #before>
+          <q-icon name="subdirectory_arrow_right" color="grey-7" />
+        </template>
 
-        <div class="row wrap items-center text-caption q-gutter-sm" style="line-height: 1.4;">
-          <span class="text-grey-8 text-weight-bold">Outputs:</span>
-          
-          <template v-if="scope.opt.outputParams && scope.opt.outputParams.length > 0">
-            <div 
-              v-for="(p, i) in scope.opt.outputParams" 
-              :key="p.name"
-              class="row items-baseline q-gutter-x-xs-mr-sm"
+        <template v-slot:option="scope">
+          <q-item v-bind="scope.itemProps">
+            <q-item-section>
+              <q-item-label class="text-weight-bold">{{
+                scope.opt.name
+              }}</q-item-label>
+
+              <q-item-label caption v-if="scope.opt.outputParams?.length">
+                <div class="row wrap q-mt-xs text-caption">
+                  <span class="text-grey-12 text-weight-medium">Outputs:</span>
+                  <div
+                    v-for="(param, i) in scope.opt.outputParams"
+                    :key="param.name"
+                    class="row items-baseline no-wrap q-gutter-x-xs"
+                  >
+                    <span
+                      class="text-grey-9"
+                      style="border-bottom: 2px solid #ab47bc; line-height: 1.1"
+                    >
+                      {{ param.name }}
+                    </span>
+                    <span class="text-grey-7">:</span>
+                    <span
+                      class="text-grey-6 font-mono"
+                      style="font-size: 0.9em"
+                    >
+                      {{ param.parameterType.name }}
+                    </span>
+                    <span
+                      v-if="i < scope.opt.outputParams.length - 1"
+                      class="text-grey-5 q-mr-xs"
+                      >,</span
+                    >
+                  </div>
+                </div>
+              </q-item-label>
+            </q-item-section>
+          </q-item>
+        </template>
+
+        <template v-slot:selected-item="scope">
+          <div v-if="scope.opt" class="column q-py-xs q-mt-xs">
+            <BadgeIcon
+              :label="scope.opt.name"
+              :uppercase="false"
+              type="task"
+              :includeIcon="true"
+              class="q-mb-sm q-pr-lg"
+              ,
+              style="width: fit-content"
+              ;
+            />
+
+            <div
+              class="row wrap items-center text-caption q-gutter-sm"
+              style="line-height: 1.4"
             >
-              <span 
-                class="text-grey-9"
-                style="border-bottom: 2px solid #ab47bc; line-height: 1.2;"
+              <span class="text-grey-8 text-weight-bold">Outputs:</span>
+
+              <template
+                v-if="
+                  scope.opt.outputParams && scope.opt.outputParams.length > 0
+                "
               >
-                {{ p.name }}
-              </span>
-              
-              <span class="text-grey-7 font-mono" style="font-size: 0.9em">
-                ({{ p.parameterType.name }})
-              </span>
+                <div
+                  v-for="(p, i) in scope.opt.outputParams"
+                  :key="p.name"
+                  class="row items-baseline q-gutter-x-xs-mr-sm"
+                >
+                  <span
+                    class="text-grey-9"
+                    style="border-bottom: 2px solid #ab47bc; line-height: 1.2"
+                  >
+                    {{ p.name }}
+                  </span>
 
+                  <span class="text-grey-7 font-mono" style="font-size: 0.9em">
+                    ({{ p.parameterType.name }})
+                  </span>
+                </div>
+              </template>
+              <span v-else class="text-grey-5 text-italic">None</span>
             </div>
-          </template>
-          <span v-else class="text-grey-5 text-italic">None</span>
-        </div>
+          </div>
+        </template>
+      </q-select>
 
-      </div>
-    </template>
-  </q-select>
-
-      <div v-if="artifactTaskOptions.length === 0 && !isLoading" class="text-caption text-negative q-mt-xs q-ml-lg">
-        The selected plugin has no files with artifact tasks. Please select another plugin.
+      <div
+        v-if="artifactTaskOptions.length === 0 && !isLoading"
+        class="text-caption text-negative q-mt-xs q-ml-lg"
+      >
+        The selected plugin has no files with artifact tasks. Please select
+        another plugin.
       </div>
     </div>
     <div :class="isLarge ? 'col-6' : 'col-3'" class="column" v-if="artifact.isDir">
@@ -371,38 +441,32 @@
 </template>
 
 <script setup>
-import { useRoute, useRouter } from "vue-router";
 import { onMounted, computed, ref, inject, watch } from "vue";
-import * as api from "@/services/dataApi";
-import KeyValueTable from "@/components/KeyValueTable.vue";
-import * as notify from "../notify";
+import { useRoute, useRouter } from "vue-router";
 import { useLoginStore } from "@/stores/LoginStore.ts";
-import { useQuasar } from "quasar";
-import CodeEditor from '@/components/CodeEditor.vue'
+import * as api from "@/services/dataApi";
+import * as notify from "../notify";
 
 // Components
-import PageTitle from '@/components/PageTitle.vue';
-import KeyValueTable from '@/components/KeyValueTable.vue';
-import ResourceName from '@/components/table/cells/ResourceName.vue';
-import ParameterList from '@/components/table/cells/ParameterList.vue';
-import BadgeIcon from '@/components/table/cells/BadgeIcon.vue';
-import CellLongText from '@/components/table/cells/CellLongText.vue';
-import { getConceptStyle } from '@/constants/tableStyles';
+import PageTitle from "@/components/PageTitle.vue";
+import KeyValueTable from "@/components/KeyValueTable.vue";
+import ResourceName from "@/components/table/cells/ResourceName.vue";
+import ParameterList from "@/components/table/cells/ParameterList.vue";
+import BadgeIcon from "@/components/table/cells/BadgeIcon.vue"; 
+import CellLongText from "@/components/table/cells/CellLongText.vue"; 
+import { getConceptStyle } from "@/constants/tableStyles";
 
+const store = useLoginStore();
 
 const $q = useQuasar();
 
 const isMedium = inject("isMedium");
 const isLarge = inject("isLarge");
 const isMobile = inject("isMobile");
-
 const store = useLoginStore();
-
+const darkMode = inject("darkMode");
 const route = useRoute();
 const router = useRouter();
-
-const darkMode = inject("darkMode");
-
 const isLoading = ref(true);
 
 const showHistory = computed(() => {
@@ -436,7 +500,7 @@ const artifact = ref({
   snapshotCreatedOn: '',
   fileUrl: '',
   fileSize: 0,
-  job: '',
+  job: "",
   isDir: false,
   plugin: {},
 })
@@ -464,9 +528,8 @@ async function getPluginSnapshot() {
     ORIGINAL_PLUGIN_SNAPSHOT = JSON.parse(
       JSON.stringify(artifact.value.plugin)
     );
-    // load task dropdown
     const pluginFile = artifact.value.plugin.files.find(
-      (file) => file.id === artifact.value.task.pluginFileResourceId
+      (file) => file.id === artifact.value.task.pluginFileResourceId,
     );
     pluginFile.tasks.artifacts.forEach((task) => {
       artifactTaskOptions.value.push(task);
@@ -611,7 +674,6 @@ const rows = computed(() => [
   },
 ]);
 
-
 function formatDate(dateString) {
   const options = {
     year: "2-digit",
@@ -632,6 +694,7 @@ async function submit() {
       taskId: selectedArtifactTask.value.id,
     });
     notify.success(`Successfully updated artifact '${route.params.id}'`);
+    router.push(`/artifacts`);
   } catch (err) {
     notify.error(err.response.data.message);
   }
