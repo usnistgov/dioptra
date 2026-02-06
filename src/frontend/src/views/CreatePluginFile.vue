@@ -500,7 +500,7 @@ import { useRoute, useRouter, onBeforeRouteLeave } from "vue-router";
 import CodeEditor from "@/components/CodeEditor.vue";
 import * as api from "@/services/dataApi";
 import * as notify from "../notify";
-import TableComponent from "@/components/TableComponent.vue";
+import TableComponent from "@/components/table/TableComponent.vue";
 import InfoPopupDialog from "@/dialogs/InfoPopupDialog.vue";
 import PageTitle from "@/components/PageTitle.vue";
 import DeleteDialog from "@/dialogs/DeleteDialog.vue";

@@ -4,6 +4,7 @@
     v-bind="$attrs"
     :rows="props.rows"
     :columns="finalColumns"
+    :row-key="props.rowKey"
     v-model:selected="selected"
     v-model:pagination="pagination"
     @request="onRequest"
@@ -245,7 +246,7 @@ const props = defineProps({
   showAll: Boolean,
   highlightRow: Boolean,
   selection: String,
-  disabledRowKeys: { type: Array, default: [] },
+  disabledRowKeys: { type: Array, default: () => [] },
   rowKey: { type: String, default: "id" },
 });
 
@@ -298,11 +299,9 @@ const pagination = ref({
   descending: false,
 });
 function keydown(event) {
-  // Exit if no rows or selection disabled
   if (!props.rows || props.rows.length === 0) return;
   if (props.disableSelect) return;
 
-  // Get the current index of the selected row
   const currentIndex = props.rows.findIndex(
     (row) => row[props.rowKey] === selected.value[0]?.[props.rowKey],
   );

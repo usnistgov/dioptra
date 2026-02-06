@@ -373,7 +373,7 @@
   import ReturnToFormDialog from '@/dialogs/ReturnToFormDialog.vue'
   import { useLoginStore } from '@/stores/LoginStore'
   import AppendResource from '@/dialogs/AppendResource.vue'
-  import TableComponent from '@/components/TableComponent.vue'
+  import TableComponent from '@/components/table/TableComponent.vue'
 
   const store = useLoginStore()
 
@@ -515,7 +515,6 @@
 
   function submit() {
     basicInfoForm.value.validate().then(success => {
-      // quasar doesn't validate disabled fields, need to manually do it below
       if(!job.experiment && experiments.value.length === 0 && !Object.hasOwn(route.params, 'id')) {
         experimentError.value = true
       }

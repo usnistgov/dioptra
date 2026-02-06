@@ -12,7 +12,14 @@
           }"
         ></div>
 
-        <div class="row items-baseline no-wrap q-gutter-x-sm">
+        <div
+          :class="[
+            layout === 'horizontal'
+              ? 'row items-baseline q-gutter-x-sm'
+              : 'column',
+            'no-wrap',
+          ]"
+        >
           <div
             class="text-weight-bold"
             :style="{
@@ -21,10 +28,10 @@
               lineHeight: '1.3',
             }"
           >
-            {{ param.name }} :
+            {{ param.name }}{{ layout === "horizontal" ? " :" : "" }}
           </div>
 
-          <div class="row">
+          <div class="row items-center text-left">
             <div
               class="font-mono text-weight-medium text-grey-7 cursor-help q-pr-xs"
               style="font-size: 0.75rem"
@@ -37,7 +44,7 @@
             </div>
 
             <div
-              v-if="!param.required & (concept == 'input')"
+              v-if="!param.required && type === 'input'"
               class="text-weight-medium text-grey-5"
               style="font-size: 0.7rem"
             >
@@ -75,17 +82,24 @@
             </div>
 
             <template v-for="(param, i) in items.slice(3)" :key="i">
-              <div class="row items-center no-wrap q-gutter-x-sm q-py-xs">
+              <div class="row items-start no-wrap q-gutter-x-sm q-py-xs">
                 <div
                   class="rounded-borders shrink-0"
                   :style="{
                     width: '6px',
                     height: '6px',
+                    marginTop: '5px',
                     backgroundColor: styles.hexColor,
                   }"
                 ></div>
 
-                <div class="row items-baseline no-wrap q-gutter-x-sm">
+                <div
+                  :class="
+                    layout === 'horizontal'
+                      ? 'row items-baseline q-gutter-x-sm'
+                      : 'column'
+                  "
+                >
                   <div
                     class="text-weight-bold"
                     :style="{
@@ -94,7 +108,7 @@
                       lineHeight: '1.3',
                     }"
                   >
-                    {{ param.name }} :
+                    {{ param.name }}{{ layout === "horizontal" ? " :" : "" }}
                   </div>
                   <div
                     class="font-mono text-weight-medium text-grey-7"
@@ -123,10 +137,14 @@ const { getPaletteColor } = colors;
 
 const props = defineProps({
   items: { type: Array, default: () => [] },
-  type: { type: String, default: "output" }, 
+  type: { type: String, default: "output" },
+  layout: {
+    type: String,
+    default: "vertical",
+    validator: (v) => ["horizontal", "vertical"].includes(v),
+  },
 });
 
-// Compute Colors based on Concept Type
 const styles = computed(() => {
   const concept = props.type === "input" ? "input" : "output";
   const styleObj = getConceptStyle(concept);
@@ -138,7 +156,7 @@ const styles = computed(() => {
 
   return {
     hexColor: getPaletteColor(baseColor),
-    textColor: getPaletteColor(fallbackText), 
+    textColor: getPaletteColor(fallbackText),
   };
 });
 

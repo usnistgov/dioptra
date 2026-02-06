@@ -14,9 +14,9 @@
     @add="(added) => addPlugin(added.value)"
     @remove="(removed) => removePlugin(removed.value)"
   >
-    <template v-slot:before>
-      <div class="field-label">Plugins:</div>
-    </template>
+    <!-- <template v-slot:before>
+      <div class="field-label">Attached Plugins:</div>
+    </template> -->
 
     <template v-slot:selected>
       <div class="q-pa-xs full-width">
@@ -99,7 +99,6 @@ import { ref, watch, computed } from "vue";
 import * as api from "@/services/dataApi";
 import { getConceptStyle } from "@/constants/tableStyles";
 
-
 const pluginStyle = computed(() => getConceptStyle("plugin"));
 const selectedPlugins = defineModel("selectedPlugins");
 const pluginIDsToUpdate = defineModel("pluginIDsToUpdate");
@@ -127,7 +126,7 @@ async function getPlugins(val = "", update) {
       });
       pluginOptions.value = res.data.data;
     } catch (err) {
-      console.warn(err); 
+      console.warn(err);
     }
   });
 }

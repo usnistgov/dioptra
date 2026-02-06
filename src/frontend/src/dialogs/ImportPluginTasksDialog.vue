@@ -166,7 +166,7 @@
 <script setup>
 import { ref, watch, computed } from 'vue'
 import * as api from '@/services/dataApi'
-import TableComponent from '@/components/TableComponent.vue'
+import TableComponent from '@/components/table/TableComponent.vue'
 import * as notify from '../notify'
 
 const props = defineProps(['pythonCode', 'pluginParameterTypes', 'existingTasks'])
