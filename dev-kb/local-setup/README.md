@@ -80,10 +80,10 @@ DIOPTRA_DEPLOY_DIR=~/di/di-dep
 ### The source code location
 DIOPTRA_CODE_DIR=~/di/di-src
 
-### [NEW!!!] Mandatory entry Defaults to "tensorflow-cpu"
+### [NEW!!!] Mandatory entry Defaults to "tensorflow_cpu"
 ### Worker-Type
-DIOPTRA_WORKER_LIB=tensorflow-cpu 
-### Other options include: [pytorch-cpu | pytorch-gpu | tensorflow-cpu | tensorflow-cpu]
+DIOPTRA_WORKER_LIB=tensorflow_cpu
+### Other options include: [pytorch_cpu | pytorch_gpu | tensorflow_cpu | tensorflow_cpu]
 
 ### [OPTIONAL-ENTRY] Environment Info
 ### Auto-Generated from ENV, if not explicitly provided
@@ -92,7 +92,7 @@ DIOPTRA_CONFIG_INFO=Dev-Dioptra for Tuning Unit-Tests
 ### [OPTIONAL-ENTRY] Python virtual environment to use
 ### Auto-Generated in the form
 ### Provide this value if you want to use preferred or already existing name of the Python virtual environment
-DIOPTRA_ENV_NAME=.env-dev
+DIOPTRA_ENV_NAME=.venv
 ```
 
 [Learn more about config files ...](#learn-more-config)
