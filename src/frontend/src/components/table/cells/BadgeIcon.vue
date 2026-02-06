@@ -8,30 +8,23 @@
     square
     class="text-weight-bold q-py-md q-px-sm"
   >
-    <q-icon
-      v-if="showIcon && styles.icon"
-      :name="styles.icon"
-      size="xs"
-    />
-    
-    <span 
-      class="font-mono ellipsis" 
-      :class="[
-        { 'text-uppercase': uppercase },
-        showIcon ? 'q-ml-xs' : '' 
-      ]"
-      style="font-size: 12px; font-weight:500; max-width:200px"
-    > 
-      {{ displayValue }} 
+    <q-icon v-if="showIcon && styles.icon" :name="styles.icon" size="xs" />
+
+    <span
+      class="font-mono ellipsis"
+      :class="[{ 'text-uppercase': uppercase }, showIcon ? 'q-ml-xs' : '']"
+      style="font-size: 12px; font-weight: 500; max-width: 200px"
+    >
+      {{ displayValue }}
     </span>
-    
+
     <q-tooltip>{{ tooltipText }}</q-tooltip>
   </q-chip>
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { getConceptStyle } from '@/constants/tableStyles'
+import { computed } from "vue";
+import { getConceptStyle } from "@/constants/tableStyles";
 
 const props = defineProps({
   type: String,
@@ -39,51 +32,52 @@ const props = defineProps({
   rowId: [String, Number],
   uppercase: {
     type: Boolean,
-    default: true
+    default: true,
   },
   size: {
     type: String,
-    default: 'sm'
+    default: "sm",
   },
   chipType: {
     type: String,
-    default: 'outline',
-    validator: (value) => ['outline', 'normal'].includes(value)
+    default: "outline",
+    validator: (value) => ["outline", "normal"].includes(value),
   },
   formatLabel: {
     type: String,
-    default: '' 
+    default: "",
   },
   showIcon: {
     type: Boolean,
-    default: true
-  }
-})
+    default: true,
+  },
+});
 
 const styles = computed(() => {
-  return getConceptStyle(props.type) || { color: 'grey-7', icon: 'help' }
-})
+  return getConceptStyle(props.type) || { color: "grey-7", icon: "help" };
+});
 
 const displayValue = computed(() => {
-  const labelVal = (props.label !== undefined && props.label !== null && props.label !== '') 
-    ? props.label 
-    : 'NA'
-  
-  const typeVal = props.type || ''
+  const labelVal =
+    props.label !== undefined && props.label !== null && props.label !== ""
+      ? props.label
+      : "NA";
+
+  const typeVal = props.type || "";
 
   if (!props.formatLabel) {
-    return labelVal !== 'NA' ? labelVal : typeVal
+    return labelVal !== "NA" ? labelVal : typeVal;
   }
-  
+
   return props.formatLabel
     .replace(/{label}/g, labelVal)
-    .replace(/{type}/g, typeVal)
-})
+    .replace(/{type}/g, typeVal);
+});
 
 const tooltipText = computed(() => {
-  if (!props.type) return ''
-  const base = `${props.type}: ${props.label || 'N/A'}`
-  const idSuffix = props.rowId ? ` (ID: ${props.rowId})` : ''
-  return base + idSuffix
-})
+  if (!props.type) return "";
+  const base = `${props.type}: ${props.label || "N/A"}`;
+  const idSuffix = props.rowId ? ` (ID: ${props.rowId})` : "";
+  return base + idSuffix;
+});
 </script>

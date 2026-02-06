@@ -1,15 +1,15 @@
 <template>
-  <div 
-    class="header-container row items-center no-wrap" 
+  <div
+    class="header-container row items-center no-wrap"
     :class="[alignClass, { 'is-sortable': col.sortable }]"
   >
     <span class="header-label">
       {{ col.label }}
     </span>
 
-    <q-icon 
+    <q-icon
       v-if="col.sortable"
-      :name="iconName" 
+      :name="iconName"
       class="sort-icon"
       :class="iconStatusClass"
     />
@@ -17,39 +17,37 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed } from "vue";
 
 const props = defineProps({
   col: Object,
   sorted: Boolean,
-  descending: Boolean
-})
+  descending: Boolean,
+});
 
 const alignClass = computed(() => {
-  const align = props.col.align || 'left'
-  if (align === 'center') return 'justify-center'
-  if (align === 'right') return 'justify-end'
-  return 'justify-start'
-})
+  const align = props.col.align || "left";
+  if (align === "center") return "justify-center";
+  if (align === "right") return "justify-end";
+  return "justify-start";
+});
 
 const iconName = computed(() => {
-  if (!props.sorted) return 'unfold_more'
-  return props.descending ? 'arrow_downward' : 'arrow_upward'
-})
+  if (!props.sorted) return "unfold_more";
+  return props.descending ? "arrow_downward" : "arrow_upward";
+});
 
 const iconStatusClass = computed(() => {
-  return props.sorted ? 'sort-icon--active' : 'sort-icon--neutral'
-})
+  return props.sorted ? "sort-icon--active" : "sort-icon--neutral";
+});
 </script>
 
 <style scoped>
 .header-container {
-  /* Default cursor for non-sortable columns */
   cursor: default;
   user-select: none;
 }
 
-/* Only show pointer if the column is sortable */
 .is-sortable {
   cursor: pointer;
 }
@@ -69,7 +67,7 @@ const iconStatusClass = computed(() => {
 }
 
 .sort-icon--neutral {
-  opacity: 0.2; 
+  opacity: 0.2;
   color: #546e7a;
 }
 

@@ -1,7 +1,7 @@
 <template>
-  <div class="row items-center q-gutter-xs wrap" style="max-width: 300px;">
-    <BadgeIcon 
-      v-for="(item, i) in visibleItems" 
+  <div class="row items-center q-gutter-xs wrap" style="max-width: 300px">
+    <BadgeIcon
+      v-for="(item, i) in visibleItems"
       :key="i"
       :type="conceptType"
       :label="item.name"
@@ -10,7 +10,7 @@
 
     <q-chip
       v-if="hiddenCount > 0"
-      color="grey-3" 
+      color="grey-3"
       text-color="grey-9"
       clickable
       @click.stop
@@ -19,11 +19,15 @@
     >
       +{{ hiddenCount }} more
 
-      <q-menu anchor="bottom middle" self="top middle" class="bg-white shadow-5 border-grey-3 q-pa-md">
+      <q-menu
+        anchor="bottom middle"
+        self="top middle"
+        class="bg-white shadow-5 border-grey-3 q-pa-md"
+      >
         Additional Entrypoints:
         <div class="column q-pa-sm q-gutter-y-xs">
-          <BadgeIcon 
-            v-for="(item, i) in hiddenItems" 
+          <BadgeIcon
+            v-for="(item, i) in hiddenItems"
             :key="i"
             :type="conceptType"
             :label="item.name"
@@ -36,25 +40,25 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import BadgeIcon from './BadgeIcon.vue'
+import { computed } from "vue";
+import BadgeIcon from "./BadgeIcon.vue";
 
 const props = defineProps({
   items: {
     type: Array,
-    default: () => []
+    default: () => [],
   },
   conceptType: {
     type: String,
-    required: true // e.g. 'entrypoint'
+    required: true, 
   },
   limit: {
     type: Number,
-    default: 3
-  }
-})
+    default: 3,
+  },
+});
 
-const visibleItems = computed(() => props.items?.slice(0, props.limit) || [])
-const hiddenItems = computed(() => props.items?.slice(props.limit) || [])
-const hiddenCount = computed(() => hiddenItems.value.length)
+const visibleItems = computed(() => props.items?.slice(0, props.limit) || []);
+const hiddenItems = computed(() => props.items?.slice(props.limit) || []);
+const hiddenCount = computed(() => hiddenItems.value.length);
 </script>
