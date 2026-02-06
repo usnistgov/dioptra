@@ -50,7 +50,7 @@ const props = defineProps({
   },
   conceptType: {
     type: String,
-    required: true, 
+    required: true,
   },
   limit: {
     type: Number,

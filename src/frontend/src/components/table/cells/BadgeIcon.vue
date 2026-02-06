@@ -3,12 +3,17 @@
     v-if="styles"
     :color="styles.color"
     text-color="white"
-    :size="size"
+    :size="mini ? 'sm' : size"
     :outline="chipType === 'outline'"
     square
-    class="text-weight-bold q-py-md q-px-sm"
+    :class="['text-weight-bold', mini ? 'q-py-xs q-px-xs' : 'q-py-md q-px-sm']"
   >
-    <q-icon v-if="showIcon && styles.icon" :name="styles.icon" size="xs" />
+    <q-icon
+      v-if="showIcon && styles.icon"
+      :name="styles.icon"
+      size="xs"
+      :style="mini ? 'font-size:1.5em !important' : ''"
+    />
 
     <span
       class="font-mono ellipsis"
@@ -50,6 +55,10 @@ const props = defineProps({
   showIcon: {
     type: Boolean,
     default: true,
+  },
+  mini: {
+    type: Boolean,
+    default: false,
   },
 });
 

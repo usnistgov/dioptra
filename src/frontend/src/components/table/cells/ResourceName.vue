@@ -1,11 +1,10 @@
 <template>
   <div
     class="resource-item-container row items-center no-wrap"
-    ,
     style="min-width: 150px; height: 100%"
   >
     <div
-      v-if="conceptType"
+      v-if="conceptType && !minimal"
       class="shrink-0 flex flex-center"
       style="width: 24px"
     >
@@ -27,8 +26,12 @@
     </div>
 
     <div
-      class="resource-name-text text-weight-bold text-blue-grey-10 text-wrap-style q-ml-xs"
-      :class="textTypeClass"
+      class="resource-name-text text-weight-bold text-blue-grey-10 text-wrap-style"
+      :class="[
+        textTypeClass,
+        minimal ? 'q-ml-none' : 'q-ml-xs',
+        { 'no-underline': minimal },
+      ]"
       :style="{
         maxWidth: maxWidth,
         letterSpacing: '.5px',
@@ -63,7 +66,7 @@
   content: "";
   position: absolute;
   left: 0;
-  bottom: -2px; 
+  bottom: -2px;
   width: 100%;
   height: 2px;
   background-color: var(--hover-color);
@@ -71,8 +74,14 @@
   transition: transform 0.15s ease-out;
 }
 
-.resource-item-container:hover .resource-name-text::after {
+.resource-item-container:hover .resource-name-text:not(.no-underline)::after {
   transform: scaleX(1);
+}
+
+.text-wrap-style {
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.2;
 }
 </style>
 
@@ -87,7 +96,7 @@ const props = defineProps({
   text: [String, Number],
   conceptType: {
     type: String,
-    default: null, 
+    default: null,
   },
   maxLength: {
     type: Number,
@@ -106,6 +115,11 @@ const props = defineProps({
     default: "none",
   },
   includeIcon: {
+    type: Boolean,
+    default: false,
+  },
+  // New Prop
+  minimal: {
     type: Boolean,
     default: false,
   },
@@ -170,11 +184,3 @@ const textTypeClass = computed(() => {
   return "";
 });
 </script>
-
-<style scoped>
-.text-wrap-style {
-  white-space: normal;
-  word-break: break-word;
-  line-height: 1.2;
-}
-</style>

@@ -37,6 +37,7 @@
       <ParameterList
         :items="props.row.task?.outputParams || []"
         type="output"
+        layout="horizontal"
       />
     </template>
 
