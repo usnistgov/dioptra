@@ -18,8 +18,7 @@
 .. _reference-users:
 
 Users
-=================
-
+=====
 
 .. contents:: Contents
    :local:
@@ -28,39 +27,117 @@ Users
 .. _reference-users-definition:
 
 User Definition
----------------------
+---------------
+
+A **User** in Dioptra represents an account which provides access to other resources (entrypoints, plugins, jobs, experiments, etc.). 
+
 
 .. _reference-users-attributes:
 
 User Attributes
----------------------
+---------------
+
+This section describes the attributes that define a User.
 
 .. _reference-users-required-attributes:
 
 Required Attributes
 ~~~~~~~~~~~~~~~~~~~
 
+* **Username**: (string) The name of the user.
+* **Password**: (string) A password for the user. 
+* **Email**: (string) The email address of the user.
+
 .. _reference-users-system-generated-attributes:
 
 System-Generated Attributes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+- **ID**: Unique identifier assigned upon creation.
+- **Groups**: List of groups that the user is in. Determines access to resources.
+- **Created On**: Timestamp indicating when the User was created.
+- **Last Modified On**: Timestamp indicating when the User was last modified.
+- **Last Login On**: Timestamp indicating when the User last logged in.
+- **Password Expires On**: Timestamp indicating when the User's password will expire.
+
 .. _reference-users-registration-interfaces:
+
 
 Registration Interfaces
 -----------------------
+
+Users can be created programmatically via the Python Client or the REST API.
+They can also be created through the web interface.
 
 .. _reference-users-python-client:
 
 Using Python Client
 ~~~~~~~~~~~~~~~~~~~
 
+**Create a User**
+
+    .. automethod:: dioptra.client.users.UsersCollectionClient.create
+
+
 .. _reference-users-rest-api:
 
 Using REST API
 ~~~~~~~~~~~~~~
 
+Users can be created directly via the HTTP API.
+
+**Create Users**
+
+See the :http:post:`POST /api/v1/users </api/v1/users/>` endpoint documentation for payload requirements.
+
+
+.. _reference-users-retrieval-interfaces:
+
+Retrieval Interfaces
+--------------------
+
+Users can be retrieved via the Python Client or the RESTAPI.
+
+.. _reference-users-retrieval-python-client:
+
+Using Python Client
+~~~~~~~~~~~~~~~~~~~
+
+**Get a list of Users**
+
+    .. automethod:: dioptra.client.users.UsersCollectionClient.get
+
+**Get the currently logged in User**
+
+    .. automethod:: dioptra.client.users.UsersCollectionClient.get_current
+
+**Get a specific user by ID**
+
+    .. automethod:: dioptra.client.users.UsersCollectionClient.get_by_id
+
+.. _reference-users-retrieval-rest-api:
+
+Using REST API
+~~~~~~~~~~~~~~
+
+**Get a list of Users**
+
+See the :http:get:`GET /api/v1/users </api/v1/users/>` endpoint documentation for payload requirements.
+
+**Get the currently logged in User**
+
+See the :http:get:`GET /api/v1/users/current </api/v1/users/current>` endpoint documentation for payload requirements.
+
+**Get a specific user by ID**
+
+See the :http:get:`GET /api/v1/users/{int:id} </api/v1/users/{int:id}>` endpoint documentation for payload requirements.
+
+
+
 .. rst-class:: fancy-header header-seealso
 
 See Also
 ---------
+
+* :ref:`How To Create a User <how_to_create_a_user>`
+* :ref:`Users and Groups Explanation <explanation-users-and-groups>`
