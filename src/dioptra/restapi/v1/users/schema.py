@@ -49,10 +49,14 @@ class UserMutableFieldsSchema(Schema):
     """The schema for the mutable data fields in a User resource."""
 
     username = fields.String(
-        attribute="username", metadata={"description": "Username of the User."}
+        attribute="username",
+        metadata={"description": "Username of the User."},
+        required=True,
     )
     email = fields.String(
-        attribute="email", metadata={"description": "Email of the User."}
+        attribute="email",
+        metadata={"description": "Email of the User."},
+        required=True,
     )
 
 
