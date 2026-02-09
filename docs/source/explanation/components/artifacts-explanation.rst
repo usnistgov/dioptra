@@ -37,6 +37,7 @@ To use an artifact as an entrypoint input parameter, the types from the deserial
 with the type from the artifact input parameter. You will not be able to select an artifact for the
 job if these types don't align.
 
+.. _explanation-artifacts-artifact-tasks:
 
 Artifact Tasks
 --------------
