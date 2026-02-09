@@ -91,49 +91,6 @@ Users can be created directly via the HTTP API.
 See the :http:post:`POST /api/v1/users </api/v1/users/>` endpoint documentation for payload requirements.
 
 
-.. _reference-users-retrieval-interfaces:
-
-Retrieval Interfaces
---------------------
-
-Users can be retrieved via the Python Client or the REST API.
-
-.. _reference-users-retrieval-python-client:
-
-Using Python Client
-~~~~~~~~~~~~~~~~~~~
-
-**Get a list of Users**
-
-    .. automethod:: dioptra.client.users.UsersCollectionClient.get
-
-**Get the currently logged in User**
-
-    .. automethod:: dioptra.client.users.UsersCollectionClient.get_current
-
-**Get a specific User by ID**
-
-    .. automethod:: dioptra.client.users.UsersCollectionClient.get_by_id
-
-.. _reference-users-retrieval-rest-api:
-
-Using REST API
-~~~~~~~~~~~~~~
-
-**Get a list of Users**
-
-See the :http:get:`GET /api/v1/users </api/v1/users/>` endpoint documentation for payload requirements.
-
-**Get the currently logged in User**
-
-See the :http:get:`GET /api/v1/users/current </api/v1/users/current>` endpoint documentation for payload requirements.
-
-**Get a specific user by ID**
-
-See the :http:get:`GET /api/v1/users/{int:id} </api/v1/users/{id}>` endpoint documentation for payload requirements.
-
-
-
 .. rst-class:: fancy-header header-seealso
 
 See Also
