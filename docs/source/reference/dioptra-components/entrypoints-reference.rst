@@ -31,7 +31,7 @@ Entrypoint Definition
 ---------------------
 
 An **Entrypoint** in Dioptra is a repeatable workflow that can be executed as a Job. Entrypoints execute the function tasks defined in the task graph upon job submission. 
-Entrypoint parameters and Artifact Input Parameters can optionally be attached to entrypoints and then used in the Task Graph. The outputs from Function Tasks 
+Entrypoint parameters and Artifact Input Parameters can optionally be attached to entrypoints and then used in the Task Graphs. The outputs from Function Tasks 
 can be saved as Artifacts, and the logic for this is defined in the Artifact Task Graph. 
 
 .. _reference-experiments-attributes:
@@ -121,7 +121,7 @@ these arguments are passed into the Python function without names in order.
         The ``graph:`` keyword that starts the YAML code blocks below does not need to be included in the task graph definition in the Graphical User Interface (GUI). When defining an entire entrypoint via YAML, this word is used to designate the task graph section of the file (as distinct from the parameter definitions, the artifact task graph, etc.)
 
 
-.. admonition:: Task Graph
+.. admonition:: Task Graph - Positional Style Invocation
     :class: code-panel yaml
 
     .. code-block:: yaml
@@ -136,7 +136,7 @@ these arguments are passed into the Python function without names in order.
 
 The keywords correspond to the names of the Function Task parameters. Upon function execution, these values are passed in as named arguments to the Python function. 
 
-.. admonition:: Task Graph
+.. admonition:: Task Graph - Keyword Style Invocation
     :class: code-panel yaml
     
     .. code-block:: yaml
@@ -158,7 +158,7 @@ keyword arguments must match one of the names of the function task arguments tha
 the positional arguments are passed into the Python function without names in order, and then the keyword arguments are passed in with their corresponding names. 
 
 
-.. admonition:: Task Graph
+.. admonition:: Task Graph - Mixed Style Invocation
     :class: code-panel yaml
     
     .. code-block:: yaml
@@ -185,7 +185,7 @@ arguments with structure. For example, a list of strings (in this case ``["arg1"
 as an argument to the ``keyword1`` parameter as follows:
 
 
-.. admonition:: Task Graph
+.. admonition:: Task Graph - Lists of Arguments
     :class: code-panel yaml
     
     .. code-block:: yaml
@@ -208,7 +208,7 @@ Alternatively, a mapping (in this case ``{"k1":"arg1", "k2":"arg11", "k3":"arg11
 as an argument to the ``keyword1`` parameter if needed:
 
 
-.. admonition:: Task Graph
+.. admonition:: Task Graph - Mapping Arguments
     :class: code-panel yaml
     
     .. code-block:: yaml
@@ -236,7 +236,7 @@ can be used in other steps.
 Here is an example of using the output of a function task.
 
 
-.. admonition:: Task Graph
+.. admonition:: Task Graph - Referencing Task Outputs
     :class: code-panel yaml
     
     .. code-block:: yaml
@@ -254,7 +254,7 @@ is given a name when registered. In an example where ``task1`` is registered to 
 ``output2``, these can be referenced as follows:
 
 
-.. admonition:: Task Graph
+.. admonition:: Task Graph - Referencing Outputs from Task with Multiple Outputs
     :class: code-panel yaml
     
     .. code-block:: yaml
@@ -278,7 +278,7 @@ graph, the usage is equivalent, though the parameters are supplied separately at
 See :ref:`explanation-entrypoints` and :ref:`explanation-artifacts` for more details.
 
 
-.. admonition:: Task Graph
+.. admonition:: Task Graph - Referencing Entrypoint Parameters
     :class: code-panel yaml
     
     .. code-block:: yaml
@@ -290,7 +290,7 @@ See :ref:`explanation-entrypoints` and :ref:`explanation-artifacts` for more det
                 task2: [$myparam, $step1.output2]
 
 
-Additional Dependencies
+Additional Dependencies - Managing Dependencies
 ~~~~~~~~~~~~~~~~~~~~~~
 
 Explicit dependencies between steps can be added via the ``dependencies`` keyword. Dependencies between steps are
@@ -338,7 +338,7 @@ There are many similarities between invoking artifact tasks and function tasks:
         
         The ``artifact_outputs:`` keyword that starts the YAML code blocks below does not need to be included in the artifact task graph definition in the Graphical User Interface (GUI). When defining an entire entrypoint via YAML, this word is used to designate the artifact output graph section of the file (as distinct from the parameter definitions, the task graph, etc.)
 
-.. admonition:: Task Graph
+.. admonition:: Artifact Output Graph
     :class: code-panel yaml
     
     .. code-block:: yaml
@@ -364,7 +364,7 @@ These arguments are used in the ``serialization`` method of the Artifact Handler
 **Positional Style Invocation**
 
 
-.. admonition:: Task Graph
+.. admonition:: Artifact Output Graph - Positional Style Invocation
     :class: code-panel yaml
     
     .. code-block:: yaml
@@ -380,7 +380,7 @@ These arguments are used in the ``serialization`` method of the Artifact Handler
 **Keyword Style Invocation**
 
 
-.. admonition:: Task Graph
+.. admonition:: Artifact Output Graph - Keyword Style Invocation
     :class: code-panel yaml
     
     .. code-block:: yaml
@@ -397,7 +397,7 @@ These arguments are used in the ``serialization`` method of the Artifact Handler
 **Mixed Style Invocation**
 
 
-.. admonition:: Task Graph
+.. admonition:: Artifact Output Graph - Mixed Style Invocation
     :class: code-panel yaml
     
     .. code-block:: yaml
@@ -420,7 +420,7 @@ artifact task graph using the same syntax as the task graph.
 
 For example, if an entrypoint parameter had the named ``dataFrameFileFormat``, then it could be referenced in the following way:
 
-.. admonition:: Task Graph
+.. admonition:: Artifact Output Graph - Using Entrypoint Parameters
     :class: code-panel yaml
     
     .. code-block:: yaml
