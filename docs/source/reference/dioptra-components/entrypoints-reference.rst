@@ -61,7 +61,7 @@ Optional Attributes
 - **Artifact Plugins**:  (list of Plugin IDs, optional) A list of Plugin containers to attach to the entrypoint - the associated Plugin Artifact Tasks are then made available to the Artifact Output Graph. Defaults to empty. (See: :ref:`Plugins Reference <reference-plugins>`)
 - **Parameters**: (list of Dicts, optional) Global parameters that can be used in the Entrypoint Task Graph and Artifact Output Graph. Each Parameter has a type and can optionally have a default value. Parameter values are set at Job runtime. Defaults to empty.
     - **Name** (string) The Name of the Entrypoint Parameter, used to access the Parameter in the Task Graphs 
-    - **Type** (Plugin Parameter Type ID) The type for the parameter, used for type validation. (See: :ref:`Plugin Parameter Types <reference-plugin-parameter-types>`) 
+    - **Type** (Plugin Parameter Type ID) The type for the parameter, used for type validation. (See: :ref:`Plugin Parameter Types <reference-parameter-types>`) 
     - **Default Value** (String, Optional) An optional default value for the parameter which can be overwritten during job execution. Gets type converted during job execution time. 
 - **Artifact Parameters**: (list of Dicts, optional) Global objects, loaded from disk at Job execution, can be used in the Entrypoint Task Graph and Artifact Output Graph. User selects which specific artifact snapshot to load into the Artifact Parameter at Job Runtime. Defaults to empty.
     - **Name** (string) The Name of the Artifact Parameter, used to access the Object(s) in the Task Graphs 
@@ -91,14 +91,14 @@ Task Graph Syntax
 The Task Graph consists of a list of step descriptions. Each step corresponds to the execution of a function task.
 The Task Graph is defined in YAML, and each function task can be invoked using one of three invocation styles:
 
-- Positional
-- Keyword  
-- Mixed 
+- :ref:`Positional Invocation Style <reference-entrypoints-task-graph-syntax-positional-style-invocation>`
+- :ref:`Keyword Invocation Style  <reference-entrypoints-task-graph-syntax-keyword-style-invocation>`
+- :ref:`Mixed Invocation Style  <reference-entrypoints-task-graph-syntax-mixed-style-invocation>`
 
 
 There are similarities across all three invocation styles:
 
-    * **Step Names**: ``step1`` and ``step2`` refer to the names of steps, and also to the *location in which the output of that step is stored*. The variable ``$step1`` contains the output of the task that was run in that step.
+    * **Step Names**: ``taskGraphStep1`` and ``taskGraphStep2`` refer to the names of steps, and also to the *location in which the output of that step is stored*. The variable ``$taskGraphStep1`` contains the output of the task that was run in that step.
 
     * **Task Names**: ``task1`` and ``task2`` refer to the registered names of plugin function tasks (and also the name of the corresponding Python functions). Each step in the graph represents an invocation of a function task.
 
@@ -106,6 +106,77 @@ There are similarities across all three invocation styles:
 
     * **Argument Names for Function Tasks**: ``keyword1``, ``keyword2``, ``keyword3``, and ``keyword4`` are the parameter names for that particular function. These names are defined at task registration time.
 
+
+.. _reference-entrypoints-example-task-graph-model-training:
+
+Example Task Graph: Model Training
+~~~~~~~~~~~~~~~~~~~~~~
+
+The following hypothetical task graph loads a dataset from disk, trains a model on that dataset, and then makes predictions on a test dataset:
+
+.. tabs::
+
+   .. tab:: Positional Invocation Style
+
+        .. admonition:: Model Training - Positional Style Invocation
+            :class: code-panel yaml
+
+            .. code-block:: yaml
+
+                dataset:
+                    load_from_disk: [$location] # Referencing an entrypoint parameter
+
+                trained_model:
+                    train: [le_net, $dataset.training] # Using the output from the first step
+
+                predictions:
+                    predict: [$train, $dataset.testing]
+
+   .. tab:: Keyword Invocation Style
+
+        .. admonition:: Model Training - Keyword Invocation Style
+            :class: code-panel yaml
+
+            .. code-block:: yaml
+
+                dataset:
+                    load_from_disk:
+                        location: $location # Referencing an entrypoint parameter
+
+                trained_model:
+                    train:
+                        architecture: le_net
+                        dataset: $dataset.training # Using the output from the first step
+
+                predictions:
+                    predict:
+                        model: $train
+                        dataset: $dataset.testing
+
+   .. tab:: Mixed Invocation Style
+
+        .. admonition:: Model Training - Mixed Invocation Style
+            :class: code-panel yaml
+
+            .. code-block:: yaml
+
+                dataset:
+                    task: load_from_disk 
+                    args: [$location] # Referencing an entrypoint parameter
+
+                trained_model:
+                    task: train
+                    args: [le_net] 
+                    kwargs:
+                        dataset: $dataset.training # Using the output from the first step
+
+                predictions:
+                    task: predict
+                    kwargs:
+                        model: $train
+                        dataset: $dataset.testing
+
+Continue reading below to understand all the details in this example. 
 
 Invocation Styles
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -139,9 +210,9 @@ these arguments are passed into the Python function without names in order.
             .. code-block:: yaml
 
                 graph:
-                    step1:
+                    taskGraphStep1:
                         task1: [arg1, arg2]
-                    step2:
+                    taskGraphStep2:
                         task2: [arg3, arg4]
 
    .. group-tab:: Entrypoint defined in the GUI / Standalone component
@@ -151,9 +222,9 @@ these arguments are passed into the Python function without names in order.
 
             .. code-block:: yaml
 
-                step1:
+                taskGraphStep1:
                     task1: [arg1, arg2]
-                step2:
+                taskGraphStep2:
                     task2: [arg3, arg4]
 
 .. _reference-entrypoints-task-graph-syntax-keyword-style-invocation:
@@ -173,11 +244,11 @@ The keywords correspond to the names of the Function Task parameters. Upon funct
             .. code-block:: yaml
 
                 graph:
-                    step1:
+                    taskGraphStep1:
                         task1:
                             keyword1: arg1
                             keyword2: arg2
-                    step2:
+                    taskGraphStep2:
                         task2:
                             keyword3: arg3
                             keyword4: arg4
@@ -189,11 +260,11 @@ The keywords correspond to the names of the Function Task parameters. Upon funct
             
             .. code-block:: yaml
 
-                step1:
+                taskGraphStep1:
                     task1:
                         keyword1: arg1
                         keyword2: arg2
-                step2:
+                taskGraphStep2:
                     task2:
                         keyword3: arg3
                         keyword4: arg4
@@ -216,13 +287,13 @@ the positional arguments are passed into the Python function without names in or
             .. code-block:: yaml
 
                 graph:
-                    step1:
+                    taskGraphStep1:
                         task: task1
                         args: [posarg1, posarg2]
                         kwargs:
                             keyword1: arg1
                             keyword2: arg2
-                    step2:
+                    taskGraphStep2:
                         task: task2
                         args: [posarg3, posarg4]
                         kwargs:
@@ -237,13 +308,13 @@ the positional arguments are passed into the Python function without names in or
             
             .. code-block:: yaml
 
-                step1:
+                taskGraphStep1:
                     task: task1
                     args: [posarg1, posarg2]
                     kwargs:
                         keyword1: arg1
                         keyword2: arg2
-                step2:
+                taskGraphStep2:
                     task: task2
                     args: [posarg3, posarg4]
                     kwargs:
@@ -262,7 +333,7 @@ The mixed style invocation method can be used to call a **function task that has
             .. code-block:: yaml
 
                 graph:
-                    step1:
+                    taskGraphStep1:
                         task: task1 # Assuming task1 has no inputs
 
    .. group-tab:: Entrypoint defined in the GUI / Standalone component
@@ -273,7 +344,7 @@ The mixed style invocation method can be used to call a **function task that has
             
             .. code-block:: yaml
 
-                step1:
+                taskGraphStep1:
                     task: task1 # Assuming task1 has no inputs
     
 Argument Structure
@@ -293,14 +364,14 @@ as an argument to the ``keyword1`` parameter as follows:
             .. code-block:: yaml
 
                 graph:
-                    step1:
+                    taskGraphStep1:
                         task1:
                             keyword1: 
                                 - arg1
                                 - arg11
                                 - arg111
                             keyword2: arg2
-                    step2:
+                    taskGraphStep2:
                         task2:
                             keyword3: arg3
                             keyword4: arg4
@@ -313,14 +384,14 @@ as an argument to the ``keyword1`` parameter as follows:
             
             .. code-block:: yaml
 
-                step1:
+                taskGraphStep1:
                     task1:
                         keyword1: 
                             - arg1
                             - arg11
                             - arg111
                         keyword2: arg2
-                step2:
+                taskGraphStep2:
                     task2:
                         keyword3: arg3
                         keyword4: arg4
@@ -342,14 +413,14 @@ as an argument to the ``keyword1`` parameter if needed:
             .. code-block:: yaml
 
                 graph:
-                    step1:
+                    taskGraphStep1:
                         task1:
                             keyword1: 
                                 - k1: arg1
                                 - k2: arg11
                                 - k3: arg111
                             keyword2: [arg2, arg22]
-                    step2:
+                    taskGraphStep2:
                         task2:
                             - keyword3: arg3
                             - keyword4: arg4
@@ -362,14 +433,14 @@ as an argument to the ``keyword1`` parameter if needed:
             
             .. code-block:: yaml
 
-                step1:
+                taskGraphStep1:
                     task1:
                         keyword1: 
                             - k1: arg1
                             - k2: arg11
                             - k3: arg111
                         keyword2: [arg2, arg22]
-                step2:
+                taskGraphStep2:
                     task2:
                         - keyword3: arg3
                         - keyword4: arg4
@@ -395,10 +466,10 @@ Here is an example of using the output of a function task.
             .. code-block:: yaml
 
                 graph:
-                    step1:
+                    taskGraphStep1:
                         task1: [arg1, arg2]
-                    step2:
-                        task2: [$step1, arg4]
+                    taskGraphStep2:
+                        task2: [$taskGraphStep1, arg4]
 
 
    .. group-tab:: Entrypoint defined in the GUI / Standalone component
@@ -409,15 +480,15 @@ Here is an example of using the output of a function task.
             
             .. code-block:: yaml
 
-                step1:
+                taskGraphStep1:
                     task1: [arg1, arg2]
-                step2:
-                    task2: [$step1, arg4]
+                taskGraphStep2:
+                    task2: [$taskGraphStep1, arg4]
 
 
 
 
-This passes the output of the step named ``step1`` as input to the first parameter of the function task named ``task2``.
+This passes the output of the step named ``taskGraphStep1`` as input to the first parameter of the function task named ``task2``.
 
 It is possible for function tasks to have multiple outputs. See :ref:`explanation-plugins` for more details. Each output
 is given a name when registered. In an example where ``task1`` is registered to have two separate outputs, ``output1`` and 
@@ -433,10 +504,10 @@ is given a name when registered. In an example where ``task1`` is registered to 
             .. code-block:: yaml
 
                 graph:
-                    step1:
+                    taskGraphStep1:
                         task1: [arg1, arg2]
-                    step2:
-                        task2: [$step1.output1, $step1.output2]
+                    taskGraphStep2:
+                        task2: [$taskGraphStep1.output1, $taskGraphStep1.output2]
 
 
    .. group-tab:: Entrypoint defined in the GUI / Standalone component
@@ -446,10 +517,10 @@ is given a name when registered. In an example where ``task1`` is registered to 
             
             .. code-block:: yaml
 
-                step1:
+                taskGraphStep1:
                     task1: [arg1, arg2]
-                step2:
-                    task2: [$step1.output1, $step1.output2]
+                taskGraphStep2:
+                    task2: [$taskGraphStep1.output1, $taskGraphStep1.output2]
 
 Task Graph Parameters
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -473,10 +544,10 @@ See :ref:`explanation-entrypoints` and :ref:`explanation-artifacts` for more det
             .. code-block:: yaml
 
                 graph:
-                    step1:
+                    taskGraphStep1:
                         task1: [arg1, arg2]
-                    step2:
-                        task2: [$myparam, $step1.output2]
+                    taskGraphStep2:
+                        task2: [$myparam, $taskGraphStep1.output2]
 
 
    .. group-tab:: Entrypoint defined in the GUI / Standalone component
@@ -486,11 +557,10 @@ See :ref:`explanation-entrypoints` and :ref:`explanation-artifacts` for more det
             
             .. code-block:: yaml
 
-                graph:
-                    step1:
-                        task1: [arg1, arg2]
-                    step2:
-                        task2: [$myparam, $step1.output2]
+                taskGraphStep1:
+                    task1: [arg1, arg2]
+                taskGraphStep2:
+                    task2: [$myparam, $taskGraphStep1.output2]
 
 
 
@@ -499,7 +569,7 @@ Additional Dependencies - Managing Dependencies
 
 Explicit dependencies between steps can be added via the ``dependencies`` keyword. Dependencies between steps are
 automatically created when a step uses the output of another step as a parameter, but sometimes a dependency is 
-needed without the presence of output. In this example, ``step2`` will always be executed after the completion of ``step1``.
+needed without the presence of output. In this example, ``taskGraphStep2`` will always be executed after the completion of ``taskGraphStep1``.
 
 .. tabs::
 
@@ -511,11 +581,11 @@ needed without the presence of output. In this example, ``step2`` will always be
             .. code-block:: yaml
 
                 graph:
-                    step1:
+                    taskGraphStep1:
                         task1: [arg1, arg2]
-                    step2:
+                    taskGraphStep2:
                         task2: [$param1, $param2]
-                        dependencies: [step1]
+                        dependencies: [taskGraphStep1]
 
 
    .. group-tab:: Entrypoint defined in the GUI / Standalone component
@@ -525,11 +595,11 @@ needed without the presence of output. In this example, ``step2`` will always be
             
             .. code-block:: yaml
 
-                step1:
+                taskGraphStep1:
                     task1: [arg1, arg2]
-                step2:
+                taskGraphStep2:
                     task2: [$param1, $param2]
-                    dependencies: [step1]
+                    dependencies: [taskGraphStep1]
 
 
 
@@ -538,26 +608,100 @@ needed without the presence of output. In this example, ``step2`` will always be
 Artifact Output Graph Syntax
 --------------------------------
 
-Upon successful completion of the Artifact Output Graph within a Job execution, the artifact output graph will then execute (if it is defined) to save any designated task outputs 
-as artifacts. 
+Upon successful completion of the Task Graph within a Job execution, the Artifact Output Graph will then execute (if it is defined) to save any designated Function Task outputs 
+as Artifacts. 
 
 There are many similarities between invoking artifact tasks and function tasks:
 
-    * **Step Names**: ``artifactStep1`` and ``artifactStep2`` refer to the names of steps in the artifact graph. ``taskGraphStep1`` and ``taskGraphStep2`` refer to step names from the Task Graph. 
+    * **Step Names**: ``artifactStep1`` and ``artifactStep2`` refer to the names of steps in the artifact graph, similar to how ``taskGraphStep1`` and ``taskGraphStep2`` referred to step names in the Task Graph. 
+        * **Note**: The name provided here is passed as the name parameter to the ``serialize()`` function of the artifact task. See the :ref:`artifact reference <reference-artifacts>` for more details. 
 
     * **Artifact Task Names**: ``artifactHandler1`` and ``artifactHandler2`` refer to the registered names of artifact function tasks (and also the name of the corresponding Python classes). Each step in the graph represents an invocation of the ``serialize()`` method of an artifact handler. 
 
-    * **Arguments for the Artifact Tasks**: ``arg1``, ``arg2`` are arguments provided to the artifact tasks.
+    * **Arguments for the Artifact Tasks**: ``arg1``, ``arg2`` are arguments provided to the artifact tasks (specifically, the ``deserialize`` method)
 
     * **Argument Names for Artifact Tasks**: ``keyword1``, ``keyword2``  are the parameter names for that particular artifact task. These names are defined at artifact task registration time.
 
+
+
+.. _reference-entrypoints-example-artifact-task-graph-saving-a-model-and-a-dataset:
+
+Example Artifact Task Graph: Saving a Model and a Dataset
+~~~~~~~~~~~~~~~~~~~~~~
+
+Building off the example :ref:`Task Graph <reference-entrypoints-example-task-graph-model-training>` in the previous section, the following hypothetical Artifact Task Graph saves the generated prediction dataframe and trained model to disk using two different Artifact Handlers. 
+
+.. tabs::
+
+   .. tab:: Positional Invocation Style
+
+        .. admonition:: Saving a Model and a Dataset - Positional Style Invocation
+            :class: code-panel yaml
+
+            .. code-block:: yaml
+
+                saved_predictions:
+                    contents: $predictions # Referencing a step name in the Task Graph
+                    task:
+                        name: DataframeArtifactTask # The name of the Artifact Handler
+                        args: [ csv, false ] # Positional args to be passed to the serialize method
+                saved_model:
+                    contents: $trained_model
+                    task:
+                        name: ModelArtifactTask
+
+   .. tab:: Keyword Invocation Style
+
+        .. admonition:: Saving a Model and a Dataset - Keyword Invocation Style
+            :class: code-panel yaml
+
+            .. code-block:: yaml
+
+                saved_predictions:
+                    contents: $predictions # Referencing a step name in the Task Graph
+                    task:
+                        name: DataframeArtifactTask # The name of the Artifact Handler
+                        kwargs:
+                            format: csv       # A keyword arg to be passed to the serialize method
+                            save_index: false # A keyword arg to be passed to the serialize method
+                saved_model:
+                    contents: $trained_model
+                    task:
+                        name: ModelArtifactTask
+
+   .. tab:: Mixed Invocation Style
+
+
+        .. admonition:: Saving a Model and a Dataset - Mixed Invocation Style
+            :class: code-panel yaml
+
+            .. code-block:: yaml
+
+                saved_predictions:
+                    contents: $predictions # Referencing a step name in the Task Graph
+                    task:
+                        name: DataframeArtifactTask # The name of the Artifact Handler
+                        args: [csv] # A positional arg
+                        kwargs: 
+                            save_index: false # A keyword arg
+                saved_model:
+                    contents: $trained_model
+                    task:
+                        name: ModelArtifactTask
+
+Generalized Syntax 
+~~~~~~~~~~~~~~~~~~~~~~
+
+The syntax below is a generalized version of the Artifact Output Graph syntax in above example: 
 
 
 .. margin::
 
     .. note::
         
-        The ``artifact_outputs:`` keyword that starts the YAML code blocks below does not need to be included in the Artifact Output Graph definition in the Graphical User Interface (GUI). When defining an entire entrypoint via YAML, this word is used to designate the artifact output graph section of the file (as distinct from the parameter definitions, the Task Graph, etc.)
+        The ``artifact_outputs:`` keyword that starts the YAML code blocks below does not need to be included in the Artifact Output Graph definition in the Graphical User Interface (GUI). When defining an entire entrypoint via YAML, this word is used to designate the Artifact Output Graph section of the file (as distinct from the parameter definitions, the Task Graph, etc.)
+
+
 
 .. tabs::
 
@@ -571,11 +715,11 @@ There are many similarities between invoking artifact tasks and function tasks:
 
                 artifact_outputs:
                     artifactStep1:
-                        contents: $taskGraphStep1.output # assumes the name of output from Task Graph step "taskGraphStep1" is "output"
+                        contents: $taskGraphStep1.output # assumes name of output from "taskGraphStep1" is "output"
                         task:
                             name: artifactHandler1
                     artifactStep2:
-                        contents: $taskGraphStep2 # If a function task only has one output, then only the step name is required
+                        contents: $taskGraphStep2 # If function task only has one output, then only step name is required
                         task:
                             name: artifactHandler2
 
@@ -588,11 +732,11 @@ There are many similarities between invoking artifact tasks and function tasks:
             .. code-block:: yaml
 
                 artifactStep1:
-                    contents: $taskGraphStep1.output # assumes the name of output from Task Graph step "taskGraphStep1" is "output"
+                    contents: $taskGraphStep1.output # assumes name of output from "taskGraphStep1" is "output"
                     task:
                         name: artifactHandler1
                 artifactStep2:
-                    contents: $taskGraphStep2 # If a function task only has one output, then only the step name is required
+                    contents: $taskGraphStep2 # If function task only has one output, then only step name is required
                     task:
                         name: artifactHandler2
 
@@ -658,8 +802,8 @@ These arguments are used in the ``serialization`` method of the Artifact Handler
                         task:
                             name: artifactHandler1
                             args:
-                                - keyword1: arg1
-                                - keyword2: arg2 
+                                keyword1: arg1
+                                keyword2: arg2 
 
    .. group-tab:: Entrypoint defined in the GUI / Standalone component
 
@@ -673,8 +817,8 @@ These arguments are used in the ``serialization`` method of the Artifact Handler
                     task:
                         name: artifactHandler1
                         args:
-                            - keyword1: arg1
-                            - keyword2: arg2 
+                            keyword1: arg1
+                            keyword2: arg2 
 
 
 
@@ -698,7 +842,7 @@ These arguments are used in the ``serialization`` method of the Artifact Handler
                             name: artifactHandler1
                             args: [arg1]
                             kwargs:
-                                - keyword2: arg2 
+                                keyword2: arg2 
 
 
    .. group-tab:: Entrypoint defined in the GUI / Standalone component
@@ -715,7 +859,7 @@ These arguments are used in the ``serialization`` method of the Artifact Handler
                         name: artifactHandler1
                         args: [arg1]
                         kwargs:
-                            - keyword2: arg2 
+                            keyword2: arg2 
 
 
 
@@ -746,7 +890,7 @@ For example, if an entrypoint parameter was named ``dataFrameFileFormat``, then 
                         task:
                             name: dataFrameHandler
                             kwargs:
-                                - format: $dataFrameFileFormat 
+                                format: $dataFrameFileFormat 
 
 
    .. group-tab:: Entrypoint defined in the GUI / Standalone component
@@ -761,7 +905,7 @@ For example, if an entrypoint parameter was named ``dataFrameFileFormat``, then 
                     task:
                         name: dataFrameHandler
                         kwargs:
-                            - format: $dataFrameFileFormat 
+                            format: $dataFrameFileFormat 
 
 
 
