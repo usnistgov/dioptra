@@ -44,8 +44,8 @@ This section describes the attributes that define a User.
 Required Attributes
 ~~~~~~~~~~~~~~~~~~~
 
-* **Username**: (string) The name of the user.
-* **Password**: (string) A password for the user. 
+* **Username**: (string) The name of the user. Used for authentication.
+* **Password**: (string) A password for the user. Used for authentication.
 * **Email**: (string) The email address of the user.
 
 .. _reference-users-system-managed-state:
@@ -53,12 +53,12 @@ Required Attributes
 System-Managed State
 ~~~~~~~~~~~~~~~~~~~~
 
-- **ID**: Unique identifier assigned upon creation.
-- **Groups**: List of groups that the user is in. Determines access to resources.
-- **Created On**: Timestamp indicating when the User was created.
-- **Last Modified On**: Timestamp indicating when the User was last modified.
-- **Last Login On**: Timestamp indicating when the User last logged in.
-- **Password Expires On**: Timestamp indicating when the User's password will expire.
+- **ID**: (integer) Unique identifier assigned upon creation.
+- **Groups**: (List of Group IDs)  List of groups that the user is in. Determines access to resources. Each user is in the Public Group by default.
+- **Created On**: (timestamp) When the User was created.
+- **Last Modified On**: (timestamp) When the User was last modified.
+- **Last Login On**: (timestamp) When the User last logged in.
+- **Password Expires On**: (timestamp) When the User's password will expire.
 
 .. _reference-users-registration-interfaces:
 
@@ -67,7 +67,7 @@ Registration Interfaces
 -----------------------
 
 Users can be created programmatically via the Python Client or the REST API.
-They can also be created through the web interface.
+They can also be :ref:`created through the web interface <how-to-create-users-and-groups>` .
 
 .. _reference-users-python-client:
 
