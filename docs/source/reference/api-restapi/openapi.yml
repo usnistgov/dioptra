@@ -1,7 +1,7 @@
 openapi: 3.0.1
 info:
   title: Dioptra REST API
-  version: 0.0.0
+  version: 1.1.0
 servers:
 - url: /
 tags:
@@ -39,6 +39,16 @@ paths:
       summary: Gets a list of all Artifact resources
       operationId: get_artifact_endpoint
       parameters:
+      - name: sortBy
+        in: query
+        description: The name of the column to sort.
+        schema:
+          type: string
+      - name: descending
+        in: query
+        description: Boolean indicating whether to sort by descending or not.
+        schema:
+          type: boolean
       - name: search
         in: query
         description: Search terms for the query (* and ? wildcards).
@@ -51,7 +61,7 @@ paths:
           type: integer
       - name: index
         in: query
-        description: Index of the current page.
+        description: Starting index of the current page.
         schema:
           type: integer
       - name: pageLength
@@ -59,6 +69,12 @@ paths:
         description: Number of results to return per page.
         schema:
           type: integer
+      - name: outputParams
+        in: query
+        description: Ordered List of Plugin Task Parameter Ids of the output values
+          produced by the ArtifactTask associated with the target Artifacts.
+        schema:
+          type: string
       - name: X-Fields
         in: header
         description: An optional fields mask
@@ -146,7 +162,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ArtifactMutableFields'
+              $ref: '#/components/schemas/ArtifactMutableFields-load'
         required: true
       responses:
         "200":
@@ -156,6 +172,79 @@ paths:
               schema:
                 $ref: '#/components/schemas/Artifact-dump'
       x-codegen-request-body-name: payload
+  /api/v1/artifacts/{id}/contents:
+    get:
+      tags:
+      - Artifacts
+      summary: Downloads the contents of an Artifact resource
+      description: |-
+        Args:
+            id: the resource id of the artifact
+
+        Returns:
+            A list of the files associated with artifact.
+      operationId: get_artifact_id_contents_endpoint
+      parameters:
+      - name: id
+        in: path
+        description: ID for the Artifact resource.
+        required: true
+        schema:
+          type: integer
+      - name: path
+        in: query
+        description: Path of a specific artifact. Only valid if artifactis a directory.
+        schema:
+          type: string
+      - name: fileType
+        in: query
+        description: "Only valid if the artifact is a directory. The type of file\
+          \ todownload: tar_gz or zip."
+        schema:
+          type: string
+      - name: X-Fields
+        in: header
+        description: An optional fields mask
+        schema:
+          type: string
+          format: mask
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ArtifactFile-dump'
+  /api/v1/artifacts/{id}/files:
+    get:
+      tags:
+      - Artifacts
+      summary: Gets a list of all files associated with an Artifact resource
+      operationId: get_artifact_id_files_endpoint
+      parameters:
+      - name: id
+        in: path
+        description: ID for the Artifact resource.
+        required: true
+        schema:
+          type: integer
+      - name: X-Fields
+        in: header
+        description: An optional fields mask
+        schema:
+          type: string
+          format: mask
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ArtifactFile-dump'
   /api/v1/artifacts/{id}/snapshots:
     get:
       tags:
@@ -176,7 +265,7 @@ paths:
           type: string
       - name: index
         in: query
-        description: Index of the current page.
+        description: Starting index of the current page.
         schema:
           type: integer
       - name: pageLength
@@ -229,6 +318,58 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SnapshotsIdArtifact-dump'
+  /api/v1/artifacts/{id}/snapshots/{snapshotId}/contents:
+    get:
+      tags:
+      - Artifacts
+      summary: Downloads the contents of an Artifact snapshot
+      description: |-
+        Args:
+            id: the resource id of the artifact
+            snapshotId: the snapshot resource id of the artifact
+
+        Returns:
+            A list of the files associated with artifact.
+      operationId: get_artifact_snapshot_id_contents_endpoint
+      parameters:
+      - name: snapshotId
+        in: path
+        description: Snapshot ID for the Artifact resource.
+        required: true
+        schema:
+          type: integer
+      - name: id
+        in: path
+        description: Snapshot ID for the Artifact resource.
+        required: true
+        schema:
+          type: integer
+      - name: path
+        in: query
+        description: Path of a specific artifact. Only valid if artifactis a directory.
+        schema:
+          type: string
+      - name: fileType
+        in: query
+        description: "Only valid if the artifact is a directory. The type of file\
+          \ todownload: tar_gz or zip."
+        schema:
+          type: string
+      - name: X-Fields
+        in: header
+        description: An optional fields mask
+        schema:
+          type: string
+          format: mask
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ArtifactFile-dump'
   /api/v1/auth/login:
     post:
       tags:
@@ -289,6 +430,16 @@ paths:
       summary: Gets a list of Entrypoint resources matching the filter parameters
       operationId: get_entrypoint_endpoint
       parameters:
+      - name: sortBy
+        in: query
+        description: The name of the column to sort.
+        schema:
+          type: string
+      - name: descending
+        in: query
+        description: Boolean indicating whether to sort by descending or not.
+        schema:
+          type: boolean
       - name: search
         in: query
         description: Search terms for the query (* and ? wildcards).
@@ -301,7 +452,7 @@ paths:
           type: integer
       - name: index
         in: query
-        description: Index of the current page.
+        description: Starting index of the current page.
         schema:
           type: integer
       - name: pageLength
@@ -367,7 +518,7 @@ paths:
           type: integer
       - name: index
         in: query
-        description: Index of the current page.
+        description: Starting index of the current page.
         schema:
           type: integer
       - name: pageLength
@@ -580,6 +731,131 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/IdStatusResponse'
+  /api/v1/entrypoints/{id}/artifactPlugins:
+    get:
+      tags:
+      - Entrypoints
+      summary: Retrieves the artifact plugin snapshots for an entrypoint resource
+      operationId: get_entrypoint_id_artifact_plugins_endpoint
+      parameters:
+      - name: id
+        in: path
+        description: ID for the Entrypoint resource.
+        required: true
+        schema:
+          type: integer
+      - name: X-Fields
+        in: header
+        description: An optional fields mask
+        schema:
+          type: string
+          format: mask
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EntrypointPlugin'
+    post:
+      tags:
+      - Entrypoints
+      summary: Appends artifact plugins to an entrypoint resource
+      operationId: post_entrypoint_id_artifact_plugins_endpoint
+      parameters:
+      - name: id
+        in: path
+        description: ID for the Entrypoint resource.
+        required: true
+        schema:
+          type: integer
+      - name: X-Fields
+        in: header
+        description: An optional fields mask
+        schema:
+          type: string
+          format: mask
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EntrypointArtifactPluginMutableFields-load'
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EntrypointPlugin'
+      x-codegen-request-body-name: payload
+  /api/v1/entrypoints/{id}/artifactPlugins/{artifactPluginId}:
+    get:
+      tags:
+      - Entrypoints
+      summary: Retrieves a artifact plugin snapshot for an entrypoint resource
+      operationId: get_entrypoint_id_artifact_plugin_id_endpoint
+      parameters:
+      - name: artifactPluginId
+        in: path
+        description: ID for the Artifact Plugin resource.
+        required: true
+        schema:
+          type: integer
+      - name: id
+        in: path
+        description: ID for the Entrypoint resource.
+        required: true
+        schema:
+          type: integer
+      - name: X-Fields
+        in: header
+        description: An optional fields mask
+        schema:
+          type: string
+          format: mask
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntrypointPlugin'
+    delete:
+      tags:
+      - Entrypoints
+      summary: Removes a artifact plugin from an entrypoint by ID
+      operationId: delete_entrypoint_id_artifact_plugin_id_endpoint
+      parameters:
+      - name: artifactPluginId
+        in: path
+        description: ID for the Artifact Plugin resource.
+        required: true
+        schema:
+          type: integer
+      - name: id
+        in: path
+        description: ID for the Entrypoint resource.
+        required: true
+        schema:
+          type: integer
+      - name: X-Fields
+        in: header
+        description: An optional fields mask
+        schema:
+          type: string
+          format: mask
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdStatusResponse'
   /api/v1/entrypoints/{id}/draft:
     get:
       tags:
@@ -628,7 +904,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DraftEntrypointDraft-load'
+              $ref: '#/components/schemas/ModifyDraftEntrypointDraft'
         required: true
       responses:
         "200":
@@ -660,7 +936,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DraftEntrypointDraft-load'
+              $ref: '#/components/schemas/CreateDraftEntrypointDraft-load'
         required: true
       responses:
         "200":
@@ -993,7 +1269,7 @@ paths:
           type: string
       - name: index
         in: query
-        description: Index of the current page.
+        description: Starting index of the current page.
         schema:
           type: integer
       - name: pageLength
@@ -1046,6 +1322,121 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SnapshotsIdEntrypoint-dump'
+  /api/v1/entrypoints/{id}/snapshots/{snapshotId}/artifactPlugins:
+    get:
+      tags:
+      - Entrypoints
+      summary: Retrieves the artifact plugin snapshots for an entrypoint resource
+      operationId: get_entrypoint_snapshot_id_artifact_plugins_endpoint
+      parameters:
+      - name: snapshotId
+        in: path
+        description: Snapshot ID for the Entrypoint snapshot.
+        required: true
+        schema:
+          type: integer
+      - name: id
+        in: path
+        description: ID for the Entrypoint resource.
+        required: true
+        schema:
+          type: integer
+      - name: X-Fields
+        in: header
+        description: An optional fields mask
+        schema:
+          type: string
+          format: mask
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EntrypointPlugin'
+  /api/v1/entrypoints/{id}/snapshots/{snapshotId}/artifactPlugins/bundle:
+    get:
+      tags:
+      - Entrypoints
+      summary: Returns a file bundle containing all of the ArtifactPlugin PluginFile
+      description: resources for an EntryPoint Snapshot resource.
+      operationId: get_entry_point_snapshot_artifact_bundle_endpoint
+      parameters:
+      - name: snapshotId
+        in: path
+        description: Snapshot ID for the Entrypoint resource.
+        required: true
+        schema:
+          type: integer
+      - name: id
+        in: path
+        description: ID for the Entrypoint resource.
+        required: true
+        schema:
+          type: integer
+      - name: fileType
+        in: query
+        description: "The type of file to download: tar_gz or zip."
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Success
+          content: {}
+  /api/v1/entrypoints/{id}/snapshots/{snapshotId}/config:
+    get:
+      tags:
+      - Entrypoints
+      operationId: get_entry_point_snapshot_config_endpoint
+      parameters:
+      - name: snapshotId
+        in: path
+        description: Snapshot ID for the entrypoint resource.
+        required: true
+        schema:
+          type: integer
+      - name: id
+        in: path
+        description: ID for the entrypoint resource.
+        required: true
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: Success
+          content: {}
+  /api/v1/entrypoints/{id}/snapshots/{snapshotId}/plugins/bundle:
+    get:
+      tags:
+      - Entrypoints
+      summary: Returns a file bundle containing all of the PluginFile resources for
+        an
+      description: EntryPoint Snapshot resource.
+      operationId: get_entry_point_snapshot_plugin_bundle_endpoint
+      parameters:
+      - name: snapshotId
+        in: path
+        description: Snapshot ID for the Entrypoint resource.
+        required: true
+        schema:
+          type: integer
+      - name: id
+        in: path
+        description: ID for the Entrypoint resource.
+        required: true
+        schema:
+          type: integer
+      - name: fileType
+        in: query
+        description: "The type of file to download: tar_gz or zip."
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Success
+          content: {}
   /api/v1/entrypoints/{id}/tags:
     get:
       tags:
@@ -1206,6 +1597,16 @@ paths:
       summary: Gets a page of Experiment resources matching the filter parameters
       operationId: get_experiment_endpoint
       parameters:
+      - name: sortBy
+        in: query
+        description: The name of the column to sort.
+        schema:
+          type: string
+      - name: descending
+        in: query
+        description: Boolean indicating whether to sort by descending or not.
+        schema:
+          type: boolean
       - name: search
         in: query
         description: Search terms for the query (* and ? wildcards).
@@ -1218,7 +1619,7 @@ paths:
           type: integer
       - name: index
         in: query
-        description: Index of the current page.
+        description: Starting index of the current page.
         schema:
           type: integer
       - name: pageLength
@@ -1284,7 +1685,7 @@ paths:
           type: integer
       - name: index
         in: query
-        description: Index of the current page.
+        description: Starting index of the current page.
         schema:
           type: integer
       - name: pageLength
@@ -1545,7 +1946,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DraftExperimentDraft-load'
+              $ref: '#/components/schemas/ModifyDraftExperimentDraft'
         required: true
       responses:
         "200":
@@ -1577,7 +1978,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DraftExperimentDraft-load'
+              $ref: '#/components/schemas/CreateDraftExperimentDraft-load'
         required: true
       responses:
         "200":
@@ -1778,6 +2179,16 @@ paths:
         required: true
         schema:
           type: integer
+      - name: sortBy
+        in: query
+        description: The name of the column to sort.
+        schema:
+          type: string
+      - name: descending
+        in: query
+        description: Boolean indicating whether to sort by descending or not.
+        schema:
+          type: boolean
       - name: search
         in: query
         description: Search terms for the query (* and ? wildcards).
@@ -1785,7 +2196,7 @@ paths:
           type: string
       - name: index
         in: query
-        description: Index of the current page.
+        description: Starting index of the current page.
         schema:
           type: integer
       - name: pageLength
@@ -1828,7 +2239,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Job-load'
+              $ref: '#/components/schemas/JobCreateRequest-load'
         required: true
       responses:
         "200":
@@ -1901,45 +2312,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/IdStatusResponse'
-  /api/v1/experiments/{id}/jobs/{jobId}/artifacts:
-    post:
-      tags:
-      - Experiments
-      summary: Creates an Artifact resource
-      operationId: post_experiment_id_job_id_artifacts_endpoint
-      parameters:
-      - name: jobId
-        in: path
-        description: ID for the Job resource.
-        required: true
-        schema:
-          type: integer
-      - name: id
-        in: path
-        description: ID for the Experiment resource.
-        required: true
-        schema:
-          type: integer
-      - name: X-Fields
-        in: header
-        description: An optional fields mask
-        schema:
-          type: string
-          format: mask
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/JobArtifactSchema-load'
-        required: true
-      responses:
-        "200":
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Artifact-dump'
-      x-codegen-request-body-name: payload
   /api/v1/experiments/{id}/jobs/{jobId}/mlflowRun:
     get:
       tags:
@@ -2080,6 +2452,57 @@ paths:
               schema:
                 $ref: '#/components/schemas/JobStatus-dump'
       x-codegen-request-body-name: payload
+  /api/v1/experiments/{id}/metrics:
+    get:
+      tags:
+      - Experiments
+      summary: Gets all of the latest metrics for every job in the experiment
+      operationId: get_experiment_id_metrics_endpoint
+      parameters:
+      - name: id
+        in: path
+        description: ID for the Experiment resource.
+        required: true
+        schema:
+          type: integer
+      - name: sortBy
+        in: query
+        description: The name of the column to sort.
+        schema:
+          type: string
+      - name: descending
+        in: query
+        description: Boolean indicating whether to sort by descending or not.
+        schema:
+          type: boolean
+      - name: search
+        in: query
+        description: Search terms for the query (* and ? wildcards).
+        schema:
+          type: string
+      - name: index
+        in: query
+        description: Starting index of the current page.
+        schema:
+          type: integer
+      - name: pageLength
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: X-Fields
+        in: header
+        description: An optional fields mask
+        schema:
+          type: string
+          format: mask
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentJobsMetrics'
   /api/v1/experiments/{id}/snapshots:
     get:
       tags:
@@ -2100,7 +2523,7 @@ paths:
           type: string
       - name: index
         in: query
-        description: Index of the current page.
+        description: Starting index of the current page.
         schema:
           type: integer
       - name: pageLength
@@ -2320,7 +2743,7 @@ paths:
           type: string
       - name: index
         in: query
-        description: Index of the current page.
+        description: Starting index of the current page.
         schema:
           type: integer
       - name: pageLength
@@ -2374,6 +2797,16 @@ paths:
       summary: Gets a list of all Job resources
       operationId: get_job_endpoint
       parameters:
+      - name: sortBy
+        in: query
+        description: The name of the column to sort.
+        schema:
+          type: string
+      - name: descending
+        in: query
+        description: Boolean indicating whether to sort by descending or not.
+        schema:
+          type: boolean
       - name: search
         in: query
         description: Search terms for the query (* and ? wildcards).
@@ -2386,7 +2819,7 @@ paths:
           type: integer
       - name: index
         in: query
-        description: Index of the current page.
+        description: Starting index of the current page.
         schema:
           type: integer
       - name: pageLength
@@ -2458,6 +2891,216 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/IdStatusResponse'
+  /api/v1/jobs/{id}/artifactParameters:
+    get:
+      tags:
+      - Job
+      operationId: get_job_id_artifact_parameters_endpoint
+      parameters:
+      - name: id
+        in: path
+        description: ID for the Job resource.
+        required: true
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: Success
+          content: {}
+  /api/v1/jobs/{id}/log:
+    get:
+      tags:
+      - Job
+      operationId: get_job_id_log_endpoint
+      parameters:
+      - name: id
+        in: path
+        description: ID for the Job resource.
+        required: true
+        schema:
+          type: integer
+      - name: search
+        in: query
+        description: Search terms for the query (* and ? wildcards).
+        schema:
+          type: string
+      - name: sortBy
+        in: query
+        description: The name of the column to sort.
+        schema:
+          type: string
+      - name: descending
+        in: query
+        description: Boolean indicating whether to sort by descending or not.
+        schema:
+          type: boolean
+      - name: index
+        in: query
+        description: Starting index of the current page.
+        schema:
+          type: integer
+      - name: pageLength
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: severity
+        in: query
+        description: List of severities to filter by
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: X-Fields
+        in: header
+        description: An optional fields mask
+        schema:
+          type: string
+          format: mask
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobLogRecordsPage'
+    post:
+      tags:
+      - Job
+      operationId: post_job_id_log_endpoint
+      parameters:
+      - name: id
+        in: path
+        description: ID for the Job resource.
+        required: true
+        schema:
+          type: integer
+      - name: X-Fields
+        in: header
+        description: An optional fields mask
+        schema:
+          type: string
+          format: mask
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobLogRecords'
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/JobLogRecord-dump'
+      x-codegen-request-body-name: payload
+  /api/v1/jobs/{id}/metrics:
+    get:
+      tags:
+      - Job
+      summary: Gets a Job resource's latest metrics
+      operationId: get_job_id_metrics_endpoint
+      parameters:
+      - name: id
+        in: path
+        description: ID for the Job resource.
+        required: true
+        schema:
+          type: integer
+      - name: X-Fields
+        in: header
+        description: An optional fields mask
+        schema:
+          type: string
+          format: mask
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Metrics-dump'
+    post:
+      tags:
+      - Job
+      summary: Sets a metric for a Job
+      operationId: post_job_id_metrics_endpoint
+      parameters:
+      - name: id
+        in: path
+        description: ID for the Job resource.
+        required: true
+        schema:
+          type: integer
+      - name: X-Fields
+        in: header
+        description: An optional fields mask
+        schema:
+          type: string
+          format: mask
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Metrics-load'
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Metrics-dump'
+      x-codegen-request-body-name: payload
+  /api/v1/jobs/{id}/metrics/{name}/snapshots:
+    get:
+      tags:
+      - Job
+      summary: Gets a Job resource's metric history
+      operationId: get_job_id_metrics_snapshots_endpoint
+      parameters:
+      - name: name
+        in: path
+        description: Name of the metric.
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        description: ID for the Job resource.
+        required: true
+        schema:
+          type: integer
+      - name: index
+        in: query
+        description: Starting index of the current page.
+        schema:
+          type: integer
+      - name: pageLength
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: X-Fields
+        in: header
+        description: An optional fields mask
+        schema:
+          type: string
+          format: mask
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetricsSnapshotPage'
   /api/v1/jobs/{id}/mlflowRun:
     get:
       tags:
@@ -2516,6 +3159,22 @@ paths:
               schema:
                 $ref: '#/components/schemas/JobMlflowRun'
       x-codegen-request-body-name: payload
+  /api/v1/jobs/{id}/parameters:
+    get:
+      tags:
+      - Job
+      operationId: get_job_id_parameters_endpoint
+      parameters:
+      - name: id
+        in: path
+        description: ID for the Job resource.
+        required: true
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: Success
+          content: {}
   /api/v1/jobs/{id}/snapshots:
     get:
       tags:
@@ -2536,7 +3195,7 @@ paths:
           type: string
       - name: index
         in: query
-        description: Index of the current page.
+        description: Starting index of the current page.
         schema:
           type: integer
       - name: pageLength
@@ -2775,6 +3434,16 @@ paths:
       summary: Gets a list of all Model resources
       operationId: get_model_endpoint
       parameters:
+      - name: sortBy
+        in: query
+        description: The name of the column to sort.
+        schema:
+          type: string
+      - name: descending
+        in: query
+        description: Boolean indicating whether to sort by descending or not.
+        schema:
+          type: boolean
       - name: search
         in: query
         description: Search terms for the query (* and ? wildcards).
@@ -2787,7 +3456,7 @@ paths:
           type: integer
       - name: index
         in: query
-        description: Index of the current page.
+        description: Starting index of the current page.
         schema:
           type: integer
       - name: pageLength
@@ -2853,7 +3522,7 @@ paths:
           type: integer
       - name: index
         in: query
-        description: Index of the current page.
+        description: Starting index of the current page.
         schema:
           type: integer
       - name: pageLength
@@ -3114,7 +3783,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DraftModel-load'
+              $ref: '#/components/schemas/ModifyDraftModel'
         required: true
       responses:
         "200":
@@ -3146,7 +3815,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DraftModel-load'
+              $ref: '#/components/schemas/CreateDraftModel-load'
         required: true
       responses:
         "200":
@@ -3201,7 +3870,7 @@ paths:
           type: string
       - name: index
         in: query
-        description: Index of the current page.
+        description: Starting index of the current page.
         schema:
           type: integer
       - name: pageLength
@@ -3427,7 +4096,7 @@ paths:
           type: string
       - name: index
         in: query
-        description: Index of the current page.
+        description: Starting index of the current page.
         schema:
           type: integer
       - name: pageLength
@@ -3557,6 +4226,16 @@ paths:
       summary: Gets a list of all PluginParameterType resources
       operationId: get_plugin_parameter_type_endpoint
       parameters:
+      - name: sortBy
+        in: query
+        description: The name of the column to sort.
+        schema:
+          type: string
+      - name: descending
+        in: query
+        description: Boolean indicating whether to sort by descending or not.
+        schema:
+          type: boolean
       - name: search
         in: query
         description: Search terms for the query (* and ? wildcards).
@@ -3569,7 +4248,7 @@ paths:
           type: integer
       - name: index
         in: query
-        description: Index of the current page.
+        description: Starting index of the current page.
         schema:
           type: integer
       - name: pageLength
@@ -3635,7 +4314,7 @@ paths:
           type: integer
       - name: index
         in: query
-        description: Index of the current page.
+        description: Starting index of the current page.
         schema:
           type: integer
       - name: pageLength
@@ -3896,7 +4575,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DraftPluginParameterTypeMutableFields'
+              $ref: '#/components/schemas/ModifyDraftPluginParameterTypeMutableFields'
         required: true
       responses:
         "200":
@@ -3928,7 +4607,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DraftPluginParameterTypeMutableFields'
+              $ref: '#/components/schemas/CreateDraftPluginParameterTypeMutableFields'
         required: true
       responses:
         "200":
@@ -3983,7 +4662,7 @@ paths:
           type: string
       - name: index
         in: query
-        description: Index of the current page.
+        description: Starting index of the current page.
         schema:
           type: integer
       - name: pageLength
@@ -4196,6 +4875,16 @@ paths:
       summary: Gets a list of all Plugin resources
       operationId: get_plugin_endpoint
       parameters:
+      - name: sortBy
+        in: query
+        description: The name of the column to sort.
+        schema:
+          type: string
+      - name: descending
+        in: query
+        description: Boolean indicating whether to sort by descending or not.
+        schema:
+          type: boolean
       - name: search
         in: query
         description: Search terms for the query (* and ? wildcards).
@@ -4208,7 +4897,7 @@ paths:
           type: integer
       - name: index
         in: query
-        description: Index of the current page.
+        description: Starting index of the current page.
         schema:
           type: integer
       - name: pageLength
@@ -4274,7 +4963,7 @@ paths:
           type: integer
       - name: index
         in: query
-        description: Index of the current page.
+        description: Starting index of the current page.
         schema:
           type: integer
       - name: pageLength
@@ -4535,7 +5224,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DraftPluginMutableFields'
+              $ref: '#/components/schemas/ModifyDraftPluginMutableFields'
         required: true
       responses:
         "200":
@@ -4567,7 +5256,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DraftPluginMutableFields'
+              $ref: '#/components/schemas/CreateDraftPluginMutableFields'
         required: true
       responses:
         "200":
@@ -4615,6 +5304,16 @@ paths:
         required: true
         schema:
           type: integer
+      - name: sortBy
+        in: query
+        description: The name of the column to sort.
+        schema:
+          type: string
+      - name: descending
+        in: query
+        description: Boolean indicating whether to sort by descending or not.
+        schema:
+          type: boolean
       - name: search
         in: query
         description: Search terms for the query (* and ? wildcards).
@@ -4622,7 +5321,7 @@ paths:
           type: string
       - name: index
         in: query
-        description: Index of the current page.
+        description: Starting index of the current page.
         schema:
           type: integer
       - name: pageLength
@@ -4647,6 +5346,9 @@ paths:
       tags:
       - Plugins
       summary: Creates a PluginFile resource associated with a Plugin resource
+      description: |-
+        If type is plugin then blah
+        If type is artifact then blah
       operationId: post_plugin_id_files_endpoint
       parameters:
       - name: id
@@ -4724,7 +5426,7 @@ paths:
           type: integer
       - name: index
         in: query
-        description: Index of the current page.
+        description: Starting index of the current page.
         schema:
           type: integer
       - name: pageLength
@@ -5033,7 +5735,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NestedDraftPluginFile-load'
+              $ref: '#/components/schemas/ModifyNestedDraftPluginFile'
         required: true
       responses:
         "200":
@@ -5070,7 +5772,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NestedDraftPluginFile-load'
+              $ref: '#/components/schemas/CreateNestedDraftPluginFile-load'
         required: true
       responses:
         "200":
@@ -5136,7 +5838,7 @@ paths:
           type: string
       - name: index
         in: query
-        description: Index of the current page.
+        description: Starting index of the current page.
         schema:
           type: integer
       - name: pageLength
@@ -5398,7 +6100,7 @@ paths:
           type: string
       - name: index
         in: query
-        description: Index of the current page.
+        description: Starting index of the current page.
         schema:
           type: integer
       - name: pageLength
@@ -5451,6 +6153,36 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SnapshotsIdPlugin-dump'
+  /api/v1/plugins/{id}/snapshots/{snapshotId}/files/bundle:
+    get:
+      tags:
+      - Plugins
+      summary: Returns a file bundle containing all of the PluginFile resources for
+        an
+      description: EntryPoint Snapshot resource.
+      operationId: get_plugin_snapshot_id_file_bundle_endpoint
+      parameters:
+      - name: snapshotId
+        in: path
+        description: Snapshot ID for the Entrypoint resource.
+        required: true
+        schema:
+          type: integer
+      - name: id
+        in: path
+        description: ID for the Entrypoint resource.
+        required: true
+        schema:
+          type: integer
+      - name: fileType
+        in: query
+        description: "The type of file to download: tar_gz or zip."
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Success
+          content: {}
   /api/v1/plugins/{id}/tags:
     get:
       tags:
@@ -5611,6 +6343,16 @@ paths:
       summary: Gets a list of all Queue resources
       operationId: get_queue_endpoint
       parameters:
+      - name: sortBy
+        in: query
+        description: The name of the column to sort.
+        schema:
+          type: string
+      - name: descending
+        in: query
+        description: Boolean indicating whether to sort by descending or not.
+        schema:
+          type: boolean
       - name: search
         in: query
         description: Search terms for the query (* and ? wildcards).
@@ -5623,7 +6365,7 @@ paths:
           type: integer
       - name: index
         in: query
-        description: Index of the current page.
+        description: Starting index of the current page.
         schema:
           type: integer
       - name: pageLength
@@ -5689,7 +6431,7 @@ paths:
           type: integer
       - name: index
         in: query
-        description: Index of the current page.
+        description: Starting index of the current page.
         schema:
           type: integer
       - name: pageLength
@@ -5950,7 +6692,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DraftQueueMutableFields'
+              $ref: '#/components/schemas/ModifyDraftQueueMutableFields'
         required: true
       responses:
         "200":
@@ -5982,7 +6724,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DraftQueueMutableFields'
+              $ref: '#/components/schemas/CreateDraftQueueMutableFields'
         required: true
       responses:
         "200":
@@ -6037,7 +6779,7 @@ paths:
           type: string
       - name: index
         in: query
-        description: Index of the current page.
+        description: Starting index of the current page.
         schema:
           type: integer
       - name: pageLength
@@ -6250,6 +6992,16 @@ paths:
       summary: Gets a list of all Tags
       operationId: get_tag_endpoint
       parameters:
+      - name: sortBy
+        in: query
+        description: The name of the column to sort.
+        schema:
+          type: string
+      - name: descending
+        in: query
+        description: Boolean indicating whether to sort by descending or not.
+        schema:
+          type: boolean
       - name: search
         in: query
         description: Search terms for the query (* and ? wildcards).
@@ -6262,7 +7014,7 @@ paths:
           type: integer
       - name: index
         in: query
-        description: Index of the current page.
+        description: Starting index of the current page.
         schema:
           type: integer
       - name: pageLength
@@ -6412,7 +7164,7 @@ paths:
           type: string
       - name: index
         in: query
-        description: Index of the current page.
+        description: Starting index of the current page.
         schema:
           type: integer
       - name: pageLength
@@ -6447,7 +7199,7 @@ paths:
           type: string
       - name: index
         in: query
-        description: Index of the current page.
+        description: Starting index of the current page.
         schema:
           type: integer
       - name: pageLength
@@ -6652,28 +7404,141 @@ paths:
               schema:
                 $ref: '#/components/schemas/IdStatusResponse'
       x-codegen-request-body-name: payload
-  /api/v1/workflows/jobFilesDownload:
-    get:
+  /api/v1/workflows/draftCommit/{id}:
+    post:
+      tags:
+      - Workflows
+      summary: Commit a draft as a new resource
+      operationId: post_draft_commit_endpoint
+      parameters:
+      - name: id
+        in: path
+        description: ID for the Draft resource.
+        required: true
+        schema:
+          type: integer
+      - name: X-Fields
+        in: header
+        description: An optional fields mask
+        schema:
+          type: string
+          format: mask
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdStatusResponse'
+  /api/v1/workflows/pluginTaskSignatureAnalysis:
+    post:
       tags:
       - Workflows
       summary: Download a compressed file archive containing the files needed to execute
         a submitted job
-      operationId: get_job_files_download_endpoint
+      operationId: post_signature_analysis_endpoint
       parameters:
-      - name: jobId
-        in: query
-        description: A job's unique identifier.
+      - name: X-Fields
+        in: header
+        description: An optional fields mask
         schema:
           type: string
-      - name: fileType
-        in: query
-        description: "The type of file to download: tar_gz or zip."
-        schema:
-          type: string
+          format: mask
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignatureAnalysis'
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignatureAnalysisOutput'
+      x-codegen-request-body-name: payload
+  /api/v1/workflows/resourceImport:
+    post:
+      tags:
+      - Workflows
+      summary: Import resources from an external source
+      operationId: post_resource_import
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              required:
+              - group
+              - sourceType
+              type: object
+              properties:
+                group:
+                  type: integer
+                  description: ID of the Group that will own the imported resources.
+                  format: int32
+                sourceType:
+                  type: string
+                  description: "The source of the resources to import('upload_archive',\
+                    \ 'upload_files', or 'git'."
+                gitUrl:
+                  type: string
+                  description: "The URL of the git repository containing resources\
+                    \ to import. A git branch can optionally be specified by appending\
+                    \ #BRANCH_NAME. Used when sourceType is 'git'."
+                archiveFile:
+                  type: string
+                  description: The archive file containing resources to import (.tar.gz).
+                    Used when sourceType is 'upload_archive'.
+                  format: binary
+                files:
+                  type: array
+                  description: The files containing the resources to import.Used when
+                    sourceType is 'upload_files'.
+                  items:
+                    type: file
+                    format: binary
+                configPath:
+                  type: string
+                  description: The path to the toml configuration file.
+                  default: dioptra.toml
+                resolveNameConflictsStrategy:
+                  type: string
+                  description: "Strategy for resolving resource name conflicts. Available\
+                    \ options are 'fail', 'update', or 'overwrite'"
+                  default: fail
+        required: true
       responses:
         "200":
           description: Success
           content: {}
+  /api/v1/workflows/validateEntrypoint:
+    post:
+      tags:
+      - Workflows
+      summary: Validates the proposed inputs for an entrypoint
+      operationId: post_validate_entrypoint_endpoint
+      parameters:
+      - name: X-Fields
+        in: header
+        description: An optional fields mask
+        schema:
+          type: string
+          format: mask
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidateEntrypointRequest'
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidateEntrypointResponse'
+      x-codegen-request-body-name: payload
 components:
   schemas:
     Login-load:
@@ -6718,7 +7583,6 @@ components:
       required:
       - group
       - job
-      - uri
       type: object
       properties:
         group:
@@ -6727,18 +7591,26 @@ components:
         description:
           type: string
           description: Description of the Artifact resource.
+        pluginSnapshotId:
+          type: integer
+          description: The Snapshot ID of the plugin containing the plugin file that
+            performs serializing/deserializing of this Artifact.
+        taskId:
+          type: integer
+          description: The id of the plugin artifact task that performs theserializing/deserializing
+            of this Artifact.
+        artifactUri:
+          type: string
+          description: URL pointing to the location of the Artifact resource.
         job:
           type: integer
           description: id of the job that produced this Artifact
-        uri:
-          type: string
-          description: URL pointing to the location of the Artifact.
     ArtifactPage:
       type: object
       properties:
         index:
           type: integer
-          description: Index of the current page.
+          description: Starting index of the current page.
         isComplete:
           type: boolean
           description: Boolean indicating if more data is available.
@@ -6764,7 +7636,6 @@ components:
     Artifact-dump:
       required:
       - job
-      - uri
       type: object
       properties:
         id:
@@ -6787,6 +7658,10 @@ components:
           type: string
           description: Timestamp when the Artifact resource was created.
           format: date-time
+        snapshotCreatedOn:
+          type: string
+          description: Timestamp when the Artifact resource snapshot was created.
+          format: date-time
         lastModifiedOn:
           type: string
           description: Timestamp when the Artifact resource was last modified.
@@ -6807,12 +7682,26 @@ components:
         description:
           type: string
           description: Description of the Artifact resource.
+        isDir:
+          type: boolean
+          description: Whether the file denotes a directory or not.
+        fileSize:
+          type: integer
+          description: The size in bytes of the file.
+        fileUrl:
+          type: string
+          description: URL for accessing the contents of the Artifact.
+        artifactUri:
+          type: string
+          description: URL pointing to the location of the Artifact resource.
         job:
           type: integer
           description: id of the job that produced this Artifact
-        uri:
-          type: string
-          description: URL pointing to the location of the Artifact.
+        task:
+          type: object
+          description: The artifact task.
+          allOf:
+          - $ref: '#/components/schemas/ArtifactArtifactTask-dump'
     GroupRef:
       type: object
       properties:
@@ -6854,18 +7743,103 @@ components:
         url:
           type: string
           description: URL for accessing the full Tag.
-    ArtifactMutableFields:
+    ArtifactArtifactTask-dump:
+      required:
+      - name
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Id of the PluginTask.
+        name:
+          type: string
+          description: Name of the PluginTask.
+        outputParams:
+          type: array
+          items:
+            type: object
+            description: List of output PluginTaskParameters produced by this ArtifactTask.
+            allOf:
+            - $ref: '#/components/schemas/PluginTaskOutputParameter-dump'
+        pluginResourceId:
+          type: integer
+          description: resource id of the plugin containing the Artifact Task
+        pluginResourceSnapshotId:
+          type: integer
+          description: snapshot resource id of the plugin containing the Artifact
+            Task
+        pluginFileResourceId:
+          type: integer
+          description: resource id of the plugin file containing the Artifact Task
+        pluginFileResourceSnapshotId:
+          type: integer
+          description: snapshot resource id of the plugin file containing the Artifact
+            Task
+    PluginTaskOutputParameter-dump:
+      required:
+      - name
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the PluginTaskParameter.
+        parameterType:
+          type: object
+          description: The assigned PluginParameterType resource.
+          allOf:
+          - $ref: '#/components/schemas/PluginParameterTypeRef'
+    PluginParameterTypeRef:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID for the PluginParameterType resource.
+        group:
+          type: object
+          description: Group that owns the PluginParameterType resource.
+          allOf:
+          - $ref: '#/components/schemas/GroupRef'
+        url:
+          type: string
+          description: URL for accessing the full PluginParameterType resource.
+        name:
+          type: string
+          description: Name of the PluginParameterType resource.
+    ArtifactMutableFields-load:
       type: object
       properties:
         description:
           type: string
           description: Description of the Artifact resource.
+        pluginSnapshotId:
+          type: integer
+          description: The Snapshot ID of the plugin containing the plugin file that
+            performs serializing/deserializing of this Artifact.
+        taskId:
+          type: integer
+          description: The id of the plugin artifact task that performs theserializing/deserializing
+            of this Artifact.
+    ArtifactFile-dump:
+      type: object
+      properties:
+        isDir:
+          type: boolean
+          description: Whether the file denotes a directory or not.
+        fileSize:
+          type: integer
+          description: The size in bytes of the file.
+        fileUrl:
+          type: string
+          description: URL for accessing the contents of the Artifact.
+        relativePath:
+          type: string
+          description: Relative path to the Artifact URI.
     SnapshotsArtifactPage:
       type: object
       properties:
         index:
           type: integer
-          description: Index of the current page.
+          description: Starting index of the current page.
         isComplete:
           type: boolean
           description: Boolean indicating if more data is available.
@@ -6891,7 +7865,6 @@ components:
     SnapshotsIdArtifact-dump:
       required:
       - job
-      - uri
       type: object
       properties:
         id:
@@ -6914,6 +7887,10 @@ components:
           type: string
           description: Timestamp when the Artifact resource was created.
           format: date-time
+        snapshotCreatedOn:
+          type: string
+          description: Timestamp when the Artifact resource snapshot was created.
+          format: date-time
         lastModifiedOn:
           type: string
           description: Timestamp when the Artifact resource was last modified.
@@ -6934,12 +7911,26 @@ components:
         description:
           type: string
           description: Description of the Artifact resource.
+        isDir:
+          type: boolean
+          description: Whether the file denotes a directory or not.
+        fileSize:
+          type: integer
+          description: The size in bytes of the file.
+        fileUrl:
+          type: string
+          description: URL for accessing the contents of the Artifact.
+        artifactUri:
+          type: string
+          description: URL pointing to the location of the Artifact resource.
         job:
           type: integer
           description: id of the job that produced this Artifact
-        uri:
-          type: string
-          description: URL pointing to the location of the Artifact.
+        task:
+          type: object
+          description: The artifact task.
+          allOf:
+          - $ref: '#/components/schemas/ArtifactArtifactTask-dump'
     Entrypoint-load:
       required:
       - group
@@ -6959,6 +7950,9 @@ components:
         taskGraph:
           type: string
           description: Task graph of the Entrypoint resource.
+        artifactGraph:
+          type: string
+          description: Artifact graph of the Entrypoint resource.
         parameters:
           type: array
           items:
@@ -6966,6 +7960,13 @@ components:
             description: List of parameters for the entrypoint.
             allOf:
             - $ref: '#/components/schemas/EntrypointParameter'
+        artifactParameters:
+          type: array
+          items:
+            type: object
+            description: List of artifacts for the entrypoint.
+            allOf:
+            - $ref: '#/components/schemas/EntrypointArtifact'
         queues:
           type: array
           description: The queue for the entrypoint.
@@ -6974,6 +7975,11 @@ components:
         plugins:
           type: array
           description: List of plugin files for the entrypoint.
+          items:
+            type: integer
+        artifactPlugins:
+          type: array
+          description: List of artifact_plugin files for the entrypoint.
           items:
             type: integer
     EntrypointParameter:
@@ -6991,12 +7997,40 @@ components:
         parameterType:
           type: string
           description: Data type of the Entrypoint parameter.
+    EntrypointArtifact:
+      required:
+      - name
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the Entrypoint artifact resource.
+        outputParams:
+          type: array
+          items:
+            type: object
+            description: List of output ArtifactOutputParameters that the artifact
+              isexpected to produce.
+            allOf:
+            - $ref: '#/components/schemas/ArtifactOutputParameter-load'
+    ArtifactOutputParameter-load:
+      required:
+      - name
+      - parameterType
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the PluginTaskParameter.
+        parameterType:
+          type: integer
+          description: The ID of the assigned PluginParameterType resource
     EntrypointPage:
       type: object
       properties:
         index:
           type: integer
-          description: Index of the current page.
+          description: Starting index of the current page.
         isComplete:
           type: boolean
           description: Boolean indicating if more data is available.
@@ -7045,6 +8079,10 @@ components:
           type: string
           description: Timestamp when the Entrypoint resource was created.
           format: date-time
+        snapshotCreatedOn:
+          type: string
+          description: Timestamp when the Entrypoint resource snapshot was created.
+          format: date-time
         lastModifiedOn:
           type: string
           description: Timestamp when the Entrypoint resource was last modified.
@@ -7071,6 +8109,9 @@ components:
         taskGraph:
           type: string
           description: Task graph of the Entrypoint resource.
+        artifactGraph:
+          type: string
+          description: Artifact graph of the Entrypoint resource.
         parameters:
           type: array
           items:
@@ -7078,11 +8119,25 @@ components:
             description: List of parameters for the entrypoint.
             allOf:
             - $ref: '#/components/schemas/EntrypointParameter'
+        artifactParameters:
+          type: array
+          items:
+            type: object
+            description: List of artifacts for the entrypoint.
+            allOf:
+            - $ref: '#/components/schemas/EntrypointArtifact'
         plugins:
           type: array
           items:
             type: object
             description: List of plugins for the entrypoint.
+            allOf:
+            - $ref: '#/components/schemas/EntrypointPlugin'
+        artifactPlugins:
+          type: array
+          items:
+            type: object
+            description: List of artifact plugins for the entrypoint.
             allOf:
             - $ref: '#/components/schemas/EntrypointPlugin'
         queues:
@@ -7104,6 +8159,9 @@ components:
         snapshotId:
           type: integer
           description: Snapshot ID for the Plugin resource.
+        latestSnapshot:
+          type: boolean
+          description: Whether or not the Plugin is the latest version.
         url:
           type: string
           description: URL for accessing the full Plugin snapshot.
@@ -7129,6 +8187,90 @@ components:
         url:
           type: string
           description: URL for accessing the full PluginFile snapshot.
+        tasks:
+          type: object
+          description: Tasks associated with the PluginFile resource.
+          allOf:
+          - $ref: '#/components/schemas/PluginTaskContainer'
+    PluginTaskContainer:
+      type: object
+      properties:
+        functions:
+          type: array
+          items:
+            type: object
+            description: List of function tasks.
+            allOf:
+            - $ref: '#/components/schemas/FunctionTask-dump'
+        artifacts:
+          type: array
+          items:
+            type: object
+            description: List of artifact tasks.
+            allOf:
+            - $ref: '#/components/schemas/ArtifactTask-dump'
+    FunctionTask-dump:
+      required:
+      - name
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Id of the PluginTask.
+        name:
+          type: string
+          description: Name of the PluginTask.
+        inputParams:
+          type: array
+          items:
+            type: object
+            description: List of input PluginTaskParameters in this FunctionTask.
+            allOf:
+            - $ref: '#/components/schemas/PluginTaskInputParameter-dump'
+        outputParams:
+          type: array
+          items:
+            type: object
+            description: List of output PluginTaskParameters in this FunctionTask.
+            allOf:
+            - $ref: '#/components/schemas/PluginTaskOutputParameter-dump'
+    PluginTaskInputParameter-dump:
+      required:
+      - name
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the PluginTaskParameter.
+        parameterType:
+          type: object
+          description: The assigned PluginParameterType resource.
+          allOf:
+          - $ref: '#/components/schemas/PluginParameterTypeRef'
+        required:
+          type: boolean
+          description: "Sets whether the input parameter is required (True) or optional\
+            \ (False). If True, then this parameter must be assigned a value in order\
+            \ to execute the PluginTask."
+          default: true
+    ArtifactTask-dump:
+      required:
+      - name
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Id of the PluginTask.
+        name:
+          type: string
+          description: Name of the PluginTask.
+        outputParams:
+          type: array
+          items:
+            type: object
+            description: List of output PluginTaskParameters produced by this ArtifactTask.
+            allOf:
+            - $ref: '#/components/schemas/PluginTaskOutputParameter-dump'
     QueueRef:
       type: object
       properties:
@@ -7161,6 +8303,9 @@ components:
         taskGraph:
           type: string
           description: Task graph of the Entrypoint resource.
+        artifactGraph:
+          type: string
+          description: Artifact graph of the Entrypoint resource.
         parameters:
           type: array
           items:
@@ -7168,6 +8313,13 @@ components:
             description: List of parameters for the entrypoint.
             allOf:
             - $ref: '#/components/schemas/EntrypointParameter'
+        artifactParameters:
+          type: array
+          items:
+            type: object
+            description: List of artifacts for the entrypoint.
+            allOf:
+            - $ref: '#/components/schemas/EntrypointArtifact'
         queues:
           type: array
           description: The queue for the entrypoint.
@@ -7190,6 +8342,14 @@ components:
         plugins:
           type: array
           description: List of plugin files for the entrypoint.
+          items:
+            type: integer
+    EntrypointArtifactPluginMutableFields-load:
+      type: object
+      properties:
+        artifactPlugins:
+          type: array
+          description: List of artifact_plugin files for the entrypoint.
           items:
             type: integer
     IdList:
@@ -7219,6 +8379,9 @@ components:
         taskGraph:
           type: string
           description: Task graph of the Entrypoint resource.
+        artifactGraph:
+          type: string
+          description: Artifact graph of the Entrypoint resource.
         parameters:
           type: array
           items:
@@ -7226,6 +8389,13 @@ components:
             description: List of parameters for the entrypoint.
             allOf:
             - $ref: '#/components/schemas/EntrypointParameter'
+        artifactParameters:
+          type: array
+          items:
+            type: object
+            description: List of artifacts for the entrypoint.
+            allOf:
+            - $ref: '#/components/schemas/EntrypointArtifact'
         queues:
           type: array
           description: The queue for the entrypoint.
@@ -7236,12 +8406,17 @@ components:
           description: List of plugin files for the entrypoint.
           items:
             type: integer
+        artifactPlugins:
+          type: array
+          description: List of artifact plugin files for the entrypoint.
+          items:
+            type: integer
     DraftPage:
       type: object
       properties:
         index:
           type: integer
-          description: Index of the current page.
+          description: Starting index of the current page.
         isComplete:
           type: boolean
           description: Boolean indicating if more data is available.
@@ -7320,6 +8495,9 @@ components:
         taskGraph:
           type: string
           description: Task graph of the Entrypoint resource.
+        artifactGraph:
+          type: string
+          description: Artifact graph of the Entrypoint resource.
         parameters:
           type: array
           items:
@@ -7327,6 +8505,13 @@ components:
             description: List of parameters for the entrypoint.
             allOf:
             - $ref: '#/components/schemas/EntrypointParameter'
+        artifactParameters:
+          type: array
+          items:
+            type: object
+            description: List of artifacts for the entrypoint.
+            allOf:
+            - $ref: '#/components/schemas/EntrypointArtifact'
         queues:
           type: array
           description: The queue for the entrypoint.
@@ -7337,7 +8522,23 @@ components:
           description: List of plugin files for the entrypoint.
           items:
             type: integer
-    DraftEntrypointDraft-load:
+        artifactPlugins:
+          type: array
+          description: List of artifact plugin files for the entrypoint.
+          items:
+            type: integer
+    ModifyDraftEntrypointDraft:
+      type: object
+      properties:
+        resourceSnapshot:
+          type: integer
+          description: ID of the resource snapshot this draft modifies.
+        resourceData:
+          type: object
+          description: Draft resource data.
+          allOf:
+          - $ref: '#/components/schemas/EntrypointDraft-load'
+    EntrypointDraft-load:
       required:
       - name
       - taskGraph
@@ -7352,6 +8553,9 @@ components:
         taskGraph:
           type: string
           description: Task graph of the Entrypoint resource.
+        artifactGraph:
+          type: string
+          description: Artifact graph of the Entrypoint resource.
         parameters:
           type: array
           items:
@@ -7359,14 +8563,63 @@ components:
             description: List of parameters for the entrypoint.
             allOf:
             - $ref: '#/components/schemas/EntrypointParameter'
+        artifactParameters:
+          type: array
+          items:
+            type: object
+            description: List of artifacts for the entrypoint.
+            allOf:
+            - $ref: '#/components/schemas/EntrypointArtifact'
         queues:
           type: array
           description: The queue for the entrypoint.
           items:
             type: integer
-        plugins:
+        artifactPlugins:
           type: array
-          description: List of plugin files for the entrypoint.
+          description: List of artifact plugin files for the entrypoint.
+          items:
+            type: integer
+    CreateDraftEntrypointDraft-load:
+      required:
+      - name
+      - taskGraph
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the Entrypoint resource.
+        description:
+          type: string
+          description: Description of the Entrypoint resource.
+        taskGraph:
+          type: string
+          description: Task graph of the Entrypoint resource.
+        artifactGraph:
+          type: string
+          description: Artifact graph of the Entrypoint resource.
+        parameters:
+          type: array
+          items:
+            type: object
+            description: List of parameters for the entrypoint.
+            allOf:
+            - $ref: '#/components/schemas/EntrypointParameter'
+        artifactParameters:
+          type: array
+          items:
+            type: object
+            description: List of artifacts for the entrypoint.
+            allOf:
+            - $ref: '#/components/schemas/EntrypointArtifact'
+        queues:
+          type: array
+          description: The queue for the entrypoint.
+          items:
+            type: integer
+        artifactPlugins:
+          type: array
+          description: List of artifact plugin files for the entrypoint.
           items:
             type: integer
     SnapshotsEntrypointPage:
@@ -7374,7 +8627,7 @@ components:
       properties:
         index:
           type: integer
-          description: Index of the current page.
+          description: Starting index of the current page.
         isComplete:
           type: boolean
           description: Boolean indicating if more data is available.
@@ -7423,6 +8676,10 @@ components:
           type: string
           description: Timestamp when the Entrypoint resource was created.
           format: date-time
+        snapshotCreatedOn:
+          type: string
+          description: Timestamp when the Entrypoint resource snapshot was created.
+          format: date-time
         lastModifiedOn:
           type: string
           description: Timestamp when the Entrypoint resource was last modified.
@@ -7449,6 +8706,9 @@ components:
         taskGraph:
           type: string
           description: Task graph of the Entrypoint resource.
+        artifactGraph:
+          type: string
+          description: Artifact graph of the Entrypoint resource.
         parameters:
           type: array
           items:
@@ -7456,11 +8716,25 @@ components:
             description: List of parameters for the entrypoint.
             allOf:
             - $ref: '#/components/schemas/EntrypointParameter'
+        artifactParameters:
+          type: array
+          items:
+            type: object
+            description: List of artifacts for the entrypoint.
+            allOf:
+            - $ref: '#/components/schemas/EntrypointArtifact'
         plugins:
           type: array
           items:
             type: object
             description: List of plugins for the entrypoint.
+            allOf:
+            - $ref: '#/components/schemas/EntrypointPlugin'
+        artifactPlugins:
+          type: array
+          items:
+            type: object
+            description: List of artifact plugins for the entrypoint.
             allOf:
             - $ref: '#/components/schemas/EntrypointPlugin'
         queues:
@@ -7495,7 +8769,7 @@ components:
       properties:
         index:
           type: integer
-          description: Index of the current page.
+          description: Starting index of the current page.
         isComplete:
           type: boolean
           description: Boolean indicating if more data is available.
@@ -7542,6 +8816,10 @@ components:
         createdOn:
           type: string
           description: Timestamp when the Experiment resource was created.
+          format: date-time
+        snapshotCreatedOn:
+          type: string
+          description: Timestamp when the Experiment resource snapshot was created.
           format: date-time
         lastModifiedOn:
           type: string
@@ -7606,7 +8884,7 @@ components:
           description: A list of Entrypoint IDs.
           items:
             type: integer
-    Job-load:
+    JobCreateRequest-load:
       required:
       - entrypoint
       - queue
@@ -7625,17 +8903,27 @@ components:
           type: object
           properties: {}
           description: A dictionary of keyword arguments to pass to the Job's Entrypoint.
+        artifactValues:
+          type: object
+          properties: {}
+          description: A dictionary of artifacts to pass to the Job's Entrypoint.
         timeout:
           type: string
           description: "The maximum alloted time for a job before it times out and\
             \ is stopped. If omitted, the job timeout will default to 24 hours."
           default: 24h
+        entrypointSnapshot:
+          type: integer
+          description: "An integer identifying a snapshot ID associated with the entrypoint.\
+            \ If specified, the snapshotted version of the entrypoint will be used\
+            \ to run the job. If not specified, the job will default to using the\
+            \ latest version of the entrypoint."
     JobPage:
       type: object
       properties:
         index:
           type: integer
-          description: Index of the current page.
+          description: Starting index of the current page.
         isComplete:
           type: boolean
           description: Boolean indicating if more data is available.
@@ -7681,6 +8969,10 @@ components:
           type: string
           description: Timestamp when the Job resource was created.
           format: date-time
+        snapshotCreatedOn:
+          type: string
+          description: Timestamp when the Job resource snapshot was created.
+          format: date-time
         lastModifiedOn:
           type: string
           description: Timestamp when the Job resource was last modified.
@@ -7720,6 +9012,10 @@ components:
           type: object
           properties: {}
           description: A dictionary of keyword arguments to pass to the Job's Entrypoint.
+        artifactValues:
+          type: object
+          properties: {}
+          description: A dictionary of artifacts to pass to the Job's Entrypoint.
         timeout:
           type: string
           description: "The maximum alloted time for a job before it times out and\
@@ -7735,10 +9031,13 @@ components:
             type: object
             description: Artifacts created by the Job resource.
             allOf:
-            - $ref: '#/components/schemas/ArtifactRef'
+            - $ref: '#/components/schemas/ArtifactRef-dump'
     QueueSnapshotRef:
       type: object
       properties:
+        id:
+          type: integer
+          description: ID for the Queue resource.
         snapshotId:
           type: integer
           description: Snapshot ID for the Queue resource.
@@ -7756,6 +9055,9 @@ components:
     ExperimentSnapshotRef:
       type: object
       properties:
+        id:
+          type: integer
+          description: ID for the Experiment resource.
         snapshotId:
           type: integer
           description: Snapshot ID for the Experiment resource.
@@ -7773,6 +9075,9 @@ components:
     EntrypointSnapshotRef:
       type: object
       properties:
+        id:
+          type: integer
+          description: ID for the Entrypoint resource.
         snapshotId:
           type: integer
           description: Snapshot ID for the Entrypoint resource.
@@ -7787,7 +9092,7 @@ components:
         name:
           type: string
           description: Name of the Entrypoint resource.
-    ArtifactRef:
+    ArtifactRef-dump:
       type: object
       properties:
         id:
@@ -7800,17 +9105,14 @@ components:
           - $ref: '#/components/schemas/GroupRef'
         url:
           type: string
-          description: URL for accessing the full Artifact resource.
-        artifactUri:
-          type: string
-          description: URL pointing to the location of the Artifact resource.
+          description: URL for accessing the full Artifact Resource.
     JobStatus-load:
       type: object
       properties:
         status:
           type: string
           description: "The current status of the job. The allowed values are: queued,\
-            \ started, deferred, finished, failed."
+            \ started, deferred, finished, failed, reset."
     JobStatus-dump:
       type: object
       properties:
@@ -7820,24 +9122,68 @@ components:
         status:
           type: string
           description: "The current status of the job. The allowed values are: queued,\
-            \ started, deferred, finished, failed."
+            \ started, deferred, finished, failed, reset."
     JobMlflowRun:
       type: object
       properties:
         mlflowRunId:
           type: string
           description: UUID for the associated Mlflow Run.
-    JobArtifactSchema-load:
-      required:
-      - uri
+    ExperimentJobsMetrics:
       type: object
       properties:
-        description:
+        index:
+          type: integer
+          description: Starting index of the current page.
+        isComplete:
+          type: boolean
+          description: Boolean indicating if more data is available.
+        totalNumResults:
+          type: integer
+          description: Total number of results.
+        first:
           type: string
-          description: Description of the Artifact resource.
-        uri:
+          description: URL to first page in results set.
+        next:
           type: string
-          description: URL pointing to the location of the Artifact.
+          description: URL to next page in results set.
+        prev:
+          type: string
+          description: URL to last page in results set.
+        data:
+          type: array
+          items:
+            type: object
+            description: List of metrics for each job in the experiment
+            allOf:
+            - $ref: '#/components/schemas/JobIdMetrics-dump'
+    JobIdMetrics-dump:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID for the Job resource.
+        metrics:
+          type: array
+          items:
+            type: object
+            description: A list of the latest metrics associated with the job.
+            allOf:
+            - $ref: '#/components/schemas/Metrics-dump'
+    Metrics-dump:
+      required:
+      - name
+      - value
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the metric.
+        value:
+          type: number
+          description: "The value of the metric. Can be a float, NaN, Infinity, or\
+            \ -Infinity. NaN values are represented with the string \"nan\" and infinite\
+            \ values are represented with the strings \"inf\" and \"-inf\"."
     DraftsExperimentDraft-load:
       required:
       - group
@@ -7874,7 +9220,34 @@ components:
           description: A list of Entrypoint IDs.
           items:
             type: integer
-    DraftExperimentDraft-load:
+    ModifyDraftExperimentDraft:
+      type: object
+      properties:
+        resourceSnapshot:
+          type: integer
+          description: ID of the resource snapshot this draft modifies.
+        resourceData:
+          type: object
+          description: Draft resource data.
+          allOf:
+          - $ref: '#/components/schemas/ExperimentDraft-load'
+    ExperimentDraft-load:
+      required:
+      - name
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the Experiment resource.
+        description:
+          type: string
+          description: Description of the Experiment resource.
+        entrypoints:
+          type: array
+          description: A list of Entrypoint IDs.
+          items:
+            type: integer
+    CreateDraftExperimentDraft-load:
       required:
       - name
       type: object
@@ -7895,7 +9268,7 @@ components:
       properties:
         index:
           type: integer
-          description: Index of the current page.
+          description: Starting index of the current page.
         isComplete:
           type: boolean
           description: Boolean indicating if more data is available.
@@ -7943,6 +9316,10 @@ components:
           type: string
           description: Timestamp when the Experiment resource was created.
           format: date-time
+        snapshotCreatedOn:
+          type: string
+          description: Timestamp when the Experiment resource snapshot was created.
+          format: date-time
         lastModifiedOn:
           type: string
           description: Timestamp when the Experiment resource was last modified.
@@ -7978,7 +9355,7 @@ components:
       properties:
         index:
           type: integer
-          description: Index of the current page.
+          description: Starting index of the current page.
         isComplete:
           type: boolean
           description: Boolean indicating if more data is available.
@@ -8071,12 +9448,143 @@ components:
         admin:
           type: boolean
           description: Flag for if the member is a Group admin.
+    Metrics-load:
+      required:
+      - name
+      - value
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the metric.
+        value:
+          type: number
+          description: "The value of the metric. Can be a float, NaN, Infinity, or\
+            \ -Infinity. NaN values are represented with the string \"nan\" and infinite\
+            \ values are represented with the strings \"inf\" and \"-inf\"."
+        step:
+          type: integer
+          description: "The step value for the metric, optional. Sequentially increasing\
+            \ step values are used to track how a metric changes over time. Indexed\
+            \ from 0. If not provided, defaults to 0."
+        timestamp:
+          type: string
+          description: "A timestamp value to associate with the metric. If not provided,\
+            \ defaults to the server time when the metric is received."
+          format: date-time
+    MetricsSnapshotPage:
+      type: object
+      properties:
+        index:
+          type: integer
+          description: Starting index of the current page.
+        isComplete:
+          type: boolean
+          description: Boolean indicating if more data is available.
+        totalNumResults:
+          type: integer
+          description: Total number of results.
+        first:
+          type: string
+          description: URL to first page in results set.
+        next:
+          type: string
+          description: URL to next page in results set.
+        prev:
+          type: string
+          description: URL to last page in results set.
+        data:
+          type: array
+          items:
+            type: object
+            description: List of Metric Snapshots in the current page.
+            allOf:
+            - $ref: '#/components/schemas/MetricsSnapshot'
+    MetricsSnapshot:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the metric.
+        value:
+          type: number
+          description: "The value of the metric. Can be a float, NaN, Infinity, or\
+            \ -Infinity. NaN values are represented with the string \"nan\" and infinite\
+            \ values are represented with the strings \"inf\" and \"-inf\"."
+        step:
+          type: integer
+          description: "The step value for the metric, indexed from 0. Sequentially\
+            \ increasing step values track a metric changing over time."
+        timestamp:
+          type: string
+          description: The timestamp for the metric.
+          format: date-time
+    JobLogRecords:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/JobLogRecord-load'
+    JobLogRecord-load:
+      required:
+      - loggerName
+      - message
+      type: object
+      properties:
+        loggerName:
+          type: string
+          description: The name of the logger that emitted the log message.
+        message:
+          type: string
+          description: The logged message.
+    JobLogRecordsPage:
+      type: object
+      properties:
+        index:
+          type: integer
+          description: Starting index of the current page.
+        isComplete:
+          type: boolean
+          description: Boolean indicating if more data is available.
+        totalNumResults:
+          type: integer
+          description: Total number of results.
+        first:
+          type: string
+          description: URL to first page in results set.
+        next:
+          type: string
+          description: URL to next page in results set.
+        prev:
+          type: string
+          description: URL to last page in results set.
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/JobLogRecord-dump'
+    JobLogRecord-dump:
+      required:
+      - loggerName
+      - message
+      type: object
+      properties:
+        loggerName:
+          type: string
+          description: The name of the logger that emitted the log message.
+        message:
+          type: string
+          description: The logged message.
+        createdOn:
+          type: string
+          description: Server timestamp for when the job log was received.
+          format: date-time
     SnapshotsJobPage:
       type: object
       properties:
         index:
           type: integer
-          description: Index of the current page.
+          description: Starting index of the current page.
         isComplete:
           type: boolean
           description: Boolean indicating if more data is available.
@@ -8122,6 +9630,10 @@ components:
           type: string
           description: Timestamp when the Job resource was created.
           format: date-time
+        snapshotCreatedOn:
+          type: string
+          description: Timestamp when the Job resource snapshot was created.
+          format: date-time
         lastModifiedOn:
           type: string
           description: Timestamp when the Job resource was last modified.
@@ -8161,6 +9673,10 @@ components:
           type: object
           properties: {}
           description: A dictionary of keyword arguments to pass to the Job's Entrypoint.
+        artifactValues:
+          type: object
+          properties: {}
+          description: A dictionary of artifacts to pass to the Job's Entrypoint.
         timeout:
           type: string
           description: "The maximum alloted time for a job before it times out and\
@@ -8176,16 +9692,12 @@ components:
             type: object
             description: Artifacts created by the Job resource.
             allOf:
-            - $ref: '#/components/schemas/ArtifactRef'
+            - $ref: '#/components/schemas/ArtifactRef-dump'
     Model-load:
       required:
-      - group
       - name
       type: object
       properties:
-        group:
-          type: integer
-          description: ID of the Group that will own the Model resource.
         name:
           type: string
           description: Name of the Model resource.
@@ -8197,7 +9709,7 @@ components:
       properties:
         index:
           type: integer
-          description: Index of the current page.
+          description: Starting index of the current page.
         isComplete:
           type: boolean
           description: Boolean indicating if more data is available.
@@ -8244,6 +9756,10 @@ components:
         createdOn:
           type: string
           description: Timestamp when the Model resource was created.
+          format: date-time
+        snapshotCreatedOn:
+          type: string
+          description: Timestamp when the Model resource snapshot was created.
           format: date-time
         lastModifiedOn:
           type: string
@@ -8304,7 +9820,7 @@ components:
           type: object
           description: The artifact representing the Model Version.
           allOf:
-          - $ref: '#/components/schemas/ArtifactRef'
+          - $ref: '#/components/schemas/ArtifactRef-dump'
         versionNumber:
           type: integer
           description: The version number of the Model.
@@ -8358,7 +9874,7 @@ components:
       properties:
         index:
           type: integer
-          description: Index of the current page.
+          description: Starting index of the current page.
         isComplete:
           type: boolean
           description: Boolean indicating if more data is available.
@@ -8413,7 +9929,18 @@ components:
         description:
           type: string
           description: Description of the Model resource.
-    DraftModel-load:
+    ModifyDraftModel:
+      type: object
+      properties:
+        resourceSnapshot:
+          type: integer
+          description: ID of the resource snapshot this draft modifies.
+        resourceData:
+          type: object
+          description: Draft resource data.
+          allOf:
+          - $ref: '#/components/schemas/Model-load'
+    CreateDraftModel-load:
       required:
       - name
       type: object
@@ -8429,7 +9956,7 @@ components:
       properties:
         index:
           type: integer
-          description: Index of the current page.
+          description: Starting index of the current page.
         isComplete:
           type: boolean
           description: Boolean indicating if more data is available.
@@ -8476,6 +10003,10 @@ components:
         createdOn:
           type: string
           description: Timestamp when the Model resource was created.
+          format: date-time
+        snapshotCreatedOn:
+          type: string
+          description: Timestamp when the Model resource snapshot was created.
           format: date-time
         lastModifiedOn:
           type: string
@@ -8536,7 +10067,7 @@ components:
       properties:
         index:
           type: integer
-          description: Index of the current page.
+          description: Starting index of the current page.
         isComplete:
           type: boolean
           description: Boolean indicating if more data is available.
@@ -8583,6 +10114,11 @@ components:
         createdOn:
           type: string
           description: Timestamp when the PluginParameterType resource was created.
+          format: date-time
+        snapshotCreatedOn:
+          type: string
+          description: Timestamp when the PluginParameterType resource snapshot was
+            created.
           format: date-time
         lastModifiedOn:
           type: string
@@ -8661,7 +10197,18 @@ components:
           type: object
           properties: {}
           description: Structure of the PluginParameterType resource.
-    DraftPluginParameterTypeMutableFields:
+    ModifyDraftPluginParameterTypeMutableFields:
+      type: object
+      properties:
+        resourceSnapshot:
+          type: integer
+          description: ID of the resource snapshot this draft modifies.
+        resourceData:
+          type: object
+          description: Draft resource data.
+          allOf:
+          - $ref: '#/components/schemas/PluginParameterTypeMutableFields'
+    CreateDraftPluginParameterTypeMutableFields:
       required:
       - name
       type: object
@@ -8681,7 +10228,7 @@ components:
       properties:
         index:
           type: integer
-          description: Index of the current page.
+          description: Starting index of the current page.
         isComplete:
           type: boolean
           description: Boolean indicating if more data is available.
@@ -8729,6 +10276,11 @@ components:
           type: string
           description: Timestamp when the PluginParameterType resource was created.
           format: date-time
+        snapshotCreatedOn:
+          type: string
+          description: Timestamp when the PluginParameterType resource snapshot was
+            created.
+          format: date-time
         lastModifiedOn:
           type: string
           description: Timestamp when the PluginParameterType resource was last modified.
@@ -8762,7 +10314,7 @@ components:
       properties:
         index:
           type: integer
-          description: Index of the current page.
+          description: Starting index of the current page.
         isComplete:
           type: boolean
           description: Boolean indicating if more data is available.
@@ -8811,6 +10363,10 @@ components:
           type: string
           description: Timestamp when the PluginFile resource was created.
           format: date-time
+        snapshotCreatedOn:
+          type: string
+          description: Timestamp when the PluginFile resource snapshot was created.
+          format: date-time
         lastModifiedOn:
           type: string
           description: Timestamp when the PluginFile resource was last modified.
@@ -8835,12 +10391,10 @@ components:
           type: string
           description: Contents of the file.
         tasks:
-          type: array
-          items:
-            type: object
-            description: Tasks associated with the PluginFile resource.
-            allOf:
-            - $ref: '#/components/schemas/PluginTask'
+          type: object
+          description: Tasks associated with the PluginFile resource.
+          allOf:
+          - $ref: '#/components/schemas/PluginTaskContainer'
         description:
           type: string
           description: Description of the PluginFile resource.
@@ -8849,58 +10403,6 @@ components:
           description: The Plugin resource this file belongs to.
           allOf:
           - $ref: '#/components/schemas/PluginRef'
-    PluginTask:
-      required:
-      - name
-      type: object
-      properties:
-        name:
-          type: string
-          description: Name of the PluginTask.
-        inputParams:
-          type: array
-          items:
-            type: object
-            description: List of input PluginTaskParameters in this PluginTask.
-            allOf:
-            - $ref: '#/components/schemas/PluginTaskInputParameter-load'
-        outputParams:
-          type: array
-          items:
-            type: object
-            description: List of output PluginTaskParameters in this PluginTask.
-            allOf:
-            - $ref: '#/components/schemas/PluginTaskOutputParameter-load'
-    PluginTaskInputParameter-load:
-      required:
-      - name
-      - parameterType
-      type: object
-      properties:
-        name:
-          type: string
-          description: Name of the PluginTaskParameter.
-        parameterType:
-          type: integer
-          description: The ID of the assigned PluginParameterType resource
-        required:
-          type: boolean
-          description: "Sets whether the input parameter is required (True) or optional\
-            \ (False). If True, then this parameter must be assigned a value in order\
-            \ to execute the PluginTask."
-          default: true
-    PluginTaskOutputParameter-load:
-      required:
-      - name
-      - parameterType
-      type: object
-      properties:
-        name:
-          type: string
-          description: Name of the PluginTaskParameter.
-        parameterType:
-          type: integer
-          description: The ID of the assigned PluginParameterType resource
     PluginRef:
       type: object
       properties:
@@ -8944,6 +10446,10 @@ components:
           type: string
           description: Timestamp when the PluginFile resource was created.
           format: date-time
+        snapshotCreatedOn:
+          type: string
+          description: Timestamp when the PluginFile resource snapshot was created.
+          format: date-time
         lastModifiedOn:
           type: string
           description: Timestamp when the PluginFile resource was last modified.
@@ -8968,12 +10474,10 @@ components:
           type: string
           description: Contents of the file.
         tasks:
-          type: array
-          items:
-            type: object
-            description: Tasks associated with the PluginFile resource.
-            allOf:
-            - $ref: '#/components/schemas/PluginTask'
+          type: object
+          description: Tasks associated with the PluginFile resource.
+          allOf:
+          - $ref: '#/components/schemas/PluginTaskContainer'
         description:
           type: string
           description: Description of the PluginFile resource.
@@ -9002,7 +10506,7 @@ components:
       properties:
         index:
           type: integer
-          description: Index of the current page.
+          description: Starting index of the current page.
         isComplete:
           type: boolean
           description: Boolean indicating if more data is available.
@@ -9049,6 +10553,10 @@ components:
         createdOn:
           type: string
           description: Timestamp when the Plugin resource was created.
+          format: date-time
+        snapshotCreatedOn:
+          type: string
+          description: Timestamp when the Plugin resource snapshot was created.
           format: date-time
         lastModifiedOn:
           type: string
@@ -9100,6 +10608,11 @@ components:
         filename:
           type: string
           description: Filename of the PluginFile resource.
+        tasks:
+          type: object
+          description: Tasks associated with the PluginFile resource.
+          allOf:
+          - $ref: '#/components/schemas/PluginTaskContainer'
     PluginMutableFields:
       required:
       - name
@@ -9124,12 +10637,10 @@ components:
           type: string
           description: Contents of the file.
         tasks:
-          type: array
-          items:
-            type: object
-            description: Tasks associated with the PluginFile resource.
-            allOf:
-            - $ref: '#/components/schemas/PluginTask'
+          type: object
+          description: Tasks associated with the PluginFile resource.
+          allOf:
+          - $ref: '#/components/schemas/PluginTaskContainer'
         description:
           type: string
           description: Description of the PluginFile resource.
@@ -9138,7 +10649,7 @@ components:
       properties:
         index:
           type: integer
-          description: Index of the current page.
+          description: Starting index of the current page.
         isComplete:
           type: boolean
           description: Boolean indicating if more data is available.
@@ -9174,12 +10685,10 @@ components:
           type: string
           description: Contents of the file.
         tasks:
-          type: array
-          items:
-            type: object
-            description: Tasks associated with the PluginFile resource.
-            allOf:
-            - $ref: '#/components/schemas/PluginTask'
+          type: object
+          description: Tasks associated with the PluginFile resource.
+          allOf:
+          - $ref: '#/components/schemas/PluginTaskContainer'
         description:
           type: string
           description: Description of the PluginFile resource.
@@ -9209,7 +10718,18 @@ components:
         description:
           type: string
           description: Description of the Plugin resource.
-    DraftPluginMutableFields:
+    ModifyDraftPluginMutableFields:
+      type: object
+      properties:
+        resourceSnapshot:
+          type: integer
+          description: ID of the resource snapshot this draft modifies.
+        resourceData:
+          type: object
+          description: Draft resource data.
+          allOf:
+          - $ref: '#/components/schemas/PluginMutableFields'
+    CreateDraftPluginMutableFields:
       required:
       - name
       type: object
@@ -9233,12 +10753,10 @@ components:
           type: string
           description: Contents of the file.
         tasks:
-          type: array
-          items:
-            type: object
-            description: Tasks associated with the PluginFile resource.
-            allOf:
-            - $ref: '#/components/schemas/PluginTask'
+          type: object
+          description: Tasks associated with the PluginFile resource.
+          allOf:
+          - $ref: '#/components/schemas/PluginTaskContainer'
         description:
           type: string
           description: Description of the PluginFile resource.
@@ -9255,16 +10773,25 @@ components:
           type: string
           description: Contents of the file.
         tasks:
-          type: array
-          items:
-            type: object
-            description: Tasks associated with the PluginFile resource.
-            allOf:
-            - $ref: '#/components/schemas/PluginTask'
+          type: object
+          description: Tasks associated with the PluginFile resource.
+          allOf:
+          - $ref: '#/components/schemas/PluginTaskContainer'
         description:
           type: string
           description: Description of the PluginFile resource.
-    NestedDraftPluginFile-load:
+    ModifyNestedDraftPluginFile:
+      type: object
+      properties:
+        resourceSnapshot:
+          type: integer
+          description: ID of the resource snapshot this draft modifies.
+        resourceData:
+          type: object
+          description: Draft resource data.
+          allOf:
+          - $ref: '#/components/schemas/PluginFile-load'
+    CreateNestedDraftPluginFile-load:
       required:
       - contents
       - filename
@@ -9277,12 +10804,10 @@ components:
           type: string
           description: Contents of the file.
         tasks:
-          type: array
-          items:
-            type: object
-            description: Tasks associated with the PluginFile resource.
-            allOf:
-            - $ref: '#/components/schemas/PluginTask'
+          type: object
+          description: Tasks associated with the PluginFile resource.
+          allOf:
+          - $ref: '#/components/schemas/PluginTaskContainer'
         description:
           type: string
           description: Description of the PluginFile resource.
@@ -9291,7 +10816,7 @@ components:
       properties:
         index:
           type: integer
-          description: Index of the current page.
+          description: Starting index of the current page.
         isComplete:
           type: boolean
           description: Boolean indicating if more data is available.
@@ -9338,6 +10863,10 @@ components:
         createdOn:
           type: string
           description: Timestamp when the Plugin resource was created.
+          format: date-time
+        snapshotCreatedOn:
+          type: string
+          description: Timestamp when the Plugin resource snapshot was created.
           format: date-time
         lastModifiedOn:
           type: string
@@ -9389,7 +10918,7 @@ components:
       properties:
         index:
           type: integer
-          description: Index of the current page.
+          description: Starting index of the current page.
         isComplete:
           type: boolean
           description: Boolean indicating if more data is available.
@@ -9436,6 +10965,10 @@ components:
         createdOn:
           type: string
           description: Timestamp when the Queue resource was created.
+          format: date-time
+        snapshotCreatedOn:
+          type: string
+          description: Timestamp when the Queue resource snapshot was created.
           format: date-time
         lastModifiedOn:
           type: string
@@ -9497,7 +11030,18 @@ components:
         description:
           type: string
           description: Description of the Queue resource.
-    DraftQueueMutableFields:
+    ModifyDraftQueueMutableFields:
+      type: object
+      properties:
+        resourceSnapshot:
+          type: integer
+          description: ID of the resource snapshot this draft modifies.
+        resourceData:
+          type: object
+          description: Draft resource data.
+          allOf:
+          - $ref: '#/components/schemas/QueueMutableFields'
+    CreateDraftQueueMutableFields:
       required:
       - name
       type: object
@@ -9513,7 +11057,7 @@ components:
       properties:
         index:
           type: integer
-          description: Index of the current page.
+          description: Starting index of the current page.
         isComplete:
           type: boolean
           description: Boolean indicating if more data is available.
@@ -9561,6 +11105,10 @@ components:
           type: string
           description: Timestamp when the Queue resource was created.
           format: date-time
+        snapshotCreatedOn:
+          type: string
+          description: Timestamp when the Queue resource snapshot was created.
+          format: date-time
         lastModifiedOn:
           type: string
           description: Timestamp when the Queue resource was last modified.
@@ -9598,7 +11146,7 @@ components:
       properties:
         index:
           type: integer
-          description: Index of the current page.
+          description: Starting index of the current page.
         isComplete:
           type: boolean
           description: Boolean indicating if more data is available.
@@ -9659,7 +11207,7 @@ components:
       properties:
         index:
           type: integer
-          description: Index of the current page.
+          description: Starting index of the current page.
         isComplete:
           type: boolean
           description: Boolean indicating if more data is available.
@@ -9700,7 +11248,7 @@ components:
       properties:
         index:
           type: integer
-          description: Index of the current page.
+          description: Starting index of the current page.
         isComplete:
           type: boolean
           description: Boolean indicating if more data is available.
@@ -9782,12 +11330,6 @@ components:
         confirmNewPassword:
           type: string
           description: The new password confirmation when changing a password.
-    UserDelete:
-      type: object
-      properties:
-        password:
-          type: string
-          description: The users current password.
     UserMutableFields:
       type: object
       properties:
@@ -9797,6 +11339,149 @@ components:
         email:
           type: string
           description: Email of the User.
+    UserDelete:
+      type: object
+      properties:
+        password:
+          type: string
+          description: The users current password.
+    SignatureAnalysis:
+      type: object
+      properties:
+        pythonCode:
+          type: string
+          description: The contents of the python file
+    SignatureAnalysisOutput:
+      type: object
+      properties:
+        tasks:
+          type: array
+          items:
+            type: object
+            description: A list of signature analyses for the plugin tasks provided
+              in the input file
+            allOf:
+            - $ref: '#/components/schemas/SignatureAnalysisSignature'
+    SignatureAnalysisSignature:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the function
+        inputs:
+          type: array
+          items:
+            type: object
+            description: A list of objects describing the input parameters.
+            allOf:
+            - $ref: '#/components/schemas/SignatureAnalysisSignatureInput'
+        outputs:
+          type: array
+          items:
+            type: object
+            description: A list of objects describing the output parameters.
+            allOf:
+            - $ref: '#/components/schemas/SignatureAnalysisSignatureOutput'
+        missing_types:
+          type: array
+          items:
+            type: object
+            description: A list of missing types for non-primitives defined by the
+              file
+            allOf:
+            - $ref: '#/components/schemas/SignatureAnalysisSuggestedTypes'
+    SignatureAnalysisSignatureInput:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the parameter
+        type:
+          type: string
+          description: The type of the parameter
+        required:
+          type: boolean
+          description: Whether this is a required parameter
+    SignatureAnalysisSignatureOutput:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the parameter
+        type:
+          type: string
+          description: The type of the parameter
+    SignatureAnalysisSuggestedTypes:
+      type: object
+      properties:
+        name:
+          type: string
+          description: A suggestion for the name of the type
+        description:
+          type: string
+          description: The annotation the suggestion is attempting to represent
+    ValidateEntrypointRequest:
+      required:
+      - group
+      - taskGraph
+      type: object
+      properties:
+        group:
+          type: integer
+          description: ID of the Group validating the Entrypoint resource.
+        taskGraph:
+          type: string
+          description: Proposed task graph for the Entrypoint resource.
+        artifactGraph:
+          type: string
+          description: Proposed artifact graph for the Entrypoint resource.
+        pluginSnapshots:
+          type: array
+          description: A list of IDs for the Plugin Snapshots that will be attached
+            to the Entrypoint resource.
+          items:
+            type: integer
+        parameters:
+          type: array
+          items:
+            type: object
+            description: Proposed parameters for the Entrypoint resource.
+            allOf:
+            - $ref: '#/components/schemas/EntrypointParameter'
+        artifacts:
+          type: array
+          items:
+            type: object
+            description: Proposed artifact inputs for the Entrypoint resource.
+            allOf:
+            - $ref: '#/components/schemas/EntrypointArtifact'
+    ValidateEntrypointResponse:
+      type: object
+      properties:
+        schemaValid:
+          type: boolean
+          description: "Indicates whether the proposed inputs for the Entrypoint resource\
+            \ are valid. If False, the schemaIssues field will contain a list of validation\
+            \ issues."
+        schemaIssues:
+          type: array
+          items:
+            type: object
+            description: A list of validation issues detected in the schema.
+            allOf:
+            - $ref: '#/components/schemas/ValidateEntrypointIssue'
+    ValidateEntrypointIssue:
+      type: object
+      properties:
+        type:
+          type: string
+          description: The validation issue type.
+        severity:
+          type: string
+          description: The severity of the validation issue.
+        message:
+          type: string
+          description: A message describing the validation issue.
   responses:
     ParseError:
       description: When a mask can't be parsed
@@ -9804,110 +11489,42 @@ components:
     MaskError:
       description: When any error occurs on mask
       content: {}
+    EntityDoesNotExistError:
+      content: {}
+    EntityExistsError:
+      content: {}
     BackendDatabaseError:
       content: {}
     SearchNotImplementedError:
       content: {}
     SearchParseError:
       content: {}
-    ResourceDoesNotExistError:
-      content: {}
     DraftDoesNotExistError:
       content: {}
     DraftAlreadyExistsError:
       content: {}
-    ArtifactDoesNotExistError:
+    DraftResourceModificationsCommitError:
       content: {}
-    ArtifactAlreadyExistsError:
+    InvalidDraftBaseResourceSnapshotError:
       content: {}
-    EntrypointDoesNotExistError:
+    LockError:
       content: {}
-    EntrypointPluginDoesNotExistError:
+    InconsistentBuiltinPluginParameterTypesError:
       content: {}
-    EntrypointAlreadyExistsError:
-      content: {}
-    EntrypointParameterNamesNotUniqueError:
-      content: {}
-    ExperimentAlreadyExistsError:
-      content: {}
-    ExperimentDoesNotExistError:
-      content: {}
-    GroupDoesNotExistError:
-      content: {}
-    GroupNameNotAvailableError:
-      content: {}
-    JobDoesNotExistError:
-      content: {}
-    JobInvalidStatusTransitionError:
-      content: {}
-    JobInvalidParameterNameError:
-      content: {}
-    JobMlflowRunAlreadySetError:
-      content: {}
-    ExperimentJobDoesNotExistError:
-      content: {}
-    EntryPointNotRegisteredToExperimentError:
-      content: {}
-    QueueNotRegisteredToEntryPointError:
-      content: {}
-    ModelDoesNotExistError:
-      content: {}
-    ModelVersionDoesNotExistError:
-      content: {}
-    ModelAlreadyExistsError:
-      content: {}
-    PluginParameterTypeMatchesBuiltinTypeError:
-      content: {}
-    PluginParameterTypeDoesNotExistError:
-      content: {}
-    PluginParameterTypeReadOnlyLockError:
-      content: {}
-    PluginParameterTypeMissingParameterError:
-      content: {}
-    PluginParameterTypeAlreadyExistsError:
-      content: {}
-    PluginDoesNotExistError:
-      content: {}
-    PluginAlreadyExistsError:
-      content: {}
-    PluginFileDoesNotExistError:
-      content: {}
-    PluginFileAlreadyExistsError:
-      content: {}
-    PluginTaskParameterTypeNotFoundError:
-      content: {}
-    PluginTaskNameAlreadyExistsError:
-      content: {}
-    PluginTaskInputParameterNameAlreadyExistsError:
-      content: {}
-    PluginTaskOutputParameterNameAlreadyExistsError:
-      content: {}
-    QueueDoesNotExistError:
-      content: {}
-    QueueLockedError:
-      content: {}
-    QueueAlreadyExistsError:
-      content: {}
-    TagDoesNotExistError:
-      content: {}
-    TagAlreadyExistsError:
+    UserDoesNotExistError:
       content: {}
     NoCurrentUserError:
       content: {}
     UserPasswordChangeError:
       content: {}
-    UserPasswordChangeSamePasswordError:
+    UserPasswordError:
       content: {}
-    UserPasswordExpiredError:
+    JobStoreError:
       content: {}
-    UserPasswordVerificationError:
+    GitError:
       content: {}
-    UserDoesNotExistError:
+    ImportFailedError:
       content: {}
-    UsernameNotAvailableError:
-      content: {}
-    UserEmailNotAvailableError:
-      content: {}
-    UserRegistrationError:
+    DioptraError:
       content: {}
 x-original-swagger-version: "2.0"
