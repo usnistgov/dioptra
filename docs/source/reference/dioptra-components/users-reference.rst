@@ -50,8 +50,8 @@ Required Attributes
 
 .. _reference-users-system-generated-attributes:
 
-System-Generated Attributes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+System-Managed State
+~~~~~~~~~~~~~~~~~~~~
 
 - **ID**: Unique identifier assigned upon creation.
 - **Groups**: List of groups that the user is in. Determines access to resources.
@@ -96,7 +96,7 @@ See the :http:post:`POST /api/v1/users </api/v1/users/>` endpoint documentation 
 Retrieval Interfaces
 --------------------
 
-Users can be retrieved via the Python Client or the RESTAPI.
+Users can be retrieved via the Python Client or the REST API.
 
 .. _reference-users-retrieval-python-client:
 
@@ -130,7 +130,7 @@ See the :http:get:`GET /api/v1/users/current </api/v1/users/current>` endpoint d
 
 **Get a specific user by ID**
 
-See the :http:get:`GET /api/v1/users/{int:id} </api/v1/users/{int:id}>` endpoint documentation for payload requirements.
+See the :http:get:`GET /api/v1/users/{int:id} </api/v1/users/{id}>` endpoint documentation for payload requirements.
 
 
 
