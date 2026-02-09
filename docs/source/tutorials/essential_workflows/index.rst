@@ -26,15 +26,15 @@ Each step will iterate on the previous step, incorporating more features and fun
 
 .. container:: wide-lightly-shaded
 
-.. toctree::
-   :caption: Tutorial Contents
-   :maxdepth: 1
+   .. toctree::
+      :caption: Tutorial Contents
+      :maxdepth: 1
 
       part-2
       part-3
       part-5
       part-6
-   .. part-0
+..    part-0
       part-1
       part-4
 
