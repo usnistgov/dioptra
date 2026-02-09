@@ -32,6 +32,10 @@ Group Definition
 
 A **Group** in Dioptra controls access to other resources for users.
 
+.. note::
+
+   Groups are not yet fully implemented in Dioptra. Currently there is a single `public` group that all users have full permissions on. The ability to create new groups as well as manage group permissions and roles will be added in a future release.
+
 .. _reference-groups-attributes:
 
 Group Attributes
