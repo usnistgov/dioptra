@@ -24,17 +24,19 @@ This tutorial builds off the simple :ref:`Hello World tutorial <tutorial-hello-w
 core functionality of Dioptra. Throughout the sections, you will **create reusable workflows** in Dioptra of **increasing complexity**. 
 Each step will iterate on the previous step, incorporating more features and functionality from Dioptra. 
 
-.. toctree::
-   :caption: Tutorial Contents
-   :maxdepth: 1
+.. container:: wide-lightly-shaded
 
-   part-2
-   part-3
-   part-5
-   part-6
-.. part-0
-   part-1
-   part-4
+   .. toctree::
+      :caption: Tutorial Contents
+      :maxdepth: 1
+
+      part-2
+      part-3
+      part-5
+      part-6
+..    part-0
+      part-1
+      part-4
 
 **By the end of this tutorial, you will have:**
 
