@@ -48,7 +48,7 @@ Required Attributes
 * **Password**: (string) A password for the user. 
 * **Email**: (string) The email address of the user.
 
-.. _reference-users-system-generated-attributes:
+.. _reference-users-system-managed-state:
 
 System-Managed State
 ~~~~~~~~~~~~~~~~~~~~
