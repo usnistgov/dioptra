@@ -49,10 +49,10 @@ Required Attributes
 * **Name**: (string) The name of the group.
 * **Creator**: (User) The creator of the group.
 
-.. _reference-groups-system-generated-attributes:
+.. _reference-groups-system-managed-state:
 
-System-Generated Attributes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+System-Managed State
+~~~~~~~~~~~~~~~~~~~~
 
 - **ID**: Unique identifier assigned upon creation.
 - **Created On**: Timestamp indicating when the Group was created.
@@ -118,7 +118,7 @@ See the :http:get:`GET /api/v1/groups </api/v1/groups/>` endpoint documentation 
 
 **Get a specific Group by ID**
 
-See the :http:get:`GET /api/v1/groups/{int:id} </api/v1/groups/{int:id}>` endpoint documentation for payload requirements.
+See the :http:get:`GET /api/v1/groups/{int:id} </api/v1/groups/{id}>` endpoint documentation for payload requirements.
 
 
 .. rst-class:: fancy-header header-seealso
