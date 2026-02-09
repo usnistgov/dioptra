@@ -54,9 +54,9 @@ Required Attributes
 System-Managed State
 ~~~~~~~~~~~~~~~~~~~~
 
-- **ID**: Unique identifier assigned upon creation.
-- **Created On**: Timestamp indicating when the Group was created.
-- **Last Modified On**: Timestamp indicating when the Group was last modified.
+- **ID**: (integer) Unique identifier assigned upon creation.
+- **Created On**: (timestamp) Indicates when the Group was created.
+- **Last Modified On**: (timestamp) Indicates when the Group was last modified.
 
 .. _reference-groups-membership:
 
@@ -71,57 +71,33 @@ their control over the group.
 Member Permissions
 ~~~~~~~~~~~~~~~~~~
 
-.. _reference-groups-manager-roles:
+
 
 * **Read**: (boolean) Whether the member can read resources in this group.
 * **Write**: (boolean) Whether the member can modify/create resources in this group.
 * **Share Read**: (boolean) Whether the member can share Read permissions for resources in the group.
 * **Share Write**: (boolean) Whether the member can share Read+Write permissions for resources in the group.
 
+.. _reference-groups-manager-roles:
+
 Manager Roles
 ~~~~~~~~~~~~~~~~~~
-
-.. _reference-groups-registration-interfaces:
 
 * **Owner**: (boolean) Whether the member is the owner of the group.
 * **Admin**: (boolean) Whether the member is an administrator of the group.
 
+.. _reference-groups-registration-interfaces:
 
-Retrieval Interfaces
+Registration Interfaces
 --------------------
 
-.. _reference-groups-rest-api:
-
-Groups can be retrieved via the Python Client or the RESTAPI.
-
-Using Python Client
-~~~~~~~~~~~~~~~~~~~
-
-**Get a list of Groups**
-
-    .. automethod:: dioptra.client.groups.GroupsCollectionClient.get
-
-**Get a specific Group by ID**
-
-    .. automethod:: dioptra.client.groups.GroupsCollectionClient.get_by_id
-
-
-
-Using REST API
-~~~~~~~~~~~~~~
-
-Groups can be retrieved directly via the HTTP API.
-
-**Get a list of Groups**
-
-See the :http:get:`GET /api/v1/groups </api/v1/groups/>` endpoint documentation for payload requirements.
-
-**Get a specific Group by ID**
-
-See the :http:get:`GET /api/v1/groups/{int:id} </api/v1/groups/{id}>` endpoint documentation for payload requirements.
+Custom groups cannot be created in Dioptra at this time. 
 
 
 .. rst-class:: fancy-header header-seealso
 
 See Also
 ---------
+
+- :ref:`reference-users`
+- :ref:`how-to-create-users-and-groups`
