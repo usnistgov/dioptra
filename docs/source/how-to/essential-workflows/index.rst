@@ -22,17 +22,19 @@ Running Experiments
 
 How to guides on essential workflows in Dioptra. 
 
-.. toctree::
-   :maxdepth: 1
+.. container:: wide-lightly-shaded
+      
+   .. toctree::
+      :maxdepth: 1
 
-   setup-python-client
-   creating-a-queue
-   creating-users-groups
-   creating-param-types
-   creating-a-plugin
-   use-metrics
-   creating-an-entrypoint
-   creating-an-experiment
-   running-jobs
+      setup-python-client
+      creating-a-queue
+      creating-users-groups
+      creating-param-types
+      creating-a-plugin
+      use-metrics
+      creating-an-entrypoint
+      creating-an-experiment
+      running-jobs
 
 
