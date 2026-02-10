@@ -15,7 +15,7 @@
 .. ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 .. https://creativecommons.org/licenses/by/4.0/legalcode
 
-.. how-to-add-a-dataset:
+.. _how-to-add-a-dataset:
 
 Add a Dataset
 =============

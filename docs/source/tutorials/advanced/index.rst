@@ -48,7 +48,7 @@ Run the Tutorials
 
 To run the tutorials in a local deployment, you'll need to do the following pre-requisites:
 
-- :ref:`Install Dioptra <how-to-quick-setup>`: Ensure you have access to a Dioptra deployment
+- :ref:`Install Dioptra <explanation-install-dioptra>`: Ensure you have access to a Dioptra deployment
 - :ref:`Setup the Python Client <how-to-set-up-the-python-client>`: Set up the Python Client
 - :ref:`Add a Dataset <how-to-add-a-dataset>`: Download and configure any datasets used by the tutorial
 
