@@ -441,7 +441,10 @@
     let output = {}
     if (parameters.value.length === 0) return output
     parameters.value.forEach((param) => {
-      output[param.name] = param.value
+      // if param value is null, dont include in payload
+      if(param.value !== null) {
+        output[param.name] = param.value
+      }
     })
     return output
   })
@@ -463,7 +466,7 @@
           }
           else {
             // only add parameters that exist in the original job
-            if (oldJob.value.values[param.name]) {
+            if (param.name in oldJob.value.values) {
               parameters.value.push({
                 name: param.name,
                 value: (history.state.oldJobId) ? oldJob.value.values[param.name] : param.defaultValue,

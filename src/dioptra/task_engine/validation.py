@@ -265,6 +265,20 @@ def _check_global_parameter_types(
     type_defs = experiment_desc.get("types", {})
     type_names = type_registry.BUILTIN_TYPES.keys() | type_defs.keys()
 
+    print("=== _check_global_parameter_types: global_parameters ===")
+    for name, spec in global_parameters.items():
+        if isinstance(spec, Mapping):
+            print(
+                f"param={name}, "
+                f"spec={spec!r}, "
+                f"type_field={spec.get('type')!r}, "
+                f"default_field={spec.get('default', '<no default>')!r}"
+            )
+        else:
+            # handles shorthand form: param: <value>
+            print(f"param={name}, spec={spec!r} (shorthand default), py_type={type(spec).__name__}")
+    print("========================================================")
+
     issues = []
 
     # Can't really use None to mean no default, since that's a valid default!
