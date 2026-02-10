@@ -28,49 +28,76 @@ Groups
 .. _reference-groups-definition:
 
 Group Definition
----------------------
+----------------
+
+A **Group** in Dioptra controls access to other resources for users.
+
+.. note::
+
+   Groups are not yet fully implemented in Dioptra. Currently there is a single `public` group that all users have full permissions on. The ability to create new groups as well as manage group permissions and roles will be added in a future release.
 
 .. _reference-groups-attributes:
 
 Group Attributes
----------------------
+----------------
 
 .. _reference-groups-required-attributes:
 
 Required Attributes
 ~~~~~~~~~~~~~~~~~~~
 
-.. _reference-groups-system-generated-attributes:
+* **Name**: (string) The name of the group.
+* **Creator**: (User) The creator of the group.
 
-System-Generated Attributes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. _reference-groups-system-managed-state:
+
+System-Managed State
+~~~~~~~~~~~~~~~~~~~~
+
+- **ID**: (integer) Unique identifier assigned upon creation.
+- **Created On**: (timestamp) Indicates when the Group was created.
+- **Last Modified On**: (timestamp) Indicates when the Group was last modified.
 
 .. _reference-groups-membership:
 
 Group Membership
----------------------
+----------------
+
+Members of a group have permissions which define their access to resources in that group, as well as roles which define
+their control over the group.
 
 .. _reference-groups-member-permissions:
 
 Member Permissions
 ~~~~~~~~~~~~~~~~~~
 
+
+
+* **Read**: (boolean) Whether the member can read resources in this group.
+* **Write**: (boolean) Whether the member can modify/create resources in this group.
+* **Share Read**: (boolean) Whether the member can share Read permissions for resources in the group.
+* **Share Write**: (boolean) Whether the member can share Read+Write permissions for resources in the group.
+
 .. _reference-groups-manager-roles:
 
 Manager Roles
 ~~~~~~~~~~~~~~~~~~
 
+* **Owner**: (boolean) Whether the member is the owner of the group.
+* **Admin**: (boolean) Whether the member is an administrator of the group.
+
 .. _reference-groups-registration-interfaces:
 
 Registration Interfaces
------------------------
+--------------------
 
-.. _reference-groups-rest-api:
+Custom groups cannot be created in Dioptra at this time. 
 
-Using REST API
-~~~~~~~~~~~~~~
 
 .. rst-class:: fancy-header header-seealso
 
 See Also
 ---------
+
+- :ref:`reference-users`
+- :ref:`how-to-create-users-and-groups`
