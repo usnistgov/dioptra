@@ -18,8 +18,7 @@
 .. _reference-users:
 
 Users
-=================
-
+=====
 
 .. contents:: Contents
    :local:
@@ -28,39 +27,74 @@ Users
 .. _reference-users-definition:
 
 User Definition
----------------------
+---------------
+
+A **User** in Dioptra represents an account which provides access to other resources (entrypoints, plugins, jobs, experiments, etc.). 
+
 
 .. _reference-users-attributes:
 
 User Attributes
----------------------
+---------------
+
+This section describes the attributes that define a User.
 
 .. _reference-users-required-attributes:
 
 Required Attributes
 ~~~~~~~~~~~~~~~~~~~
 
-.. _reference-users-system-generated-attributes:
+* **Username**: (string) The name of the user. Used for authentication.
+* **Password**: (string) A password for the user. Used for authentication.
+* **Email**: (string) The email address of the user.
 
-System-Generated Attributes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. _reference-users-system-managed-state:
+
+System-Managed State
+~~~~~~~~~~~~~~~~~~~~
+
+- **ID**: (integer) Unique identifier assigned upon creation.
+- **Groups**: (List of Group IDs)  List of groups that the user is in. Determines access to resources. Each user is in the Public Group by default.
+- **Created On**: (timestamp) When the User was created.
+- **Last Modified On**: (timestamp) When the User was last modified.
+- **Last Login On**: (timestamp) When the User last logged in.
+- **Password Expires On**: (timestamp) When the User's password will expire.
 
 .. _reference-users-registration-interfaces:
 
+
 Registration Interfaces
 -----------------------
+
+Users can be created programmatically via the Python Client or the REST API.
+They can also be :ref:`created through the web interface <how-to-create-users-and-groups>` .
 
 .. _reference-users-python-client:
 
 Using Python Client
 ~~~~~~~~~~~~~~~~~~~
 
+**Create a User**
+
+    .. automethod:: dioptra.client.users.UsersCollectionClient.create
+
+
 .. _reference-users-rest-api:
 
 Using REST API
 ~~~~~~~~~~~~~~
 
+Users can be created directly via the HTTP API.
+
+**Create Users**
+
+See the :http:post:`POST /api/v1/users </api/v1/users/>` endpoint documentation for payload requirements.
+
+
 .. rst-class:: fancy-header header-seealso
 
 See Also
 ---------
+
+* :ref:`How To Create a User <how_to_create_a_user>`
+* :ref:`Users and Groups Explanation <explanation-users-and-groups>`
