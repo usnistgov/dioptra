@@ -20,7 +20,7 @@
 Experiments Client Methods
 =================
 
-This page lists all relevant properties and methods for Dioptra :ref:`Experiments <explanation-experiments-and-jobs>` that are available via the Python Client. 
+This page lists all relevant methods for Dioptra :ref:`Experiments <explanation-experiments-and-jobs>` that are available via the Python Client. 
 
 .. contents:: Contents
    :local:
@@ -30,45 +30,9 @@ This page lists all relevant properties and methods for Dioptra :ref:`Experiment
 Requirements
 -------------
 
-- :ref:`how-to-install-dioptra` - an installation and deployment of Dioptra must be available
+- :ref:`explanation-install-dioptra` - an installation and deployment of Dioptra must be available
 - :ref:`how-to-set-up-the-python-client` - the Python client must be configured and initialized
 
-
-.. _reference-experiments-client-methods-experiment-properties:
-
-Experiment Properties
----------------------
-These properties can be accessed via ``client.experiments.{property_name}``. 
-
-
-Attached Entrypoints
-~~~~~~~~~
-
-    .. autoattribute:: dioptra.client.experiments.ExperimentsCollectionClient.entrypoints
-
-See available methods for this client subcollection: :ref:`reference-experiments-client-methods-attached-entrypoints-methods`
-
-Executed Jobs
-~~~~~~~~~
-
-    .. autoattribute:: dioptra.client.experiments.ExperimentsCollectionClient.jobs
-
-See available methods for this client subcollection: :ref:`reference-experiments-client-methods-executed-jobs-methods`
-
-Attached Tags
-~~~~~~~~~
-
-    .. autoattribute:: dioptra.client.experiments.ExperimentsCollectionClient.tags
-
-See available methods for this client subcollection: :ref:`reference-tags-client-methods`
-
-
-Experiment Snapshots
-~~~~~~~~~
-
-    .. autoattribute:: dioptra.client.experiments.ExperimentsCollectionClient.snapshots
-
-See available methods for this client subcollection: :ref:`reference-snapshots-client-methods`
 
 
 .. _reference-experiments-client-methods-crud-methods:
@@ -76,29 +40,33 @@ See available methods for this client subcollection: :ref:`reference-snapshots-c
 Experiments - CRUD methods
 ---------------------
 
-These methods can be executed via ``client.experiments.METHOD_NAME()``. 
+After :ref:`importing and initializing the client <how-to-set-up-the-python-client>`, these methods can be executed via ``client.experiments.METHOD_NAME()``. 
 
 
 
-Create
+Create Experiment
 ~~~~~~~~~
       
     .. automethod:: dioptra.client.experiments.ExperimentsCollectionClient.create
 
-Get
+Get Experiments
 ~~~~~~~~~
       
     .. automethod:: dioptra.client.experiments.ExperimentsCollectionClient.get
 
-Modify
+Modify Experiment
 ~~~~~~~~~
 
     .. automethod:: dioptra.client.experiments.ExperimentsCollectionClient.modify_by_id
 
-Delete
+Delete Experiment
 ~~~~~~~~~
       
     .. automethod:: dioptra.client.experiments.ExperimentsCollectionClient.delete_by_id
+
+
+
+
 
 
 .. _reference-experiments-client-methods-other-methods:
@@ -106,7 +74,7 @@ Delete
 Experiments - Other Methods
 ---------------------
 
-Get Metrics 
+Get Metrics for Jobs in Experiment
 ~~~~~~~~~~~~
 
     .. automethod:: dioptra.client.experiments.ExperimentsCollectionClient.get_metrics_by_id
@@ -115,20 +83,15 @@ Get Metrics
 .. _reference-experiments-client-methods-attached-entrypoints-methods:
 
 
-Attached Entrypoints - Methods
+Entrypoint Attachment - Methods
 --------------------------------------------
 
-These methods exist within the class ``ExperimentEntrypointsSubCollectionClient``, and can be executed after retrieving a specific experiment via the class property ``RETRIEVED_EXPERIMENT.entrypoints``
+These methods exist within the class ``ExperimentEntrypointsSubCollectionClient``, and can are accessed via the ``entrypoints`` property of the Experiment Client (which points to ``ExperimentEntrypointsSubCollectionClient``)
 
-.. admonition:: Access ExperimentEntrypointsSubCollectionClient
-    :class: code-panel python
+**Example - Attach Entrypoints to Experiment**
 
-    .. code-block:: python 
+``client.experiments.entrypoints.create(experiment_id=1, entrypoint_ids=[2,3])``
 
-        # Assumes authenticated Python client instance
-        experiments = client.experiments.get()
-        first_experiment = experiments[0]
-        attached_entrypoints = first_experiment.entrypoints.get() # See below for other available methods
 
 Add Entrypoint to Experiment
 ~~~~~~~~~
@@ -159,21 +122,16 @@ Delete One Entrypoint by ID
 .. _reference-experiments-client-methods-executed-jobs-methods:
 
 
-Executed Jobs - Methods
+Job Execution - Methods
 --------------------------------------------
 
-These methods exist within the class ``ExperimentJobsSubCollectionClient``, and can be executed after retrieving a specific experiment via the class property ``RETRIEVED_EXPERIMENT.jobs``
+These methods exist within the class ``ExperimentJobsSubCollectionClient``, and can are accessed via the ``jobs`` property of the Experiment Client (which points to ``ExperimentJobsSubCollectionClient``)
+
+**Example - Run an Entrypoint as a Job within an Experiment**
+
+``client.experiments.jobs.create(experiment_id=1, entrypoint_id=[2], queue_id=10,)``
 
 
-.. admonition:: Access ExperimentJobsSubCollectionClient
-    :class: code-panel python
-        
-    .. code-block:: python 
-
-        # Assumes authenticated Python client instance
-        experiments = client.experiments.get()
-        first_experiment = experiments[0]
-        executed_jobs = first_experiment.jobs.get() # See below for other available methods
 
 Get All Jobs
 ~~~~~~~~~
@@ -208,20 +166,41 @@ Delete a Job by ID
 
 
 
-Create a Job Artifact (do we want this?)
-~~~~~~~~~
-      
-    .. automethod:: dioptra.client.experiments.ExperimentJobsSubCollectionClient.create_artifact
 
-Get MLFlow Run ID (do we want this?)
-~~~~~~~~~
-      
-    .. automethod:: dioptra.client.experiments.ExperimentJobsSubCollectionClient.get_mlflow_run_id
 
-Set MLFlow Run ID  (do we want this?)
-~~~~~~~~~
-      
-    .. automethod:: dioptra.client.experiments.ExperimentJobsSubCollectionClient.set_mlflow_run_id
+
+Tags Attached to Experiment
+-------------------
+
+Methods belonging to the ``TagsSubCollectionClient`` can are accessed via the ``tags`` property of the Experiment Client (which points to ``TagsSubCollectionClient``)
+
+**Example - Get tags for an Experiment**
+
+``client.experiments.tags.get(1)``
+
+Methods - Tags
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+See **available methods for the TagsSubCollectionClient**: :ref:`reference-tags-client-methods`
+
+
+
+
+Snapshots of Experiment
+--------------------
+
+Methods belonging to the  ``SnapshotsSubCollectionClient`` can are accessed via the ``snapshots`` property of the Experiment Client (which points to ``SnapshotsSubCollectionClient``)
+
+**Example - Get snapshots for an Experiment**
+
+``client.experiments.snapshots.get(1)``
+
+Methods - Snapshots
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+See **available methods for the SnapshotsSubCollectionClient**: :ref:`reference-snapshots-client-methods`
+
+
 
 
 .. rst-class:: fancy-header header-seealso
