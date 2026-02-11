@@ -121,7 +121,7 @@ Jobs can be submitted directly via the HTTP API, usually via an experiment-speci
 
 **Create Job**
 
-See the :http:post:`POST /api/v1/experiments/{experimentId}/jobs </api/v1/experiments/{id}/jobs/>` endpoint documentation for the required JSON payload, including parameters and artifact IDs.
+See the :http:post:`POST /api/v1/experiments/{experimentId}/jobs </api/v1/experiments/{id}/jobs>` endpoint documentation for the required JSON payload, including parameters and artifact IDs.
 
 .. rst-class:: fancy-header header-seealso
 
