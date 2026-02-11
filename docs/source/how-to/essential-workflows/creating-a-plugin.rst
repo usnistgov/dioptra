@@ -129,7 +129,7 @@ Finally, register the tasks so they are visible to Dioptra.
 
    .. group-tab:: Python Client
 
-      This is done as part of ``create()`` method in step 3
+      This is done as part of the ``create()`` method in step 3.
 
 
 .. rst-class:: header-on-a-card header-steps

@@ -26,11 +26,11 @@ Overview
 
 In the last section, you created a multi-step workflow and watched how data evolved across chained tasks. Now, you will learn how to **save task outputs as artifacts**.
 
-We will build on :ref:`tutorial-building-a-multi-step-workflow`, adding artifact-saving logic.
+You will build on :ref:`tutorial-building-a-multi-step-workflow`, adding artifact-saving logic.
 
 .. admonition:: Learn More 
 
-   See :ref:`Artifacts: explanation <explanation-artifacts>` to learn what the purpose of artifacts is. 
+   See :ref:`Artifacts: explanation <explanation-artifacts>` to learn about the purpose of artifacts. 
 
 
 
@@ -46,7 +46,7 @@ Step 1: Create an Artifact Plugin
 
 Before Dioptra can save objects to disk, it needs to know how to serialize and deserialize them. This is handled by an **artifact plugin**.
 
-Just like before, we will create a new plugin, but this time we'll define **artifact tasks**.
+Just like before, you will create a new plugin, but this time you'll define **artifact tasks**.
 
 1. Go to the **Plugins** tab and click **Create Plugin**.
 2. Name it ``artifacts`` and add a short description.
@@ -64,7 +64,7 @@ Just like before, we will create a new plugin, but this time we'll define **arti
 .. note::
    This plugin defines an artifact task: ``NumpyArrayArtifactTask``.
 
-   To define an artifact task, you must overwrite two methods:
+   To define an artifact task, you must override two methods:
 
    - **serialize**: convert an in-memory object (e.g., NumPy array) into a file.
    - **deserialize**: read the file back into an object.
@@ -73,14 +73,14 @@ Just like before, we will create a new plugin, but this time we'll define **arti
 
 .. admonition:: Learn More 
 
-   See our :ref:`Plugins: reference <reference-plugins>` to guide to learn more about the syntax of Artifact Handlers.
+   See :ref:`Plugins: reference <reference-plugins>` to learn more about the syntax of artifact handlers.
 
 .. rst-class:: header-on-a-card header-steps
 
 Step 2: Register Artifact Task
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Now we must register the class we just created.
+Now you must register the class you just created.
 
 1. In the **Task Form** window (right side of editor), select **Artifact**.
 2. Enter the task name: ``NumpyArrayArtifactTask``.
@@ -94,10 +94,10 @@ Now we must register the class we just created.
    :width: 100%
    :figclass:  border-image clickable-image
 
-   Defining an Artifact Task Plugin requires creating a subclass of ``ArtifactTaskInterface``.
+   Defining an artifact task plugin requires creating a subclass of ``ArtifactTaskInterface``.
 
 .. note::
-   Whereas a Plugin task gets its name from the Python function name, an Artifact plugin task gets its name from the subclass name (in this case, ``NumpyArrayArtifactTask``).
+   Whereas a plugin task gets its name from the Python function name, an artifact plugin task gets its name from the subclass name (in this case, ``NumpyArrayArtifactTask``).
 
    The output parameter type tells Dioptra what kind of object to expect after the ``deserialize`` method is run.
 
@@ -110,10 +110,10 @@ Now we must register the class we just created.
 Step 3: Modify Entrypoint to Save Artifacts
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Next, we will modify **sample_and_transform_ep** to include an artifact-saving task. Nothing about **Plugin 3** itself needs to change.
+Next, you will modify **sample_and_transform_ep** to include an artifact-saving task. Nothing about **Plugin 3** itself needs to change.
 
 1. Open **sample_and_transform_ep**.
-2. In the **Artifact Info** window, add our new ``artifacts``.
+2. In the **Artifact Info** window, add your new ``artifacts``.
 3. Click **Add to Output Graph**.
 4. Rename the step to ``save_numpy_artifact``.
 5. Set the contents equal to the output from the final step of your task graph (e.g., ``$transform_step`` or whatever the last step was named).
@@ -123,7 +123,7 @@ Next, we will modify **sample_and_transform_ep** to include an artifact-saving t
    :width: 100%
    :figclass:  border-image clickable-image
 
-   The Artifact Output Graph defines the logic for which Plugin Tasks should be saved and how. ``contents`` should be a reference to a step name from the task graph.
+   The Artifact Output Graph defines the logic for which plugin tasks should be saved and how. ``contents`` should be a reference to a step name from the task graph.
 
 .. note::
    When the artifact task runs, it automatically calls the ``serialize`` method and writes a file to the artifact store.
@@ -134,9 +134,9 @@ Next, we will modify **sample_and_transform_ep** to include an artifact-saving t
 Step 4: Run Job with Artifact Saving
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Now let’s try it out.
+Now you can try it out.
 
-1. Create a new job using the entrypoint we just defined/edited.
+1. Create a new job using the entrypoint you just defined/edited.
 2. Select your desired parameters.
 3. Click **Submit Job**.
 
@@ -150,7 +150,7 @@ Step 5: Inspect the Artifact
 
 After the job finishes, click on the job to see the results.
 
-1. Go to the **Artifacts** tab within the Job details.
+1. Go to the **Artifacts** tab within the job details.
 2. You should see a new artifact file created by the workflow.
 3. Download it to confirm it was saved successfully.
 
@@ -163,7 +163,7 @@ After the job finishes, click on the job to see the results.
 
 A ``.npy`` file should have been downloaded. This is the numpy array after the random noise was added and the transform was applied.
 
-Congratulations — you’ve just saved your first artifact!
+Congratulations — you've just saved your first artifact!
 
 Conclusion
 ----------
@@ -175,4 +175,4 @@ You now know how to:
 - Save task outputs as reusable files
 - Verify artifact creation through the Dioptra UI
 
-In the next part, we will :ref:`load artifacts into new entrypoints<tutorial-using-saved-artifacts>`, so results from one workflow can feed directly into another.
+In the next part, you will :ref:`load artifacts into new entrypoints<tutorial-using-saved-artifacts>`, so results from one workflow can feed directly into another.

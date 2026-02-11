@@ -157,7 +157,7 @@ To execute the entrypoint, we must place it inside an Experiment and run it as a
    :width: 900px
    :figclass:  border-image clickable-image
 
-   Creating the hellow world experiment
+   Creating the hello world experiment
 
 
 4. Click **Submit Experiment**.

@@ -345,7 +345,7 @@ RST syntax: See Also
    use Dioptra. The following resources are complimentary and provide high level explanations on Dioptra's
    design and motivation.
 
-   * :ref:`Overview of Experiments <explanation-workflow-architecture>` - A summary of how Dioptra components interact to create an experiment
+   * :ref:`Overview of Experiments <explanation-experiments-and-jobs>` - A summary of how Dioptra components interact to create an experiment
    * :ref:`Workflow Architecture <explanation-workflow-architecture>` - An overview of how all the high level Dioptra components orchestrate together to execute jobs.
    * :ref:`Why Dioptra? <explanation-why-use-dioptra>` - An explanation of what Dioptra was built for
 
@@ -361,6 +361,7 @@ This is a hands-on tutorial intended to walk a user through the procedural steps
 use Dioptra. The following resources are complementary and provide high level explanations on Dioptra's
 design and motivation.
 
+* :ref:`Overview of Experiments <explanation-experiments-and-jobs>` - A summary of how Dioptra components interact to create an experiment
 * :ref:`Workflow Architecture <explanation-workflow-architecture>` - An overview of how all the high level Dioptra components orchestrate together to execute jobs.
 * :ref:`Why Dioptra? <explanation-why-use-dioptra>` - An explanation of what Dioptra was built for
 

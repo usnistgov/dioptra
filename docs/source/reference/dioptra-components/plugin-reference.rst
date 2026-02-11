@@ -162,7 +162,7 @@ See the :http:post:`POST /api/v1/plugins </api/v1/plugins/>` endpoint documentat
 
 **Add Files**
 
-See the :http:post:`/api/v1/plugins/{int:id}/files/` endpoint documentation for payload requirements.
+See the :http:post:`POST /api/v1/plugins/{int:id}/files </api/v1/plugins/{id}/files>` endpoint documentation for payload requirements.
 
 .. rst-class:: fancy-header header-seealso
 
