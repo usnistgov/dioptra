@@ -30,14 +30,14 @@ Prerequisites
 
    .. group-tab:: GUI
 
-      * :ref:`getting-started-running-dioptra` - A deployment of Dioptra is required.
+      * :ref:`how-to-prepare-deployment` - A deployment of Dioptra is required.
       * :ref:`tutorial-setup-dioptra-in-the-gui` - Access Dioptra services in the GUI, create a user, and login.
       * :ref:`how-to-create-plugins` - Plugins are needed to attach to the Entrypoint
       * :ref:`how-to-create-queues` - A queue is needed to attach to the Entrypoint
 
    .. group-tab:: Python Client
 
-      * :ref:`getting-started-running-dioptra` -  A deployment of Dioptra is required.
+      * :ref:`how-to-prepare-deployment` - A deployment of Dioptra is required.
       * :ref:`how-to-set-up-the-python-client` - Connect to the Python Client in a Jupyter Notebook.
       * :ref:`how-to-create-plugins` - Plugins are needed to attach to the Entrypoint
       * :ref:`how-to-create-queues` - A queue is needed to attach to the Entrypoint
@@ -87,6 +87,8 @@ Step 1: Locate Plugins, Queues, Groups, and Parameter Types to attach to the Ent
       **Queues:**
 
       .. automethod:: dioptra.client.queues.QueuesCollectionClient.get
+
+.. _step-2-create-an-entrypoint:
 
 .. rst-class:: header-on-a-card header-steps
 
@@ -143,7 +145,7 @@ Entrypoints are parameterizable. Any parameters or artifact input parameters you
 
    .. group-tab:: Python Client
 
-      The parameter values are provided as a list of dictionaries during entrypoint creation. 
+      The parameter values were provided as a list of dictionaries during entrypoint creation in :ref:`Step 2 <step-2-create-an-entrypoint>`. 
 
 .. rst-class:: header-on-a-card header-steps
 
@@ -174,7 +176,7 @@ If you would like this entrypoint to load an artifact from disk and make it avai
 
    .. group-tab:: Python Client
 
-      The artifact input parameters values are provided as a list of dictionaries during entrypoint creation. 
+      The artifact input parameters values were provided as a list of dictionaries during entrypoint creation in :ref:`Step 2 <step-2-create-an-entrypoint>`. 
 
 .. rst-class:: header-on-a-card header-steps
 
@@ -194,8 +196,8 @@ When an entrypoint is run as a job, the task graph will be executed by the worke
 
    .. group-tab:: Python Client
 
-      - The task graph YAML is provided as a string during entrypoint creation. 
-      - The Plugin IDs for task plugins are provided during entrypoint creation. 
+      - The task graph YAML was provided as a string during entrypoint creation in :ref:`Step 2 <step-2-create-an-entrypoint>`. 
+      - The Plugin IDs for task plugins were provided during entrypoint creation in :ref:`Step 2 <step-2-create-an-entrypoint>`. 
 
 .. rst-class:: header-on-a-card header-steps
 

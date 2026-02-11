@@ -104,7 +104,7 @@ Workflow for job execution
 To run code in Dioptra, you'll need to perform the following steps:
 
 1. Define functions in Python
-2. Register those functions in a :ref:`Plugin <how-to-create-plugins>`
+2. Register those functions in a :ref:`plugin <how-to-create-plugins>`
 3. :ref:`Define an entrypoint <how-to-create-entrypoints>` workflow that uses those function tasks
 4. Create an :ref:`experiment <how-to-create-experiments>` and attach your entrypoint
 5. Run a :ref:`job <how-to-running-jobs>` within that experiment, determining parameters, artifact inputs, and artifact outputs.

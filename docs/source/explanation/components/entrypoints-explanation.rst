@@ -59,7 +59,7 @@ An entrypoint must declare attached Plugins before it can use their associated T
 
 **Function Plugins**: Provide the computational tasks (the "verbs" of your workflow) used in the main Task Graph.
 
-**Artifact Plugins**: Provide the serialization logic (the "savers" and "loaders") used to handle loading Artifact Parameters at the beggining of jobs and saving Artifacts at the end of the job (defined in the Artifact Task Graph)
+**Artifact Plugins**: Provide the serialization logic (the "savers" and "loaders") used to handle loading Artifact Parameters at the beginning of jobs and saving Artifacts at the end of the job (defined in the Artifact Task Graph)
 
 By attaching plugins, the Entrypoint imports the input/output signatures of those tasks. This allows Dioptra to perform validation, ensuring that the tasks are compatible with one another.
 

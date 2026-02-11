@@ -26,9 +26,9 @@ Overview
 
 In the last tutorial, you built a multi-step workflow that transformed a numpy array multiple times. After each step, you printed summary stats and then viewed those in the logs.
 
-Instead of printing values in the logs, we will record them using **metrics**. This will produce time-series visualizations for us. This is useful for tracking a metric across various steps, both within and across plugins. Metrics are stored at the job level.
+Instead of printing values in the logs, you will now record them using **metrics**. This will produce time-series visualizations. This is useful for tracking a metric across various steps, both within and across plugins. Metrics are stored at the job level.
 
-We will replace our prior ``print_stats`` plugin task with a new ``log_metrics`` task.
+You will replace your prior ``print_stats`` plugin task with a new ``log_metrics`` task.
 
 .. warning::
    This part of the tutorial will not work properly until new changes from DIOPTRA-OPTIC branch are merged in for metric logging.
@@ -42,7 +42,7 @@ Workflow
 Step 1: Add Metrics Task to Plugin 3
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Let's create the new plugin task that uses Dioptra's metric logging.
+You will now create the new plugin task that uses Dioptra's metric logging.
 
 1. Go to the **Plugins** tab and open **sample_and_transform** from the previous step.
 2. Navigate to the ``sample_and_transform.py`` file you created.
@@ -69,7 +69,7 @@ Let's create the new plugin task that uses Dioptra's metric logging.
 Step 2: Modify Entrypoint 3
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Now let's edit Entrypoint 3 to use this new Plugin task. We will change the task graph to utilize ``log_metrics`` instead of ``print_stats``.
+Now edit Entrypoint 3 to use this new plugin task. You will change the task graph to utilize ``log_metrics`` instead of ``print_stats``.
 
 1. Navigate to **Entrypoints** and open **Entrypoint 3**.
 2. In the **Task Graph YAML** editor, find every reference to the task ``print_stats`` and replace it with ``log_metrics``.
@@ -80,7 +80,7 @@ Now let's edit Entrypoint 3 to use this new Plugin task. We will change the task
 Step 3: Re-run Entrypoint 3
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Now let's re-run this entrypoint and see if our metrics get logged.
+Re-run this entrypoint and see if the metrics get logged.
 
 1. Go to **Experiment 3** (the experiment you created in the last step).
 2. Create a new job using **Entrypoint 3**.
@@ -91,7 +91,7 @@ Now let's re-run this entrypoint and see if our metrics get logged.
 Step 4: Inspect Metrics
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Let's view our results.
+View the results.
 
 1. Go to the **Job Details** page for the job you just ran.
 2. Click the **Metrics** tab.
@@ -103,4 +103,4 @@ Conclusion
 
 You now know how to log metrics within a plugin task!
 
-Next, we will save outputs from plugin tasks as **artifacts**.
+Next, you will save outputs from plugin tasks as **artifacts**.

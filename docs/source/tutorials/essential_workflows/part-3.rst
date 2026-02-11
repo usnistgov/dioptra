@@ -23,16 +23,16 @@ Building a Multi-Step Workflow
 Overview
 --------
 
-So far, you have built plugins with a single task and connected them to an Entrypoint. Now, you will extend the idea further by creating a **multi-task plugin** and chaining those tasks together in an Entrypoint.
+So far, you have built plugins with a single task and connected them to an entrypoint. Now, you will extend the idea further by creating a **multi-task plugin** and chaining those tasks together in an entrypoint.
 
 This will let you:
 
-- Register **multiple Python functions** as tasks in one Plugin
+- Register **multiple Python functions** as tasks in one plugin
 - **Reference outputs** of earlier tasks as inputs for later tasks
 - **Repeat tasks** with different inputs
 - See how multiple steps can be **chained together** to make a data generation workflow
 
-We will run the workflow once and inspect how the data evolves across multiple steps.
+You will run the workflow once and inspect how the data evolves across multiple steps.
 
 
 Workflow
@@ -43,8 +43,8 @@ Workflow
 Step 1: Make "sample_and_transform" Plugin
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The ``sample_and_transform`` plugin will include multiple functions, each registered as a Plugin Task.
-Other than containing more functions, we create the plugin the same way as before.
+The ``sample_and_transform`` plugin will include multiple functions, each registered as a plugin task.
+Other than containing more functions, you will create the plugin the same way as before.
 
 The tasks include:
 
@@ -68,12 +68,12 @@ The tasks include:
 
 .. rst-class:: header-on-a-card header-steps
 
-Step 2: Create "sample_and_transform" entrypoint
+Step 2: Create "sample_and_transform" Entrypoint
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The ``sample_and_transform_ep`` entrypoint will demonstrate a **multi-step task graph**. We will pass arrays from one task to the next and re-use the ``print_stats`` task multiple times.
+The ``sample_and_transform_ep`` entrypoint will demonstrate a **multi-step task graph**. You will be able to pass arrays from one task to the next and re-use the ``print_stats`` task multiple times.
 
-Parameters for this Entrypoint:
+Parameters for this entrypoint:
 
 - ``sample_size`` (int)
 - ``mean`` (float)
@@ -82,7 +82,7 @@ Parameters for this Entrypoint:
 
 **Steps** 
 
-1. Create a new Entrypoint named ``sample_and_transform_ep``.
+1. Create a new entrypoint named ``sample_and_transform_ep``.
 2. Under the **Entrypoint Parameters** window, add the four parameters listed above, ensuring you select the correct types (``int``, ``float``, ``float``, ``string``).
 
 .. figure:: _static/screenshots/entrypoint_3_add_params.png
@@ -90,14 +90,14 @@ Parameters for this Entrypoint:
    :width: 900px
    :figclass: border-image clickable-image
 
-   Defining entrypoint parameters to use in our Task Graph.
+   Defining entrypoint parameters to use in the task graph.
 
 .. rst-class:: header-on-a-card header-steps
 
 Step 3: Build the Task Graph
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-We are going to build a task graph with **six steps**:
+You are going to build a task graph with **six steps**:
 
 1. ``draw_normal`` (generates draws)
 2. ``print_stats`` (on array from step 1)
@@ -124,7 +124,7 @@ Key ideas:
        :language: yaml
 
 .. note::
-   The output of all our tasks is simply called ``output``. This can be changed during Plugin Task registration if desired.
+   The output of all the tasks is simply called ``output``. This can be changed during plugin task registration if desired.
 
 .. figure:: _static/screenshots/entrypoint_3_task_graph.png
    :alt: Screenshot of a multi-step task graph for Entrypoint 3.
@@ -144,7 +144,7 @@ Key ideas:
 Step 4: Create Experiment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Because this workflow is conceptually different, let’s make a new experiment.
+Because this workflow is conceptually different, make a new experiment for organizational purposes.
 
 **Steps** 
 
@@ -158,7 +158,7 @@ Because this workflow is conceptually different, let’s make a new experiment.
 Step 5: Run a Job
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Let’s execute the multi-step workflow.
+It's time to execute the multi-step workflow.
 
 1. Go to the **Jobs** tab and click **Create Job**.
 2. Select **Sample and Transform Exp** and **sample_and_transform_ep**.
@@ -209,8 +209,8 @@ Conclusion
 You now know how to:
 
 - Register multiple tasks in a single plugin
-- Build a multi-step Entrypoint task graph
+- Build a multi-step entrypoint task graph
 - Reference outputs and repeat tasks
 - Run experiments with complex workflows
 
-Next, we will learn how to :ref:`save the output of a task as an artifact <tutorial-saving-artifacts>`.
+Next, you will learn how to :ref:`save the output of a task as an artifact <tutorial-saving-artifacts>`.
