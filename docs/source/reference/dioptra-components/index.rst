@@ -20,10 +20,65 @@
 Dioptra Components
 ===================
 
+Reference material for the various components and resources that comprise experiment workflows in Dioptra.
+
+Quick Definitions
+-------------------
+
+Plugins
+~~~~~~~~
+
+- ``Plugin``: A collection of Python files which contain registered ``Plugin Tasks`` and/or ``Artifact Plugin Tasks`` 
+- ``Plugin Task``: A single Python function within a ``Plugin`` file, used in ``Entrypoints``
+- ``Plugin Task Input``: An input into a ``Plugin Task`` (i.e. a Python argument)
+- ``Plugin Task Output``: The output of a ``Plugin Task``. A ``Plugin Task Output`` can be fed in as a ``Plugin Task Input`` via the ``Entrypoint Task Graph``, or saved as an ``Artifact`` via the ``Artifact Output Graph``
+- ``Plugin Parameter Type``: Either a built-in or user-defined type, used for Entrypoint task graph ``type validation`` 
+
+
+Artifacts
+~~~~~~~~~~~~
+
+- ``Artifact Plugin``: A type of ``Plugin`` container that specifically contains Artifact Plugin Tasks. 
+- ``Artifact``: The output of a Plugin Task that has been saved to disk via the serialize method of an ``Artifact Task``
+- ``Artifact Handler``: A subclass of ArtifactTaskInterface, defining serialization / deserialization / validation logic for artifacts
+- ``Artifact Task``: The serialize method for an ``Artifact Handler``, used in the ``Artifact Output Graph`` to save ``Plugin Task Outputs`` to ``Artifacts`` 
+- ``Artifact Task Output Parameter``: An object that is returned by the deserialize method of an ``Artifact Handler``
+- ``Artifact Task Output Parameter Type``: The ``Parameter Type`` for the object that is returned by an ``Artifact Task``
+
+Entrypoints
+~~~~~~~~~~~~~~~~~~~
+
+- ``Entrypoint``: Define parameterizable workflows, which can be reused across multiple ``Experiments``
+- ``Entrypoint Parameter``: An input used for the ``Entrypoint Task Graph`` (and the ``Artifact Output Graph``) - can be customized during a ``Job`` run and have an optional default value
+- ``Entrypoint Artifact Parameter``: A kind of ``Entrypoint Parameter``, where the value is read in from a ``Snapshot`` of an ``Artifact`` during ``Job`` execution. Can contain multiple objects (object is accessed with the dot notation)
+- ``Entrypoint Task Graph``: The sequence of ``Plugin Tasks`` that an ``Entrypoint`` executes, written in YAML. A directed, acyclic graph (DAG)
+- ``Entrypoint Task Graph Step``: A single step in the ``Entrypoint Task Graph``, which must have a name. Can have positional and keyword arguments as well.
+- ``Entrypoint Artifact Output Graph``: The logic dictating which ``Plugin Task Outputs`` are saved to ``Artifacts`` and how (i.e. which ``Artifact Tasks`` are invoked and their inputs)
+
+Experiments/Jobs
+~~~~~~~~~~~~~~~~~~~
+
+- ``Experiment``: A container that holds ``Entrypoints`` and ``Job`` runs 
+- ``Job``: A parameterized run of an ``Entrypoint`` 
+
+Other
+~~~~~~~~~~~~~~~~~~~
+
+- ``Metric``: A numeric value that is associated with a specific step of a ``job`` (i.e. training accuracy at a given epoch for the "train" ``plugin task``)
+- ``Snapshot`` (Artifact, Plugin, Entrypoint): A specific version of a resource in time 
+- ``Queue``: A queue manager for ``jobs`` - manages job execution for a specific ``worker`` environment
+- ``Worker``: Contains the resources for executing a ``job``. Default worker containers are available for GPU and CPU hardware. Custom workers can be developed.
+- ``User``: A user profile with login credentials and permissions. Belongs to one or more ``groups``
+- ``Groups``: A set of ``users`` and permission rules for resource access. Currently, each resource can only belong to a single ``group``
+- ``Tags``: String values that are associated in many to many relationships with various Dioptra resources. Used for filtering tables, etc.
+
+Detailed Reference Pages
+--------------------------------
+
 .. container:: wide-lightly-shaded
 
    .. toctree::
-      :maxdepth: 2
+      :maxdepth: 1
       :caption: Table of Contents
 
       dioptra-component-glossary
@@ -40,3 +95,11 @@ Dioptra Components
       workers-reference
       task-graph-reference
       artifact-graph-reference
+
+.. rst-class:: fancy-header header-seealso
+
+See Also 
+---------
+
+* :ref:`how-to-running-experiments` - How to guides for creating resources with the Dioptra GUI / Python Client
+* :ref:`Dioptra components explainers <explanation-dioptra-components>` - Explanation on Dioptra components
