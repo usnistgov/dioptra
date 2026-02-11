@@ -618,7 +618,7 @@ There are many similarities between invoking artifact tasks and function tasks:
 
     * **Artifact Task Names**: ``artifactHandler1`` and ``artifactHandler2`` refer to the registered names of artifact function tasks (and also the name of the corresponding Python classes). Each step in the graph represents an invocation of the ``serialize()`` method of an artifact handler. 
 
-    * **Arguments for the Artifact Tasks**: ``arg1``, ``arg2`` are arguments provided to the artifact tasks (specifically, the ``deserialize`` method)
+    * **Arguments for the Artifact Tasks**: ``arg1``, ``arg2`` are arguments provided to the artifact tasks (specifically, the ``serialize`` method)
 
     * **Argument Names for Artifact Tasks**: ``keyword1``, ``keyword2``  are the parameter names for that particular artifact task. These names are defined at artifact task registration time.
 
@@ -745,7 +745,7 @@ Invocation Styles
 
 Some artifact tasks define task inputs to customize the serialization logic (for example, specifying a file format). 
 Similar to the Task Graph, the arguments for artifact tasks can be passed in in a variety of ways.
-These arguments are used in the ``serialization`` method of the Artifact Handler, as well as the ``validate`` method (if it is defined).
+These arguments are used in the ``serialization`` method of the Artifact Handler.
 
 
 **Positional Style Invocation**
