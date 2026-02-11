@@ -82,7 +82,7 @@ DIOPTRA_CODE_DIR=~/di/di-src
 
 ### [NEW!!!] Mandatory entry Defaults to "tensorflow-cpu"
 ### Worker-Type
-DIOPTRA_WORKER_LIB=tensorflow-cpu 
+DIOPTRA_WORKER_LIB=tensorflow-cpu
 ### Other options include: [pytorch-cpu | pytorch-gpu | tensorflow-cpu | tensorflow-cpu]
 
 ### [OPTIONAL-ENTRY] Environment Info
