@@ -34,48 +34,42 @@ Requirements
 - :ref:`how-to-set-up-the-python-client` - the Python client must be configured and initialized
 
 
-
 .. _reference-experiments-client-methods-crud-methods:
 
-Experiments - CRUD methods
----------------------
+Experiments - CRUD Methods
+--------------------------
 
-After :ref:`importing and initializing the client <how-to-set-up-the-python-client>`, these methods can be executed via ``client.experiments.METHOD_NAME()``. 
-
+After :ref:`importing and initializing the client <how-to-set-up-the-python-client>`, these methods for creating, reading updating and deleting (CRUD) experiments can be executed via ``client.experiments.METHOD_NAME()``. 
 
 
 Create Experiment
-~~~~~~~~~
+~~~~~~~~~~~~~~~~~
       
     .. automethod:: dioptra.client.experiments.ExperimentsCollectionClient.create
 
 Get Experiments
-~~~~~~~~~
+~~~~~~~~~~~~~~~
       
     .. automethod:: dioptra.client.experiments.ExperimentsCollectionClient.get
 
 Modify Experiment
-~~~~~~~~~
+~~~~~~~~~~~~~~~~~
 
     .. automethod:: dioptra.client.experiments.ExperimentsCollectionClient.modify_by_id
 
 Delete Experiment
-~~~~~~~~~
+~~~~~~~~~~~~~~~~~
       
     .. automethod:: dioptra.client.experiments.ExperimentsCollectionClient.delete_by_id
-
-
-
-
 
 
 .. _reference-experiments-client-methods-other-methods:
 
 Experiments - Other Methods
----------------------
+---------------------------
 
 Get Metrics for Jobs in Experiment
-~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     .. automethod:: dioptra.client.experiments.ExperimentsCollectionClient.get_metrics_by_id
 
@@ -84,37 +78,42 @@ Get Metrics for Jobs in Experiment
 
 
 Entrypoint Attachment - Methods
---------------------------------------------
+-------------------------------
 
 These methods exist within the class ``ExperimentEntrypointsSubCollectionClient``, and can are accessed via the ``entrypoints`` property of the Experiment Client (which points to ``ExperimentEntrypointsSubCollectionClient``)
 
 **Example - Attach Entrypoints to Experiment**
 
-``client.experiments.entrypoints.create(experiment_id=1, entrypoint_ids=[2,3])``
+.. admonition:: Attach Entrypoints to Experiment
+   :class: code-panel python
+
+   .. code-block:: python
+
+        client.experiments.entrypoints.create(experiment_id=1, entrypoint_ids=[2,3])
 
 
 Add Entrypoint to Experiment
-~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       
     .. automethod:: dioptra.client.experiments.ExperimentEntrypointsSubCollectionClient.create
 
 Get Entrypoints for Experiment
-~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       
     .. automethod:: dioptra.client.experiments.ExperimentEntrypointsSubCollectionClient.get
 
 Replace Attached Entrypoints
-~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     .. automethod:: dioptra.client.experiments.ExperimentEntrypointsSubCollectionClient.modify_by_id
 
 Delete All Attached Entrypoints
-~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       
     .. automethod:: dioptra.client.experiments.ExperimentEntrypointsSubCollectionClient.delete
 
 Delete One Entrypoint by ID
-~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
       
     .. automethod:: dioptra.client.experiments.ExperimentEntrypointsSubCollectionClient.delete_by_id
 
@@ -123,44 +122,49 @@ Delete One Entrypoint by ID
 
 
 Job Execution - Methods
---------------------------------------------
+-----------------------
 
 These methods exist within the class ``ExperimentJobsSubCollectionClient``, and can are accessed via the ``jobs`` property of the Experiment Client (which points to ``ExperimentJobsSubCollectionClient``)
 
 **Example - Run an Entrypoint as a Job within an Experiment**
 
-``client.experiments.jobs.create(experiment_id=1, entrypoint_id=[2], queue_id=10,)``
+.. admonition:: Run Entrypoint as a Job
+   :class: code-panel python
+
+   .. code-block:: python
+
+        client.experiments.jobs.create(experiment_id=1, entrypoint_id=[2], queue_id=10,)
 
 
 
 Get All Jobs
-~~~~~~~~~
+~~~~~~~~~~~~
       
     .. automethod:: dioptra.client.experiments.ExperimentJobsSubCollectionClient.get
 
 Get One Job by ID
-~~~~~~~~~
+~~~~~~~~~~~~~~~~~
       
     .. automethod:: dioptra.client.experiments.ExperimentJobsSubCollectionClient.get_by_id
 
 Get Job Status by ID
-~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
       
     .. automethod:: dioptra.client.experiments.ExperimentJobsSubCollectionClient.get_status
 
 Create a Job
-~~~~~~~~~
+~~~~~~~~~~~~
 
     .. automethod:: dioptra.client.experiments.ExperimentJobsSubCollectionClient.create
 
 Set Job Status by ID
-~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
       
     .. automethod:: dioptra.client.experiments.ExperimentJobsSubCollectionClient.set_status
         
 
 Delete a Job by ID
-~~~~~~~~~
+~~~~~~~~~~~~~~~~~~
       
     .. automethod:: dioptra.client.experiments.ExperimentJobsSubCollectionClient.delete_by_id
 
@@ -169,38 +173,46 @@ Delete a Job by ID
 
 
 
-Tags Attached to Experiment
--------------------
+Tags Attached to Experiment - Methods
+-------------------------------------
 
 Methods belonging to the ``TagsSubCollectionClient`` can are accessed via the ``tags`` property of the Experiment Client (which points to ``TagsSubCollectionClient``)
 
-**Example - Get tags for an Experiment**
+**Example - Get Tags for an Experiment**
 
-``client.experiments.tags.get(1)``
+.. admonition:: Get Tags for Experiment
+   :class: code-panel python
 
-Methods - Tags
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   .. code-block:: python
 
-See **available methods for the TagsSubCollectionClient**: :ref:`reference-tags-client-methods`
-
-
+        client.experiments.tags.get(1)
 
 
-Snapshots of Experiment
---------------------
+See **available methods** for the ``TagsSubCollectionClient``: 
+
+* :ref:`reference-tags-client-methods`
+
+
+
+
+Snapshots of Experiment - Methods
+---------------------------------
 
 Methods belonging to the  ``SnapshotsSubCollectionClient`` can are accessed via the ``snapshots`` property of the Experiment Client (which points to ``SnapshotsSubCollectionClient``)
 
-**Example - Get snapshots for an Experiment**
+**Example - Get Snapshots for an Experiment**
 
-``client.experiments.snapshots.get(1)``
+.. admonition:: Get Snapshots for Experiment
+   :class: code-panel python
 
-Methods - Snapshots
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   .. code-block:: python
 
-See **available methods for the SnapshotsSubCollectionClient**: :ref:`reference-snapshots-client-methods`
+        client.experiments.snapshots.get(1)
 
 
+See **available methods** for the ``SnapshotsSubCollectionClient``:
+
+* :ref:`reference-snapshots-client-methods`
 
 
 .. rst-class:: fancy-header header-seealso
