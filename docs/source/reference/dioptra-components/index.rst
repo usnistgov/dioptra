@@ -38,5 +38,4 @@ Dioptra Components
       artifacts-reference
       metrics-reference
       workers-reference
-      task-graph-reference
       artifact-graph-reference
