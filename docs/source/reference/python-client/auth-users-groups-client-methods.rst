@@ -18,7 +18,7 @@
 .. _reference-auth-client-methods:
 
 Auth, Users, and Groups Client Methods
-=================
+======================================
 
 This page lists all relevant methods for Dioptra Authentication, User management, and Group management that are available via the Python Client.
 
@@ -28,7 +28,7 @@ This page lists all relevant methods for Dioptra Authentication, User management
 
 
 Requirements
--------------
+------------
 
 - :ref:`explanation-install-dioptra` - an installation and deployment of Dioptra must be available
 - :ref:`how-to-set-up-the-python-client` - the Python client must be configured and initialized
@@ -47,7 +47,7 @@ Login
     .. automethod:: dioptra.client.auth.AuthCollectionClient.login
 
 Logout
-~~~~~
+~~~~~~
 
     .. automethod:: dioptra.client.auth.AuthCollectionClient.logout
 
@@ -111,7 +111,7 @@ Delete Current User
 .. _reference-groups-client-methods:
 
 Groups Methods
----------------------
+--------------
 
 These methods relate to group management and retrieval. They can be executed via ``client.groups.METHOD_NAME()``.
 
@@ -133,7 +133,7 @@ Get Group by ID
 .. rst-class:: fancy-header header-seealso
 
 See Also
----------
+--------
 
 * :ref:`How to set up the Python Client <how-to-set-up-the-python-client>`
 * :ref:`Explanation: Users and Groups <explanation-users-and-groups>`

@@ -18,7 +18,7 @@
 .. _reference-plugin-client-methods:
 
 Plugin Client Methods
-=================
+=====================
 
 
 This page lists all relevant methods for Dioptra :ref:`Plugins <explanation-plugins>` that are available via the Python Client.
@@ -28,7 +28,7 @@ This page lists all relevant methods for Dioptra :ref:`Plugins <explanation-plug
     :depth: 2
 
 Requirements
------------
+------------
 
 * :ref:`explanation-install-dioptra` - an installation and deployment of Dioptra must be available
 * :ref:`how-to-set-up-the-python-client` - the Python client must be configured and initialized
@@ -38,10 +38,10 @@ Requirements
 Plugins - CRUD methods
 ----------------------
 
-After :ref:`importing and initializing the client <how-to-set-up-the-python-client>`, these methods can be executed via ``client.plugins.METHOD_NAME()``.
+After :ref:`importing and initializing the client <how-to-set-up-the-python-client>`, these methods for creating, reading, updating, and deleting (CRUD) Plugins can be executed via ``client.plugins.METHOD_NAME()``. 
 
 Create Plugin
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~
 
       
     .. automethod:: dioptra.client.plugins.PluginsCollectionClient.create
@@ -52,7 +52,7 @@ Get Plugins
     .. automethod:: dioptra.client.plugins.PluginsCollectionClient.get
 
 Get Plugin by ID
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~
 
 
 
@@ -61,13 +61,13 @@ Get Plugin by ID
 
 
 Modify Plugin
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~
 
 
     .. automethod:: dioptra.client.plugins.PluginsCollectionClient.modify_by_id
 
 Delete Plugin
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~
 
 
 
@@ -78,22 +78,27 @@ Delete Plugin
 .. _reference-plugins-client-methods-files-methods:
 
 Plugin Files - Methods
----------------------------------
+----------------------
 
 These methods exist within the class ``PluginFilesSubCollectionClient``, and are accessed via the ``files`` property of the Plugins Client (which points to ``PluginFilesSubCollectionClient``).
 
 **Example - Create a file within a Plugin**
 
-``client.plugins.files.create(plugin_id=1, filename="script.py", contents="print('hello')")``
+.. admonition:: Create a file within a Plugin
+   :class: code-panel python
+
+   .. code-block:: python
+
+        client.plugins.files.create(plugin_id=1, filename="script.py", contents="print('hello')")
 
 Create Plugin File
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~
 
       
     .. automethod:: dioptra.client.plugins.PluginFilesSubCollectionClient.create
 
 Get Files for Plugin
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
 
 
 
@@ -102,7 +107,7 @@ Get Files for Plugin
 
 
 Get Plugin File by ID
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
 
       
     .. automethod:: dioptra.client.plugins.PluginFilesSubCollectionClient.get_by_id
@@ -118,7 +123,7 @@ Delete Plugin File
     .. automethod:: dioptra.client.plugins.PluginFilesSubCollectionClient.delete_by_id
 
 Delete All Files in Plugin
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 
@@ -126,45 +131,52 @@ Delete All Files in Plugin
 
 
 
-Tags Attached to Plugin
+Tags Attached to Plugin - Methods
 ---------------------------------
 
 Methods belonging to the ``TagsSubCollectionClient`` are accessed via the ``tags`` property of the Plugins Client (which points to ``TagsSubCollectionClient``).
 
 **Example - Get tags for a Plugin**
 
-``client.plugins.tags.get(1)``
+.. admonition:: Get tags for a Plugin
+   :class: code-panel python
 
-Methods - Tags
-~~~~~~~~~~~~~~~~~~~~~~
+   .. code-block:: python
+
+        client.plugins.tags.get(1)
+
+See **available methods** for the ``TagsSubCollectionClient``: 
+
+* :ref:`reference-tags-client-methods`
 
 
-See **available methods for the TagsSubCollectionClient**: :ref:`reference-tags-client-methods`
-
-
-Snapshots of Plugin
--------------------
+Snapshots of Plugin - Methods
+-----------------------------
 
 Methods belonging to the ``PluginsSnapshotCollectionClient`` are accessed via the ``snapshots`` property of the Plugins Client (which points to ``PluginsSnapshotCollectionClient``).
 
 **Example - Get snapshots for a Plugin**
 
-``client.plugins.snapshots.get(1)``
+.. admonition:: Get snapshots for a Plugin
+   :class: code-panel python
 
-Methods - Snapshots
-~~~~~~~~~~~~~~~~~~~~~~
+   .. code-block:: python
 
+        client.plugins.snapshots.get(1)
 
-See **available methods for the SnapshotsSubCollectionClient**: :ref:`reference-snapshots-client-methods`
+See **available methods** for the ``SnapshotsSubCollectionClient``:
+
+* :ref:`reference-snapshots-client-methods`
+
 
 Methods - Plugin Specific Snapshots
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 The following methods are specific to Plugin snapshots and are not available on other resources.
 
 Download Files Bundle
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
 
     .. automethod:: dioptra.client.plugins.PluginsSnapshotCollectionClient.get_files_bundle
 
@@ -172,7 +184,7 @@ Download Files Bundle
 .. rst-class:: fancy-header header-seealso
 
 See Also
----------
+--------
 
 * :ref:`Plugins reference <reference-plugins>`
 * :ref:`Plugins explanation <explanation-plugins>`

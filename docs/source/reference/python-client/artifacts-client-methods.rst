@@ -28,7 +28,7 @@ This page lists all relevant methods for Dioptra :ref:`Artifacts <explanation-ar
 
 
 Requirements
--------------
+------------
 
 - :ref:`explanation-install-dioptra` - an installation and deployment of Dioptra must be available
 - :ref:`how-to-set-up-the-python-client` - the Python client must be configured and initialized
@@ -39,8 +39,7 @@ Requirements
 Artifacts - CRUD methods
 ------------------------
 
-After :ref:`importing and initializing the client <how-to-set-up-the-python-client>`, these methods can be executed via ``client.artifacts.METHOD_NAME()``.
-
+After :ref:`importing and initializing the client <how-to-set-up-the-python-client>`, these methods for creating, reading, updating, and deleting (CRUD) artifacts can be executed via ``client.artifacts.METHOD_NAME()``. 
 
 Create Artifact
 ~~~~~~~~~~~~~~~
@@ -81,19 +80,26 @@ Download Artifact Contents
 
 .. _reference-artifacts-client-methods-snapshots:
 
-Snapshots of Artifacts
-----------------------
+
+Snapshots of Artifacts - Methods
+--------------------------------
 
 Methods belonging to the ``ArtifactsSnapshotCollectionClient`` are accessed via the ``snapshots`` property of the Artifacts Client (which points to ``ArtifactsSnapshotCollectionClient``).
 
-**Example - Get snapshots for an Artifact**
+**Example - Get Snapshots for an Artifact**
 
-``client.artifacts.snapshots.get(artifact_id=1)``
+.. admonition:: Get Snapshots for an Artifact
+   :class: code-panel python
 
-Methods - Snapshots
-~~~~~~~~~~~~~~~~~~~
+   .. code-block:: python
+            
+        client.artifacts.snapshots.get(artifact_id=1)
 
-See **available methods for the generic SnapshotsSubCollectionClient**: :ref:`reference-snapshots-client-methods`
+
+See **available methods** for the ``SnapshotsSubCollectionClient``:
+
+* :ref:`reference-snapshots-client-methods`
+
 
 In addition to the standard snapshot methods, the Artifacts client includes specific methods for downloading snapshot content:
 

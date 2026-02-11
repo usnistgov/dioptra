@@ -18,7 +18,7 @@
 .. _reference-parameter-types-client-methods:
 
 Parameter Types Client Methods
-==========================
+==============================
 
 This page lists all relevant methods for Dioptra :ref:`Plugin Parameter Types <reference-plugin-parameter-types>` that are available via the Python Client. 
 
@@ -27,7 +27,7 @@ This page lists all relevant methods for Dioptra :ref:`Plugin Parameter Types <r
     :depth: 2
 
 Requirements
-----------------
+------------
 
 * :ref:`explanation-install-dioptra` - an installation and deployment of Dioptra must be available
 * :ref:`how-to-set-up-the-python-client` - the Python client must be configured and initialized
@@ -35,60 +35,64 @@ Requirements
 .. _reference-plugin-parameter-types-client-methods-crud-methods:
 
 Plugin Parameter Types - CRUD methods
-----------------
+-------------------------------------
 
-After :ref:`importing and initializing the client <how-to-set-up-the-python-client>`, these methods can be executed via ``client.plugin_parameter_types.METHOD_NAME()``. 
+After :ref:`importing and initializing the client <how-to-set-up-the-python-client>`, these methods for creating, reading, updating, and deleting (CRUD) Plugin Parameter Types can be executed via ``client.plugin_parameter_types.METHOD_NAME()``. 
 
 Create Plugin Parameter Type
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     .. automethod:: dioptra.client.plugin_parameter_types.PluginParameterTypesCollectionClient.create
 
 Get Plugin Parameter Types
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     .. automethod:: dioptra.client.plugin_parameter_types.PluginParameterTypesCollectionClient.get
 
 
 
 Get Plugin Parameter Type by ID
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     .. automethod:: dioptra.client.plugin_parameter_types.PluginParameterTypesCollectionClient.get_by_id
 
 Modify Plugin Parameter Type
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     .. automethod:: dioptra.client.plugin_parameter_types.PluginParameterTypesCollectionClient.modify_by_id
 
 
 Delete Plugin Parameter Type
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     .. automethod:: dioptra.client.plugin_parameter_types.PluginParameterTypesCollectionClient.delete_by_id
 
 
 
 
-Tags Attached to Plugin Parameter Type
--------------------
+Tags Attached to Plugin Parameter Types - Methods
+------------------------------------------------
 
 Methods belonging to the ``TagsSubCollectionClient`` can are accessed via the ``tags`` property of the Plugin Parameter Types Client (which points to ``TagsSubCollectionClient``)
 
 **Example - Get tags for a Plugin Parameter Type**
 
-``client.plugin_parameter_types.tags.get(1)``
+.. admonition:: Get Tags for a Plugin Parameter Type
+   :class: code-panel python
 
-Methods - Tags
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   .. code-block:: python
+
+        client.plugin_parameter_types.tags.get(1)
+
+See **available methods** for the ``TagsSubCollectionClient``: 
+
+* :ref:`reference-tags-client-methods`
 
 
-See **available methods for the TagsSubCollectionClient**: :ref:`reference-tags-client-methods`
 
 
-
-Snapshots of Plugin Parameter Type
------------------------------------
+Snapshots of Plugin Parameter Types - Methods
+--------------------------------------------
 
 Methods belonging to the  ``SnapshotsSubCollectionClient`` can are accessed via the ``snapshots`` property of the Plugin Parameter Types Client (which points to ``SnapshotsSubCollectionClient``)
 
@@ -96,17 +100,14 @@ Methods belonging to the  ``SnapshotsSubCollectionClient`` can are accessed via 
 
 ``client.plugin_parameter_types.snapshots.get(1)``
 
-Methods - Snapshots
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+See **available methods** for the ``SnapshotsSubCollectionClient``:
 
-
-See **available methods for the SnapshotsSubCollectionClient**: :ref:`reference-snapshots-client-methods`
-
+* :ref:`reference-snapshots-client-methods`
 
 .. rst-class:: fancy-header header-seealso
 
 See Also
----------
+--------
 
 * :ref:`Plugin Parameter Types reference <reference-parameter-types>`
 * :ref:`How to create Plugin Parameter Types <how-to-create-parameter-types>`
