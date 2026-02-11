@@ -20,7 +20,7 @@
 Parameter Types Client Methods
 ==============================
 
-This page lists all relevant methods for Dioptra :ref:`Plugin Parameter Types <reference-plugin-parameter-types>` that are available via the Python Client. 
+This page lists all relevant methods for Dioptra :ref:`Plugin Parameter Types <explanation-plugin-parameter-types>` that are available via the Python Client. 
 
 .. contents:: Contents
     :local:

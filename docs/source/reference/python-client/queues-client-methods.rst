@@ -20,7 +20,7 @@
 Queues Client Methods
 =====================
 
-This page lists all relevant methods for Dioptra :ref:`Queues <explanation-queues>` that are available via the Python Client.
+This page lists all relevant methods for Dioptra :ref:`Queues <explanation-queues-and-workers>` that are available via the Python Client.
 
 .. contents:: Contents
    :local:
