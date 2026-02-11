@@ -75,8 +75,8 @@ Artifact tasks are registered similarly to function tasks. See :ref:`explanation
 See Also
 --------
 
-* :ref:`Entrypoints: explanation <explanation-entrypoints>` - Explanation of Entrypoints, including the Artifact Task Graph.
-* :ref:`Entrypoints: reference <reference-entrypoints>` - Complete YAML syntax guide for entrypoint files and task graphs.
-* :ref:`Artifacts: reference <reference-artifacts>` - Complete reference for Artifacts.
-* :ref:`Artifact Graphs: reference <reference-artifact-graph>` - YAML syntax for artifact graph.
-* :ref:`Plugins: explanation <explanation-plugins>` - Explanation of Plugins, Function Tasks and Artifact Tasks
+* :ref:`Entrypoints Explanation <explanation-entrypoints>` - Explanation of Entrypoints, including the Artifact Task Graph.
+* :ref:`Entrypoints Reference <reference-entrypoints>` - Complete YAML syntax guide for entrypoint files and task graphs.
+* :ref:`Artifacts Reference <reference-artifacts>` - Complete reference for Artifacts.
+* :ref:`Artifact Output Graph Reference <reference-entrypoints-artifact-output-graph-syntax>` - Reference for artifacts output graphs.
+* :ref:`Plugins Explanation <explanation-plugins>` - Explanation of Plugins, Function Tasks and Artifact Tasks
