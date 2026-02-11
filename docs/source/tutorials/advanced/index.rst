@@ -37,7 +37,7 @@ Click any of the links below to view the Jupyter notebook tutorials on GitHub.
   * - `Hello World with the Dioptra Python Client <https://github.com/usnistgov/dioptra/blob/main/examples/hello_world.ipynb>`__
     - This tutorial demonstrates how interact with Diopta via the Python Client. It walks through registering a queue,
       importing plugins and entrypoints, creating an experiment, and finally executing jobs.
-  * - `Adversarial ML with OPTIC <https://github.com/usnistgov/dioptra/blob/dev/examples/mnist_demo.ipynb>`__
+  * - `Adversarial ML with OPTIC <https://github.com/usnistgov/dioptra/blob/main/examples/mnist_demo.ipynb>`__
     - This tutorial demonstrates how the OPTIC (Open Perturbation Testing for Image Classifers) plugin can be used to
       evaluate adversarial attacks and defenses on a model trained to recognize handwritten digits.
 

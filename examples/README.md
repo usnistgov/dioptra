@@ -10,7 +10,7 @@ The examples directory contains Dioptra tutorials in the form of Jupyter Noteboo
 
 ## Creating a virtual environment
 
-It is recommended that you create a virtual environment to use to manage the dependencies needed to run the setup scripts and use the Jupyter notebooks provided with the examples.
+It is recommended that you create a virtual environment to manage the dependencies needed to run the provided Jupyter Notebooks.
 Run the following after you have cloned this repository:
 
 ```sh

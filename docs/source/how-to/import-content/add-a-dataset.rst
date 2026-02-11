@@ -21,7 +21,7 @@ Add a Dataset
 =============
 
 To make datasets or other resources available when running experiments, they must be placed in a directory accessible to your workers.
-This directory can be stored anywhere on your host machine's filesystem and then (:ref:`mounted into the worker containers <running-dioptra-mounting-folders-in-the-worker-containers>`).
+This directory can be stored anywhere on your host machine's filesystem and then :ref:`mounted into the worker containers <how-to-data-mounts>`.
 
 Once the dataset directory is configured as part of the Dioptra deployment, adding data is as simple as placing the data into that directory.
 Data added to the datasets directory is immediately accessible to plugin tasks by referencing the ``/dioptra/data`` location.
@@ -44,4 +44,8 @@ Then, to download and add a dataset directly to the ``/dioptra/data`` directory,
 
    uv run ./examples/scripts/download_data.py download --data-dir /dioptra/data DATASET_NAME
 
-For the full list of options, run ``uv run ./examples/scripts/download_data.py -h`` to display the script's help message.
+For the full list of options, run the following to display the script's help message:
+
+.. code-block:: sh
+
+    uv run ./examples/scripts/download_data.py -h
