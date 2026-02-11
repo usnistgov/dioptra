@@ -22,6 +22,27 @@ Dioptra Components
 
 Reference material for the various components and resources that comprise experiment workflows in Dioptra.
 
+.. container:: wide-lightly-shaded
+
+   .. toctree::
+      :maxdepth: 1
+      :caption: Table of Contents
+
+      dioptra-component-glossary
+      users-reference
+      groups-reference
+      queues-reference
+      param-types-reference
+      plugin-reference
+      entrypoints-reference
+      experiments-reference
+      jobs-reference
+      artifacts-reference
+      metrics-reference
+      workers-reference
+      task-graph-reference
+      artifact-graph-reference
+
 Quick Definitions
 -----------------
 
@@ -69,30 +90,6 @@ Other
 - ``Group``: A set of ``Users`` and permission rules for resource access. Currently, there is only a single "public" ``Group``.
 - ``Snapshot``: A specific version of a Resource (e.g. Experiment, Plugin, Entrypoint, Artifact) in time.
 - ``Tag``: String values that are associated in many to many relationships with various Dioptra resources. Used for filtering tables, etc.
-
-Detailed Reference Pages
-------------------------
-
-.. container:: wide-lightly-shaded
-
-   .. toctree::
-      :maxdepth: 1
-      :caption: Table of Contents
-
-      dioptra-component-glossary
-      users-reference
-      groups-reference
-      queues-reference
-      param-types-reference
-      plugin-reference
-      entrypoints-reference
-      experiments-reference
-      jobs-reference
-      artifacts-reference
-      metrics-reference
-      workers-reference
-      task-graph-reference
-      artifact-graph-reference
 
 .. rst-class:: fancy-header header-seealso
 
