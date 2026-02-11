@@ -891,12 +891,15 @@
 
   function addToTaskGraph(task) {
     console.log('task = ', task)
-    let string = `<step-name>:\n  ${task.name}:`
-    task.inputParams.forEach((param) => {
-      string += `\n    ${param.name}: <input-value>`
-    })
+    // always use Mixed Style Invocation
+    let string = `<step-name>:\n  task: ${task.name}`
+    if(task.inputParams.length > 0) {
+      string += `\n  kwargs:`
+      task.inputParams.forEach((param) => {
+        string += `\n    ${param.name}: <input-value>`
+      })
+    }
     if(entryPoint.value.taskGraph.trim().length === 0) {
-      entryPoint.value.taskGraph = ''
       entryPoint.value.taskGraph = string
     } else {
       entryPoint.value.taskGraph += `\n${string}`
@@ -904,9 +907,8 @@
   }
 
   function addToArtifactGraph(task) {
-    let string = `<output-name>:\n  contents: <contents>\n  task:\n    args:\n    name: ${task.name}`
+    let string = `<output-name>:\n  contents: <contents>\n  task:\n    name: ${task.name}`
     if(entryPoint.value.artifactGraph.trim().length === 0) {
-      entryPoint.value.artifactGraph = ''
       entryPoint.value.artifactGraph = string
     } else {
       entryPoint.value.artifactGraph += `\n${string}`
