@@ -144,7 +144,7 @@ pandas==2.2.3
     # via dioptra (pyproject.toml)
 passlib==1.7.4
     # via dioptra (pyproject.toml)
-pillow==11.0.0
+pillow==12.1.1
     # via -r docker/pip-tools/restapi-requirements.in
 protobuf==5.28.3
     # via mlflow-skinny

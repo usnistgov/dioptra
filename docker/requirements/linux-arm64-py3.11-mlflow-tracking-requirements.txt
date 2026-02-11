@@ -122,7 +122,7 @@ packaging==24.1
     #   mlflow-skinny
 pandas==2.2.3
     # via mlflow
-pillow==11.0.0
+pillow==12.1.1
     # via matplotlib
 protobuf==5.28.3
     # via mlflow-skinny

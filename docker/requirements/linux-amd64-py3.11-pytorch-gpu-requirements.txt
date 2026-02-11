@@ -320,7 +320,7 @@ passlib==1.7.4
     # via dioptra (pyproject.toml)
 pendulum==3.0.0
     # via prefect
-pillow==11.0.0
+pillow==12.1.1
     # via
     #   dioptra (pyproject.toml)
     #   imageio
