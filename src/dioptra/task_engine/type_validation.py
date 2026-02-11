@@ -832,15 +832,6 @@ def _check_global_parameter_defaults(
             found
     """
 
-    print("=== _check_global_parameter_defaults INPUTS ===")
-    print("global_parameter_spec:")
-    for k, v in global_parameter_spec.items():
-        print(f"  {k}: {v!r}")
-
-    print("global_parameter_types:")
-    for k, v in global_parameter_types.items():
-        print(f"  {k}: {v}")
-    print("===============================================")
     # Can't really use None to mean no default, since that's a valid default!
     no_default = object()
 
