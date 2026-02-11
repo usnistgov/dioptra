@@ -80,7 +80,7 @@ Experiments/Jobs
 - ``Experiment``: A logical container that holds ``Entrypoints`` and ``Job`` runs.
 - ``Job``: A parameterized run of an ``Entrypoint``.
 - ``Queue``: A queue manager for ``Jobs``. Manages ``Job`` execution for a specific ``worker`` environment.
-- ``Worker``: Contains the resources for executing a ``Job``. Default worker containers are available for GPU and CPU hardware. Custom workers can be developed..
+- ``Worker``: Contains the resources for executing a ``Job``. Default worker containers are available for GPU and CPU hardware. Custom workers can be developed.
 - ``Metric``: A numeric value that is associated with a specific step of a ``Job`` (i.e. training accuracy at a given epoch for the "train" ``Function Task``).
 
 Other
