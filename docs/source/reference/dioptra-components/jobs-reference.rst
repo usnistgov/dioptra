@@ -18,7 +18,7 @@
 .. _reference-jobs:
 
 Jobs
-=================
+====
 
 
 .. contents:: Contents
@@ -28,17 +28,17 @@ Jobs
 .. _reference-jobs-definition:
 
 Job Definition
----------------------
+--------------
 
 A **Job** in Dioptra is a parameterized execution of an :ref:`Entrypoint <reference-entrypoints>`. While an Experiment defines the scope and available workflows, a Job represents the actual run of a workflow.
 
-When a Job is created, it is sent to a specific :ref:`Queue <reference-queues>`. A :ref:`Worker <reference-worker>` listening to that queue claims the Job and executes the entrypoint code using the provided parameters and artifact inputs. 
+When a Job is created, it is sent to a specific :ref:`Queue <reference-queues>`. A :ref:`Worker <reference-workers>` listening to that queue claims the Job and executes the entrypoint code using the provided parameters and artifact inputs.
 Dioptra maintains a full history of every Job, including its logs, metrics, and any generated artifacts, creating a permanent record of the execution even if the underlying entrypoint or plugins are later modified.
 
 .. _reference-jobs-attributes:
 
 Job Attributes
----------------------
+--------------
 
 This section describes the attributes used to define and track a Job.
 
@@ -51,13 +51,13 @@ Required Attributes
 - **Entrypoint**: (integer ID) The unique identifier of the Entrypoint resource defining the workflow to be executed. The Entrypoint must be associated with the selected Experiment.
 - **Queue**: (integer ID) The unique identifier of the Queue where the Job will be submitted for execution.
 - **Values**: (dictionary) A collection of parameter values (key-string pairs) passed to the Entrypoint to configure the workflow execution.
-   - **Name**: (string) The input parameter name of the entrypoint parameter 
-   - **Value**: (any) The value for that entrypoint parameter 
+   - **Name**: (string) The input parameter name of the entrypoint parameter
+   - **Value**: (any) The value for that entrypoint parameter
 
 - **Artifact Values**: (dictionary) A collection of Artifact IDs and Snapshot IDs passed as input parameters to the workflow.
    - **Name**: (string) The name of the artifact parameter defined in the entrypoint
-   - **Artifact ID**: (integer ID) The unique identifier of the Artifact, which was created by another Job execution 
-   - **Snapshot ID**: (integer ID) The unique identifier of the specific Snapshot to load for this Artifact. 
+   - **Artifact ID**: (integer ID) The unique identifier of the Artifact, which was created by another Job execution
+   - **Snapshot ID**: (integer ID) The unique identifier of the specific Snapshot to load for this Artifact.
 
 .. _reference-jobs-optional-attributes:
 
@@ -65,13 +65,13 @@ Optional Attributes
 ~~~~~~~~~~~~~~~~~~~
 
 - **Description**: (string, optional) A text description providing context for this specific Job run.
-- **Timeout**: (string, optional) The maximum duration the Job is allowed to run before being automatically terminated by the system. Formatted using shorthand notation, i.e. ``24h``, ``1d``, ``120m``, etc. 
+- **Timeout**: (string, optional) The maximum duration the Job is allowed to run before being automatically terminated by the system. Formatted using shorthand notation, i.e. ``24h``, ``1d``, ``120m``, etc.
 - **Entrypoint Snapshot ID**: (integer ID, optional) The specific snapshot of the entrypoint to use. If not provided, the latest snapshot is used.
 
-.. _reference-jobs-system-generated-attributes:
+.. _reference-jobs-system-managed-state:
 
-System-Generated Attributes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+System-Managed State
+~~~~~~~~~~~~~~~~~~~~
 
 - **ID**: Unique identifier assigned to the Job upon registration.
 - **Status**: The current state of the Job. Valid states include:
@@ -123,13 +123,12 @@ Jobs can be submitted directly via the HTTP API, usually via an experiment-speci
 
 See the :http:post:`POST /api/v1/experiments/{experimentId}/jobs </api/v1/experiments/{id}/jobs/>` endpoint documentation for the required JSON payload, including parameters and artifact IDs.
 
-
 .. rst-class:: fancy-header header-seealso
 
 See Also
----------
+--------
 
-Additional reference pages: 
+Additional reference pages:
 
 * :ref:`Experiments <reference-experiments>`
 * :ref:`Entrypoints <reference-entrypoints>`
