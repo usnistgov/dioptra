@@ -137,7 +137,7 @@ See the :http:post:`POST /api/v1/artifacts </api/v1/artifacts/>` endpoint docume
 See Also
 ---------
 
-* :ref:`Entrypoints <reference-entrypoints>`
-* :ref:`Artifact Output Graph <reference-entrypoints-artifact-output-graph-syntax>`
+* :ref:`Entrypoints Reference <reference-entrypoints>`
+* :ref:`Artifact Output Graph Reference <reference-entrypoints-artifact-output-graph-syntax>`
 * :ref:`Artifact Tasks Reference <reference-plugins-plugin-artifact-tasks>`).
-* :ref:`Plugins <reference-plugins>`
+* :ref:`Plugins Reference <reference-plugins>`
