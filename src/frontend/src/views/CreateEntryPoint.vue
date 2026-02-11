@@ -785,6 +785,7 @@
         ...oParam,
         parameterType: oParam.parameterType.id
       }))
+
     }))
     try {
       if (route.params.id === 'new') {
@@ -989,11 +990,20 @@
 
   async function validateInputs() {
     try {
+
       const res = await api.validateEntrypoint({
         group: entryPoint.value.group.id || entryPoint.value.group,
         taskGraph: entryPoint.value.taskGraph,
         pluginSnapshots: entryPoint.value.plugins.map(plugin => plugin.snapshotId || plugin.snapshot),
-        parameters: entryPoint.value.parameters
+        parameters: entryPoint.value.parameters,
+        artifacts: entryPoint.value.artifactParameters.map((param) => ({
+            ...param,
+            outputParams: param.outputParams.map((oParam) => ({
+              ...oParam,
+              parameterType: oParam.parameterType.id
+            }))
+
+          }))
       })
       if(res?.data?.schemaValid && !taskGraphPlaceholderError.value) {
         notify.success(`Entrypoint inputs are valid!`)
