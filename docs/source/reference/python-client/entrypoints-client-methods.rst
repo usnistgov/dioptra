@@ -18,4 +18,213 @@
 .. _reference-entrypoint-client-methods:
 
 Entrypoint Client Methods
-=================
+=========================
+
+
+This page lists all relevant methods for Dioptra :ref:`Entrypoints <explanation-entrypoints>` that are available via the Python Client.
+
+.. contents:: Contents
+    :local:
+    :depth: 2
+
+Requirements
+------------
+
+* :ref:`explanation-install-dioptra` - an installation and deployment of Dioptra must be available
+* :ref:`how-to-set-up-the-python-client` - the Python client must be configured and initialized
+
+.. _reference-entrypoints-client-methods-crud-methods:
+
+Entrypoints - CRUD methods
+--------------------------
+
+After :ref:`importing and initializing the client <how-to-set-up-the-python-client>`, these methods for creating, reading, updating, and deleting (CRUD) entrypoints can be executed via ``client.entrypoints.METHOD_NAME()``. 
+Create Entrypoint
+~~~~~~~~~~~~~~~~~
+      
+    .. automethod:: dioptra.client.entrypoints.EntrypointsCollectionClient.create
+
+Get Entrypoints
+~~~~~~~~~~~~~~~
+      
+    .. automethod:: dioptra.client.entrypoints.EntrypointsCollectionClient.get
+
+Get One Entrypoint
+~~~~~~~~~~~~~~~~~~
+
+    .. automethod:: dioptra.client.entrypoints.EntrypointsCollectionClient.get_by_id
+
+
+
+Modify Entrypoint
+~~~~~~~~~~~~~~~~~
+
+    .. automethod:: dioptra.client.entrypoints.EntrypointsCollectionClient.modify_by_id
+
+Delete Entrypoint
+~~~~~~~~~~~~~~~~~
+
+
+    .. automethod:: dioptra.client.entrypoints.EntrypointsCollectionClient.delete_by_id
+
+
+
+.. _reference-entrypoints-client-methods-plugins-methods:
+
+Entrypoint Plugins - Methods
+----------------------------
+
+These methods exist within the class ``EntrypointPluginsSubCollectionClient``, and are accessed via the ``plugins`` property of the Entrypoint Client (which points to ``EntrypointPluginsSubCollectionClient``).
+
+**Example - Attach Plugins to Entrypoint**
+
+.. admonition:: Attach Plugins to an Entrypoint
+   :class: code-panel python
+
+   .. code-block:: python
+
+        client.entrypoints.plugins.create(entrypoint_id=1, plugin_ids=[2,3])
+
+Add Plugin to Entrypoint
+~~~~~~~~~~~~~~~~~~~~~~~~
+      
+    .. automethod:: dioptra.client.entrypoints.EntrypointPluginsSubCollectionClient.create
+
+Get Plugins for Entrypoint
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    .. automethod:: dioptra.client.entrypoints.EntrypointPluginsSubCollectionClient.get
+
+
+
+Get One Plugin by ID
+~~~~~~~~~~~~~~~~~~~~
+      
+    .. automethod:: dioptra.client.entrypoints.EntrypointPluginsSubCollectionClient.get_by_id
+
+Delete One Plugin by ID
+~~~~~~~~~~~~~~~~~~~~~~~
+
+
+    .. automethod:: dioptra.client.entrypoints.EntrypointPluginsSubCollectionClient.delete_by_id
+
+
+
+.. _reference-entrypoints-client-methods-artifact-plugins-methods:
+
+Entrypoint Artifact Plugins - Methods
+-------------------------------------
+
+These methods exist within the class ``EntrypointArtifactPluginsSubCollectionClient``, and are accessed via the ``artifact_plugins`` property of the Entrypoint Client.
+
+**Example - Attach Artifact Plugins to Entrypoint**
+
+``client.entrypoints.artifact_plugins.create(entrypoint_id=1, artifact_plugin_ids=[5])``
+
+Add Artifact Plugin to Entrypoint
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      
+    .. automethod:: dioptra.client.entrypoints.EntrypointArtifactPluginsSubCollectionClient.create
+
+Get Artifact Plugins for Entrypoint
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+    .. automethod:: dioptra.client.entrypoints.EntrypointArtifactPluginsSubCollectionClient.get
+
+
+Get One Artifact Plugin by ID
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      
+    .. automethod:: dioptra.client.entrypoints.EntrypointArtifactPluginsSubCollectionClient.get_by_id
+
+Delete One Artifact Plugin by ID
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+    .. automethod:: dioptra.client.entrypoints.EntrypointArtifactPluginsSubCollectionClient.delete_by_id
+
+
+.. _reference-entrypoints-client-methods-queues-methods:
+
+Entrypoint Queues - Methods
+---------------------------
+
+These methods exist within the class ``EntrypointQueuesSubCollectionClient``, and are accessed via the ``queues`` property of the Entrypoint Client.
+
+**Example - Attach Queues to Entrypoint**
+
+``client.entrypoints.queues.create(entrypoint_id=1, queue_ids=[10])``
+
+Add Queue to Entrypoint
+~~~~~~~~~~~~~~~~~~~~~~~
+      
+    .. automethod:: dioptra.client.entrypoints.EntrypointQueuesSubCollectionClient.create
+
+Get Queues for Entrypoint
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+    .. automethod:: dioptra.client.entrypoints.EntrypointQueuesSubCollectionClient.get
+
+
+Replace Attached Queues
+~~~~~~~~~~~~~~~~~~~~~~~
+
+    .. automethod:: dioptra.client.entrypoints.EntrypointQueuesSubCollectionClient.modify_by_id
+
+Delete All Attached Queues
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+    .. automethod:: dioptra.client.entrypoints.EntrypointQueuesSubCollectionClient.delete
+        
+
+Delete One Queue by ID
+~~~~~~~~~~~~~~~~~~~~~~
+      
+    .. automethod:: dioptra.client.entrypoints.EntrypointQueuesSubCollectionClient.delete_by_id
+
+
+Tags Attached to Entrypoint - Methods
+-------------------------------------
+
+Methods belonging to the ``TagsSubCollectionClient`` are accessed via the ``tags`` property of the Entrypoint Client (which points to ``TagsSubCollectionClient``).
+
+**Example - Get tags for an Entrypoint**
+
+``client.entrypoints.tags.get(1)``
+
+See **available methods** for the ``TagsSubCollectionClient``: 
+
+* :ref:`reference-tags-client-methods`
+
+
+Snapshots of Entrypoint - Methods
+---------------------------------
+
+Methods belonging to the `EntrypointsSnapshotCollectionClient` are accessed via the `snapshots` property of the Entrypoint Client.
+
+**Example - Get snapshots for an Entrypoint**
+
+.. admonition:: Get snapshots for an Entrypoint
+   :class: code-panel python
+
+   .. code-block:: python
+
+        client.entrypoints.snapshots.get(1)
+
+See **available methods** for the ``SnapshotsSubCollectionClient``:
+
+* :ref:`reference-snapshots-client-methods`
+
+
+.. rst-class:: fancy-header header-seealso
+
+See Also
+--------
+
+* :ref:`Entrypoints reference <reference-entrypoints>`
+* :ref:`Entrypoints explanation <explanation-entrypoints>`
+* :ref:`How to create Entrypoints <how-to-create-entrypoints>`
+

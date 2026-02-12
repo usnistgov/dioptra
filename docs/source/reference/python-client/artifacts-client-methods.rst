@@ -18,4 +18,101 @@
 .. _reference-artifacts-client-methods:
 
 Artifacts Client Methods
-=================
+========================
+
+This page lists all relevant methods for Dioptra :ref:`Artifacts <explanation-artifacts>` that are available via the Python Client.
+
+.. contents:: Contents
+   :local:
+   :depth: 2
+
+
+Requirements
+------------
+
+- :ref:`explanation-install-dioptra` - an installation and deployment of Dioptra must be available
+- :ref:`how-to-set-up-the-python-client` - the Python client must be configured and initialized
+
+
+.. _reference-artifacts-client-methods-crud-methods:
+
+Artifacts - CRUD methods
+------------------------
+
+After :ref:`importing and initializing the client <how-to-set-up-the-python-client>`, these methods for creating, reading, updating, and deleting (CRUD) artifacts can be executed via ``client.artifacts.METHOD_NAME()``. 
+
+Create Artifact
+~~~~~~~~~~~~~~~
+
+    .. automethod:: dioptra.client.artifacts.ArtifactsCollectionClient.create
+
+Get Artifacts
+~~~~~~~~~~~~~
+
+    .. automethod:: dioptra.client.artifacts.ArtifactsCollectionClient.get
+
+Get One Artifact by ID
+~~~~~~~~~~~~~~~~~~~~~~
+
+    .. automethod:: dioptra.client.artifacts.ArtifactsCollectionClient.get_by_id
+
+Modify Artifact
+~~~~~~~~~~~~~~~
+
+    .. automethod:: dioptra.client.artifacts.ArtifactsCollectionClient.modify_by_id
+
+
+.. _reference-artifacts-client-methods-other-methods:
+
+Artifacts - Other Methods
+-------------------------
+
+Get File Listing
+~~~~~~~~~~~~~~~~
+
+    .. automethod:: dioptra.client.artifacts.ArtifactsCollectionClient.get_files
+
+Download Artifact Contents
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    .. automethod:: dioptra.client.artifacts.ArtifactsCollectionClient.get_contents
+
+
+.. _reference-artifacts-client-methods-snapshots:
+
+
+Snapshots of Artifacts - Methods
+--------------------------------
+
+Methods belonging to the ``ArtifactsSnapshotCollectionClient`` are accessed via the ``snapshots`` property of the Artifacts Client (which points to ``ArtifactsSnapshotCollectionClient``).
+
+**Example - Get Snapshots for an Artifact**
+
+.. admonition:: Get Snapshots for an Artifact
+   :class: code-panel python
+
+   .. code-block:: python
+            
+        client.artifacts.snapshots.get(artifact_id=1)
+
+
+See **available methods** for the ``SnapshotsSubCollectionClient``:
+
+* :ref:`reference-snapshots-client-methods`
+
+
+In addition to the standard snapshot methods, the Artifacts client includes specific methods for downloading snapshot content:
+
+Download Snapshot Contents
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    .. automethod:: dioptra.client.artifacts.ArtifactsSnapshotCollectionClient.get_contents
+
+
+.. rst-class:: fancy-header header-seealso
+
+See Also
+---------
+
+* :ref:`Artifacts reference <reference-artifacts>`
+* :ref:`Artifacts explanation <explanation-artifacts>`

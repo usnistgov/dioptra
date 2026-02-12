@@ -18,4 +18,54 @@
 .. _reference-workflows-client-methods:
 
 Workflows Client Methods
-=================
+========================
+
+This page lists all relevant methods for Dioptra Workflows that are available via the Python Client.
+
+.. contents:: Contents
+   :local:
+   :depth: 2
+
+
+Requirements
+------------
+
+- :ref:`explanation-install-dioptra` - an installation and deployment of Dioptra must be available
+- :ref:`how-to-set-up-the-python-client` - the Python client must be configured and initialized
+
+
+.. _reference-workflows-client-methods-resource-management:
+
+Workflows - Resource Management
+-------------------------------
+
+After :ref:`importing and initializing the client <how-to-set-up-the-python-client>`, these methods can be executed via ``client.workflows.METHOD_NAME()``.
+
+Import Resources
+~~~~~~~~~~~~~~~~
+
+   .. automethod:: dioptra.client.workflows.WorkflowsCollectionClient.import_resources
+
+Commit Draft
+~~~~~~~~~~~~
+
+   .. automethod:: dioptra.client.workflows.WorkflowsCollectionClient.commit_draft
+
+
+.. _reference-workflows-client-methods-analysis-validation:
+
+Workflows - Analysis and Validation
+-----------------------------------
+
+These methods allow for the validation of entrypoint parameters and the analysis of plugin task signatures within the workflow context.
+
+Validate Entrypoint
+~~~~~~~~~~~~~~~~~~~
+
+   .. automethod:: dioptra.client.workflows.WorkflowsCollectionClient.validate_entrypoint
+
+Analyze Plugin Task Signatures
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   .. automethod:: dioptra.client.workflows.WorkflowsCollectionClient.analyze_plugin_task_signatures
+

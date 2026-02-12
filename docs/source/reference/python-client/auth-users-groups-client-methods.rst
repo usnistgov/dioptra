@@ -18,4 +18,122 @@
 .. _reference-auth-client-methods:
 
 Auth, Users, and Groups Client Methods
-=================
+======================================
+
+This page lists all relevant methods for Dioptra Authentication, User management, and Group management that are available via the Python Client.
+
+.. contents:: Contents
+   :local:
+   :depth: 2
+
+
+Requirements
+------------
+
+- :ref:`explanation-install-dioptra` - an installation and deployment of Dioptra must be available
+- :ref:`how-to-set-up-the-python-client` - the Python client must be configured and initialized
+
+
+.. _reference-auth-client-methods:
+
+Authentication Methods
+----------------------
+
+After :ref:`importing and initializing the client <how-to-set-up-the-python-client>`, these methods can be executed via ``client.auth.METHOD_NAME()``.
+
+Login
+~~~~~
+
+    .. automethod:: dioptra.client.auth.AuthCollectionClient.login
+
+Logout
+~~~~~~
+
+    .. automethod:: dioptra.client.auth.AuthCollectionClient.logout
+
+
+.. _reference-users-client-methods:
+
+Users - General Methods
+-----------------------
+
+These methods relate to general user management and retrieval. They can be executed via ``client.users.METHOD_NAME()``.
+
+Get All Users
+~~~~~~~~~~~~~
+
+    .. automethod:: dioptra.client.users.UsersCollectionClient.get
+
+Create User
+~~~~~~~~~~~
+
+    .. automethod:: dioptra.client.users.UsersCollectionClient.create
+
+Get User by ID
+~~~~~~~~~~~~~~
+
+    .. automethod:: dioptra.client.users.UsersCollectionClient.get_by_id
+
+Change User Password by ID
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    .. automethod:: dioptra.client.users.UsersCollectionClient.change_password_by_id
+
+
+.. _reference-users-current-client-methods:
+
+Users - Current User Methods
+----------------------------
+
+These methods interact specifically with the currently authenticated user session (the user logged in via the client).
+
+Get Current User
+~~~~~~~~~~~~~~~~
+
+    .. automethod:: dioptra.client.users.UsersCollectionClient.get_current
+
+Modify Current User
+~~~~~~~~~~~~~~~~~~~
+
+    .. automethod:: dioptra.client.users.UsersCollectionClient.modify_current_user
+
+Change Current User Password
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    .. automethod:: dioptra.client.users.UsersCollectionClient.change_current_user_password
+
+Delete Current User
+~~~~~~~~~~~~~~~~~~~
+
+    .. automethod:: dioptra.client.users.UsersCollectionClient.delete_current_user
+
+
+.. _reference-groups-client-methods:
+
+Groups Methods
+--------------
+
+These methods relate to group management and retrieval. They can be executed via ``client.groups.METHOD_NAME()``.
+
+.. important::
+    
+    Groups are only partially implemented in Dioptra currently. All users are created under a single "Public" group. At this time, the creation of custom groups is not yet supported. 
+
+Get All Groups
+~~~~~~~~~~~~~~
+
+    .. automethod:: dioptra.client.groups.GroupsCollectionClient.get
+
+Get Group by ID
+~~~~~~~~~~~~~~~
+
+    .. automethod:: dioptra.client.groups.GroupsCollectionClient.get_by_id
+
+
+.. rst-class:: fancy-header header-seealso
+
+See Also
+--------
+
+* :ref:`How to set up the Python Client <how-to-set-up-the-python-client>`
+* :ref:`Explanation: Users and Groups <explanation-users-and-groups>`
