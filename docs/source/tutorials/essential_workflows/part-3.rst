@@ -23,7 +23,7 @@ Building a Multi-Step Workflow
 Overview
 --------
 
-So far, you have built plugins with a single task and connected them to an entrypoint. Now, you will extend the idea further by creating a **multi-task plugin** and chaining those tasks together in an entrypoint.
+So far, you have built plugins with a single task and connected them to an entrypoint. Now, you will extend the idea further by creating a Plugin with **multiple registered Tasks** and chaining those tasks together in an Entrypoint.
 
 This will let you:
 
@@ -164,10 +164,10 @@ It's time to execute the multi-step workflow.
 2. Select **Sample and Transform Exp** and **sample_and_transform_ep**.
 3. Choose parameter values, for example:
 
-   - ``sample_size`` = 1000
-   - ``mean`` = -5
-   - ``var`` = 10
-   - ``transform_type`` = ``square``
+   - ``sample_size`` = **1000**
+   - ``mean`` = **-5**
+   - ``var`` = **10**
+   - ``transform_type`` = **"square"**
 
 4. Click **Submit Job**.
 
