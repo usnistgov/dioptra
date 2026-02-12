@@ -20,13 +20,13 @@
 Set Up the Python Client
 ========================
 
-This how-to explains how to initialize the Dioptra Python Client in a Jupyter notebook and login. 
+This how-to explains how to initialize the Dioptra Python Client in a Python file or a Jupyter notebook.
 
 
 Prerequisites
 -------------
 
-* :ref:`how-to-prepare-deployment` - You need access to a Dioptra deployment.
+* :ref:`how-to-prepare-deployment` -  A deployment of Dioptra is required.
 
 .. _setup_python_client_recipe:
 
@@ -36,21 +36,245 @@ Client Setup Workflow
 
 .. rst-class:: header-on-a-card header-steps
 
-Step 1: Start Docker Containers
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Step 1: Configure the Client (Optional)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- Navigate to deployment folder 
-- Run ``docker compose up``
+Optionally set the environment variable for the Dioptra REST API address. This will allow you to configure the client once across multiple instantiations.
+
+The REST API is configured as part of the :ref:`Dioptra deployment <how-to-prepare-deployment>`. By default it will be `http://localhost:80`.
+
+.. admonition:: Initialize Client
+    :class: code-panel console
+
+    .. code-block:: bash
+
+        export DIOPTRA_API="<host>:<port>"
 
 .. rst-class:: header-on-a-card header-steps
 
-Step 2: Initialize Client and Log In
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Step 2: Initialize Client
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In your Jupyter notebook, run the following code: 
-        
-.. admonition:: Setup Python Client
-    :class: code-panel python
+There are two Dioptra clients to choose from: the JSON client with returns dictionaries and will raise an exception if a non-200 response is recived, and the Response client which returns Response objects and does not raise exceptions.
 
-    .. literalinclude:: ../../../../docs/source/documentation_code/client_workflows/client_setup.py
-       :language: python
+Choose your preferred client, then in your python interpreter, run the following code:
+
+.. tabs::
+
+   .. group-tab:: JSON Client
+
+        .. admonition:: Initialize Client
+            :class: code-panel python
+
+            .. code-block:: python
+
+                from dioptra.client import connect_json_dioptra_client
+
+                # the client will use the DIOPTRA_API environment variable by default
+                client = connect_json_dioptra_client()
+                # otherwise you can pass address manually:
+                # client = connect_json_dioptra_client(address="<host>:<port>")
+
+        *Full Client Method Documentation:*
+
+        .. automethod:: dioptra.client.connect_json_dioptra_client
+
+   .. group-tab:: Response Client
+
+        .. admonition:: Initialize Client
+            :class: code-panel python
+
+            .. code-block:: python
+
+                from dioptra.client import connect_response_dioptra_client
+
+                # the client will use the DIOPTRA_API environment variable by default
+                client = connect_response_dioptra_client()
+                # otherwise you can pass address manually:
+                # client = connect_response_dioptra_client(address="<host>:<port>")
+
+        *Full Client Method Documentation:*
+
+        .. automethod:: dioptra.client.connect_response_dioptra_client
+
+.. rst-class:: header-on-a-card header-steps
+
+Step 3: Register User
+~~~~~~~~~~~~~~~~~~~~~
+
+In your python interpreter, set the username, email, and password, then use the client to register a new user:
+
+.. tabs::
+
+    .. group-tab:: JSON Client
+        .. admonition:: Register User
+            :class: code-panel python
+
+            .. code-block:: python
+
+                username = "user"
+                email = "user@localhost"
+                password = "pass"
+                response = client.users.create(username, email=email, password=password)
+                print(response)
+
+        You should see a successful response similar to the below:
+
+        .. code-block:: bash
+
+            {'username': 'user',
+             'email': 'user@localhost',
+             'id': 1,
+             'groups': [{'id': 1, 'name': 'public', 'url': '/api/v1/groups/1'}],
+             'createdOn': '2026-02-02T18:47:44.794278+00:00',
+             'lastModifiedOn': '2026-02-02T18:47:44.794278+00:00',
+             'lastLoginOn': None,
+             'passwordExpiresOn': '2027-02-02T18:47:44.794278+00:00'
+             }
+
+    .. group-tab:: Response Client
+
+        .. admonition:: Register User
+            :class: code-panel python
+
+            .. code-block:: python
+
+                username = "user"
+                email = "user@localhost"
+                password = "pass"
+                response = client.users.create(username, email=email, password=password)
+                print(response.json)
+
+        You should see a successful response similar to the below:
+
+        .. code-block:: bash
+
+            {'username': 'user',
+             'email': 'user@localhost',
+             'id': 1,
+             'groups': [{'id': 1, 'name': 'public', 'url': '/api/v1/groups/1'}],
+             'createdOn': '2026-02-02T18:47:44.794278+00:00',
+             'lastModifiedOn': '2026-02-02T18:47:44.794278+00:00',
+             'lastLoginOn': None,
+             'passwordExpiresOn': '2027-02-02T18:47:44.794278+00:00'
+             }
+
+*Full Client Method Documentation:*
+
+.. automethod:: dioptra.client.users.UsersCollectionClient.create
+
+
+.. rst-class:: header-on-a-card header-steps
+
+Step 4: Log In
+~~~~~~~~~~~~~~
+
+In your python interpreter, run the following code:
+
+.. tabs::
+
+    .. group-tab:: JSON Client
+        .. admonition:: Log In
+            :class: code-panel python
+
+            .. code-block:: python
+
+                response = client.auth.login(username, password)
+                print(response)
+
+        You should see a successful response similar to the below:
+
+        .. code-block:: bash
+
+            {'username': 'user', 'status': 'Login successful'}
+
+    .. group-tab:: Response Client
+
+        .. admonition:: Log In
+            :class: code-panel python
+
+            .. code-block:: python
+
+                response = client.auth.login(username, password)
+                print(response.json())
+
+        You should see a successful response similar to the below:
+
+        .. code-block:: bash
+
+            {'username': 'user', 'status': 'Login successful'}
+
+*Full Client Method Documentation:*
+
+.. automethod:: dioptra.client.auth.AuthCollectionClient.login
+
+.. rst-class:: header-on-a-card header-steps
+
+Step 5: Retrieve the IDs of Resources (optional)
+~~~~~~~~~~~~~~
+
+There are many resource IDs you will need for access to downstream methods in the client.
+
+Some of these include:
+
+- **Group ID**: The ID for the user group in Dioptra
+- **User ID**: The IDs for users, useful for searching for resources
+- **Queue IDs**: Queues are attached to entrypoints, and by extension also experiments and jobs
+- **Plugin Parameter Type IDs**: These IDs are used for task registration and entrypoint parameters
+
+.. tabs::
+    .. tab:: Get Group IDs
+
+        .. admonition:: Get Group IDs
+            :class: code-panel python
+
+            .. code-block:: python
+
+                client.groups.get()
+
+        *Full Client Method Documentation:*
+
+
+        .. automethod:: dioptra.client.groups.GroupsCollectionClient.get
+
+
+    .. tab:: Get User IDs
+
+        .. admonition:: Get User IDs
+            :class: code-panel python
+
+            .. code-block:: python
+
+                client.users.get()
+
+        *Full Client Method Documentation:*
+
+
+        .. automethod:: dioptra.client.users.UsersCollectionClient.get
+
+    .. tab:: Get Queue IDs
+
+
+        .. admonition:: Get Queue IDs
+            :class: code-panel python
+
+            .. code-block:: python
+
+                client.queues.get()
+
+        *Full Client Method Documentation:*
+
+        .. automethod:: dioptra.client.queues.QueuesCollectionClient.get
+
+    .. tab:: Get Parameter Type IDs
+
+        .. admonition:: Get Parameter Type IDs
+            :class: code-panel python
+
+            .. code-block:: python
+
+                client.plugin_parameter_types.get()
+
+        *Full Client Method Documentation:*
+
+        .. automethod:: dioptra.client.plugin_parameter_types.PluginParameterTypesCollectionClient.get
