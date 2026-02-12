@@ -17,11 +17,11 @@
 
 .. _how-to-import-plugins:
 
-Import Plugins and Entrypoints
-==============================
+Import Resources
+================
 
-This how-to explains how to import :ref:`Plugins <plugins-explanation>` and :ref:`Entrypoints <entrypoints-explanation>` in Dioptra locally
-and from external sources which declare them via the :ref:`Resource Import <reference-resource-import-syntax>` file.
+This how-to explains how to import Resources (:ref:`Plugins <plugins-explanation>`, :ref:`Entrypoints <entrypoints-explanation>`, and  :ref:`Entrypoints <plugin-parameter-types-explanation>`)to a Dioptra deployment
+from an external source which declares Resources via a :ref:`Resource Import TOML <reference-resource-import-syntax>` file.
 
 
 Prerequisites
@@ -47,10 +47,13 @@ Resource Import Workflow
 
 Follow these steps to import resources (plugins and entrypoints) into Dioptra.
 
-Note that there are several name conflict resolution strategies for imported resources, which apply to all import options whenever
-* **Fail** - The import will fail.
-* **Update** - The previously registered resources will be updated with new definitions.
-* **Overwrite** - The previously registered resources will be deleted, and new resources will be created.
+.. note::
+
+    There are several name conflict resolution strategies for imported resources, which apply to all import options:
+
+    * **Fail** - The import will fail if there is a name conflict.
+    * **Update** - The previously registered resources will be updated with new definitions.
+    * **Overwrite** - The previously registered resources will be deleted, and new resources will be created.
 
 
 .. rst-class:: header-on-a-card header-steps
@@ -93,6 +96,8 @@ Step 2: Import the Resources.
       Enter the path to the TOML file. (For example - ``extra/dioptra.toml``)
 
       Select a name conflict resolution strategy.
+
+      Select **IMPORT**.
 
    .. group-tab:: Python Client
 
