@@ -70,9 +70,7 @@ Import resources from a Git repository.
       Select Import Resources from the drop down. Select the either **GIT REPO**, **UPLOAD ARCHIVE** or **UPLOAD DIRECTORY** depending on where you would
       like to import resources from.
 
-      If using a Git repository, enter the URL to the branch of the Git repository containing the resources to import. 
-      
-      * Example: ``https://github.com/usnistgov/dioptra.git#main``.
+      If using a Git repository, enter the URL to the branch of the Git repository containing the resources to import. (For example - ``https://github.com/usnistgov/dioptra.git#main``)
 
       If using an archive, click **Archive File Upload** and select a tar file containing the files.
 
@@ -92,9 +90,7 @@ Step 2: Import the Resources.
       .. note:: 
           Dioptra does not currently support the creation of additional groups. All resources are under the same default public group.
 
-      Enter the path to the TOML file. 
-      
-      * Example: ``extra/dioptra.toml``
+      Enter the path to the TOML file. (For example - ``extra/dioptra.toml``)
 
       Select a name conflict resolution strategy.
 
