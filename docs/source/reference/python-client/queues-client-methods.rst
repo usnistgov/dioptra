@@ -19,3 +19,98 @@
 
 Queues Client Methods
 =================
+
+This page lists all relevant methods for Dioptra :ref:`Queues <explanation-queues>` that are available via the Python Client.
+
+.. contents:: Contents
+   :local:
+   :depth: 2
+
+
+Requirements
+-------------
+
+- :ref:`explanation-install-dioptra` - an installation and deployment of Dioptra must be available
+- :ref:`how-to-set-up-the-python-client` - the Python client must be configured and initialized
+
+
+
+.. _reference-queues-client-methods-crud-methods:
+
+Queues - CRUD methods
+---------------------
+
+After :ref:`importing and initializing the client <how-to-set-up-the-python-client>`, these methods can be executed via ``client.queues.METHOD_NAME()``.
+
+
+
+Create Queue
+~~~~~~~~~
+      
+    .. automethod:: dioptra.client.queues.QueuesCollectionClient.create
+
+Get Queues
+~~~~~~~~~
+      
+    .. automethod:: dioptra.client.queues.QueuesCollectionClient.get
+
+Get Queue by ID
+~~~~~~~~~
+      
+    .. automethod:: dioptra.client.queues.QueuesCollectionClient.get_by_id
+
+Modify Queue
+~~~~~~~~~
+
+    .. automethod:: dioptra.client.queues.QueuesCollectionClient.modify_by_id
+
+Delete Queue
+~~~~~~~~~
+      
+    .. automethod:: dioptra.client.queues.QueuesCollectionClient.delete_by_id
+
+
+
+Tags Attached to Queue
+-------------------
+
+Methods belonging to the ``TagsSubCollectionClient`` can are accessed via the ``tags`` property of the Queues Client (which points to ``TagsSubCollectionClient``)
+
+**Example - Get tags for a Queue**
+
+``client.queues.tags.get(1)``
+
+Methods - Tags
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+See **available methods for the TagsSubCollectionClient**: :ref:`reference-tags-client-methods`
+
+
+
+
+Snapshots of Queue
+--------------------
+
+Methods belonging to the  ``SnapshotsSubCollectionClient`` can are accessed via the ``snapshots`` property of the Queues Client (which points to ``SnapshotsSubCollectionClient``)
+
+**Example - Get snapshots for a Queue**
+
+``client.queues.snapshots.get(1)``
+
+Methods - Snapshots
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+See **available methods for the SnapshotsSubCollectionClient**: :ref:`reference-snapshots-client-methods`
+
+
+
+
+.. rst-class:: fancy-header header-seealso
+
+See Also
+---------
+
+* :ref:`Queues reference <reference-queues>`
+* :ref:`Queues explanation <explanation-queues-and-workers>`
+* :ref:`How to create Queues <how-to-create-queues>`
+

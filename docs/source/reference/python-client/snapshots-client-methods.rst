@@ -19,3 +19,42 @@
 
 Snapshots Client Methods
 =================
+
+
+This page lists all relevant methods for Dioptra Snapshots that are available via the Python Client. Snapshots are immutable records of resources (like Experiments or Entrypoints) at a specific point in time.
+
+.. contents:: Contents
+   :local:
+   :depth: 2
+
+
+Requirements
+-------------
+
+- :ref:`explanation-install-dioptra` - an installation and deployment of Dioptra must be available
+- :ref:`how-to-set-up-the-python-client` - the Python client must be configured and initialized
+
+
+.. _reference-snapshots-client-methods-crud-methods:
+
+Snapshots - CRUD methods
+------------------------
+
+These methods exist within the class ``SnapshotsSubCollectionClient``.
+
+They are typically accessed via the ``snapshots`` property of a parent resource client (e.g., Experiments, Entrypoints).
+
+**Example - Get Snapshots for an Experiment**
+
+``client.experiments.snapshots.get(experiment_id)``
+
+
+Get Snapshots
+~~~~~~~~~~~~~
+      
+    .. automethod:: dioptra.client.snapshots.SnapshotsSubCollectionClient.get
+
+Get Snapshot by ID
+~~~~~~~~~~~~~~~~~~
+      
+    .. automethod:: dioptra.client.snapshots.SnapshotsSubCollectionClient.get_by_id

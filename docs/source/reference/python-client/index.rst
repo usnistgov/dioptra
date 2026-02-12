@@ -34,8 +34,6 @@ Python Client Methods
       experiments-client-methods
       jobs-client-methods
       artifacts-client-methods
-      metrics-client-methods
       tags-client-methods
       snapshots-client-methods
       workflows-client-methods
-

@@ -19,3 +19,144 @@
 
 Jobs Client Methods
 =================
+
+
+This page lists all relevant methods for Dioptra :ref:`Jobs <explanation-experiments-and-jobs>` that are available via the Python Client. 
+
+.. contents:: Contents
+    :local:
+    :depth: 2
+
+Requirements
+-------------
+
+* :ref:`explanation-install-dioptra` - an installation and deployment of Dioptra must be available
+* :ref:`how-to-set-up-the-python-client` - the Python client must be configured and initialized
+
+.. _reference-jobs-client-methods-crud-methods:
+
+Jobs - CRUD methods
+------------------------
+
+After :ref:`importing and initializing the client <how-to-set-up-the-python-client>`, these methods can be executed via ``client.jobs.METHOD_NAME()``.
+
+Get Jobs
+~~~~~~~~~~~~~
+
+      
+    .. automethod:: dioptra.client.jobs.JobsCollectionClient.get
+
+Get Job by ID
+~~~~~~~~~~~~~
+
+
+
+    .. automethod:: dioptra.client.jobs.JobsCollectionClient.get_by_id
+
+
+
+Delete Job by ID
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+      
+    .. automethod:: dioptra.client.jobs.JobsCollectionClient.delete_by_id
+
+
+.. _reference-jobs-client-methods-status-mlflow:
+
+Jobs - Other Methods
+---------------------
+
+Get Job Status
+~~~~~~~~~~~~~~~~~~~
+
+    .. automethod:: dioptra.client.jobs.JobsCollectionClient.get_status
+
+
+Get Job Parameters
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+      
+    .. automethod:: dioptra.client.jobs.JobsCollectionClient.get_artifact_parameters
+
+Get Artifact Parameters
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    .. automethod:: dioptra.client.jobs.JobsCollectionClient.get_artifact_parameters
+
+
+
+Get Latest Metrics for Job
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+      
+    .. automethod:: dioptra.client.jobs.JobsCollectionClient.get_metrics_by_id
+
+
+Append Metric to Job
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    .. automethod:: dioptra.client.jobs.JobsCollectionClient.append_metric_by_id
+
+
+
+Get Metric History (Snapshots)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    .. automethod:: dioptra.client.jobs.JobsCollectionClient.get_metrics_snapshots_by_id
+
+
+
+Get Logs
+~~~~~~~~~~~~~
+
+    .. automethod:: dioptra.client.jobs.JobsCollectionClient.get_logs_by_id
+
+
+
+Append Logs
+~~~~~~~~~~~~~
+
+    .. automethod:: dioptra.client.jobs.JobsCollectionClient.append_logs_by_id
+
+
+Tags Attached to Job
+-------------------
+
+Methods belonging to the ``TagsSubCollectionClient`` can are accessed via the ``tags`` property of the Jobs Client (which points to ``TagsSubCollectionClient``)
+
+**Example - Get tags for a Job**
+
+``client.jobs.tags.get(1)``
+
+Methods - Tags
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+See **available methods for the TagsSubCollectionClient**: :ref:`reference-tags-client-methods`
+
+Snapshots of Job
+------------------------
+
+Methods belonging to the  ``SnapshotsSubCollectionClient`` can are accessed via the ``snapshots`` property of the Jobs Client (which points to ``SnapshotsSubCollectionClient``)
+
+**Example - Get snapshots for a Job**
+
+``client.jobs.snapshots.get(1)``
+
+Methods - Snapshots
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+See **available methods for the SnapshotsSubCollectionClient**: :ref:`reference-snapshots-client-methods`
+
+
+.. rst-class:: fancy-header header-seealso
+
+See Also
+---------
+
+* :ref:`Jobs reference <reference-jobs>`
+* :ref:`Experiments and Jobs explanation <explanation-experiments-and-jobs>`
+* :ref:`How to create Experiments <how-to-create-experiments>`
+
