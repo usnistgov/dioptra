@@ -28,7 +28,7 @@ Dioptra documentation uses `reStructuredText (.rst) <https://www.sphinx-doc.org/
 and are built using the command ``uvx tox run -e web-compile,docs``.
 
 
-.. contents:: Contents
+.. contents:: Table of Contents
    :local:
    :depth: 1
 

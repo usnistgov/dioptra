@@ -26,6 +26,7 @@ How to guides on advanced workflows.
 
    .. toctree::
       :maxdepth: 1
+      :caption: Table of Contents
 
       distribute-plugins
       develop-for-dioptra

@@ -26,6 +26,7 @@ How to guides on essential workflows in Dioptra.
       
    .. toctree::
       :maxdepth: 1
+      :caption: Table of Contents
 
       setup-python-client
       creating-a-queue

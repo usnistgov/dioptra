@@ -85,6 +85,7 @@ Follow the steps detailed in the guides below to install Dioptra.
 
     .. toctree::
        :maxdepth: 2
+       :caption: Table of Contents
 
        get-container-images/index
        prepare-deployment
