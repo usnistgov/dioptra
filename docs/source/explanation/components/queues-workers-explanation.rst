@@ -23,31 +23,29 @@ Queues and Workers
 Summary: What is a Queue?
 -------------------------
 
-A **queue** is a resource in Dioptra which represents a logical job queue for workers watching that queue to take from. Entrypoints can
-be assigned a number of queues they are compatible with.
+A **queue** is a resource in Dioptra that represents a logical job queue. Workers watch a queue for new jobs to process. Entrypoints can
+be assigned to a number of queues they are compatible with.
 
-When a job is submitted, a queue is selected for that job to be added to. Any worker listening to that queue can claim the job from the
-queue, and execute the job in its environment.
+When submitting a job, the user selects a queue for that job. Any worker listening to that queue can claim the job and then begin execution in its environment.
 
 Summary: What is a Worker?
 --------------------------
 
-A **worker** is an environment in which a job can be executed. 
+A **worker** is an environment for executing jobs. 
 
 A worker should contain all of the requirements needed for a given entrypoint, such as any local files, 
-python packages, or executables needed as part of the job. Each worker listens to a single named
+python packages, or executables. Each worker listens to a single named
 queue, and multiple workers can listen to the same queue.
 
-By default, Dioptra provides several default worker environments which can be enabled during setup:
-    * tensorflow_cpu - for systems which do not have a GPU present, which contains Tensorflow and ART as dependencies
-    * tensorflow_gpu - for systems which do have a GPU present, which contains Tensorflow and ART as dependencies
-    * pytorch_cpu - for systems which do not have a GPU present, which contains PyTorch and ART as dependencies
-    * pytorch_gpu - for systems which do have a GPU present, which contains PyTorch and ART as dependencies
+By default, Dioptra provides several default worker environments that can be enabled during setup:
+    * tensorflow_cpu - for systems that **do not have** a GPU present, which contains Tensorflow and ART as dependencies
+    * tensorflow_gpu - for systems that **do have** a GPU present, which contains Tensorflow and ART as dependencies
+    * pytorch_cpu - for systems that **do not have** a GPU present, which contains PyTorch and ART as dependencies
+    * pytorch_gpu - for systems that **do have** a GPU present, which contains PyTorch and ART as dependencies
 
-Creating queues with these names, as long as the corresponding worker is enabled, will allow jobs to be run in these worker containers.
+If a worker is enabled, creating a queue with the same name as the worker will allow jobs to be run in the corresponding worker container.
 
-Additionally, custom workers can be created which watch queues of other names and provide different environments for the jobs to run in,
-allowing for additional requirements and packages to be included.
+Additionally, custom workers can be created to watch queues with other names. These custom workers can provide different environments for jobs, which allows users to include their own requirements and packages.
 
 See :ref:`how-to-using-custom-workers` for more information.
 

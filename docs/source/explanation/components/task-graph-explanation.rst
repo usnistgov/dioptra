@@ -22,8 +22,8 @@ Task Graph
 
 Summary: What is a Task Graph?
 ------------------------------
-The **task graph** is the component of an entrypoint description which describes the steps of the 
-workflow between plugin function tasks used by the entrypoint, as well as the parameter inputs to
+The **task graph** is the component of an entrypoint description that describes the steps of a 
+workflow between plugin function tasks and the parameter inputs to
 each of those tasks. A directed acyclic graph (DAG) representing the dependencies between the 
 various steps is constructed to ensure that the steps are executed in the correct order.
 
@@ -33,23 +33,23 @@ various steps is constructed to ensure that the steps are executed in the correc
    :figclass: border-image clickable-image 
 
    The primary function of the task graph is to describe the relationship between variables and plugins within an entrypoint.
-   It describes dependencies between the various steps, as well as how the outputs, global variables, and artifacts fit in as 
-   input to the plugins invoked in each step.
+   It describes dependencies between the various steps, as well as how the outputs, global variables, and artifacts are 
+   input to the invoked plugins.
 
 
-Summary: What is a step?
+Summary: What is a Step?
 ------------------------
 
-A **step** is one component of the task graph, which correlates, essentially, to a plugin task invocation
+A **step** is one component of the task graph that correlates to a plugin task invocation
 with a given set of parameters. A single step has several components:
 
-* a **step name**, which functions as a variable storage for the output of the invoked task,
+* a **step name**, which functions as a variable storage for the output of the invoked task.
 * a **task name**, which references the plugin task to invoke by name. At runtime, plugins associated with the entrypoint will be searched for a matching task.
 * a **list of parameters**, which are passed to the referenced plugin task during invocation.
 
 
 Below is an example task graph. In the first step, the step name is ``rng``, the task name is ``configure_rng`` and the list of parameters contains
-a single member named ``seed`` which is being passed a value of ``1234``.
+a single member named ``seed`` that is being passed a value of ``1234``.
 
 
 .. code:: yaml
@@ -87,29 +87,29 @@ a single member named ``seed`` which is being passed a value of ``1234``.
 Variables
 ~~~~~~~~~
 
-You can reference the output of steps by referencing the step name. This is useful for passing the
+Step outputs can be referenced by the step name. This is useful for passing the
 output of one step as a parameter to another. For example: ``$trained_model`` will take the output stored in the
 step with the name ``trained_model``. 
 
 Alternatively, if the plugin task has named output (perhaps named ``model``, it can be accessed with 
 ``$trained_model.model``). The names of these outputs are defined at plugin task registration, and the number
-of outputs of the registered task should match the number of outputs of the function it is associated with.
+of outputs of the registered task should match the number of outputs of its associated function.
 
 
-Global variables
+Global Variables
 ~~~~~~~~~~~~~~~~
 
-Entrypoints are parameterizable, and you can reference these parameters the same way variables are referenced. So, for example,
-``$num_samples`` could reference an entrypoint parameter, and be used as an input to a task.
+Entrypoints are parameterizable, and these parameters can be referenced the same way as variables. For example,
+``$num_samples`` could reference an entrypoint parameter and be used as an input to a task.
 
-Artifact variables
+Artifact Variables
 ~~~~~~~~~~~~~~~~~~
 
 Entrypoints can also have artifact parameters, which are referenced in the same way. ``$training_ds`` could reference
 the output of an artifact deserialization plugin task, and the entire artifact can then be used as input to a plugin
 task. 
 
-Explicit dependencies and DAG creation
+Explicit Dependencies and DAG creation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 While a dependency on a variable will automatically be represented in the DAG, there are some cases where it may be
@@ -136,7 +136,7 @@ the output of those steps).
 See Also 
 ---------
 
-* :ref:`reference-task-graph` - Reference for task graph construction.   
+* :ref:`reference-task-graph` - Reference for task graph construction
 * :ref:`explanation-entrypoints` - Entrypoints explanation, of which task graphs are a component
 * :ref:`how-to-create-plugins` - Step-by-step guide on building plugins
 * :ref:`how-to-create-entrypoints` - Step-by-step guide on building entrypoints
