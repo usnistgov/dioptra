@@ -147,6 +147,7 @@ You can find the source code, license information, and more on the NIST `GitHub 
 
    reference/glossary
    reference/dioptra-components/index.rst
+   reference/python-client/index.rst
    reference/api-reference-restapi
    reference/resource-import-reference
    reference/resource-search-language-reference
