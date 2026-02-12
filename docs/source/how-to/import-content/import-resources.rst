@@ -15,13 +15,13 @@
 .. ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 .. https://creativecommons.org/licenses/by/4.0/legalcode
 
-.. _how-to-import-plugins:
+.. _how-to-import-resources:
 
 Import Resources
 ================
 
-This how-to explains how to import Resources (:ref:`Plugins <plugins-explanation>`, :ref:`Entrypoints <entrypoints-explanation>`, and  :ref:`Entrypoints <plugin-parameter-types-explanation>`)to a Dioptra deployment
-from an external source which declares Resources via a :ref:`Resource Import TOML <reference-resource-import-syntax>` file.
+This how-to explains how to import Dioptra Resources (e.g. :ref:`Plugins <explanation-plugins>`, :ref:`Entrypoints <explanation-entrypoints>`, :ref:`Types <explanation-plugin-parameter-types>`) to a Dioptra deployment
+via an externally provided :ref:`Resource Import TOML <reference-resource-import-syntax>` file.
 
 
 Prerequisites
@@ -40,12 +40,12 @@ Prerequisites
       * :ref:`how-to-set-up-the-python-client` - Connect to the Python Client in a Jupyter Notebook.
 
 
-.. _how-to-import-plugins-import-resource-workflow:
+.. _how-to-import-resources-import-resource-workflow:
 
 Resource Import Workflow
 ------------------------
 
-Follow these steps to import resources (plugins and entrypoints) into Dioptra.
+Follow these steps to import resources (plugins, entrypoints, and types) into Dioptra.
 
 .. note::
 
@@ -68,16 +68,23 @@ Import resources from a Git repository.
 
    .. group-tab:: GUI
 
-      In the Dioptra GUI, click the wrench symbol on the navigation bar. 
+      1. In the Dioptra GUI, **click the wrench symbol** on the navigation bar. Select **Import Resources** from the drop down. 
       
-      Select Import Resources from the drop down. Select the either **GIT REPO**, **UPLOAD ARCHIVE** or **UPLOAD DIRECTORY** depending on where you would
-      like to import resources from.
+      2. Select the either **GIT REPO**, **UPLOAD ARCHIVE** or **UPLOAD DIRECTORY** depending on where you would like to import resources from.
 
-      If using a Git repository, enter the URL to the branch of the Git repository containing the resources to import. (For example - ``https://github.com/usnistgov/dioptra.git#main``)
+      3. Select the access location for the resources:
 
-      If using an archive, click **Archive File Upload** and select a tar file containing the files.
+         - For a **Git repository**:
+         
+            Enter the URL to the branch of the Git repository containing the resources to import. (For example - ``https://github.com/usnistgov/dioptra.git#main``)
 
-      If using a directory, click **Directory Upload** and select the directory containing the files.
+         - For uploading an **Archive**:
+         
+            Click **Archive File Upload** and select a tar file containing the files.
+
+         - For uploading a **Directory**:
+         
+            Click **Directory Upload** and select the directory containing the files.
 
 .. rst-class:: header-on-a-card header-steps
 
@@ -88,16 +95,14 @@ Step 2: Import the Resources.
 
    .. group-tab:: GUI
 
-      Select a group to import these resources under.
+      1. **Select a group** to import these resources under.
 
       .. note:: 
           Dioptra does not currently support the creation of additional groups. All resources are under the same default public group.
 
-      Enter the path to the TOML file. (For example - ``extra/dioptra.toml``)
-
-      Select a name conflict resolution strategy.
-
-      Select **IMPORT**.
+      2. **Enter the path** to the TOML file. (For example - ``extra/dioptra.toml``)
+      3. Select a **name conflict resolution strategy**.
+      4. Select **IMPORT**.
 
    .. group-tab:: Python Client
 
