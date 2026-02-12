@@ -50,17 +50,21 @@ Plugins
 ~~~~~~~
 
 - ``Plugin``: A collection of Python files which contain registered ``Function Tasks`` and/or ``Artifact Tasks``.
+- ``Plugin Parameter Type``: Either a built-in or user-defined type, used for Entrypoint task graph ``type validation``. ``Function Task Inputs``, ``Function Task Outputs``, ``Artifact Tasks``, ``Entrypoint Parameters`` and the outputs from ``Artifact Input Parameters`` all have associated ``Plugin Parameter Types``.
+
+Function Plugins 
+~~~~~~~~~~~~~~~~
+- ``Function Plugin``: A Plugin that registers ``Function Tasks`` and contains those task's associated Python files. 
 - ``Function Task``: A Python function within a ``Plugin`` file that defines some computational task, used in ``Entrypoints``.
-- ``Artifact Task``: A Python class within a ``Plugin`` file that defines how an ``Artifact`` is serialized and deserialized, used to in ``Entrypoints``.
 - ``Function Task Input``: An input into a ``Function Task`` registered as part of the task definition.
 - ``Function Task Output``: The output of a ``Function Task`` registered as part of the task definition. A ``Function Task Output`` can be fed in as a ``Function Task Input`` via the ``Task Graph``, or saved as an ``Artifact`` via the ``Artifact Output Graph``.
-- ``Plugin Parameter Type``: Either a built-in or user-defined type, used for Entrypoint task graph ``type validation``. ``Function Task Inputs``, ``Function Task Outputs``, and ``Artifact Tasks`` all have associated ``Plugin Parameter Types``.
 
-Artifacts
-~~~~~~~~~
+Artifact Plugins and Artifacts
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+- ``Artifact Plugin``: A Plugin that registers ``Artifact Tasks`` and contains those task's associated Python files. 
 - ``Artifact``: The output of a ``Function Task`` that has been saved to disk via the serialize method of an ``Artifact Task``.
-- ``Artifact Task``: A subclass of ArtifactTaskInterface that defines serialization, deserialization, and validation logic for an ``Artifact``.
+- ``Artifact Task``: A subclass of ArtifactTaskInterface that defines serialization, deserialization, and validation logic for an ``Artifact``, used to in ``Entrypoints``.
 - ``Artifact Task Output Parameter``: An object that is returned by the deserialize method of an ``Artifact Handler``.
 - ``Artifact Task Output Parameter Type``: The ``Parameter Type`` for the object that is returned by an ``Artifact Task``.
 
@@ -68,8 +72,8 @@ Entrypoints
 ~~~~~~~~~~~
 
 - ``Entrypoint``: Define parameterizable workflows, which can be reused across multiple ``Experiments``.
-- ``Entrypoint Parameter``: An input used for the ``Task Graph`` and the ``Artifact Output Graph``. Can be customized during a ``Job`` run and have an optional default value.
-- ``Entrypoint Artifact Parameter``: A kind of ``Entrypoint Parameter``, where the value is read in from a ``Snapshot`` of an ``Artifact`` during ``Job`` execution. Can contain multiple objects.
+- ``Entrypoint Parameter``: An input used for the ``Task Graph`` and the ``Artifact Output Graph``. Can be customized during a ``Job`` run and have an optional default value. Has an associated ``Plugin Parameter Type`` for type validation.
+- ``Entrypoint Artifact Parameter``: A kind of ``Entrypoint Parameter``, where the value is read in from a ``Snapshot`` of an ``Artifact`` during ``Job`` execution. Can contain multiple objects, each of which has an associated ``Plugin Parameter Type`` for type validation.
 - ``Task Graph``: The sequence of ``Function Tasks`` that an ``Entrypoint`` executes, written in YAML. A directed, acyclic graph (DAG).
 - ``Task Graph Step``: A single step in the ``Task Graph``, which must have a name. Can have positional and keyword arguments as well.
 - ``Artifact Output Graph``: The logic dictating which ``Function Task Outputs`` are saved to ``Artifacts`` and how (i.e. which ``Artifact Tasks`` are invoked and their inputs). Written in YAML.
