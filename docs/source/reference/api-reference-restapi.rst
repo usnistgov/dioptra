@@ -17,8 +17,8 @@
 
 .. _reference-testbed-rest-api-reference:
 
-Testbed REST API Reference
-==========================
+REST API Reference
+==================
 
 .. include:: /_glossary_note.rst
 
