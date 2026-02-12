@@ -20,16 +20,13 @@
 Plugin Parameter Types
 ======================
 
-Plugin Parameter Types are used primarily to validate that the outputs 
-of a plugin are compatible with the inputs of another plugin in which its
-outputs are used. Plugin Parameter types are effectively a way of ensuring 
-compatibility among plugins and artifacts, similar to how types are used 
-in modern programming languages to ensure that the parameters to a function
-are compatible with the object being passed in.
+Plugin parameter types are primarily used to validate that the outputs of one plugin are compatible with the inputs of another. 
+Plugin parameter types also ensure compatibility among plugins and artifacts, similar to how types are used 
+in modern programming languages to check that a function's parameters are compatible with the received input.
 
 When plugin function tasks are created, each parameter is assigned a parameter type 
-from the list of registered types. Similarly, each output of the function is assigned
-parameter types. During validation of an entrypoint, these types are used to verify
+from the list of registered types. Similarly, each output of the function is assigned a
+parameter type. During validation of an entrypoint, these types are used to verify
 compatibility between the inputs and outputs of different steps, including artifact loading
 and usage.
 
@@ -39,14 +36,14 @@ and usage.
 Parameter Type Structures
 -------------------------
 
-Parameter Types can have structures which allow for a more fine-grained
+Parameter Types can have structures that allow for a more fine-grained
 validation of plugin inputs and outputs within an endpoint.
 
 Simple Types
 ~~~~~~~~~~~~
 
-Simple types are types which do not have a structure - they act as an atomic
-unit to build structured types on, but can also be used as types themselves.
+Simple types do not have a structure - they act as atomic
+units for building structures, but can also be used as types themselves.
 
 Some builtin types are provided:
 
@@ -67,44 +64,44 @@ Lists
 
 Dioptra type structures support defining a type as a list of a single type.
 
-For example, we can represent the type of the parameter to this function:
+For example, the type of the parameter to this function:
 
 .. code-block:: python
    
    def integer_processor(x: list[int]) -> list[int]:
       return x
 
-as
+can be represented as
 
 .. code-block:: json
    
    { "list": "integer" }
 
-A structure defined like this will represent a list of integers. 
+and describes a list of integers. 
 
 
 Tuples
 ~~~~~~
 
 Dioptra type structures also support defining a type as a tuple of multiple types.
-This is useful particularly for representing the output of a function which returns
+This is useful particularly for representing the output of a function that returns
 multiple values.
 
 
-For example, we can represent the type of the output of this function:
+For example, the type of the output of this function:
 
 .. code-block:: python
    
    def zero_giver() -> tuple[int, float, str]:
       return 0, 0.0, "0"
 
-as
+can be represented as
 
 .. code-block:: json
    
    { "tuple": ["integer", "number", "string"] }
 
-A structure defined like this will represent a tuple containing three elements, 
+and describes a tuple containing three elements: 
 an integer, a floating point value, and a string.
 
 
@@ -114,7 +111,7 @@ Mappings
 Dioptra type structures also support defining a type as a mapping. This would
 generally be used to represent dictionaries.
 
-For example, we can represent the output of this function:
+For example, the output of this function:
 
 .. code-block:: python
    
@@ -125,7 +122,7 @@ For example, we can represent the output of this function:
       }
 
 
-as
+can be represented as
 
 .. code-block:: json
 
@@ -136,11 +133,11 @@ as
       }
    }
 
-A type like this represents a mapping which specifically has two fields, ``name``
-and ``value``, and defines the ``name`` field as a string, and the ``value`` field
+and describes a mapping with two fields, ``name``
+and ``value``. It defines the ``name`` field as a string, and the ``value`` field
 as a floating point.
 
-Alternatively, we can represent the output of this function:
+Alternatively, the output of this function:
 
 .. code-block:: python
    
@@ -148,7 +145,7 @@ Alternatively, we can represent the output of this function:
       return { thing:len(thing) for thing in things }
 
 
-as
+can be represented as
 
 .. code-block:: json
 
@@ -159,8 +156,7 @@ as
       ]
    }
 
-This mapping structure indicates that the keys of the mapping should always be strings,
-and the values of the mapping should always be integers.
+and indicates that the mapping keys should always be strings and the values should always be integers.
 
 
 Unions
@@ -169,32 +165,30 @@ Unions
 It is often useful to define the type of a parameter as one of a set of types. For these
 cases, it is possible to use a union structure. 
 
-We can represent the input to this function:
+The input to this function:
 
 .. code-block:: python
    
    def stringify_or_zero(something: str | int | None) -> str:
       return str(something) if something is not None else "0"
 
-as
+can be represented as
 
 .. code-block:: json
 
    { "union": ["string", "integer", "null"] }
 
-A definition such as this represents a type that can be either a string, an integer, or ``None``
+and this definition represents a type that can be either a string, an integer, or ``None``
 value.
-
 
 
 Registered Type References
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Finally, Dioptra type structures support referencing other types, both builtin and user defined,
-and the validation checker will expand the structures to perform granular validation that the
-declared input to a parameter matches the declared type of what's being passed in.
+Finally, Dioptra type structures support referencing other types, including both builtin and user defined types.
+The validation checker will expand the structures and granularly validate that a parameter's declared input type matches the declared argument type.
 
-For example, we can represent the input to this function:
+For example, the input to this function:
 
 .. code-block:: python
 
@@ -204,7 +198,7 @@ For example, we can represent the input to this function:
       return np.array(float(np.sum(my_array)))
 
 
-as two separate types.
+can be represented as two separate types.
 
 The first, ``nparray`` with no structure.
 
@@ -229,7 +223,7 @@ The input to this function:
       return len(arrs) if isinstance(arr, str) else len(arrs["arr"])
 
 
-can be represented with the following types.
+can be represented with the following types:
 
 * ``nparray`` with no structure.
 * ``list_of_nparray`` with the structure:
@@ -251,10 +245,10 @@ can be represented with the following types.
    { "union" : ["nparray_dict", "string"] }
 
 
-Note that the Python function uses a complex union type, ``dict[str, list[np.ndarray]] | str``. In our example we 
-not only define that complex type, but also explicitly define the subtypes of it, including the 
-``list_of_nparray`` (``list[np.ndarray]``) and ``nparray_dict``(``dict[str, list[np.ndarray]]``) as their own types.
-We didn't have to define these subtypes, we could have instead simply defined the ``nparray_dict_or_str`` as follows:
+Note that the Python function uses a complex union type, ``dict[str, list[np.ndarray]] | str``. The example 
+not only defines that complex type, but also explicitly defines the subtypes of it, including the 
+``list_of_nparray`` (``list[np.ndarray]``) and ``nparray_dict`` (``dict[str, list[np.ndarray]]``) as their own types.
+Defining these subtypes is optional, and the ``nparray_dict_or_str`` could be simply defined as follows:
 
 .. code-block:: json
 
@@ -272,7 +266,7 @@ We didn't have to define these subtypes, we could have instead simply defined th
 
 
  
-but by defining these subtypes as their own types, we can potentially use them to define other complex types
+but by defining these subtypes as their own types, they can potentially be used to define other complex types
 or for other plugin task definitions. 
 
 It may be desirable to structure a type like this, for example, if one
@@ -285,4 +279,4 @@ to this plugin task.
 See Also 
 ---------
 
-* :ref:`Creating Parameter Types <how-to-create-parameter-types>` - Learn how to create parameter types.
+* :ref:`Creating Parameter Types <how-to-create-parameter-types>` - Learn how to create parameter types
