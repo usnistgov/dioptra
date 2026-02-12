@@ -36,10 +36,12 @@ Client Setup Workflow
 
 .. rst-class:: header-on-a-card header-steps
 
-Step 1: Configure the Client
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Step 1: Configure the Client (Optional)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Set the environment variable for the Dioptra REST API address:
+Optionally set the environment variable for the Dioptra REST API address. This will allow you to configure the client once across multiple instantiations.
+
+The REST API is configured as part of the :ref:`Dioptra deployment <how-to-prepare-deployment>`. By default it will be `http://localhost:80`.
 
 .. admonition:: Initialize Client
     :class: code-panel console
@@ -55,7 +57,7 @@ Step 2: Initialize Client
 
 There are two Dioptra clients to choose from: the JSON client with returns dictionaries and will raise an exception if a non-200 response is recived, and the Response client which returns Response objects and does not raise exceptions.
 
-Choose your preferred client, then in your python interpreter, run the following code: 
+Choose your preferred client, then in your python interpreter, run the following code:
 
 .. tabs::
 
@@ -68,7 +70,10 @@ Choose your preferred client, then in your python interpreter, run the following
 
                 from dioptra.client import connect_json_dioptra_client
 
+                # the client will use the DIOPTRA_API environment variable by default
                 client = connect_json_dioptra_client()
+                # otherwise you can pass address manually:
+                # client = connect_json_dioptra_client(address="<host>:<port>")
 
         *Full Client Method Documentation:*
 
@@ -83,12 +88,14 @@ Choose your preferred client, then in your python interpreter, run the following
 
                 from dioptra.client import connect_response_dioptra_client
 
+                # the client will use the DIOPTRA_API environment variable by default
                 client = connect_response_dioptra_client()
+                # otherwise you can pass address manually:
+                # client = connect_response_dioptra_client(address="<host>:<port>")
 
-                
         *Full Client Method Documentation:*
 
-        .. automethod:: dioptra.client.connect_response_dioptra_client  
+        .. automethod:: dioptra.client.connect_response_dioptra_client
 
 .. rst-class:: header-on-a-card header-steps
 
@@ -96,7 +103,7 @@ Step 3: Register User
 ~~~~~~~~~~~~~~~~~~~~~
 
 In your python interpreter, set the username, email, and password, then use the client to register a new user:
-        
+
 .. tabs::
 
     .. group-tab:: JSON Client
@@ -136,7 +143,7 @@ In your python interpreter, set the username, email, and password, then use the 
                 email = "user@localhost"
                 password = "pass"
                 response = client.users.create(username, email=email, password=password)
-                print(response.json 
+                print(response.json)
 
         You should see a successful response similar to the below:
 
@@ -162,7 +169,7 @@ In your python interpreter, set the username, email, and password, then use the 
 Step 4: Log In
 ~~~~~~~~~~~~~~
 
-In your python interpreter, run the following code: 
+In your python interpreter, run the following code:
 
 .. tabs::
 
@@ -202,17 +209,17 @@ In your python interpreter, run the following code:
 .. automethod:: dioptra.client.auth.AuthCollectionClient.login
 
 .. rst-class:: header-on-a-card header-steps
-    
+
 Step 5: Retrieve the IDs of Resources (optional)
 ~~~~~~~~~~~~~~
 
-There are many resource IDs you will need for access to downstream methods in the client. 
+There are many resource IDs you will need for access to downstream methods in the client.
 
-Some of these include: 
+Some of these include:
 
-- **Group ID**: The ID for the user group in Dioptra 
+- **Group ID**: The ID for the user group in Dioptra
 - **User ID**: The IDs for users, useful for searching for resources
-- **Queue IDs**: Queues are attached to entrypoints, and by extension also experiments and jobs 
+- **Queue IDs**: Queues are attached to entrypoints, and by extension also experiments and jobs
 - **Plugin Parameter Type IDs**: These IDs are used for task registration and entrypoint parameters
 
 .. tabs::
@@ -261,7 +268,7 @@ Some of these include:
 
     .. tab:: Get Parameter Type IDs
 
-        .. admonition:: Get Queue IDs
+        .. admonition:: Get Parameter Type IDs
             :class: code-panel python
 
             .. code-block:: python
