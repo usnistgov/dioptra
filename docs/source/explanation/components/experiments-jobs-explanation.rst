@@ -23,7 +23,7 @@ Experiments and Jobs
 Summary: What is an Experiment?
 -------------------------------
 
-An **experiment** is a resource in Dioptra which is effectively a namespace for jobs. An experiment can have
+An **experiment** is a resource in Dioptra that is effectively a namespace for jobs. An experiment can have
 a number of entrypoints associated with it, and within that experiment those entrypoints can be run as jobs. Experiments
 as a resource are largely organizational, and can make it easier to filter jobs, provide access to users via 
 groups, and reduce the number of entrypoints to sift through at job creation.
@@ -32,20 +32,19 @@ Summary: What is a Job?
 -----------------------
 
 A **job** in Dioptra is essentially a parameterized execution of an entrypoint. When creating a job, a user provides parameters
-and artifact parameters specified as necessary by an entrypoint. This set of workflow instructions (the :ref:`entrypoint <explanation-entrypoints>`), 
-any parameter values, and any artifacts being passed as parameters, are sent to a queue which is selected by the user
+and artifact parameters that are required by an entrypoint. This set of workflow instructions (the :ref:`entrypoint <explanation-entrypoints>`), 
+parameter values, and any artifact parameters are sent to the queue that is selected by the user
 at job creation.
 
 When a worker listening to that queue claims the job, it attempts to execute the provided entrypoint using the 
-parameter and artifact parameter values passed along with the entrypoint within the worker environment. 
+given parameter and artifact parameter values within the worker environment. 
 
-Any logs generated during the lifetime of the job, along with any :ref:`metrics <explanation-metrics>` and artifacts created during one of the
-steps of the job, are uploaded to the Dioptra RESTAPI and associated with the job (and are viewable from the **Job
+Any logs generated during the lifetime of the job, along with any :ref:`metrics <explanation-metrics>` or created artifacts are uploaded to the Dioptra RESTAPI and associated with the job (and are viewable from the **Job
 Dashboard** page.)
 
-Dioptra maintains a job history, recording the experiment, entrypoint, parameters, artifact parameters, logs, metrics
+Dioptra maintains a job history by recording the experiment, entrypoint, parameters, artifact parameters, logs, metrics
 and generated artifacts for all jobs. Even if a user deletes or changes an entrypoint or plugin associated with a job, 
-Dioptra retains the executed version as a snapshot
+Dioptra retains the executed version as a snapshot.
 
 
 .. rst-class:: fancy-header header-seealso
