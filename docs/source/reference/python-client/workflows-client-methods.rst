@@ -46,8 +46,8 @@ Import Resources
 
    .. automethod:: dioptra.client.workflows.WorkflowsCollectionClient.import_resources
 
-Commit Draft (Should we delete? Drafts are not implemented yet)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Commit Draft
+~~~~~~~~~~~~
 
    .. automethod:: dioptra.client.workflows.WorkflowsCollectionClient.commit_draft
 

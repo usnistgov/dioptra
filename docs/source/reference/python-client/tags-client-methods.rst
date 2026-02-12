@@ -97,7 +97,7 @@ These methods exist within the class ``TagsSubCollectionClient``. In other resou
 
    .. code-block:: python
 
-        client.experiments.tags.get(experiment_id=1)
+        client.experiments.tags.get(1)
 
 
 Get Attached Tags
