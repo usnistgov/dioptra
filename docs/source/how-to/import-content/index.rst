@@ -28,4 +28,4 @@ How to guides on Importing Content
       :maxdepth: 1
 
       add-a-dataset
-      import-plugins
+      import-resources
