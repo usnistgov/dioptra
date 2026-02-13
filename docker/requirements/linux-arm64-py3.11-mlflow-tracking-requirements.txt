@@ -173,7 +173,7 @@ sqlalchemy==2.0.36
     # via
     #   alembic
     #   mlflow
-sqlparse==0.5.1
+sqlparse==0.5.4
     # via mlflow-skinny
 threadpoolctl==3.5.0
     # via scikit-learn
