@@ -831,7 +831,6 @@ def _check_global_parameter_defaults(
         A list of ValidationIssue objects; will be empty if no issues were
             found
     """
-
     # Can't really use None to mean no default, since that's a valid default!
     no_default = object()
 
@@ -920,16 +919,6 @@ def check_types(experiment_desc: Mapping[str, Any]) -> list[ValidationIssue]:
     """
     types_ = experiment_desc.get("types", {})
     global_parameter_spec = experiment_desc.get("parameters", {})
-    # Remove "default" keys whose value is None
-    sanitized = {}
-    for name, spec in global_parameter_spec.items():
-        if isinstance(spec, dict) and spec.get("default", no_default := object()) is None:
-            spec = dict(spec)          # copy so we don’t mutate original
-            spec.pop("default", None)  # remove the key
-        sanitized[name] = spec
-
-    global_parameter_spec = sanitized
-
     tasks = experiment_desc["tasks"]
     graph = experiment_desc["graph"]
     artifact_inputs = experiment_desc.get("artifact_inputs", {})
