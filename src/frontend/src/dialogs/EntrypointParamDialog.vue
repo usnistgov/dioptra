@@ -37,7 +37,7 @@
     <div v-if="parameter.defaultValue === null">
       Default Value:
       <q-chip
-        label="Null"
+        label="No Default"
         color="negative"
         text-color="white"
         class="q-ml-md"
@@ -63,7 +63,7 @@
       </template>
     </q-input>
     <div class="q-mt-md">
-      Null Value:
+      No Default Set:
       <q-checkbox
         class="q-ml-lg"
         :model-value="parameter.defaultValue === null"

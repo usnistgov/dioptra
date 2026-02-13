@@ -155,7 +155,7 @@
           <template #body-cell-defaultValue="props">
             <q-chip
               v-if="props.row.defaultValue === null"
-              label="Null"
+              label="No Default"
               color="negative"
               text-color="white"
             />
@@ -685,7 +685,7 @@
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, },
     { name: 'type', label: 'Type', align: 'left', field: 'parameterType', sortable: true, },
     { name: 'defaultValue', label: 'Default Value (optional)', align: 'left', field: 'defaultValue', sortable: true, },
-    { name: 'null', label: 'Null Value', align: 'center', },
+    { name: 'null', label: 'No Default Set', align: 'center', },
     { name: 'actions', label: 'Actions', align: 'center', },
   ]
 

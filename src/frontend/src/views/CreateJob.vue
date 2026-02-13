@@ -191,7 +191,7 @@
           <div style="font-size: 18px;">
             <span v-if="props.row.value === null">
               <q-chip
-                label="Null"
+                label="No Default Set"
                 color="negative"
                 text-color="white"
                 class="q-ml-none"
@@ -205,13 +205,13 @@
           <q-popup-edit v-model="props.row.value" v-slot="scope" buttons>
             <div v-if="scope.value === null">
               <q-chip
-                label="Null"
+                label="No Default Set"
                 color="negative"
                 text-color="white"
               />    
             </div>
             <q-input v-else v-model="scope.value" dense autofocus counter @keyup.enter="scope.set" />
-            Null Value:
+            No Default Set:
             <q-checkbox
               :model-value="scope.value === null"
               @update:model-value="val => {
