@@ -84,5 +84,5 @@ Additionally, custom workers can be created which watch queues of other names an
 
 See Also
 --------
-* :ref:`how-to-using-custom-workers` - Instructions on using Custom Workers
+* :ref:`how-to-creating-custom-workers` - Instructions on creating custom workers
 * :ref:`explanation-queues-and-workers` - Explanation on Queues and Workers
