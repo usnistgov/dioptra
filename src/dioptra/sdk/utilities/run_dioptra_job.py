@@ -29,11 +29,11 @@ from typing import (
     cast,
 )
 
-import mlflow
 import structlog
 import yaml
 from structlog.stdlib import BoundLogger
 
+import mlflow
 from dioptra.client import DioptraClient, connect_json_dioptra_client
 from dioptra.client.base import StatusCodeError
 from dioptra.client.utils import FileTypes
