@@ -39,7 +39,7 @@ at job creation.
 When a worker listening to that queue claims the job, it attempts to execute the provided entrypoint using the 
 given parameter and artifact parameter values within the worker environment. 
 
-Any logs generated during the lifetime of the job, along with any :ref:`metrics <explanation-metrics>` or created artifacts are uploaded to the Dioptra RESTAPI and associated with the job (and are viewable from the **Job
+Any logs generated during the lifetime of the job, along with any metrics or created artifacts are uploaded to the Dioptra RESTAPI and associated with the job (and are viewable from the **Job
 Dashboard** page.)
 
 Dioptra maintains a job history by recording the experiment, entrypoint, parameters, artifact parameters, logs, metrics
