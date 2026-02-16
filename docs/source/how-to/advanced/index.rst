@@ -23,12 +23,9 @@ Advanced
 How to guides on advanced workflows.
 
 .. container:: wide-lightly-shaded
-      
+
    .. toctree::
       :maxdepth: 1
 
-      distribute-plugins 
+      distribute-plugins
       develop-for-dioptra
-      custom-workers
-
-

@@ -33,4 +33,5 @@ Use these documents for quick lookup of configuration options, folder structures
       deployment-folder-reference
       init-deployment-script-reference
       deployment-commands-reference
+      custom-worker-template-reference
 

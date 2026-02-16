@@ -47,7 +47,7 @@ If a worker is enabled, creating a queue with the same name as the worker will a
 
 Additionally, custom workers can be created to watch queues with other names. These custom workers can provide different environments for jobs, which allows users to include their own requirements and packages.
 
-See :ref:`how-to-using-custom-workers` for more information.
+See :ref:`how-to-creating-custom-workers` for more information.
 
 
 .. rst-class:: fancy-header header-seealso
@@ -55,7 +55,7 @@ See :ref:`how-to-using-custom-workers` for more information.
 See Also 
 ---------
    
-* :ref:`how-to-using-custom-workers` - Guide for creating custom workers
+* :ref:`how-to-creating-custom-workers` - Guide for creating custom workers
 * :ref:`how-to-create-queues` - Step-by-step guide on creating queues
 
 
