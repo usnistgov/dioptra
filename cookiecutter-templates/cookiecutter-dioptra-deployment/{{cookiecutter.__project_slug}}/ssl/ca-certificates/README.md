@@ -1,24 +1,27 @@
-# Extra CA certificates (optional)
+# Extra CA Certificates (Optional)
 
-**IMPORTANT: This folder is for CA certificates, not your server's public certificate(s) and private key(s).**
+**This folder is for CA certificates only, not server certificates or private keys.** For server certificates, see the [ssl/db/](../db/) and [ssl/nginx/](../nginx/) folders.
 
-If you have extra CA certificates that you want to include in the containers at runtime, copy them into this folder before running the `init-deployment.sh` script.
-Only CA certificate files that meet the following criteria will be bundled and made available to the containers at runtime:
+**These CA certificates are bundled and made available to the deployment containers at runtime.**
 
--   Each CA certificate file must be in the PEM format.
-    The PEM format encodes the certificate using base64 and stores it in a plain text file between two lines, `-----BEGIN CERTIFICATE-----` and `-----END CERTIFICATE-----`.
--   Each file should include one, and only one, CA certificate.
-    Do not bundle multiple CA certificates together.
--   Each PEM-formatted CA certificate file **must** have the file extension `crt`, for example `ca-root.crt`.
-    If your CA certificate has a different file extension (such as `pem`), rename it to `crt` after copying to this folder.
+Most users do not need to add anything to this folder. If you are unsure whether you need custom CA certificates, try starting the deployment without them first. If the `init-deployment.sh` script or one of the running containers logs an HTTPS or SSL error, that is a sign you need to add certificates here.
 
-## How do I know if I need to do this?
+## When you might need this
 
-There are some common situations where it is necessary to provide one or more extra CA certificates:
+Some network environments use their own certificate authority (CA) to manage encrypted traffic. This is common in corporate or institutional networks where:
 
-1.  You are running the containers in a corporate environment that has its own certificate authority and that terminates all HTTPS traffic and then re-encrypts and re-signs it before sending it to you.
-2.  You are running the containers in a corporate environment that has its own certificate authority and the containers need to access resources on the corporate network.
-3.  You are using one or more self-signed certificates to encrypt communications between the containers.
+- HTTPS traffic is intercepted, decrypted, and re-encrypted by a network proxy before reaching your machine.
+- Internal resources that the containers need to access are signed by the organization's own CA rather than a publicly trusted one.
+- Self-signed certificates are used to encrypt communications between the containers themselves.
 
-If none of these situations apply to you, or if you are unsure if they apply to you, then it is recommended that you run `init-deployment.sh` and try starting the deployment without adding anything to this folder first.
-If the `init-deployment.sh` script or one of the deployed containers logs an HTTPS or SSL error, then that is a telltale sign that you might need to add extra CA certificates to this folder.
+In these situations, the containers cannot verify HTTPS connections unless you provide the appropriate CA certificate.
+
+## How to add certificates
+
+1. Obtain the CA certificate file(s) from your network administrator.
+2. Copy each certificate into this folder.
+3. Each file must meet these requirements:
+   - **PEM format**: The file contents are base64-encoded text between `-----BEGIN CERTIFICATE-----` and `-----END CERTIFICATE-----` lines.
+   - **One certificate per file**: Do not bundle multiple certificates into a single file.
+   - **`.crt` file extension**: If your certificate file has a different extension (such as `.pem`), rename it to `.crt`.
+4. Run `./init-deployment.sh` to bundle the certificates and make them available to the containers.

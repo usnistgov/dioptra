@@ -1,36 +1,34 @@
-# cookiecutter-dioptra-deployment
+# custom-dioptra-worker
 
-A [Cookiecutter](https://cookiecutter.readthedocs.io/) template that generates the scripts, configuration files, and Docker Compose files needed to run Dioptra on a single machine.
+A [Cookiecutter](https://cookiecutter.readthedocs.io/) template that generates the files needed to build a custom Dioptra worker container image.
+Use this when you need a worker with Python packages or other software that is not available in the standard Dioptra worker images.
 
 ## Prerequisites
 
 - [Python 3.11 or higher](https://www.python.org/)
-- [Cruft](https://cruft.github.io/cruft/) (`pip install cruft`)
-- [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/) installed and running
-- [Dioptra container images](https://pages.nist.gov/dioptra/how-to/setup-dioptra/get-container-images/index.html) (downloaded or built locally)
-- [Bash v5 or higher](https://tiswww.case.edu/php/chet/bash/bashtop.html)
-- A word dictionary at `/usr/share/dict/words` (install with `apt-get install wamerican` on Debian/Ubuntu)
+- [Cookiecutter](https://cookiecutter.readthedocs.io/) (`pip install cookiecutter`)
+- [Docker](https://docs.docker.com/get-docker/) installed and running
 
 ## Usage
 
-Install cruft and run it to generate the deployment folder.
+Install cookiecutter and run it to generate the project folder.
 
 ```sh
 # Install cookiecutter (in a virtual environment or globally)
-pip install cruft
+pip install cookiecutter
 
-# Generate the deployment folder
-# (Replace "main" with the branch that matches your container images if different)
-cruft create https://github.com/usnistgov/dioptra --checkout main \
-  --directory cookiecutter-templates/cookiecutter-dioptra-deployment
+# Generate the project folder
+# (Replace "main" with the branch that matches your deployment if different)
+cookiecutter https://github.com/usnistgov/dioptra --checkout main \
+  --directory cookiecutter-templates/custom-dioptra-worker
 ```
 
-This creates a deployment folder (default name: `dioptra-deployment`).
+You will be prompted for a project name, which is used to create the project folder.
 See the README.md inside the generated folder for quick start instructions.
 
 ## Template variables
 
-See the [Deployment Template Reference](https://pages.nist.gov/dioptra/how-to/setup-dioptra/reference/deployment-template-reference.html) for a full list of template variables, their default values, and descriptions.
+See the [Custom Worker Template Reference](https://pages.nist.gov/dioptra/how-to/setup-dioptra/reference/custom-worker-template-reference.html) for a full list of template variables, their default values, and descriptions.
 
 ## License
 
