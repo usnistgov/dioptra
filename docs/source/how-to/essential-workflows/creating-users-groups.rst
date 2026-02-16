@@ -20,7 +20,7 @@
 Create Users and Groups
 ========================
 
-This how-to explains how to create :ref:`Users <users-groups-explanation>` in Dioptra. 
+This how-to explains how to create :ref:`Users <explanation-users-and-groups>` in Dioptra. 
 
 
 Prerequisites

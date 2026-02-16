@@ -20,4 +20,4 @@
 Create Experiments
 ========================
 
-This how-to explains how to build :ref:`Experiments <experiments-explanation>` in Dioptra. 
+This how-to explains how to build :ref:`Experiments <explanation-experiments-and-jobs>` in Dioptra. 
