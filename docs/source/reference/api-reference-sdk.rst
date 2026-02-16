@@ -68,7 +68,6 @@ exceptions
    ARTDependencyError
    CryptographyDependencyError
    EstimatorPredictGenericPredTypeError
-   PrefectDependencyError
    TensorflowDependencyError
    UnknownPackageError
    UnknownPluginError
@@ -82,20 +81,15 @@ pyplugs
 .. autosummary::
 
    pyplugs.register
-   pyplugs.task_nout
    pyplugs.names
    pyplugs.funcs
    pyplugs.info
    pyplugs.exists
    pyplugs.get
    pyplugs.call
-   pyplugs.get_task
-   pyplugs.call_task
    pyplugs.names_factory
    pyplugs.funcs_factory
    pyplugs.info_factory
    pyplugs.exists_factory
    pyplugs.get_factory
    pyplugs.call_factory
-   pyplugs.get_task_factory
-   pyplugs.call_task_factory
