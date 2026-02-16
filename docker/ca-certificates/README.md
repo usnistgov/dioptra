@@ -1,23 +1,24 @@
-# Extra CA certificates (optional)
+# Extra CA Certificates (Optional)
 
-**IMPORTANT: These CA certificates will only be used to build the container images, they will _NOT_ be available at runtime.**
+**These CA certificates are only used during the Docker image build. They are not available at runtime.**
 
-If you have extra CA certificates that you want to include in the build containers, copy them into this folder before running any of the `make build-*` commands.
-Only CA certificate files that meet the following criteria will be bundled and used in the build containers:
+Most users do not need to add anything to this folder. If you are unsure whether you need custom CA certificates, try building the images first without them. If the build fails with an HTTPS or SSL error, that is a sign you need to add certificates here.
 
--   Each CA certificate file must be in the PEM format.
-    The PEM format encodes the certificate using base64 and stores it in a plain text file between two lines, `-----BEGIN CERTIFICATE-----` and `-----END CERTIFICATE-----`.
--   Each file should include one, and only one, CA certificate.
-    Do not bundle multiple CA certificates together.
--   Each PEM-formatted CA certificate file **must** have the file extension `crt`, for example `ca-root.crt`.
-    If your CA certificate has a different file extension (such as `pem`), rename it to `crt` after copying to this folder.
+## When you might need this
 
-## How do I know if I need to do this?
+Some network environments use their own certificate authority (CA) to manage encrypted traffic. This is common in corporate or institutional networks where:
 
-There are some common situations where it is necessary to provide one or more extra CA certificates:
+- HTTPS traffic is intercepted, decrypted, and re-encrypted by a network proxy before reaching your machine.
+- Internal package repositories or container registries are signed by the organization's own CA rather than a publicly trusted one.
 
-1.  You are building the containers in a corporate environment that has its own certificate authority and that terminates all HTTPS traffic and then re-encrypts and re-signs it before sending it to you.
-2.  You are building the containers in a corporate environment that has its own certificate authority and the containers need access to resources or repository mirrors on the corporate network.
+In these situations, the Docker build process cannot verify HTTPS connections to download packages unless you provide the organization's CA certificate.
 
-If these situations do not apply to you, or if you are unsure if they apply to you, then it is recommended that you try to build the containers without adding anything to this folder first.
-If the build process fails due to an HTTPS or SSL error, then that is a telltale sign that you need to add extra CA certificates to this folder.
+## How to add certificates
+
+1. Obtain the CA certificate file(s) from your network administrator.
+2. Copy each certificate into this folder.
+3. Each file must meet these requirements:
+   - **PEM format**: The file contents are base64-encoded text between `-----BEGIN CERTIFICATE-----` and `-----END CERTIFICATE-----` lines.
+   - **One certificate per file**: Do not bundle multiple certificates into a single file.
+   - **`.crt` file extension**: If your certificate file has a different extension (such as `.pem`), rename it to `.crt`.
+4. Build the Docker images as usual with `make build-all` (or any of the `make build-*` commands).
