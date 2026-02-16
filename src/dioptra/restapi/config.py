@@ -100,7 +100,6 @@ class BaseConfig(object):
     REMEMBER_COOKIE_SECURE = os.getenv("DIOPTRA_REMEMBER_COOKIE_SECURE") is not None
     LOGIN_DISABLED = os.getenv("DIOPTRA_LOGIN_DISABLED") is not None
     DIOPTRA_CORS_ORIGIN = os.getenv("DIOPTRA_CORS_ORIGIN", "http://localhost:5173")
-    DIOPTRA_PLUGINS_BUCKET = os.getenv("DIOPTRA_PLUGINS_BUCKET", "plugins")
     DIOPTRA_SWAGGER_PATH = os.getenv("DIOPTRA_SWAGGER_PATH", "/")
     DIOPTRA_BASE_URL = os.getenv("DIOPTRA_BASE_URL")
     DIOPTRA_MAX_PAGE_SIZE = _set_max_page_size()
