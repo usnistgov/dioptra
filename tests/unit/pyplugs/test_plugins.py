@@ -44,12 +44,9 @@
 Based on the Pytest test runner
 """
 
-import importlib
 import pathlib
-import sys
 
 import pytest
-from prefect import Flow
 
 from dioptra import pyplugs
 from dioptra.sdk.exceptions import (
@@ -75,22 +72,6 @@ def plugin_package():
     relative = plugins_dir.relative_to(pathlib.Path.cwd())
 
     return ".".join(relative.parts)
-
-
-@pytest.fixture
-def pyplugs_no_prefect(monkeypatch):
-    package_modules = [x for x in sys.modules.keys() if "dioptra" in x]
-    prefect_modules = [x for x in sys.modules.keys() if "prefect" in x]
-
-    for module in package_modules + prefect_modules:
-        monkeypatch.delitem(sys.modules, module)
-
-    monkeypatch.setitem(sys.modules, "prefect", None)
-
-    return (
-        importlib.import_module("dioptra.pyplugs"),
-        importlib.import_module("dioptra.sdk.exceptions"),
-    )
 
 
 def test_package_not_empty(plugin_package):
@@ -134,29 +115,6 @@ def test_plugin_not_exists(plugin_package, plugin_name):
     """
     with pytest.raises(UnknownPluginError):
         pyplugs.info(plugin_package, plugin_name)
-
-
-@pytest.mark.parametrize("task_func_name", ["get_task", "call_task"])
-def test_prefect_dependency_not_installed(
-    pyplugs_no_prefect, plugin_package, task_func_name
-):
-    plugin_name = "plugin_plain"
-    pyplugs, exceptions = pyplugs_no_prefect
-    task_func = getattr(pyplugs, task_func_name)
-
-    with pytest.raises(exceptions.PrefectDependencyError):
-        task_func(plugin_package, plugin=plugin_name)
-
-
-@pytest.mark.parametrize("task_factory_name", ["get_task_factory", "call_task_factory"])
-def test_factory_prefect_dependency_not_installed(
-    pyplugs_no_prefect, plugin_package, task_factory_name
-):
-    pyplugs, exceptions = pyplugs_no_prefect
-    task_factory_func = getattr(pyplugs, task_factory_name)
-
-    with pytest.raises(exceptions.PrefectDependencyError):
-        task_factory_func(plugin_package)
 
 
 def test_exists(plugin_package):
@@ -286,66 +244,3 @@ def test_call_factory(plugin_package):
     assert factory_call == pyplugs_call
 
 
-def test_get_task_factory(plugin_package):
-    """Test that the get task factory can retrieve a task get in package"""
-    plugin_name = "plugin_parts"
-    get_task = pyplugs.get_task_factory(plugin_package)
-
-    with Flow("Test Get Task Factory") as flow:  # noqa: F841
-        factory_get_task = get_task(plugin_name)
-        pyplugs_get_task = pyplugs.get_task(plugin_package, plugin=plugin_name)
-        assert factory_get_task.is_equal(pyplugs_get_task)
-
-
-def test_call_task_factory(plugin_package):
-    """Test that the call task factory can retrieve a task call in package"""
-    plugin_name = "plugin_parts"
-    call_task = pyplugs.call_task_factory(plugin_package)
-
-    with Flow("Test Call Task Factory") as flow:
-        factory_call_task = call_task(plugin_name)
-        pyplugs_call_task = pyplugs.call_task(plugin_package, plugin=plugin_name)
-
-    state = flow.run()
-    assert (
-        state.result[factory_call_task].result == state.result[pyplugs_call_task].result
-    )
-
-
-def test_call_tasks_with_nout(plugin_package):
-    """Test that the task_nout decorator handles multiple argument returns in prefect
-    tasks.
-    """
-    plugin_name = "plugin_task_nout"
-    call_task = pyplugs.call_task_factory(plugin_package)
-
-    with Flow("Test Call Task with nout") as flow:
-        factory_result_1, factory_result_2 = call_task(
-            plugin_name, func="plugin_with_nout"
-        )
-        pyplugs_result_1, pyplugs_result_2 = pyplugs.call_task(
-            plugin_package, plugin=plugin_name, func="plugin_with_nout"
-        )
-
-    state = flow.run()
-    assert (
-        state.result[factory_result_1].result == state.result[pyplugs_result_1].result
-    )
-    assert (
-        state.result[factory_result_2].result == state.result[pyplugs_result_2].result
-    )
-
-
-def test_call_tasks_without_nout(plugin_package):
-    """Test that omitting the task_nout decorator is not compatible with multiple
-    argument returns in prefect tasks.
-    """
-    plugin_name = "plugin_task_nout"
-
-    with pytest.raises(TypeError):
-        with Flow("Test Call Task without nout") as flow:
-            result_1, result_2 = pyplugs.call_task(
-                plugin_package, plugin=plugin_name, func="plugin_without_nout"
-            )
-
-            _ = flow.run()
