@@ -25,15 +25,7 @@ set -euo pipefail ${DEBUG:+-x}
 
 {% set minio_account_names = ["MLFLOW_TRACKING", "RESTAPI", "WORKER"] -%}
 {% set minio_policy_names = [
-  "builtin-plugins-readonly",
-  "builtin-plugins-readwrite",
-  "custom-plugins-readonly",
-  "custom-plugins-readwrite",
-  "dioptra-readonly",
   "mlflow-tracking-readwrite",
-  "plugins-readonly",
-  "workflow-downloadonly",
-  "workflow-uploadonly",
 ] -%}
 INIT_REPOS_DIR="/init-repos"
 LOGNAME="Init MinIO"
@@ -182,7 +174,7 @@ set_minio_alias() {
 }
 
 ###########################################################################################
-# Create the plugins, workflow, and mlflow-tracking buckets
+# Create the mlflow-tracking bucket
 #
 # Globals:
 #   MINIO_ENDPOINT_ALIAS
@@ -194,8 +186,6 @@ set_minio_alias() {
 
 create_buckets() {
   mc mb --p \
-    "${MINIO_ENDPOINT_ALIAS}/plugins" \
-    "${MINIO_ENDPOINT_ALIAS}/workflow" \
     "${MINIO_ENDPOINT_ALIAS}/mlflow-tracking"
 }
 

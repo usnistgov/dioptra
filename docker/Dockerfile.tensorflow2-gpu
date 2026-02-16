@@ -194,7 +194,6 @@ RUN umask 0022 && \
     sed -i 's/^#force_color_prompt=yes/force_color_prompt=yes/' /etc/skel/.bashrc && \
     useradd -u ${DIOPTRA_UID} -N -m -s /bin/bash -c "Dioptra user" ${DIOPTRA_USER} && \
     mkdir -p /home/${DIOPTRA_USER}/.aws/config && \
-    mkdir -p ${DIOPTRA_WORKDIR}/plugins && \
     chown -R ${DIOPTRA_UID}:${DIOPTRA_GID} /home/${DIOPTRA_USER} && \
     chown -R ${DIOPTRA_UID}:${DIOPTRA_GID} ${DIOPTRA_WORKDIR}
 
@@ -209,7 +208,6 @@ COPY --from=build-venv --chown=${DIOPTRA_UID}:${DIOPTRA_GID} ${VIRTUAL_ENV} ${VI
 ENV DIOPTRA_USER=${DIOPTRA_USER}
 ENV DIOPTRA_UID=${DIOPTRA_UID}
 ENV DIOPTRA_GID=${DIOPTRA_GID}
-ENV DIOPTRA_RESTAPI_ENV=prod
 ENV DIOPTRA_WORKDIR=${DIOPTRA_WORKDIR}
 ENV PATH=${VIRTUAL_ENV}/bin${PATH:+:${PATH}}
 ENV VIRTUAL_ENV=${VIRTUAL_ENV}

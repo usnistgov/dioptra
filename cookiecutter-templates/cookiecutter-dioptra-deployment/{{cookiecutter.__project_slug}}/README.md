@@ -252,7 +252,6 @@ The `init-deployment.sh` script is the main tool for initializing the deployment
 -   Copies the configuration files in `config/` folder and the server certificates and private keys into named volumes
 -   Sets the appropriate file and folder access permissions in the named volumes
 -   Creates the Minio S3 accounts and configures their access permissions
--   Syncs the built-in task plugins from the Dioptra GitHub repository with the appropriate Minio S3 bucket
 -   Enables SSL/TLS in the Postgres service (if applicable)
 
 This script should be executed if this is the first time you are starting the deployment **or** if you have changed at least one of the files in the `config/` or `ssl/` directory.
@@ -266,8 +265,8 @@ If you run `./init-deployment.sh --help`, you will print the script's help messa
             --enable-nginx-ssl: Enable the SSL-enabled configuration settings for nginx image
             --enable-postgres-ssl: Enable the SSL-enabled configuration settings for postgres
                                    image
-            --branch: The Dioptra GitHub branch to use when syncing the built-in task plugins
-                      and the frontend files (default: 'main')
+            --branch: The Dioptra GitHub branch to use when syncing the frontend files
+                      (default: 'main')
             --python: Command for invoking the Python interpreter. Must be Python 3.11 or
                       greater, and the jinja2 package must be installed.
                       (default: 'python')
@@ -277,7 +276,6 @@ If you run `./init-deployment.sh --help`, you will print the script's help messa
             -h, --help: Prints help
 
 As a rule of thumb, use the `--enable-nginx-ssl` option if you copied a server certificate and private key into the `ssl/nginx/` folder and use the `--enable-postgres-ssl` option if you copied a server certificate and private key into the `ssl/db/` folder.
-In addition, if you wish to sync the plugins from a different Dioptra GitHub branch, such as the dev branch, use the `--branch <arg>` option.
 Otherwise, you do not need to specify any of the other options when running the script.
 
 As an example, if you copied a server certificate and private key into both the `ssl/nginx/` and `ssl/db/` folders, then you would run the following to initialize the deployment:
@@ -381,15 +379,7 @@ Note that this diagram includes server certificates and private keys for the NGI
     │   ├── db
     │   │   └── init-db.sh                                       <- Postgres initialization script that creates the accounts and databases used in the Dioptra app.
     │   ├── minio
-    │   │   ├── builtin-plugins-readonly-policy.json             <- A Minio access policy. Configures a readonly role for the dioptra_builtins/ folder in the plugins bucket.
-    │   │   ├── builtin-plugins-readwrite-policy.json            <- A Minio access policy. Configures a readwrite role for the dioptra_builtins/ folder in the plugins bucket.
-    │   │   ├── custom-plugins-readonly-policy.json              <- A Minio access policy. Configures a readonly role for the dioptra_custom/ folder in the plugins bucket.
-    │   │   ├── custom-plugins-readwrite-policy.json             <- A Minio access policy. Configures a readwrite role for the dioptra_custom/ folder in the plugins bucket.
-    │   │   ├── dioptra-readonly-policy.json                     <- A Minio access policy. Configures a readonly role for all folders and buckets created and used by Dioptra.
-    │   │   ├── mlflow-tracking-readwrite-policy.json            <- A Minio access policy. Configures a readwrite role for the artifacts/ folder in the mlflow-tracking bucket.
-    │   │   ├── plugins-readonly-policy.json                     <- A Minio access policy. Configures a readonly role for the dioptra_builtins/ and dioptra_custom/ folders in the plugins bucket.
-    │   │   ├── workflow-downloadonly-policy.json                <- A Minio access policy. Configures a downloadonly role for the workflow bucket.
-    │   │   └── workflow-uploadonly-policy.json                  <- A Minio access policy. Configures a uploadonly role for the for the workflow bucket.
+    │   │   └── mlflow-tracking-readwrite-policy.json            <- A Minio access policy. Configures a readwrite role for the artifacts/ folder in the mlflow-tracking bucket.
     │   └── nginx
     │       ├── http_dbadmin.conf                                <- (HTTP) Configures Nginx to serve the pgadmin4 dashboard over http connections.
     │       ├── http_default.conf                                <- (HTTP) Configures the basic defaults for Nginx to use when serving content over http connections.

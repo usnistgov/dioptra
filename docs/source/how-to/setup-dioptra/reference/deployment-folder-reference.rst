@@ -44,15 +44,7 @@ The following tree shows all files created by the template with annotations expl
    │   ├── db/
    │   │   └── init-db.sh
    │   ├── minio/
-   │   │   ├── builtin-plugins-readonly-policy.json
-   │   │   ├── builtin-plugins-readwrite-policy.json
-   │   │   ├── custom-plugins-readonly-policy.json
-   │   │   ├── custom-plugins-readwrite-policy.json
-   │   │   ├── dioptra-readonly-policy.json
-   │   │   ├── mlflow-tracking-readwrite-policy.json
-   │   │   ├── plugins-readonly-policy.json
-   │   │   ├── workflow-downloadonly-policy.json
-   │   │   └── workflow-uploadonly-policy.json
+   │   │   └── mlflow-tracking-readwrite-policy.json
    │   └── nginx/
    │       ├── http_*.conf
    │       ├── https_*.conf
@@ -117,32 +109,8 @@ config/minio/
 
 These JSON files define access policies for the Minio S3 storage service:
 
-**builtin-plugins-readonly-policy.json**
-   Configures a readonly role for the ``dioptra_builtins/`` folder in the plugins bucket.
-
-**builtin-plugins-readwrite-policy.json**
-   Configures a readwrite role for the ``dioptra_builtins/`` folder in the plugins bucket.
-
-**custom-plugins-readonly-policy.json**
-   Configures a readonly role for the ``dioptra_custom/`` folder in the plugins bucket.
-
-**custom-plugins-readwrite-policy.json**
-   Configures a readwrite role for the ``dioptra_custom/`` folder in the plugins bucket.
-
-**dioptra-readonly-policy.json**
-   Configures a readonly role for all folders and buckets created and used by Dioptra.
-
 **mlflow-tracking-readwrite-policy.json**
    Configures a readwrite role for the ``artifacts/`` folder in the mlflow-tracking bucket.
-
-**plugins-readonly-policy.json**
-   Configures a readonly role for the ``dioptra_builtins/`` and ``dioptra_custom/`` folders in the plugins bucket.
-
-**workflow-downloadonly-policy.json**
-   Configures a download-only role for the workflow bucket.
-
-**workflow-uploadonly-policy.json**
-   Configures an upload-only role for the workflow bucket.
 
 config/nginx/
 ~~~~~~~~~~~~~
