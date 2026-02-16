@@ -108,7 +108,7 @@ By making it **public**, all users in the Public group can submit jobs to it.
 
    * :ref:`how-to-create-queues` - Instructions on customizing queues and workers
    * :ref:`explanation-queues-and-workers` - Explanation on Queues and Workers 
-   * :ref:`how-to-using-custom-workers` - Connect custom workers in Dioptra
+   * :ref:`how-to-creating-custom-workers` - Create custom worker containers for Dioptra
 
 Next Steps
 ----------

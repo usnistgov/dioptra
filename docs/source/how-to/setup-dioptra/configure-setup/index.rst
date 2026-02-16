@@ -34,6 +34,7 @@ Apply these after completing the :ref:`how-to-prepare-deployment` guide.
       gpu-enabled-workers
       adding-certificates
       enabling-ssl-tls
+      creating-custom-workers
       integrating-custom-containers
 
 
