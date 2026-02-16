@@ -148,7 +148,7 @@ Registration Interfaces
 -----------------------
 
 Plugin Parameter Types can be created programmatically via the Python Client or the REST API.
-They can also be :ref:`created through the web interface <how-to-create-parameter-types>` .
+They can also be :ref:`created through the web interface <how-to-create-parameter-types>`.
 
 
 .. _reference-parameter-types-python-client:

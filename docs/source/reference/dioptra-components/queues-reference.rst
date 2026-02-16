@@ -68,7 +68,7 @@ Registration Interfaces
 -----------------------
 
 Queues can be created programmatically via the Python Client or the REST API.
-They can also be :ref:`created through the web interface <how-to-create-queues>` .
+They can also be :ref:`created through the web interface <how-to-create-queues>`.
 
 .. _reference-queues-python-client:
 
