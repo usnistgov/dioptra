@@ -57,6 +57,5 @@ See Also
    
 * :ref:`how-to-creating-custom-workers` - Guide for creating custom workers
 * :ref:`how-to-create-queues` - Step-by-step guide on creating queues
-
-
+* :ref:`Queues Reference <reference-queues>` - Queues reference page.
 

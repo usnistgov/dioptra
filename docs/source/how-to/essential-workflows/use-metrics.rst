@@ -96,3 +96,11 @@ Retrieve metrics from a job or view them in the GUI.
       It is also possible to retrieve the metrics across all jobs in an experiment.
 
       .. automethod:: dioptra.client.experiments.ExperimentsCollectionClient.get_metrics_by_id
+
+
+.. rst-class:: fancy-header header-seealso
+
+See Also
+--------
+
+* :ref:`Metrics Reference <reference-metrics>` - Reference page for metrics.

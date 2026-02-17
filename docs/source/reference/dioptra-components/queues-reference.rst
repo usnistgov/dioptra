@@ -99,3 +99,4 @@ See Also
 
 * :ref:`How To Create Queues <how-to-create-queues>`
 * :ref:`Queues Explanation <explanation-queues-and-workers>`
+* :ref:`Entrypoints Reference <reference-entrypoints>`

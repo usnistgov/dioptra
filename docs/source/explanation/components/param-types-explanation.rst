@@ -279,4 +279,5 @@ to this plugin task.
 See Also 
 ---------
 
-* :ref:`Creating Parameter Types <how-to-create-parameter-types>` - Learn how to create parameter types
+* :ref:`how-to-create-parameter-types` - Learn how to create parameter types
+* :ref:`Parameter Types Reference <reference-plugin-parameter-types>` - Parameter Types Reference page.

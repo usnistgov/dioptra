@@ -134,4 +134,4 @@ See the :http:post:`/api/v1/jobs/{int:id}/metrics` endpoint documentation for pa
 See Also
 ---------
 
-* :ref:`How to Log Metrics <how-to-logging-metrics>` 
+* :ref:`<how-to-logging-metrics>` 

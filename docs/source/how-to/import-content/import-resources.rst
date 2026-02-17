@@ -117,7 +117,7 @@ Step 2: Import the Resources.
 See Also 
 ---------
 
-* :ref:`Resource Import: reference <reference-resource-import-syntax>` - More information on syntax requirements for the Resource Import file
-* :ref:`Plugins: reference <reference-plugins>` - More information on syntax requirements for Plugins
-* :ref:`Entrypoints: reference <reference-entrypoints>` - More information on syntax requirements for Entrypoints
+* :ref:`Resource Import Reference <reference-resource-import-syntax>` - More information on syntax requirements for the Resource Import file
+* :ref:`Plugins Reference <reference-plugins>` - More information on syntax requirements for Plugins
+* :ref:`Entrypoints Reference <reference-entrypoints>` - More information on syntax requirements for Entrypoints
 

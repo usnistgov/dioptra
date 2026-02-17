@@ -225,8 +225,8 @@ If you want to save any objects from your entrypoint to disk, you need to define
 See Also 
 ---------
 
-* :ref:`Entrypoints explanation <explanation-entrypoints>` - Understand what entrypoints are conceptually.
-* :ref:`Entrypoints: Syntax reference for YAML <reference-entrypoints>` - See syntax and other reference material for entrypoints 
-* :ref:`Task Graphs explanation <explanation-task-graph>` - Learn more about the Task Graphs 
-* :ref:`Artifacts: explanation <explanation-artifacts>` - Learn about artifacts.
+* :ref:`Entrypoints Explanation <explanation-entrypoints>` - Understand what entrypoints are conceptually.
+* :ref:`Entrypoints Reference <reference-entrypoints>` - See syntax and other reference material for entrypoints 
+* :ref:`Task Graph Explanation <explanation-task-graph>` - Learn more about the Task Graphs 
+* :ref:`Artifacts Explanation <explanation-artifacts>` - Learn about artifacts.
 

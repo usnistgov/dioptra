@@ -99,7 +99,7 @@ By linking queues to entrypoints, workers can be assigned jobs to process the as
 See Also 
 ----------
 
-* :ref:`Entrypoints: reference <reference-entrypoints>` - Complete YAML syntax guide for entrypoint files and task graphs
-* :ref:`Task Graphs: explanation <explanation-task-graph>` - Detailed explanation of workflow logic
-* :ref:`Plugins: explanation <explanation-plugins>` - Explanation of Plugins, Function Tasks and Artifact Tasks
-
+* :ref:`Entrypoints Reference <reference-entrypoints>` - Complete YAML syntax guide for entrypoint files and task graphs
+* :ref:`Task Graphs Explanation <explanation-task-graph>` - Detailed explanation of workflow logic
+* :ref:`Plugins Explanation <explanation-plugins>` - Explanation of Plugins, Function Tasks and Artifact Tasks
+* :ref:`how-to-create-entrypoints` - Step-by-step guide on creating Entrypoints

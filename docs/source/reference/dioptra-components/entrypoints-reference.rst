@@ -348,7 +348,7 @@ The mixed style invocation method can be used to call a **function task that has
                     task: task1 # Assuming task1 has no inputs
     
 Argument Structure
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~
 
 Though the above examples provide strings (such as ``arg1`` or ``arg2``) as arguments, it is also fine to use YAML to provide
 arguments with structure. For example, a list of strings (in this case ``["arg1", "arg11", "arg111"]``) could be provided
@@ -947,5 +947,5 @@ See the :http:post:`POST /api/v1/entrypoints </api/v1/entrypoints/>` endpoint do
 See Also
 ---------
 
-* :ref:`Jobs <reference-jobs>`
-* :ref:`Plugins <reference-plugins>`
+* :ref:`Jobs Reference <reference-jobs>`
+* :ref:`Plugins Reference <reference-plugins>`

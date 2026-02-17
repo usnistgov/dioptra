@@ -157,6 +157,6 @@ Once all the inputs are prepared, run the job.
 See Also 
 ---------
 
-* :ref:`Experiments and Jobs <explanation-experiments-and-jobs>` - Explanation of the purpose of experiments and jobs and how they relate to each other.
-* :ref:`Artifacts: explanation <explanation-artifacts>` - Learn about artifacts.
+* :ref:`Experiments and Jobs Explanation <explanation-experiments-and-jobs>` - Explanation of the purpose of experiments and jobs and how they relate to each other.
+* :ref:`Artifacts Explanation <explanation-artifacts>` - Learn about artifacts.
 

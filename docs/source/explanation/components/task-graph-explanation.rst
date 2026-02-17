@@ -136,7 +136,7 @@ the output of those steps).
 See Also 
 ---------
 
-* :ref:`reference-task-graph` - Reference for task graph construction
-* :ref:`explanation-entrypoints` - Entrypoints explanation, of which task graphs are a component
+* :ref:`Task Graph Reference <reference-task-graph>` - Reference for task graph construction
+* :ref:`Task Graph Explanation <explanation-entrypoints>` - Entrypoints explanation, of which task graphs are a component
 * :ref:`how-to-create-plugins` - Step-by-step guide on building plugins
 * :ref:`how-to-create-entrypoints` - Step-by-step guide on building entrypoints

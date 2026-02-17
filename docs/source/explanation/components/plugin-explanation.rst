@@ -116,6 +116,6 @@ Entrypoints utilize the types that are declared in function tasks inputs / outpu
 See Also
 ---------
 
-* :ref:`Workflow Architecture <explanation-workflow-architecture>` - How plugins fit into Dioptra's workflow architecture
+* :ref:`Workflow Architecture Explanation <explanation-workflow-architecture>` - How plugins fit into Dioptra's workflow architecture
 * :ref:`how-to-create-plugins` - Step-by-step guide on building plugins
-* :ref:`Plugins: reference <reference-plugins>` - Detailed syntax for decorators and type annotations
+* :ref:`Plugins Reference <reference-plugins>` - Detailed syntax for decorators and type annotations

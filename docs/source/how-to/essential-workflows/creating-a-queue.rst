@@ -109,4 +109,5 @@ Step 2: Associate your Queue with Existing Entrypoints
 See Also 
 --------
 
-* :ref:`Queues and Workers <explanation-queues-and-workers>` - Understand what queues and workers are for.
+* :ref:`Queues and Workers Explanation <explanation-queues-and-workers>` - Understand what queues and workers are for.
+* :ref:`Queues Reference <reference-queues>` - Queues reference page.

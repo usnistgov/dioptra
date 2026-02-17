@@ -112,5 +112,5 @@ Step 2: Locate Entrypoints to attach to the Experiment
 See Also
 --------
 
-* :ref:`Experiments explanation <explanation-experiments>` - Understand what experiments are conceptually.
-* :ref:`Experiments reference <reference-experiments>` - Reference page for experiments.
+* :ref:`Experiments Explanation <explanation-experiments>` - Understand what experiments are conceptually.
+* :ref:`Experiments Reference <reference-experiments>` - Reference page for experiments.
