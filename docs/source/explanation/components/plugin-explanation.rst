@@ -53,7 +53,7 @@ Note that while Function Tasks process data, they generally do not save it to di
     See :ref:`Entrypoints Explanation <explanation-entrypoints>` to learn how tasks are chained and how default parameter values are set.
 
 Function Task Registration
------------------
+--------------------------
 
 Writing the Python code is only the first step; function tasks must be **registered** to be visible to the Dioptra engine.
 
@@ -89,7 +89,7 @@ Artifact Handlers are Python classes that define certain methods for I/O logic.
 
 
 Artifact Task Registration
------------------
+--------------------------
 
 Artifact tasks are registered similarly to function tasks.
 
@@ -100,7 +100,7 @@ When an artifact task is registered, the user defines:
 
 
 Using Function Tasks and Artifact Tasks
-----------------------------
+---------------------------------------
 
 Plugins create the "vocabulary" of tasks available to an experiment. To utilize these tasks, a relevant plugin must be attached to an **Entrypoint**.
 

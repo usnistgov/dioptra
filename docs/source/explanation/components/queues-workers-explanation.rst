@@ -18,7 +18,7 @@
 .. _explanation-queues-and-workers:
 
 Queues and Workers
-================
+==================
 
 Summary: What is a Queue?
 -------------------------
