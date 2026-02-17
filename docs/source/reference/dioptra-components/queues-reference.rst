@@ -30,42 +30,72 @@ Queues
 Queue Definition
 ---------------------
 
+A **Queue** in Dioptra represents a logical job queue, which workers can accept jobs from.
+
+
 .. _reference-queues-attributes:
 
 Queue Attributes
----------------------
+----------------
+
+This section describes the attributes that define a Queue.
+
 
 .. _reference-queues-required-attributes:
 
 Required Attributes
 ~~~~~~~~~~~~~~~~~~~
 
-.. _reference-queues-optional-attributes:
+* **Name**: (string) The name of the queue. 
+* **Group**: (integer ID) The Group that owns this Queue and controls access permissions.
+* **Description**: (string) A description of the queue.
 
-Optional Attributes
-~~~~~~~~~~~~~~~~~~~
 
-.. _reference-queues-system-generated-attributes:
+.. _reference-queues-system-managed-state:
 
-System-Generated Attributes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+System-Managed State
+~~~~~~~~~~~~~~~~~~~~
+
+The following attributes are automatically assigned by the system and cannot be set directly by the user.
+
+- **ID**: Unique identifier assigned upon creation.
+- **Created On**: Timestamp indicating when the Experiment was created.
+- **Last Modified On**: Timestamp indicating when the Experiment was last modified.
 
 .. _reference-queues-registration-interfaces:
 
 Registration Interfaces
 -----------------------
 
+Queues can be created programmatically via the Python Client or the REST API.
+They can also be :ref:`created through the web interface <how-to-create-queues>`.
+
 .. _reference-queues-python-client:
 
 Using Python Client
 ~~~~~~~~~~~~~~~~~~~
+
+**Create a Queue**
+
+    .. automethod:: dioptra.client.queues.QueuesCollectionClient.create
+
 
 .. _reference-queues-rest-api:
 
 Using REST API
 ~~~~~~~~~~~~~~
 
+Queues can be created directly via the HTTP API.
+
+**Create Queues**
+
+See the :http:post:`POST /api/v1/queues </api/v1/queues/>` endpoint documentation for payload requirements.
+
+
 .. rst-class:: fancy-header header-seealso
 
 See Also
 ---------
+
+* :ref:`How To Create Queues <how-to-create-queues>`
+* :ref:`Queues Explanation <explanation-queues-and-workers>`
