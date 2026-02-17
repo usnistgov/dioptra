@@ -96,5 +96,5 @@ See the :http:post:`POST /api/v1/users </api/v1/users/>` endpoint documentation 
 See Also
 ---------
 
-* :ref:`How To Create a User <how_to_create_a_user>`
+* :ref:`<how_to_create_a_user>`
 * :ref:`Users and Groups Explanation <explanation-users-and-groups>`

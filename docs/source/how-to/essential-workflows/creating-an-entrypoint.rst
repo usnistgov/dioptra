@@ -18,7 +18,7 @@
 .. _how-to-create-entrypoints:
 
 Create Entrypoints
-========================
+==================
 
 This how-to explains how to build :ref:`Entrypoints <explanation-entrypoints>` in Dioptra. 
 
@@ -45,14 +45,14 @@ Prerequisites
 
 
 Entrypoint Creation Workflow
-------------------------
+----------------------------
 
 Follow these steps to create an Entrypoint. You can perform these actions via the Graphical User Interface (GUI) or programmatically using the Python Client.
 
 .. rst-class:: header-on-a-card header-steps
 
 Step 1: Locate Plugins, Queues, Groups, and Parameter Types to attach to the Entrypoint
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. tabs::
 
@@ -88,13 +88,12 @@ Step 1: Locate Plugins, Queues, Groups, and Parameter Types to attach to the Ent
 
       .. automethod:: dioptra.client.queues.QueuesCollectionClient.get
 
-.. _step-2-create-an-entrypoint:
 
 .. rst-class:: header-on-a-card header-steps
 
 
 Step 2: Create an Entrypoint
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. tabs::
 
@@ -127,7 +126,7 @@ Step 2: Create an Entrypoint
 
 
 Step 3: Add Entrypoint Parameters (optional)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Entrypoints are parameterizable. Any parameters or artifact input parameters you create can be specified when an Entrypoint is :ref:`run as a job <how-to-running-jobs>`. 
 
@@ -151,7 +150,7 @@ Entrypoints are parameterizable. Any parameters or artifact input parameters you
 
 
 Step 4: Add Artifact Input Parameters (optional)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you would like this entrypoint to load an artifact from disk and make it available to the Task Graph, create an artifact input parameter. 
 
@@ -182,7 +181,7 @@ If you would like this entrypoint to load an artifact from disk and make it avai
 
 
 Step 5. Create the Task Graph
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When an entrypoint is run as a job, the task graph will be executed by the worker in order. Define the Task Graph for the entrypoint. 
 
@@ -203,7 +202,7 @@ When an entrypoint is run as a job, the task graph will be executed by the worke
 
 
 Step 6. Create the Artifact Task Graph (optional)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you want to save any objects from your entrypoint to disk, you need to define that logic in the Artifact Task Graph section. 
 
@@ -221,13 +220,12 @@ If you want to save any objects from your entrypoint to disk, you need to define
       - The Plugin IDs for artifact plugins are provided during entrypoint creation. 
 
 
-.. rst-class:: header-on-a-card header-seealso
+.. rst-class:: fancy-header header-seealso
 
 See Also 
----------
+--------
 
-* :ref:`Entrypoints explanation <explanation-entrypoints>` - Understand what entrypoints are conceptually.
-* :ref:`Entrypoints: Syntax reference for YAML <reference-entrypoints>` - See syntax and other reference material for entrypoints 
-* :ref:`Task Graphs explanation <explanation-task-graph>` - Learn more about the Task Graphs 
-* :ref:`Artifacts: explanation <explanation-artifacts>` - Learn about artifacts.
-
+* :ref:`Entrypoints Explanation <explanation-entrypoints>` - Understand what entrypoints are conceptually.
+* :ref:`Entrypoints Reference <reference-entrypoints>` - See syntax and other reference material for entrypoints.
+* :ref:`Task Graph Explanation <explanation-task-graph>` - Learn more about the Task Graphs.
+* :ref:`Artifacts Explanation <explanation-artifacts>` - Learn about artifacts.

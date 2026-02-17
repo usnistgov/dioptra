@@ -18,6 +18,99 @@
 .. _how-to-create-experiments:
 
 Create Experiments
-========================
+==================
 
-This how-to explains how to build :ref:`Experiments <explanation-experiments-and-jobs>` in Dioptra. 
+This how-to explains how to build :ref:`Experiments <explanation-experiments-and-jobs>` in Dioptra.
+
+Prerequisites
+-------------
+
+.. tabs::
+
+   .. group-tab:: GUI
+
+      * :ref:`how-to-prepare-deployment` - A deployment of Dioptra is required.
+      * :ref:`tutorial-setup-dioptra-in-the-gui` - Access Dioptra services in the GUI, create a user, and login.
+      * :ref:`how-to-create-entrypoints` - Entrypoints are needed to attach to the Experiment
+
+   .. group-tab:: Python Client
+
+      * :ref:`how-to-prepare-deployment` - A deployment of Dioptra is required.
+      * :ref:`how-to-set-up-the-python-client` - Connect to the Python Client in a Jupyter Notebook.
+      * :ref:`how-to-create-entrypoints` - Entrypoints are needed to attach to the Experiment
+
+Experiment Creation Workflow
+----------------------------
+
+Follow these steps to create an Experiment. You can perform these actions via the Graphical User Interface (GUI) or programmatically using the Python Client.
+
+.. rst-class:: header-on-a-card header-steps
+
+Step 1: Locate Entrypoints to attach to the Experiment
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+.. tabs::
+
+   .. group-tab:: GUI
+
+      Ensure you have created at least one :ref:`entrypoint <how-to-create-entrypoints>`.
+
+      You will be able to automatically select these resources in the GUI using dropdown menus in the following steps.
+
+
+   .. group-tab:: Python Client
+
+      Retrieve IDs for the following resources:
+
+      - **Groups**
+      - **Entrypoints**
+
+      **Groups:**
+
+      .. automethod:: dioptra.client.groups.GroupsCollectionClient.get
+
+      **Queues:**
+
+      .. automethod:: dioptra.client.entrypoints.EntrypointsCollectionClient.get
+
+.. rst-class:: header-on-a-card header-steps
+
+Step 2: Locate Entrypoints to attach to the Experiment
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+.. tabs::
+
+   .. group-tab:: GUI
+
+      In the Dioptra GUI, navigate to the **Experiments** tab. Click **Create**. Enter metadata, including:
+
+      - **name**
+      - **group**
+      - **entrypoints**
+      - **description** (optional)
+
+      Click **Submit Experiment** when finished.
+
+   .. group-tab:: Python Client
+
+      Create the Experiment using the Client. Use the Group ID, and Entrypoint IDs from step 1.
+      Also pass in the following as parameters:
+
+      - **Name**
+      - **Description** (Optional)
+
+      **Experiment client CREATE method:**
+
+      .. automethod:: dioptra.client.experiments.ExperimentsCollectionClient.create
+
+
+
+.. rst-class:: fancy-header header-seealso
+
+See Also
+--------
+
+* :ref:`Experiments Explanation <explanation-experiments-and-jobs>` - Understand what experiments are conceptually.
+* :ref:`Experiments Reference <reference-experiments>` - Reference page for experiments.

@@ -130,7 +130,7 @@ See Also
 
 Additional reference pages:
 
-* :ref:`Experiments <reference-experiments>`
-* :ref:`Entrypoints <reference-entrypoints>`
-* :ref:`Queues <reference-queues>`
-* :ref:`Metrics <reference-metrics>`
+* :ref:`Experiments Reference <reference-experiments>`
+* :ref:`Entrypoints Reference <reference-entrypoints>`
+* :ref:`Queues Reference <reference-queues>`
+* :ref:`Metrics Reference <reference-metrics>`

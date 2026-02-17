@@ -30,7 +30,7 @@ You will build on :ref:`tutorial-building-a-multi-step-workflow`, adding artifac
 
 .. admonition:: Learn More 
 
-   See :ref:`Artifacts: explanation <explanation-artifacts>` to learn about the purpose of artifacts. 
+   See :ref:`Artifacts Explanation <explanation-artifacts>` to learn about the purpose of artifacts. 
 
 
 
@@ -73,7 +73,7 @@ Just like before, you will create a new plugin, but this time you'll define **ar
 
 .. admonition:: Learn More 
 
-   See :ref:`Plugins: reference <reference-plugins>` to learn more about the syntax of artifact handlers.
+   See :ref:`Plugins Reference <reference-plugins>` to learn more about the syntax of artifact handlers.
 
 .. rst-class:: header-on-a-card header-steps
 
@@ -101,7 +101,7 @@ Now you must register the class you just created.
 
    The output parameter type tells Dioptra what kind of object to expect after the ``deserialize`` method is run.
 
-   Learn more in :ref:`Plugins: explanation <explanation-plugins>` and :ref:`Plugins: reference <reference-plugins>`.
+   Learn more in :ref:`Plugins Explanation <explanation-plugins>` and :ref:`Plugins Reference <reference-plugins>`.
 
 4. Click **Save File**.
 

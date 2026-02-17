@@ -52,6 +52,7 @@ Dioptra retains the executed version as a snapshot.
 See Also
 ---------
 
-* :ref:`how-to-create-experiments` - Step-by-step guide on creating an experiment
-* :ref:`Entrypoints Explanation <explanation-entrypoints>` - Explanation of entrypoints
-* :ref:`how-to-running-jobs` - Step-by-step guide on running a job
+* :ref:`how-to-create-experiments` - Step-by-step guide on creating an experiment.
+* :ref:`how-to-running-jobs` - Step-by-step guide on running a job.
+* :ref:`Experiments Reference <reference-experiments>` - Reference page for experiments.
+* :ref:`Entrypoints Explanation <explanation-entrypoints>` - Explanation of entrypoints.

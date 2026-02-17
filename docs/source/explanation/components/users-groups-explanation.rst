@@ -50,3 +50,5 @@ See Also
 ---------
    
 * :ref:`how-to-create-users-and-groups` - Step-by-step guide on creating users
+* :ref:`Users Reference <reference-users>` - Reference page for users.
+* :ref:`Groups Reference <reference-groups>` - Reference page for groups.
