@@ -194,6 +194,7 @@ RUN umask 0022 && \
     sed -i 's/^#force_color_prompt=yes/force_color_prompt=yes/' /etc/skel/.bashrc && \
     useradd -u ${DIOPTRA_UID} -N -m -s /bin/bash -c "Dioptra user" ${DIOPTRA_USER} && \
     mkdir -p /home/${DIOPTRA_USER}/.aws/config && \
+    mkdir -p ${DIOPTRA_WORKDIR} && \
     chown -R ${DIOPTRA_UID}:${DIOPTRA_GID} /home/${DIOPTRA_USER} && \
     chown -R ${DIOPTRA_UID}:${DIOPTRA_GID} ${DIOPTRA_WORKDIR}
 
