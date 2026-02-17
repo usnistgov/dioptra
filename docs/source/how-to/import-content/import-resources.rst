@@ -112,6 +112,7 @@ Step 2: Import the Resources.
 
       .. automethod:: dioptra.client.workflows.WorkflowsCollectionClient.import_resources
 
+.. rst-class:: fancy-header header-seealso
 
 See Also 
 ---------

@@ -152,7 +152,7 @@ Once all the inputs are prepared, run the job.
       .. automethod:: dioptra.client.experiments.ExperimentJobsSubCollectionClient.create
 
 
-.. rst-class:: header-on-a-card header-seealso
+.. rst-class:: fancy-header header-seealso
 
 See Also 
 ---------

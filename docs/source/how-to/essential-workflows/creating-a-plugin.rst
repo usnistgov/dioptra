@@ -140,7 +140,7 @@ Once the tasks appear in the list (GUI) or the API call returns successfully (Py
 
 
 
-.. rst-class:: header-on-a-card header-seealso
+.. rst-class:: fancy-header header-seealso
 
 See Also 
 ---------

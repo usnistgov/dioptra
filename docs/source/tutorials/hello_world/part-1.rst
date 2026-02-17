@@ -203,7 +203,7 @@ Conclusion
 
 You have successfully run your first Dioptra job! You wrote a Python function, wrapped it in a Plugin, sequenced it in an Entrypoint, and executed it using the GUI.
 
-.. rst-class:: header-on-a-card header-seealso
+.. rst-class:: fancy-header header-seealso
 
 See Also 
 ---------

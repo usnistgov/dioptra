@@ -107,7 +107,7 @@ Step 2: Locate Entrypoints to attach to the Experiment
 
 
 
-.. rst-class:: header-on-a-card header-seealso
+.. rst-class:: fancy-header header-seealso
 
 See Also
 --------

@@ -220,7 +220,7 @@ If you want to save any objects from your entrypoint to disk, you need to define
       - The Plugin IDs for artifact plugins are provided during entrypoint creation. 
 
 
-.. rst-class:: header-on-a-card header-seealso
+.. rst-class:: fancy-header header-seealso
 
 See Also 
 ---------
