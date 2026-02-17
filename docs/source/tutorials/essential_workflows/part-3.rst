@@ -38,6 +38,9 @@ You will run the workflow once and inspect how the data evolves across multiple 
 Workflow
 --------
 
+
+.. _tutorial-building-a-multi-step-workflow-step-1-make-sample-and-transform-plugin:
+
 .. rst-class:: header-on-a-card header-steps
 
 Step 1: Make "sample_and_transform" Plugin
@@ -80,12 +83,14 @@ Parameters for this entrypoint:
 - ``var`` (float)
 - ``transform_type`` (str, e.g. ``square``)
 
+*Note*: Do not set default values for any of these Entrypoint Parameters. 
+
 **Steps** 
 
-1. Create a new entrypoint named ``sample_and_transform_ep``.
+1. Create a new entrypoint named ``sample_and_transform_ep``. Add a description and attach the ``tensorflow-cpu`` Queue.
 2. Under the **Entrypoint Parameters** window, add the four parameters listed above, ensuring you select the correct types (``int``, ``float``, ``float``, ``string``).
 
-.. figure:: _static/screenshots/entrypoint_3_add_params.png
+.. figure:: ../../images/screenshots/entrypoints/create_sample_and_transform_ep_dioptra_1_1.png
    :alt: Screenshot of the sample_and_transform_ep parameters window.
    :width: 900px
    :figclass: border-image clickable-image
@@ -126,7 +131,7 @@ Key ideas:
 .. note::
    The output of all the tasks is simply called ``output``. This can be changed during plugin task registration if desired.
 
-.. figure:: _static/screenshots/entrypoint_3_task_graph.png
+.. figure:: ../../images/screenshots/entrypoints/task_graph_sample_and_transform_dioptra_1_1.png
    :alt: Screenshot of a multi-step task graph for Entrypoint 3.
    :width: 900px
    :figclass: border-image clickable-image
@@ -150,7 +155,7 @@ Because this workflow is conceptually different, make a new experiment for organ
 
 1. Navigate to **Experiments** and click **Create Experiment**.
 2. Name it ``Sample and Transform Exp``.
-3. Add the **sample_and_transform_ep** entrypoint to the experiment.
+3. Add the ``sample_and_transform_ep`` entrypoint to the experiment.
 4. Click **Submit Experiment**.
 
 .. rst-class:: header-on-a-card header-steps
@@ -160,8 +165,8 @@ Step 5: Run a Job
 
 It's time to execute the multi-step workflow.
 
-1. Go to the **Jobs** tab and click **Create Job**.
-2. Select **Sample and Transform Exp** and **sample_and_transform_ep**.
+1. Go to the **Jobs** tab and click **Create**.
+2. Select **Sample and Transform Exp** for the Experiment and **sample_and_transform_ep** for the Entrypoint.
 3. Choose parameter values, for example:
 
    - ``sample_size`` = **1000**
@@ -171,12 +176,12 @@ It's time to execute the multi-step workflow.
 
 4. Click **Submit Job**.
 
-.. figure:: _static/screenshots/entrypoint_3_create_job.png
+.. figure:: ../../images/screenshots/jobs/execute_multi_step_workflow_job_dioptra_1_1.png
    :alt: Creating a job that uses entrypoint 3 with specific parameters.
    :width: 900px
    :figclass: border-image clickable-image
 
-   Creating a new job - any parameter that is not set in the job run will be set to the entrypoint default.
+   Creating a new job - any parameter that does not have a default value needs to have one provided at Job runtime.
 
 .. rst-class:: header-on-a-card header-steps
 

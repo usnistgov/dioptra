@@ -57,7 +57,7 @@ You should now be able to access the Dioptra web GUI in your browser.
 In the address bar, enter the configured port (default port: http://127.0.0.1).
 The Dioptra login screen should appear.
 
-.. figure:: _static/screenshots/login_dioptra.png
+.. figure:: ../../images/screenshots/login/blank_login_screen_Dioptra_1_1.png
    :alt: Screenshot of the Dioptra login page with sign-in and sign-up options.
    :width: 900px
    :figclass: border-image clickable-image
@@ -84,6 +84,8 @@ After opening the web GUI, either **log in** with an existing account or **sign 
    * :ref:`explanation-users-and-groups` - Explanation of users and groups 
    * :ref:`how-to-create-users-and-groups` - Detailed instructions on creating users and groups 
       
+.. _tutorial-setup-dioptra-in-the-gui-step-3-create-a-queue:
+
 .. rst-class:: header-on-a-card header-steps   
 
 Step 3: Create a Queue
@@ -100,7 +102,7 @@ By making it **public**, all users in the Public group can submit jobs to it.
 
 
 
-.. figure:: _static/screenshots/queues_dioptra.png
+.. figure:: ../../images/screenshots/queues/create_tensorflow_cpu_queue_dioptra_1_1.png
    :alt: Screenshot of the queue creation form with "tensorflow_cpu" entered as the name.
    :figclass: border-image clickable-image
 

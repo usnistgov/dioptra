@@ -27,9 +27,7 @@ Each step will iterate on the previous step, incorporating more features and fun
 Prerequisites
 -------------
 
-Before progressing through this tutorial, ensure that you have installed Dioptra. It is also recommended to complete the :ref:`Hello World tutorial <tutorial-hello-world-in-dioptra>` before starting this one. 
-
-* :ref:`Setup Dioptra <explanation-install-dioptra>` - Clone Dioptra and create a deployment
+Before progressing through this tutorial, ensure that you have :ref:`installed Dioptra <explanation-install-dioptra>`. It is also recommended to complete the :ref:`Hello World tutorial <tutorial-hello-world-in-dioptra>` before starting this one. 
 
 .. container:: wide-lightly-shaded
 
