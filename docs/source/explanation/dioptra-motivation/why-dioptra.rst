@@ -26,7 +26,7 @@ As users of these systems, we must implicitly trust that the models are working 
 Establishing the trustworthiness of an AI/ML model is especially hard, because the inner workings are essentially opaque to an outside observer.
 Ideally the models we rely on would be transparent, free from bias, explainable, and secure.
 
-In order to understand the tradespace between performance and the trustworthy characteristics of AI, we need a software test platform suited to creating **reproducible, trackable, and resusable**.
+In order to understand the tradespace between performance and the trustworthy characteristics of AI, we need a software test platform suited to creating **reproducible, trackable, and reusable** experiments.
 The National Institute of Standards and Technology (NIST) National Cybersecurity Center of Excellence (NCCoE) has built the Dioptra experimentation test platform to begin to address the broader challenge of evaluation for the trustworthy characteristics of AI.
 The test platform aims to facilitate evaluations of AI/ML algorithms under a diverse set of conditions.
 To that end, the test platform has a modular design enabling researchers to easily swap in alternative datasets, models, and evaluations.
@@ -43,6 +43,7 @@ While much work has been done to evaluate techniques within a narrow range of co
 Questions about the generalizability of an algorithm across a range of attacks or the transferability of a technique across models or datasets must naturally consider the full range of possible conditions.
 
 While there are a large variety of types of attacks against Predictive AI algorithms, `NIST AI 100-2e2023 <https://csrc.nist.gov/pubs/ai/100/2/e2023/final>`__ identifies three broad categories:
+
 * **Evasion** attacks manipulate the input data (sometimes by altering the physical environment) in order to cause the ML model to misbehave.
 * **Poisoning** attacks alter the training data used to create or maintain a model with the intention of causing it to learn incorrect associations.
 * **Privacy or Oracle** attacks attempt to "reverse engineer" a model to learn about details of the training set used to create it, or specific model parameters to replicate the model.
