@@ -18,7 +18,7 @@
 .. _reference-custom-worker-template:
 
 Custom Worker Template Reference
-=================================
+================================
 
 This reference describes the template variables and generated files for the custom Dioptra worker cookiecutter template.
 
@@ -153,3 +153,12 @@ Shell script templates that are compiled during the Docker build.
 **wait-for-it.sh**
    Utility script that tests TCP connectivity to a host and port.
    Used by the entrypoint script to wait for services before starting the worker.
+
+.. rst-class:: header-on-a-card header-seealso
+
+See Also
+--------
+
+* :ref:`reference-dioptra-worker-v1` -- The command invoked by the entrypoint script
+* :ref:`reference-worker-container-requirements` -- Container-level requirements for deploying a worker
+* :ref:`how-to-creating-custom-workers` -- Step-by-step guide for creating a custom worker container
