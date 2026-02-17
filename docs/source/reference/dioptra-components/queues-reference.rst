@@ -51,10 +51,10 @@ Required Attributes
 * **Description**: (string) A description of the queue.
 
 
-.. _reference-queues-optional-attributes:
+.. _reference-queues-system-managed-state:
 
-System-Generated Attributes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+System-Managed State
+~~~~~~~~~~~~~~~~~~~~
 
 The following attributes are automatically assigned by the system and cannot be set directly by the user.
 

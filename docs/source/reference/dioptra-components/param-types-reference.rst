@@ -51,10 +51,10 @@ Required Attributes
 * **Description**: (string) A description of the type.
 * **Structure**: (string) A string representing the structure of the type as a JSON object.
 
-.. _reference-queues-system-generated-attributes:
+.. _reference-queues-system-managed-state:
 
-System-Generated Attributes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+System-Managed State
+~~~~~~~~~~~~~~~~~~~~
 
 The following attributes are automatically assigned by the system and cannot be set directly by the user.
 
