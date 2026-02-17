@@ -34,4 +34,6 @@ Use these documents for quick lookup of configuration options, folder structures
       init-deployment-script-reference
       deployment-commands-reference
       custom-worker-template-reference
+      dioptra-worker-v1-reference
+      worker-container-requirements-reference
 

@@ -82,7 +82,8 @@ Below is a template for a custom worker container that integrates with Dioptra's
        environment:
          AWS_ACCESS_KEY_ID: ${WORKER_AWS_ACCESS_KEY_ID}
          AWS_SECRET_ACCESS_KEY: ${WORKER_AWS_SECRET_ACCESS_KEY}
-         DIOPTRA_RESTAPI_DATABASE_URI: ${DIOPTRA_RESTAPI_DATABASE_URI}
+         DIOPTRA_WORKER_USERNAME: ${DIOPTRA_WORKER_USERNAME}
+         DIOPTRA_WORKER_PASSWORD: ${DIOPTRA_WORKER_PASSWORD}
 
        # Wait for dependent services before starting
        command:
@@ -117,6 +118,10 @@ Below is a template for a custom worker container that integrates with Dioptra's
 .. note::
 
    Replace ``<deployment-name>`` with your deployment's slugified name (default: ``dioptra-deployment``) and ``<host-data-path>`` with the absolute path to your data directory.
+
+.. seealso::
+
+   See :ref:`reference-worker-container-requirements` for the complete list of required environment variables, process invocation, and network configuration for custom worker containers.
 
 .. rst-class:: header-on-a-card header-steps
 
@@ -162,6 +167,7 @@ Check the logs if needed:
 See Also
 --------
 
+* :ref:`reference-worker-container-requirements` - Worker container environment variables, process invocation, and network requirements
 * :ref:`how-to-using-docker-compose-overrides` - Docker Compose override file basics
 * :ref:`how-to-prepare-deployment` - Full deployment customization
 * :ref:`how-to-data-mounts` - Mount data volumes into containers
