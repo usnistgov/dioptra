@@ -114,25 +114,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Setup cache
-        if: matrix.dioptra-app != 'nginx'
-        id: cache
-        uses: actions/cache@v4
-        with:
-          path: cache-mount
-          key: cache-mount-${{ matrix.dioptra-app }}-${{ steps.platform.outputs.pair }}-${{ hashFiles('uv.lock') }}
-
-      - name: Inject cache into Buildkit
-        if: matrix.dioptra-app != 'nginx'
-        uses: reproducible-containers/buildkit-cache-dance@v3
-        with:
-          builder: ${{ steps.setup-buildx.outputs.name }}
-          cache-map: |
-            {
-              "cache-mount": "/root/.cache/uv"
-            }
-          skip-extraction: ${{ steps.cache.outputs.cache-hit }}
-
       - name: Build and push by digest
         id: build
         uses: docker/build-push-action@v6
