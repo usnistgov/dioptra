@@ -20,12 +20,12 @@
 Create Experiments
 ==================
 
-This how-to explains how to build :ref:`Experiments <explanation-experiments-and-jobs>` in Dioptra. 
+This how-to explains how to build :ref:`Experiments <explanation-experiments-and-jobs>` in Dioptra.
 
 Prerequisites
 -------------
 
-.. tabs:: 
+.. tabs::
 
    .. group-tab:: GUI
 
@@ -62,7 +62,7 @@ Step 1: Locate Entrypoints to attach to the Experiment
    .. group-tab:: Python Client
 
       Retrieve IDs for the following resources:
-  
+
       - **Groups**
       - **Entrypoints**
 
@@ -85,7 +85,7 @@ Step 2: Locate Entrypoints to attach to the Experiment
    .. group-tab:: GUI
 
       In the Dioptra GUI, navigate to the **Experiments** tab. Click **Create**. Enter metadata, including:
-      
+
       - **name**
       - **group**
       - **entrypoints**
@@ -95,7 +95,7 @@ Step 2: Locate Entrypoints to attach to the Experiment
 
    .. group-tab:: Python Client
 
-      Create the Experiment using the Client. Use the Group ID, and Entrypoint IDs from step 1. 
+      Create the Experiment using the Client. Use the Group ID, and Entrypoint IDs from step 1.
       Also pass in the following as parameters:
 
       - **Name**
@@ -112,5 +112,5 @@ Step 2: Locate Entrypoints to attach to the Experiment
 See Also
 --------
 
-* :ref:`Experiments Explanation <explanation-experiments>` - Understand what experiments are conceptually.
+* :ref:`Experiments Explanation <explanation-experiments-and-jobs>` - Understand what experiments are conceptually.
 * :ref:`Experiments Reference <reference-experiments>` - Reference page for experiments.
