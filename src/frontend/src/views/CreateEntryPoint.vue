@@ -163,14 +163,6 @@
               {{ props.row.defaultValue }}
             </div>
           </template>
-          <template #body-cell-null="props">
-            <q-checkbox
-              :model-value="props.row.defaultValue === null"
-              @update:model-value="val => {
-                props.row.defaultValue = val ? null : ''
-              }"
-            />
-          </template>
           <template #body-cell-actions="props">
             <q-btn 
               icon="edit"
@@ -685,7 +677,6 @@
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, },
     { name: 'type', label: 'Type', align: 'left', field: 'parameterType', sortable: true, },
     { name: 'defaultValue', label: 'Default Value (optional)', align: 'left', field: 'defaultValue', sortable: true, },
-    { name: 'null', label: 'No Default Set', align: 'center', },
     { name: 'actions', label: 'Actions', align: 'center', },
   ]
 
