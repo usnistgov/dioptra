@@ -19,7 +19,7 @@
 
 
 Usage Modes
-================
+===========
 
 Dioptra utilizes a microservices architecture coordinated by a :ref:`REST API <reference-glossary>` to manage job execution and resource tracking.
 
@@ -30,7 +30,7 @@ Users can interface with the Dioptra REST API through three primary workflows:
 3. **Direct HTTP API calls** 
 
 Overview
--------------
+--------
 
 The choice of workflow depends on the user's technical requirements and the complexity of the experiment:
 
@@ -42,7 +42,7 @@ These workflows are often complementary. A typical researcher might use the Pyth
 high-volume experiment loop while simultaneously using the GUI to monitor real-time job progress and inspect generated artifacts.
 
 Graphical User Interface (GUI)
----------------------------------
+------------------------------
 
 The GUI is a web-based application built using the `Quasar Framework (VueJS) <https://quasar.dev>`__. It is designed for interactive exploration and provides a user-friendly way to manage the testbed.
 
@@ -62,7 +62,7 @@ The GUI is a web-based application built using the `Quasar Framework (VueJS) <ht
    Example screenshot from the GUI
 
 Using the GUI
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~
 
 To learn how to set up the GUI, ensure you have :ref:`installed Dioptra <explanation-install-dioptra>`,
 and then follow the :ref:`Hello World Tutorial <tutorial-hello-world-in-dioptra>`, which instructs users 
@@ -74,7 +74,7 @@ how to get up and running in the GUI.
     appear in the API and Python Client before they are fully integrated into the GUI.
 
 Python Client
----------------
+-------------
 
 The Python Client is the preferred interface for researchers and developers who require programmatic control or wish to orchestrate complex meta-experiments. 
 It enables the automated creation of resources and job submission, with responses returned in JSON format.
@@ -94,7 +94,7 @@ Consequently, many users adopt a **hybrid approach**: designing complex orchestr
 using the GUI for real-time monitoring and iterative tweaks.
 
 Using the Python Client 
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
 
 **Setup Instructions**
 
@@ -112,7 +112,7 @@ Additionally, many common workflows are documented in the :ref:`How To: Running 
 
 
 Direct REST API access (HTTP)
----------------
+-----------------------------
 
 Advanced users may choose to interact directly with the REST API using standard HTTP methods. This workflow may be useful for:
 
