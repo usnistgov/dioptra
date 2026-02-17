@@ -189,11 +189,76 @@
       >
         <template #body-cell-value="props">
           <div style="font-size: 18px;">
-            {{ props.row.value }}
+            <span v-if="props.row.value === null">
+              <q-chip
+                label="Needs Parameter Value"
+                color="negative"
+                text-color="white"
+                class="q-ml-none"
+              />
+            </span>
+            <span v-else>
+              {{ props.row.value }}
+            </span>
             <q-btn icon="edit" round size="sm" color="primary" flat />
           </div>
-          <q-popup-edit v-model="props.row.value" v-slot="scope">
-            <q-input v-model="scope.value" dense autofocus counter @keyup.enter="scope.set" />
+          <q-popup-edit 
+            v-model="props.row.value"
+            v-slot="scope"
+            buttons
+          >
+            <div class="text-h6">
+              {{ props.row.name }}
+              <q-chip
+                v-if="scope.value === null"
+                label="Needs Parameter Value"
+                color="negative"
+                text-color="white"
+              />  
+            </div>
+            <div class="text-subtitle2 text-grey-7 q-mb-md">
+              Set Entrypoint Parameter Value
+            </div>
+            <q-input
+              outlined
+              v-model="scope.value"
+              dense
+              autofocus
+              @keyup.enter="scope.set"
+              class="q-mb-sm"
+              :placeholder="scope.value === null 
+                ? 'Null, please enter value' 
+                : scope.value === '' 
+                  ? '[Empty String]' 
+                  : ''"
+            >
+              <template v-slot:before>
+                <label :class="`field-label`" style="width: 125px;">Parameter Value:</label>
+              </template>
+            </q-input>
+            <!-- Set Parameter to Empty String:
+            <q-checkbox
+              :model-value="scope.value === ''"
+              @update:model-value="val => {
+                if(val) {
+                  scope.value = ''
+                }
+              }"
+            /> -->
+            <q-btn
+              label="Set Parameter to Empty String"
+              color="primary"
+              :disable="scope.value === ''"
+              @click="scope.value = ''"
+            />
+            <br />
+            <q-btn
+              label="Revert to Default Value"
+              color="primary"
+              class="q-mt-sm"
+              @click="scope.value = props.row.originalValue"
+              :disable="scope.value === props.row.originalValue"
+            />
           </q-popup-edit>
         </template>
       </TableComponent>
@@ -417,7 +482,10 @@
     let output = {}
     if (parameters.value.length === 0) return output
     parameters.value.forEach((param) => {
-      output[param.name] = param.value
+      // if param value is null, dont include in payload
+      if(param.value !== null) {
+        output[param.name] = param.value
+      }
     })
     return output
   })
@@ -434,16 +502,18 @@
             parameters.value.push({
               name: param.name,
               value: param.defaultValue,
-              type: param.parameterType
+              type: param.parameterType,
+              originalValue: param.defaultValue
             })
           }
           else {
             // only add parameters that exist in the original job
-            if (oldJob.value.values[param.name]) {
+            if (param.name in oldJob.value.values) {
               parameters.value.push({
                 name: param.name,
                 value: (history.state.oldJobId) ? oldJob.value.values[param.name] : param.defaultValue,
-                type: param.parameterType
+                type: param.parameterType,
+                originalValue: param.defaultValue
               })
             }
           }
@@ -453,7 +523,8 @@
           parameters.value.push({
               name: param.name,
               value: param.defaultValue,
-              type: param.parameterType
+              type: param.parameterType,
+              originalValue: param.defaultValue
           })
         }
       })
@@ -569,7 +640,16 @@
     } catch(err) {
       // error shows when redis isn't installed, but job is still created
       store.savedForms.jobs[expJobOrAllJobs.value] = null
-      notify.error(err.response.data.message)
+      if(err.response.data.message) {
+        notify.error(err.response.data.message)
+      }
+      if(err.response?.data?.errors?.values &&
+        Object.keys(err.response.data.errors.values).length > 0) {
+          for (const [key, value] of Object.entries(err.response.data.errors.values)) {
+            notify.error(`${key}: ${value.value}`)
+          }
+      }
+      console.log(err)
     }
   }
 

@@ -373,6 +373,17 @@ class JobInvalidStatusTransitionError(DioptraError):
         super().__init__("The requested job status update is invalid.")
 
 
+class JobParameterMissingError(DioptraError):
+    """The Parameter is missing a value."""
+
+    name: list[str]
+
+    def __init__(self, names: list[str]):
+        super().__init__(
+            f"The following job Parameters are missing a value: {','.join(names)}."
+        )
+
+
 class JobInvalidParameterNameError(DioptraError):
     """The requested job parameter name is invalid."""
 
