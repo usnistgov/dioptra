@@ -28,12 +28,19 @@
       dense
       :rules="[requiredRule]"
       aria-required="true"
-      class="q-mb-sm"
     >
       <template v-slot:before>
         <label :class="`field-label`">Type:</label>
       </template>
     </q-select>
+    <q-toggle
+      :model-value="parameter.defaultValue !== null"
+      @update:model-value="val => {
+        parameter.defaultValue = val ? '' : null
+      }"
+      label="Set Default Value?"
+      style="margin-left: 100px; margin-top: 0;"
+    />
     <div v-if="parameter.defaultValue === null">
       Default Value:
       <q-chip
@@ -50,7 +57,8 @@
       v-model.trim="parameter.defaultValue"
       class="q-mb-sm"
       aria-required="false"
-      hint="Optional"
+      :hint="`The default value is an empty string that will be coersed into type: ${parameter.parameterType.toUpperCase()}`"
+      placeholder="[Empty String]"
       :disable="parameter.defaultValue === null"
     >
       <template v-slot:before>
@@ -62,16 +70,6 @@
         </label>
       </template>
     </q-input>
-    <div class="q-mt-md">
-      No Default Set:
-      <q-checkbox
-        class="q-ml-lg"
-        :model-value="parameter.defaultValue === null"
-        @update:model-value="(val) => {
-          parameter.defaultValue = val ? null : ''
-        }"
-      />
-    </div>
   </DialogComponent>
 </template>
 
