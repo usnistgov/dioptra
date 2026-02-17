@@ -20,7 +20,7 @@
 Plugin Parameter Types
 ======================
 
-Plugin parameter types are primarily used to validate that the outputs of one plugin are compatible with the inputs of another. 
+**Plugin parameter types** are primarily used to validate that the outputs of one plugin are compatible with the inputs of another. 
 Plugin parameter types also ensure compatibility among plugins and artifacts, similar to how types are used 
 in modern programming languages to check that a function's parameters are compatible with the received input.
 

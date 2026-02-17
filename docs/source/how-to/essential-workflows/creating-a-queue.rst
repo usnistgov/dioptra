@@ -20,7 +20,7 @@
 Create Queues
 ========================
 
-This how-to explains how to build :ref:`Queues <queues-explanation>` in Dioptra. Queues logically represent a 
+This how-to explains how to build :ref:`Queues <explanation-queues-and-workers>` in Dioptra. Queues logically represent a 
 queue of jobs for workers to pull from. 
 
 .. note::

@@ -20,7 +20,7 @@
 Logging Metrics
 ===============
 
-This how-to explains how to log :ref:`Metrics <explanation-metrics>` in Dioptra. 
+This how-to explains how to log metrics in Dioptra. 
 
 Prerequisites
 -------------

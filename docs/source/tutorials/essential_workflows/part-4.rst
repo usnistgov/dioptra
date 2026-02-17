@@ -60,10 +60,6 @@ You will now create the new plugin task that uses Dioptra's metric logging.
 .. note::
    Metrics are appended to a job. They are identified by the **metric name**, and they also require a **value** and a **step name**.
 
-.. admonition:: Learn More 
-
-   More details about Dioptra metrics are available at :ref:`Metrics - Explainer <explanation-metrics>`
-
 .. rst-class:: header-on-a-card header-steps
 
 Step 2: Modify Entrypoint 3

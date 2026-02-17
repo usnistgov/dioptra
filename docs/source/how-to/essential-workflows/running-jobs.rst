@@ -20,7 +20,7 @@
 Running Jobs
 ========================
 
-This how-to explains how to run :ref:`Jobs <jobs-explanation>` in Dioptra. 
+This how-to explains how to run :ref:`Jobs <explanation-experiments-and-jobs>` in Dioptra. 
 
 Prerequisites
 -------------

@@ -20,7 +20,7 @@
 Create Parameter Types
 ========================
 
-This how-to explains how to build custom :ref:`Plugin Param Types <param-types-explanation>` in Dioptra. 
+This how-to explains how to build custom :ref:`Plugin Param Types <explanation-plugin-parameter-types>` in Dioptra. 
 
 
 Prerequisites
