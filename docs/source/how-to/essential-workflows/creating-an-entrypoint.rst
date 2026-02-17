@@ -88,13 +88,12 @@ Step 1: Locate Plugins, Queues, Groups, and Parameter Types to attach to the Ent
 
       .. automethod:: dioptra.client.queues.QueuesCollectionClient.get
 
-.. _step-2-create-an-entrypoint:
 
 .. rst-class:: header-on-a-card header-steps
 
 
 Step 2: Create an Entrypoint
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. tabs::
 
@@ -203,7 +202,7 @@ When an entrypoint is run as a job, the task graph will be executed by the worke
 
 
 Step 6. Create the Artifact Task Graph (optional)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you want to save any objects from your entrypoint to disk, you need to define that logic in the Artifact Task Graph section. 
 
