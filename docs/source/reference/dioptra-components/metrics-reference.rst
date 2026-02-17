@@ -89,15 +89,15 @@ Metrics can be retrieved directly via the HTTP API.
 
 **Retrieve Latest Metrics for a Job**
 
-See the :http:get:`/api/v1/jobs/{int:id}/metrics` endpoint documentation for payload requirements.
+See the :http:get:`GET /api/v1/jobs/{int:id}/metrics </api/v1/jobs/{id}/metrics>` endpoint documentation for payload requirements.
 
 **Retrieve Full Metric History for a Job for a given Metric**
 
-See the :http:get:`/api/v1/jobs/{int:id}/metrics/{str:name}/snapshots` endpoint documentation for payload requirements.
+See the :http:get:`GET /api/v1/jobs/{int:id}/metrics/{str:name}/snapshots </api/v1/jobs/{id}/metrics/{name}/snapshots>` endpoint documentation for payload requirements.
 
 **Retrieve Latest Metrics for all Jobs in an Experiment**
 
-See the :http:get:`/api/v1/experiments/{int:id}/metrics` endpoint documentation for payload requirements.
+See the :http:get:`GET /api/v1/experiments/{int:id}/metrics </api/v1/experiments/{id}/metrics>` endpoint documentation for payload requirements.
 
 
 .. _reference-metrics-registration-interfaces:
@@ -126,7 +126,7 @@ Metrics can be logged using the RESTAPI.
 
 **Log Metrics**
 
-See the :http:post:`/api/v1/jobs/{int:id}/metrics` endpoint documentation for payload requirements.
+See the :http:post:`POST /api/v1/jobs/{int:id}/metrics </api/v1/jobs/{id}/metrics>` endpoint documentation for payload requirements.
 
 
 .. rst-class:: fancy-header header-seealso
