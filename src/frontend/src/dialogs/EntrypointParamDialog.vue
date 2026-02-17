@@ -57,7 +57,9 @@
       v-model.trim="parameter.defaultValue"
       class="q-mb-sm"
       aria-required="false"
-      :hint="`The default value is an empty string that will be coersed into type: ${parameter.parameterType.toUpperCase()}`"
+      :hint="parameter.defaultValue === '' 
+        ? `The default value is an empty string that will be coersed into type: ${parameter.parameterType.toUpperCase()}` 
+        : ''"
       placeholder="[Empty String]"
       :disable="parameter.defaultValue === null"
     >
