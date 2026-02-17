@@ -55,10 +55,10 @@ Optional Attributes
 - **Description**: (string, optional) A text description of the Experiment's purpose or scope. Defaults to empty.
 - **Entrypoints**: (list of integer IDs, optional) A list of Entrypoint resources to associate with this Experiment. Jobs can only be created using Entrypoints that are associated with the Experiment.
 
-.. _reference-experiments-system-generated-attributes:
+.. _reference-experiments-system-managed-state:
 
-System-Generated Attributes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+System-Managed State
+~~~~~~~~~~~~~~~~~~~~
 
 The following attributes are automatically assigned by the system and cannot be set directly by the user.
 
