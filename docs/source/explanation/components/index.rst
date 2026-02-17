@@ -18,7 +18,7 @@
 .. _explanation-dioptra-components:
 
 Dioptra Components
-================
+==================
 
 .. container:: wide-lightly-shaded
 
