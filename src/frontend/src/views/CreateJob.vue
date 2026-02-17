@@ -191,7 +191,7 @@
           <div style="font-size: 18px;">
             <span v-if="props.row.value === null">
               <q-chip
-                label="No Value Set"
+                label="Needs Parameter Value"
                 color="negative"
                 text-color="white"
                 class="q-ml-none"
@@ -202,21 +202,54 @@
             </span>
             <q-btn icon="edit" round size="sm" color="primary" flat />
           </div>
-          <q-popup-edit v-model="props.row.value" v-slot="scope" buttons>
-            <div v-if="scope.value === null">
+          <q-popup-edit 
+            v-model="props.row.value"
+            v-slot="scope"
+            buttons
+          >
+            <div class="text-h6">
+              {{ props.row.name }}
               <q-chip
-                label="No Value Set"
+                v-if="scope.value === null"
+                label="Needs Parameter Value"
                 color="negative"
                 text-color="white"
-              />    
+              />  
             </div>
-            <q-input v-else v-model="scope.value" dense autofocus counter @keyup.enter="scope.set" />
-            No Value Set:
+            <div class="text-subtitle2 text-grey-7 q-mb-md">
+              Set Entrypoint Parameter Value
+            </div>
+            <q-input
+              outlined
+              v-model="scope.value"
+              dense
+              autofocus
+              @keyup.enter="scope.set"
+              class="q-mb-sm"
+              :placeholder="scope.value === null 
+                ? 'Null, please enter value' 
+                : scope.value === '' 
+                  ? '[Empty String]' 
+                  : ''"
+            >
+              <template v-slot:before>
+                <label :class="`field-label`" style="width: 125px;">Parameter Value:</label>
+              </template>
+            </q-input>
+            <!-- Set Parameter to Empty String:
             <q-checkbox
-              :model-value="scope.value === null"
+              :model-value="scope.value === ''"
               @update:model-value="val => {
-                scope.value = val ? null : ''
+                if(val) {
+                  scope.value = ''
+                }
               }"
+            /> -->
+            <q-btn
+              label="Set Parameter to Empty String"
+              color="primary"
+              :disable="scope.value === ''"
+              @click="scope.value = ''"
             />
           </q-popup-edit>
         </template>
