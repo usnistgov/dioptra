@@ -65,6 +65,9 @@ Log a metric as part of a job using the Python client.
 
       .. automethod:: dioptra.client.jobs.JobsCollectionClient.append_metric_by_id
 
+
+.. rst-class:: header-on-a-card header-steps
+
 Retrieving Metrics for Jobs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
