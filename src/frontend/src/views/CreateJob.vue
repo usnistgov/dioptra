@@ -251,6 +251,14 @@
               :disable="scope.value === ''"
               @click="scope.value = ''"
             />
+            <br />
+            <q-btn
+              label="Revert to Default Value"
+              color="primary"
+              class="q-mt-sm"
+              @click="scope.value = props.row.originalValue"
+              :disable="scope.value === props.row.originalValue"
+            />
           </q-popup-edit>
         </template>
       </TableComponent>
@@ -494,7 +502,8 @@
             parameters.value.push({
               name: param.name,
               value: param.defaultValue,
-              type: param.parameterType
+              type: param.parameterType,
+              originalValue: param.defaultValue
             })
           }
           else {
@@ -503,7 +512,8 @@
               parameters.value.push({
                 name: param.name,
                 value: (history.state.oldJobId) ? oldJob.value.values[param.name] : param.defaultValue,
-                type: param.parameterType
+                type: param.parameterType,
+                originalValue: param.defaultValue
               })
             }
           }
@@ -513,7 +523,8 @@
           parameters.value.push({
               name: param.name,
               value: param.defaultValue,
-              type: param.parameterType
+              type: param.parameterType,
+              originalValue: param.defaultValue
           })
         }
       })
