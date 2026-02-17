@@ -627,7 +627,7 @@ There are many similarities between invoking artifact tasks and function tasks:
 .. _reference-entrypoints-example-artifact-task-graph-saving-a-model-and-a-dataset:
 
 Example Artifact Task Graph: Saving a Model and a Dataset
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Building off the example :ref:`Task Graph <reference-entrypoints-example-task-graph-model-training>` in the previous section, the following hypothetical Artifact Task Graph saves the generated prediction dataframe and trained model to disk using two different Artifact Handlers. 
 
