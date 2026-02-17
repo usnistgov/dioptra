@@ -91,6 +91,7 @@ Step 2: Locate Entrypoints to attach to the Experiment
       - **entrypoints**
       - **description** (optional)
 
+      Click **Submit Experiment** when finished.
 
    .. group-tab:: Python Client
 
