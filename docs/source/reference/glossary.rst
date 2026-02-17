@@ -26,39 +26,29 @@ Glossary
       An acronym for the term *Application Programming Interface*, which refers to an interface that allows two applications to talk to one another.
       More recently, the term has been used as a shorthand for a *Web API*, see https://en.wikipedia.org/wiki/Web_API for further details.
 
+   AI
+      An acronym for the term *Artificial Intelligence*.
+
    AML
       An acronym for the term *Adversarial Machine Learning*.
-
-   CW
-      An abbreviation for the Carlini-Wagner adversarial attack, which was first proposed in the conference paper titled "Towards Evaluating the Robustness of Neural Networks" by Nicholas Carlini and David Wagner.
-      A copy of the paper is available on the arXiv at https://arxiv.org/abs/1608.04644.
-
-   FGM
-      An abbreviation for the Fast Gradient Method adversarial attack, which was first proposed in the conference paper title "Explaining and Harnessing Adversarial Examples" by Ian Goodfellow, Jonathan Shlens, and Christian Szegedy.
-      A copy of the paper is available on the arXiv at https://arxiv.org/abs/1412.6572.
 
    GHCR
       An acronym for the GitHub Container Registry that hosts container images.
 
+   GUI
+      An acronym for the term **Graphical User Interface**.
+
    HTTP
       An acronym for the term *Hypertext Transfer Protocol*, which are a set of rules that control the way data is sent and received over the internet.
       The HTTP specification is available at https://httpwg.org/specs/.
-
-   JSMA
-      An acronym for the term *Jacobian Saliency Map Attack*, a type of adversarial machine learning evasion attack that was first proposed in the paper titled "The Limitations of Deep Learning in Adversarial Settings" by Nicolas Papernot, Patrick McDaniel, Somesh Jha, Matt Fredrikson, Z. Berkay Celik, and Ananthram Swami.
-      A copy of the paper is available on the arXiv at https://arxiv.org/abs/1511.07528.
 
    JSON
       An acronym for the term *JavaScript Object Notation*.
       JSON is a lightweight data-interchange format that is completely language independent despite being based on a subset of the JavaScript Programming Language Standard ECMA-262 3rd Edition - December 1999.
       For more information, see https://www.json.org.
 
-   MNIST
-      An acronym for the Modified National Institute of Standards and Technology database of handwritten digits.
-
-   NVIDIA DGX
-      A line of NVIDIA produced servers and workstations which specialize in using GPGPU to accelerate deep learning applications.
-      For more information, see https://en.wikipedia.org/wiki/Nvidia_DGX.
+   ML
+      An acronym for the term *Machine Learning*.
 
    REST
       An acronym for REpresentational State Transfer, which is an architectural approach to designing web services `proposed by Roy Fielding in 2000 <https://www.ics.uci.edu/~fielding/pubs/dissertation/rest_arch_style.htm>`_.
