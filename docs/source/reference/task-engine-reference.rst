@@ -1,8 +1,8 @@
 .. _reference-declarative-experiment-description:
 
-====================================
- [OLD] Declarative Experiment Description
-====================================
+==================================
+Declarative Experiment Description
+==================================
 
 This document describes the data structure used to represent an experiment.
 

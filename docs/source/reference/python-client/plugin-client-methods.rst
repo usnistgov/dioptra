@@ -17,8 +17,8 @@
 
 .. _reference-plugin-client-methods:
 
-Plugin Client Methods
-=====================
+Plugins Client Methods
+======================
 
 
 This page lists all relevant methods for Dioptra :ref:`Plugins <explanation-plugins>` that are available via the Python Client.
