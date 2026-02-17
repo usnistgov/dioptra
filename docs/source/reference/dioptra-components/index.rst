@@ -28,7 +28,6 @@ Reference material for the various components and resources that comprise experi
       :maxdepth: 1
       :caption: Table of Contents
 
-      dioptra-component-glossary
       users-reference
       groups-reference
       queues-reference
@@ -40,7 +39,6 @@ Reference material for the various components and resources that comprise experi
       artifacts-reference
       metrics-reference
       workers-reference
-      artifact-graph-reference
 
 Quick Definitions
 -----------------

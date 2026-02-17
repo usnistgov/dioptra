@@ -33,7 +33,7 @@ and are built using the command ``uvx tox run -e web-compile,docs``.
    :depth: 1
 
 Exemplar Documentation Pages
------------------
+----------------------------
 
 The following pages serve as reference implementation for future documentation pages:
 
@@ -187,7 +187,7 @@ The following collection details styling components—custom-defined or provided
    These assets are loaded via ``docs/conf.py`` using ``html_css_files`` and ``html_js_files`` to point to CSS and JS code in the ``_static`` directory.
 
 Section hierarchy
-~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~
 
 Headings should be nested consistently.
 
@@ -222,7 +222,7 @@ right side table of contents.
    See :ref:`cross-references <reference-guidelines-for-documentation-cross-references>` section below to understand cross reference labels used in this example.
 
 Steps (Linkable Headers on a Card)
-~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When documenting steps for a tutorial or how-to guide, make the step name a header and use two CSS classes to place
 the steps onto a card. This makes them linkable and easy to visually distinguish.
@@ -324,7 +324,7 @@ Note the following stylistic conventions when rendering steps:
    header in a styled div that continues until the next header.
 
 "See Also" (Linkable Headers on a Card)
-~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To create a prominent section of additional reading material, use the custom RST classes
 ``header-on-a-card`` combined with ``header-seealso``. This will create
@@ -369,7 +369,7 @@ design and motivation.
 
 
 Notes, warnings, important, and "see also"
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To caveat steps or reference explanation/reference material elsewhere, use notes, warnings, and the important flag.
 These divs are built in to Sphinx. While visually distinct, they utilize significant padding to indicate optional content.
@@ -443,7 +443,7 @@ The Sphinx table of contents sidebar automatically collapses when it would be in
 in the margins. On narrow screens, these elements are hidden and require horizontal scrolling.
 
 "Learn More" - Minimalistic div for more information
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Custom CSS rules were created to define a minimalistic presentation for extra information.
 This class overrides the admonition box when the title "Learn More" is added.
@@ -520,7 +520,7 @@ but could be reused for other elements as well.
          * :doc:`/dev-guide/contributing-commit-styleguide`
 
 Page Contents / Local ToC
-~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To preview the contents on a page in a Table of Contents container, use the ``.. contents::`` component.
 
@@ -568,7 +568,7 @@ RST Syntax: Image Classes
 
 **Screenshots that use combinations of these three CSS classes**
 
-*On click, JavaScript shows the modal* ``div`` *element. *
+*On click, JavaScript shows the modal* ``div`` *element.*
 
 .. code-block:: rst
 
@@ -591,7 +591,7 @@ RST Syntax: Image Classes
 
 
 Rendered Examples: Image Classes
-^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Using** ``border-image`` **and** ``clickable-image``:
 
@@ -644,7 +644,7 @@ Use ``literalinclude`` to pull code from the repo instead of pasting it:
 
 
 Custom Code Block Styling
-~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Custom CSS classes are available to style code blocks for improved visual separation and language-specific branding.
 Font size is also reduced to save space for long code blocks.
@@ -898,7 +898,7 @@ title but can be overridden using the ``<>`` syntax (see example).
 
    ``_{tutorial}-{running-hello-world}-{step-2-create-a-plugin}``
 
-   **Examples: **
+   **Examples:**
 
    * ``_how-to-create-plugins``
    * ``_tutorial-adding-inputs-and-outputs``
@@ -914,7 +914,7 @@ Additional Sphinx Elements
 The following elements are currently unused but available for documentation.
 
 Collapsible content
-~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
 
 Collapsible admonitions could be used for long sections of code or optional context.
 
@@ -942,7 +942,7 @@ Collapsible admonitions could be used for long sections of code or optional cont
 
 
 Sphinx Page Options
-~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
 
 1. **Remove the page specific table of contents** on the right-hand side:
 
@@ -951,7 +951,7 @@ Sphinx Page Options
 
 
 Cards, grids, and callouts
-~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 `sphinx-design` provides cards and grids for menus or callouts.
 
