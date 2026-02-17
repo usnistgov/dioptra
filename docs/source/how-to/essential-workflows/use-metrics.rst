@@ -65,6 +65,9 @@ Log a metric as part of a job using the Python client.
 
       .. automethod:: dioptra.client.jobs.JobsCollectionClient.append_metric_by_id
 
+
+.. rst-class:: header-on-a-card header-steps
+
 Retrieving Metrics for Jobs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -93,3 +96,11 @@ Retrieve metrics from a job or view them in the GUI.
       It is also possible to retrieve the metrics across all jobs in an experiment.
 
       .. automethod:: dioptra.client.experiments.ExperimentsCollectionClient.get_metrics_by_id
+
+
+.. rst-class:: fancy-header header-seealso
+
+See Also
+--------
+
+* :ref:`Metrics Reference <reference-metrics>` - Reference page for metrics.

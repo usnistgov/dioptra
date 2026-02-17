@@ -170,4 +170,4 @@ See Also
 ---------
    
 * :ref:`What are Plugins? <explanation-plugins>` 
-* :ref:`How to create a plugin <how-to-create-plugins>`
+* :ref:`<how-to-create-plugins>`

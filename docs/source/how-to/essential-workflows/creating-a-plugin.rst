@@ -140,13 +140,13 @@ Once the tasks appear in the list (GUI) or the API call returns successfully (Py
 
 
 
-.. rst-class:: header-on-a-card header-seealso
+.. rst-class:: fancy-header header-seealso
 
 See Also 
 ---------
 
-* :ref:`Overview of Experiments <explanation-workflow-architecture>` - Understand how plugins fit into experiments.
-* :ref:`Artifacts: explanation <explanation-artifacts>` - Learn about artifacts.
+* :ref:`Workflow Architecture Explanation <explanation-workflow-architecture>` - Understand how plugins fit into experiments.
+* :ref:`Artifacts Explanation <explanation-artifacts>` - Learn about artifacts.
 * :ref:`Learning the Essentials Tutorial: Saving Artifacts <tutorial-saving-artifacts>` - See artifacts used in a data science workflow.
-* :ref:`Plugins: reference <reference-plugins>` - More information on syntax requirements for Plugins
+* :ref:`Plugins Reference <reference-plugins>` - More information on syntax requirements for Plugins
 

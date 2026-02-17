@@ -100,5 +100,5 @@ See the :http:post:`POST /api/v1/experiments </api/v1/experiments/>` endpoint do
 See Also
 ---------
 
-* :ref:`Entrypoints <reference-entrypoints>`
-* :ref:`Plugins <reference-plugins>`
+* :ref:`Entrypoints Reference <reference-entrypoints>`
+* :ref:`Plugins Reference <reference-plugins>`

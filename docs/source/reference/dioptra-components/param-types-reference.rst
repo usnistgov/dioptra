@@ -182,3 +182,6 @@ See Also
 
 * :ref:`How To Create Plugin Parameter Types <how-to-create-parameter-types>`
 * :ref:`Plugin Parameter Types Explanation <explanation-plugin-parameter-types>`
+* :ref:`Plugins Reference <reference-plugins>`
+* :ref:`Artifacts Reference <reference-artifacts>`
+* :ref:`Entrypoints Reference <reference-entrypoints>`

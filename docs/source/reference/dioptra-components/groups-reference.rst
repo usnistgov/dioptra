@@ -99,5 +99,4 @@ Custom groups cannot be created in Dioptra at this time.
 See Also
 ---------
 
-- :ref:`reference-users`
-- :ref:`how-to-create-users-and-groups`
+- :ref:`Users Reference <reference-users>`

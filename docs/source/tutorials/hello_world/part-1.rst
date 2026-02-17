@@ -203,12 +203,12 @@ Conclusion
 
 You have successfully run your first Dioptra job! You wrote a Python function, wrapped it in a Plugin, sequenced it in an Entrypoint, and executed it using the GUI.
 
-.. rst-class:: header-on-a-card header-seealso
+.. rst-class:: fancy-header header-seealso
 
 See Also 
 ---------
-To understand in greater depth all the components utilized in this experiment, reference :ref:`Dioptra Components: explanation <explanation-dioptra-components>`.
-You can also find syntax and file requirements in :ref:`Dioptra Components: reference <reference-dioptra-components>`.
+To understand in greater depth all the components utilized in this experiment, reference :ref:`Dioptra Components Explanation <explanation-dioptra-components>`.
+You can also find syntax and file requirements in :ref:`Dioptra Components Reference <reference-dioptra-components>`.
 
 
 Next Steps

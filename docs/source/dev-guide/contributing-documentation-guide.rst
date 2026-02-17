@@ -37,9 +37,9 @@ Exemplar Documentation Pages
 
 The following pages serve as reference implementation for future documentation pages:
 
-* :ref:`Plugins: reference <reference-plugins>`
+* :ref:`Plugins Reference <reference-plugins>`
 * :ref:`how-to-create-plugins`
-* :ref:`Plugins: explanation <explanation-plugins>`
+* :ref:`Plugins Explanation <explanation-plugins>`
 * :ref:`Tutorial: Hello World in Dioptra <tutorial-hello-world-in-dioptra>` and :ref:`Tutorial: Learning the Essentials <tutorial-learning-the-essentials>`
 
 Documentation goals

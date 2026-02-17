@@ -84,3 +84,5 @@ See Also
 ---------
 
 * :ref:`Users and Groups <explanation-users-and-groups>` - Understand what users and groups are for.
+* :ref:`Users Reference <reference-users>` - Reference page for users.
+* :ref:`Groups Reference <reference-groups>` - Reference page for groups.

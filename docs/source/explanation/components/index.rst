@@ -34,5 +34,4 @@ Dioptra Components
       entrypoints-explanation
       task-graph-explanation 
       artifacts-explanation 
-      metrics-explanation
       experiments-jobs-explanation 
