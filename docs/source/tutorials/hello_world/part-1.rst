@@ -207,8 +207,8 @@ You have successfully run your first Dioptra job! You wrote a Python function, w
 
 See Also 
 ---------
-To understand in greater depth all the components utilized in this experiment, reference :ref:`Dioptra Components: explanation <explanation-dioptra-components>`.
-You can also find syntax and file requirements in :ref:`Dioptra Components: reference <reference-dioptra-components>`.
+To understand in greater depth all the components utilized in this experiment, reference :ref:`Dioptra Components Explanation <explanation-dioptra-components>`.
+You can also find syntax and file requirements in :ref:`Dioptra Components Reference <reference-dioptra-components>`.
 
 
 Next Steps

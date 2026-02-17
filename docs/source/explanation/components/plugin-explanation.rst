@@ -50,7 +50,7 @@ When chained together in an entrypoint, the output of one function task can flow
 
 Note that while Function Tasks process data, they generally do not save it to disk. To persist results, the output of a function task must be passed into the artifact task graph to dictate which artifact task will save it to disk.
 
-    See :ref:`Entrypoints: explanation <explanation-entrypoints>` to learn how tasks are chained and how default parameter values are set.
+    See :ref:`Entrypoints Explanation <explanation-entrypoints>` to learn how tasks are chained and how default parameter values are set.
 
 Function Task Registration
 -----------------
@@ -69,7 +69,7 @@ When creating Python plugins, users manually register each function task. This c
 .. note::
 
    In order for a Python function to be registrable, it must use the ``@pyplugs.register`` decorator.
-   View  :ref:`Plugins: reference <reference-plugins>`  to learn about the ``@pyplugs.register`` syntax for function plugin tasks.
+   View :ref:`Plugins Reference <reference-plugins>`  to learn about the ``@pyplugs.register`` syntax for function plugin tasks.
 
 
 Plugin Artifact Tasks
@@ -85,7 +85,7 @@ Artifact Handlers are Python classes that define certain methods for I/O logic.
 
 .. note::
 
-    Artifact Handler classes must inherit from the parent class ``ArtifactTaskInterface``. See :ref:`Plugins: reference <reference-plugins>` to learn about the syntax for creating artifact tasks.
+    Artifact Handler classes must inherit from the parent class ``ArtifactTaskInterface``. See :ref:`Plugins Reference <reference-plugins>` to learn about the syntax for creating artifact tasks.
 
 
 Artifact Task Registration
@@ -108,7 +108,7 @@ Function tasks are used in the entrypoint task graph. Artifact tasks are used in
 
 Entrypoints utilize the types that are declared in function tasks inputs / outputs to ensure the workflow is valid.
 
-    See :ref:`Entrypoints: explanation <explanation-entrypoints>` to learn how plugins are used in entrypoints
+    See :ref:`Entrypoints Explanation <explanation-entrypoints>` to learn how plugins are used in entrypoints
 
 
 .. rst-class:: fancy-header header-seealso
