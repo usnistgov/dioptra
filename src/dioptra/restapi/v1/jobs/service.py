@@ -38,6 +38,7 @@ from dioptra.restapi.errors import (
     JobInvalidParameterNameError,
     JobInvalidStatusTransitionError,
     JobMlflowRunAlreadySetError,
+    JobParameterMissingError,
     SortParameterValidationError,
 )
 from dioptra.restapi.v1 import utils
@@ -256,8 +257,7 @@ class JobService(object):
             log.debug("Invalid parameter names", parameters=invalid_job_params)
             raise JobInvalidParameterNameError(invalid_job_params)
 
-        # Create the new Job resource and record the assigned entrypoint parameter
-        # values
+        # Create the new Job resource and record the assigned entrypoint parameter values
         job_resource = models.Resource(
             resource_type=RESOURCE_TYPE, owner=experiment.resource.owner
         )
@@ -272,6 +272,14 @@ class JobService(object):
             )
             for entrypoint_parameter in entrypoint.parameters
         ]
+
+        missing_parameter_values = [
+            param.parameter.name
+            for param in entrypoint_parameter_values
+            if param.value is None
+        ]
+        if len(missing_parameter_values) > 0:
+            raise JobParameterMissingError(missing_parameter_values)
 
         coerce_entrypoint_param_types(entrypoint_parameter_values)
 

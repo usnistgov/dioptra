@@ -386,11 +386,14 @@ def coerce_entrypoint_default_param_types(
     for param in parameters:
         default_value = param.default_value
         try:
-            params[param.name] = {
-                "default": coerce_to_type(
-                    x=default_value, type_name=param.parameter_type
-                )
-            }
+            if default_value is None:
+                params[param.name] = {}
+            else:
+                params[param.name] = {
+                    "default": coerce_to_type(
+                        x=default_value, type_name=param.parameter_type
+                    )
+                }
         except ValueError:
             param_values += [default_value]
             param_names += [param.name]
