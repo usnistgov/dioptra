@@ -1038,7 +1038,7 @@
         displayErrorDialog.value = true
       }
     } catch(err) {
-      console.warn(err)
+      notify.error(err.response.data.message)
     }
   }
 
