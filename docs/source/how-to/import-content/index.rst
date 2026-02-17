@@ -26,6 +26,7 @@ How to guides on Importing Content
 
    .. toctree::
       :maxdepth: 1
+      :caption: Table of Contents
 
       add-a-dataset
       import-resources

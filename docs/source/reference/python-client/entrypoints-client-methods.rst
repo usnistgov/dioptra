@@ -17,8 +17,8 @@
 
 .. _reference-entrypoint-client-methods:
 
-Entrypoint Client Methods
-=========================
+Entrypoints Client Methods
+==========================
 
 
 This page lists all relevant methods for Dioptra :ref:`Entrypoints <explanation-entrypoints>` that are available via the Python Client.

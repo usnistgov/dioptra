@@ -26,6 +26,7 @@ Motivation for Dioptra
    .. toctree::
       :maxdepth: 1
       :titlesonly:
+      :caption: Table of Contents
 
       why-dioptra 
       design-principles 
