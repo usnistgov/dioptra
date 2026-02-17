@@ -87,6 +87,8 @@ Step 1: Prepare the experiment, entrypoint, and queue for the job
       .. automethod:: dioptra.client.queues.QueuesCollectionClient.get
 
 
+.. rst-class:: header-on-a-card header-steps
+
 Step 2: Decide on parameterization for the job
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -103,6 +105,7 @@ Entrypoints are parameterizable, and jobs can populate these parameters with val
 
       The parameter values are provided as a dictionary during job creation (step 4).
 
+.. rst-class:: header-on-a-card header-steps
 
 Step 3: Select any needed artifacts for the job
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -128,8 +131,6 @@ artifact input.
 
 
 .. rst-class:: header-on-a-card header-steps
-
-
 
 Step 4: Run the job
 ~~~~~~~~~~~~~~~~~~~
