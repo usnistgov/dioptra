@@ -18,7 +18,7 @@
 .. _reference-entrypoints:
 
 Entrypoints
-=================
+===========
 
 
 .. contents:: Contents
@@ -73,7 +73,7 @@ Optional Attributes
 .. _reference-entrypoints-system-generated-attributes:
 
 System-Managed State
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
 
 - **ID**: (integer) Unique identifier assigned upon creation.
 - **Last Modified On**: (timestamp) The time when the Entrypoint was last modified. If any entrypoint has not yet been modified, then this equals the timestamp when the entrypoint was originally created. Upon modification, the old configuration is saved as a Snapshot and added to the Version History. 
@@ -110,7 +110,7 @@ There are similarities across all three invocation styles:
 .. _reference-entrypoints-example-task-graph-model-training:
 
 Example Task Graph: Model Training
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The following hypothetical task graph loads a dataset from disk, trains a model on that dataset, and then makes predictions on a test dataset:
 
@@ -179,7 +179,7 @@ The following hypothetical task graph loads a dataset from disk, trains a model 
 Continue reading below to understand all the details in this example. 
 
 Invocation Styles
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~
 
 .. _reference-entrypoints-task-graph-syntax-positional-style-invocation:
 
@@ -449,7 +449,7 @@ as an argument to the ``keyword1`` parameter if needed:
 
 
 References Within a Task Graph
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 As mentioned earlier, the output of each function task is stored in a variable designated by the step name. These variables
 can be used in other steps.
@@ -523,7 +523,7 @@ is given a name when registered. In an example where ``task1`` is registered to 
                     task2: [$taskGraphStep1.output1, $taskGraphStep1.output2]
 
 Task Graph Parameters
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
 
 Parameters to the Task Graph are simply variables assumed to be provided by the job at runtime. In the following example, 
 ``$myparam`` clearly does not reference a step name. As a result, this is a parameter which needs to be provided
@@ -565,7 +565,7 @@ See :ref:`explanation-entrypoints` and :ref:`explanation-artifacts` for more det
 
 
 Additional Dependencies - Managing Dependencies
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Explicit dependencies between steps can be added via the ``dependencies`` keyword. Dependencies between steps are
 automatically created when a step uses the output of another step as a parameter, but sometimes a dependency is 
@@ -606,7 +606,7 @@ needed without the presence of output. In this example, ``taskGraphStep2`` will 
 .. _reference-entrypoints-artifact-output-graph-syntax:
 
 Artifact Output Graph Syntax
---------------------------------
+----------------------------
 
 Upon successful completion of the Task Graph within a Job execution, the Artifact Output Graph will then execute (if it is defined) to save any designated Function Task outputs 
 as Artifacts. 
@@ -690,7 +690,7 @@ Building off the example :ref:`Task Graph <reference-entrypoints-example-task-gr
                         name: ModelArtifactTask
 
 Generalized Syntax 
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~
 
 The syntax below is a generalized version of the Artifact Output Graph syntax in above example: 
 
@@ -741,7 +741,7 @@ The syntax below is a generalized version of the Artifact Output Graph syntax in
                         name: artifactHandler2
 
 Invocation Styles 
-~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~
 
 Some artifact tasks define task inputs to customize the serialization logic (for example, specifying a file format). 
 Similar to the Task Graph, the arguments for artifact tasks can be passed in in a variety of ways.
