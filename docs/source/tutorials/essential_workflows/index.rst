@@ -24,6 +24,11 @@ This tutorial builds off the simple :ref:`Hello World tutorial <tutorial-hello-w
 core functionality of Dioptra. Throughout the sections, you will **create reusable workflows** in Dioptra of **increasing complexity**. 
 Each step will iterate on the previous step, incorporating more features and functionality from Dioptra. 
 
+Prerequisites
+-------------
+
+Before progressing through this tutorial, ensure that you have :ref:`installed Dioptra <explanation-install-dioptra>`. It is also recommended to complete the :ref:`Hello World tutorial <tutorial-hello-world-in-dioptra>` before starting this one. 
+
 .. container:: wide-lightly-shaded
 
    .. toctree::
@@ -41,5 +46,5 @@ Each step will iterate on the previous step, incorporating more features and fun
 **By the end of this tutorial, you will have:**
 
 - Loaded in Python files and **registered their functions** as Dioptra **Plugin Tasks**
-- **Created workflows** from those Plugin tasks to simulate data, modify that data, and visualize your results
+- **Created workflows** from those Plugin tasks to generate data, modify that data, and visualize your results
 - Defined custom **types** and their associated **saving/loading behavior** to export your generated data and results into new entrypoints and out of Dioptra

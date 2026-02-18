@@ -30,10 +30,10 @@ you will compare outputs and observe how different **sample sizes** impact the o
 
 Prerequisites
 -------------
-Before starting, ensure you have set up Dioptra and completed the :ref:`Hello World Tutorial <tutorial-hello-world-in-dioptra>`.
+Before starting, ensure you have set up Dioptra and have :ref:`created a User and Queue <tutorial-setup-dioptra-in-the-gui>`.
 
 * :ref:`explanation-install-dioptra` - Obtain the Dioptra containers and create a deployment
-* :ref:`tutorial-setup-dioptra-in-the-gui` - Create a user and queue in the GUI
+* :ref:`tutorial-setup-dioptra-in-the-gui` - Create a user and queue in the GUI (Hello World Tutorial)
 
 
 Workflow
@@ -44,23 +44,23 @@ Workflow
 Step 1: Create a New Type
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Your plugin task will output a Numpy array. Before registering this output in your plugin task, you need to define the type in Dioptra.
+The Plugin Task you will define will output a Numpy array. Before registering this output in your plugin task, you need to **define the Numpy array type** in Dioptra.
 
-1. Navigate to the **Plugin-Params** tab.
+1. Navigate to the **Plugin Parameters** tab.
 2. Click **Create**.
-3. Enter the name: ``NumpyArray``.
-4. Click **Save**.
+3. Enter the name: ``NumpyArray``. Add an optional short description. 
+4. Click **Submit**.
 
-.. figure:: _static/screenshots/make_numpy_array_type.png
+.. figure:: ../../images/screenshots/plugin_param_types/create_plugin_parameter_numpy_array_dioptra_1_1.png
    :alt: Screenshot of creating a new type called NumpyArray.
    :width: 900px
    :figclass: border-image clickable-image
 
-   Creating a new type in the UI.
+   Creating a new Parameter Type in the GUI.
 
 .. admonition:: Learn More
 
-   * :ref:`explanation-plugin-parameter-types` - Learn about parameter types
+   * :ref:`explanation-plugin-parameter-types` - Explainer on Plugin Parameter Types
 
 
 .. rst-class:: header-on-a-card header-steps
@@ -68,12 +68,19 @@ Your plugin task will output a Numpy array. Before registering this output in yo
 Step 2: Create the Plugin
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You will now create a new plugin with one task. This task accepts parameters (``random_seed``, ``sample_size``, ``mean``, ``var``), samples a normal distribution, logs the mean, and returns the array.
+You will now create a new plugin with one task. This task accepts four parameters:
+* ``random_seed``
+* ``sample_size``
+* ``mean``
+* ``var``
+
+The function samples a normal distribution, logs the mean, and then returns the array.
 
 1. Go to the **Plugins** tab and click **Create Plugin**.
 2. Name it ``sample_normal`` and add a short description.
-3. Click the **file icon** and add a new Python file named ``sample_normal.py``.
-4. Paste the code below into the editor.
+3. In the plugin list, **click the row** corresponding to the Sample Normal Plugin you just created to go to the Plugin Files table.
+4. Add a new Python file named ``sample_normal.py``.
+5. Paste the code below into the editor.
 
 .. admonition:: sample_normal.py
     :class: code-panel python
@@ -88,11 +95,11 @@ You will now create a new plugin with one task. This task accepts parameters (``
 Step 3: Register the Task
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Unlike last time, you must specify input and output types. Using Dioptra's autodetect functionality will help here.
+Unlike in the :ref:`Hello World <tutorial-hello-world-in-dioptra>` simple logging function task with no inputs/outputs, this Task requires us to register the inputs and outputs along with their Types. Using Dioptra's autodetect functionality will help here.
 
 1. Click **Import Function Tasks** (top right of the editor) to auto-detect functions from ``sample_normal.py``.
 
-.. figure:: _static/screenshots/import_plugin_tasks.png
+.. figure:: ../../images/screenshots/plugin_files/import_function_tasks_sample_normal_dioptra_1_1.png
    :alt: Screenshot of the "Import Function Tasks" button.
    :width: 900px
    :figclass: border-image clickable-image
@@ -104,7 +111,7 @@ Unlike last time, you must specify input and output types. Using Dioptra's autod
 
 2. You may see an error under **Plugin Tasks**: *Resolve missing type* for the ``np_ndarray`` output. This is because the custom type is called ``NumpyArray``, not ``np_ndarray``, which is the default name inferred from the return type.
 
-.. figure:: _static/screenshots/resolve_missing_type.png
+.. figure:: ../../images/screenshots/plugin_files/resolve_missing_type_numpy_array_dioptra_1_1.png
    :alt: Screenshot of a missing type error in Plugin Task registration.
    :width: 900px
    :figclass: border-image clickable-image
@@ -116,11 +123,11 @@ Unlike last time, you must specify input and output types. Using Dioptra's autod
 * Click the ``output`` badge.
 * Set **Name** to ``output`` and **Type** to ``NumpyArray``.
 
-Once you've corrected the errors, **save** the plugin file.
+Once you've corrected the errors, **save** the plugin file by clicking **submit**.
 
 .. admonition:: Learn More
 
-   * :ref:`reference-plugins` - More syntax specifics on creating plugins
+   * :ref:`reference-plugins` - Syntax reference for creating plugins
 
 
 .. rst-class:: header-on-a-card header-steps
@@ -128,17 +135,18 @@ Once you've corrected the errors, **save** the plugin file.
 Step 4: Create Entrypoint Parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You will create an entrypoint that accepts a parameter, allowing you to change the sample size without changing the code.
+You will create an entrypoint that accepts a parameter, allowing you to change the sample size passed to this Function Task dynamically at Job runtime. 
 
 1. Navigate to **Entrypoints** and click **Create Entrypoint**.
-2. Name it ``sample_normal_ep``.
-3. In the **Entrypoint Parameters** window, click **Add Parameter**:
+2. Name it ``sample_normal_ep`` and add a short description. 
+3. Attach the ``tensorflow-cpu`` Queue to the Entrypoint.
+4. In the **Entrypoint Parameters** window, click **Add Parameter**:
 
    - **Name:** ``sample_size``
    - **Type:** ``int``
    - **Default value:** ``100``
 
-.. figure:: _static/screenshots/sample_size_entrypoint_param.png
+.. figure:: ../../images/screenshots/entrypoints/create_entrypoint_parameter_sample_size_dioptra_1_1.png
    :alt: Screenshot of adding the sample_size parameter to Entrypoint 2.
    :width: 900px
    :figclass: border-image clickable-image
@@ -155,50 +163,60 @@ Now add the task to the graph and bind the parameters.
 1. In the **Task Plugins** window, select ``sample_normal``.
 2. Click **Add to Task Graph**. This auto-populates the YAML with default structure.
 
-.. figure:: _static/screenshots/entrypoint_2_add_to_task_graph.png
+.. figure:: ../../images/screenshots/entrypoints/add_to_task_graph_sample_normal_dioptra_1_1.png
    :alt: Screenshot of adding sample_normal to Entrypoint 2.
    :width: 900px
    :figclass: border-image clickable-image
 
    Using "Add To Task Graph" to automatically populate the YAML editor.
 
-3. Edit the YAML to bind the parameters. Map ``sample_size`` to the entrypoint parameter (``$sample_size``) and hardcode the others.
+3. Edit the YAML to bind the parameters. Map ``sample_size`` to the entrypoint parameter (``$sample_size``) and hardcode the others to something reasonable (e.g. ``random_seed=0``, ``mean=10``, ``var=10``)
 
 
-.. figure:: _static/screenshots/entrypoint_2_edit_task_graph.png
+.. figure:: ../../images/screenshots/entrypoints/task_graph_editor_sample_normal_dioptra_1_1.png
    :alt: Screenshot of editing parameters in Entrypoint 2 task graph.
    :width: 900px
    :figclass: border-image clickable-image
 
    Binding the task parameters in the YAML editor.
 
-4. Ensure the task graph is valid by clicking **Validate Inputs**
-5. Click **Submit Entrypoint**.
+4. Ensure the task graph is valid by clicking **Validate Inputs**. Assuming all Types are set appropriately for inputs / outputs, this should pass.
+5. Click **Submit Entrypoint** to save.
+
+.. admonition:: Learn More 
+
+   See :ref:`reference-entrypoints-task-graph-syntax` for detailed reference documentation on Task Graph YAML syntax 
 
 .. rst-class:: header-on-a-card header-steps
 
-Step 6: Run Jobs
+Step 6: Create an Experiment and Run Jobs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You will reuse the existing experiment to run two jobs with different parameters.
+You will create an Experiment and then run multiple Jobs within it using different parameters.
 
-1. Navigate to **Sample Normal**.
-2. In the **Entrypoints** list, verify ``sample_normal_ep`` is available (if not, add it).
-3. Click **Create Job**.
-4. Select ``sample_normal_ep``.
-5. Set the ``sample_size`` parameter to ``10000``.
-6. Click **Submit Job**.
+1. Navigate to the **Experiments** tab. Create a new Experiment called ``Sample Normal``.
+2. In the **Entrypoints** list, add the ``sample_normal_ep`` Entrypoint.
+3. Click **Submit Experiment**, then **click the row** corresponding to that Experiment.
+4. Click **Create** in the Jobs table.
+5. Select ``sample_normal_ep`` for the Entrypoint and ``tensorflow-cpu`` for the queue.
 
-.. figure:: _static/screenshots/entrypoint_2_job_10000.png
+**Submit a high sample size job**:
+
+6. Set the ``sample_size`` parameter to ``10000``. Add a Job description.
+7. Click **Submit Job**.
+
+.. figure:: ../../images/screenshots/jobs/submit_job_sample_normal_10000_sample_size_dioptra_1_1.png
    :alt: Screenshot of running Entrypoint 2 with sample_size=10000.
    :width: 900px
    :figclass: border-image clickable-image
 
    Setting the sample size parameter for a job to 10,000.
 
-7. Create a **second job** using ``sample_normal_ep``, but this time leave ``sample_size`` at the default ``100``.
+**Submit a low sample size job**:
 
-.. figure:: _static/screenshots/entrypoint_2_showing_all_jobs.png
+8. Create a **second job** using ``sample_normal_ep``, but this time leave ``sample_size`` at the default ``100``.
+
+.. figure:: ../../images/screenshots/jobs/jobs_table_sample_normal.png
    :alt: Screenshot showing multiple jobs created with different sample sizes.
    :width: 900px
    :figclass: border-image clickable-image
@@ -233,15 +251,15 @@ Once the jobs finish, inspect the logs for each.
 Notice that the sample mean was much closer to the distribution mean when the sample size was larger.
 
 .. note::
-   This experiment illustrates the **Law of Large Numbers**: as the sample size increases, the sample mean tends to get closer to the population mean.
+   This experiment is a simple illustration of the **Law of Large Numbers**: as the sample size increases, the sample mean tends to get closer to the population mean.
 
 Conclusion
 ----------
 
 You now know how to:
 
-- Define custom types
-- Register Plugin Tasks with inputs and outputs
-- Run Entrypoints and Jobs with parameters
+- Define custom :ref:`Types <explanation-plugin-parameter-types>`
+- Register :ref:`Plugin Tasks <explanation-plugins>` with inputs and outputs
+- Run :ref:`Entrypoints <explanation-entrypoints>` and :ref:`Jobs <explanation-experiments-and-jobs>` with parameters
 
 Next, :ref:`you'll chain multiple tasks together <tutorial-building-a-multi-step-workflow>` into a single workflow.
