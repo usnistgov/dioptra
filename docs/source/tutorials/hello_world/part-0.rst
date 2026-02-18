@@ -93,11 +93,11 @@ Step 3: Create a Queue
 
 Navigate to the **Queues** tab and create a new queue:
 
-- **Name:** `tensorflow_cpu`  
+- **Name:** `tensorflow-cpu`  
 - **Visibility:** Public  
 
 
-We call it `tensorflow_cpu` because this tutorial assumes only CPU resources are available.  
+We call it `tensorflow-cpu` because this tutorial assumes only CPU resources are available.  
 By making it **public**, all users in the Public group can submit jobs to it.
 
 

@@ -195,7 +195,7 @@ unset DIOPTRA_CONFIG_DETAILS
 # Add setting the default value of the env-variable
 # DIOPTRA_WORKER_LIB to tensorflow-cpu so the 
 # existing functionality keeps on working
-export DIOPTRA_WORKER_LIB=tensorflow_cpu
+export DIOPTRA_WORKER_LIB=tensorflow-cpu
 
 # if [ -n "${BASH_VERSION}" ]; then
 #   printf "\nStarting script with BASH Version: ${BASH_VERSION}\n"

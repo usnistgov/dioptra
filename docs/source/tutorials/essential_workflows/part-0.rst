@@ -65,18 +65,18 @@ Queues
 
 Navigate to the **Queues** tab and create a new queue:
 
-- **Name:** `tensorflow_cpu`  
+- **Name:** `tensorflow-cpu`  
 - **Visibility:** Public  
 
 
-We call it `tensorflow_cpu` because this tutorial assumes only CPU resources are available.  
+We call it `tensorflow-cpu` because this tutorial assumes only CPU resources are available.  
 By making it **public**, all users in the Public group can submit jobs to it.
 
 .. note::
    For more info, see our how-to on Queue creation: :ref:`how_to_create_a_queue`
 
 .. figure:: _static/screenshots/queues_dioptra.png
-   :alt: Screenshot of the queue creation form with "tensorflow_cpu" entered as the name.
+   :alt: Screenshot of the queue creation form with "tensorflow-cpu" entered as the name.
    :figclass: border-image clickable-image
 
 .. note::

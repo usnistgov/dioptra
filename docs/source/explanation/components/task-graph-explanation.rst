@@ -129,14 +129,14 @@ the output of those steps).
 
    The DAG generated from the above task graph. Dioptra creates dependencies in the DAG only based off the input/output
    chaining of plugin tasks. If a user wants to add additional explicit dependencies in the task graph, this can be done.
-   See :ref:`reference-task-graph` for more details on this.
+   See :ref:`reference-entrypoints-task-graph-dependencies` for more details on this.
 
 .. rst-class:: fancy-header header-seealso
 
 See Also 
 ---------
 
-* :ref:`Task Graph Reference <reference-task-graph>` - Reference for task graph construction
-* :ref:`Task Graph Explanation <explanation-entrypoints>` - Entrypoints explanation, of which task graphs are a component
+* :ref:`Task Graph Syntax <reference-entrypoints-task-graph-syntax>` - Reference for task graph construction
+* :ref:`Entrypoint Explanation <explanation-entrypoints>` - Entrypoints explanation, of which task graphs are a component
 * :ref:`how-to-create-plugins` - Step-by-step guide on building plugins
 * :ref:`how-to-create-entrypoints` - Step-by-step guide on building entrypoints

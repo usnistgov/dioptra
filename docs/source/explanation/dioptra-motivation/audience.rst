@@ -30,7 +30,7 @@ Similarly, second-party consumers of such products might leverage the test platf
 In both cases, the test platform allows users to test a product against a range of evaluations thereby helping them understand what types of risks should be prioritized for mitigation.
 
 We also envision Dioptra as an asset to AI/ML researchers in developing new solutions.
-The test platform will allow them to evaluate the security of any new techniques they develop by running those techniques through their paces.
+The test platform will allow them to evaluate the security and trustworthiness of any new techniques they develop by running those techniques through their paces.
 Similarly, it can facilitate "parameter sweeping" to help developers better understand the degree to which small changes in parameters can affect an algorithm.
 It also affords an opportunity to replicate and benchmark well-known results from the research literature.
 This ability to repeat experiments to reproduce results is critical for creating and validating reliable metrics.

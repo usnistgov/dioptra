@@ -24,7 +24,7 @@ Summary: What is a Queue?
 -------------------------
 
 A **queue** is a resource in Dioptra that represents a logical job queue. Workers watch a queue for new jobs to process. Entrypoints can
-be assigned to a number of queues they are compatible with.
+be assigned to any number of queues for which they are compatible.
 
 When submitting a job, the user selects a queue for that job. Any worker listening to that queue can claim the job and then begin execution in its environment.
 
@@ -38,10 +38,10 @@ python packages, or executables. Each worker listens to a single named
 queue, and multiple workers can listen to the same queue.
 
 By default, Dioptra provides several default worker environments that can be enabled during setup:
-    * tensorflow_cpu - for systems that **do not have** a GPU present, which contains Tensorflow and ART as dependencies
-    * tensorflow_gpu - for systems that **do have** a GPU present, which contains Tensorflow and ART as dependencies
-    * pytorch_cpu - for systems that **do not have** a GPU present, which contains PyTorch and ART as dependencies
-    * pytorch_gpu - for systems that **do have** a GPU present, which contains PyTorch and ART as dependencies
+    * tensorflow-cpu - for systems that **do not have** a GPU present, which contains Tensorflow and ART as dependencies
+    * tensorflow-gpu - for systems that **do have** a GPU present, which contains Tensorflow and ART as dependencies
+    * pytorch-cpu - for systems that **do not have** a GPU present, which contains PyTorch and ART as dependencies
+    * pytorch-gpu - for systems that **do have** a GPU present, which contains PyTorch and ART as dependencies
 
 If a worker is enabled, creating a queue with the same name as the worker will allow jobs to be run in the corresponding worker container.
 

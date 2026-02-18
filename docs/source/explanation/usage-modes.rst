@@ -21,8 +21,6 @@
 Usage Modes
 ===========
 
-Dioptra utilizes a microservices architecture coordinated by a :ref:`REST API <reference-glossary>` to manage job execution and resource tracking.
-
 Users can interface with the Dioptra REST API through three primary workflows:
 
 1. **Graphical User Interface** (GUI)
@@ -44,7 +42,7 @@ high-volume experiment loop while simultaneously using the GUI to monitor real-t
 Graphical User Interface (GUI)
 ------------------------------
 
-The GUI is a web-based application built using the `Quasar Framework (VueJS) <https://quasar.dev>`__. It is designed for interactive exploration and provides a user-friendly way to manage the testbed.
+The GUI is designed for interactive exploration and provides a user-friendly way to manage the test plaform.
 
 * **Access**: Once the Docker containers are running, the GUI is accessible at the port registered during the Cruft templating process (default: ``http://localhost:5173/``).
   Within any modern web browser, enter the registered port in the address bar and the login screen should appear.
@@ -102,12 +100,12 @@ Refer to :ref:`How To Setup the Python Client <how-to-set-up-the-python-client>`
 
 **Usage Examples**
 
-* Hello World Notebook [ADD REFERENCE]
-* :ref:`Dioptra Optic Reference Implementation <tutorial-optic-adversarial-ml>`.
+* :ref:`tutorial-hello-world-in-dioptra`
+* `Adversarial ML with OPTIC <https://github.com/usnistgov/dioptra/blob/main/examples/mnist_demo.ipynb>`__
 
 **Client Documentation**
 
-The methods for the Python Client are documented in the Dioptra source code. You can view those methods at [LINK TO REFERENCE].
+The methods for the Python Client are documented in the Dioptra source code. You can view those methods at :ref:`reference-python-client-methods`.
 Additionally, many common workflows are documented in the :ref:`How To: Running Experiments<how-to-running-experiments>` guides.
 
 
@@ -117,7 +115,7 @@ Direct REST API access (HTTP)
 Advanced users may choose to interact directly with the REST API using standard HTTP methods. This workflow may be useful for:
 
 * **System Integration**: Incorporating Dioptra functionality into existing workflows.
-* **Benefit 2**: Insert benefit explanation. 
+* **Language Agnostic**: Allows automation and interaction using a programming language agnostic interface. 
 
 **HTTP Endpoints Documentation**
 

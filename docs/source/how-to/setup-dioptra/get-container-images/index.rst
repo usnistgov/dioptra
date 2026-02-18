@@ -36,7 +36,7 @@ There are two ways to obtain these images:
 
       *Best for: Most users*
 
-   .. grid-item-card:: **Build Images Locally**
+   .. grid-item-card:: **Build Images Locally (Advanced)**
       :link: how-to-build-container-images
       :link-type: ref
 
