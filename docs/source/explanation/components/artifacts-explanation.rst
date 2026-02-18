@@ -33,19 +33,20 @@ an input parameter, it can be referenced in the task graph in the exact same way
 entrypoint parameter or task output. The artifact is loaded into memory at the start of the
 job execution and then is available for any tasks that reference it.
 
-To use an artifact as an entrypoint input parameter, the type from the deserialize method must match
-the type of the artifact input parameter. An artifact cannot be selected for a
+To use an artifact as an entrypoint input parameter, the output type from the deserialize
+method of the ``Plugin Artifact Task`` associated with the artifact must match
+the type for the artifact input parameter. An artifact cannot be selected for a
 job if these types don't align.
 
 .. _explanation-artifacts-artifact-tasks:
 
-Artifact Tasks
+Plugin Artifact Tasks
 --------------
 
-**Artifact tasks** are a type of plugin task that details the serialization
+**Plugin Artifact tasks** are a type of plugin task that details the serialization
 and deserialization of a given artifact type. When an output of a function task is designated to be 
-saved as an artifact, it is passed to its corresponding serialization function within the artifact task.
-Similarly, when an artifact is loaded, its deserialization function is used to load it as an object in memory.
+saved as an artifact, the ouput is passed to the serialization function within the desired plugin artifact task.
+Conversely, when an artifact is loaded, the deserialization function of the plugin artifact task is used to load the artifact as an object in memory.
 
 When serialized, Diotpra takes the serialized file and stores it in the backend data storage (S3 by default). The URL
 of the artifact is stored in the database, and retrieved by ID when the artifact is used or downloaded from the GUI.
@@ -53,7 +54,7 @@ of the artifact is stored in the database, and retrieved by ID when the artifact
 An artifact task consists of a class which implements the ``ArtifactTaskInterface`` interface.
 This interface supports three methods:
 
-* ``serialize`` - used to save the contents of an artifact with a given name to the specified directory
+* ``serialize`` - using the provided source input creates an artifact with a given name to the specified directory  
 * ``deserialize`` - used to read the contents of an artifact with a given path relative to the specified directory
 * ``validation`` - used to validate any keyword arguments passed into ``serialize()``
 

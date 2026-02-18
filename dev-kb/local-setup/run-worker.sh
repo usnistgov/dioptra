@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-_dioptra_worker_lib="${DIOPTRA_WORKER_LIB:-tensorflow_cpu}"
+_dioptra_worker_lib="${DIOPTRA_WORKER_LIB:-tensorflow-cpu}"
 
 # Exit early and print message if uv is not installed
 if ! command -v uv >/dev/null 2>&1; then

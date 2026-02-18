@@ -86,7 +86,7 @@ Usage
 
 .. code:: sh
 
-   dioptra-worker-v1 --url redis://localhost:6379/0 tensorflow_cpu
+   dioptra-worker-v1 --url redis://localhost:6379/0 tensorflow-cpu
 
 .. rst-class:: header-on-a-card header-seealso
 

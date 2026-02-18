@@ -24,7 +24,7 @@ Motivation
 Our systems increasingly rely on Artificial Intelligence (AI) and Machine Learning (ML) algorithms and models to perform essential functions.
 As users of these systems, we must implicitly trust that the models are working as designed.
 Establishing the trustworthiness of an AI/ML model is especially hard, because the inner workings are essentially opaque to an outside observer.
-Ideally the models we rely on would be transparent, free from bias, explainable, and secure.
+Ideally the models we rely on would be transparent, free from statistical bias, explainable, and secure.
 
 In order to understand the tradespace between performance and the trustworthy characteristics of AI, we need a software test platform suited to creating **reproducible, trackable, and reusable** experiments.
 The National Institute of Standards and Technology (NIST) National Cybersecurity Center of Excellence (NCCoE) has built the Dioptra experimentation test platform to begin to address the broader challenge of evaluation for the trustworthy characteristics of AI.
@@ -42,7 +42,7 @@ In this changing landscape it is extremely difficult to develop a principled app
 While much work has been done to evaluate techniques within a narrow range of conditions, there is a challenge in developing more robust metrics that account for the diversity of attacks that might be mounted against it.
 Questions about the generalizability of an algorithm across a range of attacks or the transferability of a technique across models or datasets must naturally consider the full range of possible conditions.
 
-While there are a large variety of types of attacks against Predictive AI algorithms, `NIST AI 100-2e2023 <https://csrc.nist.gov/pubs/ai/100/2/e2023/final>`__ identifies three broad categories:
+While there are a large variety of types of attacks against Predictive AI algorithms, `NIST AI 100-2 E2025 <https://csrc.nist.gov/pubs/ai/100/2/e2025/final>`__ identifies three broad categories:
 
 * **Evasion** attacks manipulate the input data (sometimes by altering the physical environment) in order to cause the ML model to misbehave.
 * **Poisoning** attacks alter the training data used to create or maintain a model with the intention of causing it to learn incorrect associations.
@@ -64,4 +64,4 @@ The simplified diagrams of the development pipeline below depict some examples.
 
 The sheer variety of attacks and defenses results in a combinatorial
 explosion of possible combinations of attacks, defenses, model architectures, and datasets, which creates a challenge for evaluating the effectiveness of defenses against the full array of attacks it may face.
-Dioptra, the NCCoE's machine learning security test platform, addresses this challenge by making it easier for researchers to explore the set of possible combinations in a reproducable and trackable way.
+Dioptra, the NCCoE's machine learning test platform, addresses this challenge by making it easier for researchers to explore the set of possible combinations in a reproducable and trackable way.

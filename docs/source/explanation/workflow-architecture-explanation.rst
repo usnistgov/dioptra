@@ -21,13 +21,13 @@
 Workflow Architecture
 ================
 
-An overview of how all the high level Dioptra components orchestrate together to execute jobs.
+A high-level overview of how Dioptra components work together to execute jobs.
 
 Summary: What comprises a Dioptra Workflow?
 --------------------------
 
 To run a :ref:`job <explanation-experiments-and-jobs>` within a Dioptra :ref:`experiment <explanation-experiments-and-jobs>`, multiple Dioptra components need to be
-created and work together. This explainer provides a high level view of how all these pieces fit together.
+created and combined. This explainer provides a high level view of how all these pieces fit together.
 
 .. figure:: ../images/figures/dioptra_workflow.png
    :alt: Diagram showing steps needed to run Python functions in Dioptra.
@@ -42,7 +42,7 @@ As the above diagram illustrates, modular functions and execution graphs are the
 More specifically:
 
 * :ref:`Tasks <explanation-plugins>` are parameterizable functions that are stored within :ref:`Plugin containers <explanation-plugins>`
-* :ref:`Entrypoints <explanation-entrypoints>` are reusable, parameterizable execution graphs that chain together multiple Tasks, defined via the a :ref:`Task Graph <explanation-task-graph>`
+* :ref:`Entrypoints <explanation-entrypoints>` are reusable, parameterizable execution graphs that chain together multiple Tasks, defined via a :ref:`Task Graph <explanation-task-graph>`
 * A :ref:`Job <explanation-experiments-and-jobs>` is a parameterized execution of an Entrypoint within an :ref:`Experiment <explanation-experiments-and-jobs>`.
 * Jobs can produce :ref:`Artifacts <explanation-artifacts>`, which are objects saved to disk.
 
@@ -91,7 +91,7 @@ experiment permutations in a principled way.
 
    * :ref:`tutorial-hello-world-in-dioptra` - Running a simple function in Dioptra
    * :ref:`tutorial-learning-the-essentials` - Building up advanced functionality in Dioptra
-   * :ref:`tutorial-optic-adversarial-ml` - A realistic reference implementation for adversarial ML on image data
+   * `Adversarial ML with OPTIC <https://github.com/usnistgov/dioptra/blob/main/examples/mnist_demo.ipynb>`__ - A realistic reference implementation for adversarial ML on image data
 
 What is required to run code in Dioptra?
 ---------------------

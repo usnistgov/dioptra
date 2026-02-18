@@ -42,7 +42,7 @@ Choose the appropriate tag for your use case:
 - **Release tags** (e.g., ``1.0.0``): Stable releases recommended for production use
 - **Branch tags** (e.g., ``dev``): Latest development builds
 
-Replace ``$TAG`` with your chosen tag in the commands below.
+Replace ``$TAG`` with your chosen tag in the commands below or set the ``TAG`` environment variable to your chosen value.
 
 .. rst-class:: header-on-a-card header-steps
 

@@ -25,14 +25,14 @@ This page provides a high-level overview of the Dioptra installation process and
 Overview 
 ----------
 
-Installing Dioptra is the process of **orchestrating a suite of microservices** into a functional environment. Dioptra runs as a collection of interconnected Docker containers that handle different aspects of the system, such as experiment tracking, task execution, and data storage. 
+Installing Dioptra is a process of **orchestrating a suite of microservices** into a functional environment. Dioptra runs as a collection of interconnected Docker containers that handle different aspects of the system, such as experiment tracking, task execution, and data storage. 
 
 Once these containers are active, Dioptra services become accessible through a REST API and a web-based Graphical User Interface (GUI).
 
 The Installation Workflow
 -------------------------
 
-There are two fundamental phases to getting Dioptra running:
+There are two fundamental phases to set-up Dioptra:
 
 1. **Phase 1: Acquire Container Images.** You must obtain the Dioptra container images on your local system. These images contain the environment for the REST API, the frontend, and the Dioptra workers. See :ref:`how-to-get-container-images`.
 2. **Phase 2: Create a Deployment.** You create a local deployment directory that configures the specific settings, credentials, and hardware allocations for your instance. See :ref:`how-to-prepare-deployment`.

@@ -227,6 +227,7 @@ volumes:
     AWS_ACCESS_KEY_ID: "${MLFLOW_TRACKING_AWS_ACCESS_KEY_ID}"
     AWS_SECRET_ACCESS_KEY: "${MLFLOW_TRACKING_AWS_SECRET_ACCESS_KEY}"
     DIOPTRA_MLFLOW_TRACKING_DATABASE_URI: "${DIOPTRA_MLFLOW_TRACKING_DATABASE_URI}"
+    MLFLOW_SERVER_ALLOWED_HOSTS: "${MLFLOW_SERVER_ALLOWED_HOSTS}"
   command:
     - --host
     - "0.0.0.0"
@@ -308,7 +309,7 @@ volumes:
     - {{ cookiecutter.__project_slug }}-mlflow-tracking:5000
     - --wait-for
     - {{ cookiecutter.__project_slug }}-restapi:5000
-    - tensorflow_cpu
+    - tensorflow-cpu
   {{ service_env_files(_tfcpu_env_files)|indent(2) }}
   {% if cookiecutter.__containers.networks -%}
   {{ service_networks(cookiecutter.__containers.networks)|indent(2) }}
@@ -348,7 +349,7 @@ volumes:
     - {{ cookiecutter.__project_slug }}-mlflow-tracking:5000
     - --wait-for
     - {{ cookiecutter.__project_slug }}-restapi:5000
-    - tensorflow_gpu
+    - tensorflow-gpu
   {{ service_env_files(_tfgpu_env_files)|indent(2) }}
   {% if cookiecutter.__containers.networks -%}
   {{ service_networks(cookiecutter.__containers.networks)|indent(2) }}
@@ -386,7 +387,7 @@ volumes:
     - {{ cookiecutter.__project_slug }}-mlflow-tracking:5000
     - --wait-for
     - {{ cookiecutter.__project_slug }}-restapi:5000
-    - pytorch_cpu
+    - pytorch-cpu
   {{ service_env_files(_pytorchcpu_env_files)|indent(2) }}
   {% if cookiecutter.__containers.networks -%}
   {{ service_networks(cookiecutter.__containers.networks)|indent(2) }}
@@ -426,7 +427,7 @@ volumes:
     - {{ cookiecutter.__project_slug }}-mlflow-tracking:5000
     - --wait-for
     - {{ cookiecutter.__project_slug }}-restapi:5000
-    - pytorch_gpu
+    - pytorch-gpu
   {{ service_env_files(_pytorchgpu_env_files)|indent(2) }}
   {% if cookiecutter.__containers.networks -%}
   {{ service_networks(cookiecutter.__containers.networks)|indent(2) }}
