@@ -30,20 +30,25 @@ class NumpyArrayArtifactTask(ArtifactTaskInterface):
         return None
 # [end-numpy-plugin-definition]
 
-# [matplotlib-plugin-definition]
+# [pngbytes-plugin-definition]
 # Paste this after the definition of 'NumpyArrayArtifactTask'
-class MatplotlibArtifactTask(ArtifactTaskInterface):
-    """Save PNG in working_dir and return the PNG path. Deserialize returns PNG bytes."""
+class PngBytesArtifactClass(ArtifactTaskInterface):
+    """Save PNG bytes in working_dir and return the PNG path. Deserialize returns PNG bytes."""
 
     @staticmethod
-    def serialize(working_dir: Path, name: str, contents: Any, **kwargs) -> Path:
-        os.environ.setdefault("MPLBACKEND", "Agg")
+    def serialize(working_dir: Path, name: str, contents: bytes, **kwargs) -> Path:
+        """Writes raw PNG bytes to disk."""
         png_path = (working_dir / name).with_suffix(".png")
-        contents.savefig(png_path, dpi=150, bbox_inches="tight")  # type: ignore[attr-defined]
+        
+        # Write the incoming bytes directly to the file
+        with open(png_path, "wb") as f:
+            f.write(contents)
+            
         return png_path
 
     @staticmethod
     def deserialize(working_dir: Path, path: str, **kwargs) -> bytes:
+        """Reads raw PNG bytes from disk."""
         png_file_path = working_dir / path
         with open(png_file_path, "rb") as f:
             png_data = f.read()
@@ -52,4 +57,4 @@ class MatplotlibArtifactTask(ArtifactTaskInterface):
     @staticmethod
     def validation() -> dict[str, Any] | None:
         return None
-# [end-matplotlib-plugin-definition]
+# [end-pngbytes-plugin-definition]

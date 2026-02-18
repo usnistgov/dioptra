@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import structlog
+import io 
 
 from dioptra import pyplugs
 
@@ -46,7 +47,7 @@ def visualize_rescaling_multi(
     original_array: np.ndarray,
     rescaled_dict: dict,
     title: str = "Original vs Multiple Rescalings",
-) -> None:
+) -> bytes:
     """Compare multiple rescaling methods with scatterplots and stats."""
     
     x = _as_1d_float_array(original_array)
@@ -111,7 +112,7 @@ def visualize_rescaling_multi(
     fig.suptitle(title)
     fig.tight_layout()
 
-    try:
-        return fig
-    finally:
-        plt.close(fig)
+    buf = io.BytesIO()
+    fig.savefig(buf, format='png')
+    plt.close(fig) 
+    return buf.getvalue()

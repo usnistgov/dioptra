@@ -24,9 +24,9 @@ Saving Artifacts
 Overview
 --------
 
-In the last section, you created a multi-step workflow and watched how data evolved across chained tasks. Now, you will learn how to **save task outputs as artifacts**.
+In the :ref:`last section <tutorial-building-a-multi-step-workflow>`, you created a multi-step workflow and watched how data evolved across chained tasks. Now, you will learn how to **save task outputs as artifacts**.
 
-You will build on :ref:`tutorial-building-a-multi-step-workflow`, adding artifact-saving logic.
+This tutorial build on the previous workflow by adding artifact-saving logic.
 
 .. admonition:: Learn More 
 
@@ -44,14 +44,14 @@ Workflow
 Step 1: Create an Artifact Plugin
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Before Dioptra can save objects to disk, it needs to know how to serialize and deserialize them. This is handled by an **artifact plugin**.
+Before Dioptra can save objects to disk, it needs to know how to serialize and deserialize them. This is handled by an **Artifact Task**.
 
-Just like before, you will create a new plugin, but this time you'll define **artifact tasks**.
+Just like before, you will create a new plugin, but this time you'll define **artifact tasks** instead of function tasks..
 
 1. Go to the **Plugins** tab and click **Create Plugin**.
 2. Name it ``artifacts`` and add a short description.
-3. Create a new Python file in the plugin.
-4. Copy and paste the code below.
+3. **Create a new Python file** in the plugin called ``artifacts.py``.
+4. **Copy and paste** the code below.
 
 .. admonition:: artifacts.py
     :class: code-panel python
@@ -62,18 +62,21 @@ Just like before, you will create a new plugin, but this time you'll define **ar
        :end-before: # [end-numpy-plugin-definition]
 
 .. note::
-   This plugin defines an artifact task: ``NumpyArrayArtifactTask``.
+   This plugin defines a single Artifact Task: ``NumpyArrayArtifactTask``.
 
-   To define an artifact task, you must override two methods:
+   To define an Artifact Task, you must override two methods:
 
    - **serialize**: convert an in-memory object (e.g., NumPy array) into a file.
    - **deserialize**: read the file back into an object.
 
    The serialize method should return the path to where the object is saved to disk.
 
-.. admonition:: Learn More 
+   .. admonition:: Learn More 
 
-   See :ref:`Plugins Reference <reference-plugins>` to learn more about the syntax of artifact handlers.
+      See :ref:`Plugins Reference <reference-plugins>` to learn more about the syntax of artifact handlers.
+
+
+.. _tutorial-saving-artifacts-step-2-register-artifact-task:
 
 .. rst-class:: header-on-a-card header-steps
 
@@ -82,14 +85,14 @@ Step 2: Register Artifact Task
 
 Now you must register the class you just created.
 
-1. In the **Task Form** window (right side of editor), select **Artifact**.
+1. In the **Plugin Artifact Tasks** window, click **Create**.
 2. Enter the task name: ``NumpyArrayArtifactTask``.
 3. For the **output parameter**, add:
 
    - **Name:** ``output``
    - **Type:** ``NumpyArray``
 
-.. figure:: _static/screenshots/artifact_task_plugin.png
+.. figure:: ../../images/screenshots/plugin_files/create_artifact_task_numpy_array_dioptra_1_1.png
    :alt: Screenshot of a job producing an artifact.
    :width: 100%
    :figclass:  border-image clickable-image
@@ -103,27 +106,29 @@ Now you must register the class you just created.
 
    Learn more in :ref:`Plugins Explanation <explanation-plugins>` and :ref:`Plugins Reference <reference-plugins>`.
 
-4. Click **Save File**.
+4. Click **Submit File**.
 
 .. rst-class:: header-on-a-card header-steps
 
 Step 3: Modify Entrypoint to Save Artifacts
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Next, you will modify **sample_and_transform_ep** to include an artifact-saving task. Nothing about **Plugin 3** itself needs to change.
+Next, you will modify **sample_and_transform_ep** to include an artifact-saving task. Nothing about the :ref:`sample_and_transform Plugin <tutorial-building-a-multi-step-workflow-step-1-make-sample-and-transform-plugin>` itself needs to change.
 
-1. Open **sample_and_transform_ep**.
-2. In the **Artifact Info** window, add your new ``artifacts``.
+1. Open ``sample_and_transform_ep``.
+2. In the **Artifact Info** window (toward the bottom), select your new ``artifacts`` Plugin.
 3. Click **Add to Output Graph**.
 4. Rename the step to ``save_numpy_artifact``.
 5. Set the contents equal to the output from the final step of your task graph (e.g., ``$transform_step`` or whatever the last step was named).
 
-.. figure:: _static/screenshots/artifact_task_graph.png
+.. figure:: ../../images/screenshots/entrypoints/artifact_output_graph_sample_and_transform_dioptra_1_1.png
    :alt: Screenshot of a job producing an artifact.
    :width: 100%
    :figclass:  border-image clickable-image
 
    The Artifact Output Graph defines the logic for which plugin tasks should be saved and how. ``contents`` should be a reference to a step name from the task graph.
+
+6. Click **Submit Entrypoint** to save your changes. 
 
 .. note::
    When the artifact task runs, it automatically calls the ``serialize`` method and writes a file to the artifact store.
@@ -134,11 +139,14 @@ Next, you will modify **sample_and_transform_ep** to include an artifact-saving 
 Step 4: Run Job with Artifact Saving
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Now you can try it out.
+Now you can try out the Artifact saving logic.
 
-1. Create a new job using the entrypoint you just defined/edited.
-2. Select your desired parameters.
-3. Click **Submit Job**.
+1. Navigate back to your **Experiments** and select the ``Sample and Transform Exp`` from the :ref:`previous step <tutorial-building-a-multi-step-workflow>`.
+2. Create a **new job** using the entrypoint you just edited (``sample_and_transform_ep``).
+3. Select your **desired parameters** and add a **description** to the Job.
+4. Click **Submit Job**.
+   
+   * Note: Ignore the **Artifact Parameters** editor - this is for loading past Artifacts as *inputs*, something that will be explained in the :ref:`next step <tutorial-using-saved-artifacts>`
 
 .. note::
    When an artifact task graph is defined, the logic will execute once all the plugin tasks have completed.
@@ -152,9 +160,9 @@ After the job finishes, click on the job to see the results.
 
 1. Go to the **Artifacts** tab within the job details.
 2. You should see a new artifact file created by the workflow.
-3. Download it to confirm it was saved successfully.
+3. **Download** it to confirm it was saved successfully.
 
-.. figure:: _static/screenshots/download_artifact.png
+.. figure:: ../../images/screenshots/jobs/output_artifacts_sample_and_transform_dioptra_1_1.png
    :alt: Screenshot of a job producing an artifact.
    :width: 100%
    :figclass:  border-image clickable-image
@@ -171,8 +179,8 @@ Conclusion
 You now know how to:
 
 - Create an artifact plugin with **serialize** and **deserialize** methods
-- Add artifact tasks into an Entrypoint
-- Save task outputs as reusable files
-- Verify artifact creation through the Dioptra UI
+- **Add artifact tasks** into an Entrypoint
+- **Save task outputs** as reusable files
+- **Verify artifact creation** through the Dioptra UI
 
 In the next part, you will :ref:`load artifacts into new entrypoints<tutorial-using-saved-artifacts>`, so results from one workflow can feed directly into another.
