@@ -97,7 +97,7 @@ Below is a template for a custom worker container that integrates with Dioptra's
          - <deployment-name>-mlflow-tracking:5000
          - --wait-for
          - <deployment-name>-restapi:5000
-         - tensorflow_cpu
+         - tensorflow-cpu
 
        # Environment files to load
        env_file:

@@ -186,7 +186,7 @@ Registered Type References
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Finally, Dioptra type structures support referencing other types, including both builtin and user defined types.
-The validation checker will expand the structures and granularly validate that a parameter's declared input type matches the declared argument type.
+The validation process will expand the structures and granularly validate that a parameter's declared input type matches the declared argument type.
 
 For example, the input to this function:
 
@@ -267,12 +267,12 @@ Defining these subtypes is optional, and the ``nparray_dict_or_str`` could be si
 
  
 but by defining these subtypes as their own types, they can potentially be used to define other complex types
-or for other plugin task definitions. 
+or for other plugin function task definitions. 
 
-It may be desirable to structure a type like this, for example, if one
-plugin task returns a ``string``, and another task returns a ``dict[str, list[np.ndarray]]``. By defining the
-type as above, the validation checker will properly allow the output of both of those tasks to be used as input
-to this plugin task.
+A potential use for a type structure a type like this might occur if one
+task returns a ``string``, and another task returns a ``dict[str, list[np.ndarray]]``. By defining the
+type as above, the validation process will allow the output of both tasks to be used as input
+to a task using the above definition.
 
 .. rst-class:: fancy-header header-seealso
 

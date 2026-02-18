@@ -563,6 +563,7 @@ See :ref:`explanation-entrypoints` and :ref:`explanation-artifacts` for more det
                     task2: [$myparam, $taskGraphStep1.output2]
 
 
+.. _reference-entrypoints-task-graph-dependencies:
 
 Additional Dependencies - Managing Dependencies
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

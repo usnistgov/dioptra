@@ -20,4 +20,4 @@
 Develop for Dioptra
 ========================
 
-Are you interested in developing for Dioptra? See our developer guidelines at [LINK TO DEVELOPER.MD]
+Are you interested in developing for Dioptra? See our developer guidelines at `DEVELOPER.MD <https://github.com/usnistgov/dioptra/blob/main/DEVELOPER.md>`_

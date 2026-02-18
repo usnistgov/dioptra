@@ -25,19 +25,18 @@ Summary: What is an Experiment?
 
 An **experiment** is a resource in Dioptra that is effectively a namespace for jobs. An experiment can have
 a number of entrypoints associated with it, and within that experiment those entrypoints can be run as jobs. Experiments
-as a resource are largely organizational, and can make it easier to filter jobs, provide access to users via 
+are mainly an organizational resource, providing a way to filter jobs, provide access to users via 
 groups, and reduce the number of entrypoints to sift through at job creation.
 
 Summary: What is a Job?
 -----------------------
 
-A **job** in Dioptra is essentially a parameterized execution of an entrypoint. When creating a job, a user provides parameters
-and artifact parameters that are required by an entrypoint. This set of workflow instructions (the :ref:`entrypoint <explanation-entrypoints>`), 
-parameter values, and any artifact parameters are sent to the queue that is selected by the user
-at job creation.
+A **job** in Dioptra is essentially an execution of an entrypoint with specified parameter values. When creating a job, a user provides parameters
+and artifact parameters that are required by an entrypoint. The set of workflow instructions (the :ref:`entrypoint <explanation-entrypoints>`), 
+parameter values, and any artifact parameters are sent to the queue selected by the user at job creation.
 
 When a worker listening to that queue claims the job, it attempts to execute the provided entrypoint using the 
-given parameter and artifact parameter values within the worker environment. 
+given parameter and artifact parameter values within the worker environment.
 
 Any logs generated during the lifetime of the job, along with any metrics or created artifacts are uploaded to the Dioptra RESTAPI and associated with the job (and are viewable from the **Job
 Dashboard** page.)

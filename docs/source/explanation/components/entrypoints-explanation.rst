@@ -26,7 +26,7 @@ Summary: What is an Entrypoint?
 
 An **entrypoint** is the declarative workflow. It specifies which tasks to run, how data flows between them, and what inputs are required to start the process.
 
-Whether interacting with Dioptra via the Graphical User Interface (GUI) or programmatically via the API, the entrypoint serves as the template. It allows the same logic to run repeatedly with different settings.
+Whether interacting with Dioptra via the Graphical User Interface (GUI) or programmatically via the API, the entrypoint serves as a template for running a sequence of tasks. It allows the same logic to run repeatedly with different settings.
 
 An entrypoint is comprised of six distinct components:
 
