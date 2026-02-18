@@ -63,7 +63,7 @@ description = "A simple sklearn classification plugin."
     { name = "y_true", type = "np.ndarray", required = true },
     { name = "y_pred", type = "np.ndarray", required = true },
   ]
-  output_params = [ { name = "predictions", type = "dataframe" } ]
+  output_params = [ { name = "predictions", type = "pd.DataFrame" } ]
 
 [[plugins]]
 path = "plugins/artifacts"
@@ -92,7 +92,7 @@ description = "A collection of basic artifact tasks."
   [[plugins.tasks.artifacts]]
   filename = "tasks.py"
   name = "DataframeArtifactTask"
-  output_params = [ { name = "dataframe", type = "dataframe" } ]
+  output_params = [ { name = "dataframe", type = "pd.DataFrame" } ]
 
 [[plugin_param_types]]
 name = "bytes"
@@ -107,8 +107,8 @@ name = "np.estimator"
 description = "A numpy estimator."
 
 [[plugin_param_types]]
-name = "dataframe"
-description = "A dataframe."
+name = "pd.DataFrame"
+description = "A pandas DataFrame object."
 
 [[entrypoints]]
 path = "entrypoints/hello-world.yaml"

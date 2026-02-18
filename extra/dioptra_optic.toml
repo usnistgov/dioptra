@@ -174,7 +174,6 @@ A collection of plugin tasks for evaluating evasion attacks and defenses using t
   name = "KerasModelArtifactTask"
   output_params = [ { name = "model", type = "keras.Model" } ]
 
-
 [[plugins]]
 path = "plugins/artifacts"
 description = "A collection of basic artifact tasks."
@@ -186,8 +185,18 @@ description = "A collection of basic artifact tasks."
 
   [[plugins.tasks.artifacts]]
   filename = "tasks.py"
+  name = "BytesArtifactTask"
+  output_params = [ { name = "contents", type = "bytes" } ]
+
+  [[plugins.tasks.artifacts]]
+  filename = "tasks.py"
   name = "NumpyArrayArtifactTask"
   output_params = [ { name = "array", type = "np.ndarray" } ]
+
+  [[plugins.tasks.artifacts]]
+  filename = "tasks.py"
+  name = "PickleArtifactTask"
+  output_params = [ { name = "array", type = "any" } ]
 
   [[plugins.tasks.artifacts]]
   filename = "tasks.py"
@@ -242,6 +251,10 @@ structure = { union = ["string", "integer"] }
 [[plugin_param_types]]
 name = "path"
 description = "A pathlib Path object."
+
+[[plugin_param_types]]
+name = "bytes"
+description = "Python bytes object."
 
 [[entrypoints]]
 path = "entrypoints/dioptra_optic/model_train.yml"
