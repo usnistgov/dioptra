@@ -1,0 +1,599 @@
+
+
+
+
+<!DOCTYPE html>
+
+
+<html >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Artifacts &#8212; Dioptra 1.1.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" href="../../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/dioptra.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
+
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/clipboard.min.js"></script>
+    <script src="../../_static/copybutton.js"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../_static/togglebutton.js"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script src="../../_static/jquery.visible.js"></script>
+    <script src="../../_static/jquery.leaveNotice-nist.js"></script>
+    <script src="../../_static/applyLeaveNotice.js"></script>
+    <script src="../../_static/smoothNavScroll.js"></script>
+    <script src="../../_static/image_modals.js"></script>
+    <script src="../../_static/design-tabs.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'explanation/components/artifacts-explanation';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Experiments and Jobs" href="experiments-jobs-explanation.html" />
+    <link rel="prev" title="Task Graph" href="task-graph-explanation.html" />
+    
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="None"/>
+
+    <link rel="stylesheet" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css">
+    <link rel="stylesheet" type="text/css" href="https://pages.nist.gov/leaveNotice/css/jquery.leaveNotice.css" />
+    <script src="https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js" type="text/javascript" defer="defer"></script>
+    <script async type="text/javascript" id="_fed_an_ua_tag" src="https://dap.digitalgov.gov/Universal-Federated-Analytics-Min.js?agency=NIST&subagency=github&pua=UA-66610693-1&yt=true&exts=ppsx,pps,f90,sch,rtf,wrl,txz,m1v,xlsm,msi,xsd,f,tif,eps,mpg,xml,pl,xlt,c"></script>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    <p class="title logo__title">Dioptra 1.1.0 documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../index.html">
+                    Dioptra Overview
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">What is Dioptra?</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../dioptra-motivation/why-dioptra.html">Motivation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dioptra-motivation/design-principles.html">Design Principles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dioptra-motivation/audience.html">Intended Audience</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture-overview.html">Architecture Overview</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Setup</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../how-to/setup-dioptra/install-dioptra-explanation.html">Install Dioptra</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../how-to/setup-dioptra/get-container-images/index.html">Get the Container Images</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../how-to/setup-dioptra/get-container-images/download-container-images.html">Download the Container Images</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../how-to/setup-dioptra/get-container-images/build-container-images.html">Build the Container Images</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/prepare-deployment.html">Prepare Your Deployment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/update-deployment.html">Update Your Deployment</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../how-to/setup-dioptra/configure-setup/index.html">Customize Your Setup</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/configure-setup/using-docker-compose-overrides.html">Use Docker Compose Override Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/configure-setup/data-mounts.html">Mount Data Volumes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/configure-setup/gpu-enabled-workers.html">Configure GPU Workers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/configure-setup/adding-certificates.html">Add Custom CA Certificates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/configure-setup/enabling-ssl-tls.html">Enable SSL/TLS in NGINX and Postgres</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/configure-setup/creating-custom-workers.html">Create a Custom Worker Container</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/configure-setup/integrating-custom-containers.html">Integrate Custom Containers</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../how-to/setup-dioptra/reference/index.html">Setup Reference</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/reference/deployment-template-reference.html">Deployment Template Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/reference/deployment-folder-reference.html">Deployment Folder Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/reference/init-deployment-script-reference.html">init-deployment.sh Script Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/reference/deployment-commands-reference.html">Deployment Commands Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/reference/custom-worker-template-reference.html">Custom Worker Template Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/reference/dioptra-worker-v1-reference.html">dioptra-worker-v1 Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/reference/worker-container-requirements-reference.html">Worker Container Requirements Reference</a></li>
+</ul>
+</li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Explainers</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../workflow-architecture-explanation.html">Workflow Architecture</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Dioptra Components</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="queues-workers-explanation.html">Queues and Workers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="users-groups-explanation.html">Users and Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="param-types-explanation.html">Plugin Parameter Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plugin-explanation.html">Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="entrypoints-explanation.html">Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="task-graph-explanation.html">Task Graph</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Artifacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiments-jobs-explanation.html">Experiments and Jobs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../usage-modes.html">Usage Modes</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../tutorials/hello_world/index.html">Hello World in Dioptra</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/hello_world/part-0.html">Set Up Dioptra in the GUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/hello_world/part-1.html">Running Hello World</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../tutorials/essential_workflows/index.html">Learning the Essentials</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/essential_workflows/part-2.html">Adding Inputs and Outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/essential_workflows/part-3.html">Building a Multi-Step Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/essential_workflows/part-5.html">Saving Artifacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/essential_workflows/part-6.html">Using Saved Artifacts</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/advanced/index.html">Advanced Tutorials</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">How Tos</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../how-to/essential-workflows/index.html">Running Experiments</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/setup-python-client.html">Set Up the Python Client</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-a-queue.html">Create Queues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-users-groups.html">Create Users and Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-param-types.html">Create Parameter Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-a-plugin.html">Create Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/use-metrics.html">Logging Metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-an-entrypoint.html">Create Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-an-experiment.html">Create Experiments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/running-jobs.html">Running Jobs</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../how-to/import-content/index.html">Importing Content</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-9"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/import-content/add-a-dataset.html">Add a Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/import-content/import-resources.html">Import Resources</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../how-to/advanced/index.html">Advanced</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/advanced/distribute-plugins.html">Distribute Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/advanced/develop-for-dioptra.html">Develop for Dioptra</a></li>
+</ul>
+</li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../reference/glossary.html">Glossary</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../reference/dioptra-components/index.html">Dioptra Components</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-11"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/dioptra-components/users-reference.html">Users</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/dioptra-components/groups-reference.html">Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/dioptra-components/queues-reference.html">Queues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/dioptra-components/param-types-reference.html">Plugin Parameter Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/dioptra-components/plugin-reference.html">Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/dioptra-components/entrypoints-reference.html">Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/dioptra-components/experiments-reference.html">Experiments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/dioptra-components/jobs-reference.html">Jobs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/dioptra-components/artifacts-reference.html">Artifacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/dioptra-components/metrics-reference.html">Metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/dioptra-components/workers-reference.html">Workers</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../reference/python-client/index.html">Python Client Methods</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-12"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/python-client/auth-users-groups-client-methods.html">Auth, Users, and Groups Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/python-client/queues-client-methods.html">Queues Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/python-client/param-types-client-methods.html">Parameter Types Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/python-client/plugin-client-methods.html">Plugins Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/python-client/entrypoints-client-methods.html">Entrypoints Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/python-client/experiments-client-methods.html">Experiments Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/python-client/jobs-client-methods.html">Jobs Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/python-client/artifacts-client-methods.html">Artifacts Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/python-client/tags-client-methods.html">Tags Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/python-client/snapshots-client-methods.html">Snapshots Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/python-client/workflows-client-methods.html">Workflows Client Methods</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/api-reference-restapi.html">REST API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/resource-import-reference.html">Resource Import Syntax</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/resource-search-language-reference.html">Resource Search Language Syntax</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/task-engine-reference.html">Declarative Experiment Description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dev-guide/contributing-documentation-guide.html">Guidelines for Documentation</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/usnistgov/dioptra" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../_sources/explanation/components/artifacts-explanation.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script>
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Artifacts</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary-what-is-an-artifact">Summary: What is an Artifact?</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#plugin-artifact-tasks">Plugin Artifact Tasks</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See Also</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <section id="artifacts">
+<span id="explanation-artifacts"></span><h1>Artifacts<a class="headerlink" href="#artifacts" title="Permalink to this headline">#</a></h1>
+<section id="summary-what-is-an-artifact">
+<h2>Summary: What is an Artifact?<a class="headerlink" href="#summary-what-is-an-artifact" title="Permalink to this headline">#</a></h2>
+<p>An <strong>artifact</strong> refers to a stored output of a job that is managed by Dioptra. A job can produce multiple artifacts,
+and these artifacts can be used as inputs to other jobs. Artifact usage
+is specified in the entrypoint associated with the job, but the artifact itself is provided to the job at
+runtime.</p>
+<p>Artifacts are used in entrypoints through <code class="docutils literal notranslate"><span class="pre">Artifact</span> <span class="pre">Parameters</span></code>. When an artifact is designated as
+an input parameter, it can be referenced in the task graph in the exact same way as any regular
+entrypoint parameter or task output. The artifact is loaded into memory at the start of the
+job execution and then is available for any tasks that reference it.</p>
+<p>To use an artifact as an entrypoint input parameter, the output type from the deserialize
+method of the <code class="docutils literal notranslate"><span class="pre">Plugin</span> <span class="pre">Artifact</span> <span class="pre">Task</span></code> associated with the artifact must match
+the type for the artifact input parameter. An artifact cannot be selected for a
+job if these types don’t align.</p>
+</section>
+<section id="plugin-artifact-tasks">
+<span id="explanation-artifacts-artifact-tasks"></span><h2>Plugin Artifact Tasks<a class="headerlink" href="#plugin-artifact-tasks" title="Permalink to this headline">#</a></h2>
+<p><strong>Plugin Artifact tasks</strong> are a type of plugin task that details the serialization
+and deserialization of a given artifact type. When an output of a function task is designated to be
+saved as an artifact, the ouput is passed to the serialization function within the desired plugin artifact task.
+Conversely, when an artifact is loaded, the deserialization function of the plugin artifact task is used to load the artifact as an object in memory.</p>
+<p>When serialized, Diotpra takes the serialized file and stores it in the backend data storage (S3 by default). The URL
+of the artifact is stored in the database, and retrieved by ID when the artifact is used or downloaded from the GUI.</p>
+<p>An artifact task consists of a class which implements the <code class="docutils literal notranslate"><span class="pre">ArtifactTaskInterface</span></code> interface.
+This interface supports three methods:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">serialize</span></code> - using the provided source input creates an artifact with a given name to the specified directory</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">deserialize</span></code> - used to read the contents of an artifact with a given path relative to the specified directory</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">validation</span></code> - used to validate any keyword arguments passed into <code class="docutils literal notranslate"><span class="pre">serialize()</span></code></p></li>
+</ul>
+<p>The <code class="docutils literal notranslate"><span class="pre">serialize</span></code> function supports passing additional keyword arguments. This can be useful
+for selecting file types or configuring other settings when saving an artifact.</p>
+<p>Entrypoints can designate the output of a function task as an artifact by referencing an artifact task for serialization.
+When used as a parameter to another entrypoint, the deserialization function of that artifact task will be used.</p>
+<p>Note that when artifacts are created, they are associated with a snapshot of the artifact task that they were
+created with. Since the artifact task contains both serialization and deserialization, the same snapshot is used
+for deserialization.</p>
+<p>Artifact tasks are registered similarly to function tasks. See <a class="reference internal" href="plugin-explanation.html#explanation-plugins"><span class="std std-ref">Plugins</span></a> for more details.</p>
+</section>
+<section class="fancy-header header-seealso" id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Permalink to this headline">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="entrypoints-explanation.html#explanation-entrypoints"><span class="std std-ref">Entrypoints Explanation</span></a> - Explanation of Entrypoints, including the Artifact Task Graph</p></li>
+<li><p><a class="reference internal" href="../../reference/dioptra-components/entrypoints-reference.html#reference-entrypoints"><span class="std std-ref">Entrypoints Reference</span></a> - Complete YAML syntax guide for entrypoint files and task graphs</p></li>
+<li><p><a class="reference internal" href="../../reference/dioptra-components/artifacts-reference.html#reference-artifacts"><span class="std std-ref">Artifacts Reference</span></a> - Complete reference for Artifacts</p></li>
+<li><p><a class="reference internal" href="../../reference/dioptra-components/entrypoints-reference.html#reference-entrypoints-artifact-output-graph-syntax"><span class="std std-ref">Artifact Output Graph Reference</span></a> - Reference for artifacts output graphs</p></li>
+<li><p><a class="reference internal" href="plugin-explanation.html#explanation-plugins"><span class="std std-ref">Plugins Explanation</span></a> - Explanation of Plugins, Function Tasks and Artifact Tasks</p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+                <footer class="bd-footer-article">
+                  
+<div class="footer-article-items footer-article__inner">
+  
+    <div class="footer-article-item"><!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="task-graph-explanation.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Task Graph</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="experiments-jobs-explanation.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Experiments and Jobs</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div></div>
+  
+</div>
+
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary-what-is-an-artifact">Summary: What is an Artifact?</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#plugin-artifact-tasks">Plugin Artifact Tasks</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See Also</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
+
+  
+  <footer class="bd-footer">
+  </footer>
+  <div id="img-modal">
+    <span class="close-btn">&times;</span>
+    <img id="modal-img" src="" alt="enlarged screenshot">
+  </div>
+  </body>
+</html>

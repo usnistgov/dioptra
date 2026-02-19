@@ -1,0 +1,83 @@
+.. This Software (Dioptra) is being made available as a public service by the
+.. National Institute of Standards and Technology (NIST), an Agency of the United
+.. States Department of Commerce. This software was developed in part by employees of
+.. NIST and in part by NIST contractors. Copyright in portions of this software that
+.. were developed by NIST contractors has been licensed or assigned to NIST. Pursuant
+.. to Title 17 United States Code Section 105, works of NIST employees are not
+.. subject to copyright protection in the United States. However, NIST may hold
+.. international copyright in software created by its employees and domestic
+.. copyright (or licensing rights) in portions of software that were assigned or
+.. licensed to NIST. To the extent that NIST holds copyright in this software, it is
+.. being made available under the Creative Commons Attribution 4.0 International
+.. license (CC BY 4.0). The disclaimers of the CC BY 4.0 license apply to all parts
+.. of the software developed or licensed by NIST.
+..
+.. ACCESS THE FULL CC BY 4.0 LICENSE HERE:
+.. https://creativecommons.org/licenses/by/4.0/legalcode
+
+.. _explanation-artifacts:
+
+Artifacts
+=========
+
+Summary: What is an Artifact?
+-----------------------------
+
+An **artifact** refers to a stored output of a job that is managed by Dioptra. A job can produce multiple artifacts,
+and these artifacts can be used as inputs to other jobs. Artifact usage
+is specified in the entrypoint associated with the job, but the artifact itself is provided to the job at
+runtime. 
+
+Artifacts are used in entrypoints through ``Artifact Parameters``. When an artifact is designated as 
+an input parameter, it can be referenced in the task graph in the exact same way as any regular
+entrypoint parameter or task output. The artifact is loaded into memory at the start of the
+job execution and then is available for any tasks that reference it.
+
+To use an artifact as an entrypoint input parameter, the output type from the deserialize
+method of the ``Plugin Artifact Task`` associated with the artifact must match
+the type for the artifact input parameter. An artifact cannot be selected for a
+job if these types don't align.
+
+.. _explanation-artifacts-artifact-tasks:
+
+Plugin Artifact Tasks
+--------------
+
+**Plugin Artifact tasks** are a type of plugin task that details the serialization
+and deserialization of a given artifact type. When an output of a function task is designated to be 
+saved as an artifact, the ouput is passed to the serialization function within the desired plugin artifact task.
+Conversely, when an artifact is loaded, the deserialization function of the plugin artifact task is used to load the artifact as an object in memory.
+
+When serialized, Diotpra takes the serialized file and stores it in the backend data storage (S3 by default). The URL
+of the artifact is stored in the database, and retrieved by ID when the artifact is used or downloaded from the GUI.
+
+An artifact task consists of a class which implements the ``ArtifactTaskInterface`` interface.
+This interface supports three methods:
+
+* ``serialize`` - using the provided source input creates an artifact with a given name to the specified directory  
+* ``deserialize`` - used to read the contents of an artifact with a given path relative to the specified directory
+* ``validation`` - used to validate any keyword arguments passed into ``serialize()``
+
+The ``serialize`` function supports passing additional keyword arguments. This can be useful
+for selecting file types or configuring other settings when saving an artifact.
+
+Entrypoints can designate the output of a function task as an artifact by referencing an artifact task for serialization. 
+When used as a parameter to another entrypoint, the deserialization function of that artifact task will be used. 
+
+Note that when artifacts are created, they are associated with a snapshot of the artifact task that they were 
+created with. Since the artifact task contains both serialization and deserialization, the same snapshot is used
+for deserialization. 
+
+Artifact tasks are registered similarly to function tasks. See :ref:`explanation-plugins` for more details.
+
+
+.. rst-class:: fancy-header header-seealso
+
+See Also
+--------
+
+* :ref:`Entrypoints Explanation <explanation-entrypoints>` - Explanation of Entrypoints, including the Artifact Task Graph
+* :ref:`Entrypoints Reference <reference-entrypoints>` - Complete YAML syntax guide for entrypoint files and task graphs
+* :ref:`Artifacts Reference <reference-artifacts>` - Complete reference for Artifacts
+* :ref:`Artifact Output Graph Reference <reference-entrypoints-artifact-output-graph-syntax>` - Reference for artifacts output graphs
+* :ref:`Plugins Explanation <explanation-plugins>` - Explanation of Plugins, Function Tasks and Artifact Tasks

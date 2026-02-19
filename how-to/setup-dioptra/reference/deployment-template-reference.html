@@ -1,0 +1,787 @@
+
+
+
+
+<!DOCTYPE html>
+
+
+<html >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Deployment Template Reference &#8212; Dioptra 1.1.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../../../_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+
+  
+  <link href="../../../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" href="../../../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/dioptra.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
+
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/clipboard.min.js"></script>
+    <script src="../../../_static/copybutton.js"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../../_static/togglebutton.js"></script>
+    <script src="../../../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script src="../../../_static/jquery.visible.js"></script>
+    <script src="../../../_static/jquery.leaveNotice-nist.js"></script>
+    <script src="../../../_static/applyLeaveNotice.js"></script>
+    <script src="../../../_static/smoothNavScroll.js"></script>
+    <script src="../../../_static/image_modals.js"></script>
+    <script src="../../../_static/design-tabs.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'how-to/setup-dioptra/reference/deployment-template-reference';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Deployment Folder Reference" href="deployment-folder-reference.html" />
+    <link rel="prev" title="Setup Reference" href="index.html" />
+    
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="None"/>
+
+    <link rel="stylesheet" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css">
+    <link rel="stylesheet" type="text/css" href="https://pages.nist.gov/leaveNotice/css/jquery.leaveNotice.css" />
+    <script src="https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js" type="text/javascript" defer="defer"></script>
+    <script async type="text/javascript" id="_fed_an_ua_tag" src="https://dap.digitalgov.gov/Universal-Federated-Analytics-Min.js?agency=NIST&subagency=github&pua=UA-66610693-1&yt=true&exts=ppsx,pps,f90,sch,rtf,wrl,txz,m1v,xlsm,msi,xsd,f,tif,eps,mpg,xml,pl,xlt,c"></script>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    <p class="title logo__title">Dioptra 1.1.0 documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../../index.html">
+                    Dioptra Overview
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">What is Dioptra?</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../explanation/dioptra-motivation/why-dioptra.html">Motivation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../explanation/dioptra-motivation/design-principles.html">Design Principles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../explanation/dioptra-motivation/audience.html">Intended Audience</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../explanation/architecture-overview.html">Architecture Overview</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Setup</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../install-dioptra-explanation.html">Install Dioptra</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../get-container-images/index.html">Get the Container Images</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../get-container-images/download-container-images.html">Download the Container Images</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../get-container-images/build-container-images.html">Build the Container Images</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../prepare-deployment.html">Prepare Your Deployment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../update-deployment.html">Update Your Deployment</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../configure-setup/index.html">Customize Your Setup</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../configure-setup/using-docker-compose-overrides.html">Use Docker Compose Override Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../configure-setup/data-mounts.html">Mount Data Volumes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../configure-setup/gpu-enabled-workers.html">Configure GPU Workers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../configure-setup/adding-certificates.html">Add Custom CA Certificates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../configure-setup/enabling-ssl-tls.html">Enable SSL/TLS in NGINX and Postgres</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../configure-setup/creating-custom-workers.html">Create a Custom Worker Container</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../configure-setup/integrating-custom-containers.html">Integrate Custom Containers</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Setup Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Deployment Template Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deployment-folder-reference.html">Deployment Folder Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="init-deployment-script-reference.html">init-deployment.sh Script Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deployment-commands-reference.html">Deployment Commands Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom-worker-template-reference.html">Custom Worker Template Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dioptra-worker-v1-reference.html">dioptra-worker-v1 Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="worker-container-requirements-reference.html">Worker Container Requirements Reference</a></li>
+</ul>
+</li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Explainers</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../explanation/workflow-architecture-explanation.html">Workflow Architecture</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../explanation/components/index.html">Dioptra Components</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../explanation/components/queues-workers-explanation.html">Queues and Workers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../explanation/components/users-groups-explanation.html">Users and Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../explanation/components/param-types-explanation.html">Plugin Parameter Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../explanation/components/plugin-explanation.html">Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../explanation/components/entrypoints-explanation.html">Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../explanation/components/task-graph-explanation.html">Task Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../explanation/components/artifacts-explanation.html">Artifacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../explanation/components/experiments-jobs-explanation.html">Experiments and Jobs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../explanation/usage-modes.html">Usage Modes</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../tutorials/hello_world/index.html">Hello World in Dioptra</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorials/hello_world/part-0.html">Set Up Dioptra in the GUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorials/hello_world/part-1.html">Running Hello World</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../tutorials/essential_workflows/index.html">Learning the Essentials</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorials/essential_workflows/part-2.html">Adding Inputs and Outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorials/essential_workflows/part-3.html">Building a Multi-Step Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorials/essential_workflows/part-5.html">Saving Artifacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorials/essential_workflows/part-6.html">Using Saved Artifacts</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/advanced/index.html">Advanced Tutorials</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">How Tos</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../essential-workflows/index.html">Running Experiments</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../essential-workflows/setup-python-client.html">Set Up the Python Client</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../essential-workflows/creating-a-queue.html">Create Queues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../essential-workflows/creating-users-groups.html">Create Users and Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../essential-workflows/creating-param-types.html">Create Parameter Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../essential-workflows/creating-a-plugin.html">Create Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../essential-workflows/use-metrics.html">Logging Metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../essential-workflows/creating-an-entrypoint.html">Create Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../essential-workflows/creating-an-experiment.html">Create Experiments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../essential-workflows/running-jobs.html">Running Jobs</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../import-content/index.html">Importing Content</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-9"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../import-content/add-a-dataset.html">Add a Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../import-content/import-resources.html">Import Resources</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../advanced/index.html">Advanced</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../advanced/distribute-plugins.html">Distribute Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../advanced/develop-for-dioptra.html">Develop for Dioptra</a></li>
+</ul>
+</li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/glossary.html">Glossary</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../reference/dioptra-components/index.html">Dioptra Components</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-11"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/dioptra-components/users-reference.html">Users</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/dioptra-components/groups-reference.html">Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/dioptra-components/queues-reference.html">Queues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/dioptra-components/param-types-reference.html">Plugin Parameter Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/dioptra-components/plugin-reference.html">Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/dioptra-components/entrypoints-reference.html">Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/dioptra-components/experiments-reference.html">Experiments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/dioptra-components/jobs-reference.html">Jobs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/dioptra-components/artifacts-reference.html">Artifacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/dioptra-components/metrics-reference.html">Metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/dioptra-components/workers-reference.html">Workers</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../reference/python-client/index.html">Python Client Methods</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-12"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/python-client/auth-users-groups-client-methods.html">Auth, Users, and Groups Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/python-client/queues-client-methods.html">Queues Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/python-client/param-types-client-methods.html">Parameter Types Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/python-client/plugin-client-methods.html">Plugins Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/python-client/entrypoints-client-methods.html">Entrypoints Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/python-client/experiments-client-methods.html">Experiments Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/python-client/jobs-client-methods.html">Jobs Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/python-client/artifacts-client-methods.html">Artifacts Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/python-client/tags-client-methods.html">Tags Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/python-client/snapshots-client-methods.html">Snapshots Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/python-client/workflows-client-methods.html">Workflows Client Methods</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/api-reference-restapi.html">REST API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/resource-import-reference.html">Resource Import Syntax</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/resource-search-language-reference.html">Resource Search Language Syntax</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/task-engine-reference.html">Declarative Experiment Description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev-guide/contributing-documentation-guide.html">Guidelines for Documentation</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/usnistgov/dioptra" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../../_sources/how-to/setup-dioptra/reference/deployment-template-reference.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script>
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Deployment Template Reference</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#template-variables">Template Variables</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#deployment-name">deployment_name</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#container-registry">container_registry</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#container-tag">container_tag</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#docker-compose-path">docker_compose_path</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#systemd-required-mounts">systemd_required_mounts</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nginx-server-name">nginx_server_name</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nginx-expose-ports-on-localhost-only">nginx_expose_ports_on_localhost_only</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#postgres-container-tag">postgres_container_tag</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pgadmin-default-email">pgadmin_default_email</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#num-tensorflow-cpu-workers">num_tensorflow_cpu_workers</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#num-tensorflow-gpu-workers">num_tensorflow_gpu_workers</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#num-pytorch-cpu-workers">num_pytorch_cpu_workers</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#num-pytorch-gpu-workers">num_pytorch_gpu_workers</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#datasets-directory">datasets_directory</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#interactive-prompt-example">Interactive Prompt Example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#non-interactive-configuration">Non-Interactive Configuration</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <section id="deployment-template-reference">
+<span id="reference-deployment-template"></span><h1>Deployment Template Reference<a class="headerlink" href="#deployment-template-reference" title="Permalink to this headline">#</a></h1>
+<p>This reference describes the template variables used by the Dioptra deployment cookiecutter template.
+These variables control how the deployment configuration files are generated.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="../prepare-deployment.html#how-to-prepare-deployment"><span class="std std-ref">Prepare Your Deployment</span></a> - Step-by-step guide for customizing your deployment.</p>
+</div>
+<section id="template-variables">
+<h2>Template Variables<a class="headerlink" href="#template-variables" title="Permalink to this headline">#</a></h2>
+<p>When using <code class="docutils literal notranslate"><span class="pre">cruft</span></code> interactively (Method 1 in the how-to guide), you will be prompted to set the following variables.
+In most cases, you can accept the default value, but some variables may need customization based on your environment.</p>
+<section id="deployment-name">
+<h3>deployment_name<a class="headerlink" href="#deployment-name" title="Permalink to this headline">#</a></h3>
+<p><strong>Default:</strong> <code class="docutils literal notranslate"><span class="pre">Dioptra</span> <span class="pre">deployment</span></code></p>
+<p>A name to associate with the deployment.
+The template will <a class="reference external" href="https://www.stackbit.com/blog/what-is-a-content-slug">“slugify”</a> the deployment name you provide and use it to name files, folders, and configuration settings.
+For example, it will be used to name the main folder created by the template (<code class="docutils literal notranslate"><span class="pre">dioptra-deployment</span></code> for the default value).</p>
+</section>
+<section id="container-registry">
+<h3>container_registry<a class="headerlink" href="#container-registry" title="Permalink to this headline">#</a></h3>
+<p><strong>Default:</strong> <code class="docutils literal notranslate"><span class="pre">ghcr.io/usnistgov</span></code></p>
+<p>This is the registry prefix for the Dioptra container images.
+The default value, <code class="docutils literal notranslate"><span class="pre">ghcr.io/usnistgov</span></code>, points to the prebuilt Dioptra images published to GitHub.
+If you are using locally built images instead, set this to an empty string.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>See <a class="reference internal" href="../get-container-images/index.html#how-to-get-container-images-registry-prefix"><span class="std std-ref">Understanding Container Registry Prefixes</span></a> for details on registry prefixes and their implications when choosing between downloaded and locally built images.</p>
+</div>
+</section>
+<section id="container-tag">
+<h3>container_tag<a class="headerlink" href="#container-tag" title="Permalink to this headline">#</a></h3>
+<p><strong>Default:</strong> <code class="docutils literal notranslate"><span class="pre">1.1.0</span></code></p>
+<p>This should match the tags of the Dioptra container images you will be using.
+If you are using Docker, you can see the available tags by running <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">images</span></code>.
+If you built the images manually using the build commands in the repository, the images will have the <code class="docutils literal notranslate"><span class="pre">dev</span></code> tag.</p>
+</section>
+<section id="docker-compose-path">
+<h3>docker_compose_path<a class="headerlink" href="#docker-compose-path" title="Permalink to this headline">#</a></h3>
+<p><strong>Default:</strong> <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span></code></p>
+<p>This should match the way you invoke Docker Compose on the host machine.
+If you are running an up-to-date version of Docker with the Compose plugin, then you should answer <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span></code>.
+If instead <a class="reference external" href="https://docs.docker.com/compose/install/other/">you installed Docker Compose v2 in a standalone manner</a>, then this should be the absolute path to the <code class="docutils literal notranslate"><span class="pre">docker-compose</span></code> binary, for example <code class="docutils literal notranslate"><span class="pre">/usr/local/bin/docker-compose</span></code>.</p>
+</section>
+<section id="systemd-required-mounts">
+<h3>systemd_required_mounts<a class="headerlink" href="#systemd-required-mounts" title="Permalink to this headline">#</a></h3>
+<p><strong>Default:</strong> <em>empty string</em></p>
+<p>This applies only if you are deploying Dioptra on a Linux distribution that uses systemd, such as Ubuntu, Fedora, or Red Hat Enterprise Linux.
+Otherwise, leave this blank.</p>
+<p>The “required mounts” are the storage devices mounted on the host machine, which may include NFS volumes or block storage volumes, that must be accessible before the Dioptra application containers can start.
+This list should include all the devices that store the container images, runtime files, and volume data for Dioptra.</p>
+<p>To find the mount names for your system, run:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>systemctl<span class="w"> </span>list-units<span class="w"> </span>-t<span class="w"> </span>mount
+</pre></div>
+</div>
+<p>The names you should use are in the first column labeled UNIT.
+Multiple mounts should be separated by spaces, for example: <code class="docutils literal notranslate"><span class="pre">data.mount</span> <span class="pre">var.mount</span></code>.</p>
+</section>
+<section id="nginx-server-name">
+<h3>nginx_server_name<a class="headerlink" href="#nginx-server-name" title="Permalink to this headline">#</a></h3>
+<p><strong>Default:</strong> <code class="docutils literal notranslate"><span class="pre">dioptra.example.org</span></code></p>
+<p>If you are hosting Dioptra on a remote machine, such as a virtual private server, then this will either be a domain name like <code class="docutils literal notranslate"><span class="pre">dioptra.example.org</span></code> or the IP address you use to access the machine.
+If you are running Dioptra on your personal computer or laptop, then answer <code class="docutils literal notranslate"><span class="pre">_</span></code> (underscore).</p>
+</section>
+<section id="nginx-expose-ports-on-localhost-only">
+<h3>nginx_expose_ports_on_localhost_only<a class="headerlink" href="#nginx-expose-ports-on-localhost-only" title="Permalink to this headline">#</a></h3>
+<p><strong>Default:</strong> <code class="docutils literal notranslate"><span class="pre">True</span></code></p>
+<p>Choosing <code class="docutils literal notranslate"><span class="pre">True</span></code> will generate a <code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code> file that binds the NGINX ports to the loopback interface (localhost, 127.0.0.1).
+In this configuration, you will need to use port forwarding via SSH or a firewall in order to access the services from another machine.
+If <code class="docutils literal notranslate"><span class="pre">False</span></code>, the NGINX ports will be exposed on all available network interfaces.</p>
+<p><strong>Recommendations:</strong></p>
+<ul class="simple">
+<li><p><strong>Personal computer or laptop:</strong> Choose <code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
+<li><p><strong>Remote server with SSH access:</strong> Choose <code class="docutils literal notranslate"><span class="pre">True</span></code> and use SSH port forwarding</p></li>
+<li><p><strong>Remote server without SSH (not recommended):</strong> Choose <code class="docutils literal notranslate"><span class="pre">False</span></code>, but ensure you have firewall rules in place</p></li>
+</ul>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Dioptra currently does not have a comprehensive access control system, so it is recommended to choose <code class="docutils literal notranslate"><span class="pre">True</span></code> on remote machines and use SSH or firewall rules to manage access.</p>
+</div>
+</section>
+<section id="postgres-container-tag">
+<h3>postgres_container_tag<a class="headerlink" href="#postgres-container-tag" title="Permalink to this headline">#</a></h3>
+<p><strong>Default:</strong> <code class="docutils literal notranslate"><span class="pre">18</span></code></p>
+<p>Sets the version of PostgreSQL to be used in the deployment.
+For a full list of available versions, visit the <em>Tags</em> tab on the <a class="reference external" href="https://hub.docker.com/_/postgres">postgres image page on Docker Hub</a>.</p>
+</section>
+<section id="pgadmin-default-email">
+<h3>pgadmin_default_email<a class="headerlink" href="#pgadmin-default-email" title="Permalink to this headline">#</a></h3>
+<p><strong>Default:</strong> <code class="docutils literal notranslate"><span class="pre">dioptra&#64;example.com</span></code></p>
+<p>This email address will be used to create the default account on the <a class="reference external" href="https://www.pgadmin.org/docs/pgadmin4/latest/index.html">pgadmin4 app</a>, which provides a web interface for database administration.</p>
+</section>
+<section id="num-tensorflow-cpu-workers">
+<h3>num_tensorflow_cpu_workers<a class="headerlink" href="#num-tensorflow-cpu-workers" title="Permalink to this headline">#</a></h3>
+<p><strong>Default:</strong> <code class="docutils literal notranslate"><span class="pre">1</span></code></p>
+<p>Sets the number of TensorFlow CPU workers to use in your Dioptra deployment.
+Each worker is dedicated to watching a named queue and runs one job at a time.
+Increase this number if you need to run multiple TensorFlow CPU jobs concurrently.</p>
+</section>
+<section id="num-tensorflow-gpu-workers">
+<h3>num_tensorflow_gpu_workers<a class="headerlink" href="#num-tensorflow-gpu-workers" title="Permalink to this headline">#</a></h3>
+<p><strong>Default:</strong> <code class="docutils literal notranslate"><span class="pre">0</span></code></p>
+<p>Sets the number of TensorFlow GPU workers to use in your Dioptra deployment.
+Each worker is assigned a dedicated GPU, watches a named queue, and runs one job at a time.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The combined number of TensorFlow and PyTorch GPU workers cannot be greater than the number of GPUs available on the host machine.</p>
+</div>
+</section>
+<section id="num-pytorch-cpu-workers">
+<h3>num_pytorch_cpu_workers<a class="headerlink" href="#num-pytorch-cpu-workers" title="Permalink to this headline">#</a></h3>
+<p><strong>Default:</strong> <code class="docutils literal notranslate"><span class="pre">1</span></code></p>
+<p>Sets the number of PyTorch CPU workers to use in your Dioptra deployment.
+Each worker is dedicated to watching a named queue and runs one job at a time.
+Increase this number if you need to run multiple PyTorch CPU jobs concurrently.</p>
+</section>
+<section id="num-pytorch-gpu-workers">
+<h3>num_pytorch_gpu_workers<a class="headerlink" href="#num-pytorch-gpu-workers" title="Permalink to this headline">#</a></h3>
+<p><strong>Default:</strong> <code class="docutils literal notranslate"><span class="pre">0</span></code></p>
+<p>Sets the number of PyTorch GPU workers to use in your Dioptra deployment.
+Each worker is assigned a dedicated GPU, watches a named queue, and runs one job at a time.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The combined number of TensorFlow and PyTorch GPU workers cannot be greater than the number of GPUs available on the host machine.</p>
+</div>
+</section>
+<section id="datasets-directory">
+<h3>datasets_directory<a class="headerlink" href="#datasets-directory" title="Permalink to this headline">#</a></h3>
+<p><strong>Default:</strong> <em>empty string</em></p>
+<p>Sets the datasets directory to be mounted into all worker containers in your Dioptra deployment.
+The provided directory will be mounted to <code class="docutils literal notranslate"><span class="pre">/dioptra/data</span></code> in each worker container.
+If an empty string is provided, no dataset directory will be mounted.
+If the provided path is not valid, the <code class="docutils literal notranslate"><span class="pre">init-deployment.sh</span></code> script will fail.</p>
+<p>More advanced configurations (such as mounting multiple directories or NFS shares) can be achieved by modifying the <code class="docutils literal notranslate"><span class="pre">docker-compose.override.yml</span></code> file.
+See <a class="reference internal" href="../configure-setup/data-mounts.html#how-to-data-mounts"><span class="std std-ref">Mount Data Volumes</span></a> for details.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><span class="xref std std-ref">how-to-download-data</span> - Information about downloading example datasets.</p>
+</div>
+</section>
+</section>
+<section id="interactive-prompt-example">
+<h2>Interactive Prompt Example<a class="headerlink" href="#interactive-prompt-example" title="Permalink to this headline">#</a></h2>
+<p>When using <code class="docutils literal notranslate"><span class="pre">cruft</span></code> interactively (Method 1), you will see prompts like the following.
+The values between the square brackets <code class="docutils literal notranslate"><span class="pre">[]</span></code> show the default answer for each question.
+Press Enter to accept the default, or type a new value.</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>deployment_name [Dioptra deployment]: Dioptra deployment
+container_registry [ghcr.io/usnistgov]:
+container_tag [1.1.0]: 1.1.0
+docker_compose_path [docker compose]: docker compose
+systemd_required_mounts []:
+nginx_server_name [dioptra.example.org]: _
+Select nginx_expose_ports_on_localhost_only:
+1 - True
+2 - False
+Choose from 1, 2 [1]: 1
+postgres_container_tag [18]: 18
+pgadmin_default_email [dioptra@example.com]: dioptra@example.com
+num_tensorflow_cpu_workers [1]: 1
+num_tensorflow_gpu_workers [0]: 0
+num_pytorch_cpu_workers [1]: 1
+num_pytorch_gpu_workers [0]: 0
+datasets_directory []: /path/to/dioptra/data
+</pre></div>
+</div>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>If you make a mistake during the interactive prompts (such as accepting a default by accident or making a typo), you can interrupt <code class="docutils literal notranslate"><span class="pre">cruft</span></code> by pressing <kbd class="kbd compound docutils literal notranslate"><kbd class="kbd docutils literal notranslate">Ctrl</kbd>+<kbd class="kbd docutils literal notranslate">C</kbd></kbd>.
+If <code class="docutils literal notranslate"><span class="pre">cruft</span></code> has already created a folder (check your working directory), remove it before starting over.
+The folder name will be a slugified version of the <strong>deployment_name</strong> variable.</p>
+</div>
+</section>
+<section id="non-interactive-configuration">
+<h2>Non-Interactive Configuration<a class="headerlink" href="#non-interactive-configuration" title="Permalink to this headline">#</a></h2>
+<p>For automated deployments or when you want to avoid interactive prompts, you can use one of these methods.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Replace <code class="docutils literal notranslate"><span class="pre">&lt;branch-name&gt;</span></code> with the Dioptra branch that matches your container images (e.g., <code class="docutils literal notranslate"><span class="pre">main</span></code> for releases, <code class="docutils literal notranslate"><span class="pre">dev</span></code> for development builds).</p>
+</div>
+<p><strong>Use all defaults:</strong></p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>cruft<span class="w"> </span>create<span class="w"> </span>https://github.com/usnistgov/dioptra<span class="w"> </span>--checkout<span class="w"> </span>&lt;branch-name&gt;<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--directory<span class="w"> </span>cookiecutter-templates/cookiecutter-dioptra-deployment<span class="w"> </span>--no-input
+</pre></div>
+</div>
+<p><strong>Override specific values on the command line:</strong></p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>cruft<span class="w"> </span>create<span class="w"> </span>https://github.com/usnistgov/dioptra<span class="w"> </span>--checkout<span class="w"> </span>&lt;branch-name&gt;<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--directory<span class="w"> </span>cookiecutter-templates/cookiecutter-dioptra-deployment<span class="w"> </span>--no-input<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--extra-context<span class="w"> </span><span class="s1">&#39;{&quot;datasets_directory&quot;: &quot;~/datasets&quot;, &quot;nginx_server_name&quot;: &quot;_&quot;}&#39;</span>
+</pre></div>
+</div>
+<p><strong>Override values from a JSON file:</strong></p>
+<p>Create a file named <code class="docutils literal notranslate"><span class="pre">overrides.json</span></code>:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;deployment_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;My Dioptra Deployment&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;datasets_directory&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/data/ml-datasets&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;nginx_server_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;_&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;num_tensorflow_cpu_workers&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Then run:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>cruft<span class="w"> </span>create<span class="w"> </span>https://github.com/usnistgov/dioptra<span class="w"> </span>--checkout<span class="w"> </span>&lt;branch-name&gt;<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--directory<span class="w"> </span>cookiecutter-templates/cookiecutter-dioptra-deployment<span class="w"> </span>--no-input<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--extra-context-file<span class="w"> </span>overrides.json
+</pre></div>
+</div>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+                <footer class="bd-footer-article">
+                  
+<div class="footer-article-items footer-article__inner">
+  
+    <div class="footer-article-item"><!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Setup Reference</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="deployment-folder-reference.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Deployment Folder Reference</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div></div>
+  
+</div>
+
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#template-variables">Template Variables</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#deployment-name">deployment_name</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#container-registry">container_registry</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#container-tag">container_tag</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#docker-compose-path">docker_compose_path</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#systemd-required-mounts">systemd_required_mounts</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nginx-server-name">nginx_server_name</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nginx-expose-ports-on-localhost-only">nginx_expose_ports_on_localhost_only</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#postgres-container-tag">postgres_container_tag</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pgadmin-default-email">pgadmin_default_email</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#num-tensorflow-cpu-workers">num_tensorflow_cpu_workers</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#num-tensorflow-gpu-workers">num_tensorflow_gpu_workers</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#num-pytorch-cpu-workers">num_pytorch_cpu_workers</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#num-pytorch-gpu-workers">num_pytorch_gpu_workers</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#datasets-directory">datasets_directory</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#interactive-prompt-example">Interactive Prompt Example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#non-interactive-configuration">Non-Interactive Configuration</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
+<script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
+
+  
+  <footer class="bd-footer">
+  </footer>
+  <div id="img-modal">
+    <span class="close-btn">&times;</span>
+    <img id="modal-img" src="" alt="enlarged screenshot">
+  </div>
+  </body>
+</html>

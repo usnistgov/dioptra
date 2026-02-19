@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Declarative Experiment Description &#8212; Dioptra 1.0.1 documentation</title>
+    <title>Declarative Experiment Description &#8212; Dioptra 1.1.0 documentation</title>
   
   
   
@@ -57,13 +57,14 @@
     <script src="../_static/jquery.leaveNotice-nist.js"></script>
     <script src="../_static/applyLeaveNotice.js"></script>
     <script src="../_static/smoothNavScroll.js"></script>
+    <script src="../_static/image_modals.js"></script>
     <script src="../_static/design-tabs.js"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'reference/task-engine-reference';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Testbed REST API Reference" href="api-reference-restapi.html" />
-    <link rel="prev" title="The Web Frontend" href="../user-guide/the-web-frontend.html" />
+    <link rel="next" title="Guidelines for Documentation" href="../dev-guide/contributing-documentation-guide.html" />
+    <link rel="prev" title="Resource Search Language Syntax" href="resource-search-language-reference.html" />
     
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="None"/>
@@ -141,7 +142,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.0.1 documentation</p>
+    <p class="title logo__title">Dioptra 1.1.0 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -150,27 +151,143 @@
         <ul class="nav bd-sidenav bd-sidenav__home-link">
             <li class="toctree-l1">
                 <a class="reference internal" href="../index.html">
-                    What is Dioptra?
+                    Dioptra Overview
                 </a>
             </li>
         </ul>
-        <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
-</ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">What is Dioptra?</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../getting-started/building-the-containers.html">Building the Containers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../getting-started/running-dioptra.html">Running Dioptra</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../getting-started/acquiring-datasets.html">Downloading Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/dioptra-motivation/why-dioptra.html">Motivation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/dioptra-motivation/design-principles.html">Design Principles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/dioptra-motivation/audience.html">Intended Audience</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/architecture-overview.html">Architecture Overview</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Setup</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../user-guide/the-web-frontend.html">The Web Frontend</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../how-to/setup-dioptra/install-dioptra-explanation.html">Install Dioptra</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../how-to/setup-dioptra/get-container-images/index.html">Get the Container Images</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../how-to/setup-dioptra/get-container-images/download-container-images.html">Download the Container Images</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../how-to/setup-dioptra/get-container-images/build-container-images.html">Build the Container Images</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/prepare-deployment.html">Prepare Your Deployment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/update-deployment.html">Update Your Deployment</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/index.html">Customize Your Setup</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/using-docker-compose-overrides.html">Use Docker Compose Override Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/data-mounts.html">Mount Data Volumes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/gpu-enabled-workers.html">Configure GPU Workers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/adding-certificates.html">Add Custom CA Certificates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/enabling-ssl-tls.html">Enable SSL/TLS in NGINX and Postgres</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/creating-custom-workers.html">Create a Custom Worker Container</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/integrating-custom-containers.html">Integrate Custom Containers</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../how-to/setup-dioptra/reference/index.html">Setup Reference</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/deployment-template-reference.html">Deployment Template Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/deployment-folder-reference.html">Deployment Folder Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/init-deployment-script-reference.html">init-deployment.sh Script Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/deployment-commands-reference.html">Deployment Commands Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/custom-worker-template-reference.html">Custom Worker Template Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/dioptra-worker-v1-reference.html">dioptra-worker-v1 Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/worker-container-requirements-reference.html">Worker Container Requirements Reference</a></li>
+</ul>
+</li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Explainers</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../explanation/workflow-architecture-explanation.html">Workflow Architecture</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../explanation/components/index.html">Dioptra Components</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/components/queues-workers-explanation.html">Queues and Workers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/components/users-groups-explanation.html">Users and Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/components/param-types-explanation.html">Plugin Parameter Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/components/plugin-explanation.html">Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/components/entrypoints-explanation.html">Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/components/task-graph-explanation.html">Task Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/components/artifacts-explanation.html">Artifacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/components/experiments-jobs-explanation.html">Experiments and Jobs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/usage-modes.html">Usage Modes</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../tutorials/hello_world/index.html">Hello World in Dioptra</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/hello_world/part-0.html">Set Up Dioptra in the GUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/hello_world/part-1.html">Running Hello World</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../tutorials/essential_workflows/index.html">Learning the Essentials</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/essential_workflows/part-2.html">Adding Inputs and Outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/essential_workflows/part-3.html">Building a Multi-Step Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/essential_workflows/part-5.html">Saving Artifacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/essential_workflows/part-6.html">Using Saved Artifacts</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/advanced/index.html">Advanced Tutorials</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">How Tos</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../how-to/essential-workflows/index.html">Running Experiments</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/setup-python-client.html">Set Up the Python Client</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/creating-a-queue.html">Create Queues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/creating-users-groups.html">Create Users and Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/creating-param-types.html">Create Parameter Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/creating-a-plugin.html">Create Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/use-metrics.html">Logging Metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/creating-an-entrypoint.html">Create Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/creating-an-experiment.html">Create Experiments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/running-jobs.html">Running Jobs</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../how-to/import-content/index.html">Importing Content</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-9"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/import-content/add-a-dataset.html">Add a Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/import-content/import-resources.html">Import Resources</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../how-to/advanced/index.html">Advanced</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/advanced/distribute-plugins.html">Distribute Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/advanced/develop-for-dioptra.html">Develop for Dioptra</a></li>
+</ul>
+</li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="dioptra-components/index.html">Dioptra Components</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-11"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="dioptra-components/users-reference.html">Users</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dioptra-components/groups-reference.html">Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dioptra-components/queues-reference.html">Queues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dioptra-components/param-types-reference.html">Plugin Parameter Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dioptra-components/plugin-reference.html">Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dioptra-components/entrypoints-reference.html">Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dioptra-components/experiments-reference.html">Experiments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dioptra-components/jobs-reference.html">Jobs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dioptra-components/artifacts-reference.html">Artifacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dioptra-components/metrics-reference.html">Metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dioptra-components/workers-reference.html">Workers</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="python-client/index.html">Python Client Methods</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-12"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="python-client/auth-users-groups-client-methods.html">Auth, Users, and Groups Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python-client/queues-client-methods.html">Queues Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python-client/param-types-client-methods.html">Parameter Types Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python-client/plugin-client-methods.html">Plugins Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python-client/entrypoints-client-methods.html">Entrypoints Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python-client/experiments-client-methods.html">Experiments Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python-client/jobs-client-methods.html">Jobs Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python-client/artifacts-client-methods.html">Artifacts Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python-client/tags-client-methods.html">Tags Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python-client/snapshots-client-methods.html">Snapshots Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python-client/workflows-client-methods.html">Workflows Client Methods</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api-reference-restapi.html">REST API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="resource-import-reference.html">Resource Import Syntax</a></li>
+<li class="toctree-l1"><a class="reference internal" href="resource-search-language-reference.html">Resource Search Language Syntax</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Declarative Experiment Description</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api-reference-restapi.html">Testbed REST API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev-guide/contributing-documentation-guide.html">Guidelines for Documentation</a></li>
 </ul>
 
     </div>
@@ -362,6 +479,7 @@ document.write(`
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#task-outputs">Task Outputs</a></li>
 </ul>
 </li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#artifact-input-parameters">Artifact Input Parameters</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#graph">Graph</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#steps">Steps</a><ul class="nav section-nav flex-column">
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#positional-style-invocation">Positional Style Invocation</a></li>
@@ -376,6 +494,7 @@ document.write(`
 </li>
 </ul>
 </li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#artifact-outputs">Artifact Outputs</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#type-validation">Type Validation</a><ul class="nav section-nav flex-column">
@@ -406,7 +525,7 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section id="declarative-experiment-description">
-<h1><a class="toc-backref" href="#id1">Declarative Experiment Description</a><a class="headerlink" href="#declarative-experiment-description" title="Permalink to this headline">#</a></h1>
+<span id="reference-declarative-experiment-description"></span><h1><a class="toc-backref" href="#id1">Declarative Experiment Description</a><a class="headerlink" href="#declarative-experiment-description" title="Permalink to this headline">#</a></h1>
 <p>This document describes the data structure used to represent an experiment.</p>
 <div class="contents topic" id="contents">
 <p class="topic-title">Contents</p>
@@ -449,43 +568,45 @@ document.write(`
 <li><p><a class="reference internal" href="#task-outputs" id="id21">Task Outputs</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#graph" id="id22">Graph</a></p>
+<li><p><a class="reference internal" href="#artifact-input-parameters" id="id22">Artifact Input Parameters</a></p></li>
+<li><p><a class="reference internal" href="#graph" id="id23">Graph</a></p>
 <ul>
-<li><p><a class="reference internal" href="#steps" id="id23">Steps</a></p>
+<li><p><a class="reference internal" href="#steps" id="id24">Steps</a></p>
 <ul>
-<li><p><a class="reference internal" href="#positional-style-invocation" id="id24">Positional Style Invocation</a></p></li>
-<li><p><a class="reference internal" href="#keyword-style-invocation" id="id25">Keyword Style Invocation</a></p></li>
-<li><p><a class="reference internal" href="#mixed-style-invocation" id="id26">Mixed Style Invocation</a></p></li>
-<li><p><a class="reference internal" href="#describing-argument-values" id="id27">Describing Argument Values</a></p>
+<li><p><a class="reference internal" href="#positional-style-invocation" id="id25">Positional Style Invocation</a></p></li>
+<li><p><a class="reference internal" href="#keyword-style-invocation" id="id26">Keyword Style Invocation</a></p></li>
+<li><p><a class="reference internal" href="#mixed-style-invocation" id="id27">Mixed Style Invocation</a></p></li>
+<li><p><a class="reference internal" href="#describing-argument-values" id="id28">Describing Argument Values</a></p>
 <ul>
-<li><p><a class="reference internal" href="#references" id="id28">References</a></p></li>
+<li><p><a class="reference internal" href="#references" id="id29">References</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#dependencies" id="id29">Dependencies</a></p></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p><a class="reference internal" href="#type-validation" id="id30">Type Validation</a></p>
-<ul>
-<li><p><a class="reference internal" href="#type-inference" id="id31">Type Inference</a></p>
-<ul>
-<li><p><a class="reference internal" href="#type-inference-from-literals" id="id32">Type Inference from Literals</a></p>
-<ul>
-<li><p><a class="reference internal" href="#inferring-mapping-types" id="id33">Inferring Mapping Types</a></p></li>
+<li><p><a class="reference internal" href="#dependencies" id="id30">Dependencies</a></p></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#type-compatibility" id="id34">Type Compatibility</a></p>
-<ul>
-<li><p><a class="reference internal" href="#union-compatibility" id="id35">Union Compatibility</a></p></li>
-<li><p><a class="reference internal" href="#structured-type-compatibility" id="id36">Structured Type Compatibility</a></p></li>
+<li><p><a class="reference internal" href="#artifact-outputs" id="id31">Artifact Outputs</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#type-variance" id="id37">Type Variance</a></p></li>
+<li><p><a class="reference internal" href="#type-validation" id="id32">Type Validation</a></p>
+<ul>
+<li><p><a class="reference internal" href="#type-inference" id="id33">Type Inference</a></p>
+<ul>
+<li><p><a class="reference internal" href="#type-inference-from-literals" id="id34">Type Inference from Literals</a></p>
+<ul>
+<li><p><a class="reference internal" href="#inferring-mapping-types" id="id35">Inferring Mapping Types</a></p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#type-compatibility" id="id36">Type Compatibility</a></p>
+<ul>
+<li><p><a class="reference internal" href="#union-compatibility" id="id37">Union Compatibility</a></p></li>
+<li><p><a class="reference internal" href="#structured-type-compatibility" id="id38">Structured Type Compatibility</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#type-variance" id="id39">Type Variance</a></p></li>
 </ul>
 </li>
 </ul>
@@ -545,29 +666,35 @@ clearest presentation of the content.</p>
 <section id="structure-description">
 <h2><a class="toc-backref" href="#id5">Structure Description</a><a class="headerlink" href="#structure-description" title="Permalink to this headline">#</a></h2>
 <p>The top level of the data structure is a mapping with a few prescribed keys,
-which provide the basic ingredients for the experiment: types, parameters,
-tasks, and a graph which links task invocations together:</p>
+which provide the basic ingredients for the experiment: types, parameters, artifact
+input parameters, tasks, a graph which links task invocations together, and the artifact
+output declaration:</p>
 <div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">types</span><span class="p">:</span>
 <span class="w">    </span><span class="s">&quot;&lt;type</span><span class="nv"> </span><span class="s">definitions</span><span class="nv"> </span><span class="s">here&gt;&quot;</span>
 
 <span class="nt">parameters</span><span class="p">:</span>
 <span class="w">    </span><span class="s">&quot;&lt;parameters</span><span class="nv"> </span><span class="s">here&gt;&quot;</span>
 
+<span class="nt">artifact_inputs</span><span class="p">:</span>
+<span class="w">    </span><span class="s">&quot;&lt;artifact</span><span class="nv"> </span><span class="s">input</span><span class="nv"> </span><span class="s">parameters</span><span class="nv"> </span><span class="s">here&gt;&quot;</span>
+
 <span class="nt">tasks</span><span class="p">:</span>
 <span class="w">    </span><span class="s">&quot;&lt;tasks</span><span class="nv"> </span><span class="s">here&gt;&quot;</span>
 
 <span class="nt">graph</span><span class="p">:</span>
 <span class="w">    </span><span class="s">&quot;&lt;graph</span><span class="nv"> </span><span class="s">here&gt;&quot;</span>
+
+<span class="nt">artifact_outputs</span><span class="p">:</span>
+<span class="w">    </span><span class="s">&quot;artifact</span><span class="nv"> </span><span class="s">output</span><span class="nv"> </span><span class="s">declaration</span><span class="nv"> </span><span class="s">here&quot;</span>
 </pre></div>
 </div>
-<p>The rest of the structural description describes what goes in each of those
-four places.</p>
+<p>The rest of the structural description describes what goes in each of those six places.</p>
 <section id="types">
-<h3><a class="toc-backref" href="#id6">Types</a><a class="headerlink" href="#types" title="Permalink to this headline">#</a></h3>
+<span id="type-reference"></span><h3><a class="toc-backref" href="#id6">Types</a><a class="headerlink" href="#types" title="Permalink to this headline">#</a></h3>
 <p>This section is used to define a set of types.  Types describe the inputs and
-outputs of task plugins, and global parameters.  They allow an additional kind
-of validation of the experiment: that the inputs passed to task plugins are
-compatible with their parameter types.</p>
+outputs of task plugins, the outputs from artifact input parameter deserialization, and
+global parameters.  They allow an additional kind of validation of the experiment: that
+the inputs passed to task plugins are compatible with their parameter types.</p>
 <p>The top-level structure of this section is a mapping from type name to type
 definition:</p>
 <div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">types</span><span class="p">:</span>
@@ -728,7 +855,7 @@ type.</p>
 </section>
 </section>
 <section id="parameters">
-<h3><a class="toc-backref" href="#id17">Parameters</a><a class="headerlink" href="#parameters" title="Permalink to this headline">#</a></h3>
+<span id="parameters-label"></span><h3><a class="toc-backref" href="#id17">Parameters</a><a class="headerlink" href="#parameters" title="Permalink to this headline">#</a></h3>
 <p>The value of the top-level <code class="docutils literal notranslate"><span class="pre">parameters</span></code> key must be a mapping.  The keys
 of the mapping are the global parameter names.  They may map to any value,
 where mapping values are treated specially.  If not a mapping, the value is
@@ -822,7 +949,7 @@ defaults to true, i.e. all defined task plugin inputs are required by default.
 Long form must be used in order to define an input as optional.</p>
 </section>
 <section id="task-outputs">
-<h4><a class="toc-backref" href="#id21">Task Outputs</a><a class="headerlink" href="#task-outputs" title="Permalink to this headline">#</a></h4>
+<span id="task-outputs-label"></span><h4><a class="toc-backref" href="#id21">Task Outputs</a><a class="headerlink" href="#task-outputs" title="Permalink to this headline">#</a></h4>
 <p>A task plugin may or may not produce any output.  If it does, and its output(s)
 will be needed to feed other task(s), then the output(s) must be defined.  They
 require names so they may be referred to, and must also be assigned types so
@@ -851,8 +978,33 @@ attempts to refer to them will produce an error.</p>
 </div>
 </section>
 </section>
+<section id="artifact-input-parameters">
+<h3><a class="toc-backref" href="#id22">Artifact Input Parameters</a><a class="headerlink" href="#artifact-input-parameters" title="Permalink to this headline">#</a></h3>
+<p>Artifact input parameters are similar to <a class="reference internal" href="#parameters-label"><span class="std std-ref">Parameters</span></a>, but use artifacts from other
+jobs as input values. The artifacts are deserialized and the output values from this
+deserialization are made available similar to any result from a task. The value of the
+top-level <code class="docutils literal notranslate"><span class="pre">artifact_inputs</span></code> key must be a mapping.  The keys
+of the mapping are the artifact input parameter names.  The artifact input parameter
+names map to ouput values in an identical manner to what is described in
+<a class="reference internal" href="#task-outputs-label"><span class="std std-ref">Task Outputs</span></a>. For example:</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">artifact_inputs</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">artifact1</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">result</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Path</span>
+<span class="w">    </span><span class="nt">foo</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">bar</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">integer</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">baz</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">string</span>
+</pre></div>
+</div>
+<p>Here, <code class="docutils literal notranslate"><span class="pre">artifact1</span></code> has a single output value using a custom type of <code class="docutils literal notranslate"><span class="pre">Path</span></code> and <code class="docutils literal notranslate"><span class="pre">foo</span></code>
+has two output values of <code class="docutils literal notranslate"><span class="pre">bar</span></code> which is an integer value and <code class="docutils literal notranslate"><span class="pre">baz</span></code> which is a string
+value.</p>
+<p>Additional rules include:</p>
+<ul class="simple">
+<li><p>All artifacts <em>must</em> have one or more outputs.</p></li>
+</ul>
+</section>
 <section id="graph">
-<h3><a class="toc-backref" href="#id22">Graph</a><a class="headerlink" href="#graph" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id23">Graph</a><a class="headerlink" href="#graph" title="Permalink to this headline">#</a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">graph</span></code> section is where you describe invocations of the aforementioned
 task plugins, and connect the outputs of some to the inputs of others, creating
 the graph structure.</p>
@@ -868,7 +1020,7 @@ to invoke it:</p>
 </pre></div>
 </div>
 <section id="steps">
-<h4><a class="toc-backref" href="#id23">Steps</a><a class="headerlink" href="#steps" title="Permalink to this headline">#</a></h4>
+<h4><a class="toc-backref" href="#id24">Steps</a><a class="headerlink" href="#steps" title="Permalink to this headline">#</a></h4>
 <p>Each step invokes a task plugin, which is a Python function, and the way you
 invoke Python functions depends on how they are written.  For example, they
 may have positional-only or keyword-only arguments, or a combination of the
@@ -880,8 +1032,15 @@ keyword style be used since the meaning of the argument values is clearer
 due to the naming of each argument.  It is also structurally simpler than
 the mixed style.</p>
 </div>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>The Positional Style Invocation and Keyword Style Invocation cannot be used
+with a parameter that has zero parameters. Instead, the Mixed Style Invocation
+must be used. (Both Positional and Keyword Style Invocations will assume a
+single <code class="docutils literal notranslate"><span class="pre">None</span></code> parameter if none are specified.)</p>
+</div>
 <section id="positional-style-invocation">
-<h5><a class="toc-backref" href="#id24">Positional Style Invocation</a><a class="headerlink" href="#positional-style-invocation" title="Permalink to this headline">#</a></h5>
+<h5><a class="toc-backref" href="#id25">Positional Style Invocation</a><a class="headerlink" href="#positional-style-invocation" title="Permalink to this headline">#</a></h5>
 <p>A simple way to describe a positional style task plugin invocation is to map
 the plugin short name to a list of positional arguments:</p>
 <div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">graph</span><span class="p">:</span>
@@ -895,7 +1054,7 @@ simple structures, one is permitted to use a simple non-map, non-list value as
 well, and this will be interpreted the same as a length-one list.</p>
 </section>
 <section id="keyword-style-invocation">
-<h5><a class="toc-backref" href="#id25">Keyword Style Invocation</a><a class="headerlink" href="#keyword-style-invocation" title="Permalink to this headline">#</a></h5>
+<h5><a class="toc-backref" href="#id26">Keyword Style Invocation</a><a class="headerlink" href="#keyword-style-invocation" title="Permalink to this headline">#</a></h5>
 <p>Similarly to positional style, the keyword arg style maps a plugin short name
 to a mapping of keyword arg names to values:</p>
 <div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">graph</span><span class="p">:</span>
@@ -909,7 +1068,7 @@ to a mapping of keyword arg names to values:</p>
 and invoke it with keyword arguments keyword1=arg1 and keyword2=arg2.</p>
 </section>
 <section id="mixed-style-invocation">
-<h5><a class="toc-backref" href="#id26">Mixed Style Invocation</a><a class="headerlink" href="#mixed-style-invocation" title="Permalink to this headline">#</a></h5>
+<h5><a class="toc-backref" href="#id27">Mixed Style Invocation</a><a class="headerlink" href="#mixed-style-invocation" title="Permalink to this headline">#</a></h5>
 <p>There is a longer form invocation description which supports both styles at the
 same time, for a mixed style invocation.  It uses a mapping with prescribed
 keys <code class="docutils literal notranslate"><span class="pre">task</span></code>, <code class="docutils literal notranslate"><span class="pre">args</span></code>, <code class="docutils literal notranslate"><span class="pre">kwargs</span></code>:</p>
@@ -927,7 +1086,7 @@ keys <code class="docutils literal notranslate"><span class="pre">task</span></c
 posarg2, and keyword args keyword1=arg1 and keyword2=arg2.</p>
 </section>
 <section id="describing-argument-values">
-<h5><a class="toc-backref" href="#id27">Describing Argument Values</a><a class="headerlink" href="#describing-argument-values" title="Permalink to this headline">#</a></h5>
+<h5><a class="toc-backref" href="#id28">Describing Argument Values</a><a class="headerlink" href="#describing-argument-values" title="Permalink to this headline">#</a></h5>
 <p>In the invocation examples above, argument values were given as simple strings
 to keep the presented data structures clear and free of clutter.  However, one
 can use more than simple values as task plugin argument values.  It is possible
@@ -946,7 +1105,7 @@ positional invocation.  The list has one value in it, which is itself a
 mapping: {prop1: value1, prop2: value2}.  The task plugin will be invoked
 positionally, where its one positional argument will be a Python dict.</p>
 <section id="references">
-<h6><a class="toc-backref" href="#id28">References</a><a class="headerlink" href="#references" title="Permalink to this headline">#</a></h6>
+<h6><a class="toc-backref" href="#id29">References</a><a class="headerlink" href="#references" title="Permalink to this headline">#</a></h6>
 <p>An important aspect of describing an argument value is being able to refer to
 another part of the experiment description.  This is how we make use of global
 <a class="reference internal" href="#parameters">parameters</a>, and refer to the outputs of other steps.</p>
@@ -998,7 +1157,7 @@ appropriate values before the task plugin is invoked.</p>
 </section>
 </section>
 <section id="dependencies">
-<h5><a class="toc-backref" href="#id29">Dependencies</a><a class="headerlink" href="#dependencies" title="Permalink to this headline">#</a></h5>
+<h5><a class="toc-backref" href="#id30">Dependencies</a><a class="headerlink" href="#dependencies" title="Permalink to this headline">#</a></h5>
 <p>The references described above can imply dependencies among the steps.  If step
 B requires as input the output of step A, then A must run first so that there
 is an output to pass to B.  The task graph runner can work out for itself a
@@ -1020,9 +1179,35 @@ which maps to a list of step names.  For example:</p>
 </section>
 </section>
 </section>
+<section id="artifact-outputs">
+<h3><a class="toc-backref" href="#id31">Artifact Outputs</a><a class="headerlink" href="#artifact-outputs" title="Permalink to this headline">#</a></h3>
+<p>Artifact outputs are declared and can use the result of any other artifact, parameter, or
+task as input for serialization. All artifacts are serialized at the end of the job. The
+value of the top-level <code class="docutils literal notranslate"><span class="pre">artifact_outputs</span></code> key must be a mapping.  The keys
+of the mapping are the names of the artifacts to be serialized and the values are the
+declarative description for what should be the <code class="docutils literal notranslate"><span class="pre">contents</span></code>, the <code class="docutils literal notranslate"><span class="pre">name</span></code> of the class
+implementing <code class="docutils literal notranslate"><span class="pre">ArtifactTaskInterface</span></code> which should be used to serialize and
+deserialize the artifact, and any optional <code class="docutils literal notranslate"><span class="pre">args</span></code> that should be passed to the
+serialize method for the handler.</p>
+<p>For example:</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">artifact_outputs</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">artifact1</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">contents</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$task1.result2</span>
+<span class="w">        </span><span class="nt">task</span><span class="p">:</span>
+<span class="w">            </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Result2Serializer</span>
+<span class="w">            </span><span class="nt">args</span><span class="p">:</span>
+<span class="w">                </span><span class="nt">foo</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">arg1</span>
+</pre></div>
+</div>
+<p>Here, <code class="docutils literal notranslate"><span class="pre">artifact1</span></code> is the name of an artifact that has as its <code class="docutils literal notranslate"><span class="pre">contents</span></code> the value of
+<code class="docutils literal notranslate"><span class="pre">result2</span></code> from the output of <code class="docutils literal notranslate"><span class="pre">task1</span></code>. The <code class="docutils literal notranslate"><span class="pre">name</span></code> of the <code class="docutils literal notranslate"><span class="pre">ArtifactTaskInterface</span></code>
+to use is a class called <code class="docutils literal notranslate"><span class="pre">Result2Serializer</span></code> and this particular implementation has a
+single extra argument called <code class="docutils literal notranslate"><span class="pre">foo</span></code> and a value of <code class="docutils literal notranslate"><span class="pre">arg1</span></code> which has been provided in
+this example.</p>
+</section>
 </section>
 <section id="type-validation">
-<h2><a class="toc-backref" href="#id30">Type Validation</a><a class="headerlink" href="#type-validation" title="Permalink to this headline">#</a></h2>
+<h2><a class="toc-backref" href="#id32">Type Validation</a><a class="headerlink" href="#type-validation" title="Permalink to this headline">#</a></h2>
 <p>This section describes how types are used.  The larger goal of validation is to
 ensure that the experiment definition is sensible and correct.  The goal of
 type validation is to ensure that task plugins are always passed types of
@@ -1038,7 +1223,7 @@ compatibility check to ensure each task plugin invocation makes sense.  Type
 inference and compatibility checking are the basic foundation of type
 validation.  These two operations are described in the following subsections.</p>
 <section id="type-inference">
-<h3><a class="toc-backref" href="#id31">Type Inference</a><a class="headerlink" href="#type-inference" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id33">Type Inference</a><a class="headerlink" href="#type-inference" title="Permalink to this headline">#</a></h3>
 <p>Input values to a task plugin can come from a few different places: outputs of
 other task plugins, global parameter values, and literal values given directly
 in a task plugin invocation.  In all cases, the input values must be assigned
@@ -1058,7 +1243,7 @@ type name is used which must refer to a type defined in the <code class="docutil
 of the experiment description.  That is a simple case.  Inferring a type from
 a literal value is more complex, and is described in the next section.</p>
 <section id="type-inference-from-literals">
-<h4><a class="toc-backref" href="#id32">Type Inference from Literals</a><a class="headerlink" href="#type-inference-from-literals" title="Permalink to this headline">#</a></h4>
+<h4><a class="toc-backref" href="#id34">Type Inference from Literals</a><a class="headerlink" href="#type-inference-from-literals" title="Permalink to this headline">#</a></h4>
 <p>Type inference from literals is based on Python types.  When experiment
 description content comes from a file (e.g. YAML or JSON), there is a second
 translation that can happen from the file format to Python.  In that case, it
@@ -1153,7 +1338,7 @@ the mapping/iterable value.  Type inference will recurse throughout a complex
 value, so it is possible to infer a complex type.  Mapping inference is more
 complex and is described separately in the next section.</p>
 <section id="inferring-mapping-types">
-<h5><a class="toc-backref" href="#id33">Inferring Mapping Types</a><a class="headerlink" href="#inferring-mapping-types" title="Permalink to this headline">#</a></h5>
+<h5><a class="toc-backref" href="#id35">Inferring Mapping Types</a><a class="headerlink" href="#inferring-mapping-types" title="Permalink to this headline">#</a></h5>
 <p>In Python, mapping keys can be heterogenous and of any hashable type, and
 anything can be a value.  Type inference tries to infer the most specific
 mapping type it can, as follows:</p>
@@ -1173,7 +1358,7 @@ inferred.</p></li>
 </section>
 </section>
 <section id="type-compatibility">
-<h3><a class="toc-backref" href="#id34">Type Compatibility</a><a class="headerlink" href="#type-compatibility" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id36">Type Compatibility</a><a class="headerlink" href="#type-compatibility" title="Permalink to this headline">#</a></h3>
 <p>Type compatibility refers to whether a task plugin invocation argument of one
 type may be legally passed as the value of a task parameter of a possibly
 different type.  If A “is compatible with” B, then values of type A may be
@@ -1192,7 +1377,7 @@ same as or a subtype of the second</p></li>
 <p>The following subsections describe more complex compatibility criteria related
 to structured and union types.</p>
 <section id="union-compatibility">
-<h4><a class="toc-backref" href="#id35">Union Compatibility</a><a class="headerlink" href="#union-compatibility" title="Permalink to this headline">#</a></h4>
+<h4><a class="toc-backref" href="#id37">Union Compatibility</a><a class="headerlink" href="#union-compatibility" title="Permalink to this headline">#</a></h4>
 <p>Compatibility rules related to union types are as follows:</p>
 <ul class="simple">
 <li><p>A union type is compatible with another type iff all member types of the
@@ -1204,7 +1389,7 @@ compatible with at least one member of the union</p></li>
 </ul>
 </section>
 <section id="structured-type-compatibility">
-<h4><a class="toc-backref" href="#id36">Structured Type Compatibility</a><a class="headerlink" href="#structured-type-compatibility" title="Permalink to this headline">#</a></h4>
+<h4><a class="toc-backref" href="#id38">Structured Type Compatibility</a><a class="headerlink" href="#structured-type-compatibility" title="Permalink to this headline">#</a></h4>
 <p>Compatibility rules related to structured types are as follows:</p>
 <ul class="simple">
 <li><p>Named structured types with different names are incompatible.  This is
@@ -1236,7 +1421,7 @@ key/value type mappings.</p></li>
 </section>
 </section>
 <section id="type-variance">
-<h3><a class="toc-backref" href="#id37">Type Variance</a><a class="headerlink" href="#type-variance" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id39">Type Variance</a><a class="headerlink" href="#type-variance" title="Permalink to this headline">#</a></h3>
 <p>“Type variance” refers to whether and how types are allowed to differ in
 various contexts (typically related to programming languages).  An experiment
 is analogous to a program in that functions are called, which are passed values
@@ -1282,20 +1467,20 @@ plugin.</p>
     <div class="footer-article-item"><!-- Previous / next buttons -->
 <div class="prev-next-area">
     <a class="left-prev"
-       href="../user-guide/the-web-frontend.html"
+       href="resource-search-language-reference.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">The Web Frontend</p>
+        <p class="prev-next-title">Resource Search Language Syntax</p>
       </div>
     </a>
     <a class="right-next"
-       href="api-reference-restapi.html"
+       href="../dev-guide/contributing-documentation-guide.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Testbed REST API Reference</p>
+        <p class="prev-next-title">Guidelines for Documentation</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -1347,6 +1532,7 @@ plugin.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#task-outputs">Task Outputs</a></li>
 </ul>
 </li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#artifact-input-parameters">Artifact Input Parameters</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#graph">Graph</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#steps">Steps</a><ul class="nav section-nav flex-column">
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#positional-style-invocation">Positional Style Invocation</a></li>
@@ -1361,6 +1547,7 @@ plugin.</p>
 </li>
 </ul>
 </li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#artifact-outputs">Artifact Outputs</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#type-validation">Type Validation</a><ul class="nav section-nav flex-column">
@@ -1400,18 +1587,12 @@ plugin.</p>
   <script src="../_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
 <script src="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
 
-<footer class="footer mt-5 mt-md-0">
-    <div class="container">
-      <p>
-        <div class="disclaimer">
-          <strong>Disclaimer:</strong> Certain commercial equipment, instruments, or
-          materials are identified in this documentation to foster understanding. Such
-          identification does not imply recommendation or endorsement by the National
-          Institute of Standards and Technology, nor does it imply that the materials
-          or equipment identified are necessarily the best available for the purpose.
-        </div>
-      </p>
-    </div>
-</footer>
+  
+  <footer class="bd-footer">
+  </footer>
+  <div id="img-modal">
+    <span class="close-btn">&times;</span>
+    <img id="modal-img" src="" alt="enlarged screenshot">
+  </div>
   </body>
 </html>

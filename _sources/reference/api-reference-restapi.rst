@@ -15,16 +15,16 @@
 .. ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 .. https://creativecommons.org/licenses/by/4.0/legalcode
 
-.. _user-guide-api-reference-restapi:
+.. _reference-testbed-rest-api-reference:
 
-Testbed REST API Reference
-==========================
+REST API Reference
+==================
 
 .. include:: /_glossary_note.rst
 
 This page documents the endpoints and available :term:`HTTP` methods for the Dioptra :term:`REST` :term:`API`.
-In addition to using this page, it is highly recommended that Testbed users also use the Swagger documentation that the :term:`REST` :term:`API` service automatically generates at runtime, which presents all of this page's information in an interactive format.
-To access the Swagger documentation, just navigate to the web URL for the Testbed :term:`REST` :term:`API` service (omit the ``/api/v1`` part at the end of the web address).
+In addition to using this page, it is highly recommended that Dioptra users also use the Swagger documentation that the :term:`REST` :term:`API` service automatically generates at runtime, which presents all of this page's information in an interactive format.
+To access the Swagger documentation, just navigate to the web URL for the Dioptra :term:`REST` :term:`API` service (omit the ``/api/v1`` part at the end of the web address).
 
 
 Authentication

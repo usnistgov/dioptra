@@ -1,0 +1,1227 @@
+
+
+
+
+<!DOCTYPE html>
+
+
+<html >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>dioptra.client.experiments &#8212; Dioptra 1.1.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../../../_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+
+  
+  <link href="../../../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" href="../../../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/dioptra.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
+
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/clipboard.min.js"></script>
+    <script src="../../../_static/copybutton.js"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../../_static/togglebutton.js"></script>
+    <script src="../../../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script src="../../../_static/jquery.visible.js"></script>
+    <script src="../../../_static/jquery.leaveNotice-nist.js"></script>
+    <script src="../../../_static/applyLeaveNotice.js"></script>
+    <script src="../../../_static/smoothNavScroll.js"></script>
+    <script src="../../../_static/image_modals.js"></script>
+    <script src="../../../_static/design-tabs.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/dioptra/client/experiments';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="None"/>
+
+    <link rel="stylesheet" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css">
+    <link rel="stylesheet" type="text/css" href="https://pages.nist.gov/leaveNotice/css/jquery.leaveNotice.css" />
+    <script src="https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js" type="text/javascript" defer="defer"></script>
+    <script async type="text/javascript" id="_fed_an_ua_tag" src="https://dap.digitalgov.gov/Universal-Federated-Analytics-Min.js?agency=NIST&subagency=github&pua=UA-66610693-1&yt=true&exts=ppsx,pps,f90,sch,rtf,wrl,txz,m1v,xlsm,msi,xsd,f,tif,eps,mpg,xml,pl,xlt,c"></script>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    <p class="title logo__title">Dioptra 1.1.0 documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../../index.html">
+                    Dioptra Overview
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">What is Dioptra?</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../explanation/dioptra-motivation/why-dioptra.html">Motivation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../explanation/dioptra-motivation/design-principles.html">Design Principles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../explanation/dioptra-motivation/audience.html">Intended Audience</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../explanation/architecture-overview.html">Architecture Overview</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Setup</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../how-to/setup-dioptra/install-dioptra-explanation.html">Install Dioptra</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../how-to/setup-dioptra/get-container-images/index.html">Get the Container Images</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../how-to/setup-dioptra/get-container-images/download-container-images.html">Download the Container Images</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../how-to/setup-dioptra/get-container-images/build-container-images.html">Build the Container Images</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/prepare-deployment.html">Prepare Your Deployment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/update-deployment.html">Update Your Deployment</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../how-to/setup-dioptra/configure-setup/index.html">Customize Your Setup</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/configure-setup/using-docker-compose-overrides.html">Use Docker Compose Override Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/configure-setup/data-mounts.html">Mount Data Volumes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/configure-setup/gpu-enabled-workers.html">Configure GPU Workers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/configure-setup/adding-certificates.html">Add Custom CA Certificates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/configure-setup/enabling-ssl-tls.html">Enable SSL/TLS in NGINX and Postgres</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/configure-setup/creating-custom-workers.html">Create a Custom Worker Container</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/configure-setup/integrating-custom-containers.html">Integrate Custom Containers</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../how-to/setup-dioptra/reference/index.html">Setup Reference</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/reference/deployment-template-reference.html">Deployment Template Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/reference/deployment-folder-reference.html">Deployment Folder Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/reference/init-deployment-script-reference.html">init-deployment.sh Script Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/reference/deployment-commands-reference.html">Deployment Commands Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/reference/custom-worker-template-reference.html">Custom Worker Template Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/reference/dioptra-worker-v1-reference.html">dioptra-worker-v1 Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/reference/worker-container-requirements-reference.html">Worker Container Requirements Reference</a></li>
+</ul>
+</li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Explainers</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../explanation/workflow-architecture-explanation.html">Workflow Architecture</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../explanation/components/index.html">Dioptra Components</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../explanation/components/queues-workers-explanation.html">Queues and Workers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../explanation/components/users-groups-explanation.html">Users and Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../explanation/components/param-types-explanation.html">Plugin Parameter Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../explanation/components/plugin-explanation.html">Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../explanation/components/entrypoints-explanation.html">Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../explanation/components/task-graph-explanation.html">Task Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../explanation/components/artifacts-explanation.html">Artifacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../explanation/components/experiments-jobs-explanation.html">Experiments and Jobs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../explanation/usage-modes.html">Usage Modes</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../tutorials/hello_world/index.html">Hello World in Dioptra</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorials/hello_world/part-0.html">Set Up Dioptra in the GUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorials/hello_world/part-1.html">Running Hello World</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../tutorials/essential_workflows/index.html">Learning the Essentials</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorials/essential_workflows/part-2.html">Adding Inputs and Outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorials/essential_workflows/part-3.html">Building a Multi-Step Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorials/essential_workflows/part-5.html">Saving Artifacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorials/essential_workflows/part-6.html">Using Saved Artifacts</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/advanced/index.html">Advanced Tutorials</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">How Tos</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../how-to/essential-workflows/index.html">Running Experiments</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/setup-python-client.html">Set Up the Python Client</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/creating-a-queue.html">Create Queues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/creating-users-groups.html">Create Users and Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/creating-param-types.html">Create Parameter Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/creating-a-plugin.html">Create Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/use-metrics.html">Logging Metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/creating-an-entrypoint.html">Create Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/creating-an-experiment.html">Create Experiments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/running-jobs.html">Running Jobs</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../how-to/import-content/index.html">Importing Content</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-9"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/import-content/add-a-dataset.html">Add a Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/import-content/import-resources.html">Import Resources</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../how-to/advanced/index.html">Advanced</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/advanced/distribute-plugins.html">Distribute Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/advanced/develop-for-dioptra.html">Develop for Dioptra</a></li>
+</ul>
+</li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/glossary.html">Glossary</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../reference/dioptra-components/index.html">Dioptra Components</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-11"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/dioptra-components/users-reference.html">Users</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/dioptra-components/groups-reference.html">Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/dioptra-components/queues-reference.html">Queues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/dioptra-components/param-types-reference.html">Plugin Parameter Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/dioptra-components/plugin-reference.html">Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/dioptra-components/entrypoints-reference.html">Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/dioptra-components/experiments-reference.html">Experiments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/dioptra-components/jobs-reference.html">Jobs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/dioptra-components/artifacts-reference.html">Artifacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/dioptra-components/metrics-reference.html">Metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/dioptra-components/workers-reference.html">Workers</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../reference/python-client/index.html">Python Client Methods</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-12"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/python-client/auth-users-groups-client-methods.html">Auth, Users, and Groups Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/python-client/queues-client-methods.html">Queues Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/python-client/param-types-client-methods.html">Parameter Types Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/python-client/plugin-client-methods.html">Plugins Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/python-client/entrypoints-client-methods.html">Entrypoints Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/python-client/experiments-client-methods.html">Experiments Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/python-client/jobs-client-methods.html">Jobs Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/python-client/artifacts-client-methods.html">Artifacts Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/python-client/tags-client-methods.html">Tags Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/python-client/snapshots-client-methods.html">Snapshots Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/python-client/workflows-client-methods.html">Workflows Client Methods</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/api-reference-restapi.html">REST API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/resource-import-reference.html">Resource Import Syntax</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/resource-search-language-reference.html">Resource Search Language Syntax</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/task-engine-reference.html">Declarative Experiment Description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev-guide/contributing-documentation-guide.html">Guidelines for Documentation</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/usnistgov/dioptra" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script>
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <h1>Source code for dioptra.client.experiments</h1><div class="highlight"><pre>
+<span></span><span class="c1"># This Software (Dioptra) is being made available as a public service by the</span>
+<span class="c1"># National Institute of Standards and Technology (NIST), an Agency of the United</span>
+<span class="c1"># States Department of Commerce. This software was developed in part by employees of</span>
+<span class="c1"># NIST and in part by NIST contractors. Copyright in portions of this software that</span>
+<span class="c1"># were developed by NIST contractors has been licensed or assigned to NIST. Pursuant</span>
+<span class="c1"># to Title 17 United States Code Section 105, works of NIST employees are not</span>
+<span class="c1"># subject to copyright protection in the United States. However, NIST may hold</span>
+<span class="c1"># international copyright in software created by its employees and domestic</span>
+<span class="c1"># copyright (or licensing rights) in portions of software that were assigned or</span>
+<span class="c1"># licensed to NIST. To the extent that NIST holds copyright in this software, it is</span>
+<span class="c1"># being made available under the Creative Commons Attribution 4.0 International</span>
+<span class="c1"># license (CC BY 4.0). The disclaimers of the CC BY 4.0 license apply to all parts</span>
+<span class="c1"># of the software developed or licensed by NIST.</span>
+<span class="c1">#</span>
+<span class="c1"># ACCESS THE FULL CC BY 4.0 LICENSE HERE:</span>
+<span class="c1"># https://creativecommons.org/licenses/by/4.0/legalcode</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">ClassVar</span><span class="p">,</span> <span class="n">Final</span><span class="p">,</span> <span class="n">TypeVar</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.base</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">CollectionClient</span><span class="p">,</span>
+    <span class="n">DioptraClientError</span><span class="p">,</span>
+    <span class="n">DioptraSession</span><span class="p">,</span>
+    <span class="n">SubCollectionClient</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.drafts</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ModifyResourceDraftsSubCollectionClient</span><span class="p">,</span>
+    <span class="n">NewResourceDraftsSubCollectionClient</span><span class="p">,</span>
+    <span class="n">make_draft_fields_validator</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.snapshots</span><span class="w"> </span><span class="kn">import</span> <span class="n">SnapshotsSubCollectionClient</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.tags</span><span class="w"> </span><span class="kn">import</span> <span class="n">TagsSubCollectionClient</span>
+
+<span class="n">ARTIFACTS</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;artifacts&quot;</span>
+<span class="n">METRICS</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;metrics&quot;</span>
+<span class="n">MLFLOW_RUN</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;mlflowRun&quot;</span>
+<span class="n">STATUS</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;status&quot;</span>
+
+<span class="n">DRAFT_FIELDS</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;description&quot;</span><span class="p">,</span> <span class="s2">&quot;entrypoints&quot;</span><span class="p">}</span>
+
+<span class="n">T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T&quot;</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">ExperimentEntrypointsSubCollectionClient</span><span class="p">(</span><span class="n">SubCollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">]):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The client for managing Dioptra&#39;s /experiments/{id}/entrypoints sub-collection.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        name: The name of the sub-collection.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;entrypoints&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">session</span><span class="p">:</span> <span class="n">DioptraSession</span><span class="p">[</span><span class="n">T</span><span class="p">],</span>
+        <span class="n">root_collection</span><span class="p">:</span> <span class="n">CollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">],</span>
+        <span class="n">parent_sub_collections</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="s2">&quot;SubCollectionClient[T]&quot;</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the ExperimentEntrypointsSubCollectionClient instance.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            session: The Dioptra API session object.</span>
+<span class="sd">            root_collection: The client for the root collection that owns this</span>
+<span class="sd">                sub-collection.</span>
+<span class="sd">            parent_sub_collections: Unused in this client, must be None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">parent_sub_collections</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DioptraClientError</span><span class="p">(</span>
+                <span class="s2">&quot;The parent_sub_collections argument must be None for this client.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">session</span><span class="o">=</span><span class="n">session</span><span class="p">,</span>
+            <span class="n">root_collection</span><span class="o">=</span><span class="n">root_collection</span><span class="p">,</span>
+            <span class="n">parent_sub_collections</span><span class="o">=</span><span class="n">parent_sub_collections</span><span class="p">,</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="ExperimentEntrypointsSubCollectionClient.get"><a class="viewcode-back" href="../../../reference/python-client/experiments-client-methods.html#dioptra.client.experiments.ExperimentEntrypointsSubCollectionClient.get">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get a list of entrypoints added to the experiment.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            experiment_id: The experiment id, an integer.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The response from the Dioptra API.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">build_sub_collection_url</span><span class="p">(</span><span class="n">experiment_id</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="ExperimentEntrypointsSubCollectionClient.create"><a class="viewcode-back" href="../../../reference/python-client/experiments-client-methods.html#dioptra.client.experiments.ExperimentEntrypointsSubCollectionClient.create">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">create</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">experiment_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">entrypoint_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Adds one or more entrypoints to the experiment.</span>
+
+<span class="sd">        If an entrypoint id matches an entrypoint that is already attached to the</span>
+<span class="sd">        experiment, then the experiment will update the entrypoint to the latest</span>
+<span class="sd">        version.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            experiment_id: The experiment id, an integer.</span>
+<span class="sd">            entrypoint_ids: A list of entrypoint ids that will be registered to the</span>
+<span class="sd">                experiment.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The response from the Dioptra API.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">json_</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;ids&quot;</span><span class="p">:</span> <span class="n">entrypoint_ids</span><span class="p">}</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">build_sub_collection_url</span><span class="p">(</span><span class="n">experiment_id</span><span class="p">),</span> <span class="n">json_</span><span class="o">=</span><span class="n">json_</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="ExperimentEntrypointsSubCollectionClient.delete"><a class="viewcode-back" href="../../../reference/python-client/experiments-client-methods.html#dioptra.client.experiments.ExperimentEntrypointsSubCollectionClient.delete">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Remove all entrypoints from the experiment.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            experiment_id: The experiment id, an integer.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The response from the Dioptra API.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">build_sub_collection_url</span><span class="p">(</span><span class="n">experiment_id</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="ExperimentEntrypointsSubCollectionClient.modify_by_id"><a class="viewcode-back" href="../../../reference/python-client/experiments-client-methods.html#dioptra.client.experiments.ExperimentEntrypointsSubCollectionClient.modify_by_id">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">modify_by_id</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">experiment_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">entrypoint_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Replaces the experiment&#39;s full list of entrypoints.</span>
+
+<span class="sd">        If an entrypoint id matches an entrypoint that is already attached to the</span>
+<span class="sd">        experiment, then the experiment will update the entrypoint to the latest</span>
+<span class="sd">        version. If an empty list is provided, then all entrypoints will be removed from</span>
+<span class="sd">        the experiment.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            experiment_id: The experiment id, an integer.</span>
+<span class="sd">            entrypoint_ids: A list of entrypoint ids that will replace the current list</span>
+<span class="sd">                of experiment entrypoints.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The response from the Dioptra API.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">json_</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;ids&quot;</span><span class="p">:</span> <span class="n">entrypoint_ids</span><span class="p">}</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">put</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">build_sub_collection_url</span><span class="p">(</span><span class="n">experiment_id</span><span class="p">),</span> <span class="n">json_</span><span class="o">=</span><span class="n">json_</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="ExperimentEntrypointsSubCollectionClient.delete_by_id"><a class="viewcode-back" href="../../../reference/python-client/experiments-client-methods.html#dioptra.client.experiments.ExperimentEntrypointsSubCollectionClient.delete_by_id">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">delete_by_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span> <span class="n">entrypoint_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Remove an entrypoint from the experiment.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            experiment_id: The experiment id, an integer.</span>
+<span class="sd">            entrypoint_id: The id for the entrypoint that will be removed.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The response from the Dioptra API.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">build_sub_collection_url</span><span class="p">(</span><span class="n">experiment_id</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">entrypoint_id</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">ExperimentJobsSubCollectionClient</span><span class="p">(</span><span class="n">SubCollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">]):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The client for managing Dioptra&#39;s /experiments/{id}/jobs sub-collection.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        name: The name of the sub-collection.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;jobs&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">session</span><span class="p">:</span> <span class="n">DioptraSession</span><span class="p">[</span><span class="n">T</span><span class="p">],</span>
+        <span class="n">root_collection</span><span class="p">:</span> <span class="n">CollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">],</span>
+        <span class="n">parent_sub_collections</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="s2">&quot;SubCollectionClient[T]&quot;</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the ExperimentJobsSubCollectionClient instance.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            session: The Dioptra API session object.</span>
+<span class="sd">            root_collection: The client for the root collection that owns this</span>
+<span class="sd">                sub-collection.</span>
+<span class="sd">            parent_sub_collections: Unused in this client, must be None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">parent_sub_collections</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DioptraClientError</span><span class="p">(</span>
+                <span class="s2">&quot;The parent_sub_collections argument must be None for this client.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">session</span><span class="o">=</span><span class="n">session</span><span class="p">,</span>
+            <span class="n">root_collection</span><span class="o">=</span><span class="n">root_collection</span><span class="p">,</span>
+            <span class="n">parent_sub_collections</span><span class="o">=</span><span class="n">parent_sub_collections</span><span class="p">,</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="ExperimentJobsSubCollectionClient.get"><a class="viewcode-back" href="../../../reference/python-client/experiments-client-methods.html#dioptra.client.experiments.ExperimentJobsSubCollectionClient.get">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">experiment_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">page_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+        <span class="n">sort_by</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">descending</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">search</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get an experiment&#39;s jobs.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            experiment_id: The experiment id, an integer.</span>
+<span class="sd">            index: The paging index. Optional, defaults to 0.</span>
+<span class="sd">            page_length: The maximum number of jobs to return in the paged</span>
+<span class="sd">                response. Optional, defaults to 10.</span>
+<span class="sd">            sort_by: The field to use to sort the returned list. Optional, defaults to</span>
+<span class="sd">                None.</span>
+<span class="sd">            descending: Sort the returned list in descending order. Optional, defaults</span>
+<span class="sd">                to None.</span>
+<span class="sd">            search: Search for models using the Dioptra API&#39;s query language. Optional,</span>
+<span class="sd">                defaults to None.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The response from the Dioptra API.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="n">index</span><span class="p">,</span>
+            <span class="s2">&quot;pageLength&quot;</span><span class="p">:</span> <span class="n">page_length</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="n">sort_by</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;sortBy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sort_by</span>
+
+        <span class="k">if</span> <span class="n">descending</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;descending&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">descending</span>
+
+        <span class="k">if</span> <span class="n">search</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;search&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">search</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">build_sub_collection_url</span><span class="p">(</span><span class="n">experiment_id</span><span class="p">),</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="ExperimentJobsSubCollectionClient.get_by_id"><a class="viewcode-back" href="../../../reference/python-client/experiments-client-methods.html#dioptra.client.experiments.ExperimentJobsSubCollectionClient.get_by_id">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_by_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span> <span class="n">job_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get a specific job from an experiment.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            experiment_id: The experiment id, an integer.</span>
+<span class="sd">            job_id: The job id, an integer.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The response from the Dioptra API.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">build_sub_collection_url</span><span class="p">(</span><span class="n">experiment_id</span><span class="p">),</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">job_id</span><span class="p">),</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="ExperimentJobsSubCollectionClient.create"><a class="viewcode-back" href="../../../reference/python-client/experiments-client-methods.html#dioptra.client.experiments.ExperimentJobsSubCollectionClient.create">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">create</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">experiment_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">entrypoint_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">queue_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">entrypoint_snapshot_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">values</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">artifact_values</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">timeout</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates a job for an experiment.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            experiment_id: The experiment id, an integer.</span>
+<span class="sd">            entrypoint_id: The id for the entrypoint that the job will run.</span>
+<span class="sd">            queue_id: The id for the queue that will execute the job.</span>
+<span class="sd">            entrypoint_snapshot_id: The id for a snapshot associated with the</span>
+<span class="sd">                entrypoint. If specified, the snapshotted version of the entrypoint will</span>
+<span class="sd">                be used to run the job. If not specified, the job will use the latest</span>
+<span class="sd">                version of the entrypoint. Defaults to None.</span>
+<span class="sd">            values: A dictionary of keyword arguments to pass to the entrypoint that</span>
+<span class="sd">                parameterize the job. Default to None.</span>
+<span class="sd">            artifact_values: A dictionary of artifact input names associated with a</span>
+<span class="sd">                value that is also a dictionary that contains the keys &quot;id&quot; and</span>
+<span class="sd">                &quot;snapshotId&quot; whose values are the artifact resource id and the artifact</span>
+<span class="sd">                resource snapshot id respectively. Defaults to None.</span>
+<span class="sd">            timeout: The maximum alloted time for a job before it times out and is</span>
+<span class="sd">                stopped. If omitted, the job timeout will use the default set in the</span>
+<span class="sd">                API.</span>
+<span class="sd">            description: The description for the job. Optional, defaults to None.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The response from the Dioptra API.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">json_</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;entrypoint&quot;</span><span class="p">:</span> <span class="n">entrypoint_id</span><span class="p">,</span> <span class="s2">&quot;queue&quot;</span><span class="p">:</span> <span class="n">queue_id</span><span class="p">}</span>
+
+        <span class="k">if</span> <span class="n">entrypoint_snapshot_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">json_</span><span class="p">[</span><span class="s2">&quot;entrypointSnapshot&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">entrypoint_snapshot_id</span>
+
+        <span class="k">if</span> <span class="n">values</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">json_</span><span class="p">[</span><span class="s2">&quot;values&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span>
+
+        <span class="k">if</span> <span class="n">artifact_values</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">json_</span><span class="p">[</span><span class="s2">&quot;artifactValues&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">artifact_values</span>
+
+        <span class="k">if</span> <span class="n">timeout</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">json_</span><span class="p">[</span><span class="s2">&quot;timeout&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">timeout</span>
+
+        <span class="k">if</span> <span class="n">description</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">json_</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">description</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">build_sub_collection_url</span><span class="p">(</span><span class="n">experiment_id</span><span class="p">),</span> <span class="n">json_</span><span class="o">=</span><span class="n">json_</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="ExperimentJobsSubCollectionClient.delete_by_id"><a class="viewcode-back" href="../../../reference/python-client/experiments-client-methods.html#dioptra.client.experiments.ExperimentJobsSubCollectionClient.delete_by_id">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">delete_by_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span> <span class="n">job_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Delete a job from the experiment.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            experiment_id: The experiment id, an integer.</span>
+<span class="sd">            job_id: The id for the job that will be deleted.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The response from the Dioptra API.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">build_sub_collection_url</span><span class="p">(</span><span class="n">experiment_id</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">job_id</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">create_artifact</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">experiment_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">job_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">uri</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates a job artifact for an experiment.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            experiment_id: The experiment id, an integer.</span>
+<span class="sd">            job_id: The id of the job that produced this artifact.</span>
+<span class="sd">            uri: The URI pointing to the location of the artifact.</span>
+<span class="sd">            description: The description of the new artifact. Optional, defaults to</span>
+<span class="sd">                None.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The response from the Dioptra API.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">json_</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;uri&quot;</span><span class="p">:</span> <span class="n">uri</span><span class="p">}</span>
+
+        <span class="k">if</span> <span class="n">description</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">json_</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">description</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">build_sub_collection_url</span><span class="p">(</span><span class="n">experiment_id</span><span class="p">),</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">job_id</span><span class="p">),</span>
+            <span class="n">ARTIFACTS</span><span class="p">,</span>
+            <span class="n">json_</span><span class="o">=</span><span class="n">json_</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_mlflow_run_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span> <span class="n">job_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets the MLflow run id for an experiment&#39;s job.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            experiment_id: The experiment id, an integer.</span>
+<span class="sd">            job_id: The job id, an integer.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The response from the Dioptra API.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">build_sub_collection_url</span><span class="p">(</span><span class="n">experiment_id</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">job_id</span><span class="p">),</span> <span class="n">MLFLOW_RUN</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_mlflow_run_id</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">experiment_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span> <span class="n">job_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span> <span class="n">mlflow_run_id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Sets the MLflow run id for an experiment&#39;s job.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            experiment_id: The experiment id, an integer.</span>
+<span class="sd">            job_id: The job id, an integer.</span>
+<span class="sd">            mlflow_run_id: The UUid as a string for the associated MLflow run.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The response from the Dioptra API.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">json_</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;mlflowRunId&quot;</span><span class="p">:</span> <span class="n">mlflow_run_id</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">build_sub_collection_url</span><span class="p">(</span><span class="n">experiment_id</span><span class="p">),</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">job_id</span><span class="p">),</span>
+            <span class="n">MLFLOW_RUN</span><span class="p">,</span>
+            <span class="n">json_</span><span class="o">=</span><span class="n">json_</span><span class="p">,</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="ExperimentJobsSubCollectionClient.get_status"><a class="viewcode-back" href="../../../reference/python-client/experiments-client-methods.html#dioptra.client.experiments.ExperimentJobsSubCollectionClient.get_status">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span> <span class="n">job_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets the status for an experiment&#39;s job.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            experiment_id: The experiment id, an integer.</span>
+<span class="sd">            job_id: The job id, an integer.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The response from the Dioptra API.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">build_sub_collection_url</span><span class="p">(</span><span class="n">experiment_id</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">job_id</span><span class="p">),</span> <span class="n">STATUS</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="ExperimentJobsSubCollectionClient.set_status"><a class="viewcode-back" href="../../../reference/python-client/experiments-client-methods.html#dioptra.client.experiments.ExperimentJobsSubCollectionClient.set_status">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">set_status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span> <span class="n">job_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span> <span class="n">status</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Sets the status for an experiment&#39;s job.</span>
+
+<span class="sd">            Primarily used for testing or to reset a job that has failed, whose cause</span>
+<span class="sd">            has been remedied, in order to re-run the job,</span>
+<span class="sd">        Args:</span>
+<span class="sd">            experiment_id: The experiment id, an integer.</span>
+<span class="sd">            job_id: The job id, an integer.</span>
+<span class="sd">            status: The new status for the job. The allowed values are: queued, started,</span>
+<span class="sd">                deferred, finished, failed.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The response from the Dioptra API.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">json_</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">status</span><span class="p">}</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">put</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">build_sub_collection_url</span><span class="p">(</span><span class="n">experiment_id</span><span class="p">),</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">job_id</span><span class="p">),</span>
+            <span class="n">STATUS</span><span class="p">,</span>
+            <span class="n">json_</span><span class="o">=</span><span class="n">json_</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">ExperimentsCollectionClient</span><span class="p">(</span><span class="n">CollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">]):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The client for managing Dioptra&#39;s /experiments collection.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        name: The name of the collection.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;experiments&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">DioptraSession</span><span class="p">[</span><span class="n">T</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the ExperimentsCollectionClient instance.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            session: The Dioptra API session object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_entrypoints</span> <span class="o">=</span> <span class="n">ExperimentEntrypointsSubCollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">](</span>
+            <span class="n">session</span><span class="o">=</span><span class="n">session</span><span class="p">,</span> <span class="n">root_collection</span><span class="o">=</span><span class="bp">self</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_jobs</span> <span class="o">=</span> <span class="n">ExperimentJobsSubCollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">](</span>
+            <span class="n">session</span><span class="o">=</span><span class="n">session</span><span class="p">,</span> <span class="n">root_collection</span><span class="o">=</span><span class="bp">self</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_new_resource_drafts</span> <span class="o">=</span> <span class="n">NewResourceDraftsSubCollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">](</span>
+            <span class="n">session</span><span class="o">=</span><span class="n">session</span><span class="p">,</span>
+            <span class="n">validate_fields_fn</span><span class="o">=</span><span class="n">make_draft_fields_validator</span><span class="p">(</span>
+                <span class="n">draft_fields</span><span class="o">=</span><span class="n">DRAFT_FIELDS</span><span class="p">,</span>
+                <span class="n">resource_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">root_collection</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_modify_resource_drafts</span> <span class="o">=</span> <span class="n">ModifyResourceDraftsSubCollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">](</span>
+            <span class="n">session</span><span class="o">=</span><span class="n">session</span><span class="p">,</span>
+            <span class="n">validate_fields_fn</span><span class="o">=</span><span class="n">make_draft_fields_validator</span><span class="p">(</span>
+                <span class="n">draft_fields</span><span class="o">=</span><span class="n">DRAFT_FIELDS</span><span class="p">,</span>
+                <span class="n">resource_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">root_collection</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span> <span class="o">=</span> <span class="n">SnapshotsSubCollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">](</span>
+            <span class="n">session</span><span class="o">=</span><span class="n">session</span><span class="p">,</span> <span class="n">root_collection</span><span class="o">=</span><span class="bp">self</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tags</span> <span class="o">=</span> <span class="n">TagsSubCollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">](</span><span class="n">session</span><span class="o">=</span><span class="n">session</span><span class="p">,</span> <span class="n">root_collection</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">entrypoints</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ExperimentEntrypointsSubCollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The client for managing the entrypoints sub-collection.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_entrypoints</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">jobs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ExperimentJobsSubCollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The client for managing the jobs sub-collection.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jobs</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">new_resource_drafts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NewResourceDraftsSubCollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The client for managing the new experiment drafts sub-collection.</span>
+
+<span class="sd">        Each client method in the sub-collection accepts an arbitrary number of</span>
+<span class="sd">        positional arguments called ``*resource_ids``. These are the parent resource ids</span>
+<span class="sd">        that own the new experiment drafts sub-collection. Below are examples of how</span>
+<span class="sd">        HTTP requests to this sub-collection translate into method calls for an active</span>
+<span class="sd">        Python Dioptra Python client called ``client``::</span>
+
+<span class="sd">            # GET /api/v1/experiments/drafts</span>
+<span class="sd">            client.experiments.new_resource_drafts.get()</span>
+
+<span class="sd">            # GET /api/v1/experiments/drafts/1</span>
+<span class="sd">            client.experiments.new_resource_drafts.get_by_id(draft_id=1)</span>
+
+<span class="sd">            # PUT /api/v1/experiments/drafts/1</span>
+<span class="sd">            client.experiments.new_resource_drafts.modify(</span>
+<span class="sd">                draft_id=1, name=&quot;new-name&quot;, description=&quot;new-description&quot;</span>
+<span class="sd">            )</span>
+
+<span class="sd">            # POST /api/v1/experiments/drafts</span>
+<span class="sd">            client.experiments.new_resource_drafts.create(</span>
+<span class="sd">                group_id=1, name=&quot;name&quot;, description=&quot;description&quot;</span>
+<span class="sd">            )</span>
+
+<span class="sd">            # DELETE /api/v1/experiments/drafts/1</span>
+<span class="sd">            client.experiments.new_resource_drafts.delete(draft_id=1)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_new_resource_drafts</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">modify_resource_drafts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ModifyResourceDraftsSubCollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The client for managing the experiment modification drafts sub-collection.</span>
+
+<span class="sd">        Each client method in the sub-collection accepts an arbitrary number of</span>
+<span class="sd">        positional arguments called ``*resource_ids``. These are the parent resource ids</span>
+<span class="sd">        that own the experiment modification drafts sub-collection. Below are examples</span>
+<span class="sd">        of how HTTP requests to this sub-collection translate into method calls for an</span>
+<span class="sd">        active Python Dioptra Python client called ``client``::</span>
+
+<span class="sd">            # GET /api/v1/experiments/1/draft</span>
+<span class="sd">            client.experiments.modify_resource_drafts.get_by_id(1)</span>
+
+<span class="sd">            # PUT /api/v1/experiments/1/draft</span>
+<span class="sd">            client.experiments.modify_resource_drafts.modify(</span>
+<span class="sd">                1,</span>
+<span class="sd">                resource_snapshot_id=1,</span>
+<span class="sd">                name=&quot;new-name&quot;,</span>
+<span class="sd">                description=&quot;new-description&quot;,</span>
+<span class="sd">            )</span>
+
+<span class="sd">            # POST /api/v1/experiments/1/draft</span>
+<span class="sd">            client.experiments.modify_resource_drafts.create(</span>
+<span class="sd">                1, name=&quot;name&quot;, description=&quot;description&quot;</span>
+<span class="sd">            )</span>
+
+<span class="sd">            # DELETE /api/v1/experiments/1/draft</span>
+<span class="sd">            client.experiments.modify_resource_drafts.delete(1)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modify_resource_drafts</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">snapshots</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SnapshotsSubCollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The client for retrieving experiment resource snapshots.</span>
+
+<span class="sd">        Each client method in the sub-collection accepts an arbitrary number of</span>
+<span class="sd">        positional arguments called ``*resource_ids``. These are the parent resource ids</span>
+<span class="sd">        that own the experiment snapshots sub-collection. Below are examples of how HTTP</span>
+<span class="sd">        requests to this sub-collection translate into method calls for an active Python</span>
+<span class="sd">        Dioptra Python client called ``client``::</span>
+
+<span class="sd">            # GET /api/v1/experiments/1/snapshots</span>
+<span class="sd">            client.experiments.snapshots.get(1)</span>
+
+<span class="sd">            # GET /api/v1/experiments/1/snapshots/2</span>
+<span class="sd">            client.experiments.snapshots.get_by_id(1, snapshot_id=2)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">tags</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TagsSubCollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The client for managing the tags sub-collection owned by the /experiments</span>
+<span class="sd">        collection.</span>
+
+<span class="sd">        Each client method in the sub-collection accepts an arbitrary number of</span>
+<span class="sd">        positional arguments called ``*resource_ids``. These are the parent resource ids</span>
+<span class="sd">        that own the tags sub-collection. Below are examples of how HTTP requests to</span>
+<span class="sd">        this sub-collection translate into method calls for an active Python Dioptra</span>
+<span class="sd">        Python client called ``client``::</span>
+
+<span class="sd">            # GET /api/v1/experiments/1/tags</span>
+<span class="sd">            client.experiments.tags.get(1)</span>
+
+<span class="sd">            # PUT /api/v1/experiments/1/tags</span>
+<span class="sd">            client.experiments.tags.modify(1, ids=[2, 3])</span>
+
+<span class="sd">            # POST /api/v1/experiments/1/tags</span>
+<span class="sd">            client.experiments.tags.append(1, ids=[2, 3])</span>
+
+<span class="sd">            # DELETE /api/v1/experiments/1/tags/3</span>
+<span class="sd">            client.experiments.tags.remove(1, tag_id=3)</span>
+
+<span class="sd">            # DELETE /api/v1/experiments/1/tags</span>
+<span class="sd">            client.experiments.tags.remove(1)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tags</span>
+
+<div class="viewcode-block" id="ExperimentsCollectionClient.get"><a class="viewcode-back" href="../../../reference/python-client/experiments-client-methods.html#dioptra.client.experiments.ExperimentsCollectionClient.get">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">group_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">page_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+        <span class="n">sort_by</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">descending</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">search</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get a list of experiments.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            group_id: The group id the experiments belong to. If None, return</span>
+<span class="sd">                experiments from all groups that the user has access to. Optional,</span>
+<span class="sd">                defaults to None.</span>
+<span class="sd">            index: The paging index. Optional, defaults to 0.</span>
+<span class="sd">            page_length: The maximum number of experiments to return in the paged</span>
+<span class="sd">                response. Optional, defaults to 10.</span>
+<span class="sd">            sort_by: The field to use to sort the returned list. Optional, defaults to</span>
+<span class="sd">                None.</span>
+<span class="sd">            descending: Sort the returned list in descending order. Optional, defaults</span>
+<span class="sd">                to None.</span>
+<span class="sd">            search: Search for experiments using the Dioptra API&#39;s query language.</span>
+<span class="sd">                Optional, defaults to None.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The response from the Dioptra API.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="n">index</span><span class="p">,</span>
+            <span class="s2">&quot;pageLength&quot;</span><span class="p">:</span> <span class="n">page_length</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="n">sort_by</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;sortBy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sort_by</span>
+
+        <span class="k">if</span> <span class="n">descending</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;descending&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">descending</span>
+
+        <span class="k">if</span> <span class="n">search</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;search&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">search</span>
+
+        <span class="k">if</span> <span class="n">group_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;groupId&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">group_id</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span>
+            <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_by_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the experiment matching the provided id.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            experiment_id: The experiment id, an integer.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The response from the Dioptra API.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">experiment_id</span><span class="p">))</span>
+
+<div class="viewcode-block" id="ExperimentsCollectionClient.create"><a class="viewcode-back" href="../../../reference/python-client/experiments-client-methods.html#dioptra.client.experiments.ExperimentsCollectionClient.create">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">create</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">group_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">entrypoints</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates an experiment.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            group_id: The id of the group that will own the experiment.</span>
+<span class="sd">            name: The name of the new experiment.</span>
+<span class="sd">            description: The description of the new experiment. Optional, defaults to</span>
+<span class="sd">                None.</span>
+<span class="sd">            entrypoints: A list of entrypoint ids to associate with the new experiment.</span>
+<span class="sd">                Optional, defaults to None.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The response from the Dioptra API.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">json_</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;group&quot;</span><span class="p">:</span> <span class="n">group_id</span><span class="p">,</span>
+            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="n">description</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">json_</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">description</span>
+
+        <span class="k">if</span> <span class="n">entrypoints</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">json_</span><span class="p">[</span><span class="s2">&quot;entrypoints&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">entrypoints</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">json_</span><span class="o">=</span><span class="n">json_</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ExperimentsCollectionClient.modify_by_id"><a class="viewcode-back" href="../../../reference/python-client/experiments-client-methods.html#dioptra.client.experiments.ExperimentsCollectionClient.modify_by_id">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">modify_by_id</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">experiment_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">entrypoints</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Modify the experiment matching the provided id.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            experiment_id: The experiment id, an integer.</span>
+<span class="sd">            name: The new name of the experiment.</span>
+<span class="sd">            description: The new description of the experiment. To remove the</span>
+<span class="sd">                description, pass None.</span>
+<span class="sd">            entrypoints: A new list of entrypoint ids to associate with the experiment.</span>
+<span class="sd">                To remove all associated entrypoints, pass an empty list or None.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The response from the Dioptra API.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">json_</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">}</span>
+
+        <span class="k">if</span> <span class="n">description</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">json_</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">description</span>
+
+        <span class="k">if</span> <span class="n">entrypoints</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">json_</span><span class="p">[</span><span class="s2">&quot;entrypoints&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">entrypoints</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">experiment_id</span><span class="p">),</span> <span class="n">json_</span><span class="o">=</span><span class="n">json_</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ExperimentsCollectionClient.delete_by_id"><a class="viewcode-back" href="../../../reference/python-client/experiments-client-methods.html#dioptra.client.experiments.ExperimentsCollectionClient.delete_by_id">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">delete_by_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Delete the experiment matching the provided id.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            experiment_id: The experiment id, an integer.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The response from the Dioptra API.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">experiment_id</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="ExperimentsCollectionClient.get_metrics_by_id"><a class="viewcode-back" href="../../../reference/python-client/experiments-client-methods.html#dioptra.client.experiments.ExperimentsCollectionClient.get_metrics_by_id">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_metrics_by_id</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">experiment_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">page_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+        <span class="n">sort_by</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">descending</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">search</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the metrics for the jobs in this experiment.</span>
+
+<span class="sd">        Each returned metric value is either a float or a string representing the</span>
+<span class="sd">        special values of NaN, Infinity, or -Infinity. NaN values are represented as the</span>
+<span class="sd">        string &quot;nan&quot;, positive infinity as &quot;inf&quot;, and negative infinity as &quot;-inf&quot;. To</span>
+<span class="sd">        convert these string values back to their corresponding float representations in</span>
+<span class="sd">        Python, wrap the returned value with ``float()``.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            experiment_id: The experiment id, an integer.</span>
+<span class="sd">            index: The paging index. Optional, defaults to 0.</span>
+<span class="sd">            page_length: The maximum number of experiments to return in the paged</span>
+<span class="sd">                response. Optional, defaults to 10.</span>
+<span class="sd">            sort_by: The field to use to sort the returned list. Optional, defaults to</span>
+<span class="sd">                None.</span>
+<span class="sd">            descending: Sort the returned list in descending order. Optional, defaults</span>
+<span class="sd">                to None.</span>
+<span class="sd">            search: Search for jobs using the Dioptra API&#39;s query language.</span>
+<span class="sd">                Optional, defaults to None.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The response from the Dioptra API.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;experiment_id&quot;</span><span class="p">:</span> <span class="n">experiment_id</span><span class="p">,</span>
+            <span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="n">index</span><span class="p">,</span>
+            <span class="s2">&quot;pageLength&quot;</span><span class="p">:</span> <span class="n">page_length</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="n">sort_by</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;sortBy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sort_by</span>
+
+        <span class="k">if</span> <span class="n">descending</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;descending&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">descending</span>
+
+        <span class="k">if</span> <span class="n">search</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;search&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">search</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">experiment_id</span><span class="p">),</span> <span class="n">METRICS</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span></div>
+</pre></div>
+
+                </article>
+              
+
+              
+              
+                <footer class="bd-footer-article">
+                  
+<div class="footer-article-items footer-article__inner">
+  
+    <div class="footer-article-item"><!-- Previous / next buttons -->
+<div class="prev-next-area">
+</div></div>
+  
+</div>
+
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
+<script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
+
+  
+  <footer class="bd-footer">
+  </footer>
+  <div id="img-modal">
+    <span class="close-btn">&times;</span>
+    <img id="modal-img" src="" alt="enlarged screenshot">
+  </div>
+  </body>
+</html>

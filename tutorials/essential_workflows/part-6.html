@@ -1,0 +1,956 @@
+
+
+
+
+<!DOCTYPE html>
+
+
+<html >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Using Saved Artifacts &#8212; Dioptra 1.1.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" href="../../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/dioptra.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
+
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/clipboard.min.js"></script>
+    <script src="../../_static/copybutton.js"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../_static/togglebutton.js"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script src="../../_static/jquery.visible.js"></script>
+    <script src="../../_static/jquery.leaveNotice-nist.js"></script>
+    <script src="../../_static/applyLeaveNotice.js"></script>
+    <script src="../../_static/smoothNavScroll.js"></script>
+    <script src="../../_static/image_modals.js"></script>
+    <script src="../../_static/design-tabs.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'tutorials/essential_workflows/part-6';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Advanced Tutorials" href="../advanced/index.html" />
+    <link rel="prev" title="Saving Artifacts" href="part-5.html" />
+    
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="None"/>
+
+    <link rel="stylesheet" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css">
+    <link rel="stylesheet" type="text/css" href="https://pages.nist.gov/leaveNotice/css/jquery.leaveNotice.css" />
+    <script src="https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js" type="text/javascript" defer="defer"></script>
+    <script async type="text/javascript" id="_fed_an_ua_tag" src="https://dap.digitalgov.gov/Universal-Federated-Analytics-Min.js?agency=NIST&subagency=github&pua=UA-66610693-1&yt=true&exts=ppsx,pps,f90,sch,rtf,wrl,txz,m1v,xlsm,msi,xsd,f,tif,eps,mpg,xml,pl,xlt,c"></script>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    <p class="title logo__title">Dioptra 1.1.0 documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../index.html">
+                    Dioptra Overview
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">What is Dioptra?</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../explanation/dioptra-motivation/why-dioptra.html">Motivation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../explanation/dioptra-motivation/design-principles.html">Design Principles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../explanation/dioptra-motivation/audience.html">Intended Audience</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../explanation/architecture-overview.html">Architecture Overview</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Setup</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../how-to/setup-dioptra/install-dioptra-explanation.html">Install Dioptra</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../how-to/setup-dioptra/get-container-images/index.html">Get the Container Images</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../how-to/setup-dioptra/get-container-images/download-container-images.html">Download the Container Images</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../how-to/setup-dioptra/get-container-images/build-container-images.html">Build the Container Images</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/prepare-deployment.html">Prepare Your Deployment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/update-deployment.html">Update Your Deployment</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../how-to/setup-dioptra/configure-setup/index.html">Customize Your Setup</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/configure-setup/using-docker-compose-overrides.html">Use Docker Compose Override Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/configure-setup/data-mounts.html">Mount Data Volumes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/configure-setup/gpu-enabled-workers.html">Configure GPU Workers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/configure-setup/adding-certificates.html">Add Custom CA Certificates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/configure-setup/enabling-ssl-tls.html">Enable SSL/TLS in NGINX and Postgres</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/configure-setup/creating-custom-workers.html">Create a Custom Worker Container</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/configure-setup/integrating-custom-containers.html">Integrate Custom Containers</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../how-to/setup-dioptra/reference/index.html">Setup Reference</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/reference/deployment-template-reference.html">Deployment Template Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/reference/deployment-folder-reference.html">Deployment Folder Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/reference/init-deployment-script-reference.html">init-deployment.sh Script Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/reference/deployment-commands-reference.html">Deployment Commands Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/reference/custom-worker-template-reference.html">Custom Worker Template Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/reference/dioptra-worker-v1-reference.html">dioptra-worker-v1 Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/reference/worker-container-requirements-reference.html">Worker Container Requirements Reference</a></li>
+</ul>
+</li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Explainers</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../explanation/workflow-architecture-explanation.html">Workflow Architecture</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../explanation/components/index.html">Dioptra Components</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../explanation/components/queues-workers-explanation.html">Queues and Workers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../explanation/components/users-groups-explanation.html">Users and Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../explanation/components/param-types-explanation.html">Plugin Parameter Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../explanation/components/plugin-explanation.html">Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../explanation/components/entrypoints-explanation.html">Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../explanation/components/task-graph-explanation.html">Task Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../explanation/components/artifacts-explanation.html">Artifacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../explanation/components/experiments-jobs-explanation.html">Experiments and Jobs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../explanation/usage-modes.html">Usage Modes</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../hello_world/index.html">Hello World in Dioptra</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../hello_world/part-0.html">Set Up Dioptra in the GUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../hello_world/part-1.html">Running Hello World</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Learning the Essentials</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="part-2.html">Adding Inputs and Outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="part-3.html">Building a Multi-Step Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="part-5.html">Saving Artifacts</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Using Saved Artifacts</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/index.html">Advanced Tutorials</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">How Tos</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../how-to/essential-workflows/index.html">Running Experiments</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/setup-python-client.html">Set Up the Python Client</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-a-queue.html">Create Queues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-users-groups.html">Create Users and Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-param-types.html">Create Parameter Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-a-plugin.html">Create Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/use-metrics.html">Logging Metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-an-entrypoint.html">Create Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-an-experiment.html">Create Experiments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/running-jobs.html">Running Jobs</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../how-to/import-content/index.html">Importing Content</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-9"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/import-content/add-a-dataset.html">Add a Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/import-content/import-resources.html">Import Resources</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../how-to/advanced/index.html">Advanced</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/advanced/distribute-plugins.html">Distribute Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/advanced/develop-for-dioptra.html">Develop for Dioptra</a></li>
+</ul>
+</li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../reference/glossary.html">Glossary</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../reference/dioptra-components/index.html">Dioptra Components</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-11"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/dioptra-components/users-reference.html">Users</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/dioptra-components/groups-reference.html">Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/dioptra-components/queues-reference.html">Queues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/dioptra-components/param-types-reference.html">Plugin Parameter Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/dioptra-components/plugin-reference.html">Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/dioptra-components/entrypoints-reference.html">Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/dioptra-components/experiments-reference.html">Experiments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/dioptra-components/jobs-reference.html">Jobs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/dioptra-components/artifacts-reference.html">Artifacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/dioptra-components/metrics-reference.html">Metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/dioptra-components/workers-reference.html">Workers</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../reference/python-client/index.html">Python Client Methods</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-12"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/python-client/auth-users-groups-client-methods.html">Auth, Users, and Groups Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/python-client/queues-client-methods.html">Queues Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/python-client/param-types-client-methods.html">Parameter Types Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/python-client/plugin-client-methods.html">Plugins Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/python-client/entrypoints-client-methods.html">Entrypoints Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/python-client/experiments-client-methods.html">Experiments Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/python-client/jobs-client-methods.html">Jobs Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/python-client/artifacts-client-methods.html">Artifacts Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/python-client/tags-client-methods.html">Tags Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/python-client/snapshots-client-methods.html">Snapshots Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/python-client/workflows-client-methods.html">Workflows Client Methods</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/api-reference-restapi.html">REST API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/resource-import-reference.html">Resource Import Syntax</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/resource-search-language-reference.html">Resource Search Language Syntax</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/task-engine-reference.html">Declarative Experiment Description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dev-guide/contributing-documentation-guide.html">Guidelines for Documentation</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/usnistgov/dioptra" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../_sources/tutorials/essential_workflows/part-6.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script>
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Using Saved Artifacts</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#using-saved-artifacts-in-an-entrypoint-task-graph">Using Saved Artifacts in an Entrypoint Task Graph</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#workflow">Workflow</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-1-add-two-new-plugin-parameter-types">Step 1: Add two New Plugin Parameter Types</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-2-create-the-rescale-and-graph-array-plugin">Step 2: Create the “rescale_and_graph_array” Plugin</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-3-add-another-artifact-task">Step 3: Add Another Artifact Task</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-4-create-rescale-and-graph-array-entrypoint">Step 4: Create “rescale_and_graph_array” Entrypoint</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-5-create-experiment-and-run-a-job">Step 5: Create Experiment and Run a Job</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-6-inspect-results">Step 6: Inspect Results</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#conclusion">Conclusion</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#keep-learning">Keep Learning</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <section id="using-saved-artifacts">
+<span id="tutorial-using-saved-artifacts"></span><h1>Using Saved Artifacts<a class="headerlink" href="#using-saved-artifacts" title="Permalink to this headline">#</a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">#</a></h2>
+<p>In the last section, you learned how to save task outputs as artifacts. Now, you will take the next step: <strong>using a saved artifact as input in a new workflow</strong>.</p>
+<p>This is done through <strong>artifact parameters</strong>. They behave like Entrypoint parameters, but instead of being set at job creation, they are <strong>loaded from disk</strong>. You can then reference them throughout the task graph.</p>
+<section id="using-saved-artifacts-in-an-entrypoint-task-graph">
+<h3>Using Saved Artifacts in an Entrypoint Task Graph<a class="headerlink" href="#using-saved-artifacts-in-an-entrypoint-task-graph" title="Permalink to this headline">#</a></h3>
+<p>In this example, you will build a new workflow that:</p>
+<ul class="simple">
+<li><p><strong>Loads</strong> a NumPy array <strong>artifact</strong> that was saved from <a class="reference internal" href="part-5.html#tutorial-saving-artifacts"><span class="std std-ref">the last tutorial step</span></a></p></li>
+<li><p>Applies <strong>multiple rescaling methods</strong></p></li>
+<li><p><strong>Visualizes</strong> the results with Matplotlib</p></li>
+<li><p><strong>Saves</strong> the resulting <strong>PNG file as a new artifact</strong></p></li>
+</ul>
+<p>To accomplish this, you’ll need to perform the following:</p>
+<ol class="arabic simple">
+<li><p><strong>Create a new Artifact Handler</strong> that is capable of serializing Matplotlib figures to PNG files</p></li>
+<li><p><strong>Define a new Plugin</strong> that reads in a Numpy array as an input and produces a Matplotlib figure as an artifact</p></li>
+<li><p><strong>Define a new Entrypoint</strong> to use the new plugin and new artifact handler</p></li>
+</ol>
+<p>Once all that is done, we can run a job for this Entrypoint and <strong>select the previously saved NumPy Array</strong> as the <strong>Artifact Input Parameter</strong>.</p>
+</section>
+</section>
+<section id="workflow">
+<h2>Workflow<a class="headerlink" href="#workflow" title="Permalink to this headline">#</a></h2>
+<section class="header-on-a-card header-steps" id="step-1-add-two-new-plugin-parameter-types">
+<h3>Step 1: Add two New Plugin Parameter Types<a class="headerlink" href="#step-1-add-two-new-plugin-parameter-types" title="Permalink to this headline">#</a></h3>
+<p>You’ll use the python <code class="docutils literal notranslate"><span class="pre">dict</span></code> type and the <code class="docutils literal notranslate"><span class="pre">bytes</span></code> type in your next Function Task and Artifact Task, so go ahead and add them now:</p>
+<ol class="arabic simple">
+<li><p>Go to the <strong>Plugin Parameters</strong> tab.</p></li>
+<li><p>Create two new types:</p>
+<ol class="arabic simple">
+<li><p>Type one: Called <code class="docutils literal notranslate"><span class="pre">dict</span></code> (for a Python dictionary type object)</p></li>
+<li><p>Type two: Called <code class="docutils literal notranslate"><span class="pre">bytes</span></code> (for a raw PNG image)</p></li>
+</ol>
+</li>
+<li><p>For each type, add the name an a short description, then click <strong>Submit</strong>.</p></li>
+</ol>
+</section>
+<section class="header-on-a-card header-steps" id="step-2-create-the-rescale-and-graph-array-plugin">
+<h3>Step 2: Create the “rescale_and_graph_array” Plugin<a class="headerlink" href="#step-2-create-the-rescale-and-graph-array-plugin" title="Permalink to this headline">#</a></h3>
+<p>You want to create a plugin that utilizes a saved numpy array as an <em>input</em>.</p>
+<ol class="arabic simple">
+<li><p>Go to the <strong>Plugins</strong> tab and click <strong>Create Plugin</strong>.</p></li>
+<li><p>Name it <code class="docutils literal notranslate"><span class="pre">rescale_and_graph_array</span></code> and add a short description.</p></li>
+<li><p><strong>Open</strong> the Plugin. <strong>Create</strong> a new file named <code class="docutils literal notranslate"><span class="pre">rescale_and_graph_array.py</span></code>.</p></li>
+<li><p>Copy and paste the code below.</p></li>
+<li><p>Import the functions via <strong>Import Function Tasks</strong>. Fix any types as needed.</p></li>
+</ol>
+<div class="code-panel python admonition">
+<p class="admonition-title">rescale_and_graph_array.py</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">structlog</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">io</span> 
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">dioptra</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplugs</span>
+
+<span class="n">LOGGER</span> <span class="o">=</span> <span class="n">structlog</span><span class="o">.</span><span class="n">get_logger</span><span class="p">()</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_as_1d_float_array</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;input_array is empty.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">a</span>
+
+<span class="nd">@pyplugs</span><span class="o">.</span><span class="n">register</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">scale_array</span><span class="p">(</span><span class="n">input_array</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a dict of rescaled arrays using z-score, min-max, and log1p methods.&quot;&quot;&quot;</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">_as_1d_float_array</span><span class="p">(</span><span class="n">input_array</span><span class="p">)</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="c1"># Z-score scaling</span>
+    <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">sigma</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+        <span class="n">out</span><span class="p">[</span><span class="s2">&quot;zscore&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">out</span><span class="p">[</span><span class="s2">&quot;zscore&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">mu</span><span class="p">)</span> <span class="o">/</span> <span class="n">sigma</span>
+
+    <span class="c1"># Min-max scaling (to [0, 1])</span>
+    <span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">xmax</span> <span class="o">==</span> <span class="n">xmin</span><span class="p">:</span>
+        <span class="n">out</span><span class="p">[</span><span class="s2">&quot;minmax&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">out</span><span class="p">[</span><span class="s2">&quot;minmax&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">xmin</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">xmax</span> <span class="o">-</span> <span class="n">xmin</span><span class="p">)</span>
+
+    <span class="c1"># Log1p scaling (nonlinear, requires non-negative values)</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">x</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="n">LOGGER</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;scale_array_dict.log1p_negative&quot;</span><span class="p">,</span> <span class="n">msg</span><span class="o">=</span><span class="s2">&quot;Negative values present; log1p not applied.&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">out</span><span class="p">[</span><span class="s2">&quot;log1p&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log1p</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">out</span>
+
+<span class="nd">@pyplugs</span><span class="o">.</span><span class="n">register</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">visualize_rescaling_multi</span><span class="p">(</span>
+    <span class="n">original_array</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">rescaled_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+    <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;Original vs Multiple Rescalings&quot;</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compare multiple rescaling methods with scatterplots and stats.&quot;&quot;&quot;</span>
+    
+    <span class="n">x</span> <span class="o">=</span> <span class="n">_as_1d_float_array</span><span class="p">(</span><span class="n">original_array</span><span class="p">)</span>
+
+    <span class="c1"># Reorder dict to put minmax first if present</span>
+    <span class="n">methods</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">rescaled_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="k">if</span> <span class="s2">&quot;minmax&quot;</span> <span class="ow">in</span> <span class="n">methods</span><span class="p">:</span>
+        <span class="n">methods</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;minmax&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">m</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">methods</span> <span class="k">if</span> <span class="n">m</span> <span class="o">!=</span> <span class="s2">&quot;minmax&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Compute global y-limits across all rescaled arrays</span>
+    <span class="n">all_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">_as_1d_float_array</span><span class="p">(</span><span class="n">rescaled_dict</span><span class="p">[</span><span class="n">m</span><span class="p">])</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">methods</span><span class="p">])</span>
+    <span class="n">y_min</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">all_y</span><span class="p">)</span>
+    <span class="n">y_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">all_y</span><span class="p">)</span>
+    <span class="n">y_lim</span> <span class="o">=</span> <span class="p">(</span><span class="n">y_min</span><span class="p">,</span> <span class="mf">1.1</span> <span class="o">*</span> <span class="n">y_max</span><span class="p">)</span>
+
+    <span class="n">n_methods</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">methods</span><span class="p">)</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_methods</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span> <span class="o">*</span> <span class="n">n_methods</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sharey</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">n_methods</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">axes</span> <span class="o">=</span> <span class="p">[</span><span class="n">axes</span><span class="p">]</span>  <span class="c1"># make iterable</span>
+
+    <span class="k">for</span> <span class="n">ax</span><span class="p">,</span> <span class="n">method</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">methods</span><span class="p">):</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">rescaled_dict</span><span class="p">[</span><span class="n">method</span><span class="p">]</span>
+        <span class="c1"># Truncate to shared length</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">size</span><span class="p">))</span>
+        <span class="n">x_plot</span><span class="p">,</span> <span class="n">y_plot</span> <span class="o">=</span> <span class="n">x</span><span class="p">[:</span><span class="n">n</span><span class="p">],</span> <span class="n">y</span><span class="p">[:</span><span class="n">n</span><span class="p">]</span>
+
+        <span class="c1"># Regression fit</span>
+        <span class="n">coef</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyfit</span><span class="p">(</span><span class="n">x_plot</span><span class="p">,</span> <span class="n">y_plot</span><span class="p">,</span> <span class="n">deg</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">slope</span><span class="p">,</span> <span class="n">intercept</span> <span class="o">=</span> <span class="n">coef</span>
+        <span class="n">xx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">x_plot</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">x_plot</span><span class="p">),</span> <span class="mi">200</span><span class="p">)</span>
+        <span class="n">yy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyval</span><span class="p">(</span><span class="n">coef</span><span class="p">,</span> <span class="n">xx</span><span class="p">)</span>
+
+        <span class="c1"># Scatter + regression</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x_plot</span><span class="p">,</span> <span class="n">y_plot</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.6</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;data&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">xx</span><span class="p">,</span> <span class="n">yy</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">1.2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;regression&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Stats</span>
+        <span class="n">stats</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;n_obs: </span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;min: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">x_plot</span><span class="p">)</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> → </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">y_plot</span><span class="p">)</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;max: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">x_plot</span><span class="p">)</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> → </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">y_plot</span><span class="p">)</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;mean: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">x_plot</span><span class="p">)</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> → </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">y_plot</span><span class="p">)</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;median: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">x_plot</span><span class="p">)</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> → </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">y_plot</span><span class="p">)</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;std dev: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">x_plot</span><span class="p">)</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> → </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">y_plot</span><span class="p">)</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;regression: y = </span><span class="si">{</span><span class="n">slope</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">·x + </span><span class="si">{</span><span class="n">intercept</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Original&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">y_lim</span><span class="p">)</span>  <span class="c1"># unified y-limits</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s2">&quot;upper left&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
+            <span class="mf">0.98</span><span class="p">,</span> <span class="mf">0.02</span><span class="p">,</span> <span class="n">stats</span><span class="p">,</span>
+            <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span>
+            <span class="n">va</span><span class="o">=</span><span class="s2">&quot;bottom&quot;</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+            <span class="n">bbox</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;white&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+
+    <span class="n">buf</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">()</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;png&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span> 
+    <span class="k">return</span> <span class="n">buf</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<ol class="arabic simple" start="6">
+<li><p>Click <strong>Submit File</strong></p></li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This plugin defines two new tasks:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">scale_array</span></code>: to rescale the input array three different ways.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">visualize_rescaling_multi</span></code>: to visualize all the rescaled arrays.</p></li>
+</ul>
+</div>
+</section>
+<section class="header-on-a-card header-steps" id="step-3-add-another-artifact-task">
+<h3>Step 3: Add Another Artifact Task<a class="headerlink" href="#step-3-add-another-artifact-task" title="Permalink to this headline">#</a></h3>
+<p>Your second plugin task outputs a Matplotlib figure as a PNG image. To view this output, you need to save it as an artifact. You will <strong>add a new artifact plugin task</strong> that serializes a Matplotlib object as a PNG.</p>
+<ol class="arabic simple">
+<li><p>In the <strong>Plugins</strong> tab, open your <code class="docutils literal notranslate"><span class="pre">artifacts</span></code> Plugin from the previous <a class="reference internal" href="part-5.html#tutorial-saving-artifacts-step-1-create-an-artifact-plugin"><span class="std std-ref">tutorial step</span></a>.</p></li>
+<li><p><strong>Add the new artifact plugin class code</strong> to the bottom of the file to define <code class="docutils literal notranslate"><span class="pre">PngBytesArtifactTask</span></code>.</p></li>
+<li><p><strong>Register</strong> it in your plugin the same way as the <code class="docutils literal notranslate"><span class="pre">NumpyArrayArtifactTask</span></code> (see <a class="reference internal" href="part-5.html#tutorial-saving-artifacts-step-2-register-artifact-task"><span class="std std-ref">Step 2: Register Artifact Task</span></a>).</p>
+<ul class="simple">
+<li><p><strong>Name</strong>: <code class="docutils literal notranslate"><span class="pre">PngBytesArtifactTask</span></code></p></li>
+<li><p><strong>Output Parameters - Name</strong>: <code class="docutils literal notranslate"><span class="pre">output</span></code></p></li>
+<li><p><strong>Output Parameters - Type</strong>: <code class="docutils literal notranslate"><span class="pre">bytes</span></code></p></li>
+</ul>
+</li>
+</ol>
+<p><strong>Add this class to the bottom of the file:</strong></p>
+<div class="code-panel python admonition">
+<p class="admonition-title">artifacts.py (add to bottom)</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Paste this after the definition of &#39;NumpyArrayArtifactTask&#39;</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">PngBytesArtifactClass</span><span class="p">(</span><span class="n">ArtifactTaskInterface</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Save PNG bytes in working_dir and return the PNG path. Deserialize returns PNG bytes.&quot;&quot;&quot;</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">serialize</span><span class="p">(</span><span class="n">working_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">contents</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Writes raw PNG bytes to disk.&quot;&quot;&quot;</span>
+        <span class="n">png_path</span> <span class="o">=</span> <span class="p">(</span><span class="n">working_dir</span> <span class="o">/</span> <span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">&quot;.png&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># Write the incoming bytes directly to the file</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">png_path</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">contents</span><span class="p">)</span>
+            
+        <span class="k">return</span> <span class="n">png_path</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">deserialize</span><span class="p">(</span><span class="n">working_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Reads raw PNG bytes from disk.&quot;&quot;&quot;</span>
+        <span class="n">png_file_path</span> <span class="o">=</span> <span class="n">working_dir</span> <span class="o">/</span> <span class="n">path</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">png_file_path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">png_data</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">png_data</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">validation</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+</pre></div>
+</div>
+</div>
+<p><strong>then register the Artifact Task</strong></p>
+<ol class="arabic simple" start="6">
+<li><p>Click <strong>Submit File</strong> to save your changes to <code class="docutils literal notranslate"><span class="pre">artifacts.py</span></code></p></li>
+</ol>
+</section>
+<section class="header-on-a-card header-steps" id="step-4-create-rescale-and-graph-array-entrypoint">
+<h3>Step 4: Create “rescale_and_graph_array” Entrypoint<a class="headerlink" href="#step-4-create-rescale-and-graph-array-entrypoint" title="Permalink to this headline">#</a></h3>
+<p>Now define a <strong>new Entrypoint</strong> that loads the array, transforms it, and saves the plot.</p>
+<ol class="arabic simple">
+<li><p>Go to the <strong>Entrypoints</strong> tab.</p></li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Dioptra saves <strong>Snapshots</strong> of Resources each time Resources are modified. If an Entrypoint is referencing an old Plugin snapshot, Dioptra will warn you.
+Feel free to sync this Plugin now or to ignore this warning - it is irrelevant for this portion of the tutorial.</p>
+<figure class="border-image clickable-image align-default">
+<img alt="Screenshot showing Plugin attached to entrypoint as being outdated" src="../../_images/entrypoints_plugin_out_of_date_dioptra_1_1.png" style="width: 100%;" />
+</figure>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>Click <strong>Create Entrypoint</strong>.</p></li>
+<li><p>Name the new Entrypoint <code class="docutils literal notranslate"><span class="pre">rescale_and_graph_array_ep</span></code>. Attach <code class="docutils literal notranslate"><span class="pre">tensorflow-cpu</span></code> as a <strong>Queue</strong> and provide a <strong>description</strong>.</p></li>
+</ol>
+<p><strong>Add Parameters:</strong></p>
+<ol class="arabic simple" start="4">
+<li><p>In the <strong>Entrypoint Parameters</strong> box, add:</p>
+<ul class="simple">
+<li><p><strong>Name:</strong> <code class="docutils literal notranslate"><span class="pre">figure_title</span></code></p></li>
+<li><p><strong>Type:</strong> <code class="docutils literal notranslate"><span class="pre">string</span></code></p></li>
+<li><p><strong>Default:</strong> <code class="docutils literal notranslate"><span class="pre">&quot;Comparing</span> <span class="pre">rescaling</span> <span class="pre">methods</span> <span class="pre">plot&quot;</span></code></p></li>
+</ul>
+</li>
+<li><p>In the <strong>Artifact Parameters</strong> box, add the input parameter:</p>
+<ul class="simple">
+<li><p><strong>Artifact parameter name:</strong> <code class="docutils literal notranslate"><span class="pre">artifact_input_array</span></code></p></li>
+<li><p><strong>Output parameter name:</strong> <code class="docutils literal notranslate"><span class="pre">output</span></code></p></li>
+<li><p><strong>Output parameter type:</strong> <code class="docutils literal notranslate"><span class="pre">NumpyArray</span></code></p></li>
+</ul>
+</li>
+</ol>
+<figure class="border-image clickable-image align-default" id="id1">
+<img alt="Screenshot showing artifact parameter input in Entrypoint rescale_and_graph_array_ep." src="../../_images/ep_w_artifact_and_regular_parameters_dioptra_1_1.png" style="width: 100%;" />
+<figcaption>
+<p><span class="caption-text">Create one Entrypoint parameter and one artifact parameter.</span><a class="headerlink" href="#id1" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The specific artifact instantiated for a given artifact Entrypoint parameter is decided at job runtime.</p>
+</div>
+<p><strong>Define Task Graph:</strong></p>
+<ol class="arabic simple" start="6">
+<li><p>In the <strong>Task Plugins</strong> and <strong>Artifact Task Plugins</strong> windows, select the relevant plugins.</p>
+<ul class="simple">
+<li><p><strong>Task Plugins</strong>: <code class="docutils literal notranslate"><span class="pre">rescale_and_graph_array</span></code></p></li>
+<li><p><strong>Artifact Task Plugins</strong>: <code class="docutils literal notranslate"><span class="pre">artifacts</span></code></p></li>
+</ul>
+</li>
+<li><p>Copy the <strong>Task Graph</strong> YAML below into the <strong>Task Graph editor</strong>.</p></li>
+</ol>
+<div class="code-panel yaml admonition">
+<p class="admonition-title">rescale_and_graph_array_ep: Task Graph YAML</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">scale_step</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">task</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">scale_array</span>
+<span class="w">  </span><span class="nt">args</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">$artifact_input_array</span><span class="p p-Indicator">]</span><span class="w"> </span><span class="c1"># This comes from our Artifact Inputs</span>
+
+<span class="nt">viz_step</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">task</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">visualize_rescaling_multi</span>
+<span class="w">  </span><span class="nt">args</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">$artifact_input_array</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">$scale_step.output</span><span class="p p-Indicator">]</span><span class="w"> </span><span class="c1"># Reusing the artifact input, as well as the output of task 1</span>
+<span class="w">  </span><span class="nt">kwargs</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">title</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$figure_title</span><span class="w"> </span><span class="c1"># A regular entrypoint parameter</span>
+</pre></div>
+</div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Note the reference to <code class="docutils literal notranslate"><span class="pre">$artifact_input_array</span></code> in the task graph. This is referencing the loaded artifact.</p>
+</div>
+<p><strong>Define Artifact Output Graph:</strong></p>
+<ol class="arabic simple" start="8">
+<li><p>Copy the <strong>Artifact Output Graph</strong> YAML below and paste it into the code editor for the <strong>Artifact Output Graph</strong>. It saves the generated matplotlib figure from step 2.</p></li>
+</ol>
+<div class="code-panel yaml admonition">
+<p class="admonition-title">rescale_and_graph_array: Artifact Output Task Graph YAML</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">save_graph</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">contents</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$viz_step</span>
+<span class="w">  </span><span class="nt">task</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">PngBytesArtifactClass</span>
+</pre></div>
+</div>
+</div>
+<figure class="border-image clickable-image align-default" id="id2">
+<img alt="Screenshot showing the task graph editors." src="../../_images/artifact_output_and_task_graph_dioptra_1_1.png" style="width: 100%;" />
+<figcaption>
+<p><span class="caption-text">Showing how the Artifact Input Parameter is used in the task graph to produce a new output (a Matplotlib figure) which is then saved in the Artifact Output Graph</span><a class="headerlink" href="#id2" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
+<ol class="arabic simple" start="9">
+<li><p>Click <strong>Validate Inputs</strong> - it should pass.</p></li>
+<li><p>Click <strong>Submit Entrypoint</strong>.</p></li>
+</ol>
+</section>
+<section class="header-on-a-card header-steps" id="step-5-create-experiment-and-run-a-job">
+<h3>Step 5: Create Experiment and Run a Job<a class="headerlink" href="#step-5-create-experiment-and-run-a-job" title="Permalink to this headline">#</a></h3>
+<p>Finally, test it out.</p>
+<ol class="arabic simple">
+<li><p>Create a new Experiment named <code class="docutils literal notranslate"><span class="pre">Rescale</span> <span class="pre">and</span> <span class="pre">Graph</span> <span class="pre">Array</span> <span class="pre">Exp</span></code>. Add a description.</p></li>
+<li><p>Add the <code class="docutils literal notranslate"><span class="pre">rescale_and_graph_array_ep</span></code> entrypoint. Click <strong>Submit Experiment</strong>.</p></li>
+<li><p>Under this new experiment, <strong>create a new job</strong>.</p></li>
+<li><p>Select the correct Entrypoint (<code class="docutils literal notranslate"><span class="pre">rescale_and_graph_array_ep</span></code>) and add a description for the Job run.</p></li>
+<li><p>Under the <strong>Artifact Parameters</strong> box, select the Artifact generated from <a class="reference internal" href="part-5.html#tutorial-saving-artifacts"><span class="std std-ref">the previous step</span></a>.</p></li>
+<li><p>Click <strong>Submit Job</strong>.</p></li>
+</ol>
+<figure class="border-image clickable-image align-default" id="id3">
+<img alt="Screenshot of job configuration showing artifact input parameter selection." src="../../_images/utilizing_artifact_input_param_dioptra_1_1.png" style="width: 100%;" />
+<figcaption>
+<p><span class="caption-text">Selecting the input artifact at runtime.</span><a class="headerlink" href="#id3" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
+</section>
+<section class="header-on-a-card header-steps" id="step-6-inspect-results">
+<h3>Step 6: Inspect Results<a class="headerlink" href="#step-6-inspect-results" title="Permalink to this headline">#</a></h3>
+<p>After running the job, open the Job and <strong>download</strong> the <strong>Output Artifact</strong> - it should be a PNG file that was saved from your Entrypoint.</p>
+<p><strong>Artifact Output</strong> from <code class="docutils literal notranslate"><span class="pre">rescale_and_graph_array_ep</span></code>:</p>
+<figure class="border-image clickable-image align-default" id="id4">
+<img alt="The Matplotlib figure created from rescale_and_graph_array_ep showing three scatter plots of rescaled data." src="../../_images/entrypoint_5_artifact_visualization.png" style="width: 100%;" />
+<figcaption>
+<p><span class="caption-text">The artifact that was generated from this Entrypoint - a Matplotlib figure showing the various rescaling methods.</span><a class="headerlink" href="#id4" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
+<p>The original NumPy array artifact from the <a class="reference internal" href="part-5.html#tutorial-saving-artifacts"><span class="std std-ref">the previous workflow</span></a> ranged from roughly 0 to 500+. Here’s how the three scaling methods reshape it:</p>
+<ul class="simple">
+<li><p><strong>Min-Max Scaling</strong>: Linearly maps values into [0,1], preserving relative spacing.</p></li>
+<li><p><strong>Z-Score Scaling</strong>: Centers data at 0 with unit variance; shows distance from the mean.</p></li>
+<li><p><strong>Log1p Scaling</strong>: Nonlinear compression; reduces the impact of large values and outliers.</p></li>
+</ul>
+</section>
+</section>
+<section id="conclusion">
+<h2>Conclusion<a class="headerlink" href="#conclusion" title="Permalink to this headline">#</a></h2>
+<p>You now know how to:</p>
+<ul class="simple">
+<li><p>Create Entrypoints that use <strong>artifact parameters</strong> as inputs</p></li>
+<li><p><strong>Chain workflows together</strong> across experiments using artifacts</p></li>
+</ul>
+<p><strong>Tutorial complete!</strong>
+You’re now ready to design your own workflows in Dioptra by combining multiple plugins, artifacts, and experiments.</p>
+</section>
+<section class="header-on-a-card header-seealso" id="keep-learning">
+<h2>Keep Learning<a class="headerlink" href="#keep-learning" title="Permalink to this headline">#</a></h2>
+<p>This tutorial demonstrated the core functionalities of Dioptra. To see more interesting and complicated uses of
+these capabilities, view the <a class="reference internal" href="../advanced/index.html#tutorial-advanced-tutorials"><span class="std std-ref">advanced tutorials</span></a> which utilize the Python Client for more complex workflows.</p>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+                <footer class="bd-footer-article">
+                  
+<div class="footer-article-items footer-article__inner">
+  
+    <div class="footer-article-item"><!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="part-5.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Saving Artifacts</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../advanced/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Advanced Tutorials</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div></div>
+  
+</div>
+
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#using-saved-artifacts-in-an-entrypoint-task-graph">Using Saved Artifacts in an Entrypoint Task Graph</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#workflow">Workflow</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-1-add-two-new-plugin-parameter-types">Step 1: Add two New Plugin Parameter Types</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-2-create-the-rescale-and-graph-array-plugin">Step 2: Create the “rescale_and_graph_array” Plugin</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-3-add-another-artifact-task">Step 3: Add Another Artifact Task</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-4-create-rescale-and-graph-array-entrypoint">Step 4: Create “rescale_and_graph_array” Entrypoint</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-5-create-experiment-and-run-a-job">Step 5: Create Experiment and Run a Job</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-6-inspect-results">Step 6: Inspect Results</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#conclusion">Conclusion</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#keep-learning">Keep Learning</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
+
+  
+  <footer class="bd-footer">
+  </footer>
+  <div id="img-modal">
+    <span class="close-btn">&times;</span>
+    <img id="modal-img" src="" alt="enlarged screenshot">
+  </div>
+  </body>
+</html>

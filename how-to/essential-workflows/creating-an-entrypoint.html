@@ -1,0 +1,867 @@
+
+
+
+
+<!DOCTYPE html>
+
+
+<html >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Create Entrypoints &#8212; Dioptra 1.1.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" href="../../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/dioptra.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/tabs.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
+
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/clipboard.min.js"></script>
+    <script src="../../_static/copybutton.js"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../_static/togglebutton.js"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script src="../../_static/jquery.visible.js"></script>
+    <script src="../../_static/jquery.leaveNotice-nist.js"></script>
+    <script src="../../_static/applyLeaveNotice.js"></script>
+    <script src="../../_static/smoothNavScroll.js"></script>
+    <script src="../../_static/image_modals.js"></script>
+    <script src="../../_static/design-tabs.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../../_static/tabs.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'how-to/essential-workflows/creating-an-entrypoint';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Create Experiments" href="creating-an-experiment.html" />
+    <link rel="prev" title="Logging Metrics" href="use-metrics.html" />
+    
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="None"/>
+
+    <link rel="stylesheet" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css">
+    <link rel="stylesheet" type="text/css" href="https://pages.nist.gov/leaveNotice/css/jquery.leaveNotice.css" />
+    <script src="https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js" type="text/javascript" defer="defer"></script>
+    <script async type="text/javascript" id="_fed_an_ua_tag" src="https://dap.digitalgov.gov/Universal-Federated-Analytics-Min.js?agency=NIST&subagency=github&pua=UA-66610693-1&yt=true&exts=ppsx,pps,f90,sch,rtf,wrl,txz,m1v,xlsm,msi,xsd,f,tif,eps,mpg,xml,pl,xlt,c"></script>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    <p class="title logo__title">Dioptra 1.1.0 documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../index.html">
+                    Dioptra Overview
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">What is Dioptra?</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../explanation/dioptra-motivation/why-dioptra.html">Motivation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../explanation/dioptra-motivation/design-principles.html">Design Principles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../explanation/dioptra-motivation/audience.html">Intended Audience</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../explanation/architecture-overview.html">Architecture Overview</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Setup</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../setup-dioptra/install-dioptra-explanation.html">Install Dioptra</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../setup-dioptra/get-container-images/index.html">Get the Container Images</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../setup-dioptra/get-container-images/download-container-images.html">Download the Container Images</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../setup-dioptra/get-container-images/build-container-images.html">Build the Container Images</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/prepare-deployment.html">Prepare Your Deployment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/update-deployment.html">Update Your Deployment</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../setup-dioptra/configure-setup/index.html">Customize Your Setup</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/configure-setup/using-docker-compose-overrides.html">Use Docker Compose Override Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/configure-setup/data-mounts.html">Mount Data Volumes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/configure-setup/gpu-enabled-workers.html">Configure GPU Workers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/configure-setup/adding-certificates.html">Add Custom CA Certificates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/configure-setup/enabling-ssl-tls.html">Enable SSL/TLS in NGINX and Postgres</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/configure-setup/creating-custom-workers.html">Create a Custom Worker Container</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/configure-setup/integrating-custom-containers.html">Integrate Custom Containers</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../setup-dioptra/reference/index.html">Setup Reference</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/reference/deployment-template-reference.html">Deployment Template Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/reference/deployment-folder-reference.html">Deployment Folder Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/reference/init-deployment-script-reference.html">init-deployment.sh Script Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/reference/deployment-commands-reference.html">Deployment Commands Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/reference/custom-worker-template-reference.html">Custom Worker Template Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/reference/dioptra-worker-v1-reference.html">dioptra-worker-v1 Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/reference/worker-container-requirements-reference.html">Worker Container Requirements Reference</a></li>
+</ul>
+</li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Explainers</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../explanation/workflow-architecture-explanation.html">Workflow Architecture</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../explanation/components/index.html">Dioptra Components</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../explanation/components/queues-workers-explanation.html">Queues and Workers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../explanation/components/users-groups-explanation.html">Users and Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../explanation/components/param-types-explanation.html">Plugin Parameter Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../explanation/components/plugin-explanation.html">Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../explanation/components/entrypoints-explanation.html">Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../explanation/components/task-graph-explanation.html">Task Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../explanation/components/artifacts-explanation.html">Artifacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../explanation/components/experiments-jobs-explanation.html">Experiments and Jobs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../explanation/usage-modes.html">Usage Modes</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../tutorials/hello_world/index.html">Hello World in Dioptra</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/hello_world/part-0.html">Set Up Dioptra in the GUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/hello_world/part-1.html">Running Hello World</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../tutorials/essential_workflows/index.html">Learning the Essentials</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/essential_workflows/part-2.html">Adding Inputs and Outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/essential_workflows/part-3.html">Building a Multi-Step Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/essential_workflows/part-5.html">Saving Artifacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/essential_workflows/part-6.html">Using Saved Artifacts</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/advanced/index.html">Advanced Tutorials</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">How Tos</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Running Experiments</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="setup-python-client.html">Set Up the Python Client</a></li>
+<li class="toctree-l2"><a class="reference internal" href="creating-a-queue.html">Create Queues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="creating-users-groups.html">Create Users and Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="creating-param-types.html">Create Parameter Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="creating-a-plugin.html">Create Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="use-metrics.html">Logging Metrics</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Create Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="creating-an-experiment.html">Create Experiments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="running-jobs.html">Running Jobs</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../import-content/index.html">Importing Content</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-9"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../import-content/add-a-dataset.html">Add a Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../import-content/import-resources.html">Import Resources</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../advanced/index.html">Advanced</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../advanced/distribute-plugins.html">Distribute Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../advanced/develop-for-dioptra.html">Develop for Dioptra</a></li>
+</ul>
+</li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../reference/glossary.html">Glossary</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../reference/dioptra-components/index.html">Dioptra Components</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-11"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/dioptra-components/users-reference.html">Users</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/dioptra-components/groups-reference.html">Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/dioptra-components/queues-reference.html">Queues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/dioptra-components/param-types-reference.html">Plugin Parameter Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/dioptra-components/plugin-reference.html">Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/dioptra-components/entrypoints-reference.html">Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/dioptra-components/experiments-reference.html">Experiments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/dioptra-components/jobs-reference.html">Jobs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/dioptra-components/artifacts-reference.html">Artifacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/dioptra-components/metrics-reference.html">Metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/dioptra-components/workers-reference.html">Workers</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../reference/python-client/index.html">Python Client Methods</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-12"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/python-client/auth-users-groups-client-methods.html">Auth, Users, and Groups Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/python-client/queues-client-methods.html">Queues Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/python-client/param-types-client-methods.html">Parameter Types Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/python-client/plugin-client-methods.html">Plugins Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/python-client/entrypoints-client-methods.html">Entrypoints Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/python-client/experiments-client-methods.html">Experiments Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/python-client/jobs-client-methods.html">Jobs Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/python-client/artifacts-client-methods.html">Artifacts Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/python-client/tags-client-methods.html">Tags Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/python-client/snapshots-client-methods.html">Snapshots Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/python-client/workflows-client-methods.html">Workflows Client Methods</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/api-reference-restapi.html">REST API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/resource-import-reference.html">Resource Import Syntax</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/resource-search-language-reference.html">Resource Search Language Syntax</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/task-engine-reference.html">Declarative Experiment Description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dev-guide/contributing-documentation-guide.html">Guidelines for Documentation</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/usnistgov/dioptra" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../_sources/how-to/essential-workflows/creating-an-entrypoint.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script>
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Create Entrypoints</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#prerequisites">Prerequisites</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#entrypoint-creation-workflow">Entrypoint Creation Workflow</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-1-locate-plugins-queues-groups-and-parameter-types-to-attach-to-the-entrypoint">Step 1: Locate Plugins, Queues, Groups, and Parameter Types to attach to the Entrypoint</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-2-create-an-entrypoint">Step 2: Create an Entrypoint</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-3-add-entrypoint-parameters-optional">Step 3: Add Entrypoint Parameters (optional)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-4-add-artifact-input-parameters-optional">Step 4: Add Artifact Input Parameters (optional)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-5-create-the-task-graph">Step 5. Create the Task Graph</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-6-create-the-artifact-task-graph-optional">Step 6. Create the Artifact Task Graph (optional)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See Also</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <section id="create-entrypoints">
+<span id="how-to-create-entrypoints"></span><h1>Create Entrypoints<a class="headerlink" href="#create-entrypoints" title="Permalink to this headline">#</a></h1>
+<p>This how-to explains how to build <a class="reference internal" href="../../explanation/components/entrypoints-explanation.html#explanation-entrypoints"><span class="std std-ref">Entrypoints</span></a> in Dioptra.</p>
+<section id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">#</a></h2>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-0-R1VJ" aria-selected="true" class="sphinx-tabs-tab group-tab" id="tab-0-R1VJ" name="R1VJ" role="tab" tabindex="0">GUI</button><button aria-controls="panel-0-UHl0aG9uIENsaWVudA==" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-0-UHl0aG9uIENsaWVudA==" name="UHl0aG9uIENsaWVudA==" role="tab" tabindex="-1">Python Client</button></div><div aria-labelledby="tab-0-R1VJ" class="sphinx-tabs-panel group-tab" id="panel-0-R1VJ" name="R1VJ" role="tabpanel" tabindex="0"><ul class="simple">
+<li><p><a class="reference internal" href="../setup-dioptra/prepare-deployment.html#how-to-prepare-deployment"><span class="std std-ref">Prepare Your Deployment</span></a> - A deployment of Dioptra is required.</p></li>
+<li><p><a class="reference internal" href="../../tutorials/hello_world/part-0.html#tutorial-setup-dioptra-in-the-gui"><span class="std std-ref">Set Up Dioptra in the GUI</span></a> - Access Dioptra services in the GUI, create a user, and login.</p></li>
+<li><p><a class="reference internal" href="creating-a-plugin.html#how-to-create-plugins"><span class="std std-ref">Create Plugins</span></a> - Plugins are needed to attach to the Entrypoint</p></li>
+<li><p><a class="reference internal" href="creating-a-queue.html#how-to-create-queues"><span class="std std-ref">Create Queues</span></a> - A queue is needed to attach to the Entrypoint</p></li>
+</ul>
+</div><div aria-labelledby="tab-0-UHl0aG9uIENsaWVudA==" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-0-UHl0aG9uIENsaWVudA==" name="UHl0aG9uIENsaWVudA==" role="tabpanel" tabindex="0"><ul class="simple">
+<li><p><a class="reference internal" href="../setup-dioptra/prepare-deployment.html#how-to-prepare-deployment"><span class="std std-ref">Prepare Your Deployment</span></a> - A deployment of Dioptra is required.</p></li>
+<li><p><a class="reference internal" href="setup-python-client.html#how-to-set-up-the-python-client"><span class="std std-ref">Set Up the Python Client</span></a> - Connect to the Python Client in a Jupyter Notebook.</p></li>
+<li><p><a class="reference internal" href="creating-a-plugin.html#how-to-create-plugins"><span class="std std-ref">Create Plugins</span></a> - Plugins are needed to attach to the Entrypoint</p></li>
+<li><p><a class="reference internal" href="creating-a-queue.html#how-to-create-queues"><span class="std std-ref">Create Queues</span></a> - A queue is needed to attach to the Entrypoint</p></li>
+</ul>
+</div></div>
+</section>
+<section id="entrypoint-creation-workflow">
+<h2>Entrypoint Creation Workflow<a class="headerlink" href="#entrypoint-creation-workflow" title="Permalink to this headline">#</a></h2>
+<p>Follow these steps to create an Entrypoint. You can perform these actions via the Graphical User Interface (GUI) or programmatically using the Python Client.</p>
+<section class="header-on-a-card header-steps" id="step-1-locate-plugins-queues-groups-and-parameter-types-to-attach-to-the-entrypoint">
+<h3>Step 1: Locate Plugins, Queues, Groups, and Parameter Types to attach to the Entrypoint<a class="headerlink" href="#step-1-locate-plugins-queues-groups-and-parameter-types-to-attach-to-the-entrypoint" title="Permalink to this headline">#</a></h3>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-1-R1VJ" aria-selected="true" class="sphinx-tabs-tab group-tab" id="tab-1-R1VJ" name="R1VJ" role="tab" tabindex="0">GUI</button><button aria-controls="panel-1-UHl0aG9uIENsaWVudA==" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-1-UHl0aG9uIENsaWVudA==" name="UHl0aG9uIENsaWVudA==" role="tab" tabindex="-1">Python Client</button></div><div aria-labelledby="tab-1-R1VJ" class="sphinx-tabs-panel group-tab" id="panel-1-R1VJ" name="R1VJ" role="tabpanel" tabindex="0"><p>Ensure you have created at least one <a class="reference internal" href="creating-a-plugin.html#how-to-create-plugins"><span class="std std-ref">plugin</span></a> and at least one <a class="reference internal" href="creating-a-queue.html#how-to-create-queues"><span class="std std-ref">queue</span></a>.</p>
+<p>You will be able to automatically select these resources in the GUI using dropdown menus in the following steps.</p>
+</div><div aria-labelledby="tab-1-UHl0aG9uIENsaWVudA==" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-1-UHl0aG9uIENsaWVudA==" name="UHl0aG9uIENsaWVudA==" role="tabpanel" tabindex="0"><p>Retrieve IDs for the following resources:</p>
+<ul class="simple">
+<li><p><strong>Plugins</strong></p></li>
+<li><p><strong>Queues</strong></p></li>
+<li><p><strong>Groups</strong></p></li>
+<li><p><strong>Plugin Parameter Types</strong></p></li>
+</ul>
+<p><strong>Groups:</strong></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="dioptra.client.groups.GroupsCollectionClient.get">
+<span class="sig-prename descclassname"><span class="pre">GroupsCollectionClient.</span></span><span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">page_length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">search</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dioptra.client.groups.T</span></span></span><a class="reference internal" href="../../_modules/dioptra/client/groups.html#GroupsCollectionClient.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.groups.GroupsCollectionClient.get" title="Permalink to this definition">#</a></dt>
+<dd><p>Get a list of groups.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>index</strong> – The paging index. Optional, defaults to 0.</p></li>
+<li><p><strong>page_length</strong> – The maximum number of groups to return in the paged response.
+Optional, defaults to 10.</p></li>
+<li><p><strong>search</strong> – Search for groups using the Dioptra API’s query language. Optional,
+defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The response from the Dioptra API.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p><strong>Plugins:</strong></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="dioptra.client.plugins.PluginsCollectionClient.get">
+<span class="sig-prename descclassname"><span class="pre">PluginsCollectionClient.</span></span><span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">group_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">page_length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort_by</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">descending</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">search</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dioptra.client.plugins.T</span></span></span><a class="reference internal" href="../../_modules/dioptra/client/plugins.html#PluginsCollectionClient.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.plugins.PluginsCollectionClient.get" title="Permalink to this definition">#</a></dt>
+<dd><p>Get a list of plugins.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>group_id</strong> – The group id the plugins belong to. If None, return plugins from
+all groups that the user has access to. Optional, defaults to None.</p></li>
+<li><p><strong>index</strong> – The paging index. Optional, defaults to 0.</p></li>
+<li><p><strong>page_length</strong> – The maximum number of plugins to return in the paged response.
+Optional, defaults to 10.</p></li>
+<li><p><strong>sort_by</strong> – The field to use to sort the returned list. Optional, defaults to
+None.</p></li>
+<li><p><strong>descending</strong> – Sort the returned list in descending order. Optional, defaults
+to None.</p></li>
+<li><p><strong>search</strong> – Search for plugins using the Dioptra API’s query language. Optional,
+defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The response from the Dioptra API.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p><strong>Parameter Types:</strong></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="dioptra.client.plugin_parameter_types.PluginParameterTypesCollectionClient.get">
+<span class="sig-prename descclassname"><span class="pre">PluginParameterTypesCollectionClient.</span></span><span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">group_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">page_length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort_by</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">descending</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">search</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dioptra.client.plugin_parameter_types.T</span></span></span><a class="reference internal" href="../../_modules/dioptra/client/plugin_parameter_types.html#PluginParameterTypesCollectionClient.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.plugin_parameter_types.PluginParameterTypesCollectionClient.get" title="Permalink to this definition">#</a></dt>
+<dd><p>Get a list of plugin parameter types.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>group_id</strong> – The group id the plugin parameter types belong to. If None, return
+plugin parameter types from all groups that the user has access to.
+Optional, defaults to None.</p></li>
+<li><p><strong>index</strong> – The paging index. Optional, defaults to 0.</p></li>
+<li><p><strong>page_length</strong> – The maximum number of plugin parameter types to return in the
+paged response. Optional, defaults to 10.</p></li>
+<li><p><strong>sort_by</strong> – The field to use to sort the returned list. Optional, defaults to
+None.</p></li>
+<li><p><strong>descending</strong> – Sort the returned list in descending order. Optional, defaults
+to None.</p></li>
+<li><p><strong>search</strong> – Search for plugin parameter types using the Dioptra API’s query
+language. Optional, defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The response from the Dioptra API.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p><strong>Queues:</strong></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="dioptra.client.queues.QueuesCollectionClient.get">
+<span class="sig-prename descclassname"><span class="pre">QueuesCollectionClient.</span></span><span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">group_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">page_length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort_by</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">descending</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">search</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dioptra.client.queues.T</span></span></span><a class="reference internal" href="../../_modules/dioptra/client/queues.html#QueuesCollectionClient.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.queues.QueuesCollectionClient.get" title="Permalink to this definition">#</a></dt>
+<dd><p>Get a list of queues.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>group_id</strong> – The group id the queues belong to. If None, return queues from all
+groups that the user has access to. Optional, defaults to None.</p></li>
+<li><p><strong>index</strong> – The paging index. Optional, defaults to 0.</p></li>
+<li><p><strong>page_length</strong> – The maximum number of queues to return in the paged response.
+Optional, defaults to 10.</p></li>
+<li><p><strong>sort_by</strong> – The field to use to sort the returned list. Optional, defaults to
+None.</p></li>
+<li><p><strong>descending</strong> – Sort the returned list in descending order. Optional, defaults
+to None.</p></li>
+<li><p><strong>search</strong> – Search for queues using the Dioptra API’s query language. Optional,
+defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The response from the Dioptra API.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div></div>
+</section>
+<section class="header-on-a-card header-steps" id="step-2-create-an-entrypoint">
+<h3>Step 2: Create an Entrypoint<a class="headerlink" href="#step-2-create-an-entrypoint" title="Permalink to this headline">#</a></h3>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-2-R1VJ" aria-selected="true" class="sphinx-tabs-tab group-tab" id="tab-2-R1VJ" name="R1VJ" role="tab" tabindex="0">GUI</button><button aria-controls="panel-2-UHl0aG9uIENsaWVudA==" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-2-UHl0aG9uIENsaWVudA==" name="UHl0aG9uIENsaWVudA==" role="tab" tabindex="-1">Python Client</button></div><div aria-labelledby="tab-2-R1VJ" class="sphinx-tabs-panel group-tab" id="panel-2-R1VJ" name="R1VJ" role="tabpanel" tabindex="0"><p>In the Dioptra GUI, navigate to the <strong>Entrypoints</strong> tab. Click <strong>Create</strong>. Enter metadata, including:</p>
+<ul class="simple">
+<li><p><strong>name</strong></p></li>
+<li><p><strong>group</strong></p></li>
+<li><p><strong>queues</strong></p></li>
+<li><p><strong>description</strong> (optional)</p></li>
+</ul>
+</div><div aria-labelledby="tab-2-UHl0aG9uIENsaWVudA==" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-2-UHl0aG9uIENsaWVudA==" name="UHl0aG9uIENsaWVudA==" role="tabpanel" tabindex="0"><p>Create the Entrypoint using the Client. Use the Group ID, Plugin IDs, Queue IDs, and Parameter Type IDs from step 1.
+Also pass in the following as parameters:</p>
+<ul class="simple">
+<li><p><strong>Task Graph YAML</strong></p></li>
+<li><p><strong>Artifact Graph YAML</strong> (optional)</p></li>
+<li><p><strong>Parameters</strong> (optional)</p></li>
+<li><p><strong>Artifact Input Parameters</strong> (Optional)</p></li>
+<li><p><strong>Description</strong> (Optional)</p></li>
+</ul>
+<p><strong>Entrypoint client CREATE method:</strong></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="dioptra.client.entrypoints.EntrypointsCollectionClient.create">
+<span class="sig-prename descclassname"><span class="pre">EntrypointsCollectionClient.</span></span><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">group_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_graph</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">artifact_graph</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">artifact_parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">queues</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plugins</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">artifact_plugins</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dioptra.client.entrypoints.T</span></span></span><a class="reference internal" href="../../_modules/dioptra/client/entrypoints.html#EntrypointsCollectionClient.create"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.entrypoints.EntrypointsCollectionClient.create" title="Permalink to this definition">#</a></dt>
+<dd><p>Creates a entrypoint.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>group_id</strong> – The id of the group that will own the entrypoint.</p></li>
+<li><p><strong>name</strong> – The name of the new entrypoint.</p></li>
+<li><p><strong>task_graph</strong> – The task graph for the new entrypoint as a YAML-formatted
+string.</p></li>
+<li><p><strong>artifact_graph</strong> – The artifact graph for the new entrypoint as a
+YAML-formatted string. Optional, defaults to None. A None value
+indicates there are no produced artifacts that need to be stored.</p></li>
+<li><p><strong>description</strong> – The description of the new entrypoint. Optional, defaults to
+None.</p></li>
+<li><p><strong>parameters</strong> – The list of parameters for the new entrypoint. Optional,
+defaults to None.</p></li>
+<li><p><strong>artifact_parameters</strong> – The list of artifact parameters for the new entrypoint.
+Optional, defaults to None.</p></li>
+<li><p><strong>queues</strong> – A list of queue ids to associate with the new entrypoint. Optional,
+defaults to None.</p></li>
+<li><p><strong>plugins</strong> – A list of plugin ids to associate with the new entrypoint.
+Optional, defaults to None.</p></li>
+<li><p><strong>artifact_plugins</strong> – A list of artifact plugin ids to associate with the new
+entrypoint. Optional, defaults to None.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition-example admonition">
+<p class="admonition-title">Example</p>
+<p>Create an entrypoint called “hello_world” with artifact input parameters and artifact output graph.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">entrypoint</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">entrypoints</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+    <span class="n">group_id</span><span class="o">=</span><span class="n">GROUP_ID</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;hello_world&quot;</span><span class="p">,</span>
+    <span class="n">task_graph</span><span class="o">=</span><span class="n">TASK_GRAPH_YAML_STR</span><span class="p">,</span>
+    <span class="n">artifact_graph</span><span class="o">=</span><span class="n">ARTIFACT_TASK_GRAPH_YAML_STR</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;An entrypoint to run hello world task&quot;</span><span class="p">,</span>
+    <span class="n">parameters</span><span class="o">=</span><span class="p">[</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;greeting&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;defaultValue&quot;</span><span class="p">:</span> <span class="s2">&quot;Hello&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;parameterType&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;name&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;defaultValue&quot;</span><span class="p">:</span> <span class="s2">&quot;World&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;parameterType&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">],</span>
+    <span class="n">artifact_parameters</span><span class="o">=</span><span class="p">[</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;artifact_name&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;outputParams&quot;</span><span class="p">:</span> <span class="p">[</span>
+                <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="s2">&quot;parameterType&quot;</span><span class="p">:</span> <span class="n">STRING_PARAM_TYPE_ID</span><span class="p">}</span>
+            <span class="p">],</span>
+        <span class="p">}</span>
+    <span class="p">],</span>
+    <span class="n">queues</span><span class="o">=</span><span class="p">[</span><span class="n">QUEUE_ID_1</span><span class="p">],</span>
+    <span class="n">plugins</span><span class="o">=</span><span class="p">[</span><span class="n">PLUGIN_ID_1</span><span class="p">],</span>
+    <span class="n">artifact_plugins</span><span class="o">=</span><span class="p">[</span><span class="n">PLUGIN_ID_2</span><span class="p">],</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The response from the Dioptra API.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div></div>
+</section>
+<section class="header-on-a-card header-steps" id="step-3-add-entrypoint-parameters-optional">
+<h3>Step 3: Add Entrypoint Parameters (optional)<a class="headerlink" href="#step-3-add-entrypoint-parameters-optional" title="Permalink to this headline">#</a></h3>
+<p>Entrypoints are parameterizable. Any parameters or artifact input parameters you create can be specified when an Entrypoint is <a class="reference internal" href="running-jobs.html#how-to-running-jobs"><span class="std std-ref">run as a job</span></a>.</p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-3-R1VJ" aria-selected="true" class="sphinx-tabs-tab group-tab" id="tab-3-R1VJ" name="R1VJ" role="tab" tabindex="0">GUI</button><button aria-controls="panel-3-UHl0aG9uIENsaWVudA==" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-3-UHl0aG9uIENsaWVudA==" name="UHl0aG9uIENsaWVudA==" role="tab" tabindex="-1">Python Client</button></div><div aria-labelledby="tab-3-R1VJ" class="sphinx-tabs-panel group-tab" id="panel-3-R1VJ" name="R1VJ" role="tabpanel" tabindex="0"><p>On the Entrypoint creation page, go to the <strong>Entrypoint Parameters</strong> box and click <strong>Create</strong>.</p>
+<p>For each parameter, enter the following:</p>
+<ul class="simple">
+<li><p><strong>Name</strong></p></li>
+<li><p><strong>Type</strong></p></li>
+<li><p><strong>Default Value</strong> (optional).</p></li>
+</ul>
+</div><div aria-labelledby="tab-3-UHl0aG9uIENsaWVudA==" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-3-UHl0aG9uIENsaWVudA==" name="UHl0aG9uIENsaWVudA==" role="tabpanel" tabindex="0"><p>The parameter values were provided as a list of dictionaries during entrypoint creation in <span class="xref std std-ref">Step 2</span>.</p>
+</div></div>
+</section>
+<section class="header-on-a-card header-steps" id="step-4-add-artifact-input-parameters-optional">
+<h3>Step 4: Add Artifact Input Parameters (optional)<a class="headerlink" href="#step-4-add-artifact-input-parameters-optional" title="Permalink to this headline">#</a></h3>
+<p>If you would like this entrypoint to load an artifact from disk and make it available to the Task Graph, create an artifact input parameter.</p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-4-R1VJ" aria-selected="true" class="sphinx-tabs-tab group-tab" id="tab-4-R1VJ" name="R1VJ" role="tab" tabindex="0">GUI</button><button aria-controls="panel-4-UHl0aG9uIENsaWVudA==" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-4-UHl0aG9uIENsaWVudA==" name="UHl0aG9uIENsaWVudA==" role="tab" tabindex="-1">Python Client</button></div><div aria-labelledby="tab-4-R1VJ" class="sphinx-tabs-panel group-tab" id="panel-4-R1VJ" name="R1VJ" role="tabpanel" tabindex="0"><p>On the Entrypoint creation page, go to the <strong>Artifact Parameters</strong> box and click <strong>Create</strong>.</p>
+<p>For each artifact input parameter, provide the following:</p>
+<ul class="simple">
+<li><p><strong>Artifact Input Name</strong></p></li>
+<li><p><strong>Output Parameters</strong> (one or more)</p></li>
+</ul>
+<p>An artifact task can produce multiple output parameters in the <code class="docutils literal notranslate"><span class="pre">deserialize()</span></code> method. Which artifact handler is used is selected at job run time.</p>
+<p>For each artifact input’s output parameter, provide the following:</p>
+<ul class="simple">
+<li><p><strong>Output Parameter Name</strong></p></li>
+<li><p><strong>Output Parameter Type</strong></p></li>
+</ul>
+</div><div aria-labelledby="tab-4-UHl0aG9uIENsaWVudA==" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-4-UHl0aG9uIENsaWVudA==" name="UHl0aG9uIENsaWVudA==" role="tabpanel" tabindex="0"><p>The artifact input parameters values were provided as a list of dictionaries during entrypoint creation in <span class="xref std std-ref">Step 2</span>.</p>
+</div></div>
+</section>
+<section class="header-on-a-card header-steps" id="step-5-create-the-task-graph">
+<h3>Step 5. Create the Task Graph<a class="headerlink" href="#step-5-create-the-task-graph" title="Permalink to this headline">#</a></h3>
+<p>When an entrypoint is run as a job, the task graph will be executed by the worker in order. Define the Task Graph for the entrypoint.</p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-5-R1VJ" aria-selected="true" class="sphinx-tabs-tab group-tab" id="tab-5-R1VJ" name="R1VJ" role="tab" tabindex="0">GUI</button><button aria-controls="panel-5-UHl0aG9uIENsaWVudA==" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-5-UHl0aG9uIENsaWVudA==" name="UHl0aG9uIENsaWVudA==" role="tab" tabindex="-1">Python Client</button></div><div aria-labelledby="tab-5-R1VJ" class="sphinx-tabs-panel group-tab" id="panel-5-R1VJ" name="R1VJ" role="tabpanel" tabindex="0"><p>On the Entrypoint creation page, scroll to the <strong>Task Graph Info</strong> box and select the <strong>Task Plugins</strong> dropdown - select any Plugins that you want to use for this Entrypoint.</p>
+<p>In the <strong>Task Graph</strong> code editor, add YAML code that defines your Task Graph. You can also add tasks to the code editor by clicking <strong>add to task graph</strong> from the <strong>Function Tasks</strong> table.</p>
+</div><div aria-labelledby="tab-5-UHl0aG9uIENsaWVudA==" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-5-UHl0aG9uIENsaWVudA==" name="UHl0aG9uIENsaWVudA==" role="tabpanel" tabindex="0"><ul class="simple">
+<li><p>The task graph YAML was provided as a string during entrypoint creation in <span class="xref std std-ref">Step 2</span>.</p></li>
+<li><p>The Plugin IDs for task plugins were provided during entrypoint creation in <span class="xref std std-ref">Step 2</span>.</p></li>
+</ul>
+</div></div>
+</section>
+<section class="header-on-a-card header-steps" id="step-6-create-the-artifact-task-graph-optional">
+<h3>Step 6. Create the Artifact Task Graph (optional)<a class="headerlink" href="#step-6-create-the-artifact-task-graph-optional" title="Permalink to this headline">#</a></h3>
+<p>If you want to save any objects from your entrypoint to disk, you need to define that logic in the Artifact Task Graph section.</p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-6-R1VJ" aria-selected="true" class="sphinx-tabs-tab group-tab" id="tab-6-R1VJ" name="R1VJ" role="tab" tabindex="0">GUI</button><button aria-controls="panel-6-UHl0aG9uIENsaWVudA==" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-6-UHl0aG9uIENsaWVudA==" name="UHl0aG9uIENsaWVudA==" role="tab" tabindex="-1">Python Client</button></div><div aria-labelledby="tab-6-R1VJ" class="sphinx-tabs-panel group-tab" id="panel-6-R1VJ" name="R1VJ" role="tabpanel" tabindex="0"><p>On the Entrypoint creation page, scroll to the <strong>Artifact Info</strong> box and select the <strong>Artifact Task Plugins</strong> dropdown - select any plugins that you wish to use the Artifact Tasks from.</p>
+<p>In the <strong>Artifact Output Graph</strong> code editor, add YAML code that defines your Artifact Output Graph. You can also add artifact tasks to the code editor by clicking <strong>add to task graph</strong> from the <strong>Artifact Tasks</strong> table.</p>
+</div><div aria-labelledby="tab-6-UHl0aG9uIENsaWVudA==" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-6-UHl0aG9uIENsaWVudA==" name="UHl0aG9uIENsaWVudA==" role="tabpanel" tabindex="0"><ul class="simple">
+<li><p>The artifact output graph YAML is provided as a string during entrypoint creation.</p></li>
+<li><p>The Plugin IDs for artifact plugins are provided during entrypoint creation.</p></li>
+</ul>
+</div></div>
+</section>
+</section>
+<section class="fancy-header header-seealso" id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Permalink to this headline">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../../explanation/components/entrypoints-explanation.html#explanation-entrypoints"><span class="std std-ref">Entrypoints Explanation</span></a> - Understand what entrypoints are conceptually.</p></li>
+<li><p><a class="reference internal" href="../../reference/dioptra-components/entrypoints-reference.html#reference-entrypoints"><span class="std std-ref">Entrypoints Reference</span></a> - See syntax and other reference material for entrypoints.</p></li>
+<li><p><a class="reference internal" href="../../explanation/components/task-graph-explanation.html#explanation-task-graph"><span class="std std-ref">Task Graph Explanation</span></a> - Learn more about the Task Graphs.</p></li>
+<li><p><a class="reference internal" href="../../explanation/components/artifacts-explanation.html#explanation-artifacts"><span class="std std-ref">Artifacts Explanation</span></a> - Learn about artifacts.</p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+                <footer class="bd-footer-article">
+                  
+<div class="footer-article-items footer-article__inner">
+  
+    <div class="footer-article-item"><!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="use-metrics.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Logging Metrics</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="creating-an-experiment.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Create Experiments</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div></div>
+  
+</div>
+
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#prerequisites">Prerequisites</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#entrypoint-creation-workflow">Entrypoint Creation Workflow</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-1-locate-plugins-queues-groups-and-parameter-types-to-attach-to-the-entrypoint">Step 1: Locate Plugins, Queues, Groups, and Parameter Types to attach to the Entrypoint</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-2-create-an-entrypoint">Step 2: Create an Entrypoint</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-3-add-entrypoint-parameters-optional">Step 3: Add Entrypoint Parameters (optional)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-4-add-artifact-input-parameters-optional">Step 4: Add Artifact Input Parameters (optional)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-5-create-the-task-graph">Step 5. Create the Task Graph</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-6-create-the-artifact-task-graph-optional">Step 6. Create the Artifact Task Graph (optional)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See Also</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
+
+  
+  <footer class="bd-footer">
+  </footer>
+  <div id="img-modal">
+    <span class="close-btn">&times;</span>
+    <img id="modal-img" src="" alt="enlarged screenshot">
+  </div>
+  </body>
+</html>

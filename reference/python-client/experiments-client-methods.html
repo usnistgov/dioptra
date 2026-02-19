@@ -1,0 +1,1136 @@
+
+
+
+
+<!DOCTYPE html>
+
+
+<html >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Experiments Client Methods &#8212; Dioptra 1.1.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" href="../../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/dioptra.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
+
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/clipboard.min.js"></script>
+    <script src="../../_static/copybutton.js"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../_static/togglebutton.js"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script src="../../_static/jquery.visible.js"></script>
+    <script src="../../_static/jquery.leaveNotice-nist.js"></script>
+    <script src="../../_static/applyLeaveNotice.js"></script>
+    <script src="../../_static/smoothNavScroll.js"></script>
+    <script src="../../_static/image_modals.js"></script>
+    <script src="../../_static/design-tabs.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'reference/python-client/experiments-client-methods';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Jobs Client Methods" href="jobs-client-methods.html" />
+    <link rel="prev" title="Entrypoints Client Methods" href="entrypoints-client-methods.html" />
+    
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="None"/>
+
+    <link rel="stylesheet" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css">
+    <link rel="stylesheet" type="text/css" href="https://pages.nist.gov/leaveNotice/css/jquery.leaveNotice.css" />
+    <script src="https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js" type="text/javascript" defer="defer"></script>
+    <script async type="text/javascript" id="_fed_an_ua_tag" src="https://dap.digitalgov.gov/Universal-Federated-Analytics-Min.js?agency=NIST&subagency=github&pua=UA-66610693-1&yt=true&exts=ppsx,pps,f90,sch,rtf,wrl,txz,m1v,xlsm,msi,xsd,f,tif,eps,mpg,xml,pl,xlt,c"></script>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    <p class="title logo__title">Dioptra 1.1.0 documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../index.html">
+                    Dioptra Overview
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">What is Dioptra?</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../explanation/dioptra-motivation/why-dioptra.html">Motivation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../explanation/dioptra-motivation/design-principles.html">Design Principles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../explanation/dioptra-motivation/audience.html">Intended Audience</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../explanation/architecture-overview.html">Architecture Overview</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Setup</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../how-to/setup-dioptra/install-dioptra-explanation.html">Install Dioptra</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../how-to/setup-dioptra/get-container-images/index.html">Get the Container Images</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../how-to/setup-dioptra/get-container-images/download-container-images.html">Download the Container Images</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../how-to/setup-dioptra/get-container-images/build-container-images.html">Build the Container Images</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/prepare-deployment.html">Prepare Your Deployment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/update-deployment.html">Update Your Deployment</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../how-to/setup-dioptra/configure-setup/index.html">Customize Your Setup</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/configure-setup/using-docker-compose-overrides.html">Use Docker Compose Override Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/configure-setup/data-mounts.html">Mount Data Volumes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/configure-setup/gpu-enabled-workers.html">Configure GPU Workers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/configure-setup/adding-certificates.html">Add Custom CA Certificates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/configure-setup/enabling-ssl-tls.html">Enable SSL/TLS in NGINX and Postgres</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/configure-setup/creating-custom-workers.html">Create a Custom Worker Container</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/configure-setup/integrating-custom-containers.html">Integrate Custom Containers</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../how-to/setup-dioptra/reference/index.html">Setup Reference</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/reference/deployment-template-reference.html">Deployment Template Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/reference/deployment-folder-reference.html">Deployment Folder Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/reference/init-deployment-script-reference.html">init-deployment.sh Script Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/reference/deployment-commands-reference.html">Deployment Commands Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/reference/custom-worker-template-reference.html">Custom Worker Template Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/reference/dioptra-worker-v1-reference.html">dioptra-worker-v1 Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/reference/worker-container-requirements-reference.html">Worker Container Requirements Reference</a></li>
+</ul>
+</li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Explainers</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../explanation/workflow-architecture-explanation.html">Workflow Architecture</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../explanation/components/index.html">Dioptra Components</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../explanation/components/queues-workers-explanation.html">Queues and Workers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../explanation/components/users-groups-explanation.html">Users and Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../explanation/components/param-types-explanation.html">Plugin Parameter Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../explanation/components/plugin-explanation.html">Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../explanation/components/entrypoints-explanation.html">Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../explanation/components/task-graph-explanation.html">Task Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../explanation/components/artifacts-explanation.html">Artifacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../explanation/components/experiments-jobs-explanation.html">Experiments and Jobs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../explanation/usage-modes.html">Usage Modes</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../tutorials/hello_world/index.html">Hello World in Dioptra</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/hello_world/part-0.html">Set Up Dioptra in the GUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/hello_world/part-1.html">Running Hello World</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../tutorials/essential_workflows/index.html">Learning the Essentials</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/essential_workflows/part-2.html">Adding Inputs and Outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/essential_workflows/part-3.html">Building a Multi-Step Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/essential_workflows/part-5.html">Saving Artifacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/essential_workflows/part-6.html">Using Saved Artifacts</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/advanced/index.html">Advanced Tutorials</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">How Tos</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../how-to/essential-workflows/index.html">Running Experiments</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/setup-python-client.html">Set Up the Python Client</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-a-queue.html">Create Queues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-users-groups.html">Create Users and Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-param-types.html">Create Parameter Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-a-plugin.html">Create Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/use-metrics.html">Logging Metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-an-entrypoint.html">Create Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-an-experiment.html">Create Experiments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/running-jobs.html">Running Jobs</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../how-to/import-content/index.html">Importing Content</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-9"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/import-content/add-a-dataset.html">Add a Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/import-content/import-resources.html">Import Resources</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../how-to/advanced/index.html">Advanced</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/advanced/distribute-plugins.html">Distribute Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/advanced/develop-for-dioptra.html">Develop for Dioptra</a></li>
+</ul>
+</li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../dioptra-components/index.html">Dioptra Components</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-11"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../dioptra-components/users-reference.html">Users</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dioptra-components/groups-reference.html">Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dioptra-components/queues-reference.html">Queues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dioptra-components/param-types-reference.html">Plugin Parameter Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dioptra-components/plugin-reference.html">Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dioptra-components/entrypoints-reference.html">Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dioptra-components/experiments-reference.html">Experiments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dioptra-components/jobs-reference.html">Jobs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dioptra-components/artifacts-reference.html">Artifacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dioptra-components/metrics-reference.html">Metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dioptra-components/workers-reference.html">Workers</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Python Client Methods</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-12"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="auth-users-groups-client-methods.html">Auth, Users, and Groups Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="queues-client-methods.html">Queues Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="param-types-client-methods.html">Parameter Types Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plugin-client-methods.html">Plugins Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="entrypoints-client-methods.html">Entrypoints Client Methods</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Experiments Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jobs-client-methods.html">Jobs Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="artifacts-client-methods.html">Artifacts Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tags-client-methods.html">Tags Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="snapshots-client-methods.html">Snapshots Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflows-client-methods.html">Workflows Client Methods</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../api-reference-restapi.html">REST API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resource-import-reference.html">Resource Import Syntax</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resource-search-language-reference.html">Resource Search Language Syntax</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../task-engine-reference.html">Declarative Experiment Description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dev-guide/contributing-documentation-guide.html">Guidelines for Documentation</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/usnistgov/dioptra" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../_sources/reference/python-client/experiments-client-methods.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script>
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Experiments Client Methods</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#requirements">Requirements</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#experiments-crud-methods">Experiments - CRUD Methods</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#create-experiment">Create Experiment</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-experiments">Get Experiments</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modify-experiment">Modify Experiment</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#delete-experiment">Delete Experiment</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#experiments-other-methods">Experiments - Other Methods</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-metrics-for-jobs-in-experiment">Get Metrics for Jobs in Experiment</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#entrypoint-attachment-methods">Entrypoint Attachment - Methods</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#add-entrypoint-to-experiment">Add Entrypoint to Experiment</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-entrypoints-for-experiment">Get Entrypoints for Experiment</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#replace-attached-entrypoints">Replace Attached Entrypoints</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#delete-all-attached-entrypoints">Delete All Attached Entrypoints</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#delete-one-entrypoint-by-id">Delete One Entrypoint by ID</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#job-execution-methods">Job Execution - Methods</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-all-jobs">Get All Jobs</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-one-job-by-id">Get One Job by ID</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-job-status-by-id">Get Job Status by ID</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#create-a-job">Create a Job</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#set-job-status-by-id">Set Job Status by ID</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#delete-a-job-by-id">Delete a Job by ID</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tags-attached-to-experiment-methods">Tags Attached to Experiment - Methods</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#snapshots-of-experiment-methods">Snapshots of Experiment - Methods</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See Also</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <section id="experiments-client-methods">
+<span id="reference-experiments-client-methods"></span><h1>Experiments Client Methods<a class="headerlink" href="#experiments-client-methods" title="Permalink to this headline">#</a></h1>
+<p>This page lists all relevant methods for Dioptra <a class="reference internal" href="../../explanation/components/experiments-jobs-explanation.html#explanation-experiments-and-jobs"><span class="std std-ref">Experiments</span></a> that are available via the Python Client.</p>
+<div class="contents local topic" id="contents">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#requirements" id="id1">Requirements</a></p></li>
+<li><p><a class="reference internal" href="#experiments-crud-methods" id="id2">Experiments - CRUD Methods</a></p>
+<ul>
+<li><p><a class="reference internal" href="#create-experiment" id="id3">Create Experiment</a></p></li>
+<li><p><a class="reference internal" href="#get-experiments" id="id4">Get Experiments</a></p></li>
+<li><p><a class="reference internal" href="#modify-experiment" id="id5">Modify Experiment</a></p></li>
+<li><p><a class="reference internal" href="#delete-experiment" id="id6">Delete Experiment</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#experiments-other-methods" id="id7">Experiments - Other Methods</a></p>
+<ul>
+<li><p><a class="reference internal" href="#get-metrics-for-jobs-in-experiment" id="id8">Get Metrics for Jobs in Experiment</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#entrypoint-attachment-methods" id="id9">Entrypoint Attachment - Methods</a></p>
+<ul>
+<li><p><a class="reference internal" href="#add-entrypoint-to-experiment" id="id10">Add Entrypoint to Experiment</a></p></li>
+<li><p><a class="reference internal" href="#get-entrypoints-for-experiment" id="id11">Get Entrypoints for Experiment</a></p></li>
+<li><p><a class="reference internal" href="#replace-attached-entrypoints" id="id12">Replace Attached Entrypoints</a></p></li>
+<li><p><a class="reference internal" href="#delete-all-attached-entrypoints" id="id13">Delete All Attached Entrypoints</a></p></li>
+<li><p><a class="reference internal" href="#delete-one-entrypoint-by-id" id="id14">Delete One Entrypoint by ID</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#job-execution-methods" id="id15">Job Execution - Methods</a></p>
+<ul>
+<li><p><a class="reference internal" href="#get-all-jobs" id="id16">Get All Jobs</a></p></li>
+<li><p><a class="reference internal" href="#get-one-job-by-id" id="id17">Get One Job by ID</a></p></li>
+<li><p><a class="reference internal" href="#get-job-status-by-id" id="id18">Get Job Status by ID</a></p></li>
+<li><p><a class="reference internal" href="#create-a-job" id="id19">Create a Job</a></p></li>
+<li><p><a class="reference internal" href="#set-job-status-by-id" id="id20">Set Job Status by ID</a></p></li>
+<li><p><a class="reference internal" href="#delete-a-job-by-id" id="id21">Delete a Job by ID</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#tags-attached-to-experiment-methods" id="id22">Tags Attached to Experiment - Methods</a></p></li>
+<li><p><a class="reference internal" href="#snapshots-of-experiment-methods" id="id23">Snapshots of Experiment - Methods</a></p></li>
+<li><p><a class="reference internal" href="#see-also" id="id24">See Also</a></p></li>
+</ul>
+</div>
+<section id="requirements">
+<h2><a class="toc-backref" href="#id1">Requirements</a><a class="headerlink" href="#requirements" title="Permalink to this headline">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../../how-to/setup-dioptra/install-dioptra-explanation.html#explanation-install-dioptra"><span class="std std-ref">Install Dioptra</span></a> - an installation and deployment of Dioptra must be available</p></li>
+<li><p><a class="reference internal" href="../../how-to/essential-workflows/setup-python-client.html#how-to-set-up-the-python-client"><span class="std std-ref">Set Up the Python Client</span></a> - the Python client must be configured and initialized</p></li>
+</ul>
+</section>
+<section id="experiments-crud-methods">
+<span id="reference-experiments-client-methods-crud-methods"></span><h2><a class="toc-backref" href="#id2">Experiments - CRUD Methods</a><a class="headerlink" href="#experiments-crud-methods" title="Permalink to this headline">#</a></h2>
+<p>After <a class="reference internal" href="../../how-to/essential-workflows/setup-python-client.html#how-to-set-up-the-python-client"><span class="std std-ref">importing and initializing the client</span></a>, these methods for creating, reading updating and deleting (CRUD) experiments can be executed via <code class="docutils literal notranslate"><span class="pre">client.experiments.METHOD_NAME()</span></code>.</p>
+<section id="create-experiment">
+<h3><a class="toc-backref" href="#id3">Create Experiment</a><a class="headerlink" href="#create-experiment" title="Permalink to this headline">#</a></h3>
+<blockquote>
+<div><dl class="py method">
+<dt class="sig sig-object py" id="dioptra.client.experiments.ExperimentsCollectionClient.create">
+<span class="sig-prename descclassname"><span class="pre">ExperimentsCollectionClient.</span></span><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">group_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entrypoints</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dioptra.client.experiments.T</span></span></span><a class="reference internal" href="../../_modules/dioptra/client/experiments.html#ExperimentsCollectionClient.create"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.experiments.ExperimentsCollectionClient.create" title="Permalink to this definition">#</a></dt>
+<dd><p>Creates an experiment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>group_id</strong> – The id of the group that will own the experiment.</p></li>
+<li><p><strong>name</strong> – The name of the new experiment.</p></li>
+<li><p><strong>description</strong> – The description of the new experiment. Optional, defaults to
+None.</p></li>
+<li><p><strong>entrypoints</strong> – A list of entrypoint ids to associate with the new experiment.
+Optional, defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The response from the Dioptra API.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div></blockquote>
+</section>
+<section id="get-experiments">
+<h3><a class="toc-backref" href="#id4">Get Experiments</a><a class="headerlink" href="#get-experiments" title="Permalink to this headline">#</a></h3>
+<blockquote>
+<div><dl class="py method">
+<dt class="sig sig-object py" id="dioptra.client.experiments.ExperimentsCollectionClient.get">
+<span class="sig-prename descclassname"><span class="pre">ExperimentsCollectionClient.</span></span><span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">group_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">page_length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort_by</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">descending</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">search</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dioptra.client.experiments.T</span></span></span><a class="reference internal" href="../../_modules/dioptra/client/experiments.html#ExperimentsCollectionClient.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.experiments.ExperimentsCollectionClient.get" title="Permalink to this definition">#</a></dt>
+<dd><p>Get a list of experiments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>group_id</strong> – The group id the experiments belong to. If None, return
+experiments from all groups that the user has access to. Optional,
+defaults to None.</p></li>
+<li><p><strong>index</strong> – The paging index. Optional, defaults to 0.</p></li>
+<li><p><strong>page_length</strong> – The maximum number of experiments to return in the paged
+response. Optional, defaults to 10.</p></li>
+<li><p><strong>sort_by</strong> – The field to use to sort the returned list. Optional, defaults to
+None.</p></li>
+<li><p><strong>descending</strong> – Sort the returned list in descending order. Optional, defaults
+to None.</p></li>
+<li><p><strong>search</strong> – Search for experiments using the Dioptra API’s query language.
+Optional, defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The response from the Dioptra API.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div></blockquote>
+</section>
+<section id="modify-experiment">
+<h3><a class="toc-backref" href="#id5">Modify Experiment</a><a class="headerlink" href="#modify-experiment" title="Permalink to this headline">#</a></h3>
+<blockquote>
+<div><dl class="py method">
+<dt class="sig sig-object py" id="dioptra.client.experiments.ExperimentsCollectionClient.modify_by_id">
+<span class="sig-prename descclassname"><span class="pre">ExperimentsCollectionClient.</span></span><span class="sig-name descname"><span class="pre">modify_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiment_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">entrypoints</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dioptra.client.experiments.T</span></span></span><a class="reference internal" href="../../_modules/dioptra/client/experiments.html#ExperimentsCollectionClient.modify_by_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.experiments.ExperimentsCollectionClient.modify_by_id" title="Permalink to this definition">#</a></dt>
+<dd><p>Modify the experiment matching the provided id.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>experiment_id</strong> – The experiment id, an integer.</p></li>
+<li><p><strong>name</strong> – The new name of the experiment.</p></li>
+<li><p><strong>description</strong> – The new description of the experiment. To remove the
+description, pass None.</p></li>
+<li><p><strong>entrypoints</strong> – A new list of entrypoint ids to associate with the experiment.
+To remove all associated entrypoints, pass an empty list or None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The response from the Dioptra API.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div></blockquote>
+</section>
+<section id="delete-experiment">
+<h3><a class="toc-backref" href="#id6">Delete Experiment</a><a class="headerlink" href="#delete-experiment" title="Permalink to this headline">#</a></h3>
+<blockquote>
+<div><dl class="py method">
+<dt class="sig sig-object py" id="dioptra.client.experiments.ExperimentsCollectionClient.delete_by_id">
+<span class="sig-prename descclassname"><span class="pre">ExperimentsCollectionClient.</span></span><span class="sig-name descname"><span class="pre">delete_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiment_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dioptra.client.experiments.T</span></span></span><a class="reference internal" href="../../_modules/dioptra/client/experiments.html#ExperimentsCollectionClient.delete_by_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.experiments.ExperimentsCollectionClient.delete_by_id" title="Permalink to this definition">#</a></dt>
+<dd><p>Delete the experiment matching the provided id.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>experiment_id</strong> – The experiment id, an integer.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The response from the Dioptra API.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div></blockquote>
+</section>
+</section>
+<section id="experiments-other-methods">
+<span id="reference-experiments-client-methods-other-methods"></span><h2><a class="toc-backref" href="#id7">Experiments - Other Methods</a><a class="headerlink" href="#experiments-other-methods" title="Permalink to this headline">#</a></h2>
+<section id="get-metrics-for-jobs-in-experiment">
+<h3><a class="toc-backref" href="#id8">Get Metrics for Jobs in Experiment</a><a class="headerlink" href="#get-metrics-for-jobs-in-experiment" title="Permalink to this headline">#</a></h3>
+<blockquote>
+<div><dl class="py method">
+<dt class="sig sig-object py" id="dioptra.client.experiments.ExperimentsCollectionClient.get_metrics_by_id">
+<span class="sig-prename descclassname"><span class="pre">ExperimentsCollectionClient.</span></span><span class="sig-name descname"><span class="pre">get_metrics_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiment_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">page_length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort_by</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">descending</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">search</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dioptra.client.experiments.T</span></span></span><a class="reference internal" href="../../_modules/dioptra/client/experiments.html#ExperimentsCollectionClient.get_metrics_by_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.experiments.ExperimentsCollectionClient.get_metrics_by_id" title="Permalink to this definition">#</a></dt>
+<dd><p>Get the metrics for the jobs in this experiment.</p>
+<p>Each returned metric value is either a float or a string representing the
+special values of NaN, Infinity, or -Infinity. NaN values are represented as the
+string “nan”, positive infinity as “inf”, and negative infinity as “-inf”. To
+convert these string values back to their corresponding float representations in
+Python, wrap the returned value with <code class="docutils literal notranslate"><span class="pre">float()</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>experiment_id</strong> – The experiment id, an integer.</p></li>
+<li><p><strong>index</strong> – The paging index. Optional, defaults to 0.</p></li>
+<li><p><strong>page_length</strong> – The maximum number of experiments to return in the paged
+response. Optional, defaults to 10.</p></li>
+<li><p><strong>sort_by</strong> – The field to use to sort the returned list. Optional, defaults to
+None.</p></li>
+<li><p><strong>descending</strong> – Sort the returned list in descending order. Optional, defaults
+to None.</p></li>
+<li><p><strong>search</strong> – Search for jobs using the Dioptra API’s query language.
+Optional, defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The response from the Dioptra API.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div></blockquote>
+</section>
+</section>
+<section id="entrypoint-attachment-methods">
+<span id="reference-experiments-client-methods-attached-entrypoints-methods"></span><h2><a class="toc-backref" href="#id9">Entrypoint Attachment - Methods</a><a class="headerlink" href="#entrypoint-attachment-methods" title="Permalink to this headline">#</a></h2>
+<p>These methods exist within the class <code class="docutils literal notranslate"><span class="pre">ExperimentEntrypointsSubCollectionClient</span></code>, and can are accessed via the <code class="docutils literal notranslate"><span class="pre">entrypoints</span></code> property of the Experiment Client (which points to <code class="docutils literal notranslate"><span class="pre">ExperimentEntrypointsSubCollectionClient</span></code>)</p>
+<p><strong>Example - Attach Entrypoints to Experiment</strong></p>
+<div class="code-panel python admonition">
+<p class="admonition-title">Attach Entrypoints to Experiment</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">client</span><span class="o">.</span><span class="n">experiments</span><span class="o">.</span><span class="n">entrypoints</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">experiment_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">entrypoint_ids</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<section id="add-entrypoint-to-experiment">
+<h3><a class="toc-backref" href="#id10">Add Entrypoint to Experiment</a><a class="headerlink" href="#add-entrypoint-to-experiment" title="Permalink to this headline">#</a></h3>
+<blockquote>
+<div><dl class="py method">
+<dt class="sig sig-object py" id="dioptra.client.experiments.ExperimentEntrypointsSubCollectionClient.create">
+<span class="sig-prename descclassname"><span class="pre">ExperimentEntrypointsSubCollectionClient.</span></span><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiment_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">entrypoint_ids</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dioptra.client.experiments.T</span></span></span><a class="reference internal" href="../../_modules/dioptra/client/experiments.html#ExperimentEntrypointsSubCollectionClient.create"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.experiments.ExperimentEntrypointsSubCollectionClient.create" title="Permalink to this definition">#</a></dt>
+<dd><p>Adds one or more entrypoints to the experiment.</p>
+<p>If an entrypoint id matches an entrypoint that is already attached to the
+experiment, then the experiment will update the entrypoint to the latest
+version.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>experiment_id</strong> – The experiment id, an integer.</p></li>
+<li><p><strong>entrypoint_ids</strong> – A list of entrypoint ids that will be registered to the
+experiment.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The response from the Dioptra API.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div></blockquote>
+</section>
+<section id="get-entrypoints-for-experiment">
+<h3><a class="toc-backref" href="#id11">Get Entrypoints for Experiment</a><a class="headerlink" href="#get-entrypoints-for-experiment" title="Permalink to this headline">#</a></h3>
+<blockquote>
+<div><dl class="py method">
+<dt class="sig sig-object py" id="dioptra.client.experiments.ExperimentEntrypointsSubCollectionClient.get">
+<span class="sig-prename descclassname"><span class="pre">ExperimentEntrypointsSubCollectionClient.</span></span><span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiment_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dioptra.client.experiments.T</span></span></span><a class="reference internal" href="../../_modules/dioptra/client/experiments.html#ExperimentEntrypointsSubCollectionClient.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.experiments.ExperimentEntrypointsSubCollectionClient.get" title="Permalink to this definition">#</a></dt>
+<dd><p>Get a list of entrypoints added to the experiment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>experiment_id</strong> – The experiment id, an integer.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The response from the Dioptra API.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div></blockquote>
+</section>
+<section id="replace-attached-entrypoints">
+<h3><a class="toc-backref" href="#id12">Replace Attached Entrypoints</a><a class="headerlink" href="#replace-attached-entrypoints" title="Permalink to this headline">#</a></h3>
+<blockquote>
+<div><dl class="py method">
+<dt class="sig sig-object py" id="dioptra.client.experiments.ExperimentEntrypointsSubCollectionClient.modify_by_id">
+<span class="sig-prename descclassname"><span class="pre">ExperimentEntrypointsSubCollectionClient.</span></span><span class="sig-name descname"><span class="pre">modify_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiment_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">entrypoint_ids</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dioptra.client.experiments.T</span></span></span><a class="reference internal" href="../../_modules/dioptra/client/experiments.html#ExperimentEntrypointsSubCollectionClient.modify_by_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.experiments.ExperimentEntrypointsSubCollectionClient.modify_by_id" title="Permalink to this definition">#</a></dt>
+<dd><p>Replaces the experiment’s full list of entrypoints.</p>
+<p>If an entrypoint id matches an entrypoint that is already attached to the
+experiment, then the experiment will update the entrypoint to the latest
+version. If an empty list is provided, then all entrypoints will be removed from
+the experiment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>experiment_id</strong> – The experiment id, an integer.</p></li>
+<li><p><strong>entrypoint_ids</strong> – A list of entrypoint ids that will replace the current list
+of experiment entrypoints.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The response from the Dioptra API.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div></blockquote>
+</section>
+<section id="delete-all-attached-entrypoints">
+<h3><a class="toc-backref" href="#id13">Delete All Attached Entrypoints</a><a class="headerlink" href="#delete-all-attached-entrypoints" title="Permalink to this headline">#</a></h3>
+<blockquote>
+<div><dl class="py method">
+<dt class="sig sig-object py" id="dioptra.client.experiments.ExperimentEntrypointsSubCollectionClient.delete">
+<span class="sig-prename descclassname"><span class="pre">ExperimentEntrypointsSubCollectionClient.</span></span><span class="sig-name descname"><span class="pre">delete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiment_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dioptra.client.experiments.T</span></span></span><a class="reference internal" href="../../_modules/dioptra/client/experiments.html#ExperimentEntrypointsSubCollectionClient.delete"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.experiments.ExperimentEntrypointsSubCollectionClient.delete" title="Permalink to this definition">#</a></dt>
+<dd><p>Remove all entrypoints from the experiment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>experiment_id</strong> – The experiment id, an integer.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The response from the Dioptra API.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div></blockquote>
+</section>
+<section id="delete-one-entrypoint-by-id">
+<h3><a class="toc-backref" href="#id14">Delete One Entrypoint by ID</a><a class="headerlink" href="#delete-one-entrypoint-by-id" title="Permalink to this headline">#</a></h3>
+<blockquote>
+<div><dl class="py method">
+<dt class="sig sig-object py" id="dioptra.client.experiments.ExperimentEntrypointsSubCollectionClient.delete_by_id">
+<span class="sig-prename descclassname"><span class="pre">ExperimentEntrypointsSubCollectionClient.</span></span><span class="sig-name descname"><span class="pre">delete_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiment_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">entrypoint_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dioptra.client.experiments.T</span></span></span><a class="reference internal" href="../../_modules/dioptra/client/experiments.html#ExperimentEntrypointsSubCollectionClient.delete_by_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.experiments.ExperimentEntrypointsSubCollectionClient.delete_by_id" title="Permalink to this definition">#</a></dt>
+<dd><p>Remove an entrypoint from the experiment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>experiment_id</strong> – The experiment id, an integer.</p></li>
+<li><p><strong>entrypoint_id</strong> – The id for the entrypoint that will be removed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The response from the Dioptra API.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div></blockquote>
+</section>
+</section>
+<section id="job-execution-methods">
+<span id="reference-experiments-client-methods-executed-jobs-methods"></span><h2><a class="toc-backref" href="#id15">Job Execution - Methods</a><a class="headerlink" href="#job-execution-methods" title="Permalink to this headline">#</a></h2>
+<p>These methods exist within the class <code class="docutils literal notranslate"><span class="pre">ExperimentJobsSubCollectionClient</span></code>, and can are accessed via the <code class="docutils literal notranslate"><span class="pre">jobs</span></code> property of the Experiment Client (which points to <code class="docutils literal notranslate"><span class="pre">ExperimentJobsSubCollectionClient</span></code>)</p>
+<p><strong>Example - Run an Entrypoint as a Job within an Experiment</strong></p>
+<div class="code-panel python admonition">
+<p class="admonition-title">Run Entrypoint as a Job</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">client</span><span class="o">.</span><span class="n">experiments</span><span class="o">.</span><span class="n">jobs</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">experiment_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">entrypoint_id</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">queue_id</span><span class="o">=</span><span class="mi">10</span><span class="p">,)</span>
+</pre></div>
+</div>
+</div>
+<section id="get-all-jobs">
+<h3><a class="toc-backref" href="#id16">Get All Jobs</a><a class="headerlink" href="#get-all-jobs" title="Permalink to this headline">#</a></h3>
+<blockquote>
+<div><dl class="py method">
+<dt class="sig sig-object py" id="dioptra.client.experiments.ExperimentJobsSubCollectionClient.get">
+<span class="sig-prename descclassname"><span class="pre">ExperimentJobsSubCollectionClient.</span></span><span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiment_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">page_length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort_by</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">descending</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">search</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dioptra.client.experiments.T</span></span></span><a class="reference internal" href="../../_modules/dioptra/client/experiments.html#ExperimentJobsSubCollectionClient.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.experiments.ExperimentJobsSubCollectionClient.get" title="Permalink to this definition">#</a></dt>
+<dd><p>Get an experiment’s jobs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>experiment_id</strong> – The experiment id, an integer.</p></li>
+<li><p><strong>index</strong> – The paging index. Optional, defaults to 0.</p></li>
+<li><p><strong>page_length</strong> – The maximum number of jobs to return in the paged
+response. Optional, defaults to 10.</p></li>
+<li><p><strong>sort_by</strong> – The field to use to sort the returned list. Optional, defaults to
+None.</p></li>
+<li><p><strong>descending</strong> – Sort the returned list in descending order. Optional, defaults
+to None.</p></li>
+<li><p><strong>search</strong> – Search for models using the Dioptra API’s query language. Optional,
+defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The response from the Dioptra API.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div></blockquote>
+</section>
+<section id="get-one-job-by-id">
+<h3><a class="toc-backref" href="#id17">Get One Job by ID</a><a class="headerlink" href="#get-one-job-by-id" title="Permalink to this headline">#</a></h3>
+<blockquote>
+<div><dl class="py method">
+<dt class="sig sig-object py" id="dioptra.client.experiments.ExperimentJobsSubCollectionClient.get_by_id">
+<span class="sig-prename descclassname"><span class="pre">ExperimentJobsSubCollectionClient.</span></span><span class="sig-name descname"><span class="pre">get_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiment_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dioptra.client.experiments.T</span></span></span><a class="reference internal" href="../../_modules/dioptra/client/experiments.html#ExperimentJobsSubCollectionClient.get_by_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.experiments.ExperimentJobsSubCollectionClient.get_by_id" title="Permalink to this definition">#</a></dt>
+<dd><p>Get a specific job from an experiment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>experiment_id</strong> – The experiment id, an integer.</p></li>
+<li><p><strong>job_id</strong> – The job id, an integer.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The response from the Dioptra API.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div></blockquote>
+</section>
+<section id="get-job-status-by-id">
+<h3><a class="toc-backref" href="#id18">Get Job Status by ID</a><a class="headerlink" href="#get-job-status-by-id" title="Permalink to this headline">#</a></h3>
+<blockquote>
+<div><dl class="py method">
+<dt class="sig sig-object py" id="dioptra.client.experiments.ExperimentJobsSubCollectionClient.get_status">
+<span class="sig-prename descclassname"><span class="pre">ExperimentJobsSubCollectionClient.</span></span><span class="sig-name descname"><span class="pre">get_status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiment_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dioptra.client.experiments.T</span></span></span><a class="reference internal" href="../../_modules/dioptra/client/experiments.html#ExperimentJobsSubCollectionClient.get_status"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.experiments.ExperimentJobsSubCollectionClient.get_status" title="Permalink to this definition">#</a></dt>
+<dd><p>Gets the status for an experiment’s job.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>experiment_id</strong> – The experiment id, an integer.</p></li>
+<li><p><strong>job_id</strong> – The job id, an integer.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The response from the Dioptra API.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div></blockquote>
+</section>
+<section id="create-a-job">
+<h3><a class="toc-backref" href="#id19">Create a Job</a><a class="headerlink" href="#create-a-job" title="Permalink to this headline">#</a></h3>
+<blockquote>
+<div><dl class="py method">
+<dt class="sig sig-object py" id="dioptra.client.experiments.ExperimentJobsSubCollectionClient.create">
+<span class="sig-prename descclassname"><span class="pre">ExperimentJobsSubCollectionClient.</span></span><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiment_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">entrypoint_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">queue_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">entrypoint_snapshot_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">artifact_values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dioptra.client.experiments.T</span></span></span><a class="reference internal" href="../../_modules/dioptra/client/experiments.html#ExperimentJobsSubCollectionClient.create"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.experiments.ExperimentJobsSubCollectionClient.create" title="Permalink to this definition">#</a></dt>
+<dd><p>Creates a job for an experiment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>experiment_id</strong> – The experiment id, an integer.</p></li>
+<li><p><strong>entrypoint_id</strong> – The id for the entrypoint that the job will run.</p></li>
+<li><p><strong>queue_id</strong> – The id for the queue that will execute the job.</p></li>
+<li><p><strong>entrypoint_snapshot_id</strong> – The id for a snapshot associated with the
+entrypoint. If specified, the snapshotted version of the entrypoint will
+be used to run the job. If not specified, the job will use the latest
+version of the entrypoint. Defaults to None.</p></li>
+<li><p><strong>values</strong> – A dictionary of keyword arguments to pass to the entrypoint that
+parameterize the job. Default to None.</p></li>
+<li><p><strong>artifact_values</strong> – A dictionary of artifact input names associated with a
+value that is also a dictionary that contains the keys “id” and
+“snapshotId” whose values are the artifact resource id and the artifact
+resource snapshot id respectively. Defaults to None.</p></li>
+<li><p><strong>timeout</strong> – The maximum alloted time for a job before it times out and is
+stopped. If omitted, the job timeout will use the default set in the
+API.</p></li>
+<li><p><strong>description</strong> – The description for the job. Optional, defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The response from the Dioptra API.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div></blockquote>
+</section>
+<section id="set-job-status-by-id">
+<h3><a class="toc-backref" href="#id20">Set Job Status by ID</a><a class="headerlink" href="#set-job-status-by-id" title="Permalink to this headline">#</a></h3>
+<blockquote>
+<div><dl class="py method">
+<dt class="sig sig-object py" id="dioptra.client.experiments.ExperimentJobsSubCollectionClient.set_status">
+<span class="sig-prename descclassname"><span class="pre">ExperimentJobsSubCollectionClient.</span></span><span class="sig-name descname"><span class="pre">set_status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiment_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">status</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dioptra.client.experiments.T</span></span></span><a class="reference internal" href="../../_modules/dioptra/client/experiments.html#ExperimentJobsSubCollectionClient.set_status"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.experiments.ExperimentJobsSubCollectionClient.set_status" title="Permalink to this definition">#</a></dt>
+<dd><p>Sets the status for an experiment’s job.</p>
+<blockquote>
+<div><p>Primarily used for testing or to reset a job that has failed, whose cause
+has been remedied, in order to re-run the job,</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>experiment_id</strong> – The experiment id, an integer.</p></li>
+<li><p><strong>job_id</strong> – The job id, an integer.</p></li>
+<li><p><strong>status</strong> – The new status for the job. The allowed values are: queued, started,
+deferred, finished, failed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The response from the Dioptra API.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div></blockquote>
+</section>
+<section id="delete-a-job-by-id">
+<h3><a class="toc-backref" href="#id21">Delete a Job by ID</a><a class="headerlink" href="#delete-a-job-by-id" title="Permalink to this headline">#</a></h3>
+<blockquote>
+<div><dl class="py method">
+<dt class="sig sig-object py" id="dioptra.client.experiments.ExperimentJobsSubCollectionClient.delete_by_id">
+<span class="sig-prename descclassname"><span class="pre">ExperimentJobsSubCollectionClient.</span></span><span class="sig-name descname"><span class="pre">delete_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiment_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dioptra.client.experiments.T</span></span></span><a class="reference internal" href="../../_modules/dioptra/client/experiments.html#ExperimentJobsSubCollectionClient.delete_by_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.experiments.ExperimentJobsSubCollectionClient.delete_by_id" title="Permalink to this definition">#</a></dt>
+<dd><p>Delete a job from the experiment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>experiment_id</strong> – The experiment id, an integer.</p></li>
+<li><p><strong>job_id</strong> – The id for the job that will be deleted.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The response from the Dioptra API.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div></blockquote>
+</section>
+</section>
+<section id="tags-attached-to-experiment-methods">
+<h2><a class="toc-backref" href="#id22">Tags Attached to Experiment - Methods</a><a class="headerlink" href="#tags-attached-to-experiment-methods" title="Permalink to this headline">#</a></h2>
+<p>Methods belonging to the <code class="docutils literal notranslate"><span class="pre">TagsSubCollectionClient</span></code> can are accessed via the <code class="docutils literal notranslate"><span class="pre">tags</span></code> property of the Experiment Client (which points to <code class="docutils literal notranslate"><span class="pre">TagsSubCollectionClient</span></code>)</p>
+<p><strong>Example - Get Tags for an Experiment</strong></p>
+<div class="code-panel python admonition">
+<p class="admonition-title">Get Tags for Experiment</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">client</span><span class="o">.</span><span class="n">experiments</span><span class="o">.</span><span class="n">tags</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>See <strong>available methods</strong> for the <code class="docutils literal notranslate"><span class="pre">TagsSubCollectionClient</span></code>:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="tags-client-methods.html#reference-tags-client-methods"><span class="std std-ref">Tags Client Methods</span></a></p></li>
+</ul>
+</section>
+<section id="snapshots-of-experiment-methods">
+<h2><a class="toc-backref" href="#id23">Snapshots of Experiment - Methods</a><a class="headerlink" href="#snapshots-of-experiment-methods" title="Permalink to this headline">#</a></h2>
+<p>Methods belonging to the  <code class="docutils literal notranslate"><span class="pre">SnapshotsSubCollectionClient</span></code> can are accessed via the <code class="docutils literal notranslate"><span class="pre">snapshots</span></code> property of the Experiment Client (which points to <code class="docutils literal notranslate"><span class="pre">SnapshotsSubCollectionClient</span></code>)</p>
+<p><strong>Example - Get Snapshots for an Experiment</strong></p>
+<div class="code-panel python admonition">
+<p class="admonition-title">Get Snapshots for Experiment</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">client</span><span class="o">.</span><span class="n">experiments</span><span class="o">.</span><span class="n">snapshots</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>See <strong>available methods</strong> for the <code class="docutils literal notranslate"><span class="pre">SnapshotsSubCollectionClient</span></code>:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="snapshots-client-methods.html#reference-snapshots-client-methods"><span class="std std-ref">Snapshots Client Methods</span></a></p></li>
+</ul>
+</section>
+<section class="fancy-header header-seealso" id="see-also">
+<h2><a class="toc-backref" href="#id24">See Also</a><a class="headerlink" href="#see-also" title="Permalink to this headline">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../dioptra-components/experiments-reference.html#reference-experiments"><span class="std std-ref">Experiments reference</span></a></p></li>
+<li><p><a class="reference internal" href="../../explanation/components/experiments-jobs-explanation.html#explanation-experiments-and-jobs"><span class="std std-ref">Experiments and Jobs explanation</span></a></p></li>
+<li><p><a class="reference internal" href="../../how-to/essential-workflows/creating-an-experiment.html#how-to-create-experiments"><span class="std std-ref">How to create Experiments</span></a></p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+                <footer class="bd-footer-article">
+                  
+<div class="footer-article-items footer-article__inner">
+  
+    <div class="footer-article-item"><!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="entrypoints-client-methods.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Entrypoints Client Methods</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="jobs-client-methods.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Jobs Client Methods</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div></div>
+  
+</div>
+
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#requirements">Requirements</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#experiments-crud-methods">Experiments - CRUD Methods</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#create-experiment">Create Experiment</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-experiments">Get Experiments</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modify-experiment">Modify Experiment</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#delete-experiment">Delete Experiment</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#experiments-other-methods">Experiments - Other Methods</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-metrics-for-jobs-in-experiment">Get Metrics for Jobs in Experiment</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#entrypoint-attachment-methods">Entrypoint Attachment - Methods</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#add-entrypoint-to-experiment">Add Entrypoint to Experiment</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-entrypoints-for-experiment">Get Entrypoints for Experiment</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#replace-attached-entrypoints">Replace Attached Entrypoints</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#delete-all-attached-entrypoints">Delete All Attached Entrypoints</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#delete-one-entrypoint-by-id">Delete One Entrypoint by ID</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#job-execution-methods">Job Execution - Methods</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-all-jobs">Get All Jobs</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-one-job-by-id">Get One Job by ID</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-job-status-by-id">Get Job Status by ID</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#create-a-job">Create a Job</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#set-job-status-by-id">Set Job Status by ID</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#delete-a-job-by-id">Delete a Job by ID</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tags-attached-to-experiment-methods">Tags Attached to Experiment - Methods</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#snapshots-of-experiment-methods">Snapshots of Experiment - Methods</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See Also</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
+
+  
+  <footer class="bd-footer">
+  </footer>
+  <div id="img-modal">
+    <span class="close-btn">&times;</span>
+    <img id="modal-img" src="" alt="enlarged screenshot">
+  </div>
+  </body>
+</html>

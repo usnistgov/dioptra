@@ -1,0 +1,1635 @@
+
+
+
+
+<!DOCTYPE html>
+
+
+<html >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Guidelines for Documentation &#8212; Dioptra 1.1.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/dioptra.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/tabs.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../_static/togglebutton.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script src="../_static/jquery.visible.js"></script>
+    <script src="../_static/jquery.leaveNotice-nist.js"></script>
+    <script src="../_static/applyLeaveNotice.js"></script>
+    <script src="../_static/smoothNavScroll.js"></script>
+    <script src="../_static/image_modals.js"></script>
+    <script src="../_static/design-tabs.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/tabs.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'dev-guide/contributing-documentation-guide';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Declarative Experiment Description" href="../reference/task-engine-reference.html" />
+    
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="None"/>
+
+    <link rel="stylesheet" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css">
+    <link rel="stylesheet" type="text/css" href="https://pages.nist.gov/leaveNotice/css/jquery.leaveNotice.css" />
+    <script src="https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js" type="text/javascript" defer="defer"></script>
+    <script async type="text/javascript" id="_fed_an_ua_tag" src="https://dap.digitalgov.gov/Universal-Federated-Analytics-Min.js?agency=NIST&subagency=github&pua=UA-66610693-1&yt=true&exts=ppsx,pps,f90,sch,rtf,wrl,txz,m1v,xlsm,msi,xsd,f,tif,eps,mpg,xml,pl,xlt,c"></script>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    <p class="title logo__title">Dioptra 1.1.0 documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../index.html">
+                    Dioptra Overview
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">What is Dioptra?</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../explanation/dioptra-motivation/why-dioptra.html">Motivation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/dioptra-motivation/design-principles.html">Design Principles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/dioptra-motivation/audience.html">Intended Audience</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/architecture-overview.html">Architecture Overview</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Setup</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../how-to/setup-dioptra/install-dioptra-explanation.html">Install Dioptra</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../how-to/setup-dioptra/get-container-images/index.html">Get the Container Images</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../how-to/setup-dioptra/get-container-images/download-container-images.html">Download the Container Images</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../how-to/setup-dioptra/get-container-images/build-container-images.html">Build the Container Images</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/prepare-deployment.html">Prepare Your Deployment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/update-deployment.html">Update Your Deployment</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/index.html">Customize Your Setup</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/using-docker-compose-overrides.html">Use Docker Compose Override Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/data-mounts.html">Mount Data Volumes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/gpu-enabled-workers.html">Configure GPU Workers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/adding-certificates.html">Add Custom CA Certificates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/enabling-ssl-tls.html">Enable SSL/TLS in NGINX and Postgres</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/creating-custom-workers.html">Create a Custom Worker Container</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/integrating-custom-containers.html">Integrate Custom Containers</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../how-to/setup-dioptra/reference/index.html">Setup Reference</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/deployment-template-reference.html">Deployment Template Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/deployment-folder-reference.html">Deployment Folder Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/init-deployment-script-reference.html">init-deployment.sh Script Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/deployment-commands-reference.html">Deployment Commands Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/custom-worker-template-reference.html">Custom Worker Template Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/dioptra-worker-v1-reference.html">dioptra-worker-v1 Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/worker-container-requirements-reference.html">Worker Container Requirements Reference</a></li>
+</ul>
+</li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Explainers</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../explanation/workflow-architecture-explanation.html">Workflow Architecture</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../explanation/components/index.html">Dioptra Components</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/components/queues-workers-explanation.html">Queues and Workers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/components/users-groups-explanation.html">Users and Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/components/param-types-explanation.html">Plugin Parameter Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/components/plugin-explanation.html">Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/components/entrypoints-explanation.html">Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/components/task-graph-explanation.html">Task Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/components/artifacts-explanation.html">Artifacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/components/experiments-jobs-explanation.html">Experiments and Jobs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/usage-modes.html">Usage Modes</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../tutorials/hello_world/index.html">Hello World in Dioptra</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/hello_world/part-0.html">Set Up Dioptra in the GUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/hello_world/part-1.html">Running Hello World</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../tutorials/essential_workflows/index.html">Learning the Essentials</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/essential_workflows/part-2.html">Adding Inputs and Outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/essential_workflows/part-3.html">Building a Multi-Step Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/essential_workflows/part-5.html">Saving Artifacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/essential_workflows/part-6.html">Using Saved Artifacts</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/advanced/index.html">Advanced Tutorials</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">How Tos</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../how-to/essential-workflows/index.html">Running Experiments</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/setup-python-client.html">Set Up the Python Client</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/creating-a-queue.html">Create Queues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/creating-users-groups.html">Create Users and Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/creating-param-types.html">Create Parameter Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/creating-a-plugin.html">Create Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/use-metrics.html">Logging Metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/creating-an-entrypoint.html">Create Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/creating-an-experiment.html">Create Experiments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/running-jobs.html">Running Jobs</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../how-to/import-content/index.html">Importing Content</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-9"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/import-content/add-a-dataset.html">Add a Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/import-content/import-resources.html">Import Resources</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../how-to/advanced/index.html">Advanced</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/advanced/distribute-plugins.html">Distribute Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/advanced/develop-for-dioptra.html">Develop for Dioptra</a></li>
+</ul>
+</li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../reference/glossary.html">Glossary</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../reference/dioptra-components/index.html">Dioptra Components</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-11"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../reference/dioptra-components/users-reference.html">Users</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/dioptra-components/groups-reference.html">Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/dioptra-components/queues-reference.html">Queues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/dioptra-components/param-types-reference.html">Plugin Parameter Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/dioptra-components/plugin-reference.html">Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/dioptra-components/entrypoints-reference.html">Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/dioptra-components/experiments-reference.html">Experiments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/dioptra-components/jobs-reference.html">Jobs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/dioptra-components/artifacts-reference.html">Artifacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/dioptra-components/metrics-reference.html">Metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/dioptra-components/workers-reference.html">Workers</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../reference/python-client/index.html">Python Client Methods</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-12"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../reference/python-client/auth-users-groups-client-methods.html">Auth, Users, and Groups Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/python-client/queues-client-methods.html">Queues Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/python-client/param-types-client-methods.html">Parameter Types Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/python-client/plugin-client-methods.html">Plugins Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/python-client/entrypoints-client-methods.html">Entrypoints Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/python-client/experiments-client-methods.html">Experiments Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/python-client/jobs-client-methods.html">Jobs Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/python-client/artifacts-client-methods.html">Artifacts Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/python-client/tags-client-methods.html">Tags Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/python-client/snapshots-client-methods.html">Snapshots Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/python-client/workflows-client-methods.html">Workflows Client Methods</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/api-reference-restapi.html">REST API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/resource-import-reference.html">Resource Import Syntax</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/resource-search-language-reference.html">Resource Search Language Syntax</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/task-engine-reference.html">Declarative Experiment Description</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Guidelines for Documentation</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/usnistgov/dioptra" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/dev-guide/contributing-documentation-guide.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script>
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Guidelines for Documentation</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#exemplar-documentation-pages">Exemplar Documentation Pages</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#documentation-goals">Documentation goals</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#documentation-file-placement">Documentation File Placement</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#image-files">Image Files</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#documentation-code-snippets">Documentation Code Snippets</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#diataxis-content-types">Diátaxis content types</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tutorials-learning-by-doing">Tutorials (learning by doing)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-to-guides-solve-a-task">How-to guides (solve a task)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reference-facts">Reference (facts)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#explanation-concepts-why">Explanation (concepts &amp; why)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#style-guide-for-rst-documents">Style guide for RST documents</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#section-hierarchy">Section hierarchy</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#steps-linkable-headers-on-a-card">Steps (Linkable Headers on a Card)</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#rst-syntax-steps">RST Syntax: Steps</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#rendered-example-steps">Rendered Example: Steps</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#example-step-1-create-the-plugin-container">Example Step 1: Create the Plugin Container</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#example-step-2-add-a-file">Example Step 2: Add a file</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#notes-for-steps-styling">Notes for “Steps” styling</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also-linkable-headers-on-a-card">“See Also” (Linkable Headers on a Card)</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#rst-syntax-see-also">RST syntax: See Also</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#rendered-example-see-also">Rendered Example: See Also</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See Also</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#notes-warnings-important-and-see-also">Notes, warnings, important, and “see also”</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#placing-items-in-the-margin">Placing items in the margin</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learn-more-minimalistic-div-for-more-information">“Learn More” - Minimalistic div for more information</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#shaded-container-for-table-of-contents">Shaded container for Table of Contents</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#page-contents-local-toc">Page Contents / Local ToC</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#figures-screenshots">Figures (screenshots)</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#rst-syntax-image-classes">RST Syntax: Image Classes</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#rendered-examples-image-classes">Rendered Examples: Image Classes</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#literal-includes">Literal includes</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#custom-code-block-styling">Custom Code Block Styling</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tabs-for-alternate-paths">Tabs for alternate paths</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cross-references">Cross-references</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#additional-sphinx-elements">Additional Sphinx Elements</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#collapsible-content">Collapsible content</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sphinx-page-options">Sphinx Page Options</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cards-grids-and-callouts">Cards, grids, and callouts</a></li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <section id="guidelines-for-documentation">
+<span id="reference-guidelines-for-documentation"></span><h1>Guidelines for Documentation<a class="headerlink" href="#guidelines-for-documentation" title="Permalink to this headline">#</a></h1>
+<p>This is a guide for Dioptra developers that details <strong>style and content guidelines</strong> for <a class="reference external" href="https://www.sphinx-doc.org/en/master/index.html">Sphinx</a> documentation pages.</p>
+<p>Dioptra documentation uses <a class="reference external" href="https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html#rst-primer">reStructuredText (.rst)</a> with Sphinx. The documentation pages are located in <code class="docutils literal notranslate"><span class="pre">docs/source/</span></code>
+and are built using the command <code class="docutils literal notranslate"><span class="pre">uvx</span> <span class="pre">tox</span> <span class="pre">run</span> <span class="pre">-e</span> <span class="pre">web-compile,docs</span></code>.</p>
+<div class="contents local topic" id="table-of-contents">
+<p class="topic-title">Table of Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#exemplar-documentation-pages" id="id3">Exemplar Documentation Pages</a></p></li>
+<li><p><a class="reference internal" href="#documentation-goals" id="id4">Documentation goals</a></p></li>
+<li><p><a class="reference internal" href="#documentation-file-placement" id="id5">Documentation File Placement</a></p></li>
+<li><p><a class="reference internal" href="#diataxis-content-types" id="id6">Diátaxis content types</a></p></li>
+<li><p><a class="reference internal" href="#style-guide-for-rst-documents" id="id7">Style guide for RST documents</a></p></li>
+<li><p><a class="reference internal" href="#additional-sphinx-elements" id="id8">Additional Sphinx Elements</a></p></li>
+</ul>
+</div>
+<section id="exemplar-documentation-pages">
+<h2><a class="toc-backref" href="#id3">Exemplar Documentation Pages</a><a class="headerlink" href="#exemplar-documentation-pages" title="Permalink to this headline">#</a></h2>
+<p>The following pages serve as reference implementation for future documentation pages:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../reference/dioptra-components/plugin-reference.html#reference-plugins"><span class="std std-ref">Plugins Reference</span></a></p></li>
+<li><p><a class="reference internal" href="../how-to/essential-workflows/creating-a-plugin.html#how-to-create-plugins"><span class="std std-ref">Create Plugins</span></a></p></li>
+<li><p><a class="reference internal" href="../explanation/components/plugin-explanation.html#explanation-plugins"><span class="std std-ref">Plugins Explanation</span></a></p></li>
+<li><p><a class="reference internal" href="../tutorials/hello_world/index.html#tutorial-hello-world-in-dioptra"><span class="std std-ref">Tutorial: Hello World in Dioptra</span></a> and <a class="reference internal" href="../tutorials/essential_workflows/index.html#tutorial-learning-the-essentials"><span class="std std-ref">Tutorial: Learning the Essentials</span></a></p></li>
+</ul>
+</section>
+<section id="documentation-goals">
+<h2><a class="toc-backref" href="#id4">Documentation goals</a><a class="headerlink" href="#documentation-goals" title="Permalink to this headline">#</a></h2>
+<ul class="simple">
+<li><p><strong>Brevity &amp; placement.</strong> Put content where it belongs; avoid duplication across types.</p></li>
+<li><p><strong>Single purpose per page.</strong> Don’t mix a tutorial with reference or explanation on the same page.</p></li>
+<li><p><strong>Source of truth lives in code dirs.</strong> Bring example code in with <code class="docutils literal notranslate"><span class="pre">literalinclude</span></code>.</p></li>
+<li><p><strong>Cross Reference Documentation.</strong> Don’t repeat information across pages - reference relevant complimentary materials using Sphinx cross references instead.</p></li>
+</ul>
+</section>
+<section id="documentation-file-placement">
+<h2><a class="toc-backref" href="#id5">Documentation File Placement</a><a class="headerlink" href="#documentation-file-placement" title="Permalink to this headline">#</a></h2>
+<p>This is the current proposed structure for storing documentation static assets.</p>
+<section id="image-files">
+<h3>Image Files<a class="headerlink" href="#image-files" title="Permalink to this headline">#</a></h3>
+<p>All images should be stored in <code class="docutils literal notranslate"><span class="pre">docs/source/images/</span></code>. Avoid storing images inside the specific documentation folders (e.g., avoid <code class="docutils literal notranslate"><span class="pre">docs/source/tutorials/images</span></code>).</p>
+<p><strong>Directory Structure</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>Screenshots:</strong> Store screenshots in <code class="docutils literal notranslate"><span class="pre">docs/source/images/screenshots/</span></code>.</dt><dd><ul>
+<li><p>Organize these sub-folders roughly by the <strong>Vue/Quasar page</strong> they represent (e.g., <cite>jobs</cite>, <cite>plugins</cite>, <cite>experiments</cite>).</p></li>
+<li><p>This structure allows screenshots to potentially be reused across different content types (e.g., using the same “Login” screenshot in both a <em>Tutorial</em> and a <em>How-to</em>).</p></li>
+<li><p>It also makes identifying screenshots that require updates easier once a Quasar page changes.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p><strong>Figures:</strong> Store conceptual diagrams, architecture flows, and non-GUI visuals in <code class="docutils literal notranslate"><span class="pre">docs/source/images/figures/</span></code>.</p></li>
+</ul>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>docs/source/images/
+├── screenshots/
+│   ├── entrypoints/
+│   ├── experiments/
+│   ├── jobs/
+│   ├── login/
+│   ├── plugins/
+│   └── ...
+└── figures/
+    ├── entrypoint_diagram.png
+    ├── experiment_overview.png
+    └── ...
+</pre></div>
+</div>
+</section>
+<section id="documentation-code-snippets">
+<h3>Documentation Code Snippets<a class="headerlink" href="#documentation-code-snippets" title="Permalink to this headline">#</a></h3>
+<p>Code will ideally never be written inline on .rst pages. Whenever appropriate, the documentation should reference the doc strings for methods and classes.
+When bespoke code snippets are needed (i.e. for tutorial workflows, etc), place the code in the appropriate subdirectory directory under docs and use <code class="docutils literal notranslate"><span class="pre">..</span> <span class="pre">literalinclude::</span></code> to pull it in.</p>
+<p><strong>Directory Structure</strong></p>
+<p>Documentation code that is not meant to be run in production or in a standalone manner lives in <code class="docutils literal notranslate"><span class="pre">docs/source/documentation_code/</span></code>.</p>
+<p>Within this directory:</p>
+<ul class="simple">
+<li><p><strong>Client Workflows:</strong> Python scripts demonstrating the Python Client API (e.g., connecting, authenticating, submitting jobs).</p></li>
+<li><p><strong>Plugins:</strong> Python files with plugin tasks and artifact tasks.</p></li>
+<li><p><strong>Artifact Task Graphs:</strong> YAML files with artifact task graphs</p></li>
+<li><p><strong>Task Graphs:</strong> YAML files with entrypoint task graphs</p></li>
+</ul>
+<p><strong>Current Directory Structure</strong>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>docs/source/documentation_code/
+├── client_workflows/
+│   ├── import_plugins.py
+│   └── client_setup.py
+├── artifact_task_graphs/
+├── task_graphs/
+└── plugins/
+    ├── essential_workflows_tutorial
+    └── hello_world_tutorial
+</pre></div>
+</div>
+</section>
+</section>
+<section id="diataxis-content-types">
+<h2><a class="toc-backref" href="#id6">Diátaxis content types</a><a class="headerlink" href="#diataxis-content-types" title="Permalink to this headline">#</a></h2>
+<p>Content is organized according to the <a class="reference external" href="https://diataxis.fr/">Diátaxis</a> framework:</p>
+<ul class="simple">
+<li><p><strong>Tutorials</strong></p></li>
+<li><p><strong>How-to guides</strong></p></li>
+<li><p><strong>Reference</strong></p></li>
+<li><p><strong>Explanation</strong></p></li>
+</ul>
+<p>The following principles apply the Diátaxis framework to Dioptra documentation:</p>
+<section id="tutorials-learning-by-doing">
+<h3>Tutorials (learning by doing)<a class="headerlink" href="#tutorials-learning-by-doing" title="Permalink to this headline">#</a></h3>
+<ul class="simple">
+<li><p>Learn by doing</p></li>
+<li><p>Provide early wins for users with small accomplishments</p></li>
+<li><p>Tell readers upfront what to expect (“In this tutorial, you will build a plugin that…”)</p></li>
+<li><p>Give feedback along the way (“You should see…”)</p></li>
+<li><p>Minimize explanation — link out to other docs instead</p></li>
+</ul>
+</section>
+<section id="how-to-guides-solve-a-task">
+<h3>How-to guides (solve a task)<a class="headerlink" href="#how-to-guides-solve-a-task" title="Permalink to this headline">#</a></h3>
+<ul class="simple">
+<li><p>Cookbook style - a recipe / procedural workflow to accomplish a specific goal</p></li>
+<li><p>One outcome per page</p></li>
+<li><p>Concise, no digressions</p></li>
+</ul>
+</section>
+<section id="reference-facts">
+<h3>Reference (facts)<a class="headerlink" href="#reference-facts" title="Permalink to this headline">#</a></h3>
+<ul class="simple">
+<li><p>Precise, factual</p></li>
+<li><p>No steps or advice</p></li>
+<li><p>Covers APIs, schemas, configs, syntax, requirements, etc</p></li>
+</ul>
+</section>
+<section id="explanation-concepts-why">
+<h3>Explanation (concepts &amp; why)<a class="headerlink" href="#explanation-concepts-why" title="Permalink to this headline">#</a></h3>
+<ul class="simple">
+<li><p>Provide background and rationale</p></li>
+<li><p>Cover trade-offs and mental models</p></li>
+<li><p>No steps</p></li>
+<li><p>“Read once” and then never read again (ideally)</p></li>
+</ul>
+<p>Each documentation page should align with one of these types.</p>
+<p><strong>The Table of Contents headers reflect these types:</strong></p>
+<ul class="simple">
+<li><p>“<strong>What is Dioptra</strong>” →  Explanation</p></li>
+<li><p>“<strong>Setup</strong>” →  How To</p></li>
+<li><p>“<strong>Explainers</strong>” →  Explanation</p></li>
+<li><p>“<strong>Tutorials</strong>” →  Tutorials</p></li>
+<li><p>“<strong>How Tos</strong>” →  How To</p></li>
+<li><p>“<strong>Reference</strong>” →  Reference</p></li>
+</ul>
+</section>
+</section>
+<section id="style-guide-for-rst-documents">
+<h2><a class="toc-backref" href="#id7">Style guide for RST documents</a><a class="headerlink" href="#style-guide-for-rst-documents" title="Permalink to this headline">#</a></h2>
+<p>The following collection details styling components—custom-defined or provided by Sphinx—used in Dioptra documentation.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><strong>Custom CSS</strong></p>
+<p>Custom CSS classes are defined in files in <code class="docutils literal notranslate"><span class="pre">docs/assets/scss/</span></code> and imported into <code class="docutils literal notranslate"><span class="pre">dioptra.scss</span></code>. These scss files are compiled
+when the docs are built with <code class="docutils literal notranslate"><span class="pre">uvx</span> <span class="pre">tox</span> <span class="pre">run</span> <span class="pre">-e</span> <span class="pre">web-compile,docs</span></code> and create the resulting <code class="docutils literal notranslate"><span class="pre">docs/source/_static/dioptra.css</span></code> file.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><strong>Custom JavaScript</strong></p>
+<p>Custom javascript code exists in <code class="docutils literal notranslate"><span class="pre">docs/source/_static/</span></code>.
+These assets are loaded via <code class="docutils literal notranslate"><span class="pre">docs/conf.py</span></code> using <code class="docutils literal notranslate"><span class="pre">html_css_files</span></code> and <code class="docutils literal notranslate"><span class="pre">html_js_files</span></code> to point to CSS and JS code in the <code class="docutils literal notranslate"><span class="pre">_static</span></code> directory.</p>
+</div>
+<section id="section-hierarchy">
+<h3>Section hierarchy<a class="headerlink" href="#section-hierarchy" title="Permalink to this headline">#</a></h3>
+<p>Headings should be nested consistently.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">=</span></code> for page title</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-</span></code> for H2</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">~</span></code> for H3</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">^</span></code> for H4</p></li>
+</ul>
+<p>Put these symbols under text to create a heading. The heading is automatically included in the
+right side table of contents.</p>
+<p><strong>Header Example:</strong></p>
+<div class="highlight-rst notranslate"><div class="highlight"><pre><span></span><span class="p">..</span> <span class="nt">_doc-type-doc-title-my-example-header:</span>
+
+<span class="gh">My Example Header</span>
+<span class="gh">-------------------</span>
+
+Section contents...
+
+<span class="p">..</span> <span class="nt">_doc-type-doc-title-my-example-subheader:</span>
+
+<span class="gh">My Example Subheader</span>
+<span class="gh">~~~~~~~~~~~~~~~~~~~~</span>
+
+Section contents .. (nested under &quot;My Example Header&quot; in ToC)
+</pre></div>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>See <a class="reference internal" href="#reference-guidelines-for-documentation-cross-references"><span class="std std-ref">cross-references</span></a> section below to understand cross reference labels used in this example.</p>
+</div>
+</section>
+<section id="steps-linkable-headers-on-a-card">
+<h3>Steps (Linkable Headers on a Card)<a class="headerlink" href="#steps-linkable-headers-on-a-card" title="Permalink to this headline">#</a></h3>
+<p>When documenting steps for a tutorial or how-to guide, make the step name a header and use two CSS classes to place
+the steps onto a card. This makes them linkable and easy to visually distinguish.</p>
+<p>Custom CSS classes:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">header-on-a-card</span></code> - puts the entire section on a card with slight padding and box shadow</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">header-steps</span></code> - Adds the blue clipboard to the header and the bottom border, and adjusts the header font size</p></li>
+</ul>
+<section id="rst-syntax-steps">
+<h4>RST Syntax: Steps<a class="headerlink" href="#rst-syntax-steps" title="Permalink to this headline">#</a></h4>
+<div class="highlight-rst notranslate"><div class="highlight"><pre><span></span><span class="p">..</span> <span class="ow">rst-class</span><span class="p">::</span> header-on-a-card header-steps
+
+<span class="gh">Example Step 1: Create the Plugin Container</span>
+<span class="gh">^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</span>
+
+<span class="m">1.</span> Open <span class="gs">**Plugins**</span>.
+<span class="m">2.</span> Click <span class="gs">**Create Plugin**</span>.
+<span class="m">3.</span> Name it and <span class="gs">**Save**</span>.
+
+<span class="p">   ..</span> <span class="ow">note</span><span class="p">::</span> Make sure you click save.
+
+<span class="p">..</span> <span class="ow">rst-class</span><span class="p">::</span> header-on-a-card header-steps
+
+<span class="gh">Example Step 2: Add a file</span>
+<span class="gh">^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</span>
+
+<span class="m">1.</span> Click on the Plugin
+<span class="m">2.</span> Click <span class="gs">**Add a File**</span>
+<span class="m">3.</span> Click <span class="gs">**Register Task**</span> and create these inputs:
+
+      <span class="m">*</span> <span class="s">``sample_size``</span> : int
+      <span class="m">*</span> <span class="s">``mean``</span> : float
+
+<span class="m">4.</span> Click <span class="gs">**Save**</span>
+
+<span class="p">..</span> <span class="ow">admonition</span><span class="p">::</span> Learn More
+
+   <span class="m">*</span> <span class="na">:ref:</span><span class="nv">`plugins-explanation`</span> - Learn about plugins
+</pre></div>
+</div>
+</section>
+<section id="rendered-example-steps">
+<h4>Rendered Example: Steps<a class="headerlink" href="#rendered-example-steps" title="Permalink to this headline">#</a></h4>
+<p>The above RST code is rendered below:</p>
+</section>
+<section class="header-on-a-card header-steps" id="example-step-1-create-the-plugin-container">
+<h4>Example Step 1: Create the Plugin Container<a class="headerlink" href="#example-step-1-create-the-plugin-container" title="Permalink to this headline">#</a></h4>
+<ol class="arabic">
+<li><p>Open <strong>Plugins</strong>.</p></li>
+<li><p>Click <strong>Create Plugin</strong>.</p></li>
+<li><p>Name it and <strong>Save</strong>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Make sure you click save.</p>
+</div>
+</li>
+</ol>
+</section>
+<section class="header-on-a-card header-steps" id="example-step-2-add-a-file">
+<h4>Example Step 2: Add a file<a class="headerlink" href="#example-step-2-add-a-file" title="Permalink to this headline">#</a></h4>
+<ol class="arabic">
+<li><p>Click on the Plugin</p></li>
+<li><p>Click <strong>Add a File</strong></p></li>
+<li><p>Click <strong>Register Task</strong> and create these inputs:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">sample_size</span></code> : int</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mean</span></code> : float</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>Click <strong>Save</strong></p></li>
+</ol>
+<div class="admonition-learn-more admonition">
+<p class="admonition-title">Learn More</p>
+<ul class="simple">
+<li><p><span class="xref std std-ref">plugins-explanation</span> - Learn about plugins</p></li>
+</ul>
+</div>
+</section>
+<section id="notes-for-steps-styling">
+<h4>Notes for “Steps” styling<a class="headerlink" href="#notes-for-steps-styling" title="Permalink to this headline">#</a></h4>
+<p>Note the following stylistic conventions when rendering steps:</p>
+<ul class="simple">
+<li><p>Use of <strong>bold</strong> to emphasize the concrete actions within a step (corresponds to buttons, etc)</p></li>
+<li><p>The creation of separating lines between <strong>header-steps</strong> classes is automatically done through a CSS rule</p></li>
+<li><dl class="simple">
+<dt>You can nest other classes / structures within the <strong>header-steps</strong> &amp; <strong>header-on-a-card</strong> class, but use sparingly.</dt><dd><p>Items commonly nested on cards include:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">..</span> <span class="pre">admonition::</span> <span class="pre">Learn</span> <span class="pre">More</span></code> - Custom “learn more” override of the admonition box</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">..</span> <span class="pre">note::</span></code> - Built in Sphinx blue Sphinx box that says “Note”</p></li>
+<li><p>Indentation to create a block quote</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Once you use a custom <strong>header-on-a-card</strong> class, the card container will continue until the next header.
+This is how  <code class="docutils literal notranslate"><span class="pre">..</span> <span class="pre">rst-class::</span> <span class="pre">header-on-a-card</span> <span class="pre">header-steps</span></code> works - the styling wraps the entire next
+header in a styled div that continues until the next header.</p>
+</div>
+</section>
+</section>
+<section id="see-also-linkable-headers-on-a-card">
+<h3>“See Also” (Linkable Headers on a Card)<a class="headerlink" href="#see-also-linkable-headers-on-a-card" title="Permalink to this headline">#</a></h3>
+<p>To create a prominent section of additional reading material, use the custom RST classes
+<code class="docutils literal notranslate"><span class="pre">header-on-a-card</span></code> combined with <code class="docutils literal notranslate"><span class="pre">header-seealso</span></code>. This will create
+a lightly indented card with a green header that also has an anchor link and appears in the HTML
+sidebar.</p>
+<section id="rst-syntax-see-also">
+<h4>RST syntax: See Also<a class="headerlink" href="#rst-syntax-see-also" title="Permalink to this headline">#</a></h4>
+<div class="highlight-rst notranslate"><div class="highlight"><pre><span></span><span class="p">..</span> <span class="ow">rst-class</span><span class="p">::</span> header-on-a-card header-seealso
+
+<span class="gh">See Also</span>
+<span class="gh">^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</span>
+This is a hands-on tutorial intended to walk a user through the procedural steps required to
+use Dioptra. The following resources are complimentary and provide high level explanations on Dioptra&#39;s
+design and motivation.
+
+<span class="m">*</span> <span class="na">:ref:</span><span class="nv">`Overview of Experiments &lt;explanation-experiments-and-jobs&gt;`</span> - A summary of how Dioptra components interact to create an experiment
+<span class="m">*</span> <span class="na">:ref:</span><span class="nv">`Workflow Architecture &lt;explanation-workflow-architecture&gt;`</span> - An overview of how all the high level Dioptra components orchestrate together to execute jobs.
+<span class="m">*</span> <span class="na">:ref:</span><span class="nv">`Why Dioptra? &lt;explanation-why-use-dioptra&gt;`</span> - An explanation of what Dioptra was built for
+</pre></div>
+</div>
+</section>
+<section id="rendered-example-see-also">
+<h4>Rendered Example: See Also<a class="headerlink" href="#rendered-example-see-also" title="Permalink to this headline">#</a></h4>
+</section>
+<section class="header-on-a-card header-seealso" id="see-also">
+<h4>See Also<a class="headerlink" href="#see-also" title="Permalink to this headline">#</a></h4>
+<p>This is a hands-on tutorial intended to walk a user through the procedural steps required to
+use Dioptra. The following resources are complementary and provide high level explanations on Dioptra’s
+design and motivation.</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../explanation/components/experiments-jobs-explanation.html#explanation-experiments-and-jobs"><span class="std std-ref">Overview of Experiments</span></a> - A summary of how Dioptra components interact to create an experiment</p></li>
+<li><p><a class="reference internal" href="../explanation/workflow-architecture-explanation.html#explanation-workflow-architecture"><span class="std std-ref">Workflow Architecture</span></a> - An overview of how all the high level Dioptra components orchestrate together to execute jobs.</p></li>
+<li><p><a class="reference internal" href="../explanation/dioptra-motivation/why-dioptra.html#explanation-why-use-dioptra"><span class="std std-ref">Why Dioptra?</span></a> - An explanation of what Dioptra was built for</p></li>
+</ul>
+</section>
+</section>
+<section id="notes-warnings-important-and-see-also">
+<h3>Notes, warnings, important, and “see also”<a class="headerlink" href="#notes-warnings-important-and-see-also" title="Permalink to this headline">#</a></h3>
+<p>To caveat steps or reference explanation/reference material elsewhere, use notes, warnings, and the important flag.
+These divs are built in to Sphinx. While visually distinct, they utilize significant padding to indicate optional content.
+Use them sparingly for information that is not required reading.</p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-0-0-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-0-0-0" name="0-0" role="tab" tabindex="0">Rendered</button><button aria-controls="panel-0-0-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-0-0-1" name="0-1" role="tab" tabindex="-1">RST Source</button></div><div aria-labelledby="tab-0-0-0" class="sphinx-tabs-panel" id="panel-0-0-0" name="0-0" role="tabpanel" tabindex="0"><div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This tutorial uses the <strong>web UI</strong>; you can do the same via <strong>API</strong> or <strong>TOML</strong>.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Make sure the queue is <strong>Public</strong> or jobs won’t start.</p>
+</div>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>In YAML, null is interpreted as the null value. Therefore, it does not name the null type!</p>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>View the <span class="xref std std-ref">plugins-explanation</span> for more information.</p>
+</div>
+</div><div aria-labelledby="tab-0-0-1" class="sphinx-tabs-panel" hidden="true" id="panel-0-0-1" name="0-1" role="tabpanel" tabindex="0"><div class="highlight-rst notranslate"><div class="highlight"><pre><span></span><span class="p">..</span> <span class="ow">note</span><span class="p">::</span>
+   This tutorial uses the <span class="gs">**web UI**</span>; you can do the same via <span class="gs">**API**</span> or <span class="gs">**TOML**</span>.
+
+<span class="p">..</span> <span class="ow">warning</span><span class="p">::</span>
+   Make sure the queue is <span class="gs">**Public**</span> or jobs won’t start.
+
+<span class="p">..</span> <span class="ow">important</span><span class="p">::</span>
+   In YAML, null is interpreted as the null value. Therefore, it does not name the null type!
+
+<span class="p">..</span> <span class="ow">seealso</span><span class="p">::</span>
+   View the <span class="na">:ref:</span><span class="nv">`plugins-explanation`</span> for more information.
+</pre></div>
+</div>
+</div></div>
+<p>Nesting these elements in other cards or containers can result in visual clutter.
+Overusing these elements can result in visual clutter as well. These elements
+don’t provide anchor links, so don’t use them for major sections as they won’t be embedded in the table of contents.</p>
+</section>
+<section id="placing-items-in-the-margin">
+<h3>Placing items in the margin<a class="headerlink" href="#placing-items-in-the-margin" title="Permalink to this headline">#</a></h3>
+<p>Important, note, warning and “see also” boxes can be placed in the margin with the following syntax.</p>
+<aside class="margin sidebar">
+<p class="sidebar-title"></p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>The NGINX SSL/TLS disabled and enabled tabs are just snippets.
+The snippets omit the lines that come both before and after the <code class="docutils literal notranslate"><span class="pre">healthcheck:</span></code> and <code class="docutils literal notranslate"><span class="pre">ports:</span></code> sections.
+<strong>Do not delete these surrounding lines in your actual file!</strong></p>
+</div>
+</aside>
+<p><strong>RST source code</strong></p>
+<div class="highlight-rst notranslate"><div class="highlight"><pre><span></span><span class="p">..</span> <span class="ow">margin</span><span class="p">::</span>
+
+<span class="p">   ..</span> <span class="ow">important</span><span class="p">::</span>
+
+      The NGINX SSL/TLS disabled and enabled tabs are just snippets.
+      The snippets omit the lines that come both before and after the <span class="s">``healthcheck:``</span> and <span class="s">``ports:``</span> sections.
+      <span class="gs">**Do not delete these surrounding lines in your actual file!**</span>
+</pre></div>
+</div>
+<p>The Sphinx table of contents sidebar automatically collapses when it would be interfering with a box
+in the margins. On narrow screens, these elements are hidden and require horizontal scrolling.</p>
+</section>
+<section id="learn-more-minimalistic-div-for-more-information">
+<h3>“Learn More” - Minimalistic div for more information<a class="headerlink" href="#learn-more-minimalistic-div-for-more-information" title="Permalink to this headline">#</a></h3>
+<p>Custom CSS rules were created to define a minimalistic presentation for extra information.
+This class overrides the admonition box when the title “Learn More” is added.
+The use of this class is preferred to the <code class="docutils literal notranslate"><span class="pre">..</span> <span class="pre">seealso::</span></code> built in Sphinx element when used inside
+another element.</p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-1-1-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-1-1-0" name="1-0" role="tab" tabindex="0">Rendered</button><button aria-controls="panel-1-1-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-1-1-1" name="1-1" role="tab" tabindex="-1">RST Source</button></div><div aria-labelledby="tab-1-1-0" class="sphinx-tabs-panel" id="panel-1-1-0" name="1-0" role="tabpanel" tabindex="0"><div class="admonition-learn-more admonition">
+<p class="admonition-title">Learn More</p>
+<p>View the <span class="xref std std-ref">plugins-explanation</span> for more information.</p>
+</div>
+</div><div aria-labelledby="tab-1-1-1" class="sphinx-tabs-panel" hidden="true" id="panel-1-1-1" name="1-1" role="tabpanel" tabindex="0"><div class="highlight-rst notranslate"><div class="highlight"><pre><span></span><span class="p">..</span> <span class="ow">admonition</span><span class="p">::</span> Learn More
+
+   View the <span class="na">:ref:</span><span class="nv">`plugins-explanation`</span> for more information.
+</pre></div>
+</div>
+</div></div>
+<p>This is similar to the <code class="docutils literal notranslate"><span class="pre">..</span> <span class="pre">seealso::</span></code> built in Sphinx box, but it has more minimal padding and is more appropriate
+to use nested inside other elements.</p>
+</section>
+<section id="shaded-container-for-table-of-contents">
+<h3>Shaded container for Table of Contents<a class="headerlink" href="#shaded-container-for-table-of-contents" title="Permalink to this headline">#</a></h3>
+<p>Custom CSS rules were created to define a lightly shaded container
+with a larger width. This container is used for table of contents (TOC) elements in index pages,
+but could be reused for other elements as well.</p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-2-2-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-2-2-0" name="2-0" role="tab" tabindex="0">Rendered</button><button aria-controls="panel-2-2-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-2-2-1" name="2-1" role="tab" tabindex="-1">RST Source</button></div><div aria-labelledby="tab-2-2-0" class="sphinx-tabs-panel" id="panel-2-2-0" name="2-0" role="tabpanel" tabindex="0"><div class="wide-lightly-shaded docutils container">
+<p><strong>Table of Contents:</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#"><span class="doc">Guidelines for Documentation</span></a></p></li>
+<li><p><span class="xref std std-doc">/dev-guide/contributing-merge-request-guidelines</span></p></li>
+<li><p><span class="xref std std-doc">/dev-guide/contributing-commit-styleguide</span></p></li>
+</ul>
+</div>
+</div><div aria-labelledby="tab-2-2-1" class="sphinx-tabs-panel" hidden="true" id="panel-2-2-1" name="2-1" role="tabpanel" tabindex="0"><p>In production documentation pages, use <code class="docutils literal notranslate"><span class="pre">..</span> <span class="pre">toctree::</span></code> to incorporate
+the TOC into the global navigation system.</p>
+<div class="highlight-rst notranslate"><div class="highlight"><pre><span></span><span class="p">..</span> <span class="ow">container</span><span class="p">::</span> wide-lightly-shaded
+
+<span class="p">   ..</span> <span class="ow">toctree</span><span class="p">::</span>
+      <span class="nc">:maxdepth:</span> 1
+      <span class="nc">:titlesonly:</span>
+      <span class="nc">:caption:</span> Table of Contents
+
+      /dev-guide/contributing-documentation-guide
+      /dev-guide/contributing-merge-request-guidelines
+      /dev-guide/contributing-commit-styleguide
+</pre></div>
+</div>
+<p>In this example, however, doc references were used to avoid actually adding these pages to the global navigation.</p>
+<div class="highlight-rst notranslate"><div class="highlight"><pre><span></span><span class="gs">**Table of Contents:**</span>
+
+<span class="m">*</span> <span class="na">:doc:</span><span class="nv">`/dev-guide/contributing-documentation-guide`</span>
+<span class="m">*</span> <span class="na">:doc:</span><span class="nv">`/dev-guide/contributing-merge-request-guidelines`</span>
+<span class="m">*</span> <span class="na">:doc:</span><span class="nv">`/dev-guide/contributing-commit-styleguide`</span>
+</pre></div>
+</div>
+</div></div>
+</section>
+<section id="page-contents-local-toc">
+<h3>Page Contents / Local ToC<a class="headerlink" href="#page-contents-local-toc" title="Permalink to this headline">#</a></h3>
+<p>To preview the contents on a page in a Table of Contents container, use the <code class="docutils literal notranslate"><span class="pre">..</span> <span class="pre">contents::</span></code> component.</p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-3-3-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-3-3-0" name="3-0" role="tab" tabindex="0">Rendered</button><button aria-controls="panel-3-3-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-3-3-1" name="3-1" role="tab" tabindex="-1">RST Source</button></div><div aria-labelledby="tab-3-3-0" class="sphinx-tabs-panel" id="panel-3-3-0" name="3-0" role="tabpanel" tabindex="0"><p>View the <a class="reference internal" href="#reference-guidelines-for-documentation"><span class="std std-ref">top of this page</span></a> to see this rendered.</p>
+</div><div aria-labelledby="tab-3-3-1" class="sphinx-tabs-panel" hidden="true" id="panel-3-3-1" name="3-1" role="tabpanel" tabindex="0"><div class="highlight-rst notranslate"><div class="highlight"><pre><span></span><span class="p">..</span> <span class="ow">contents</span><span class="p">::</span> Contents
+   <span class="nc">:local:</span>
+   <span class="nc">:depth:</span> 1
+</pre></div>
+</div>
+</div></div>
+</section>
+<section id="figures-screenshots">
+<h3>Figures (screenshots)<a class="headerlink" href="#figures-screenshots" title="Permalink to this headline">#</a></h3>
+<p>Screenshots should be cropped and zoomed for readability. Always include <code class="docutils literal notranslate"><span class="pre">:alt:</span></code> text.</p>
+<p><strong>Custom CSS and JavaScript</strong> are available for images.</p>
+<p>To apply this styling, use one or more of the following figure classes with <code class="docutils literal notranslate"><span class="pre">:figclass:</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">border-image</span></code> → Adds a light border, shadow, and background</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">clickable-image</span></code> → Makes the image interactive with cursor + modal support</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">big-image</span></code> → Allows images to grow wider than the text column (experimental; CSS overrides may conflict with sidebar/layout changes — use sparingly)</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Modals are included by default through the addition of a <code class="docutils literal notranslate"><span class="pre">div</span></code> element in the <code class="docutils literal notranslate"><span class="pre">layout.html</span></code> footer.</p>
+</div>
+<section id="rst-syntax-image-classes">
+<h4>RST Syntax: Image Classes<a class="headerlink" href="#rst-syntax-image-classes" title="Permalink to this headline">#</a></h4>
+<p><strong>Screenshots that use combinations of these three CSS classes</strong></p>
+<p><em>On click, JavaScript shows the modal</em> <code class="docutils literal notranslate"><span class="pre">div</span></code> <em>element.</em></p>
+<div class="highlight-rst notranslate"><div class="highlight"><pre><span></span><span class="gs">**Using**</span> <span class="s">``border-image``</span> <span class="gs">**and**</span> <span class="s">``clickable-image``</span>:
+
+<span class="p">..</span> <span class="ow">figure</span><span class="p">::</span> ../tutorials/hello_world/_static/screenshots/login_dioptra.png
+   <span class="nc">:alt:</span> Dioptra login screen
+   <span class="nc">:figclass:</span> border-image clickable-image
+
+   Using the custom image class - clicking the image opens a modal.
+
+<span class="gs">**Using**</span> <span class="s">``big-image``</span>, <span class="s">``border-image``</span> <span class="gs">**and**</span> <span class="s">``clickable-image``</span>:
+
+<span class="p">..</span> <span class="ow">figure</span><span class="p">::</span> ../tutorials/hello_world/_static/screenshots/register_hello_world_task.png
+   <span class="nc">:alt:</span> Dioptra login screen
+   <span class="nc">:figclass:</span> border-image clickable-image big-image
+
+   Using the <span class="s">``big-image``</span> figclass - not recommended because it interferes
+   with the HTML sidebar.
+</pre></div>
+</div>
+</section>
+<section id="rendered-examples-image-classes">
+<h4>Rendered Examples: Image Classes<a class="headerlink" href="#rendered-examples-image-classes" title="Permalink to this headline">#</a></h4>
+<p><strong>Using</strong> <code class="docutils literal notranslate"><span class="pre">border-image</span></code> <strong>and</strong> <code class="docutils literal notranslate"><span class="pre">clickable-image</span></code>:</p>
+<figure class="border-image clickable-image align-default" id="id1">
+<img alt="Dioptra login screen" src="../_images/login_dioptra.png" />
+<figcaption>
+<p><span class="caption-text">Using the custom image class - clicking the image opens a modal.</span><a class="headerlink" href="#id1" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
+<p><strong>Using</strong> <code class="docutils literal notranslate"><span class="pre">big-image</span></code>, <code class="docutils literal notranslate"><span class="pre">border-image</span></code> <strong>and</strong> <code class="docutils literal notranslate"><span class="pre">clickable-image</span></code>:</p>
+<figure class="border-image clickable-image big-image align-default" id="id2">
+<img alt="Dioptra login screen" src="../_images/register_hello_world_task.png" />
+<figcaption>
+<p><span class="caption-text">Using the <code class="docutils literal notranslate"><span class="pre">big-image</span></code> figclass - not recommended because it interferes
+with the HTML sidebar.</span><a class="headerlink" href="#id2" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Making images larger than the text column with <code class="docutils literal notranslate"><span class="pre">big-image</span></code> is potentially <strong>fragile</strong> and relies on CSS workarounds.
+It may look odd with different sidebar widths or screen sizes. Prefer standard-sized images unless
+the extra width is necessary for readability.</p>
+</div>
+</section>
+</section>
+<section id="literal-includes">
+<h3>Literal includes<a class="headerlink" href="#literal-includes" title="Permalink to this headline">#</a></h3>
+<p>Use <code class="docutils literal notranslate"><span class="pre">literalinclude</span></code> to pull code from the repo instead of pasting it:</p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-4-4-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-4-4-0" name="4-0" role="tab" tabindex="0">Rendered</button><button aria-controls="panel-4-4-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-4-4-1" name="4-1" role="tab" tabindex="-1">RST Source</button></div><div aria-labelledby="tab-4-4-0" class="sphinx-tabs-panel" id="panel-4-4-0" name="4-0" role="tabpanel" tabindex="0"><p><strong>hello_world.py</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="kn">import</span><span class="w"> </span><span class="nn">structlog</span>
+<span class="linenos">2</span><span class="kn">from</span><span class="w"> </span><span class="nn">dioptra</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplugs</span>
+<span class="linenos">3</span>
+<span class="linenos">4</span><span class="n">logger</span> <span class="o">=</span> <span class="n">structlog</span><span class="o">.</span><span class="n">get_logger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="linenos">5</span>
+<span class="linenos">6</span><span class="nd">@pyplugs</span><span class="o">.</span><span class="n">register</span>
+<span class="linenos">7</span><span class="k">def</span><span class="w"> </span><span class="nf">hello_world</span><span class="p">():</span>
+<span class="linenos">8</span>    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Hello, World! Welcome to Dioptra.&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-4-4-1" class="sphinx-tabs-panel" hidden="true" id="panel-4-4-1" name="4-1" role="tabpanel" tabindex="0"><div class="highlight-rst notranslate"><div class="highlight"><pre><span></span><span class="gs">**hello_world.py**</span>:
+
+<span class="p">..</span> <span class="ow">literalinclude</span><span class="p">::</span> ../../../docs/source/documentation_code/plugins/hello_world_tutorial/hello_world.py
+   <span class="nc">:language:</span> python
+   <span class="nc">:linenos:</span>
+</pre></div>
+</div>
+</div></div>
+</section>
+<section id="custom-code-block-styling">
+<h3>Custom Code Block Styling<a class="headerlink" href="#custom-code-block-styling" title="Permalink to this headline">#</a></h3>
+<p>Custom CSS classes are available to style code blocks for improved visual separation and language-specific branding.
+Font size is also reduced to save space for long code blocks.
+Apply these classes using the standard Sphinx admonition directive.</p>
+<p><strong>Available Classes</strong></p>
+<p>Use the following classes with an <code class="docutils literal notranslate"><span class="pre">..</span> <span class="pre">admonition::</span></code> block:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">code-panel</span></code>: The base class. This applies the custom box, rounded corners, shadow, and reduced font size.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">python</span></code>: Applies the custom dark blue title bar, yellow border, and the &gt;&gt;&gt; prompt prefix.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">yaml</span></code>: Applies the custom dark brown title bar, dark border, and the &gt;&gt; prompt prefix.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">console</span></code>: Applies custom dark theme and the $ prompt prefix.</p></li>
+</ul>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-5-5-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-5-5-0" name="5-0" role="tab" tabindex="0">Rendered</button><button aria-controls="panel-5-5-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-5-5-1" name="5-1" role="tab" tabindex="-1">RST Source</button></div><div aria-labelledby="tab-5-5-0" class="sphinx-tabs-panel" id="panel-5-5-0" name="5-0" role="tabpanel" tabindex="0"><div class="code-panel python admonition">
+<p class="admonition-title">&lt;My Python LiteralInclude&gt;</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="linenos"> 2</span><span class="kn">import</span><span class="w"> </span><span class="nn">structlog</span>
+<span class="linenos"> 3</span><span class="kn">from</span><span class="w"> </span><span class="nn">dioptra</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplugs</span>
+<span class="linenos"> 4</span>
+<span class="linenos"> 5</span><span class="n">LOGGER</span> <span class="o">=</span> <span class="n">structlog</span><span class="o">.</span><span class="n">get_logger</span><span class="p">()</span>
+<span class="linenos"> 6</span>
+<span class="linenos"> 7</span><span class="c1"># Helper function - not registered as a Dioptra plugin task</span>
+<span class="linenos"> 8</span><span class="k">def</span><span class="w"> </span><span class="nf">sqrt</span><span class="p">(</span><span class="n">num</span><span class="p">:</span><span class="nb">float</span><span class="p">)</span><span class="o">-&gt;</span><span class="nb">float</span><span class="p">:</span>
+<span class="linenos"> 9</span>  <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">num</span><span class="p">)</span>
+<span class="linenos">10</span>
+<span class="linenos">11</span><span class="nd">@pyplugs</span><span class="o">.</span><span class="n">register</span>
+<span class="linenos">12</span><span class="k">def</span><span class="w"> </span><span class="nf">sample_normal_distribution_print_mean</span><span class="p">(</span>
+<span class="linenos">13</span>              <span class="n">random_seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+<span class="linenos">14</span>              <span class="n">mean</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+<span class="linenos">15</span>              <span class="n">var</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+<span class="linenos">16</span>              <span class="n">sample_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="p">:</span>
+<span class="linenos">17</span>
+<span class="linenos">18</span>  <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">random_seed</span><span class="p">)</span>
+<span class="linenos">19</span>  <span class="n">std_dev</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+<span class="linenos">20</span>  <span class="n">draws</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="n">mean</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">std_dev</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">sample_size</span><span class="p">)</span>
+<span class="linenos">21</span>  <span class="n">draws_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">draws</span><span class="p">)</span>
+<span class="linenos">22</span>  <span class="n">diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">mean</span><span class="o">-</span><span class="n">draws_mean</span><span class="p">)</span>
+<span class="linenos">23</span>  <span class="n">pct</span> <span class="o">=</span> <span class="mi">100</span><span class="o">*</span><span class="n">diff</span><span class="o">/</span><span class="n">mean</span>
+<span class="linenos">24</span>
+<span class="linenos">25</span>  <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+<span class="linenos">26</span>      <span class="s2">&quot;Plugin 2 - &quot;</span>
+<span class="linenos">27</span>      <span class="sa">f</span><span class="s2">&quot;The mean value of the draws was </span><span class="si">{</span><span class="n">draws_mean</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">, &quot;</span>
+<span class="linenos">28</span>      <span class="sa">f</span><span class="s2">&quot;which was </span><span class="si">{</span><span class="n">diff</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> different from the passed-in mean (</span><span class="si">{</span><span class="n">pct</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">%). &quot;</span>
+<span class="linenos">29</span>      <span class="s2">&quot;[Passed-in Parameters]&quot;</span>
+<span class="linenos">30</span>      <span class="sa">f</span><span class="s2">&quot;Seed: </span><span class="si">{</span><span class="n">random_seed</span><span class="si">}</span><span class="s2">; &quot;</span>
+<span class="linenos">31</span>      <span class="sa">f</span><span class="s2">&quot;Mean: </span><span class="si">{</span><span class="n">mean</span><span class="si">}</span><span class="s2">; &quot;</span>
+<span class="linenos">32</span>      <span class="sa">f</span><span class="s2">&quot;Variance: </span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2">; &quot;</span>
+<span class="linenos">33</span>      <span class="sa">f</span><span class="s2">&quot;Sample Size: </span><span class="si">{</span><span class="n">sample_size</span><span class="si">}</span><span class="s2">;&quot;</span>
+<span class="linenos">34</span>      <span class="p">)</span>
+<span class="linenos">35</span>
+<span class="linenos">36</span>  <span class="k">return</span> <span class="n">draws</span>
+</pre></div>
+</div>
+</div>
+<div class="code-panel yaml admonition">
+<p class="admonition-title">&lt;My YAML LiteralInclude&gt;</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">draw_samples</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">task</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sample_normal_distribution</span>
+<span class="w">  </span><span class="nt">args</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
+<span class="w">  </span><span class="nt">kwargs</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">random_seed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">    </span><span class="nt">mean</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$mean</span><span class="w"> </span><span class="c1"># User parameter</span>
+<span class="w">    </span><span class="nt">var</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$var</span><span class="w"> </span><span class="c1"># User parameter</span>
+<span class="w">    </span><span class="nt">sample_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$sample_size</span><span class="w"> </span><span class="c1"># User Parameter</span>
+
+<span class="nt">log_stats_1</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">task</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">print_stats</span>
+<span class="w">  </span><span class="nt">args</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
+<span class="w">  </span><span class="nt">kwargs</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">input_array</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$draw_samples.output</span><span class="w"> </span><span class="c1"># This is the output from Task 1</span>
+<span class="w">    </span><span class="nt">plugin_step_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Task</span><span class="nv"> </span><span class="s">1:</span><span class="nv"> </span><span class="s">Drawing</span><span class="nv"> </span><span class="s">from</span><span class="nv"> </span><span class="s">normal</span><span class="nv"> </span><span class="s">distribution&quot;</span>
+
+<span class="nt">add_noise_step</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">task</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">add_noise</span>
+<span class="w">  </span><span class="nt">args</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
+<span class="w">  </span><span class="nt">kwargs</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">input_array</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$draw_samples.output</span><span class="w"> </span><span class="c1"># This is the output from Task 1</span>
+<span class="w">    </span><span class="nt">random_seed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">    </span><span class="nt">var</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
+<span class="w">    </span><span class="nt">mean</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">    </span><span class="nt">noise_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">normal</span>
+
+<span class="nt">log_stats_2</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">task</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">print_stats</span><span class="w"> </span><span class="c1"># Invoking this plugin task again with different input_array</span>
+<span class="w">  </span><span class="nt">args</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
+<span class="w">  </span><span class="nt">kwargs</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">input_array</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$add_noise_step.output</span><span class="w"> </span><span class="c1"># This is the output from Task 3</span>
+<span class="w">    </span><span class="nt">plugin_step_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Task</span><span class="nv"> </span><span class="s">2:</span><span class="nv"> </span><span class="s">Adding</span><span class="nv"> </span><span class="s">Noise&quot;</span>
+
+<span class="nt">transform_step</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">task</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nonlinear_transform</span>
+<span class="w">  </span><span class="nt">args</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
+<span class="w">  </span><span class="nt">kwargs</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">input_array</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$add_noise_step.output</span>
+<span class="w">    </span><span class="nt">transform</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$transform_type</span><span class="w"> </span><span class="c1"># User Parameter</span>
+
+<span class="nt">log_stats_3</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">task</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">print_stats</span><span class="w"> </span><span class="c1"># Invoking this plugin task a third time</span>
+<span class="w">  </span><span class="nt">args</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
+<span class="w">  </span><span class="nt">kwargs</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">input_array</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$transform_step.output</span><span class="w"> </span><span class="c1"># This is the output from Task 5</span>
+<span class="w">    </span><span class="nt">plugin_step_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Task</span><span class="nv"> </span><span class="s">3:</span><span class="nv"> </span><span class="s">Transforming</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">array&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="code-panel console admonition">
+<p class="admonition-title">&lt;My Console Input/Output&gt;</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">Plugin 1 was successfully completed. Output value was .7432 with parameter &quot;random&quot;.</span>
+</pre></div>
+</div>
+</div>
+</div><div aria-labelledby="tab-5-5-1" class="sphinx-tabs-panel" hidden="true" id="panel-5-5-1" name="5-1" role="tabpanel" tabindex="0"><div class="highlight-rst notranslate"><div class="highlight"><pre><span></span><span class="p">..</span> <span class="ow">admonition</span><span class="p">::</span> <span class="nt">&lt;My Python LiteralInclude&gt;</span>
+   <span class="nc">:class:</span> code-panel python
+
+<span class="p">   ..</span> <span class="ow">literalinclude</span><span class="p">::</span> ../../../docs/source/documentation_code/plugins/essential_workflows_tutorial/sample_normal.py
+      <span class="nc">:language:</span> python
+      <span class="nc">:linenos:</span>
+
+<span class="p">..</span> <span class="ow">admonition</span><span class="p">::</span> <span class="nt">&lt;My YAML LiteralInclude&gt;</span>
+   <span class="nc">:class:</span> code-panel yaml
+
+<span class="p">   ..</span> <span class="ow">literalinclude</span><span class="p">::</span> ../../../docs/source/documentation_code/task_graphs/essential_workflows_tutorial/sample_and_transform.yaml
+      <span class="nc">:language:</span> yaml
+
+<span class="p">..</span> <span class="ow">admonition</span><span class="p">::</span> <span class="nt">&lt;My Console Input/Output&gt;</span>
+   <span class="nc">:class:</span> code-panel console
+
+<span class="p">   ..</span> <span class="ow">code-block</span><span class="p">::</span> console
+
+      Plugin 1 was successfully completed. Output value was .7432 with parameter &quot;random&quot;.
+</pre></div>
+</div>
+</div></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Use unique comments, such as <code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">[docs:start]</span></code> and <code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">[docs:end]</span></code>, in Python files
+(or the appropriate comment style for other languages)
+to only grab sections of code. These tags must be present in the code files.</p>
+<p>In <code class="docutils literal notranslate"><span class="pre">literalincludes</span></code>, use the following syntax:</p>
+<div class="highlight-rst notranslate"><div class="highlight"><pre><span></span><span class="p">..</span> <span class="ow">literalinclude</span><span class="p">::</span> python_file.py
+   <span class="nc">:language:</span> python
+   <span class="nc">:start-after:</span> # my-start-comment
+   <span class="nc">:end-before:</span> # my-end-comment
+</pre></div>
+</div>
+</div>
+</section>
+<section id="tabs-for-alternate-paths">
+<h3>Tabs for alternate paths<a class="headerlink" href="#tabs-for-alternate-paths" title="Permalink to this headline">#</a></h3>
+<p>Tabs can be used for alternate instructions (e.g., GUI vs. Python client), as demonstrated below.</p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-6-6-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-6-6-0" name="6-0" role="tab" tabindex="0">Rendered</button><button aria-controls="panel-6-6-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-6-6-1" name="6-1" role="tab" tabindex="-1">RST Source</button></div><div aria-labelledby="tab-6-6-0" class="sphinx-tabs-panel" id="panel-6-6-0" name="6-0" role="tabpanel" tabindex="0"><div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-7-R1VJ" aria-selected="true" class="sphinx-tabs-tab group-tab" id="tab-7-R1VJ" name="R1VJ" role="tab" tabindex="0">GUI</button><button aria-controls="panel-7-UHl0aG9uIENsaWVudA==" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-7-UHl0aG9uIENsaWVudA==" name="UHl0aG9uIENsaWVudA==" role="tab" tabindex="-1">Python Client</button></div><div aria-labelledby="tab-7-R1VJ" class="sphinx-tabs-panel group-tab" id="panel-7-R1VJ" name="R1VJ" role="tabpanel" tabindex="0"><p>Login using the GUI</p>
+<figure class="border-image align-default">
+<img alt="Dioptra login screen" src="../_images/login_dioptra.png" style="width: 900px;" />
+</figure>
+</div><div aria-labelledby="tab-7-UHl0aG9uIENsaWVudA==" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-7-UHl0aG9uIENsaWVudA==" name="UHl0aG9uIENsaWVudA==" role="tabpanel" tabindex="0"><p>Login using the Python client API</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">LOCAL_PATH</span> <span class="o">=</span> <span class="s1">&#39;http://127.0.0.1&#39;</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dioptra.client</span><span class="w"> </span><span class="kn">import</span> <span class="n">connect_json_dioptra_client</span>
+<span class="n">client</span> <span class="o">=</span> <span class="n">connect_json_dioptra_client</span><span class="p">(</span><span class="n">LOCAL_PATH</span><span class="p">)</span>
+<span class="n">client</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">username</span><span class="o">=</span><span class="n">USER_NAME</span><span class="p">,</span> <span class="n">email</span><span class="o">=</span><span class="n">USER_EMAIL</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="n">USER_PASSWORD</span><span class="p">)</span>
+<span class="n">client</span><span class="o">.</span><span class="n">auth</span><span class="o">.</span><span class="n">login</span><span class="p">(</span><span class="n">USER_NAME</span><span class="p">,</span> <span class="n">USER_PASSWORD</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></div>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-8-R1VJ" aria-selected="true" class="sphinx-tabs-tab group-tab" id="tab-8-R1VJ" name="R1VJ" role="tab" tabindex="0">GUI</button><button aria-controls="panel-8-UHl0aG9uIENsaWVudA==" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-8-UHl0aG9uIENsaWVudA==" name="UHl0aG9uIENsaWVudA==" role="tab" tabindex="-1">Python Client</button></div><div aria-labelledby="tab-8-R1VJ" class="sphinx-tabs-panel group-tab" id="panel-8-R1VJ" name="R1VJ" role="tabpanel" tabindex="0"><p>Create a plugin in the GUI</p>
+<figure class="border-image align-default">
+<img alt="Dioptra login screen" src="../_images/register_hello_world_task.png" style="width: 900px;" />
+</figure>
+</div><div aria-labelledby="tab-8-UHl0aG9uIENsaWVudA==" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-8-UHl0aG9uIENsaWVudA==" name="UHl0aG9uIENsaWVudA==" role="tabpanel" tabindex="0"><p>Create a plugin using the Python client.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">plugin</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">plugins</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">group_id</span><span class="p">,</span>
+                 <span class="s2">&quot;hello&quot;</span><span class="p">,</span>
+                 <span class="s2">&quot;This is a Hello World Plugin&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></div>
+</div><div aria-labelledby="tab-6-6-1" class="sphinx-tabs-panel" hidden="true" id="panel-6-6-1" name="6-1" role="tabpanel" tabindex="0"><div class="highlight-rst notranslate"><div class="highlight"><pre><span></span><span class="p">..</span> <span class="ow">tabs</span><span class="p">::</span>
+
+<span class="p">   ..</span> <span class="ow">group-tab</span><span class="p">::</span> GUI
+      Login using the GUI
+
+<span class="p">      ..</span> <span class="ow">figure</span><span class="p">::</span> ../tutorials/hello_world/_static/screenshots/login_dioptra.png
+         <span class="nc">:alt:</span> Dioptra login screen
+         <span class="nc">:width:</span> 900px
+         <span class="nc">:figclass:</span> border-image
+
+<span class="p">   ..</span> <span class="ow">group-tab</span><span class="p">::</span> Python Client
+      Login using the Python client API
+
+<span class="p">      ..</span> <span class="ow">code-block</span><span class="p">::</span> <span class="k">python</span>
+
+         <span class="n">LOCAL_PATH</span> <span class="o">=</span> <span class="s1">&#39;http://127.0.0.1&#39;</span>
+         <span class="kn">from</span><span class="w"> </span><span class="nn">dioptra.client</span><span class="w"> </span><span class="kn">import</span> <span class="n">connect_json_dioptra_client</span>
+         <span class="n">client</span> <span class="o">=</span> <span class="n">connect_json_dioptra_client</span><span class="p">(</span><span class="n">LOCAL_PATH</span><span class="p">)</span>
+         <span class="n">client</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">username</span><span class="o">=</span><span class="n">USER_NAME</span><span class="p">,</span> <span class="n">email</span><span class="o">=</span><span class="n">USER_EMAIL</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="n">USER_PASSWORD</span><span class="p">)</span>
+         <span class="n">client</span><span class="o">.</span><span class="n">auth</span><span class="o">.</span><span class="n">login</span><span class="p">(</span><span class="n">USER_NAME</span><span class="p">,</span> <span class="n">USER_PASSWORD</span><span class="p">)</span>
+
+<span class="p">..</span> <span class="ow">tabs</span><span class="p">::</span>
+
+<span class="p">   ..</span> <span class="ow">group-tab</span><span class="p">::</span> GUI
+      Create a plugin in the GUI
+
+<span class="p">      ..</span> <span class="ow">figure</span><span class="p">::</span> ../tutorials/hello_world/_static/screenshots/register_hello_world_task.png
+         <span class="nc">:alt:</span> Dioptra login screen
+         <span class="nc">:width:</span> 900px
+         <span class="nc">:figclass:</span> border-image
+
+<span class="p">   ..</span> <span class="ow">group-tab</span><span class="p">::</span> Python Client
+      Create a plugin using the Python client.
+
+<span class="p">      ..</span> <span class="ow">code-block</span><span class="p">::</span> <span class="k">python</span>
+
+         <span class="n">plugin</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">plugins</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">group_id</span><span class="p">,</span>
+                        <span class="s2">&quot;hello&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;This is a Hello World Plugin&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>To have tabs synchronize together (like above example), use the <code class="docutils literal notranslate"><span class="pre">..</span> <span class="pre">group-tab::</span></code> syntax
+and make sure the tabs are named the exact same thing across iterations, i.e. <code class="docutils literal notranslate"><span class="pre">..</span> <span class="pre">group-tab::</span> <span class="pre">Python</span> <span class="pre">Client</span></code>
+wil be synchronized with another instanced of <code class="docutils literal notranslate"><span class="pre">..</span> <span class="pre">group-tab::</span> <span class="pre">Python</span> <span class="pre">Client</span></code>. If synchronization is not required, replace
+<code class="docutils literal notranslate"><span class="pre">group-tab</span></code> with <code class="docutils literal notranslate"><span class="pre">tab</span></code>.</p>
+</div>
+</section>
+<section id="cross-references">
+<span id="reference-guidelines-for-documentation-cross-references"></span><h3>Cross-references<a class="headerlink" href="#cross-references" title="Permalink to this headline">#</a></h3>
+<p>Use explicit references (<code class="docutils literal notranslate"><span class="pre">..</span> <span class="pre">_label-name:</span></code>) together with <code class="docutils literal notranslate"><span class="pre">:ref:</span></code>.
+This is the most reliable way to link between pages, since it does not
+depend on the document being in a <code class="docutils literal notranslate"><span class="pre">..</span> <span class="pre">toctree::</span></code>. Note that displayed link text is equal to the page
+title but can be overridden using the <code class="docutils literal notranslate"><span class="pre">&lt;&gt;</span></code> syntax (see example).</p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-9-9-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-9-9-0" name="9-0" role="tab" tabindex="0">Rendered</button><button aria-controls="panel-9-9-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-9-9-1" name="9-1" role="tab" tabindex="-1">RST Source</button></div><div aria-labelledby="tab-9-9-0" class="sphinx-tabs-panel" id="panel-9-9-0" name="9-0" role="tabpanel" tabindex="0"><p>See more about <a class="reference internal" href="../how-to/setup-dioptra/prepare-deployment.html#how-to-prepare-deployment"><span class="std std-ref">Prepare Your Deployment</span></a>
+in the dedicated page.</p>
+<p>See more about <a class="reference internal" href="../how-to/setup-dioptra/prepare-deployment.html#how-to-prepare-deployment"><span class="std std-ref">My custom reference name for the same page</span></a>
+in the dedicated page.</p>
+</div><div aria-labelledby="tab-9-9-1" class="sphinx-tabs-panel" hidden="true" id="panel-9-9-1" name="9-1" role="tabpanel" tabindex="0"><div class="highlight-rst notranslate"><div class="highlight"><pre><span></span>See more about <span class="na">:ref:</span><span class="nv">`how-to-prepare-deployment`</span>
+in the dedicated page.
+
+See more about <span class="na">:ref:</span><span class="nv">`My custom reference name for the same page &lt;how-to-prepare-deployment&gt;`</span>
+in the dedicated page.
+</pre></div>
+</div>
+</div></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>To make a <code class="docutils literal notranslate"><span class="pre">:ref:</span></code> work, the target document must define a label
+(<code class="docutils literal notranslate"><span class="pre">..</span> <span class="pre">_label-name:</span></code>) in the .rst file. Without a label, <code class="docutils literal notranslate"><span class="pre">:link-type:</span> <span class="pre">ref</span></code> cannot resolve.</p>
+<p>Place the label near the top of the file you want to link to. For example:</p>
+<div class="highlight-rst notranslate"><div class="highlight"><pre><span></span><span class="p">..</span> <span class="nt">_tutorial-1:</span>
+
+<span class="gh">Tutorial 1</span>
+<span class="gh">==========</span>
+
+Continue with the rest of the document...
+
+<span class="p">..</span> <span class="nt">_tutorial-1-header-2:</span>
+
+<span class="gh">Tutorial 1 Header 2:</span>
+<span class="gh">----------------------</span>
+
+Continue with the rest of the document...
+</pre></div>
+</div>
+<p>With those two labels in the .rst file, you could link to the page / specific section with:</p>
+<div class="highlight-rst notranslate"><div class="highlight"><pre><span></span><span class="na">:ref:</span><span class="nv">`tutorial-1`</span>
+<span class="na">:ref:</span><span class="nv">`tutorial-1-header-2`</span>
+</pre></div>
+</div>
+<p>Notice that the leading underscore is omitted when using a <code class="docutils literal notranslate"><span class="pre">:ref:</span></code>.</p>
+</div>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>To standardize the label names for .rst references, use this formula:</p>
+<p><code class="docutils literal notranslate"><span class="pre">_{page_type}-{page_title}-{optionally:</span> <span class="pre">header_title}</span></code></p>
+<p>i.e.</p>
+<p><code class="docutils literal notranslate"><span class="pre">_{tutorial}-{running-hello-world}-{step-2-create-a-plugin}</span></code></p>
+<p><strong>Examples:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">_how-to-create-plugins</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_tutorial-adding-inputs-and-outputs</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_reference-plugins</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_reference-plugins-plugin-function-tasks</span></code> → includes header_title</p></li>
+</ul>
+<p>Notice that we only use dashes, no underscores. Use the page type in the singular, e.g. <code class="docutils literal notranslate"><span class="pre">explanation</span></code>, <code class="docutils literal notranslate"><span class="pre">reference</span></code>,
+<code class="docutils literal notranslate"><span class="pre">how-to</span></code>, <code class="docutils literal notranslate"><span class="pre">tutorial</span></code>.</p>
+</div>
+</section>
+</section>
+<section id="additional-sphinx-elements">
+<h2><a class="toc-backref" href="#id8">Additional Sphinx Elements</a><a class="headerlink" href="#additional-sphinx-elements" title="Permalink to this headline">#</a></h2>
+<p>The following elements are currently unused but available for documentation.</p>
+<section id="collapsible-content">
+<h3>Collapsible content<a class="headerlink" href="#collapsible-content" title="Permalink to this headline">#</a></h3>
+<p>Collapsible admonitions could be used for long sections of code or optional context.</p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-10-10-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-10-10-0" name="10-0" role="tab" tabindex="0">Rendered</button><button aria-controls="panel-10-10-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-10-10-1" name="10-1" role="tab" tabindex="-1">RST Source</button></div><div aria-labelledby="tab-10-10-0" class="sphinx-tabs-panel" id="panel-10-10-0" name="10-0" role="tabpanel" tabindex="0"><div class="dropdown code-panel python admonition">
+<p class="admonition-title">Python Plugin Code (long)</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="linenos"> 2</span><span class="kn">import</span><span class="w"> </span><span class="nn">structlog</span>
+<span class="linenos"> 3</span><span class="kn">from</span><span class="w"> </span><span class="nn">dioptra</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplugs</span>
+<span class="linenos"> 4</span>
+<span class="linenos"> 5</span><span class="n">LOGGER</span> <span class="o">=</span> <span class="n">structlog</span><span class="o">.</span><span class="n">get_logger</span><span class="p">()</span>
+<span class="linenos"> 6</span>
+<span class="linenos"> 7</span><span class="c1"># Helper function - not registered as a Dioptra plugin task</span>
+<span class="linenos"> 8</span><span class="k">def</span><span class="w"> </span><span class="nf">sqrt</span><span class="p">(</span><span class="n">num</span><span class="p">:</span><span class="nb">float</span><span class="p">)</span><span class="o">-&gt;</span><span class="nb">float</span><span class="p">:</span>
+<span class="linenos"> 9</span>  <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">num</span><span class="p">)</span>
+<span class="linenos">10</span>
+<span class="linenos">11</span><span class="nd">@pyplugs</span><span class="o">.</span><span class="n">register</span>
+<span class="linenos">12</span><span class="k">def</span><span class="w"> </span><span class="nf">sample_normal_distribution_print_mean</span><span class="p">(</span>
+<span class="linenos">13</span>              <span class="n">random_seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+<span class="linenos">14</span>              <span class="n">mean</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+<span class="linenos">15</span>              <span class="n">var</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+<span class="linenos">16</span>              <span class="n">sample_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="p">:</span>
+<span class="linenos">17</span>
+<span class="linenos">18</span>  <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">random_seed</span><span class="p">)</span>
+<span class="linenos">19</span>  <span class="n">std_dev</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+<span class="linenos">20</span>  <span class="n">draws</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="n">mean</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">std_dev</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">sample_size</span><span class="p">)</span>
+<span class="linenos">21</span>  <span class="n">draws_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">draws</span><span class="p">)</span>
+<span class="linenos">22</span>  <span class="n">diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">mean</span><span class="o">-</span><span class="n">draws_mean</span><span class="p">)</span>
+<span class="linenos">23</span>  <span class="n">pct</span> <span class="o">=</span> <span class="mi">100</span><span class="o">*</span><span class="n">diff</span><span class="o">/</span><span class="n">mean</span>
+<span class="linenos">24</span>
+<span class="linenos">25</span>  <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+<span class="linenos">26</span>      <span class="s2">&quot;Plugin 2 - &quot;</span>
+<span class="linenos">27</span>      <span class="sa">f</span><span class="s2">&quot;The mean value of the draws was </span><span class="si">{</span><span class="n">draws_mean</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">, &quot;</span>
+<span class="linenos">28</span>      <span class="sa">f</span><span class="s2">&quot;which was </span><span class="si">{</span><span class="n">diff</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> different from the passed-in mean (</span><span class="si">{</span><span class="n">pct</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">%). &quot;</span>
+<span class="linenos">29</span>      <span class="s2">&quot;[Passed-in Parameters]&quot;</span>
+<span class="linenos">30</span>      <span class="sa">f</span><span class="s2">&quot;Seed: </span><span class="si">{</span><span class="n">random_seed</span><span class="si">}</span><span class="s2">; &quot;</span>
+<span class="linenos">31</span>      <span class="sa">f</span><span class="s2">&quot;Mean: </span><span class="si">{</span><span class="n">mean</span><span class="si">}</span><span class="s2">; &quot;</span>
+<span class="linenos">32</span>      <span class="sa">f</span><span class="s2">&quot;Variance: </span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2">; &quot;</span>
+<span class="linenos">33</span>      <span class="sa">f</span><span class="s2">&quot;Sample Size: </span><span class="si">{</span><span class="n">sample_size</span><span class="si">}</span><span class="s2">;&quot;</span>
+<span class="linenos">34</span>      <span class="p">)</span>
+<span class="linenos">35</span>
+<span class="linenos">36</span>  <span class="k">return</span> <span class="n">draws</span>
+</pre></div>
+</div>
+</div>
+</div><div aria-labelledby="tab-10-10-1" class="sphinx-tabs-panel" hidden="true" id="panel-10-10-1" name="10-1" role="tabpanel" tabindex="0"><div class="highlight-rst notranslate"><div class="highlight"><pre><span></span><span class="p">..</span> <span class="ow">admonition</span><span class="p">::</span> Python Plugin Code (long)
+   <span class="nc">:class:</span> dropdown code-panel python
+
+<span class="p">   ..</span> <span class="ow">literalinclude</span><span class="p">::</span> ../../../docs/source/documentation_code/plugins/essential_workflows_tutorial/sample_normal.py
+      <span class="nc">:language:</span> python
+      <span class="nc">:linenos:</span>
+</pre></div>
+</div>
+</div></div>
+</section>
+<section id="sphinx-page-options">
+<h3>Sphinx Page Options<a class="headerlink" href="#sphinx-page-options" title="Permalink to this headline">#</a></h3>
+<ol class="arabic simple">
+<li><p><strong>Remove the page specific table of contents</strong> on the right-hand side:</p>
+<ul class="simple">
+<li><p>Place <code class="docutils literal notranslate"><span class="pre">:html_theme.sidebar_secondary.remove:</span></code> in the .rst file, ideally at the top.</p></li>
+</ul>
+</li>
+</ol>
+</section>
+<section id="cards-grids-and-callouts">
+<h3>Cards, grids, and callouts<a class="headerlink" href="#cards-grids-and-callouts" title="Permalink to this headline">#</a></h3>
+<p><cite>sphinx-design</cite> provides cards and grids for menus or callouts.</p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-11-11-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-11-11-0" name="11-0" role="tab" tabindex="0">Rendered</button><button aria-controls="panel-11-11-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-11-11-1" name="11-1" role="tab" tabindex="-1">RST Source</button></div><div aria-labelledby="tab-11-11-0" class="sphinx-tabs-panel" id="panel-11-11-0" name="11-0" role="tabpanel" tabindex="0"><div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
+<div class="sd-row sd-row-cols-2 sd-row-cols-xs-2 sd-row-cols-sm-2 sd-row-cols-md-2 sd-row-cols-lg-2 docutils">
+<div class="sd-col sd-d-flex-row docutils">
+<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm sd-card-hover docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+<strong>Run Dioptra</strong></div>
+<p class="sd-card-text">Step-by-step instructions for running Dioptra.</p>
+</div>
+<a class="sd-stretched-link reference internal" href="../how-to/setup-dioptra/prepare-deployment.html#how-to-prepare-deployment"><span class="std std-ref"></span></a></div>
+</div>
+<div class="sd-col sd-d-flex-row docutils">
+<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm sd-card-hover docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+<strong>Installation</strong></div>
+<p class="sd-card-text">How to install Dioptra locally.</p>
+</div>
+<span class="sd-stretched-link"></span></div>
+</div>
+<div class="sd-col sd-d-flex-row docutils">
+<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm sd-card-hover docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+<strong>Get Container Images</strong></div>
+<p class="sd-card-text">Download or build container images.</p>
+</div>
+<a class="sd-stretched-link reference internal" href="../how-to/setup-dioptra/get-container-images/index.html#how-to-get-container-images"><span class="std std-ref"></span></a></div>
+</div>
+<div class="sd-col sd-d-flex-row docutils">
+<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm sd-card-hover docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+<strong>Additional Configuration</strong></div>
+<p class="sd-card-text">Optional configuration steps after setup.</p>
+</div>
+<span class="sd-stretched-link"></span></div>
+</div>
+</div>
+</div>
+</div><div aria-labelledby="tab-11-11-1" class="sphinx-tabs-panel" hidden="true" id="panel-11-11-1" name="11-1" role="tabpanel" tabindex="0"><div class="highlight-rst notranslate"><div class="highlight"><pre><span></span><span class="p">..</span> <span class="ow">grid</span><span class="p">::</span> 2
+
+<span class="p">   ..</span> <span class="ow">grid-item-card</span><span class="p">::</span> <span class="gs">**Run Dioptra**</span>
+      <span class="nc">:link:</span> getting-started-running-dioptra
+      <span class="nc">:link-type:</span> ref
+
+      Step-by-step instructions for running Dioptra.
+
+<span class="p">   ..</span> <span class="ow">grid-item-card</span><span class="p">::</span> <span class="gs">**Installation**</span>
+      <span class="nc">:link:</span> getting-started-installation
+      <span class="nc">:link-type:</span> ref
+
+      How to install Dioptra locally.
+
+<span class="p">   ..</span> <span class="ow">grid-item-card</span><span class="p">::</span> <span class="gs">**Get Container Images**</span>
+      <span class="nc">:link:</span> how-to-get-container-images
+      <span class="nc">:link-type:</span> ref
+
+      Download or build container images.
+
+<span class="p">   ..</span> <span class="ow">grid-item-card</span><span class="p">::</span> <span class="gs">**Additional Configuration**</span>
+      <span class="nc">:link:</span> getting-started-additional-configuration
+      <span class="nc">:link-type:</span> ref
+
+      Optional configuration steps after setup.
+</pre></div>
+</div>
+</div></div>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+                <footer class="bd-footer-article">
+                  
+<div class="footer-article-items footer-article__inner">
+  
+    <div class="footer-article-item"><!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../reference/task-engine-reference.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Declarative Experiment Description</p>
+      </div>
+    </a>
+</div></div>
+  
+</div>
+
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#exemplar-documentation-pages">Exemplar Documentation Pages</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#documentation-goals">Documentation goals</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#documentation-file-placement">Documentation File Placement</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#image-files">Image Files</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#documentation-code-snippets">Documentation Code Snippets</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#diataxis-content-types">Diátaxis content types</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tutorials-learning-by-doing">Tutorials (learning by doing)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-to-guides-solve-a-task">How-to guides (solve a task)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reference-facts">Reference (facts)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#explanation-concepts-why">Explanation (concepts &amp; why)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#style-guide-for-rst-documents">Style guide for RST documents</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#section-hierarchy">Section hierarchy</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#steps-linkable-headers-on-a-card">Steps (Linkable Headers on a Card)</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#rst-syntax-steps">RST Syntax: Steps</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#rendered-example-steps">Rendered Example: Steps</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#example-step-1-create-the-plugin-container">Example Step 1: Create the Plugin Container</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#example-step-2-add-a-file">Example Step 2: Add a file</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#notes-for-steps-styling">Notes for “Steps” styling</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also-linkable-headers-on-a-card">“See Also” (Linkable Headers on a Card)</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#rst-syntax-see-also">RST syntax: See Also</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#rendered-example-see-also">Rendered Example: See Also</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See Also</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#notes-warnings-important-and-see-also">Notes, warnings, important, and “see also”</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#placing-items-in-the-margin">Placing items in the margin</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learn-more-minimalistic-div-for-more-information">“Learn More” - Minimalistic div for more information</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#shaded-container-for-table-of-contents">Shaded container for Table of Contents</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#page-contents-local-toc">Page Contents / Local ToC</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#figures-screenshots">Figures (screenshots)</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#rst-syntax-image-classes">RST Syntax: Image Classes</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#rendered-examples-image-classes">Rendered Examples: Image Classes</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#literal-includes">Literal includes</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#custom-code-block-styling">Custom Code Block Styling</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tabs-for-alternate-paths">Tabs for alternate paths</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cross-references">Cross-references</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#additional-sphinx-elements">Additional Sphinx Elements</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#collapsible-content">Collapsible content</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sphinx-page-options">Sphinx Page Options</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cards-grids-and-callouts">Cards, grids, and callouts</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
+
+  
+  <footer class="bd-footer">
+  </footer>
+  <div id="img-modal">
+    <span class="close-btn">&times;</span>
+    <img id="modal-img" src="" alt="enlarged screenshot">
+  </div>
+  </body>
+</html>

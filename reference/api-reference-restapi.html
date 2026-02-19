@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Testbed REST API Reference &#8212; Dioptra 1.0.1 documentation</title>
+    <title>REST API Reference &#8212; Dioptra 1.1.0 documentation</title>
   
   
   
@@ -57,12 +57,14 @@
     <script src="../_static/jquery.leaveNotice-nist.js"></script>
     <script src="../_static/applyLeaveNotice.js"></script>
     <script src="../_static/smoothNavScroll.js"></script>
+    <script src="../_static/image_modals.js"></script>
     <script src="../_static/design-tabs.js"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'reference/api-reference-restapi';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="prev" title="Declarative Experiment Description" href="task-engine-reference.html" />
+    <link rel="next" title="Resource Import Syntax" href="resource-import-reference.html" />
+    <link rel="prev" title="Workflows Client Methods" href="python-client/workflows-client-methods.html" />
     
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="None"/>
@@ -140,7 +142,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.0.1 documentation</p>
+    <p class="title logo__title">Dioptra 1.1.0 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -149,27 +151,143 @@
         <ul class="nav bd-sidenav bd-sidenav__home-link">
             <li class="toctree-l1">
                 <a class="reference internal" href="../index.html">
-                    What is Dioptra?
+                    Dioptra Overview
                 </a>
             </li>
         </ul>
-        <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
-</ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">What is Dioptra?</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../getting-started/building-the-containers.html">Building the Containers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../getting-started/running-dioptra.html">Running Dioptra</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../getting-started/acquiring-datasets.html">Downloading Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/dioptra-motivation/why-dioptra.html">Motivation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/dioptra-motivation/design-principles.html">Design Principles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/dioptra-motivation/audience.html">Intended Audience</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/architecture-overview.html">Architecture Overview</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Setup</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../user-guide/the-web-frontend.html">The Web Frontend</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../how-to/setup-dioptra/install-dioptra-explanation.html">Install Dioptra</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../how-to/setup-dioptra/get-container-images/index.html">Get the Container Images</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../how-to/setup-dioptra/get-container-images/download-container-images.html">Download the Container Images</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../how-to/setup-dioptra/get-container-images/build-container-images.html">Build the Container Images</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/prepare-deployment.html">Prepare Your Deployment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/update-deployment.html">Update Your Deployment</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/index.html">Customize Your Setup</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/using-docker-compose-overrides.html">Use Docker Compose Override Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/data-mounts.html">Mount Data Volumes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/gpu-enabled-workers.html">Configure GPU Workers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/adding-certificates.html">Add Custom CA Certificates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/enabling-ssl-tls.html">Enable SSL/TLS in NGINX and Postgres</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/creating-custom-workers.html">Create a Custom Worker Container</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/integrating-custom-containers.html">Integrate Custom Containers</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../how-to/setup-dioptra/reference/index.html">Setup Reference</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/deployment-template-reference.html">Deployment Template Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/deployment-folder-reference.html">Deployment Folder Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/init-deployment-script-reference.html">init-deployment.sh Script Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/deployment-commands-reference.html">Deployment Commands Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/custom-worker-template-reference.html">Custom Worker Template Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/dioptra-worker-v1-reference.html">dioptra-worker-v1 Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/worker-container-requirements-reference.html">Worker Container Requirements Reference</a></li>
+</ul>
+</li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Explainers</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../explanation/workflow-architecture-explanation.html">Workflow Architecture</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../explanation/components/index.html">Dioptra Components</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/components/queues-workers-explanation.html">Queues and Workers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/components/users-groups-explanation.html">Users and Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/components/param-types-explanation.html">Plugin Parameter Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/components/plugin-explanation.html">Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/components/entrypoints-explanation.html">Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/components/task-graph-explanation.html">Task Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/components/artifacts-explanation.html">Artifacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/components/experiments-jobs-explanation.html">Experiments and Jobs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/usage-modes.html">Usage Modes</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../tutorials/hello_world/index.html">Hello World in Dioptra</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/hello_world/part-0.html">Set Up Dioptra in the GUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/hello_world/part-1.html">Running Hello World</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../tutorials/essential_workflows/index.html">Learning the Essentials</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/essential_workflows/part-2.html">Adding Inputs and Outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/essential_workflows/part-3.html">Building a Multi-Step Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/essential_workflows/part-5.html">Saving Artifacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/essential_workflows/part-6.html">Using Saved Artifacts</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/advanced/index.html">Advanced Tutorials</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">How Tos</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../how-to/essential-workflows/index.html">Running Experiments</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/setup-python-client.html">Set Up the Python Client</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/creating-a-queue.html">Create Queues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/creating-users-groups.html">Create Users and Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/creating-param-types.html">Create Parameter Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/creating-a-plugin.html">Create Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/use-metrics.html">Logging Metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/creating-an-entrypoint.html">Create Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/creating-an-experiment.html">Create Experiments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/running-jobs.html">Running Jobs</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../how-to/import-content/index.html">Importing Content</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-9"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/import-content/add-a-dataset.html">Add a Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/import-content/import-resources.html">Import Resources</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../how-to/advanced/index.html">Advanced</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/advanced/distribute-plugins.html">Distribute Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/advanced/develop-for-dioptra.html">Develop for Dioptra</a></li>
+</ul>
+</li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="dioptra-components/index.html">Dioptra Components</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-11"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="dioptra-components/users-reference.html">Users</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dioptra-components/groups-reference.html">Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dioptra-components/queues-reference.html">Queues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dioptra-components/param-types-reference.html">Plugin Parameter Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dioptra-components/plugin-reference.html">Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dioptra-components/entrypoints-reference.html">Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dioptra-components/experiments-reference.html">Experiments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dioptra-components/jobs-reference.html">Jobs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dioptra-components/artifacts-reference.html">Artifacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dioptra-components/metrics-reference.html">Metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dioptra-components/workers-reference.html">Workers</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="python-client/index.html">Python Client Methods</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-12"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="python-client/auth-users-groups-client-methods.html">Auth, Users, and Groups Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python-client/queues-client-methods.html">Queues Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python-client/param-types-client-methods.html">Parameter Types Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python-client/plugin-client-methods.html">Plugins Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python-client/entrypoints-client-methods.html">Entrypoints Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python-client/experiments-client-methods.html">Experiments Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python-client/jobs-client-methods.html">Jobs Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python-client/artifacts-client-methods.html">Artifacts Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python-client/tags-client-methods.html">Tags Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python-client/snapshots-client-methods.html">Snapshots Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python-client/workflows-client-methods.html">Workflows Client Methods</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">REST API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="resource-import-reference.html">Resource Import Syntax</a></li>
+<li class="toctree-l1"><a class="reference internal" href="resource-search-language-reference.html">Resource Search Language Syntax</a></li>
 <li class="toctree-l1"><a class="reference internal" href="task-engine-reference.html">Declarative Experiment Description</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Testbed REST API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev-guide/contributing-documentation-guide.html">Guidelines for Documentation</a></li>
 </ul>
 
     </div>
@@ -321,7 +439,7 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>Testbed REST API Reference</h1>
+    <h1>REST API Reference</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -394,15 +512,15 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article" role="main">
                   
-  <section id="testbed-rest-api-reference">
-<span id="user-guide-api-reference-restapi"></span><h1>Testbed REST API Reference<a class="headerlink" href="#testbed-rest-api-reference" title="Permalink to this headline">#</a></h1>
+  <section id="rest-api-reference">
+<span id="reference-testbed-rest-api-reference"></span><h1>REST API Reference<a class="headerlink" href="#rest-api-reference" title="Permalink to this headline">#</a></h1>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>See the <a class="reference internal" href="../glossary.html"><span class="doc">Glossary</span></a> for the meaning of the acronyms used in this guide.</p>
+<p>See the <a class="reference internal" href="glossary.html#reference-glossary"><span class="std std-ref">Glossary</span></a> for the meaning of the acronyms used in this guide.</p>
 </div>
-<p>This page documents the endpoints and available <a class="reference internal" href="../glossary.html#term-HTTP"><span class="xref std std-term">HTTP</span></a> methods for the Dioptra <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a>.
-In addition to using this page, it is highly recommended that Testbed users also use the Swagger documentation that the <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> service automatically generates at runtime, which presents all of this page’s information in an interactive format.
-To access the Swagger documentation, just navigate to the web URL for the Testbed <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> service (omit the <code class="docutils literal notranslate"><span class="pre">/api/v1</span></code> part at the end of the web address).</p>
+<p>This page documents the endpoints and available <a class="reference internal" href="glossary.html#term-HTTP"><span class="xref std std-term">HTTP</span></a> methods for the Dioptra <a class="reference internal" href="glossary.html#term-REST"><span class="xref std std-term">REST</span></a> <a class="reference internal" href="glossary.html#term-API"><span class="xref std std-term">API</span></a>.
+In addition to using this page, it is highly recommended that Dioptra users also use the Swagger documentation that the <a class="reference internal" href="glossary.html#term-REST"><span class="xref std std-term">REST</span></a> <a class="reference internal" href="glossary.html#term-API"><span class="xref std std-term">API</span></a> service automatically generates at runtime, which presents all of this page’s information in an interactive format.
+To access the Swagger documentation, just navigate to the web URL for the Dioptra <a class="reference internal" href="glossary.html#term-REST"><span class="xref std std-term">REST</span></a> <a class="reference internal" href="glossary.html#term-API"><span class="xref std std-term">API</span></a> service (omit the <code class="docutils literal notranslate"><span class="pre">/api/v1</span></code> part at the end of the web address).</p>
 <section id="authentication">
 <h2>Authentication<a class="headerlink" href="#authentication" title="Permalink to this headline">#</a></h2>
 <p>User authentication operations.</p>
@@ -466,10 +584,13 @@ To access the Swagger documentation, just navigate to the web URL for the Testbe
 <dl class="field-list simple">
 <dt class="field-odd">Query Parameters</dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><strong>sortBy</strong> (<em>string</em>) – The name of the column to sort.</p></li>
+<li><p><strong>descending</strong> (<em>boolean</em>) – Boolean indicating whether to sort by descending or not.</p></li>
 <li><p><strong>search</strong> (<em>string</em>) – Search terms for the query (* and ? wildcards).</p></li>
 <li><p><strong>groupId</strong> (<em>integer</em>) – Filter results by the Group ID.</p></li>
-<li><p><strong>index</strong> (<em>integer</em>) – Index of the current page.</p></li>
+<li><p><strong>index</strong> (<em>integer</em>) – Starting index of the current page.</p></li>
 <li><p><strong>pageLength</strong> (<em>integer</em>) – Number of results to return per page.</p></li>
+<li><p><strong>outputParams</strong> (<em>string</em>) – Ordered List of Plugin Task Parameter Ids of the output values produced by the ArtifactTask associated with the target Artifacts.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Status Codes</dt>
@@ -550,6 +671,64 @@ To access the Swagger documentation, just navigate to the web URL for the Testbe
 </dd></dl>
 
 <dl class="http get">
+<dt class="sig sig-object http" id="get--api-v1-artifacts-id-contents">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/api/v1/artifacts/{id}/contents</span></span><a class="headerlink" href="#get--api-v1-artifacts-id-contents" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Downloads the contents of an Artifact resource</strong></p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>id: the resource id of the artifact</p>
+</dd>
+<dt>Returns:</dt><dd><p>A list of the files associated with artifact.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<em>integer</em>) – ID for the Artifact resource.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Query Parameters</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>path</strong> (<em>string</em>) – Path of a specific artifact. Only valid if artifactis a directory.</p></li>
+<li><p><strong>fileType</strong> (<em>string</em>) – Only valid if the artifact is a directory. The type of file todownload: tar_gz or zip.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Status Codes</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
+</ul>
+</dd>
+<dt class="field-even">Request Headers</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>X-Fields</strong> – An optional fields mask</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http get">
+<dt class="sig sig-object http" id="get--api-v1-artifacts-id-files">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/api/v1/artifacts/{id}/files</span></span><a class="headerlink" href="#get--api-v1-artifacts-id-files" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Gets a list of all files associated with an Artifact resource</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<em>integer</em>) – ID for the Artifact resource.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Status Codes</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Request Headers</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X-Fields</strong> – An optional fields mask</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http get">
 <dt class="sig sig-object http" id="get--api-v1-artifacts-id-snapshots">
 <span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/api/v1/artifacts/{id}/snapshots</span></span><a class="headerlink" href="#get--api-v1-artifacts-id-snapshots" title="Permalink to this definition">#</a></dt>
 <dd><p><strong>Gets the Snapshots for the resource</strong></p>
@@ -562,7 +741,7 @@ To access the Swagger documentation, just navigate to the web URL for the Testbe
 <dt class="field-even">Query Parameters</dt>
 <dd class="field-even"><ul class="simple">
 <li><p><strong>search</strong> (<em>string</em>) – Search terms for the query (* and ? wildcards).</p></li>
-<li><p><strong>index</strong> (<em>integer</em>) – Index of the current page.</p></li>
+<li><p><strong>index</strong> (<em>integer</em>) – Starting index of the current page.</p></li>
 <li><p><strong>pageLength</strong> (<em>integer</em>) – Number of results to return per page.</p></li>
 </ul>
 </dd>
@@ -603,6 +782,43 @@ To access the Swagger documentation, just navigate to the web URL for the Testbe
 </dl>
 </dd></dl>
 
+<dl class="http get">
+<dt class="sig sig-object http" id="get--api-v1-artifacts-id-snapshots-snapshotId-contents">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/api/v1/artifacts/{id}/snapshots/{snapshotId}/contents</span></span><a class="headerlink" href="#get--api-v1-artifacts-id-snapshots-snapshotId-contents" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Downloads the contents of an Artifact snapshot</strong></p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>id: the resource id of the artifact
+snapshotId: the snapshot resource id of the artifact</p>
+</dd>
+<dt>Returns:</dt><dd><p>A list of the files associated with artifact.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>snapshotId</strong> (<em>integer</em>) – Snapshot ID for the Artifact resource.</p></li>
+<li><p><strong>id</strong> (<em>integer</em>) – Snapshot ID for the Artifact resource.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Query Parameters</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>path</strong> (<em>string</em>) – Path of a specific artifact. Only valid if artifactis a directory.</p></li>
+<li><p><strong>fileType</strong> (<em>string</em>) – Only valid if the artifact is a directory. The type of file todownload: tar_gz or zip.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Status Codes</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
+</ul>
+</dd>
+<dt class="field-even">Request Headers</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>X-Fields</strong> – An optional fields mask</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 </section>
 <section id="entrypoints">
@@ -618,9 +834,11 @@ To access the Swagger documentation, just navigate to the web URL for the Testbe
 <dl class="field-list simple">
 <dt class="field-odd">Query Parameters</dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><strong>sortBy</strong> (<em>string</em>) – The name of the column to sort.</p></li>
+<li><p><strong>descending</strong> (<em>boolean</em>) – Boolean indicating whether to sort by descending or not.</p></li>
 <li><p><strong>search</strong> (<em>string</em>) – Search terms for the query (* and ? wildcards).</p></li>
 <li><p><strong>groupId</strong> (<em>integer</em>) – Filter results by the Group ID.</p></li>
-<li><p><strong>index</strong> (<em>integer</em>) – Index of the current page.</p></li>
+<li><p><strong>index</strong> (<em>integer</em>) – Starting index of the current page.</p></li>
 <li><p><strong>pageLength</strong> (<em>integer</em>) – Number of results to return per page.</p></li>
 </ul>
 </dd>
@@ -664,7 +882,7 @@ To access the Swagger documentation, just navigate to the web URL for the Testbe
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>draftType</strong> (<em>string</em>) – The type of drafts to return: all, existing, or new.</p></li>
 <li><p><strong>groupId</strong> (<em>integer</em>) – Filter results by the Group ID.</p></li>
-<li><p><strong>index</strong> (<em>integer</em>) – Index of the current page.</p></li>
+<li><p><strong>index</strong> (<em>integer</em>) – Starting index of the current page.</p></li>
 <li><p><strong>pageLength</strong> (<em>integer</em>) – Number of results to return per page.</p></li>
 </ul>
 </dd>
@@ -821,6 +1039,100 @@ To access the Swagger documentation, just navigate to the web URL for the Testbe
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<em>integer</em>) – ID for the Entrypoint resource.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Status Codes</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Request Headers</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X-Fields</strong> – An optional fields mask</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http get">
+<dt class="sig sig-object http" id="get--api-v1-entrypoints-id-artifactPlugins">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/api/v1/entrypoints/{id}/artifactPlugins</span></span><a class="headerlink" href="#get--api-v1-entrypoints-id-artifactPlugins" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Retrieves the artifact plugin snapshots for an entrypoint resource</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<em>integer</em>) – ID for the Entrypoint resource.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Status Codes</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Request Headers</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X-Fields</strong> – An optional fields mask</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http post">
+<dt class="sig sig-object http" id="post--api-v1-entrypoints-id-artifactPlugins">
+<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/entrypoints/{id}/artifactPlugins</span></span><a class="headerlink" href="#post--api-v1-entrypoints-id-artifactPlugins" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Appends artifact plugins to an entrypoint resource</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<em>integer</em>) – ID for the Entrypoint resource.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Status Codes</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Request Headers</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X-Fields</strong> – An optional fields mask</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http get">
+<dt class="sig sig-object http" id="get--api-v1-entrypoints-id-artifactPlugins-artifactPluginId">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/api/v1/entrypoints/{id}/artifactPlugins/{artifactPluginId}</span></span><a class="headerlink" href="#get--api-v1-entrypoints-id-artifactPlugins-artifactPluginId" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Retrieves a artifact plugin snapshot for an entrypoint resource</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>artifactPluginId</strong> (<em>integer</em>) – ID for the Artifact Plugin resource.</p></li>
+<li><p><strong>id</strong> (<em>integer</em>) – ID for the Entrypoint resource.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Status Codes</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Request Headers</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X-Fields</strong> – An optional fields mask</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http delete">
+<dt class="sig sig-object http" id="delete--api-v1-entrypoints-id-artifactPlugins-artifactPluginId">
+<span class="sig-name descname"><span class="pre">DELETE</span> </span><span class="sig-name descname"><span class="pre">/api/v1/entrypoints/{id}/artifactPlugins/{artifactPluginId}</span></span><a class="headerlink" href="#delete--api-v1-entrypoints-id-artifactPlugins-artifactPluginId" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Removes a artifact plugin from an entrypoint by ID</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>artifactPluginId</strong> (<em>integer</em>) – ID for the Artifact Plugin resource.</p></li>
 <li><p><strong>id</strong> (<em>integer</em>) – ID for the Entrypoint resource.</p></li>
 </ul>
 </dd>
@@ -1152,7 +1464,7 @@ To access the Swagger documentation, just navigate to the web URL for the Testbe
 <dt class="field-even">Query Parameters</dt>
 <dd class="field-even"><ul class="simple">
 <li><p><strong>search</strong> (<em>string</em>) – Search terms for the query (* and ? wildcards).</p></li>
-<li><p><strong>index</strong> (<em>integer</em>) – Index of the current page.</p></li>
+<li><p><strong>index</strong> (<em>integer</em>) – Starting index of the current page.</p></li>
 <li><p><strong>pageLength</strong> (<em>integer</em>) – Number of results to return per page.</p></li>
 </ul>
 </dd>
@@ -1188,6 +1500,98 @@ To access the Swagger documentation, just navigate to the web URL for the Testbe
 <dt class="field-odd">Request Headers</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>X-Fields</strong> – An optional fields mask</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http get">
+<dt class="sig sig-object http" id="get--api-v1-entrypoints-id-snapshots-snapshotId-artifactPlugins">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/api/v1/entrypoints/{id}/snapshots/{snapshotId}/artifactPlugins</span></span><a class="headerlink" href="#get--api-v1-entrypoints-id-snapshots-snapshotId-artifactPlugins" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Retrieves the artifact plugin snapshots for an entrypoint resource</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>snapshotId</strong> (<em>integer</em>) – Snapshot ID for the Entrypoint snapshot.</p></li>
+<li><p><strong>id</strong> (<em>integer</em>) – ID for the Entrypoint resource.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Status Codes</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Request Headers</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X-Fields</strong> – An optional fields mask</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http get">
+<dt class="sig sig-object http" id="get--api-v1-entrypoints-id-snapshots-snapshotId-artifactPlugins-bundle">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/api/v1/entrypoints/{id}/snapshots/{snapshotId}/artifactPlugins/bundle</span></span><a class="headerlink" href="#get--api-v1-entrypoints-id-snapshots-snapshotId-artifactPlugins-bundle" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Returns a file bundle containing all of the ArtifactPlugin PluginFile</strong></p>
+<p>resources for an EntryPoint Snapshot resource.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>snapshotId</strong> (<em>integer</em>) – Snapshot ID for the Entrypoint resource.</p></li>
+<li><p><strong>id</strong> (<em>integer</em>) – ID for the Entrypoint resource.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Query Parameters</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>fileType</strong> (<em>string</em>) – The type of file to download: tar_gz or zip.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Status Codes</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http get">
+<dt class="sig sig-object http" id="get--api-v1-entrypoints-id-snapshots-snapshotId-config">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/api/v1/entrypoints/{id}/snapshots/{snapshotId}/config</span></span><a class="headerlink" href="#get--api-v1-entrypoints-id-snapshots-snapshotId-config" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>snapshotId</strong> (<em>integer</em>) – Snapshot ID for the entrypoint resource.</p></li>
+<li><p><strong>id</strong> (<em>integer</em>) – ID for the entrypoint resource.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Status Codes</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http get">
+<dt class="sig sig-object http" id="get--api-v1-entrypoints-id-snapshots-snapshotId-plugins-bundle">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/api/v1/entrypoints/{id}/snapshots/{snapshotId}/plugins/bundle</span></span><a class="headerlink" href="#get--api-v1-entrypoints-id-snapshots-snapshotId-plugins-bundle" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Returns a file bundle containing all of the PluginFile resources for an</strong></p>
+<p>EntryPoint Snapshot resource.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>snapshotId</strong> (<em>integer</em>) – Snapshot ID for the Entrypoint resource.</p></li>
+<li><p><strong>id</strong> (<em>integer</em>) – ID for the Entrypoint resource.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Query Parameters</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>fileType</strong> (<em>string</em>) – The type of file to download: tar_gz or zip.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Status Codes</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
 </ul>
 </dd>
 </dl>
@@ -1324,9 +1728,11 @@ To access the Swagger documentation, just navigate to the web URL for the Testbe
 <dl class="field-list simple">
 <dt class="field-odd">Query Parameters</dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><strong>sortBy</strong> (<em>string</em>) – The name of the column to sort.</p></li>
+<li><p><strong>descending</strong> (<em>boolean</em>) – Boolean indicating whether to sort by descending or not.</p></li>
 <li><p><strong>search</strong> (<em>string</em>) – Search terms for the query (* and ? wildcards).</p></li>
 <li><p><strong>groupId</strong> (<em>integer</em>) – Filter results by the Group ID.</p></li>
-<li><p><strong>index</strong> (<em>integer</em>) – Index of the current page.</p></li>
+<li><p><strong>index</strong> (<em>integer</em>) – Starting index of the current page.</p></li>
 <li><p><strong>pageLength</strong> (<em>integer</em>) – Number of results to return per page.</p></li>
 </ul>
 </dd>
@@ -1370,7 +1776,7 @@ To access the Swagger documentation, just navigate to the web URL for the Testbe
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>draftType</strong> (<em>string</em>) – The type of drafts to return: all, existing, or new.</p></li>
 <li><p><strong>groupId</strong> (<em>integer</em>) – Filter results by the Group ID.</p></li>
-<li><p><strong>index</strong> (<em>integer</em>) – Index of the current page.</p></li>
+<li><p><strong>index</strong> (<em>integer</em>) – Starting index of the current page.</p></li>
 <li><p><strong>pageLength</strong> (<em>integer</em>) – Number of results to return per page.</p></li>
 </ul>
 </dd>
@@ -1763,8 +2169,10 @@ To access the Swagger documentation, just navigate to the web URL for the Testbe
 </dd>
 <dt class="field-even">Query Parameters</dt>
 <dd class="field-even"><ul class="simple">
+<li><p><strong>sortBy</strong> (<em>string</em>) – The name of the column to sort.</p></li>
+<li><p><strong>descending</strong> (<em>boolean</em>) – Boolean indicating whether to sort by descending or not.</p></li>
 <li><p><strong>search</strong> (<em>string</em>) – Search terms for the query (* and ? wildcards).</p></li>
-<li><p><strong>index</strong> (<em>integer</em>) – Index of the current page.</p></li>
+<li><p><strong>index</strong> (<em>integer</em>) – Starting index of the current page.</p></li>
 <li><p><strong>pageLength</strong> (<em>integer</em>) – Number of results to return per page.</p></li>
 </ul>
 </dd>
@@ -1832,30 +2240,6 @@ To access the Swagger documentation, just navigate to the web URL for the Testbe
 <dt class="sig sig-object http" id="delete--api-v1-experiments-id-jobs-jobId">
 <span class="sig-name descname"><span class="pre">DELETE</span> </span><span class="sig-name descname"><span class="pre">/api/v1/experiments/{id}/jobs/{jobId}</span></span><a class="headerlink" href="#delete--api-v1-experiments-id-jobs-jobId" title="Permalink to this definition">#</a></dt>
 <dd><p><strong>Deletes a Job resource</strong></p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>jobId</strong> (<em>integer</em>) – ID for the Job resource.</p></li>
-<li><p><strong>id</strong> (<em>integer</em>) – ID for the Experiment resource.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Status Codes</dt>
-<dd class="field-even"><ul class="simple">
-<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
-</ul>
-</dd>
-<dt class="field-odd">Request Headers</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>X-Fields</strong> – An optional fields mask</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="http post">
-<dt class="sig sig-object http" id="post--api-v1-experiments-id-jobs-jobId-artifacts">
-<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/experiments/{id}/jobs/{jobId}/artifacts</span></span><a class="headerlink" href="#post--api-v1-experiments-id-jobs-jobId-artifacts" title="Permalink to this definition">#</a></dt>
-<dd><p><strong>Creates an Artifact resource</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1973,6 +2357,38 @@ To access the Swagger documentation, just navigate to the web URL for the Testbe
 </dd></dl>
 
 <dl class="http get">
+<dt class="sig sig-object http" id="get--api-v1-experiments-id-metrics">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/api/v1/experiments/{id}/metrics</span></span><a class="headerlink" href="#get--api-v1-experiments-id-metrics" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Gets all of the latest metrics for every job in the experiment</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<em>integer</em>) – ID for the Experiment resource.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Query Parameters</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>sortBy</strong> (<em>string</em>) – The name of the column to sort.</p></li>
+<li><p><strong>descending</strong> (<em>boolean</em>) – Boolean indicating whether to sort by descending or not.</p></li>
+<li><p><strong>search</strong> (<em>string</em>) – Search terms for the query (* and ? wildcards).</p></li>
+<li><p><strong>index</strong> (<em>integer</em>) – Starting index of the current page.</p></li>
+<li><p><strong>pageLength</strong> (<em>integer</em>) – Number of results to return per page.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Status Codes</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
+</ul>
+</dd>
+<dt class="field-even">Request Headers</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>X-Fields</strong> – An optional fields mask</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http get">
 <dt class="sig sig-object http" id="get--api-v1-experiments-id-snapshots">
 <span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/api/v1/experiments/{id}/snapshots</span></span><a class="headerlink" href="#get--api-v1-experiments-id-snapshots" title="Permalink to this definition">#</a></dt>
 <dd><p><strong>Gets the Snapshots for the resource</strong></p>
@@ -1985,7 +2401,7 @@ To access the Swagger documentation, just navigate to the web URL for the Testbe
 <dt class="field-even">Query Parameters</dt>
 <dd class="field-even"><ul class="simple">
 <li><p><strong>search</strong> (<em>string</em>) – Search terms for the query (* and ? wildcards).</p></li>
-<li><p><strong>index</strong> (<em>integer</em>) – Index of the current page.</p></li>
+<li><p><strong>index</strong> (<em>integer</em>) – Starting index of the current page.</p></li>
 <li><p><strong>pageLength</strong> (<em>integer</em>) – Number of results to return per page.</p></li>
 </ul>
 </dd>
@@ -2158,7 +2574,7 @@ To access the Swagger documentation, just navigate to the web URL for the Testbe
 <dt class="field-odd">Query Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>search</strong> (<em>string</em>) – Search terms for the query (* and ? wildcards).</p></li>
-<li><p><strong>index</strong> (<em>integer</em>) – Index of the current page.</p></li>
+<li><p><strong>index</strong> (<em>integer</em>) – Starting index of the current page.</p></li>
 <li><p><strong>pageLength</strong> (<em>integer</em>) – Number of results to return per page.</p></li>
 </ul>
 </dd>
@@ -2213,9 +2629,11 @@ To access the Swagger documentation, just navigate to the web URL for the Testbe
 <dl class="field-list simple">
 <dt class="field-odd">Query Parameters</dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><strong>sortBy</strong> (<em>string</em>) – The name of the column to sort.</p></li>
+<li><p><strong>descending</strong> (<em>boolean</em>) – Boolean indicating whether to sort by descending or not.</p></li>
 <li><p><strong>search</strong> (<em>string</em>) – Search terms for the query (* and ? wildcards).</p></li>
 <li><p><strong>groupId</strong> (<em>integer</em>) – Filter results by the Group ID.</p></li>
-<li><p><strong>index</strong> (<em>integer</em>) – Index of the current page.</p></li>
+<li><p><strong>index</strong> (<em>integer</em>) – Starting index of the current page.</p></li>
 <li><p><strong>pageLength</strong> (<em>integer</em>) – Number of results to return per page.</p></li>
 </ul>
 </dd>
@@ -2279,6 +2697,153 @@ To access the Swagger documentation, just navigate to the web URL for the Testbe
 </dd></dl>
 
 <dl class="http get">
+<dt class="sig sig-object http" id="get--api-v1-jobs-id-artifactParameters">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/api/v1/jobs/{id}/artifactParameters</span></span><a class="headerlink" href="#get--api-v1-jobs-id-artifactParameters" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<em>integer</em>) – ID for the Job resource.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Status Codes</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http get">
+<dt class="sig sig-object http" id="get--api-v1-jobs-id-log">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/api/v1/jobs/{id}/log</span></span><a class="headerlink" href="#get--api-v1-jobs-id-log" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<em>integer</em>) – ID for the Job resource.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Query Parameters</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>search</strong> (<em>string</em>) – Search terms for the query (* and ? wildcards).</p></li>
+<li><p><strong>sortBy</strong> (<em>string</em>) – The name of the column to sort.</p></li>
+<li><p><strong>descending</strong> (<em>boolean</em>) – Boolean indicating whether to sort by descending or not.</p></li>
+<li><p><strong>index</strong> (<em>integer</em>) – Starting index of the current page.</p></li>
+<li><p><strong>pageLength</strong> (<em>integer</em>) – Number of results to return per page.</p></li>
+<li><p><strong>severity</strong> (<em>array</em>) – List of severities to filter by</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Status Codes</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
+</ul>
+</dd>
+<dt class="field-even">Request Headers</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>X-Fields</strong> – An optional fields mask</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http post">
+<dt class="sig sig-object http" id="post--api-v1-jobs-id-log">
+<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/jobs/{id}/log</span></span><a class="headerlink" href="#post--api-v1-jobs-id-log" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<em>integer</em>) – ID for the Job resource.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Status Codes</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Request Headers</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X-Fields</strong> – An optional fields mask</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http get">
+<dt class="sig sig-object http" id="get--api-v1-jobs-id-metrics">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/api/v1/jobs/{id}/metrics</span></span><a class="headerlink" href="#get--api-v1-jobs-id-metrics" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Gets a Job resource’s latest metrics</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<em>integer</em>) – ID for the Job resource.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Status Codes</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Request Headers</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X-Fields</strong> – An optional fields mask</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http post">
+<dt class="sig sig-object http" id="post--api-v1-jobs-id-metrics">
+<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/jobs/{id}/metrics</span></span><a class="headerlink" href="#post--api-v1-jobs-id-metrics" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Sets a metric for a Job</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<em>integer</em>) – ID for the Job resource.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Status Codes</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Request Headers</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X-Fields</strong> – An optional fields mask</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http get">
+<dt class="sig sig-object http" id="get--api-v1-jobs-id-metrics-name-snapshots">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/api/v1/jobs/{id}/metrics/{name}/snapshots</span></span><a class="headerlink" href="#get--api-v1-jobs-id-metrics-name-snapshots" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Gets a Job resource’s metric history</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>string</em>) – Name of the metric.</p></li>
+<li><p><strong>id</strong> (<em>integer</em>) – ID for the Job resource.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Query Parameters</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>index</strong> (<em>integer</em>) – Starting index of the current page.</p></li>
+<li><p><strong>pageLength</strong> (<em>integer</em>) – Number of results to return per page.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Status Codes</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
+</ul>
+</dd>
+<dt class="field-even">Request Headers</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>X-Fields</strong> – An optional fields mask</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http get">
 <dt class="sig sig-object http" id="get--api-v1-jobs-id-mlflowRun">
 <span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/api/v1/jobs/{id}/mlflowRun</span></span><a class="headerlink" href="#get--api-v1-jobs-id-mlflowRun" title="Permalink to this definition">#</a></dt>
 <dd><p><strong>Gets a Job resource’s mlflow run id</strong></p>
@@ -2325,6 +2890,23 @@ To access the Swagger documentation, just navigate to the web URL for the Testbe
 </dd></dl>
 
 <dl class="http get">
+<dt class="sig sig-object http" id="get--api-v1-jobs-id-parameters">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/api/v1/jobs/{id}/parameters</span></span><a class="headerlink" href="#get--api-v1-jobs-id-parameters" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<em>integer</em>) – ID for the Job resource.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Status Codes</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http get">
 <dt class="sig sig-object http" id="get--api-v1-jobs-id-snapshots">
 <span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/api/v1/jobs/{id}/snapshots</span></span><a class="headerlink" href="#get--api-v1-jobs-id-snapshots" title="Permalink to this definition">#</a></dt>
 <dd><p><strong>Gets the Snapshots for the resource</strong></p>
@@ -2337,7 +2919,7 @@ To access the Swagger documentation, just navigate to the web URL for the Testbe
 <dt class="field-even">Query Parameters</dt>
 <dd class="field-even"><ul class="simple">
 <li><p><strong>search</strong> (<em>string</em>) – Search terms for the query (* and ? wildcards).</p></li>
-<li><p><strong>index</strong> (<em>integer</em>) – Index of the current page.</p></li>
+<li><p><strong>index</strong> (<em>integer</em>) – Starting index of the current page.</p></li>
 <li><p><strong>pageLength</strong> (<em>integer</em>) – Number of results to return per page.</p></li>
 </ul>
 </dd>
@@ -2532,9 +3114,11 @@ To access the Swagger documentation, just navigate to the web URL for the Testbe
 <dl class="field-list simple">
 <dt class="field-odd">Query Parameters</dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><strong>sortBy</strong> (<em>string</em>) – The name of the column to sort.</p></li>
+<li><p><strong>descending</strong> (<em>boolean</em>) – Boolean indicating whether to sort by descending or not.</p></li>
 <li><p><strong>search</strong> (<em>string</em>) – Search terms for the query (* and ? wildcards).</p></li>
 <li><p><strong>groupId</strong> (<em>integer</em>) – Filter results by the Group ID.</p></li>
-<li><p><strong>index</strong> (<em>integer</em>) – Index of the current page.</p></li>
+<li><p><strong>index</strong> (<em>integer</em>) – Starting index of the current page.</p></li>
 <li><p><strong>pageLength</strong> (<em>integer</em>) – Number of results to return per page.</p></li>
 </ul>
 </dd>
@@ -2578,7 +3162,7 @@ To access the Swagger documentation, just navigate to the web URL for the Testbe
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>draftType</strong> (<em>string</em>) – The type of drafts to return: all, existing, or new.</p></li>
 <li><p><strong>groupId</strong> (<em>integer</em>) – Filter results by the Group ID.</p></li>
-<li><p><strong>index</strong> (<em>integer</em>) – Index of the current page.</p></li>
+<li><p><strong>index</strong> (<em>integer</em>) – Starting index of the current page.</p></li>
 <li><p><strong>pageLength</strong> (<em>integer</em>) – Number of results to return per page.</p></li>
 </ul>
 </dd>
@@ -2856,7 +3440,7 @@ To access the Swagger documentation, just navigate to the web URL for the Testbe
 <dt class="field-even">Query Parameters</dt>
 <dd class="field-even"><ul class="simple">
 <li><p><strong>search</strong> (<em>string</em>) – Search terms for the query (* and ? wildcards).</p></li>
-<li><p><strong>index</strong> (<em>integer</em>) – Index of the current page.</p></li>
+<li><p><strong>index</strong> (<em>integer</em>) – Starting index of the current page.</p></li>
 <li><p><strong>pageLength</strong> (<em>integer</em>) – Number of results to return per page.</p></li>
 </ul>
 </dd>
@@ -3026,7 +3610,7 @@ To access the Swagger documentation, just navigate to the web URL for the Testbe
 <dt class="field-even">Query Parameters</dt>
 <dd class="field-even"><ul class="simple">
 <li><p><strong>search</strong> (<em>string</em>) – Search terms for the query (* and ? wildcards).</p></li>
-<li><p><strong>index</strong> (<em>integer</em>) – Index of the current page.</p></li>
+<li><p><strong>index</strong> (<em>integer</em>) – Starting index of the current page.</p></li>
 <li><p><strong>pageLength</strong> (<em>integer</em>) – Number of results to return per page.</p></li>
 </ul>
 </dd>
@@ -3129,9 +3713,11 @@ To access the Swagger documentation, just navigate to the web URL for the Testbe
 <dl class="field-list simple">
 <dt class="field-odd">Query Parameters</dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><strong>sortBy</strong> (<em>string</em>) – The name of the column to sort.</p></li>
+<li><p><strong>descending</strong> (<em>boolean</em>) – Boolean indicating whether to sort by descending or not.</p></li>
 <li><p><strong>search</strong> (<em>string</em>) – Search terms for the query (* and ? wildcards).</p></li>
 <li><p><strong>groupId</strong> (<em>integer</em>) – Filter results by the Group ID.</p></li>
-<li><p><strong>index</strong> (<em>integer</em>) – Index of the current page.</p></li>
+<li><p><strong>index</strong> (<em>integer</em>) – Starting index of the current page.</p></li>
 <li><p><strong>pageLength</strong> (<em>integer</em>) – Number of results to return per page.</p></li>
 </ul>
 </dd>
@@ -3175,7 +3761,7 @@ To access the Swagger documentation, just navigate to the web URL for the Testbe
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>draftType</strong> (<em>string</em>) – The type of drafts to return: all, existing, or new.</p></li>
 <li><p><strong>groupId</strong> (<em>integer</em>) – Filter results by the Group ID.</p></li>
-<li><p><strong>index</strong> (<em>integer</em>) – Index of the current page.</p></li>
+<li><p><strong>index</strong> (<em>integer</em>) – Starting index of the current page.</p></li>
 <li><p><strong>pageLength</strong> (<em>integer</em>) – Number of results to return per page.</p></li>
 </ul>
 </dd>
@@ -3453,7 +4039,7 @@ To access the Swagger documentation, just navigate to the web URL for the Testbe
 <dt class="field-even">Query Parameters</dt>
 <dd class="field-even"><ul class="simple">
 <li><p><strong>search</strong> (<em>string</em>) – Search terms for the query (* and ? wildcards).</p></li>
-<li><p><strong>index</strong> (<em>integer</em>) – Index of the current page.</p></li>
+<li><p><strong>index</strong> (<em>integer</em>) – Starting index of the current page.</p></li>
 <li><p><strong>pageLength</strong> (<em>integer</em>) – Number of results to return per page.</p></li>
 </ul>
 </dd>
@@ -3625,9 +4211,11 @@ To access the Swagger documentation, just navigate to the web URL for the Testbe
 <dl class="field-list simple">
 <dt class="field-odd">Query Parameters</dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><strong>sortBy</strong> (<em>string</em>) – The name of the column to sort.</p></li>
+<li><p><strong>descending</strong> (<em>boolean</em>) – Boolean indicating whether to sort by descending or not.</p></li>
 <li><p><strong>search</strong> (<em>string</em>) – Search terms for the query (* and ? wildcards).</p></li>
 <li><p><strong>groupId</strong> (<em>integer</em>) – Filter results by the Group ID.</p></li>
-<li><p><strong>index</strong> (<em>integer</em>) – Index of the current page.</p></li>
+<li><p><strong>index</strong> (<em>integer</em>) – Starting index of the current page.</p></li>
 <li><p><strong>pageLength</strong> (<em>integer</em>) – Number of results to return per page.</p></li>
 </ul>
 </dd>
@@ -3671,7 +4259,7 @@ To access the Swagger documentation, just navigate to the web URL for the Testbe
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>draftType</strong> (<em>string</em>) – The type of drafts to return: all, existing, or new.</p></li>
 <li><p><strong>groupId</strong> (<em>integer</em>) – Filter results by the Group ID.</p></li>
-<li><p><strong>index</strong> (<em>integer</em>) – Index of the current page.</p></li>
+<li><p><strong>index</strong> (<em>integer</em>) – Starting index of the current page.</p></li>
 <li><p><strong>pageLength</strong> (<em>integer</em>) – Number of results to return per page.</p></li>
 </ul>
 </dd>
@@ -3948,8 +4536,10 @@ To access the Swagger documentation, just navigate to the web URL for the Testbe
 </dd>
 <dt class="field-even">Query Parameters</dt>
 <dd class="field-even"><ul class="simple">
+<li><p><strong>sortBy</strong> (<em>string</em>) – The name of the column to sort.</p></li>
+<li><p><strong>descending</strong> (<em>boolean</em>) – Boolean indicating whether to sort by descending or not.</p></li>
 <li><p><strong>search</strong> (<em>string</em>) – Search terms for the query (* and ? wildcards).</p></li>
-<li><p><strong>index</strong> (<em>integer</em>) – Index of the current page.</p></li>
+<li><p><strong>index</strong> (<em>integer</em>) – Starting index of the current page.</p></li>
 <li><p><strong>pageLength</strong> (<em>integer</em>) – Number of results to return per page.</p></li>
 </ul>
 </dd>
@@ -3970,6 +4560,8 @@ To access the Swagger documentation, just navigate to the web URL for the Testbe
 <dt class="sig sig-object http" id="post--api-v1-plugins-id-files">
 <span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/plugins/{id}/files</span></span><a class="headerlink" href="#post--api-v1-plugins-id-files" title="Permalink to this definition">#</a></dt>
 <dd><p><strong>Creates a PluginFile resource associated with a Plugin resource</strong></p>
+<p>If type is plugin then blah
+If type is artifact then blah</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -4026,7 +4618,7 @@ To access the Swagger documentation, just navigate to the web URL for the Testbe
 <dd class="field-even"><ul class="simple">
 <li><p><strong>draftType</strong> (<em>string</em>) – The type of drafts to return: all, existing, or new.</p></li>
 <li><p><strong>groupId</strong> (<em>integer</em>) – Filter results by the Group ID.</p></li>
-<li><p><strong>index</strong> (<em>integer</em>) – Index of the current page.</p></li>
+<li><p><strong>index</strong> (<em>integer</em>) – Starting index of the current page.</p></li>
 <li><p><strong>pageLength</strong> (<em>integer</em>) – Number of results to return per page.</p></li>
 </ul>
 </dd>
@@ -4320,7 +4912,7 @@ To access the Swagger documentation, just navigate to the web URL for the Testbe
 <dt class="field-even">Query Parameters</dt>
 <dd class="field-even"><ul class="simple">
 <li><p><strong>search</strong> (<em>string</em>) – Search terms for the query (* and ? wildcards).</p></li>
-<li><p><strong>index</strong> (<em>integer</em>) – Index of the current page.</p></li>
+<li><p><strong>index</strong> (<em>integer</em>) – Starting index of the current page.</p></li>
 <li><p><strong>pageLength</strong> (<em>integer</em>) – Number of results to return per page.</p></li>
 </ul>
 </dd>
@@ -4496,7 +5088,7 @@ To access the Swagger documentation, just navigate to the web URL for the Testbe
 <dt class="field-even">Query Parameters</dt>
 <dd class="field-even"><ul class="simple">
 <li><p><strong>search</strong> (<em>string</em>) – Search terms for the query (* and ? wildcards).</p></li>
-<li><p><strong>index</strong> (<em>integer</em>) – Index of the current page.</p></li>
+<li><p><strong>index</strong> (<em>integer</em>) – Starting index of the current page.</p></li>
 <li><p><strong>pageLength</strong> (<em>integer</em>) – Number of results to return per page.</p></li>
 </ul>
 </dd>
@@ -4532,6 +5124,31 @@ To access the Swagger documentation, just navigate to the web URL for the Testbe
 <dt class="field-odd">Request Headers</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>X-Fields</strong> – An optional fields mask</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http get">
+<dt class="sig sig-object http" id="get--api-v1-plugins-id-snapshots-snapshotId-files-bundle">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/api/v1/plugins/{id}/snapshots/{snapshotId}/files/bundle</span></span><a class="headerlink" href="#get--api-v1-plugins-id-snapshots-snapshotId-files-bundle" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Returns a file bundle containing all of the PluginFile resources for an</strong></p>
+<p>EntryPoint Snapshot resource.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>snapshotId</strong> (<em>integer</em>) – Snapshot ID for the Entrypoint resource.</p></li>
+<li><p><strong>id</strong> (<em>integer</em>) – ID for the Entrypoint resource.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Query Parameters</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>fileType</strong> (<em>string</em>) – The type of file to download: tar_gz or zip.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Status Codes</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
 </ul>
 </dd>
 </dl>
@@ -4668,9 +5285,11 @@ To access the Swagger documentation, just navigate to the web URL for the Testbe
 <dl class="field-list simple">
 <dt class="field-odd">Query Parameters</dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><strong>sortBy</strong> (<em>string</em>) – The name of the column to sort.</p></li>
+<li><p><strong>descending</strong> (<em>boolean</em>) – Boolean indicating whether to sort by descending or not.</p></li>
 <li><p><strong>search</strong> (<em>string</em>) – Search terms for the query (* and ? wildcards).</p></li>
 <li><p><strong>groupId</strong> (<em>integer</em>) – Filter results by the Group ID.</p></li>
-<li><p><strong>index</strong> (<em>integer</em>) – Index of the current page.</p></li>
+<li><p><strong>index</strong> (<em>integer</em>) – Starting index of the current page.</p></li>
 <li><p><strong>pageLength</strong> (<em>integer</em>) – Number of results to return per page.</p></li>
 </ul>
 </dd>
@@ -4714,7 +5333,7 @@ To access the Swagger documentation, just navigate to the web URL for the Testbe
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>draftType</strong> (<em>string</em>) – The type of drafts to return: all, existing, or new.</p></li>
 <li><p><strong>groupId</strong> (<em>integer</em>) – Filter results by the Group ID.</p></li>
-<li><p><strong>index</strong> (<em>integer</em>) – Index of the current page.</p></li>
+<li><p><strong>index</strong> (<em>integer</em>) – Starting index of the current page.</p></li>
 <li><p><strong>pageLength</strong> (<em>integer</em>) – Number of results to return per page.</p></li>
 </ul>
 </dd>
@@ -4992,7 +5611,7 @@ To access the Swagger documentation, just navigate to the web URL for the Testbe
 <dt class="field-even">Query Parameters</dt>
 <dd class="field-even"><ul class="simple">
 <li><p><strong>search</strong> (<em>string</em>) – Search terms for the query (* and ? wildcards).</p></li>
-<li><p><strong>index</strong> (<em>integer</em>) – Index of the current page.</p></li>
+<li><p><strong>index</strong> (<em>integer</em>) – Starting index of the current page.</p></li>
 <li><p><strong>pageLength</strong> (<em>integer</em>) – Number of results to return per page.</p></li>
 </ul>
 </dd>
@@ -5164,9 +5783,11 @@ To access the Swagger documentation, just navigate to the web URL for the Testbe
 <dl class="field-list simple">
 <dt class="field-odd">Query Parameters</dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><strong>sortBy</strong> (<em>string</em>) – The name of the column to sort.</p></li>
+<li><p><strong>descending</strong> (<em>boolean</em>) – Boolean indicating whether to sort by descending or not.</p></li>
 <li><p><strong>search</strong> (<em>string</em>) – Search terms for the query (* and ? wildcards).</p></li>
 <li><p><strong>groupId</strong> (<em>integer</em>) – Filter results by the Group ID.</p></li>
-<li><p><strong>index</strong> (<em>integer</em>) – Index of the current page.</p></li>
+<li><p><strong>index</strong> (<em>integer</em>) – Starting index of the current page.</p></li>
 <li><p><strong>pageLength</strong> (<em>integer</em>) – Number of results to return per page.</p></li>
 </ul>
 </dd>
@@ -5283,7 +5904,7 @@ To access the Swagger documentation, just navigate to the web URL for the Testbe
 <dt class="field-even">Query Parameters</dt>
 <dd class="field-even"><ul class="simple">
 <li><p><strong>resourceType</strong> (<em>string</em>) – Filter results by the type of resource.</p></li>
-<li><p><strong>index</strong> (<em>integer</em>) – Index of the current page.</p></li>
+<li><p><strong>index</strong> (<em>integer</em>) – Starting index of the current page.</p></li>
 <li><p><strong>pageLength</strong> (<em>integer</em>) – Number of results to return per page.</p></li>
 </ul>
 </dd>
@@ -5316,7 +5937,7 @@ To access the Swagger documentation, just navigate to the web URL for the Testbe
 <dt class="field-odd">Query Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>search</strong> (<em>string</em>) – Search terms for the query (* and ? wildcards).</p></li>
-<li><p><strong>index</strong> (<em>integer</em>) – Index of the current page.</p></li>
+<li><p><strong>index</strong> (<em>integer</em>) – Starting index of the current page.</p></li>
 <li><p><strong>pageLength</strong> (<em>integer</em>) – Number of results to return per page.</p></li>
 </ul>
 </dd>
@@ -5477,20 +6098,73 @@ To access the Swagger documentation, just navigate to the web URL for the Testbe
 <section id="id12">
 <h3>Endpoints<a class="headerlink" href="#id12" title="Permalink to this headline">#</a></h3>
 <p>The following is the list of endpoints under the <code class="docutils literal notranslate"><span class="pre">/api/v1/workflows/</span></code> namespace.</p>
-<dl class="http get">
-<dt class="sig sig-object http" id="get--api-v1-workflows-jobFilesDownload">
-<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/api/v1/workflows/jobFilesDownload</span></span><a class="headerlink" href="#get--api-v1-workflows-jobFilesDownload" title="Permalink to this definition">#</a></dt>
-<dd><p><strong>Download a compressed file archive containing the files needed to execute a submitted job</strong></p>
+<dl class="http post">
+<dt class="sig sig-object http" id="post--api-v1-workflows-draftCommit-id">
+<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/workflows/draftCommit/{id}</span></span><a class="headerlink" href="#post--api-v1-workflows-draftCommit-id" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Commit a draft as a new resource</strong></p>
 <dl class="field-list simple">
-<dt class="field-odd">Query Parameters</dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>jobId</strong> (<em>string</em>) – A job’s unique identifier.</p></li>
-<li><p><strong>fileType</strong> (<em>string</em>) – The type of file to download: tar_gz or zip.</p></li>
+<li><p><strong>id</strong> (<em>integer</em>) – ID for the Draft resource.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Status Codes</dt>
 <dd class="field-even"><ul class="simple">
 <li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Request Headers</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X-Fields</strong> – An optional fields mask</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http post">
+<dt class="sig sig-object http" id="post--api-v1-workflows-pluginTaskSignatureAnalysis">
+<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/workflows/pluginTaskSignatureAnalysis</span></span><a class="headerlink" href="#post--api-v1-workflows-pluginTaskSignatureAnalysis" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Download a compressed file archive containing the files needed to execute a submitted job</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Status Codes</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
+</ul>
+</dd>
+<dt class="field-even">Request Headers</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>X-Fields</strong> – An optional fields mask</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http post">
+<dt class="sig sig-object http" id="post--api-v1-workflows-resourceImport">
+<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/workflows/resourceImport</span></span><a class="headerlink" href="#post--api-v1-workflows-resourceImport" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Import resources from an external source</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Status Codes</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http post">
+<dt class="sig sig-object http" id="post--api-v1-workflows-validateEntrypoint">
+<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/workflows/validateEntrypoint</span></span><a class="headerlink" href="#post--api-v1-workflows-validateEntrypoint" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Validates the proposed inputs for an entrypoint</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Status Codes</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
+</ul>
+</dd>
+<dt class="field-even">Request Headers</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>X-Fields</strong> – An optional fields mask</p></li>
 </ul>
 </dd>
 </dl>
@@ -5513,13 +6187,22 @@ To access the Swagger documentation, just navigate to the web URL for the Testbe
     <div class="footer-article-item"><!-- Previous / next buttons -->
 <div class="prev-next-area">
     <a class="left-prev"
-       href="task-engine-reference.html"
+       href="python-client/workflows-client-methods.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Declarative Experiment Description</p>
+        <p class="prev-next-title">Workflows Client Methods</p>
       </div>
+    </a>
+    <a class="right-next"
+       href="resource-import-reference.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Resource Import Syntax</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
     </a>
 </div></div>
   
@@ -5612,18 +6295,12 @@ To access the Swagger documentation, just navigate to the web URL for the Testbe
   <script src="../_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
 <script src="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
 
-<footer class="footer mt-5 mt-md-0">
-    <div class="container">
-      <p>
-        <div class="disclaimer">
-          <strong>Disclaimer:</strong> Certain commercial equipment, instruments, or
-          materials are identified in this documentation to foster understanding. Such
-          identification does not imply recommendation or endorsement by the National
-          Institute of Standards and Technology, nor does it imply that the materials
-          or equipment identified are necessarily the best available for the purpose.
-        </div>
-      </p>
-    </div>
-</footer>
+  
+  <footer class="bd-footer">
+  </footer>
+  <div id="img-modal">
+    <span class="close-btn">&times;</span>
+    <img id="modal-img" src="" alt="enlarged screenshot">
+  </div>
   </body>
 </html>

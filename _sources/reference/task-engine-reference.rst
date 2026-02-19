@@ -1,6 +1,8 @@
-====================================
- Declarative Experiment Description
-====================================
+.. _reference-declarative-experiment-description:
+
+==================================
+Declarative Experiment Description
+==================================
 
 This document describes the data structure used to represent an experiment.
 
@@ -72,8 +74,9 @@ Structure Description
 =====================
 
 The top level of the data structure is a mapping with a few prescribed keys,
-which provide the basic ingredients for the experiment: types, parameters,
-tasks, and a graph which links task invocations together:
+which provide the basic ingredients for the experiment: types, parameters, artifact
+input parameters, tasks, a graph which links task invocations together, and the artifact
+output declaration:
 
 .. code:: YAML
 
@@ -83,22 +86,30 @@ tasks, and a graph which links task invocations together:
     parameters:
         "<parameters here>"
 
+    artifact_inputs:
+        "<artifact input parameters here>"
+
     tasks:
         "<tasks here>"
 
     graph:
         "<graph here>"
 
-The rest of the structural description describes what goes in each of those
-four places.
+    artifact_outputs:
+        "artifact output declaration here"
+
+
+The rest of the structural description describes what goes in each of those six places.
+
+.. _type_reference:
 
 Types
 -----
 
 This section is used to define a set of types.  Types describe the inputs and
-outputs of task plugins, and global parameters.  They allow an additional kind
-of validation of the experiment: that the inputs passed to task plugins are
-compatible with their parameter types.
+outputs of task plugins, the outputs from artifact input parameter deserialization, and
+global parameters.  They allow an additional kind of validation of the experiment: that
+the inputs passed to task plugins are compatible with their parameter types.
 
 The top-level structure of this section is a mapping from type name to type
 definition:
@@ -284,6 +295,8 @@ This is a nested mapping, string -> string -> list:
                     - string
                     - list: elt_type
 
+.. _parameters-label:
+
 Parameters
 ----------
 
@@ -394,6 +407,8 @@ example also shows the ``required`` key.  Usage of this key is optional and
 defaults to true, i.e. all defined task plugin inputs are required by default.
 Long form must be used in order to define an input as optional.
 
+.. _task_outputs-label:
+
 Task Outputs
 ~~~~~~~~~~~~
 
@@ -428,6 +443,34 @@ For example:
             outputs:
                 result: number
 
+Artifact Input Parameters
+-------------------------
+Artifact input parameters are similar to :ref:`parameters-label`, but use artifacts from other
+jobs as input values. The artifacts are deserialized and the output values from this
+deserialization are made available similar to any result from a task. The value of the
+top-level ``artifact_inputs`` key must be a mapping.  The keys 
+of the mapping are the artifact input parameter names.  The artifact input parameter
+names map to ouput values in an identical manner to what is described in
+:ref:`task_outputs-label`. For example:
+
+.. code:: YAML
+
+    artifact_inputs:
+        artifact1:
+            result: Path
+        foo: 
+            - bar: integer
+            - baz: string
+
+Here, ``artifact1`` has a single output value using a custom type of ``Path`` and ``foo``
+has two output values of ``bar`` which is an integer value and ``baz`` which is a string
+value.
+
+Additional rules include:
+
+- All artifacts *must* have one or more outputs.
+
+
 Graph
 -----
 
@@ -461,6 +504,12 @@ two.  A step description supports all of these styles.
     keyword style be used since the meaning of the argument values is clearer
     due to the naming of each argument.  It is also structurally simpler than
     the mixed style.
+
+.. important:: 
+    The Positional Style Invocation and Keyword Style Invocation cannot be used
+    with a parameter that has zero parameters. Instead, the Mixed Style Invocation
+    must be used. (Both Positional and Keyword Style Invocations will assume a 
+    single ``None`` parameter if none are specified.)
 
 Positional Style Invocation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -622,6 +671,35 @@ which maps to a list of step names.  For example:
             dependencies: [step1]
 
 This will force step1 to run before step2.
+
+Artifact Outputs
+----------------
+Artifact outputs are declared and can use the result of any other artifact, parameter, or
+task as input for serialization. All artifacts are serialized at the end of the job. The
+value of the top-level ``artifact_outputs`` key must be a mapping.  The keys 
+of the mapping are the names of the artifacts to be serialized and the values are the
+declarative description for what should be the ``contents``, the ``name`` of the class
+implementing ``ArtifactTaskInterface`` which should be used to serialize and
+deserialize the artifact, and any optional ``args`` that should be passed to the
+serialize method for the handler.
+
+For example:
+
+.. code:: YAML
+
+    artifact_outputs:
+        artifact1:
+            contents: $task1.result2
+            task:
+                name: Result2Serializer
+                args:
+                    foo: arg1
+
+Here, ``artifact1`` is the name of an artifact that has as its ``contents`` the value of
+``result2`` from the output of ``task1``. The ``name`` of the ``ArtifactTaskInterface``
+to use is a class called ``Result2Serializer`` and this particular implementation has a
+single extra argument called ``foo`` and a value of ``arg1`` which has been provided in
+this example.
 
 Type Validation
 ===============

@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>What is Dioptra? &#8212; Dioptra 1.0.1 documentation</title>
+    <title>Dioptra Overview &#8212; Dioptra 1.1.0 documentation</title>
   
   
   
@@ -57,12 +57,13 @@
     <script src="_static/jquery.leaveNotice-nist.js"></script>
     <script src="_static/applyLeaveNotice.js"></script>
     <script src="_static/smoothNavScroll.js"></script>
+    <script src="_static/image_modals.js"></script>
     <script src="_static/design-tabs.js"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'index';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Glossary" href="glossary.html" />
+    <link rel="next" title="Motivation" href="explanation/dioptra-motivation/why-dioptra.html" />
     
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="None"/>
@@ -140,7 +141,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.0.1 documentation</p>
+    <p class="title logo__title">Dioptra 1.1.0 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -149,27 +150,143 @@
         <ul class="nav bd-sidenav bd-sidenav__home-link">
             <li class="toctree-l1 current active">
                 <a class="reference internal" href="#">
-                    What is Dioptra?
+                    Dioptra Overview
                 </a>
             </li>
         </ul>
-        <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
-</ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">What is Dioptra?</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="getting-started/building-the-containers.html">Building the Containers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="getting-started/running-dioptra.html">Running Dioptra</a></li>
-<li class="toctree-l1"><a class="reference internal" href="getting-started/acquiring-datasets.html">Downloading Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="explanation/dioptra-motivation/why-dioptra.html">Motivation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="explanation/dioptra-motivation/design-principles.html">Design Principles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="explanation/dioptra-motivation/audience.html">Intended Audience</a></li>
+<li class="toctree-l1"><a class="reference internal" href="explanation/architecture-overview.html">Architecture Overview</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Setup</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="user-guide/the-web-frontend.html">The Web Frontend</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="how-to/setup-dioptra/install-dioptra-explanation.html">Install Dioptra</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="how-to/setup-dioptra/get-container-images/index.html">Get the Container Images</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="how-to/setup-dioptra/get-container-images/download-container-images.html">Download the Container Images</a></li>
+<li class="toctree-l3"><a class="reference internal" href="how-to/setup-dioptra/get-container-images/build-container-images.html">Build the Container Images</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/setup-dioptra/prepare-deployment.html">Prepare Your Deployment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/setup-dioptra/update-deployment.html">Update Your Deployment</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="how-to/setup-dioptra/configure-setup/index.html">Customize Your Setup</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="how-to/setup-dioptra/configure-setup/using-docker-compose-overrides.html">Use Docker Compose Override Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/setup-dioptra/configure-setup/data-mounts.html">Mount Data Volumes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/setup-dioptra/configure-setup/gpu-enabled-workers.html">Configure GPU Workers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/setup-dioptra/configure-setup/adding-certificates.html">Add Custom CA Certificates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/setup-dioptra/configure-setup/enabling-ssl-tls.html">Enable SSL/TLS in NGINX and Postgres</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/setup-dioptra/configure-setup/creating-custom-workers.html">Create a Custom Worker Container</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/setup-dioptra/configure-setup/integrating-custom-containers.html">Integrate Custom Containers</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="how-to/setup-dioptra/reference/index.html">Setup Reference</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="how-to/setup-dioptra/reference/deployment-template-reference.html">Deployment Template Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/setup-dioptra/reference/deployment-folder-reference.html">Deployment Folder Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/setup-dioptra/reference/init-deployment-script-reference.html">init-deployment.sh Script Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/setup-dioptra/reference/deployment-commands-reference.html">Deployment Commands Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/setup-dioptra/reference/custom-worker-template-reference.html">Custom Worker Template Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/setup-dioptra/reference/dioptra-worker-v1-reference.html">dioptra-worker-v1 Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/setup-dioptra/reference/worker-container-requirements-reference.html">Worker Container Requirements Reference</a></li>
+</ul>
+</li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Explainers</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="explanation/workflow-architecture-explanation.html">Workflow Architecture</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="explanation/components/index.html">Dioptra Components</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="explanation/components/queues-workers-explanation.html">Queues and Workers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="explanation/components/users-groups-explanation.html">Users and Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="explanation/components/param-types-explanation.html">Plugin Parameter Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="explanation/components/plugin-explanation.html">Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="explanation/components/entrypoints-explanation.html">Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="explanation/components/task-graph-explanation.html">Task Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="explanation/components/artifacts-explanation.html">Artifacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="explanation/components/experiments-jobs-explanation.html">Experiments and Jobs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="explanation/usage-modes.html">Usage Modes</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="tutorials/hello_world/index.html">Hello World in Dioptra</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/hello_world/part-0.html">Set Up Dioptra in the GUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/hello_world/part-1.html">Running Hello World</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="tutorials/essential_workflows/index.html">Learning the Essentials</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/essential_workflows/part-2.html">Adding Inputs and Outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/essential_workflows/part-3.html">Building a Multi-Step Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/essential_workflows/part-5.html">Saving Artifacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/essential_workflows/part-6.html">Using Saved Artifacts</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/advanced/index.html">Advanced Tutorials</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">How Tos</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="how-to/essential-workflows/index.html">Running Experiments</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="how-to/essential-workflows/setup-python-client.html">Set Up the Python Client</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/essential-workflows/creating-a-queue.html">Create Queues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/essential-workflows/creating-users-groups.html">Create Users and Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/essential-workflows/creating-param-types.html">Create Parameter Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/essential-workflows/creating-a-plugin.html">Create Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/essential-workflows/use-metrics.html">Logging Metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/essential-workflows/creating-an-entrypoint.html">Create Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/essential-workflows/creating-an-experiment.html">Create Experiments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/essential-workflows/running-jobs.html">Running Jobs</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="how-to/import-content/index.html">Importing Content</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-9"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="how-to/import-content/add-a-dataset.html">Add a Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/import-content/import-resources.html">Import Resources</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="how-to/advanced/index.html">Advanced</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="how-to/advanced/distribute-plugins.html">Distribute Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/advanced/develop-for-dioptra.html">Develop for Dioptra</a></li>
+</ul>
+</li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="reference/glossary.html">Glossary</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="reference/dioptra-components/index.html">Dioptra Components</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-11"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="reference/dioptra-components/users-reference.html">Users</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/dioptra-components/groups-reference.html">Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/dioptra-components/queues-reference.html">Queues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/dioptra-components/param-types-reference.html">Plugin Parameter Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/dioptra-components/plugin-reference.html">Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/dioptra-components/entrypoints-reference.html">Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/dioptra-components/experiments-reference.html">Experiments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/dioptra-components/jobs-reference.html">Jobs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/dioptra-components/artifacts-reference.html">Artifacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/dioptra-components/metrics-reference.html">Metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/dioptra-components/workers-reference.html">Workers</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="reference/python-client/index.html">Python Client Methods</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-12"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="reference/python-client/auth-users-groups-client-methods.html">Auth, Users, and Groups Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/python-client/queues-client-methods.html">Queues Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/python-client/param-types-client-methods.html">Parameter Types Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/python-client/plugin-client-methods.html">Plugins Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/python-client/entrypoints-client-methods.html">Entrypoints Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/python-client/experiments-client-methods.html">Experiments Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/python-client/jobs-client-methods.html">Jobs Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/python-client/artifacts-client-methods.html">Artifacts Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/python-client/tags-client-methods.html">Tags Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/python-client/snapshots-client-methods.html">Snapshots Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/python-client/workflows-client-methods.html">Workflows Client Methods</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="reference/api-reference-restapi.html">REST API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/resource-import-reference.html">Resource Import Syntax</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/resource-search-language-reference.html">Resource Search Language Syntax</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/task-engine-reference.html">Declarative Experiment Description</a></li>
-<li class="toctree-l1"><a class="reference internal" href="reference/api-reference-restapi.html">Testbed REST API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dev-guide/contributing-documentation-guide.html">Guidelines for Documentation</a></li>
 </ul>
 
     </div>
@@ -321,7 +438,7 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>What is Dioptra?</h1>
+    <h1>Dioptra Overview</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -331,15 +448,13 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#use-cases">Use Cases</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#key-properties">Key Properties</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#motivation">Motivation</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#context">Context</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#target-audience">Target Audience</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scope">Scope</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#architecture-overview">Architecture Overview</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#assumptions-system-requirements">Assumptions / System Requirements</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#points-of-contact">Points of Contact</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dioptra-documentation">Dioptra Documentation</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#understand-dioptra">Understand Dioptra</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#use-dioptra">Use Dioptra</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dive-into-the-details">Dive Into the Details</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#about">About</a><ul class="nav section-nav flex-column">
 </ul>
 </li>
 </ul>
@@ -353,163 +468,46 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article" role="main">
                   
-  <section id="what-is-dioptra">
-<h1>What is Dioptra?<a class="headerlink" href="#what-is-dioptra" title="Permalink to this headline">#</a></h1>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>See the <a class="reference internal" href="glossary.html"><span class="doc">Glossary</span></a> for the meaning of the acronyms used in this guide.</p>
+  <section id="dioptra-overview">
+<h1>Dioptra Overview<a class="headerlink" href="#dioptra-overview" title="Permalink to this headline">#</a></h1>
+<p>Dioptra is a software test platform for assessing the trustworthy characteristics of Artificial Intelligence (AI) models.</p>
+<p>Dioptra is a modular, microservice-based environment for creating <strong>reproducible, trackable, and reusable AI workflows</strong>.
+It is designed to <strong>measure, analyze, and track AI risks</strong>, making it particularly useful for addressing the “combinatorial explosion” of testing possibilities across attacks.</p>
+<section id="dioptra-documentation">
+<h2>Dioptra Documentation<a class="headerlink" href="#dioptra-documentation" title="Permalink to this headline">#</a></h2>
+<p>Below are some useful guides to help get you started. To see the entire list of documentation topics, view the table of contents on the left sidebar.</p>
+<section class="header-on-a-card" id="understand-dioptra">
+<h3>Understand Dioptra<a class="headerlink" href="#understand-dioptra" title="Permalink to this headline">#</a></h3>
+<ul class="simple">
+<li><p><a class="reference internal" href="explanation/dioptra-motivation/index.html#explanation-motivation-for-dioptra"><span class="std std-ref">Motivation for Dioptra</span></a> - What is Dioptra for and how does it compare to other tools?</p></li>
+<li><p><a class="reference internal" href="explanation/workflow-architecture-explanation.html#explanation-workflow-architecture"><span class="std std-ref">Workflow Architecture</span></a> - Learn how all the high level Dioptra components orchestrate together to execute jobs</p></li>
+</ul>
+</section>
+<section class="header-on-a-card" id="use-dioptra">
+<h3>Use Dioptra<a class="headerlink" href="#use-dioptra" title="Permalink to this headline">#</a></h3>
+<ul class="simple">
+<li><p><a class="reference internal" href="how-to/setup-dioptra/install-dioptra-explanation.html#explanation-install-dioptra"><span class="std std-ref">Follow the installation guide</span></a> to build the Docker containers and start the services</p></li>
+<li><p><a class="reference internal" href="tutorials/hello_world/index.html#tutorial-hello-world-in-dioptra"><span class="std std-ref">Run the Hello World tutorial</span></a> to make sure things are set up correctly</p></li>
+</ul>
+</section>
+<section class="header-on-a-card" id="dive-into-the-details">
+<h3>Dive Into the Details<a class="headerlink" href="#dive-into-the-details" title="Permalink to this headline">#</a></h3>
+<ul class="simple">
+<li><p><a class="reference internal" href="explanation/components/index.html#explanation-dioptra-components"><span class="std std-ref">Read through the Dioptra component explainers</span></a> to dive deeper on each part of the workflow architecture.</p></li>
+<li><p>Learn how to <a class="reference internal" href="how-to/setup-dioptra/configure-setup/index.html#how-to-setup-options"><span class="std std-ref">customize your Dioptra deployment</span></a></p></li>
+<li><p>Reference the <a class="reference internal" href="reference/api-reference-restapi.html#reference-testbed-rest-api-reference"><span class="std std-ref">API endpoints</span></a> and learn how to use the <a class="reference internal" href="reference/python-client/index.html#reference-python-client-methods"><span class="std std-ref">Python client</span></a></p></li>
+<li><p><a class="reference internal" href="tutorials/essential_workflows/index.html#tutorial-learning-the-essentials"><span class="std std-ref">Progress through the intermediate tutorial</span></a> to learn about complex workflows, artifacts, and more</p></li>
+</ul>
+</section>
+</section>
+<section id="about">
+<h2>About<a class="headerlink" href="#about" title="Permalink to this headline">#</a></h2>
+<p>Dioptra is open-source software developed by the National Institute of Standards and Technology (NIST). Contributions and feedback are welcome from the community.
+You can find the source code, license information, and more on the NIST <a class="reference external" href="https://github.com/usnistgov/dioptra">GitHub repository</a>.</p>
+<div class="toctree-wrapper compound">
 </div>
-<p>Dioptra is a software test platform for assessing the trustworthy characteristics of artificial intelligence (AI). Trustworthy AI is: valid and reliable, safe, secure and resilient, accountable and transparent, explainable and interpretable, privacy-enhanced, and fair - with harmful bias managed1. Dioptra supports the Measure function of the NIST AI Risk Management Framework by providing functionality to assess, analyze, and track identified AI risks.</p>
-<section id="use-cases">
-<h2>Use Cases<a class="headerlink" href="#use-cases" title="Permalink to this headline">#</a></h2>
-<p>We envision the following primary use cases for Dioptra:</p>
-<ul class="simple">
-<li><dl class="simple">
-<dt>Model Testing:</dt><dd><ul>
-<li><p>1st party - Assess AI models throughout the development lifecycle</p></li>
-<li><p>2nd party - Assess AI models during acquisition or in an evaluation lab environment</p></li>
-<li><p>3rd party - Assess AI models during auditing or compliance activities</p></li>
-</ul>
-</dd>
-</dl>
-</li>
-<li><p>Research: Aid trustworthy AI researchers in tracking experiments</p></li>
-<li><p>Evaluations and Challenges: Provide a common platform and resources for participants</p></li>
-<li><p>Red-Teaming: Expose models and resources to a red team in a controlled environment</p></li>
-</ul>
-</section>
-<section id="key-properties">
-<h2>Key Properties<a class="headerlink" href="#key-properties" title="Permalink to this headline">#</a></h2>
-<p>Dioptra strives for the following key properties:</p>
-<ul class="simple">
-<li><p>Reproducible: Dioptra automatically creates snapshots of resources so experiments can be reproduced and validated</p></li>
-<li><p>Traceable: The full history of experiments and their inputs are tracked</p></li>
-<li><p>Extensible: Support for expanding functionality and importing existing Python packages via a plugin system</p></li>
-<li><p>Interoperable: A type system promotes interoperability between plugins</p></li>
-<li><p>Modular: New experiments can be composed from modular components in a simple yaml file</p></li>
-<li><p>Secure: Dioptra provides user authentication with access controls coming soon</p></li>
-<li><p>Interactive: Users can interact with Dioptra via an intuitive web interface</p></li>
-<li><p>Shareable and Reusable: Dioptra can be deployed in a multi-tenant environment so users can share and reuse components</p></li>
-</ul>
-</section>
-<section id="motivation">
-<h2>Motivation<a class="headerlink" href="#motivation" title="Permalink to this headline">#</a></h2>
-<p>Our systems increasingly rely on Machine Learning (ML) algorithms and models to perform essential functions.
-As users of these systems, we must implicitly trust that the models are working as designed.
-Establishing the trustworthiness of an ML model is especially hard, because the inner workings are essentially opaque to an outside observer.
-Ideally the models we rely on would be transparent, free from bias, explainable, and secure.
-Research has shown that ML models are vulnerable to a variety of adversarial attacks that cause them to misbehave in ways that provide benefit to the adversary.
-This has sparked a competition between defenses attempting to mitigate
-attacks and ever novel attacks that defeat the defenses, and this competition poses a growing challenge for securing ML systems.</p>
-<p>In this changing landscape it is extremely difficult to develop a principled approach to evaluating the strengths and weaknesses of defenses.
-While much work has been done to evaluate techniques within a narrow range of conditions, there is a challenge in developing more robust metrics that account for the diversity of attacks that might be mounted against it.
-Questions about the generalizability of an algorithm across a range of attacks or the transferability of a technique across models or datasets must naturally consider the full range of possible conditions.</p>
-<p>The National Institute of Standards and Technology (NIST) National
-Cybersecurity Center of Excellence (NCCoE) has built an experimentation testbed to begin to address the broader challenge of evaluation for attacks and defenses.
-The testbed aims to facilitate security evaluations of ML algorithms under a diverse set of conditions.
-To that end, the testbed has a modular design enabling researchers to easily swap in alternative datasets, models, attacks, and defenses.
-The result is the ability to advance the metrology needed to ultimately help secure ML-enabled systems.</p>
-</section>
-<section id="context">
-<h2>Context<a class="headerlink" href="#context" title="Permalink to this headline">#</a></h2>
-<p>While there are a large variety of types of attacks against ML algorithms, NIST Internal Report 8269 identifies three broad categories: Evasion, Poisoning, and Oracle.
-In Evasion attacks, an adversary manipulates the test data (sometimes by altering the physical environment) in order to cause the ML model to misbehave.
-Poisoning attacks alter the training data used to create or maintain a model with the intention of causing it to learn incorrect associations.
-Oracle attacks attempt to “reverse engineer” a model to learn about details of the training set used to create it, or specific model parameters to replicate the model.</p>
-<figure class="align-default">
-<img alt="_images/overview-image-attack-examples.png" src="_images/overview-image-attack-examples.png" />
-</figure>
-<p>In the case of image classification, attacks can manifest in many different ways ranging from the addition of noise which is difficult for humans to detect in the training or testing images, to the inclusion of colorful “patches,” which are noticeable by a human observer and can be printed and placed in the physical environment to alter the images entering the classifier.</p>
-<p>There are an equal variety in the types of defenses researchers have developed to mitigate the effectiveness of attacks.
-These types range from altering the training paradigm for generating models to techniques that pre-process test data in an attempt to eliminate any carefully crafted alterations added by an adversary.
-Just as with attacks, defenses can be deployed at any stage of the ML development pipeline.
-The simplified diagrams of the development pipeline below depict some examples.</p>
-<figure class="align-default" style="width: 49%">
-<img alt="_images/overview-attack-interfaces.png" src="_images/overview-attack-interfaces.png" />
-</figure>
-<figure class="align-default" style="width: 49%">
-<img alt="_images/overview-defense-interfaces.png" src="_images/overview-defense-interfaces.png" />
-</figure>
-<p>The sheer variety of attacks and defenses results in a combinatorial
-explosion of possible combinations of attacks, defenses, model architectures, and datasets, which creates a challenge for evaluating the effectiveness of defenses against the full array of attacks it may face.
-Dioptra, the NCCoE’s machine learning security testbed, addresses this challenge by making it easier for researchers to explore the set of possible combinations.</p>
-</section>
-<section id="target-audience">
-<h2>Target Audience<a class="headerlink" href="#target-audience" title="Permalink to this headline">#</a></h2>
-<p>We envision an audience with a wide variety of familiarity with and expertise in machine learning.
-Newcomers to the platform will be able to run the included demonstrations of attacks and defenses even if they have very little programming experience.</p>
-<p>The testbed offers new opportunities for analysts in organizations using ML-enabled products.
-For example, the inclusion of testing as part of the build pipeline for first-party developers would help promote more robust products.
-Similarly, second-party consumers of such products might leverage the testbed as part of a verification or risk assessment process.
-In both cases, the testbed allows users to test a product against a range of attacks, thereby helping them understand what types of threats are most harmful.</p>
-<p>We also envision Dioptra as an asset to ML researchers in developing new solutions.
-The testbed will allow them to evaluate the security of any new techniques they develop by running those techniques through their paces.
-For example, we envision new defenses being tested against a wider array of attacks than is typically found in the literature.
-Similarly, it can facilitate “parameter sweeping” to help developers better understand the degree to which small changes in parameters can affect an algorithm.
-It also affords an opportunity to replicate and benchmark well-known results from the research literature.
-This ability to repeat experiments to reproduce results is critical for creating and validating reliable metrics.</p>
-<p>We envision four primary user levels.</p>
-<dl class="simple">
-<dt>Level 1—The Newcomer</dt><dd><p>These individuals have little or no hands-on experience with the testbed.
-They will be able to read the documentation and run the provided demos to learn how to use the testbed.
-They will be able to alter the parameters of the provided demos to create slight variants of the existing experiments.
-These users can have a wide variety of skill sets.
-They need not be familiar with the technologies the testbed uses, nor do they have to have much experience with scripting or programming.</p>
-</dd>
-<dt>Level 2—The Analyst</dt><dd><p>These are individuals who want to analyze a wider variety of scenarios.
-They will be able to interface with the testbed’s <a class="reference internal" href="glossary.html#term-REST"><span class="xref std std-term">REST</span></a> (<strong>RE</strong>presentational <strong>S</strong>tate <strong>T</strong>ransfer) <a class="reference internal" href="glossary.html#term-API"><span class="xref std std-term">API</span></a> to create new experiments from existing entry points.
-They will also learn to create custom entry points from the built-in plugins.
-They must know how to customize the testbed’s code templates; thus a basic knowledge of scripting or programming is required.</p>
-</dd>
-<dt>Level 3—The Researcher</dt><dd><p>These are individuals who want to run experiments using novel metrics, algorithms, and analytical techniques.
-They will be able to implement their own “in-house” plugins and Software Development Kit (<a class="reference internal" href="glossary.html#term-SDK"><span class="xref std std-term">SDK</span></a>) plugins to create novel entry points that rely on custom algorithms.
-They will need to understand the testbed’s plugin architecture to extend it with new functionality.
-They, therefore, require a solid background in scripting or programming.</p>
-</dd>
-<dt>Level 4—The Developer</dt><dd><p>These are individuals who want to expand the testbed’s core capabilities by contributing to the distribution.
-They will add new features by implementing built-in plugins, <a class="reference internal" href="glossary.html#term-REST"><span class="xref std std-term">REST</span></a> <a class="reference internal" href="glossary.html#term-API"><span class="xref std std-term">API</span></a> endpoints, <a class="reference internal" href="glossary.html#term-SDK"><span class="xref std std-term">SDK</span></a> modules, and architecture extensions.
-These individuals will have a deep understanding of how the testbed’s architectural and software components work together.
-They will be able to write reusable code and program applications that conform to coding best practices.</p>
-</dd>
-</dl>
-</section>
-<section id="scope">
-<h2>Scope<a class="headerlink" href="#scope" title="Permalink to this headline">#</a></h2>
-<p>The testbed is specifically focused on adversarial attacks against the ML algorithms themselves and defensive techniques designed to mitigate the attacks.
-In that spirit, the testbed presently is not designed to embed ML algorithms into a larger system context.
-For instance, an automated checkout system based on classifying images of products would require additional engineering.
-Defenses that could be applied to the surrounding system are currently out of scope.
-Similarly, the initial focus has been on image classification algorithms due to the prevalence of available information about attacks and defenses against such algorithms.
-There is nothing about the architecture that inherently limits the scope to computer vision, and it would be relatively straightforward to include algorithms using different modalities such as speech recognition or natural language processing.</p>
-</section>
-<section id="architecture-overview">
-<h2>Architecture Overview<a class="headerlink" href="#architecture-overview" title="Permalink to this headline">#</a></h2>
-<p>The testbed is built on a microservices architecture.
-It is designed to be deployed across several physical machines but is equally deployable on a local laptop.
-The distributed deployment allows the core optimization algorithms to reside on machines with GPUs or other high-powered computational resources, while a local deployment will impose strong computational constraints.</p>
-<p>The heart of the architecture is the core testbed Application Programming Interface (<a class="reference internal" href="glossary.html#term-API"><span class="xref std std-term">API</span></a>) that manages requests and responses with a human user via a reverse proxy.
-The backend Data Storage component hosts datasets, registered models, and experiment results and metrics.
-As experiment jobs get submitted, the <a class="reference internal" href="glossary.html#term-API"><span class="xref std std-term">API</span></a> registers them on the Redis queue, which is watched by a worker pool of Docker containers provisioned with all necessary environment dependencies.
-These worker containers run the plugins and coordinate job dependencies and record statistics, metrics, and any generated artifacts.</p>
-<p>The architecture relies on a modular plugin system to ease the job of programming new combinations of attacks and defenses.
-Plugin tasks perform various basic, low-level functions such as loading models, preparing data, and computing metrics.
-They also implement atomic portions of attacks and defenses such as generating adversarial examples or pre-processing images before inference.
-Entry points are larger functional units that consist of various ways to wire together registered plugins.
-This enables users of different levels of experience and expertise to interact with the testbed.</p>
-<p>The architecture is built entirely from open-source resources making it easy for others to extend and improve upon.</p>
-</section>
-<section id="assumptions-system-requirements">
-<h2>Assumptions / System Requirements<a class="headerlink" href="#assumptions-system-requirements" title="Permalink to this headline">#</a></h2>
-<p>Most of the built-in demonstrations in the testbed assume the testbed is deployed on Unix-based operating systems (e.g., Linux, macOS).
-Those familiar with the Windows Subsystem for Linux (WSL) should be able to deploy it on Windows, but this mode is not explicitly supported at this time.
-Most included demos perform computationally intensive calculations requiring access to significant computational resources such as Graphics Processing Units (GPUs).
-The architecture has been tested on a <a class="reference internal" href="glossary.html#term-NVIDIA-DGX"><span class="xref std std-term">NVIDIA DGX</span></a> server with 4 GPUs.
-The demonstrations also rely on publicly available datasets such as <a class="reference internal" href="glossary.html#term-MNIST"><span class="xref std std-term">MNIST</span></a> handwritten digits, ImageNet, and Fruits360 that are not part of the testbed distribution.
-The built-in demonstrations assume that relevant datasets have already been obtained and saved in the testbed’s Data Storage container.</p>
-</section>
-<section id="points-of-contact">
-<h2>Points of Contact<a class="headerlink" href="#points-of-contact" title="Permalink to this headline">#</a></h2>
-<p>Email us: <a class="reference external" href="mailto:dioptra&#37;&#52;&#48;nist&#46;gov">dioptra<span>&#64;</span>nist<span>&#46;</span>gov</a></p>
+<div class="toctree-wrapper compound">
+</div>
 <div class="toctree-wrapper compound">
 </div>
 <div class="toctree-wrapper compound">
@@ -534,11 +532,11 @@ The built-in demonstrations assume that relevant datasets have already been obta
     <div class="footer-article-item"><!-- Previous / next buttons -->
 <div class="prev-next-area">
     <a class="right-next"
-       href="glossary.html"
+       href="explanation/dioptra-motivation/why-dioptra.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Glossary</p>
+        <p class="prev-next-title">Motivation</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -560,15 +558,13 @@ The built-in demonstrations assume that relevant datasets have already been obta
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#use-cases">Use Cases</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#key-properties">Key Properties</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#motivation">Motivation</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#context">Context</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#target-audience">Target Audience</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scope">Scope</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#architecture-overview">Architecture Overview</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#assumptions-system-requirements">Assumptions / System Requirements</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#points-of-contact">Points of Contact</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dioptra-documentation">Dioptra Documentation</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#understand-dioptra">Understand Dioptra</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#use-dioptra">Use Dioptra</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dive-into-the-details">Dive Into the Details</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#about">About</a><ul class="nav section-nav flex-column">
 </ul>
 </li>
 </ul>
@@ -592,18 +588,12 @@ The built-in demonstrations assume that relevant datasets have already been obta
   <script src="_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
 <script src="_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
 
-<footer class="footer mt-5 mt-md-0">
-    <div class="container">
-      <p>
-        <div class="disclaimer">
-          <strong>Disclaimer:</strong> Certain commercial equipment, instruments, or
-          materials are identified in this documentation to foster understanding. Such
-          identification does not imply recommendation or endorsement by the National
-          Institute of Standards and Technology, nor does it imply that the materials
-          or equipment identified are necessarily the best available for the purpose.
-        </div>
-      </p>
-    </div>
-</footer>
+  
+  <footer class="bd-footer">
+  </footer>
+  <div id="img-modal">
+    <span class="close-btn">&times;</span>
+    <img id="modal-img" src="" alt="enlarged screenshot">
+  </div>
   </body>
 </html>
