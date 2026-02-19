@@ -73,7 +73,7 @@ A collection of plugin tasks for evaluating evasion attacks and defenses using t
   input_params = [
     { name = "predictions", type = "pd.DataFrame", required = true},
     { name = "dataset", type = "Dataset", required = true },
-    { name = "metrics", type = "options_dicts", required = false },
+    { name = "metrics", type = "metrics_list", required = false },
   ]
   output_params = [ { name = "metrics", type = "pd.DataFrame" } ]
 
@@ -226,6 +226,11 @@ structure = { mapping = ["string", "any"] }
 name = "options_dicts"
 description = "Represents parameters passed as keyword args."
 structure = { list = "options_dict" }
+
+[[plugin_param_types]]
+name = "metrics_list"
+description = "A list of metrics, each specified as either a string name or a mapping with name and options."
+structure = { list = { union = ["options_dict", "string"] } }
 
 [[plugin_param_types]]
 name = "keras.Model"
