@@ -103,7 +103,7 @@ Key variables include:
 
 - **deployment_name:** A name to associate with the deployment (default: ``Dioptra deployment``)
 - **container_registry:** Registry prefix for Dioptra container images. Leave as default for downloaded images, or set to empty for locally built images. See :ref:`how-to-get-container-images-registry-prefix` for details. (default: ``ghcr.io/usnistgov``)
-- **container_tag:** Should match the tags of your Dioptra container images (default: ``dev``)
+- **container_tag:** Should match the tags of your Dioptra container images (default: ``1.1.0``)
 - **nginx_server_name:** Domain name, IP address, or ``_`` for local deployments (default: ``dioptra.example.org``)
 - **num_tensorflow_cpu_workers / num_pytorch_cpu_workers:** Number of CPU workers (default: ``1`` each)
 - **datasets_directory:** Host directory to mount at ``/dioptra/data`` in workers (default: *empty*)

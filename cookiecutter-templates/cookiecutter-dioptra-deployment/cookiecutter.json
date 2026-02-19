@@ -3,7 +3,7 @@
     "__project_slug": "{{ cookiecutter.deployment_name.lower().replace(' ', '-').replace('_', '-') }}",
     "container_registry": "ghcr.io/usnistgov",
     "__container_namespace": "dioptra",
-    "container_tag": "dev",
+    "container_tag": "1.1.0",
     "docker_compose_path": "docker compose",
     "systemd_required_mounts": "",
     "nginx_server_name": "dioptra.example.org",
