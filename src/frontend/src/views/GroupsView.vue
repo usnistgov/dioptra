@@ -7,10 +7,9 @@
     @delete="showDeleteDialog = true"
     @edit="router.push('/groups/admin')"
     v-model:selected="selected"
-    :hideEditBtn="true"
-    :hideDeleteBtn="true"
     @request="getUserGroups"
     ref="tableRef"
+    :hideCreateBtn="true"
   >
     <template #body-cell="props">
       <q-td :props="props">
@@ -18,19 +17,6 @@
       </q-td>
     </template>
   </TableComponent>
-  <!-- <q-btn 
-    class="fixedButton"
-    round
-    color="primary"
-    icon="add"
-    size="lg"
-    to="/groups/admin"
-  >
-    <span class="sr-only">Create a new Group</span>
-    <q-tooltip>
-      Create a new Group
-    </q-tooltip>
-  </q-btn> -->
 </template>
 
 <script setup>

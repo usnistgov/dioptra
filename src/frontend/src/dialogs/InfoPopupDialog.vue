@@ -1,12 +1,12 @@
 <template>
   <q-dialog v-model="showDialog" aria-labelledby="modalTitle">
-    <q-card style="width: 95%;" flat >
+    <q-card style="width: 95%; max-height: 80vh" flat >
       <q-card-section class="bg-primary text-white q-mb-md">
         <div class="text-h6">
           <slot name="title"  />
         </div>
       </q-card-section>
-      <q-card-section>
+      <q-card-section style="overflow-y: auto; max-height: 60vh">
         <slot />
       </q-card-section>
       <q-separator />

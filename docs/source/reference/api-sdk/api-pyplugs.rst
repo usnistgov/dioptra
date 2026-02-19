@@ -25,8 +25,6 @@ Decorators
 
 .. autodecorator:: dioptra.pyplugs.register
 
-.. autodecorator:: dioptra.pyplugs.task_nout
-
 Methods
 -------
 
@@ -42,10 +40,6 @@ Methods
 
 .. autofunction:: dioptra.pyplugs.call
 
-.. autofunction:: dioptra.pyplugs.get_task
-
-.. autofunction:: dioptra.pyplugs.call_task
-
 Method Factories
 ----------------
 
@@ -60,7 +54,3 @@ Method Factories
 .. autofunction:: dioptra.pyplugs.get_factory
 
 .. autofunction:: dioptra.pyplugs.call_factory
-
-.. autofunction:: dioptra.pyplugs.get_task_factory
-
-.. autofunction:: dioptra.pyplugs.call_task_factory

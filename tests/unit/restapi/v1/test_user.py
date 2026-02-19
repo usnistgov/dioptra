@@ -15,96 +15,19 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """Test suite for user operations.
+
 This module contains a set of tests that validate the CRUD operations and additional
-functionalities for the user entity. The tests ensure that the users can be
-registered, modified, and deleted as expected through the REST API.
+functionalities for the user entity. The tests ensure that the users can be registered,
+modified, and deleted as expected through the REST API.
 """
+from http import HTTPStatus
 from typing import Any
 
-from flask.testing import FlaskClient
-from flask_sqlalchemy import SQLAlchemy
-from werkzeug.test import TestResponse
+from dioptra.client.base import DioptraResponseProtocol
+from dioptra.client.client import DioptraClient
 
-from dioptra.restapi.routes import V1_ROOT, V1_USERS_ROUTE
-
-from ..lib import actions, helpers
-
-# -- Actions ---------------------------------------------------------------------------
-
-
-def modify_current_user(
-    client: FlaskClient,
-    new_username: str,
-    new_email: str,
-) -> TestResponse:
-    """Change the current user's email using the API.
-
-    Args:
-        client The Flask test client.
-        new_email: The new email to assign to the user.
-
-    Returns:
-        The response from the API.
-    """
-
-    payload = {"username": new_username, "email": new_email}
-
-    return client.put(
-        f"/{V1_ROOT}/{V1_USERS_ROUTE}/current", json=payload, follow_redirects=True
-    )
-
-
-def delete_current_user(
-    client: FlaskClient,
-    password: str,
-) -> TestResponse:
-    """Delete the current user using the API.
-
-    Args:
-        client: The Flask test client.
-
-    Returns:
-        The response from the API.
-    """
-    payload = {"password": password}
-    return client.delete(
-        f"/{V1_ROOT}/{V1_USERS_ROUTE}/current", json=payload, follow_redirects=True
-    )
-
-
-def change_current_user_password(
-    client: FlaskClient,
-    old_password: str,
-    new_password: str,
-):
-    """Change the current user password using the API."""
-    payload = {
-        "oldPassword": old_password,
-        "newPassword": new_password,
-        "confirmNewPassword": new_password,
-    }
-    return client.post(
-        f"/{V1_ROOT}/{V1_USERS_ROUTE}/current/password",
-        json=payload,
-        follow_redirects=True,
-    )
-
-
-def change_user_password(
-    client: FlaskClient, user_id: int, old_password: str, new_password: str
-):
-    """Change a user password using its ID using the API."""
-    payload = {
-        "oldPassword": old_password,
-        "newPassword": new_password,
-        "confirmNewPassword": new_password,
-    }
-    return client.post(
-        f"/{V1_ROOT}/{V1_USERS_ROUTE}/{user_id}/password",
-        json=payload,
-        follow_redirects=True,
-    )
-
+from ..lib import helpers
+from ..test_utils import assert_retrieving_resource_works
 
 # -- Assertions ----------------------------------------------------------------
 
@@ -170,12 +93,14 @@ def assert_user_response_contents_matches_expectations(
 
 
 def assert_retrieving_user_by_id_works(
-    client: FlaskClient, user_id: int, expected: dict[str, Any]
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    user_id: int,
+    expected: dict[str, Any],
 ) -> None:
     """Assert that retrieving a user by id works.
 
     Args:
-        client: The Flask test client.
+        dioptra_client: The Dioptra client.
         user_id: The id of the user to retrieve.
         expected: The expected response from the API.
 
@@ -183,59 +108,38 @@ def assert_retrieving_user_by_id_works(
         AssertionError: If the response status code is not 200 or if the API response
             does not match the expected response.
     """
-    response = client.get(
-        f"/{V1_ROOT}/{V1_USERS_ROUTE}/{user_id}", follow_redirects=True
-    )
-    assert response.status_code == 200 and response.get_json() == expected
+    response = dioptra_client.users.get_by_id(user_id)
+    assert response.status_code == HTTPStatus.OK and response.json() == expected
 
 
 def assert_retrieving_current_user_works(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     expected: dict[str, Any],
 ) -> None:
     """Assert that retrieving the current user works.
 
     Args:
-        client: The Flask test client.
+        dioptra_client: The Dioptra client.
         expected: The expected response from the API.
 
     Raises:
         AssertionError: If the response status code is not 200 or if the API response
             does not match the expected response.
     """
-    response = client.get(f"/{V1_ROOT}/{V1_USERS_ROUTE}/current", follow_redirects=True)
+    response = dioptra_client.users.get_current()
     to_ignore = ["lastLoginOn", "lastModifiedOn"]
     response_info_filtered = {
-        k: v for k, v in response.get_json().items() if k not in to_ignore
+        k: v for k, v in response.json().items() if k not in to_ignore
     }
     expected_filtered = {k: v for k, v in expected.items() if k not in to_ignore}
-    assert response.status_code == 200 and response_info_filtered == expected_filtered
-
-
-def assert_retrieving_all_users_works(
-    client: FlaskClient,
-    expected: list[dict[str, Any]],
-) -> None:
-    """Assert that retrieving all queues works.
-
-    Args:
-        client: The Flask test client.
-        expected: The expected response from the API.
-
-    Raises:
-        AssertionError: If the response status code is not 200 or if the API response
-            does not match the expected response.
-    """
-    response = client.get(
-        f"/{V1_ROOT}/{V1_USERS_ROUTE}",
-        query_string={},
-        follow_redirects=True,
+    assert (
+        response.status_code == HTTPStatus.OK
+        and response_info_filtered == expected_filtered
     )
-    assert response.status_code == 200 and response.get_json()["data"] == expected
 
 
 def assert_retrieving_users_works(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     expected: list[dict[str, Any]],
     search: str | None = None,
     paging_info: dict[str, int] | None = None,
@@ -243,7 +147,7 @@ def assert_retrieving_users_works(
     """Assert that retrieving all users works.
 
     Args:
-        client: The Flask test client.
+        dioptra_client: The Dioptra client.
         expected: The expected response from the API.
         search: The search string used in query parameters.
         paging_info: The paging information used in query parameters.
@@ -252,72 +156,65 @@ def assert_retrieving_users_works(
         AssertionError: If the response status code is not 200 or if the API response
             does not match the expected response.
     """
-    query_string = {}
-
-    if search is not None:
-        query_string["search"] = search
-
-    if paging_info is not None:
-        query_string["index"] = paging_info["index"]
-        query_string["pageLength"] = paging_info["page_length"]
-
-    response = client.get(
-        f"/{V1_ROOT}/{V1_USERS_ROUTE}",
-        query_string=query_string,
-        follow_redirects=True,
+    assert_retrieving_resource_works(
+        dioptra_client=dioptra_client.users,
+        expected=expected,
+        search=search,
+        paging_info=paging_info,
     )
-    assert response.status_code == 200 and response.get_json()["data"] == expected
 
 
 def assert_registering_existing_username_fails(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     existing_username: str,
     non_existing_email: str,
 ) -> None:
     """Assert that registering a user with an existing username fails.
 
     Args:
-        client: The Flask test client.
+        dioptra_client: The Dioptra client.
         username: The username to assign to the new user.
 
     Raises:
-        AssertionError: If the response status code is not 400.
+        AssertionError: If the response status code is not 409.
     """
     password = "supersecurepassword"
-    response = actions.register_user(
-        client, existing_username, non_existing_email, password
+    response = dioptra_client.users.create(
+        username=existing_username, email=non_existing_email, password=password
     )
-    assert response.status_code == 409
+    assert response.status_code == HTTPStatus.CONFLICT
 
 
 def assert_registering_existing_email_fails(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     non_existing_username: str,
     existing_email: str,
 ) -> None:
     """Assert that registering a user with an existing username fails.
 
     Args:
-        client: The Flask test client.
+        dioptra_client: The Dioptra client.
         username: The username to assign to the new user.
 
     Raises:
-        AssertionError: If the response status code is not 400.
+        AssertionError: If the response status code is not 409.
     """
     password = "supersecurepassword"
-    response = actions.register_user(
-        client, non_existing_username, existing_email, password
+    response = dioptra_client.users.create(
+        username=non_existing_username, email=existing_email, password=password
     )
-    assert response.status_code == 409
+    assert response.status_code == HTTPStatus.CONFLICT
 
 
 def assert_user_username_matches_expected_name(
-    client: FlaskClient, user_id: int, expected_name: str
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    user_id: int,
+    expected_name: str,
 ) -> None:
     """Assert that the name of a user matches the expected name.
 
     Args:
-        client: The Flask test client.
+        dioptra_client: The Dioptra client.
         user_id: The id of the user to retrieve.
         expected_name: The expected name of the user.
 
@@ -325,153 +222,150 @@ def assert_user_username_matches_expected_name(
         AssertionError: If the response status code is not 200 or if the name of the
             user does not match the expected name.
     """
-    response = client.get(
-        f"/{V1_ROOT}/{V1_USERS_ROUTE}/{user_id}",
-        follow_redirects=True,
+    response = dioptra_client.users.get_by_id(user_id)
+    assert (
+        response.status_code == HTTPStatus.OK
+        and response.json()["name"] == expected_name
     )
-    assert response.status_code == 200 and response.get_json()["name"] == expected_name
 
 
 def assert_current_user_username_matches_expected_name(
-    client: FlaskClient, expected_name: str
+    dioptra_client: DioptraClient[DioptraResponseProtocol], expected_name: str
 ) -> None:
     """Assert that the name of the current user matches the expected name.
 
     Args:
-        client: The Flask test client.
+        dioptra_client: The Dioptra client.
         expected_name: The expected name of the user.
 
     Raises:
         AssertionError: If the response status code is not 200 or if the name of the
             user does not match the expected name.
     """
-    response = client.get(
-        f"/{V1_ROOT}/{V1_USERS_ROUTE}/current",
-        follow_redirects=True,
+    response = dioptra_client.users.get_current()
+    assert (
+        response.status_code == HTTPStatus.OK
+        and response.json()["name"] == expected_name
     )
-    assert response.status_code == 200 and response.get_json()["name"] == expected_name
 
 
 def assert_user_is_not_found(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     user_id: int,
 ) -> None:
     """Assert that a user is not found.
 
     Args:
-        client: The Flask test client.
+        dioptra_client: The Dioptra client.
         user_id: The id of the user to retrieve.
 
     Raises:
         AssertionError: If the response status code is not 404.
     """
-    response = client.get(
-        f"/{V1_ROOT}/{V1_USERS_ROUTE}/{user_id}",
-        follow_redirects=True,
-    )
-    assert response.status_code == 404
+    response = dioptra_client.users.get_by_id(user_id)
+    assert response.status_code == HTTPStatus.NOT_FOUND
 
 
 def assert_cannot_rename_user_with_existing_username(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     existing_username: str,
 ) -> None:
     """Assert that renaming a user with an existing username fails.
 
     Args:
-        client: The Flask test client.
+        dioptra_client: The Dioptra client.
         existing_username: The username of the existing user.
 
     Raises:
         AssertionError: If the response status code is not 400.
     """
-    response = modify_current_user(
-        client=client,
-        new_username=existing_username,
-        new_email="new_email",
+    response = dioptra_client.users.modify_current_user(
+        username=existing_username,
+        email="new_email",
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
 
 
 def assert_cannot_rename_user_with_existing_email(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     existing_email: str,
 ) -> None:
     """Assert that changing a user email with an existing email fails.
 
     Args:
-        client: The Flask test client.
+        dioptra_client: The Dioptra client.
         existing_email: The email of the existing user.
 
     Raises:
         AssertionError: If the response status code is not 400.
     """
-    response = modify_current_user(
-        client=client,
-        new_username="new_username",
-        new_email=existing_email,
+    response = dioptra_client.users.modify_current_user(
+        username="new_username",
+        email=existing_email,
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
 
 
 def assert_login_works(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     username: str,
     password: str,
 ):
     """Assert that logging in using a username and password works.
 
     Args:
-        client: The Flask test client.
+        dioptra_client: The Dioptra client.
         username: The username of the user to be logged in.
         password: The password of the user to be logged in.
 
     Raises:
         AssertionError: If the response status code is not 200.
     """
-    assert actions.login(client, username, password).status_code == 200
+    assert dioptra_client.auth.login(username, password).status_code == HTTPStatus.OK
 
 
 def assert_user_does_not_exist(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     username: str,
     password: str,
 ):
     """Assert that the user does not exist.
 
     Args:
-        client: The Flask test client.
+        dioptra_client: The Dioptra client.
         username: The username of the user to be logged in.
         password: The password of the user to be logged in.
 
     Raises:
         AssertionError: If the response status code is not 404.
     """
-    assert actions.login(client, username, password).status_code == 404
+    response = dioptra_client.auth.login(username, password)
+    assert response.status_code == HTTPStatus.UNAUTHORIZED
 
 
 def assert_login_is_unauthorized(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     username: str,
     password: str,
 ):
     """Assert that logging in using a username and password is unauthorized.
 
     Args:
-        client: The Flask test client.
+        dioptra_client: The Dioptra client.
         username: The username of the user to be logged in.
         password: The password of the user to be logged in.
 
     Raises:
         AssertionError: If the response status code is not 401.
     """
-    assert actions.login(client, username, password).status_code == 401
+    response = dioptra_client.auth.login(username, password)
+    assert response.status_code == HTTPStatus.UNAUTHORIZED
 
 
 def assert_new_password_cannot_be_existing(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     password: str,
-    user_id: str = None,
+    user_id: str | None = None,
 ):
     """Assert that changing a user (current or otherwise) password to the
     existing password fails.
@@ -483,26 +377,23 @@ def assert_new_password_cannot_be_existing(
         we assume we are the current user. Defaults to None.
 
     Raises:
-        AssertionError: If the response status code is not 400.
+        AssertionError: If the response status code is not 403.
     """
     # Means we are the current user.
-    if not user_id:
-        assert (
-            change_current_user_password(client, password, password).status_code == 403
-        )
+    if user_id is None:
+        response = dioptra_client.users.change_current_user_password(password, password)
+        assert response.status_code == HTTPStatus.FORBIDDEN
     else:
-        assert (
-            change_user_password(client, user_id, password, password).status_code == 403
+        response = dioptra_client.users.change_password_by_id(
+            user_id, password, password
         )
+        assert response.status_code == HTTPStatus.FORBIDDEN
 
 
 # -- Tests -------------------------------------------------------------
 
 
-def test_create_user(
-    client: FlaskClient,
-    db: SQLAlchemy,
-) -> None:
+def test_create_user(dioptra_client: DioptraClient[DioptraResponseProtocol]) -> None:
     """Test that we can create a user and its response is expected.
 
     This test validates the following sequence of actions:
@@ -520,7 +411,7 @@ def test_create_user(
     password = "supersecurepassword"
 
     # Posting a user returns CurrentUserSchema.
-    user_response = actions.register_user(client, username, email, password).get_json()
+    user_response = dioptra_client.users.create(username, email, password).json()
     assert_user_response_contents_matches_expectations(
         response=user_response,
         expected_contents={
@@ -530,19 +421,20 @@ def test_create_user(
         current_user=True,
     )
 
-    actions.login(client, username, password).get_json()
-    assert_retrieving_current_user_works(client, expected=user_response)
+    dioptra_client.auth.login(username, password)
+    assert_retrieving_current_user_works(dioptra_client, expected=user_response)
 
     # Getting a user by id returns UserSchema.
     user_expected = {
         k: v for k, v in user_response.items() if k in ["username", "email", "id"]
     }
-    assert_retrieving_user_by_id_works(client, user_expected["id"], user_expected)
+    assert_retrieving_user_by_id_works(
+        dioptra_client, user_expected["id"], user_expected
+    )
 
 
 def test_user_get_all(
-    client: FlaskClient,
-    db: SQLAlchemy,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_users: dict[str, Any],
 ) -> None:
@@ -559,12 +451,11 @@ def test_user_get_all(
         {"username": user["username"], "email": user["email"], "id": user["id"]}
         for user in list(registered_users.values())
     ]
-    assert_retrieving_users_works(client, expected=user_expected_list)
+    assert_retrieving_users_works(dioptra_client, expected=user_expected_list)
 
 
 def test_user_search_query(
-    client: FlaskClient,
-    db: SQLAlchemy,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_users: dict[str, Any],
 ) -> None:
@@ -581,24 +472,25 @@ def test_user_search_query(
         for user in list(registered_users.values())[:2]
     ]
     assert_retrieving_users_works(
-        client, expected=user_expected_list, search="username:*user*"
+        dioptra_client, expected=user_expected_list, search="username:*user*"
     )
     assert_retrieving_users_works(
-        client, expected=user_expected_list, search="username:'*user*'"
+        dioptra_client, expected=user_expected_list, search="username:'*user*'"
     )
     assert_retrieving_users_works(
-        client, expected=user_expected_list, search='username:"user?"'
+        dioptra_client, expected=user_expected_list, search='username:"user?"'
     )
     assert_retrieving_users_works(
-        client, expected=user_expected_list, search="username:user?,email:user*"
+        dioptra_client, expected=user_expected_list, search="username:user?,email:user*"
     )
-    assert_retrieving_users_works(client, expected=[], search=r"username:\*user*")
-    assert_retrieving_users_works(client, expected=[], search="email:user?")
+    assert_retrieving_users_works(
+        dioptra_client, expected=[], search=r"username:\*user*"
+    )
+    assert_retrieving_users_works(dioptra_client, expected=[], search="email:user?")
 
 
 def test_cannot_register_existing_username(
-    client: FlaskClient,
-    db: SQLAlchemy,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     registered_users: dict[str, Any],
 ) -> None:
     """Test that registering a user with an existing username fails.
@@ -612,15 +504,14 @@ def test_cannot_register_existing_username(
     """
     existing_user = registered_users["user1"]
     assert_registering_existing_username_fails(
-        client,
+        dioptra_client,
         existing_username=existing_user["username"],
         non_existing_email="unique" + existing_user["email"],
     )
 
 
 def test_cannot_register_existing_email(
-    client: FlaskClient,
-    db: SQLAlchemy,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     registered_users: dict[str, Any],
 ) -> None:
     """Test that registering a user with an existing email fails.
@@ -634,15 +525,14 @@ def test_cannot_register_existing_email(
     """
     existing_user = registered_users["user1"]
     assert_registering_existing_email_fails(
-        client,
+        dioptra_client,
         non_existing_username="unique" + existing_user["username"],
         existing_email=existing_user["email"],
     )
 
 
 def test_rename_current_user(
-    client: FlaskClient,
-    db: SQLAlchemy,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
 ) -> None:
     """Test that renaming the current user works.
@@ -654,13 +544,15 @@ def test_rename_current_user(
     that reflects the updated username.
     """
     new_username = "new_name"
-    user = modify_current_user(client, new_username, auth_account["email"]).get_json()
-    assert_retrieving_current_user_works(client, expected=user)
+    user = dioptra_client.users.modify_current_user(
+        username=new_username,
+        email=auth_account["email"],
+    ).json()
+    assert_retrieving_current_user_works(dioptra_client, expected=user)
 
 
 def test_user_authorization_failure(
-    client: FlaskClient,
-    db: SQLAlchemy,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     registered_users: dict[str, Any],
 ) -> None:
     """Test that a user providing an incorrect password cannot log in.
@@ -672,12 +564,11 @@ def test_user_authorization_failure(
     """
     username = registered_users["user2"]["username"]
     password = registered_users["user2"]["password"] + "incorrect"
-    assert_login_is_unauthorized(client, username=username, password=password)
+    assert_login_is_unauthorized(dioptra_client, username=username, password=password)
 
 
 def test_delete_current_user(
-    client: FlaskClient,
-    db: SQLAlchemy,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
 ) -> None:
     """Test that deleting the current user works.
@@ -689,13 +580,12 @@ def test_delete_current_user(
     """
     username = auth_account["username"]
     password = auth_account["password"]
-    delete_current_user(client, password)
-    assert_user_does_not_exist(client, username=username, password=password)
+    dioptra_client.users.delete_current_user(password)
+    assert_user_does_not_exist(dioptra_client, username=username, password=password)
 
 
 def test_change_current_user_password(
-    client: FlaskClient,
-    db: SQLAlchemy,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
 ):
     """Test that changing the current user password works.
@@ -708,13 +598,12 @@ def test_change_current_user_password(
     username = auth_account["username"]
     old_password = auth_account["password"]
     new_password = "new_password"
-    change_current_user_password(client, old_password, new_password)
-    assert_login_works(client, username=username, password=new_password)
+    dioptra_client.users.change_current_user_password(old_password, new_password)
+    assert_login_works(dioptra_client, username=username, password=new_password)
 
 
 def test_change_user_password(
-    client: FlaskClient,
-    db: SQLAlchemy,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_users: dict[str, Any],
 ):
@@ -729,13 +618,12 @@ def test_change_user_password(
     username = registered_users["user2"]["username"]
     old_password = registered_users["user2"]["password"]
     new_password = "new_password"
-    change_user_password(client, user_id, old_password, new_password)
-    assert_login_works(client, username=username, password=new_password)
+    dioptra_client.users.change_password_by_id(user_id, old_password, new_password)
+    assert_login_works(dioptra_client, username=username, password=new_password)
 
 
 def test_new_password_cannot_be_existing(
-    client: FlaskClient,
-    db: SQLAlchemy,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
 ):
     """Test that changing a password and setting the new password as the
@@ -751,6 +639,6 @@ def test_new_password_cannot_be_existing(
     user_id = auth_account["id"]
     password = auth_account["password"]
     # test via /users/current
-    assert_new_password_cannot_be_existing(client, password)
+    assert_new_password_cannot_be_existing(dioptra_client, password)
     # test via /users/{user_id}
-    assert_new_password_cannot_be_existing(client, password, user_id)
+    assert_new_password_cannot_be_existing(dioptra_client, password, user_id)

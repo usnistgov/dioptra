@@ -15,7 +15,6 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The schemas for serializing/deserializing the auth endpoint objects."""
-from __future__ import annotations
 
 from marshmallow import Schema, fields
 
@@ -25,18 +24,18 @@ class LoginSchema(Schema):
 
     username = fields.String(
         attribute="username",
-        metadata=dict(description="The account username."),
+        metadata={"description": "The account username."},
         required=True,
     )
     password = fields.String(
         attribute="password",
-        metadata=dict(description="The account password."),
+        metadata={"description": "The account password."},
         load_only=True,
         required=True,
     )
     status = fields.String(
         attribute="status",
-        metadata=dict(description="The status of the login request."),
+        metadata={"description": "The status of the login request."},
         dump_only=True,
     )
 
@@ -46,18 +45,18 @@ class LogoutSchema(Schema):
 
     username = fields.String(
         attribute="username",
-        metadata=dict(description="The account username."),
+        metadata={"description": "The account username."},
         dump_only=True,
         required=True,
     )
     everywhere = fields.Bool(
         attribute="everywhere",
-        metadata=dict(description="Logout on all devices."),
+        metadata={"description": "Logout on all devices."},
         load_default=lambda: False,
     )
     status = fields.String(
         attribute="status",
-        metadata=dict(description="The status of the logout request."),
+        metadata={"description": "The status of the logout request."},
         dump_only=True,
     )
 
@@ -67,6 +66,6 @@ class LogoutQueryParametersSchema(Schema):
 
     everywhere = fields.Bool(
         attribute="everywhere",
-        metadata=dict(description="Logout on all devices."),
+        metadata={"description": "Logout on all devices."},
         load_default=lambda: False,
     )

@@ -15,10 +15,13 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """Custom Marshmallow fields for REST API schemas."""
-from __future__ import annotations
 
 from marshmallow.fields import Field
 
 
 class FileUpload(Field):
     """A field that represents a file upload."""
+
+
+class MultiFileUpload(Field):
+    """A field that represents uploading multiple files."""

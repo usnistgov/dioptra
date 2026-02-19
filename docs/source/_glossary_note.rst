@@ -17,4 +17,4 @@
 
 .. note::
 
-   See the :doc:`/glossary` for the meaning of the acronyms used in this guide.
+   See the :ref:`reference-glossary` for the meaning of the acronyms used in this guide.

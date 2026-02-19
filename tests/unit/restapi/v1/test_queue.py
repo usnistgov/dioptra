@@ -20,65 +20,17 @@ This module contains a set of tests that validate the CRUD operations and additi
 functionalities for the queue entity. The tests ensure that the queues can be
 registered, renamed, deleted, and locked/unlocked as expected through the REST API.
 """
+
+from http import HTTPStatus
 from typing import Any
 
 import pytest
-from flask.testing import FlaskClient
-from flask_sqlalchemy import SQLAlchemy
-from werkzeug.test import TestResponse
 
-from dioptra.restapi.routes import V1_ENTRYPOINTS_ROUTE, V1_QUEUES_ROUTE, V1_ROOT
+from dioptra.client.base import DioptraResponseProtocol
+from dioptra.client.client import DioptraClient
 
-from ..lib import actions, asserts, helpers
-
-# -- Actions ---------------------------------------------------------------------------
-
-
-def modify_queue(
-    client: FlaskClient,
-    queue_id: int,
-    new_name: str,
-    new_description: str,
-) -> TestResponse:
-    """Rename a queue using the API.
-
-    Args:
-        client: The Flask test client.
-        queue_id: The id of the queue to rename.
-        new_name: The new name to assign to the queue.
-        new_description: The new description to assign to the queue.
-
-    Returns:
-        The response from the API.
-    """
-    payload = {"name": new_name, "description": new_description}
-
-    return client.put(
-        f"/{V1_ROOT}/{V1_QUEUES_ROUTE}/{queue_id}",
-        json=payload,
-        follow_redirects=True,
-    )
-
-
-def delete_queue_with_id(
-    client: FlaskClient,
-    queue_id: int,
-) -> TestResponse:
-    """Delete a queue using the API.
-
-    Args:
-        client: The Flask test client.
-        queue_id: The id of the queue to delete.
-
-    Returns:
-        The response from the API.
-    """
-
-    return client.delete(
-        f"/{V1_ROOT}/{V1_QUEUES_ROUTE}/{queue_id}",
-        follow_redirects=True,
-    )
-
+from ..lib import helpers, routines
+from ..test_utils import assert_retrieving_resource_works
 
 # -- Assertions ------------------------------------------------------------------------
 
@@ -103,6 +55,7 @@ def assert_queue_response_contents_matches_expectations(
         "group",
         "user",
         "createdOn",
+        "snapshotCreatedOn",
         "lastModifiedOn",
         "latestSnapshot",
         "hasDraft",
@@ -118,6 +71,7 @@ def assert_queue_response_contents_matches_expectations(
     assert isinstance(response["name"], str)
     assert isinstance(response["description"], str)
     assert isinstance(response["createdOn"], str)
+    assert isinstance(response["snapshotCreatedOn"], str)
     assert isinstance(response["lastModifiedOn"], str)
     assert isinstance(response["latestSnapshot"], bool)
     assert isinstance(response["hasDraft"], bool)
@@ -126,6 +80,7 @@ def assert_queue_response_contents_matches_expectations(
     assert response["description"] == expected_contents["description"]
 
     assert helpers.is_iso_format(response["createdOn"])
+    assert helpers.is_iso_format(response["snapshotCreatedOn"])
     assert helpers.is_iso_format(response["lastModifiedOn"])
 
     # Validate the UserRef structure
@@ -148,14 +103,14 @@ def assert_queue_response_contents_matches_expectations(
 
 
 def assert_retrieving_queue_by_id_works(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     queue_id: int,
     expected: dict[str, Any],
 ) -> None:
     """Assert that retrieving a queue by id works.
 
     Args:
-        client: The Flask test client.
+        dioptra_client: The Dioptra client.
         queue_id: The id of the queue to retrieve.
         expected: The expected response from the API.
 
@@ -163,23 +118,23 @@ def assert_retrieving_queue_by_id_works(
         AssertionError: If the response status code is not 200 or if the API response
             does not match the expected response.
     """
-    response = client.get(
-        f"/{V1_ROOT}/{V1_QUEUES_ROUTE}/{queue_id}", follow_redirects=True
-    )
-    assert response.status_code == 200 and response.get_json() == expected
+    response = dioptra_client.queues.get_by_id(queue_id)
+    assert response.status_code == HTTPStatus.OK and response.json() == expected
 
 
 def assert_retrieving_queues_works(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     expected: list[dict[str, Any]],
-    group_id: int | None = None,
+    sort_by: str | None = None,
+    descending: bool | None = None,
     search: str | None = None,
+    group_id: int | None = None,
     paging_info: dict[str, Any] | None = None,
 ) -> None:
     """Assert that retrieving all queues works.
 
     Args:
-        client: The Flask test client.
+        dioptra_client: The Dioptra client.
         expected: The expected response from the API.
         group_id: The group ID used in query parameters.
         search: The search string used in query parameters.
@@ -190,86 +145,44 @@ def assert_retrieving_queues_works(
             does not match the expected response.
     """
 
-    query_string: dict[str, Any] = {}
-
-    if group_id is not None:
-        query_string["groupId"] = group_id
-
-    if search is not None:
-        query_string["search"] = search
-
-    if paging_info is not None:
-        query_string["index"] = paging_info["index"]
-        query_string["pageLength"] = paging_info["page_length"]
-
-    response = client.get(
-        f"/{V1_ROOT}/{V1_QUEUES_ROUTE}",
-        query_string=query_string,
-        follow_redirects=True,
+    assert_retrieving_resource_works(
+        dioptra_client=dioptra_client.queues,
+        expected=expected,
+        group_id=group_id,
+        sort_by=sort_by,
+        descending=descending,
+        search=search,
+        paging_info=paging_info,
     )
-    assert response.status_code == 200 and response.get_json()["data"] == expected
-
-
-def assert_sorting_queue_works(
-    client: FlaskClient,
-    sortBy: str,
-    descending: bool,
-    expected: list[str],
-) -> None:
-    """Assert that queues can be sorted by column ascending/descending.
-
-    Args:
-        client: The Flask test client.
-        expected: The expected order of queue ids after sorting.
-            See test_queue_sort for expected orders.
-
-    Raises:
-        AssertionError: If the response status code is not 200 or if the API response
-            does not match the expected response.
-    """
-
-    query_string: dict[str, Any] = {}
-
-    query_string["sortBy"] = sortBy
-    query_string["descending"] = descending
-
-    response = client.get(
-        f"/{V1_ROOT}/{V1_QUEUES_ROUTE}",
-        query_string=query_string,
-        follow_redirects=True,
-    )
-
-    response_data = response.get_json()
-    queue_ids = [queue["id"] for queue in response_data["data"]]
-
-    assert response.status_code == 200 and queue_ids == expected
 
 
 def assert_registering_existing_queue_name_fails(
-    client: FlaskClient, name: str, group_id: int
+    dioptra_client: DioptraClient[DioptraResponseProtocol], name: str, group_id: int
 ) -> None:
     """Assert that registering a queue with an existing name fails.
 
     Args:
-        client: The Flask test client.
+        dioptra_client: The Dioptra client.
         name: The name to assign to the new queue.
 
     Raises:
-        AssertionError: If the response status code is not 400.
+        AssertionError: If the response status code is not 409.
     """
-    response = actions.register_queue(
-        client, name=name, description="", group_id=group_id
+    response = dioptra_client.queues.create(
+        group_id=group_id, name=name, description=""
     )
-    assert response.status_code == 409
+    assert response.status_code == HTTPStatus.CONFLICT
 
 
 def assert_queue_name_matches_expected_name(
-    client: FlaskClient, queue_id: int, expected_name: str
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    queue_id: int,
+    expected_name: str,
 ) -> None:
     """Assert that the name of a queue matches the expected name.
 
     Args:
-        client: The Flask test client.
+        dioptra_client: The Dioptra client.
         queue_id: The id of the queue to retrieve.
         expected_name: The expected name of the queue.
 
@@ -277,35 +190,32 @@ def assert_queue_name_matches_expected_name(
         AssertionError: If the response status code is not 200 or if the name of the
             queue does not match the expected name.
     """
-    response = client.get(
-        f"/{V1_ROOT}/{V1_QUEUES_ROUTE}/{queue_id}",
-        follow_redirects=True,
+    response = dioptra_client.queues.get_by_id(queue_id)
+    assert (
+        response.status_code == HTTPStatus.OK
+        and response.json()["name"] == expected_name
     )
-    assert response.status_code == 200 and response.get_json()["name"] == expected_name
 
 
 def assert_queue_is_not_found(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     queue_id: int,
 ) -> None:
     """Assert that a queue is not found.
 
     Args:
-        client: The Flask test client.
+        dioptra_client: The Dioptra client.
         queue_id: The id of the queue to retrieve.
 
     Raises:
         AssertionError: If the response status code is not 404.
     """
-    response = client.get(
-        f"/{V1_ROOT}/{V1_QUEUES_ROUTE}/{queue_id}",
-        follow_redirects=True,
-    )
-    assert response.status_code == 404
+    response = dioptra_client.queues.get_by_id(queue_id)
+    assert response.status_code == HTTPStatus.NOT_FOUND
 
 
 def assert_queue_is_not_associated_with_entrypoint(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     entrypoint_id: int,
     queue_id: int,
 ) -> None:
@@ -320,18 +230,14 @@ def assert_queue_is_not_associated_with_entrypoint(
         AssertionError: If the response status code is not 200 or if the queue id
             is in the list of queues associated with the entrypoint.
     """
-    response = client.get(
-        f"/{V1_ROOT}/{V1_ENTRYPOINTS_ROUTE}/{entrypoint_id}",
-        follow_redirects=True,
-    )
-    entrypoint = response.get_json()
+    response = dioptra_client.entrypoints.get_by_id(entrypoint_id)
+    entrypoint = response.json()
     queue_ids = set(queue["id"] for queue in entrypoint["queues"])
-
-    assert response.status_code == 200 and queue_id not in queue_ids
+    assert response.status_code == HTTPStatus.OK and queue_id not in queue_ids
 
 
 def assert_cannot_rename_queue_with_existing_name(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     queue_id: int,
     existing_name: str,
     existing_description: str,
@@ -339,28 +245,26 @@ def assert_cannot_rename_queue_with_existing_name(
     """Assert that renaming a queue with an existing name fails.
 
     Args:
-        client: The Flask test client.
+        dioptra_client: The Dioptra client.
         queue_id: The id of the queue to rename.
         name: The name of an existing queue.
 
     Raises:
-        AssertionError: If the response status code is not 400.
+        AssertionError: If the response status code is not 409.
     """
-    response = modify_queue(
-        client=client,
+    response = dioptra_client.queues.modify_by_id(
         queue_id=queue_id,
-        new_name=existing_name,
-        new_description=existing_description,
+        name=existing_name,
+        description=existing_description,
     )
-    assert response.status_code == 409
+    assert response.status_code == HTTPStatus.CONFLICT
 
 
 # -- Tests -----------------------------------------------------------------------------
 
 
 def test_create_queue(
-    client: FlaskClient,
-    db: SQLAlchemy,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
 ) -> None:
     """Test that queues can be correctly registered and retrieved using the API.
@@ -375,10 +279,10 @@ def test_create_queue(
     description = "The first queue."
     user_id = auth_account["id"]
     group_id = auth_account["groups"][0]["id"]
-    queue1_response = actions.register_queue(
-        client, name=name, description=description, group_id=group_id
+    queue1_response = dioptra_client.queues.create(
+        group_id=group_id, name=name, description=description
     )
-    queue1_expected = queue1_response.get_json()
+    queue1_expected = queue1_response.json()
     assert_queue_response_contents_matches_expectations(
         response=queue1_expected,
         expected_contents={
@@ -389,13 +293,12 @@ def test_create_queue(
         },
     )
     assert_retrieving_queue_by_id_works(
-        client, queue_id=queue1_expected["id"], expected=queue1_expected
+        dioptra_client, queue_id=queue1_expected["id"], expected=queue1_expected
     )
 
 
 def test_queue_get_all(
-    client: FlaskClient,
-    db: SQLAlchemy,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_queues: dict[str, Any],
 ) -> None:
@@ -409,13 +312,12 @@ def test_queue_get_all(
     - The returned list of queues matches the full list of registered queues.
     """
     queue_expected_list = list(registered_queues.values())
-    assert_retrieving_queues_works(client, expected=queue_expected_list)
+    assert_retrieving_queues_works(dioptra_client, expected=queue_expected_list)
 
 
 @pytest.mark.parametrize(
-    "sortBy, descending , expected",
+    "sort_by,descending,expected",
     [
-        (None, None, ["queue1", "queue2", "queue3"]),
         ("name", True, ["queue2", "queue1", "queue3"]),
         ("name", False, ["queue3", "queue1", "queue2"]),
         ("createdOn", True, ["queue3", "queue2", "queue1"]),
@@ -423,11 +325,10 @@ def test_queue_get_all(
     ],
 )
 def test_queue_sort(
-    client: FlaskClient,
-    db: SQLAlchemy,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_queues: dict[str, Any],
-    sortBy: str,
+    sort_by: str | None,
     descending: bool,
     expected: list[str],
 ) -> None:
@@ -442,15 +343,14 @@ def test_queue_sort(
     - The returned list of queues matches the order in the parametrize lists above.
     """
 
-    expected_ids = [
-        registered_queues[expected_name]["id"] for expected_name in expected
-    ]
-    assert_sorting_queue_works(client, sortBy, descending, expected=expected_ids)
+    expected_queues = [registered_queues[expected_name] for expected_name in expected]
+    assert_retrieving_queues_works(
+        dioptra_client, sort_by=sort_by, descending=descending, expected=expected_queues
+    )
 
 
 def test_queue_search_query(
-    client: FlaskClient,
-    db: SQLAlchemy,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_queues: dict[str, Any],
 ) -> None:
@@ -464,18 +364,19 @@ def test_queue_search_query(
     """
     queue_expected_list = list(registered_queues.values())[:2]
     assert_retrieving_queues_works(
-        client, expected=queue_expected_list, search="description:*queue*"
+        dioptra_client, expected=queue_expected_list, search="description:*queue*"
     )
     assert_retrieving_queues_works(
-        client, expected=queue_expected_list, search="*queue*, name:tensorflow*"
+        dioptra_client, expected=queue_expected_list, search="*queue*, name:tensorflow*"
     )
     queue_expected_list = list(registered_queues.values())
-    assert_retrieving_queues_works(client, expected=queue_expected_list, search="*")
+    assert_retrieving_queues_works(
+        dioptra_client, expected=queue_expected_list, search="*"
+    )
 
 
 def test_queue_group_query(
-    client: FlaskClient,
-    db: SQLAlchemy,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_queues: dict[str, Any],
 ) -> None:
@@ -490,15 +391,14 @@ def test_queue_group_query(
     """
     queue_expected_list = list(registered_queues.values())
     assert_retrieving_queues_works(
-        client,
+        dioptra_client,
         expected=queue_expected_list,
         group_id=auth_account["groups"][0]["id"],
     )
 
 
 def test_cannot_register_existing_queue_name(
-    client: FlaskClient,
-    db: SQLAlchemy,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_queues: dict[str, Any],
 ) -> None:
@@ -513,15 +413,14 @@ def test_cannot_register_existing_queue_name(
     existing_queue = registered_queues["queue1"]
 
     assert_registering_existing_queue_name_fails(
-        client,
+        dioptra_client,
         name=existing_queue["name"],
         group_id=existing_queue["group"]["id"],
     )
 
 
 def test_rename_queue(
-    client: FlaskClient,
-    db: SQLAlchemy,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_queues: dict[str, Any],
 ) -> None:
@@ -544,34 +443,32 @@ def test_rename_queue(
     queue_to_rename = registered_queues["queue1"]
     existing_queue = registered_queues["queue2"]
 
-    modified_queue = modify_queue(
-        client,
+    modified_queue = dioptra_client.queues.modify_by_id(
         queue_id=queue_to_rename["id"],
-        new_name=updated_queue_name,
-        new_description=queue_to_rename["description"],
-    ).get_json()
+        name=updated_queue_name,
+        description=queue_to_rename["description"],
+    ).json()
     assert_queue_name_matches_expected_name(
-        client, queue_id=queue_to_rename["id"], expected_name=updated_queue_name
+        dioptra_client, queue_id=queue_to_rename["id"], expected_name=updated_queue_name
     )
     queue_expected_list = [
         modified_queue,
         registered_queues["queue2"],
         registered_queues["queue3"],
     ]
-    assert_retrieving_queues_works(client, expected=queue_expected_list)
+    assert_retrieving_queues_works(dioptra_client, expected=queue_expected_list)
 
-    modified_queue = modify_queue(
-        client,
+    modified_queue = dioptra_client.queues.modify_by_id(
         queue_id=queue_to_rename["id"],
-        new_name=updated_queue_name,
-        new_description=queue_to_rename["description"],
-    ).get_json()
+        name=updated_queue_name,
+        description=queue_to_rename["description"],
+    ).json()
     assert_queue_name_matches_expected_name(
-        client, queue_id=queue_to_rename["id"], expected_name=updated_queue_name
+        dioptra_client, queue_id=queue_to_rename["id"], expected_name=updated_queue_name
     )
 
     assert_cannot_rename_queue_with_existing_name(
-        client,
+        dioptra_client,
         queue_id=queue_to_rename["id"],
         existing_name=existing_queue["name"],
         existing_description=queue_to_rename["description"],
@@ -579,8 +476,7 @@ def test_rename_queue(
 
 
 def test_delete_queue_by_id(
-    client: FlaskClient,
-    db: SQLAlchemy,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_queues: dict[str, Any],
     registered_entrypoints: dict[str, Any],
@@ -598,16 +494,15 @@ def test_delete_queue_by_id(
     entrypoint = registered_entrypoints["entrypoint1"]
     queue_to_delete = entrypoint["queues"][0]
 
-    delete_queue_with_id(client, queue_id=queue_to_delete["id"])
-    assert_queue_is_not_found(client, queue_id=queue_to_delete["id"])
+    dioptra_client.queues.delete_by_id(queue_to_delete["id"])
+    assert_queue_is_not_found(dioptra_client, queue_id=queue_to_delete["id"])
     assert_queue_is_not_associated_with_entrypoint(
-        client, entrypoint_id=entrypoint["id"], queue_id=queue_to_delete["id"]
+        dioptra_client, entrypoint_id=entrypoint["id"], queue_id=queue_to_delete["id"]
     )
 
 
 def test_manage_existing_queue_draft(
-    client: FlaskClient,
-    db: SQLAlchemy,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_queues: dict[str, Any],
 ) -> None:
@@ -626,65 +521,49 @@ def test_manage_existing_queue_draft(
     - The user attempts to retrieve information about the deleted draft.
     - The request fails with an appropriate error message and response code.
     """
+    # Requests data
     queue = registered_queues["queue1"]
     name = "draft"
     new_name = "draft2"
     description = "description"
 
     # test creation
-    payload = {"name": name, "description": description}
-    expected = {
+    draft = {"name": name, "description": description}
+    draft_mod = {"name": new_name, "description": description}
+
+    # Expected responses
+    draft_expected = {
         "user_id": auth_account["id"],
         "group_id": queue["group"]["id"],
         "resource_id": queue["id"],
         "resource_snapshot_id": queue["snapshot"],
         "num_other_drafts": 0,
-        "payload": payload,
+        "payload": draft,
     }
-    response = actions.create_existing_resource_draft(
-        client, resource_route=V1_QUEUES_ROUTE, resource_id=queue["id"], payload=payload
-    ).get_json()
-    asserts.assert_draft_response_contents_matches_expectations(response, expected)
-    asserts.assert_retrieving_draft_by_resource_id_works(
-        client,
-        resource_route=V1_QUEUES_ROUTE,
-        resource_id=queue["id"],
-        expected=response,
-    )
-    asserts.assert_creating_another_existing_draft_fails(
-        client, resource_route=V1_QUEUES_ROUTE, resource_id=queue["id"]
-    )
-
-    # test modification
-    payload = {"name": new_name, "description": description}
-    expected = {
+    draft_mod_expected = {
         "user_id": auth_account["id"],
         "group_id": queue["group"]["id"],
         "resource_id": queue["id"],
         "resource_snapshot_id": queue["snapshot"],
         "num_other_drafts": 0,
-        "payload": payload,
+        "payload": draft_mod,
     }
-    response = actions.modify_existing_resource_draft(
-        client,
-        resource_route=V1_QUEUES_ROUTE,
-        resource_id=queue["id"],
-        payload=payload,
-    ).get_json()
-    asserts.assert_draft_response_contents_matches_expectations(response, expected)
 
-    # test deletion
-    actions.delete_existing_resource_draft(
-        client, resource_route=V1_QUEUES_ROUTE, resource_id=queue["id"]
-    )
-    asserts.assert_existing_draft_is_not_found(
-        client, resource_route=V1_QUEUES_ROUTE, resource_id=queue["id"]
+    # Run routine: existing resource drafts tests
+    routines.run_existing_resource_drafts_tests(
+        dioptra_client.queues,
+        dioptra_client.queues.modify_resource_drafts,
+        dioptra_client.workflows,
+        queue["id"],
+        draft=draft,
+        draft_mod=draft_mod,
+        draft_expected=draft_expected,
+        draft_mod_expected=draft_mod_expected,
     )
 
 
 def test_manage_new_queue_drafts(
-    client: FlaskClient,
-    db: SQLAlchemy,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
 ) -> None:
     """Test that drafts of queue can be created and managed by the user
@@ -699,88 +578,47 @@ def test_manage_new_queue_drafts(
     - The user attempts to retrieve information about the deleted draft.
     - The request fails with an appropriate error message and response code.
     """
+    # Requests data
     group_id = auth_account["groups"][0]["id"]
-    drafts = {
+    drafts: dict[str, Any] = {
         "draft1": {"name": "queue1", "description": "new queue"},
         "draft2": {"name": "queue2", "description": None},
     }
+    draft1_mod = {"name": "draft1", "description": "new description"}
 
-    # test creation
+    # Expected responses
     draft1_expected = {
         "user_id": auth_account["id"],
         "group_id": group_id,
         "payload": drafts["draft1"],
     }
-    draft1_response = actions.create_new_resource_draft(
-        client,
-        resource_route=V1_QUEUES_ROUTE,
-        group_id=group_id,
-        payload=drafts["draft1"],
-    ).get_json()
-    asserts.assert_draft_response_contents_matches_expectations(
-        draft1_response, draft1_expected
-    )
-    asserts.assert_retrieving_draft_by_id_works(
-        client,
-        resource_route=V1_QUEUES_ROUTE,
-        draft_id=draft1_response["id"],
-        expected=draft1_response,
-    )
     draft2_expected = {
         "user_id": auth_account["id"],
         "group_id": group_id,
         "payload": drafts["draft2"],
     }
-    draft2_response = actions.create_new_resource_draft(
-        client,
-        resource_route=V1_QUEUES_ROUTE,
-        group_id=group_id,
-        payload=drafts["draft2"],
-    ).get_json()
-    asserts.assert_draft_response_contents_matches_expectations(
-        draft2_response, draft2_expected
-    )
-    asserts.assert_retrieving_draft_by_id_works(
-        client,
-        resource_route=V1_QUEUES_ROUTE,
-        draft_id=draft2_response["id"],
-        expected=draft2_response,
-    )
-    asserts.assert_retrieving_drafts_works(
-        client,
-        resource_route=V1_QUEUES_ROUTE,
-        expected=[draft1_response, draft2_response],
-    )
-
-    # test modification
-    draft1_mod = {"name": "draft1", "description": "new description"}
     draft1_mod_expected = {
         "user_id": auth_account["id"],
         "group_id": group_id,
         "payload": draft1_mod,
     }
-    response = actions.modify_new_resource_draft(
-        client,
-        resource_route=V1_QUEUES_ROUTE,
-        draft_id=draft1_response["id"],
-        payload=draft1_mod,
-    ).get_json()
-    asserts.assert_draft_response_contents_matches_expectations(
-        response, draft1_mod_expected
-    )
 
-    # test deletion
-    actions.delete_new_resource_draft(
-        client, resource_route=V1_QUEUES_ROUTE, draft_id=draft1_response["id"]
-    )
-    asserts.assert_new_draft_is_not_found(
-        client, resource_route=V1_QUEUES_ROUTE, draft_id=draft1_response["id"]
+    # Run routine: existing resource drafts tests
+    routines.run_new_resource_drafts_tests(
+        dioptra_client.queues,
+        dioptra_client.queues.new_resource_drafts,
+        dioptra_client.workflows,
+        drafts=drafts,
+        draft1_mod=draft1_mod,
+        draft1_expected=draft1_expected,
+        draft2_expected=draft2_expected,
+        draft1_mod_expected=draft1_mod_expected,
+        group_id=group_id,
     )
 
 
 def test_manage_queue_snapshots(
-    client: FlaskClient,
-    db: SQLAlchemy,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_queues: dict[str, Any],
 ) -> None:
@@ -798,42 +636,22 @@ def test_manage_queue_snapshots(
       response
     """
     queue_to_rename = registered_queues["queue1"]
-    modified_queue = modify_queue(
-        client,
+    modified_queue = dioptra_client.queues.modify_by_id(
         queue_id=queue_to_rename["id"],
-        new_name=queue_to_rename["name"] + "modified",
-        new_description=queue_to_rename["description"],
-    ).get_json()
-    modified_queue.pop("hasDraft")
-    queue_to_rename.pop("hasDraft")
-    queue_to_rename["latestSnapshot"] = False
-    queue_to_rename["lastModifiedOn"] = modified_queue["lastModifiedOn"]
-    asserts.assert_retrieving_snapshot_by_id_works(
-        client,
-        resource_route=V1_QUEUES_ROUTE,
-        resource_id=queue_to_rename["id"],
-        snapshot_id=queue_to_rename["snapshot"],
-        expected=queue_to_rename,
-    )
-    asserts.assert_retrieving_snapshot_by_id_works(
-        client,
-        resource_route=V1_QUEUES_ROUTE,
-        resource_id=modified_queue["id"],
-        snapshot_id=modified_queue["snapshot"],
-        expected=modified_queue,
-    )
-    expected_snapshots = [queue_to_rename, modified_queue]
-    asserts.assert_retrieving_snapshots_works(
-        client,
-        resource_route=V1_QUEUES_ROUTE,
-        resource_id=queue_to_rename["id"],
-        expected=expected_snapshots,
+        name=queue_to_rename["name"] + "modified",
+        description=queue_to_rename["description"],
+    ).json()
+
+    # Run routine: resource snapshots tests
+    routines.run_resource_snapshots_tests(
+        dioptra_client.queues.snapshots,
+        resource_to_rename=queue_to_rename.copy(),
+        modified_resource=modified_queue.copy(),
     )
 
 
 def test_tag_queue(
-    client: FlaskClient,
-    db: SQLAlchemy,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_queues: dict[str, Any],
     registered_tags: dict[str, Any],
@@ -845,55 +663,11 @@ def test_tag_queue(
 
     """
     queue = registered_queues["queue1"]
-    tags = [tag["id"] for tag in registered_tags.values()]
+    tag_ids = [tag["id"] for tag in registered_tags.values()]
 
-    # test append
-    response = actions.append_tags(
-        client,
-        resource_route=V1_QUEUES_ROUTE,
-        resource_id=queue["id"],
-        tag_ids=[tags[0], tags[1]],
+    # Run routine: resource tag tests
+    routines.run_resource_tag_tests(
+        dioptra_client.queues.tags,
+        queue["id"],
+        tag_ids=tag_ids,
     )
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.get_json(), [tags[0], tags[1]]
-    )
-    response = actions.append_tags(
-        client,
-        resource_route=V1_QUEUES_ROUTE,
-        resource_id=queue["id"],
-        tag_ids=[tags[1], tags[2]],
-    )
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.get_json(), [tags[0], tags[1], tags[2]]
-    )
-
-    # test remove
-    actions.remove_tag(
-        client, resource_route=V1_QUEUES_ROUTE, resource_id=queue["id"], tag_id=tags[1]
-    )
-    response = actions.get_tags(
-        client, resource_route=V1_QUEUES_ROUTE, resource_id=queue["id"]
-    )
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.get_json(), [tags[0], tags[2]]
-    )
-
-    # test modify
-    response = actions.modify_tags(
-        client,
-        resource_route=V1_QUEUES_ROUTE,
-        resource_id=queue["id"],
-        tag_ids=[tags[1], tags[2]],
-    )
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.get_json(), [tags[1], tags[2]]
-    )
-
-    # test delete
-    response = actions.remove_tags(
-        client, resource_route=V1_QUEUES_ROUTE, resource_id=queue["id"]
-    )
-    response = actions.get_tags(
-        client, resource_route=V1_QUEUES_ROUTE, resource_id=queue["id"]
-    )
-    asserts.assert_tags_response_contents_matches_expectations(response.get_json(), [])

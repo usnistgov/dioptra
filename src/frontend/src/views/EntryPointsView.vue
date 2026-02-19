@@ -5,15 +5,18 @@
   <TableComponent 
     :rows="entrypoints"
     :columns="columns"
-    :showExpand="true"
     title="Entrypoints"
     v-model:selected="selected"
-    @edit="router.push(`/entrypoints/${selected[0].id}`)"
+    @open="openTab => (openTab
+      ? openWindow.open(`/entrypoints/${selected[0].id}`, '_blank')
+      : router.push(`/entrypoints/${selected[0].id}`)
+    )"
     @delete="showDeleteDialog = true"
     @request="getEntrypoints"
     ref="tableRef"
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
     @create="router.push('/entrypoints/new')"
+    :loading="isLoading"
   >
     <template #body-cell-group="props">
       <div>{{ props.row.group.name }}</div>
@@ -29,55 +32,89 @@
         EMPTY
       </span>
     </template>
-    <template #body-cell-parameterNames="props">
-      <label v-for="(param, i) in props.row.parameters" :key="i">
-        {{ param.name }} <br>
-      </label>
-    </template>
-    <template #body-cell-parameterTypes="props">
-      <label v-for="(param, i) in props.row.parameters" :key="i">
-        {{ param.parameterType }} <br>
-      </label>
-    </template>
-    <template #body-cell-defaultValues="props">
-      <label v-for="(param, i) in props.row.parameters" :key="i">
-        {{ param.defaultValue }} <br>
-      </label>
-    </template>
-    <template #expandedSlot="{ row }">
-      <CodeEditor v-model="row.taskGraph" language="yaml" />
-    </template>
     <template #body-cell-plugins="props">
-      <q-chip
+      <span
         v-for="(plugin, i) in props.row.plugins"
         :key="i"
-        color="secondary" 
-        text-color="white"
       >
-        {{ plugin.name }}
-      </q-chip>
+        <q-chip
+          color="secondary" 
+          text-color="white"
+          clickable
+          @click.stop="editEntrypoint = props.row; pluginType = 'plugins'; showAssignPluginsDialog = true"
+        >
+          {{ plugin.name }}
+          <q-badge
+            v-if="!plugin.latestSnapshot" 
+            color="red" 
+            label="outdated" 
+            rounded
+            class="q-ml-xs"
+          />
+        </q-chip>
+        <q-btn
+          v-if="!plugin.latestSnapshot"
+          round 
+          color="red" 
+          icon="sync"
+          size="sm"
+          @click.stop="syncPlugin(props.row.id, plugin.id, plugin.name, 'plugins')"
+        >
+          <q-tooltip>
+            Sync to latest version of plugin
+          </q-tooltip>
+        </q-btn>
+      </span>
       <q-btn
         round
         size="sm"
         icon="add"
-        @click.stop="editEntrypoint = props.row; showAssignPluginsDialog = true"
+        @click.stop="editEntrypoint = props.row; pluginType = 'plugins'; showAssignPluginsDialog = true"
+        class="q-ml-sm"
+      />
+    </template>
+      <template #body-cell-artifactPlugins="props">
+      <span
+        v-for="(plugin, i) in props.row.artifactPlugins"
+        :key="i"
+      >
+        <q-chip
+          color="secondary" 
+          text-color="white"
+          clickable
+          @click.stop="editEntrypoint = props.row; pluginType = 'artifactPlugins'; showAssignPluginsDialog = true"
+        >
+          {{ plugin.name }}
+          <q-badge
+            v-if="!plugin.latestSnapshot" 
+            color="red" 
+            label="outdated" 
+            rounded
+            class="q-ml-xs"
+          />
+        </q-chip>
+        <q-btn
+          v-if="!plugin.latestSnapshot"
+          round 
+          color="red" 
+          icon="sync"
+          size="sm"
+          @click.stop="syncPlugin(props.row.id, plugin.id, plugin.name, 'artifactPlugins')"
+        >
+          <q-tooltip>
+            Sync to latest version of plugin
+          </q-tooltip>
+        </q-btn>
+      </span>
+      <q-btn
+        round
+        size="sm"
+        icon="add"
+        @click.stop="editEntrypoint = props.row; pluginType = 'artifactPlugins'; showAssignPluginsDialog = true"
+        class="q-ml-sm"
       />
     </template>
   </TableComponent>
-
-  <q-btn 
-    class="fixedButton"
-    round
-    color="primary"
-    icon="add"
-    size="lg"
-    to="/entrypoints/new"
-  >
-    <span class="sr-only">Register new Entrypoint</span>
-    <q-tooltip>
-      Register new Entrypoint
-    </q-tooltip>
-  </q-btn>
 
   <InfoPopupDialog
     v-model="showTaskGraphDialog"
@@ -103,6 +140,7 @@
   />
   <AssignPluginsDialog 
     v-model="showAssignPluginsDialog"
+    :pluginType="pluginType"
     :editObj="editEntrypoint"
     @refreshTable="tableRef.refreshTable()"
   />
@@ -121,17 +159,17 @@
   import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
   import AssignPluginsDialog from '@/dialogs/AssignPluginsDialog.vue'
 
+  const openWindow = window
   const router = useRouter()
 
   const columns = [
+    { name: 'id', label: 'ID', align: 'left', field: 'id', sortable: false, },
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, },
     { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true, },
     { name: 'taskGraph', label: 'Task Graph', align: 'left', field: 'taskGraph',sortable: false, },
-    { name: 'parameterNames', label: 'Parameter Name(s)', align: 'left', sortable: false },
-    { name: 'parameterTypes', label: 'Parameter Type(s)', align: 'left', field: 'parameterTypes', sortable: false },
-    { name: 'defaultValues', label: 'Default Values', align: 'left', field: 'defaultValues', sortable: false },
     { name: 'tags', label: 'Tags', align: 'left', field: 'tags', sortable: false },
     { name: 'plugins', label: 'Plugins', align: 'left', field: 'plugins', sortable: false },
+    { name: 'artifactPlugins', label: 'Artifact Plugins', align: 'left', field: 'artifactPlugins', sortable: false },
   ]
 
   const selected = ref([])
@@ -141,21 +179,34 @@
 
   const tableRef = ref(null)
   
+  const isLoading = ref(false)
+
   const entrypoints = ref([])
 
   const showDeleteDialog = ref(false)
   const showAssignPluginsDialog = ref(false)
   const editEntrypoint = ref('')
+  const pluginType = ref('')
 
   async function getEntrypoints(pagination, showDrafts) {
+    isLoading.value = true
+      
+    const minLoadTimePromise = new Promise(resolve => setTimeout(resolve, 300)); 
+
     try {
-      const res = await api.getData('entrypoints', pagination, showDrafts)
-      entrypoints.value = res.data.data
-      tableRef.value.updateTotalRows(res.data.totalNumResults)
+      const [res] = await Promise.all([
+        api.getData('entrypoints', pagination, showDrafts),
+        minLoadTimePromise
+      ]);
+        
+      entrypoints.value = res.data.data;
+      tableRef.value.updateTotalRows(res.data.totalNumResults);
     } catch(err) {
-      console.log('err = ', err)
-      notify.error(err.response.data.message)
-    } 
+      console.log('err = ', err);
+      notify.error(err.response.data.message);
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   async function deleteEntryPoint() {
@@ -172,5 +223,15 @@
 
   const editObjTags = ref({})
   const showTagsDialog = ref(false)
+
+  async function syncPlugin(entrypointId, pluginId, pluginName, pluginType) {
+    try {
+      await api.addPluginsToEntrypoint(entrypointId, [pluginId], pluginType)
+      tableRef.value.refreshTable()
+      notify.success(`Successfully updated plugin '${pluginName}' to latest version`)
+    } catch(err) {
+      console.warn(err)
+    }
+  }
 
 </script>

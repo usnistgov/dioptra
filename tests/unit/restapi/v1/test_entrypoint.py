@@ -20,75 +20,18 @@ This module contains a set of tests that validate the CRUD operations and additi
 functionalities for the entrypoint entity. The tests ensure that the entrypoints can be
 registered, renamed, deleted, and locked/unlocked as expected through the REST API.
 """
+
 import textwrap
+from http import HTTPStatus
 from typing import Any
 
 import pytest
-from flask.testing import FlaskClient
-from flask_sqlalchemy import SQLAlchemy
-from werkzeug.test import TestResponse
 
-from dioptra.restapi.routes import V1_ENTRYPOINTS_ROUTE, V1_EXPERIMENTS_ROUTE, V1_ROOT
+from dioptra.client.base import DioptraResponseProtocol, FieldNameCollisionError
+from dioptra.client.client import DioptraClient
 
-from ..lib import actions, asserts, helpers
-
-# -- Actions ---------------------------------------------------------------------------
-
-
-def modify_entrypoint(
-    client: FlaskClient,
-    entrypoint_id: int,
-    new_name: str,
-    new_description: str,
-    new_task_graph: str,
-    new_parameters: list[dict[str, Any]],
-    new_queue_ids: list[int],
-) -> TestResponse:
-    """Rename a entrypoint using the API.
-
-    Args:
-        client: The Flask test client.
-        entrypoint_id: The id of the entrypoint to rename.
-        new_name: The new name to assign to the entrypoint.
-        new_description: The new description to assign to the entrypoint.
-
-    Returns:
-        The response from the API.
-    """
-    payload: dict[str, Any] = {
-        "name": new_name,
-        "description": new_description,
-        "taskGraph": new_task_graph,
-        "parameters": new_parameters,
-        "queues": new_queue_ids,
-    }
-
-    return client.put(
-        f"/{V1_ROOT}/{V1_ENTRYPOINTS_ROUTE}/{entrypoint_id}",
-        json=payload,
-        follow_redirects=True,
-    )
-
-
-def delete_entrypoint(
-    client: FlaskClient,
-    entrypoint_id: int,
-) -> TestResponse:
-    """Delete a entrypoint using the API.
-
-    Args:
-        client: The Flask test client.
-        entrypoint_id: The id of the entrypoint to delete.
-
-    Returns:
-        The response from the API.
-    """
-
-    return client.delete(
-        f"/{V1_ROOT}/{V1_ENTRYPOINTS_ROUTE}/{entrypoint_id}",
-        follow_redirects=True,
-    )
-
+from ..lib import helpers, routines
+from ..test_utils import assert_retrieving_resource_works, assert_searchable_field_works
 
 # -- Assertions ------------------------------------------------------------------------
 
@@ -113,14 +56,18 @@ def assert_entrypoint_response_contents_matches_expectations(
         "group",
         "user",
         "createdOn",
+        "snapshotCreatedOn",
         "lastModifiedOn",
         "latestSnapshot",
         "hasDraft",
         "name",
         "description",
         "taskGraph",
+        "artifactGraph",
         "parameters",
+        "artifactParameters",
         "plugins",
+        "artifactPlugins",
         "queues",
         "tags",
     }
@@ -132,6 +79,7 @@ def assert_entrypoint_response_contents_matches_expectations(
     assert isinstance(response["name"], str)
     assert isinstance(response["description"], str)
     assert isinstance(response["createdOn"], str)
+    assert isinstance(response["snapshotCreatedOn"], str)
     assert isinstance(response["lastModifiedOn"], str)
     assert isinstance(response["latestSnapshot"], bool)
     assert isinstance(response["hasDraft"], bool)
@@ -141,6 +89,7 @@ def assert_entrypoint_response_contents_matches_expectations(
     assert response["taskGraph"] == expected_contents["task_graph"]
 
     assert helpers.is_iso_format(response["createdOn"])
+    assert helpers.is_iso_format(response["snapshotCreatedOn"])
     assert helpers.is_iso_format(response["lastModifiedOn"])
 
     # Validate PluginRef structure
@@ -189,7 +138,7 @@ def assert_entrypoint_response_contents_matches_expectations(
 
 
 def assert_retrieving_entrypoint_by_id_works(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     entrypoint_id: int,
     expected: dict[str, Any],
 ) -> None:
@@ -204,16 +153,16 @@ def assert_retrieving_entrypoint_by_id_works(
         AssertionError: If the response status code is not 200 or if the API response
             does not match the expected response.
     """
-    response = client.get(
-        f"/{V1_ROOT}/{V1_ENTRYPOINTS_ROUTE}/{entrypoint_id}", follow_redirects=True
-    )
-    assert response.status_code == 200 and response.get_json() == expected
+    response = dioptra_client.entrypoints.get_by_id(entrypoint_id)
+    assert response.status_code == HTTPStatus.OK and response.json() == expected
 
 
 def assert_retrieving_entrypoints_works(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     expected: list[dict[str, Any]],
     group_id: int | None = None,
+    sort_by: str | None = None,
+    descending: bool | None = None,
     search: str | None = None,
     paging_info: dict[str, Any] | None = None,
 ) -> None:
@@ -231,64 +180,19 @@ def assert_retrieving_entrypoints_works(
             does not match the expected response.
     """
 
-    query_string: dict[str, Any] = {}
-
-    if group_id is not None:
-        query_string["groupId"] = group_id
-
-    if search is not None:
-        query_string["search"] = search
-
-    if paging_info is not None:
-        query_string["index"] = paging_info["index"]
-        query_string["pageLength"] = paging_info["page_length"]
-
-    response = client.get(
-        f"/{V1_ROOT}/{V1_ENTRYPOINTS_ROUTE}",
-        query_string=query_string,
-        follow_redirects=True,
+    assert_retrieving_resource_works(
+        dioptra_client=dioptra_client.entrypoints,
+        expected=expected,
+        group_id=group_id,
+        sort_by=sort_by,
+        descending=descending,
+        search=search,
+        paging_info=paging_info,
     )
-
-    assert response.status_code == 200 and response.get_json()["data"] == expected
-
-
-def assert_sorting_entrypoint_works(
-    client: FlaskClient,
-    sortBy: str,
-    descending: bool,
-    expected: list[str],
-) -> None:
-    """Assert that entrypoints can be sorted by column ascending/descending.
-
-    Args:
-        client: The Flask test client.
-        expected: The expected order of entrypoints ids after sorting.
-            See test_entrypoint_sort for expected orders.
-
-    Raises:
-        AssertionError: If the response status code is not 200 or if the API response
-            does not match the expected response.
-    """
-
-    query_string: dict[str, Any] = {}
-
-    query_string["sortBy"] = sortBy
-    query_string["descending"] = descending
-
-    response = client.get(
-        f"/{V1_ROOT}/{V1_ENTRYPOINTS_ROUTE}",
-        query_string=query_string,
-        follow_redirects=True,
-    )
-
-    response_data = response.get_json()
-    entrypoint_ids = [entrypoint["id"] for entrypoint in response_data["data"]]
-
-    assert response.status_code == 200 and entrypoint_ids == expected
 
 
 def assert_registering_existing_entrypoint_name_fails(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     name: str,
     description: str,
     group_id: int,
@@ -306,21 +210,22 @@ def assert_registering_existing_entrypoint_name_fails(
     Raises:
         AssertionError: If the response status code is not 400.
     """
-    response = actions.register_entrypoint(
-        client,
-        name=name,
-        description=description,
+    response = dioptra_client.entrypoints.create(
         group_id=group_id,
+        name=name,
         task_graph=task_graph,
+        description=description,
         parameters=parameters,
-        plugin_ids=plugin_ids,
-        queue_ids=queue_ids,
+        queues=queue_ids,
+        plugins=plugin_ids,
     )
-    assert response.status_code == 409
+    assert response.status_code == HTTPStatus.CONFLICT
 
 
 def assert_entrypoint_name_matches_expected_name(
-    client: FlaskClient, entrypoint_id: int, expected_name: str
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    entrypoint_id: int,
+    expected_name: str,
 ) -> None:
     """Assert that the name of a entrypoint matches the expected name.
 
@@ -333,15 +238,15 @@ def assert_entrypoint_name_matches_expected_name(
         AssertionError: If the response status code is not 200 or if the name of the
             entrypoint does not match the expected name.
     """
-    response = client.get(
-        f"/{V1_ROOT}/{V1_ENTRYPOINTS_ROUTE}/{entrypoint_id}",
-        follow_redirects=True,
+    response = dioptra_client.entrypoints.get_by_id(entrypoint_id)
+    assert (
+        response.status_code == HTTPStatus.OK
+        and response.json()["name"] == expected_name
     )
-    assert response.status_code == 200 and response.get_json()["name"] == expected_name
 
 
 def assert_entrypoint_is_not_found(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     entrypoint_id: int,
 ) -> None:
     """Assert that a entrypoint is not found.
@@ -353,15 +258,12 @@ def assert_entrypoint_is_not_found(
     Raises:
         AssertionError: If the response status code is not 404.
     """
-    response = client.get(
-        f"/{V1_ROOT}/{V1_ENTRYPOINTS_ROUTE}/{entrypoint_id}",
-        follow_redirects=True,
-    )
-    assert response.status_code == 404
+    response = dioptra_client.queues.get_by_id(entrypoint_id)
+    assert response.status_code == HTTPStatus.NOT_FOUND
 
 
 def assert_entrypoint_is_not_associated_with_experiment(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     experiment_id: int,
     entrypoint_id: int,
 ) -> None:
@@ -376,24 +278,21 @@ def assert_entrypoint_is_not_associated_with_experiment(
         AssertionError: If the response status code is not 200 or if the queue id
             is in the list of queues associated with the entrypoint.
     """
-    response = client.get(
-        f"/{V1_ROOT}/{V1_EXPERIMENTS_ROUTE}/{experiment_id}",
-        follow_redirects=True,
-    )
-    experiment = response.get_json()
-    print(experiment)
+    response = dioptra_client.experiments.get_by_id(experiment_id)
+    experiment = response.json()
     entrypoint_ids = set(entrypoint["id"] for entrypoint in experiment["entrypoints"])
-
-    assert response.status_code == 200 and entrypoint_id not in entrypoint_ids
+    assert response.status_code == HTTPStatus.OK and entrypoint_id not in entrypoint_ids
 
 
 def assert_cannot_rename_entrypoint_with_existing_name(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     entrypoint_id: int,
     existing_name: str,
     existing_description: str,
     existing_task_graph: str,
+    existing_artifact_graph: str,
     existing_parameters: list[dict[str, Any]],
+    existing_artifact_parameters: list[dict[str, Any]],
     existing_queue_ids: list[int],
 ) -> None:
     """Assert that renaming a entrypoint with an existing name fails.
@@ -404,53 +303,172 @@ def assert_cannot_rename_entrypoint_with_existing_name(
         existing_name: str,
         existing_description: str,
         existing_task_graph: str,
+        existing_artifact_graph: str,
         existing_parameters: list[dict[str, Any]],
+        existing_artifact_parameters: list[dict[str, Any]],
         existing_queue_ids: list[int],
 
     Raises:
         AssertionError: If the response status code is not 400.
     """
-    response = modify_entrypoint(
-        client,
+    response = dioptra_client.entrypoints.modify_by_id(
         entrypoint_id=entrypoint_id,
-        new_name=existing_name,
-        new_description=existing_description,
-        new_task_graph=existing_task_graph,
-        new_parameters=existing_parameters,
-        new_queue_ids=existing_queue_ids,
+        name=existing_name,
+        task_graph=existing_task_graph,
+        artifact_graph=existing_artifact_graph,
+        description=existing_description,
+        parameters=existing_parameters,
+        artifact_parameters=existing_artifact_parameters,
+        queues=existing_queue_ids,
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
 
 
 def assert_entrypoint_must_have_unique_param_names(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     name: str,
     description: str,
     group_id: int,
     task_graph: str,
+    artifact_graph: str,
     parameters: list[dict[str, Any]],
+    artifact_parameters: list[dict[str, Any]],
     plugin_ids: list[int],
+    artifact_plugin_ids: list[int],
     queue_ids: list[int],
 ) -> None:
-    response = actions.register_entrypoint(
-        client,
-        name=name,
-        description=description,
+    response = dioptra_client.entrypoints.create(
         group_id=group_id,
+        name=name,
         task_graph=task_graph,
+        artifact_graph=artifact_graph,
+        description=description,
         parameters=parameters,
-        plugin_ids=plugin_ids,
-        queue_ids=queue_ids,
+        artifact_parameters=artifact_parameters,
+        queues=queue_ids,
+        plugins=plugin_ids,
+        artifact_plugins=artifact_plugin_ids,
     )
-    assert response.status_code == 409
+    assert response.status_code == HTTPStatus.CONFLICT
+
+
+def assert_retrieving_all_queues_for_entrypoint_works(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    entrypoint_id: int,
+    expected: list[Any],
+) -> None:
+    response = dioptra_client.entrypoints.queues.get(entrypoint_id)
+    assert (
+        response.status_code == HTTPStatus.OK
+        and [queue_ref["id"] for queue_ref in response.json()] == expected
+    )
+
+
+def assert_append_queues_to_entrypoint_works(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    entrypoint_id: int,
+    queue_ids: list[int],
+    expected: list[Any],
+) -> None:
+    response = dioptra_client.entrypoints.queues.create(
+        entrypoint_id=entrypoint_id, queue_ids=queue_ids
+    )
+    assert (
+        response.status_code == HTTPStatus.OK
+        and [queue_ref["id"] for queue_ref in response.json()] == expected
+    )
+
+
+def assert_retrieving_all_plugin_snapshots_for_entrypoint_works(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    entrypoint_id: int,
+    expected: list[int],
+) -> None:
+    response = dioptra_client.entrypoints.plugins.get(entrypoint_id)
+    assert (
+        response.status_code == HTTPStatus.OK
+        and [plugin_snapshot["id"] for plugin_snapshot in response.json()] == expected
+    )
+
+
+def assert_append_plugins_to_entrypoint_works(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    entrypoint_id: int,
+    plugin_ids: list[int],
+    expected: list[int],
+) -> None:
+    response = dioptra_client.entrypoints.plugins.create(
+        entrypoint_id=entrypoint_id, plugin_ids=plugin_ids
+    )
+    response_json = response.json()
+    assert (
+        response.status_code == HTTPStatus.OK
+        and [plugin_snapshot["id"] for plugin_snapshot in response_json] == expected
+    )
+
+
+def assert_retrieving_plugin_snapshots_by_id_for_entrypoint_works(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    entrypoint_id: int,
+    plugin_id: int,
+    expected: int,
+) -> None:
+    response = dioptra_client.entrypoints.plugins.get_by_id(
+        entrypoint_id=entrypoint_id, plugin_id=plugin_id
+    )
+    assert response.status_code == HTTPStatus.OK and response.json()["id"] == expected
+
+
+def assert_registering_entrypoint_with_no_queues_succeeds(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    entry_point: dict[str, Any],
+    assert_message: str,
+) -> None:
+    """Assert that registering entryPoint with empty queues, plugins and/or params is OK
+
+    Args:
+        dioptra_client (DioptraClient[DioptraResponseProtocol]): the restAPI client
+        entry_point (dict[str, Any]): Dict packed with stuffed data for creating entry-point
+        assert_message (str): Failed evaluation message for the assert to report
+    """
+
+    def assert_correct_emptiness(
+        entry_point: dict[str, Any], entity_name: str, entry_point_data: dict[str, Any]
+    ):
+        # For empties - the empties are stored
+        if not entry_point[entity_name] and entity_name in entry_point_data:
+            assert not bool(entry_point_data[entity_name])
+        # For non-empties - the non-empties match
+        if entry_point[entity_name] and entity_name in entry_point_data:
+            assert entry_point_data[entity_name] == entry_point[entity_name]
+
+    entrypoint_response = None
+    entrypoint_response = dioptra_client.entrypoints.create(
+        group_id=entry_point["group_id"],
+        name=entry_point["name"],
+        artifact_graph=entry_point["artifact_graph"],
+        task_graph=entry_point["task_graph"],
+        description=entry_point["description"],
+        parameters=entry_point["parameters"],
+        queues=entry_point["queues"],
+        plugins=entry_point["plugins"],
+        artifact_plugins=entry_point["artifact_plugins"],
+    )
+    assert (
+        entrypoint_response and entrypoint_response.status_code == HTTPStatus.OK
+    ), assert_message
+    # Assert the return values match what was expected
+    entry_point_data = entrypoint_response.json()
+    assert_correct_emptiness(entry_point, "queues", entry_point_data)
+    assert_correct_emptiness(entry_point, "parameters", entry_point_data)
+    assert_correct_emptiness(entry_point, "plugins", entry_point_data)
 
 
 # -- Tests -----------------------------------------------------------------------------
 
 
 def test_create_entrypoint(
-    client: FlaskClient,
-    db: SQLAlchemy,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_plugin_with_files: dict[str, Any],
     registered_queues: dict[str, Any],
@@ -476,6 +494,7 @@ def test_create_entrypoint(
             my_entrypoint: $name
         """
     )
+    artifact_graph = ""
     parameters = [
         {
             "name": "my_entrypoint_param_1",
@@ -488,19 +507,22 @@ def test_create_entrypoint(
             "parameterType": "string",
         },
     ]
+    artifact_parameters = []
     plugin_ids = [registered_plugin_with_files["plugin"]["id"]]
+    artifact_plugin_ids = []
     queue_ids = [queue["id"] for queue in list(registered_queues.values())]
-    entrypoint_response = actions.register_entrypoint(
-        client,
-        name=name,
-        description=description,
+    entrypoint_response = dioptra_client.entrypoints.create(
         group_id=group_id,
+        name=name,
         task_graph=task_graph,
+        artifact_graph=artifact_graph,
+        description=description,
         parameters=parameters,
-        plugin_ids=plugin_ids,
-        queue_ids=queue_ids,
+        artifact_parameters=artifact_parameters,
+        queues=queue_ids,
+        plugins=plugin_ids,
     )
-    entrypoint_expected = entrypoint_response.get_json()
+    entrypoint_expected = entrypoint_response.json()
     assert_entrypoint_response_contents_matches_expectations(
         response=entrypoint_expected,
         expected_contents={
@@ -509,14 +531,18 @@ def test_create_entrypoint(
             "user_id": user_id,
             "group_id": group_id,
             "task_graph": task_graph,
+            "artifact_graph": artifact_graph,
             "parameters": parameters,
+            "artifact_parameters": artifact_parameters,
             "plugin_ids": plugin_ids,
             "queue_ids": queue_ids,
             "tags": [],
         },
     )
     assert_retrieving_entrypoint_by_id_works(
-        client, entrypoint_id=entrypoint_expected["id"], expected=entrypoint_expected
+        dioptra_client,
+        entrypoint_id=entrypoint_expected["id"],
+        expected=entrypoint_expected,
     )
 
     # Testing that parameter names must be unique
@@ -533,20 +559,22 @@ def test_create_entrypoint(
         },
     ]
     assert_entrypoint_must_have_unique_param_names(
-        client,
+        dioptra_client,
         name=name,
         description=description,
         group_id=group_id,
         task_graph=task_graph,
+        artifact_graph=artifact_graph,
         parameters=bad_parameters,
+        artifact_parameters=artifact_parameters,
         plugin_ids=plugin_ids,
+        artifact_plugin_ids=artifact_plugin_ids,
         queue_ids=queue_ids,
     )
 
 
 def test_entrypoint_get_all(
-    client: FlaskClient,
-    db: SQLAlchemy,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
 ) -> None:
@@ -562,23 +590,67 @@ def test_entrypoint_get_all(
     - The user is able to retrieve a list of all registered entrypoints.
     - The returned list of entrypoints matches the full list of registered entrypoints.
     """
-    entrypoint_expected_list = list(registered_entrypoints.values())[:3]
-    assert_retrieving_entrypoints_works(client, expected=entrypoint_expected_list)
+    entrypoint_expected_list = list(registered_entrypoints.values())
+    assert_retrieving_entrypoints_works(
+        dioptra_client, expected=entrypoint_expected_list
+    )
+
+
+@pytest.mark.parametrize(
+    "field, value, expected_count",
+    [
+        ("name", None, 1),
+        ("description", None, 1),
+        ("task_graph", "*my_entrypoint*", 4),
+        ("artifact_graph", "Foo", 0),
+        ("tag", "Foo", 0),
+    ],
+)
+def test_entrypoint_searchable_fields(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+    field: str,
+    value: str | None,
+    expected_count: int,
+) -> None:
+    entrypoint = registered_entrypoints["entrypoint1"]
+    search_value = entrypoint[field] if value is None else value
+    assert_searchable_field_works(
+        dioptra_client=dioptra_client.entrypoints,
+        term=field,
+        value=search_value,
+        expected_count=expected_count,
+    )
 
 
 @pytest.mark.parametrize(
     "sortBy, descending , expected",
     [
-        (None, None, ["entrypoint1", "entrypoint2", "entrypoint3"]),
-        ("name", True, ["entrypoint2", "entrypoint3", "entrypoint1"]),
-        ("name", False, ["entrypoint1", "entrypoint3", "entrypoint2"]),
-        ("createdOn", True, ["entrypoint3", "entrypoint2", "entrypoint1"]),
-        ("createdOn", False, ["entrypoint1", "entrypoint2", "entrypoint3"]),
+        (
+            "name",
+            True,
+            ["entrypoint2", "entrypoint3", "entrypoint1", "entrypoint_no_params"],
+        ),
+        (
+            "name",
+            False,
+            ["entrypoint_no_params", "entrypoint1", "entrypoint3", "entrypoint2"],
+        ),
+        (
+            "createdOn",
+            True,
+            ["entrypoint_no_params", "entrypoint3", "entrypoint2", "entrypoint1"],
+        ),
+        (
+            "createdOn",
+            False,
+            ["entrypoint1", "entrypoint2", "entrypoint3", "entrypoint_no_params"],
+        ),
     ],
 )
 def test_entrypoint_sort(
-    client: FlaskClient,
-    db: SQLAlchemy,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
     sortBy: str,
@@ -599,15 +671,19 @@ def test_entrypoint_sort(
     - The returned list of entrypoints matches the order in the parametrize lists above.
     """
 
-    expected_ids = [
-        registered_entrypoints[expected_name]["id"] for expected_name in expected
+    expected_entrypoints = [
+        registered_entrypoints[expected_name] for expected_name in expected
     ]
-    assert_sorting_entrypoint_works(client, sortBy, descending, expected=expected_ids)
+    assert_retrieving_entrypoints_works(
+        dioptra_client,
+        sort_by=sortBy,
+        descending=descending,
+        expected=expected_entrypoints,
+    )
 
 
 def test_entrypoint_search_query(
-    client: FlaskClient,
-    db: SQLAlchemy,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
 ) -> None:
@@ -622,17 +698,18 @@ def test_entrypoint_search_query(
     """
     entrypoint_expected_list = list(registered_entrypoints.values())[:2]
     assert_retrieving_entrypoints_works(
-        client, expected=entrypoint_expected_list, search="description:*entrypoint*"
+        dioptra_client,
+        expected=entrypoint_expected_list,
+        search="description:*entrypoint*",
     )
-    entrypoint_expected_list = list(registered_entrypoints.values())[:3]
+    entrypoint_expected_list = list(registered_entrypoints.values())
     assert_retrieving_entrypoints_works(
-        client, expected=entrypoint_expected_list, search="*"
+        dioptra_client, expected=entrypoint_expected_list, search="*"
     )
 
 
 def test_entrypoint_group_query(
-    client: FlaskClient,
-    db: SQLAlchemy,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
 ) -> None:
@@ -646,17 +723,16 @@ def test_entrypoint_group_query(
     - The returned list of entrypoints matches the expected list owned by the default
       group.
     """
-    entrypoint_expected_list = list(registered_entrypoints.values())[:3]
+    entrypoint_expected_list = list(registered_entrypoints.values())
     assert_retrieving_entrypoints_works(
-        client,
+        dioptra_client,
         expected=entrypoint_expected_list,
         group_id=auth_account["groups"][0]["id"],
     )
 
 
 def test_cannot_register_existing_entrypoint_name(
-    client: FlaskClient,
-    db: SQLAlchemy,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
     registered_plugin_with_files: dict[str, Any],
@@ -675,7 +751,7 @@ def test_cannot_register_existing_entrypoint_name(
     queue_ids = [queue["id"] for queue in list(registered_queues.values())]
 
     assert_registering_existing_entrypoint_name_fails(
-        client,
+        dioptra_client,
         name=existing_entrypoint["name"],
         description="",
         group_id=existing_entrypoint["group"]["id"],
@@ -687,8 +763,7 @@ def test_cannot_register_existing_entrypoint_name(
 
 
 def test_rename_entrypoint(
-    client: FlaskClient,
-    db: SQLAlchemy,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
 ) -> None:
@@ -713,17 +788,18 @@ def test_rename_entrypoint(
     existing_entrypoint = registered_entrypoints["entrypoint2"]
     queue_ids = [queue["id"] for queue in entrypoint_to_rename["queues"]]
 
-    modified_entrypoint = modify_entrypoint(
-        client,
+    modified_entrypoint = dioptra_client.entrypoints.modify_by_id(
         entrypoint_id=entrypoint_to_rename["id"],
-        new_name=updated_entrypoint_name,
-        new_description=entrypoint_to_rename["description"],
-        new_task_graph=entrypoint_to_rename["taskGraph"],
-        new_parameters=entrypoint_to_rename["parameters"],
-        new_queue_ids=queue_ids,
-    ).get_json()
+        name=updated_entrypoint_name,
+        task_graph=entrypoint_to_rename["taskGraph"],
+        artifact_graph=entrypoint_to_rename["artifactGraph"],
+        description=entrypoint_to_rename["description"],
+        parameters=entrypoint_to_rename["parameters"],
+        artifact_parameters=entrypoint_to_rename["artifactParameters"],
+        queues=queue_ids,
+    ).json()
     assert_entrypoint_name_matches_expected_name(
-        client,
+        dioptra_client,
         entrypoint_id=entrypoint_to_rename["id"],
         expected_name=updated_entrypoint_name,
     )
@@ -731,38 +807,43 @@ def test_rename_entrypoint(
         modified_entrypoint,
         registered_entrypoints["entrypoint2"],
         registered_entrypoints["entrypoint3"],
+        registered_entrypoints["entrypoint_no_params"],
     ]
-    assert_retrieving_entrypoints_works(client, expected=entrypoint_expected_list)
+    assert_retrieving_entrypoints_works(
+        dioptra_client, expected=entrypoint_expected_list
+    )
 
-    modified_entrypoint = modify_entrypoint(
-        client,
+    modified_entrypoint = dioptra_client.entrypoints.modify_by_id(
         entrypoint_id=entrypoint_to_rename["id"],
-        new_name=updated_entrypoint_name,
-        new_description=entrypoint_to_rename["description"],
-        new_task_graph=entrypoint_to_rename["taskGraph"],
-        new_parameters=entrypoint_to_rename["parameters"],
-        new_queue_ids=entrypoint_to_rename["queues"],
-    ).get_json()
+        name=updated_entrypoint_name,
+        task_graph=entrypoint_to_rename["taskGraph"],
+        artifact_graph=entrypoint_to_rename["artifactGraph"],
+        description=entrypoint_to_rename["description"],
+        parameters=entrypoint_to_rename["parameters"],
+        artifact_parameters=entrypoint_to_rename["artifactParameters"],
+        queues=queue_ids,
+    ).json()
     assert_entrypoint_name_matches_expected_name(
-        client,
+        dioptra_client,
         entrypoint_id=entrypoint_to_rename["id"],
         expected_name=updated_entrypoint_name,
     )
 
     assert_cannot_rename_entrypoint_with_existing_name(
-        client,
+        dioptra_client,
         entrypoint_id=entrypoint_to_rename["id"],
         existing_name=existing_entrypoint["name"],
         existing_description=entrypoint_to_rename["description"],
         existing_task_graph=entrypoint_to_rename["taskGraph"],
+        existing_artifact_graph=entrypoint_to_rename["artifactGraph"],
         existing_parameters=entrypoint_to_rename["parameters"],
+        existing_artifact_parameters=entrypoint_to_rename["artifactParameters"],
         existing_queue_ids=entrypoint_to_rename["queues"],
     )
 
 
 def test_delete_entrypoint_by_id(
-    client: FlaskClient,
-    db: SQLAlchemy,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_experiments: dict[str, Any],
 ) -> None:
@@ -778,17 +859,19 @@ def test_delete_entrypoint_by_id(
     """
     experiment = registered_experiments["experiment1"]
     entrypoint_to_delete = experiment["entrypoints"][0]
-
-    delete_entrypoint(client, entrypoint_id=entrypoint_to_delete["id"])
-    assert_entrypoint_is_not_found(client, entrypoint_id=entrypoint_to_delete["id"])
+    dioptra_client.entrypoints.delete_by_id(entrypoint_to_delete["id"])
+    assert_entrypoint_is_not_found(
+        dioptra_client, entrypoint_id=entrypoint_to_delete["id"]
+    )
     assert_entrypoint_is_not_associated_with_experiment(
-        client, experiment_id=experiment["id"], entrypoint_id=entrypoint_to_delete["id"]
+        dioptra_client,
+        experiment_id=experiment["id"],
+        entrypoint_id=entrypoint_to_delete["id"],
     )
 
 
 def test_manage_existing_entrypoint_draft(
-    client: FlaskClient,
-    db: SQLAlchemy,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
 ) -> None:
@@ -808,6 +891,7 @@ def test_manage_existing_entrypoint_draft(
     - The user attempts to retrieve information about the deleted draft.
     - The request fails with an appropriate error message and response code.
     """
+    # Requests data
     entrypoint = registered_entrypoints["entrypoint1"]
     name = "draft"
     new_name = "draft2"
@@ -826,74 +910,80 @@ def test_manage_existing_entrypoint_draft(
             "parameterType": "string",
         }
     ]
-    plugin_ids = [plugin["id"] for plugin in entrypoint["plugins"]]
     queue_ids = [queue["id"] for queue in entrypoint["queues"]]
 
     # test creation
-    payload = {
+    draft = {
         "name": name,
         "description": description,
-        "taskGraph": task_graph,
+        "task_graph": task_graph,
+        "artifact_graph": "",
         "parameters": parameters,
-        "plugins": plugin_ids,
+        "artifact_parameters": [],
         "queues": queue_ids,
     }
-    expected = {
+    draft_mod = {
+        "name": new_name,
+        "description": description,
+        "task_graph": task_graph,
+        "artifact_graph": "",
+        "parameters": parameters,
+        "artifact_parameters": [],
+        "queues": queue_ids,
+    }
+
+    # Expected responses
+    draft_expected = {
         "user_id": auth_account["id"],
         "group_id": entrypoint["group"]["id"],
         "resource_id": entrypoint["id"],
         "resource_snapshot_id": entrypoint["snapshot"],
         "num_other_drafts": 0,
-        "payload": payload,
+        "payload": {
+            "name": name,
+            "description": description,
+            "taskGraph": task_graph,
+            "artifactGraph": "",
+            "parameters": parameters,
+            "artifactParameters": [],
+            "queues": queue_ids,
+        },
     }
-    response = actions.create_existing_resource_draft(
-        client,
-        resource_route=V1_ENTRYPOINTS_ROUTE,
-        resource_id=entrypoint["id"],
-        payload=payload,
-    ).get_json()
-    asserts.assert_draft_response_contents_matches_expectations(response, expected)
-    asserts.assert_retrieving_draft_by_resource_id_works(
-        client,
-        resource_route=V1_ENTRYPOINTS_ROUTE,
-        resource_id=entrypoint["id"],
-        expected=response,
-    )
-    asserts.assert_creating_another_existing_draft_fails(
-        client, resource_route=V1_ENTRYPOINTS_ROUTE, resource_id=entrypoint["id"]
-    )
-
-    # test modification
-    payload = {"name": new_name, "description": description, "taskGraph": task_graph}
-    expected = {
+    draft_mod_expected = {
         "user_id": auth_account["id"],
         "group_id": entrypoint["group"]["id"],
         "resource_id": entrypoint["id"],
         "resource_snapshot_id": entrypoint["snapshot"],
         "num_other_drafts": 0,
-        "payload": payload,
+        "payload": {
+            "name": new_name,
+            "description": description,
+            "taskGraph": task_graph,
+            "artifactGraph": "",
+            "parameters": parameters,
+            "artifactParameters": [],
+            "queues": queue_ids,
+        },
     }
-    response = actions.modify_existing_resource_draft(
-        client,
-        resource_route=V1_ENTRYPOINTS_ROUTE,
-        resource_id=entrypoint["id"],
-        payload=payload,
-    ).get_json()
-    asserts.assert_draft_response_contents_matches_expectations(response, expected)
 
-    # test deletion
-    actions.delete_existing_resource_draft(
-        client, resource_route=V1_ENTRYPOINTS_ROUTE, resource_id=entrypoint["id"]
-    )
-    asserts.assert_existing_draft_is_not_found(
-        client, resource_route=V1_ENTRYPOINTS_ROUTE, resource_id=entrypoint["id"]
+    # Run routine: existing resource drafts tests
+    routines.run_existing_resource_drafts_tests(
+        dioptra_client.entrypoints,
+        dioptra_client.entrypoints.modify_resource_drafts,
+        dioptra_client.workflows,
+        entrypoint["id"],
+        draft=draft,
+        draft_mod=draft_mod,
+        draft_expected=draft_expected,
+        draft_mod_expected=draft_mod_expected,
     )
 
 
 def test_manage_new_entrypoint_drafts(
-    client: FlaskClient,
-    db: SQLAlchemy,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+    registered_plugins: dict[str, Any],
 ) -> None:
     """Test that drafts of entrypoint can be created and managed by the user
 
@@ -907,102 +997,177 @@ def test_manage_new_entrypoint_drafts(
     - The user attempts to retrieve information about the deleted draft.
     - The request fails with an appropriate error message and response code.
     """
+    # Requests data
     group_id = auth_account["groups"][0]["id"]
     drafts = {
         "draft1": {
             "name": "entrypoint1",
             "description": "new entrypoint",
-            "taskGraph": "graph",
+            "task_graph": "graph",
+            "artifact_graph": "",
+            "parameters": [],
+            "artifact_parameters": [],
+            "plugins": [],
+            "artifact_plugins": [],
+            "queues": [],
         },
         "draft2": {
             "name": "entrypoint2",
             "description": "entrypoint",
-            "taskGraph": "graph",
-            "queues": [1, 3],
-            "plugins": [2],
+            "task_graph": "graph",
+            "artifact_graph": "",
+            "parameters": [],
+            "artifact_parameters": [],
+            "plugins": [registered_plugins["plugin2"]["id"]],
+            "artifact_plugins": [],
+            "queues": [
+                registered_queues["queue1"]["id"],
+                registered_queues["queue3"]["id"],
+            ],
         },
     }
-
-    # test creation
-    draft1_expected = {
-        "user_id": auth_account["id"],
-        "group_id": group_id,
-        "payload": drafts["draft1"],
-    }
-    draft1_response = actions.create_new_resource_draft(
-        client,
-        resource_route=V1_ENTRYPOINTS_ROUTE,
-        group_id=group_id,
-        payload=drafts["draft1"],
-    ).get_json()
-    asserts.assert_draft_response_contents_matches_expectations(
-        draft1_response, draft1_expected
-    )
-    asserts.assert_retrieving_draft_by_id_works(
-        client,
-        resource_route=V1_ENTRYPOINTS_ROUTE,
-        draft_id=draft1_response["id"],
-        expected=draft1_response,
-    )
-    draft2_expected = {
-        "user_id": auth_account["id"],
-        "group_id": group_id,
-        "payload": drafts["draft2"],
-    }
-    draft2_response = actions.create_new_resource_draft(
-        client,
-        resource_route=V1_ENTRYPOINTS_ROUTE,
-        group_id=group_id,
-        payload=drafts["draft2"],
-    ).get_json()
-    asserts.assert_draft_response_contents_matches_expectations(
-        draft2_response, draft2_expected
-    )
-    asserts.assert_retrieving_draft_by_id_works(
-        client,
-        resource_route=V1_ENTRYPOINTS_ROUTE,
-        draft_id=draft2_response["id"],
-        expected=draft2_response,
-    )
-    asserts.assert_retrieving_drafts_works(
-        client,
-        resource_route=V1_ENTRYPOINTS_ROUTE,
-        expected=[draft1_response, draft2_response],
-    )
-
-    # test modification
     draft1_mod = {
         "name": "draft1",
         "description": "new description",
-        "taskGraph": "graph",
+        "task_graph": "graph",
+        "artifact_graph": "",
+        "parameters": [],
+        "artifact_parameters": [],
+        "plugins": [],
+        "artifact_plugins": [],
+        "queues": [],
+    }
+
+    # Expected responses
+    draft1_expected = {
+        "user_id": auth_account["id"],
+        "group_id": group_id,
+        "payload": {
+            "name": "entrypoint1",
+            "description": "new entrypoint",
+            "taskGraph": "graph",
+            "artifactGraph": "",
+            "parameters": [],
+            "artifactParameters": [],
+            "plugins": [],
+            "artifactPlugins": [],
+            "queues": [],
+        },
+    }
+    draft2_expected = {
+        "user_id": auth_account["id"],
+        "group_id": group_id,
+        "payload": {
+            "name": "entrypoint2",
+            "description": "entrypoint",
+            "taskGraph": "graph",
+            "artifactGraph": "",
+            "parameters": [],
+            "artifactParameters": [],
+            "plugins": [registered_plugins["plugin2"]["id"]],
+            "artifactPlugins": [],
+            "queues": [
+                registered_queues["queue1"]["id"],
+                registered_queues["queue3"]["id"],
+            ],
+        },
     }
     draft1_mod_expected = {
         "user_id": auth_account["id"],
         "group_id": group_id,
-        "payload": draft1_mod,
+        "payload": {
+            "name": "draft1",
+            "description": "new description",
+            "taskGraph": "graph",
+            "artifactGraph": "",
+            "parameters": [],
+            "artifactParameters": [],
+            "plugins": [],
+            "artifactPlugins": [],
+            "queues": [],
+        },
     }
-    response = actions.modify_new_resource_draft(
-        client,
-        resource_route=V1_ENTRYPOINTS_ROUTE,
-        draft_id=draft1_response["id"],
-        payload=draft1_mod,
-    ).get_json()
-    asserts.assert_draft_response_contents_matches_expectations(
-        response, draft1_mod_expected
+
+    # Run routine: existing resource drafts tests
+    routines.run_new_resource_drafts_tests(
+        dioptra_client.entrypoints,
+        dioptra_client.entrypoints.new_resource_drafts,
+        dioptra_client.workflows,
+        drafts=drafts,
+        draft1_mod=draft1_mod,
+        draft1_expected=draft1_expected,
+        draft2_expected=draft2_expected,
+        draft1_mod_expected=draft1_mod_expected,
+        group_id=group_id,
     )
 
-    # test deletion
-    actions.delete_new_resource_draft(
-        client, resource_route=V1_ENTRYPOINTS_ROUTE, draft_id=draft1_response["id"]
+
+def test_client_raises_error_on_field_name_collision(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+) -> None:
+    """
+    Test that the client errors out if both task_graph and taskGraph are passed as
+    keyword arguments to either the create and modify draft resource sub-collection
+    clients.
+
+    Given an authenticated user, this test validates the following sequence of actions:
+
+    - The user prepares a payload for either the create or modify draft resource
+      sub-collection client. The payload contains both task_graph an taskGraph as keys.
+    - The user submits a create new resource request using the payload, which raises
+      a FieldNameCollisionError.
+    - The user submits a modify resource draft request using the payload, which raises
+        a FieldNameCollisionError.
+    """
+    entrypoint = registered_entrypoints["entrypoint1"]
+    group_id = auth_account["groups"][0]["id"]
+    name = "draft"
+    description = "description"
+    task_graph = textwrap.dedent(
+        """# my entrypoint graph
+        graph:
+          message:
+            my_entrypoint: $name
+        """
     )
-    asserts.assert_new_draft_is_not_found(
-        client, resource_route=V1_ENTRYPOINTS_ROUTE, draft_id=draft1_response["id"]
-    )
+    parameters = [
+        {
+            "name": "my_entrypoint_param",
+            "defaultValue": "my_value",
+            "parameterType": "string",
+        }
+    ]
+    plugin_ids = [plugin["id"] for plugin in entrypoint["plugins"]]
+    queue_ids = [queue["id"] for queue in entrypoint["queues"]]
+
+    draft = {
+        "name": name,
+        "description": description,
+        "task_graph": task_graph,
+        "taskGraph": task_graph,
+        "parameters": parameters,
+        "plugins": plugin_ids,
+        "queues": queue_ids,
+    }
+
+    with pytest.raises(FieldNameCollisionError):
+        dioptra_client.entrypoints.new_resource_drafts.create(
+            group_id=group_id,
+            **draft,
+        )
+
+    with pytest.raises(FieldNameCollisionError):
+        dioptra_client.entrypoints.modify_resource_drafts.modify(
+            entrypoint["id"],
+            resource_snapshot_id=entrypoint["snapshot"],
+            **draft,
+        )
 
 
 def test_manage_entrypoint_snapshots(
-    client: FlaskClient,
-    db: SQLAlchemy,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
 ) -> None:
@@ -1021,47 +1186,28 @@ def test_manage_entrypoint_snapshots(
     """
     entrypoint_to_rename = registered_entrypoints["entrypoint1"]
     queue_ids = [queue["id"] for queue in entrypoint_to_rename["queues"]]
-    modified_entrypoint = modify_entrypoint(
-        client,
+    modified_entrypoint = dioptra_client.entrypoints.modify_by_id(
         entrypoint_id=entrypoint_to_rename["id"],
-        new_name=entrypoint_to_rename["name"] + "modified",
-        new_description=entrypoint_to_rename["description"],
-        new_task_graph=entrypoint_to_rename["taskGraph"],
-        new_parameters=entrypoint_to_rename["parameters"],
-        new_queue_ids=queue_ids,
-    ).get_json()
-    entrypoint_to_rename["latestSnapshot"] = False
-    entrypoint_to_rename["lastModifiedOn"] = modified_entrypoint["lastModifiedOn"]
-    entrypoint_to_rename.pop("queues")
-    entrypoint_to_rename.pop("hasDraft")
-    asserts.assert_retrieving_snapshot_by_id_works(
-        client,
-        resource_route=V1_ENTRYPOINTS_ROUTE,
-        resource_id=entrypoint_to_rename["id"],
-        snapshot_id=entrypoint_to_rename["snapshot"],
-        expected=entrypoint_to_rename,
-    )
-    modified_entrypoint.pop("queues")
-    modified_entrypoint.pop("hasDraft")
-    asserts.assert_retrieving_snapshot_by_id_works(
-        client,
-        resource_route=V1_ENTRYPOINTS_ROUTE,
-        resource_id=modified_entrypoint["id"],
-        snapshot_id=modified_entrypoint["snapshot"],
-        expected=modified_entrypoint,
-    )
-    expected_snapshots = [entrypoint_to_rename, modified_entrypoint]
-    asserts.assert_retrieving_snapshots_works(
-        client,
-        resource_route=V1_ENTRYPOINTS_ROUTE,
-        resource_id=entrypoint_to_rename["id"],
-        expected=expected_snapshots,
+        name=entrypoint_to_rename["name"] + "modified",
+        task_graph=entrypoint_to_rename["taskGraph"],
+        artifact_graph=entrypoint_to_rename["artifactGraph"],
+        description=entrypoint_to_rename["description"],
+        parameters=entrypoint_to_rename["parameters"],
+        artifact_parameters=entrypoint_to_rename["artifactParameters"],
+        queues=queue_ids,
+    ).json()
+
+    # Run routine: resource snapshots tests
+    routines.run_resource_snapshots_tests(
+        dioptra_client.entrypoints.snapshots,
+        resource_to_rename=entrypoint_to_rename.copy(),
+        modified_resource=modified_entrypoint.copy(),
+        drop_additional_fields=["queues"],
     )
 
 
 def test_tag_entrypoint(
-    client: FlaskClient,
-    db: SQLAlchemy,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
     registered_tags: dict[str, Any],
@@ -1073,58 +1219,286 @@ def test_tag_entrypoint(
 
     """
     entrypoint = registered_entrypoints["entrypoint1"]
-    tags = [tag["id"] for tag in registered_tags.values()]
+    tag_ids = [tag["id"] for tag in registered_tags.values()]
 
-    # test append
-    response = actions.append_tags(
-        client,
-        resource_route=V1_ENTRYPOINTS_ROUTE,
-        resource_id=entrypoint["id"],
-        tag_ids=[tags[0], tags[1]],
-    )
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.get_json(), [tags[0], tags[1]]
-    )
-    response = actions.append_tags(
-        client,
-        resource_route=V1_ENTRYPOINTS_ROUTE,
-        resource_id=entrypoint["id"],
-        tag_ids=[tags[1], tags[2]],
-    )
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.get_json(), [tags[0], tags[1], tags[2]]
+    # Run routine: resource tag tests
+    routines.run_resource_tag_tests(
+        dioptra_client.entrypoints.tags,
+        entrypoint["id"],
+        tag_ids=tag_ids,
     )
 
-    # test remove
-    actions.remove_tag(
-        client,
-        resource_route=V1_ENTRYPOINTS_ROUTE,
-        resource_id=entrypoint["id"],
-        tag_id=tags[1],
-    )
-    response = actions.get_tags(
-        client, resource_route=V1_ENTRYPOINTS_ROUTE, resource_id=entrypoint["id"]
-    )
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.get_json(), [tags[0], tags[2]]
+
+def test_get_all_queues_for_entrypoint(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+) -> None:
+    """Test that queues associated with entrypoints can be retrieved.
+    Given an authenticated user, registered entrypoints, and registered queues,
+    this test validates the following sequence of actions:
+    - A user retrieves a list of all queue refs associated with the entrypoints.
+    """
+    entrypoint_id = registered_entrypoints["entrypoint1"]["id"]
+    expected_queue_ids = [queue["id"] for queue in list(registered_queues.values())]
+    assert_retrieving_all_queues_for_entrypoint_works(
+        dioptra_client,
+        entrypoint_id=entrypoint_id,
+        expected=expected_queue_ids,
     )
 
-    # test modify
-    response = actions.modify_tags(
-        client,
-        resource_route=V1_ENTRYPOINTS_ROUTE,
-        resource_id=entrypoint["id"],
-        tag_ids=[tags[1], tags[2]],
-    )
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.get_json(), [tags[1], tags[2]]
+
+def test_append_queues_to_entrypoint(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+) -> None:
+    """Test that queues can be appended to entrypoints.
+    Given an authenticated user, registered entrypoints, and registered queues,
+    this test validates the following sequence of actions:
+    - A user adds new queue to the list of associated queues with the entrypoint.
+    - A user can then retreive the new list that includes all old and new queues refs.
+    """
+    entrypoint_id = registered_entrypoints["entrypoint3"]["id"]
+    queue_ids_to_append = [
+        queue["id"] for queue in list(registered_queues.values())[1:]
+    ]
+    expected_queue_ids = [queue["id"] for queue in list(registered_queues.values())]
+    assert_append_queues_to_entrypoint_works(
+        dioptra_client,
+        entrypoint_id=entrypoint_id,
+        queue_ids=queue_ids_to_append,
+        expected=expected_queue_ids,
     )
 
-    # test delete
-    response = actions.remove_tags(
-        client, resource_route=V1_ENTRYPOINTS_ROUTE, resource_id=entrypoint["id"]
+
+def test_modify_queues_for_entrypoint(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+) -> None:
+    """Test that the list of associated queues with entrypoints can be modified.
+    Given an authenticated user, registered entrypoints, and registered queues,
+    this test validates the following sequence of actions:
+    - A user modifies the list of queues associated with an entrypoint.
+    - A user retrieves the list of all the new queues associated with the experiemnts.
+    """
+    entrypoint_id = registered_entrypoints["entrypoint3"]["id"]
+    expected_queue_ids = [queue["id"] for queue in list(registered_queues.values())]
+    dioptra_client.entrypoints.queues.modify_by_id(
+        entrypoint_id=entrypoint_id, queue_ids=expected_queue_ids
     )
-    response = actions.get_tags(
-        client, resource_route=V1_ENTRYPOINTS_ROUTE, resource_id=entrypoint["id"]
+    assert_retrieving_all_queues_for_entrypoint_works(
+        dioptra_client,
+        entrypoint_id=entrypoint_id,
+        expected=expected_queue_ids,
     )
-    asserts.assert_tags_response_contents_matches_expectations(response.get_json(), [])
+
+
+def test_delete_all_queues_for_entrypoint(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+) -> None:
+    """Test that the list of all associated queues can be deleted from a entrypoint.
+    Given an authenticated user and registered entrypoints, this test validates the
+    following sequence of actions:
+    - A user deletes the list of associated queues with the entrypoint.
+    - A user retrieves an empty list of associated queues with the entrypoint.
+    """
+    entrypoint_id = registered_entrypoints["entrypoint1"]["id"]
+    dioptra_client.entrypoints.queues.delete(entrypoint_id)
+    assert_retrieving_all_queues_for_entrypoint_works(
+        dioptra_client,
+        entrypoint_id=entrypoint_id,
+        expected=[],
+    )
+
+
+def test_delete_queue_by_id_for_entrypoint(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+) -> None:
+    """Test that queues associated with the entrypoint can be deleted by id.
+    Given an authenticated user, registered entrypoints, and registered queues,
+    this test validates the following sequence of actions:
+    - A user deletes an associated queue with the entrypoint.
+    - A user retrieves a list of associated queues that does not include the deleted.
+    """
+    entrypoint_id = registered_entrypoints["entrypoint1"]["id"]
+    queue_id_to_delete = registered_queues["queue1"]["id"]
+    expected_queue_ids = [queue["id"] for queue in list(registered_queues.values())[1:]]
+    dioptra_client.entrypoints.queues.delete_by_id(
+        entrypoint_id=entrypoint_id, queue_id=queue_id_to_delete
+    )
+    assert_retrieving_all_queues_for_entrypoint_works(
+        dioptra_client,
+        entrypoint_id=entrypoint_id,
+        expected=expected_queue_ids,
+    )
+
+
+def test_get_plugin_snapshots_for_entrypoint(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_plugin_with_files: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+) -> None:
+    """Test that plugins associated with entrypoints can be retrieved.
+    Given an authenticated user, registered entrypoints, and registered plugins,
+    this test validates the following sequence of actions:
+    - A user retrieves a list of all plugin refs associated with the entrypoints.
+    """
+    entrypoint_id = registered_entrypoints["entrypoint1"]["id"]
+    expected_plugin_ids = [registered_plugin_with_files["plugin"]["id"]]
+    assert_retrieving_all_plugin_snapshots_for_entrypoint_works(
+        dioptra_client,
+        entrypoint_id=entrypoint_id,
+        expected=expected_plugin_ids,
+    )
+
+
+def test_append_plugins_to_entrypoint(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_plugin_with_files: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+) -> None:
+    """Test that plugins can be appended to entrypoints.
+    Given an authenticated user, registered entrypoints, and registered plugins,
+    this test validates the following sequence of actions:
+    - A user adds new plugin to the list of associated plugins with the entrypoint.
+    - A user can then retreive the new list that includes all old and new plugins refs.
+    """
+    entrypoint_id = registered_entrypoints["entrypoint3"]["id"]
+    expected_plugin_ids = [registered_plugin_with_files["plugin"]["id"]]
+    assert_append_plugins_to_entrypoint_works(
+        dioptra_client,
+        entrypoint_id=entrypoint_id,
+        plugin_ids=expected_plugin_ids,
+        expected=expected_plugin_ids,
+    )
+
+
+def test_get_plugin_snapshot_by_id_for_entrypoint(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_plugin_with_files: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+) -> None:
+    """Test that plugins associated with entrypoints can be retrieved by id.
+    Given an authenticated user, registered entrypoints, and registered plugins,
+    this test validates the following sequence of actions:
+    - A user retrieves a plugin ref associated with the entrypoints by its id.
+    """
+    entrypoint_id = registered_entrypoints["entrypoint1"]["id"]
+    expected_plugin_id = registered_plugin_with_files["plugin"]["id"]
+    assert_retrieving_plugin_snapshots_by_id_for_entrypoint_works(
+        dioptra_client,
+        entrypoint_id=entrypoint_id,
+        plugin_id=expected_plugin_id,
+        expected=expected_plugin_id,
+    )
+
+
+def test_delete_plugin_snapshot_by_id_for_entrypoint(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_plugin_with_files: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+) -> None:
+    """Test that plugins associated with the entrypoint can be deleted by id.
+    Given an authenticated user, registered entrypoints, and registered plugins,
+    this test validates the following sequence of actions:
+    - A user deletes an associated plugin with the entrypoint.
+    - A user retrieves a list of associated plugins that does not include the deleted.
+    """
+    entrypoint_id = registered_entrypoints["entrypoint1"]["id"]
+    plugin_id_to_delete = registered_plugin_with_files["plugin"]["id"]
+    dioptra_client.entrypoints.plugins.delete_by_id(
+        entrypoint_id=entrypoint_id, plugin_id=plugin_id_to_delete
+    )
+    assert_retrieving_all_plugin_snapshots_for_entrypoint_works(
+        dioptra_client,
+        entrypoint_id=entrypoint_id,
+        expected=[],
+    )
+
+
+def test_create_entrypoint_with_empty_queues_plugins_params(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+) -> None:
+    """Verify that API can register entry-point with empty arrays for queues, plugins, and params
+
+    Args:
+        dioptra_client (DioptraClient[DioptraResponseProtocol]): Client
+        auth_account (dict[str, Any]): Account
+    """
+    user_id = auth_account["id"]
+    group_id = auth_account["groups"][0]["id"]
+    empty_entry_point = {
+        "user_id": user_id,
+        "group_id": group_id,
+        "name": "test_entrypoint_3Empties",
+        "description": "new test entrypoint #1 With 3 []s",
+        "parameters": [],
+        "plugins": [],
+        "artifact_plugins": [],
+        "queues": [],
+        "task_graph": textwrap.dedent(
+            """# my entrypoint graph
+                graph:
+                message:
+                    my_entrypoint:  "test_entrypoint_3Empties"
+                """
+        ),
+        "artifact_graph": "",
+    }
+    assert_registering_entrypoint_with_no_queues_succeeds(
+        dioptra_client=dioptra_client,
+        entry_point=empty_entry_point,
+        assert_message="Failed to create EntryPoint with 3 EMPTY entities: [queues=[], plugins=[], parameters=[]]",
+    )
+
+
+def test_create_entrypoint_with_none_queues_plugins_params(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+) -> None:
+    """Tests that queues, plugins and parameters can be None-s
+
+    Args:
+        dioptra_client (DioptraClient[DioptraResponseProtocol]): Client
+        auth_account (dict[str, Any]): Account
+    """
+    user_id = auth_account["id"]
+    group_id = auth_account["groups"][0]["id"]
+    none_entry_point = {
+        "user_id": user_id,
+        "group_id": group_id,
+        "name": "test_entrypoint_3Nones",
+        "description": "new test entrypoint #2 With 3 Nones",
+        "parameters": None,
+        "plugins": None,
+        "artifact_plugins": None,
+        "queues": None,
+        "task_graph": textwrap.dedent(
+            """# my entrypoint graph
+                graph:
+                message:
+                    my_entrypoint:  "test_entrypoint_3Nones"
+                """
+        ),
+        "artifact_graph": "",
+    }
+    assert_registering_entrypoint_with_no_queues_succeeds(
+        dioptra_client=dioptra_client,
+        entry_point=none_entry_point,
+        assert_message="Failed to create EntryPoint with 3 None entities: [queues=None, plugins=None, parameters=None]",
+    )

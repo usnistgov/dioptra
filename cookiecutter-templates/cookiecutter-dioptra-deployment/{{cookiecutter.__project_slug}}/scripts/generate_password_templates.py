@@ -8,6 +8,7 @@ import os
 import random
 import string
 import unicodedata
+import urllib.parse as URL
 from pathlib import Path
 from typing import Any
 
@@ -191,7 +192,17 @@ def _generate_random_password(
         password_components.append(extra_word)
         password_string = delimiter.join(password_components + end_number)
 
+    password_string = _password_encoding(password_string)
     return password_string
+
+
+def _password_encoding(password):
+
+    key="word"
+    ue_param = URL.urlencode({key: password})
+    url_safe_word = ue_param[len(key)+1:]
+
+    return url_safe_word
 
 
 def _populate_words(

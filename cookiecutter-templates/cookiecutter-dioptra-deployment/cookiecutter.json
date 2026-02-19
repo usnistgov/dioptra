@@ -1,14 +1,14 @@
 {
     "deployment_name": "Dioptra deployment",
     "__project_slug": "{{ cookiecutter.deployment_name.lower().replace(' ', '-').replace('_', '-') }}",
-    "container_registry": "",
+    "container_registry": "ghcr.io/usnistgov",
     "__container_namespace": "dioptra",
-    "container_tag": "dev",
+    "container_tag": "1.1.0",
     "docker_compose_path": "docker compose",
     "systemd_required_mounts": "",
     "nginx_server_name": "dioptra.example.org",
     "nginx_expose_ports_on_localhost_only": ["True", "False"],
-    "postgres_container_tag": "16",
+    "postgres_container_tag": "18",
     "__restapi_http_port": "80",
     "__restapi_https_port": "443",
     "__db_admin_username": "postgres",
@@ -96,7 +96,7 @@
         "nodejs": {
             "image": "node",
             "namespace": "",
-            "tag": "22.5.1",
+            "tag": "22-bullseye",
             "registry": ""
         },
         "redis": {

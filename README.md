@@ -2,7 +2,7 @@
 
 Dioptra is a software test platform for assessing the trustworthy characteristics of artificial intelligence (AI).
 Trustworthy AI is: valid and reliable, safe, secure and resilient, accountable and transparent, explainable and interpretable, privacy-enhanced, and fair - with harmful bias managed[^1].
-Dioptra supports the Measure function of the [NIST AI Risk Management Framework](https://nist.gov/itl/ai-risk-management-framework/) by providing functionality to assess, analyze, and track identified AI risks.
+Dioptra supports the Measure function of the [NIST AI Risk Management Framework](https://nist.gov/itl/ai-risk-management-framework/) by providing functionality to assess, analyze, and track identified AI potential benefits and negative consequences.
 
 Dioptra provides a REST API, which can be controlled via an intuitive web interface, a Python client, or any REST client library of the user's choice for designing, managing, executing, and tracking experiments.
 Details are available in the project documentation available at <https://pages.nist.gov/dioptra/>.
@@ -14,9 +14,7 @@ Details are available in the project documentation available at <https://pages.n
 - [Use Cases](#use-cases)
 - [Key Properties](#key-properties)
 - [Usage Instructions](#usage-instructions)
-    - [Build the containers](#build-the-containers)
-    - [Run Dioptra](#run-dioptra)
-    - [User registration](#user-registration)
+  - [Install Dioptra](#install-dioptra)
 - [Develop Dioptra](#develop-dioptra)
 - [License](#license)
 - [How to Cite](#how-to-cite)
@@ -24,7 +22,7 @@ Details are available in the project documentation available at <https://pages.n
 
 ## Current Release Status
 
-Release 1.0.1 -- with on-going improvements and development
+Release 1.1.0 -- with on-going improvements and development
 
 ## Use Cases
 
@@ -53,23 +51,44 @@ Dioptra strives for the following key properties:
 
 ## Usage Instructions
 
-### Build the containers
+### Install Dioptra
 
-The first step in setting up Dioptra is to clone the repository and build the docker containers for the various services that are part of a deployment.
-See the [Building the containers](https://pages.nist.gov/dioptra/getting-started/building-the-containers.html) section of the documentation for instructions.
+See the [Install Dioptra](https://pages.nist.gov/dioptra/getting-started/install-dioptra-explanation.html) section of the documentation for more detailed instructions.
 
-### Run Dioptra
+1. Pull the Dioptra docker images:
+```sh
+# pull the core dioptra images:
+docker pull ghcr.io/usnistgov/dioptra/nginx:1.1.0
+docker pull ghcr.io/usnistgov/dioptra/mlflow-tracking:1.1.0
+docker pull ghcr.io/usnistgov/dioptra/restapi:1.1.0
 
-Once the containers have been built, the next step is to configure the deployment with cruft and run Dioptra.
-See the [Running Dioptra](https://pages.nist.gov/dioptra/getting-started/running-dioptra.html) section of the documentation for instructions.
+# pull the worker images:
+docker pull ghcr.io/usnistgov/dioptra/pytorch-cpu:1.1.0
+docker pull ghcr.io/usnistgov/dioptra/tensorflow2-cpu:1.1.0
 
-Additionally, you may want to add datasets, see the [Downloading datasets](https://pages.nist.gov/dioptra/getting-started/acquiring-datasets.html) section of the documentation for details.
+# optionally pull the GPU worker images:
+docker pull ghcr.io/usnistgov/dioptra/pytorch-gpu:1.1.0
+docker pull ghcr.io/usnistgov/dioptra/tensorflow2-gpu:1.1.0
+```
 
-### User registration
+2. Prepare your Dioptra deployment:
+```sh
+cruft create https://github.com/usnistgov/dioptra --checkout main \
+  --directory cookiecutter-templates/cookiecutter-dioptra-deployment
+```
 
-Register a user account with your Dioptra instance via either the user interface.
-The user interface can be accessed via your web browser at the URL specified when creating the deployment.
-The default is <http://localhost>.
+3. Initialize your Dioptra deployment:
+```sh
+cd dioptra-deployment  # Or your deployment folder name
+./init-deployment.sh --branch main
+```
+
+4. Run Dioptra
+```
+docker compose up -d
+```
+
+Your Dioptra deployment is now accessible at `http://localhost`. We recommend getting started with the [Hello World Tutorial](https://pages.nist.gov/dioptra/tutorials/hello_world/index.html)
 
 ## Develop Dioptra
 

@@ -1,41 +1,60 @@
 <template>
-  <div>
-    <codemirror
+  <div class="column" style="flex: 1; width: 100%;">
+    <Codemirror
       v-model="code"
       :placeholder="placeholder"
       :autofocus="false"
       :indent-with-tab="true"
       :tab-size="2"
       :extensions="extensions"
+      :disabled="readOnly"
       @ready="handleReady"
       @update="highlightPlaceholder"
-      :style="{ 'min-height': '250px', 'max-height': '70vh',
+      :style="{
+        flex: 1,
+        'max-height': expanded ? 'none' : (props.maxHeight || '100vh'),
         'border': `${showError ? '2px solid red' : '2px solid black'}`
       }"
     />
-    <caption
-      :class="{ invisible: showError?.length === 0 || showError === undefined ? true : false }"
-      class="row text-caption q-ml-md text-negative" 
+    <div v-if="code.split('\n').length > maxLines && props.maxHeight">
+      <q-btn
+        :label="`${expanded ? 'Collapse' : 'Expand'}`"
+        :icon="`${expanded ? 'arrow_upward' : 'arrow_downward'}`"
+        color="secondary" 
+        @click="expanded = !expanded"
+        class="q-mt-xs"
+      />
+    </div>
+    <div
+      :class="{ visibility: showError ? 'hidden' : '' }"
+      class="row text-caption text-negative"
+      role="alert"
+      style="min-height: 20px;" 
     >
-      {{ showError || '...' }}
-    </caption>
+      {{ showError }}
+    </div>
   </div>
 </template>
 
 <script setup>
-  import { computed, shallowRef } from 'vue'
+  import { computed, shallowRef, ref } from 'vue'
   import { Codemirror } from 'vue-codemirror'
   import { yaml } from '@codemirror/lang-yaml'
   import { oneDark } from '@codemirror/theme-one-dark'
   import { linter, lintGutter } from "@codemirror/lint"
   import parser from "js-yaml"
   import { python } from '@codemirror/lang-python'
-  import { EditorState } from '@codemirror/state'
   import { CompletionContext, autocompletion, startCompletion } from '@codemirror/autocomplete'
   import YAML from 'yaml'
+  import { EditorView } from '@codemirror/view'
+  import { useQuasar } from 'quasar'
+
+  const $q = useQuasar()
+
+  const expanded = ref(false)
 
   function myCompletions(context) {
-    let word = context.matchBefore(/\w*/)
+    let word = context.matchBefore(/\$\w*/) || context.matchBefore(/\w*/)
     if (word.from == word.to && !context.explicit) {
       return null
     }
@@ -69,11 +88,12 @@
     }
 
     // Filter out the current top-level key from the autocompletions
-    const filteredTopLevelKeys = getTopLevelKeys().filter(option => option.label !== `$${currentTopLevelKey}`)
+    const filteredTopLevelKeys = getTopLevelKeys(code.value).filter(option => option.label !== `$${currentTopLevelKey}`)
+    const additionalTopLevelKeys = getTopLevelKeys(props.additionalCode)
 
     return {
       from: word.from,
-      options: [...props.autocompletions, ...filteredTopLevelKeys],
+      options: [...props.autocompletions, ...filteredTopLevelKeys, ...additionalTopLevelKeys],
       // options: [
       //   {label: "match", type: "keyword"},
       //   {label: "hello", type: "variable", info: "(World)"},
@@ -82,7 +102,7 @@
     }
   }
 
-  const props = defineProps(['placeholder', 'language', 'readOnly', 'showError', 'autocompletions'])
+  const props = defineProps(['placeholder', 'language', 'readOnly', 'showError', 'autocompletions', 'additionalCode', 'maxHeight'])
 
   const code = defineModel()
 
@@ -98,7 +118,7 @@
     const to = view.value.state.selection.ranges[0].to
     if(from !== to) return // short circut if user is dragging cursor
 
-    const placeholders = ['<input-value>', '<step-name>']
+    const placeholders = ['<input-value>', '<step-name>', '<output-name>', '<contents>']
     placeholders.forEach((placeholder) => {
       let startIndex = code.value.indexOf(placeholder)
       while(startIndex !== -1) {
@@ -110,7 +130,7 @@
           view.value.dispatch({
             selection: { anchor: startIndex, head: endIndex }
           })
-          if(placeholder === '<input-value>') {
+          if(placeholder === '<input-value>' || placeholder === '<contents>') {
             startCompletion(view.value)
           }
           return // Break after the first match to avoid overlapping selection conflicts
@@ -144,11 +164,11 @@
     return diagnostics
   })
 
-  function getTopLevelKeys() {
+  function getTopLevelKeys(code) {
     try {
-      if(code.value) {
+      if(code) {
         let output = []
-        const keys =  Object.keys(YAML.parse(code.value)).filter((key) => key !== '<step-name>')
+        const keys =  Object.keys(YAML.parse(code)).filter((key) => key !== '<step-name>')
         keys.forEach((key) => {
           output.push({
             label: `$${key}`,
@@ -164,17 +184,73 @@
     }
   }
 
+const dollarTriggerExtension = EditorView.updateListener.of((update) => {
+  if (!view.value) return
+
+  let insertedText = ""
+  let isSingleCharInsertion = false
+
+  update.changes.iterChanges((fromA, toA, fromB, toB, inserted) => {
+    insertedText = inserted.sliceString(0)
+
+    // Check if exactly one character was inserted
+    isSingleCharInsertion = (inserted.length === 1) && (insertedText === "$")
+  })
+
+  if (isSingleCharInsertion) {
+    startCompletion(view.value)
+  }
+})
+
+  const noActiveLine = EditorView.theme({
+    '.cm-activeLine': { backgroundColor: 'transparent' },
+    '.cm-activeLineGutter': { backgroundColor: 'transparent' }
+  })
+
   const extensions = computed(() => {
-    if(props.language === 'python') {
-      return [python(), oneDark]
+    const baseExtensions = []
+
+    if($q.dark.isActive) {
+      baseExtensions.push(oneDark)
     }
+
+    if (props.language === 'python') {
+      return [python(), ...baseExtensions]
+    }
+
+    if (props.language === 'text') {
+      return [
+        EditorView.lineWrapping,
+        noActiveLine,  
+        ...baseExtensions,
+      ]
+    }
+
     return [
-      yaml(), 
-      oneDark,
+      yaml(),
       yamlLinter,
       lintGutter(),
-      EditorState.readOnly.of(props.readOnly),
       autocompletion({ override: [myCompletions] }),
+      dollarTriggerExtension,
+      EditorView.lineWrapping,
+      ...baseExtensions,
     ]
   })
+
+  const maxLines = computed(() => {
+    const height = parseInt(props.maxHeight, 10)
+    if(height <= 215) return 10
+    if(height >= 216) return 22
+  })
 </script>
+
+<style>
+  /* .cm-scroller { 
+    overflow: auto; 
+    min-height: 250px;
+  } */
+
+.cm-editor {
+  width: 100% !important;
+}
+</style>

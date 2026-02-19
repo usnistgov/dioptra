@@ -46,9 +46,9 @@ def require_package(
             try:
                 importlib.import_module(name=name)
 
-            except ModuleNotFoundError:
+            except ModuleNotFoundError as err:
                 LOGGER.exception(error_msg, args=args, kwargs=kwargs)
-                raise exc
+                raise exc from err
 
             return func(*args, **kwargs)
 

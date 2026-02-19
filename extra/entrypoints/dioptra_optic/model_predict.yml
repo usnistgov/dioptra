@@ -1,0 +1,20 @@
+artifacts:
+  predictions:
+    contents: $predictions
+    task:
+      name: DataframeArtifactTask
+      args:
+        format: csv
+
+graph:
+  predictions:
+    model_predict:
+      model: $model_artifact
+      dataset: $dataset_artifact
+
+  metrics:
+    evaluate_predictions:
+      predictions: $predictions
+      dataset: $dataset_artifact
+    dependencies:
+      - predictions

@@ -26,9 +26,8 @@
         class="q-mx-md q-mb-lg"
         :title="`${row.name} Versions`"
         :disableSelect="true"
-        :hideEditBtn="true"
-        :hideDeleteBtn="true"
         :hideCreateBtn="true"
+        :hideOpenBtn="true"
       >
         <template #body-cell-createdOn="props">
           <div>{{ formatDate(props.row.createdOn) }}</div>
@@ -36,19 +35,7 @@
       </TableComponent>
     </template>
   </TableComponent>
-  <q-btn 
-    class="fixedButton"
-    round
-    color="primary"
-    icon="add"
-    size="lg"
-    @click="showAddEditDialog = true"
-  >
-    <span class="sr-only">Register a new Model</span>
-    <q-tooltip>
-      Register a new Model
-    </q-tooltip>
-  </q-btn>
+
   <ModelsDialog 
     v-model="showAddEditDialog"
     @addModel="addModel"
@@ -78,6 +65,9 @@ import * as api from '@/services/dataApi'
 import * as notify from '../notify'
 import PageTitle from '@/components/PageTitle.vue'
 import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
+import { useLoginStore } from '@/stores/LoginStore'
+
+const store = useLoginStore()
 
 const selected = ref([])
 const editing = ref(false)

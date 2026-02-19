@@ -18,6 +18,7 @@
 Build a "type registry", i.e. a mapping from type name to Type instance,
 from a set of type definitions.
 """
+
 import graphlib
 from collections.abc import Iterable, Iterator, Mapping, MutableMapping, Sequence
 from typing import Any, Optional, Union, cast
@@ -291,7 +292,7 @@ def build_type(
 
     else:  # else, a simple type
         if super_type and not isinstance(super_type, types.SimpleType):
-            raise NonSimpleSuperTypeError(super_type_name)
+            raise NonSimpleSuperTypeError(cast(str, super_type_name))
 
         # Here, super_type must either be null or an instance of SimpleType
         # (the negation of the above if condition).  I.e. it satisfies
@@ -308,7 +309,7 @@ def build_type(
 
 
 def get_dependency_types(  # noqa: C901
-    type_def: Optional[Union[_TypeDefinition, str]]
+    type_def: Optional[Union[_TypeDefinition, str]],
 ) -> Iterator[str]:
     """
     Search the given type definition and generate all references to other
@@ -395,7 +396,7 @@ def get_sorted_types(type_defs: Mapping[str, _TypeDefinition]) -> list[str]:
 
 
 def build_type_registry(
-    type_defs: Mapping[str, _TypeDefinition]
+    type_defs: Mapping[str, _TypeDefinition],
 ) -> Mapping[str, types.Type]:
     """
     Create a type registry from a set of type definitions.

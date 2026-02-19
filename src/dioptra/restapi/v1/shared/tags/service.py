@@ -15,7 +15,6 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform tag endpoint operations."""
-from __future__ import annotations
 
 from typing import Any, cast
 
@@ -39,7 +38,7 @@ class ResourceTagsService(object):
     def __init__(
         self,
         resource_type: str,
-        resource_id_service: ClassAssistedBuilder[ResourceIdService],
+        resource_id_service: ClassAssistedBuilder["ResourceIdService"],
         tag_id_service: TagIdService,
     ) -> None:
         """Initialize the resource tags service.
@@ -109,7 +108,7 @@ class ResourceTagsService(object):
         resource = self._resource_id_service.get(resource_id, log=log)
 
         tag_ids = list(set(tag_ids))
-        existing_tag_ids = set(tag.tag_id for tag in resource.tags)
+        existing_tag_ids = {tag.tag_id for tag in resource.tags}
         tags = [
             self._tag_id_service.get(
                 tag_id, error_if_not_found=error_if_not_found, log=log
@@ -198,7 +197,7 @@ class ResourceTagsIdService(object):
     def __init__(
         self,
         resource_type: str,
-        resource_id_service: ClassAssistedBuilder[ResourceIdService],
+        resource_id_service: ClassAssistedBuilder["ResourceIdService"],
         tag_id_service: TagIdService,
     ) -> None:
         """Initialize the resource tags service.

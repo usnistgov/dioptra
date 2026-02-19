@@ -15,14 +15,32 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 import argparse
+import json
 import logging
 import logging.config
 from collections.abc import Iterable
-from typing import Any, Union
+from pathlib import Path
+from typing import Any, Literal, Union
 
 import yaml
 
-import dioptra.task_engine.task_engine
+import dioptra.task_engine.task_engine as task_engine
+
+
+class PathType(object):
+    def __init__(self, type: Literal["file", "dir"] = "file"):
+        self._type = type
+
+    def __call__(self, input: str) -> Path:
+        path = Path(input)
+        if not path.exists():
+            raise argparse.ArgumentTypeError(f"path does not exist: '{input}'")
+
+        if self._type == "file" and not path.is_file():
+            raise argparse.ArgumentTypeError(f"path is not a file: '{input}'")
+        elif self._type == "dir" and not path.is_dir():
+            raise argparse.ArgumentTypeError("path is not a directory: '{input}'")
+        return path
 
 
 def _parse_args() -> argparse.Namespace:
@@ -37,6 +55,47 @@ def _parse_args() -> argparse.Namespace:
         "file",
         type=argparse.FileType(mode="r", encoding="utf-8"),
         help="The declarative experiment file to read",
+    )
+
+    arg_parser.add_argument(
+        "artifact_tasks",
+        type=argparse.FileType(mode="r", encoding="utf-8"),
+        help="The location of the artifact tasks file",
+        default=".dioptra/serialize/artifact_tasks.json",
+    )
+
+    arg_parser.add_argument(
+        "plugins",
+        type=PathType(type="dir"),
+        help="The location of the plugins folder.",
+        default=".dioptra/plugins",
+    )
+
+    arg_parser.add_argument(
+        "serialize",
+        type=PathType(type="dir"),
+        help="""
+        The path to the artifact plugin tasks folder used during serialization  of
+        produced artifacts.
+        """,
+        default=".dioptra/serialize",
+    )
+
+    arg_parser.add_argument(
+        "deserialize",
+        type=PathType(type="dir"),
+        help="""
+        The path to the artifact plugin tasks folder used during deserialization of
+        produced artifacts.
+        """,
+        default=".dioptra/deserialize",
+    )
+
+    arg_parser.add_argument(
+        "artifact_parameters",
+        type=argparse.FileType(mode="r", encoding="utf-8"),
+        help="The location of the artifact parameters file.",
+        default="artifact_parameters.json",
     )
 
     arg_parser.add_argument(
@@ -154,10 +213,16 @@ def main() -> None:
     args = _parse_args()
     _setup_logging(args.log_level)
 
-    experiment_desc = yaml.safe_load(args.file)
-    global_parameters = _cmdline_params_to_map(args.P)
-
-    dioptra.task_engine.task_engine.run_experiment(experiment_desc, global_parameters)
+    task_engine.run_experiment(
+        experiment_desc=yaml.safe_load(args.file),
+        global_parameters=_cmdline_params_to_map(args.P),
+        artifact_parameters=json.load(args.artifact_parameters),
+        artifacts_dir=args.artifacts,
+        artifact_tasks=json.load(args.artifact_tasks),
+        deserialize_dir=args.deserialize,
+        serialize_dir=args.serialize,
+        plugins_dir=args.plugins,
+    )
 
 
 if __name__ == "__main__":

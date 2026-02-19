@@ -14,7 +14,6 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from __future__ import annotations
 
 from typing import Any, Callable, Dict, Optional, Union
 
@@ -50,10 +49,10 @@ def _(estimator: Model, x: Any, pred_type: str, **kwargs) -> np.ndarray:
         args_signature=("Model", "Any", "str"),
     )
 
-    predict: Callable[..., np.ndarray] = dict(
-        prob=keras_model_predict_proba,
-        label=keras_model_predict_label,
-    ).get(pred_type, _null_predict)
+    predict: Callable[..., np.ndarray] = {
+        "prob": keras_model_predict_proba,
+        "label": keras_model_predict_label,
+    }.get(pred_type, _null_predict)
 
     try:
         prediction: np.ndarray = predict(

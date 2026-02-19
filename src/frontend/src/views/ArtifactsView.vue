@@ -5,40 +5,49 @@
     :columns="columns"
     title="Artifacts"
     v-model:selected="selected"
-    @edit="editing = true; showAddEditDialog = true"
+    @open="openTab => (openTab
+      ? openWindow.open(`/artifacts/${selected[0].id}`, '_blank')
+      : router.push(`/artifacts/${selected[0].id}`)
+    )"
     @delete="showDeleteDialog = true"
     @request="getArtifacts"
     ref="tableRef"
-    :hideDeleteBtn="true"
     :hideCreateBtn="true"
+    :hideDeleteBtn="true"
+    :loading="isLoading"
   >
-    <template #body-cell-group="props">
-      <div>{{ props.row.group.name }}</div>
+    <template #body-cell-job="props">
+      <q-btn
+        color="primary"
+        :to="`/jobs/${props.row.job}`"
+        :label="`View Job ${props.row.job}`"
+      />
     </template>
-    <template #expandedSlot="{ row }">
-      <!-- <BasicTable
-        :columns="fileColumns"
-        :rows="row?.versions || []"
-        :hideSearch="true"
-        :hideEditTable="true"
-        class="q-mx-md"
-        :title="`${row.name} Versions`"
-      /> -->
+    <template #body-cell-taskName="props">
+      {{ props.row.task.name }}
+    </template>
+    <template #body-cell-taskOutputParams="props">
+      <q-chip
+        v-for="param in props.row.task.outputParams"
+        color="purple"
+        text-color="white"
+        dense
+      >
+        {{ param.name }}: {{ param.parameterType.name }}
+      </q-chip>
+    </template>
+    <template #body-cell-download="props">
+      <q-btn
+        color="primary"
+        round
+        icon="download"
+        size="sm"
+        @click.stop="downloadFile(props.row.fileUrl, `artifact-${props.row?.id}`, props.row.id)"
+        :loading="downloadingId === props.row.id"
+      />
     </template>
   </TableComponent>
-  <!-- <q-btn 
-    class="fixedButton"
-    round
-    color="primary"
-    icon="add"
-    size="lg"
-    @click="showAddEditDialog = true"
-  >
-    <span class="sr-only">Register a new Artifact</span>
-    <q-tooltip>
-      Register a new Artifact
-    </q-tooltip>
-  </q-btn> -->
+
   <ArtifactsDialog 
     v-model="showAddEditDialog"
     @addArtifact="addArtifact"
@@ -49,7 +58,7 @@
     v-model="showDeleteDialog"
     @submit="deleteModel"
     type="Model"
-    :name="selected.length ? selected[0].name : ''"
+    :name="selected.length ? selected[0].description : ''"
   />
   <AssignTagsDialog 
     v-model="showTagsDialog"
@@ -60,7 +69,6 @@
 
 <script setup>
 import TableComponent from '@/components/TableComponent.vue'
-import BasicTable from '@/components/BasicTable.vue'
 import ArtifactsDialog from '@/dialogs/ArtifactsDialog.vue'
 import DeleteDialog from '@/dialogs/DeleteDialog.vue'
 import { ref, watch } from 'vue'
@@ -68,6 +76,10 @@ import * as api from '@/services/dataApi'
 import * as notify from '../notify'
 import PageTitle from '@/components/PageTitle.vue'
 import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
+import { useRouter } from 'vue-router'
+
+const openWindow = window
+const router = useRouter()
 
 const selected = ref([])
 const editing = ref(false)
@@ -82,23 +94,38 @@ watch(showAddEditDialog, (newVal) => {
 
 const artifacts = ref([])
 
+const isLoading = ref(false)
+
 async function getArtifacts(pagination) {
+  isLoading.value = true
+  const minLoadTimePromise = new Promise(resolve => setTimeout(resolve, 300)); 
+  if(!pagination.sortBy) {
+    pagination.sortBy = 'job'
+    pagination.descending = true
+  }
   try {
-    const res = await api.getData('artifacts', pagination)
+    const [res] = await Promise.all([
+      api.getData('artifacts', pagination),
+      minLoadTimePromise
+    ]);
+    
     artifacts.value = res.data.data
     tableRef.value.updateTotalRows(res.data.totalNumResults)
   } catch(err) {
-    console.log('err = ', err)
-    notify.error(err.response.data.message)
-  } 
+    console.log('err = ', err);
+    notify.error(err.response.data.message);
+  } finally {
+    isLoading.value = false;
+  }
 }
 
 const columns = [
-  { name: 'description', label: 'Description', field: 'description',align: 'left', sortable: true },
-  { name: 'uri', label: 'uri', align: 'left', field: 'uri', sortable: true },
-  { name: 'createdOn', label: 'Created On', align: 'left', field: 'createdOn', sortable: true },
-  { name: 'lastModifiedOn', label: 'Last Modified', align: 'left', field: 'lastModifiedOn', sortable: true },
-  // { name: 'tags', label: 'Tags', align: 'left', field: 'tags', sortable: false },
+  { name: 'id', label: 'ID', align: 'left', field: 'id', sortable: false, },
+  { name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true },
+  { name: 'job', label: 'Job', align: 'left' },
+  { name: 'taskName', label: 'Task Name', align: 'left' },
+  { name: 'taskOutputParams', label: 'Task Output Params', align: 'left' },
+  { name: 'download', label: 'Download', align: 'center' },
 ]
 
 async function addArtifact(name, group, description) {
@@ -119,7 +146,7 @@ async function addArtifact(name, group, description) {
 async function deleteModel() {
   try {
     await api.deleteItem('models', selected.value[0].id)
-    notify.success(`Successfully deleted '${selected.value[0].name}'`)
+    notify.success(`Successfully deleted '${selected.value[0].description}'`)
     showDeleteDialog.value = false
     selected.value = []
     tableRef.value.refreshTable()
@@ -163,6 +190,21 @@ async function submitTags(selectedTagIDs) {
   } catch(err) {
     console.log('err = ', err)
     notify.error(err.response.data.message);
+  }
+}
+
+const downloadingId = ref(null)
+
+async function downloadFile(url, filename, id) {
+  downloadingId.value = id
+  try {
+    await api.downloadFile(url, filename);
+    notify.success(`Successfully downloaded file: ${filename}`);
+  } catch (err) {
+    console.warn(err);
+    notify.error(`Error downloading file ${filename}`);
+  } finally {
+    downloadingId.value = null
   }
 }
 

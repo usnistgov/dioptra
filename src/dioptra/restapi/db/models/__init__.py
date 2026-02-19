@@ -17,9 +17,13 @@
 from .artifacts import Artifact
 from .entry_points import (
     EntryPoint,
+    EntryPointArtifactOutputParameter,
+    EntryPointArtifactParameter,
+    EntryPointArtifactParameterValue,
+    EntryPointArtifactPlugin,
     EntryPointParameter,
     EntryPointParameterValue,
-    EntryPointPluginFile,
+    EntryPointPlugin,
     entry_point_parameter_types_table,
 )
 from .experiments import Experiment
@@ -28,8 +32,11 @@ from .jobs import (
     EntryPointJob,
     ExperimentJob,
     Job,
+    JobLog,
+    JobMetric,
     JobMlflowRun,
     QueueJob,
+    job_log_severity_table,
     job_status_types_table,
 )
 from .locks import (
@@ -42,8 +49,11 @@ from .locks import (
 )
 from .ml_models import MlModel, MlModelVersion
 from .plugins import (
+    ArtifactTask,
+    FunctionTask,
     Plugin,
     PluginFile,
+    PluginPluginFile,
     PluginTask,
     PluginTaskInputParameter,
     PluginTaskOutputParameter,
@@ -66,24 +76,33 @@ from .users import User
 
 __all__ = [
     "Artifact",
+    "ArtifactTask",
     "DraftResource",
     "EntryPoint",
     "EntryPointJob",
     "EntryPointParameter",
+    "EntryPointArtifactParameter",
+    "EntryPointArtifactPlugin",
+    "EntryPointArtifactOutputParameter",
     "EntryPointParameterValue",
-    "EntryPointPluginFile",
+    "EntryPointArtifactParameterValue",
+    "EntryPointPlugin",
     "Experiment",
     "ExperimentJob",
+    "FunctionTask",
     "Group",
     "GroupLock",
     "GroupManager",
     "GroupMember",
     "Job",
     "JobMlflowRun",
+    "JobLog",
+    "JobMetric",
     "MlModel",
     "MlModelVersion",
     "Plugin",
     "PluginFile",
+    "PluginPluginFile",
     "PluginTask",
     "PluginTaskInputParameter",
     "PluginTaskOutputParameter",
@@ -100,6 +119,7 @@ __all__ = [
     "entry_point_parameter_types_table",
     "group_lock_types_table",
     "job_status_types_table",
+    "job_log_severity_table",
     "resource_dependencies_table",
     "resource_dependency_types_table",
     "resource_lock_types_table",

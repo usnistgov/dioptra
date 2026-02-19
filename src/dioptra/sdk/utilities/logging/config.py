@@ -16,19 +16,28 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 import logging
 import sys
+from collections.abc import Iterator, Mapping, MutableMapping
+from contextlib import contextmanager
 from logging import getLogger
-from typing import Any, Callable, List, Mapping, MutableMapping, Optional, Tuple, Union
+from typing import Any, Callable, cast
 
 import structlog
 
+from dioptra.client import DioptraClient
+from dioptra.client.base import DioptraResponseProtocol
+from dioptra.sdk.utilities.auth_client import get_authenticated_worker_client
+
+from .filters import LibraryFilter, OmitClientJobLoggingFilter
+from .handlers import DioptraJobLoggingHandler
+
 ProcessorType = Callable[
     [Any, str, MutableMapping[str, Any]],
-    Union[Mapping[str, Any], str, bytes, Tuple[Any, ...]],
+    Mapping[str, Any] | str | bytes | tuple[Any, ...],
 ]
 
 
 def attach_stdout_stream_handler(
-    as_json: bool, logger: Optional[logging.Logger] = None
+    as_json: bool, logger: logging.Logger | None = None
 ) -> None:
     logger = logger or getLogger()
     log_processor: ProcessorType = _get_structlog_processor(as_json)
@@ -39,6 +48,7 @@ def attach_stdout_stream_handler(
         foreign_pre_chain=[
             structlog.stdlib.add_logger_name,
             structlog.stdlib.add_log_level,
+            structlog.stdlib.PositionalArgumentsFormatter(),
             structlog.processors.TimeStamper(fmt="iso", utc=True),
             structlog.processors.StackInfoRenderer(),
             structlog.processors.format_exc_info,
@@ -50,7 +60,60 @@ def attach_stdout_stream_handler(
     logger.addHandler(handler)
 
 
-def clear_logger_handlers(logger: Optional[logging.Logger]) -> None:
+@contextmanager
+def forward_job_logs_to_api(
+    job_id: str | int, client: DioptraClient[DioptraResponseProtocol] | None = None
+) -> Iterator[None]:
+    """Context manager for forwarding job logs to the Dioptra API.
+
+    Args:
+        job_id: The Dioptra job ID the logs are for.
+        client: An authenticated Dioptra client. If not provided, it will be created
+            using environment variables for authentication.
+    """
+    logger = getLogger()
+    if client is None:
+        # need to cast because return type can't be inferred at runtime
+        client = cast(
+            DioptraClient[DioptraResponseProtocol],
+            get_authenticated_worker_client(logger, "response"),
+        )
+
+    formatter = structlog.stdlib.ProcessorFormatter(
+        processors=[
+            structlog.stdlib.ProcessorFormatter.remove_processors_meta,
+            structlog.dev.ConsoleRenderer(colors=False),
+        ],
+        foreign_pre_chain=[
+            structlog.stdlib.add_logger_name,
+            structlog.stdlib.add_log_level,
+            structlog.stdlib.PositionalArgumentsFormatter(),
+            structlog.processors.TimeStamper(fmt="iso", utc=True),
+            structlog.processors.StackInfoRenderer(),
+            structlog.processors.format_exc_info,
+            structlog.processors.UnicodeDecoder(),
+        ],
+    )
+    library_filter = LibraryFilter(["git", "rq", "urllib3", "tests"])
+    omit_client_job_logging_filter = OmitClientJobLoggingFilter()
+
+    handler = DioptraJobLoggingHandler(
+        sender=client.jobs.append_logs_by_id, job_id=job_id
+    )
+    handler.setFormatter(formatter)
+    handler.addFilter(library_filter)
+    handler.addFilter(omit_client_job_logging_filter)
+
+    try:
+        logger.addHandler(handler)
+        yield
+
+    finally:
+        handler.close()
+        logger.removeHandler(handler)
+
+
+def clear_logger_handlers(logger: logging.Logger | None) -> None:
     if logger is None:
         return None
 
@@ -58,8 +121,28 @@ def clear_logger_handlers(logger: Optional[logging.Logger]) -> None:
         logger.removeHandler(handler)
 
 
+def configure_structlog_for_worker() -> None:
+    structlog.configure(
+        processors=[
+            structlog.stdlib.filter_by_level,
+            structlog.stdlib.add_logger_name,
+            structlog.stdlib.add_log_level,
+            structlog.stdlib.PositionalArgumentsFormatter(),
+            structlog.processors.TimeStamper(fmt="iso", utc=True),
+            structlog.processors.StackInfoRenderer(),
+            structlog.processors.format_exc_info,
+            structlog.processors.UnicodeDecoder(),
+            structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
+        ],
+        context_class=dict,
+        logger_factory=structlog.stdlib.LoggerFactory(),
+        wrapper_class=structlog.stdlib.BoundLogger,
+        cache_logger_on_first_use=True,
+    )
+
+
 def configure_structlog() -> None:
-    processors: List[Any] = [
+    processors: list[Any] = [
         structlog.stdlib.filter_by_level,
         structlog.stdlib.add_logger_name,
         structlog.stdlib.add_log_level,
@@ -80,7 +163,7 @@ def configure_structlog() -> None:
     )
 
 
-def set_logging_level(level: str, logger: Optional[logging.Logger] = None) -> None:
+def set_logging_level(level: str, logger: logging.Logger | None = None) -> None:
     logger = logger or getLogger()
     logger.setLevel(_get_logging_level(level.strip().upper()))
 

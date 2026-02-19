@@ -14,7 +14,6 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from __future__ import annotations
 
 import math
 from typing import cast
@@ -25,7 +24,7 @@ from structlog.stdlib import BoundLogger
 from dioptra.sdk.object_detection.bounding_boxes.coordinates import (
     TensorflowBoundingBoxesBatchedGrid,
 )
-from dioptra.sdk.object_detection.bounding_boxes.postprocessing.bounding_boxes_postprocessing import (  # noqa: B950
+from dioptra.sdk.object_detection.bounding_boxes.postprocessing.bounding_boxes_postprocessing import (
     BoundingBoxesYOLOV1PostProcessing,
 )
 
@@ -65,7 +64,7 @@ class TensorflowBoundingBoxesYOLOV1NMS(BoundingBoxesYOLOV1PostProcessing):
         max_output_size_per_class: int = 20,
         iou_threshold: float = 0.5,
         score_threshold: float = 0.5,
-    ) -> TensorflowBoundingBoxesYOLOV1NMS:
+    ) -> "TensorflowBoundingBoxesYOLOV1NMS":
         return cls(
             bounding_boxes_batched_grid=(
                 TensorflowBoundingBoxesBatchedGrid.on_grid_shape(grid_shape=grid_shape)

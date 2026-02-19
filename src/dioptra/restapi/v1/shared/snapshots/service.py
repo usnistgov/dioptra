@@ -15,7 +15,6 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform snapshots sub endpoint operations."""
-from __future__ import annotations
 
 from typing import Any, Type
 
@@ -93,7 +92,7 @@ class ResourceSnapshotsService(object):
 
             return None
 
-        filters = list()
+        filters = []
 
         if search_string:
             filters.append(

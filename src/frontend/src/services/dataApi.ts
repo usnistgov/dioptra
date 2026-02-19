@@ -3,7 +3,7 @@ import axios from 'axios'
 export const API_VERSION = 'v1'
 
 axios.interceptors.request.use(function (config) {
-  if (config.url) {
+  if (config.url && !config.url.includes(`/api/${API_VERSION}/`)) {
     config.url = config.url.replace('/api/', `/api/${API_VERSION}/`)
   }
   return config
@@ -110,6 +110,18 @@ type UpdateParams = {
   },
 }
 
+type WorkflowParams = {
+	resourceImport: {
+		group: number,
+		sourceType: string,
+		gitUrl: string,
+		files: string,
+		archiveFile: string,
+		configPath: string,
+		resolveNameConflictsStrategy: string
+	}
+}
+
 interface EntrypointParameters {
   name: string,
   defaultValue: string,
@@ -129,7 +141,7 @@ export async function getData<T extends ItemType>(type: T, pagination: Paginatio
     params: {
       index: pagination.index,
       pageLength: pagination.rowsPerPage === 0 ? 100 : pagination.rowsPerPage,  // 0 means GET ALL
-      search: urlEncode(pagination.search),
+      search: pagination.search,
       draftType: showDrafts ? 'new' : '',
       sortBy: pagination.sortBy,
       descending: pagination.descending,
@@ -151,7 +163,56 @@ export async function getData<T extends ItemType>(type: T, pagination: Paginatio
       Object.assign(obj, obj.payload)
     })
   }
-  console.log('getData = ', res)
+  console.log('getData = ', res.data.data)
+  return res
+}
+
+export async function getSnapshots<T extends ItemType>(type: T, id: number) {
+  const res =  await axios.get(`/api/${type}/${id}/snapshots`, {
+    params: {
+      pageLength: 100
+    }
+  })
+
+  if(res.data.next) {
+    let nextUrl = res.data.next.replace("/v1", "")
+    while (nextUrl) {
+      const response = await axios.get(nextUrl)
+      res.data.data.push(...response.data.data)
+      nextUrl = response.data.next ? response.data.next.replace("/v1", "") : null
+    }
+  }
+  return res
+}
+
+export async function getSnapshot<T extends ItemType>(type: T, id: number, snapshotId: number) {
+  return await axios.get(`/api/${type}/${id}/snapshots/${snapshotId}`)
+
+}
+
+export async function addJobMetric(id: string, name: string, value: number, step: number) {
+  const res = await axios.post(`/api/jobs/${id}/metrics`, {
+    name,
+    value,
+    step,
+  })
+}
+
+export async function getJobMetricHistory(id: string, name: string) {
+  const res = await axios.get(`/api/jobs/${id}/metrics/${name}/snapshots`, {
+    params: {
+      pageLength: 100
+    }
+  })
+  // always GET ALL job metrics
+  if(res.data.next) {
+    let nextUrl = res.data.next.replace("/v1", "")
+    while (nextUrl) {
+      const response = await axios.get(nextUrl)
+      res.data.data.push(...response.data.data)
+      nextUrl = response.data.next ? response.data.next.replace("/v1", "") : null
+    }
+  }
   return res
 }
 
@@ -160,7 +221,7 @@ export async function getJobs(id: number, pagination: Pagination) {
     params: {
       index: pagination.index,
       pageLength: pagination.rowsPerPage === 0 ? 100 : pagination.rowsPerPage,  // 0 means GET ALL
-      search: urlEncode(pagination.search),
+      search: pagination.search,
       sortBy: pagination.sortBy,
       descending: pagination.descending,
     }
@@ -178,28 +239,53 @@ export async function getJobs(id: number, pagination: Pagination) {
   return res
 }
 
-function urlEncode(string: string) {
-  if(!string.trim()) return ''
-  if(string.includes(':')) {
-    const words = string.split(':')
-    console.log('words = ', words)
-    return `${words[0]}:"${words[1]}"`
-  } else {
-    return `"${string}"`
-  }
+export async function getJobMetrics(id: number) {
+  return await axios.get(`/api/jobs/${id}/metrics`)
 }
 
-export async function getItem<T extends ItemType>(type: T, id: number, isDraft: boolean = false) {
-  const res =  await axios.get(`/api/${type}/${id}${isDraft ? '/draft' : ''}`)
-  if(isDraft && res.data) {
-    console.log('res = ', res)
-    Object.assign(res.data, res.data.payload)
+export async function getJobLogs(id: number, pagination: Pagination, severity?: string[]) {
+  const res = await axios.get(`/api/jobs/${id}/log`, {
+    params: {
+      index: pagination.index,
+      pageLength: pagination.rowsPerPage === 0 ? 100 : pagination.rowsPerPage,  // 0 means GET ALL
+      search: pagination.search,
+      sortBy: pagination.sortBy,
+      descending: pagination.descending,
+      severity: severity ?? null,
+    },
+    paramsSerializer: {
+      // This makes arrays become: severity=INFO&severity=WARNING
+      // instead of severity[]=INFO&severity[]=WARNING
+      indexes: null,
+    },
+  })
+
+  // if GET ALL (rowsPerPage = 0), then keep on getting next page until there is no next
+  if(pagination.rowsPerPage === 0 && res.data.next) {
+    let nextUrl = res.data.next.replace("/v1", "")
+    while (nextUrl) {
+      const response = await axios.get(nextUrl)
+      res.data.data.push(...response.data.data)
+      nextUrl = response.data.next ? response.data.next.replace("/v1", "") : null
+    }
   }
+
   return res
 }
 
-export async function getDraft<T extends ItemType>(type: T, id: number) {
+export async function getItem<T extends ItemType>(type: T, id: number, isDraft: boolean = false) {
+  // isDraft here means regular draft, not resource draft
+  const res =  await axios.get(`/api/${type}/${isDraft ? 'drafts/' : ''}${id}`)
+  if(isDraft && res.data) {
+    Object.assign(res.data, res.data.payload)
+  }
+  console.log('res = ', res)
+  return res
+}
+
+export async function getResourceDraft<T extends ItemType>(type: T, id: number) {
   const res = await axios.get(`/api/${type}/${id}/draft`)
+  Object.assign(res.data, res.data.payload)
   return res
 }
 
@@ -239,8 +325,14 @@ export async function updateDraft<T extends ItemType>(type: T, draftId: string, 
   return await axios.put(`/api/${type}/drafts/${draftId}`, params)
 }
 
-export async function updateDraftLinkedtoQueue(queueId: number, name: string, description: string) {
-  return await axios.put(`/api/queues/${queueId}/draft`, { name, description })
+export async function updateDraftLinkedtoQueue(queueId: number, name: string, description: string, snapshotId: number) {
+  return await axios.put(`/api/queues/${queueId}/draft`, { 
+    resourceSnapshot: snapshotId,
+    resourceData: {
+      name, 
+      description,
+    }
+   })
 }
 
 export async function deleteItem<T extends ItemType>(type: T, id: number) {
@@ -251,12 +343,20 @@ export async function deleteDraft<T extends ItemType>(type: T, draftId: number) 
   return await axios.delete(`/api/${type}/drafts/${draftId}`)
 }
 
+export async function deleteResourceDraft<T extends ItemType>(type: T, id: number) {
+  return await axios.delete(`/api/${type}/${id}/draft`)
+}
+
+export async function convertToResource(id: number) {
+  return await axios.post(`/api/workflows/draftCommit/${id}`)
+}
+
 export async function getFiles(id: number, pagination: Pagination) {
   const res =  await axios.get(`/api/plugins/${id}/files`, {
     params: {
       index: pagination.index,
       pageLength: pagination.rowsPerPage === 0 ? 100 : pagination.rowsPerPage,  // 0 means GET ALL
-      search: urlEncode(pagination.search),
+      search: pagination.search,
       sortBy: pagination.sortBy,
       descending: pagination.descending,
     }
@@ -276,6 +376,10 @@ export async function getFiles(id: number, pagination: Pagination) {
 
 export async function getFile(pluginID: string, fileID: string) {
   return await axios.get(`/api/plugins/${pluginID}/files/${fileID}`)
+}
+
+export async function getFileSnapshot(pluginID: string, fileID: string, snapshotId: number) {
+  return await axios.get(`/api/plugins/${pluginID}/files/${fileID}/snapshots/${snapshotId}`)
 }
 
 export async function addFile(id: number, params: CreateParams['files']){
@@ -307,18 +411,65 @@ export async function addArtifact(expId: string, jobId: string, params: Artifact
   return await axios.post(`/api/experiments/${expId}/jobs/${jobId}/artifacts`, params)
 }
 
-export async function addPluginsToEntrypoint(id: string, plugins: number[]) {
-  return await axios.post(`/api/entrypoints/${id}/plugins`, {plugins})
+export async function getArtifactFiles(id: string) {
+  return await axios.get(`/api/artifacts/${id}/files`)
 }
 
-export async function removePluginFromEntrypoint(entrypointId: string, pluginId: number) {
-  return await axios.delete(`/api/entrypoints/${entrypointId}/plugins/${pluginId}`)
+export async function downloadFile(url: string, filename: string,
+  {
+    withCredentials = true,
+    headers = {},
+  }: {
+    withCredentials?: boolean
+    headers?: Record<string, string>
+  } = {}
+) {
+  const res = await axios.get(url, {
+    responseType: 'blob',
+    withCredentials,
+    headers,
+  })
+
+  const blob = res.data
+  const objectUrl = URL.createObjectURL(blob)
+
+  const a = document.createElement('a')
+  a.href = objectUrl
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+
+  URL.revokeObjectURL(objectUrl)
+}
+
+export async function addPluginsToEntrypoint(id: string, plugins: number[], pluginType: string) {
+  return await axios.post(`/api/entrypoints/${id}/${pluginType}`, {[pluginType]: plugins})
+}
+
+export async function removePluginFromEntrypoint(entrypointId: string, pluginId: number, pluginType: string) {
+  return await axios.delete(`/api/entrypoints/${entrypointId}/${pluginType}/${pluginId}`)
+}
+
+export async function appendResource<T extends ItemType>(parentResourceType: T, parentResourceId: number, childResourceType: T, ids: number[]) {
+  return await axios.post(`/api/${parentResourceType}/${parentResourceId}/${childResourceType}`, {ids})
+}
+
+export async function removeResourceFromResource<T extends ItemType>(parentResourceType: T, parentResourceId: number, childResourceType: T, id: number) {
+  return await axios.delete(`/api/${parentResourceType}/${parentResourceId}/${childResourceType}/${id}`)
 }
 
 export async function getVersions(id: string,) {
   return await axios.get(`/api/models/${id}/versions`)
 }
 
+export async function validateEntrypoint(payload: any) {
+  return await axios.post(`/api/workflows/validateEntrypoint`, payload)
+}
+
+export async function suggestPluginTasks(pythonCode: string) {
+  return await axios.post(`/api/workflows/pluginTaskSignatureAnalysis`, { pythonCode })
+}
 
 export async function getLoginStatus() {
   return await axios.get(`/api/users/current`)
@@ -356,4 +507,13 @@ export async function deleteUser(password: string) {
   return await axios.delete(`/api/users/current`, {
     data: { password: password }
   })
+}
+
+export async function importResources(params: WorkflowParams['resourceImport']) {
+  return await axios.postForm(`/api/workflows/resourceImport`, params, {formSerializer: { indexes: null }})
+}
+
+export async function getDioptraVersion() {
+  const res = await axios.get('/health')
+  return res.data?.version ?? 'unknown'
 }

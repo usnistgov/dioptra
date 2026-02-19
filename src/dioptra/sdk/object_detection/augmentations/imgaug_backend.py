@@ -14,8 +14,6 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from __future__ import annotations
-
 from typing import Optional, Tuple
 
 import numpy as np
@@ -47,7 +45,7 @@ class ImgAugObjectDetectionAugmentations(ObjectDetectionAugmentations):
     @classmethod
     def use_minimal_augmenters(
         cls, image_dimensions: Tuple[int, int], seed: Optional[int] = None
-    ) -> ImgAugObjectDetectionAugmentations:
+    ) -> "ImgAugObjectDetectionAugmentations":
         augmenters: iaa.Sequential = iaa.Sequential(
             [
                 iaa.Fliplr(0.5),
@@ -68,7 +66,7 @@ class ImgAugObjectDetectionAugmentations(ObjectDetectionAugmentations):
     @classmethod
     def use_light_augmenters(
         cls, image_dimensions: Tuple[int, int], seed: Optional[int] = None
-    ) -> ImgAugObjectDetectionAugmentations:
+    ) -> "ImgAugObjectDetectionAugmentations":
         augmenters: iaa.Sequential = iaa.Sequential(
             [
                 iaa.Fliplr(0.5),
@@ -100,7 +98,7 @@ class ImgAugObjectDetectionAugmentations(ObjectDetectionAugmentations):
     @classmethod
     def use_heavy_augmenters(
         cls, image_dimensions: Tuple[int, int], seed: Optional[int] = None
-    ) -> ImgAugObjectDetectionAugmentations:
+    ) -> "ImgAugObjectDetectionAugmentations":
         augmenters: iaa.Sequential = iaa.Sequential(
             [
                 iaa.Fliplr(0.5),

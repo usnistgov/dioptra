@@ -16,7 +16,7 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 #
 # This is a fork of the work
-# https://github.com/gahjelle/pyplugs/blob/90e635777672f75080291c737f08453a26ea380d/pyplugs/_plugins.py  # noqa: B950
+# https://github.com/gahjelle/pyplugs/blob/90e635777672f75080291c737f08453a26ea380d/pyplugs/_plugins.py
 # See copyright below.
 #
 # Copyright (c) 2019 Geir Arne Hjelle
@@ -41,14 +41,11 @@
 # SOFTWARE.
 """Decorators for registering plugins"""
 
-from __future__ import annotations
-
 import functools
 import importlib
 import sys
 import textwrap
 from typing import (
-    TYPE_CHECKING,
     Any,
     Callable,
     Dict,
@@ -56,8 +53,6 @@ from typing import (
     NamedTuple,
     Optional,
     TypeVar,
-    Union,
-    cast,
     overload,
 )
 
@@ -65,12 +60,10 @@ import structlog
 from structlog.stdlib import BoundLogger
 
 from dioptra.sdk.exceptions import (
-    PrefectDependencyError,
     UnknownPackageError,
     UnknownPluginError,
     UnknownPluginFunctionError,
 )
-from dioptra.sdk.utilities.decorators import require_package
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -80,32 +73,6 @@ try:
 
 except ImportError:  # pragma: nocover
     import importlib_resources as resources  # type: ignore
-
-try:
-    from prefect import task
-
-except ImportError:  # pragma: nocover
-    LOGGER.warn(
-        "Unable to import one or more optional packages, functionality may be reduced",
-        package="prefect",
-    )
-
-try:
-    from typing import Protocol
-
-except ImportError:  # pragma: nocover
-    from typing_extensions import Protocol  # type: ignore
-
-if TYPE_CHECKING:
-    from prefect.tasks.core.function import FunctionTask
-
-
-# Structural subtyping
-class NoutPlugin(Protocol):
-    _task_nout: int
-
-    def __call__(self, *args, **kwargs) -> Any: ...  # noqa: E704; pragma: nocover
-
 
 # Type aliases
 T = TypeVar("T")
@@ -118,7 +85,7 @@ class PluginInfo(NamedTuple):
     package_name: str
     plugin_name: str
     func_name: str
-    func: Union[Plugin, NoutPlugin]
+    func: Plugin
     description: str
     doc: str
     module_doc: str
@@ -171,19 +138,6 @@ def register(_func=None, *, sort_value=0):
 
     else:
         return decorator_register(_func)
-
-
-def task_nout(nout: int) -> Callable[[Plugin], NoutPlugin]:
-    def decorator(func: Plugin) -> NoutPlugin:
-        # We're just assigning an attribute, and we need mypy to let us
-        # do that.  So we just force a type change, to a callable type which
-        # includes an attribute.
-        nout_func = cast(NoutPlugin, func)
-        nout_func._task_nout = nout
-
-        return nout_func
-
-    return decorator
 
 
 def names(package: str) -> List[str]:
@@ -255,25 +209,6 @@ def call(
     return plugin_func(*args, **kwargs)
 
 
-@require_package("prefect", exc_type=PrefectDependencyError)
-def get_task(package: str, plugin: str, func: Optional[str] = None) -> FunctionTask:
-    """Get a given plugin wrapped as a prefect task"""
-    plugin_func: Union[Plugin, NoutPlugin] = info(package, plugin, func).func
-    nout: Optional[int] = getattr(plugin_func, "_task_nout", None)
-
-    return task(nout=nout)(plugin_func)
-
-
-@require_package("prefect", exc_type=PrefectDependencyError)
-def call_task(
-    package: str, plugin: str, func: Optional[str] = None, *args: Any, **kwargs: Any
-) -> Any:
-    """Call the given plugin as a prefect task"""
-    plugin_task = get_task(package, plugin, func)
-
-    return plugin_task(*args, **kwargs)
-
-
 def _import(package: str, plugin: str) -> None:
     """Import the given plugin file from a package"""
     if package in _PLUGINS and plugin in _PLUGINS[package]:
@@ -308,18 +243,17 @@ def _import(package: str, plugin: str) -> None:
 def _import_all(package: str) -> None:
     """Import all plugins in a package"""
     try:
-        all_resources = resources.contents(package)
-
+        # Loop through all Python files in the directories of the package
+        plugins = [
+            r.name[:-3]
+            for r in resources.files(package).iterdir()
+            if r.is_file() and r.name.endswith(".py") and not r.name.startswith("_")
+        ]
     except ImportError as err:
         raise UnknownPackageError(err) from None
 
     # Note that we have tried to import the package by adding it to _PLUGINS
     _PLUGINS.setdefault(package, {})
-
-    # Loop through all Python files in the directories of the package
-    plugins = [
-        r[:-3] for r in all_resources if r.endswith(".py") and not r.startswith("_")
-    ]
 
     for plugin in plugins:
         try:
@@ -359,35 +293,18 @@ def call_factory(package: str) -> Callable[..., Any]:
     return functools.partial(call, package)
 
 
-@require_package("prefect", exc_type=PrefectDependencyError)
-def get_task_factory(package: str) -> Callable[[str, Optional[str]], FunctionTask]:
-    """Create a get_task() function for one package"""
-    return functools.partial(get_task, package)
-
-
-@require_package("prefect", exc_type=PrefectDependencyError)
-def call_task_factory(package: str) -> Callable[..., Any]:
-    """Create a call_task() function for one package"""
-    return functools.partial(call_task, package)
-
-
 __all__ = [
     "register",
-    "task_nout",
     "names",
     "funcs",
     "info",
     "exists",
     "get",
     "call",
-    "get_task",
-    "call_task",
     "names_factory",
     "funcs_factory",
     "info_factory",
     "exists_factory",
     "get_factory",
     "call_factory",
-    "get_task_factory",
-    "call_task_factory",
 ]

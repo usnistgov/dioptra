@@ -15,7 +15,8 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """Utility functions to help in building responses from ORM models"""
-from typing import Any, Callable, Final, Optional, TypedDict, cast
+
+from typing import Any, Callable, Final, Iterable, Optional, TypedDict, cast
 from urllib.parse import urlencode, urlunparse
 
 from marshmallow import Schema
@@ -63,9 +64,27 @@ class PluginTaskOutputParameterDict(TypedDict):
 
 
 class PluginTaskDict(TypedDict):
+    id: int
     name: str
+
+
+class FunctionTaskDict(PluginTaskDict):
     input_params: list[PluginTaskInputParameterDict]
     output_params: list[PluginTaskOutputParameterDict]
+
+
+class ArtifactTaskDict(PluginTaskDict):
+    output_params: list[PluginTaskOutputParameterDict]
+
+
+class PluginTaskContainerDict(TypedDict):
+    functions: list[FunctionTaskDict]
+    artifacts: list[ArtifactTaskDict]
+
+
+class PluginTaskContainerRefDict(TypedDict):
+    functions: list[PluginTaskDict]
+    artifacts: list[PluginTaskDict]
 
 
 class PluginWithFilesDict(TypedDict):
@@ -97,6 +116,12 @@ class ArtifactDict(TypedDict):
     has_draft: bool | None
 
 
+class ArtifactFileDict(TypedDict):
+    relative_path: str
+    is_dir: bool
+    file_size: int | None
+
+
 class QueueDict(TypedDict):
     queue: models.Queue
     has_draft: bool | None
@@ -106,6 +131,16 @@ class EntrypointDict(TypedDict):
     entry_point: models.EntryPoint
     queues: list[models.Queue]
     has_draft: bool | None
+
+
+class EntryPointArtifactOutputParameterDict(TypedDict):
+    name: str
+    parameter_type: PluginParameterTypeRefDict
+
+
+class EntrypointArtifactDict(TypedDict):
+    name: str
+    output_parameters: list[EntryPointArtifactOutputParameterDict]
 
 
 class JobDict(TypedDict):
@@ -151,6 +186,7 @@ def build_experiment_snapshot_ref(experiment: models.Experiment) -> dict[str, An
         The ExperimentSnapshotRef dictionary.
     """
     return {
+        "id": experiment.resource_id,
         "snapshot_id": experiment.resource_snapshot_id,
         "name": experiment.name,
         "group": build_group_ref(experiment.resource.owner),
@@ -255,6 +291,8 @@ def build_entrypoint_plugin(plugin_with_files: PluginWithFilesDict) -> dict[str,
     return {
         "id": plugin.resource_id,
         "snapshot_id": plugin.resource_snapshot_id,
+        "latest_snapshot": plugin.resource.latest_snapshot_id
+        == plugin.resource_snapshot_id,
         "name": plugin.name,
         "url": build_url(
             f"{PLUGINS}/{plugin.resource_id}/snapshots/{plugin.resource_snapshot_id}"
@@ -268,6 +306,7 @@ def build_entrypoint_plugin(plugin_with_files: PluginWithFilesDict) -> dict[str,
                     f"{PLUGINS}/{plugin.resource_id}/{PLUGIN_FILES}/{plugin_file.resource_id}/"
                     f"snapshots/{plugin_file.resource_snapshot_id}"
                 ),
+                "tasks": build_plugin_task(plugin_file.tasks),
             }
             for plugin_file in plugin_files
         ],
@@ -284,6 +323,7 @@ def build_plugin_snapshot_ref(plugin: models.Plugin) -> dict[str, Any]:
         The PluginSnapshotRef dictionary.
     """
     return {
+        "id": plugin.resource_id,
         "snapshot_id": plugin.resource_snapshot_id,
         "name": plugin.name,
         "group": build_group_ref(plugin.resource.owner),
@@ -303,6 +343,7 @@ def build_plugin_file_ref(plugin_file: models.PluginFile) -> dict[str, Any]:
         The PluginRef dictionary.
     """
     plugin_id = plugin_file.plugin_id
+
     return {
         "id": plugin_file.resource_id,
         "plugin": plugin_id,
@@ -311,6 +352,7 @@ def build_plugin_file_ref(plugin_file: models.PluginFile) -> dict[str, Any]:
         "url": build_url(
             f"{PLUGINS}/{plugin_id}/{PLUGIN_FILES}/{plugin_file.resource_id}"
         ),
+        "tasks": build_plugin_task(plugin_file.tasks),
     }
 
 
@@ -341,6 +383,7 @@ def build_entrypoint_snapshot_ref(entrypoint: models.EntryPoint) -> dict[str, An
         The EntrypointSnapshotRef dictionary.
     """
     return {
+        "id": entrypoint.resource_id,
         "snapshot_id": entrypoint.resource_snapshot_id,
         "name": entrypoint.name,
         "group": build_group_ref(entrypoint.resource.owner),
@@ -395,6 +438,7 @@ def build_queue_snapshot_ref(queue: models.Queue) -> dict[str, Any]:
         The QueueSnapshotRef dictionary.
     """
     return {
+        "id": queue.resource_id,
         "snapshot_id": queue.resource_snapshot_id,
         "name": queue.name,
         "group": build_group_ref(queue.resource.owner),
@@ -435,7 +479,6 @@ def build_artifact_ref(artifact: models.Artifact) -> dict[str, Any]:
     """
     return {
         "id": artifact.resource_id,
-        "artifact_uri": artifact.uri,
         "group": build_group_ref(artifact.resource.owner),
         "url": build_url(f"{ARTIFACTS}/{artifact.resource_id}"),
     }
@@ -523,6 +566,49 @@ def build_group(group: models.Group) -> dict[str, Any]:
     }
 
 
+def build_resource(resource_snapshot: models.ResourceSnapshot) -> dict[str, Any]:
+    """Build a Resource response dictionary.
+    Args:
+        resource_snapshot: The resource snapshot ORM object to convert into a Resource
+            response dictionary.
+    Returns:
+        The Resource response dictionary.
+    """
+    from dioptra.restapi.v1.artifacts.schema import ArtifactSchema
+    from dioptra.restapi.v1.entrypoints.schema import EntrypointSchema
+    from dioptra.restapi.v1.experiments.schema import ExperimentSchema
+    from dioptra.restapi.v1.models.schema import ModelSchema
+    from dioptra.restapi.v1.plugin_parameter_types.schema import (
+        PluginParameterTypeSchema,
+    )
+    from dioptra.restapi.v1.plugins.schema import PluginFileSchema, PluginSchema
+    from dioptra.restapi.v1.queues.schema import QueueSchema
+
+    build_fn = {
+        "artifact": build_artifact,
+        "entry_point": build_entrypoint,
+        "experiment": build_experiment,
+        "ml_model": build_model,
+        "plugin": build_plugin,
+        "plugin_file": build_plugin_file,
+        "plugin_task_parameter_type": build_plugin_parameter_type,
+        "queue": build_queue,
+    }.get(resource_snapshot.resource_type)
+
+    schema = {
+        "artifact": ArtifactSchema(),
+        "entry_point": EntrypointSchema(),
+        "experiment": ExperimentSchema(),
+        "ml_model": ModelSchema(),
+        "plugin": PluginSchema(),
+        "plugin_file": PluginFileSchema(),
+        "plugin_task_parameter_type": PluginParameterTypeSchema(),
+        "queue": QueueSchema(),
+    }.get(resource_snapshot.resource_type)
+
+    return schema.dump(build_fn({resource_snapshot.resource_type: resource_snapshot}))  # type: ignore
+
+
 def build_experiment(experiment_dict: ExperimentDict) -> dict[str, Any]:
     """Build an Experiment response dictionary.
 
@@ -546,6 +632,7 @@ def build_experiment(experiment_dict: ExperimentDict) -> dict[str, Any]:
         "group": build_group_ref(experiment.resource.owner),
         "created_on": experiment.resource.created_on,
         "last_modified_on": experiment.resource.last_modified_on,
+        "snapshot_created_on": experiment.created_on,
         "latest_snapshot": experiment.resource.latest_snapshot_id
         == experiment.resource_snapshot_id,
         "tags": [build_tag_ref(tag) for tag in experiment.tags],
@@ -586,17 +673,23 @@ def build_entrypoint(entrypoint_dict: EntrypointDict) -> dict[str, Any]:
     queues = entrypoint_dict.get("queues", None)
     has_draft = entrypoint_dict.get("has_draft", None)
 
-    plugins_dict = {
-        entry_point_plugin_file.plugin.resource_id: PluginWithFilesDict(
-            plugin=entry_point_plugin_file.plugin, plugin_files=[], has_draft=False
+    plugins = [
+        PluginWithFilesDict(
+            plugin=entry_point_plugin.plugin,
+            plugin_files=list(entry_point_plugin.plugin.plugin_files),
+            has_draft=False,
         )
-        for entry_point_plugin_file in entrypoint.entry_point_plugin_files
-    }
-    for entry_point_plugin_file in entrypoint.entry_point_plugin_files:
-        resource_id = entry_point_plugin_file.plugin.resource_id
-        plugin_file = entry_point_plugin_file.plugin_file
-        plugins_dict[resource_id]["plugin_files"].append(plugin_file)
-    plugins = list(plugins_dict.values())
+        for entry_point_plugin in entrypoint.entry_point_plugins
+    ]
+
+    artifact_plugins = [
+        PluginWithFilesDict(
+            plugin=entry_point_artifact_plugin.plugin,
+            plugin_files=list(entry_point_artifact_plugin.plugin.plugin_files),
+            has_draft=False,
+        )
+        for entry_point_artifact_plugin in entrypoint.entry_point_artifact_plugins
+    ]
 
     data = {
         "id": entrypoint.resource_id,
@@ -604,10 +697,12 @@ def build_entrypoint(entrypoint_dict: EntrypointDict) -> dict[str, Any]:
         "name": entrypoint.name,
         "description": entrypoint.description,
         "task_graph": entrypoint.task_graph,
+        "artifact_graph": entrypoint.artifact_graph,
         "user": build_user_ref(entrypoint.creator),
         "group": build_group_ref(entrypoint.resource.owner),
         "created_on": entrypoint.resource.created_on,
         "last_modified_on": entrypoint.resource.last_modified_on,
+        "snapshot_created_on": entrypoint.created_on,
         "latest_snapshot": entrypoint.resource.latest_snapshot_id
         == entrypoint.resource_snapshot_id,
         "tags": [build_tag_ref(tag) for tag in entrypoint.tags],
@@ -617,9 +712,32 @@ def build_entrypoint(entrypoint_dict: EntrypointDict) -> dict[str, Any]:
                 "default_value": param.default_value,
                 "parameter_type": param.parameter_type,
             }
-            for param in entrypoint.parameters
+            for param in sorted(entrypoint.parameters, key=lambda x: x.parameter_number)
+        ],
+        "artifact_parameters": [
+            {
+                "name": artifact.name,
+                "output_params": [
+                    {
+                        "name": param.name,
+                        "parameter_type": build_plugin_parameter_type_ref(
+                            param.parameter_type
+                        ),
+                    }
+                    for param in sorted(
+                        artifact.output_parameters, key=lambda x: x.parameter_number
+                    )
+                ],
+            }
+            for artifact in sorted(
+                entrypoint.artifact_parameters, key=lambda x: x.artifact_number
+            )
         ],
         "plugins": [build_entrypoint_plugin(plugin) for plugin in plugins],
+        "artifact_plugins": [
+            build_entrypoint_plugin(artifact_plugin)
+            for artifact_plugin in artifact_plugins
+        ],
     }
 
     if queues is not None:
@@ -631,11 +749,25 @@ def build_entrypoint(entrypoint_dict: EntrypointDict) -> dict[str, Any]:
     return data
 
 
+def build_metrics_snapshots(metrics_snapshots_dict: dict[str, Any]) -> dict[str, Any]:
+    """Build a Metrics Snapshot response dictionary.
+
+    Args:
+        metrics_snapshots_dict: The Metrics Snapshots object to convert
+        into a dictionary.
+
+    Returns:
+        The Metric Snapshots response dictionary.
+    """
+    # no changes currently
+    return metrics_snapshots_dict
+
+
 def build_job(job_dict: JobDict) -> dict[str, Any]:
     """Build a Job response dictionary.
 
     Args:
-        job: The Job object to convert into a job response dictionary.
+        job_dict: The Job object to convert into a job response dictionary.
 
     Returns:
         The Job response dictionary.
@@ -653,6 +785,10 @@ def build_job(job_dict: JobDict) -> dict[str, Any]:
             param.parameter.name: param.value
             for param in job.entry_point_job.entry_point_parameter_values
         },
+        "artifact_values": {
+            av.artifact_parameter.name: build_artifact_value(av.artifact)
+            for av in job.entry_point_job.entry_point_artifact_parameter_values
+        },
         "timeout": job.timeout,
         "user": build_user_ref(job.creator),
         "group": build_group_ref(job.resource.owner),
@@ -661,6 +797,7 @@ def build_job(job_dict: JobDict) -> dict[str, Any]:
         "entrypoint": build_entrypoint_snapshot_ref(job.entry_point_job.entry_point),
         "created_on": job.resource.created_on,
         "last_modified_on": job.resource.last_modified_on,
+        "snapshot_created_on": job.created_on,
         "latest_snapshot": job.resource.latest_snapshot_id == job.resource_snapshot_id,
         "tags": [build_tag_ref(tag) for tag in job.tags],
     }
@@ -711,6 +848,7 @@ def build_model(model_dict: ModelWithVersionDict) -> dict[str, Any]:
         "group": build_group_ref(model.resource.owner),
         "created_on": model.resource.created_on,
         "last_modified_on": model.resource.last_modified_on,
+        "snapshot_created_on": model.created_on,
         "latest_snapshot": model.resource.latest_snapshot_id
         == model.resource_snapshot_id,
         "tags": [build_tag_ref(tag) for tag in model.tags],
@@ -745,7 +883,44 @@ def build_model_version(model_dict: ModelWithVersionDict) -> dict[str, Any]:
     }
 
 
+def build_artifact_artifact_task(artifact: models.Artifact) -> dict[str, Any]:
+    if not artifact.task:
+        return {}
+
+    return {
+        "plugin_resource_id": artifact.plugin_plugin_file.plugin.resource_id,
+        "plugin_resource_snapshot_id": artifact.plugin_plugin_file.plugin.resource_snapshot_id,
+        "plugin_file_resource_id": artifact.plugin_plugin_file.plugin_file.resource_id,
+        "plugin_file_resource_snapshot_id": artifact.plugin_plugin_file.plugin_file.resource_snapshot_id,
+        **_build_artifact_task(plugin_task=artifact.task),
+    }
+
+
+def build_artifact_value(artifact: models.Artifact) -> dict[str, Any]:
+    """Build a JobArtifactValue dictionary.
+
+    Args:
+        artifact: The Artifact object to convert into a JobArtifactValue dictionary.
+
+    Returns:
+        The JobArtifactValue dictionary.
+    """
+    return {
+        "id": artifact.resource_id,
+        "snapshot_id": artifact.resource_snapshot_id,
+    }
+
+
 def build_artifact(artifact_dict: ArtifactDict) -> dict[str, Any]:
+    """Build an Artifact response dictionary.
+
+    Args:
+        artifact_dict: The Artifact object to convert into a ModelVeArtifactrsion
+            response dictionary.
+
+    Returns:
+        The Artifact response dictionary.
+    """
     artifact = artifact_dict["artifact"]
     has_draft = artifact_dict.get("has_draft")
 
@@ -758,15 +933,55 @@ def build_artifact(artifact_dict: ArtifactDict) -> dict[str, Any]:
         "group": build_group_ref(artifact.resource.owner),
         "created_on": artifact.resource.created_on,
         "last_modified_on": artifact.resource.last_modified_on,
+        "snapshot_created_on": artifact.created_on,
         "latest_snapshot": artifact.resource.latest_snapshot_id
         == artifact.resource_snapshot_id,
         "tags": [build_tag_ref(tag) for tag in artifact.tags],
+        "job_id": artifact.job_id,
+        "artifact_uri": artifact.uri,
+        "is_dir": artifact.is_dir,
+        "file_size": artifact.file_size,
+        "task": build_artifact_artifact_task(artifact=artifact),
+        "file_url": build_url(f"{ARTIFACTS}/{artifact.resource_id}/contents"),
     }
 
     if has_draft is not None:
         data["has_draft"] = has_draft
 
     return data
+
+
+def build_artifact_files(
+    artifact_id: int, files: Iterable[ArtifactFileDict]
+) -> Iterable[dict[str, Any]]:
+    """Build an Artifact Files response dictionary.
+
+    Args:
+        artifact: The Artifact object associated with the files to convert into an
+            Artifact Files response dictionary.
+        files: An iterable containing the Artifact Files to convert into an Artifact
+            Files response dictionary
+
+    Returns:
+        An iterable containing the Artifact Files response dictionaries.
+    """
+
+    def mapper(entry: ArtifactFileDict) -> dict[str, Any]:
+        relative_path = entry["relative_path"]
+        query_params = None
+        if relative_path:
+            query_params = {"path": relative_path}
+        return {
+            "is_dir": entry["is_dir"],
+            "relative_path": relative_path,
+            "file_size": entry["file_size"],
+            "file_url": build_url(
+                f"{ARTIFACTS}/{artifact_id}/contents",
+                query_params=query_params,
+            ),
+        }
+
+    return map(mapper, files)
 
 
 def build_queue(queue_dict: QueueDict) -> dict[str, Any]:
@@ -790,6 +1005,7 @@ def build_queue(queue_dict: QueueDict) -> dict[str, Any]:
         "group": build_group_ref(queue.resource.owner),
         "created_on": queue.resource.created_on,
         "last_modified_on": queue.resource.last_modified_on,
+        "snapshot_created_on": queue.created_on,
         "latest_snapshot": queue.resource.latest_snapshot_id
         == queue.resource_snapshot_id,
         "tags": [build_tag_ref(tag) for tag in queue.tags],
@@ -823,6 +1039,7 @@ def build_plugin(plugin_with_files: PluginWithFilesDict) -> dict[str, Any]:
         "group": build_group_ref(plugin.resource.owner),
         "created_on": plugin.resource.created_on,
         "last_modified_on": plugin.resource.last_modified_on,
+        "snapshot_created_on": plugin.created_on,
         "latest_snapshot": plugin.resource.latest_snapshot_id
         == plugin.resource_snapshot_id,
         "tags": [build_tag_ref(tag) for tag in plugin.tags],
@@ -853,10 +1070,11 @@ def build_plugin_file(plugin_file_with_plugin: PluginFileDict) -> dict[str, Any]
         "group": build_group_ref(plugin_file.resource.owner),
         "created_on": plugin_file.resource.created_on,
         "last_modified_on": plugin_file.resource.last_modified_on,
+        "snapshot_created_on": plugin_file.created_on,
         "latest_snapshot": plugin_file.resource.latest_snapshot_id
         == plugin_file.resource_snapshot_id,
         "contents": plugin_file.contents,
-        "tasks": [build_plugin_task(task) for task in plugin_file.tasks],
+        "tasks": build_plugin_task(plugin_file.tasks),
         "tags": [build_tag_ref(tag) for tag in plugin_file.tags],
     }
 
@@ -869,7 +1087,7 @@ def build_plugin_file(plugin_file_with_plugin: PluginFileDict) -> dict[str, Any]
     return data
 
 
-def build_plugin_task(plugin_task: models.PluginTask) -> PluginTaskDict:
+def _build_function_task(plugin_task: models.FunctionTask) -> FunctionTaskDict:
     input_params: list[PluginTaskInputParameterDict] = []
     for input_parameter in sorted(
         plugin_task.input_parameters, key=lambda x: x.parameter_number
@@ -896,12 +1114,66 @@ def build_plugin_task(plugin_task: models.PluginTask) -> PluginTaskDict:
                 ),
             )
         )
-
-    return PluginTaskDict(
+    return FunctionTaskDict(
+        id=plugin_task.task_id,
         name=plugin_task.plugin_task_name,
         input_params=input_params,
         output_params=output_params,
     )
+
+
+def _build_artifact_task(plugin_task: models.ArtifactTask) -> ArtifactTaskDict:
+    output_params: list[PluginTaskOutputParameterDict] = []
+    for output_parameter in sorted(
+        plugin_task.output_parameters, key=lambda x: x.parameter_number
+    ):
+        output_params.append(
+            PluginTaskOutputParameterDict(
+                name=output_parameter.name,
+                parameter_type=build_plugin_parameter_type_ref(
+                    output_parameter.parameter_type
+                ),
+            )
+        )
+    return ArtifactTaskDict(
+        id=plugin_task.task_id,
+        name=plugin_task.plugin_task_name,
+        output_params=output_params,
+    )
+
+
+def build_plugin_task(
+    plugin_tasks: Iterable[models.PluginTask],
+) -> PluginTaskContainerDict:
+    functions = []
+    artifacts = []
+    for task in plugin_tasks:
+        if isinstance(task, models.FunctionTask):
+            functions.append(_build_function_task(task))
+        elif isinstance(task, models.ArtifactTask):
+            artifacts.append(_build_artifact_task(task))
+        else:
+            # if this error is raised, need to add another block
+            raise RuntimeError("unknown plugin task type")
+    return PluginTaskContainerDict(functions=functions, artifacts=artifacts)
+
+
+def build_plugin_task_ref(
+    plugin_tasks: Iterable[models.PluginTask],
+) -> PluginTaskContainerRefDict:
+    functions: list[PluginTaskDict] = []
+    artifacts: list[PluginTaskDict] = []
+    for task in plugin_tasks:
+        current = None
+        if isinstance(task, models.FunctionTask):
+            current = functions
+        elif isinstance(task, models.ArtifactTask):
+            current = artifacts
+        else:
+            # if this error is raised, need to add another block
+            raise RuntimeError("unknown plugin task type")
+        current.append(PluginTaskDict(id=task.task_id, name=task.plugin_task_name))
+    return PluginTaskContainerRefDict(functions=functions, artifacts=artifacts)
 
 
 def build_plugin_parameter_type(
@@ -917,7 +1189,7 @@ def build_plugin_parameter_type(
         The Plugin Parameter Type response dictionary.
     """
     plugin_parameter_type = plugin_parameter_type_dict["plugin_task_parameter_type"]
-    has_draft = plugin_parameter_type_dict["has_draft"]
+    has_draft = plugin_parameter_type_dict.get("has_draft", None)
 
     data = {
         "id": plugin_parameter_type.resource_id,
@@ -929,6 +1201,7 @@ def build_plugin_parameter_type(
         "group": build_group_ref(plugin_parameter_type.resource.owner),
         "created_on": plugin_parameter_type.resource.created_on,
         "last_modified_on": plugin_parameter_type.resource.last_modified_on,
+        "snapshot_created_on": plugin_parameter_type.created_on,
         "latest_snapshot": plugin_parameter_type.resource.latest_snapshot_id
         == plugin_parameter_type.resource_snapshot_id,
         "tags": [build_tag_ref(tag) for tag in plugin_parameter_type.tags],
@@ -960,7 +1233,7 @@ def build_resource_draft(
         schema = draft_schema()
     payload = schema.dump(draft.payload["resource_data"])
 
-    metadata = dict()
+    metadata = {}
     if num_other_drafts is not None:
         metadata["num_other_drafts"] = num_other_drafts
     return {
@@ -1007,7 +1280,7 @@ def build_paging_envelope(
         data: The list of ORM objects to wrap in the paging envelope.
         query: The optional search query string.
         draft_type: The type of drafts to return.
-        index: The index of the current page.
+        index: The starting index of the current page.
         length: The number of results to return per page.
         total_num_elements: The total number of elements in the collection.
         sort_by: The name of the column to sort.
@@ -1078,7 +1351,7 @@ def build_paging_url(
         resource_type: The prefix of the route to paginate, forms the URL path.
         search: The optional search query string.
         draft_type: The type of drafts to return.
-        index: The index of the current page.
+        index: The starting index of the current page.
         length: The number of results to return per page.
 
     Returns:

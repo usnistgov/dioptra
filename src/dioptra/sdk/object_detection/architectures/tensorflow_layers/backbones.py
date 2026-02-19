@@ -14,8 +14,6 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from __future__ import annotations
-
 from typing import Optional, Tuple
 
 import structlog
@@ -39,7 +37,9 @@ try:
     from tensorflow.keras.applications.efficientnet import (
         preprocess_input as efficient_net_preprocess_input,
     )
-    from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2
+    from tensorflow.keras.applications.mobilenet_v2 import (
+        MobileNetV2,
+    )
     from tensorflow.keras.applications.mobilenet_v2 import (
         preprocess_input as mobilenet_v2_preprocess_input,
     )
@@ -63,16 +63,16 @@ class EfficientNetBackbone(Model):
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
-        efficient_net_registry = dict(
-            b0=EfficientNetB0,
-            b1=EfficientNetB1,
-            b2=EfficientNetB2,
-            b3=EfficientNetB3,
-            b4=EfficientNetB4,
-            b5=EfficientNetB5,
-            b6=EfficientNetB6,
-            b7=EfficientNetB7,
-        )
+        efficient_net_registry = {
+            "b0": EfficientNetB0,
+            "b1": EfficientNetB1,
+            "b2": EfficientNetB2,
+            "b3": EfficientNetB3,
+            "b4": EfficientNetB4,
+            "b5": EfficientNetB5,
+            "b6": EfficientNetB6,
+            "b7": EfficientNetB7,
+        }
         self.model = efficient_net_registry[flavor.strip().lower()](
             include_top=False,
             weights=weights,

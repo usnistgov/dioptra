@@ -15,6 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The schemas for serializing/deserializing Queue resources."""
+
 from marshmallow import Schema, fields
 
 from dioptra.restapi.v1.schemas import (
@@ -38,7 +39,7 @@ class QueueRefSchema(QueueRefBaseSchema):  # type: ignore
 
     name = fields.String(
         attribute="name",
-        metadata=dict(description="Name of the Queue resource."),
+        metadata={"description": "Name of the Queue resource."},
     )
 
 
@@ -47,7 +48,7 @@ class QueueSnapshotRefSchema(QueueSnapshotRefBaseSchema):  # type: ignore
 
     name = fields.String(
         attribute="name",
-        metadata=dict(description="Name of the Queue resource."),
+        metadata={"description": "Name of the Queue resource."},
     )
 
 
@@ -56,12 +57,12 @@ class QueueMutableFieldsSchema(Schema):
 
     name = fields.String(
         attribute="name",
-        metadata=dict(description="Name of the Queue resource."),
+        metadata={"description": "Name of the Queue resource."},
         required=True,
     )
     description = fields.String(
         attribute="description",
-        metadata=dict(description="Description of the Queue resource."),
+        metadata={"description": "Description of the Queue resource."},
         load_default=None,
     )
 
@@ -79,7 +80,7 @@ class QueuePageSchema(BasePageSchema):
     data = fields.Nested(
         QueueSchema,
         many=True,
-        metadata=dict(description="List of Queue resources in the current page."),
+        metadata={"description": "List of Queue resources in the current page."},
     )
 
 

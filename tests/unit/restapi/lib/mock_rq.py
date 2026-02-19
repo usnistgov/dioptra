@@ -14,7 +14,6 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from __future__ import annotations
 
 import uuid
 from typing import Any, Dict, Optional, Union
@@ -30,20 +29,20 @@ class MockRQJob(object):
         self,
         id: str = "4520511d-678b-4966-953e-af2d0edcea32",
         queue: Optional[str] = None,
-        timeout: Optional[str] = None,
+        job_timeout: Optional[str] = None,
         cmd_kwargs: Optional[Dict[str, Any]] = None,
-        depends_on: Optional[Union[str, MockRQJob]] = None,
+        depends_on: Optional[Union[str, "MockRQJob"]] = None,
     ) -> None:
         LOGGER.info(
             "Mocking rq.job.Job instance",
             id=id,
             queue=queue,
-            timeout=timeout,
+            job_timeout=job_timeout,
             cmd_kwargs=cmd_kwargs,
             depends_on=depends_on,
         )
         self.queue = queue
-        self.timeout = timeout
+        self.job_timeout = job_timeout
         self.cmd_kwargs = cmd_kwargs
         self._id = id
         self._dependency_ids = None
@@ -54,7 +53,7 @@ class MockRQJob(object):
             ]
 
     @classmethod
-    def fetch(cls, id: str, *args, **kwargs) -> MockRQJob:
+    def fetch(cls, id: str, *args, **kwargs) -> "MockRQJob":
         LOGGER.info(
             "Mocking rq.job.Job.fetch() function", id=id, args=args, kwargs=kwargs
         )
@@ -79,7 +78,7 @@ class MockRQJob(object):
         self._id = value
 
     @property
-    def dependency(self) -> Optional[MockRQJob]:
+    def dependency(self) -> Optional["MockRQJob"]:
         LOGGER.info("Mocking rq.job.Job.dependency getter")
         if not self._dependency_ids:
             return None
@@ -98,11 +97,11 @@ class MockRQQueue(object):
         job_id = kwargs.get("job_id", str(uuid.uuid4()))
         cmd_kwargs = kwargs.get("kwargs")
         depends_on = kwargs.get("depends_on")
-        timeout = kwargs.get("timeout")
+        job_timeout = kwargs.get("job_timeout")
         return MockRQJob(
             id=job_id,
             queue=self.name,
-            timeout=timeout,
+            job_timeout=job_timeout,
             cmd_kwargs=cmd_kwargs,
             depends_on=depends_on,
         )

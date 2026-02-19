@@ -119,6 +119,26 @@ class NonIterableTaskOutputError(StepError):
         self.value = value
 
 
+class ArtifactOutputNotFoundError(StepError):
+    """A reference to a nonexistent output of an artifact parameter."""
+
+    def __init__(
+        self,
+        parameter_name: str,
+        output_name: str,
+        context_step_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            'Unrecognized output of artifact parameter "{}": {}'.format(
+                parameter_name, output_name
+            ),
+            context_step_name,
+        )
+
+        self.parameter_name = parameter_name
+        self.output_name = output_name
+
+
 class UnresolvableReferenceError(StepError):
     """
     A reference did not resolve and does not match any global parameter or
@@ -291,7 +311,7 @@ class TooManyTypeStructuresError(DioptraTypeError):
         context_type_name: Optional[str] = None,
     ) -> None:
         message = (
-            "A type definition may include at most one structure type." "  Found: {}"
+            "A type definition may include at most one structure type.  Found: {}"
         ).format(", ".join(structure_type.name for structure_type in structure_types))
 
         super().__init__(message, context_type_name)

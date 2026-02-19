@@ -14,18 +14,18 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from __future__ import annotations
 
 from flask import Flask, Response
+from flask.testing import FlaskClient
+
+from dioptra.restapi.__version__ import __version__ as DIOPTRA_VERSION
+
+def test_create_app(flask_app: Flask):
+    assert isinstance(flask_app, Flask)
 
 
-def test_create_app(app: Flask):
-    assert isinstance(app, Flask)
-
-
-def test_app_healthy(app: Flask):
-    with app.test_client() as client:
-        resp: Response = client.get("/health")
-        assert resp.status_code == 200
-        assert resp.is_json
-        assert resp.json == "healthy"
+def test_app_healthy(client: FlaskClient):
+    resp: Response = client.get("/health")
+    assert resp.status_code == 200
+    assert resp.is_json
+    assert resp.json == {"status": "healthy", "version": DIOPTRA_VERSION}

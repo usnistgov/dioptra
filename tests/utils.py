@@ -14,7 +14,6 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from __future__ import annotations
 
 import io
 import tarfile
@@ -31,7 +30,7 @@ class Timer(object):
         self._elapsed: Optional[float] = None
         self._timeout = timeout
 
-    def __enter__(self) -> Timer:
+    def __enter__(self) -> "Timer":
         self.start = timeit.default_timer()
         self._elapsed = None
         return self

@@ -1,0 +1,8 @@
+{
+    "project_name": "Custom Dioptra Worker",
+    "__project_slug": "{{ cookiecutter.project_name.lower().replace(' ', '-').replace('_', '-') }}",
+    "__argbash_version": "2.11.0",
+    "__python_version": "3.11",
+    "_copy_without_render": [],
+    "_is_pytest": "False"
+}

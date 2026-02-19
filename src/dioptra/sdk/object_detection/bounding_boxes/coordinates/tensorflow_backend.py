@@ -14,7 +14,6 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from __future__ import annotations
 
 from typing import cast
 
@@ -308,14 +307,14 @@ class TensorflowBoundingBoxCoordinates(BoundingBoxCoordinates):
     def _find_no_obj_cell_ij(
         self, bboxes_cell_ij: npt.NDArray, i_range: npt.NDArray, j_range: npt.NDArray
     ) -> npt.NDArray:
-        cell_ij_set: set[tuple[npt.ArrayLike, npt.ArrayLike]] = set(
-            [(i, j) for i in i_range for j in j_range]
-        )
-        cell_ij_seen: set[tuple[npt.ArrayLike, npt.ArrayLike]] = set(
-            [(x[0], x[1]) for x in bboxes_cell_ij.tolist()]
-        )
+        cell_ij_set: set[tuple[npt.ArrayLike, npt.ArrayLike]] = {
+            (i, j) for i in i_range for j in j_range
+        }
+        cell_ij_seen: set[tuple[npt.ArrayLike, npt.ArrayLike]] = {
+            (x[0], x[1]) for x in bboxes_cell_ij.tolist()
+        }
         no_obj_cell_ij: list[tuple[npt.ArrayLike, npt.ArrayLike]] = sorted(
-            list(cell_ij_set - cell_ij_seen)
+            cell_ij_set - cell_ij_seen
         )
 
         return np.array(no_obj_cell_ij, dtype="int32")
@@ -343,7 +342,7 @@ class TensorflowBoundingBoxesBatchedGrid(BoundingBoxesBatchedGrid):
     @classmethod
     def on_grid_shape(
         cls, grid_shape: tuple[int, int]
-    ) -> TensorflowBoundingBoxesBatchedGrid:
+    ) -> "TensorflowBoundingBoxesBatchedGrid":
         return cls(
             bounding_box_coordinates=TensorflowBoundingBoxCoordinates(
                 grid_shape=grid_shape

@@ -30,14 +30,13 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath("../../task-plugins"))
 sys.path.insert(0, os.path.abspath("../../src"))
 
 
 # -- Project information -----------------------------------------------------
 
 project = "Dioptra"
-release = "1.0.1"
+release = "1.1.0"
 version = ".".join(release.split(".")[:2])
 
 # -- General configuration ---------------------------------------------------
@@ -57,6 +56,7 @@ extensions = [
     "sphinx_togglebutton",
     "sphinxcontrib.httpdomain",
     "sphinxcontrib.openapi",
+    "sphinx_tabs.tabs",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -75,7 +75,13 @@ master_doc = "index"
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "dev-guide", "getting-started/installation.rst"]
+exclude_patterns = [
+    "_build",
+    "Thumbs.db",
+    ".DS_Store",
+    # "dev-guide",
+    "getting-started/installation.rst",
+]
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = "sphinx"
@@ -89,6 +95,7 @@ add_module_names = False
 #
 on_rtd = os.environ.get("READTHEDOCS") == "True"
 html_theme = "sphinx_book_theme"
+
 # if on_rtd:
 #     html_theme = "default"
 
@@ -100,13 +107,17 @@ html_theme = "sphinx_book_theme"
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
 
-html_css_files = ["dioptra.css"]
+
+html_css_files = [
+    "dioptra.css",
+]
 
 html_js_files = [
     "jquery.visible.js",
     "jquery.leaveNotice-nist.js",
     "applyLeaveNotice.js",
     "smoothNavScroll.js",
+    "image_modals.js",
 ]
 
 html_theme_options = {
@@ -117,6 +128,8 @@ html_theme_options = {
     "path_to_docs": "docs/source",
 }
 
+html_scaled_image_link = False
+
 # -- Extension configuration -------------------------------------------------
 
 # -- Options for autodoc extension -------------------------------------------
@@ -124,7 +137,6 @@ html_theme_options = {
 autoclass_content = "class"
 autodoc_mock_imports = [
     "alembic",
-    "art",
     "botocore",
     "boto3",
     "entrypoints",
@@ -138,10 +150,7 @@ autodoc_mock_imports = [
     "passlib",
     "redis",
     "rq",
-    "scipy",
-    "sklearn",
     "structlog",
-    "tensorflow",
 ]
 autodoc_inherit_docstrings = True
 autodoc_member_order = "bysource"
@@ -156,20 +165,23 @@ intersphinx_mapping = {
         None,
     ),
     "boto3": ("https://boto3.amazonaws.com/v1/documentation/api/latest/", None),
-    "click": ("https://click.palletsprojects.com/en/8.1.x/", None),
-    "flask": ("https://flask.palletsprojects.com/en/2.1.x/", None),
+    "click": ("https://click.palletsprojects.com/en/stable/", None),
+    "flask": ("https://flask.palletsprojects.com/en/stable/", None),
     "flask_migrate": ("https://flask-migrate.readthedocs.io/en/latest/", None),
     "flask_restx": ("https://flask-restx.readthedocs.io/en/latest/", None),
-    "flask_sqlalchemy": ("https://flask-sqlalchemy.palletsprojects.com/en/2.x/", None),
+    "flask_sqlalchemy": (
+        "https://flask-sqlalchemy.palletsprojects.com/en/stable/",
+        None,
+    ),
     "injector": ("https://injector.readthedocs.io/en/latest/", None),
     "marshmallow": ("https://marshmallow.readthedocs.io/en/stable/", None),
-    "mlflow": ("https://mlflow.org/docs/latest/", None),
+    "mlflow": ("https://mlflow.org/docs/latest/api_reference/", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
     "pandas": ("https://pandas.pydata.org/docs/", None),
     "python": ("https://docs.python.org/3/", None),
-    "sqlalchemy": ("https://docs.sqlalchemy.org/en/14/", None),
+    "sqlalchemy": ("https://docs.sqlalchemy.org/en/20/", None),
     "scipy": ("https://docs.scipy.org/doc/scipy/", None),
-    "sklearn": ("https://scikit-learn.org/1.0/", None),
+    "sklearn": ("https://scikit-learn.org/stable/", None),
     "structlog": ("https://www.structlog.org/en/stable/", None),
 }
 
@@ -188,5 +200,3 @@ napoleon_use_param = True
 napoleon_use_rtype = True
 
 # -- Options for panels extension --------------------------------------------
-
-panels_add_bootstrap_css = False

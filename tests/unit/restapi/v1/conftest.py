@@ -15,33 +15,40 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """Fixtures representing resources needed for test suites"""
+
+import os
+import shutil
+import subprocess
+import tarfile
 import textwrap
-from collections.abc import Iterator
+import uuid
+from http import HTTPStatus
 from pathlib import Path
+from tempfile import NamedTemporaryFile, TemporaryDirectory
 from typing import Any, cast
 
+import mlflow
+import mlflow.artifacts
 import pytest
-from flask import Flask
+import tomli as toml
 from flask.testing import FlaskClient
-from flask_sqlalchemy import SQLAlchemy
-from injector import Injector
+from freezegun import freeze_time
+from mlflow.tracking import MlflowClient
 from pytest import MonkeyPatch
 
-from ..lib import actions, mock_rq
+from dioptra.client import (
+    DioptraFile,
+    select_files_in_directory,
+    select_one_or_more_files,
+)
+from dioptra.sdk.utilities.paths import set_cwd
+
+from ..lib import actions, mock_mlflow, mock_rq
 
 
 @pytest.fixture
-def app(dependency_modules: list[Any]) -> Iterator[Flask]:
-    from dioptra.restapi import create_app
-
-    injector = Injector(dependency_modules)
-    app = create_app(env="test_v1", injector=injector)
-
-    yield app
-
-
-@pytest.fixture
-def registered_users(client: FlaskClient, db: SQLAlchemy) -> dict[str, Any]:
+@freeze_time("Apr 1st, 2025 5:00am", auto_tick_seconds=1)
+def registered_users(client: FlaskClient) -> dict[str, Any]:
     password = "supersecurepassword"
     user1_response = actions.register_user(
         client, "user1", "user1@example.org", password
@@ -66,23 +73,24 @@ def registered_users(client: FlaskClient, db: SQLAlchemy) -> dict[str, Any]:
 
 
 @pytest.fixture
+@freeze_time("Apr 1st, 2025 5:30am", auto_tick_seconds=1)
 def auth_account(
     client: FlaskClient,
-    db: SQLAlchemy,
     registered_users: dict[str, Any],  # noqa: F811
 ) -> dict[str, Any]:
     user_info = cast(dict[str, Any], registered_users["user1"])
     login_response = actions.login(
         client, username=user_info["username"], password=user_info["password"]
     )
-    if login_response.status_code != 200:
+    if login_response.status_code != HTTPStatus.OK:
         raise ValueError("User login failed.")
     return user_info
 
 
 @pytest.fixture
+@freeze_time("Apr 1st, 2025", auto_tick_seconds=1)
 def registered_tags(
-    client: FlaskClient, db: SQLAlchemy, auth_account: dict[str, Any]
+    client: FlaskClient, auth_account: dict[str, Any]
 ) -> dict[str, Any]:
     tag1_response = actions.register_tag(
         client,
@@ -107,54 +115,80 @@ def registered_tags(
 
 
 @pytest.fixture
-def registered_artifacts(
-    client: FlaskClient,
-    db: SQLAlchemy,
-    auth_account: dict[str, Any],
-    registered_jobs: dict[str, Any],
-) -> dict[str, Any]:
-    group_id = auth_account["groups"][0]["id"]
-    artifact1_response = actions.register_artifact(
-        client,
-        uri="s3://bucket/model_v1.artifact",
-        description="Model artifact.",
-        job_id=registered_jobs["job1"]["id"],
-        group_id=group_id,
-    ).get_json()
-    artifact2_response = actions.register_artifact(
-        client,
-        uri="s3://bucket/cnn.artifact",
-        description="Trained conv net model artifact.",
-        job_id=registered_jobs["job1"]["id"],
-        group_id=group_id,
-    ).get_json()
-    artifact3_response = actions.register_artifact(
-        client,
-        uri="s3://bucket/model.artifact",
-        description="Another model",
-        job_id=registered_jobs["job2"]["id"],
-        group_id=group_id,
-    ).get_json()
-    artifact4_response = actions.register_artifact(
-        client,
-        uri="s3://bucket/model_v2.artifact",
-        description="Fine-tuned model.",
-        job_id=registered_jobs["job3"]["id"],
-        group_id=group_id,
-    ).get_json()
-
+def artifact_info() -> dict[str, dict[str, str]]:
     return {
-        "artifact1": artifact1_response,
-        "artifact2": artifact2_response,
-        "artifact3": artifact3_response,
-        "artifact4": artifact4_response,
+        "artifact1": {
+            "job_name": "job1",
+            "name": "model_v1.artifact",
+            "description": "Model artifact.",
+        },
+        "artifact2": {
+            "job_name": "job1",
+            "name": "cnn.artifact",
+            "description": "Trained conv net model artifact.",
+        },
+        "artifact3": {
+            "job_name": "job2",
+            "name": "model.artifact",
+            "description": "Another model",
+        },
+        "artifact4": {
+            "job_name": "job3",
+            "name": "model_v2.artifact",
+            "description": "Fine-tuned model.",
+        },
     }
 
 
 @pytest.fixture
+@freeze_time("Apr 1st, 2025 3:00pm", auto_tick_seconds=1)
+def mlflow_artifact_uris(
+    mockup_mlflow: MlflowClient,
+    registered_mlflowrun: dict[str, Any],
+    artifact_info: dict[str, dict[str, str]],
+) -> dict[str, str]:
+    artifact_uris = {}
+    for name, artifact in artifact_info.items():
+        run_id = registered_mlflowrun[artifact["job_name"]]["mlflowRunId"]
+        mlflow.start_run(run_id)
+        mlflow.log_artifact(
+            artifact_path=None,
+            local_path=artifact["name"],
+        )
+        artifact_uris[name] = mlflow.get_artifact_uri(artifact["name"])
+        mlflow.end_run()
+    return artifact_uris
+
+
+@pytest.fixture
+@freeze_time("Apr 1st, 2025 4:00pm", auto_tick_seconds=1)
+def registered_artifacts(
+    client: FlaskClient,
+    mockup_mlflow: MlflowClient,
+    auth_account: dict[str, Any],
+    registered_jobs: dict[str, Any],
+    artifact_info: dict[str, dict[str, str]],
+    mlflow_artifact_uris: dict[str, str],
+) -> dict[str, Any]:
+    group_id = auth_account["groups"][0]["id"]
+    result = {}
+    for name, artifact in artifact_info.items():
+        response = actions.register_artifact(
+            client,
+            uri=mlflow_artifact_uris[name],
+            description=artifact["description"],
+            job_id=registered_jobs[artifact["job_name"]]["id"],
+            group_id=group_id,
+        )
+        assert response.status_code == HTTPStatus.OK
+        result[name] = response.get_json()
+    return result
+
+
+@pytest.fixture
+@freeze_time("Apr 1st, 2025 5:00pm", auto_tick_seconds=1)
 def registered_models(
     client: FlaskClient,
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_artifacts: dict[str, Any],
 ) -> dict[str, Any]:
@@ -216,9 +250,9 @@ def registered_models(
 
 
 @pytest.fixture
+@freeze_time("Apr 1st, 2025 6:00pm", auto_tick_seconds=1)
 def registered_model_versions(
     client: FlaskClient,
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
     registered_artifacts: dict[str, Any],
@@ -264,8 +298,9 @@ def registered_model_versions(
 
 
 @pytest.fixture
+@freeze_time("Apr 1st, 2025 8:00am", auto_tick_seconds=1)
 def registered_plugins(
-    client: FlaskClient, db: SQLAlchemy, auth_account: dict[str, Any]
+    client: FlaskClient, auth_account: dict[str, Any]
 ) -> dict[str, Any]:
     plugin1_response = actions.register_plugin(
         client,
@@ -293,8 +328,9 @@ def registered_plugins(
 
 
 @pytest.fixture
+@freeze_time("Apr 1st, 2025 8:30am", auto_tick_seconds=1)
 def registered_plugin_with_files(
-    client: FlaskClient, db: SQLAlchemy, auth_account: dict[str, Any]
+    client: FlaskClient, auth_account: dict[str, Any]
 ) -> dict[str, Any]:
     plugin_response = actions.register_plugin(
         client,
@@ -341,9 +377,9 @@ def registered_plugin_with_files(
 
 
 @pytest.fixture
+@freeze_time("Apr 1st, 2025 9:00am", auto_tick_seconds=1)
 def registered_plugin_with_file_and_tasks(
     client: FlaskClient,
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
 ) -> dict[str, Any]:
     plugin_response = actions.register_plugin(
@@ -406,7 +442,7 @@ def registered_plugin_with_file_and_tasks(
         description="The plugin file with tasks.",
         filename="plugin_file.py",
         contents=contents,
-        tasks=plugin_task_list,
+        function_tasks=plugin_task_list,
     ).get_json()
     return {
         "plugin": plugin_response,
@@ -418,8 +454,74 @@ def registered_plugin_with_file_and_tasks(
 
 
 @pytest.fixture
+@freeze_time("Apr 1st, 2025 9:40am", auto_tick_seconds=1)
+def registered_artifact_plugins(
+    client: FlaskClient,
+    auth_account: dict[str, Any],
+    registered_plugin_parameter_types: dict[str, Any],
+) -> dict[str, Any]:
+    plugin_response = actions.register_plugin(
+        client,
+        name="artifact_plugin",
+        description="An artifact plugin with files.",
+        group_id=auth_account["default_group_id"],
+    ).get_json()
+    contents = textwrap.dedent(
+        """from dioptra.sdk.api.artifact import ArtifactTaskInterface
+        from pathlib import Path
+
+        class TestArtifactTask(ArtifactTaskInterface):
+            @staticmethod
+            def serialize(
+                working_dir: Path, name: str, contents: str, **kwargs
+            ) -> Path:
+                result = Path(working_dir, name)
+                result.write_text(contents, encoding="UTF-8", newline="")
+                return result
+
+            @staticmethod
+            def deserialize(working_dir: Path, path: str, **kwargs) -> str:
+                return Path(working_dir, path).read_text()
+
+            @staticmethod
+            def validation() -> dict[str, Any] | None:
+                return None
+
+            @staticmethod
+            def name() -> str:
+                return "test_artifact"
+        """
+    )
+    test_artifact_task = {
+        "name": "TestArtifactTask",
+        "outputParams": [
+            {
+                "name": "contents",
+                "parameterType": registered_plugin_parameter_types["string"]["id"],
+            }
+        ],
+    }
+    artifact_task_list = [test_artifact_task]
+    plugin_file_response = actions.register_plugin_file(
+        client,
+        plugin_id=plugin_response["id"],
+        description="The artifact plugin file with tasks.",
+        filename="artifact_file.py",
+        contents=contents,
+        artifact_tasks=artifact_task_list,
+    ).get_json()
+    return {
+        "artifact_plugin": {
+            "plugin_id": plugin_response["id"],
+            "plugin_file": plugin_file_response,
+        }
+    }
+
+
+@pytest.fixture
+@freeze_time("Apr 1st, 2025 10:00am", auto_tick_seconds=1)
 def registered_queues(
-    client: FlaskClient, db: SQLAlchemy, auth_account: dict[str, Any]
+    client: FlaskClient, auth_account: dict[str, Any]
 ) -> dict[str, Any]:
     queue1_response = actions.register_queue(
         client,
@@ -447,8 +549,9 @@ def registered_queues(
 
 
 @pytest.fixture
+@freeze_time("Apr 1st, 2025 7:00am", auto_tick_seconds=1)
 def registered_groups(
-    client: FlaskClient, db: SQLAlchemy, auth_account: dict[str, Any]
+    client: FlaskClient, auth_account: dict[str, Any]
 ) -> dict[str, Any]:
     public_response = actions.get_public_group(client).get_json()
     # group1_response = actions.register_group(
@@ -472,8 +575,9 @@ def registered_groups(
 
 
 @pytest.fixture
+@freeze_time("Apr 1st, 2025 9:30am", auto_tick_seconds=1)
 def registered_plugin_parameter_types(
-    client: FlaskClient, db: SQLAlchemy, auth_account: dict[str, Any]
+    client: FlaskClient, auth_account: dict[str, Any]
 ) -> dict[str, Any]:
     built_in_types = {"any", "number", "integer", "string", "boolean", "null"}
     response = actions.get_plugin_parameter_types(client).get_json()
@@ -486,14 +590,14 @@ def registered_plugin_parameter_types(
         client,
         name="image_shape",
         group_id=auth_account["groups"][0]["id"],
-        structure={"list": ["integer"]},
+        structure={"list": "integer"},
         description="The dimensions of an image",
     ).get_json()
     plugin_param_type2_response = actions.register_plugin_parameter_type(
         client,
         name="model_output",
         group_id=auth_account["groups"][0]["id"],
-        structure=dict({"list": ["float"]}),
+        structure=dict({"list": "number"}),
         description="The softmax scores from a model",
     ).get_json()
     plugin_param_type3_response = actions.register_plugin_parameter_type(
@@ -512,9 +616,9 @@ def registered_plugin_parameter_types(
 
 
 @pytest.fixture
+@freeze_time("Apr 1st, 2025 12:00pm", auto_tick_seconds=1)
 def registered_experiments(
     client: FlaskClient,
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
 ) -> dict[str, Any]:
@@ -550,9 +654,9 @@ def registered_experiments(
 
 
 @pytest.fixture
+@freeze_time("Apr 1st, 2025 11:00am", auto_tick_seconds=1)
 def registered_entrypoints(
     client: FlaskClient,
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_queues: dict[str, Any],
     registered_plugin_with_files: dict[str, Any],
@@ -587,7 +691,7 @@ def registered_entrypoints(
         },
         {
             "name": "entrypoint_param_5",
-            "defaultValue": "['a', 'b', {'c': 1}]",
+            "defaultValue": "[\"a\", \"b\", {\"c\": 1}]",
             "parameterType": "list",
         },
     ]
@@ -623,17 +727,28 @@ def registered_entrypoints(
         plugin_ids=plugin_ids,
         queue_ids=queue_ids,
     ).get_json()
+    entrypoint_no_params = actions.register_entrypoint(
+        client,
+        name="entrypoint_no_params",
+        description="No params Entry-Point.",
+        group_id=auth_account["groups"][0]["id"],
+        task_graph=task_graph,
+        parameters=[],
+        plugin_ids=plugin_ids,
+        queue_ids=queue_ids,
+    ).get_json()
     return {
         "entrypoint1": entrypoint1_response,
         "entrypoint2": entrypoint2_response,
         "entrypoint3": entrypoint3_response,
+        "entrypoint_no_params": entrypoint_no_params,
     }
 
 
 @pytest.fixture
+@freeze_time("Apr 1st, 2025 1:00pm", auto_tick_seconds=1)
 def registered_jobs(
     client: FlaskClient,
-    db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_queues: dict[str, Any],
     registered_experiments: dict[str, Any],
@@ -645,9 +760,9 @@ def registered_jobs(
 
     monkeypatch.setattr(rq_service, "RQQueue", mock_rq.MockRQQueue)
 
-    queue_id = registered_queues["queue1"]["snapshot"]
-    experiment_id = registered_experiments["experiment1"]["snapshot"]
-    entrypoint_id = registered_entrypoints["entrypoint1"]["snapshot"]
+    queue_id = registered_queues["queue1"]["id"]
+    experiment_id = registered_experiments["experiment1"]["id"]
+    entrypoint_id = registered_entrypoints["entrypoint1"]["id"]
     values = {
         registered_entrypoints["entrypoint1"]["parameters"][0]["name"]: "new_value",
     }
@@ -684,3 +799,116 @@ def registered_jobs(
         "job2": job2_response,
         "job3": job3_response,
     }
+
+
+@pytest.fixture
+@freeze_time("Apr 1st, 2025 2:00pm", auto_tick_seconds=1)
+def registered_mlflowrun(
+    client: FlaskClient,
+    mockup_mlflow: MlflowClient,
+    auth_account: dict[str, Any],
+    registered_jobs: dict[str, Any],
+) -> dict[str, Any]:
+    run_ids = []
+    # should be able to do this without creating an experiment
+    # leaving it here for now
+    experiment_id = mlflow.create_experiment("experiment1")
+    with mlflow.start_run(experiment_id=experiment_id) as run:
+        run_ids.append(run.info.run_id)
+    with mlflow.start_run(experiment_id=experiment_id) as run:
+        run_ids.append(run.info.run_id)
+    with mlflow.start_run(experiment_id=experiment_id) as run:
+        run_ids.append(run.info.run_id)
+    mlflowruns = {"job1": run_ids[0], "job2": run_ids[1], "job3": run_ids[2]}
+
+    responses = actions.post_mlflowruns(
+        client=client, mlflowruns=mlflowruns, registered_jobs=registered_jobs
+    )
+
+    return responses
+
+
+@pytest.fixture
+@freeze_time("Apr 1st, 2025 2:10pm", auto_tick_seconds=1)
+def registered_mlflowrun_incomplete(
+    client: FlaskClient,
+    auth_account: dict[str, Any],
+    registered_jobs: dict[str, Any],
+) -> dict[str, Any]:
+    mlflowruns = {
+        "job1": uuid.uuid4(),
+        "job2": uuid.uuid4(),
+    }  # leave job3 out so we can use that in test_mlflowrun()
+
+    responses = actions.post_mlflowruns(
+        client=client, mlflowruns=mlflowruns, registered_jobs=registered_jobs
+    )
+
+    return responses
+
+
+@pytest.fixture
+def resources_tar_file() -> DioptraFile:
+    path = Path(__file__).absolute().parent / "workflows" / "resource_import_files"
+    with set_cwd(path):
+        with NamedTemporaryFile(suffix=".tar.gz", delete=False) as f:
+            with tarfile.open(fileobj=f, mode="w:gz") as tar:
+                tar.add("dioptra.toml")
+                tar.add("plugins", recursive=True)
+                tar.add("entrypoints", recursive=True)
+
+        yield select_one_or_more_files([f.name])[0]
+
+        os.unlink(f.name)
+
+
+@pytest.fixture
+def resources_repo() -> str:
+    path = Path(__file__).absolute().parent / "workflows" / "resource_import_files"
+
+    git = shutil.which("git")
+
+    with TemporaryDirectory() as tmp_dir:
+        repo_dir = Path(tmp_dir) / "repo.git"
+        shutil.copytree(path, repo_dir)
+        with set_cwd(repo_dir):
+            subprocess.run([git, "init", "."])
+            subprocess.run([git, "add", "."])
+            subprocess.run(
+                [git, "-c", "user.name=test", "-c", "user.email=test", "commit", "-m."]
+            )
+
+            yield str(repo_dir)
+
+
+@pytest.fixture
+def resources_files() -> DioptraFile:
+    path = Path(__file__).absolute().parent / "workflows" / "resource_import_files"
+    with set_cwd(path):
+        return select_files_in_directory(".", recursive=True)
+
+
+@pytest.fixture
+def resources_import_config() -> dict[str, Any]:
+    path = Path(__file__).absolute().parent / "workflows" / "resource_import_files"
+    with set_cwd(path):
+        with open(path / "dioptra.toml", "rb") as f:
+            return toml.load(f)
+
+
+@pytest.fixture
+def mockup_mlflow(monkeypatch: MonkeyPatch) -> mock_mlflow.MockMlflowClient:
+    monkeypatch.setattr(mlflow, "create_experiment", mock_mlflow.create_experiment)
+    monkeypatch.setattr(mlflow, "start_run", mock_mlflow.start_run)
+    monkeypatch.setattr(mlflow, "end_run", mock_mlflow.end_run)
+    monkeypatch.setattr(mlflow, "set_tag", mock_mlflow.set_tag)
+    monkeypatch.setattr(mlflow, "log_dict", mock_mlflow.log_dict)
+    monkeypatch.setattr(mlflow, "log_params", mock_mlflow.log_params)
+    monkeypatch.setattr(mlflow, "log_artifact", mock_mlflow.log_artifact)
+    monkeypatch.setattr(mlflow, "get_artifact_uri", mock_mlflow.get_artifact_uri)
+
+    monkeypatch.setattr(mlflow.artifacts, "list_artifacts", mock_mlflow.list_artifacts)
+    monkeypatch.setattr(
+        mlflow.artifacts, "download_artifacts", mock_mlflow.download_artifacts
+    )
+    return mock_mlflow.MockMlflowClient()

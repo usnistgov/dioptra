@@ -15,7 +15,6 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """A module for binding configurations to shared services using dependency injection."""
-from __future__ import annotations
 
 import os
 from dataclasses import dataclass
@@ -24,22 +23,27 @@ from typing import Any, Callable, List, Optional
 from boto3.session import Session
 from botocore.client import BaseClient
 from injector import Binder, Module, provider
-from mlflow.tracking import MlflowClient
+from mlflow import MlflowClient
 from passlib.context import CryptContext
 from redis import Redis
 
+from dioptra.restapi.request_scope import request
+from dioptra.restapi.v1.shared.job_run_store import (
+    JobRunStoreProtocol,
+    MlFlowJobRunStore,
+)
 from dioptra.restapi.v1.shared.password_service import PasswordService
-from dioptra.restapi.v1.shared.request_scope import request
 from dioptra.restapi.v1.shared.rq_service import RQServiceV1
 
 
-class MLFlowClientModule(Module):
+class JobRunStoreModule(Module):
     @request
     @provider
-    def provide_mlflow_client_module(
+    def provide_job_run_store_module(
         self,
-    ) -> MlflowClient:
-        return MlflowClient()
+        client: MlflowClient,
+    ) -> JobRunStoreProtocol:
+        return MlFlowJobRunStore(client)
 
 
 @dataclass
@@ -75,6 +79,11 @@ def _bind_rq_service_configuration(binder: Binder):
     binder.bind(RQServiceConfiguration, to=configuration, scope=request)
 
 
+def _bind_job_run_store_configuration(binder: Binder):
+    tracking_uri = os.getenv("MLFLOW_TRACKING_URI")
+    binder.bind(MlflowClient, to=MlflowClient(tracking_uri=tracking_uri), scope=request)
+
+
 def _bind_s3_service_configuration(binder: Binder) -> None:
     s3_endpoint_url: Optional[str] = os.getenv("MLFLOW_S3_ENDPOINT_URL")
 
@@ -106,6 +115,7 @@ def bind_dependencies(binder: Binder) -> None:
     _bind_rq_service_configuration(binder)
     _bind_s3_service_configuration(binder)
     _bind_password_service_configuration(binder)
+    _bind_job_run_store_configuration(binder)
 
 
 def register_providers(modules: List[Callable[..., Any]]) -> None:
@@ -116,6 +126,6 @@ def register_providers(modules: List[Callable[..., Any]]) -> None:
             environment.
     """
 
-    modules.append(MLFlowClientModule)
+    modules.append(JobRunStoreModule)
     modules.append(RQServiceV1Module)
     modules.append(PasswordServiceModule)

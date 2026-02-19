@@ -18,7 +18,7 @@ name: Docker images
 
 on:
   schedule:
-    - cron: "0 3 * * *" # everyday at 3am
+    - cron: "0 3 * * 0" # Sunday at 3am
   push:
     branches:
       - "main"
@@ -32,80 +32,246 @@ on:
 
 env:
   PROJECT_PREFIX: dioptra
+  REGISTRY: ghcr.io
+  REGISTRY_IMAGE: ghcr.io/${{ github.repository_owner }}/dioptra
 
 jobs:
-  build-docker-dioptra-apps:
-    runs-on: ubuntu-22.04
-    if: ${{ false }}  # disable for now
+  # Build job: Build platform-specific images and push by digest
+  build:
     strategy:
+      fail-fast: false
       matrix:
         dioptra-app:
           - nginx
           - mlflow-tracking
           - restapi
           - pytorch-cpu
-          - pytorch-gpu
           - tensorflow2-cpu
+          - pytorch-gpu
           - tensorflow2-gpu
+        platform:
+          - linux/amd64
+          - linux/arm64
+        exclude:
+          # GPU images are only built for amd64
+          - platform: linux/arm64
+            dioptra-app: pytorch-gpu
+          - platform: linux/arm64
+            dioptra-app: tensorflow2-gpu
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-22.04
+          - platform: linux/arm64
+            runner: ubuntu-22.04-arm
 
+    runs-on: ${{ matrix.runner }}
     steps:
+      - name: Prepare platform pair
+        id: platform
+        run: |
+          platform=${{ matrix.platform }}
+          echo "pair=${platform//\//-}" >> $GITHUB_OUTPUT
+
       - uses: actions/checkout@v6
       - uses: ./.github/actions/remove-extra-software
 
-      - name: set docker metadata
+      - name: Set up Docker Buildx
+        id: setup-buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Set docker metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: |
-            ${{ env.PROJECT_PREFIX }}/${{ matrix.dioptra-app }}
+            ${{ env.REGISTRY_IMAGE }}/${{ matrix.dioptra-app }}
+          flavor: |
+            latest=${{ github.ref_type == 'tag' && !contains(github.ref_name, 'dev') && !contains(github.ref_name, 'rc') && !contains(github.ref_name, 'a') && !contains(github.ref_name, 'b') }}
           tags: |
-            type=schedule,pattern=nightly
-            type=schedule,prefix=nightly-,pattern={{date 'YYYYMMDD'}}
+            type=schedule,pattern=weekly
+            type=schedule,prefix=weekly-,pattern={{date 'YYYYMMDD'}}
             type=ref,event=branch
             type=ref,event=pr
             type=ref,event=tag
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}},enable=${{ !startsWith(github.ref, 'refs/tags/v0.') }}
+            type=semver,pattern={{major}},enable=${{ !startsWith(github.ref, 'refs/tags/0.') }}
             type=sha,format=long,prefix=,suffix=
           labels: |
             org.opencontainers.image.title=${{ matrix.dioptra-app }}
-            org.opencontainers.image.description=Provides the ${{ matrix.dioptra-app }} microservice within the Dioptra architecture.
+            org.opencontainers.image.description=Provides the ${{ matrix.dioptra-app }} service.
+            org.opencontainers.image.authors=NCCoE Artificial Intelligence Team <dioptra@nist.gov>, Harold Booth <harold.booth@nist.gov>, James Glasbrenner <jglasbrenner@mitre.org>, Keith Manville <kmanville@mitre.org>, Julian Sexton <jtsexton@mitre.org>, Michael Andy Chisholm, Henry Choy <hchoy@mitre.org>, Andrew Hand, Bronwyn Hodges <bhodges@mitre.org>, Paul Scemama, Dmitry Cousin <dmitry.cousin@nist.gov>, Eric Trapnell <eric.trapnell@nist.gov>, Mark Trapnell <mark.trapnell@nist.gov>, Colton Lapp <colton.lapp@nist.gov>, Howard Huang <hhuang@mitre.org>, Paul Rowe <prowe@mitre.org>, Alexander Byrne, Luke Barner, Cory Miniter
             org.opencontainers.image.vendor=National Institute of Standards and Technology
-            org.opencontainers.image.licenses=NIST-PD OR CC-BY-4.0
+            org.opencontainers.image.url=https://github.com/usnistgov/dioptra
+            org.opencontainers.image.source=https://github.com/usnistgov/dioptra
             org.opencontainers.image.documentation=https://pages.nist.gov/dioptra
-            org.opencontainers.image.authors=NCCoE Artificial Intelligence Team <dioptra@nist.gov>
+            org.opencontainers.image.licenses=NIST-PD OR CC-BY-4.0
 
-      - name: set up docker qemu
-        uses: docker/setup-qemu-action@v3
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: set up docker buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: build and push
+      - name: Build and push by digest
+        id: build
         uses: docker/build-push-action@v6
         with:
           context: .
           target: final
-          push: false
-          load: true
+          platforms: ${{ matrix.platform }}
           file: docker/Dockerfile.${{ matrix.dioptra-app }}
-          tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          no-cache: true
           pull: true
+          outputs: type=image,name=${{ env.REGISTRY_IMAGE }}/${{ matrix.dioptra-app }},push-by-digest=true,name-canonical=true,push=true
 
-      - name: create 'dev' tag
+      - name: Export digest
         run: |
-          docker tag ${{ env.PROJECT_PREFIX }}/${{ matrix.dioptra-app }}:${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.revision'] }} ${{ env.PROJECT_PREFIX }}/${{ matrix.dioptra-app }}:dev
+          mkdir -p ${{ runner.temp }}/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "${{ runner.temp }}/digests/${digest#sha256:}"
 
-      - name: export dev-tagged image to tar.gz file
-        shell: bash
-        run: |
-          docker save ${{ env.PROJECT_PREFIX }}/${{ matrix.dioptra-app }}:dev | gzip > /tmp/${{ env.PROJECT_PREFIX }}_${{ matrix.dioptra-app }}_dev.tar.gz
-
-      - name: archive the testing images
+      - name: Upload digest
         uses: actions/upload-artifact@v6
         with:
-          name: ${{ env.PROJECT_PREFIX }}-${{ matrix.dioptra-app }}-dev-image
-          path: /tmp/${{ env.PROJECT_PREFIX }}_${{ matrix.dioptra-app }}_dev.tar.gz
+          name: digests-${{ matrix.dioptra-app }}-${{ steps.platform.outputs.pair }}
+          path: ${{ runner.temp }}/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  # Merge job: Create multi-arch manifest and sign
+  merge:
+    needs:
+      - build
+
+    strategy:
+      fail-fast: false
+      matrix:
+        dioptra-app:
+          - nginx
+          - mlflow-tracking
+          - restapi
+          - pytorch-cpu
+          - tensorflow2-cpu
+          - pytorch-gpu
+          - tensorflow2-gpu
+
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Download digests
+        uses: actions/download-artifact@v4
+        with:
+          path: ${{ runner.temp }}/digests
+          pattern: digests-${{ matrix.dioptra-app }}-*
+          merge-multiple: true
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Set docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.REGISTRY_IMAGE }}/${{ matrix.dioptra-app }}
+          flavor: |
+            latest=${{ github.ref_type == 'tag' && !contains(github.ref_name, 'dev') && !contains(github.ref_name, 'rc') && !contains(github.ref_name, 'a') && !contains(github.ref_name, 'b') }}
+          tags: |
+            type=schedule,pattern=weekly
+            type=schedule,prefix=weekly-,pattern={{date 'YYYYMMDD'}}
+            type=ref,event=branch
+            type=ref,event=pr
+            type=ref,event=tag
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}},enable=${{ !startsWith(github.ref, 'refs/tags/0.') }}
+            type=sha,format=long,prefix=,suffix=
+          labels: |
+            org.opencontainers.image.title=${{ matrix.dioptra-app }}
+            org.opencontainers.image.description=Provides the ${{ matrix.dioptra-app }} service.
+            org.opencontainers.image.authors=NCCoE Artificial Intelligence Team <dioptra@nist.gov>, Harold Booth <harold.booth@nist.gov>, James Glasbrenner <jglasbrenner@mitre.org>, Keith Manville <kmanville@mitre.org>, Julian Sexton <jtsexton@mitre.org>, Michael Andy Chisholm, Henry Choy <hchoy@mitre.org>, Andrew Hand, Bronwyn Hodges <bhodges@mitre.org>, Paul Scemama, Dmitry Cousin <dmitry.cousin@nist.gov>, Eric Trapnell <eric.trapnell@nist.gov>, Mark Trapnell <mark.trapnell@nist.gov>, Colton Lapp <colton.lapp@nist.gov>, Howard Huang <hhuang@mitre.org>, Paul Rowe <prowe@mitre.org>, Alexander Byrne, Luke Barner, Cory Miniter
+            org.opencontainers.image.vendor=National Institute of Standards and Technology
+            org.opencontainers.image.url=https://github.com/usnistgov/dioptra
+            org.opencontainers.image.source=https://github.com/usnistgov/dioptra
+            org.opencontainers.image.documentation=https://pages.nist.gov/dioptra
+            org.opencontainers.image.licenses=NIST-PD OR CC-BY-4.0
+
+      - name: Create manifest list and push
+        working-directory: ${{ runner.temp }}/digests
+        run: |
+          docker buildx imagetools create \
+            $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ env.REGISTRY_IMAGE }}/${{ matrix.dioptra-app }}@sha256:%s ' *)
+
+      - name: Inspect image
+        run: |
+          docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}/${{ matrix.dioptra-app }}:${{ steps.meta.outputs.version }}
+
+      # Signing: Sign the manifest list with FIPS-compliant OpenSSL
+      - name: Install rekor-cli
+        uses: ./.github/actions/install-rekor-cli
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3.9.2
+
+      - name: Extract first image tag
+        id: extract_tag
+        run: |
+          IMAGE_TAG=$(echo '${{ steps.meta.outputs.tags }}' | head -n1)
+          echo "Using image tag: $IMAGE_TAG"
+          echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Generate cosign payload
+        id: gen_cosign_payload
+        run: |
+          IMAGE="${{ steps.extract_tag.outputs.image_tag }}"
+          mkdir -p "${{ github.workspace }}/tmp"
+          cosign generate "${IMAGE}" > ${{ github.workspace }}/tmp/image_payload.json
+          echo "payload=$(cat ${{ github.workspace }}/tmp/image_payload.json)" >> $GITHUB_OUTPUT
+
+      - name: Sign payload with FIPS-compliant OpenSSL
+        uses: ./.github/actions/sign-payload-fips
+        id: sign_payload_fips
+        with:
+          payload: ${{ steps.gen_cosign_payload.outputs.payload }}
+          private-key: ${{ secrets.DIOPTRA_PRIVATE_KEY }}
+          public-key: ${{ secrets.DIOPTRA_PUBLIC_KEY }}
+
+      - name: Attach OpenSSL signature using cosign
+        run: |
+          IMAGE="${{ steps.extract_tag.outputs.image_tag }}"
+          echo "${{ steps.sign_payload_fips.outputs.signature }}" | tr -d '\n' > ${{ github.workspace }}/tmp/payload_b64.sig
+          cosign attach signature \
+            --payload "${{ github.workspace }}/tmp/image_payload.json" \
+            --signature "${{ github.workspace }}/tmp/payload_b64.sig" \
+            "${IMAGE}"
+
+      - name: Create Rekor entry
+        uses: ./.github/actions/create-rekor-entry
+        id: create_rekor_entry
+        with:
+          payload: ${{ steps.gen_cosign_payload.outputs.payload }}
+          public-key: ${{ secrets.DIOPTRA_PUBLIC_KEY }}
+          signature: ${{ steps.sign_payload_fips.outputs.signature }}
+
+      - name: Verify Rekor entry
+        run: |
+          UUID="${{ steps.create_rekor_entry.outputs.uuid }}"
+          echo "Checking Rekor for UUID=${UUID}"
+          rekor-cli get --uuid "${UUID}" --rekor_server https://rekor.sigstore.dev
+
+      - name: Verify signature with cosign
+        run: |
+          IMAGE="${{ steps.extract_tag.outputs.image_tag }}"
+          echo "${{ secrets.DIOPTRA_PUBLIC_KEY }}" > "${{ github.workspace }}/tmp/dioptra.pub"
+          cosign verify --key "${{ github.workspace }}/tmp/dioptra.pub" "${IMAGE}"

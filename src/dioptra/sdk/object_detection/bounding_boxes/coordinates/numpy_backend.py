@@ -14,8 +14,6 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from __future__ import annotations
-
 import numpy as np
 import numpy.typing as npt
 
@@ -61,13 +59,13 @@ class NumpyBoundingBoxCoordinates(BoundingBoxCoordinates):
         )
 
     def find_no_obj_cell_ij(self, bboxes_cell_ij: npt.NDArray) -> npt.NDArray:
-        cell_ij_set: set[tuple[int, int]] = set(
-            [(i, j) for i in range(self.cell_nrow) for j in range(self.cell_ncol)]
-        )
-        cell_ij_seen: set[tuple[int, int]] = set(
-            [(int(x[0]), int(x[1])) for x in bboxes_cell_ij.tolist()]
-        )
-        no_obj_cell_ij = sorted(list(cell_ij_set - cell_ij_seen))
+        cell_ij_set: set[tuple[int, int]] = {
+            (i, j) for i in range(self.cell_nrow) for j in range(self.cell_ncol)
+        }
+        cell_ij_seen: set[tuple[int, int]] = {
+            (int(x[0]), int(x[1])) for x in bboxes_cell_ij.tolist()
+        }
+        no_obj_cell_ij = sorted(cell_ij_set - cell_ij_seen)
 
         return np.array(no_obj_cell_ij, dtype="int32")
 
@@ -236,7 +234,7 @@ class NumpyBoundingBoxesBatchedGrid(BoundingBoxesBatchedGrid):
     @classmethod
     def on_grid_shape(
         cls, grid_shape: tuple[int, int]
-    ) -> NumpyBoundingBoxesBatchedGrid:
+    ) -> "NumpyBoundingBoxesBatchedGrid":
         bbox_coord: NumpyBoundingBoxCoordinates = NumpyBoundingBoxCoordinates(
             grid_shape=grid_shape
         )

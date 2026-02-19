@@ -1,5 +1,8 @@
 <template>
-  <PageTitle :title="title" />
+  <PageTitle
+    v-if="route.name !== 'experimentJobs'"
+    :title="title" 
+  />
   <TableComponent 
     :rows="jobs"
     :columns="columns"
@@ -8,53 +11,34 @@
     @request="getJobs"
     @delete="showDeleteDialog = true"
     ref="tableRef"
-    :hideEditBtn="true"
-    :showExpand="true"
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
-    @create="router.push(`/experiments/${route.params.id}/jobs/new`)"
+    @create="pushToJobRoute"
+    :hideOpenBtn="true"
+    @open="openTab => (openTab
+      ? openWindow.open(`/jobs/${selected[0].id}`, '_blank')
+      : router.push(`/jobs/${selected[0].id}`)
+    )"
+    :loading="isLoading"
   >
+    <template #body-cell-experiment="props">
+      {{ props.row.experiment.name }}
+    </template>
     <template #body-cell-entrypoint="props">
       {{ props.row.entrypoint.name }}
     </template>
     <template #body-cell-queue="props">
       {{ props.row.queue.name }}
     </template>
-    <template #expandedSlot="{ row }">
-      <q-btn
-        label="Create Artifact"
-        color="primary"
-        class="q-ml-md q-my-sm"
-        @click="jobId = row.id; showArtifactsDialog = true"
-      />
-      <BasicTable
-        :columns="artifactColumns"
-        :rows="row.artifacts"
-        :hideSearch="true"
-        :hideEditTable="true"
-        class="q-mx-md"
-        :title="`Job Artifacts`"
-      />
+    <template #body-cell-status="props">
+      <JobStatus :status="props.row.status" />
     </template>
   </TableComponent>
-  <q-btn 
-    class="fixedButton"
-    round
-    color="primary"
-    icon="add"
-    size="lg"
-    :to="`/experiments/${route.params.id}/jobs/new`"
-  >
-    <span class="sr-only">Create a new Job</span>
-    <q-tooltip>
-      Create a new Job
-    </q-tooltip>
-  </q-btn>
 
   <DeleteDialog 
     v-model="showDeleteDialog"
     @submit="deleteJob"
     type="Job"
-    :name="selected.length ? selected[0].description : ''"
+    :name="selected[0]?.description || `Job ID: ${selected[0]?.id}`"
   />
 
   <ArtifactsDialog 
@@ -81,31 +65,43 @@
   import * as api from '@/services/dataApi'
   import * as notify from '../notify'
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'
-  import BasicTable from '@/components/BasicTable.vue'
   import ArtifactsDialog from '@/dialogs/ArtifactsDialog.vue'
   import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
+  import JobStatus from '@/components/JobStatus.vue'
 
+  const openWindow = window
   const route = useRoute()
   const router = useRouter()
 
   const columns = [
-    { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true, },
-    { name: 'id', label: 'Job ID', align: 'left', field: 'id', sortable: false, },
-    { name: 'entrypoint', label: 'Entrypoint', align: 'left', field: 'entrypoint', sortable: false, },
-    { name: 'queue', label: 'Queue', align: 'left', field: 'queue', sortable: false, },
+    { name: 'id', label: 'ID', align: 'left', field: 'id', sortable: true, },
+    { name: 'entrypoint', label: 'Entrypoint', align: 'left', field: 'entrypoint', sortable: true, },
+    { name: 'queue', label: 'Queue', align: 'left', field: 'queue', sortable: true, },
+    { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true, style: 'width: 275px',},
     { name: 'status', label: 'Status', align: 'left', field: 'status', sortable: true },
-    { name: 'tags', label: 'Tags', align: 'left', field: 'tags', sortable: false },
+    { name: 'tags', label: 'Tags', align: 'left', field: 'tags', sortable: false, },
   ]
 
+  if(route.name === 'allJobs') {
+    columns.splice(2, 0, 
+      { name: 'experiment', label: 'Experiment', align: 'left', field: 'experiment', sortable: true, }
+    )
+  }
+
   const artifactColumns = [
-    { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true, },
-    { name: 'uri', label: 'uri', align: 'left', field: 'uri', sortable: true, },
+    { name: 'id', label: 'id', align: 'left', field: 'id', sortable: true, },
   ]
 
   const selected = ref([])
 
   const title = ref('')
-  getExperiment()
+
+  if(route.name === 'experimentJobs') {
+    getExperiment()
+  } else if(route.name === 'allJobs') {
+    title.value = 'Jobs'
+  }
+
   async function getExperiment() {
     try {
       const res = await api.getItem('experiments', route.params.id)
@@ -117,18 +113,44 @@
 
   const jobs = ref([])
 
+  const isLoading = ref(false)
+
   const tableRef = ref(null)
 
-  async function getJobs(pagination, showDrafts) {
+async function getJobs(pagination, showDrafts) {
+    isLoading.value = true
+    const minLoadTimePromise = new Promise(resolve => setTimeout(resolve, 300));
+
+    // default sort by id descending
+    if(!pagination.sortBy) {
+      pagination.sortBy = 'id'
+      pagination.descending = true
+    }
     try {
-      const res = await api.getJobs(route.params.id, pagination, showDrafts)
+      let res
+      if(route.name === 'experimentJobs') {
+        [res] = await Promise.all([
+          api.getJobs(route.params.id, pagination, showDrafts),
+          minLoadTimePromise
+        ]);
+      } else if(route.name === 'allJobs') {
+        [res] = await Promise.all([
+          api.getData('jobs', pagination, false),
+          minLoadTimePromise
+        ]);
+      } else {
+        await minLoadTimePromise;
+        return;
+      }
       console.log('jobs res = ', res)
       jobs.value = res.data.data
       tableRef.value.updateTotalRows(res.data.totalNumResults)
     } catch(err) {
       console.log('err = ', err)
       notify.error(err.response.data.message)
-    } 
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   const showDeleteDialog = ref(false)
@@ -140,17 +162,22 @@
 
   async function deleteJob() {
     try {
-      if(Object.hasOwn(selected.value[0], 'hasDraft')) {
-        await api.deleteItem('jobs', selected.value[0].id)
-      } else {
-        // await api.deleteDraft('queues', selected.value[0].id)
-      }
-      notify.success(`Successfully deleted '${selected.value[0].description}'`)
+      const jobId = JSON.parse(JSON.stringify(selected.value[0].id))
+      await api.deleteItem('jobs', selected.value[0].id)
+      notify.success(`Successfully deleted job ${jobId}`)
       showDeleteDialog.value = false
       selected.value = []
       tableRef.value.refreshTable()
     } catch(err) {
       notify.error(err.response.data.message);
+    }
+  }
+
+  function pushToJobRoute() {
+    if(route.name === 'experimentJobs') {
+      router.push(`/experiments/${route.params.id}/jobs/new`)
+    } else if(route.name === 'allJobs') {
+      router.push('/jobs/new')
     }
   }
 

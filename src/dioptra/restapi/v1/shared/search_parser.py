@@ -20,7 +20,10 @@ A module for Dioptra's REST API query language.
 This module is responsible for defining the query language and providing a parser.
 It parses syntactically correct search queries into a list of search terms. It also
 provides support for constructing sqlalchemy WHERE clauses from a parsed query.
+
+See test_grammar in unit tests for example grammar usage
 """
+
 from typing import Any
 
 import pyparsing as pp
@@ -44,7 +47,7 @@ def _define_query_grammar() -> pp.ParserElement:
     wildcard = ~pp.Literal("\\") + (pp.Literal("*") | pp.Literal("?"))
 
     # An escaped character is a '\' followed by a character that needs to be escaped
-    escape = pp.Literal("\\") + pp.Word("\\?*\"'n", exact=1)
+    escape = pp.Literal("\\") + pp.Word("\\?*\"'n:,", exact=1)
 
     # Spaces are allowed in unquoted searches, but not when a field is specified
     space = pp.Literal(" ")
@@ -106,17 +109,27 @@ def parse_search_text(search_text: str) -> list[dict]:
             contains a 'field' and 'value' key. The field is the name of the field to
             be searched or None to indicate the query should not be restricted by
             field. The value is a list of strings that represent the search value.
+
+    Raises:
+        SearchParseError: if an error occurs while trying to parse the received string
     """
 
-    parsed_search = DIOPTRA_QUERY_GRAMMAR.parse_string(
-        search_text, parse_all=True
-    ).as_list()
-    formatted_result = []
-    for term in parsed_search:
-        if len(term) > 1 and isinstance(term[1], list):
-            formatted_result.append({"field": term[0], "value": term[1]})
-        else:
-            formatted_result.append({"field": None, "value": term})
+    formatted_result: list[dict]
+    if not search_text:
+        formatted_result = []
+    else:
+        try:
+            parsed_search = DIOPTRA_QUERY_GRAMMAR.parse_string(
+                search_text, parse_all=True
+            ).as_list()
+        except pp.ParseException as error:
+            raise SearchParseError(error.line, repr(error)) from error
+        formatted_result = []
+        for term in parsed_search:
+            if len(term) > 1 and isinstance(term[1], list):
+                formatted_result.append({"field": term[0], "value": term[1]})
+            else:
+                formatted_result.append({"field": None, "value": term})
     return formatted_result
 
 
@@ -155,6 +168,7 @@ def construct_sql_query_filters(search_string: str, searchable_fields: dict[str,
 
     Args:
         search_string: A string conforming to the search grammar.
+        searchable_fields: A mapping of field names to SQL Alchemy filter functions
 
     Returns:
         A filter that can be used in a sqlalchemy query.
@@ -165,10 +179,7 @@ def construct_sql_query_filters(search_string: str, searchable_fields: dict[str,
     if not search_string:
         return True
 
-    try:
-        parsed_search_terms = parse_search_text(search_string)
-    except pp.ParseException as error:
-        raise SearchParseError(error.line, repr(error)) from error
+    parsed_search_terms = parse_search_text(search_string)
 
     query_filters: list = []
     for search_term in parsed_search_terms:
@@ -184,55 +195,3 @@ def construct_sql_query_filters(search_string: str, searchable_fields: dict[str,
         query_filters.append(filter)
 
     return and_(*query_filters)
-
-
-if __name__ == "__main__":
-    """
-    A simple demonstration of the query grammar with sample queries.
-    """
-
-    DIOPTRA_QUERY_GRAMMAR.run_tests(
-        r"""
-        # search all text fields matching 'search_*'
-        search_*
-        # search all text the exactly match 'search_*'
-        search_\*
-        # a quoted search term can contain spaces and other characters
-        "search \"this\", and 'that'"
-        # multiple search terms can be provided via a comma-separated list
-        "search=this", 'and, how about "this\?"',this_too
-        # search tags whose name matches 'classification' exactly
-        tag:classification
-        # search tags whose name starts with 'class'
-        tag:class*
-        # search descriptions containing mnist and whose tag name matches 'cv' exactly
-        description:*mnist*,tag:cv
-        # search for name starting with 'trial_' and ending with two valid characters
-        name:trial_??
-        # search for literal '*'
-        \*
-        # multi-word search
-        search all for this
-        # field multi-word search
-        field:"search all for this"
-        """,
-        full_dump=False,
-    )
-
-    DIOPTRA_QUERY_GRAMMAR.run_tests(
-        r"""
-        # invalid multi word field search
-        field:search all for this
-        # incorrect assignment character used
-        bad=assignment
-        # invalid characters in field name
-        bad-name:classification
-        # invalid delimiter between search terms
-        description:bad_delim|tag:cv
-        # missing closing quote
-        "forgot to close this quote
-        # tried to escape an unescapable character
-        \q
-        """,
-        full_dump=False,
-    )

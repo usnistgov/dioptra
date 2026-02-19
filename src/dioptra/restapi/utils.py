@@ -21,28 +21,33 @@
 .. |RequestParser| replace:: :py:class:`~flask_restx.reqparse.RequestParser`
 .. |Resource| replace:: :py:class:`~flask_restx.Resource`
 """
-from __future__ import annotations
 
 import datetime
 import functools
+import json
+import posixpath
+import re
 from collections import Counter
 from importlib.resources import as_file, files
-from typing import Any, Callable, List, Protocol, Type, cast
+from pathlib import PurePosixPath, PureWindowsPath
+from typing import Any, Callable, Iterable, List, Protocol, Type, cast
+from urllib.parse import urlparse
 
 from flask.views import View
 from flask_restx import Api, Namespace, Resource, inputs
 from flask_restx.reqparse import RequestParser
 from injector import Injector
-from marshmallow import Schema
+from marshmallow import Schema, ValidationError, missing
 from marshmallow import fields as ma
-from marshmallow import missing
 from marshmallow.schema import SchemaMeta
 from typing_extensions import TypedDict
 from werkzeug.datastructures import FileStorage
 
-from dioptra.restapi.v1.shared.request_scope import set_request_scope_callbacks
+from dioptra.restapi.request_scope import set_request_scope_callbacks
 
-from .custom_schema_fields import FileUpload
+from .custom_schema_fields import FileUpload, MultiFileUpload
+
+DOTS_REGEX = re.compile(r"^\.\.\.+$")
 
 
 class ParametersSchema(TypedDict, total=False):
@@ -54,6 +59,7 @@ class ParametersSchema(TypedDict, total=False):
     required: bool
     default: Any | None
     help: str
+    action: str
 
 
 def as_api_parser(
@@ -150,11 +156,14 @@ def create_parameters_schema(
         location = "files"
 
     parameters_schema = ParametersSchema(
-        name=cast(str, field.name),
+        name=cast(str, field.data_key or field.name),
         type=parameter_type,
         location=location,
         required=field.required,
     )
+
+    if type(field) is MultiFileUpload:
+        parameters_schema["action"] = "append"
 
     if operation == "load" and field.load_default is not missing:
         parameters_schema["default"] = field.load_default
@@ -202,6 +211,107 @@ def read_text_file(package: str, filename: str) -> str:
         return fp.read_text()
 
 
+def read_json_file(package: str, filename: str) -> Any:
+    """Read a JSON file from a specified package into a dict.
+
+    Args:
+        package: The name of the Python package containing the text file. This should
+            be a string representing the package's import path, for example
+            "my_package.subpackage".
+        filename: The base name of the JSON file, including its extension. For
+            example, "data.json".
+
+    Returns:
+        A dictionary with the contents of the JSON file.
+    """
+    traversable = files(package).joinpath(filename)
+    with as_file(traversable) as fp:
+        return json.loads(fp.read_text())
+
+
+def validate_artifact_url(url: str) -> None:
+    try:
+        result = urlparse(url)
+    except ValueError:
+        raise ValidationError("Failed to parse URL") from None
+
+    # only allow these schemes
+    if result.scheme not in [
+        "http",
+        "https",
+        "ftp",
+        "ftps",
+        "sftp",
+        "file",
+        "mlflow-artifacts",
+        "s3",
+    ]:
+        raise ValidationError("Not a valid scheme")
+
+    # network location required if not a file
+    if result.scheme not in ["file", "mlflow-artifacts"] and (
+        result.netloc is None or result.netloc == ""
+    ):
+        raise ValidationError("Location is required")
+
+    try:
+        verify_filename_is_safe(result.path, relative=False, absolute=True)
+    except ValueError:
+        raise ValidationError("URL is not absolute") from None
+
+
+def verify_filename_is_safe(
+    filename: str, relative: bool = True, absolute: bool = False
+) -> None:
+    """
+    Verifies that a filename is "safe". Safe in this case means that it is a relative
+    posix style path, and a sub-directory refence with no attempts to use '..' as a
+    means to accomplish directory traversal.
+
+    Args:
+        filename: the filename to verify
+        relative: whether to allow  relative filenames
+        absolute: whether to allow absolute filenames
+
+    Returns:
+        a normalized version of the path that has been verified
+
+    Raises:
+        ValueError: If filename is deemed to be unsafe
+    """
+    if PureWindowsPath(filename).as_posix() != str(PurePosixPath(filename)):  # fmt: skip
+        raise ValueError(
+            "Invalid filename (reason: filename is a Windows path): {filename}"
+        )
+
+    if posixpath.normpath(filename) != filename:
+        raise ValueError(
+            f"Invalid filename (reason: filename is not normalized): {filename}"
+        )
+
+    if not absolute and not PurePosixPath(filename).is_relative_to("."):
+        raise ValueError(
+            f"Invalid filename (reason: filename is not a relative path): {filename}"
+        )
+
+    if not relative and not PurePosixPath(filename).is_absolute():
+        raise ValueError(
+            f"Invalid filename (reason: filename is not an absolute path): {filename}"
+        )
+
+    if PurePosixPath("..") in PurePosixPath(filename).parents:  # fmt: skip
+        raise ValueError(
+            "Invalid filename (reason: filename contains directory traversal parts): "
+            f"{filename}"
+        )
+
+    if any(DOTS_REGEX.match(str(x)) for x in PurePosixPath(filename).parts):  # fmt: skip
+        raise ValueError(
+            "Invalid filename (reason: filename contains a sub-directory name that "
+            f"is all dots): {filename}"
+        )
+
+
 class _ClassBasedViewFunction(Protocol):
     """
     We distinguish a class-based view function from other view functions
@@ -210,7 +320,7 @@ class _ClassBasedViewFunction(Protocol):
 
     view_class: Type[View]
 
-    def __call__(self, *args, **kwargs) -> Any: ...  # noqa: E704
+    def __call__(self, *args, **kwargs) -> Any: ...
 
 
 def _new_class_view_function(
@@ -306,7 +416,9 @@ TYPE_MAP_MA_TO_REQPARSE = {
     ma.Decimal: float,
     ma.Dict: dict,
     ma.Email: str,
+    ma.Enum: str,
     FileUpload: FileStorage,
+    MultiFileUpload: FileStorage,
     ma.Float: float,
     ma.Function: str,
     ma.Int: int,
@@ -329,7 +441,7 @@ TYPE_MAP_MA_TO_REQPARSE = {
 
 
 # Validation Functions
-def find_non_unique(name: str, parameters: list[dict[str, Any]]) -> list[str]:
+def find_non_unique(name: str, parameters: Iterable[dict[str, Any]]) -> list[str]:
     """
     Finds all values of a key that are not unique in a list of dictionaries.
     Useful for checking that a provided input satisfies uniqueness constraints.

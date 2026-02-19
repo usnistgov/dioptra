@@ -15,10 +15,8 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The module defining the endpoints for Plugin resources."""
-from __future__ import annotations
 
 import uuid
-from typing import cast
 from urllib.parse import unquote
 
 import structlog
@@ -41,20 +39,34 @@ from dioptra.restapi.v1.shared.tags.controller import (
     generate_resource_tags_endpoint,
     generate_resource_tags_id_endpoint,
 )
+from dioptra.restapi.v1.workflows.lib.export_job_parameters import (
+    build_job_artifacts_dict,
+    build_job_parameters_dict,
+)
 
 from .schema import (
     JobGetQueryParameters,
+    JobLogGetQueryParameters,
+    JobLogRecordSchema,
+    JobLogRecordsPageSchema,
+    JobLogRecordsSchema,
     JobMlflowRunSchema,
     JobPageSchema,
     JobSchema,
     JobStatusSchema,
+    MetricsSchema,
+    MetricsSnapshotPageSchema,
+    MetricsSnapshotsGetQueryParameters,
 )
 from .service import (
     RESOURCE_TYPE,
     SEARCHABLE_FIELDS,
+    JobIdMetricsService,
+    JobIdMetricsSnapshotsService,
     JobIdMlflowrunService,
     JobIdService,
     JobIdStatusService,
+    JobLogService,
     JobService,
 )
 
@@ -141,11 +153,7 @@ class JobIdEndpoint(Resource):
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="Job", request_type="GET", id=id
         )
-        job = cast(
-            models.Job,
-            self._job_id_service.get(id, error_if_not_found=True, log=log),
-        )
-        return utils.build_job(job)
+        return utils.build_job(self._job_id_service.get(id, log=log))
 
     @login_required
     @responds(schema=IdStatusResponseSchema, api=api)
@@ -155,6 +163,58 @@ class JobIdEndpoint(Resource):
             request_id=str(uuid.uuid4()), resource="Job", request_type="DELETE", id=id
         )
         return self._job_id_service.delete(job_id=id, log=log)
+
+
+@api.route("/<int:id>/parameters")
+@api.param("id", "ID for the Job resource.")
+class JobIdParametersEndpoint(Resource):
+    @inject
+    def __init__(self, job_id_service: JobIdService, *args, **kwargs) -> None:
+        """Initialize the jobs resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            job_id_service: A JobIdService object.
+        """
+        self._job_id_service = job_id_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    def get(self, id: int):
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="Job", request_type="GET", id=id
+        )
+        return build_job_parameters_dict(
+            job_param_values=self._job_id_service.get_parameter_values(id),
+            logger=log,
+        )
+
+
+@api.route("/<int:id>/artifactParameters")
+@api.param("id", "ID for the Job resource.")
+class JobIdArtifactParametersEndpoint(Resource):
+    @inject
+    def __init__(self, job_id_service: JobIdService, *args, **kwargs) -> None:
+        """Initialize the jobs resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            job_id_service: A JobIdService object.
+        """
+        self._job_id_service = job_id_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    def get(self, id: int):
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="Job", request_type="GET", id=id
+        )
+        return build_job_artifacts_dict(
+            job_artifact_values=self._job_id_service.get_artifact_values(id),
+            logger=log,
+        )
 
 
 @api.route("/<int:id>/status")
@@ -201,7 +261,7 @@ class JobIdMlflowrunEndpoint(Resource):
         All arguments are provided via dependency injection.
 
         Args:
-            job_id_service: A JobIdStatusService object.
+            job_id_service: A JobIdMlflowrunService object.
         """
         self._job_id_mlflowrun_service = job_id_mlflowrun_service
         super().__init__(*args, **kwargs)
@@ -216,9 +276,7 @@ class JobIdMlflowrunEndpoint(Resource):
             request_type="GET",
             job_id=id,
         )
-        return self._job_id_mlflowrun_service.get(
-            job_id=id, error_if_not_found=True, log=log
-        )
+        return {"mlflow_run_id": self._job_id_mlflowrun_service.get(job_id=id, log=log)}
 
     @login_required
     @accepts(schema=JobMlflowRunSchema, api=api)
@@ -238,6 +296,177 @@ class JobIdMlflowrunEndpoint(Resource):
             error_if_not_found=True,
             log=log,
         )
+
+
+@api.route("/<int:id>/metrics")
+@api.param("id", "ID for the Job resource.")
+class JobIdMetricsEndpoint(Resource):
+    @inject
+    def __init__(
+        self,
+        job_id_metrics_service: JobIdMetricsService,
+        *args,
+        **kwargs,
+    ) -> None:
+        """Initialize the jobs resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            job_id_metrics_service: A JobIdMetricsService object.
+        """
+        self._job_id_metrics_service = job_id_metrics_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    @responds(schema=MetricsSchema(many=True), api=api)
+    def get(self, id: int):
+        """Gets a Job resource's latest metrics."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="JobIdMetricsEndpoint",
+            request_type="GET",
+            job_id=id,
+        )
+
+        return self._job_id_metrics_service.get(
+            job_id=id, error_if_not_found=True, log=log
+        )
+
+    @login_required
+    @accepts(schema=MetricsSchema, api=api)
+    @responds(schema=MetricsSchema, api=api)
+    def post(self, id: int):
+        """Sets a metric for a Job"""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="JobIdMetricsEndpoint",
+            request_type="POST",
+            job_id=id,
+        )
+        parsed_obj = request.parsed_obj  # type: ignore
+        return self._job_id_metrics_service.update(
+            job_id=id,
+            metric_name=parsed_obj["name"],
+            metric_value=parsed_obj["value"],
+            metric_step=parsed_obj["step"],
+            metric_timestamp=parsed_obj["timestamp"],
+            error_if_not_found=True,
+            log=log,
+        )
+
+
+@api.route("/<int:id>/metrics/<string:name>/snapshots")
+@api.param("id", "ID for the Job resource.")
+@api.param("name", "Name of the metric.")
+class JobIdMetricsSnapshotsEndpoint(Resource):
+    @inject
+    def __init__(
+        self,
+        job_id_metrics_snapshots_service: JobIdMetricsSnapshotsService,
+        *args,
+        **kwargs,
+    ) -> None:
+        """Initialize the jobs resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            job_id_metrics_snapshots_service: A JobIdMetricsSnapshotsService object.
+        """
+        self._job_id_metrics_snapshots_service = job_id_metrics_snapshots_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    @accepts(query_params_schema=MetricsSnapshotsGetQueryParameters, api=api)
+    @responds(schema=MetricsSnapshotPageSchema, api=api)
+    def get(self, id: int, name: str):
+        """Gets a Job resource's metric history."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="JobIdMetricsSnapshotsEndpoint",
+            request_type="GET",
+            job_id=id,
+            metric_name=name,
+        )
+        parsed_query_params = request.parsed_query_params  # type: ignore
+        page_index = parsed_query_params["index"]
+        page_length = parsed_query_params["page_length"]
+        metrics_page, total_num_metrics = self._job_id_metrics_snapshots_service.get(
+            job_id=id,
+            metric_name=name,
+            page_index=page_index,
+            page_length=page_length,
+            error_if_not_found=True,
+            log=log,
+        )
+
+        return utils.build_paging_envelope(
+            f"jobs/{id}/metrics/{name}/snapshots",
+            build_fn=utils.build_metrics_snapshots,
+            data=metrics_page,
+            group_id=None,
+            query=None,
+            draft_type=None,
+            index=page_index,
+            length=page_length,
+            total_num_elements=total_num_metrics,
+            sort_by=None,
+            descending=None,
+        )
+
+
+@api.route("/<int:id>/log")
+@api.param("id", "ID for the Job resource.")
+class JobIdLogEndpoint(Resource):
+    @inject
+    def __init__(self, job_log_service: JobLogService, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._job_log_service = job_log_service
+
+    @login_required
+    @accepts(query_params_schema=JobLogGetQueryParameters, api=api)
+    @responds(schema=JobLogRecordsPageSchema, api=api)
+    def get(self, id: int):
+        index = request.parsed_query_params["index"]  # type: ignore
+        page_length = request.parsed_query_params["page_length"]  # type: ignore
+        search_string = unquote(request.parsed_query_params["search"])  # type: ignore
+        severity = request.parsed_query_params.get("severity")  # type: ignore
+        sort_by_string = request.parsed_query_params["sort_by"]  # type: ignore
+        descending = request.parsed_query_params["descending"]  # type: ignore
+
+        records, total = self._job_log_service.get_logs(
+            job_resource_id=id,
+            index=index,
+            page_length=page_length,
+            search_string=search_string,
+            sort_by_string=sort_by_string,
+            descending=descending,
+            severity=severity,
+        )
+
+        page = utils.build_paging_envelope(
+            f"{V1_JOBS_ROUTE}/{id}/log",
+            build_fn=lambda x: x,
+            data=records,
+            group_id=None,
+            query=None,
+            draft_type=None,
+            index=index,
+            length=page_length,
+            total_num_elements=total,
+            sort_by=sort_by_string,
+            descending=descending,
+        )
+
+        return page
+
+    @login_required
+    @accepts(schema=JobLogRecordsSchema, api=api)
+    @responds(schema=JobLogRecordSchema(many=True), api=api)
+    def post(self, id: int):
+        records = request.parsed_obj["data"]  # type: ignore
+        return self._job_log_service.add_logs(id, records)
 
 
 JobSnapshotsResource = generate_resource_snapshots_endpoint(

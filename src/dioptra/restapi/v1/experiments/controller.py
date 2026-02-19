@@ -15,6 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The module defining the endpoints for Experiment resources."""
+
 import uuid
 from typing import cast
 from urllib.parse import unquote
@@ -28,13 +29,14 @@ from injector import inject
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
+from dioptra.restapi.db.repository.experiments import ExperimentRepository
 from dioptra.restapi.routes import V1_EXPERIMENTS_ROUTE
 from dioptra.restapi.v1 import utils
-from dioptra.restapi.v1.artifacts.schema import ArtifactSchema
-from dioptra.restapi.v1.artifacts.service import JobArtifactService
 from dioptra.restapi.v1.entrypoints.schema import EntrypointRefSchema
 from dioptra.restapi.v1.jobs.schema import (
     ExperimentJobGetQueryParameters,
+    ExperimentJobsMetricsSchema,
+    JobCreateRequestSchema,
     JobMlflowRunSchema,
     JobPageSchema,
     JobSchema,
@@ -45,6 +47,7 @@ from dioptra.restapi.v1.jobs.service import (
     ExperimentJobIdService,
     ExperimentJobIdStatusService,
     ExperimentJobService,
+    ExperimentMetricsService,
 )
 from dioptra.restapi.v1.schemas import IdListSchema, IdStatusResponseSchema
 from dioptra.restapi.v1.shared.drafts.controller import (
@@ -64,13 +67,13 @@ from dioptra.restapi.v1.shared.tags.controller import (
 from .schema import (
     ExperimentDraftSchema,
     ExperimentGetQueryParameters,
+    ExperimentMetricsGetQueryParameters,
     ExperimentMutableFieldsSchema,
     ExperimentPageSchema,
     ExperimentSchema,
 )
 from .service import (
     RESOURCE_TYPE,
-    SEARCHABLE_FIELDS,
     ExperimentIdEntrypointsIdService,
     ExperimentIdEntrypointsService,
     ExperimentIdService,
@@ -293,7 +296,7 @@ class ExperimentIdJobEndpoint(Resource):
         )
 
     @login_required
-    @accepts(schema=JobSchema(exclude=["groupId"]), api=api)
+    @accepts(schema=JobCreateRequestSchema(exclude=["groupId"]), api=api)
     @responds(schema=JobSchema, api=api)
     def post(self, id: int):
         """Creates a Job resource under the specified Experiment."""
@@ -308,9 +311,11 @@ class ExperimentIdJobEndpoint(Resource):
             experiment_id=id,
             queue_id=parsed_obj["queue_id"],
             entrypoint_id=parsed_obj["entrypoint_id"],
-            values=parsed_obj["values"],
-            description=parsed_obj["description"],
-            timeout=parsed_obj["timeout"],
+            values=parsed_obj.get("values", {}),
+            artifact_values=parsed_obj.get("artifact_values", {}),
+            description=parsed_obj.get("description", ""),
+            timeout=parsed_obj.get("timeout", "60"),
+            entrypoint_snapshot_id=parsed_obj["entrypoint_snapshot_id"],
             log=log,
         )
         return utils.build_job(job)
@@ -478,47 +483,69 @@ class ExperimentIdJobIdMlflowrunEndpoint(Resource):
         )
 
 
-@api.route("/<int:id>/jobs/<int:jobId>/artifacts")
+@api.route("/<int:id>/metrics")
 @api.param("id", "ID for the Experiment resource.")
-@api.param("jobId", "ID for the Job resource.")
-class ExperimentIdJobIdArtifactsEndpoint(Resource):
+class ExperimentIdMetricsEndpoint(Resource):
     @inject
     def __init__(
-        self, job_artifact_service: JobArtifactService, *args, **kwargs
+        self,
+        experiment_metrics_service: ExperimentMetricsService,
+        *args,
+        **kwargs,
     ) -> None:
-        """Initialize the jobs resource.
+        """Initialize the Experiment Metrics resource.
 
         All arguments are provided via dependency injection.
 
         Args:
-            job_id_service: A JobIdStatusService object.
+            experiment_metrics_service: A ExperimentMetricsService object.
         """
-        self._job_artifact_service = job_artifact_service
+        self._experiment_metrics_service = experiment_metrics_service
         super().__init__(*args, **kwargs)
 
     @login_required
-    @accepts(
-        schema=ArtifactSchema(exclude=["groupId", "jobId"]),
-        model_name="JobArtifactSchema",
-        api=api,
-    )
-    @responds(schema=ArtifactSchema, api=api)
-    def post(self, id: int, jobId: int):
-        """Creates an Artifact resource."""
+    @accepts(query_params_schema=ExperimentMetricsGetQueryParameters, api=api)
+    @responds(schema=ExperimentJobsMetricsSchema, api=api)
+    def get(self, id: int):
+        """Gets all of the latest metrics for every job in the experiment."""
         log = LOGGER.new(
-            request_id=str(uuid.uuid4()), resource="Artifact", request_type="POST"
-        )
-        log.debug("Request received")
-        parsed_obj = request.parsed_obj  # type: ignore
-
-        artifact = self._job_artifact_service.create(
+            request_id=str(uuid.uuid4()),
+            resource="ExperimentIdMetricsEndpoint",
+            request_type="GET",
             experiment_id=id,
-            job_id=jobId,
-            uri=parsed_obj["uri"],
-            description=parsed_obj["description"],
+        )
+
+        parsed_query_params = request.parsed_query_params  # type: ignore
+        search_string = unquote(parsed_query_params["search"])
+        page_index = parsed_query_params["index"]
+        page_length = parsed_query_params["page_length"]
+        sort_by_string = unquote(parsed_query_params["sort_by"])
+        descending = parsed_query_params["descending"]
+
+        jobs_metrics, total_num_jobs = self._experiment_metrics_service.get(
+            experiment_id=id,
+            search_string=search_string,
+            page_index=page_index,
+            page_length=page_length,
+            sort_by_string=sort_by_string,
+            descending=descending,
+            error_if_not_found=True,
             log=log,
         )
-        return utils.build_artifact(artifact)
+
+        return utils.build_paging_envelope(
+            f"/experiments/{id}/metrics",
+            build_fn=utils.build_metrics_snapshots,
+            data=jobs_metrics,
+            group_id=None,
+            query=None,
+            draft_type=None,
+            index=page_index,
+            length=page_length,
+            total_num_elements=total_num_jobs,
+            sort_by=None,
+            descending=None,
+        )
 
 
 @api.route("/<int:id>/entrypoints")
@@ -652,7 +679,7 @@ ExperimentSnapshotsResource = generate_resource_snapshots_endpoint(
     resource_model=models.Experiment,
     resource_name=RESOURCE_TYPE,
     route_prefix=V1_EXPERIMENTS_ROUTE,
-    searchable_fields=SEARCHABLE_FIELDS,
+    searchable_fields=ExperimentRepository.SEARCHABLE_FIELDS,
     page_schema=ExperimentPageSchema,
     build_fn=utils.build_experiment,
 )

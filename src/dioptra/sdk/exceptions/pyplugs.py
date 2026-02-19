@@ -16,7 +16,7 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 #
 # This is a fork of the work
-# https://github.com/gahjelle/pyplugs/blob/5e1586994051e32b0e6bdc6b1b75a3d011443940/pyplugs/_exceptions.py  # noqa: B950
+# https://github.com/gahjelle/pyplugs/blob/5e1586994051e32b0e6bdc6b1b75a3d011443940/pyplugs/_exceptions.py
 # See copyright below.
 #
 # Copyright (c) 2019 Geir Arne Hjelle

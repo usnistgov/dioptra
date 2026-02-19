@@ -14,7 +14,6 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from __future__ import annotations
 
 from pathlib import Path
 from typing import Dict, Iterable, List, Tuple, Union, cast
@@ -53,16 +52,16 @@ class PascalVOCAnnotationData(AnnotationData):
     ) -> Tuple[list[list[float]], list[int]]:
         # Load and parse the file
         filepath = filepath.decode() if isinstance(filepath, bytes) else str(filepath)
-        tree: ElementTree.ElementTree = ElementTree.parse(filepath)
+        tree = ElementTree.parse(filepath)
 
         # Get the root of the document
         root = tree.getroot()
-        boxes: List[List[float]] = list()
-        classes: List[int] = list()
+        boxes: List[List[float]] = []
+        classes: List[int] = []
 
         # Get width and height of an image
-        width_element: ElementTree.Element | None = root.find(".//size/width")
-        height_element: ElementTree.Element | None = root.find(".//size/height")
+        width_element = root.find(".//size/width")
+        height_element = root.find(".//size/height")
         width: int = (
             int(cast(str, width_element.text)) if width_element is not None else -1
         )

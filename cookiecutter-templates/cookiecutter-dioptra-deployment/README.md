@@ -1,47 +1,36 @@
 # cookiecutter-dioptra-deployment
 
-A Cookiecutter template that generates the scripts, configuration files, and Docker Compose files needed to run Dioptra on a single machine.
+A [Cookiecutter](https://cookiecutter.readthedocs.io/) template that generates the scripts, configuration files, and Docker Compose files needed to run Dioptra on a single machine.
 
 ## Prerequisites
 
--   [Bash v5 or higher](https://tiswww.case.edu/php/chet/bash/bashtop.html)
--   [Python 3.11 or higher](https://www.python.org/)
--   [Cruft 2.15.0 or higher](https://cruft.github.io/cruft/)
--   [Docker Engine 20.10.13 or higher](https://docs.docker.com/engine/install/)
--   [Docker Compose](https://docs.docker.com/compose/install/)
--   Dictionary of words at `/usr/share/dict/words` (`apt-get install wamerican`)
--   [Working builds of the Dioptra container images](https://pages.nist.gov/dioptra/getting-started/building-the-containers.html)
+- [Python 3.11 or higher](https://www.python.org/)
+- [Cruft](https://cruft.github.io/cruft/) (`pip install cruft`)
+- [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/) installed and running
+- [Dioptra container images](https://pages.nist.gov/dioptra/how-to/setup-dioptra/get-container-images/index.html) (downloaded or built locally)
+- [Bash v5 or higher](https://tiswww.case.edu/php/chet/bash/bashtop.html)
+- A word dictionary at `/usr/share/dict/words` (install with `apt-get install wamerican` on Debian/Ubuntu)
 
 ## Usage
 
-Open a terminal and run the following to generate a setup that is appropriate for testing Dioptra on your personal computer or laptop.
+Install cruft and run it to generate the deployment folder.
 
 ```sh
-# Move to the base directory where you plan to store your Dioptra
-# configuration folder
-mkdir -p /path/to/deployments/folder  # Create it if it doesn't exist
-cd /path/to/deployments/folder
+# Install cookiecutter (in a virtual environment or globally)
+pip install cruft
 
-# Create a virtual environment and install cruft
-python -m venv venv-cruft
-source venv-cruft/bin/activate
-python -m pip install --upgrade pip cruft
-
-# Run cruft and set the template's variables
-# (If using a different branch, replace "main" with that branch's name)
+# Generate the deployment folder
+# (Replace "main" with the branch that matches your container images if different)
 cruft create https://github.com/usnistgov/dioptra --checkout main \
   --directory cookiecutter-templates/cookiecutter-dioptra-deployment
-
-# Deactivate the virtual environment
-deactivate
 ```
 
-This will create a Dioptra configuration folder at the path `/path/to/deployments/folder/dioptra-deployment` (`dioptra-deployment` is the default name).
-See the README.md in this folder for instructions on how to start and stop Dioptra.
+This creates a deployment folder (default name: `dioptra-deployment`).
+See the README.md inside the generated folder for quick start instructions.
 
 ## Template variables
 
-See [Running Dioptra - Applying the template](https://pages.nist.gov/dioptra/getting-started/running-dioptra.html#applying-the-template) for a full list of template variables, their default values, and explanations of what they mean.
+See the [Deployment Template Reference](https://pages.nist.gov/dioptra/how-to/setup-dioptra/reference/deployment-template-reference.html) for a full list of template variables, their default values, and descriptions.
 
 ## License
 

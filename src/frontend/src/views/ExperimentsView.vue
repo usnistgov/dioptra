@@ -5,21 +5,17 @@
     :columns="columns"
     title="Experiments"
     v-model:selected="selected"
-    @edit="router.push(`/experiments/${selected[0].id}`)"
+    @open="openTab => (openTab
+      ? openWindow.open(`/experiments/${selected[0].id}`, '_blank')
+      : router.push(`/experiments/${selected[0].id}`)
+    )"
     @delete="showDeleteDialog = true"
     @request="getExperiments"
     ref="tableRef"
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
     @create="router.push('/experiments/new')"
+    :loading="isLoading"
   >
-    <template #body-cell-name="props">
-      <RouterLink :to="`/experiments/${props.row.id}/jobs`">
-        {{ props.row.name.length < 18 ? props.row.name : props.row.name.replace(/(.{18})..+/, "$1…") }}
-        <q-tooltip v-if="props.row.name.length > 18" max-width="30vw" style="overflow-wrap: break-word">
-          {{ props.row.name }}
-        </q-tooltip>
-      </RouterLink>
-    </template>
     <template #body-cell-entrypoints="props">
       <q-chip
         v-for="(entrypoint, i) in props.row.entrypoints"
@@ -31,30 +27,6 @@
       </q-chip>
     </template>
   </TableComponent>
-
-  <q-btn 
-    class="fixedButton"
-    round
-    color="primary"
-    icon="add"
-    size="lg"
-  >
-    <span class="sr-only">Create a new Experiment</span>
-    <q-tooltip>
-      Create a new Experiment
-    </q-tooltip>
-    <q-menu anchor="top middle" self="bottom middle">
-      <q-list >
-        <q-item clickable to="/experiments/new">
-          <q-item-section>Create Experiment</q-item-section>
-        </q-item>
-        <q-separator />
-        <q-item clickable to="/entrypoints/new">
-          <q-item-section>Create Entry Point</q-item-section>
-        </q-item>
-      </q-list>
-    </q-menu>
-  </q-btn>
 
   <DeleteDialog 
     v-model="showDeleteDialog"
@@ -71,7 +43,6 @@
 </template>
 
 <script setup>
-
   import TableComponent from '@/components/TableComponent.vue'
   import { ref } from 'vue'
   import { useRouter } from 'vue-router'
@@ -82,6 +53,7 @@
   import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
   
   const router = useRouter()
+  const openWindow = window
 
   const showDeleteDialog = ref(false)
   const showTagsDialog = ref(false)
@@ -89,7 +61,10 @@
 
   const experiments = ref([])
 
+  const isLoading = ref(false)
+
   const columns = [
+    { name: 'id', label: 'ID', align: 'left', field: 'id', sortable: false, },
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, },
     { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true },
     { name: 'entrypoints', label: 'Entry Points', align: 'left', field: 'entrypoints', sortable: false },
@@ -97,17 +72,25 @@
   ]
 
   const selected = ref([])
-
   async function getExperiments(pagination) {
+    isLoading.value = true
+    const minLoadTimePromise = new Promise(resolve => setTimeout(resolve, 300)); 
+
     try {
-      const res = await api.getData('experiments', pagination, false)
-      experiments.value = res.data.data
-      tableRef.value.updateTotalRows(res.data.totalNumResults)
+        const [res] = await Promise.all([
+            api.getData('experiments', pagination, false),
+            minLoadTimePromise
+        ]);
+        
+        experiments.value = res.data.data;
+        tableRef.value.updateTotalRows(res.data.totalNumResults);
     } catch(err) {
-      console.log('err = ', err)
-      notify.error(err.response.data.message)
-    } 
-  }
+        console.log('err = ', err);
+        notify.error(err.response.data.message);
+    } finally {
+        isLoading.value = false;
+    }
+}
 
   const tableRef = ref(null)
 

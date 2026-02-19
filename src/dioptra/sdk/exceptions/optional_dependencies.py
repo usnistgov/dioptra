@@ -27,9 +27,5 @@ class CryptographyDependencyError(BaseOptionalDependencyError):
     """Method/function depends on the "cryptography" package."""
 
 
-class PrefectDependencyError(BaseOptionalDependencyError):
-    """Method/function depends on the "prefect" package."""
-
-
 class TensorflowDependencyError(BaseOptionalDependencyError):
     """Method/function depends on the "tensorflow" package."""

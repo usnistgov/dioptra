@@ -14,12 +14,11 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from __future__ import annotations
 
 from pathlib import Path
 
-from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import select, text
+from sqlalchemy.orm.session import Session
 
 from dioptra.restapi.db import models
 
@@ -29,11 +28,11 @@ from dioptra.restapi.db import models
 LATEST_QUEUES_SQL_PATH = Path(__file__).parent / "latest_queues.sql"
 
 
-def get_latest_queue(db: SQLAlchemy, resource_id: int) -> models.Queue | None:
+def get_latest_queue(session: Session, resource_id: int) -> models.Queue | None:
     """Get the latest queue for a given resource ID.
 
     Args:
-        db: The SQLAlchemy database session.
+        session: The SQLAlchemy database session.
         resource_id: The ID of the resource.
 
     Returns:
@@ -49,4 +48,4 @@ def get_latest_queue(db: SQLAlchemy, resource_id: int) -> models.Queue | None:
         .bindparams(resource_id=resource_id)
     )
     stmt = select(models.Queue).from_statement(textual_sql)
-    return db.session.execute(stmt).scalar()
+    return session.execute(stmt).scalar()

@@ -16,7 +16,7 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 #
 # This is a fork of the work
-# https://github.com/gahjelle/pyplugs/blob/8615d6b71261069acf2218370b0a45584c617041/tests/plugin_directory/plugin_plain.py  # noqa: B950
+# https://github.com/gahjelle/pyplugs/blob/8615d6b71261069acf2218370b0a45584c617041/tests/plugin_directory/plugin_plain.py
 # See copyright below.
 #
 # Copyright (c) 2019 Geir Arne Hjelle

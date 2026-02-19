@@ -15,7 +15,6 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform model endpoint operations."""
-from __future__ import annotations
 
 from typing import Any, Final, cast
 
@@ -45,9 +44,13 @@ MODEL_VERSION_RESOURCE_TYPE: Final[str] = "ml_model_version"
 MODEL_SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
     "name": lambda x: models.MlModel.name.like(x, escape="/"),
     "description": lambda x: models.MlModel.description.like(x, escape="/"),
+    "tag": lambda x: models.MlModel.tags.any(models.Tag.name.like(x, escape="/")),
 }
 MODEL_VERSION_SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
     "description": lambda x: models.MlModelVersion.description.like(x, escape="/"),
+    "tag": lambda x: models.MlModelVersion.tags.any(
+        models.Tag.name.like(x, escape="/")
+    ),
 }
 MODEL_SORTABLE_FIELDS: Final[dict[str, Any]] = {
     "name": models.MlModel.name,
@@ -63,7 +66,7 @@ class ModelService(object):
     @inject
     def __init__(
         self,
-        model_name_service: ModelNameService,
+        model_name_service: "ModelNameService",
         group_id_service: GroupIdService,
     ) -> None:
         """Initialize the model service.
@@ -166,7 +169,7 @@ class ModelService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get full list of models")
 
-        filters = list()
+        filters = []
 
         if group_id is not None:
             filters.append(models.Resource.group_id == group_id)
@@ -295,7 +298,7 @@ class ModelIdService(object):
     @inject
     def __init__(
         self,
-        model_name_service: ModelNameService,
+        model_name_service: "ModelNameService",
     ) -> None:
         """Initialize the model service.
 
@@ -529,11 +532,8 @@ class ModelIdVersionsService(object):
         version = ml_model_dict["version"]
         next_version_number = version.version_number + 1 if version is not None else 1
         group = ml_model.resource.owner
-        artifact_dict = cast(
-            utils.ArtifactDict,
-            self._artifact_id_service.get(
-                artifact_id, error_if_not_found=True, log=log
-            ),
+        artifact_dict = self._artifact_id_service.get(
+            artifact_id, error_if_not_found=True, log=log
         )
         artifact = artifact_dict["artifact"]
 

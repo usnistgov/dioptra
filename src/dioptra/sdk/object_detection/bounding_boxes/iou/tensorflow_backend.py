@@ -14,7 +14,6 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from __future__ import annotations
 
 from typing import Tuple
 
@@ -77,7 +76,7 @@ class TensorflowBoundingBoxesBatchedGridIOU(BoundingBoxesBatchedGridIOU):
     @classmethod
     def on_grid_shape(
         cls, grid_shape: Tuple[int, int]
-    ) -> TensorflowBoundingBoxesBatchedGridIOU:
+    ) -> "TensorflowBoundingBoxesBatchedGridIOU":
         return cls(
             bounding_boxes_iou=TensorflowBoundingBoxesIOU(),
             bounding_boxes_batched_grid=(

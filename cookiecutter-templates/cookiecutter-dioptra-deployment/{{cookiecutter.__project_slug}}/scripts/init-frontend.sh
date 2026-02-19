@@ -294,6 +294,7 @@ prepare_build_dir() {
     "tsconfig.app.json"
     "tsconfig.node.json"
     "vite.config.ts"
+    "env.d.ts"
   )
 
   log_info "Creating the build directory ${BUILD_DIR}"

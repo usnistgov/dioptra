@@ -15,7 +15,13 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The schemas for serializing/deserializing Job resources."""
-from marshmallow import Schema, fields, validate
+
+import enum
+import math
+import re
+
+import nh3
+from marshmallow import Schema, fields, post_dump, post_load, validate
 
 from dioptra.restapi.v1.artifacts.schema import ArtifactRefSchema
 from dioptra.restapi.v1.schemas import (
@@ -28,6 +34,9 @@ from dioptra.restapi.v1.schemas import (
     generate_base_resource_schema,
 )
 
+ALLOWED_METRIC_NAME_REGEX = re.compile(r"^([A-Z]|[A-Z_][A-Z0-9_]+)$", flags=re.IGNORECASE)  # fmt: skip
+
+
 JobRefSchema = generate_base_resource_ref_schema("Job")
 JobSnapshotRefSchema = generate_base_resource_ref_schema("Job", keep_snapshot_id=True)
 
@@ -37,31 +46,179 @@ class JobMlflowRunSchema(Schema):
 
     mlflowRunId = fields.UUID(
         attribute="mlflow_run_id",
-        metadata=dict(description="UUID for the associated Mlflow Run."),
+        metadata={"description": "UUID for the associated Mlflow Run."},
     )
 
 
-class JobStatusSchema(Schema):
-    """The fields schema for the data in a Job status resource."""
-
+class JobIdSchema(Schema):
     id = fields.Integer(
         attribute="id",
-        metadata=dict(description="ID for the Job resource."),
+        metadata={"description": "ID for the Job resource."},
         dump_only=True,
     )
+
+
+class MetricsSchema(Schema):
+    name = fields.String(
+        attribute="name",
+        metadata={"description": "The name of the metric."},
+        required=True,
+        validate=validate.Regexp(
+            ALLOWED_METRIC_NAME_REGEX,
+            error=(
+                "'{input}' is not a compatible name for a metric. "
+                "A metric name must start with a letter or underscore, "
+                "followed by letters, numbers, or underscores. In "
+                "addition, '_' is not a valid metric name."
+            ),
+        ),
+    )
+    value = fields.Float(
+        attribute="value",
+        metadata={
+            "description": (
+                "The value of the metric. Can be a float, NaN, Infinity, or -Infinity. "
+                'NaN values are represented with the string "nan" and infinite values '
+                'are represented with the strings "inf" and "-inf".'
+            )
+        },
+        required=True,
+        allow_nan=True,
+        as_string=True,
+    )
+    step = fields.Integer(
+        attribute="step",
+        metadata={
+            "description": (
+                "The step value for the metric, optional. Sequentially increasing "
+                "step values are used to track how a metric changes over time. Indexed "
+                "from 0. If not provided, defaults to 0."
+            ),
+        },
+        load_only=True,
+        required=False,
+        load_default=0,
+    )
+    timestamp = fields.DateTime(
+        attribute="timestamp",
+        metadata={
+            "description": (
+                "A timestamp value to associate with the metric. If not provided, "
+                "defaults to the server time when the metric is received."
+            ),
+        },
+        load_only=True,
+        required=False,
+        load_default=None,
+    )
+
+    @post_dump
+    def try_coerce_value_to_float(self, data, **kwargs):
+        value = float(data["value"])
+        is_special_value = math.isnan(value) or math.isinf(value)
+
+        if not is_special_value:
+            data["value"] = value
+
+        return data
+
+
+class MetricsSnapshotSchema(Schema):
+    name = fields.String(
+        attribute="name",
+        metadata={"description": "The name of the metric."},
+    )
+    value = fields.Float(
+        attribute="value",
+        metadata={
+            "description": (
+                "The value of the metric. Can be a float, NaN, Infinity, or -Infinity. "
+                'NaN values are represented with the string "nan" and infinite values '
+                'are represented with the strings "inf" and "-inf".'
+            )
+        },
+        allow_nan=True,
+        as_string=True,
+    )
+    step = fields.Integer(
+        attribute="step",
+        metadata={
+            "description": (
+                "The step value for the metric, indexed from 0. Sequentially increasing "
+                "step values track a metric changing over time."
+            ),
+        },
+    )
+    timestamp = fields.DateTime(
+        attribute="timestamp",
+        metadata={"description": "The timestamp for the metric."},
+    )
+
+    @post_dump
+    def try_coerce_value_to_float(self, data, **kwargs):
+        value = float(data["value"])
+        is_special_value = math.isnan(value) or math.isinf(value)
+
+        if not is_special_value:
+            data["value"] = value
+
+        return data
+
+
+class MetricsSnapshotPageSchema(BasePageSchema):
+    data = fields.Nested(
+        MetricsSnapshotSchema,
+        many=True,
+        metadata={"description": "List of Metric Snapshots in the current page."},
+    )
+
+
+class JobIdMetricsSchema(JobIdSchema):
+    metrics = fields.Nested(
+        MetricsSchema,
+        attribute="metrics",
+        metadata={
+            "description": "A list of the latest metrics associated with the job."
+        },
+        many=True,
+    )
+
+
+class ExperimentJobsMetricsSchema(BasePageSchema):
+    data = fields.Nested(
+        JobIdMetricsSchema,
+        many=True,
+        metadata={"description": "List of metrics for each job in the experiment"},
+    )
+
+
+class JobStatusSchema(JobIdSchema):
+    """The fields schema for the data in a Job status resource."""
+
     status = fields.String(
         attribute="status",
         validate=validate.OneOf(
-            ["queued", "started", "deferred", "finished", "failed"],
+            ["queued", "started", "deferred", "finished", "failed", "reset"],
         ),
-        metadata=dict(
-            description="The current status of the job. The allowed values are: "
-            "queued, started, deferred, finished, failed.",
-        ),
+        metadata={
+            "description": "The current status of the job. The allowed values are: "
+            "queued, started, deferred, finished, failed, reset.",
+        },
     )
 
 
 JobBaseSchema = generate_base_resource_schema("Job", snapshot=True)
+
+
+class JobArtifactValueSchema(Schema):
+    id = fields.Int(
+        attribute="id",
+        metadata={"description": "Artifact Resoure Id."},
+    )
+    snapshotId = fields.Int(
+        attribute="snapshot_id",
+        metadata={"description": "Artifact Resoure Snapshot Id."},
+    )
 
 
 class JobSchema(JobBaseSchema):  # type: ignore
@@ -73,39 +230,39 @@ class JobSchema(JobBaseSchema):  # type: ignore
 
     description = fields.String(
         attribute="description",
-        metadata=dict(description="Description of the Job resource."),
+        metadata={"description": "Description of the Job resource."},
         load_default=None,
     )
     queueId = fields.Integer(
         attribute="queue_id",
         data_key="queue",
-        metadata=dict(description="An integer identifying a registered queue."),
+        metadata={"description": "An integer identifying a registered queue."},
         load_only=True,
         required=True,
     )
     queue = fields.Nested(
         QueueSnapshotRefSchema,
         attribute="queue",
-        metadata=dict(description="The active queue used to run the Job."),
+        metadata={"description": "The active queue used to run the Job."},
         dump_only=True,
     )
     experiment = fields.Nested(
         ExperimentSnapshotRefSchema,
         attribute="experiment",
-        metadata=dict(description="The registered experiment associated with the Job."),
+        metadata={"description": "The registered experiment associated with the Job."},
         dump_only=True,
     )
     entrypointId = fields.Integer(
         attribute="entrypoint_id",
         data_key="entrypoint",
-        metadata=dict(description="An integer identifying a registered entry point."),
+        metadata={"description": "An integer identifying a registered entry point."},
         load_only=True,
         required=True,
     )
     entrypoint = fields.Nested(
         EntrypointSnapshotRefSchema,
         attribute="entrypoint",
-        metadata=dict(description="The entry point associated with the Job."),
+        metadata={"description": "The entry point associated with the Job."},
         dump_only=True,
     )
     values = fields.Dict(
@@ -113,34 +270,66 @@ class JobSchema(JobBaseSchema):  # type: ignore
         values=fields.String(),
         attribute="values",
         allow_none=True,
-        metadata=dict(
-            description=(
+        metadata={
+            "description": (
                 "A dictionary of keyword arguments to pass to the Job's Entrypoint."
             ),
-        ),
+        },
+        load_default=dict,
+    )
+    artifactValues = fields.Dict(
+        keys=fields.String(),
+        values=fields.Nested(JobArtifactValueSchema),
+        attribute="artifact_values",
+        allow_none=True,
+        metadata={
+            "description": (
+                "A dictionary of artifacts to pass to the Job's Entrypoint."
+            ),
+        },
     )
     timeout = fields.String(
         attribute="timeout",
         load_default="24h",
-        metadata=dict(
-            description="The maximum alloted time for a job before it times out and "
+        metadata={
+            "description": "The maximum alloted time for a job before it times out and "
             "is stopped. If omitted, the job timeout will default to 24 hours.",
-        ),
+        },
     )
     status = fields.String(
         attribute="status",
-        metadata=dict(
-            description="The current status of the job. The allowed values are: "
+        metadata={
+            "description": "The current status of the job. The allowed values are: "
             "queued, started, deferred, finished, failed.",
-        ),
+        },
         dump_only=True,
     )
     artifacts = fields.Nested(
         ArtifactRefSchema,
         attribute="artifacts",
         many=True,
-        metadata=dict(description="Artifacts created by the Job resource."),
+        metadata={"description": "Artifacts created by the Job resource."},
         dump_only=True,
+    )
+
+
+class JobCreateRequestSchema(JobSchema):
+    """The schema for creating a Job resource."""
+
+    entrypointSnapshotId = fields.Integer(
+        attribute="entrypoint_snapshot_id",
+        data_key="entrypointSnapshot",
+        allow_none=True,
+        metadata={
+            "description": (
+                "An integer identifying a snapshot ID associated with the entrypoint. "
+                "If specified, the snapshotted version of the entrypoint will be used "
+                "to run the job. If not specified, the job will default to using the "
+                "latest version of the entrypoint."
+            )
+        },
+        required=False,
+        load_default=None,
     )
 
 
@@ -150,8 +339,15 @@ class JobPageSchema(BasePageSchema):
     data = fields.Nested(
         JobSchema,
         many=True,
-        metadata=dict(description="List of Job resources in the current page."),
+        metadata={"description": "List of Job resources in the current page."},
     )
+
+
+class MetricsSnapshotsGetQueryParameters(
+    PagingQueryParametersSchema,
+):
+    """The query parameters for the GET method of the
+    /jobs/{id}/metrics/{name}/snapshots endpoint."""
 
 
 class JobGetQueryParameters(
@@ -170,3 +366,98 @@ class ExperimentJobGetQueryParameters(
 ):
     """The query parameters for the GET method of the /experiments/{id}/jobs
     endpoint."""
+
+
+class JobLogSeverity(enum.Enum):
+    DEBUG = enum.auto()
+    INFO = enum.auto()
+    WARNING = enum.auto()
+    ERROR = enum.auto()
+    CRITICAL = enum.auto()
+
+
+class JobLogRecordSchema(Schema):
+    """
+    A logging record within the context of a running job.
+    """
+
+    severity = fields.Enum(
+        JobLogSeverity,
+        attribute="severity",
+        metadata={
+            "description": "Log severity level: {}".format(
+                ", ".join(e.name for e in JobLogSeverity)
+            )
+        },
+        required=True,
+    )
+    loggerName = fields.String(
+        attribute="logger_name",
+        metadata={
+            "description": "The name of the logger that emitted the log message."
+        },
+        required=True,
+    )
+    message = fields.String(
+        attribute="message",
+        metadata={"description": "The logged message."},
+        required=True,
+    )
+    createdOn = fields.DateTime(
+        attribute="created_on",
+        metadata={"description": "Server timestamp for when the job log was received."},
+        dump_only=True,
+    )
+
+    @post_load
+    def sanitize_logger_name(self, in_data, **kwargs):
+        in_data["logger_name"] = nh3.clean(in_data["logger_name"])
+        return in_data
+
+    @post_load
+    def sanitize_message(self, in_data, **kwargs):
+        in_data["message"] = nh3.clean(in_data["message"])
+        return in_data
+
+
+class JobLogRecordsSchema(Schema):
+    """
+    A list of logging records. Used for upload.
+    """
+
+    data = fields.Nested(
+        JobLogRecordSchema,
+        many=True,
+        validate=validate.Length(min=1),
+        required=True,
+    )
+
+
+class JobLogRecordsPageSchema(BasePageSchema):
+    """
+    A page of logging records with detailed paging information. Used for download.
+    """
+
+    data = fields.Nested(
+        JobLogRecordSchema,
+        many=True,
+        validate=validate.Length(min=1),
+        required=True,
+    )
+
+
+class JobLogGetQueryParameters(
+    PagingQueryParametersSchema,
+    SortByGetQueryParametersSchema,
+    SearchQueryParametersSchema,
+):
+    """
+    The query parameters for the GET method of the /jobs/{id}/log endpoint.
+    """
+
+    severity = fields.List(
+        fields.String(validate=validate.OneOf([e.name for e in JobLogSeverity])),
+        required=False,
+        allow_none=True,
+        metadata={"description": "List of severities to filter by"},
+    )

@@ -16,7 +16,7 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 #
 # This is a fork of the work
-# https://github.com/gahjelle/pyplugs/blob/90e635777672f75080291c737f08453a26ea380d/tests/plugin_directory/plugin_with_import_error.py  # noqa: B950
+# https://github.com/gahjelle/pyplugs/blob/90e635777672f75080291c737f08453a26ea380d/tests/plugin_directory/plugin_with_import_error.py
 # See copyright below.
 #
 # Copyright (c) 2019 Geir Arne Hjelle

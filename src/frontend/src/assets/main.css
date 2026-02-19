@@ -38,9 +38,22 @@ p {
   font-size: 1.2em
 }
 
+.body--dark * {
+  font-weight: 500;
+}
+
 .body--dark a {
   color: #51bef4;
-  font-weight: 500;
+}
+
+.link {
+  cursor:pointer;
+  color:blue;
+  text-decoration:underline;
+}
+
+.body--dark .link {
+  color: #51bef4;
 }
 
 .body--dark {
@@ -110,17 +123,20 @@ h1 {
   font-size: clamp(1rem, 10vw, 4rem) !important;
   line-height: 1 !important;
   font-weight: 400 !important;
+  margin-top: 0;
 }
 
 h2 {
-  font-size: clamp(1rem, 5vw, 2rem) !important;
+  font-size: 22px !important;
   line-height: 1 !important;
-  margin-bottom: 0;
+  margin-bottom: 5px;
+  font-weight: 500 !important;
+  margin-top: 0;
 }
 
 .field-label {
   width: 100px;
-  font-size: 1rem;
+  font-size: 14px;
   color: black;
 }
 
@@ -130,4 +146,33 @@ h2 {
 
 legend {
   font-size: large;
+}
+
+.body--dark .cancel-btn {
+  color: #41a4f4 !important;
+}
+
+.body--dark fieldset {
+  border-color: #717070;
+}
+
+.noselect {
+  -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Old versions of Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome, Edge, Opera and Firefox */
+}
+
+.no-link-style {
+  color: inherit !important;
+  text-decoration: none !important;
+}
+
+/* Prevent q-item from applying link color to its contents */
+.no-link-style a {
+  color: inherit !important;
+  text-decoration: none !important;
 }

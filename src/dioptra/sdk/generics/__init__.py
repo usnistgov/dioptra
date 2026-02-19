@@ -16,8 +16,6 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """A subpackage of generic functions for common data science operations."""
 
-from __future__ import annotations
-
 from ._estimator_predict import estimator_predict
 from ._fit_estimator import fit_estimator
 from ._registry import register_entrypoints

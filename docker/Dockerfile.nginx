@@ -16,16 +16,6 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 
 ######################################################################################################
-# Prerequisites
-######################################################################################################
-
-# -- Prerequisite: copy files ------------------------------------------------------------------------
-
-FROM ubuntu:jammy AS copy-files
-
-COPY --chown=root:root --chmod=0644 docker/configs/nginx.conf /files/nginx.conf
-
-######################################################################################################
 # Base images
 ######################################################################################################
 
@@ -35,10 +25,10 @@ FROM ubuntu:jammy AS base
 
 USER root
 
-ENV DEBIAN_FRONTEND noninteractive
-ENV LANG C.UTF-8
-ENV LANGUAGE C.UTF-8
-ENV LC_ALL C.UTF-8
+ENV DEBIAN_FRONTEND=noninteractive
+ENV LANG=C.UTF-8
+ENV LANGUAGE=C.UTF-8
+ENV LC_ALL=C.UTF-8
 
 RUN apt-get update && \
     apt-get -y upgrade && \
@@ -63,18 +53,18 @@ RUN chmod 0644 /ca-certificates/* && \
     cp /ca-certificates/*.crt /usr/local/share/ca-certificates 2>/dev/null || true && \
     /usr/sbin/update-ca-certificates
 
-ENV AWS_CA_BUNDLE /etc/ssl/certs/ca-certificates.crt
-ENV CURL_CA_BUNDLE /etc/ssl/certs/ca-certificates.crt
-ENV NODE_EXTRA_CA_CERTS /etc/ssl/certs/ca-certificates.crt
-ENV REQUESTS_CA_BUNDLE /etc/ssl/certs/ca-certificates.crt
-ENV SSL_CERT_FILE /etc/ssl/certs/ca-certificates.crt
+ENV AWS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+ENV CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
+ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
 
 # -- Base image (includes compiler toolchain) --------------------------------------------------------
 
 FROM certs-base AS build-base
 
-RUN echo "===> Installing compilers...." && \
-    apt-get update && \
+# Install compilers
+RUN apt-get update && \
     apt-get install -yq --no-install-recommends autoconf build-essential
 
 # -- Base image (argbash) ----------------------------------------------------------------------------
@@ -120,16 +110,13 @@ ARG DIOPTRA_USER=dioptra
 ARG DIOPTRA_UID=39000
 ARG DIOPTRA_GID=100
 
-RUN sed -i 's/^#force_color_prompt=yes/force_color_prompt=yes/' /etc/skel/.bashrc && \
+RUN umask 0022 && \
+    sed -i 's/^#force_color_prompt=yes/force_color_prompt=yes/' /etc/skel/.bashrc && \
     useradd -u ${DIOPTRA_UID} -N -m -s /bin/bash -c "Dioptra user" ${DIOPTRA_USER} && \
     mkdir -p /etc/nginx/conf.d && \
     mkdir -p /var/cache/nginx && \
     mkdir -p /var/lib/nginx && \
     mkdir -p /var/log/nginx && \
-    chmod 0755 /etc/nginx/conf.d && \
-    chmod 0755 /var/cache/nginx && \
-    chmod 0755 /var/lib/nginx && \
-    chmod 0755 /var/log/nginx && \
     chown -R ${DIOPTRA_UID}:${DIOPTRA_GID} /etc/nginx/conf.d && \
     chown -R ${DIOPTRA_UID}:${DIOPTRA_GID} /var/cache/nginx && \
     chown -R ${DIOPTRA_UID}:${DIOPTRA_GID} /var/lib/nginx && \
@@ -139,11 +126,11 @@ COPY --from=shellscripts --chown=root:root --chmod=0755 /shellscripts/entrypoint
 COPY --from=shellscripts --chown=root:root --chmod=0755 /shellscripts/healthcheck-nginx.sh /usr/local/bin/healthcheck.sh
 COPY --from=shellscripts --chown=root:root --chmod=0755 /shellscripts/parse-uri.sh /usr/local/bin/parse-uri.sh
 COPY --from=shellscripts --chown=root:root --chmod=0755 /shellscripts/wait-for-it.sh /usr/local/bin/wait-for-it.sh
-COPY --from=copy-files --chown=${DIOPTRA_UID}:${DIOPTRA_GID} --chmod=0644 /files/nginx.conf /etc/nginx/nginx.conf
+COPY --chown=${DIOPTRA_UID}:${DIOPTRA_GID} --chmod=0644 docker/configs/nginx.conf /etc/nginx/nginx.conf
 
-ENV DIOPTRA_USER ${DIOPTRA_USER}
-ENV DIOPTRA_UID ${DIOPTRA_UID}
-ENV DIOPTRA_GID ${DIOPTRA_GID}
+ENV DIOPTRA_USER=${DIOPTRA_USER}
+ENV DIOPTRA_UID=${DIOPTRA_UID}
+ENV DIOPTRA_GID=${DIOPTRA_GID}
 
 USER ${DIOPTRA_UID}
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

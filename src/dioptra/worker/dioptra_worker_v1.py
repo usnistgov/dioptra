@@ -26,10 +26,12 @@ import rq.cli
 
 from dioptra.sdk.utilities.logging import (
     attach_stdout_stream_handler,
+    configure_structlog_for_worker,
     set_logging_level,
 )
 
 _REQUIRED_ENV = {
+    "MLFLOW_TRACKING_URI",
     "MLFLOW_S3_ENDPOINT_URL",
     "DIOPTRA_API",
     "DIOPTRA_WORKER_USERNAME",
@@ -38,6 +40,7 @@ _REQUIRED_ENV = {
 
 
 def _setup_logging() -> None:
+    configure_structlog_for_worker()
     attach_stdout_stream_handler(
         True if os.getenv("DIOPTRA_RQ_WORKER_LOG_AS_JSON") else False,
     )

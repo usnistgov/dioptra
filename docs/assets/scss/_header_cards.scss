@@ -1,0 +1,161 @@
+// This Software (Dioptra) is being made available as a public service by the
+// National Institute of Standards and Technology (NIST), an Agency of the United
+// States Department of Commerce. This software was developed in part by employees of
+// NIST and in part by NIST contractors. Copyright in portions of this software that
+// were developed by NIST contractors has been licensed or assigned to NIST. Pursuant
+// to Title 17 United States Code Section 105, works of NIST employees are not
+// subject to copyright protection in the United States. However, NIST may hold
+// international copyright in software created by its employees and domestic
+// copyright (or licensing rights) in portions of software that were assigned or
+// licensed to NIST. To the extent that NIST holds copyright in this software, it is
+// being made available under the Creative Commons Attribution 4.0 International
+// license (CC BY 4.0). The disclaimers of the CC BY 4.0 license apply to all parts
+// of the software developed or licensed by NIST.
+//
+// ACCESS THE FULL CC BY 4.0 LICENSE HERE:
+// https://creativecommons.org/licenses/by/4.0/legalcode
+
+/* Base Class */
+.header-on-a-card {
+  padding: 5px;
+  box-shadow: var(--dioptra-shadow-card);
+  border: 1px var(--dioptra-border-10) solid;
+  border-radius: 5px;
+  background-color: var(--dioptra-bg-0);
+}
+
+.header-on-a-card + .header-on-a-card {
+  margin-top: 25px; 
+  position: relative;
+}
+
+.header-on-a-card > h2,
+.header-on-a-card > h3,
+.header-on-a-card > h4 {
+  padding-left: 5px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  display: block;
+  margin-top: .5rem;
+  margin-bottom: .5rem;
+  position: relative;
+}
+
+/* Utility: Fix anchor link (#) positioning within the box */
+.header-on-a-card > h2 .headerlink,
+.header-on-a-card > h3 .headerlink,
+.header-on-a-card > h4 .headerlink {
+  font-size: 0.8em;
+  margin-left: 10px;
+  color: var(--dioptra-text-muted);
+  text-decoration: none;
+}
+
+/* --------------------------------------------------------------------------
+   2a. Additional Styling for Header-On-A-Card class: Header-steps
+   -------------------------------------------------------------------------- */
+
+.header-steps {
+  box-shadow: var(--dioptra-shadow-card);
+  margin-bottom: 2rem;
+  background-color: var(--dioptra-bg-0);
+  border: 1px var(--dioptra-border-20) solid; /* Using border-20 for stronger definition */
+  border-radius: 3px;
+  margin-top: 2rem;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.header-steps > blockquote {
+  background-color: var(--dioptra-bg-20);
+  color: var(--pst-color-text-base); /* Ensure text is readable in both modes */
+}
+
+/* Apply specific border and color styling for Steps headers */
+.header-steps > h2,
+.header-steps > h3,
+.header-steps > h4 {
+  font-weight: 600;
+  color: var(--pst-color-muted);
+  border-bottom: 1px solid var(--dioptra-border-10);
+  margin-top: .25rem;
+  padding-bottom: .5rem;
+}
+
+.header-steps > h2 { font-size: 1.5rem; }
+.header-steps > h3 { font-size: 1.25rem; }
+.header-steps > h4 { font-size: 1.15rem; }
+
+.header-steps > h2::before,
+.header-steps > h3::before,
+.header-steps > h4::before {
+  content: "\f46d"; /* FontAwesome Clipboard */
+  font-family: "Font Awesome 5 Free";
+  font-weight: 900;
+  margin-right: 10px;
+  color: var(--dioptra-blue-icon);
+  display: inline-block;
+}
+
+/* Logic for connecting lines between steps:
+   1. Create a large margin between step blocks.
+   2. Use a pseudo-element positioned absolutely to draw a line 
+      across that empty gap.
+*/
+.header-steps + .header-steps {
+  margin-top: 50px; 
+  position: relative;
+}
+
+.header-steps + .header-steps::before {
+  content: "";
+  position: absolute;
+  top: -20px; 
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--dioptra-line-connect);
+}
+
+/* --------------------------------------------------------------------------
+   2b. Header on a card second styling: "See Also"
+   -------------------------------------------------------------------------- */
+
+.header-seealso {
+  box-shadow: var(--dioptra-shadow-card);
+  margin-top: 3rem;
+  margin-bottom: 2rem;
+  border: 1px var(--dioptra-border-20) solid;
+  padding: 10px;
+  border-radius: 5px;
+  background-color: var(--dioptra-bg-0); /* Ensure card itself has bg */
+}
+
+/* See Also specific header styling */
+.header-seealso > h2,
+.header-seealso > h3,
+.header-seealso > h4 {
+  color: var(--dioptra-green-text-title);
+  background-color: var(--dioptra-green-bg);
+  margin-bottom: 10px;
+  margin-top: -10px;
+  padding: 10px;
+  margin-left: -10px;
+  margin-right: -10px;
+  border-radius: 5px 5px 0px 0px;
+}
+
+.header-seealso > h2 { font-size: 1.5rem; }
+.header-seealso > h3 { font-size: 1.25rem; }
+.header-seealso > h4 { font-size: 1.15rem; }
+
+.header-seealso > h2::before,
+.header-seealso > h3::before,
+.header-seealso > h4::before {
+  content: "\f0a9"; /* FontAwesome Arrow */
+  font-family: "Font Awesome 5 Free";
+  font-weight: 900;
+  margin-right: 10px;
+  color: var(--dioptra-green-border);
+  display: inline-block;
+}

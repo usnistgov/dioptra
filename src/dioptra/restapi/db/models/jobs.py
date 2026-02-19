@@ -14,12 +14,31 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, ForeignKey, ForeignKeyConstraint, Index, Text, select
-from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
+from sqlalchemy import (
+    Column,
+    ForeignKey,
+    ForeignKeyConstraint,
+    Index,
+    PrimaryKeyConstraint,
+    Text,
+    func,
+    select,
+)
+from sqlalchemy.orm import Mapped, aliased, column_property, mapped_column, relationship
 
-from dioptra.restapi.db.db import bigint, db, guid, intpk, text_
+from dioptra.restapi.db.db import (
+    bigint,
+    datetimetz,
+    db,
+    double_,
+    guid,
+    intpk,
+    optionalstr,
+    text_,
+)
 
 from .entry_points import EntryPoint
 from .experiments import Experiment
@@ -27,7 +46,7 @@ from .queues import Queue
 from .resources import ResourceSnapshot
 
 if TYPE_CHECKING:
-    from .entry_points import EntryPointParameterValue
+    from .entry_points import EntryPointArtifactParameterValue, EntryPointParameterValue
     from .resources import Resource
 
 # -- Tables (no ORM) -------------------------------------------------------------------
@@ -35,6 +54,11 @@ if TYPE_CHECKING:
 job_status_types_table = db.Table(
     "job_status_types",
     Column("status", Text(), primary_key=True),
+)
+
+job_log_severity_table = db.Table(
+    "job_log_severity",
+    Column("severity", Text(), primary_key=True),
 )
 
 # -- ORM Classes -----------------------------------------------------------------------
@@ -71,6 +95,11 @@ class EntryPointJob(db.Model):  # type: ignore[name-defined]
         relationship(
             back_populates="entry_point_job", overlaps="job_resource,parameter,values"
         )
+    )
+    entry_point_artifact_parameter_values: Mapped[
+        list["EntryPointArtifactParameterValue"]
+    ] = relationship(
+        back_populates="entry_point_job", overlaps="job_resource,artifact_parameter"
     )
 
     # Additional settings
@@ -210,3 +239,66 @@ class Job(ResourceSnapshot):
     __mapper_args__ = {
         "polymorphic_identity": "job",
     }
+
+
+class JobLog(db.Model):  # type: ignore[name-defined]
+    __tablename__ = "job_logs"
+
+    # Database fields
+
+    # "id" also acts as an ordinal for recording log entry order
+    id: Mapped[intpk] = mapped_column(init=False)
+    job_resource_id: Mapped[bigint] = mapped_column(
+        ForeignKey("resources.resource_id"), init=False
+    )
+    severity: Mapped[text_] = mapped_column(ForeignKey("job_log_severity.severity"))
+    logger_name: Mapped[text_]
+    message: Mapped[text_]
+    created_on: Mapped[datetimetz] = mapped_column(init=False, nullable=False)
+
+    # Relationships
+    job_resource: Mapped["Resource"] = relationship()
+
+    # Additional settings
+    __table_args__ = (Index(None, "job_resource_id", "id"),)
+
+    # Initialize default values using dataclass __post_init__ method
+    # https://docs.python.org/3/library/dataclasses.html#dataclasses.__post_init__
+    def __post_init__(self) -> None:
+        timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
+        self.created_on = timestamp
+
+
+class JobMetric(db.Model):  # type: ignore[name-defined]
+    __tablename__ = "job_metrics"
+
+    # Database fields
+
+    job_resource_id: Mapped[bigint] = mapped_column(
+        ForeignKey("resources.resource_id"), init=False
+    )
+    name: Mapped[text_]
+    value: Mapped[double_]
+    special_value: Mapped[optionalstr]
+    step: Mapped[bigint]
+    timestamp: Mapped[datetimetz]
+
+    # Relationships
+    job_resource: Mapped["Resource"] = relationship()
+
+    # Additional settings
+    __table_args__ = (PrimaryKeyConstraint("job_resource_id", "name", "step"),)
+
+    @classmethod
+    def __declare_last__(cls) -> None:
+        job_metric_alias = aliased(cls)
+        cls.is_latest = column_property(
+            select(func.max(job_metric_alias.step))
+            .where(
+                job_metric_alias.job_resource_id == cls.job_resource_id,
+                job_metric_alias.name == cls.name,
+            )
+            .correlate_except(job_metric_alias)
+            .scalar_subquery()
+            == cls.step
+        )

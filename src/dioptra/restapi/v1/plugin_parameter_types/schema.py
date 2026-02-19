@@ -15,6 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The schemas for serializing/deserializing PluginParameterType resources."""
+
 from marshmallow import Schema, fields
 
 from dioptra.restapi.v1.schemas import (
@@ -37,7 +38,7 @@ class PluginParameterTypeRefSchema(PluginParameterTypeRefBaseSchema):  # type: i
 
     name = fields.String(
         attribute="name",
-        metadata=dict(description="Name of the PluginParameterType resource."),
+        metadata={"description": "Name of the PluginParameterType resource."},
     )
 
 
@@ -46,17 +47,17 @@ class PluginParameterTypeMutableFieldsSchema(Schema):
 
     name = fields.String(
         attribute="name",
-        metadata=dict(description="Name of the PluginParameterType resource."),
+        metadata={"description": "Name of the PluginParameterType resource."},
         required=True,
     )
     description = fields.String(
         attribute="description",
-        metadata=dict(description="Description of the PluginParameterType resource."),
+        metadata={"description": "Description of the PluginParameterType resource."},
         load_default=None,
     )
     structure = fields.Dict(
         attribute="structure",
-        metadata=dict(description="Structure of the PluginParameterType resource."),
+        metadata={"description": "Structure of the PluginParameterType resource."},
         load_default=None,
     )
 
@@ -67,7 +68,8 @@ PluginParameterTypeBaseSchema = generate_base_resource_schema(
 
 
 class PluginParameterTypeSchema(
-    PluginParameterTypeMutableFieldsSchema, PluginParameterTypeBaseSchema  # type: ignore
+    PluginParameterTypeMutableFieldsSchema,
+    PluginParameterTypeBaseSchema,  # type: ignore
 ):
     """The schema for the data stored in a PluginParameterType resource."""
 
@@ -78,9 +80,9 @@ class PluginParameterTypePageSchema(BasePageSchema):
     data = fields.Nested(
         PluginParameterTypeSchema,
         many=True,
-        metadata=dict(
-            description="List of PluginParameterType resources in the current page."
-        ),
+        metadata={
+            "description": "List of PluginParameterType resources in the current page."
+        },
     )
 
 

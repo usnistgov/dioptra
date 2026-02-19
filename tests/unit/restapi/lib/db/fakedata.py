@@ -279,7 +279,7 @@ class FakeData(object):
             parameter_number=1,
             parameter_type=str_parameter_type,
         )
-        plugin_task = models.PluginTask(
+        plugin_task = models.FunctionTask(
             file=plugin_file,
             plugin_task_name=plugin_task_name,
             input_parameters=[input_parameter],

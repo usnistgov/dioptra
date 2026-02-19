@@ -58,5 +58,5 @@ class RQServiceV1(object):
             RUN_V1_DIOPTRA_JOB_FUNC,
             kwargs=cmd_kwargs,
             job_id=str(job_id),
-            timeout=timeout,
+            job_timeout=timeout if timeout else TIMEOUT_24_HOURS,
         )

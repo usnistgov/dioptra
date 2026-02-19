@@ -155,7 +155,7 @@ class TypeStructure:
         if self.struct_type is StructureType.MAPPING and not isinstance(
             self.struct_def, (Mapping, Sequence)
         ):
-            raise dioptra.sdk.exceptions.task_engine.InvalidTypeStructureDefinitionError(  # noqa: B950
+            raise dioptra.sdk.exceptions.task_engine.InvalidTypeStructureDefinitionError(
                 "For mapping type structures, the definition must be"
                 " either a mapping (e.g. a dict) from property names to types,"
                 " or a 2-element list containing a key type followed by a value"
@@ -165,16 +165,15 @@ class TypeStructure:
         elif self.struct_type is StructureType.LIST and not isinstance(
             self.struct_def, Type
         ):
-            raise dioptra.sdk.exceptions.task_engine.InvalidTypeStructureDefinitionError(  # noqa: B950
+            raise dioptra.sdk.exceptions.task_engine.InvalidTypeStructureDefinitionError(
                 "For a list type structure, the definition must be a type"
             )
 
         elif self.struct_type is StructureType.TUPLE and not isinstance(
             self.struct_def, Sequence
         ):
-            raise dioptra.sdk.exceptions.task_engine.InvalidTypeStructureDefinitionError(  # noqa: B950
-                "For a tuple type structure, the definition must be a sequence"
-                " of types"
+            raise dioptra.sdk.exceptions.task_engine.InvalidTypeStructureDefinitionError(
+                "For a tuple type structure, the definition must be a sequence of types"
             )
 
     def __eq__(self, other: Any) -> bool:
