@@ -73,7 +73,7 @@ A collection of plugin tasks for evaluating evasion attacks and defenses using t
   input_params = [
     { name = "predictions", type = "pd.DataFrame", required = true},
     { name = "dataset", type = "Dataset", required = true },
-    { name = "metrics", type = "options_dicts", required = false },
+    { name = "metrics", type = "metrics_list", required = false },
   ]
   output_params = [ { name = "metrics", type = "pd.DataFrame" } ]
 
@@ -174,7 +174,6 @@ A collection of plugin tasks for evaluating evasion attacks and defenses using t
   name = "KerasModelArtifactTask"
   output_params = [ { name = "model", type = "keras.Model" } ]
 
-
 [[plugins]]
 path = "plugins/artifacts"
 description = "A collection of basic artifact tasks."
@@ -186,8 +185,18 @@ description = "A collection of basic artifact tasks."
 
   [[plugins.tasks.artifacts]]
   filename = "tasks.py"
+  name = "BytesArtifactTask"
+  output_params = [ { name = "contents", type = "bytes" } ]
+
+  [[plugins.tasks.artifacts]]
+  filename = "tasks.py"
   name = "NumpyArrayArtifactTask"
   output_params = [ { name = "array", type = "np.ndarray" } ]
+
+  [[plugins.tasks.artifacts]]
+  filename = "tasks.py"
+  name = "PickleArtifactTask"
+  output_params = [ { name = "array", type = "any" } ]
 
   [[plugins.tasks.artifacts]]
   filename = "tasks.py"
@@ -219,6 +228,11 @@ description = "Represents parameters passed as keyword args."
 structure = { list = "options_dict" }
 
 [[plugin_param_types]]
+name = "metrics_list"
+description = "A list of metrics, each specified as either a string name or a mapping with name and options."
+structure = { list = { union = ["options_dict", "string"] } }
+
+[[plugin_param_types]]
 name = "keras.Model"
 description = "A keras Model object."
 
@@ -242,6 +256,10 @@ structure = { union = ["string", "integer"] }
 [[plugin_param_types]]
 name = "path"
 description = "A pathlib Path object."
+
+[[plugin_param_types]]
+name = "bytes"
+description = "Python bytes object."
 
 [[entrypoints]]
 path = "entrypoints/dioptra_optic/model_train.yml"
@@ -282,7 +300,7 @@ path = "entrypoints/dioptra_optic/model_eval.yml"
 name = "Evaluate Keras Image Classifier"
 description = "Get metrics based on the predictions and the actual classifications."
 params = [
-  { name = "metrics", type = "mapping", default_value = '{"accuracy": {}}' },
+  { name = "metrics", type = "list", default_value = '["categorical_accuracy", "auc", "precision", "recall", {"name": "f1_score", "options": {"average": "weighted"}}]' },
 ]
 artifact_params = [
   { name = "model_artifact", output_params = [ { name = "model", type = "keras.Model" } ] },
