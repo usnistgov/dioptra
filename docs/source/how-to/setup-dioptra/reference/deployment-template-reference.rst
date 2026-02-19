@@ -45,11 +45,11 @@ For example, it will be used to name the main folder created by the template (``
 container_registry
 ~~~~~~~~~~~~~~~~~~
 
-**Default:** *empty string*
+**Default:** ``ghcr.io/usnistgov``
 
-This is needed if you want to use the Dioptra container images from a container registry.
-If you wish to use the prebuilt Dioptra images published to GitHub, then you would answer ``ghcr.io/usnistgov``.
-Otherwise, leave this blank.
+This is the registry prefix for the Dioptra container images.
+The default value, ``ghcr.io/usnistgov``, points to the prebuilt Dioptra images published to GitHub.
+If you are using locally built images instead, set this to an empty string.
 
 .. seealso::
 
@@ -123,7 +123,7 @@ If ``False``, the NGINX ports will be exposed on all available network interface
 postgres_container_tag
 ~~~~~~~~~~~~~~~~~~~~~~
 
-**Default:** ``15``
+**Default:** ``18``
 
 Sets the version of PostgreSQL to be used in the deployment.
 For a full list of available versions, visit the *Tags* tab on the `postgres image page on Docker Hub <https://hub.docker.com/_/postgres>`__.
@@ -204,7 +204,7 @@ Press Enter to accept the default, or type a new value.
 .. code:: text
 
    deployment_name [Dioptra deployment]: Dioptra deployment
-   container_registry []:
+   container_registry [ghcr.io/usnistgov]:
    container_tag [dev]: dev
    docker_compose_path [docker compose]: docker compose
    systemd_required_mounts []:
@@ -213,7 +213,7 @@ Press Enter to accept the default, or type a new value.
    1 - True
    2 - False
    Choose from 1, 2 [1]: 1
-   postgres_container_tag [15]: 15
+   postgres_container_tag [18]: 18
    pgadmin_default_email [dioptra@example.com]: dioptra@example.com
    num_tensorflow_cpu_workers [1]: 1
    num_tensorflow_gpu_workers [0]: 0
