@@ -21,7 +21,7 @@ Details are available in the project documentation available at <https://pages.n
 
 ## Current Release Status
 
-Release 1.1.0-dev -- with on-going improvements and development
+Release 1.2.0-dev -- with on-going improvements and development
 
 ## Use Cases
 
