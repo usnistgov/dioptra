@@ -295,7 +295,7 @@ path = "entrypoints/dioptra_optic/model_eval.yml"
 name = "Evaluate Keras Image Classifier"
 description = "Get metrics based on the predictions and the actual classifications."
 params = [
-  { name = "metrics", type = "mapping", default_value = '{"accuracy": {}}' },
+  { name = "metrics", type = "list", default_value = '["categorical_accuracy", "auc", "precision", "recall", {"name": "f1_score", "options": {"average": "weighted"}}]' },
 ]
 artifact_params = [
   { name = "model_artifact", output_params = [ { name = "model", type = "keras.Model" } ] },

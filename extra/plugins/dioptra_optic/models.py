@@ -218,13 +218,7 @@ def evaluate_model(
 def evaluate_predictions(
     predictions: pd.DataFrame,
     dataset: Dataset,
-    metrics: list[str | dict[str, Any]] = [
-        "categorical_accuracy",
-        "auc",
-        "precision",
-        "recall",
-        {"name": "f1_score", "options": {"average": "weighted"}},
-    ],
+    metrics: list[str | dict[str, Any]] | None = None,
 ) -> pd.DataFrame:
     """
     Evaluates predictions from a model.
@@ -233,11 +227,20 @@ def evaluate_predictions(
         predictions: The predictions used to compute metrics.
         dataset: The dataset containing the labels.
         metrics: A list of metrics to be evaluated by the model.
-            If None, use the metrics already compiled to the model.
+            If None, uses a default set of metrics.
 
     Returns:
         A DataFrame containing the computed metrics.
     """
+    if metrics is None:
+        metrics = [
+            "categorical_accuracy",
+            "auc",
+            "precision",
+            "recall",
+            {"name": "f1_score", "options": {"average": "weighted"}},
+        ]
+
     metrics_callback = DioptraMetricsLoggingCallback(LOGGER)
 
     metrics_fns: list[keras.Metric] = [
