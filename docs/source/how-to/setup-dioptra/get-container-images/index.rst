@@ -82,8 +82,8 @@ This prefix affects how you configure your Dioptra deployment.
 
 When you :ref:`prepare your deployment <how-to-prepare-deployment>`, you will set the ``container_registry`` template variable to match your images:
 
-- **Downloaded images:** Set ``container_registry`` to ``ghcr.io/usnistgov``
-- **Locally built images:** Leave ``container_registry`` empty (the default)
+- **Downloaded images:** Leave ``container_registry`` at its default value of ``ghcr.io/usnistgov``
+- **Locally built images:** Set ``container_registry`` to an empty string
 
 .. note::
 

@@ -35,7 +35,7 @@ EXPECTED_DEFAULTS = {
     "docker_compose_path": "docker compose",
     "nginx_server_name": "dioptra.example.org",
     "nginx_expose_ports_on_localhost_only": "True",
-    "postgres_container_tag": "15",
+    "postgres_container_tag": "18",
     "pgadmin_default_email": "dioptra@example.com",
     "num_tensorflow_cpu_workers": "1",
     "num_tensorflow_gpu_workers": "0",
@@ -91,7 +91,7 @@ def test_deployment_name(rendered_folder):
 def test_dioptra_container_tags(rendered_folder):
     """Test that the Dioptra containers have the right tag."""
     expected_tag = EXPECTED_DEFAULTS["container_tag"]
-    dioptra_prefix = "dioptra/"
+    dioptra_prefix = "ghcr.io/usnistgov/dioptra/"
     docker_compose_file = os.path.join(rendered_folder, "docker-compose.yml")
 
     assert os.path.exists(docker_compose_file), f"File not found: {docker_compose_file}"

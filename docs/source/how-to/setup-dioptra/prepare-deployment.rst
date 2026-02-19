@@ -102,7 +102,7 @@ In most cases, the default value is appropriate.
 Key variables include:
 
 - **deployment_name:** A name to associate with the deployment (default: ``Dioptra deployment``)
-- **container_registry:** Set to ``ghcr.io/usnistgov`` if using downloaded images, or leave empty for locally built images. See :ref:`how-to-get-container-images-registry-prefix` for details. (default: *empty*)
+- **container_registry:** Registry prefix for Dioptra container images. Leave as default for downloaded images, or set to empty for locally built images. See :ref:`how-to-get-container-images-registry-prefix` for details. (default: ``ghcr.io/usnistgov``)
 - **container_tag:** Should match the tags of your Dioptra container images (default: ``dev``)
 - **nginx_server_name:** Domain name, IP address, or ``_`` for local deployments (default: ``dioptra.example.org``)
 - **num_tensorflow_cpu_workers / num_pytorch_cpu_workers:** Number of CPU workers (default: ``1`` each)
