@@ -27,7 +27,11 @@ import pytest
 from flask.testing import FlaskClient
 from werkzeug.test import TestResponse
 
-from dioptra.client.base import DioptraResponseProtocol
+from dioptra.client.base import (
+    CollectionClient,
+    DioptraResponseProtocol,
+    SubCollectionClient,
+)
 from dioptra.client.client import DioptraClient
 from dioptra.restapi.routes import V1_GROUPS_ROUTE, V1_ROOT
 
@@ -107,7 +111,6 @@ def assert_group_response_contents_matches_expectations(
 
     # Validate the that each member is a GroupMember
     for member in response["members"]:
-
         # Validate the UserRef structure for member
         assert isinstance(member["user"]["id"], int)
         assert isinstance(member["user"]["username"], str)
@@ -186,7 +189,7 @@ def assert_registering_existing_group_name_fails(
         AssertionError: If the response status code is not 400.
     """
     response = actions.register_group(client, name=name)
-    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert response.status_code == HTTPStatus.CONFLICT
 
 
 def assert_group_name_matches_expected_name(
@@ -232,13 +235,58 @@ def assert_cannot_rename_group_with_existing_name(
         group_id=group_id,
         new_name=existing_name,
     )
-    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert response.status_code == HTTPStatus.CONFLICT
 
+
+def assert_cannot_get_private_resource(
+    dioptra_client: CollectionClient[DioptraResponseProtocol]
+    | SubCollectionClient[DioptraResponseProtocol],
+    *resource_ids: int,
+) -> None:
+    """Assert that a user cannot get resources from a group to which they do not belong.
+
+    Args:
+        dioptra_client: The Dioptra client
+        resource_ids: The id (and child id(s)) of a resource that is in a group the
+            authenticated user does not belong to.
+
+    Raises:
+        AssertionError: If the response status code is not NOT_FOUND or if the resource
+            is returned by the get all query.
+    """
+    response = dioptra_client.get_by_id(*resource_ids)
+    assert response.status_code == HTTPStatus.NOT_FOUND
+
+    response = dioptra_client.get(*resource_ids[1:])
+    if isinstance(dioptra_client, CollectionClient):
+        assert response.status_code == HTTPStatus.OK
+        for resource in response.json()["data"]:
+            assert resource["id"] not in resource_ids
+    elif isinstance(dioptra_client, SubCollectionClient):
+        assert response.status_code == HTTPStatus.NOT_FOUND
+
+
+def assert_cannot_delete_private_resource(
+    dioptra_client: CollectionClient[DioptraResponseProtocol]
+    | SubCollectionClient[DioptraResponseProtocol],
+    *resource_ids: int,
+) -> None:
+    """Assert that a user cannot delete resources from a group to which they do not belong.
+
+    Args:
+        dioptra_client: The Dioptra client
+        resource_ids: The id (and child id(s)) of a resource that is in a group the
+            authenticated user does not belong to.
+
+    Raises:
+        AssertionError: If the response status code is not FORBIDDEN
+    """
+    response = dioptra_client.delete_by_id(*resource_ids)
+    assert response.status_code == HTTPStatus.FORBIDDEN
 
 # -- Tests -----------------------------------------------------------------------------
 
 
-@pytest.mark.v1_test
 def test_create_group(
     client: FlaskClient,
     dioptra_client: DioptraClient[DioptraResponseProtocol],
@@ -315,7 +363,6 @@ def test_group_search_query(
     assert_retrieving_groups_works(dioptra_client, expected=[], search="name:pub")
 
 
-@pytest.mark.v1_test
 def test_cannot_register_existing_group_name(
     client: FlaskClient,
     auth_account: dict[str, Any],
@@ -333,7 +380,6 @@ def test_cannot_register_existing_group_name(
     assert_registering_existing_group_name_fails(client, name=existing_group["name"])
 
 
-@pytest.mark.v1_test
 def test_rename_group(
     client: FlaskClient,
     dioptra_client: DioptraClient[DioptraResponseProtocol],
@@ -365,3 +411,54 @@ def test_rename_group(
         group_id=group_to_rename["id"],
         existing_name=existing_group["name"],
     )
+
+
+@pytest.mark.parametrize(
+    "resource_type",
+    [
+        "queue",
+        "param_type",
+        "plugin",
+        "entrypoint",
+        "experiment",
+         "job",
+        "artifact",
+    ],
+)
+def test_cannot_get_private_resource(
+    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    registered_private_resources: dict[str, Any],
+    auth_account2: dict[str, Any],  # must come after registered_private_resources
+    resource_type: str,
+) -> None:
+    """
+    Test that a user can not access resources that belong to a group they are not a member of.
+    """
+    resource, resource_client = registered_private_resources[resource_type]
+    assert_cannot_get_private_resource(resource_client, resource["id"])
+
+
+@pytest.mark.parametrize(
+    "resource_type",
+    [
+        "queue",
+        "param_type",
+        "plugin",
+        "entrypoint",
+        "experiment",
+        "job",
+    ],
+)
+def test_cannot_delete_private_resource(
+    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    registered_private_resources: dict[str, Any],
+    auth_account2: dict[str, Any],  # must come after registered_private_resources
+    resource_type: str,
+) -> None:
+    """
+    Test that a user can not delete resources that belong to a group they are not a member of.
+    """
+    resource, resource_client = registered_private_resources[resource_type]
+    assert_cannot_delete_private_resource(resource_client, resource["id"])

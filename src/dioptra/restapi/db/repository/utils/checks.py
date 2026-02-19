@@ -952,12 +952,55 @@ def assert_can_create_snapshot(
     assert_resource_modifiable(session, snap)
     assert_user_exists(session, snap.creator, DeletionPolicy.NOT_DELETED)
     assert_user_in_group(session, snap.creator, snap.resource.owner)
+    assert_user_permission(session, snap.creator, snap.resource.owner, "read")
+    assert_user_permission(session, snap.creator, snap.resource.owner, "write")
     assert_resource_children_exist(session, snap, DeletionPolicy.NOT_DELETED)
     assert_resource_type(session, snap, resource_type)
 
     # TODO: should check if the children are already parented to a different
     # different resource?  What's the cardinality of parent/child
     # relationships?
+
+
+def assert_can_delete_resource(
+    session: CompatibleSession[S], user: m.User, resource: m.Resource
+):
+    """
+    Check whether the given resource may be delete.
+    There may also be other resource-type-specific criteria; this function
+    tests general criteria common to all resource types.
+
+    Args:
+        session: An SQLAlchemy session
+        snap: A ResourceSnapshot object with the desired resource settings
+        resource_type: the resource_type value for the type of resource being
+            created.  Used to verify type settings on the resource and resource
+            objects.
+
+    Raises:
+        EntityExistsError: if the resource already exists
+        EntityDoesNotExistError: if the resource or user does not exist, or if any child
+            resource does not exist
+        EntityDeletedError: if the resource is deleted, user is deleted, or if all child
+            resources exist but some are deleted
+        ReadOnlyLockError: if the resource exists and has a read-only lock
+        UserNotInGroupError: if the user is not a member of the group who owns the
+            resource
+        UserPermissionsError: if the user does not have permission to delete the resource
+        MismatchedResourceTypeError: if the resource or resource's type doesn't
+            match resource_type
+    """
+    # NOTE: this behavior is different for repositories.
+    #       non-repo returns EntityDoesNotExistError, repo returns Success
+    #       If we enable this assert, repo will return EntityDeletedError
+    # assert_resource_exists(session, resource, DeletionPolicy.NOT_DELETED)
+    assert_resource_modifiable(session, resource)
+    assert_user_exists(session, user, DeletionPolicy.NOT_DELETED)
+    assert_user_in_group(session, user, resource.owner)
+    assert_user_permission(session, user, resource.owner, "read")
+    assert_user_permission(session, user, resource.owner, "write")
+    assert_resource_children_exist(session, resource, DeletionPolicy.NOT_DELETED)
+    assert_resource_type(session, resource, resource.resource_type)
 
 
 def assert_exists(
@@ -1168,6 +1211,46 @@ def assert_user_in_group(
         raise e.UserNotInGroupError(user.user_id, group.group_id)
 
 
+def assert_user_permission(
+    session: CompatibleSession[S], user: m.User, group: m.Group, permission: str
+) -> None:
+    """
+    Ensure the given user is a member of the given group.  This function
+    assumes both already exist in the database.  It also ignores the deletion
+    status of both.  Existence/deletion status should be checked by the caller
+    first, if necessary.
+
+    Args:
+        session: An SQLAlchemy session
+        user: An existing user
+        group: An existing group
+        permission: The requested permission
+
+    Raises:
+        UserNotInGroupError: if the given user is not in the given group
+        UserPermissionsError: if the given user does not have the requested permission
+    """
+
+    # Assume existence checks on user and group were already done, so they are
+    # known to exist.
+    membership = session.get(m.GroupMember, (user.user_id, group.group_id))
+
+    if not membership:
+        raise e.UserNotInGroupError(user.user_id, group.group_id)
+
+    if permission == "read" and not membership.read:
+        raise e.UserPermissionsError("read", group_id=group.group_id)
+
+    if permission == "write" and not membership.write:
+        raise e.UserPermissionsError("read", group_id=group.group_id)
+
+    if permission == "share_read" and not membership.write:
+        raise e.UserPermissionsError("share_read", group_id=group.group_id)
+
+    if permission == "share_write" and not membership.write:
+        raise e.UserPermissionsError("share_write", group_id=group.group_id)
+
+
 def check_user_collision(session: CompatibleSession[S], user: m.User) -> None:
     """
     Factored out check from user and group repositories.  Their create methods
@@ -1296,6 +1379,7 @@ def assert_snapshot_name_available(
 __all__ = [
     "assert_can_create_resource",
     "assert_can_create_snapshot",
+    "assert_can_delete_resource",
     "assert_draft_does_not_exist",
     "assert_draft_exists",
     "assert_exists",

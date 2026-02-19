@@ -20,16 +20,27 @@ import datetime
 from typing import Any, Final
 
 import structlog
+from flask_login import current_user
 from injector import inject
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
 from dioptra.restapi.db.repository.utils import DeletionPolicy
 from dioptra.restapi.db.unit_of_work import UnitOfWork
-from dioptra.restapi.errors import EntityDoesNotExistError, EntityExistsError
+from dioptra.restapi.errors import (
+    DioptraError,
+    EntityDoesNotExistError,
+    EntityExistsError,
+)
+from dioptra.restapi.v1.plugin_parameter_types.service import (
+    BuiltinPluginParameterTypeService,
+)
 from dioptra.restapi.v1.shared.search_parser import parse_search_text
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
+
+DEFAULT_GROUP_ID: Final[int] = 1
+DEFAULT_GROUP_NAME: Final[str] = "public"
 
 DEFAULT_GROUP_MEMBER_PERMISSIONS: Final[dict[str, bool]] = {
     "read": False,
@@ -53,6 +64,7 @@ class GroupService(object):
         self,
         group_member_service: "GroupMemberService",
         group_manager_service: "GroupManagerService",
+        builtin_plugin_parameter_type_service: BuiltinPluginParameterTypeService,
         uow: UnitOfWork,
     ) -> None:
         """Initialize the group service.
@@ -62,16 +74,20 @@ class GroupService(object):
         Args:
             group_member_service: A GroupMemberService object.
             group_manager_service: A GroupManagerService object.
+            builtin_plugin_parameter_type_service: A BuiltinPluginParameterTypeService
+                object.
             uow: A UnitOfWork instance
         """
         self._group_member_service = group_member_service
         self._group_manager_service = group_manager_service
+        self._builtin_plugin_parameter_type_service = (
+            builtin_plugin_parameter_type_service
+        )
         self._uow = uow
 
     def create(
         self,
         name: str,
-        creator: models.User,
         commit: bool = True,
         **kwargs,
     ) -> models.Group:
@@ -79,7 +95,6 @@ class GroupService(object):
 
         Args:
             name: The name requested by the user.
-            creator: The user who created the group.
             commit: If True, commit the transaction. Defaults to True.
 
         Returns:
@@ -90,8 +105,13 @@ class GroupService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        new_group = models.Group(name=name, creator=creator)
+        new_group = models.Group(name=name, creator=current_user)
         self._uow.group_repo.create(new_group)
+
+        # Register the built-in plugin parameter types when creating a new group.
+        self._builtin_plugin_parameter_type_service.create_all(
+            user=current_user, group=new_group, commit=False
+        )
 
         if commit:
             self._uow.commit()
@@ -207,6 +227,11 @@ class GroupIdService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Modify group", group_id=group_id)
 
+        if group_id == DEFAULT_GROUP_ID:
+            raise DioptraError(
+                f"The default group ({DEFAULT_GROUP_NAME}) can not be modified."
+            )
+
         group = self._uow.group_repo.get(group_id, DeletionPolicy.NOT_DELETED)
 
         if group is None:
@@ -240,6 +265,11 @@ class GroupIdService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Delete group", group_id=group_id)
+
+        if group_id == DEFAULT_GROUP_ID:
+            raise DioptraError(
+                f"The default group ({DEFAULT_GROUP_NAME}) can not be deleted."
+            )
 
         group = self._uow.group_repo.get_one(group_id, DeletionPolicy.NOT_DELETED)
 

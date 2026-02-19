@@ -40,6 +40,8 @@ from dioptra.restapi.errors import (
     JobMlflowRunAlreadySetError,
     JobParameterMissingError,
     SortParameterValidationError,
+    UserNotInGroupError,
+    UserPermissionsError,
 )
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.artifacts.snapshot import ArtifactSnapshotIdService
@@ -424,6 +426,14 @@ class JobService(object):
 
         filters = []
 
+        # only return resources the current user is a member of with read permissions
+        groups_stmt = select(models.GroupMember).where(
+            models.GroupMember.user_id == current_user.user_id,
+            models.GroupMember.read,
+        )
+        group_ids = {group.group_id for group in db.session.scalars(groups_stmt).all()}
+        filters.append(models.Resource.group_id.in_(group_ids))
+
         if group_id is not None:
             filters.append(models.Resource.group_id == group_id)
 
@@ -508,6 +518,13 @@ class JobIdService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get job by id", job_id=job_id)
 
+        # only return resources the current user is a member of with read permissions
+        groups_stmt = select(models.GroupMember).where(
+            models.GroupMember.user_id == current_user.user_id,
+            models.GroupMember.read,
+        )
+        group_ids = {group.group_id for group in db.session.scalars(groups_stmt).all()}
+
         stmt = (
             select(models.Job)
             .join(models.Resource)
@@ -515,6 +532,7 @@ class JobIdService(object):
                 models.Job.resource_id == job_id,
                 models.Job.resource_snapshot_id == models.Resource.latest_snapshot_id,
                 models.Resource.is_deleted == False,  # noqa: E712
+                models.Resource.group_id.in_(group_ids),
             )
         )
         job = db.session.scalars(stmt).first()
@@ -556,6 +574,22 @@ class JobIdService(object):
 
         if job_resource is None:
             raise EntityDoesNotExistError(RESOURCE_TYPE, job_id=job_id)
+
+        group_stmt = select(models.GroupMember).where(
+            models.GroupMember.user_id == current_user.user_id,
+            models.GroupMember.group_id == job_resource.group_id,
+        )
+        group_member = db.session.scalar(group_stmt)
+
+        if group_member is None:
+            raise UserNotInGroupError(
+                user_id=current_user.user_id, group_id=job_resource.group_id
+            )
+
+        if not group_member.write:
+            raise UserPermissionsError(
+                "write", user_id=current_user.user_id, group_id=job_resource.group_id
+            )
 
         deleted_resource_lock = models.ResourceLock(
             resource_lock_type="delete",
@@ -639,6 +673,13 @@ class JobIdStatusService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get job status by id", job_id=job_id)
 
+        # only return resources the current user is a member of with read permissions
+        groups_stmt = select(models.GroupMember).where(
+            models.GroupMember.user_id == current_user.user_id,
+            models.GroupMember.read,
+        )
+        group_ids = {group.group_id for group in db.session.scalars(groups_stmt).all()}
+
         stmt = (
             select(models.Job)
             .join(models.Resource)
@@ -646,6 +687,7 @@ class JobIdStatusService(object):
                 models.Job.resource_id == job_id,
                 models.Job.resource_snapshot_id == models.Resource.latest_snapshot_id,
                 models.Resource.is_deleted == False,  # noqa: E712
+                models.Resource.group_id.in_(group_ids),
             )
         )
         job = db.session.scalars(stmt).first()
@@ -685,8 +727,21 @@ class JobIdMetricsService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get job metrics by id", job_id=job_id)
 
-        stmt = select(models.JobMetric).where(
-            models.JobMetric.is_latest, models.JobMetric.job_resource_id == job_id
+        # only return resources the current user is a member of with read permissions
+        groups_stmt = select(models.GroupMember).where(
+            models.GroupMember.user_id == current_user.user_id,
+            models.GroupMember.read,
+        )
+        group_ids = {group.group_id for group in db.session.scalars(groups_stmt).all()}
+
+        stmt = (
+            select(models.JobMetric)
+            .join(models.Resource)
+            .where(
+                models.JobMetric.is_latest,
+                models.JobMetric.job_resource_id == job_id,
+                models.Resource.group_id.in_(group_ids),
+            )
         )
         job_metrics = list(db.session.scalars(stmt).all())
 
@@ -808,9 +863,21 @@ class JobIdMetricsSnapshotsService(object):
             metric_name=metric_name,
         )
 
-        job_metrics_stmt = select(models.JobMetric).where(
-            models.JobMetric.job_resource_id == job_id,
-            models.JobMetric.name == metric_name,
+        # only return resources the current user is a member of with read permissions
+        groups_stmt = select(models.GroupMember).where(
+            models.GroupMember.user_id == current_user.user_id,
+            models.GroupMember.read,
+        )
+        group_ids = {group.group_id for group in db.session.scalars(groups_stmt).all()}
+
+        job_metrics_stmt = (
+            select(models.JobMetric)
+            .join(models.Resource)
+            .where(
+                models.JobMetric.job_resource_id == job_id,
+                models.JobMetric.name == metric_name,
+                models.Resource.group_id.in_(group_ids),
+            )
         )
 
         history = list(db.session.scalars(job_metrics_stmt).unique().all())
@@ -924,6 +991,14 @@ class ExperimentJobService(object):
 
         filters = []
 
+        # only return resources the current user is a member of with read permissions
+        groups_stmt = select(models.GroupMember).where(
+            models.GroupMember.user_id == current_user.user_id,
+            models.GroupMember.read,
+        )
+        group_ids = {group.group_id for group in db.session.scalars(groups_stmt).all()}
+        filters.append(models.Resource.group_id.in_(group_ids))
+
         if search_string:
             filters.append(
                 construct_sql_query_filters(search_string, SEARCHABLE_FIELDS)
@@ -1027,9 +1102,17 @@ class ExperimentJobIdService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
+        # only return resources the current user is a member of with read permissions
+        groups_stmt = select(models.GroupMember).where(
+            models.GroupMember.user_id == current_user.user_id,
+            models.GroupMember.read,
+        )
+        group_ids = {group.group_id for group in db.session.scalars(groups_stmt).all()}
+
         experiment_job_stmt = select(models.ExperimentJob).where(
             models.ExperimentJob.experiment_id == experiment_id,
             models.ExperimentJob.job_resource_id == job_id,
+            models.Resource.group_id.in_(group_ids),
         )
         experiment_job = db.session.scalar(experiment_job_stmt)
 
@@ -1495,6 +1578,14 @@ class JobLogService(object):
         log.debug("Get job logs", job_id=job_resource_id)
 
         filters = []
+
+        # only return resources the current user is a member of with read permissions
+        groups_stmt = select(models.GroupMember).where(
+            models.GroupMember.user_id == current_user.user_id,
+            models.GroupMember.read,
+        )
+        group_ids = {group.group_id for group in db.session.scalars(groups_stmt).all()}
+        filters.append(models.Resource.group_id.in_(group_ids))
 
         if search_string:
             filters.append(

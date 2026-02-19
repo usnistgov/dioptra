@@ -41,6 +41,8 @@ from dioptra.client import (
     select_files_in_directory,
     select_one_or_more_files,
 )
+from dioptra.client.base import DioptraResponseProtocol
+from dioptra.client.client import DioptraClient
 from dioptra.sdk.utilities.paths import set_cwd
 
 from ..lib import actions, mock_mlflow, mock_rq
@@ -79,6 +81,21 @@ def auth_account(
     registered_users: dict[str, Any],  # noqa: F811
 ) -> dict[str, Any]:
     user_info = cast(dict[str, Any], registered_users["user1"])
+    login_response = actions.login(
+        client, username=user_info["username"], password=user_info["password"]
+    )
+    if login_response.status_code != HTTPStatus.OK:
+        raise ValueError("User login failed.")
+    return user_info
+
+
+@pytest.fixture
+@freeze_time("Apr 1st, 2025 5:30am", auto_tick_seconds=1)
+def auth_account2(
+    client: FlaskClient,
+    registered_users: dict[str, Any],  # noqa: F811
+) -> dict[str, Any]:
+    user_info = cast(dict[str, Any], registered_users["user2"])
     login_response = actions.login(
         client, username=user_info["username"], password=user_info["password"]
     )
@@ -554,23 +571,23 @@ def registered_groups(
     client: FlaskClient, auth_account: dict[str, Any]
 ) -> dict[str, Any]:
     public_response = actions.get_public_group(client).get_json()
-    # group1_response = actions.register_group(
-    # client,
-    #  name="group_one",
-    # ).get_json()
-    # group2_response = actions.register_group(
-    # client,
-    # name="group_two",
-    # ).get_json()
-    # group3_response = actions.register_group(
-    # client,
-    # name="group_three",
-    # ).get_json()
+    group1_response = actions.register_group(
+        client,
+        name="group_one",
+    ).get_json()
+    group2_response = actions.register_group(
+         client,
+         name="group_two",
+    ).get_json()
+    group3_response = actions.register_group(
+         client,
+         name="group_three",
+    ).get_json()
     return {
         "public": public_response,
-        # "group1": group1_response,
-        # "group2": group2_response,
-        # "group3": group3_response,
+        "group1": group1_response,
+        "group2": group2_response,
+        "group3": group3_response,
     }
 
 
@@ -597,14 +614,14 @@ def registered_plugin_parameter_types(
         client,
         name="model_output",
         group_id=auth_account["groups"][0]["id"],
-        structure=dict({"list": "number"}),
+        structure={"list": "number"},
         description="The softmax scores from a model",
     ).get_json()
     plugin_param_type3_response = actions.register_plugin_parameter_type(
         client,
         name="model",
         group_id=auth_account["groups"][0]["id"],
-        structure=dict(),
+        structure={},
         description="Opaque type for an ml model",
     ).get_json()
     return {
@@ -800,6 +817,75 @@ def registered_jobs(
         "job3": job3_response,
     }
 
+@pytest.fixture
+@freeze_time("Apr 1st, 2025 1:00pm", auto_tick_seconds=1)
+def registered_private_resources(
+    client: FlaskClient,
+    mockup_mlflow: MlflowClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_groups: dict[str, Any],
+) -> dict[str, Any]:
+    group_id = registered_groups["group1"]["id"]
+    queue = actions.register_queue(
+        client, name="private queue", description="queue", group_id=group_id
+    ).get_json()
+    param_type = actions.register_plugin_parameter_type(
+        client, name="private type", group_id=group_id
+    ).get_json()
+    plugin = actions.register_plugin(
+        client, name="private_plugin", description="plugin.", group_id=group_id,
+    ).get_json()
+    plugin_file = actions.register_plugin_file(
+        client, plugin_id=plugin["id"], filename="private.py", description="file", contents=""
+    ).get_json()
+    entrypoint = actions.register_entrypoint(
+        client,
+        name="private entrypoint",
+        description="private.",
+        group_id=group_id,
+        task_graph="",
+        parameters=[],
+        plugin_ids=[plugin["id"]],
+        queue_ids=[queue["id"]],
+    ).get_json()
+    experiment = actions.register_experiment(
+        client, name="private experiment", group_id=group_id, entrypoint_ids=[entrypoint["id"]]
+    ).get_json()
+    job = actions.register_job(
+        client=client,
+        queue_id=queue["id"],
+        experiment_id=experiment["id"],
+        entrypoint_id=entrypoint["id"],
+        description="private",
+        values={},
+    ).get_json()
+    with mlflow.start_run(experiment_id=experiment["id"]) as run:
+        run_id = run.info.run_id
+    actions.post_mlflowruns(
+        client=client, mlflowruns={"job": run_id}, registered_jobs={"job": job}
+    )
+    with mlflow.start_run(run_id):
+        mlflow.log_artifact(artifact_path=None, local_path="private")
+        uri = mlflow.get_artifact_uri("private")
+    artifact = actions.register_artifact(
+        client,
+        uri=uri,
+        description="private artifact",
+        job_id=job["id"],
+        group_id=group_id,
+    ).get_json()
+
+    return {
+        "queue": (queue, dioptra_client.queues),
+        "param_type": (param_type, dioptra_client.plugin_parameter_types),
+        "plugin": (plugin, dioptra_client.plugins),
+        "plugin_file": (plugin_file, dioptra_client.plugins.files),
+        "entrypoint": (entrypoint, dioptra_client.entrypoints),
+        "experiment": (experiment, dioptra_client.experiments),
+        "job": (job, dioptra_client.jobs),
+        "artifact": (artifact, dioptra_client.artifacts),
+    }
 
 @pytest.fixture
 @freeze_time("Apr 1st, 2025 2:00pm", auto_tick_seconds=1)

@@ -260,6 +260,14 @@ class ArtifactService(object):
 
         filters = []
 
+        # only return resources the current user is a member of with read permissions
+        groups_stmt = select(models.GroupMember).where(
+            models.GroupMember.user_id == current_user.user_id,
+            models.GroupMember.read,
+        )
+        group_ids = {group.group_id for group in db.session.scalars(groups_stmt).all()}
+        filters.append(models.Resource.group_id.in_(group_ids))
+
         if group_id is not None:
             filters.append(models.Resource.group_id == group_id)
 
@@ -427,6 +435,13 @@ class ArtifactIdService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get artifact by id", artifact_id=artifact_id)
 
+        # only return resources the current user is a member of with read permissions
+        groups_stmt = select(models.GroupMember).where(
+            models.GroupMember.user_id == current_user.user_id,
+            models.GroupMember.read,
+        )
+        group_ids = {group.group_id for group in db.session.scalars(groups_stmt).all()}
+
         stmt = (
             select(models.Artifact)
             .join(models.Resource)
@@ -435,6 +450,7 @@ class ArtifactIdService(object):
                 models.Artifact.resource_snapshot_id
                 == models.Resource.latest_snapshot_id,
                 models.Resource.is_deleted == False,  # noqa: E712
+                models.Resource.group_id.in_(group_ids),
             )
         )
         artifact = db.session.scalars(stmt).first()

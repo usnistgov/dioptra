@@ -19,10 +19,12 @@ The queue repository: data operations related to queues
 """
 
 from collections.abc import Iterable, Sequence
-from typing import Any, Final, overload
+from typing import Any, Final, cast, overload
+
+from flask_login import current_user
 
 import dioptra.restapi.db.repository.utils as utils
-from dioptra.restapi.db.models import Group, Queue, Resource, Tag
+from dioptra.restapi.db.models import Group, Queue, Resource, Tag, User
 
 
 class QueueRepository:
@@ -124,6 +126,10 @@ class QueueRepository:
         Raises:
             EntityDoesNotExistError: if the queue does not exist
         """
+        user = cast(User, current_user)
+        resource = utils.get_resource(self.session, queue)
+
+        utils.assert_can_delete_resource(self.session, user, resource)
 
         utils.delete_resource(self.session, queue)
 

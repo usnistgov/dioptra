@@ -25,6 +25,9 @@ from collections.abc import Iterable, Sequence, Set
 
 import sqlalchemy as sa
 import sqlalchemy.orm as sao
+import structlog
+from flask_login import current_user
+from structlog.stdlib import BoundLogger
 
 import dioptra.restapi.db.models as m
 import dioptra.restapi.errors as e
@@ -51,6 +54,8 @@ from dioptra.restapi.db.repository.utils.search import construct_sql_query_filte
 # May be bound to a resource-type-specific ResourceSnapshot subclass,
 # i.e. represents our python class representation of a resource type.
 ResourceT = typing.TypeVar("ResourceT", bound=m.ResourceSnapshot)
+
+LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
 class ResourceLockType(enum.Enum):
@@ -96,6 +101,39 @@ def apply_resource_deletion_policy(
         )
 
     return stmt
+
+
+def get_resource(
+    session: CompatibleSession[S], resource: m.Resource | m.ResourceSnapshot | int
+) -> m.Resource:
+    """
+    Gets the Resource from one of Resource, ResourceSnapshot or Resource ID.
+
+    Args:
+        session: An SQLAlchemy session
+        resource: A Resource, ResourceSnapshot, or Resource ID integer,
+            used to retrieve the Resource
+
+    Raises:
+        EntityDoesNotExistError: if the resource does not exist in the database
+            (deleted or not)
+
+    Returns:
+        The resource or None if the resource was not found
+    """
+
+    if isinstance(resource, m.Resource):
+        return resource
+    elif isinstance(resource, m.ResourceSnapshot):
+        return resource.resource
+    elif isinstance(resource, int):
+        stmt = sa.select(m.Resource).where(m.Resource.resource_id == resource)
+        resource_obj = session.scalar(stmt)
+
+        if resource_obj is None:
+            raise e.EntityDoesNotExistError(None, resource_id=resource)
+
+        return resource_obj
 
 
 @typing.overload
@@ -153,6 +191,12 @@ def get_latest_snapshots(
             get_resource_id(res) for res in resources
         )
 
+    # only return resources the current user is a member of with read permissions
+    groups_stmt = sa.select(m.GroupMember).where(
+        m.GroupMember.user_id == current_user.user_id and m.GroupMember.read
+    )
+    group_ids = {group.group_id for group in session.scalars(groups_stmt).all()}
+
     # Extra join with Resource is important: the query produces incorrect
     # results without it!
     stmt = (
@@ -162,6 +206,7 @@ def get_latest_snapshots(
             resource_id_check,
             snap_class.resource_snapshot_id == m.Resource.latest_snapshot_id,
         )
+        .where(m.Resource.group_id.in_(group_ids))
     )
     stmt = apply_resource_deletion_policy(stmt, deletion_policy)
 
@@ -567,6 +612,9 @@ def delete_resource(
     deleted.  This function differs from add_resource_lock_types() in that this
     function requires that the given resource exists.
 
+    This function does not verify if the resource can be deleted, the
+    `can_delete_resource` function should be called first.
+
     Args:
         session: An SQLAlchemy session
         resource: A resource, snapshot, or resource_id integer primary key
@@ -574,13 +622,10 @@ def delete_resource(
 
     Raises:
         EntityDoesNotExistError: if the resource does not exist
-        ReadOnlyLockError: if the resource exists, is not deleted, and has a
-            read-only lock
 
     See Also:
         - :py:func:`add_resource_lock_types`
     """
-
     exists_result = resource_exists(session, resource)
 
     if exists_result is ExistenceResult.DOES_NOT_EXIST:
@@ -771,11 +816,18 @@ def get_by_filters_paged(
     if group_id is not None:
         assert_group_exists(session, group_id, DeletionPolicy.NOT_DELETED)
 
+    # only return resources the current user is a member of with read permissions
+    groups_stmt = sa.select(m.GroupMember).where(
+        m.GroupMember.user_id == current_user.user_id and m.GroupMember.read
+    )
+    group_ids = {group.group_id for group in session.scalars(groups_stmt).all()}
+
     count_stmt = (
         sa.select(sa.func.count())
         .select_from(snap_class)
         .join(m.Resource)
         .where(snap_class.resource_snapshot_id == m.Resource.latest_snapshot_id)
+        .where(m.Resource.group_id.in_(group_ids))
     )
 
     if group_id is not None:
@@ -799,6 +851,8 @@ def get_by_filters_paged(
             .join(m.Resource)
             .where(snap_class.resource_snapshot_id == m.Resource.latest_snapshot_id)
         )
+
+        page_stmt = page_stmt.where(m.Resource.group_id.in_(group_ids))
 
         if group_id is not None:
             page_stmt = page_stmt.where(m.Resource.group_id == group_id)
@@ -835,6 +889,7 @@ __all__ = [
     "delete_resource",
     "get_by_filters_paged",
     "get_latest_child_snapshots",
+    "get_resource",
     "get_latest_snapshots",
     "get_one_latest_snapshot",
     "get_resource_lock_types",

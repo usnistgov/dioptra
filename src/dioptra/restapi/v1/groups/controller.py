@@ -96,7 +96,7 @@ class GroupEndpoint(Resource):
     @login_required
     @accepts(schema=GroupSchema, api=api)
     @responds(schema=GroupSchema, api=api)
-    def _post(self):
+    def post(self):
         """Creates a Group resource."""
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="Group", request_type="POST"
@@ -137,7 +137,7 @@ class GroupIdEndpoint(Resource):
 
     @login_required
     @responds(schema=IdStatusResponseSchema, api=api)
-    def _delete(self, id: int):
+    def delete(self, id: int):
         """Deletes a Group resource."""
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="Group", request_type="DELETE", id=id
@@ -147,7 +147,7 @@ class GroupIdEndpoint(Resource):
     @login_required
     @accepts(schema=GroupMutableFieldsSchema, api=api)
     @responds(schema=GroupSchema, api=api)
-    def _put(self, id: int):
+    def put(self, id: int):
         """Modifies a Group resource."""
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="Group", request_type="PUT", id=id

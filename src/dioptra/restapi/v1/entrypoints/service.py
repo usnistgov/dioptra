@@ -32,6 +32,8 @@ from dioptra.restapi.errors import (
     EntityExistsError,
     QueryParameterNotUniqueError,
     SortParameterValidationError,
+    UserNotInGroupError,
+    UserPermissionsError,
 )
 from dioptra.restapi.utils import find_non_unique
 from dioptra.restapi.v1 import utils
@@ -243,6 +245,14 @@ class EntrypointService(object):
 
         filters = []
 
+        # only return resources the current user is a member of with read permissions
+        groups_stmt = select(models.GroupMember).where(
+            models.GroupMember.user_id == current_user.user_id,
+            models.GroupMember.read,
+        )
+        group_ids = {group.group_id for group in db.session.scalars(groups_stmt).all()}
+        filters.append(models.Resource.group_id.in_(group_ids))
+
         if group_id is not None:
             filters.append(models.Resource.group_id == group_id)
 
@@ -378,6 +388,14 @@ class EntrypointIdService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get entrypoint by id", entrypoint_id=entrypoint_id)
+
+        # only return resources the current user is a member of with read permissions
+        groups_stmt = select(models.GroupMember).where(
+            models.GroupMember.user_id == current_user.user_id,
+            models.GroupMember.read,
+        )
+        group_ids = {group.group_id for group in db.session.scalars(groups_stmt).all()}
+
         # Get a specific snapshot if entrypoint_snapshot_id is specified
         snapshot_id = (
             entrypoint_snapshot_id
@@ -391,6 +409,7 @@ class EntrypointIdService(object):
                 models.EntryPoint.resource_id == entrypoint_id,
                 models.EntryPoint.resource_snapshot_id == snapshot_id,
                 models.Resource.is_deleted == False,  # noqa: E712
+                models.Resource.group_id.in_(group_ids),
             )
         )
         entrypoint = db.session.scalars(stmt).first()
@@ -547,6 +566,24 @@ class EntrypointIdService(object):
         if entrypoint_resource is None:
             raise EntityDoesNotExistError(RESOURCE_TYPE, entrypoint_id=entrypoint_id)
 
+        group_stmt = select(models.GroupMember).where(
+            models.GroupMember.user_id == current_user.user_id,
+            models.GroupMember.group_id == entrypoint_resource.group_id,
+        )
+        group_member = db.session.scalar(group_stmt)
+
+        if group_member is None:
+            raise UserNotInGroupError(
+                user_id=current_user.user_id, group_id=entrypoint_resource.group_id
+            )
+
+        if not group_member.write:
+            raise UserPermissionsError(
+                "write",
+                user_id=current_user.user_id,
+                group_id=entrypoint_resource.group_id,
+            )
+
         deleted_resource_lock = models.ResourceLock(
             resource_lock_type=resource_lock_types.DELETE,
             resource=entrypoint_resource,
@@ -580,9 +617,18 @@ class EntrypointSnapshotIdService(object):
             resource_id=entrypoint_id,
             resource_snapshot_id=entrypoint_snapshot_id,
         )
+
+        # only return resources the current user is a member of with read permissions
+        groups_stmt = select(models.GroupMember).where(
+            models.GroupMember.user_id == current_user.user_id,
+            models.GroupMember.read,
+        )
+        group_ids = {group.group_id for group in db.session.scalars(groups_stmt).all()}
+
         entry_point_resource_snapshot_stmt = select(models.EntryPoint).where(
             models.EntryPoint.resource_id == entrypoint_id,
             models.EntryPoint.resource_snapshot_id == entrypoint_snapshot_id,
+            models.Resource.group_id.in_(group_ids),
         )
         entry_point = db.session.scalar(entry_point_resource_snapshot_stmt)
 
@@ -592,6 +638,7 @@ class EntrypointSnapshotIdService(object):
                 entrypoint_id=entrypoint_id,
                 entrypoint_snapshot_id=entrypoint_snapshot_id,
             )
+
         return entry_point
 
     def get_plugin_files(
@@ -667,6 +714,13 @@ class EntrypointSnapshotIdService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
 
+        # only return resources the current user is a member of with read permissions
+        groups_stmt = select(models.GroupMember).where(
+            models.GroupMember.user_id == current_user.user_id,
+            models.GroupMember.read,
+        )
+        group_ids = {group.group_id for group in db.session.scalars(groups_stmt).all()}
+
         plugin_parameter_types_stmt = (
             select(models.PluginTaskParameterType)
             .join(models.Resource)
@@ -675,6 +729,7 @@ class EntrypointSnapshotIdService(object):
                 models.Resource.group_id == group_id,
                 models.Resource.latest_snapshot_id
                 == models.PluginTaskParameterType.resource_snapshot_id,
+                models.Resource.group_id.in_(group_ids),
             )
         )
         return list(db.session.scalars(plugin_parameter_types_stmt).all())
@@ -1283,6 +1338,13 @@ class EntrypointIdsService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get entrypoint by id", entrypoint_ids=entrypoint_ids)
 
+        # only return resources the current user is a member of with read permissions
+        groups_stmt = select(models.GroupMember).where(
+            models.GroupMember.user_id == current_user.user_id,
+            models.GroupMember.read,
+        )
+        group_ids = {group.group_id for group in db.session.scalars(groups_stmt).all()}
+
         stmt = (
             select(models.EntryPoint)
             .join(models.Resource)
@@ -1291,6 +1353,7 @@ class EntrypointIdsService(object):
                 models.EntryPoint.resource_snapshot_id
                 == models.Resource.latest_snapshot_id,
                 models.Resource.is_deleted == False,  # noqa: E712
+                models.Resource.group_id.in_(group_ids),
             )
         )
         entrypoints = list(db.session.scalars(stmt).all())
@@ -1563,6 +1626,13 @@ class EntrypointNameService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get entrypoint by name", entrypoint_name=name, group_id=group_id)
 
+        # only return resources the current user is a member of with read permissions
+        groups_stmt = select(models.GroupMember).where(
+            models.GroupMember.user_id == current_user.user_id,
+            models.GroupMember.read,
+        )
+        group_ids = {group.group_id for group in db.session.scalars(groups_stmt).all()}
+
         stmt = (
             select(models.EntryPoint)
             .join(models.Resource)
@@ -1572,6 +1642,7 @@ class EntrypointNameService(object):
                 models.Resource.is_deleted == False,  # noqa: E712
                 models.Resource.latest_snapshot_id
                 == models.EntryPoint.resource_snapshot_id,
+                models.Resource.group_id.in_(group_ids),
             )
         )
         entrypoint = db.session.scalars(stmt).first()
