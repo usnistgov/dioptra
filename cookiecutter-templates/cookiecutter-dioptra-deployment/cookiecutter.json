@@ -66,7 +66,7 @@
         "argbash": {
             "image": "argbash",
             "namespace": "matejak",
-            "tag": "sha-0d046ad",
+            "tag": "branch-master",
             "registry": ""
         },
         "db": {
@@ -78,7 +78,7 @@
         "dbadmin": {
             "image": "pgadmin4",
             "namespace": "dpage",
-            "tag": "8.12",
+            "tag": "latest",
             "registry": ""
         },
         "mc": {
@@ -90,7 +90,7 @@
         "minio": {
             "image": "minio",
             "namespace": "minio",
-            "tag": "RELEASE.2024-07-16T23-46-41Z",
+            "tag": "latest",
             "registry": ""
         },
         "nodejs": {
@@ -102,7 +102,7 @@
         "redis": {
             "image": "redis",
             "namespace": "",
-            "tag": "7.2.6",
+            "tag": "latest",
             "registry": ""
         }
     },
