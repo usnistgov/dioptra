@@ -142,17 +142,25 @@ log_info() {
 ###########################################################################################
 
 validate_python_cmd() {
-  local python_cmd="${1}"
+  local candidate_python_cmd="${1}"
 
-  if ! command -v "${python_cmd}" >/dev/null 2>&1; then
-    log_error "Command ${python_cmd} not found, exiting..."
+  if ! command -v "${candidate_python_cmd}" >/dev/null 2>&1; then
+    log_error "Command \"${candidate_python_cmd}\" not found, exiting..."
     exit 1
   fi
 
   local jinja2_installed
-  local jinja2_cmd_check="'import importlib.util;print(importlib.util.find_spec("jinja2") is not None)'"
-  if ! jinja2_installed="$(${python_cmd} -c ${jinja2_cmd_check})"; then
-    log_error "Command ${python_cmd} -c ${jinja2_cmd_check} failed, exiting..."
+  local jinja2_cmd_check=(
+    "import"
+    "importlib.util;"
+    'print(importlib.util.find_spec("jinja2")'
+    "is"
+    "not"
+    "None)"
+  )
+  if ! jinja2_installed="$("${candidate_python_cmd}" -c "${jinja2_cmd_check[*]}")"; then
+    log_error "Command \"${candidate_python_cmd}\" -c \"${jinja2_cmd_check[*]}\"" \
+      "failed, exiting..."
     exit 1
   fi
 
