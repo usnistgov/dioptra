@@ -213,7 +213,7 @@ Press Enter to accept the default, or type a new value.
    1 - True
    2 - False
    Choose from 1, 2 [1]: 1
-   postgres_container_tag [18]: 18
+   postgres_container_tag [17]: 17
    pgadmin_default_email [dioptra@example.com]: dioptra@example.com
    num_tensorflow_cpu_workers [1]: 1
    num_tensorflow_gpu_workers [0]: 0
