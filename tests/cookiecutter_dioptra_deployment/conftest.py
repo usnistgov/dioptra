@@ -29,7 +29,7 @@ def context():
         "systemd_required_mounts": "",
         "nginx_server_name": "dioptra.example.org",
         "nginx_expose_ports_on_localhost_only": "True",
-        "postgres_container_tag": "18",
+        "postgres_container_tag": "17",
         "__restapi_http_port": "80",
         "__restapi_https_port": "443",
         "__db_admin_username": "postgres",

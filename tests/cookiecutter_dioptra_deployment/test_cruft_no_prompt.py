@@ -35,7 +35,7 @@ EXPECTED_DEFAULTS = {
     "docker_compose_path": "docker compose",
     "nginx_server_name": "dioptra.example.org",
     "nginx_expose_ports_on_localhost_only": "True",
-    "postgres_container_tag": "18",
+    "postgres_container_tag": "17",
     "pgadmin_default_email": "dioptra@example.com",
     "num_tensorflow_cpu_workers": "1",
     "num_tensorflow_gpu_workers": "0",
