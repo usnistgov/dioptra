@@ -123,7 +123,7 @@ If ``False``, the NGINX ports will be exposed on all available network interface
 postgres_container_tag
 ~~~~~~~~~~~~~~~~~~~~~~
 
-**Default:** ``18``
+**Default:** ``17``
 
 Sets the version of PostgreSQL to be used in the deployment.
 For a full list of available versions, visit the *Tags* tab on the `postgres image page on Docker Hub <https://hub.docker.com/_/postgres>`__.
