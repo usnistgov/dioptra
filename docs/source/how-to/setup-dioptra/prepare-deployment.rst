@@ -38,7 +38,7 @@ Organizing your Deployments
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-In Dioptra, a **Deployment** is a configured instance of Dioptra tailored for a particular use case. Multiple deployments can be maintained in isolated environments on a single host. 
+In Dioptra, a **Deployment** is a configured instance of Dioptra. Multiple deployments can be maintained in isolated environments on a single host. 
 
 You will create a deployments folder on your machine independent of (or nested within) the Dioptra repository :ref:`you previously cloned <how-to-download-container-images-clone-the-repository>`.
 
@@ -68,7 +68,7 @@ If not already created, make the folder where you plan to keep your deployment(s
 
 .. rst-class:: header-on-a-card header-steps
 
-Step 2: Create a virtual environment and install dependencies
+Step 2: Create a Virtual Environment and Install Dependencies
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Cruft is required to create the deployment. 
@@ -80,7 +80,7 @@ Cruft is required to create the deployment.
 
 .. rst-class:: header-on-a-card header-steps
 
-Step 3: Choose which branch to deploy
+Step 3: Choose Deployment Branch
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Export the branch name as an environment variable
@@ -158,7 +158,7 @@ Export the branch name as an environment variable
 
 .. rst-class:: header-on-a-card header-steps
 
-Step 5: Configure Template Variables (Method 1 only)
+Step 5: Configure Template Variables (Method 1 Only)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you selected Method 1 (interactive prompts), you will be asked to set configuration variables.
