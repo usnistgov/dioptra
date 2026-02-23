@@ -20,7 +20,7 @@
 Download the Container Images
 =============================
 
-This guide explains how to download pre-built Dioptra container images from the GitHub Container Registry (:term:`GHCR`) and verify their authenticity.
+This guide explains how to download pre-built Dioptra container `images <https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-an-image/>`__ from the GitHub Container Registry (:term:`GHCR`) and verify their authenticity.
 After completing these steps, you will have container images ready for deployment.
 
 .. include:: /_glossary_note.rst
@@ -33,23 +33,88 @@ Prerequisites
 * (Optional) `cosign <https://github.com/sigstore/cosign>`__ installed for image verification
 * (Optional) `jq <https://jqlang.org/>`__ for easier key path retrieval
 
-Downloading the Images
-----------------------
+.. _how-to-download-container-images-clone-the-repository:
 
-Dioptra images are tagged based on release versions and branches.
-Choose the appropriate tag for your use case:
+Clone the Repository 
+--------------------
 
-- **Release tags** (e.g., ``1.0.0``): Stable releases recommended for production use
-- **Branch tags** (e.g., ``dev``): Latest development builds
+Before obtaining the Dioptra container images, ensure you have obtained the Dioptra source code by **cloning the repository** from GitHub.
+If not already done, clone the repository now.
 
-Replace ``$TAG`` with your chosen tag in the commands below or set the ``TAG`` environment variable to your chosen value.
 
 .. rst-class:: header-on-a-card header-steps
 
-Step 1: Pull the Core Images
+Step 1: Clone the Repository 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Steps** 
+
+1. Open a terminal shell and navigate to an appropriate location on your machine
+2. Clone the Dioptra repository
+
+.. tab-set::
+
+   .. tab-item:: Clone with HTTPS
+
+      .. code:: sh
+
+         git clone https://github.com/usnistgov/dioptra.git
+
+   .. tab-item:: Clone with SSH
+
+      .. code:: sh
+
+         git clone git@github.com:usnistgov/dioptra.git
+
+Downloading the Images
+----------------------
+
+Obtain the container images for the core Dioptra services.
+
+.. rst-class:: header-on-a-card header-steps
+
+Step 2: Choose Your Build
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Open a terminal and pull the core Dioptra images:
+Dioptra images are tagged based on release versions and branches. Choose the appropriate build tag for your use case:
+
+- **Release tags** (e.g., ``1.2.0``): Stable releases recommended for production use
+- **Branch tags** (e.g., ``dev``): Latest development builds
+
+.. margin:: 
+
+   .. note:: 
+      
+      The latest stable release can be identified by looking in the top left corner of any `published documentation page <https://pages.nist.gov/dioptra/>`__. 
+
+**Steps** 
+
+1. **Set the** ``TAG`` **environment variable**:
+
+.. tabs::
+
+   .. tab:: Stable Releases
+
+
+      .. code:: sh
+
+         export TAG="1.2.0"
+
+   .. tab:: Developer Builds
+
+
+      .. code:: sh
+
+         export TAG="dev"
+
+.. rst-class:: header-on-a-card header-steps
+
+Step 3: Pull the Core Images
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Steps** 
+
+1. Pull the core Dioptra images:
 
 .. code:: sh
 
@@ -59,10 +124,15 @@ Open a terminal and pull the core Dioptra images:
 
 .. rst-class:: header-on-a-card header-steps
 
-Step 2: Pull Worker Images
+Step 4: Pull Worker Images
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Pull one or more worker images depending on your needs.
+You will need at least one worker image to run Jobs in Dioptra. 
+Each image comes equipped with different dependencies and is configured for different hardware (CPU vs GPU).
+
+**Steps** 
+
+1. Pull one (or more) worker images depending on your needs. 
 
 **CPU workers:**
 
@@ -80,7 +150,7 @@ Pull one or more worker images depending on your needs.
 
 .. rst-class:: header-on-a-card header-steps
 
-Step 3: Verify the Images Exist Locally
+Step 5: Verify the Images Exist Locally
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Run ``docker images`` to verify that the container images are available with your chosen tag:
@@ -111,54 +181,99 @@ Verifying Image Authenticity (Recommended)
 Dioptra container images are cryptographically signed.
 Verifying these signatures confirms that the images you downloaded are authentic and have not been tampered with.
 
-.. rst-class:: header-on-a-card header-steps
-
-Step 4: Clone the Repository (If Not Already Done)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 The public key needed for verification is stored in the Dioptra repository.
-Clone the repository if you have not already done so:
-
-.. tab-set::
-
-   .. tab-item:: Clone with HTTPS
-
-      .. code:: sh
-
-         git clone https://github.com/usnistgov/dioptra.git
-
-   .. tab-item:: Clone with SSH
-
-      .. code:: sh
-
-         git clone git@github.com:usnistgov/dioptra.git
 
 .. rst-class:: header-on-a-card header-steps
 
-Step 5: Locate the Public Key
+Step 6: Locate the Public Key
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The repository root contains a ``verify.json`` file that specifies the path to the public key.
 Retrieve the key path:
 
-.. code:: sh
+**Steps**
 
-   cd dioptra
-   KEY_PATH=$(jq -r '.key_path' verify.json)
 
-If you do not have ``jq`` installed, open ``verify.json`` and note the value of the ``key_path`` field (e.g., ``keys/dioptra.pub``).
+.. tabs::
+
+   .. tab:: Using jq
+
+
+      .. code:: sh
+
+         cd dioptra
+         KEY_PATH=$(jq -r '.key_path' verify.json)
+
+   .. tab:: Without using jq
+
+      1. Navigate to ``dioptra/``  (cloned in :ref:`step 1 <how-to-download-container-images-clone-the-repository>`)
+      2. Open the file ``dioptra/verify.json`` 
+      3. Copy the value of the ``key_path`` field (e.g. "**keys/dioptra.pub**")
+      4. Export the copied value to an environment variable 
+
+         .. code:: sh
+
+            export KEY_PATH="keys/dioptra.pub" 
 
 .. rst-class:: header-on-a-card header-steps
 
-Step 6: Verify Each Image
+Step 7: Verify Each Image
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Use ``cosign verify`` to verify each downloaded image.
 Run this command for each image, replacing the image name and tag as needed:
 
-.. code:: sh
+.. tabs::
 
-   cosign verify --key "$KEY_PATH" ghcr.io/usnistgov/dioptra/nginx:$TAG
+   .. tab:: NGINX
+
+      .. code:: sh
+
+         cosign verify --key "$KEY_PATH" ghcr.io/usnistgov/dioptra/nginx:$TAG
+
+   .. tab:: Rest API
+
+      .. code:: sh
+
+         cosign verify --key "$KEY_PATH" ghcr.io/usnistgov/dioptra/restapi:$TAG
+
+   .. tab:: MLFlow Tracking
+
+      .. code:: sh
+
+         cosign verify --key "$KEY_PATH" ghcr.io/usnistgov/dioptra/mlflow-tracking:$TAG
+   
+   .. tab:: Optional Images
+
+      .. tabs::
+            
+         .. tab:: PyTorch CPU
+
+            .. code:: sh
+
+               cosign verify --key "$KEY_PATH" ghcr.io/usnistgov/dioptra/pytorch-cpu:$TAG
+
+
+         .. tab:: Tensorflow CPU
+
+            .. code:: sh
+
+               cosign verify --key "$KEY_PATH" ghcr.io/usnistgov/dioptra/tensorflow2-cpu:$TAG
+
+
+         .. tab:: PyTorch GPU
+
+            .. code:: sh
+
+               cosign verify --key "$KEY_PATH" ghcr.io/usnistgov/dioptra/pytorch-gpu:$TAG
+
+
+         .. tab:: Tensorflow GPU
+
+            .. code:: sh
+
+               cosign verify --key "$KEY_PATH" ghcr.io/usnistgov/dioptra/tensorflow2-gpu:$TAG
+
 
 Successful verification produces output similar to:
 

@@ -34,12 +34,32 @@ Prerequisites
 Deployment Setup
 ----------------
 
+Organizing your Deployments 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+In Dioptra, a **Deployment** is a configured instance of Dioptra tailored for a particular use case. Multiple deployments can be maintained in isolated environments on a single host. 
+
+You will create a deployments folder on your machine independent of (or nested within) the Dioptra repository :ref:`you previously cloned <how-to-download-container-images-clone-the-repository>`.
+
+**File Structure Overview** 
+
+.. figure:: ../../images/figures/repo_deployments_directory_overview.png
+   :alt: Diagram showing directory structures for Dioptra
+   :figclass: border-image clickable-image
+
+   Your deployments folder can be nested within ``dioptra/`` or be located elsewhere. 
+
+
+Create a Deployment
+------------------------
+
 .. rst-class:: header-on-a-card header-steps
 
 Step 1: Create the Deployment Directory
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Create the folder where you plan to keep your deployment and change into it so that it becomes your working directory.
+If not already created, make the folder where you plan to keep your deployment(s) and change into it so that it becomes your working directory.
 
 .. code:: sh
 
@@ -48,44 +68,89 @@ Create the folder where you plan to keep your deployment and change into it so t
 
 .. rst-class:: header-on-a-card header-steps
 
-Step 2: Apply the Template
+Step 2: Create a virtual environment and install dependencies
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Cruft is required to create the deployment. 
+
+.. code:: sh
+
+   uv venv 
+   uv pip install cruft
+
+.. rst-class:: header-on-a-card header-steps
+
+Step 3: Choose which branch to deploy
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Export the branch name as an environment variable
+
+.. tabs::
+
+   .. tab:: Stable Releases
+
+
+      .. code:: sh
+
+         export BRANCH="main"
+
+   .. tab:: Developer Builds
+
+
+      .. code:: sh
+
+         export BRANCH="dev"
+
+
+
+.. rst-class:: header-on-a-card header-steps
+
+Step 4: Apply the Template
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Run cruft to apply the Dioptra Deployment template. There are four different methods for configuring the deployment:
 
-**Method 1: Interactive prompts for each variable**
+* **Method 1**: Interactive prompts for each variable
+* **Method 2**: Use all default template values 
+* **Method 3**: Use all default template values, except values which are overridden in command line 
+* **Method 4**: Use all default template values, except values which are provided in config file
 
-.. code:: sh
+Export the branch name as an environment variable
 
-   cruft create https://github.com/usnistgov/dioptra --checkout <branch-name> \
-     --directory cookiecutter-templates/cookiecutter-dioptra-deployment
+.. tabs::
 
-**Method 2: Use all default template values**
+   .. tab:: Method 1: All specified
 
-.. code:: sh
+      .. code:: sh
 
-   cruft create https://github.com/usnistgov/dioptra --checkout <branch-name> \
-     --directory cookiecutter-templates/cookiecutter-dioptra-deployment --no-input
+         cruft create https://github.com/usnistgov/dioptra --checkout $BRANCH \
+         --directory cookiecutter-templates/cookiecutter-dioptra-deployment
 
-**Method 3: Use defaults except for specific values**
 
-.. code:: sh
+   .. tab:: Method 2: Default values
 
-   cruft create https://github.com/usnistgov/dioptra --checkout <branch-name> \
-     --directory cookiecutter-templates/cookiecutter-dioptra-deployment --no-input \
-     --extra-context '{"datasets_directory": "~/datasets"}'
+      .. code:: sh
 
-**Method 4: Use defaults except for values in a config file**
+         cruft create https://github.com/usnistgov/dioptra --checkout $BRANCH \
+         --directory cookiecutter-templates/cookiecutter-dioptra-deployment --no-input
 
-.. code:: sh
 
-   cruft create https://github.com/usnistgov/dioptra --checkout <branch-name> \
-     --directory cookiecutter-templates/cookiecutter-dioptra-deployment --no-input \
-     --extra-context-file overrides.json
+   .. tab:: Method 3: Override via CLI
 
-.. note::
+      .. code:: sh
 
-   Replace ``<branch-name>`` with the Dioptra branch that matches your container images (e.g., ``main`` for releases, ``dev`` for development builds).
+         cruft create https://github.com/usnistgov/dioptra --checkout $BRANCH \
+         --directory cookiecutter-templates/cookiecutter-dioptra-deployment --no-input \
+         --extra-context '{"datasets_directory": "~/datasets"}'
+
+
+   .. tab:: Method 4: Override via config
+
+      .. code:: sh
+
+         cruft create https://github.com/usnistgov/dioptra --checkout $BRANCH \
+         --directory cookiecutter-templates/cookiecutter-dioptra-deployment --no-input \
+         --extra-context-file overrides.json
 
 .. tip::
 
@@ -93,7 +158,7 @@ Run cruft to apply the Dioptra Deployment template. There are four different met
 
 .. rst-class:: header-on-a-card header-steps
 
-Step 3: Configure Template Variables
+Step 5: Configure Template Variables (Method 1 only)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you selected Method 1 (interactive prompts), you will be asked to set configuration variables.
@@ -114,19 +179,24 @@ Key variables include:
 
 .. rst-class:: header-on-a-card header-steps
 
-Step 4: Initialize the Deployment
+Step 6: Initialize the Deployment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Run the initialization script to generate passwords, copy configuration files, and prepare the named volumes.
 
-.. code:: sh
+**Steps**
 
-   cd dioptra-deployment  # Or your deployment folder name
-   ./init-deployment.sh --branch <branch-name>
+1. Navigate into the created deployment
 
-.. note::
+   .. code:: sh
 
-   Replace ``<branch-name>`` with the Dioptra branch that matches your container images (e.g., ``main`` for releases, ``dev`` for development builds).
+      cd dioptra-deployment  # Or your deployment folder name
+
+2. Run the initialization script 
+
+   .. code:: sh
+   
+      ./init-deployment.sh --branch $BRANCH
 
 The script automates password generation, certificate bundling, volume preparation, Minio account setup, and built-in plugin syncing.
 
@@ -136,7 +206,7 @@ The script automates password generation, certificate bundling, volume preparati
 
 .. rst-class:: header-on-a-card header-steps
 
-Step 5: Start Dioptra
+Step 7: Start Dioptra
 ~~~~~~~~~~~~~~~~~~~~~
 
 Start all Dioptra services:
