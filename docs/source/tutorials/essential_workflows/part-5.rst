@@ -48,9 +48,9 @@ Before Dioptra can save objects to disk, it needs to know how to serialize and d
 
 Just like before, you will create a new plugin, but this time you'll define **artifact tasks** instead of function tasks..
 
-1. Go to the **Plugins** tab and click **Create Plugin**.
+1. Go to the **Plugins** tab and click **Create**.
 2. Name it ``artifacts`` and add a short description.
-3. **Create a new Python file** in the plugin called ``artifacts.py``.
+3. In the ``artifacts`` Plugin, click **create** to make a new Python file - call this file ``artifacts.py`` and add a description.
 4. **Copy and paste** the code below.
 
 .. admonition:: artifacts.py
@@ -60,6 +60,8 @@ Just like before, you will create a new plugin, but this time you'll define **ar
        :language: python
        :start-after: # [numpy-plugin-definition]
        :end-before: # [end-numpy-plugin-definition]
+
+5. Do **not** click **Import Function Tasks** - that button does not support Artifact Tasks currently. You will learn how to register Artifact Tasks in the :ref:`next step <tutorial-saving-artifacts-step-2-register-artifact-task>`. 
 
 .. note::
    This plugin defines a single Artifact Task: ``NumpyArrayArtifactTask``.
@@ -92,6 +94,8 @@ Now you must register the class you just created.
    - **Name:** ``output``
    - **Type:** ``NumpyArray``
 
+**Click the purple plus** button to add the output parameter. Click **Confirm** to finish registration.
+
 .. figure:: ../../images/screenshots/plugin_files/create_artifact_task_numpy_array_dioptra_1_1.png
    :alt: Screenshot of a job producing an artifact.
    :width: 100%
@@ -100,13 +104,15 @@ Now you must register the class you just created.
    Defining an artifact task plugin requires creating a subclass of ``ArtifactTaskInterface``.
 
 .. note::
-   Whereas a plugin task gets its name from the Python function name, an artifact plugin task gets its name from the subclass name (in this case, ``NumpyArrayArtifactTask``).
+   Whereas a Plugin Task gets its name from the *Python function name*, an Artifact Plugin Task gets its name from the *subclass name* (in this case, ``NumpyArrayArtifactTask``).
 
    The output parameter type tells Dioptra what kind of object to expect after the ``deserialize`` method is run.
 
-   Learn more in :ref:`Plugins Explanation <explanation-plugins>` and :ref:`Plugins Reference <reference-plugins>`.
+   .. admonition:: Learn More 
 
-4. Click **Submit File**.
+      Learn more in :ref:`Plugins Explanation <explanation-plugins>` and :ref:`Plugins Reference <reference-plugins>`.
+
+4. Click **Submit File** to save the Plugin File.
 
 .. rst-class:: header-on-a-card header-steps
 
@@ -115,8 +121,8 @@ Step 3: Modify Entrypoint to Save Artifacts
 
 Next, you will modify **sample_and_transform_ep** to include an artifact-saving task. Nothing about the :ref:`sample_and_transform Plugin <tutorial-building-a-multi-step-workflow-step-1-make-sample-and-transform-plugin>` itself needs to change.
 
-1. Open ``sample_and_transform_ep``.
-2. In the **Artifact Info** window (toward the bottom), select your new ``artifacts`` Plugin.
+1. Open ``sample_and_transform_ep`` from the :ref:`previous tutorial step <tutorial-building-a-multi-step-workflow-step-2-create-sample-and-transform-entrypoint>`
+2. Scroll down. In the **Artifact Info** window, select your new ``artifacts`` Plugin.
 3. Click **Add to Output Graph**.
 4. Rename the step to ``save_numpy_artifact``.
 5. Set the contents equal to the output from the final step of your task graph (e.g., ``$transform_step`` or whatever the last step was named).
@@ -143,8 +149,14 @@ Now you can try out the Artifact saving logic.
 
 1. Navigate back to your **Experiments** and select the ``Sample and Transform Exp`` from the :ref:`previous step <tutorial-building-a-multi-step-workflow>`.
 2. Create a **new job** using the entrypoint you just edited (``sample_and_transform_ep``).
-3. Select your **desired parameters** and add a **description** to the Job.
-4. Click **Submit Job**.
+3. Select your **desired parameters** - for example:
+
+   - ``sample_size`` = **1000**
+   - ``mean`` = **-5**
+   - ``var`` = **10**
+   - ``transform_type`` = **"square"**
+
+4. Add a **description**, then click **Submit Job**.
    
    * Note: Ignore the **Artifact Parameters** editor - this is for loading past Artifacts as *inputs*, something that will be explained in the :ref:`next step <tutorial-using-saved-artifacts>`
 

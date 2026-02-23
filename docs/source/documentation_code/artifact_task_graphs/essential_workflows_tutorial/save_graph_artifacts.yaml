@@ -1,4 +1,4 @@
 save_graph:
   contents: $viz_step
   task:
-    name: PngBytesArtifactClass
+    name: PngBytesArtifactTask
