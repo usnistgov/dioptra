@@ -116,7 +116,6 @@
       : router.push(`/plugins/${route.params.id}/files/${selected[0].id}`)
     )"
     :loading="isLoading"
->>>>>>> ff3f9670 (feat: update table styling, work in progress)
     @request="getFiles"
     @create="router.push(`/plugins/${route.params.id}/files/new`)"
     @edit="(row) => router.push(`/plugins/${route.params.id}/files/${row.id}`)"

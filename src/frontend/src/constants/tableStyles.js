@@ -72,7 +72,7 @@ export const CONCEPT_STYLES = {
     icon: 'help_outline', 
     color: 'grey-7', 
     darkColor: 'grey-5',
-    basePath: 'home' 
+    basePath: '' 
   }
 }
 

@@ -5,7 +5,9 @@
       :key="i"
       :type="conceptType"
       :label="item.name"
-      :row-id="item.id"
+      :rowId="item.id"
+      :snapshotId="item.snapshotId"
+      :clickable="clickable"
     />
 
     <q-chip
@@ -24,14 +26,18 @@
         self="top middle"
         class="bg-white shadow-5 border-grey-3 q-pa-md"
       >
-        Additional Entrypoints:
+        <div class="text-caption text-grey-7 q-mb-xs text-weight-bold" style="text-transform: capitalize;">
+          Additional {{ conceptType }}s:
+        </div>
         <div class="column q-pa-sm q-gutter-y-xs">
           <BadgeIcon
             v-for="(item, i) in hiddenItems"
             :key="i"
             :type="conceptType"
             :label="item.name"
-            :row-id="item.id"
+            :rowId="item.id"
+            :snapshotId="item.snapshotId"
+            :clickable="clickable"
           />
         </div>
       </q-menu>
@@ -47,6 +53,10 @@ const props = defineProps({
   items: {
     type: Array,
     default: () => [],
+  },
+  clickable: {                  
+    type: Boolean,
+    default: undefined,
   },
   conceptType: {
     type: String,

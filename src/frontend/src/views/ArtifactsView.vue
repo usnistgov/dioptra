@@ -18,7 +18,6 @@
     :loading="isLoading"
     :hideCreateBtn="true"
     :hideDeleteBtn="true"
-    @request="getArtifacts"
     @edit="(row) => router.push(`/artifacts/${row.id}`)"
     @delete="
       (row) => {

@@ -2,7 +2,7 @@
   <div class="row items-center justify-between">
     <div class="row items-center">
       <PageTitle 
-        :subtitle="route.params.id === 'new' ? 'Create Entrypoint' : copyAtEditStart?.name"
+        :subtitle="pageSubtitle"
         conceptType="entrypoint" 
       />
       <q-chip
@@ -527,6 +527,20 @@
     plugins: [],
     artifactPlugins: [],
   }
+
+  const pageSubtitle = computed(() => {
+    if (route.params.id === 'new') {
+      return 'Create Entrypoint'
+    }
+    
+    // 2. Handling History / Snapshots
+    if (history.value && store.selectedSnapshot) {
+      return `${entryPoint.value.name || 'Loading...'} (Snapshot ${store.selectedSnapshot.snapshot})`
+    }
+    
+    // 3. Standard view 
+    return copyAtEditStart.value?.name || entryPoint.value.name || 'Loading...'
+  })
 
   const valuesChangedFromOriginal = computed(() => {
     for (const key in ORIGINAL_COPY) {

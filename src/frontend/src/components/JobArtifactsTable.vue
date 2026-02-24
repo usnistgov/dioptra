@@ -124,16 +124,6 @@ async function getArtifacts() {
     isLoading.value = false
   }
 }
-<<<<<<< HEAD
 
 
-const columns = [
-  { name: 'id', label: 'ID', field: 'id', align: 'left', sortable: true },
-  { name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true },
-  { name: 'taskName', label: 'Task Name', align: 'left' },
-  { name: 'taskOutputParams', label: 'Task Output Params', align: 'left' },
-  { name: 'download', label: 'Download', align: 'center' },
-]
-=======
->>>>>>> f0524b85 (feat: add table styling WIP)
 </script>

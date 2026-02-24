@@ -78,15 +78,17 @@
               :chipType="col.chipType"
               :uppercase="col.uppercase"
               :formatLabel="col.formatLabel"
-              ,
+              :clickable="col.clickable"
               :showIcon="col.showIcon"
+              :snapshotId="col.value?.snapshotId" 
+              :to="col.value?.to || col.to"
             />
 
             <MultiBadgeIcon
               v-else-if="col.styleType === 'multi-badge'"
               :items="col.value"
               :concept-type="col.conceptType"
-              ,
+              :clickable="col.clickable"
               :showIcon="col.showIcon"
             />
 

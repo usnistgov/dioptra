@@ -15,7 +15,6 @@
       : router.push(`/experiments/${selected[0].id}`)
     )"
     @request="getExperiments"
-    @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
     @create="router.push('/experiments/new')"
     :loading="isLoading"
     @edit="(row) => router.push(`/experiments/${row.id}`)"
@@ -112,11 +111,12 @@ const computedColumns = computed(() => [
   },
   {
     name: "entrypoints",
-    label: "Entry Points",
+    label: "EntryPoints",
     field: "entrypoints",
     align: "left",
     styleType: "multi-badge",
     conceptType: "entrypoint",
+    clickable: true,
   },
   {
     name: "tags",

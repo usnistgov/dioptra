@@ -25,12 +25,6 @@
         showDeleteDialog = true;
       }
     "
-    @editTags="
-      (row) => {
-        editObjTags = row;
-        showTagsDialog = true;
-      }
-    "
   >
     <template #body-cell-taskGraph="props">
       <q-btn

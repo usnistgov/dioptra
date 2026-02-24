@@ -10,34 +10,19 @@
     :rows="pluginParameterTypes"
     :columns="computedColumns"
     v-model:selected="selected"
-<<<<<<< HEAD
     @open="openTab => (openTab
       ? openWindow.open(`/pluginParams/${selected[0].id}`, '_blank')
       : router.push(`/pluginParams/${selected[0].id}`)
     )"
-    @delete="showDeleteDialog = true"
     @request="getPluginParameterTypes"
-    ref="tableRef"
-    :hideToggleDraft="true"
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
     @create="router.push('/pluginParams/new')"
-=======
->>>>>>> ff3f9670 (feat: update table styling, work in progress)
     :loading="isLoading"
     :hideToggleDraft="true"
-    @request="getPluginParameterTypes"
-    @create="router.push('/pluginParams/new')"
-    @edit="(row) => router.push(`/pluginParams/${row.id}`)"
     @delete="
       (row) => {
         selected = [row];
         showDeleteDialog = true;
-      }
-    "
-    @editTags="
-      (row) => {
-        editObjTags = row;
-        showTagsDialog = true;
       }
     "
   />
@@ -58,18 +43,6 @@
 </template>
 
 <script setup>
-<<<<<<< HEAD
-  import DeleteDialog from '@/dialogs/DeleteDialog.vue'
-  import { ref, watch } from 'vue'
-  import * as api from '@/services/dataApi'
-  import * as notify from '../notify'
-  import PageTitle from '@/components/PageTitle.vue'
-  import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
-  import { useRouter } from 'vue-router'
-
-  const openWindow = window
-  const router = useRouter()
-=======
 import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
 import TableComponent from "@/components/table/TableComponent.vue";
@@ -81,7 +54,6 @@ import * as notify from "../notify";
 
 const router = useRouter();
 const tableRef = ref(null);
->>>>>>> ff3f9670 (feat: update table styling, work in progress)
 
 // State
 const pluginParameterTypes = ref([]);

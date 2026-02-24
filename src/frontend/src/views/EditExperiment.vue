@@ -2,7 +2,7 @@
   <div class="row items-center justify-between">
     <div class="row items-center">
       <PageTitle
-        :subtitle="ORIGINAL_EXPERIMENT?.name"
+        :subtitle="pageSubtitle"
         conceptType="experiment"
       />
       <q-chip
@@ -235,7 +235,24 @@ const history = computed(() => {
   return store.showRightDrawer;
 });
 
+const pageSubtitle = computed(() => {
+  if (route.params.id === 'new') {
+    return 'Create Experiment'
+  }
+  if (store.showRightDrawer && store.selectedSnapshot) {
+    return `${experiment.value?.name || 'Loading...'} (Snapshot ${store.selectedSnapshot.snapshot})`
+  }
+  if (route.query.snapshotId && store.showRightDrawer) {
+    return `${experiment.value?.name || 'Loading...'} (Snapshot ${route.query.snapshotId})`
+  }
+  return ORIGINAL_EXPERIMENT.value?.name || experiment.value?.name || 'Loading...'
+})
+
 onMounted(() => {
+  if (route.query.snapshotId && !store.showRightDrawer) {
+    store.showRightDrawer = true
+  }
+  
   getExperiment();
 });
 

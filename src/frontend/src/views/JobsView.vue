@@ -35,6 +35,48 @@
       }
     "
   >
+    <template #body-cell-id="props">
+      <BadgeIcon
+        type="job"
+        :label="props.row.id"
+        :rowId="props.row.id"
+        formatLabel="Job #{label}"
+        :showIcon="true"
+      />
+    </template>
+
+    <template #body-cell-entrypoint="props">
+      <BadgeIcon
+        v-if="props.row.entrypoint"
+        type="entrypoint"
+        :label="props.row.entrypoint.name"
+        :rowId="props.row.entrypoint.id"
+        :snapshotId="props.row.entrypoint.snapshotId"
+      />
+      <span v-else class="text-grey-5">-</span>
+    </template>
+
+    <template #body-cell-queue="props">
+      <BadgeIcon
+        v-if="props.row.queue"
+        type="queue"
+        :label="props.row.queue.name"
+        :rowId="props.row.queue.id"
+      />
+      <span v-else class="text-grey-5">-</span>
+    </template>
+
+    <template #body-cell-experiment="props">
+      <BadgeIcon
+        v-if="props.row.experiment"
+        type="experiment"
+        :label="props.row.experiment.name"
+        :rowId="props.row.experiment.id"
+        :snapshotId="props.row.experiment.snapshotId"
+      />
+      <span v-else class="text-grey-5">-</span>
+    </template>
+
     <template #body-cell-status="props">
       <JobStatus :status="props.row.status" />
     </template>
@@ -55,7 +97,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue"; 
+import { ref, computed } from "vue"; 
 import { useRoute, useRouter } from "vue-router";
 import TableComponent from "@/components/table/TableComponent.vue";
 import PageTitle from "@/components/PageTitle.vue";
@@ -64,8 +106,9 @@ import * as notify from "../notify";
 import DeleteDialog from "@/dialogs/DeleteDialog.vue";
 import AssignTagsDialog from "@/dialogs/AssignTagsDialog.vue";
 import JobStatus from "@/components/JobStatus.vue";
+import BadgeIcon from "@/components/table/cells/BadgeIcon.vue";
 
-  const openWindow = window
+const openWindow = window
 const route = useRoute();
 const router = useRouter();
 
@@ -108,7 +151,6 @@ const computedColumns = computed(() => {
       styleType: "long-text",
       maxLength: 150,
       maxWidth: "300px",
-      align: "left",
       useQuotes: true,
       textType: "capitalize",
       sortable: true,
@@ -121,6 +163,7 @@ const computedColumns = computed(() => {
       conceptType: "entrypoint",
       align: "left",
       sortable: true,
+      clickable: true, // Errors out currently if entrypoint was deleted - need to add functionality to view deleted snapshots
     },
     {
       name: "queue",
@@ -130,8 +173,8 @@ const computedColumns = computed(() => {
       conceptType: "queue",
       align: "left",
       sortable: true,
+      clickable: true,
     },
-
     {
       name: "status",
       label: "Status",
@@ -157,6 +200,7 @@ const computedColumns = computed(() => {
       conceptType: "experiment",
       align: "left",
       sortable: true,
+      clickable: true,
     });
   }
   return baseCols;

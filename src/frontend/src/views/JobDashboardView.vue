@@ -64,32 +64,24 @@
           </template>
 
           <template #experiment>
-            <RouterLink
+            <BadgeIcon
               v-if="job?.experiment"
-              :to="`/experiments/${job.experiment.id}?snapshotId=${job.experiment.snapshotId}`"
-              style="text-decoration: none"
-            >
-              <BadgeIcon
-                type="experiment"
-                :label="job.experiment.name"
-                :showIcon="true"
-              />
-            </RouterLink>
+              type="experiment"
+              :label="job.experiment.name"
+              :rowId="job.experiment.id"
+              :snapshotId="job.experiment.snapshotId"
+            />
             <span v-else>-</span>
           </template>
 
           <template #entrypoint>
-            <RouterLink
+            <BadgeIcon
               v-if="job?.entrypoint"
-              :to="`/entrypoints/${job.entrypoint.id}?snapshotId=${job.entrypoint.snapshotId}`"
-              style="text-decoration: none"
-            >
-              <BadgeIcon
-                type="entrypoint"
-                :label="job.entrypoint.name"
-                :showIcon="true"
-              />
-            </RouterLink>
+              type="entrypoint"
+              :label="job.entrypoint.name"
+              :rowId="job.entrypoint.id"
+              :snapshotId="job.entrypoint.snapshotId"
+            />
             <span v-else>-</span>
           </template>
 
@@ -98,7 +90,7 @@
               v-if="job?.queue"
               type="queue"
               :label="job.queue.name"
-              :showIcon="true"
+              :rowId="job.queue.id"
             />
             <span v-else>-</span>
           </template>
@@ -153,16 +145,12 @@
             "
           >
             <template #body-cell-id="props">
-              <RouterLink
-                :to="`/artifacts/${props.row.id}`"
-                style="text-decoration: none"
-              >
-                <BadgeIcon
-                  type="artifact"
-                  :label="props.row.id"
-                  :showIcon="true"
-                />
-              </RouterLink>
+              <BadgeIcon
+                type="artifact"
+                :label="props.row.id"
+                :rowId="props.row.id"
+                :snapshotId="props.row.snapshotId"
+              />
             </template>
           </TableComponent>
         </div>

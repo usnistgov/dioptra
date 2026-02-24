@@ -1,9 +1,12 @@
 <template>
   <div class="row items-center justify-between">
     <div class="row items-center">
-      <PageTitle :title="route.params.id === 'new' ? 'Create Queue' : copyAtEditStart?.name" />
-        <q-chip
-          v-if="route.params.id !== 'new'"
+      <PageTitle 
+        :subtitle="pageSubtitle" 
+        conceptType="queue" 
+      />
+      <q-chip
+        v-if="route.params.id !== 'new'"
           class="q-ml-md"
           :color="`${darkMode ? 'grey-9' : ''}`"
           label="View History"
@@ -147,6 +150,22 @@ const ORIGINAL_COPY = {
   group: store.loggedInGroup.id,
   description: ''
 }
+
+const pageSubtitle = computed(() => {
+  if (route.params.id === 'new') {
+    return 'Create Queue'
+  }
+  
+  if (store.showRightDrawer && store.selectedSnapshot) {
+    return `${queue.value?.name || 'Loading...'} (Snapshot ${store.selectedSnapshot.snapshot})`
+  }
+  
+  if (route.query.snapshotId) {
+    return `${queue.value?.name || 'Loading...'} (Snapshot ${route.query.snapshotId})`
+  }
+  
+  return copyAtEditStart.value?.name || queue.value?.name || 'Loading...'
+})
 
 const copyAtEditStart = ref()
 

@@ -165,12 +165,13 @@
                 "
                 color="negative"
                 text-color="white"
-                size="xs"
+                size="sm"
+                class=""
                 square
                 dense
-                icon="warning"
               >
-                <q-tooltip>Resolve missing type</q-tooltip>
+                <q-icon name="warning"></q-icon>
+                <q-tooltip>Please resolve missing type for parameter '{{ param.name }}'</q-tooltip>
               </q-chip>
             </template>
 
