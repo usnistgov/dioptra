@@ -623,6 +623,21 @@ class UserNeedsAGroupError(DioptraError):
         self.user_id = user_id
         self.group_id = group_id
 
+class CannotModifyDeletedError(DioptraError):
+    def __init__(self, entity_type: str | None = None, **kwargs: typing.Any):
+        super().__init__(
+            "".join(
+                [
+                    "Cannot modify deleted",
+                    "entity" if entity_type is None else entity_type,
+                    *add_attribute_values(**kwargs),
+                    ".",
+                ]
+            )
+        )
+        self.entity_type = "unknown" if entity_type is None else entity_type
+        self.entity_attributes = kwargs
+
 
 class GroupNeedsAManagerError(DioptraError):
     """A group must have at least one manager."""

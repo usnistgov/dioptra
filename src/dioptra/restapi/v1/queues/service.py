@@ -26,7 +26,7 @@ from structlog.stdlib import BoundLogger
 from dioptra.restapi.db import models
 from dioptra.restapi.db.repository.utils import DeletionPolicy
 from dioptra.restapi.db.unit_of_work import UnitOfWork
-from dioptra.restapi.errors import EntityDoesNotExistError
+from dioptra.restapi.errors import CannotModifyDeletedError, EntityDoesNotExistError
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.shared.search_parser import parse_search_text
 
@@ -106,6 +106,7 @@ class QueueService(object):
         page_length: int,
         sort_by_string: str,
         descending: bool,
+        show_deleted: bool,
         **kwargs,
     ) -> tuple[list[utils.QueueDict], int]:
         """Fetch a list of queues, optionally filtering by search string and paging
@@ -139,7 +140,7 @@ class QueueService(object):
             page_length,
             sort_by_string,
             descending,
-            DeletionPolicy.NOT_DELETED,
+            DeletionPolicy.NOT_DELETED if not show_deleted else DeletionPolicy.ANY,
         )
 
         queues_dict: dict[int, utils.QueueDict] = {
@@ -188,9 +189,7 @@ class QueueIdService(object):
             The queue object if found, otherwise None.
 
         Raises:
-            ResourceNotFoundError: If the queue is not found and `error_if_not_found`
-                is True.
-            ResourceDeletedError: If the queue is deleted and `error_if_not_found`
+            EntityDoesNotExistError: If the queue is not found and `error_if_not_found`
                 is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -200,12 +199,6 @@ class QueueIdService(object):
 
         if not queue:
             if error_if_not_found:
-                raise EntityDoesNotExistError("queue", resource_id=queue_id)
-            else:
-                return None
-        elif queue.resource.is_deleted:
-            if error_if_not_found:
-                # treat "deleted" as if "not found"?
                 raise EntityDoesNotExistError("queue", resource_id=queue_id)
             else:
                 return None
@@ -258,7 +251,7 @@ class QueueIdService(object):
         elif queue.resource.is_deleted:
             if error_if_not_found:
                 # treat "deleted" as if "not found"?
-                raise EntityDoesNotExistError("queue", resource_id=queue_id)
+                raise CannotModifyDeletedError("queue", resource_id=queue_id)
             else:
                 return None
 
