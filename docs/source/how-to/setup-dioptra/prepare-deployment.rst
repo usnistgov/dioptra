@@ -76,7 +76,9 @@ Cruft is required to create the deployment.
 .. code:: sh
 
    uv venv 
+   source .venv/bin/activate
    uv pip install cruft
+   
 
 .. rst-class:: header-on-a-card header-steps
 
@@ -115,7 +117,7 @@ Run cruft to apply the Dioptra Deployment template. There are four different met
 * **Method 3**: Use all default template values, except values which are overridden in command line 
 * **Method 4**: Use all default template values, except values which are provided in config file
 
-Export the branch name as an environment variable
+Choose a method and then create the deployment by applying the template:
 
 .. tabs::
 
