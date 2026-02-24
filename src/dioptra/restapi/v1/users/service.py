@@ -219,7 +219,11 @@ class UserIdService(object):
         self._uow = uow
 
     def get(
-        self, user_id: int, error_if_not_found: bool = False, **kwargs
+        self, 
+        user_id: int,
+        show_deleted: bool = False,
+        error_if_not_found: bool = False, 
+        **kwargs
     ) -> models.User | None:
         """Fetch a user by its unique id.
 
@@ -238,12 +242,11 @@ class UserIdService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Lookup user account by unique id", user_id=user_id)
 
-        user = self._uow.user_repo.get(user_id, DeletionPolicy.NOT_DELETED)
+        user = self._uow.user_repo.get(user_id, DeletionPolicy.NOT_DELETED if not show_deleted else DeletionPolicy.ANY)
 
         if user is None:
             if error_if_not_found:
                 raise UserDoesNotExistError(user_id=user_id)
-
             return None
 
         return user
