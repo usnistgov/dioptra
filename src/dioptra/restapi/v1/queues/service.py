@@ -106,7 +106,7 @@ class QueueService(object):
         page_length: int,
         sort_by_string: str,
         descending: bool,
-        show_deleted: bool,
+        show_deleted: bool = False,
         **kwargs,
     ) -> tuple[list[utils.QueueDict], int]:
         """Fetch a list of queues, optionally filtering by search string and paging

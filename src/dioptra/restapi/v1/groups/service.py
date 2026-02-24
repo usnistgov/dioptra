@@ -104,6 +104,7 @@ class GroupService(object):
         search_string: str,
         page_index: int,
         page_length: int,
+        show_deleted: bool = False,
         **kwargs,
     ) -> tuple[list[models.Group], int]:
         """Fetch a list of groups, optionally filtering by search string and paging
@@ -127,7 +128,7 @@ class GroupService(object):
 
         search_struct = parse_search_text(search_string)
         groups, total_num_groups = self._uow.group_repo.get_by_filters_paged(
-            search_struct, page_index, page_length
+            search_struct, page_index, page_length, deletion_policy = DeletionPolicy.NOT_DELETED if not show_deleted else DeletionPolicy.ANY
         )
 
         return list(groups), total_num_groups
@@ -151,7 +152,11 @@ class GroupIdService(object):
         self._uow = uow
 
     def get(
-        self, group_id: int, error_if_not_found: bool = False, **kwargs
+        self,
+        group_id: int,
+        show_deleted: bool = False,
+        error_if_not_found: bool = False,
+        **kwargs
     ) -> models.Group | None:
         """Fetch a group by its unique id.
 
@@ -170,12 +175,11 @@ class GroupIdService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Lookup group by unique id", group_id=group_id)
 
-        group = self._uow.group_repo.get(group_id, DeletionPolicy.NOT_DELETED)
+        group = self._uow.group_repo.get(group_id, DeletionPolicy.ANY)
 
         if group is None:
             if error_if_not_found:
                 raise EntityDoesNotExistError(GROUP_TYPE, group_id=group_id)
-
             return None
 
         return group

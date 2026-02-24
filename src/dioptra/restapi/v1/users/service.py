@@ -145,6 +145,7 @@ class UserService(object):
         search_string: str,
         page_index: int,
         page_length: int,
+        show_deleted: bool = False,
         **kwargs,
     ) -> tuple[list[models.User], int]:
         """Fetch a list of users, optionally filtering by search string and paging
@@ -168,7 +169,7 @@ class UserService(object):
 
         search_struct = parse_search_text(search_string)
         users, total_num_users = self._uow.user_repo.get_by_filters_paged(
-            search_struct, page_index, page_length
+            search_struct, page_index, page_length, deletion_policy = DeletionPolicy.NOT_DELETED if not show_deleted else DeletionPolicy.ANY
         )
 
         return list(users), total_num_users
@@ -221,7 +222,6 @@ class UserIdService(object):
     def get(
         self, 
         user_id: int,
-        show_deleted: bool = False,
         error_if_not_found: bool = False, 
         **kwargs
     ) -> models.User | None:
@@ -242,7 +242,7 @@ class UserIdService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Lookup user account by unique id", user_id=user_id)
 
-        user = self._uow.user_repo.get(user_id, DeletionPolicy.NOT_DELETED if not show_deleted else DeletionPolicy.ANY)
+        user = self._uow.user_repo.get(user_id, DeletionPolicy.ANY)
 
         if user is None:
             if error_if_not_found:
