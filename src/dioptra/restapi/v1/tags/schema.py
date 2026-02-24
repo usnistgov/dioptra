@@ -55,7 +55,9 @@ class TagMutableFieldsSchema(Schema):
     """The fields schema for the mutable data in a Tag resource."""
 
     name = fields.String(
-        attribute="name", metadata={"description": "Name of the Tag resource."}
+        attribute="name",
+        metadata={"description": "Name of the Tag resource."},
+        required=True,
     )
 
 
@@ -72,6 +74,7 @@ class TagBaseSchema(Schema):
         data_key="group",
         metadata={"description": "Group that owns the Tag."},
         load_only=True,
+        required=True,
     )
     group = fields.Nested(
         GroupRefSchema,
