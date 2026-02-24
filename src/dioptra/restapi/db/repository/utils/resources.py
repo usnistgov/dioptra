@@ -45,6 +45,7 @@ from dioptra.restapi.db.repository.utils.common import (
     S,
     get_group_id,
     get_resource_id,
+    get_resource_snapshot_id,
 )
 from dioptra.restapi.db.repository.utils.search import construct_sql_query_filters
 
@@ -236,6 +237,80 @@ def get_one_latest_snapshot(
     # latest can't be None here.
     assert latest is not None
     return latest
+
+
+def get_one_snapshot(
+    session: CompatibleSession[S],
+    snap_class: typing.Type[ResourceT],
+    snapshot: int | m.ResourceSnapshot,
+    deletion_policy: DeletionPolicy,
+) -> ResourceT:
+    """
+    Get the a specific resource snapshot given the resource snapshot ID; require that
+    exactly one is found, or raise an exception.
+
+    Args:
+        session: An SQLAlchemy session
+        snap_class: A ResourceSnapshot subclass, which represents the type
+            of resource to get
+        resource: A resource, resource snapshot, or integer resource ID,
+            for which to obtain the latest snapshot
+        deletion_policy: Whether to look at deleted resources, non-deleted
+            resources, or all resources
+
+    Returns:
+        A snapshot
+
+    Raises:
+        EntityDoesNotExistError: if the resource does not exist in the database
+            (deleted or not)
+        EntityExistsError: if the resource exists and is not deleted, but
+            policy was to find a deleted resource
+        EntityDeletedError: if the resource is deleted, but policy was to find
+            a non-deleted resource
+    """
+    snapshot_id = get_resource_snapshot_id(snapshot)
+
+    stmt = (
+        sa.select(snap_class)
+        .join(m.Resource)
+        .where(snap_class.resource_snapshot_id == snapshot_id)
+    )
+
+    snapshot_obj = session.scalar(stmt)
+
+    if snapshot_obj is None:
+        existence_result = ExistenceResult.DOES_NOT_EXIST
+    elif snapshot_obj.resource.is_deleted:
+        existence_result = ExistenceResult.DELETED
+    else:
+        existence_result = ExistenceResult.EXISTS
+
+    resource_id: int | None
+    if snapshot_obj:
+        resource_type = snapshot_obj.resource_type
+        resource_id = snapshot_obj.resource_id
+    elif isinstance(snapshot, m.ResourceSnapshot):
+        resource_type = snapshot.resource_type
+        resource_id = get_resource_id(snapshot)
+    else:  # resource is an int
+        resource_type = None
+        resource_id = None
+
+    # Here, we combine the passed-in deletion policy with existence, to
+    # determine the exception.
+    assert_exists(
+        deletion_policy,
+        existence_result,
+        resource_type,
+        resource_id,
+        snapshot_id=snapshot_id,
+    )
+
+    # The above assert_exists() function would have raised an exception, so
+    # latest can't be None here.
+    assert snapshot_obj is not None
+    return snapshot_obj
 
 
 def get_latest_child_snapshots(
@@ -841,6 +916,7 @@ __all__ = [
     "get_latest_child_snapshots",
     "get_latest_snapshots",
     "get_one_latest_snapshot",
+    "get_one_snapshot",
     "get_resource_lock_types",
     "get_snapshot_by_name",
     "set_resource_children",

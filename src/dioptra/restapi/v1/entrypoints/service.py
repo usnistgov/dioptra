@@ -21,49 +21,32 @@ from typing import Any, Final, Iterable
 import structlog
 from flask_login import current_user
 from injector import inject
-from sqlalchemy import Integer, func, select
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
-from dioptra.restapi.db.models.constants import resource_lock_types
+from dioptra.restapi.db.repository.utils.common import DeletionPolicy
+from dioptra.restapi.db.unit_of_work import UnitOfWork
 from dioptra.restapi.errors import (
-    BackendDatabaseError,
     EntityDoesNotExistError,
-    EntityExistsError,
     QueryParameterNotUniqueError,
-    SortParameterValidationError,
 )
 from dioptra.restapi.utils import find_non_unique
 from dioptra.restapi.v1 import utils
-from dioptra.restapi.v1.groups.service import GroupIdService
 from dioptra.restapi.v1.plugins.service import (
     PluginIdsService,
     get_plugin_task_parameter_types_by_id,
 )
 from dioptra.restapi.v1.queues.service import RESOURCE_TYPE as QUEUE_RESOURCE_TYPE
 from dioptra.restapi.v1.queues.service import QueueIdsService
-from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
+from dioptra.restapi.v1.shared.search_parser import parse_search_text
 from dioptra.restapi.v1.shared.task_engine_yaml.service import (
     coerce_entrypoint_default_param_types,
 )
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
-PLUGIN_RESOURCE_TYPE: Final[str] = "entry_point_plugin"
 
 RESOURCE_TYPE: Final[str] = "entry_point"
-SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
-    "name": lambda x: models.EntryPoint.name.like(x, escape="/"),
-    "description": lambda x: models.EntryPoint.description.like(x, escape="/"),
-    "task_graph": lambda x: models.EntryPoint.task_graph.like(x, escape="/"),
-    "artifact_graph": lambda x: models.EntryPoint.artifact_graph.like(x, escape="/"),
-    "tag": lambda x: models.EntryPoint.tags.any(models.Tag.name.like(x, escape="/")),
-}
-SORTABLE_FIELDS: Final[dict[str, Any]] = {
-    "name": models.EntryPoint.name,
-    "createdOn": models.EntryPoint.created_on,
-    "lastModifiedOn": models.Resource.last_modified_on,
-    "description": models.EntryPoint.description,
-}
+PLUGIN_RESOURCE_TYPE: Final[str] = "entry_point_plugin"
 
 
 class EntrypointService(object):
@@ -72,25 +55,22 @@ class EntrypointService(object):
     @inject
     def __init__(
         self,
-        entrypoint_name_service: "EntrypointNameService",
         plugin_ids_service: PluginIdsService,
         queue_ids_service: QueueIdsService,
-        group_id_service: GroupIdService,
+        uow: UnitOfWork,
     ) -> None:
         """Initialize the entrypoint service.
 
         All arguments are provided via dependency injection.
 
         Args:
-            entrypoint_name_service: A EntrypointNameService object.
             plugin_ids_service: A PluginIdsService object.
             queue_ids_service: A QueueIdsService object.
-            group_id_service: A GroupIdService object.
+            uow: A UnitOfWork instance
         """
-        self._entrypoint_name_service = entrypoint_name_service
         self._plugin_ids_service = plugin_ids_service
         self._queue_ids_service = queue_ids_service
-        self._group_id_service = group_id_service
+        self._uow = uow
 
     def create(
         self,
@@ -138,23 +118,9 @@ class EntrypointService(object):
 
         # TODO: need to add a check here that graphs are valid yaml
 
-        duplicate = self._entrypoint_name_service.get(name, group_id=group_id, log=log)
-        if duplicate is not None:
-            raise EntityExistsError(
-                RESOURCE_TYPE, duplicate.resource_id, name=name, group_id=group_id
-            )
+        owner = self._uow.group_repo.get_one(group_id, DeletionPolicy.NOT_DELETED)
 
-        plugin_ids = list(set(plugin_ids))
-        artifact_plugin_ids = list(set(artifact_plugin_ids))
-        group = self._group_id_service.get(group_id, error_if_not_found=True)
-        queues = self._queue_ids_service.get(queue_ids, error_if_not_found=True)
-        plugins = self._plugin_ids_service.get(plugin_ids, error_if_not_found=True)
-        artifact_plugins = self._plugin_ids_service.get(
-            artifact_plugin_ids, error_if_not_found=True
-        )
-
-        resource = models.Resource(resource_type=RESOURCE_TYPE, owner=group)
-
+        resource = models.Resource(RESOURCE_TYPE, owner)
         new_entrypoint = models.EntryPoint(
             name=name,
             description=description,
@@ -167,7 +133,14 @@ class EntrypointService(object):
             resource=resource,
             creator=current_user,
         )
-        db.session.add(new_entrypoint)
+
+        plugin_ids = list(set(plugin_ids))
+        artifact_plugin_ids = list(set(artifact_plugin_ids))
+        queues = self._uow.queue_repo.get(queue_ids, DeletionPolicy.NOT_DELETED)
+        plugins = self._plugin_ids_service.get(plugin_ids, error_if_not_found=True)
+        artifact_plugins = self._plugin_ids_service.get(
+            artifact_plugin_ids, error_if_not_found=True
+        )
 
         new_entrypoint.entry_point_plugins = [
             models.EntryPointPlugin(
@@ -196,8 +169,14 @@ class EntrypointService(object):
 
         new_entrypoint.children.extend(all_plugin_resources + queue_resources)
 
+        try:
+            self._uow.entrypoint_repo.create(new_entrypoint)
+        except Exception:
+            self._uow.rollback()
+            raise
+
         if commit:
-            db.session.commit()
+            self._uow.commit()
             log.debug(
                 "Entrypoint registration successful",
                 entrypoint_id=new_entrypoint.resource_id,
@@ -241,63 +220,26 @@ class EntrypointService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get full list of entrypoints")
 
-        filters = []
+        search_struct = parse_search_text(search_string)
 
-        if group_id is not None:
-            filters.append(models.Resource.group_id == group_id)
-
-        if search_string:
-            filters.append(
-                construct_sql_query_filters(search_string, SEARCHABLE_FIELDS)
-            )
-
-        stmt = (
-            select(func.count(models.EntryPoint.resource_id))
-            .join(models.Resource)
-            .where(
-                *filters,
-                models.Resource.is_deleted == False,  # noqa: E712
-                models.Resource.latest_snapshot_id
-                == models.EntryPoint.resource_snapshot_id,
+        entrypoints, total_num_entrypoints = (
+            self._uow.entrypoint_repo.get_by_filters_paged(
+                group_id,
+                search_struct,
+                page_index,
+                page_length,
+                sort_by_string,
+                descending,
+                DeletionPolicy.NOT_DELETED,
             )
         )
-        total_num_entrypoints = db.session.scalars(stmt).first()
 
-        if total_num_entrypoints is None:
-            log.error(
-                "The database query returned a None when counting the number of "
-                "groups when it should return a number.",
-                sql=str(stmt),
+        entrypoint_dicts = {
+            entrypoint.resource_id: utils.EntrypointDict(
+                entry_point=entrypoint, queues=[], has_draft=False
             )
-            raise BackendDatabaseError
-
-        if total_num_entrypoints == 0:
-            return [], total_num_entrypoints
-
-        entrypoints_stmt = (
-            select(models.EntryPoint)
-            .join(models.Resource)
-            .where(
-                *filters,
-                models.Resource.is_deleted == False,  # noqa: E712
-                models.Resource.latest_snapshot_id
-                == models.EntryPoint.resource_snapshot_id,
-            )
-            .offset(page_index)
-            .limit(page_length)
-        )
-
-        if sort_by_string and sort_by_string in SORTABLE_FIELDS:
-            sort_column = SORTABLE_FIELDS[sort_by_string]
-            if descending:
-                sort_column = sort_column.desc()
-            else:
-                sort_column = sort_column.asc()
-            entrypoints_stmt = entrypoints_stmt.order_by(sort_column)
-        elif sort_by_string and sort_by_string not in SORTABLE_FIELDS:
-            raise SortParameterValidationError(RESOURCE_TYPE, sort_by_string)
-
-        entrypoints = list(db.session.scalars(entrypoints_stmt).unique().all())
+            for entrypoint in entrypoints
+        }
 
         queue_ids = {
             resource.resource_id
@@ -307,32 +249,19 @@ class EntrypointService(object):
         }
         queues = {
             queue.resource_id: queue
-            for queue in self._queue_ids_service.get(
-                list(queue_ids), error_if_not_found=True
-            )
+            for queue in self._uow.queue_repo.get(queue_ids, DeletionPolicy.NOT_DELETED)
         }
 
-        entrypoint_dicts = {
-            entrypoint.resource_id: utils.EntrypointDict(
-                entry_point=entrypoint, queues=[], has_draft=False
-            )
-            for entrypoint in entrypoints
-        }
         for entrypoint in entrypoint_dicts.values():
             for resource in entrypoint["entry_point"].children:
                 if resource.resource_type == "queue" and not resource.is_deleted:
                     entrypoint["queues"].append(queues[resource.resource_id])
 
-        drafts_stmt = select(
-            models.DraftResource.payload["resource_id"].as_string().cast(Integer)
-        ).where(
-            models.DraftResource.payload["resource_id"]
-            .as_string()
-            .cast(Integer)
-            .in_(tuple(entrypoint_dicts.keys())),
-            models.DraftResource.user_id == current_user.user_id,
+        resource_ids_with_drafts = self._uow.drafts_repo.has_draft_modifications(
+            entrypoints,
+            current_user,
         )
-        for resource_id in db.session.scalars(drafts_stmt):
+        for resource_id in resource_ids_with_drafts:
             entrypoint_dicts[resource_id]["has_draft"] = True
 
         return list(entrypoint_dicts.values()), total_num_entrypoints
@@ -347,6 +276,7 @@ class EntrypointIdService(object):
         self,
         entrypoint_name_service: "EntrypointNameService",
         queue_ids_service: QueueIdsService,
+        uow: UnitOfWork,
     ) -> None:
         """Initialize the entrypoint service.
 
@@ -355,9 +285,11 @@ class EntrypointIdService(object):
         Args:
             entrypoint_name_service: A EntrypointNameService object.
             queue_ids_service: A QueueIdsService object.
+            uow: A UnitOfWork instance
         """
         self._entrypoint_name_service = entrypoint_name_service
         self._queue_ids_service = queue_ids_service
+        self._uow = uow
 
     def get(
         self,
@@ -378,22 +310,19 @@ class EntrypointIdService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get entrypoint by id", entrypoint_id=entrypoint_id)
+
         # Get a specific snapshot if entrypoint_snapshot_id is specified
-        snapshot_id = (
-            entrypoint_snapshot_id
-            if entrypoint_snapshot_id is not None
-            else models.Resource.latest_snapshot_id
-        )
-        stmt = (
-            select(models.EntryPoint)
-            .join(models.Resource)
-            .where(
-                models.EntryPoint.resource_id == entrypoint_id,
-                models.EntryPoint.resource_snapshot_id == snapshot_id,
-                models.Resource.is_deleted == False,  # noqa: E712
+        if entrypoint_snapshot_id is None:
+            entrypoint = self._uow.entrypoint_repo.get(
+                entrypoint_id, DeletionPolicy.NOT_DELETED
             )
-        )
-        entrypoint = db.session.scalars(stmt).first()
+        else:
+            entrypoint = self._uow.entrypoint_repo.get_one_snapshot(
+                entrypoint_snapshot_id, DeletionPolicy.NOT_DELETED
+            )
+
+        if entrypoint is None:
+            raise EntityDoesNotExistError(RESOURCE_TYPE, entrypoint_id=entrypoint_id)
 
         if entrypoint is None:
             raise EntityDoesNotExistError(
@@ -409,17 +338,10 @@ class EntrypointIdService(object):
         }
         queues = self._queue_ids_service.get(list(queue_ids), error_if_not_found=True)
 
-        drafts_stmt = (
-            select(models.DraftResource.draft_resource_id)
-            .where(
-                models.DraftResource.payload["resource_id"].as_string().cast(Integer)
-                == entrypoint.resource_id,
-                models.DraftResource.user_id == current_user.user_id,
-            )
-            .exists()
-            .select()
+        has_draft = self._uow.drafts_repo.has_draft_modification(
+            entrypoint,
+            current_user,
         )
-        has_draft = db.session.scalar(drafts_stmt)
 
         return utils.EntrypointDict(
             entry_point=entrypoint, queues=queues, has_draft=has_draft
@@ -463,27 +385,25 @@ class EntrypointIdService(object):
                 parameters list is not unique
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
-        duplicates = find_non_unique("name", parameters)
-        if len(duplicates) > 0:
-            raise QueryParameterNotUniqueError(RESOURCE_TYPE, name=duplicates)
+
+        entrypoint = self._uow.entrypoint_repo.get(entrypoint_id, DeletionPolicy.ANY)
+
+        if not entrypoint:
+            raise EntityDoesNotExistError("entrypoint", resource_id=entrypoint_id)
+        elif entrypoint.resource.is_deleted:
+            raise EntityDoesNotExistError("entrypoint", resource_id=entrypoint_id)
+
+        entrypoint_param_duplicates = find_non_unique("name", parameters)
+        if len(entrypoint_param_duplicates) > 0:
+            raise QueryParameterNotUniqueError(
+                RESOURCE_TYPE, name=entrypoint_param_duplicates
+            )
+
         artifact_parameter_duplicates = find_non_unique("name", artifact_parameters)
         if len(artifact_parameter_duplicates) > 0:
             raise QueryParameterNotUniqueError(
                 RESOURCE_TYPE, name=artifact_parameter_duplicates
             )
-
-        entrypoint_dict = self.get(entrypoint_id, log=log)
-
-        entrypoint = entrypoint_dict["entry_point"]
-        group_id = entrypoint.resource.group_id
-        if name != entrypoint.name:
-            duplicate = self._entrypoint_name_service.get(
-                name, group_id=group_id, log=log
-            )
-            if duplicate is not None:
-                raise EntityExistsError(
-                    RESOURCE_TYPE, duplicate.resource_id, name=name, group_id=group_id
-                )
 
         queues = self._queue_ids_service.get(queue_ids, error_if_not_found=True)
 
@@ -499,7 +419,6 @@ class EntrypointIdService(object):
             resource=entrypoint.resource,
             creator=current_user,
         )
-        db.session.add(new_entrypoint)
 
         plugin_resources = _copy_plugins(
             plugins=entrypoint.entry_point_plugins, target_entrypoint=new_entrypoint
@@ -515,14 +434,21 @@ class EntrypointIdService(object):
 
         new_entrypoint.children = all_plugin_resources + queue_resources
 
+        try:
+            self._uow.entrypoint_repo.create_snapshot(new_entrypoint)
+        except Exception:
+            self._uow.rollback()
+            raise
+
         if commit:
-            db.session.commit()
-            log.debug(
-                "Entrypoint modification successful",
-                entrypoint_id=entrypoint_id,
-                name=name,
-                description=description,
-            )
+            self._uow.commit()
+
+        log.debug(
+            "Entrypoint modification successful",
+            entrypoint_id=entrypoint_id,
+            name=name,
+            description=description,
+        )
 
         return utils.EntrypointDict(
             entry_point=new_entrypoint, queues=queues, has_draft=False
@@ -539,26 +465,28 @@ class EntrypointIdService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        stmt = select(models.Resource).filter_by(
-            resource_id=entrypoint_id, resource_type=RESOURCE_TYPE, is_deleted=False
-        )
-        entrypoint_resource = db.session.scalars(stmt).first()
-
-        if entrypoint_resource is None:
-            raise EntityDoesNotExistError(RESOURCE_TYPE, entrypoint_id=entrypoint_id)
-
-        deleted_resource_lock = models.ResourceLock(
-            resource_lock_type=resource_lock_types.DELETE,
-            resource=entrypoint_resource,
-        )
-        db.session.add(deleted_resource_lock)
-        db.session.commit()
-        log.debug("Entrypoint deleted", entrypoint_id=entrypoint_id)
+        with self._uow:
+            self._uow.entrypoint_repo.delete(entrypoint_id)
+        log.debug("Experiment deleted", entrypoint_id=entrypoint_id)
 
         return {"status": "Success", "id": [entrypoint_id]}
 
 
 class EntrypointSnapshotIdService(object):
+    """The service methods for creating and managing entrypoints by
+    their unique id."""
+
+    @inject
+    def __init__(self, uow: UnitOfWork) -> None:
+        """Initialize the entrypoint service.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            uow: A UnitOfWork instance
+        """
+        self._uow = uow
+
     def get(
         self, entrypoint_id: int, entrypoint_snapshot_id: int, **kwargs
     ) -> models.EntryPoint:
@@ -580,19 +508,12 @@ class EntrypointSnapshotIdService(object):
             resource_id=entrypoint_id,
             resource_snapshot_id=entrypoint_snapshot_id,
         )
-        entry_point_resource_snapshot_stmt = select(models.EntryPoint).where(
-            models.EntryPoint.resource_id == entrypoint_id,
-            models.EntryPoint.resource_snapshot_id == entrypoint_snapshot_id,
-        )
-        entry_point = db.session.scalar(entry_point_resource_snapshot_stmt)
 
-        if entry_point is None:
-            raise EntityDoesNotExistError(
-                RESOURCE_TYPE,
-                entrypoint_id=entrypoint_id,
-                entrypoint_snapshot_id=entrypoint_snapshot_id,
-            )
-        return entry_point
+        entrypoint = self._uow.entrypoint_repo.get_one_snapshot(
+            entrypoint_snapshot_id, DeletionPolicy.NOT_DELETED
+        )
+
+        return entrypoint
 
     def get_plugin_files(
         self,
@@ -666,18 +587,18 @@ class EntrypointSnapshotIdService(object):
             The plugin files for the Job's entrypoint.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
+        log.debug("get plugin param types", group_id=group_id)
 
-        plugin_parameter_types_stmt = (
-            select(models.PluginTaskParameterType)
-            .join(models.Resource)
-            .where(
-                models.Resource.is_deleted == False,  # noqa: E712
-                models.Resource.group_id == group_id,
-                models.Resource.latest_snapshot_id
-                == models.PluginTaskParameterType.resource_snapshot_id,
-            )
+        types, _ = self._uow.type_repo.get_by_filters_paged(
+            group_id,
+            filters=[],
+            page_start=0,
+            page_length=-1,  # unlimited page size
+            sort_by=None,
+            descending=True,  # unused because sort_by is None
         )
-        return list(db.session.scalars(plugin_parameter_types_stmt).all())
+
+        return list(types)
 
 
 class EntrypointIdPluginsService(object):
@@ -1260,6 +1181,17 @@ class EntrypointIdArtifactPluginsIdService(object):
 class EntrypointIdsService(object):
     """The service methods for retrieving entrypoints from a list of ids."""
 
+    @inject
+    def __init__(self, uow: UnitOfWork) -> None:
+        """Initialize the entrypoint service.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            uow: A UnitOfWork instance
+        """
+        self._uow = uow
+
     def get(
         self,
         entrypoint_ids: list[int],
@@ -1283,27 +1215,22 @@ class EntrypointIdsService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get entrypoint by id", entrypoint_ids=entrypoint_ids)
 
-        stmt = (
-            select(models.EntryPoint)
-            .join(models.Resource)
-            .where(
-                models.EntryPoint.resource_id.in_(tuple(entrypoint_ids)),
-                models.EntryPoint.resource_snapshot_id
-                == models.Resource.latest_snapshot_id,
-                models.Resource.is_deleted == False,  # noqa: E712
-            )
+        # More complex situation here where some entrypoints could be deleted and
+        # some may not exist at all.  For now, just treat both as not existing.
+        entrypoints = self._uow.entrypoint_repo.get(
+            entrypoint_ids, DeletionPolicy.NOT_DELETED
         )
-        entrypoints = list(db.session.scalars(stmt).all())
 
         if len(entrypoints) != len(entrypoint_ids) and error_if_not_found:
             entrypoint_ids_missing = set(entrypoint_ids) - {
                 entrypoint.resource_id for entrypoint in entrypoints
             }
+            log.debug("Queue not found", entrypoint_ids=list(entrypoint_ids_missing))
             raise EntityDoesNotExistError(
-                RESOURCE_TYPE, entrypoint_ids=list(entrypoint_ids_missing)
+                "entrypoint", resource_ids=entrypoint_ids_missing
             )
 
-        return entrypoints
+        return list(entrypoints)
 
 
 class EntrypointIdQueuesService(object):
@@ -1538,6 +1465,17 @@ class EntrypointIdQueuesIdService(object):
 class EntrypointNameService(object):
     """The service methods for managing entrypoints by their name."""
 
+    @inject
+    def __init__(self, uow: UnitOfWork) -> None:
+        """Initialize the entrypoint service.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            uow: A UnitOfWork instance
+        """
+        self._uow = uow
+
     def get(
         self,
         name: str,
@@ -1563,24 +1501,13 @@ class EntrypointNameService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get entrypoint by name", entrypoint_name=name, group_id=group_id)
 
-        stmt = (
-            select(models.EntryPoint)
-            .join(models.Resource)
-            .where(
-                models.EntryPoint.name == name,
-                models.Resource.group_id == group_id,
-                models.Resource.is_deleted == False,  # noqa: E712
-                models.Resource.latest_snapshot_id
-                == models.EntryPoint.resource_snapshot_id,
-            )
+        entrypoint = self._uow.entrypoint_repo.get_by_name(
+            name, group_id, DeletionPolicy.NOT_DELETED
         )
-        entrypoint = db.session.scalars(stmt).first()
 
         if entrypoint is None:
             if error_if_not_found:
-                raise EntityDoesNotExistError(
-                    RESOURCE_TYPE, name=name, group_id=group_id
-                )
+                raise EntityDoesNotExistError(RESOURCE_TYPE, name=name)
 
             return None
 
