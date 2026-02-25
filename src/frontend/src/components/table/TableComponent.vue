@@ -16,6 +16,8 @@
     class="q-mt-lg"
     :tabindex="props.disableSelect ? '' : '0'"
     @keydown="keydown"
+    :selection="selection"
+    :hideBottom="props.hideBottom && rows?.length > 0"
   >
     <template v-slot:header="props">
       <q-tr :props="props">
@@ -24,6 +26,7 @@
           :key="col.name"
           :class="col.__thClass"
           @click="col.sortable ? props.sort(col) : null"
+          @auxclick="onAuxClick(props, $event)"
         >
           <CellHeader
             :col="col"
@@ -48,8 +51,23 @@
           selectResource(props);
         "
       >
-        <q-td v-for="col in props.cols" :key="col.name" :props="props">
-          <slot :name="`body-cell-${col.name}`" v-bind="props">
+          <q-td v-for="col in props.cols" :key="col.name" :props="props" :style="props.expand ? {'border-bottom': 'none'} : {}">
+            <q-menu
+              v-if="selection !== 'multiple'"
+              context-menu
+              @show="props.selected = true"
+            >
+              <q-list dense>
+                <q-item clickable v-close-popup @click="openResource(props)">
+                  <q-item-section>Open</q-item-section>
+                </q-item>
+                <q-item clickable v-close-popup @click="openResource(props, null, true)">
+                  <q-item-section>Open In New Tab</q-item-section>
+                </q-item>
+              </q-list>
+            </q-menu>
+
+            <slot :name="`body-cell-${col.name}`" v-bind="props">
             <ResourceName
               v-if="col.styleType === 'resource-name'"
               :text="col.value"
@@ -252,7 +270,7 @@ const props = defineProps({
   rowKey: { type: String, default: "id" },
 });
 
-const emit = defineEmits(["edit", "delete", "request", "create", "editTags"]);
+const emit = defineEmits(["edit", "open", "delete", "request", "create", "editTags", "expand"]); 
 const $q = useQuasar();
 const filter = ref("");
 const selected = defineModel("selected");
@@ -263,6 +281,12 @@ const darkMode = computed(() => {
     return window.matchMedia("(prefers-color-scheme: dark)").matches;
   return $q.dark.mode;
 });
+
+const selection = computed(() => {
+  if(props.disableSelect) return 'none'
+  if(props.selection === 'multiple') return 'multiple'
+  return 'single'
+})
 
 // Columns Logic
 const finalColumns = computed(() => {
@@ -300,6 +324,13 @@ const pagination = ref({
   sortBy: "",
   descending: false,
 });
+
+function onAuxClick(tableProps, event) {
+  if (event.button === 1) {   // mouse wheel click only
+    openResource(tableProps, event , true)
+  }
+}
+
 function keydown(event) {
   if (!props.rows || props.rows.length === 0) return;
   if (props.disableSelect) return;
@@ -325,7 +356,7 @@ function keydown(event) {
   } else if (event.key === "Enter") {
     // If a row is selected, trigger the edit/open event
     if (selected.value.length > 0) {
-      emit("edit", selected.value[0]);
+      emit("open", false);
     }
   }
 }
@@ -378,7 +409,7 @@ function checkSearch(string) {
     trimmed[trimmed.length - 2] !== "\\" &&
     trimmed[trimmed.length - 2] !== ","
   )
-    return `Trailing comma.`;
+    return "Trailing comma. Please remove or add new search criteria.";
   let singleQuotes = 0;
   let doubleQuotes = 0;
   for (let i = 0; i < trimmed.length; i++) {
@@ -424,11 +455,17 @@ function selectResource(tableProps) {
   tableProps.selected = !tableProps.selected;
 }
 
-function openResource(tableProps) {
-  if (props.disableSelect || props.selection === "multiple") return;
-  tableProps.selected = true;
-  emit("edit", tableProps.row);
-}
+
+  function openResource(tableProps, event = null, openTab = false) {
+    if(props.disableSelect || props.selection === 'multiple') return
+    tableProps.selected = true
+    // ⌘ on macOS or Ctrl on windows should open new tab
+    if(event?.metaKey || event?.ctrlKey) {
+      emit('open', true)
+    } else {
+      emit('open', openTab)
+    }
+  }
 
 function deleteResource(tableProps) {
   if (!props.disableSelect) {

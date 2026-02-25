@@ -7,9 +7,20 @@
     :outline="chipType === 'outline'"
     square
     :clickable="isClickable"
-    @click.stop="navigate" 
+    @click.stop="openInNewTab" 
     :class="['text-weight-bold', mini ? 'q-py-xs q-px-xs' : 'q-py-md q-px-sm']"
   >
+    <q-menu v-if="isClickable" context-menu>
+      <q-list dense>
+        <q-item clickable v-close-popup @click.stop="openInSameTab">
+          <q-item-section>Open</q-item-section>
+        </q-item>
+        <q-item clickable v-close-popup @click.stop="openInNewTab">
+          <q-item-section>Open In New Tab</q-item-section>
+        </q-item>
+      </q-list>
+    </q-menu>
+
     <q-icon
       v-if="showIcon && styles.icon"
       :name="styles.icon"
@@ -105,9 +116,29 @@ const isClickable = computed(() => {
   return !!targetRoute.value;
 });
 
-function navigate() {
+// Navigate in the same tab
+function openInSameTab() {
   if (isClickable.value && targetRoute.value) {
-    router.push(targetRoute.value);
+    // If the 'to' prop is an external string link, handle it directly
+    if (typeof targetRoute.value === 'string' && targetRoute.value.startsWith('http')) {
+      window.location.href = targetRoute.value;
+    } else {
+      router.push(targetRoute.value);
+    }
+  }
+}
+
+// Navigate in a new tab
+function openInNewTab() {
+  if (isClickable.value && targetRoute.value) {
+    // If the 'to' prop is an external string link, handle it directly
+    if (typeof targetRoute.value === 'string' && targetRoute.value.startsWith('http')) {
+      window.open(targetRoute.value, '_blank');
+    } else {
+      // Resolve the Vue Router object into a standard URL href
+      const routeData = router.resolve(targetRoute.value);
+      window.open(routeData.href, '_blank');
+    }
   }
 }
 
@@ -117,7 +148,6 @@ const displayValue = computed(() => {
   if (!props.formatLabel) return labelVal !== "NA" ? labelVal : typeVal;
   return props.formatLabel.replace(/{label}/g, labelVal).replace(/{type}/g, typeVal);
 });
-
 
 const tooltipText = computed(() => {
   if (!props.type) return "";

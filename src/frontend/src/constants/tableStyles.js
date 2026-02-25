@@ -42,7 +42,7 @@ export const CONCEPT_STYLES = {
     icon: 'person', 
     color: 'grey-8', 
     darkColor: 'grey-5', 
-    basePath: 'group' 
+    basePath: 'groups' 
   },
   artifact: { 
     icon: 'sim_card_download', 

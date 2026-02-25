@@ -9,7 +9,7 @@
     :loading="isLoading"
     :hideCreateBtn="true"
     @request="getUserGroups"
-    @edit="router.push('/groups/admin')"
+    @open="router.push('/groups/admin')"
     @delete="showDeleteDialog = true"
   />
 

@@ -15,6 +15,10 @@
     @request="getPlugins"
     @create="router.push('/plugins/new')"
     @edit="(row) => router.push(`/plugins/${row.id}`)"
+    @open="openTab => (openTab
+      ? openWindow.open(`/plugins/${selected[0].id}`, '_blank')
+      : router.push(`/plugins/${selected[0].id}`)
+    )"
     @delete="
       (row) => {
         selected = [row];

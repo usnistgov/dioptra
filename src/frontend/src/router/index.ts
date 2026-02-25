@@ -124,6 +124,11 @@ const router = createRouter({
       path: '/groups/admin',
       component: () => import('../views/GroupsAdminView.vue')
     },
+    // Temporary redirect for badge icons passing hardcoded group IDs
+    {
+      path: '/groups/:id',
+      redirect: '/groups'
+    },
     {
       path: '/tags',
       component: () => import('../views/TagsView.vue'),

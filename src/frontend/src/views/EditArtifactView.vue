@@ -24,7 +24,6 @@
       <ResourceName
         conceptType="artifact"
         :text="artifact.id"
-        ,
         includeIcon="true"
       />
     </template>
@@ -205,7 +204,7 @@
 
               <q-item-label caption v-if="scope.opt.outputParams?.length">
                 <div class="row wrap q-mt-xs text-caption">
-                  <span class="text-grey-12 text-weight-medium">Outputs:</span>
+                  <span class="text-grey-8 text-weight-medium">Outputs:</span>
                   <div
                     v-for="(param, i) in scope.opt.outputParams"
                     :key="param.name"
@@ -244,7 +243,6 @@
               type="task"
               :includeIcon="true"
               class="q-mb-sm q-pr-lg"
-              ,
               style="width: fit-content"
               ;
             />
@@ -290,7 +288,7 @@
         The selected plugin has no files with artifact tasks. Please select
         another plugin.
       </div>
-    </div>
+
     <div :class="isLarge ? 'col-6' : 'col-3'" class="column" v-if="artifact.isDir">
       <h2 class="q-mt-lg">Directory</h2>
       <q-card
@@ -440,12 +438,18 @@
   </div>
 </template>
 
+  </KeyValueTable>
+
+</template>
+
 <script setup>
+
 import { onMounted, computed, ref, inject, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useLoginStore } from "@/stores/LoginStore.ts";
 import * as api from "@/services/dataApi";
 import * as notify from "../notify";
+import {useQuasar} from "quasar";
 
 // Components
 import PageTitle from "@/components/PageTitle.vue";
@@ -463,7 +467,6 @@ const $q = useQuasar();
 const isMedium = inject("isMedium");
 const isLarge = inject("isLarge");
 const isMobile = inject("isMobile");
-const store = useLoginStore();
 const darkMode = inject("darkMode");
 const route = useRoute();
 const router = useRouter();
@@ -889,7 +892,7 @@ function processFiles() {
 
 function handleSelect(node) {
   if (selectedNode.value?.relativePath === node.relativePath) {
-    selectedNode.value = "";
+    selectedNode.value = null;
   } else {
     selectedNode.value = node;
   }
