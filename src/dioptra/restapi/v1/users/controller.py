@@ -75,12 +75,14 @@ class UserEndpoint(Resource):
         search_string = unquote(parsed_query_params["search"])
         page_index = parsed_query_params["index"]
         page_length = parsed_query_params["page_length"]
+        show_deleted = parsed_query_params["show_deleted"]
 
         users, total_num_users = self._user_service.get(
             search_string=search_string,
             page_index=page_index,
             page_length=page_length,
             log=log,
+            show_deleted=show_deleted,
         )
         return utils.build_paging_envelope(
             "users",
