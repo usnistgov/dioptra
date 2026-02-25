@@ -22,6 +22,7 @@ from dioptra.restapi.v1.schemas import (
     BasePageSchema,
     PagingQueryParametersSchema,
     SearchQueryParametersSchema,
+    ShowDeletedQueryParametersSchema,
 )
 
 
@@ -204,5 +205,6 @@ class GroupPageSchema(BasePageSchema):
 class GroupGetQueryParameters(
     PagingQueryParametersSchema,
     SearchQueryParametersSchema,
+    ShowDeletedQueryParametersSchema,
 ):
     """The query parameters for the GET method of the /groups endpoint."""
