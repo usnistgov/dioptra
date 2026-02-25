@@ -564,7 +564,7 @@ def build_group(group: models.Group) -> dict[str, Any]:
         "members": list(members.values()),
         "created_on": group.created_on,
         "last_modified_on": group.last_modified_on,
-        "deleted": group.is_deleted
+        "deleted": group.is_deleted,
     }
 
 
