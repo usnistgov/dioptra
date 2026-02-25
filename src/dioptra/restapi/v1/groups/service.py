@@ -26,7 +26,7 @@ from structlog.stdlib import BoundLogger
 from dioptra.restapi.db import models
 from dioptra.restapi.db.repository.utils import DeletionPolicy
 from dioptra.restapi.db.unit_of_work import UnitOfWork
-from dioptra.restapi.errors import EntityDoesNotExistError, EntityExistsError
+from dioptra.restapi.errors import CannotModifyDeletedError, EntityDoesNotExistError, EntityExistsError
 from dioptra.restapi.v1.shared.search_parser import parse_search_text
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -211,13 +211,17 @@ class GroupIdService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Modify group", group_id=group_id)
 
-        group = self._uow.group_repo.get(group_id, DeletionPolicy.NOT_DELETED)
+        group = self._uow.group_repo.get(group_id, DeletionPolicy.ANY)
 
         if group is None:
             if error_if_not_found:
                 raise EntityDoesNotExistError(GROUP_TYPE, group_id=group_id)
-
             return None
+        elif group.resource.is_deleted:
+            if error_if_not_found:
+                raise CannotModifyDeletedError("group", resource_id=group_id)
+            else:
+                return None
 
         duplicate = self._uow.group_repo.get_by_name(name, DeletionPolicy.ANY)
         if duplicate is not None:

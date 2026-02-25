@@ -250,7 +250,6 @@ class QueueIdService(object):
                 return None
         elif queue.resource.is_deleted:
             if error_if_not_found:
-                # treat "deleted" as if "not found"?
                 raise CannotModifyDeletedError("queue", resource_id=queue_id)
             else:
                 return None

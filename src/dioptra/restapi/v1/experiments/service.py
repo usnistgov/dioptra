@@ -26,7 +26,7 @@ from structlog.stdlib import BoundLogger
 from dioptra.restapi.db import models
 from dioptra.restapi.db.repository.utils import DeletionPolicy
 from dioptra.restapi.db.unit_of_work import UnitOfWork
-from dioptra.restapi.errors import EntityDoesNotExistError
+from dioptra.restapi.errors import CannotModifyDeletedError, EntityDoesNotExistError
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.entrypoints.service import EntrypointIdsService
 from dioptra.restapi.v1.shared.search_parser import parse_search_text
@@ -135,6 +135,7 @@ class ExperimentService(object):
         page_length: int,
         sort_by_string: str,
         descending: bool,
+        show_deleted: bool = False,
         **kwargs,
     ) -> tuple[list[utils.ExperimentDict], int]:
         """Fetch a list of experiments, optionally filtering by search string and paging
@@ -169,7 +170,7 @@ class ExperimentService(object):
                 page_length,
                 sort_by_string,
                 descending,
-                DeletionPolicy.NOT_DELETED,
+                DeletionPolicy.NOT_DELETED if not show_deleted else DeletionPolicy.ANY,
             )
         )
 
@@ -180,7 +181,8 @@ class ExperimentService(object):
                 entrypoints=list(
                     self._uow.experiment_repo.get_entrypoints(
                         experiment,
-                        DeletionPolicy.NOT_DELETED,
+                        # is this correct behavior?
+                        DeletionPolicy.NOT_DELETED if not show_deleted else DeletionPolicy.ANY,
                     )
                 ),
                 queue=None,
@@ -246,7 +248,7 @@ class ExperimentIdService(object):
 
         experiment = self._uow.experiment_repo.get(
             experiment_id,
-            DeletionPolicy.NOT_DELETED,
+            DeletionPolicy.ANY,
         )
 
         if experiment is None:
@@ -259,7 +261,7 @@ class ExperimentIdService(object):
 
         entrypoints = self._uow.experiment_repo.get_entrypoints(
             experiment,
-            DeletionPolicy.NOT_DELETED,
+            DeletionPolicy.ANY,
         )
 
         has_draft = self._uow.drafts_repo.has_draft_modification(
@@ -319,7 +321,7 @@ class ExperimentIdService(object):
         elif experiment.resource.is_deleted:
             if error_if_not_found:
                 # treat "deleted" as if "not found"?
-                raise EntityDoesNotExistError("experiment", resource_id=experiment_id)
+                raise CannotModifyDeletedError("experiment", resource_id=experiment_id)
             else:
                 return None
 
