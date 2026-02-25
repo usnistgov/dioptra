@@ -733,6 +733,7 @@ class ExperimentsCollectionClient(CollectionClient[T]):
         sort_by: str | None = None,
         descending: bool | None = None,
         search: str | None = None,
+        show_deleted: bool | None = None
     ) -> T:
         """Get the metrics for the jobs in this experiment.
 
@@ -772,5 +773,8 @@ class ExperimentsCollectionClient(CollectionClient[T]):
 
         if search is not None:
             params["search"] = search
+
+        if show_deleted is not None:
+            params["showDeleted"] = show_deleted
 
         return self._session.get(self.url, str(experiment_id), METRICS, params=params)

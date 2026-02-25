@@ -81,8 +81,8 @@ class UserEndpoint(Resource):
             search_string=search_string,
             page_index=page_index,
             page_length=page_length,
-            log=log,
             show_deleted=show_deleted,
+            log=log,
         )
         return utils.build_paging_envelope(
             "users",
