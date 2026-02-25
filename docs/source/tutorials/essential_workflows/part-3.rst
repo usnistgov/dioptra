@@ -60,7 +60,7 @@ The tasks include:
 
 1. Go to the **Plugins** tab and click the **Create** button in the Plugins table.
 2. Name it ``sample_and_transform`` and add a short description.
-3. Add a new file named ``sample_and_transform.py``. **Paste the Python code** code below into the code editor.
+3. Open the Plugin you just created and then click **Create** to add a new file. Name the file ``sample_and_transform.py``, add a description, then **paste the Python code** code below into the code editor.
 4. Import functions via **Import Function Tasks** (same as in :ref:`tutorial-1-part-2-register-the-task`). Fix any Parameter Type errors as needed.
 
 .. admonition:: sample_and_transform.py

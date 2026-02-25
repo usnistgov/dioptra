@@ -100,7 +100,7 @@ Step 3: Add Another Artifact Task
 Your second plugin task outputs a Matplotlib figure as a PNG image. To view this output, you need to save it as an artifact. You will **add a new artifact plugin task** that serializes a Matplotlib object as a PNG.
 
 1. In the **Plugins** tab, open your ``artifacts`` Plugin from the previous :ref:`tutorial step <tutorial-saving-artifacts-step-1-create-an-artifact-plugin>`.
-2. Open the ``artifcats.py`` file. **Add the new artifact plugin class code** to the bottom of the file to define ``PngBytesArtifactTask``.
+2. Open the ``artifacts.py`` file. **Add the new artifact plugin class code** to the bottom of the file to define ``PngBytesArtifactTask``.
 3. **Register** this new Artifact Task in your plugin the same way as the ``NumpyArrayArtifactTask`` (see :ref:`tutorial-saving-artifacts-step-2-register-artifact-task`).
 
    * **Name**: ``PngBytesArtifactTask``

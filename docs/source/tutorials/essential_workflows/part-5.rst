@@ -123,7 +123,7 @@ Next, you will modify **sample_and_transform_ep** to include an artifact-saving 
 
 1. Open ``sample_and_transform_ep`` from the :ref:`previous tutorial step <tutorial-building-a-multi-step-workflow-step-2-create-sample-and-transform-entrypoint>`
 2. Scroll down. In the **Artifact Info** window, select your new ``artifacts`` Plugin.
-3. Click **Add to Output Graph**.
+3. Click **Add to Artifact Output Graph**.
 4. Rename the step to ``save_numpy_artifact``.
 5. Set the contents equal to the output from the final step of your task graph (e.g., ``$transform_step`` or whatever the last step was named).
 
