@@ -623,6 +623,7 @@ class UserNeedsAGroupError(DioptraError):
         self.user_id = user_id
         self.group_id = group_id
 
+
 class CannotModifyDeletedError(DioptraError):
     def __init__(self, entity_type: str | None = None, **kwargs: typing.Any):
         super().__init__(

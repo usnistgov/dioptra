@@ -169,7 +169,12 @@ class UserService(object):
 
         search_struct = parse_search_text(search_string)
         users, total_num_users = self._uow.user_repo.get_by_filters_paged(
-            search_struct, page_index, page_length, deletion_policy = DeletionPolicy.NOT_DELETED if not show_deleted else DeletionPolicy.ANY
+            search_struct,
+            page_index,
+            page_length,
+            deletion_policy=DeletionPolicy.NOT_DELETED
+            if not show_deleted
+            else DeletionPolicy.ANY,
         )
 
         return list(users), total_num_users
@@ -220,10 +225,7 @@ class UserIdService(object):
         self._uow = uow
 
     def get(
-        self, 
-        user_id: int,
-        error_if_not_found: bool = False, 
-        **kwargs
+        self, user_id: int, error_if_not_found: bool = False, **kwargs
     ) -> models.User | None:
         """Fetch a user by its unique id.
 

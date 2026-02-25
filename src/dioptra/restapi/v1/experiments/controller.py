@@ -126,7 +126,7 @@ class ExperimentEndpoint(Resource):
             page_length=page_length,
             sort_by_string=sort_by_string,
             descending=descending,
-            show_deleted=show_deleted
+            show_deleted=show_deleted,
             log=log,
         )
         return utils.build_paging_envelope(

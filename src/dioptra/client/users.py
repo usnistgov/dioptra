@@ -31,7 +31,11 @@ class UsersCollectionClient(CollectionClient[T]):
     name: ClassVar[str] = "users"
 
     def get(
-        self, index: int = 0, page_length: int = 10, search: str | None = None, show_deleted: bool | None = None
+        self,
+        index: int = 0,
+        page_length: int = 10,
+        search: str | None = None,
+        show_deleted: bool | None = None,
     ) -> T:
         """Get a list of Dioptra users.
 

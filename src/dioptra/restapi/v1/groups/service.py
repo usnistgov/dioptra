@@ -26,7 +26,11 @@ from structlog.stdlib import BoundLogger
 from dioptra.restapi.db import models
 from dioptra.restapi.db.repository.utils import DeletionPolicy
 from dioptra.restapi.db.unit_of_work import UnitOfWork
-from dioptra.restapi.errors import CannotModifyDeletedError, EntityDoesNotExistError, EntityExistsError
+from dioptra.restapi.errors import (
+    CannotModifyDeletedError,
+    EntityDoesNotExistError,
+    EntityExistsError,
+)
 from dioptra.restapi.v1.shared.search_parser import parse_search_text
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -128,7 +132,12 @@ class GroupService(object):
 
         search_struct = parse_search_text(search_string)
         groups, total_num_groups = self._uow.group_repo.get_by_filters_paged(
-            search_struct, page_index, page_length, deletion_policy = DeletionPolicy.NOT_DELETED if not show_deleted else DeletionPolicy.ANY
+            search_struct,
+            page_index,
+            page_length,
+            deletion_policy=DeletionPolicy.NOT_DELETED
+            if not show_deleted
+            else DeletionPolicy.ANY,
         )
 
         return list(groups), total_num_groups
@@ -156,7 +165,7 @@ class GroupIdService(object):
         group_id: int,
         show_deleted: bool = False,
         error_if_not_found: bool = False,
-        **kwargs
+        **kwargs,
     ) -> models.Group | None:
         """Fetch a group by its unique id.
 

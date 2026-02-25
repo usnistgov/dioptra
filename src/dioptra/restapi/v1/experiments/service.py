@@ -182,7 +182,9 @@ class ExperimentService(object):
                     self._uow.experiment_repo.get_entrypoints(
                         experiment,
                         # is this correct behavior?
-                        DeletionPolicy.NOT_DELETED if not show_deleted else DeletionPolicy.ANY,
+                        DeletionPolicy.NOT_DELETED
+                        if not show_deleted
+                        else DeletionPolicy.ANY,
                     )
                 ),
                 queue=None,
