@@ -117,6 +117,7 @@ def assert_job_response_contents_matches_expectations(
         "entrypoint",
         "artifacts",
         "artifactValues",
+        "deleted",
     }
     assert set(response.keys()) == expected_keys
 

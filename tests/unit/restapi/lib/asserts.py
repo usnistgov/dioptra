@@ -35,6 +35,7 @@ def assert_base_resource_contents_match_expectations(response: dict[str, Any]) -
     assert isinstance(response["lastModifiedOn"], str)
     assert isinstance(response["latestSnapshot"], bool)
     assert isinstance(response["hasDraft"], bool)
+    assert isinstance(response["deleted"], bool)
 
     assert helpers.is_iso_format(response["createdOn"])
     assert helpers.is_iso_format(response["snapshotCreatedOn"])

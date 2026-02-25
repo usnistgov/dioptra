@@ -85,6 +85,7 @@ def assert_group_response_contents_matches_expectations(
         "members",
         "createdOn",
         "lastModifiedOn",
+        "deleted",
     }
     assert set(response.keys()) == expected_keys
 
@@ -93,6 +94,7 @@ def assert_group_response_contents_matches_expectations(
     assert isinstance(response["name"], str)
     assert isinstance(response["createdOn"], str)
     assert isinstance(response["lastModifiedOn"], str)
+    assert isinstance(response["deleted"], bool)
 
     assert response["name"] == expected_contents["name"]
 

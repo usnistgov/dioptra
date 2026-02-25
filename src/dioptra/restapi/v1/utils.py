@@ -500,6 +500,7 @@ def build_user(user: models.User) -> dict[str, Any]:
         "id": user.user_id,
         "username": user.username,
         "email": user.email_address,
+        "deleted": user.is_deleted,
     }
 
 

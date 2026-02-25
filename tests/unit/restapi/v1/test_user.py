@@ -53,6 +53,7 @@ def assert_user_response_contents_matches_expectations(
         "username",
         "email",
         "id",
+        "deleted"
     }
     if current_user:
         expected_keys.update(
@@ -70,6 +71,7 @@ def assert_user_response_contents_matches_expectations(
     assert isinstance(response["username"], str)
     assert isinstance(response["email"], str)
     assert isinstance(response["id"], int)
+    assert isinstance(response["deleted"], bool)
 
     assert response["username"] == expected_contents["username"]
     assert response["email"] == expected_contents["email"]

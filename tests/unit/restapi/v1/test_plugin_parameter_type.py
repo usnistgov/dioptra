@@ -275,6 +275,7 @@ def assert_plugin_parameter_type_content_matches_expectations(
         "structure",
         "description",
         "tags",
+        "deleted",
     }
     assert set(response.keys()) == expected_keys
 
@@ -289,6 +290,7 @@ def assert_plugin_parameter_type_content_matches_expectations(
     assert isinstance(response["lastModifiedOn"], str)
     assert isinstance(response["latestSnapshot"], bool)
     assert isinstance(response["hasDraft"], bool)
+    assert isinstance(response["deleted"], bool)
 
     assert response["name"] == expected_contents["name"]
     assert response["structure"] == expected_contents["structure"]

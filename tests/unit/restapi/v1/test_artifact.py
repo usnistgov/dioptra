@@ -68,6 +68,7 @@ def assert_artifact_response_contents_matches_expectations(
         "fileUrl",
         "artifactUri",
         "job",
+        "deleted",
     }
     assert set(response.keys()) == expected_keys
 
@@ -85,6 +86,7 @@ def assert_artifact_response_contents_matches_expectations(
     assert isinstance(response["fileUrl"], str)
     assert isinstance(response["artifactUri"], str)
     assert isinstance(response["job"], int)
+    assert isinstance(response["deleted"], bool)
 
     assert response["artifactUri"] == expected_contents["artifactUri"]
     assert response["description"] == expected_contents["description"]
