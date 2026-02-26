@@ -70,7 +70,7 @@
           <template v-if="props.row[colName] && props.row[colName].length > 0">
             <template v-for="(plugin, i) in props.row[colName].slice(0, 3)" :key="i">
               <div
-                class="row items-center no-wrap bg-white q-pa-none shadow-1"
+                class="row items-center no-wrap  bg-white  q-pa-none shadow-1"
                 style="border-radius: 4px; border: 1px solid #eeeeee; width: fit-content; max-width: 220px;"
               >
                 <q-chip
@@ -81,22 +81,22 @@
                 >
                   <span class="font-mono ellipsis" style="font-size: 11px; font-weight: 500; max-width: 140px">
                     {{ plugin.name }}
+                    <q-tooltip>Plugin ID: {{ plugin.id }}</q-tooltip>
                   </span>
-
+                  
                   <template v-if="!plugin.latestSnapshot">
                     <div style="height: 12px; width: 1px; background-color: #ddd; margin: 0 6px;"></div>
                     <q-badge rounded color="warning" class="q-mr-xs" style="padding: 2px">
-                      <q-icon name="warning" color="white" size="10px" />
+                      <q-icon name="warning" color="white" size="13px" />
                       <q-tooltip anchor="center right">Plugin out of date</q-tooltip>
                     </q-badge>
                     <q-btn
-                      flat round dense size="xs" color="red" icon="sync"
+                      flat round dense size="10px" color="red" icon="sync" 
                       @click.stop="syncPlugin(props.row.id, plugin.id, plugin.name, colName)"
                     >
                       <q-tooltip anchor="center right">Sync to latest</q-tooltip>
                     </q-btn>
                   </template>
-                  <q-tooltip>ID: {{ plugin.id }}</q-tooltip>
                 </q-chip>
               </div>
             </template>

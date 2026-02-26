@@ -656,12 +656,11 @@ function getExpandKeysForFilter(nodes, filter) {
     for (const node of items || []) {
       const nextAncestors = [...ancestorKeys];
 
-      // Only directories should be expanded (usually what you want)
+      // Only directories should be expanded 
       if (node.isDir && node.relativePath) {
         nextAncestors.push(node.relativePath);
       }
 
-      // If THIS node matches, expand its ancestors (not its children)
       if (matches(node)) {
         for (const k of ancestorKeys) keys.add(k);
       }
@@ -706,7 +705,7 @@ function processFiles() {
   const rootChildren = nodes.value[0].children;
 
   files.value.forEach((file) => {
-    const parts = file.relativePath.split("/"); // e.g. ["4958", "0000.shard", "file.snapshot"]
+    const parts = file.relativePath.split("/"); 
 
     let currentChildren = rootChildren;
     let currentPath = ""; // will build up like "4958", then "4958/0000.shard", etc.
@@ -854,7 +853,6 @@ async function loadPreview(node) {
 
     const isPdf = ext === "pdf";
 
-    // If you need auth headers, replace fetch() with an api call (axios) and responseType accordingly.
     if (isText) {
       const res = await fetch(node.fileUrl, { credentials: "include" });
       if (!res.ok)

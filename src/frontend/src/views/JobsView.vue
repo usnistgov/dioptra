@@ -134,7 +134,7 @@ const computedColumns = computed(() => {
       conceptType: "entrypoint",
       align: "left",
       sortable: true,
-      clickable: true, // Errors out currently if entrypoint was deleted - need to add functionality to view deleted snapshots
+      clickable: true, 
     },
     {
       name: "queue",
@@ -181,7 +181,6 @@ const computedColumns = computed(() => {
 async function getJobs(pagination, showDrafts) {
   isLoading.value = true;
   
-  // Restore default sorting by ID descending if no sort is specified
   if (!pagination.sortBy) {
     pagination.sortBy = 'id';
     pagination.descending = true;

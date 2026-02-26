@@ -361,7 +361,7 @@ function keydown(event) {
     // If a row is selected, trigger the edit/open event
     if (selected.value.length > 0) {
       emit("open", false);
-      emit("edit", selected.value[0]); // Restore old functionality on enter
+      emit("edit", selected.value[0]); 
     }
   }
 }
@@ -470,10 +470,10 @@ function openResource(tableProps, event = null, openTab = false) {
     // ⌘ on macOS or Ctrl on windows should open new tab
     if(event?.metaKey || event?.ctrlKey) {
       emit('open', true)
-      emit('edit', tableProps.row) // Restore old functionality
+      emit('edit', tableProps.row) 
     } else {
       emit('open', openTab)
-      emit('edit', tableProps.row) // Restore old functionality
+      emit('edit', tableProps.row) 
     }
   }
 

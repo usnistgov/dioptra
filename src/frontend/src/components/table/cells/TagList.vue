@@ -14,9 +14,9 @@
         outline
         square
         size="11px"
-        @click.stop
+        :ripple="false"
         class="q-my-none text-weight-medium"
-        style="border-color: #cfd8dc; height: 20px"
+        style="border-color: #cfd8dc; height: 20px; cursor: default !important;"
       >
         #
         <span
@@ -67,6 +67,8 @@
                 outline
                 square
                 size="10px"
+                :ripple="false"
+                style="cursor: default !important;"
               >
                 #
                 <span

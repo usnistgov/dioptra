@@ -44,7 +44,6 @@ const selected = ref([])
 const artifacts = ref([])
 const isLoading = ref(false)
 
-// Column Definitions using Standard Styles
 const columns = [
   { 
     name: 'id', 
@@ -56,7 +55,15 @@ const columns = [
     includeIcon: true,
     size: 'md',
     uppercase: false,
-    formatLabel: 'Artifact #{label}'
+    formatLabel: 'Artifact #{label}',
+    clickable: true,
+    field: (row) => {
+      if (!row.task) return "-";
+      return {
+        name: row.id,
+        to: `/artifacts/${row.id}` 
+      };
+    },
   },
   { 
     name: 'description', 
@@ -69,13 +76,18 @@ const columns = [
   { 
     name: 'taskName', 
     label: 'Task Name', 
-    // Access nested property directly in field function
-    field: row => row.task?.name, 
     align: 'left',
     styleType: 'icon-badge',
     conceptType: 'task',
     chipType: 'outline',
-    uppercase: false
+    uppercase: false,
+    field: (row) => {
+      if (!row.task) return "-";
+      return {
+        name: row.task.name,
+        to: `/plugins/${row.task.pluginResourceId}/files/${row.task.pluginFileResourceId}` 
+      };
+    },
   },
   { 
     name: 'taskOutputParams', 
@@ -83,7 +95,7 @@ const columns = [
     // Pass the array directly to the component
     field: row => row.task?.outputParams || [], 
     align: 'left',
-    styleType: 'parameter-list', // Uses your new ParameterList component automatically
+    styleType: 'parameter-list',
     parameterType: 'output',
     style: 'min-width: 250px'
   },

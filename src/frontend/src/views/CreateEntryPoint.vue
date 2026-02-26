@@ -780,7 +780,7 @@
       }
     }
     
-    // FIX: Check if q is an object (from initial load) or ID (from Picker update)
+
     submitObject.queues = submitObject.queues.map(q => (q && typeof q === 'object') ? q.id : q)
     submitObject.plugins = submitObject.plugins.map(p => (p && typeof p === 'object') ? p.id : p)
     submitObject.artifactPlugins = submitObject.artifactPlugins.map(p => (p && typeof p === 'object') ? p.id : p)

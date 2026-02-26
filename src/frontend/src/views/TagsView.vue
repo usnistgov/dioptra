@@ -107,7 +107,6 @@ const computedColumns = computed(() => [
 ]);
 
 // API Actions
-
 async function getTags(pagination) {
   isLoading.value = true;
   try {

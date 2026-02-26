@@ -52,7 +52,7 @@ const props = defineProps({
   label: [String, Number],
   rowId: [String, Number],
   snapshotId: [String, Number], 
-  to: [String, Object],         // Escape hatch for custom URLs
+  to: [String, Object],         // Allow custom URL override
   clickable: {                  // Explicit control if needed
     type: Boolean,
     default: undefined,
@@ -90,21 +90,19 @@ const styles = computed(() => {
 
 // Determine the target route
 const targetRoute = computed(() => {
-  // 1. If an explicit 'to' override is provided, use it
+  // If an explicit 'to' override is provided, use it
   if (props.to) return props.to;
 
-  // 2. If we don't have the minimum data to construct a route, return null
+  // Return null if insufficient info
   if (!props.rowId || !props.type) return null;
 
-  // 3. Construct standard route using styles.value!
+  // Construct standard route using styles.value!
   const baseRoute = styles.value.basePath;
   
-  // Safety check: if there is no basePath defined for this type, don't create a route
   if (!baseRoute) return null;
 
   const path = `/${baseRoute.toLowerCase()}/${props.rowId}`;
 
-  // 4. Return the route object, conditionally adding the snapshotId query
   return props.snapshotId
     ? { path, query: { snapshotId: props.snapshotId } }
     : { path };
@@ -119,7 +117,6 @@ const isClickable = computed(() => {
 // Navigate in the same tab
 function openInSameTab() {
   if (isClickable.value && targetRoute.value) {
-    // If the 'to' prop is an external string link, handle it directly
     if (typeof targetRoute.value === 'string' && targetRoute.value.startsWith('http')) {
       window.location.href = targetRoute.value;
     } else {
@@ -131,11 +128,9 @@ function openInSameTab() {
 // Navigate in a new tab
 function openInNewTab() {
   if (isClickable.value && targetRoute.value) {
-    // If the 'to' prop is an external string link, handle it directly
     if (typeof targetRoute.value === 'string' && targetRoute.value.startsWith('http')) {
       window.open(targetRoute.value, '_blank');
     } else {
-      // Resolve the Vue Router object into a standard URL href
       const routeData = router.resolve(targetRoute.value);
       window.open(routeData.href, '_blank');
     }

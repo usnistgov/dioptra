@@ -9,6 +9,7 @@
     ref="tableRef"
     :rows="artifacts"
     :columns="computedColumns"
+    title="Artifacts"
     v-model:selected="selected"
     @open="openTab => (openTab
       ? openWindow.open(`/artifacts/${selected[0].id}`, '_blank')
@@ -145,12 +146,18 @@ const computedColumns = computed(() => [
   {
     name: "taskName",
     label: "Task Name",
-    field: (row) => row.task?.name,
     align: "left",
     styleType: "icon-badge",
     conceptType: "task",
     uppercase: false,
     chipType: "outline",
+    field: (row) => {
+      if (!row.task) return "-";
+      return {
+        name: row.task.name,
+        to: `/plugins/${row.task.pluginResourceId}/files/${row.task.pluginFileResourceId}` 
+      };
+    },
   },
   {
     name: "taskOutputParams",

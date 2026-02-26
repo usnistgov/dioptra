@@ -14,6 +14,7 @@
     @add="(added) => addPlugin(added.value)"
     @remove="(removed) => removePlugin(removed.value)"
   >
+    <!-- Removed to reduce clutter -->
     <!-- <template v-slot:before>
       <div class="field-label">Attached Plugins:</div>
     </template> -->
@@ -55,7 +56,7 @@
                 {{ plugin.name }}
               </span>
 
-              <q-tooltip>ID: {{ plugin.id }}</q-tooltip>
+              <q-tooltip>Plugin ID: {{ plugin.id }}</q-tooltip>
             </q-chip>
 
             <div
@@ -114,7 +115,7 @@ watch(
       originalSelectedPluginIds.value = newVal.map((p) => p.id);
     }
   },
-  { once: true } // Let Vue handle running this exactly once
+  { once: true }
 );
 
 async function getPlugins(val = "", update) {
@@ -122,7 +123,7 @@ async function getPlugins(val = "", update) {
     try {
       const res = await api.getData("plugins", {
         search: val,
-        rowsPerPage: 0, // get all
+        rowsPerPage: 0,
         index: 0,
       });
       pluginOptions.value = res.data.data;

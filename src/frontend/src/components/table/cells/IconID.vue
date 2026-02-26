@@ -17,7 +17,7 @@
     <span style="font-size: 12px; font-weight: 500"
       >#<strong>{{ label || type }}</strong>
     </span>
-    <q-tooltip>Go to {{ type }} {{ label }}</q-tooltip>
+    <q-tooltip>Go to: {{ type }} {{ label }}</q-tooltip>
   </q-btn>
 </template>
 
