@@ -50,6 +50,7 @@
           openResource(props);
           selectResource(props);
         "
+        @auxclick="onAuxClick(props, $event)"
       >
           <q-td v-for="col in props.cols" :key="col.name" :props="props" :style="props.expand ? {'border-bottom': 'none'} : {}">
             <q-menu
@@ -57,6 +58,8 @@
               context-menu
               @show="props.selected = true"
             >
+
+
               <q-list dense>
                 <q-item clickable v-close-popup @click="openResource(props)">
                   <q-item-section>Open</q-item-section>
@@ -225,7 +228,6 @@
           v-model="showDrafts"
           toggle-color="primary"
           push
-          dense
           style="box-shadow: 0 0 0 0.5px grey"
           :options="[
             { label: 'Active', value: false },
@@ -332,13 +334,14 @@ function onAuxClick(tableProps, event) {
   }
 }
 
+
 function keydown(event) {
   if (!props.rows || props.rows.length === 0) return;
   if (props.disableSelect) return;
 
   const currentIndex = props.rows.findIndex(
-  (row) => row[props.rowKey] === selected.value?.[0]?.[props.rowKey],
-);
+    (row) => row[props.rowKey] === selected.value?.[0]?.[props.rowKey],
+  );
 
   if (event.key === "ArrowUp") {
     event.preventDefault(); // Prevent scrolling the page
@@ -348,7 +351,7 @@ function keydown(event) {
       selected.value = [prevRow];
     }
   } else if (event.key === "ArrowDown") {
-    event.preventDefault(); // Prevent scrolling the page
+    event.preventDefault(); 
     // Navigate to the next row
     if (currentIndex < props.rows.length - 1) {
       const nextRow = props.rows[currentIndex + 1];
@@ -358,9 +361,12 @@ function keydown(event) {
     // If a row is selected, trigger the edit/open event
     if (selected.value.length > 0) {
       emit("open", false);
+      emit("edit", selected.value[0]); // Restore old functionality on enter
     }
   }
 }
+
+
 const tableRef = ref();
 onMounted(() => {
   tableRef.value.requestServerInteraction();
@@ -457,14 +463,17 @@ function selectResource(tableProps) {
 }
 
 
-  function openResource(tableProps, event = null, openTab = false) {
+function openResource(tableProps, event = null, openTab = false) {
     if(props.disableSelect || props.selection === 'multiple') return
     tableProps.selected = true
+    
     // ⌘ on macOS or Ctrl on windows should open new tab
     if(event?.metaKey || event?.ctrlKey) {
       emit('open', true)
+      emit('edit', tableProps.row) // Restore old functionality
     } else {
       emit('open', openTab)
+      emit('edit', tableProps.row) // Restore old functionality
     }
   }
 

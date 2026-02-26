@@ -1,5 +1,7 @@
 <template>
-  <PageTitle title="Create Plugin" />
+  <PageTitle title="Create Plugin" 
+  conceptType="plugin"
+  />
   <div :style="{ width: isMobile ? '100%' : isMedium ? '60%' : '50%' }">
     <fieldset class="q-mt-lg">
       <legend>Basic Info</legend>
@@ -55,16 +57,17 @@
         class="q-mr-lg cancel-btn"
         @click="confirmLeave = true; router.back()"
       />
-      <q-btn  
-        @click="submit()" 
-        color="primary"
-        label="Submit"
-        :disable="!valuesChangedFromOriginal"
-      >
+      <div class="inline-block">
+        <q-btn  
+          @click="submit()" 
+          color="primary"
+          label="Submit"
+          :disable="!valuesChangedFromOriginal"
+        />
         <q-tooltip v-if="!valuesChangedFromOriginal">
           No changes detected — nothing to save
         </q-tooltip>
-      </q-btn>
+      </div>
     </div>
   </div>
 

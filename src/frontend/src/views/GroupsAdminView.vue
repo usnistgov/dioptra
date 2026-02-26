@@ -182,6 +182,7 @@ const memberColumns = computed(() => [
     label: "User Name",
     align: "left",
     field: "name",
+    sortable: true,
     styleType: "resource-name", 
     includeIcon: false, 
     conceptType: "user", 
@@ -191,18 +192,21 @@ const memberColumns = computed(() => [
     label: "Read",
     field: "read",
     align: "center",
+    sortable: true,
   },
   {
     name: "write",
     label: "Write",
     field: "write",
     align: "center",
+    sortable: true,
   },
   {
     name: "shareRead",
     label: "Share Read",
     field: "shareRead",
     align: "center",
+    sortable: true,
     style: "width: 100px",
   },
   {
@@ -210,6 +214,7 @@ const memberColumns = computed(() => [
     label: "Share Write",
     field: "shareWrite",
     align: "center",
+    sortable: true,
     style: "width: 100px",
   },
   {
@@ -217,12 +222,14 @@ const memberColumns = computed(() => [
     label: "Admin",
     field: "admin",
     align: "center",
+    sortable: true,
   },
   {
     name: "owner",
     label: "Owner",
     field: "owner",
     align: "center",
+    sortable: true,
   },
   {
     name: "actions",
@@ -232,14 +239,15 @@ const memberColumns = computed(() => [
   },
 ]);
 
-
 function performSearch() {
-  if (!searchQuery.value) return;
+  if (!searchQuery.value) {
+    searchResults.value = [];
+    return;
+  }
   searchResults.value = ["Henry", "Bob", "Joe", "Larry", "John", "Dan"].filter(
     (u) => u.toLowerCase().includes(searchQuery.value.toLowerCase()),
   );
 }
-
 const selectedMember = ref(null);
 const showDeleteDialog = ref(false);
 const showEditParamDialog = ref(false);

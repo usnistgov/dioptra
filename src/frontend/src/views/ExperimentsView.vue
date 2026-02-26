@@ -17,7 +17,6 @@
     @request="getExperiments"
     @create="router.push('/experiments/new')"
     :loading="isLoading"
-    @edit="(row) => router.push(`/experiments/${row.id}`)"
     @delete="
       (row) => {
         selected = [row];
@@ -48,10 +47,6 @@
 </template>
 
 <script setup>
-
-  
-const openWindow = window
-
 import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
 import TableComponent from "@/components/table/TableComponent.vue";
@@ -63,6 +58,7 @@ import * as notify from "../notify";
 
 const router = useRouter();
 const tableRef = ref(null);
+const openWindow = window
 
 // State
 const experiments = ref([]);
@@ -73,7 +69,7 @@ const showTagsDialog = ref(false);
 const editObjTags = ref({});
 
 // Column Definitions
-const computedColumns = computed(() => [
+const computedColumns =  [
   {
     name: "id",
     label: "Experiment ID",
@@ -88,11 +84,8 @@ const computedColumns = computed(() => [
     label: "Experiment Name",
     field: "name",
     align: "left",
-
     styleType: "resource-name",
     conceptType: "experiment",
-
-    textType: "capitalize",
     maxWidth: "250px",
     includeIcon: false,
     sortable: true,
@@ -125,7 +118,7 @@ const computedColumns = computed(() => [
     align: "left",
     styleType: "tag-list",
   },
-]);
+];
 
 // API Functions
 async function getExperiments(pagination) {

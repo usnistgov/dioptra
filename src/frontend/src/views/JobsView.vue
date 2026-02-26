@@ -1,7 +1,7 @@
 <template>
   <PageTitle
     v-if="!embedded"
-    title="Jobs"
+    :title="title"
     conceptType="job"
     caption="Runs of Entrypoints"
   />
@@ -35,48 +35,6 @@
       }
     "
   >
-    <template #body-cell-id="props">
-      <BadgeIcon
-        type="job"
-        :label="props.row.id"
-        :rowId="props.row.id"
-        formatLabel="Job #{label}"
-        :showIcon="true"
-      />
-    </template>
-
-    <template #body-cell-entrypoint="props">
-      <BadgeIcon
-        v-if="props.row.entrypoint"
-        type="entrypoint"
-        :label="props.row.entrypoint.name"
-        :rowId="props.row.entrypoint.id"
-        :snapshotId="props.row.entrypoint.snapshotId"
-      />
-      <span v-else class="text-grey-5">-</span>
-    </template>
-
-    <template #body-cell-queue="props">
-      <BadgeIcon
-        v-if="props.row.queue"
-        type="queue"
-        :label="props.row.queue.name"
-        :rowId="props.row.queue.id"
-      />
-      <span v-else class="text-grey-5">-</span>
-    </template>
-
-    <template #body-cell-experiment="props">
-      <BadgeIcon
-        v-if="props.row.experiment"
-        type="experiment"
-        :label="props.row.experiment.name"
-        :rowId="props.row.experiment.id"
-        :snapshotId="props.row.experiment.snapshotId"
-      />
-      <span v-else class="text-grey-5">-</span>
-    </template>
-
     <template #body-cell-status="props">
       <JobStatus :status="props.row.status" />
     </template>
@@ -121,6 +79,19 @@ const showTagsDialog = ref(false);
 const editObjTags = ref({});
 const tableRef = ref(null);
 
+if (route.name === "experimentJobs") {
+  getExperiment();
+}
+
+async function getExperiment() {
+  try {
+    const res = await api.getItem("experiments", route.params.id);
+    title.value = `${res.data.name} Jobs`;
+  } catch (err) {
+    console.error("Failed to fetch experiment info", err);
+  }
+}
+
 const props = defineProps({
   embedded: {
     type: Boolean,
@@ -137,7 +108,7 @@ const computedColumns = computed(() => {
       align: "left",
       styleType: "icon-badge",
       conceptType: "job",
-      includeIcon: true,
+      showIcon: true,
       size: "md",
       uppercase: false,
       formatLabel: "Job #{label}",
@@ -209,6 +180,13 @@ const computedColumns = computed(() => {
 // API functions
 async function getJobs(pagination, showDrafts) {
   isLoading.value = true;
+  
+  // Restore default sorting by ID descending if no sort is specified
+  if (!pagination.sortBy) {
+    pagination.sortBy = 'id';
+    pagination.descending = true;
+  }
+
   try {
     let res;
     if (route.name === "experimentJobs") {

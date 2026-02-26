@@ -48,7 +48,7 @@ export const CONCEPT_STYLES = {
     icon: 'sim_card_download', 
     color: 'brown-6', 
     darkColor: 'brown-4', 
-    basePath: 'artifact' 
+    basePath: 'artifacts' 
   },
   task: {
     icon: 'functions', 

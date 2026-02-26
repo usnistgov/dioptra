@@ -45,8 +45,8 @@
 <script setup>
 import { useLoginStore } from "@/stores/LoginStore";
 import { useRoute, useRouter } from "vue-router";
-//import TableComponent from '@/components/table/TableComponent.vue'
-import TableComponent from "@/components/TableComponentOld.vue";
+import TableComponent from '@/components/table/TableComponent.vue'
+//import TableComponent from "@/components/TableComponentOld.vue";
 import { ref, watch, nextTick } from "vue";
 import * as api from "@/services/dataApi";
 

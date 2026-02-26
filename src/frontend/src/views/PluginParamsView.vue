@@ -54,6 +54,7 @@ import * as notify from "../notify";
 
 const router = useRouter();
 const tableRef = ref(null);
+const openWindow = window;
 
 // State
 const pluginParameterTypes = ref([]);
@@ -64,7 +65,7 @@ const showTagsDialog = ref(false);
 const editObjTags = ref({});
 
 // Columns
-const computedColumns = computed(() => [
+const computedColumns = [
   {
     name: "id",
     label: "ID",
@@ -81,7 +82,6 @@ const computedColumns = computed(() => [
     align: "left",
     styleType: "resource-name",
     conceptType: "parameterType",
-    textType: "capitalize",
     maxWidth: "200px",
     sortable: true,
   },
@@ -113,13 +113,22 @@ const computedColumns = computed(() => [
     textColor: "text-grey-10",
   },
   {
+    name: "group",
+    label: "Group",
+    field: "group",
+    align: "left",
+    styleType: "icon-badge",
+    conceptType: "group",
+  },
+  {
     name: "tags",
     label: "Tags",
     field: "tags",
     align: "left",
     styleType: "tag-list",
   },
-]);
+
+];
 
 // Actions
 async function getPluginParameterTypes(pagination) {

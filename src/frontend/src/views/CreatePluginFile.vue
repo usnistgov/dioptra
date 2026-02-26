@@ -170,7 +170,17 @@
                 square
                 dense
               >
-                <q-icon name="warning"></q-icon>
+                <q-icon name="warning"
+                @click="
+                  handleSelectedParam(
+                    'edit',
+                    props,
+                    i,
+                    'inputParams',
+                    'functions',
+                  );
+                  showEditParamDialog = true;
+                "></q-icon>
                 <q-tooltip>Please resolve missing type for parameter '{{ param.name }}'</q-tooltip>
               </q-chip>
             </template>
@@ -198,7 +208,7 @@
 
         <template #body-cell-outputParams="props">
           <div class="row justify-end q-gutter-xs">
-            <div v-for="(param, i) in props.row.outputParams" :key="i">
+            <template v-for="(param, i) in props.row.outputParams" :key="i">
               <q-chip
                 color="purple"
                 text-color="white"
@@ -225,10 +235,41 @@
               >
                 <span class="text-weight-bold">{{ param.name }}</span>
                 <span class="q-ml-xs text-grey-6" style="font-size: 10px">
-                  : {{ param.parameterType.name }}
+                  : {{
+                    pluginParameterTypes.find(
+                      (t) => t.id === param.parameterType.id,
+                    )?.name || "?"
+                  }}
                 </span>
               </q-chip>
-            </div>
+              
+              <q-chip
+                v-if="
+                  !pluginParameterTypes.find(
+                    (t) => t.id === param.parameterType.id,
+                  )?.name
+                "
+                color="negative"
+                text-color="white"
+                size="sm"
+                square
+                dense
+              >
+                <q-icon name="warning"
+                @click="
+                  handleSelectedParam(
+                    'edit',
+                    props,
+                    i,
+                    'outputParams',
+                    'functions',
+                  );
+                  showEditParamDialog = true;
+                "></q-icon>
+                <q-tooltip>Please resolve missing type for parameter '{{ param.name }}'</q-tooltip>
+              </q-chip>
+            </template>
+            
             <q-btn
               round
               size="xs"
@@ -334,10 +375,41 @@
               >
                 <span class="text-weight-bold">{{ param.name }}</span>
                 <span class="q-ml-xs text-grey-6" style="font-size: 10px">
-                  : {{ param.parameterType.name }}
+                  : {{
+                    pluginParameterTypes.find(
+                      (t) => t.id === param.parameterType.id,
+                    )?.name || "?"
+                  }}
                 </span>
               </q-chip>
+
+              <q-chip
+                v-if="
+                  !pluginParameterTypes.find(
+                    (t) => t.id === param.parameterType.id,
+                  )?.name
+                "
+                color="negative"
+                text-color="white"
+                size="sm"
+                square
+                dense
+              >
+                <q-icon name="warning"
+                @click="
+                  handleSelectedParam(
+                    'edit',
+                    props,
+                    i,
+                    'outputParams',
+                    'artifacts',
+                  );
+                  showEditParamDialog = true;
+                "></q-icon>
+                <q-tooltip>Please resolve missing type for parameter '{{ param.name }}'</q-tooltip>
+              </q-chip>
             </template>
+            
             <q-btn
               round
               size="xs"
@@ -735,18 +807,6 @@ const tableRef = ref(null);
 const pluginParameterTypes = ref([]);
 const displayStructure = ref(false);
 const structure = ref("");
-
-const columns = [
-  { name: "name", label: "Name", align: "left", field: "name", sortable: true },
-  {
-    name: "description",
-    label: "Description",
-    field: "description",
-    align: "left",
-    sortable: true,
-  },
-  { name: "view", label: "Structure", align: "left", sortable: false },
-];
 
 const basicInfoForm = ref(null);
 

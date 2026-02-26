@@ -4,6 +4,7 @@
   <TableComponent
     ref="tableRef"
     :rows="userGroups"
+    title="Groups"
     :columns="computedColumns"
     v-model:selected="selected"
     :loading="isLoading"
@@ -42,12 +43,13 @@ const isLoading = ref(false);
 const showDeleteDialog = ref(false);
 
 // Columns
-const computedColumns = computed(() => [
+const computedColumns = [
   {
     name: "name",
     label: "Name",
     field: "name",
     align: "left",
+    sortable: true,
     styleType: "resource-name",
     conceptType: "group", 
     includeIcon: true,
@@ -57,18 +59,21 @@ const computedColumns = computed(() => [
     label: "Read",
     field: "read",
     align: "center",
+    sortable: true,
   },
   {
     name: "write",
     label: "Write",
     field: "write",
     align: "center",
+    sortable: true,
   },
   {
     name: "shareRead",
     label: "Share Read",
     field: "shareRead",
     align: "center",
+    sortable: true,
     style: "width: 150px",
   },
   {
@@ -76,6 +81,7 @@ const computedColumns = computed(() => [
     label: "Share Write",
     field: "shareWrite",
     align: "center",
+    sortable: true,
     style: "width: 150px",
   },
   {
@@ -83,14 +89,16 @@ const computedColumns = computed(() => [
     label: "Admin",
     field: "admin",
     align: "center",
+    sortable: true,
   },
   {
     name: "owner",
     label: "Owner",
     field: "owner",
     align: "center",
+    sortable: true,
   },
-]);
+];
 
 const userGroupsIds = computed(() => {
   if (store.loggedInUser && store.loggedInUser.groups) {

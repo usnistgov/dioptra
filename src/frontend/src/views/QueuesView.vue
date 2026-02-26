@@ -56,7 +56,7 @@
 </template>
 
 <script setup>
-const openWindow = window;
+
 import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
 import TableComponent from "@/components/table/TableComponent.vue";
@@ -68,6 +68,7 @@ import * as notify from "../notify";
 
 const router = useRouter();
 const tableRef = ref(null);
+const openWindow = window;
 
 const queues = ref([]);
 const isLoading = ref(false);
@@ -77,7 +78,7 @@ const showDeleteDialog = ref(false);
 const showTagsDialog = ref(false);
 const editObjTags = ref({});
 
-const computedColumns = computed(() => [
+const computedColumns =  [
   {
     name: "id",
     label: "ID",
@@ -121,7 +122,6 @@ const computedColumns = computed(() => [
     label: "Created On",
     field: "createdOn",
     align: "left",
-    sortable: true,
     styleType: "date",
     textColor: "text-grey-10",
     sortable: true,
@@ -131,7 +131,6 @@ const computedColumns = computed(() => [
     label: "Last Modified",
     field: "lastModifiedOn",
     align: "left",
-    sortable: true,
     styleType: "date",
     textColor: "text-grey-10",
     sortable: false,
@@ -144,9 +143,9 @@ const computedColumns = computed(() => [
     styleType: "tag-list",
     sortable: false,
   },
-]);
+];
 
-const computedDraftColumns = computed(() => [
+const computedDraftColumns = [
   {
     name: "id",
     label: "ID",
@@ -183,6 +182,7 @@ const computedDraftColumns = computed(() => [
     field: "createdOn",
     align: "left",
     sortable: true,
+    styleType: "date",
   },
   {
     name: "lastModifiedOn",
@@ -190,8 +190,9 @@ const computedDraftColumns = computed(() => [
     field: "lastModifiedOn",
     align: "left",
     sortable: true,
+    styleType: "date",
   },
-]);
+];
 
 async function getQueues(pagination, showDraftsVal) {
   isLoading.value = true;

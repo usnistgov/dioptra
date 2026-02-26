@@ -43,20 +43,18 @@
             {{ name }}
             <q-icon name="edit" size="xs" color="primary" class="q-ml-sm" />
             <q-popup-edit
-              v-model="name"
+              v-model.trim="description"
               auto-save
               v-slot="scope"
-              :validate="requiredRule"
+              buttons
             >
               <q-input
-                v-model.trim="scope.value"
+                v-model="scope.value"
                 dense
                 autofocus
                 counter
-                @keyup.enter="scope.set"
-                :error="invalidName"
-                :error-message="nameError"
-                @update:model-value="checkName"
+                type="textarea"
+                @keyup.enter.stop
               />
             </q-popup-edit>
           </div>
@@ -108,6 +106,7 @@
 
   <TableComponent
     ref="tableRef"
+    title="Plugin Files"
     :rows="files"
     :columns="fileColumns"
     v-model:selected="selected"
@@ -118,7 +117,6 @@
     :loading="isLoading"
     @request="getFiles"
     @create="router.push(`/plugins/${route.params.id}/files/new`)"
-    @edit="(row) => router.push(`/plugins/${route.params.id}/files/${row.id}`)"
     @delete="
       (row) => {
         selected = [row];
@@ -330,7 +328,7 @@ async function deleteFile() {
 async function deletePlugin() {
   try {
     await api.deleteItem("plugins", route.params.id);
-    notify.success(`Successfully deleted plugin`);
+    notify.success(`Successfully deleted '${name.value}'`);
     router.push(`/plugins`);
   } catch (err) {
     notify.error(err.response?.data?.message || "Delete failed");

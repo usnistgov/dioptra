@@ -11,10 +11,11 @@
     :hideToggleDraft="true"
     @request="getTags"
     @create="showAddDialog = true"
-    @edit="
+    @edit="(row) => {
+      selected = [row];
       editing = true;
       showAddDialog = true;
-    "
+    }"
     @delete="
       (row) => {
         selected = [row];
@@ -64,15 +65,18 @@ watch(showAddDialog, (newVal) => {
 // Columns
 const computedColumns = computed(() => [
   {
-    name: "id",
-    label: "ID",
-    field: "id",
-    align: "left",
-    styleType: "icon-badge",
-    conceptType: "tag",
-    includeIcon: true,
-    formatLabel: "{label}",
-  },
+      name: "id",
+      label: "Tag ID",
+      field: "id",
+      align: "left",
+      styleType: "icon-badge",
+      conceptType: "tag",
+      showIcon: false,
+      size: "md",
+      uppercase: false,
+      formatLabel: "Tag: #{label}",
+      sortable: true,
+    },
   {
     name: "name",
     label: "Tag Name",

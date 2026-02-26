@@ -115,7 +115,7 @@ const computedColumns = computed(() => [
     align: "left",
     styleType: "icon-badge",
     conceptType: "artifact",
-    includeIcon: true,
+    showIcon: true,
     size: "md",
     uppercase: false,
     formatLabel: "Artifact #{label}",

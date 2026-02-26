@@ -14,7 +14,6 @@
     :loading="isLoading"
     @request="getPlugins"
     @create="router.push('/plugins/new')"
-    @edit="(row) => router.push(`/plugins/${row.id}`)"
     @open="openTab => (openTab
       ? openWindow.open(`/plugins/${selected[0].id}`, '_blank')
       : router.push(`/plugins/${selected[0].id}`)
@@ -72,7 +71,7 @@ const showTagsDialog = ref(false);
 const editObjTags = ref({});
 
 // Columns
-const computedColumns = computed(() => [
+const computedColumns = [
   {
     name: "id",
     label: "ID",
@@ -89,7 +88,6 @@ const computedColumns = computed(() => [
     align: "left",
     styleType: "resource-name",
     conceptType: "plugin",
-    textType: "capitalize",
     maxWidth: "250px",
     sortable: true,
   },
@@ -128,7 +126,7 @@ const computedColumns = computed(() => [
     align: "left",
     styleType: "tag-list",
   },
-]);
+];
 
 // API Functions
 async function getPlugins(pagination) {

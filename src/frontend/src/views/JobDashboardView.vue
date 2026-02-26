@@ -139,10 +139,14 @@
             :hideSearch="true"
             :hideBottom="true"
             class="q-mt-none"
-            @edit="
-              (row) =>
-                router.push(`/artifacts/${row.id}?snapshotId=${row.snapshotId}`)
-            "
+            v-model:selected="selectedUsedArtifact"
+            @open="(openTab) => {
+              if (selectedUsedArtifact.length) {
+                const row = selectedUsedArtifact[0];
+                const routePath = `/artifacts/${row.id}?snapshotId=${row.snapshotId}`;
+                openTab ? window.open(routePath, '_blank') : router.push(routePath);
+              }
+            }"
           >
             <template #body-cell-id="props">
               <BadgeIcon
@@ -345,6 +349,7 @@ const jobLogs = ref([]);
 const logTotalNumber = ref(0);
 const tableRef = ref(null);
 const filter = ref("");
+const selectedUsedArtifact = ref([]);
 
 // Columns 
 const parametersColumns = [
@@ -367,7 +372,7 @@ const parametersColumns = [
 const artifactsUsedColumns = [
   {
     name: "id",
-    label: "Job ID",
+    label: "Artifact ID",
     align: "left",
     field: "id",
     styleType: "icon-badge",
@@ -669,7 +674,13 @@ function formatDate(dateString) {
 
 <style scoped>
 :deep(.q-table .code-cell .cm-editor),
-:deep(.q-table .code-cell .cm-content) {
+:deep(.q-table .code-cell .cm-content),
+:deep(.q-table .code-cell .cm-scroller),
+:deep(.q-table .code-cell .cm-line) {
   cursor: text !important;
+}
+
+:deep(.q-table .code-cell .cm-gutters) {
+  cursor: default !important;
 }
 </style>

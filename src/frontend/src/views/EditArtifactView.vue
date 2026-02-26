@@ -532,18 +532,18 @@ const rows = computed(() => [
     label: "Snapshot Timestamp",
     value: formatDate(artifact.value?.snapshotCreatedOn),
   },
-  {
-    label: "Download",
-    slot: "fileUrl",
-    props: { fileUrl: artifact.value?.fileUrl },
-  },
   { label: "fileSize", slot: "fileSize" },
   { label: "Job ID", slot: "job" },
   { label: "isDir", value: artifact.value?.isDir },
   {
-    label: "Plugin",
+    label: "Plugin for Download",
     slot: "plugin",
     props: { plugin: artifact.value?.plugin },
+  },
+  {
+    label: "Download",
+    slot: "fileUrl",
+    props: { fileUrl: artifact.value?.fileUrl },
   },
 ]);
 

@@ -10,6 +10,7 @@
     :rows="entrypoints"
     :columns="computedColumns"
     v-model:selected="selected"
+    title="Entrypoints"
     @open="openTab => (openTab
       ? openWindow.open(`/entrypoints/${selected[0].id}`, '_blank')
       : router.push(`/entrypoints/${selected[0].id}`)
@@ -49,170 +50,82 @@
       >
     </template>
 
-    <template #body-cell-plugins="props">
+    <template
+      v-for="colName in ['plugins', 'artifactPlugins']"
+      :key="colName"
+      #[`body-cell-${colName}`]="props"
+    >
       <div class="q-py-xs" style="min-width: 200px">
         <div
           class="plugin-container column q-pa-xs q-gutter-y-xs cursor-pointer"
-          @click.stop="openPluginDialog(props.row, 'plugins')"
+          @click.stop="openPluginDialog(props.row, colName)"
         >
-          <div
-            class="absolute-top-right q-ma-xs plugin-edit-btn"
-            style="z-index: 10"
-          >
+          <div class="absolute-top-right q-ma-xs plugin-edit-btn" style="z-index: 10">
             <q-btn
-              round
-              dense
-              flat
-              size="xs"
-              icon="edit"
-              color="grey-9"
-              class="bg-white shadow-1"
+              round dense flat size="xs" icon="edit" color="grey-9" class="bg-white shadow-1"
             />
             <q-tooltip>Manage Attached Plugins</q-tooltip>
           </div>
 
-          <template v-if="props.row.plugins.length > 0">
-            <template
-              v-for="(plugin, i) in props.row.plugins.slice(0, 3)"
-              :key="i"
-            >
+          <template v-if="props.row[colName] && props.row[colName].length > 0">
+            <template v-for="(plugin, i) in props.row[colName].slice(0, 3)" :key="i">
               <div
                 class="row items-center no-wrap bg-white q-pa-none shadow-1"
-                style="
-                  border-radius: 4px;
-                  border: 1px solid #eeeeee;
-                  width: fit-content;
-                  max-width: 220px;
-                "
+                style="border-radius: 4px; border: 1px solid #eeeeee; width: fit-content; max-width: 220px;"
               >
                 <q-chip
                   :color="getConceptStyle('plugin').color"
-                  text-color="white"
-                  size="sm"
-                  outline
-                  square
-                  clickable
+                  text-color="white" size="sm" outline square clickable
                   class="text-weight-bold q-py-sm q-pr-sm q-ma-none no-border full-width"
-                  @click.stop="openPluginDialog(props.row, 'plugins')"
+                  @click.stop="openPluginDialog(props.row, colName)"
                 >
-                  <span
-                    class="font-mono ellipsis"
-                    style="font-size: 11px; font-weight: 500; max-width: 140px"
-                  >
+                  <span class="font-mono ellipsis" style="font-size: 11px; font-weight: 500; max-width: 140px">
                     {{ plugin.name }}
                   </span>
 
                   <template v-if="!plugin.latestSnapshot">
-                    <div
-                      style="
-                        height: 12px;
-                        width: 1px;
-                        background-color: #ddd;
-                        margin: 0 6px;
-                      "
-                    ></div>
-
-                    <q-badge
-                      rounded
-                      color="warning"
-                      class="q-mr-xs"
-                      style="padding: 2px"
-                    >
+                    <div style="height: 12px; width: 1px; background-color: #ddd; margin: 0 6px;"></div>
+                    <q-badge rounded color="warning" class="q-mr-xs" style="padding: 2px">
                       <q-icon name="warning" color="white" size="10px" />
-                      <q-tooltip anchor="center right"
-                        >Plugin out of date</q-tooltip
-                      >
+                      <q-tooltip anchor="center right">Plugin out of date</q-tooltip>
                     </q-badge>
-
                     <q-btn
-                      flat
-                      round
-                      dense
-                      size="xs"
-                      color="red"
-                      icon="sync"
-                      @click.stop="
-                        syncPlugin(
-                          props.row.id,
-                          plugin.id,
-                          plugin.name,
-                          'plugins',
-                        )
-                      "
+                      flat round dense size="xs" color="red" icon="sync"
+                      @click.stop="syncPlugin(props.row.id, plugin.id, plugin.name, colName)"
                     >
-                      <q-tooltip anchor="center right"
-                        >Sync to latest</q-tooltip
-                      >
+                      <q-tooltip anchor="center right">Sync to latest</q-tooltip>
                     </q-btn>
                   </template>
-
                   <q-tooltip>ID: {{ plugin.id }}</q-tooltip>
                 </q-chip>
               </div>
             </template>
 
-            <div v-if="props.row.plugins.length > 3">
+            <div v-if="props.row[colName].length > 3">
               <q-chip
-                dense
-                clickable
-                color="grey-3"
-                text-color="grey-9"
-                class="text-weight-bold"
-                style="font-size: 11px; border: 1px solid lightgrey"
-                @click.stop
+                dense clickable color="grey-3" text-color="grey-9" class="text-weight-bold"
+                style="font-size: 11px; border: 1px solid lightgrey" @click.stop
               >
-                +{{ props.row.plugins.length - 3 }} more
-
-                <q-menu
-                  anchor="bottom middle"
-                  self="top middle"
-                  class="bg-white shadow-5 border-grey-3"
-                >
-                  <div
-                    class="column q-pa-sm q-gutter-y-xs"
-                    style="min-width: 200px"
-                  >
-                    <div
-                      class="text-caption text-grey-7 q-mb-xs text-weight-bold"
-                    >
-                      Additional Plugins
+                +{{ props.row[colName].length - 3 }} more
+                <q-menu anchor="bottom middle" self="top middle" class="bg-white shadow-5 border-grey-3">
+                  <div class="column q-pa-sm q-gutter-y-xs" style="min-width: 200px">
+                    <div class="text-caption text-grey-7 q-mb-xs text-weight-bold">
+                      Additional {{ colName === 'plugins' ? 'Plugins' : 'Artifact Plugins' }}
                     </div>
-                    <template
-                      v-for="(plugin, i) in props.row.plugins.slice(3)"
-                      :key="i"
-                    >
-                      <div
-                        class="row items-center justify-between no-wrap bg-grey-1 q-pa-xs border-radius-inherit"
-                      >
+                    <template v-for="(plugin, i) in props.row[colName].slice(3)" :key="i">
+                      <div class="row items-center justify-between no-wrap bg-grey-1 q-pa-xs border-radius-inherit">
                         <q-chip
-                          :color="getConceptStyle('plugin').color"
-                          text-color="white"
-                          :icon="getConceptStyle('plugin').icon"
-                          size="sm"
-                          outline
-                          square
-                          clickable
+                          :color="getConceptStyle('plugin').color" text-color="white"
+                          :icon="getConceptStyle('plugin').icon" size="sm" outline square clickable
                           class="text-weight-bold q-my-none"
-                          @click.stop="openPluginDialog(props.row, 'plugins')"
+                          @click.stop="openPluginDialog(props.row, colName)"
                         >
                           {{ plugin.name }}
                           <q-tooltip>ID: {{ plugin.id }}</q-tooltip>
                         </q-chip>
                         <q-btn
-                          v-if="!plugin.latestSnapshot"
-                          flat
-                          round
-                          size="xs"
-                          color="red"
-                          icon="sync"
-                          @click.stop="
-                            syncPlugin(
-                              props.row.id,
-                              plugin.id,
-                              plugin.name,
-                              'plugins',
-                            )
-                          "
+                          v-if="!plugin.latestSnapshot" flat round size="xs" color="red" icon="sync"
+                          @click.stop="syncPlugin(props.row.id, plugin.id, plugin.name, colName)"
                         />
                       </div>
                     </template>
@@ -222,190 +135,21 @@
             </div>
           </template>
           <div v-else class="text-caption text-center text-grey-9 q-pa-xs">
-            No plugins
+            No {{ colName === 'plugins' ? 'plugins' : 'artifact plugins' }}
           </div>
         </div>
       </div>
     </template>
-    <template #body-cell-artifactPlugins="props">
-      <div class="q-py-xs" style="min-width: 200px">
-        <div
-          class="plugin-container column q-pa-xs q-gutter-y-xs cursor-pointer"
-          @click.stop="openPluginDialog(props.row, 'artifactPlugins')"
-        >
-          <div
-            class="absolute-top-right q-ma-xs plugin-edit-btn"
-            style="z-index: 10"
-          >
-            <q-btn
-              round
-              dense
-              flat
-              size="xs"
-              icon="edit"
-              color="grey-9"
-              class="bg-white shadow-1"
-            />
-            <q-tooltip>Manage Attached Plugins</q-tooltip>
-          </div>
 
-          <template v-if="props.row.artifactPlugins.length > 0">
-            <template
-              v-for="(plugin, i) in props.row.artifactPlugins.slice(0, 3)"
-              :key="i"
-            >
-              <div
-                class="row items-center no-wrap bg-white q-pa-none shadow-1"
-                style="
-                  border-radius: 4px;
-                  border: 1px solid #eeeeee;
-                  width: fit-content;
-                  max-width: 220px;
-                "
-              >
-                <q-chip
-                  :color="getConceptStyle('plugin').color"
-                  text-color="white"
-                  size="sm"
-                  outline
-                  square
-                  clickable
-                  class="text-weight-bold q-py-sm q-pr-sm q-ma-none no-border full-width"
-                  @click.stop="openPluginDialog(props.row, 'artifactPlugins')"
-                >
-                  <span
-                    class="font-mono ellipsis"
-                    style="font-size: 11px; font-weight: 500; max-width: 140px"
-                  >
-                    {{ plugin.name }}
-                  </span>
-
-                  <template v-if="!plugin.latestSnapshot">
-                    <div
-                      style="
-                        height: 12px;
-                        width: 1px;
-                        background-color: #ddd;
-                        margin: 0 6px;
-                      "
-                    ></div>
-
-                    <q-badge
-                      rounded
-                      color="warning"
-                      class="q-mr-xs"
-                      style="padding: 2px"
-                    >
-                      <q-icon name="warning" color="white" size="10px" />
-                      <q-tooltip anchor="center right"
-                        >Plugin out of date</q-tooltip
-                      >
-                    </q-badge>
-
-                    <q-btn
-                      flat
-                      round
-                      dense
-                      size="xs"
-                      color="red"
-                      icon="sync"
-                      @click.stop="
-                        syncPlugin(
-                          props.row.id,
-                          plugin.id,
-                          plugin.name,
-                          'artifactPlugins',
-                        )
-                      "
-                    >
-                      <q-tooltip anchor="center right"
-                        >Sync to latest</q-tooltip
-                      >
-                    </q-btn>
-                  </template>
-
-                  <q-tooltip>Plugin ID: {{ plugin.id }}</q-tooltip>
-                </q-chip>
-              </div>
-            </template>
-
-            <div v-if="props.row.artifactPlugins.length > 3">
-              <q-chip
-                dense
-                clickable
-                color="grey-3"
-                text-color="grey-9"
-                class="text-weight-bold"
-                style="font-size: 11px; border: 1px solid lightgrey"
-                @click.stop
-              >
-                +{{ props.row.artifactPlugins.length - 3 }} more
-                <q-menu
-                  anchor="bottom middle"
-                  self="top middle"
-                  class="bg-white shadow-5 border-grey-3"
-                >
-                  <div
-                    class="column q-pa-sm q-gutter-y-xs"
-                    style="min-width: 200px"
-                  >
-                    <div
-                      class="text-caption text-grey-7 q-mb-xs text-weight-bold"
-                    >
-                      Additional Artifact Plugins
-                    </div>
-                    <template
-                      v-for="(plugin, i) in props.row.artifactPlugins.slice(3)"
-                      :key="i"
-                    >
-                      <div
-                        class="row items-center justify-between no-wrap bg-grey-1 q-pa-xs border-radius-inherit"
-                      >
-                        <q-chip
-                          :color="getConceptStyle('plugin').color"
-                          text-color="white"
-                          :icon="getConceptStyle('plugin').icon"
-                          size="sm"
-                          outline
-                          square
-                          clickable
-                          class="text-weight-bold q-my-none"
-                          @click.stop="
-                            openPluginDialog(props.row, 'artifactPlugins')
-                          "
-                        >
-                          {{ plugin.name }}
-                          <q-tooltip>ID: {{ plugin.id }}</q-tooltip>
-                        </q-chip>
-                        <q-btn
-                          v-if="!plugin.latestSnapshot"
-                          flat
-                          round
-                          size="xs"
-                          color="red"
-                          icon="sync"
-                          @click.stop="
-                            syncPlugin(
-                              props.row.id,
-                              plugin.id,
-                              plugin.name,
-                              'artifactPlugins',
-                            )
-                          "
-                        />
-                      </div>
-                    </template>
-                  </div>
-                </q-menu>
-              </q-chip>
-            </div>
-          </template>
-          <div v-else class="text-caption text-center text-grey-9 q-pa-xs">
-            No artifact plugins
-          </div>
-        </div>
-      </div>
+    <!-- Dropped this because there were too many columns - feel free to add back in  -->
+    <template #body-cell-group="props">
+      <ResourceName
+        :text="props.row.group?.name"
+        conceptType="group"
+        :showIcon="true"
+      />
     </template>
+    
   </TableComponent>
 
   <InfoPopupDialog v-model="showTaskGraphDialog">
@@ -512,7 +256,6 @@ const computedColumns = computed(() => [
     align: "left",
     styleType: "resource-name",
     conceptType: "entrypoint",
-    textType: "capitalize",
     maxWidth: "180px",
     sortable: true,
   },

@@ -98,6 +98,7 @@
 import { ref, watch, computed } from "vue";
 import * as api from "@/services/dataApi";
 import { getConceptStyle } from "@/constants/tableStyles";
+import * as notify from "../notify";
 
 const pluginStyle = computed(() => getConceptStyle("plugin"));
 const selectedPlugins = defineModel("selectedPlugins");
@@ -109,11 +110,11 @@ const pluginOptions = ref([]);
 watch(
   selectedPlugins,
   (newVal) => {
-    if (originalSelectedPluginIds.value.length === 0 && newVal?.length > 0) {
+    if (newVal?.length > 0) {
       originalSelectedPluginIds.value = newVal.map((p) => p.id);
     }
   },
-  { immediate: true },
+  { once: true } // Let Vue handle running this exactly once
 );
 
 async function getPlugins(val = "", update) {
@@ -121,12 +122,14 @@ async function getPlugins(val = "", update) {
     try {
       const res = await api.getData("plugins", {
         search: val,
-        rowsPerPage: 0,
+        rowsPerPage: 0, // get all
         index: 0,
       });
       pluginOptions.value = res.data.data;
     } catch (err) {
       console.warn(err);
+      const msg = err.response?.data?.message || "Failed to load plugins";
+      notify.error(msg);
     }
   });
 }

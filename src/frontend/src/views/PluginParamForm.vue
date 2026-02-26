@@ -280,6 +280,8 @@ const basicInfoForm = ref()
 
 async function submit() {
   basicInfoForm.value.validate().then(success => {
+    if (!success) return; 
+    
     if(jsonError.value) return
     if(route.params.id === 'new') {
       createPluginParamType()

@@ -310,6 +310,14 @@
               @update:model-value="onSelectArtifact(row)"
               class="col"
             >
+              <template v-slot:no-option>
+                <q-item>
+                  <q-item-section class="text-grey">
+                    No saved artifacts match type: 
+                    {{ row.outputParams.map(p => p.parameterType.name).join(', ') }}
+                  </q-item-section>
+                </q-item>
+              </template>
               <template v-slot:option="scope">
                 <q-item v-bind="scope.itemProps">
                   <q-item-section>
