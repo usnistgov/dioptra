@@ -1,5 +1,5 @@
 <template>
-  <q-markup-table flat bordered separator="cell" class="text-left">
+  <q-markup-table flat bordered separator="cell" class="text-left" style="width: fit-content; max-width: 100%;">
     <tbody>
       <tr
         v-for="(row, index) in rows"
@@ -11,7 +11,7 @@
           :class="
             $q.dark.isActive ? 'bg-grey-9 text-grey-4' : 'bg-grey-2 text-grey-9'
           "
-          style="min-width: 150px; width: 150px"
+          :style="{ minWidth: firstColumnMinWidth, width: firstColumnMinWidth }"
         >
           {{ row.label }}
         </td>

@@ -53,7 +53,7 @@
       >
           <q-td v-for="col in props.cols" :key="col.name" :props="props" :style="props.expand ? {'border-bottom': 'none'} : {}">
             <q-menu
-              v-if="selection !== 'multiple'"
+              v-if="!props.disableSelect && selection !== 'multiple'"
               context-menu
               @show="props.selected = true"
             >
@@ -178,6 +178,7 @@
     </template>
 
     <template v-slot:top-right>
+      <slot name="top-right" />
       <slot name="jobLogSlot" />
 
       <q-btn
@@ -273,8 +274,8 @@ const props = defineProps({
 const emit = defineEmits(["edit", "open", "delete", "request", "create", "editTags", "expand"]); 
 const $q = useQuasar();
 const filter = ref("");
-const selected = defineModel("selected");
-const showDrafts = defineModel("showDrafts");
+const selected = defineModel("selected", { default: () => [] });
+const showDrafts = defineModel("showDrafts", { default: false });
 
 const darkMode = computed(() => {
   if ($q.dark.mode === "auto")
@@ -336,8 +337,8 @@ function keydown(event) {
   if (props.disableSelect) return;
 
   const currentIndex = props.rows.findIndex(
-    (row) => row[props.rowKey] === selected.value[0]?.[props.rowKey],
-  );
+  (row) => row[props.rowKey] === selected.value?.[0]?.[props.rowKey],
+);
 
   if (event.key === "ArrowUp") {
     event.preventDefault(); // Prevent scrolling the page

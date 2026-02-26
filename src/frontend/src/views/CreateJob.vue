@@ -183,14 +183,15 @@
         title="Entrypoint Parameters"
         :columns="columns"
         :rows="parameters"
+        row-key="name" 
         :hideCreateBtn="true"
         :hideDeleteBtn="true"
         :disableSelect="true"
         :hideSearch="true"
       >
-        <template #body-cell-value="props">
-          <div style="font-size: 18px;">
-            <span v-if="props.row.value === null">
+        <template #body-cell-value="{ row }">
+          <div style="font-size: 18px; cursor: pointer;">
+            <span v-if="row.value === null">
               <q-chip
                 label="Needs Parameter Value"
                 color="negative"
@@ -199,17 +200,17 @@
               />
             </span>
             <span v-else>
-              {{ props.row.value }}
+              {{ row.value }}
             </span>
             <q-btn icon="edit" round size="sm" color="primary" flat />
           </div>
           <q-popup-edit 
-            v-model="props.row.value"
+            v-model="row.value"
             v-slot="scope"
             buttons
           >
             <div class="text-h6">
-              {{ props.row.name }}
+              {{ row.name }}
               <q-chip
                 v-if="scope.value === null"
                 label="Needs Parameter Value"
@@ -237,15 +238,6 @@
                 <label :class="`field-label`" style="width: 125px;">Parameter Value:</label>
               </template>
             </q-input>
-            <!-- Set Parameter to Empty String:
-            <q-checkbox
-              :model-value="scope.value === ''"
-              @update:model-value="val => {
-                if(val) {
-                  scope.value = ''
-                }
-              }"
-            /> -->
             <q-btn
               label="Set Parameter to Empty String"
               color="primary"
@@ -257,12 +249,13 @@
               label="Revert to Default Value"
               color="primary"
               class="q-mt-sm"
-              @click="scope.value = props.row.originalValue"
-              :disable="scope.value === props.row.originalValue"
+              @click="scope.value = row.originalValue"
+              :disable="scope.value === row.originalValue"
             />
           </q-popup-edit>
         </template>
       </TableComponent>
+
       <q-btn
         v-if="!updateEntrypoint && job.entrypoint?.id === oldEntrypoint?.id && 
         oldEntrypoint?.snapshot !== latestEntrypoint?.snapshot"
@@ -272,7 +265,7 @@
         icon="sync"
         size="sm"
         @click.stop="syncJobParams()"
-        class="q-mr-md"
+        class="q-mr-md q-my-sm"
       >
         <q-tooltip>
           Sync to latest version of entrypoint parameters and values.
@@ -287,42 +280,34 @@
         icon="sync"
         size="sm"
         @click.stop="revertJobParams()"
-        class="q-mr-md"
+        class="q-mr-md q-my-sm"
       >
         <q-tooltip>
           Revert to original job's entrypoint parameters and values.
         </q-tooltip>
       </q-btn>
+
       <TableComponent
         title="Artifact Parameters"
         :columns="artifactParamColumns"
         :rows="artifactParameters"
+        row-key="name"
         :hideCreateBtn="true"
         :hideDeleteBtn="true"
         :disableSelect="true"
         :hideSearch="true"
       >
-        <template #body-cell-output="props">
-          <div v-for="param in props.row.outputParams">
-            <q-chip 
-              :label="`${param.name}: ${param.parameterType.name}`"
-              color="secondary"
-              text-color="white"
-              dense
-            />
-          </div>
-        </template>
-        <template #body-cell-artifact="props">
-          <div class="row">
+        <template #body-cell-artifact="{ row }">
+          <div class="row items-center no-wrap">
             <q-select
               label="Artifact"
-              v-model="props.row.selectedArtifact"
+              v-model="row.selectedArtifact"
               dense
               outlined
-              :options="getMatchingArtifacts(props.row.outputParams)"
+              :options="getMatchingArtifacts(row.outputParams)"
               option-label="description"
               clearable
-              @update:model-value="onSelectArtifact(props.row)"
+              @update:model-value="onSelectArtifact(row)"
               class="col"
             >
               <template v-slot:option="scope">
@@ -335,12 +320,13 @@
               </template>
             </q-select>
             <q-checkbox
-              v-model="props.row.showSnapshotDropdown"
+              v-model="row.showSnapshotDropdown"
               checked-icon="history"
               unchecked-icon="sym_o_history"
               size="lg"
+              class="q-ml-sm"
               @update:model-value="(value) => {
-                if(!value) onSelectArtifact(props.row)
+                if(!value) onSelectArtifact(row)
               }"
             >
               <q-tooltip>
@@ -349,16 +335,17 @@
             </q-checkbox>
           </div>
           <q-select
-            v-if="props.row.showSnapshotDropdown"
+            v-if="row.showSnapshotDropdown"
             label="Artifact Snapshot"
-            v-model="props.row.selectedArtifactSnapshot"
+            v-model="row.selectedArtifactSnapshot"
             dense
             outlined
-            :options="props.row.artifactSnapshotOptions"
+            class="q-mt-sm"
+            :options="row.artifactSnapshotOptions"
             option-label="description"
             clearable
-            @clear="props.row.showSnapshotDropdown = false; onSelectArtifact(props.row)"
-            :disable="!props.row.selectedArtifact"
+            @clear="row.showSnapshotDropdown = false; onSelectArtifact(row)"
+            :disable="!row.selectedArtifact"
           >
             <template #before>
               <q-icon name="subdirectory_arrow_right" />
@@ -568,16 +555,15 @@
   const basicInfoForm = ref(null)
 
   const columns = [
-    { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, },
-    { name: 'value', label: 'Value', align: 'left', field: 'value', sortable: true, },
-    { name: 'parameterType', label: 'Type', align: 'left', field: 'type', sortable: true, },
-    // { name: 'actions', label: 'Actions', align: 'center',  },
+    { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, styleType: 'resource-name' },
+    { name: 'value', label: 'Value', align: 'left', field: 'value', sortable: true },
+    { name: 'parameterType', label: 'Type', align: 'left', field: 'type', sortable: true },
   ]
 
   const artifactParamColumns = [
-    { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, },
-    { name: 'output', label: 'Output', align: 'left', field: 'outputParams', sortable: true, },
-    { name: 'artifact', label: 'Artifact', align: 'left', sortable: false, },
+    { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, styleType: 'resource-name' },
+    { name: 'output', label: 'Output', align: 'left', field: 'outputParams', sortable: true, styleType: 'parameter-list' },
+    { name: 'artifact', label: 'Artifact', align: 'left', sortable: false },
   ]
 
   const experimentError = ref(false)

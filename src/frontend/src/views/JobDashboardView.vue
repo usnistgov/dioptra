@@ -49,7 +49,7 @@
         <KeyValueTable :rows="overviewRows">
           <template #id>
             <ResourceName
-              :text="job?.id"
+              :text="'Job: #' + job?.id"
               conceptType="job"
               :includeIcon="true"
             />
@@ -367,7 +367,7 @@ const parametersColumns = [
 const artifactsUsedColumns = [
   {
     name: "id",
-    label: "ID",
+    label: "Job ID",
     align: "left",
     field: "id",
     styleType: "icon-badge",
@@ -448,7 +448,7 @@ const logColumns = [
 
 // --- Computed Rows for Overview ---
 const overviewRows = computed(() => [
-  { label: "ID", slot: "id" },
+  { label: "Job ID", slot: "id" },
   { label: "Description", slot: "description" },
   { label: "Status", slot: "status" },
   { label: "Created On", value: formatDate(job.value?.createdOn) },

@@ -22,9 +22,14 @@
     <div :class="`${isLarge ? 'col-12' : 'col-4'}`">
       <h2 class="q-mt-none text-h6">Details</h2>
 
-      <KeyValueTable :rows="rows" :disabled="showHistory">
+      <KeyValueTable 
+        :rows="rows" 
+        :disabled="showHistory"
+        firstColumnMinWidth="205px"
+        :secondColumnFullWidth="isLarge || !artifact.isDir ? false : true"
+      >
         <template #id>
-          <ResourceName conceptType="artifact" :text="artifact.id" includeIcon="true" />
+          <ResourceName conceptType="artifact" :text="'ID: #' + artifact.id" includeIcon="true" />
         </template>
 
         <template #description>
@@ -171,7 +176,7 @@
         </template>
       </KeyValueTable>
       
-      <div class="row justify-end q-my-lg q-gutter-x-md">
+      <div class="row justify-start q-my-lg q-gutter-x-md">
         <q-btn outline color="primary" label="Cancel" @click="store.initialPage ? router.push('/artifacts') : router.back()" />
         <q-btn @click="submit()" color="primary" label="Save Artifact" :disable="store.showRightDrawer" />
       </div>
@@ -205,25 +210,97 @@
       </q-card>
     </div>
 
-    <div class="col column">
+    <div class="col column" style="max-width: 100%;">
       <h2 class="q-mt-none text-h6">File Preview</h2>
-      <q-card class="col" flat style="border: 1px solid #cecece;">
-        <q-card-section style="height: 72px;" class="row items-center justify-between">
-          <div v-if="!selectedNode || selectedNode.isDir" class="text-grey">Select a file to preview</div>
-          <div v-else class="row items-center text-subtitle2">{{ selectedNode.label }}</div>
-          <q-toggle v-if="preview.kind === 'image'" label="Full Width" v-model="imageFullWidth" />
-        </q-card-section>
-        <q-separator />
-        <q-card-section v-if="selectedNode && !selectedNode.isDir" style="max-height: 65vh; overflow-y: auto">
-          <div v-if="preview.loading" class="q-pa-md"><q-spinner /> Loading preview...</div>
-          <div v-else-if="preview.error" class="text-negative q-pa-md">{{ preview.error }}</div>
-          <div v-else-if="preview.ext === 'json' || preview.ext === 'yaml'">
-            <CodeEditor v-model="preview.text" language="yaml" :readOnly="true" />
+      <q-card class="col column shadow-1" style="border: 1px solid #cecece; border-radius: 6px;">
+        
+        <q-card-section 
+          class="bg-grey-1 row items-center justify-between q-py-sm" 
+          style="border-bottom: 1px solid #cecece; min-height: 60px;"
+        >
+          <div v-if="!selectedNode || selectedNode.isDir" class="text-grey-6 text-italic flex items-center q-gutter-x-sm">
+            <q-icon name="sym_o_visibility_off" size="sm" />
+            <span>No preview selected</span>
           </div>
-          <pre v-else-if="preview.kind === 'text'">{{ preview.text }}</pre>
-          <img v-else-if="preview.kind === 'image'" :src="preview.objectUrl" style="max-width: 100%; height: auto;" :style="{ width: imageFullWidth ? '100%' : `auto` }" />
-          <iframe v-else-if="preview.kind === 'pdf'" :src="preview.objectUrl" style="width: 100%; height: 100%; border: 0" />
-          <div v-else class="text-caption text-grey">No preview available for this file type. Use Download.</div>
+          
+          <div v-else class="row items-center q-gutter-x-sm">
+            <q-icon name="sym_o_description" color="primary" size="sm"  />
+            <span class="text-weight-bold text-blue-grey-9" style="font-size: 1.1rem; letter-spacing: 0.5px;">
+              {{ selectedNode.label }}
+            </span>
+            <q-chip 
+              v-if="preview.ext"  
+              size="sm" 
+              color="blue-grey-2" 
+              text-color="blue-grey-9" 
+              class="text-weight-bold text-uppercase q-ml-sm"
+            >
+              {{ preview.ext }}
+            </q-chip>
+          </div>
+          
+          <q-toggle 
+            v-if="preview.kind === 'image'" 
+            color="primary" 
+            label="Full Width" 
+            v-model="imageFullWidth" 
+            left-label 
+            dense 
+          />
+        </q-card-section>
+
+        <q-card-section class="q-pa-none col flex column bg-white" style="max-height: 65vh; overflow-y: auto;">
+          
+          <div v-if="!selectedNode || selectedNode.isDir" class="flex flex-center column q-pa-xl text-grey-5 col">
+            <q-icon name="sym_o_file_present" size="4rem" class="q-mb-md" style="opacity: 0.5" />
+            <div class="text-h6 text-weight-regular">Select a file to preview</div>
+          </div>
+
+          <div v-else-if="preview.loading" class="flex flex-center column q-pa-xl text-primary col">
+            <q-spinner size="3rem" class="q-mb-md" />
+            <div class="text-subtitle1">Loading file preview...</div>
+          </div>
+
+          <div v-else-if="preview.error" class="flex flex-center column q-pa-xl text-negative col">
+            <q-icon name="error_outline" size="3rem" class="q-mb-md" />
+            <div class="text-subtitle1 text-center">{{ preview.error }}</div>
+          </div>
+
+          <div v-else class="q-pa-md col">
+            
+            <div v-if="preview.ext === 'json' || preview.ext === 'yaml'" class="shadow-1 rounded-borders overflow-hidden" style="border: 1px solid #e0e0e0;">
+              <CodeEditor v-model="preview.text" language="yaml" :readOnly="true" />
+            </div>
+
+            <pre 
+              v-else-if="preview.kind === 'text'" 
+              class="q-pa-md rounded-borders text-body2 font-mono text-blue-grey-9 bg-grey-2" 
+              style="white-space: pre-wrap; word-break: break-word; border: 1px solid #e0e0e0; margin: 0;"
+            >{{ preview.text }}</pre>
+
+            <div v-else-if="preview.kind === 'image'" class="flex flex-center bg-grey-2 rounded-borders q-pa-sm" style="border: 1px solid #e0e0e0;">
+              <img 
+                :src="preview.objectUrl" 
+                class="rounded-borders shadow-1" 
+                style="max-width: 100%; height: auto; transition: width 0.3s ease;" 
+                :style="{ width: imageFullWidth ? '100%' : 'auto' }" 
+              />
+            </div>
+
+            <iframe 
+              v-else-if="preview.kind === 'pdf'" 
+              :src="preview.objectUrl" 
+              class="rounded-borders"
+              style="width: 100%; height: 60vh; border: 1px solid #e0e0e0;" 
+            />
+
+            <div v-else class="flex flex-center column q-pa-xl text-grey-6 col">
+              <q-icon name="sym_o_visibility_off" size="3rem" class="q-mb-md" />
+              <div class="text-subtitle1">No preview available for this file type.</div>
+              <div class="text-caption">Use the Download Artifact button above to view Artifact.</div>
+            </div>
+          </div>
+          
         </q-card-section>
       </q-card>
     </div>
@@ -434,7 +511,10 @@ async function syncPlugin(pluginID) {
 }
 
 const rows = computed(() => [
-  { label: "ID", value: artifact.value?.id },
+  { 
+    label: "Artifact ID", 
+    slot: "id" 
+  },
   {
     label: "Description",
     slot: "description",
