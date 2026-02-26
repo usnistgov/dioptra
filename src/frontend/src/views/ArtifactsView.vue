@@ -42,14 +42,12 @@
 
     <template #body-cell-download="props">
       <q-btn
-        :href="props.row.fileUrl"
-        :download="`artifact-${props.row?.id}`"
-        round
-        dense
         color="primary"
+        round
         icon="download"
-        size="md"
-        @click.stop
+        size="sm"
+        @click.stop="downloadFile(props.row.fileUrl, `artifact-${props.row?.id}`, props.row.id)"
+        :loading="downloadingId === props.row.id"
       >
         <q-tooltip>Download Artifact</q-tooltip>
       </q-btn>
@@ -136,12 +134,13 @@ const computedColumns = computed(() => [
   {
     name: "job",
     label: "Job",
-    field: "job",
+    field: (row) => ({ id: row.job, name: row.job }),
     align: "left",
     styleType: "icon-badge", 
     conceptType: "job",
     size: "md",
     sortable: true,
+    clickable: true, 
   },
   {
     name: "taskName",
@@ -168,6 +167,20 @@ const computedColumns = computed(() => [
   },
 ]);
 
+const downloadingId = ref(null);
+
+async function downloadFile(url, filename, id) {
+  downloadingId.value = id;
+  try {
+    await api.downloadFile(url, filename);
+    notify.success(`Successfully downloaded file: ${filename}`);
+  } catch (err) {
+    console.warn(err);
+    notify.error(`Error downloading file ${filename}`);
+  } finally {
+    downloadingId.value = null;
+  }
+}
 
 async function getArtifacts(pagination) {
   isLoading.value = true;
