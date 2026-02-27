@@ -33,9 +33,9 @@ Prerequisites
 * (Optional) `cosign <https://github.com/sigstore/cosign>`__ installed for image verification
 * (Optional) `jq <https://jqlang.org/>`__ for easier key path retrieval
 
-.. _how-to-download-container-images-clone-the-repository:
+.. _how-to-download-container-downloading-the-images:
 
-Downloading Container Images
+Downloading the Images
 ----------------------
 
 Obtain the container images for the core Dioptra services.
