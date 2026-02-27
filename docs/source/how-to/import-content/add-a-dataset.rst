@@ -48,4 +48,4 @@ For the full list of options, run the following to display the script's help mes
 
 .. code-block:: sh
 
-    uv run ./examples/scripts/download_data.py -h
+    uv run ./examples/scripts/download_data.py --help

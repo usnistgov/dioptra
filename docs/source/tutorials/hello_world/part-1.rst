@@ -65,7 +65,7 @@ Step 2: Create the Plugin
 We must create a container for our code and register the task in the system.
 
 1. In the GUI, navigate to the **Plugins** tab.
-2. Click **Create Plugin**.
+2. Click the **Create** button in the Plugins table.
 3. Enter the name ``hello_world_plugin`` and add a short description. Click **Submit**.
 
 .. figure:: ../../images/screenshots/plugins/create_hello_world_plugin_dioptra_1_1.png
@@ -75,7 +75,7 @@ We must create a container for our code and register the task in the system.
 
    Creating the Hello World Plugin Container
 
-4. In the plugin list, **click the row** corresponding to the Hello World Plugin you just created to go to the Plugin Files table.
+4. In the plugin list, **click the row** corresponding to the Hello World Plugin you just created to go to the **Plugin Files table**.
 
 .. figure:: ../../images/screenshots/plugins/hello_world_plugin_files_table_dioptra_1_1.png
    :alt: Screenshot of the plugin creation / registration modal
@@ -89,10 +89,12 @@ We must create a container for our code and register the task in the system.
 
 **Register the Task**
 
-7. In the **Task Form** (on the right side of the editor), register the function:
+7. In the **Task Form** (on the right side of the editor), register the function. Click the **Create** button under the Plugin Function Tasks table. Enter the following:
    
    - **Task Name:** ``hello_world`` (Must match the Python function name exactly).
    - **Input/Output Parameters:** *Leave blank* - Our function has no inputs and returns no outputs.
+
+Click the **Confirm** button to finish task registration. 
 
 .. figure:: ../../images/screenshots/plugin_files/register_hello_world_function_task_Dioptra_1_1.png
    :alt: Screenshot of the task registration
@@ -121,8 +123,9 @@ Entrypoints define the workflow (Task Graph) that sequences our tasks.
 Our workflow is one with a single task only.
 
 1. Navigate to the **Entrypoints** tab.
-2. Click **Create Entrypoint**.
-3. Name it ``hello_world_entrypoint``.
+2. Click the **Create** button in the Entrypoints table.
+3. Name it ``hello_world_entrypoint`` and add a brief description.
+4. In the Queues section, attach the ``tensorflow-cpu`` Queue we created in the :ref:`setup step <tutorial-setup-dioptra-in-the-gui>` of this tutorial.
 
 .. figure:: ../../images/screenshots/entrypoints/create_hello_world_ep_metadata_dioptra_1_1.png
    :alt: Screenshot of entrypoint creation metadata 
@@ -130,8 +133,8 @@ Our workflow is one with a single task only.
    :figclass:  border-image clickable-image
 
 
-4. In the **Task Plugins** window, select the ``hello_world_plugin`` we created in :ref:`Step 2 <tutorial-running-hello-world-step-2-create-the-plugin>`.
-5. In the **Task Graph YAML** editor, paste the following YAML:
+5. Scroll down. In the **Task Plugins** window, select the ``hello_world_plugin`` we created :ref:`earlier <tutorial-running-hello-world-step-2-create-the-plugin>`.
+6. In the **Task Graph YAML** editor, paste the following YAML:
 
 .. admonition:: Entrypoint Task Graph
    :class: code-panel yaml
@@ -141,7 +144,7 @@ Our workflow is one with a single task only.
       hello_world_step: # Task name
          task: hello_world # One of our registered tasks
 
-6. Click **Validate Inputs** (it should pass as there are no parameters).
+7. Click **Validate Inputs** (it should pass as there are no parameters).
 
 .. figure:: ../../images/screenshots/entrypoints/hello_world_task_graph_inputs_valid_dioptra_1_1.png
    :alt: Screenshot of the Entrypoint creation screen showing the YAML editor.
@@ -151,7 +154,7 @@ Our workflow is one with a single task only.
    Defining the workflow structure in the Entrypoint editor.
 
 
-7. Click **Submit Entrypoint**.
+8. Click **Submit Entrypoint**.
 
 
 .. rst-class:: header-on-a-card header-steps
@@ -161,7 +164,7 @@ Step 4: Create Experiment & Job
 
 To execute the entrypoint, we must place it inside an Experiment and run it as a Job.
 
-1. Navigate to the **Experiments** tab and click **Create Experiment**.
+1. Navigate to the **Experiments** tab and click the **Create** button in the Experiments table.
 2. Name it ``hello_world_experiment``.
 3. In the Entrypoint dropdown, select ``hello_world_entrypoint``.
 
@@ -177,8 +180,8 @@ To execute the entrypoint, we must place it inside an Experiment and run it as a
 5. Once the experiment is created, **click on the experiment** - the Experiment's Job page should appear. 
 6. In the jobs table, click **Create**.
 7. Select the ``hello_world_entrypoint``.
-8. Select the queue you created in the :ref:`previous tutorial<tutorial-setup-dioptra-in-the-gui-step-3-create-a-queue>` (``tensorflow-cpu``).
-9. Click **Submit Job**.
+8. Select the ``tensorflow-cpu`` queue (which we created in :ref:`the previous tutorial step <tutorial-setup-dioptra-in-the-gui>`) - attach it now if you forgot to attach it previously.
+9. Add a short description, and then click **Submit Job**.
 
 .. figure:: ../../images/screenshots/jobs/running_hello_world_job_dioptra_1_1.png
    :alt: Screenshot of the Job submission modal.
@@ -204,14 +207,14 @@ The job will transition from **Queued** to **Finished**. We can verify the code 
 
    Viewing the execution logs.
 
-You should see the following message generated by ``hello_world_plugin.plugin``:
+You should see the following message generated by ``hello_world_plugin.plugin_1``:
 
 .. admonition:: Job Log Output
    :class: code-panel console
 
    .. code-block:: console
 
-      [info     ] Hello, World! Welcome to Dioptra. [hello_world_plugin.plugin]
+      [info     ] Hello, World! Welcome to Dioptra. [hello_world_plugin.plugin_1]
 
 .. note::
 

@@ -32,7 +32,7 @@ class NumpyArrayArtifactTask(ArtifactTaskInterface):
 
 # [pngbytes-plugin-definition]
 # Paste this after the definition of 'NumpyArrayArtifactTask'
-class PngBytesArtifactClass(ArtifactTaskInterface):
+class PngBytesArtifactTask(ArtifactTaskInterface):
     """Save PNG bytes in working_dir and return the PNG path. Deserialize returns PNG bytes."""
 
     @staticmethod
