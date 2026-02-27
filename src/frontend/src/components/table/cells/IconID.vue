@@ -4,20 +4,23 @@
     dense
     no-caps
     size="md"
-    class="bg-grey-2 text-blue-grey-8 q-pr-sm q-mr-sm row items-left no-wrap justify-start"
+    :class="[
+      $q.dark.isActive ? 'bg-grey-9 text-grey-3' : 'bg-grey-2 text-blue-grey-8', 
+      'q-pr-sm q-mr-sm row items-left no-wrap justify-start'
+    ]"
     style="max-width: 100%; min-width: 70px"
   >
     <q-icon
       v-if="includeIcon"
       :name="styles.icon"
-      :color="styles.color"
+      :color="$q.dark.isActive && styles.darkColor ? styles.darkColor : styles.color"
       class="items-left justify-left q-mr-xs"
       size="xs"
     />
     <span style="font-size: 12px; font-weight: 500"
       >#<strong>{{ label || type }}</strong>
     </span>
-    <q-tooltip>Go to: {{ type }} {{ label }}</q-tooltip>
+    <q-tooltip>Go to {{ type }} {{ label }}</q-tooltip>
   </q-btn>
 </template>
 
@@ -25,7 +28,9 @@
 import { computed } from "vue";
 import { useRouter } from "vue-router";
 import { getConceptStyle } from "@/constants/tableStyles";
+import { useQuasar } from "quasar";
 
+const $q = useQuasar();
 const props = defineProps({
   type: String,
   label: [String, Number],

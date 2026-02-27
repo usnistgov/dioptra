@@ -33,7 +33,7 @@
         outline
         dense
         no-caps
-        color="grey-8"
+        :color="darkMode ? 'text-grey-5' : 'text-grey-8'"
         label="YAML"
         icon="code"
         size="xs"
@@ -59,10 +59,13 @@
         <div
           class="plugin-container column q-pa-xs q-gutter-y-xs cursor-pointer"
           @click.stop="openPluginDialog(props.row, colName)"
+          :class="$q.dark.isActive ? 'bg-black' : 'bg-grey-2'"
         >
           <div class="absolute-top-right q-ma-xs plugin-edit-btn" style="z-index: 10">
             <q-btn
-              round dense flat size="xs" icon="edit" color="grey-9" class="bg-white shadow-1"
+              round dense flat size="xs" icon="edit" class="shadow-1"
+              :class="$q.dark.isActive ? 'bg-grey-10' : 'bg-grey-2'"
+              :color="$q.dark.isActive ? 'bg-grey-1' : 'bg-grey-9'"
             />
             <q-tooltip>Manage Attached Plugins</q-tooltip>
           </div>
@@ -74,12 +77,14 @@
                 style="border-radius: 4px; border: 1px solid #eeeeee; width: fit-content; max-width: 220px;"
               >
                 <q-chip
-                  :color="getConceptStyle('plugin').color"
-                  text-color="white" size="sm" outline square clickable
+                  :color="$q.dark.isActive ? getConceptStyle('plugin').darkColor : getConceptStyle('plugin').color"
+                  size="sm" outline square clickable
                   class="text-weight-bold q-py-sm q-pr-sm q-ma-none no-border full-width"
+                  :class="$q.dark.isActive ? 'bg-grey-10' : 'bg-grey-2'"
                   @click.stop="openPluginDialog(props.row, colName)"
                 >
-                  <span class="font-mono ellipsis" style="font-size: 11px; font-weight: 500; max-width: 140px">
+                  <span class="font-mono ellipsis" 
+                  style="font-size: 11px; font-weight: 500; max-width: 140px">
                     {{ plugin.name }}
                     <q-tooltip>Plugin ID: {{ plugin.id }}</q-tooltip>
                   </span>
@@ -103,8 +108,9 @@
 
             <div v-if="props.row[colName].length > 3">
               <q-chip
-                dense clickable color="grey-3" text-color="grey-9" class="text-weight-bold"
+                dense clickable  class="text-weight-bold"
                 style="font-size: 11px; border: 1px solid lightgrey" @click.stop
+                :class="$q.dark.isActive ? 'text-grey-1 bg-grey-9' : 'text-grey-9 bg-grey-3'"
               >
                 +{{ props.row[colName].length - 3 }} more
                 <q-menu anchor="bottom middle" self="top middle" class="bg-white shadow-5 border-grey-3">
@@ -134,7 +140,7 @@
               </q-chip>
             </div>
           </template>
-          <div v-else class="text-caption text-center text-grey-9 q-pa-xs">
+          <div v-else class="text-caption text-center q-pa-xs" :class="$q.dark.isActive ? 'text-grey-3' : 'text-grey-9'">
             No {{ colName === 'plugins' ? 'plugins' : 'artifact plugins' }}
           </div>
         </div>

@@ -3,7 +3,8 @@
     class="header-container row items-center no-wrap"
     :class="[alignClass, { 'is-sortable': col.sortable }]"
   >
-    <span class="header-label">
+    <span class="header-label"
+    :class="$q.dark.isActive ? 'header-label--dark' : 'header-label--light'">
       {{ col.label }}
     </span>
 
@@ -18,7 +19,9 @@
 
 <script setup>
 import { computed } from "vue";
+import { useQuasar } from "quasar";
 
+const $q = useQuasar();
 const props = defineProps({
   col: Object,
   sorted: Boolean,
@@ -54,12 +57,20 @@ const iconStatusClass = computed(() => {
 
 .header-label {
   font-weight: 600;
-  color: #546e7a;
   font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   padding-right: 4px;
 }
+
+.header-label--light {
+    color: #546e7a;
+}
+
+.header-label--dark {
+    color: #cbe8f5;
+}
+
 
 .sort-icon {
   font-size: 16px;

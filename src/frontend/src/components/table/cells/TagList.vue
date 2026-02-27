@@ -8,15 +8,15 @@
       <q-chip
         v-for="(tag, i) in visibleTags"
         :key="i"
-        color="blue-grey-7"
-        text-color="blue-grey-10"
+        :color="$q.dark.isActive ? 'grey-8' : 'blue-grey-7'"
+        :text-color="$q.dark.isActive ? 'grey-3' : 'blue-grey-10'"
         dense
         outline
         square
         size="11px"
-        :ripple="false"
+        @click.stop
         class="q-my-none text-weight-medium"
-        style="border-color: #cfd8dc; height: 20px; cursor: default !important;"
+        :style="{ borderColor: $q.dark.isActive ? '#555' : '#cfd8dc', height: '20px' }"
       >
         #
         <span
@@ -35,8 +35,8 @@
 
       <q-chip
         v-if="hiddenCount > 0"
-        color="blue-grey-1"
-        text-color="blue-grey-10"
+        :color="$q.dark.isActive ? 'grey-9' : 'blue-grey-1'"
+        :text-color="$q.dark.isActive ? 'grey-3' : 'blue-grey-10'"
         dense
         clickable
         square
@@ -48,7 +48,7 @@
         <q-menu
           anchor="bottom left"
           self="top left"
-          class="bg-white shadow-5 border-grey-3"
+          :class="[$q.dark.isActive ? 'bg-grey-9 border-grey-8' : 'bg-white border-grey-3', 'shadow-5']"
         >
           <div class="column q-pa-sm" style="min-width: 200px">
             <div
@@ -106,6 +106,9 @@
 
 <script setup>
 import { computed } from "vue";
+import { useQuasar } from "quasar";
+
+const $q = useQuasar();
 
 const props = defineProps({
   tags: {

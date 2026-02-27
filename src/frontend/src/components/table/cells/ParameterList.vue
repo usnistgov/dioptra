@@ -33,7 +33,8 @@
 
           <div class="row items-center text-left">
             <div
-              class="font-mono text-weight-medium text-grey-7 cursor-help q-pr-xs"
+              class="font-mono text-weight-medium cursor-help q-pr-xs" 
+              :class="$q.dark.isActive ? 'text-grey-4' : 'text-grey-8'"
               style="font-size: 0.75rem"
             >
               {{ param.parameterType?.name || "Unknown" }}
@@ -63,8 +64,8 @@
       <q-chip
         dense
         clickable
-        color="grey-2"
-        text-color="grey-8"
+        :color="$q.dark.isActive ? 'grey-9' : 'grey-2'"
+        :text-color="$q.dark.isActive ? 'grey-3' : 'grey-8'"
         class="text-weight-bold"
         style="font-size: 10px; height: 20px"
         @click.stop
@@ -74,24 +75,31 @@
         <q-menu
           anchor="bottom middle"
           self="top left"
-          class="bg-white shadow-5 border-grey-3"
+          :class="[$q.dark.isActive ? 'bg-grey-9 border-grey-8' : 'bg-white border-grey-3', 'shadow-5']"
         >
           <div class="column q-pa-sm q-gutter-y-xs">
-            <div class="text-caption text-grey-7 q-mb-xs">
+            <div 
+              class="text-caption q-mb-xs"
+              :class="$q.dark.isActive ? 'text-grey-4' : 'text-grey-7'"
+            >
               Additional {{ type === "input" ? "Inputs" : "Outputs" }}
             </div>
-
             <template v-for="(param, i) in items.slice(3)" :key="i">
               <div class="row items-start no-wrap q-gutter-x-sm q-py-xs">
                 <div
-                  class="rounded-borders shrink-0"
-                  :style="{
+                    class="font-mono text-weight-medium"
+                    :class="$q.dark.isActive ? 'text-grey-4' : 'text-grey-7'"
+                    :style="{
                     width: '6px',
                     height: '6px',
                     marginTop: '5px',
                     backgroundColor: styles.hexColor,
                   }"
-                ></div>
+                    style="font-size: 0.75rem"
+                  >
+                    {{ param.parameterType?.name }}
+                  </div>
+          
 
                 <div
                   :class="
@@ -127,12 +135,11 @@
     <div v-if="items.length === 0" class="text-caption text-grey-4">-</div>
   </div>
 </template>
-
 <script setup>
 import { computed } from "vue";
-import { getConceptStyle } from "@/constants/tableStyles";
-import { colors } from "quasar";
+import { useQuasar, colors } from "quasar";
 
+const $q = useQuasar();
 const { getPaletteColor } = colors;
 
 const props = defineProps({
@@ -146,17 +153,19 @@ const props = defineProps({
 });
 
 const styles = computed(() => {
-  const concept = props.type === "input" ? "input" : "output";
-  const styleObj = getConceptStyle(concept);
+  const isDark = $q.dark.isActive;
 
-  const fallbackColor = props.type === "input" ? "indigo-6" : "purple-6";
-  const fallbackText = props.type === "input" ? "blue-grey-6" : "deep-purple-5";
+  const colorClass = props.type === "input" 
+    ? (isDark ? "indigo-4" : "indigo-6") 
+    : (isDark ? "purple-4" : "purple-6");
 
-  const baseColor = styleObj?.color || fallbackColor;
+  const textClass = props.type === "input" 
+    ? (isDark ? "blue-grey-3" : "blue-grey-6") 
+    : (isDark ? "deep-purple-3" : "deep-purple-5");
 
   return {
-    hexColor: getPaletteColor(baseColor),
-    textColor: getPaletteColor(fallbackText),
+    hexColor: getPaletteColor(colorClass),
+    textColor: getPaletteColor(textClass),
   };
 });
 

@@ -26,11 +26,12 @@
     </div>
 
     <div
-      class="resource-name-text text-weight-bold text-blue-grey-10 text-wrap-style"
+      class="resource-name-text text-weight-bold text-wrap-style"
       :class="[
         textTypeClass,
         minimal ? 'q-ml-none' : 'q-ml-xs',
         { 'no-underline': minimal },
+        $q.dark.isActive ? 'text-grey-4' : 'text-blue-grey-10'
       ]"
       :style="{
         maxWidth: maxWidth,
@@ -87,9 +88,10 @@
 
 <script setup>
 import { computed } from "vue";
-import { getConceptStyle } from "@/constants/tableStyles";
-import { colors } from "quasar";
+import { getConceptStyle, getConceptColorHex } from "@/constants/tableStyles";
+import { useQuasar, colors } from "quasar";
 
+const $q = useQuasar();
 const { getPaletteColor } = colors;
 
 const props = defineProps({
@@ -128,14 +130,10 @@ const props = defineProps({
 const styles = computed(() => {
   if (!props.conceptType) return { icon: "", color: "" };
   const style = getConceptStyle(props.conceptType);
-  try {
-    return {
-      ...style,
-      hexColor: getPaletteColor(style.color),
-    };
-  } catch (e) {
-    return { ...style, hexColor: style.color };
-  }
+  return {
+    ...style,
+    hexColor: getConceptColorHex(props.conceptType, $q.dark.isActive),
+  };
 });
 
 const applyTransformation = (val) => {

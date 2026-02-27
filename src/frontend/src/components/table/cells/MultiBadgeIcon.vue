@@ -12,11 +12,11 @@
 
     <q-chip
       v-if="hiddenCount > 0"
-      color="grey-3"
-      text-color="grey-9"
       clickable
       @click.stop
       class="q-my-none text-weight-bold"
+      :color="$q.dark.isActive ? 'grey-9' : 'grey-2'"
+      :text-color="$q.dark.isActive ? 'grey-2' : 'grey-9'"
       style="font-size: 13px"
     >
       +{{ hiddenCount }} more
@@ -24,7 +24,8 @@
       <q-menu
         anchor="bottom middle"
         self="top middle"
-        class="bg-white shadow-5 border-grey-3 q-pa-md"
+        class="shadow-5 border-grey-3 q-pa-md"
+        :class="$q.dark.isActive ? 'bg-grey-9 text-grey-3' : 'bg-grey-2 text-grey-9'"
       >
         <div class="text-caption text-grey-7 q-mb-xs text-weight-bold" style="text-transform: capitalize;">
           Additional {{ conceptType }}s:

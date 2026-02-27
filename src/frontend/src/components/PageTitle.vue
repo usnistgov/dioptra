@@ -46,7 +46,7 @@
             size="52px"
             font-size="28px"
           >
-            <q-icon :name="styles.icon" size="lg" />
+            <q-icon :name="styles.icon" size="lg"  :color="$q.dark.isActive ? 'grey-3' : 'grey-2'" />
           </q-avatar>
 
           <div class="row items-center">
@@ -68,13 +68,13 @@
             />
           </div>
         </div>
-        <div v-if="caption" class="text-grey-7 q-mt-xs">
+        <div v-if="caption" class="q-mt-xs" :class="darkMode ? 'text-grey-5' : 'text-grey-8'">
           {{ caption }}
         </div>
       </div>
 
       <nav aria-label="Breadcrumb" class="q-mt-md">
-        <q-breadcrumbs class="text-grey-7" style="font-size: 0.95em">
+        <q-breadcrumbs :class="darkMode ? 'text-grey-4' : 'text-grey-9'" style="font-size: 0.95em">
           <template v-slot:separator>
             <q-icon name="chevron_right" size="1.4em" color="grey-4" />
           </template>
@@ -118,7 +118,9 @@ import { ref, computed, inject } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import * as api from "@/services/dataApi";
 import { getConceptStyle, getConceptColorHex } from "@/constants/tableStyles";
+import { useQuasar } from "quasar";
 
+const $q = useQuasar();
 const props = defineProps({
   title: String,
   draftLabel: String,

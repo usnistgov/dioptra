@@ -23,7 +23,7 @@ export const CONCEPT_STYLES = {
   plugin: { 
     icon: 'extension', 
     color: 'teal-7', 
-    darkColor: 'teal-4', 
+    darkColor: 'teal-2', 
     basePath: 'plugins' 
   },
   file: {

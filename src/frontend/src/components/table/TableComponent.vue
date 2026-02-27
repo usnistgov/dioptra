@@ -138,7 +138,7 @@
 
             <div
               v-else-if="col.styleType === 'date'"
-              :class="col.textColor || 'text-grey-8'"
+              :class="col.textColor || ($q.dark.isActive ? 'text-grey-4' : 'text-grey-8')"
               style="font-size: 13px"
             >
               {{ formatDate(col.value) }}
@@ -200,7 +200,7 @@
         dense
         placeholder="Search"
         outlined
-        bg-color="white"
+        :bg-color="$q.dark.isActive ? 'grey-9' : 'white'"
       >
         <template #append>
           <q-icon name="search" />
@@ -219,6 +219,7 @@
         <div
           v-if="props.title"
           class="text-h6 q-mb-lg q-mt-md q-mx-lg text-grey-8"
+          :class="$q.dark.isActive ? 'text-grey-4' : 'text-grey-8'"
         >
           {{ props.title }}
         </div>
@@ -326,6 +327,7 @@ const pagination = ref({
   rowsPerPage: props.showAll ? 0 : 15,
   sortBy: "",
   descending: false,
+  rowsNumber: 0, 
 });
 
 function onAuxClick(tableProps, event) {
@@ -380,8 +382,8 @@ function refreshTable() {
 // --- SEARCH & REQUEST LOGIC ---
 let invalidSearchNotification = notify.wait();
 
-function onRequest(props) {
-  const searchError = checkSearch(props.filter);
+function onRequest(tableProps) {
+  const searchError = checkSearch(tableProps.filter);
 
   invalidSearchNotification();
   if (searchError.length) {
@@ -389,14 +391,17 @@ function onRequest(props) {
     return;
   }
 
-  pagination.value = { ...props.pagination };
-  const paginationOptions = props.pagination;
+  const { page, rowsPerPage, sortBy, descending } = tableProps.pagination;
 
-  const { page, rowsPerPage } = props.pagination;
+  pagination.value.page = page;
+  pagination.value.rowsPerPage = rowsPerPage;
+  pagination.value.sortBy = sortBy;
+  pagination.value.descending = descending;
+
+  const paginationOptions = { ...tableProps.pagination };
   const index = (page - 1) * rowsPerPage;
   paginationOptions.index = index;
-
-  paginationOptions.search = props.filter;
+  paginationOptions.search = tableProps.filter;
 
   emit("request", paginationOptions, showDrafts.value);
 }
@@ -435,7 +440,8 @@ onBeforeUnmount(() => {
 });
 
 function updateTotalRows(totalRows) {
-  pagination.value.rowsNumber = totalRows;
+  // Ensure we always assign a valid number, never undefined
+  pagination.value.rowsNumber = Number(totalRows) || 0;
 }
 
 //  Helpers

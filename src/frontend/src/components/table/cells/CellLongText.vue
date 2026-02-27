@@ -1,6 +1,10 @@
 <template>
   <div
-    :class="[textColor, textTypeClass, 'text-wrap-style']"
+    :class="[
+      (textColor === 'text-grey-8' && $q.dark.isActive) ? 'text-grey-4' : textColor, 
+      textTypeClass, 
+      'text-wrap-style'
+    ]"
     :style="{ maxWidth: maxWidth, width: 'fit-content' }"
   >
     {{ formattedDisplayValue }}
@@ -17,7 +21,9 @@
 
 <script setup>
 import { computed } from "vue";
+import { useQuasar } from "quasar";
 
+const $q = useQuasar();
 const props = defineProps({
   text: [String, Number],
   maxLength: {

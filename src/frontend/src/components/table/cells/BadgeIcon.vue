@@ -1,8 +1,8 @@
 <template>
   <q-chip
     v-if="styles"
-    :color="styles.color"
-    text-color="white"
+    :color="$q.dark.isActive ? styles.darkColor : styles.color"
+    :text-color="$q.dark.isActive ? 'black' : 'white'"
     :size="mini ? 'sm' : size"
     :outline="chipType === 'outline'"
     square
