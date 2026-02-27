@@ -26,9 +26,13 @@ from dioptra.restapi.db.models import (
     EntryPoint,
     Experiment,
     Group,
+    Plugin,
+    Queue,
     Resource,
+    ResourceSnapshot,
     Tag,
 )
+from dioptra.restapi.errors import EntityDoesNotExistError
 
 
 class EntrypointRepository:
@@ -146,6 +150,7 @@ class EntrypointRepository:
         self,
         resource_id: int,
         deletion_policy: utils.DeletionPolicy,
+        error_if_not_found=False,
     ) -> EntryPoint:
         """
         Get the latest snapshot of the given entrypoint resource; require that
@@ -155,6 +160,7 @@ class EntrypointRepository:
             resource_id: A resource ID
             deletion_policy: Whether to look at deleted entrypoints, non-deleted
                 entrypoints, or all entrypoints
+            error_if_not_found: If True, raise an error if the entrypoint is not found.
 
         Returns:
             An EntryPoint object
@@ -167,9 +173,14 @@ class EntrypointRepository:
             EntityDeletedError: if the entrypoint is deleted, but policy was to
                 find a non-deleted entrypoint
         """
-        return utils.get_one_latest_snapshot(
+        entrypoint = utils.get_one_latest_snapshot(
             self.session, EntryPoint, resource_id, deletion_policy
         )
+
+        if entrypoint is None and error_if_not_found:
+            raise EntityDoesNotExistError("entry_point", entrypoint_id=resource_id)
+
+        return entrypoint
 
     def get_one_snapshot(
         self,
@@ -260,89 +271,65 @@ class EntrypointRepository:
             deletion_policy,
         )
 
-    # def set_entrypoint_children(
-    # self,
-    # entrypoint: EntryPoint | int,
-    # plugins: Plugin | int,
-    # artifact_plugins: Plugin | int,
-    # queues: Plugin | int,
-    # ) -> Sequence[Plugin]:
-    # pass
+    def add_queues(
+        self,
+        entrypoint: EntryPoint | int,
+        queues: Iterable[Queue | Resource | int],
+    ) -> Sequence[Queue]:
+        """
+        Add the given entry points as children of the given experiment.
 
-    # def set_entrypoints(
-    # self,
-    # entrypoint: EntryPoint | int,
-    # children: Iterable[EntryPoint | int],
-    # ) -> Sequence[EntryPoint]:
-    # """
-    # Set the children of the given experiment to the given entry points.
-    # This replaces all existing children with the given resources.
+        Args:
+            experiment: An Experiment object or resource_id integer primary key value
+            children: The entry points to add
 
-    # Args:
-    # experiment: An Experiment object or resource_id integer primary key
-    # value
-    # children: The entry points to set as children
+        Returns:
+            The complete list of queue children, as latest snapshots (including both
+            pre-existing and new children).
 
-    # Returns:
-    # The new children, as their latest snapshots
+        Raises:
+            EntityDoesNotExistError: if parent or any new child does not exist
+            EntityDeletedError: if parent or any new child is deleted
+        """
+        snaps = utils.append_resource_children(self.session, Queue, entrypoint, queues)
+        return [snap for snap in snaps if isinstance(snap, Queue)]
 
-    # Raises:
-    # EntityDoesNotExistError: if experiment or any entry point not exist
-    # EntityDeletedError: if experiment or any entry point is deleted
-    # """
+    def unlink_child(
+        self,
+        entrypoint: EntryPoint | int,
+        child: Queue | Plugin | int,
+    ):
+        """
+        "Unlink" the given child resource from the given entrypoint.  This
+        only severs the relationship; it does not delete either resource.  If
+        there is no parent/child relationship, this is a no-op.
 
-    # child_snaps = utils.set_resource_children(
-    # self.session,
-    # EntryPoint,
-    # experiment,
-    # children,
-    # )
+        Args:
+            experiment: An entrypoint or resource_id integer primary key value
+            child: A queue or plugin or resource_id integer primary key value
 
-    # return child_snaps
+        Raises:
+            EntityDoesNotExistError: if parent or child do not exist
+        """
+        utils.unlink_child(self.session, entrypoint, child)
 
-    # def add_entrypoints(
-    # self,
-    # experiment: Experiment | int,
-    # children: Iterable[EntryPoint | int],
-    # ) -> list[EntryPoint]:
-    # """
-    # Add the given entry points as children of the given experiment.
+    def unlink_queues(
+        self,
+        entrypoint: EntryPoint | int,
+    ) -> Sequence[int]:
+        """
+        "Unlink" the given child resource from the given entrypoint.  This
+        only severs the relationship; it does not delete either resource.  If
+        there is no parent/child relationship, this is a no-op.
 
-    # Args:
-    # experiment: An Experiment object or resource_id integer primary key
-    # value
-    # children: The entry points to add
+        Args:
+            experiment: An entrypoint or resource_id integer primary key value
+            child: A queue or plugin or resource_id integer primary key value
 
-    # Returns:
-    # The complete list of entry point children, as latest snapshots
-    # (including both pre-existing and new children).
-
-    # Raises:
-    # EntityDoesNotExistError: if parent or any new child does not exist
-    # EntityDeletedError: if parent or any new child is deleted
-    # """
-    # return utils.append_resource_children(
-    # self.session, EntryPoint, experiment, children
-    # )
-
-    # def unlink_entrypoint(
-    # self,
-    # experiment: Experiment | int,
-    # entrypoint: EntryPoint | int,
-    # ):
-    # """
-    # "Unlink" the given child entry point from the given experiment.  This
-    # only severs the relationship; it does not delete either resource.  If
-    # there is no parent/child relationship, this is a no-op.
-
-    # Args:
-    # experiment: An experiment or resource_id integer primary key value
-    # entrypoint: An entry point or resource_id integer primary key value
-
-    # Raises:
-    # EntityDoesNotExistError: if parent or child do not exist
-    # """
-    # utils.unlink_child(self.session, experiment, entrypoint)
+        Raises:
+            EntityDoesNotExistError: if parent or child do not exist
+        """
+        return utils.unlink_children(self.session, entrypoint, "queue")
 
     def delete(self, entrypoint: EntryPoint | int) -> None:
         """

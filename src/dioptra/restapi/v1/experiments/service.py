@@ -372,6 +372,7 @@ class ExperimentIdService(object):
 
         with self._uow:
             self._uow.experiment_repo.delete(experiment_id)
+
         log.debug("Experiment deleted", experiment_id=experiment_id)
 
         return {"status": "Success", "id": [experiment_id]}

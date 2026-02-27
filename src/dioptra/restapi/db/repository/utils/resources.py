@@ -533,7 +533,7 @@ def append_resource_children(
     child_class: typing.Type[ResourceT],
     parent: m.Resource | m.ResourceSnapshot | int,
     new_children: Iterable[m.Resource | ResourceT | int],
-) -> list[ResourceT]:
+) -> Sequence[ResourceT]:
     """
     Add the given children to the given parent.
 
@@ -636,6 +636,48 @@ def unlink_child(
         if child.resource_id == child_id:
             del parent.children[idx]
             break
+
+
+def unlink_children(
+    session: CompatibleSession[S],
+    parent: m.Resource | m.ResourceSnapshot | int,
+    type_: str | None,
+) -> list[int]:
+    """
+    "Unlink" children of the given type from the given parent. If type is None,
+    unlink all children. This only severs the relationship; it does not delete either
+    resource.  If there is no parent/child relationship, this is a no-op.
+
+    Args:
+        session: An SQLAlchemy session
+        parent: A resource, snapshot, or resource_id integer primary key
+            value
+        child: A resource, snapshot, or resource_id integer primary key
+            value
+
+    Raises:
+        EntityDoesNotExistError: if parent or child do not exist
+    """
+    assert_resource_exists(session, parent, DeletionPolicy.ANY)
+
+    # We need a parent object...
+    if isinstance(parent, int):
+        temp = session.get(m.Resource, parent)
+        # I just checked parent exists above, so the above .get() should not
+        # return None.
+        assert temp is not None
+        parent = temp
+
+    resource_ids = {child.resource_id for child in parent.children}
+    if type_ is None:
+        parent.children.clear()
+    else:
+        children = [child for child in parent.children if child.resource_type != type_]
+        resource_ids = resource_ids - {child.resource_id for child in children}
+        parent.children.clear()
+        parent.children.extend(children)
+
+    return list(resource_ids)
 
 
 def delete_resource(
@@ -921,4 +963,5 @@ __all__ = [
     "get_snapshot_by_name",
     "set_resource_children",
     "unlink_child",
+    "unlink_children",
 ]

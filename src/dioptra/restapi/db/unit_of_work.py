@@ -18,6 +18,8 @@ import contextlib
 from types import TracebackType
 from typing import Literal, Type
 
+from injector import inject
+
 from dioptra.restapi.db.db import db
 from dioptra.restapi.db.repository.drafts import DraftsRepository
 from dioptra.restapi.db.repository.entrypoints import EntrypointRepository
@@ -65,3 +67,16 @@ class UnitOfWork(contextlib.AbstractContextManager):
             self.commit()
 
         return False
+
+
+class UnitOfWorkService:
+    @inject
+    def __init__(self, uow: UnitOfWork) -> None:
+        """Initialize the UnitOfWork service.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            uow: A UnitOfWork instance
+        """
+        self._uow = uow
