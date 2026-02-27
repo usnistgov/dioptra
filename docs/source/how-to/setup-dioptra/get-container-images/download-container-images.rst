@@ -33,7 +33,7 @@ Prerequisites
 * (Optional) `cosign <https://github.com/sigstore/cosign>`__ installed for image verification
 * (Optional) `jq <https://jqlang.org/>`__ for easier key path retrieval
 
-.. _how-to-download-container-downloading-the-images:
+.. _how-to-download-container-images-downloading-the-images:
 
 Downloading the Images
 ----------------------
