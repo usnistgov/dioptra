@@ -412,7 +412,6 @@ def test_create_user(dioptra_client: DioptraClient[DioptraResponseProtocol]) -> 
 
     # Posting a user returns CurrentUserSchema.
     user_response = dioptra_client.users.create(username, email, password).json()
-    print(user_response, flush=True)
     assert_user_response_contents_matches_expectations(
         response=user_response,
         expected_contents={

@@ -500,7 +500,6 @@ def build_user(user: models.User) -> dict[str, Any]:
         "id": user.user_id,
         "username": user.username,
         "email": user.email_address,
-        "deleted": user.is_deleted,
     }
 
 
@@ -523,7 +522,6 @@ def build_current_user(user: models.User) -> dict[str, Any]:
         ],
         "created_on": user.created_on,
         "last_modified_on": user.last_modified_on,
-        "deleted": user.is_deleted,
         "last_login_on": user.last_login_on,
         "password_expires_on": user.password_expire_on,
     }
@@ -565,7 +563,6 @@ def build_group(group: models.Group) -> dict[str, Any]:
         "members": list(members.values()),
         "created_on": group.created_on,
         "last_modified_on": group.last_modified_on,
-        "deleted": group.is_deleted,
     }
 
 
