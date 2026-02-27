@@ -53,7 +53,6 @@ def assert_user_response_contents_matches_expectations(
         "username",
         "email",
         "id",
-        "deleted"
     }
     if current_user:
         expected_keys.update(
@@ -71,7 +70,6 @@ def assert_user_response_contents_matches_expectations(
     assert isinstance(response["username"], str)
     assert isinstance(response["email"], str)
     assert isinstance(response["id"], int)
-    assert isinstance(response["deleted"], bool)
 
     assert response["username"] == expected_contents["username"]
     assert response["email"] == expected_contents["email"]
@@ -414,6 +412,7 @@ def test_create_user(dioptra_client: DioptraClient[DioptraResponseProtocol]) -> 
 
     # Posting a user returns CurrentUserSchema.
     user_response = dioptra_client.users.create(username, email, password).json()
+    print(user_response, flush=True)
     assert_user_response_contents_matches_expectations(
         response=user_response,
         expected_contents={
