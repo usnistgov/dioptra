@@ -19,7 +19,6 @@
     :loading="isLoading"
     :hideCreateBtn="true"
     :hideDeleteBtn="true"
-    @edit="(row) => router.push(`/artifacts/${row.id}`)"
     @delete="
       (row) => {
         selected = [row];

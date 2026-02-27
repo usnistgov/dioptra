@@ -326,6 +326,7 @@ import ParameterList from "@/components/table/cells/ParameterList.vue";
 import BadgeIcon from "@/components/table/cells/BadgeIcon.vue"; 
 import CellLongText from "@/components/table/cells/CellLongText.vue"; 
 import { getConceptStyle } from "@/constants/tableStyles";
+import CodeEditor from '@/components/CodeEditor.vue'
 
 const store = useLoginStore();
 
@@ -418,23 +419,35 @@ const selectedArtifactTask = ref();
 const plugins = ref([]);
 
 async function getPlugins(val = "", update) {
-  update(async () => {
-    try {
-      let res = await api.getData("plugins", {
-        search: val,
-        rowsPerPage: 0, // get all
-        index: 0,
-      });
-      const originalPluginIndex = res.data.data.findIndex(
-        (plugin) => plugin.id === ORIGINAL_PLUGIN_SNAPSHOT.id
-      );
-      // replace latest plugin snapshot with original plugin snapshot from artifact
-      res.data.data[originalPluginIndex] = ORIGINAL_PLUGIN_SNAPSHOT;
-      plugins.value = res.data.data;
-    } catch (err) {
-      notify.error(err.response.data.message);
-    }
-  });
+  try {
+
+    let res = await api.getData("plugins", {
+      search: val,
+      rowsPerPage: 0, // get all
+      index: 0,
+    });
+
+    update(() => {
+      if (res?.data?.data) {
+        if (ORIGINAL_PLUGIN_SNAPSHOT) {
+          const originalPluginIndex = res.data.data.findIndex(
+            (plugin) => plugin.id === ORIGINAL_PLUGIN_SNAPSHOT.id
+          );
+          
+          // Prevent mutating index -1
+          if (originalPluginIndex !== -1) {
+            res.data.data[originalPluginIndex] = ORIGINAL_PLUGIN_SNAPSHOT;
+          }
+        }
+        plugins.value = res.data.data;
+      }
+    });
+  } catch (err) {
+    update(() => {
+      plugins.value = [];
+    });
+    notify.error(err.response?.data?.message || err.message);
+  }
 }
 
 watch(

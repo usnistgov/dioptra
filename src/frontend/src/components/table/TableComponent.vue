@@ -14,7 +14,7 @@
     bordered
     dense
     class="q-mt-lg"
-    :tabindex="props.disableSelect ? '' : '0'"
+    :tabindex="props.disableSelect ? -1 : 0"
     @keydown="keydown"
     :selection="selection"
     :hideBottom="props.hideBottom && rows?.length > 0"
