@@ -35,45 +35,14 @@ Prerequisites
 
 .. _how-to-download-container-images-clone-the-repository:
 
-Clone the Repository 
---------------------
-
-Before obtaining the Dioptra container images, ensure you have obtained the Dioptra source code by **cloning the repository** from GitHub.
-If not already done, clone the repository now.
-
-
-.. rst-class:: header-on-a-card header-steps
-
-Step 1: Clone the Repository 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-**Steps** 
-
-1. Open a terminal shell and navigate to an appropriate location on your machine
-2. Clone the Dioptra repository
-
-.. tab-set::
-
-   .. tab-item:: Clone with HTTPS
-
-      .. code:: sh
-
-         git clone https://github.com/usnistgov/dioptra.git
-
-   .. tab-item:: Clone with SSH
-
-      .. code:: sh
-
-         git clone git@github.com:usnistgov/dioptra.git
-
-Downloading the Images
+Downloading Container Images
 ----------------------
 
 Obtain the container images for the core Dioptra services.
 
 .. rst-class:: header-on-a-card header-steps
 
-Step 2: Choose Your Build
+Step 1: Choose Your Build
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Dioptra images are tagged based on release versions and branches. Choose the appropriate build tag for your use case:
@@ -85,7 +54,7 @@ Dioptra images are tagged based on release versions and branches. Choose the app
 
    .. note:: 
       
-      The latest stable release can be identified by looking in the top left corner of any `published documentation page <https://pages.nist.gov/dioptra/>`__. 
+      The latest stable release ID (e.g. 1.1.0) can be identified by looking in the top left corner of any `published documentation page <https://pages.nist.gov/dioptra/>`__. 
 
 **Steps** 
 
@@ -93,14 +62,14 @@ Dioptra images are tagged based on release versions and branches. Choose the app
 
 .. tabs::
 
-   .. tab:: Stable Releases
+   .. group-tab:: Stable Releases
 
 
       .. code:: sh
 
          export TAG="1.2.0"
 
-   .. tab:: Developer Builds
+   .. group-tab:: Developer Builds
 
 
       .. code:: sh
@@ -109,7 +78,7 @@ Dioptra images are tagged based on release versions and branches. Choose the app
 
 .. rst-class:: header-on-a-card header-steps
 
-Step 3: Pull the Core Images
+Step 2: Pull the Core Images
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **Steps** 
@@ -124,7 +93,7 @@ Step 3: Pull the Core Images
 
 .. rst-class:: header-on-a-card header-steps
 
-Step 4: Pull Worker Images
+Step 3: Pull Worker Images
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You will need at least one worker image to run Jobs in Dioptra. 
@@ -150,7 +119,7 @@ Each image comes equipped with different dependencies and is configured for diff
 
 .. rst-class:: header-on-a-card header-steps
 
-Step 5: Verify the Images Exist Locally
+Step 4: Verify the Images Exist Locally
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Run ``docker images`` to verify that the container images are available with your chosen tag:
@@ -185,31 +154,93 @@ The public key needed for verification is stored in the Dioptra repository.
 
 .. rst-class:: header-on-a-card header-steps
 
-Step 6: Locate the Public Key
+Step 5: Locate the Public Key
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The repository root contains a ``verify.json`` file that specifies the path to the public key.
-Retrieve the key path:
+The `Dioptra repository <https://github.com/usnistgov/dioptra>`__ root contains a ``verify.json`` file that specifies the path to the public key.
+
+Retrieve the key path in one of three ways:
 
 **Steps**
 
 
 .. tabs::
 
-   .. tab:: Using jq
+   .. tab:: Curl GitHub API 
+
+      **Steps**
+
+      1. Export branch corresponding to your build 
+
+      .. tabs::
+
+         .. group-tab:: Stable Releases
 
 
-      .. code:: sh
+            .. code:: sh
 
-         cd dioptra
-         KEY_PATH=$(jq -r '.key_path' verify.json)
+               export BRANCH_NAME="main"
 
-   .. tab:: Without using jq
+         .. group-tab:: Developer Builds
 
-      1. Navigate to ``dioptra/``  (cloned in :ref:`step 1 <how-to-download-container-images-clone-the-repository>`)
-      2. Open the file ``dioptra/verify.json`` 
-      3. Copy the value of the ``key_path`` field (e.g. "**keys/dioptra.pub**")
-      4. Export the copied value to an environment variable 
+
+            .. code:: sh
+
+               export BRANCH_NAME="dev"
+
+      2. Obtain the key path using curl
+
+      .. tab-set::
+
+         .. tab-item:: Using jq
+
+            .. code:: sh
+
+               export KEY_PATH=$(curl -sL "https://raw.githubusercontent.com/usnistgov/dioptra/refs/heads/$BRANCH_NAME/verify.json" | jq -r '.key_path')
+               echo $KEY_PATH
+
+         .. tab-item:: Without jq (less reliable)
+
+            .. code:: sh
+
+               export KEY_PATH=$(curl -sL "https://raw.githubusercontent.com/usnistgov/dioptra/refs/heads/$BRANCH_NAME/verify.json" | grep 'key_path' | sed 's/.*": "\(.*\)".*/\1/')
+               echo $KEY_PATH
+
+   .. tab:: Clone Dioptra
+
+      These instructions utilize **jq**
+
+      **Steps**
+
+      1. Clone the Dioptra repository (if not already done)
+
+         .. tab-set::
+
+            .. tab-item:: Clone with HTTPS
+
+               .. code:: sh
+
+                  git clone https://github.com/usnistgov/dioptra.git
+
+            .. tab-item:: Clone with SSH
+
+               .. code:: sh
+
+                  git clone git@github.com:usnistgov/dioptra.git
+               
+      2. Use **jq** to obtain the key path from ``verify.json`` 
+
+         .. code:: sh
+
+            cd dioptra
+            KEY_PATH=$(jq -r '.key_path' verify.json)
+            echo $KEY_PATH
+
+   .. tab:: Find path in browser
+
+      1. Open ``verify.json`` in GitHub here: `<https://github.com/usnistgov/dioptra/blob/main/verify.json>`__ (ensure you are on the right branch)
+      2. Copy the value of the ``key_path`` field (e.g. "**keys/dioptra.pub**")
+      3. Export the copied value to an environment variable 
 
          .. code:: sh
 
@@ -217,11 +248,11 @@ Retrieve the key path:
 
 .. rst-class:: header-on-a-card header-steps
 
-Step 7: Verify Each Image
+Step 6: Verify Each Image
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Use ``cosign verify`` to verify each downloaded image.
-Run this command for each image, replacing the image name and tag as needed:
+Run this command for each image - ensure you have set your image tag as an environment variable first:
 
 .. tabs::
 

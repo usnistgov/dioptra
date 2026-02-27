@@ -31,35 +31,16 @@ Prerequisites
 * :ref:`how-to-get-container-images` - Container images available (downloaded or built)
 * A terminal with access to the deployment target directory
 
-Deployment Setup
-----------------
-
-Organizing your Deployments 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-In Dioptra, a **Deployment** is a configured instance of Dioptra. Multiple deployments can be maintained in isolated environments on a single host. 
-
-You will create a deployments folder on your machine independent of (or nested within) the Dioptra repository :ref:`you previously cloned <how-to-download-container-images-clone-the-repository>`.
-
-**File Structure Overview** 
-
-.. figure:: ../../images/figures/repo_deployments_directory_overview.png
-   :alt: Diagram showing directory structures for Dioptra
-   :figclass: border-image clickable-image
-
-   Your deployments folder can be nested within ``dioptra/`` or be located elsewhere. 
-
 
 Create a Deployment
-------------------------
+-------------------
 
 .. rst-class:: header-on-a-card header-steps
 
 Step 1: Create the Deployment Directory
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If not already created, make the folder where you plan to keep your deployment(s) and change into it so that it becomes your working directory.
+If not already created, make a folder where you plan to keep your deployment(s) and change into it so that it becomes your working directory.
 
 .. code:: sh
 
@@ -68,22 +49,34 @@ If not already created, make the folder where you plan to keep your deployment(s
 
 .. rst-class:: header-on-a-card header-steps
 
-Step 2: Create a Virtual Environment and Install Dependencies
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Step 2: Create a Virtual Environment and Install Cruft
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Cruft is required to create the deployment. 
 
-.. code:: sh
+.. tabs:: 
 
-   uv venv 
-   source .venv/bin/activate
-   uv pip install cruft
-   
+   .. tab:: uv 
+
+      .. code:: sh
+
+         uv venv 
+         source .venv/bin/activate
+         uv pip install cruft
+         
+   .. tab:: pip
+
+      .. code:: sh
+
+         python3 -m venv .venv
+         source .venv/bin/activate
+         pip install cruft
+         
 
 .. rst-class:: header-on-a-card header-steps
 
 Step 3: Choose Deployment Branch
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Export the branch name as an environment variable
 
@@ -91,6 +84,7 @@ Export the branch name as an environment variable
 
    .. tab:: Stable Releases
 
+      Best for stable performance 
 
       .. code:: sh
 
@@ -98,6 +92,7 @@ Export the branch name as an environment variable
 
    .. tab:: Developer Builds
 
+      Best for access to newer features 
 
       .. code:: sh
 
@@ -121,7 +116,7 @@ Choose a method and then create the deployment by applying the template:
 
 .. tabs::
 
-   .. tab:: Method 1: All specified
+   .. tab:: Method 1: User specified
 
       .. code:: sh
 
@@ -161,7 +156,7 @@ Choose a method and then create the deployment by applying the template:
 .. rst-class:: header-on-a-card header-steps
 
 Step 5: Configure Template Variables (Method 1 Only)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you selected Method 1 (interactive prompts), you will be asked to set configuration variables.
 In most cases, the default value is appropriate.
@@ -192,7 +187,7 @@ Run the initialization script to generate passwords, copy configuration files, a
 
    .. code:: sh
 
-      cd dioptra-deployment  # Or your deployment folder name
+      cd dioptra-deployment  # Or the name of your deployment as specified in cruft script
 
 2. Run the initialization script 
 
@@ -230,9 +225,9 @@ Verify all services are running:
    See :ref:`reference-deployment-commands` for the full suite of commands to manage your deployment (stop, restart, view logs, etc.).
 
 Next Steps
-------------
+----------
 
-To test that Dioptra is working, consider progressing through the :ref:`Hello World Tutorial<tutorial-hello-world-in-dioptra>`.
+You have now successfully installed Dioptra! To test that Dioptra is working, consider progressing through the :ref:`Hello World Tutorial<tutorial-hello-world-in-dioptra>`.
 
 
 .. rst-class:: header-on-a-card header-seealso
