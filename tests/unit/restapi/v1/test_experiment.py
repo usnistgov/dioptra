@@ -55,7 +55,7 @@ def assert_experiment_response_contents_matches_expectations(
         "createdOn",
         "snapshotCreatedOn",
         "lastModifiedOn",
-        "deleted"
+        "deleted",
         "latestSnapshot",
         "hasDraft",
         "name",
