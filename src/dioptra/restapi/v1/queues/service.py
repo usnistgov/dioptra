@@ -268,6 +268,7 @@ class QueueIdService(object):
             resource=queue.resource,
             creator=current_user,
         )
+
         try:
             self._uow.queue_repo.create_snapshot(new_queue)
         except Exception:
