@@ -409,7 +409,8 @@ class ExperimentJobsSubCollectionClient(SubCollectionClient[T]):
         """Sets the status for an experiment's job.
 
             Primarily used for testing or to reset a job that has failed, whose cause
-            has been remedied, in order to re-run the job,
+            has been remedied, in order to re-run the job.
+            
         Args:
             experiment_id: The experiment id, an integer.
             job_id: The job id, an integer.

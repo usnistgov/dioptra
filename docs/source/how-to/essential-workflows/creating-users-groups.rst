@@ -71,6 +71,7 @@ Register a user with a username, email address, and password to be able to creat
       Use the client to create the user.
 
       .. automethod:: dioptra.client.users.UsersCollectionClient.create
+         :noindex:
 
 Group Creation Workflow
 -----------------------

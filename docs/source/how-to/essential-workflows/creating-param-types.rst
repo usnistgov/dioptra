@@ -67,6 +67,7 @@ Register a parameter type for use in dioptra.
       Use the client to create the parameter type.
 
       .. automethod:: dioptra.client.plugin_parameter_types.PluginParameterTypesCollectionClient.create
+         :noindex:
 
 .. rst-class:: fancy-header header-seealso
 
@@ -74,4 +75,4 @@ See Also
 ---------
 
 * :ref:`Parameter Types Explanation <explanation-plugin-parameter-types>` - Understand parameter types, structures, and their role in dioptra.
-* :ref:`Parameter Types Reference <reference-plugin-parameter-types>` - Reference page for parameter types.
+* :ref:`Parameter Types Reference <reference-parameter-types>` - Reference page for parameter types.

@@ -34,7 +34,7 @@ An **Entrypoint** in Dioptra is a repeatable workflow that can be executed as a 
 Entrypoint parameters and Artifact Input Parameters can optionally be attached to entrypoints and then used in the Task Graphs. The outputs from Function Tasks 
 can be saved as Artifacts, and the logic for this is defined in the Artifact Output Graph. 
 
-.. _reference-experiments-attributes:
+.. _reference-entrypoints-attributes:
 
 
 Entrypoint Attributes
@@ -867,7 +867,7 @@ These arguments are used in the ``serialization`` method of the Artifact Handler
 
 
 Artifact Output Graph Parameters
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Similar to the Task Graph, the Artifact Output Graph also has access to global entrypoint parameters. Entrypoint parameters can be referenced in the 
 Artifact Output Graph using the same syntax as the Task Graph. 
@@ -927,6 +927,7 @@ Using Python Client
 
       
     .. automethod:: dioptra.client.entrypoints.EntrypointsCollectionClient.create
+        :noindex:
 
 
 .. _reference-entrypoints-rest-api:

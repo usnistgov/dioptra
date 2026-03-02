@@ -301,7 +301,7 @@ Example Step 2: Add a file
 
 .. admonition:: Learn More
 
-   * :ref:`plugins-explanation` - Learn about plugins
+   * :ref:`explanation-plugins` - Learn about plugins
 
 Notes for "Steps" styling
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -389,7 +389,7 @@ Use them sparingly for information that is not required reading.
          In YAML, null is interpreted as the null value. Therefore, it does not name the null type!
 
       .. seealso::
-         View the :ref:`plugins-explanation` for more information.
+         View the :ref:`explanation-plugins` for more information.
 
    .. tab:: RST Source
 
@@ -456,7 +456,7 @@ another element.
 
       .. admonition:: Learn More
 
-         View the :ref:`plugins-explanation` for more information.
+         View the :ref:`explanation-plugins` for more information.
 
    .. tab:: RST Source
 
@@ -486,8 +486,8 @@ but could be reused for other elements as well.
          **Table of Contents:**
 
          * :doc:`/dev-guide/contributing-documentation-guide`
-         * :doc:`/dev-guide/contributing-merge-request-guidelines`
-         * :doc:`/dev-guide/contributing-commit-styleguide`
+         * :doc:`/reference/glossary`
+         * :doc:`/reference/dioptra-components/index`
 
 
 
@@ -506,8 +506,8 @@ but could be reused for other elements as well.
                :caption: Table of Contents
 
                /dev-guide/contributing-documentation-guide
-               /dev-guide/contributing-merge-request-guidelines
-               /dev-guide/contributing-commit-styleguide
+               /reference/glossary
+               /reference/dioptra-components/index
 
       In this example, however, doc references were used to avoid actually adding these pages to the global navigation.
 
@@ -969,7 +969,7 @@ Cards, grids, and callouts
             Step-by-step instructions for running Dioptra.
 
          .. grid-item-card:: **Installation**
-            :link: getting-started-installation
+            :link: explanation-install-dioptra
             :link-type: ref
 
             How to install Dioptra locally.
@@ -980,11 +980,11 @@ Cards, grids, and callouts
 
             Download or build container images.
 
-         .. grid-item-card:: **Additional Configuration**
-            :link: getting-started-additional-configuration
+         .. grid-item-card:: **Customize Setup**
+            :link: how-to-setup-options
             :link-type: ref
 
-            Optional configuration steps after setup.
+            Optional customizations.
 
    .. tab:: RST Source
 
@@ -993,13 +993,13 @@ Cards, grids, and callouts
          .. grid:: 2
 
             .. grid-item-card:: **Run Dioptra**
-               :link: getting-started-running-dioptra
+               :link: how-to-prepare-deployment
                :link-type: ref
 
                Step-by-step instructions for running Dioptra.
 
             .. grid-item-card:: **Installation**
-               :link: getting-started-installation
+               :link: explanation-install-dioptra
                :link-type: ref
 
                How to install Dioptra locally.
@@ -1010,8 +1010,8 @@ Cards, grids, and callouts
 
                Download or build container images.
 
-            .. grid-item-card:: **Additional Configuration**
-               :link: getting-started-additional-configuration
+            .. grid-item-card:: **Customize Setup**
+               :link: how-to-setup-options
                :link-type: ref
 
-               Optional configuration steps after setup.
+               Optional customizations.

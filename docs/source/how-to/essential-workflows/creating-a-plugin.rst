@@ -57,7 +57,7 @@ Write your Python functions or Artifact classes in a local file. Ensure you have
 .. rst-class:: header-on-a-card header-steps
 
 Step 2: Create the Plugin Container
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 First, define the container that will hold your files.
@@ -75,6 +75,7 @@ First, define the container that will hold your files.
       Use the client to create the plugin container.
 
       .. automethod:: dioptra.client.plugins.PluginsCollectionClient.create
+         :noindex:
 
 
 .. rst-class:: header-on-a-card header-steps
@@ -99,12 +100,13 @@ Next, add your Python code to the container.
       Use the ``client.plugins.files.create()`` method to upload code and register tasks simultaneously.
 
       .. automethod:: dioptra.client.plugins.PluginFilesSubCollectionClient.create
+         :noindex:
 
 
 .. rst-class:: header-on-a-card header-steps
 
 Step 4: Register Tasks (GUI only)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Finally, register the tasks so they are visible to Dioptra.
 
@@ -135,7 +137,7 @@ Finally, register the tasks so they are visible to Dioptra.
 .. rst-class:: header-on-a-card header-steps
 
 Step 5: Save and Confirm (GUI only)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Once the tasks appear in the list (GUI) or the API call returns successfully (Python Client), your plugin is ready for use in experiments.
 
 

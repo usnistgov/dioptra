@@ -83,6 +83,7 @@ Using Python Client
 **Create an Experiment**
 
     .. automethod:: dioptra.client.experiments.ExperimentsCollectionClient.create
+        :noindex:
 
 .. _reference-experiments-rest-api:
 

@@ -174,6 +174,6 @@ See Also
 --------
 
 * :ref:`how-to-using-docker-compose-overrides` - Docker Compose override file basics
-* :ref:`how-to-download-data` - Download example datasets
+* :ref:`how-to-add-a-dataset` - Download example datasets
 * :ref:`how-to-prepare-deployment` - Full deployment customization
 * :ref:`how-to-integrating-custom-containers` - Add custom containers to your deployment

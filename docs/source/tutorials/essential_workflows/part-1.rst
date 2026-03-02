@@ -14,12 +14,11 @@
 ..
 .. ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 .. https://creativecommons.org/licenses/by/4.0/legalcode
-:html_theme.sidebar_secondary.remove:
 
 .. _tutorial-running-your-first-plugin-task:
 
 [OLD] Running your first plugin task
-==============================
+====================================
 
 Overview
 --------
@@ -55,7 +54,7 @@ We will create a plugin with one task. This task will:
 We can refer to the Dioptra logs to see if our Plugin task worked. 
 
 Create the Plugin in the UI
-~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. note::
    Plugins, tasks, entrypoints, and types can be created through the User Interface (UI), Rest API, or TOML files.  
@@ -106,10 +105,10 @@ We now attach code to the Plugin.
 
 
 
-.. _tutorial-1-part-1-make-your-first-plugin:
+.. _tutorial-1-part-1-register-your-first-plugin:
 
 Register the Plugin Task
-~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 Functions must be registered as tasks before they can be used in Entrypoints.
 
@@ -250,4 +249,4 @@ Conclusion
 ----------
 
 You have now run your first Plugin Task in Dioptra.  
-Next, we’ll add **inputs and outputs** to our Plugin Task so you can parametrize your Entrypoints.
+Next, we'll add **inputs and outputs** to our Plugin Task so you can parametrize your Entrypoints.

@@ -129,7 +129,7 @@ Artifact tasks must be defined as classes that inherit from the ``ArtifactTaskIn
       :end-before: # [end-example-artifact-task]
 
 
-.. _reference-plugins-registration-interfaces:
+.. _plugin-reference-registration-interfaces:
 
 Registration Interfaces
 -----------------------
@@ -145,10 +145,12 @@ Using Python Client
 **Create a Plugin Container**
 
     .. automethod:: dioptra.client.plugins.PluginsCollectionClient.create
+      :noindex:
 
 **Add a Python file and register function tasks / artifact tasks**
 
     .. automethod:: dioptra.client.plugins.PluginFilesSubCollectionClient.create
+      :noindex:
 
 
 Using REST API
@@ -170,4 +172,4 @@ See Also
 ---------
    
 * :ref:`What are Plugins? <explanation-plugins>` 
-* :ref:`<how-to-create-plugins>`
+* :ref:`how-to-create-plugins`

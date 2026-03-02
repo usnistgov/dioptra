@@ -15,7 +15,7 @@
 .. ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 .. https://creativecommons.org/licenses/by/4.0/legalcode
 
-.. _reference-auth-client-methods:
+.. _reference-auth-users-groups-client-methods:
 
 Auth, Users, and Groups Client Methods
 ======================================

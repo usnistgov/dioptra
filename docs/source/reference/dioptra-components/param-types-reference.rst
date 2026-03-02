@@ -51,7 +51,7 @@ Required Attributes
 * **Description**: (string) A description of the type.
 * **Structure**: (string) A string representing the structure of the type as a JSON object.
 
-.. _reference-queues-system-managed-state:
+.. _reference-parameter-types-system-managed-state:
 
 System-Managed State
 ~~~~~~~~~~~~~~~~~~~~
@@ -159,6 +159,7 @@ Using Python Client
 **Create a Plugin Parameter Type**
 
     .. automethod:: dioptra.client.plugin_parameter_types.PluginParameterTypesCollectionClient.create
+      :noindex:
 
 
 .. _reference-parameter-types-rest-api:

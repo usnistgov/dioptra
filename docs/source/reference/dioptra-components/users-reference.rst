@@ -77,6 +77,7 @@ Using Python Client
 **Create a User**
 
     .. automethod:: dioptra.client.users.UsersCollectionClient.create
+        :noindex:
 
 
 .. _reference-users-rest-api:
@@ -96,5 +97,5 @@ See the :http:post:`POST /api/v1/users </api/v1/users/>` endpoint documentation 
 See Also
 ---------
 
-* :ref:`<how_to_create_a_user>`
+* :ref:`how-to-create-users-and-groups`
 * :ref:`Users and Groups Explanation <explanation-users-and-groups>`

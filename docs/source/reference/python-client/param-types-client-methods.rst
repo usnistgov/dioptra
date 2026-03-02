@@ -71,7 +71,7 @@ Delete Plugin Parameter Type
 
 
 Tags Attached to Plugin Parameter Types - Methods
-------------------------------------------------
+-------------------------------------------------
 
 Methods belonging to the ``TagsSubCollectionClient`` can are accessed via the ``tags`` property of the Plugin Parameter Types Client (which points to ``TagsSubCollectionClient``)
 
@@ -92,7 +92,7 @@ See **available methods** for the ``TagsSubCollectionClient``:
 
 
 Snapshots of Plugin Parameter Types - Methods
---------------------------------------------
+---------------------------------------------
 
 Methods belonging to the  ``SnapshotsSubCollectionClient`` can are accessed via the ``snapshots`` property of the Plugin Parameter Types Client (which points to ``SnapshotsSubCollectionClient``)
 

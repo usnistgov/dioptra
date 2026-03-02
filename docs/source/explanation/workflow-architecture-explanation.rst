@@ -19,12 +19,12 @@
 
 
 Workflow Architecture
-================
+=====================
 
 A high-level overview of how Dioptra components work together to execute jobs.
 
 Summary: What comprises a Dioptra Workflow?
---------------------------
+-------------------------------------------
 
 To run a :ref:`job <explanation-experiments-and-jobs>` within a Dioptra :ref:`experiment <explanation-experiments-and-jobs>`, multiple Dioptra components need to be
 created and combined. This explainer provides a high level view of how all these pieces fit together.
@@ -47,7 +47,7 @@ More specifically:
 * Jobs can produce :ref:`Artifacts <explanation-artifacts>`, which are objects saved to disk.
 
 Example Experiment: Adversarial ML
-~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In the context of a Dioptra experiment seeking to **evaluate ML attacks and defenses**, some potential examples include:
 
@@ -94,7 +94,7 @@ experiment permutations in a principled way.
    * `Adversarial ML with OPTIC <https://github.com/usnistgov/dioptra/blob/main/examples/mnist_demo.ipynb>`__ - A realistic reference implementation for adversarial ML on image data
 
 What is required to run code in Dioptra?
----------------------
+----------------------------------------
 
 Dioptra is primarily a platform for executing custom code in an **organized and reproducible manner**. Currently, Dioptra supports the execution of Python code only.
 
@@ -135,4 +135,4 @@ The Dioptra **how-to guides** instruct users on how to build each of these compo
 
 The Dioptra **component glossary** provides a useful reference for all the components mentioned here.
 
-* :ref:`reference-dioptra-components-glossary`
+* :ref:`reference-dioptra-components`

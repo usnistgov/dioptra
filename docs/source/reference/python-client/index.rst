@@ -18,7 +18,7 @@
 .. _reference-python-client-methods:
 
 Python Client Methods
-===================
+=====================
 
 .. container:: wide-lightly-shaded
 

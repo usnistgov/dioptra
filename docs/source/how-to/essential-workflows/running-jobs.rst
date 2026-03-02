@@ -77,14 +77,17 @@ Step 1: Prepare the experiment, entrypoint, and queue for the job
       **Experiment client GET method:**
 
       .. automethod:: dioptra.client.experiments.ExperimentsCollectionClient.get
+         :noindex:
 
       **Entrypoint client GET method:**
 
       .. automethod:: dioptra.client.entrypoints.EntrypointsCollectionClient.get
+         :noindex:
 
       **Queue client GET method:**
 
       .. automethod:: dioptra.client.queues.QueuesCollectionClient.get
+         :noindex:
 
 
 .. rst-class:: header-on-a-card header-steps
@@ -128,6 +131,7 @@ artifact input.
       Use the client to retrieve the IDs of artifacts.
 
       .. automethod:: dioptra.client.artifacts.ArtifactsCollectionClient.get
+         :noindex:
 
 
 .. rst-class:: header-on-a-card header-steps
@@ -150,6 +154,7 @@ Once all the inputs are prepared, run the job.
       Use the client to create the job.
 
       .. automethod:: dioptra.client.experiments.ExperimentJobsSubCollectionClient.create
+         :noindex:
 
 
 .. rst-class:: fancy-header header-seealso
