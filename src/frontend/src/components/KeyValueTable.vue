@@ -9,7 +9,7 @@
         <td
           class="text-weight-bold"
           :class="
-            $q.dark.isActive ? 'bg-grey-9 text-grey-4' : 'bg-grey-2 text-grey-9'
+            $q.dark.isActive ? 'bg-blue-grey-10 text-grey-4' : 'bg-grey-2 text-grey-9'
           "
           :style="{ minWidth: firstColumnMinWidth, width: firstColumnMinWidth }"
         >

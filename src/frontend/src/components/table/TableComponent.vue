@@ -218,8 +218,8 @@
       <div class="row items-center q-gutter-x-md">
         <div
           v-if="props.title"
-          class="text-h6 q-mb-lg q-mt-md q-mx-lg text-grey-8"
-          :class="$q.dark.isActive ? 'text-grey-4' : 'text-grey-8'"
+          class="text-h6 q-mb-lg q-mt-md q-mx-lg"
+          :class="$q.dark.isActive ? 'text-grey-6' : 'text-grey-7'"
         >
           {{ props.title }}
         </div>

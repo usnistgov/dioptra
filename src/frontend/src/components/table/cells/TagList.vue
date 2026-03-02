@@ -8,8 +8,7 @@
       <q-chip
         v-for="(tag, i) in visibleTags"
         :key="i"
-        :color="$q.dark.isActive ? 'grey-8' : 'blue-grey-7'"
-        :text-color="$q.dark.isActive ? 'grey-3' : 'blue-grey-10'"
+        :color="$q.dark.isActive ? 'grey-5' : 'blue-grey-7'"
         dense
         outline
         square
@@ -35,12 +34,12 @@
 
       <q-chip
         v-if="hiddenCount > 0"
-        :color="$q.dark.isActive ? 'grey-9' : 'blue-grey-1'"
-        :text-color="$q.dark.isActive ? 'grey-3' : 'blue-grey-10'"
+        :color="$q.dark.isActive ? 'grey-9' : 'grey-2'"
+        :text-color="$q.dark.isActive ? 'grey-3' : 'blue-grey-9'"
         dense
         clickable
         square
-        class="q-my-none text-weight-bold"
+        class="q-my-none text-weight-bold q-px-sm"
         style="font-size: 10px; height: 20px"
       >
         +{{ hiddenCount }} more...
@@ -52,7 +51,8 @@
         >
           <div class="column q-pa-sm" style="min-width: 200px">
             <div
-              class="text-caption text-weight-bold text-blue-grey-8 q-mb-xs q-px-xs"
+              class="text-caption text-weight-bold q-mb-xs q-px-xs"
+              :class="$q.dark.isActive ? 'text-grey-4' : 'text-blue-grey-7'"
             >
               ADDITIONAL TAGS
             </div>
@@ -61,8 +61,7 @@
               <q-chip
                 v-for="(tag, i) in hiddenTags"
                 :key="i"
-                color="blue-grey-7"
-                text-color="blue-grey-10"
+                :class="$q.dark.isActive ? 'text-grey-5' : 'text-blue-grey-7'"
                 dense
                 outline
                 square
@@ -88,10 +87,10 @@
       </q-chip>
     </div>
 
-    <div class="q-pl-sm">
+    <div class="q-pl-sm column">
       <q-btn
         round
-        size="xs"
+        size="sm"
         icon="add"
         color="grey-4"
         text-color="blue-grey-9"
@@ -107,6 +106,7 @@
 <script setup>
 import { computed } from "vue";
 import { useQuasar } from "quasar";
+import { LineCounter } from "yaml";
 
 const $q = useQuasar();
 

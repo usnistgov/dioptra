@@ -99,14 +99,22 @@
 
               <template v-slot:selected-item="scope">
                 <div class="q-py-xs">
-                  <div class="row items-center q-px-sm no-wrap bg-white shadow-1" style="border-radius: 4px; border: 1px solid #eeeeee; width: fit-content;">
-                    <q-icon :name="getConceptStyle('plugin').icon" :color="getConceptStyle('plugin').color" size="xs" />
-                    <q-chip :color="getConceptStyle('plugin').color" text-color="white" size="sm" outline square clickable class="text-weight-bold no-border q-mx-none">
-                      <span class="font-mono ellipsis" style="font-size: 14px; font-weight: 500">
+                  <div class="row items-center q-px-sm no-wrap shadow-1" 
+                  style="border-radius: 4px; border: 1px solid #eeeeee; width: fit-content;"
+                  :class="$q.dark.isActive ? 'bg-grey-10' : 'bg-grey-1'" >
+                    <q-icon :name="getConceptStyle('plugin').icon" 
+                      :color="$q.dark.isActive ? getConceptStyle('plugin').darkColor : getConceptStyle('plugin').color"  
+                      size="xs" />
+                    <q-chip 
+                     :color="$q.dark.isActive ? getConceptStyle('plugin').darkColor : getConceptStyle('plugin').color"
+                      size="sm" outline square clickable class="text-weight-bold no-border q-mx-none">
+                      <span class="font-mono ellipsis" style="font-size: 14px; font-weight: 500 "
+                       :color="$q.dark.isActive ? getConceptStyle('plugin').darkColor : getConceptStyle('plugin').color"
+                      >
                         {{ scope.opt.name }}
                       </span>
                       <template v-if="!scope.opt.latestSnapshot">
-                        <div style="height: 12px; width: 1px; background-color: #ddd; margin: 0 6px;"></div>
+                        <div style="height: 12px; width: 1px; margin: 0 6px;"></div>
                         <q-badge rounded color="warning" class="q-mr-xs" style="padding: 2px">
                           <q-icon name="warning" color="white" size="10px" />
                         </q-badge>
@@ -141,11 +149,12 @@
                   <q-item-label class="text-weight-bold">{{ scope.opt.name }}</q-item-label>
                   <q-item-label caption v-if="scope.opt.outputParams?.length">
                     <div class="row wrap q-mt-xs text-caption">
-                      <span class="text-grey-8 text-weight-medium q-mr-xs">Outputs:</span>
+                      <span class="text-weight-medium q-mr-xs"
+                      :class="$q.dark.isActive ? 'text-grey-2' : 'text-grey-9'">Outputs:</span>
                       <div v-for="(param, i) in scope.opt.outputParams" :key="param.name" class="row items-baseline no-wrap q-gutter-x-xs">
-                        <span class="text-grey-9" style="border-bottom: 2px solid #ab47bc; line-height: 1.1">{{ param.name }}</span>
-                        <span class="text-grey-7">:</span>
-                        <span class="text-grey-6 font-mono" style="font-size: 0.9em">{{ param.parameterType.name }}</span>
+                        <span :class="$q.dark.isActive ? 'text-grey-2' : 'text-grey-9'" style="border-bottom: 2px solid #ab47bc; line-height: 1.1">{{ param.name }}</span>
+                        <span :class="$q.dark.isActive ? 'text-grey-2' : 'text-grey-9'">:</span>
+                        <span :class="$q.dark.isActive ? 'text-grey-4' : 'text-grey-7'" class="font-mono" style="font-size: 0.9em">{{ param.parameterType.name }}</span>
                         <span v-if="i < scope.opt.outputParams.length - 1" class="text-grey-5 q-mr-xs">,</span>
                       </div>
                     </div>
@@ -157,11 +166,11 @@
               <div v-if="scope.opt" class="column q-py-xs q-mt-xs">
                 <BadgeIcon :label="scope.opt.name" :uppercase="false" type="task" :includeIcon="true" class="q-mb-sm q-pr-lg" style="width: fit-content" />
                 <div class="row wrap items-center text-caption q-gutter-sm" style="line-height: 1.4">
-                  <span class="text-grey-8 text-weight-bold">Outputs:</span>
+                  <span :class="$q.dark.isActive ? 'text-grey-4' : 'text-grey-7'" class="text-weight-bold">Outputs:</span>
                   <template v-if="scope.opt.outputParams && scope.opt.outputParams.length > 0">
                     <div v-for="(p, i) in scope.opt.outputParams" :key="p.name" class="row items-baseline q-gutter-x-xs q-mr-sm">
-                      <span class="text-grey-9" style="border-bottom: 2px solid #ab47bc; line-height: 1.2">{{ p.name }}</span>
-                      <span class="text-grey-7 font-mono" style="font-size: 0.9em">({{ p.parameterType.name }})</span>
+                      <span :class="$q.dark.isActive ? 'text-grey-5' : 'text-grey-7'" style="border-bottom: 2px solid #ab47bc; line-height: 1.2">{{ p.name }}</span>
+                      <span :class="$q.dark.isActive ? 'text-grey-6' : 'text-grey-6'" class=" font-mono" style="font-size: 0.9em">({{ p.parameterType.name }})</span>
                     </div>
                   </template>
                   <span v-else class="text-grey-5 text-italic">None</span>
@@ -215,17 +224,21 @@
       <q-card class="col column shadow-1" style="border: 1px solid #cecece; border-radius: 6px;">
         
         <q-card-section 
-          class="bg-grey-1 row items-center justify-between q-py-sm" 
+          class=" row items-center justify-between q-py-sm" 
+          :class="$q.dark.isActive ? 'bg-grey-10' : 'bg-grey-2'"
           style="border-bottom: 1px solid #cecece; min-height: 60px;"
         >
-          <div v-if="!selectedNode || selectedNode.isDir" class="text-grey-6 text-italic flex items-center q-gutter-x-sm">
+          <div v-if="!selectedNode || selectedNode.isDir" class="text-italic flex items-center q-gutter-x-sm"
+           :class="$q.dark.isActive ? 'bg-grey-2' : 'bg-grey-9'">
             <q-icon name="sym_o_visibility_off" size="sm" />
             <span>No preview selected</span>
           </div>
           
           <div v-else class="row items-center q-gutter-x-sm">
-            <q-icon name="sym_o_description" color="primary" size="sm"  />
-            <span class="text-weight-bold text-blue-grey-9" style="font-size: 1.1rem; letter-spacing: 0.5px;">
+            <q-icon name="sym_o_description" size="sm"  
+             :color="$q.dark.isActive ? 'lightblue' : 'primary'"/>
+            <span class="text-weight-bold" style="font-size: 1.1rem; letter-spacing: 0.5px;"
+             :class="$q.dark.isActive ? 'text-grey-2' : 'text-grey-9'">
               {{ selectedNode.label }}
             </span>
             <q-chip 
@@ -249,7 +262,9 @@
           />
         </q-card-section>
 
-        <q-card-section class="q-pa-none col flex column bg-white" style="max-height: 65vh; overflow-y: auto;">
+        <q-card-section class="q-pa-none col flex column"
+        :class="$q.dark.isActive ? 'bg-grey-10' : 'bg-grey-2'"
+        style="max-height: 65vh; overflow-y: auto;">
           
           <div v-if="!selectedNode || selectedNode.isDir" class="flex flex-center column q-pa-xl text-grey-5 col">
             <q-icon name="sym_o_file_present" size="4rem" class="q-mb-md" style="opacity: 0.5" />
@@ -274,7 +289,8 @@
 
             <pre 
               v-else-if="preview.kind === 'text'" 
-              class="q-pa-md rounded-borders text-body2 font-mono text-blue-grey-9 bg-grey-2" 
+              class="q-pa-md rounded-borders text-body2 font-mono "
+              :class="$q.dark.isActive ? 'bg-grey-9 text-blue-grey-1' : 'bg-grey-3 text-blue-grey-9'" 
               style="white-space: pre-wrap; word-break: break-word; border: 1px solid #e0e0e0; margin: 0;"
             >{{ preview.text }}</pre>
 

@@ -142,6 +142,12 @@
           @create="selectedParam = null; showEntrypointParamDialog = true;"
           style="margin-top: 0;"
         >
+                  <template #body-cell-name="props">
+            <div style="font-size: 15px;">
+              {{ props.row.name }}
+            </div>
+          </template>
+
           <template #body-cell-defaultValue="props">
             <q-chip
               v-if="props.row.defaultValue === null"
@@ -182,6 +188,7 @@
           </template>
         </TableComponent>
       </div>
+
       <div class="col">
         <TableComponent
           :rows="entryPoint.artifactParameters"
@@ -196,33 +203,56 @@
           :showAll="true"
           rightCaption="*Click parameter to edit, or X to delete"
           style="margin-top: 0;"
-          @create="showArtifactParamDialog = true"
+          @create="selectedArtifactParam = null; showArtifactParamDialog = true"
         >
           <template #body-cell-name="props">
-            <div style="font-size: 18px;">
+            <div style="font-size: 15px;">
               {{ props.row.name }}
-              <q-btn icon="edit" round size="sm" color="primary" flat />
             </div>
-            <q-popup-edit v-model="props.row.name" v-slot="scope">
-              <q-input v-model="scope.value" dense autofocus counter @keyup.enter="scope.set" />
-            </q-popup-edit>
+          </template>
+          
+          <template #body-cell-actions="props">
+            <q-btn 
+              icon="edit"
+              round size="sm"
+              color="primary"
+              flat
+              class="q-mr-sm"
+              @click="
+                selectedArtifactParam = props.row;
+                selectedArtifactParamIndex = props.rowIndex;
+                showArtifactParamDialog = true;
+              "
+            />
+            <q-btn 
+              icon="sym_o_delete"
+              round size="sm"
+              color="negative"
+              flat
+              @click="selectedArtifactParamProps = props; showDeleteDialogArtifactParam = true"
+            />
           </template>
           
           <template #body-cell-outputParams="props">
+            <div class='row q-gutter-x-md justify-between'>
              <ParameterList 
                 :items="props.row.outputParams" 
                 type="output" 
                 @click="(param, i) => { handleSelectedParam('edit', props, i, 'outputParams', 'artifacts'); showEditArtifactParamDialog = true; }"
              />
-            <q-btn
-              round
-              size="xs"
-              icon="add"
-              color="grey-5"
-              text-color="black"
-              class="q-mr-xs q-my-xs"
-              @click="handleSelectedParam('create', props, 0, 'outputParams', 'artifacts'); showEditArtifactParamDialog = true"
-            />
+              <div>
+                <q-btn
+                  round
+                  size="xs"
+                  icon="add"
+                  color="grey-5"
+                  text-color="black"
+                  class="q-mr-xs q-my-xs"
+                  @click="handleSelectedParam('create', props, 0, 'outputParams', 'artifacts'); showEditArtifactParamDialog = true"
+                />
+                <q-tooltip> Add Output Parameters </q-tooltip> 
+              </div>
+            </div>
           </template>
 
           <template #body-cell-delete="props">
@@ -422,7 +452,8 @@
   />
   <ArtifactParamDialog
     v-model="showArtifactParamDialog"
-    @submit="addArtifactParam"
+    :editParam="selectedArtifactParam"
+    @submit="handleArtifactParamSubmit"
   />
   <LeaveFormDialog 
     v-model="showLeaveDialog"
@@ -492,6 +523,20 @@
 
   const isMobile = inject('isMobile')
   const darkMode = inject('darkMode')
+
+  const selectedArtifactParam = ref(null)
+  const selectedArtifactParamIndex = ref(-1)
+
+  function handleArtifactParamSubmit(param) {
+    if (selectedArtifactParam.value) {
+      // Update existing parameter
+      entryPoint.value.artifactParameters[selectedArtifactParamIndex.value] = { ...param }
+    } else {
+      // Create new parameter
+      entryPoint.value.artifactParameters.push({ ...param })
+    }
+    showArtifactParamDialog.value = false
+  }
 
   const history = computed(() => {
     return store.showRightDrawer
@@ -677,7 +722,7 @@
   const artifactColumns = [
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, },
     { name: 'outputParams', label: 'Output Parameters', align: 'left', field: 'outputParams', sortable: false, classes: 'vertical-top' },
-    { name: 'delete', label: 'Delete', align: 'center', },
+    { name: 'actions', label: 'Actions', align: 'center', },
   ]
 
   const taskColumns = [
@@ -691,7 +736,7 @@
   const artifactTaskColumns = [
     { name: 'pluginName', label: 'Plugin', align: 'left', field: 'pluginName', sortable: true, },
     { name: 'taskName', label: 'Task', align: 'left', field: 'name', sortable: true, },
-    { name: 'outputParams', label: 'Output Params', align: 'right', field: 'outputParams', sortable: false, classes: 'vertical-top' },
+    { name: 'outputParams', label: 'Output Params', align: 'left', field: 'outputParams', sortable: false, classes: 'vertical-top' },
     { name: 'add', label: 'Add to Graph', align: 'center', sortable: false, },
   ]
 

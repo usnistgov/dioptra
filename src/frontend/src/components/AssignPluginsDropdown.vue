@@ -27,7 +27,7 @@
           class="q-mt-sm"
         >
           <div
-            class="row items-center no-wrap bg-white q-pa-none shadow-1"
+            class="row items-center no-wrap q-pa-none shadow-1"
             style="
               border-radius: 4px;
               border: 1px solid #eeeeee;
@@ -37,13 +37,13 @@
           >
             <q-chip
               removable
-              :color="pluginStyle.color"
+              :color="$q.dark.isActive ? pluginStyle.darkColor : pluginStyle.color"
               :icon="pluginStyle.icon"
-              text-color="white"
               size="sm"
               outline
               square
               class="text-weight-bold q-py-sm q-ma-none no-border"
+              :class="$q.dark.isActive ? 'bg-grey-10' : 'bg-grey-1'"
               @remove="
                 selectedPlugins.splice(i, 1);
                 removePlugin(plugin);
@@ -107,7 +107,9 @@ const pluginIDsToUpdate = defineModel("pluginIDsToUpdate");
 const pluginIDsToRemove = defineModel("pluginIDsToRemove");
 const originalSelectedPluginIds = ref([]);
 const pluginOptions = ref([]);
+import { useQuasar } from "quasar";
 
+const $q = useQuasar();
 watch(
   selectedPlugins,
   (newVal) => {

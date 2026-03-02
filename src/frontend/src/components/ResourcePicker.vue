@@ -19,7 +19,7 @@
         :tabindex="scope.tabindex"
         :square="chipSquare"
         :style="getChipStyles"
-        :text-color="chipOutline ? 'black' : 'white'"
+        :class="getChipClasses"
       >
         <q-icon
           :name="styles.icon"
@@ -28,9 +28,9 @@
           class="q-mr-sm"
         />
 
-        <span class="q-mr-sm" style="letter-spacing: 0.8px">{{
-          scope.opt[optionLabel]
-        }}</span>
+        <span class="q-mr-xs ellipsis" style="letter-spacing: 0.5px">
+          {{ scope.opt[optionLabel] }}
+        </span>
       </q-chip>
     </template>
 
@@ -42,7 +42,7 @@
         <q-item-section>
           <q-item-label>{{ scope.opt[optionLabel] }}</q-item-label>
           <q-item-label caption v-if="scope.opt.description">
-            {{ truncate(scope.opt.description) }}
+            {{ truncate(scope.opt.description) }} 
           </q-item-label>
         </q-item-section>
       </q-item>
@@ -64,7 +64,6 @@ const props = defineProps({
   type: { type: String, required: true },
   label: String,
   optionLabel: { type: String, default: "name" },
-
   chipOutline: { type: Boolean, default: false },
   chipSquare: { type: Boolean, default: false },
   color: { type: String, default: null },
@@ -81,19 +80,45 @@ const computedColor = computed(() => {
   return getConceptColorHex(props.type, isDark);
 });
 
-// Dynamic Styles for the Chip container
+const computedColorOpposite = computed(() => {
+  if (props.color) return props.color;
+  const isLight =  $q.dark.isActive;
+  return getConceptColorHex(props.type, isLight);
+});
+
+// Manage purely dynamic styles (borders, custom background colors)
 const getChipStyles = computed(() => {
   if (props.chipOutline) {
     return {
-      border: `2px solid ${computedColor.value}`,
-      backgroundColor: "transparent",
+      border: `1px solid ${computedColor.value}`
     };
-  } else {
-    return {
-      backgroundColor: computedColor.value,
-      border: "none",
-    };
+  } else { 
+    if ($q.dark.isActive){
+      return {
+        backgroundColor: computedColor.value,
+        color: 'black', 
+        border: "none"
+      };
+    }
+    else {
+      return {
+        backgroundColor: computedColorOpposite.value,
+        color: 'white', 
+        border: "none"
+      };
+    }
   }
+});
+
+// Manage Quasar utility classes (theme-aware backgrounds and text)
+const getChipClasses = computed(() => {
+  if (props.chipOutline) {
+    // Provides a subtle background and guarantees high-contrast text + remove icon
+    return $q.dark.isActive 
+      ? 'bg-grey-10 text-grey-3' 
+      : 'bg-grey-2 text-grey-9';
+  }
+  return ''; // Solid mode classes aren't needed; it relies on getChipStyles
 });
 
 function truncate(str) {
