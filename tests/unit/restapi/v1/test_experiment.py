@@ -55,6 +55,7 @@ def assert_experiment_response_contents_matches_expectations(
         "createdOn",
         "snapshotCreatedOn",
         "lastModifiedOn",
+        "deleted",
         "latestSnapshot",
         "hasDraft",
         "name",
@@ -73,6 +74,7 @@ def assert_experiment_response_contents_matches_expectations(
     assert isinstance(response["snapshotCreatedOn"], str)
     assert isinstance(response["lastModifiedOn"], str)
     assert isinstance(response["latestSnapshot"], bool)
+    assert isinstance(response["deleted"], bool)
 
     assert response["name"] == expected_contents["name"]
     assert response["description"] == expected_contents["description"]

@@ -106,6 +106,12 @@ def generate_base_resource_schema(name: str, snapshot: bool) -> type[Schema]:
             many=True,
             dump_only=True,
         ),
+        "deleted": fields.Bool(
+            attribute="deleted",
+            metadata={"description": f"Whether the {name} resource has been deleted."},
+            dump_only=True,
+            load_default=False,
+        ),
     }
 
     if not snapshot:
@@ -141,6 +147,12 @@ def generate_base_resource_ref_schema(
             attribute="url",
             metadata={"description": f"URL for accessing the full {name} resource."},
             relative=True,
+        ),
+        "deleted": fields.Bool(
+            attribute="deleted",
+            metadata={"description": f"Whether the {name} resource has been deleted."},
+            dump_only=True,
+            load_default=False,
         ),
     }
 

@@ -70,6 +70,7 @@ def assert_plugin_response_contents_matches_expectations(
         "description",
         "files",
         "tags",
+        "deleted",
     }
     assert set(response.keys()) == expected_keys
 
@@ -83,6 +84,7 @@ def assert_plugin_response_contents_matches_expectations(
     assert isinstance(response["lastModifiedOn"], str)
     assert isinstance(response["latestSnapshot"], bool)
     assert isinstance(response["hasDraft"], bool)
+    assert isinstance(response["deleted"], bool)
 
     assert response["name"] == expected_contents["name"]
     assert response["description"] == expected_contents["description"]
@@ -284,6 +286,7 @@ def assert_plugin_file_response_contents_matches_expectations(
         "tasks",
         "tags",
         "plugin",
+        "deleted",
     }
     assert set(response.keys()) == expected_keys
 
@@ -298,6 +301,7 @@ def assert_plugin_file_response_contents_matches_expectations(
     assert isinstance(response["lastModifiedOn"], str)
     assert isinstance(response["latestSnapshot"], bool)
     assert isinstance(response["hasDraft"], bool)
+    assert isinstance(response["deleted"], bool)
 
     assert response["filename"] == expected_contents["filename"]
     assert response["description"] == expected_contents["description"]

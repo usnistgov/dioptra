@@ -65,6 +65,7 @@ def assert_model_response_contents_matches_expectations(
         "description",
         "latestVersion",
         "tags",
+        "deleted",
     }
     assert set(response.keys()) == expected_keys
 

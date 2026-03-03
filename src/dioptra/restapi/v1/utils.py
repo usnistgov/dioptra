@@ -632,6 +632,7 @@ def build_experiment(experiment_dict: ExperimentDict) -> dict[str, Any]:
         "group": build_group_ref(experiment.resource.owner),
         "created_on": experiment.resource.created_on,
         "last_modified_on": experiment.resource.last_modified_on,
+        "deleted": experiment.resource.is_deleted,
         "snapshot_created_on": experiment.created_on,
         "latest_snapshot": experiment.resource.latest_snapshot_id
         == experiment.resource_snapshot_id,
@@ -702,6 +703,7 @@ def build_entrypoint(entrypoint_dict: EntrypointDict) -> dict[str, Any]:
         "group": build_group_ref(entrypoint.resource.owner),
         "created_on": entrypoint.resource.created_on,
         "last_modified_on": entrypoint.resource.last_modified_on,
+        "deleted": entrypoint.resource.is_deleted,
         "snapshot_created_on": entrypoint.created_on,
         "latest_snapshot": entrypoint.resource.latest_snapshot_id
         == entrypoint.resource_snapshot_id,
@@ -798,6 +800,7 @@ def build_job(job_dict: JobDict) -> dict[str, Any]:
         "created_on": job.resource.created_on,
         "last_modified_on": job.resource.last_modified_on,
         "snapshot_created_on": job.created_on,
+        "deleted": job.resource.is_deleted,
         "latest_snapshot": job.resource.latest_snapshot_id == job.resource_snapshot_id,
         "tags": [build_tag_ref(tag) for tag in job.tags],
     }
@@ -852,6 +855,7 @@ def build_model(model_dict: ModelWithVersionDict) -> dict[str, Any]:
         "latest_snapshot": model.resource.latest_snapshot_id
         == model.resource_snapshot_id,
         "tags": [build_tag_ref(tag) for tag in model.tags],
+        "deleted": model.resource.is_deleted,
         "latest_version": latest_version,
         "versions": versions,
     }
@@ -941,6 +945,7 @@ def build_artifact(artifact_dict: ArtifactDict) -> dict[str, Any]:
         "artifact_uri": artifact.uri,
         "is_dir": artifact.is_dir,
         "file_size": artifact.file_size,
+        "deleted": artifact.resource.is_deleted,
         "task": build_artifact_artifact_task(artifact=artifact),
         "file_url": build_url(f"{ARTIFACTS}/{artifact.resource_id}/contents"),
     }
@@ -1005,6 +1010,7 @@ def build_queue(queue_dict: QueueDict) -> dict[str, Any]:
         "group": build_group_ref(queue.resource.owner),
         "created_on": queue.resource.created_on,
         "last_modified_on": queue.resource.last_modified_on,
+        "deleted": queue.resource.is_deleted,
         "snapshot_created_on": queue.created_on,
         "latest_snapshot": queue.resource.latest_snapshot_id
         == queue.resource_snapshot_id,
@@ -1039,6 +1045,7 @@ def build_plugin(plugin_with_files: PluginWithFilesDict) -> dict[str, Any]:
         "group": build_group_ref(plugin.resource.owner),
         "created_on": plugin.resource.created_on,
         "last_modified_on": plugin.resource.last_modified_on,
+        "deleted": plugin.resource.is_deleted,
         "snapshot_created_on": plugin.created_on,
         "latest_snapshot": plugin.resource.latest_snapshot_id
         == plugin.resource_snapshot_id,
@@ -1070,6 +1077,7 @@ def build_plugin_file(plugin_file_with_plugin: PluginFileDict) -> dict[str, Any]
         "group": build_group_ref(plugin_file.resource.owner),
         "created_on": plugin_file.resource.created_on,
         "last_modified_on": plugin_file.resource.last_modified_on,
+        "deleted": plugin_file.resource.is_deleted,
         "snapshot_created_on": plugin_file.created_on,
         "latest_snapshot": plugin_file.resource.latest_snapshot_id
         == plugin_file.resource_snapshot_id,
@@ -1201,6 +1209,7 @@ def build_plugin_parameter_type(
         "group": build_group_ref(plugin_parameter_type.resource.owner),
         "created_on": plugin_parameter_type.resource.created_on,
         "last_modified_on": plugin_parameter_type.resource.last_modified_on,
+        "deleted": plugin_parameter_type.resource.is_deleted,
         "snapshot_created_on": plugin_parameter_type.created_on,
         "latest_snapshot": plugin_parameter_type.resource.latest_snapshot_id
         == plugin_parameter_type.resource_snapshot_id,
