@@ -230,6 +230,7 @@ class ArtifactService(object):
         page_length: int,
         sort_by_string: str,
         descending: bool,
+        show_deleted: bool = False,
         **kwargs,
     ) -> Any:
         """Fetch a list of artifacts, optionally filtering by search string and paging
@@ -268,12 +269,14 @@ class ArtifactService(object):
                 construct_sql_query_filters(search_string, SEARCHABLE_FIELDS)
             )
 
+        allowed_deleted_values = [False, True] if show_deleted else [False]
+
         stmt = (
             select(func.count(models.Artifact.resource_id))
             .join(models.Resource)
             .where(
                 *filters,
-                models.Resource.is_deleted == False,  # noqa: E712
+                models.Resource.is_deleted in allowed_deleted_values,  # noqa: E712
                 models.Resource.latest_snapshot_id
                 == models.Artifact.resource_snapshot_id,
             )
@@ -301,7 +304,7 @@ class ArtifactService(object):
             .join(models.Resource)
             .where(
                 *filters,
-                models.Resource.is_deleted == False,  # noqa: E712
+                models.Resource.is_deleted in allowed_deleted_values,  # noqa: E712
                 models.Resource.latest_snapshot_id
                 == models.Artifact.resource_snapshot_id,
             )
@@ -434,7 +437,6 @@ class ArtifactIdService(object):
                 models.Artifact.resource_id == artifact_id,
                 models.Artifact.resource_snapshot_id
                 == models.Resource.latest_snapshot_id,
-                models.Resource.is_deleted == False,  # noqa: E712
             )
         )
         artifact = db.session.scalars(stmt).first()

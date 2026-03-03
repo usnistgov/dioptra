@@ -216,6 +216,7 @@ class EntrypointService(object):
         page_length: int,
         sort_by_string: str,
         descending: bool,
+        show_deleted: bool = False,
         **kwargs,
     ) -> tuple[list[utils.EntrypointDict], int]:
         """Fetch a list of entrypoints, optionally filtering by search string and paging
@@ -251,12 +252,14 @@ class EntrypointService(object):
                 construct_sql_query_filters(search_string, SEARCHABLE_FIELDS)
             )
 
+        allowed_deleted_values = [False, True] if show_deleted else [False]
+
         stmt = (
             select(func.count(models.EntryPoint.resource_id))
             .join(models.Resource)
             .where(
                 *filters,
-                models.Resource.is_deleted == False,  # noqa: E712
+                models.Resource.is_deleted in allowed_deleted_values,  # noqa: E712
                 models.Resource.latest_snapshot_id
                 == models.EntryPoint.resource_snapshot_id,
             )
@@ -279,7 +282,7 @@ class EntrypointService(object):
             .join(models.Resource)
             .where(
                 *filters,
-                models.Resource.is_deleted == False,  # noqa: E712
+                models.Resource.is_deleted in allowed_deleted_values,  # noqa: E712
                 models.Resource.latest_snapshot_id
                 == models.EntryPoint.resource_snapshot_id,
             )
@@ -390,7 +393,6 @@ class EntrypointIdService(object):
             .where(
                 models.EntryPoint.resource_id == entrypoint_id,
                 models.EntryPoint.resource_snapshot_id == snapshot_id,
-                models.Resource.is_deleted == False,  # noqa: E712
             )
         )
         entrypoint = db.session.scalars(stmt).first()

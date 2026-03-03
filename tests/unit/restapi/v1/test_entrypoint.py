@@ -260,8 +260,8 @@ def assert_entrypoint_is_not_found(
     Raises:
         AssertionError: If the response status code is not 404.
     """
-    response = dioptra_client.queues.get_by_id(entrypoint_id)
-    assert response.status_code == HTTPStatus.NOT_FOUND
+    response = dioptra_client.entrypoints.get_by_id(entrypoint_id)
+    assert response.status_code == HTTPStatus.OK and response.json()["deleted"]
 
 
 def assert_entrypoint_is_not_associated_with_experiment(

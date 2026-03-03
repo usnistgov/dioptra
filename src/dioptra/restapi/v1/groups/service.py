@@ -108,7 +108,6 @@ class GroupService(object):
         search_string: str,
         page_index: int,
         page_length: int,
-        show_deleted: bool = False,
         **kwargs,
     ) -> tuple[list[models.Group], int]:
         """Fetch a list of groups, optionally filtering by search string and paging
@@ -135,9 +134,7 @@ class GroupService(object):
             search_struct,
             page_index,
             page_length,
-            deletion_policy=DeletionPolicy.NOT_DELETED
-            if not show_deleted
-            else DeletionPolicy.ANY,
+            deletion_policy=DeletionPolicy.NOT_DELETED,
         )
 
         return list(groups), total_num_groups
@@ -163,7 +160,6 @@ class GroupIdService(object):
     def get(
         self,
         group_id: int,
-        show_deleted: bool = False,
         error_if_not_found: bool = False,
         **kwargs,
     ) -> models.Group | None:

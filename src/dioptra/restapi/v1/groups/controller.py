@@ -74,13 +74,11 @@ class GroupEndpoint(Resource):
         search_string = unquote(parsed_query_params["search"])
         page_index = parsed_query_params["index"]
         page_length = parsed_query_params["page_length"]
-        show_deleted = parsed_query_params["show_deleted"]
 
         groups, total_num_groups = self._group_service.get(
             search_string=search_string,
             page_index=page_index,
             page_length=page_length,
-            show_deleted=show_deleted,
             log=log,
         )
         return utils.build_paging_envelope(

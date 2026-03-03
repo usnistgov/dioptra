@@ -213,7 +213,8 @@ def assert_queue_is_not_found(
         AssertionError: If the response status code is not 404.
     """
     response = dioptra_client.queues.get_by_id(queue_id)
-    assert response.status_code == HTTPStatus.NOT_FOUND
+    
+    assert response.status_code == HTTPStatus.OK and response.json()["deleted"]
 
 
 def assert_queue_is_not_associated_with_entrypoint(

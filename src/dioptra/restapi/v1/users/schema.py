@@ -23,7 +23,6 @@ from dioptra.restapi.v1.schemas import (
     BasePageSchema,
     PagingQueryParametersSchema,
     SearchQueryParametersSchema,
-    ShowDeletedQueryParametersSchema,
 )
 
 
@@ -163,6 +162,5 @@ class UserPageSchema(BasePageSchema):
 class UserGetQueryParameters(
     PagingQueryParametersSchema,
     SearchQueryParametersSchema,
-    ShowDeletedQueryParametersSchema,
 ):
     """The query parameters for the GET method of the /users endpoint."""

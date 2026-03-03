@@ -145,7 +145,6 @@ class UserService(object):
         search_string: str,
         page_index: int,
         page_length: int,
-        show_deleted: bool = False,
         **kwargs,
     ) -> tuple[list[models.User], int]:
         """Fetch a list of users, optionally filtering by search string and paging
@@ -172,9 +171,7 @@ class UserService(object):
             search_struct,
             page_index,
             page_length,
-            deletion_policy=DeletionPolicy.NOT_DELETED
-            if not show_deleted
-            else DeletionPolicy.ANY,
+            deletion_policy=DeletionPolicy.NOT_DELETED,
         )
 
         return list(users), total_num_users
