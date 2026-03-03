@@ -21,8 +21,6 @@ from typing import Any, Final
 import structlog
 from flask_login import current_user
 from injector import inject
-from sqlalchemy import Select, func, select
-from sqlalchemy.orm import aliased
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
@@ -77,10 +75,12 @@ class ArtifactTaskHelper(object):
                 raise DioptraError(
                     "plugin_snapshot_id must be provided if task_id is provided"
                 )
+
             # verify the plugin task exists and then associate
             plugin_task = self._plugin_task_id_service.get(task_id=task_id)
             if not isinstance(plugin_task, models.ArtifactTask):
                 raise DioptraError("task_id provided was not an Artifact Task")
+
             plugin_plugin_file = (
                 self._plugin_id_snapshot_id_service.get_plugin_plugin_file(
                     plugin_snapshot_id, plugin_task.plugin_file_resource_snapshot_id
@@ -92,6 +92,7 @@ class ArtifactTaskHelper(object):
                     task_id=task_id,
                     plugin_snapshot_id=plugin_snapshot_id,
                 )
+
             # associate this artifact with the task
             artifact.task = plugin_task
             artifact.plugin_plugin_file = plugin_plugin_file
@@ -177,7 +178,7 @@ class ArtifactService(object):
         if duplicate is not None:
             raise EntityExistsError(RESOURCE_TYPE, duplicate.resource_id, uri=uri)
 
-        artifact = self._job_run_store.find_artifact(run_id=mlflow_run_id, uri=uri)
+        artifact_file = self._job_run_store.find_artifact(run_id=mlflow_run_id, uri=uri)
 
         group = self._uow.group_repo.get_one(group_id, DeletionPolicy.NOT_DELETED)
         if group is None:
@@ -187,8 +188,8 @@ class ArtifactService(object):
         new_artifact = models.Artifact(
             uri=uri,
             description=description,
-            is_dir=artifact.is_dir,
-            file_size=artifact.file_size,
+            is_dir=artifact_file.is_dir,
+            file_size=artifact_file.file_size,
             resource=resource,
             creator=current_user,
         )
@@ -255,21 +256,15 @@ class ArtifactService(object):
 
         search_struct = parse_search_text(search_string)
 
-        additional_query_terms = []
-        if output_params is not None:
-            additional_query_terms.append(
-                lambda stmt: self._apply_ouput_params_filter(stmt, output_params)
-            )
-
         artifacts, total_num_artifacts = self._uow.artifact_repo.get_by_filters_paged(
             group_id,
             search_struct,
+            output_params,
             page_index,
             page_length,
             sort_by_string,
             descending,
             DeletionPolicy.NOT_DELETED,
-            additional_query_terms=additional_query_terms,
         )
 
         artifacts_dict: dict[int, utils.ArtifactDict] = {
@@ -285,50 +280,6 @@ class ArtifactService(object):
             artifacts_dict[resource_id]["has_draft"] = True
 
         return list(artifacts_dict.values()), total_num_artifacts
-
-    def _apply_ouput_params_filter(
-        self, stmt: Select, output_params: list[int]
-    ) -> Select:
-        # creates a comparison for each outuput parameter and makes
-        # sure the type is correct for that parameter_number
-        for index, p in enumerate(output_params):
-            task_alias = aliased(models.ArtifactTask)
-            parameter_alias = aliased(models.PluginTaskOutputParameter)
-            type_alias = aliased(models.PluginTaskParameterType)
-            stmt = (
-                stmt.join(models.Artifact.task.of_type(task_alias))
-                .join(models.ArtifactTask.output_parameters.of_type(parameter_alias))
-                .join(
-                    type_alias,
-                    type_alias.resource_snapshot_id
-                    == parameter_alias.plugin_task_parameter_type_resource_snapshot_id,
-                )
-                .where(
-                    type_alias.resource_id == p,
-                    parameter_alias.parameter_number == index,
-                )
-            )
-
-        # verifies that the number of parameters is what we are looking for
-        # prevents picking up artifacts which match the ones we are looking
-        # for, but have more parameters
-        count_subquery = (
-            select(
-                models.PluginTaskOutputParameter.task_id,
-                func.count().label("param_count"),
-            )
-            .group_by(models.PluginTaskOutputParameter.task_id)
-            .subquery()
-        )
-        task_alias = aliased(models.ArtifactTask)
-        stmt = (
-            stmt.join(models.Artifact.task.of_type(task_alias))
-            .join(count_subquery, task_alias.task_id == count_subquery.c.task_id)
-            .where(
-                count_subquery.c.param_count == len(output_params),
-            )
-        )
-        return stmt
 
 
 class ArtifactIdService(object):
