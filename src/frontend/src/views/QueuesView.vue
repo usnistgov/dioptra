@@ -1,19 +1,33 @@
 <template>
-  <PageTitle title="Queues" />
-  <TableComponent 
+  <PageTitle 
+    title="Queues" 
+    conceptType="queue" 
+  />
+
+  <TableComponent
+    ref="tableRef"
     :rows="queues"
-    :columns="showDrafts ? draftColumns : columns"
-    title="Queues"
-    @delete="showDeleteDialog = true"
-    @open="openQueue($event)"
+    :columns="showDrafts ? computedDraftColumns : computedColumns"
     v-model:selected="selected"
     v-model:showDrafts="showDrafts"
-    @request="getQueues"
-    ref="tableRef"
     :showToggleDraft="true"
-    @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
-    @create="router.push('/queues/new')"
     :loading="isLoading"
+    @request="getQueues"
+    @create="router.push('/queues/new')"
+    @edit="(row) => openQueue(false, row)"
+    @open="(openTab) => openQueue(openTab)"
+    @delete="
+      (row) => {
+        selected = [row];
+        showDeleteDialog = true;
+      }
+    "
+    @editTags="
+      (row) => {
+        editObjTags = row;
+        showTagsDialog = true;
+      }
+    "
   >
     <template #body-cell-hasDraft="props">
       <q-btn
@@ -26,13 +40,14 @@
     </template>
   </TableComponent>
 
-  <DeleteDialog 
+  <DeleteDialog
     v-model="showDeleteDialog"
     @submit="deleteQueue"
     type="Queue"
-    :name="selected.length ? selected[0].name : ''"
+    :name="selected[0]?.name || ''"
   />
-  <AssignTagsDialog 
+
+  <AssignTagsDialog
     v-model="showTagsDialog"
     :editObj="editObjTags"
     type="queues"
@@ -41,92 +56,191 @@
 </template>
 
 <script setup>
-  import * as api from '@/services/dataApi'
-  import { ref } from 'vue'
-  import * as notify from '../notify'
-  import TableComponent from '@/components/TableComponent.vue'
-  import DeleteDialog from '@/dialogs/DeleteDialog.vue'
-  import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
-  import PageTitle from '@/components/PageTitle.vue'
-  import { useRouter } from 'vue-router'
 
-  const router = useRouter()
+import { ref, computed } from "vue";
+import { useRouter } from "vue-router";
+import TableComponent from "@/components/table/TableComponent.vue";
+import PageTitle from "@/components/PageTitle.vue";
+import DeleteDialog from "@/dialogs/DeleteDialog.vue";
+import AssignTagsDialog from "@/dialogs/AssignTagsDialog.vue";
+import * as api from "@/services/dataApi";
+import * as notify from "../notify";
 
-  const showDeleteDialog = ref(false)
-  const showTagsDialog = ref(false)
+const router = useRouter();
+const tableRef = ref(null);
+const openWindow = window;
 
-  const queues = ref([])
+const queues = ref([]);
+const isLoading = ref(false);
+const selected = ref([]);
+const showDrafts = ref(false);
+const showDeleteDialog = ref(false);
+const showTagsDialog = ref(false);
+const editObjTags = ref({});
 
-  const isLoading = ref(false)
+const computedColumns =  [
+  {
+    name: "id",
+    label: "ID",
+    field: "id",
+    align: "left",
+    styleType: "icon-id",
+    conceptType: "queue",
+    includeIcon: true,
+    sortable: false,
+  },
+  {
+    name: "name",
+    label: "Name",
+    field: "name",
+    align: "left",
+    styleType: "resource-name",
+    conceptType: "queue",
+    textType: "none",
+    sortable: true,
+  },
+  {
+    name: "description",
+    label: "Description",
+    field: "description",
+    align: "left",
+    styleType: "long-text",
+    maxWidth: "300px",
+    maxLength: 100,
+    useQuotes: false,
+    sortable: true,
+  },
+  {
+    name: "hasDraft",
+    label: "Has Draft",
+    field: "hasDraft",
+    align: "left",
+    sortable: false,
+  },
+  {
+    name: "createdOn",
+    label: "Created On",
+    field: "createdOn",
+    align: "left",
+    styleType: "date",
+    textColor: "text-grey-10",
+    sortable: true,
+  },
+  {
+    name: "lastModifiedOn",
+    label: "Last Modified",
+    field: "lastModifiedOn",
+    align: "left",
+    styleType: "date",
+    textColor: "text-grey-10",
+    sortable: false,
+  },
+  {
+    name: "tags",
+    label: "Tags",
+    field: "tags",
+    align: "left",
+    styleType: "tag-list",
+    sortable: false,
+  },
+];
 
-  const tableRef = ref(null)
+const computedDraftColumns = [
+  {
+    name: "id",
+    label: "ID",
+    field: "id",
+    align: "left",
+    styleType: "icon-id",
+    conceptType: "queue",
+    includeIcon: true,
+    sortable: false,
+  },
+  {
+    name: "name",
+    label: "Name",
+    field: "name",
+    align: "left",
+    styleType: "resource-name",
+    conceptType: "queue",
+    sortable: true,
+  },
+  {
+    name: "description",
+    label: "Description",
+    field: "description",
+    align: "left",
+    styleType: "long-text",
+    maxWidth: "300px",
+    maxLength: 100,
+    useQuotes: false,
+    sortable: true,
+  },
+  {
+    name: "createdOn",
+    label: "Created On",
+    field: "createdOn",
+    align: "left",
+    sortable: true,
+    styleType: "date",
+  },
+  {
+    name: "lastModifiedOn",
+    label: "Last Modified",
+    field: "lastModifiedOn",
+    align: "left",
+    sortable: true,
+    styleType: "date",
+  },
+];
 
-  const columns = [
-    { name: 'id', label: 'ID', align: 'left', field: 'id', sortable: false },
-    { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true },
-    { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true },
-    { name: 'hasDraft', label: 'hasDraft', align: 'left', field: 'hasDraft', sortable: false },
-    { name: 'createdOn', label: 'Created On', align: 'left', field: 'createdOn', sortable: true },
-    { name: 'lastModifiedOn', label: 'Last Modified', align: 'left', field: 'lastModifiedOn', sortable: true },
-    { name: 'tags', label: 'Tags', align: 'left', field: 'tags', sortable: false },
-  ]
+async function getQueues(pagination, showDraftsVal) {
+  isLoading.value = true;
+  const minLoadTimePromise = new Promise((resolve) => setTimeout(resolve, 300));
 
-  const draftColumns = [
-    { name: 'id', label: 'ID', align: 'left', field: 'id', sortable: false },
-    { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true },
-    { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true },
-    { name: 'createdOn', label: 'Created On', align: 'left', field: 'createdOn', sortable: true },
-    { name: 'lastModifiedOn', label: 'Last Modified', align: 'left', field: 'lastModifiedOn', sortable: true },
-  ]
+  try {
+    const [res] = await Promise.all([
+      api.getData("queues", pagination, showDraftsVal),
+      minLoadTimePromise,
+    ]);
 
-  const selected = ref([])
-  const showDrafts = ref(false)
+    queues.value = res.data.data;
+    tableRef.value.updateTotalRows(res.data.totalNumResults);
+  } catch (err) {
+    notify.error(err.response?.data?.message || "Failed to fetch queues");
+  } finally {
+    isLoading.value = false;
+  }
+}
 
-  async function getQueues(pagination, showDrafts) {
-    isLoading.value = true
-    const minLoadTimePromise = new Promise(resolve => setTimeout(resolve, 300)); 
-
-    try {
-      const [res] = await Promise.all([
-        api.getData('queues', pagination, showDrafts),
-        minLoadTimePromise
-      ]);
-        
-      queues.value = res.data.data;
-      tableRef.value.updateTotalRows(res.data.totalNumResults);
-    } catch(err) {
-      console.log('err = ', err);
-      notify.error(err.response.data.message);
-    } finally {
-      isLoading.value = false;
+async function deleteQueue() {
+  try {
+    const id = selected.value[0].id;
+    
+    if (Object.hasOwn(selected.value[0], "hasDraft")) {
+      await api.deleteItem("queues", id);
+    } else {
+      await api.deleteDraft("queues", id);
     }
+    
+    notify.success(`Successfully deleted '${selected.value[0].name}'`);
+    showDeleteDialog.value = false;
+    selected.value = [];
+    tableRef.value.refreshTable();
+  } catch (err) {
+    notify.error(err.response?.data?.message || "Failed to delete queue");
   }
+}
 
-  async function deleteQueue() {
-    try {
-      if(Object.hasOwn(selected.value[0], 'hasDraft')) {
-        await api.deleteItem('queues', selected.value[0].id)
-      } else {
-        await api.deleteDraft('queues', selected.value[0].id)
-      }
-      notify.success(`Successfully deleted Queue '${selected.value[0].name}'`)
-      showDeleteDialog.value = false
-      selected.value = []
-      tableRef.value.refreshTable()
-    } catch(err) {
-      notify.error(err.response.data.message);
-    }
-  }
+function openQueue(openTab, row) {
+  const target = row || selected.value[0];
+  if (!target) return;
 
-  const editObjTags = ref({})
+  const url = target.payload
+    ? `/queues/${target.id}/draft`
+    : `/queues/${target.id}`;
 
-  function openQueue(openTab) {
-    const url = selected.value[0].payload
-      ? `/queues/${selected.value[0].id}/draft`
-      : `/queues/${selected.value[0].id}`
-
-    if(openTab) window.open(url, '_blank', 'noopener,noreferrer')
-    else router.push(url)
-  }
-
+  if (openTab) openWindow.open(url, "_blank", "noopener,noreferrer");
+  else router.push(url);
+}
 </script>

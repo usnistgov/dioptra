@@ -3,7 +3,6 @@
   <TableComponent
     :rows="models"
     :columns="columns"
-    title="Models"
     v-model:selected="selected"
     @edit="editing = true; showAddEditDialog = true"
     @delete="showDeleteDialog = true"

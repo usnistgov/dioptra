@@ -1,40 +1,44 @@
 <template>
-  <PageTitle title="Experiments" />
-  <TableComponent 
-    :rows="experiments"
-    :columns="columns"
+  <PageTitle
     title="Experiments"
+    caption="Containers for Job runs"
+    conceptType="experiment"
+  />
+
+  <TableComponent
+    ref="tableRef"
+    :rows="experiments"
+    :columns="computedColumns"
     v-model:selected="selected"
     @open="openTab => (openTab
       ? openWindow.open(`/experiments/${selected[0].id}`, '_blank')
       : router.push(`/experiments/${selected[0].id}`)
     )"
-    @delete="showDeleteDialog = true"
     @request="getExperiments"
-    ref="tableRef"
-    @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
     @create="router.push('/experiments/new')"
     :loading="isLoading"
-  >
-    <template #body-cell-entrypoints="props">
-      <q-chip
-        v-for="(entrypoint, i) in props.row.entrypoints"
-        :key="i"
-        color="secondary" 
-        text-color="white"
-      >
-        {{ entrypoint.name }}
-      </q-chip>
-    </template>
-  </TableComponent>
+    @delete="
+      (row) => {
+        selected = [row];
+        showDeleteDialog = true;
+      }
+    "
+    @editTags="
+      (row) => {
+        editObjTags = row;
+        showTagsDialog = true;
+      }
+    "
+  />
 
-  <DeleteDialog 
+  <DeleteDialog
     v-model="showDeleteDialog"
     @submit="deleteExperiment"
     type="Experiment"
-    :name="selected.length ? selected[0].name : ''"
+    :name="selected[0]?.name || ''"
   />
-  <AssignTagsDialog 
+
+  <AssignTagsDialog
     v-model="showTagsDialog"
     :editObj="editObjTags"
     type="experiments"
@@ -43,68 +47,111 @@
 </template>
 
 <script setup>
-  import TableComponent from '@/components/TableComponent.vue'
-  import { ref } from 'vue'
-  import { useRouter } from 'vue-router'
-  import * as api from '@/services/dataApi'
-  import * as notify from '../notify'
-  import DeleteDialog from '@/dialogs/DeleteDialog.vue'
-  import PageTitle from '@/components/PageTitle.vue'
-  import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
-  
-  const router = useRouter()
-  const openWindow = window
+import { ref, computed } from "vue";
+import { useRouter } from "vue-router";
+import TableComponent from "@/components/table/TableComponent.vue";
+import PageTitle from "@/components/PageTitle.vue";
+import DeleteDialog from "@/dialogs/DeleteDialog.vue";
+import AssignTagsDialog from "@/dialogs/AssignTagsDialog.vue";
+import * as api from "@/services/dataApi";
+import * as notify from "../notify";
 
-  const showDeleteDialog = ref(false)
-  const showTagsDialog = ref(false)
-  const editObjTags = ref({})
+const router = useRouter();
+const tableRef = ref(null);
+const openWindow = window
 
-  const experiments = ref([])
+// State
+const experiments = ref([]);
+const isLoading = ref(false);
+const selected = ref([]);
+const showDeleteDialog = ref(false);
+const showTagsDialog = ref(false);
+const editObjTags = ref({});
 
-  const isLoading = ref(false)
+// Column Definitions
+const computedColumns =  [
+  {
+    name: "id",
+    label: "Experiment ID",
+    field: "id",
+    align: "left",
+    styleType: "icon-id",
+    conceptType: "experiment",
+    includeIcon: true,
+  },
+  {
+    name: "name",
+    label: "Experiment Name",
+    field: "name",
+    align: "left",
+    styleType: "resource-name",
+    conceptType: "experiment",
+    maxWidth: "250px",
+    includeIcon: false,
+    sortable: true,
+  },
 
-  const columns = [
-    { name: 'id', label: 'ID', align: 'left', field: 'id', sortable: false, },
-    { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, },
-    { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true },
-    { name: 'entrypoints', label: 'Entry Points', align: 'left', field: 'entrypoints', sortable: false },
-    { name: 'tags', label: 'Tags', align: 'left', sortable: false },
-  ]
+  {
+    name: "description",
+    label: "Description",
+    field: "description",
+    align: "left",
+    styleType: "long-text",
+    maxWidth: "300px",
+    maxLength: 100,
+    useQuotes: true,
+    sortable: true,
+  },
+  {
+    name: "entrypoints",
+    label: "EntryPoints",
+    field: "entrypoints",
+    align: "left",
+    styleType: "multi-badge",
+    conceptType: "entrypoint",
+    clickable: true,
+  },
+  {
+    name: "tags",
+    label: "Tags",
+    field: "tags",
+    align: "left",
+    styleType: "tag-list",
+  },
+];
 
-  const selected = ref([])
-  async function getExperiments(pagination) {
-    isLoading.value = true
-    const minLoadTimePromise = new Promise(resolve => setTimeout(resolve, 300)); 
+// API Functions
+async function getExperiments(pagination) {
+  isLoading.value = true;
+  try {
+    const minLoadTimePromise = new Promise((resolve) =>
+      setTimeout(resolve, 300),
+    );
 
-    try {
-        const [res] = await Promise.all([
-            api.getData('experiments', pagination, false),
-            minLoadTimePromise
-        ]);
-        
-        experiments.value = res.data.data;
-        tableRef.value.updateTotalRows(res.data.totalNumResults);
-    } catch(err) {
-        console.log('err = ', err);
-        notify.error(err.response.data.message);
-    } finally {
-        isLoading.value = false;
-    }
+    const [res] = await Promise.all([
+      api.getData("experiments", pagination, false),
+      minLoadTimePromise,
+    ]);
+
+    experiments.value = res.data.data;
+    tableRef.value.updateTotalRows(res.data.totalNumResults);
+  } catch (err) {
+    notify.error(err.response?.data?.message || "Failed to fetch experiments");
+  } finally {
+    isLoading.value = false;
+  }
 }
 
-  const tableRef = ref(null)
-
-  async function deleteExperiment() {
-    try {
-      await api.deleteItem('experiments', selected.value[0].id)
-      notify.success(`Successfully deleted '${selected.value[0].name}'`)
-      showDeleteDialog.value = false
-      selected.value = []
-      tableRef.value.refreshTable()
-    } catch(err) {
-      notify.error(err.response.data.message);
-    }
+async function deleteExperiment() {
+  try {
+    const id = selected.value[0].id;
+    await api.deleteItem("experiments", id);
+    notify.success(`Successfully deleted '${selected.value[0].name}'`);
+    showDeleteDialog.value = false;
+    selected.value = [];
+    tableRef.value.refreshTable();
+  } catch (err) {
+    notify.error(err.response?.data?.message);
   }
-
-
+}
 </script>

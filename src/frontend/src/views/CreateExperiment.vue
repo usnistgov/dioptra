@@ -1,5 +1,8 @@
 <template>
-  <PageTitle :title="title" />
+      <PageTitle 
+        subtitle="Create Experiment"
+        conceptType="experiment" 
+      />
   <div :class="`row q-my-lg`">
     <div :class="`${isMobile ? 'col-12' : 'col-5'} q-mr-xl`">
       <fieldset>
@@ -52,35 +55,21 @@
     <fieldset :class="`${isMobile ? 'col-12 q-mt-lg' : 'col'}`">
       <legend>Entrypoint</legend>
       <div class="q-ma-lg">
-        <q-select
-          outlined
+        <ResourcePicker
           v-model="experiment.entrypoints"
-          use-input
-          use-chips
-          multiple
-          map-options
-          option-label="name"
-          option-value="id"
-          input-debounce="300"
+          type="entrypoint"
           :options="entrypoints"
+          option-value="id"
           @filter="getEntrypoints"
+          input-debounce="300"
           class="q-mb-md"
+          chip-outline
+          chip-square 
         >
           <template v-slot:before>
             <div class="field-label">Entrypoints:</div>
           </template>
-          <template v-slot:selected>
-            <q-chip
-              v-for="(entrypoint, i) in experiment.entrypoints"
-              :key="entrypoint.id"
-              color="secondary"
-              :label="entrypoint.name"
-              class="text-white"
-              removable
-              @remove="experiment.entrypoints.splice(i, 1)"
-            />
-          </template>  
-        </q-select>
+        </ResourcePicker>
 
         <q-btn
           color="primary"
@@ -127,6 +116,7 @@
   import * as notify from '../notify'
   import PageTitle from '@/components/PageTitle.vue'
   import ReturnToFormDialog from '@/dialogs/ReturnToFormDialog.vue'
+  import ResourcePicker from '@/components/ResourcePicker.vue'
 
   const route = useRoute()
   

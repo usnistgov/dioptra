@@ -2,7 +2,7 @@
   <q-dialog v-model="showDialog" :persistent="true">
     <q-card>
       <q-card-section class="bg-primary text-white text-h6">
-        <div class="text-h6">Create Artifact Parameter</div>
+        <div class="text-h6">{{ editParam ? 'Edit' : 'Create' }} Artifact Parameter</div>
       </q-card-section>
       <q-card-section>
         <q-form ref="artifactParamForm" greedy @submit.prevent="addArtifactParam" id="artifactForm">
@@ -102,6 +102,13 @@ const showDialog = defineModel()
 
 const emit = defineEmits(['submit'])
 
+const props = defineProps({
+  editParam: {
+    type: Object,
+    default: null
+  }
+})
+
 const outputParams = ref([])
 const outputParam = ref({
   name: '',
@@ -120,20 +127,22 @@ function requiredRule(val) {
 }
 
 watch(showDialog, (newVal) => {
-  getPluginParameterTypes()
-  if(!newVal) {
-    artifactParam.value = {
-      name: '',
-      outputParams: []
+  if (newVal) {
+    getPluginParameterTypes()
+    
+    if (props.editParam) {
+      artifactParam.value.name = props.editParam.name
+      // Deep copy to prevent modifying the parent state directly before confirming
+      outputParams.value = JSON.parse(JSON.stringify(props.editParam.outputParams))
+    } else {
+      artifactParam.value = { name: '', outputParams: [] }
+      outputParams.value = []
     }
-    outputParam.value = {
-      name: '',
-      parameterType: ''
-    }
+    outputParam.value = { name: '', parameterType: '' }
+  } else {
     resetForm()
   }
 })
-
 async function getPluginParameterTypes() {
   try {
     const res = await api.getData('pluginParameterTypes', { rowsPerPage: 0 })
@@ -173,8 +182,8 @@ function addArtifactParam() {
 }
 
 function resetForm() {
-  artifactParam.value ={}
-  artifactParamForm.value.reset()
+  artifactParam.value = {}
+  artifactParamForm.value?.reset()
   outputParam.value = {}
   outputParams.value = []
   outputParamForm.value?.reset()

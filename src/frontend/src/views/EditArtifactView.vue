@@ -1,6 +1,9 @@
 <template>
   <div class="row items-center">
-    <PageTitle :title="`Artifact ${route.params.id}`" />
+    <PageTitle
+      :subtitle="`Artifact ${route.params.id}`"
+      conceptType="artifact"
+    />
     <q-chip
       v-if="route.params.id !== 'new'"
       class="q-ml-lg"
@@ -13,271 +16,200 @@
       <q-toggle v-model="store.showRightDrawer" left-label color="orange" />
     </q-chip>
   </div>
-  <div class="row q-gutter-xl">
+
+
+  <div class="row q-gutter-xl q-mt-md">
     <div :class="`${isLarge ? 'col-12' : 'col-4'}`">
-      <h2 class="q-mt-lg">Details</h2>
-      <div class="inline-block">
-        <KeyValueTable
-          :rows="rows"
-          :disabled="showHistory"
-          firstColumnMinWidth="205px"
-          :secondColumnFullWidth="isLarge || !artifact.isDir ? false : true"
-        >
-          <template #description="{}">
-            {{ artifact.description }}
-            <q-btn icon="edit" round size="sm" color="primary" flat />
-            <q-popup-edit v-model="artifact.description" auto-save v-slot="scope">
-              <q-input
-                v-model="scope.value"
-                dense
-                autofocus
-                counter
-                @keyup.enter="scope.set"
-              />
-            </q-popup-edit>
-          </template>
-          <template #fileUrl="{ fileUrl }">
-            <q-btn
-              @click="
-                downloadFile(
-                  artifact.fileUrl,
-                  artifact.artifactUri.split('/').pop(),
-                  'artifact'
-                )
-              "
-              label="Download Artifact"
-              color="primary"
-              icon="download"
-              :loading="isDownloadingArtifact"
-            />
-          </template>
-          <template #fileSize>
-            {{ prettyBytes(artifact.fileSize) }}
-          </template>
-          <template #job>
-            <RouterLink :to="`/jobs/${artifact?.job}`">
-              {{ artifact?.job }}
-            </RouterLink>
-          </template>
-          <template #plugin="{ plugin = {} }">
-            <div class="row items-end">
-              <div
-                v-if="Object.keys(plugin).length === 0 && !isLoading"
-                class="text-red"
-              >
-                <q-icon name="sym_o_warning" size="2.5em" />
-                The attached plugin has been deleted.
-              </div>
-              <q-select
-                label="Plugin"
-                v-model="artifact.plugin"
-                @filter="getPlugins"
-                :options="plugins"
-                option-label="name"
-                input-debounce="100"
-                dense
-                outlined
-                use-input
-                class="q-mt-sm q-ml-md col"
-              >
-                <template v-slot:option="scope">
-                  <q-item v-bind="scope.itemProps">
-                    <q-item-section>
-                      <q-item-label>{{ scope.opt.name }}</q-item-label>
-                      <q-item-label caption
-                        >Number of Files:
-                        {{ scope.opt.files.length }}</q-item-label
-                      >
-                      <q-item-label caption
-                        >Number of artifact tasks:
-                        {{ countTasks(scope.opt) }}</q-item-label
-                      >
-                    </q-item-section>
-                  </q-item>
-                </template>
-                <template v-slot:selected-item="scope">
-                  <q-item-label class="q-my-sm">
-                    <q-chip
-                      :label="plugin.name"
-                      color="secondary"
-                      text-color="white"
-                      v-if="Object.keys(plugin).length > 0"
-                    >
-                      <q-badge
-                        v-if="!plugin.latestSnapshot"
-                        color="red"
-                        label="outdated"
-                        rounded
-                        class="q-ml-xs"
-                      />
-                    </q-chip>
-                    <q-btn
-                      v-if="
-                        !plugin.latestSnapshot && Object.keys(plugin).length > 0
-                      "
-                      round
-                      color="red"
-                      icon="sync"
-                      size="sm"
-                      @click.stop="syncPlugin(plugin.id)"
-                    >
-                      <q-tooltip> Sync to latest version of plugin </q-tooltip>
-                    </q-btn>
-                  </q-item-label>
-                </template>
-              </q-select>
-            </div>
-            <q-select
-              dense
-              v-model="selectedArtifactTask"
-              :options="artifactTaskOptions"
-              option-label="name"
-              outlined
-              label="Artifact Task"
-              class="q-mt-sm q-ml-md"
-              :disable="artifactTaskOptions.length === 0"
-            >
-              <template #before>
-                <q-icon name="subdirectory_arrow_right" color="black" />
-              </template>
-              <template v-slot:option="scope">
-                <q-item v-bind="scope.itemProps">
-                  <q-item-section>
-                    <q-item-label>{{ scope.opt.name }}</q-item-label>
-                    <q-item-label caption>
-                      Output Parameters:
-                      <q-chip
-                        v-for="param in scope.opt.outputParams"
-                        color="purple"
-                        text-color="white"
-                        dense
-                      >
-                        {{ param.name }}: {{ param.parameterType.name }}
-                      </q-chip>
-                    </q-item-label>
-                  </q-item-section>
-                </q-item>
-              </template>
-              <template v-slot:selected-item="scope">
-                <q-item
-                  v-bind="scope.itemProps"
-                  class="q-pl-none"
-                  v-if="artifactTaskOptions.length !== 0"
-                >
-                  <q-item-section>
-                    <q-item-label>{{ scope.opt.name }}</q-item-label>
-                    <q-item-label caption>
-                      <br />
-                      Output Parameters: <br />
-                      <q-chip
-                        v-for="outputParam in scope.opt.outputParams"
-                        :key="outputParam.name"
-                        :label="`${outputParam.name}: ${outputParam.parameterType.name}`"
-                        color="purple"
-                        text-color="white"
-                      />
-                    </q-item-label>
-                  </q-item-section>
-                </q-item>
-              </template>
-            </q-select>
-            <div
-              v-if="artifactTaskOptions.length === 0 && !isLoading"
-              class="text-caption text-negative"
-            >
-              The selected plugin has no files with artifact tasks. Please select
-              another plugin.
-            </div>
-          </template>
-        </KeyValueTable>
-        <div :class="`q-mt-lg float-right`">
-          <q-btn
-            outline
-            color="primary"
-            label="Cancel"
-            class="q-mr-lg cancel-btn"
-            @click="store.initialPage ? router.push('/artifacts') : router.back()"
-          />
-          <q-btn
-            @click="submit()"
-            color="primary"
-            label="Save Artifact"
-            type="submit"
-            :disable="store.showRightDrawer"
-          />
-        </div>
-      </div>
-    </div>
-    <div :class="isLarge ? 'col-6' : 'col-3'" class="column" v-if="artifact.isDir">
-      <h2 class="q-mt-lg">Directory</h2>
-      <q-card
-        flat
-        class="col q-py-sm"
-        style="border: 1px solid #cecece; "
+      <h2 class="q-mt-none text-h6">Details</h2>
+
+      <KeyValueTable 
+        :rows="rows" 
+        :disabled="showHistory"
+        firstColumnMinWidth="205px"
+        :secondColumnFullWidth="isLarge || !artifact.isDir ? false : true"
       >
-        <q-card-section class="row justify-between q-pt-sm">
+        <template #id>
+          <ResourceName conceptType="artifact" :text="'ID: #' + artifact.id" includeIcon="true" />
+        </template>
+
+        <template #description>
+          <div class="row items-center justify-start">
+            <CellLongText :text="artifact.description" max-width="800px" class="col-auto" />
+            <q-btn icon="edit" round size="sm" color="primary" flat class="q-ml-sm">
+              <q-tooltip>Edit Description</q-tooltip>
+            </q-btn>
+            <q-popup-edit v-model="artifact.description" auto-save v-slot="scope">
+              <q-input v-model="scope.value" dense autofocus counter @keyup.enter="scope.set" label="Description" />
+            </q-popup-edit>
+          </div>
+        </template>
+
+        <template #fileUrl="{ fileUrl }">
           <q-btn
-            @click="downloadFile(selectedNode?.fileUrl, selectedNode?.label)"
-            label="Download File"
+            @click="downloadFile(artifact.fileUrl, artifact.artifactUri.split('/').pop(), 'artifact')"
+            label="Download Artifact"
             color="primary"
             icon="download"
-            :disable="!selectedNode || selectedNode.isDir"
-            :loading="isDownloadingFile"
+            size="sm"
+            class="q-my-sm q-py-sm"
+            :loading="isDownloadingArtifact"
           />
-          <q-input
-            v-model="filter"
-            debounce="300"
+        </template>
+
+        <template #fileSize>
+          {{ prettyBytes(artifact.fileSize) }}
+        </template>
+
+        <template #job>
+          <RouterLink :to="`/jobs/${artifact?.job}`" style="text-decoration: none">
+            <BadgeIcon type="job" :label="artifact.job" :showIcon="true", :clickable="true" />
+          </RouterLink>
+        </template>
+
+        <template #plugin="{ plugin = {} }">
+          <div class="column">
+            <div v-if="Object.keys(plugin).length === 0 && !isLoading" class="text-red q-mb-xs">
+              <q-icon name="sym_o_warning" size="1.5em" class="q-mr-xs" />
+              The attached plugin has been deleted.
+            </div>
+
+            <q-select
+              label="Attached Plugin"
+              v-model="artifact.plugin"
+              @filter="getPlugins"
+              :options="plugins"
+              option-label="name"
+              input-debounce="100"
+              outlined
+              use-input
+              class="col"
+              style="max-width: 400px"
+            >
+              <template v-slot:option="scope">
+                <q-item v-bind="scope.itemProps">
+                  <q-item-section avatar>
+                    <q-icon :name="getConceptStyle('plugin').icon" :color="getConceptStyle('plugin').color" />
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label>{{ scope.opt.name }}</q-item-label>
+                    <q-item-label caption>Files: {{ scope.opt.files.length }} | Tasks: {{ countTasks(scope.opt) }}</q-item-label>
+                  </q-item-section>
+                </q-item>
+              </template>
+
+              <template v-slot:selected-item="scope">
+                <div class="q-py-xs">
+                  <div class="row items-center q-px-sm no-wrap shadow-1" 
+                  style="border-radius: 4px; border: 1px solid #eeeeee; width: fit-content;"
+                  :class="$q.dark.isActive ? 'bg-grey-10' : 'bg-grey-1'" >
+                    <q-icon :name="getConceptStyle('plugin').icon" 
+                      :color="$q.dark.isActive ? getConceptStyle('plugin').darkColor : getConceptStyle('plugin').color"  
+                      size="xs" />
+                    <q-chip 
+                     :color="$q.dark.isActive ? getConceptStyle('plugin').darkColor : getConceptStyle('plugin').color"
+                      size="sm" outline square clickable class="text-weight-bold no-border q-mx-none">
+                      <span class="font-mono ellipsis" style="font-size: 14px; font-weight: 500 "
+                       :color="$q.dark.isActive ? getConceptStyle('plugin').darkColor : getConceptStyle('plugin').color"
+                      >
+                        {{ scope.opt.name }}
+                      </span>
+                      <template v-if="!scope.opt.latestSnapshot">
+                        <div style="height: 12px; width: 1px; margin: 0 6px;"></div>
+                        <q-badge rounded color="warning" class="q-mr-xs" style="padding: 2px">
+                          <q-icon name="warning" color="white" size="10px" />
+                        </q-badge>
+                        <q-btn flat round dense size="xs" color="red" icon="sync" @click.stop="syncPlugin(scope.opt.id)">
+                          <q-tooltip>Sync to latest</q-tooltip>
+                        </q-btn>
+                      </template>
+                    </q-chip>
+                  </div>
+                </div>
+              </template>
+            </q-select>
+          </div>
+          
+          <q-select
             dense
-            placeholder="Search"
             outlined
-            clearable
-            @clear="selectedNode = null"
+            v-model="selectedArtifactTask"
+            :options="artifactTaskOptions"
+            option-label="name"
+            label="Artifact Task"
+            class="q-mt-sm"
+            style="width: fit-content"
+            :disable="artifactTaskOptions.length === 0"
           >
-            <template #append>
-              <q-icon name="search" />
+            <template #before>
+              <q-icon name="subdirectory_arrow_right" color="grey-7" />
             </template>
+            <template v-slot:option="scope">
+              <q-item v-bind="scope.itemProps">
+                <q-item-section>
+                  <q-item-label class="text-weight-bold">{{ scope.opt.name }}</q-item-label>
+                  <q-item-label caption v-if="scope.opt.outputParams?.length">
+                    <div class="row wrap q-mt-xs text-caption">
+                      <span class="text-weight-medium q-mr-xs"
+                      :class="$q.dark.isActive ? 'text-grey-2' : 'text-grey-9'">Outputs:</span>
+                      <div v-for="(param, i) in scope.opt.outputParams" :key="param.name" class="row items-baseline no-wrap q-gutter-x-xs">
+                        <span :class="$q.dark.isActive ? 'text-grey-2' : 'text-grey-9'" style="border-bottom: 2px solid #ab47bc; line-height: 1.1">{{ param.name }}</span>
+                        <span :class="$q.dark.isActive ? 'text-grey-2' : 'text-grey-9'">:</span>
+                        <span :class="$q.dark.isActive ? 'text-grey-4' : 'text-grey-7'" class="font-mono" style="font-size: 0.9em">{{ param.parameterType.name }}</span>
+                        <span v-if="i < scope.opt.outputParams.length - 1" class="text-grey-5 q-mr-xs">,</span>
+                      </div>
+                    </div>
+                  </q-item-label>
+                </q-item-section>
+              </q-item>
+            </template>
+            <template v-slot:selected-item="scope">
+              <div v-if="scope.opt" class="column q-py-xs q-mt-xs">
+                <BadgeIcon :label="scope.opt.name" :uppercase="false" type="task" :includeIcon="true" class="q-mb-sm q-pr-lg" style="width: fit-content" />
+                <div class="row wrap items-center text-caption q-gutter-sm" style="line-height: 1.4">
+                  <span :class="$q.dark.isActive ? 'text-grey-4' : 'text-grey-7'" class="text-weight-bold">Outputs:</span>
+                  <template v-if="scope.opt.outputParams && scope.opt.outputParams.length > 0">
+                    <div v-for="(p, i) in scope.opt.outputParams" :key="p.name" class="row items-baseline q-gutter-x-xs q-mr-sm">
+                      <span :class="$q.dark.isActive ? 'text-grey-5' : 'text-grey-7'" style="border-bottom: 2px solid #ab47bc; line-height: 1.2">{{ p.name }}</span>
+                      <span :class="$q.dark.isActive ? 'text-grey-6' : 'text-grey-6'" class=" font-mono" style="font-size: 0.9em">({{ p.parameterType.name }})</span>
+                    </div>
+                  </template>
+                  <span v-else class="text-grey-5 text-italic">None</span>
+                </div>
+              </div>
+            </template>
+          </q-select>
+
+          <div v-if="artifactTaskOptions.length === 0 && !isLoading" class="text-caption text-negative q-mt-xs q-ml-lg">
+            The selected plugin has no files with artifact tasks. Please select another plugin.
+          </div>
+        </template>
+      </KeyValueTable>
+      
+      <div class="row justify-start q-my-lg q-gutter-x-md">
+        <q-btn outline color="primary" label="Cancel" @click="store.initialPage ? router.push('/artifacts') : router.back()" />
+        <q-btn @click="submit()" color="primary" label="Save Artifact" :disable="store.showRightDrawer" />
+      </div>
+    </div>
+
+    <div :class="isLarge ? 'col-6' : 'col-3'" class="column" v-if="artifact.isDir">
+      <h2 class="q-mt-none text-h6">Directory</h2>
+      <q-card flat class="col q-py-sm" style="border: 1px solid #cecece;">
+        <q-card-section class="row justify-between q-pt-sm">
+          <q-btn @click="downloadFile(selectedNode?.fileUrl, selectedNode?.label)" label="Download File" color="primary" icon="download" :disable="!selectedNode || selectedNode.isDir" :loading="isDownloadingFile" />
+          <q-input v-model="filter" debounce="300" dense placeholder="Search" outlined clearable @clear="selectedNode = null">
+            <template #append><q-icon name="search" /></template>
           </q-input>
         </q-card-section>
         <q-separator />
-        <q-card-section
-          style="max-height: 65vh; overflow-y: auto"
-          class="q-pl-md q-pt-sm"
-        >
-          <q-tree
-            :nodes="nodes"
-            node-key="relativePath"
-            v-model:expanded="expandedKeys"
-            selected-color="primary"
-            dense
-            :filter="filter"
-            :filter-method="myFilterMethod"
-          >
+        <q-card-section style="max-height: 65vh; overflow-y: auto" class="q-pl-md q-pt-sm">
+          <q-tree :nodes="nodes" node-key="relativePath" v-model:expanded="expandedKeys" selected-color="primary" dense :filter="filter" :filter-method="myFilterMethod">
             <template v-slot:default-header="prop">
-              <q-item
-                clickable
-                style="width: 100%"
-                dense
-                class="q-pa-none"
-                @click="handleSelect(prop.node)"
-                :active="selectedNode === prop.node"
-                :active-class="`${
-                  $q.dark.isActive
-                    ? 'bg-deep-purple-10 text-white'
-                    : 'bg-grey-4 text-black'
-                }`"
-              >
-                <q-item-section avatar>
-                  <q-icon :name="prop.node.icon" />
-                </q-item-section>
+              <q-item clickable style="width: 100%" dense class="q-pa-none" @click="handleSelect(prop.node)" :active="selectedNode === prop.node" :active-class="`${$q.dark.isActive ? 'bg-deep-purple-10 text-white' : 'bg-grey-4 text-black'}`">
+                <q-item-section avatar><q-icon :name="prop.node.icon" /></q-item-section>
                 <q-item-section>
                   <q-item-label>
                     {{ prop.node.label }}
-                    <span
-                      v-if="prop.node.isFile"
-                      class="text-caption float-right q-pr-sm"
-                    >
-                      {{ prettyBytes(prop.node.fileSize) }}
-                    </span>
+                    <span v-if="prop.node.isFile" class="text-caption float-right q-pr-sm">{{ prettyBytes(prop.node.fileSize) }}</span>
                   </q-item-label>
                 </q-item-section>
               </q-item>
@@ -286,98 +218,142 @@
         </q-card-section>
       </q-card>
     </div>
-    <div class="col column">
-      <h2 class="q-mt-lg">File Preview</h2>
-      <q-card
-        class="col"
-        flat
-        style="border: 1px solid #cecece;"
-      >
-        <q-card-section style="height: 72px;" class="row items-center justify-between">
-          <div v-if="!selectedNode || selectedNode.isDir" class="text-grey">
-            Select a file to preview
+
+    <div class="col column" style="max-width: 100%;">
+      <h2 class="q-mt-none text-h6">File Preview</h2>
+      <q-card class="col column shadow-1" style="border: 1px solid #cecece; border-radius: 6px;">
+        
+        <q-card-section 
+          class=" row items-center justify-between q-py-sm" 
+          :class="$q.dark.isActive ? 'bg-grey-10' : 'bg-grey-2'"
+          style="border-bottom: 1px solid #cecece; min-height: 60px;"
+        >
+          <div v-if="!selectedNode || selectedNode.isDir" class="text-italic flex items-center q-gutter-x-sm"
+           :class="$q.dark.isActive ? 'bg-grey-2' : 'bg-grey-9'">
+            <q-icon name="sym_o_visibility_off" size="sm" />
+            <span>No preview selected</span>
           </div>
-          <div v-else class="row items-center text-subtitle2">
-            {{ selectedNode.label }}
+          
+          <div v-else class="row items-center q-gutter-x-sm">
+            <q-icon name="sym_o_description" size="sm"  
+             :color="$q.dark.isActive ? 'lightblue' : 'primary'"/>
+            <span class="text-weight-bold" style="font-size: 1.1rem; letter-spacing: 0.5px;"
+             :class="$q.dark.isActive ? 'text-grey-2' : 'text-grey-9'">
+              {{ selectedNode.label }}
+            </span>
+            <q-chip 
+              v-if="preview.ext"  
+              size="sm" 
+              color="blue-grey-2" 
+              text-color="blue-grey-9" 
+              class="text-weight-bold text-uppercase q-ml-sm"
+            >
+              {{ preview.ext }}
+            </q-chip>
           </div>
-          <q-toggle
-            v-if="preview.kind === 'image'"
-            label="Full Width"
-            v-model="imageFullWidth"
+          
+          <q-toggle 
+            v-if="preview.kind === 'image'" 
+            color="primary" 
+            label="Full Width" 
+            v-model="imageFullWidth" 
+            left-label 
+            dense 
           />
         </q-card-section>
-        <q-separator />
-        <q-card-section 
-          v-if="selectedNode && !selectedNode.isDir"
-          style="max-height: 65vh; overflow-y: auto"
-        >
-          <div v-if="preview.loading" class="q-pa-md">
-            <q-spinner /> Loading preview...
+
+        <q-card-section class="q-pa-none col flex column"
+        :class="$q.dark.isActive ? 'bg-grey-10' : 'bg-grey-2'"
+        style="max-height: 65vh; overflow-y: auto;">
+          
+          <div v-if="!selectedNode || selectedNode.isDir" class="flex flex-center column q-pa-xl text-grey-5 col">
+            <q-icon name="sym_o_file_present" size="4rem" class="q-mb-md" style="opacity: 0.5" />
+            <div class="text-h6 text-weight-regular">Select a file to preview</div>
           </div>
 
-          <div v-else-if="preview.error" class="text-negative q-pa-md">
-            {{ preview.error }}
+          <div v-else-if="preview.loading" class="flex flex-center column q-pa-xl text-primary col">
+            <q-spinner size="3rem" class="q-mb-md" />
+            <div class="text-subtitle1">Loading file preview...</div>
           </div>
 
-          <div v-else-if="preview.ext === 'json' || preview.ext === 'yaml'">
-            <CodeEditor 
-              v-model="preview.text"
-              language="yaml"
-              :readOnly="true"
+          <div v-else-if="preview.error" class="flex flex-center column q-pa-xl text-negative col">
+            <q-icon name="error_outline" size="3rem" class="q-mb-md" />
+            <div class="text-subtitle1 text-center">{{ preview.error }}</div>
+          </div>
+
+          <div v-else class="q-pa-md col">
+            
+            <div v-if="preview.ext === 'json' || preview.ext === 'yaml'" class="shadow-1 rounded-borders overflow-hidden" style="border: 1px solid #e0e0e0;">
+              <CodeEditor v-model="preview.text" language="yaml" :readOnly="true" />
+            </div>
+
+            <pre 
+              v-else-if="preview.kind === 'text'" 
+              class="q-pa-md rounded-borders text-body2 font-mono "
+              :class="$q.dark.isActive ? 'bg-grey-9 text-blue-grey-1' : 'bg-grey-3 text-blue-grey-9'" 
+              style="white-space: pre-wrap; word-break: break-word; border: 1px solid #e0e0e0; margin: 0;"
+            >{{ preview.text }}</pre>
+
+            <div v-else-if="preview.kind === 'image'" class="flex flex-center bg-grey-2 rounded-borders q-pa-sm" style="border: 1px solid #e0e0e0;">
+              <img 
+                :src="preview.objectUrl" 
+                class="rounded-borders shadow-1" 
+                style="max-width: 100%; height: auto; transition: width 0.3s ease;" 
+                :style="{ width: imageFullWidth ? '100%' : 'auto' }" 
+              />
+            </div>
+
+            <iframe 
+              v-else-if="preview.kind === 'pdf'" 
+              :src="preview.objectUrl" 
+              class="rounded-borders"
+              style="width: 100%; height: 60vh; border: 1px solid #e0e0e0;" 
             />
+
+            <div v-else class="flex flex-center column q-pa-xl text-grey-6 col">
+              <q-icon name="sym_o_visibility_off" size="3rem" class="q-mb-md" />
+              <div class="text-subtitle1">No preview available for this file type.</div>
+              <div class="text-caption">Use the Download Artifact button above to view Artifact.</div>
+            </div>
           </div>
-
-          <!-- JSON/text preview -->
-          <pre v-else-if="preview.kind === 'text'">{{ preview.text }}</pre>
-
-          <!-- Image preview -->
-          <img
-            v-else-if="preview.kind === 'image'"
-            :src="preview.objectUrl"
-            style="max-width: 100%; height: auto;"
-            :style="{ width: imageFullWidth ? '100%' : `auto` }"
-          />
-
-          <!-- PDF preview -->
-          <iframe
-            v-else-if="preview.kind === 'pdf'"
-            :src="preview.objectUrl"
-            style="width: 100%; height: 100%; border: 0"
-          />
-
-          <div v-else class="text-caption text-grey">
-            No preview available for this file type. Use Download.
-          </div>
+          
         </q-card-section>
       </q-card>
     </div>
   </div>
 </template>
 
+
+
 <script setup>
-import PageTitle from "@/components/PageTitle.vue";
-import { useRoute, useRouter } from "vue-router";
+
 import { onMounted, computed, ref, inject, watch } from "vue";
-import * as api from "@/services/dataApi";
-import KeyValueTable from "@/components/KeyValueTable.vue";
-import * as notify from "../notify";
+import { useRoute, useRouter } from "vue-router";
 import { useLoginStore } from "@/stores/LoginStore.ts";
-import { useQuasar } from "quasar";
+import * as api from "@/services/dataApi";
+import * as notify from "../notify";
+import {useQuasar} from "quasar";
+
+// Components
+import PageTitle from "@/components/PageTitle.vue";
+import KeyValueTable from "@/components/KeyValueTable.vue";
+import ResourceName from "@/components/table/cells/ResourceName.vue";
+import ParameterList from "@/components/table/cells/ParameterList.vue";
+import BadgeIcon from "@/components/table/cells/BadgeIcon.vue"; 
+import CellLongText from "@/components/table/cells/CellLongText.vue"; 
+import { getConceptStyle } from "@/constants/tableStyles";
 import CodeEditor from '@/components/CodeEditor.vue'
+
+const store = useLoginStore();
 
 const $q = useQuasar();
 
 const isMedium = inject("isMedium");
 const isLarge = inject("isLarge");
 const isMobile = inject("isMobile");
-
-const store = useLoginStore();
-
+const darkMode = inject("darkMode");
 const route = useRoute();
 const router = useRouter();
-
-const darkMode = inject("darkMode");
-
 const isLoading = ref(true);
 
 const showHistory = computed(() => {
@@ -404,7 +380,17 @@ const artifact = ref({
   task: {
     outputParams: [],
   },
-});
+
+  id: '',
+  createdOn: '',
+  lastModifiedOn: '',
+  snapshotCreatedOn: '',
+  fileUrl: '',
+  fileSize: 0,
+  job: "",
+  isDir: false,
+  plugin: {},
+})
 
 async function getArtifact() {
   try {
@@ -429,9 +415,8 @@ async function getPluginSnapshot() {
     ORIGINAL_PLUGIN_SNAPSHOT = JSON.parse(
       JSON.stringify(artifact.value.plugin)
     );
-    // load task dropdown
     const pluginFile = artifact.value.plugin.files.find(
-      (file) => file.id === artifact.value.task.pluginFileResourceId
+      (file) => file.id === artifact.value.task.pluginFileResourceId,
     );
     pluginFile.tasks.artifacts.forEach((task) => {
       artifactTaskOptions.value.push(task);
@@ -450,23 +435,35 @@ const selectedArtifactTask = ref();
 const plugins = ref([]);
 
 async function getPlugins(val = "", update) {
-  update(async () => {
-    try {
-      let res = await api.getData("plugins", {
-        search: val,
-        rowsPerPage: 0, // get all
-        index: 0,
-      });
-      const originalPluginIndex = res.data.data.findIndex(
-        (plugin) => plugin.id === ORIGINAL_PLUGIN_SNAPSHOT.id
-      );
-      // replace latest plugin snapshot with original plugin snapshot from artifact
-      res.data.data[originalPluginIndex] = ORIGINAL_PLUGIN_SNAPSHOT;
-      plugins.value = res.data.data;
-    } catch (err) {
-      notify.error(err.response.data.message);
-    }
-  });
+  try {
+
+    let res = await api.getData("plugins", {
+      search: val,
+      rowsPerPage: 0, // get all
+      index: 0,
+    });
+
+    update(() => {
+      if (res?.data?.data) {
+        if (ORIGINAL_PLUGIN_SNAPSHOT) {
+          const originalPluginIndex = res.data.data.findIndex(
+            (plugin) => plugin.id === ORIGINAL_PLUGIN_SNAPSHOT.id
+          );
+          
+          // Prevent mutating index -1
+          if (originalPluginIndex !== -1) {
+            res.data.data[originalPluginIndex] = ORIGINAL_PLUGIN_SNAPSHOT;
+          }
+        }
+        plugins.value = res.data.data;
+      }
+    });
+  } catch (err) {
+    update(() => {
+      plugins.value = [];
+    });
+    notify.error(err.response?.data?.message || err.message);
+  }
 }
 
 watch(
@@ -543,7 +540,10 @@ async function syncPlugin(pluginID) {
 }
 
 const rows = computed(() => [
-  { label: "ID", value: artifact.value?.id },
+  { 
+    label: "Artifact ID", 
+    slot: "id" 
+  },
   {
     label: "Description",
     slot: "description",
@@ -561,18 +561,18 @@ const rows = computed(() => [
     label: "Snapshot Timestamp",
     value: formatDate(artifact.value?.snapshotCreatedOn),
   },
-  {
-    label: "Download",
-    slot: "fileUrl",
-    props: { fileUrl: artifact.value?.fileUrl },
-  },
   { label: "fileSize", slot: "fileSize" },
   { label: "Job ID", slot: "job" },
   { label: "isDir", value: artifact.value?.isDir },
   {
-    label: "Plugin",
+    label: "Plugin for Download",
     slot: "plugin",
     props: { plugin: artifact.value?.plugin },
+  },
+  {
+    label: "Download",
+    slot: "fileUrl",
+    props: { fileUrl: artifact.value?.fileUrl },
   },
 ]);
 
@@ -596,6 +596,7 @@ async function submit() {
       taskId: selectedArtifactTask.value.id,
     });
     notify.success(`Successfully updated artifact '${route.params.id}'`);
+    router.push(`/artifacts`);
   } catch (err) {
     notify.error(err.response.data.message);
   }
@@ -684,12 +685,11 @@ function getExpandKeysForFilter(nodes, filter) {
     for (const node of items || []) {
       const nextAncestors = [...ancestorKeys];
 
-      // Only directories should be expanded (usually what you want)
+      // Only directories should be expanded 
       if (node.isDir && node.relativePath) {
         nextAncestors.push(node.relativePath);
       }
 
-      // If THIS node matches, expand its ancestors (not its children)
       if (matches(node)) {
         for (const k of ancestorKeys) keys.add(k);
       }
@@ -734,7 +734,7 @@ function processFiles() {
   const rootChildren = nodes.value[0].children;
 
   files.value.forEach((file) => {
-    const parts = file.relativePath.split("/"); // e.g. ["4958", "0000.shard", "file.snapshot"]
+    const parts = file.relativePath.split("/"); 
 
     let currentChildren = rootChildren;
     let currentPath = ""; // will build up like "4958", then "4958/0000.shard", etc.
@@ -790,7 +790,7 @@ function processFiles() {
 
 function handleSelect(node) {
   if (selectedNode.value?.relativePath === node.relativePath) {
-    selectedNode.value = "";
+    selectedNode.value = null;
   } else {
     selectedNode.value = node;
   }
@@ -882,7 +882,6 @@ async function loadPreview(node) {
 
     const isPdf = ext === "pdf";
 
-    // If you need auth headers, replace fetch() with an api call (axios) and responseType accordingly.
     if (isText) {
       const res = await fetch(node.fileUrl, { credentials: "include" });
       if (!res.ok)

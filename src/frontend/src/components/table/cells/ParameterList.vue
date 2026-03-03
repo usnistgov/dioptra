@@ -1,0 +1,175 @@
+<template>
+  <div class="column q-gutter-y-xs">
+    <template v-for="(param, i) in items.slice(0, 3)" :key="i">
+      <div class="row no-wrap q-gutter-x-sm">
+        <div
+          class="rounded-borders shrink-0"
+          :style="{
+            marginTop: '6px',
+            width: '6px',
+            height: '6px',
+            backgroundColor: styles.textColor,
+          }"
+        ></div>
+
+        <div
+          :class="[
+            layout === 'horizontal'
+              ? 'row items-baseline q-gutter-x-sm'
+              : 'column',
+            'no-wrap',
+          ]"
+        >
+          <div
+            class="text-weight-bold"
+            :style="{
+              color: styles.textColor,
+              borderBottom: `1.5px solid ${styles.textColor}`,
+              lineHeight: '1.3',
+            }"
+          >
+            {{ param.name }}{{ layout === "horizontal" ? " :" : "" }}
+          </div>
+
+          <div class="row items-center text-left">
+            <div
+              class="font-mono text-weight-medium cursor-help q-pr-xs" 
+              :class="$q.dark.isActive ? 'text-grey-4' : 'text-grey-8'"
+              style="font-size: 0.75rem"
+            >
+              {{ param.parameterType?.name || "Unknown" }}
+
+              <q-tooltip class="bg-grey-9" style="font-size: 11px">
+                {{ getTooltip(param) }}
+              </q-tooltip>
+            </div>
+
+            <div
+              v-if="!param.required && type === 'input'"
+              class="text-weight-medium text-grey-5"
+              style="font-size: 0.7rem"
+            >
+              (optional)
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <div v-if="items.length > 3" class="row no-wrap q-gutter-x-md">
+      <div
+        class="rounded-borders shrink-0"
+        :style="{ marginTop: '6px', width: '6px', height: '6px', opacity: 1 }"
+      ></div>
+      <q-chip
+        dense
+        clickable
+        :color="$q.dark.isActive ? 'grey-9' : 'grey-2'"
+        :text-color="$q.dark.isActive ? 'grey-3' : 'grey-8'"
+        class="text-weight-bold"
+        style="font-size: 10px; height: 20px"
+        @click.stop
+      >
+        +{{ items.length - 3 }} more
+
+        <q-menu
+          anchor="bottom middle"
+          self="top left"
+          :class="[$q.dark.isActive ? 'bg-grey-9 border-grey-8' : 'bg-white border-grey-3', 'shadow-5']"
+        >
+          <div class="column q-pa-sm q-gutter-y-xs">
+            <div 
+              class="text-caption q-mb-xs"
+              :class="$q.dark.isActive ? 'text-grey-4' : 'text-grey-7'"
+            >
+              Additional {{ type === "input" ? "Inputs" : "Outputs" }}
+            </div>
+            <template v-for="(param, i) in items.slice(3)" :key="i">
+              <div class="row items-start no-wrap q-gutter-x-sm q-py-xs">
+                <div
+                    class="font-mono text-weight-medium"
+                    :class="$q.dark.isActive ? 'text-grey-4' : 'text-grey-7'"
+                    :style="{
+                    width: '6px',
+                    height: '6px',
+                    marginTop: '5px',
+                    backgroundColor: styles.hexColor,
+                  }"
+                    style="font-size: 0.75rem"
+                  >
+                    {{ param.parameterType?.name }}
+                  </div>
+          
+
+                <div
+                  :class="
+                    layout === 'horizontal'
+                      ? 'row items-baseline q-gutter-x-sm'
+                      : 'column'
+                  "
+                >
+                  <div
+                    class="text-weight-bold"
+                    :style="{
+                      color: styles.textColor,
+                      borderBottom: `1.5px solid ${styles.hexColor}`,
+                      lineHeight: '1.3',
+                    }"
+                  >
+                    {{ param.name }}{{ layout === "horizontal" ? " :" : "" }}
+                  </div>
+                  <div
+                    class="font-mono text-weight-medium text-grey-7"
+                    style="font-size: 0.75rem"
+                  >
+                    {{ param.parameterType?.name }}
+                  </div>
+                </div>
+              </div>
+            </template>
+          </div>
+        </q-menu>
+      </q-chip>
+    </div>
+
+    <div v-if="items.length === 0" class="text-caption text-grey-4">-</div>
+  </div>
+</template>
+<script setup>
+import { computed } from "vue";
+import { useQuasar, colors } from "quasar";
+
+const $q = useQuasar();
+const { getPaletteColor } = colors;
+
+const props = defineProps({
+  items: { type: Array, default: () => [] },
+  type: { type: String, default: "output" },
+  layout: {
+    type: String,
+    default: "vertical",
+    validator: (v) => ["horizontal", "vertical"].includes(v),
+  },
+});
+
+const styles = computed(() => {
+  const isDark = $q.dark.isActive;
+
+  const colorClass = props.type === "input" 
+    ? (isDark ? "indigo-4" : "indigo-6") 
+    : (isDark ? "purple-4" : "purple-6");
+
+  const textClass = props.type === "input" 
+    ? (isDark ? "blue-grey-3" : "blue-grey-6") 
+    : (isDark ? "deep-purple-3" : "deep-purple-5");
+
+  return {
+    hexColor: getPaletteColor(colorClass),
+    textColor: getPaletteColor(textClass),
+  };
+});
+
+function getTooltip(param) {
+  return param.description || `Type: ${param.parameterType?.name}`;
+}
+</script>

@@ -2,7 +2,7 @@
   <div class="row items-center justify-between">
     <div class="row items-center">
       <PageTitle 
-        :title="title"
+        :title="title" 
         :draftLabel="resourceDraft ? 'Resource Draft' : 'Draft'"
       />
     </div>

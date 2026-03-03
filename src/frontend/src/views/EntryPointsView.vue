@@ -1,237 +1,368 @@
 <template>
-  <PageTitle 
+  <PageTitle
     title="Entrypoints"
+    caption="Reusable workflows composed of Tasks"
+    conceptType="entrypoint"
   />
-  <TableComponent 
+
+  <TableComponent
+    ref="tableRef"
     :rows="entrypoints"
-    :columns="columns"
-    title="Entrypoints"
+    :columns="computedColumns"
     v-model:selected="selected"
+    title="Entrypoints"
     @open="openTab => (openTab
       ? openWindow.open(`/entrypoints/${selected[0].id}`, '_blank')
       : router.push(`/entrypoints/${selected[0].id}`)
     )"
-    @delete="showDeleteDialog = true"
     @request="getEntrypoints"
-    ref="tableRef"
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
     @create="router.push('/entrypoints/new')"
     :loading="isLoading"
+    @edit="(row) => router.push(`/entrypoints/${row.id}`)"
+    @delete="
+      (row) => {
+        selected = [row];
+        showDeleteDialog = true;
+      }
+    "
   >
-    <template #body-cell-group="props">
-      <div>{{ props.row.group.name }}</div>
-    </template>
     <template #body-cell-taskGraph="props">
       <q-btn
-        v-if="props.row.taskGraph.length"
-        label="View YAML"
-        color="primary"
-        @click.stop="displayYaml = props.row.taskGraph; showTaskGraphDialog = true;"
+        v-if="props.row.taskGraph && props.row.taskGraph.length"
+        outline
+        dense
+        no-caps
+        :color="darkMode ? 'text-grey-5' : 'text-grey-8'"
+        label="YAML"
+        icon="code"
+        size="xs"
+        class="q-px-sm q-py-xs"
+        style="font-size: 12px; font-weight: bold"
+        @click.stop="
+          displayYaml = props.row.taskGraph;
+          showTaskGraphDialog = true;
+        "
       />
-      <span v-else class="text-negative">
-        EMPTY
-      </span>
-    </template>
-    <template #body-cell-plugins="props">
-      <span
-        v-for="(plugin, i) in props.row.plugins"
-        :key="i"
+      <span v-else class="text-grey-5 text-caption">Empty</span>
+      <q-tooltip
+        >View '{{ props.row.name || "Entrypoint" }}' Task Graph YAML</q-tooltip
       >
-        <q-chip
-          color="secondary" 
-          text-color="white"
-          clickable
-          @click.stop="editEntrypoint = props.row; pluginType = 'plugins'; showAssignPluginsDialog = true"
+    </template>
+
+    <template
+      v-for="colName in ['plugins', 'artifactPlugins']"
+      :key="colName"
+      #[`body-cell-${colName}`]="props"
+    >
+      <div class="q-py-xs" style="min-width: 200px">
+        <div
+          class="plugin-container column q-pa-xs q-gutter-y-xs cursor-pointer"
+          @click.stop="openPluginDialog(props.row, colName)"
+          :class="$q.dark.isActive ? 'bg-black' : 'bg-grey-2'"
         >
-          {{ plugin.name }}
-          <q-badge
-            v-if="!plugin.latestSnapshot" 
-            color="red" 
-            label="outdated" 
-            rounded
-            class="q-ml-xs"
-          />
-        </q-chip>
-        <q-btn
-          v-if="!plugin.latestSnapshot"
-          round 
-          color="red" 
-          icon="sync"
-          size="sm"
-          @click.stop="syncPlugin(props.row.id, plugin.id, plugin.name, 'plugins')"
-        >
-          <q-tooltip>
-            Sync to latest version of plugin
-          </q-tooltip>
-        </q-btn>
-      </span>
-      <q-btn
-        round
-        size="sm"
-        icon="add"
-        @click.stop="editEntrypoint = props.row; pluginType = 'plugins'; showAssignPluginsDialog = true"
-        class="q-ml-sm"
+          <div class="absolute-top-right q-ma-xs plugin-edit-btn" style="z-index: 10">
+            <q-btn
+              round dense flat size="xs" icon="edit" class="shadow-1"
+              :class="$q.dark.isActive ? 'bg-grey-10' : 'bg-grey-2'"
+              :color="$q.dark.isActive ? 'bg-grey-1' : 'bg-grey-9'"
+            />
+            <q-tooltip>Manage Attached Plugins</q-tooltip>
+          </div>
+
+          <template v-if="props.row[colName] && props.row[colName].length > 0">
+            <template v-for="(plugin, i) in props.row[colName].slice(0, 3)" :key="i">
+              <div
+                class="row items-center no-wrap  bg-white  q-pa-none shadow-1"
+                style="border-radius: 4px; border: 1px solid #eeeeee; width: fit-content; max-width: 220px;"
+              >
+                <q-chip
+                  :color="$q.dark.isActive ? getConceptStyle('plugin').darkColor : getConceptStyle('plugin').color"
+                  size="sm" outline square clickable
+                  class="text-weight-bold q-py-sm q-pr-sm q-ma-none no-border full-width"
+                  :class="$q.dark.isActive ? 'bg-grey-10' : 'bg-grey-2'"
+                  @click.stop="openPluginDialog(props.row, colName)"
+                >
+                  <span class="font-mono ellipsis" 
+                  style="font-size: 11px; font-weight: 500; max-width: 140px">
+                    {{ plugin.name }}
+                    <q-tooltip>Plugin ID: {{ plugin.id }}</q-tooltip>
+                  </span>
+                  
+                  <template v-if="!plugin.latestSnapshot">
+                    <div style="height: 12px; width: 1px; background-color: #ddd; margin: 0 6px;"></div>
+                    <q-badge rounded color="warning" class="q-mr-xs" style="padding: 2px">
+                      <q-icon name="warning" color="white" size="13px" />
+                      <q-tooltip anchor="center right">Plugin out of date</q-tooltip>
+                    </q-badge>
+                    <q-btn
+                      flat round dense size="10px" color="red" icon="sync" 
+                      @click.stop="syncPlugin(props.row.id, plugin.id, plugin.name, colName)"
+                    >
+                      <q-tooltip anchor="center right">Sync to latest</q-tooltip>
+                    </q-btn>
+                  </template>
+                </q-chip>
+              </div>
+            </template>
+
+            <div v-if="props.row[colName].length > 3">
+              <q-chip
+                dense clickable  class="text-weight-bold"
+                style="font-size: 11px; border: 1px solid lightgrey" @click.stop
+                :class="$q.dark.isActive ? 'text-grey-1 bg-grey-9' : 'text-grey-9 bg-grey-3'"
+              >
+                +{{ props.row[colName].length - 3 }} more
+                <q-menu anchor="bottom middle" self="top middle" class="bg-white shadow-5 border-grey-3">
+                  <div class="column q-pa-sm q-gutter-y-xs" style="min-width: 200px">
+                    <div class="text-caption text-grey-7 q-mb-xs text-weight-bold">
+                      Additional {{ colName === 'plugins' ? 'Plugins' : 'Artifact Plugins' }}
+                    </div>
+                    <template v-for="(plugin, i) in props.row[colName].slice(3)" :key="i">
+                      <div class="row items-center justify-between no-wrap bg-grey-1 q-pa-xs border-radius-inherit">
+                        <q-chip
+                          :color="getConceptStyle('plugin').color" text-color="white"
+                          :icon="getConceptStyle('plugin').icon" size="sm" outline square clickable
+                          class="text-weight-bold q-my-none"
+                          @click.stop="openPluginDialog(props.row, colName)"
+                        >
+                          {{ plugin.name }}
+                          <q-tooltip>ID: {{ plugin.id }}</q-tooltip>
+                        </q-chip>
+                        <q-btn
+                          v-if="!plugin.latestSnapshot" flat round size="xs" color="red" icon="sync"
+                          @click.stop="syncPlugin(props.row.id, plugin.id, plugin.name, colName)"
+                        />
+                      </div>
+                    </template>
+                  </div>
+                </q-menu>
+              </q-chip>
+            </div>
+          </template>
+          <div v-else class="text-caption text-center q-pa-xs" :class="$q.dark.isActive ? 'text-grey-3' : 'text-grey-9'">
+            No {{ colName === 'plugins' ? 'plugins' : 'artifact plugins' }}
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <!-- Dropped this because there were too many columns - feel free to add back in  -->
+    <template #body-cell-group="props">
+      <ResourceName
+        :text="props.row.group?.name"
+        conceptType="group"
+        :showIcon="true"
       />
     </template>
-      <template #body-cell-artifactPlugins="props">
-      <span
-        v-for="(plugin, i) in props.row.artifactPlugins"
-        :key="i"
-      >
-        <q-chip
-          color="secondary" 
-          text-color="white"
-          clickable
-          @click.stop="editEntrypoint = props.row; pluginType = 'artifactPlugins'; showAssignPluginsDialog = true"
-        >
-          {{ plugin.name }}
-          <q-badge
-            v-if="!plugin.latestSnapshot" 
-            color="red" 
-            label="outdated" 
-            rounded
-            class="q-ml-xs"
-          />
-        </q-chip>
-        <q-btn
-          v-if="!plugin.latestSnapshot"
-          round 
-          color="red" 
-          icon="sync"
-          size="sm"
-          @click.stop="syncPlugin(props.row.id, plugin.id, plugin.name, 'artifactPlugins')"
-        >
-          <q-tooltip>
-            Sync to latest version of plugin
-          </q-tooltip>
-        </q-btn>
-      </span>
-      <q-btn
-        round
-        size="sm"
-        icon="add"
-        @click.stop="editEntrypoint = props.row; pluginType = 'artifactPlugins'; showAssignPluginsDialog = true"
-        class="q-ml-sm"
-      />
-    </template>
+    
   </TableComponent>
 
-  <InfoPopupDialog
-    v-model="showTaskGraphDialog"
-  >
-    <template #title>
-      <label id="modalTitle">
-        Task Graph YAML
-      </label>
-    </template>
-    <CodeEditor v-model="displayYaml" style="height: auto;" :readOnly="true" />
+  <InfoPopupDialog v-model="showTaskGraphDialog">
+    <template #title>Task Graph YAML</template>
+    <CodeEditor v-model="displayYaml" style="height: auto" :readOnly="true" />
   </InfoPopupDialog>
-  <DeleteDialog 
+
+  <DeleteDialog
     v-model="showDeleteDialog"
     @submit="deleteEntryPoint"
     type="Entry Point"
-    :name="selected.length ? selected[0].name : ''"
+    :name="selected[0]?.name || ''"
   />
-  <AssignTagsDialog 
+
+  <AssignTagsDialog
     v-model="showTagsDialog"
     :editObj="editObjTags"
     type="entrypoints"
     @refreshTable="tableRef.refreshTable()"
   />
-  <AssignPluginsDialog 
+
+  <AssignPluginsDialog
     v-model="showAssignPluginsDialog"
     :pluginType="pluginType"
     :editObj="editEntrypoint"
     @refreshTable="tableRef.refreshTable()"
   />
 </template>
+<style scoped>
+.plugin-container {
+  position: relative;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background-color: #fafafa;
+  transition: all 0.2s ease;
+  min-height: 40px;
+  height: 100%;
+}
+
+.plugin-container:hover {
+  background-color: #f5f5f5;
+  border-color: #bdbdbd;
+}
+
+/* Hide edit button by default */
+.plugin-edit-btn {
+  opacity: 0.4;
+  transition: opacity 0.2s ease;
+}
+
+/* Show edit button when container is hovered */
+.plugin-container:hover .plugin-edit-btn {
+  opacity: 1;
+}
+</style>
 
 <script setup>
-  import TableComponent from '@/components/TableComponent.vue'
-  import { ref } from 'vue'
-  import { useRouter } from 'vue-router'
-  import CodeEditor from '@/components/CodeEditor.vue'
-  import InfoPopupDialog from '@/dialogs/InfoPopupDialog.vue'
-  import * as api from '@/services/dataApi'
-  import * as notify from '../notify'
-  import DeleteDialog from '@/dialogs/DeleteDialog.vue'
-  import PageTitle from '@/components/PageTitle.vue'
-  import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
-  import AssignPluginsDialog from '@/dialogs/AssignPluginsDialog.vue'
+import { ref, computed } from "vue";
+import { useRouter } from "vue-router";
+import TableComponent from "@/components/table/TableComponent.vue";
+import CodeEditor from "@/components/CodeEditor.vue";
+import InfoPopupDialog from "@/dialogs/InfoPopupDialog.vue";
+import DeleteDialog from "@/dialogs/DeleteDialog.vue";
+import PageTitle from "@/components/PageTitle.vue";
+import AssignTagsDialog from "@/dialogs/AssignTagsDialog.vue";
+import AssignPluginsDialog from "@/dialogs/AssignPluginsDialog.vue";
+import * as api from "@/services/dataApi";
+import * as notify from "../notify";
+import { getConceptStyle } from "@/constants/tableStyles";
 
-  const openWindow = window
-  const router = useRouter()
+const openWindow = window
+const router = useRouter();
+const tableRef = ref(null);
 
-  const columns = [
-    { name: 'id', label: 'ID', align: 'left', field: 'id', sortable: false, },
-    { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, },
-    { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true, },
-    { name: 'taskGraph', label: 'Task Graph', align: 'left', field: 'taskGraph',sortable: false, },
-    { name: 'tags', label: 'Tags', align: 'left', field: 'tags', sortable: false },
-    { name: 'plugins', label: 'Plugins', align: 'left', field: 'plugins', sortable: false },
-    { name: 'artifactPlugins', label: 'Artifact Plugins', align: 'left', field: 'artifactPlugins', sortable: false },
-  ]
+// State
+const entrypoints = ref([]);
+const isLoading = ref(false);
+const selected = ref([]);
+const showDeleteDialog = ref(false);
+const showAssignPluginsDialog = ref(false);
+const showTaskGraphDialog = ref(false);
+const showTagsDialog = ref(false);
 
-  const selected = ref([])
+const editEntrypoint = ref({});
+const editObjTags = ref({});
+const pluginType = ref("");
+const displayYaml = ref("");
 
-  const showTaskGraphDialog = ref(false)
-  const displayYaml = ref('')
+// Column Definitions
+const computedColumns = computed(() => [
+  {
+    name: "id",
+    label: "Entrypoint ID",
+    field: "id",
+    align: "left",
+    styleType: "icon-id",
+    conceptType: "entrypoint",
+    includeIcon: true,
+  },
+  {
+    name: "name",
+    label: "Name",
+    field: "name",
+    align: "left",
+    styleType: "resource-name",
+    conceptType: "entrypoint",
+    maxWidth: "180px",
+    sortable: true,
+  },
+  {
+    name: "description",
+    label: "Description",
+    field: "description",
+    align: "left",
+    styleType: "long-text",
+    maxWidth: "150px",
+    maxLength: 60,
+    useQuotes: false,
+    style: "max-width: 300px;",
+    sortable: true,
+  },
+  {
+    name: "taskGraph",
+    label: "Task Graph",
+    field: "taskGraph",
+    align: "left",
+  },
+  {
+    name: "plugins",
+    label: "Plugins",
+    field: "plugins",
+    align: "left",
+  },
+  {
+    name: "artifactPlugins",
+    label: "Artifact Plugins",
+    field: "artifactPlugins",
+    align: "left",
+  },
+  // Hide Group - too many values with it in there
+  // {
+  //   name: 'group',
+  //   label: 'Group',
+  //   field: 'group',
+  //   align: 'left',
+  //   styleType: 'icon-badge',
+  //   conceptType: 'group',
+  //   showIcon: false
+  // },
 
-  const tableRef = ref(null)
-  
-  const isLoading = ref(false)
+  {
+    name: "tags",
+    label: "Tags",
+    field: "tags",
+    align: "left",
+    styleType: "tag-list",
+  },
+]);
 
-  const entrypoints = ref([])
+// Actions
 
-  const showDeleteDialog = ref(false)
-  const showAssignPluginsDialog = ref(false)
-  const editEntrypoint = ref('')
-  const pluginType = ref('')
+function openPluginDialog(row, type) {
+  editEntrypoint.value = row;
+  pluginType.value = type;
+  showAssignPluginsDialog.value = true;
+}
 
-  async function getEntrypoints(pagination, showDrafts) {
-    isLoading.value = true
-      
-    const minLoadTimePromise = new Promise(resolve => setTimeout(resolve, 300)); 
+async function getEntrypoints(pagination, showDrafts) {
+  isLoading.value = true;
+  const minLoadTimePromise = new Promise((resolve) => setTimeout(resolve, 300));
 
-    try {
-      const [res] = await Promise.all([
-        api.getData('entrypoints', pagination, showDrafts),
-        minLoadTimePromise
-      ]);
-        
-      entrypoints.value = res.data.data;
-      tableRef.value.updateTotalRows(res.data.totalNumResults);
-    } catch(err) {
-      console.log('err = ', err);
-      notify.error(err.response.data.message);
-    } finally {
-      isLoading.value = false;
-    }
+  try {
+    const [res] = await Promise.all([
+      api.getData("entrypoints", pagination, showDrafts),
+      minLoadTimePromise,
+    ]);
+
+    entrypoints.value = res.data.data;
+    tableRef.value.updateTotalRows(res.data.totalNumResults);
+  } catch (err) {
+    notify.error(err.response?.data?.message || "Failed to fetch entrypoints");
+  } finally {
+    isLoading.value = false;
   }
+}
 
-  async function deleteEntryPoint() {
-    try {
-      await api.deleteItem('entrypoints', selected.value[0].id)
-      notify.success(`Successfully deleted '${selected.value[0].name}'`)
-      showDeleteDialog.value = false
-      selected.value = []
-      tableRef.value.refreshTable()
-    } catch(err) {
-      notify.error(err.response.data.message);
-    }
+async function deleteEntryPoint() {
+  try {
+    const id = selected.value[0].id;
+    await api.deleteItem("entrypoints", id);
+    notify.success(`Successfully deleted '${selected.value[0].name}'`);
+    showDeleteDialog.value = false;
+    selected.value = [];
+    tableRef.value.refreshTable();
+  } catch (err) {
+    notify.error(err.response?.data?.message);
   }
+}
 
-  const editObjTags = ref({})
-  const showTagsDialog = ref(false)
-
-  async function syncPlugin(entrypointId, pluginId, pluginName, pluginType) {
-    try {
-      await api.addPluginsToEntrypoint(entrypointId, [pluginId], pluginType)
-      tableRef.value.refreshTable()
-      notify.success(`Successfully updated plugin '${pluginName}' to latest version`)
-    } catch(err) {
-      console.warn(err)
-    }
+async function syncPlugin(entrypointId, pluginId, pluginName, pType) {
+  try {
+    await api.addPluginsToEntrypoint(entrypointId, [pluginId], pType);
+    tableRef.value.refreshTable();
+    notify.success(`Updated '${pluginName}' to latest version`);
+  } catch (err) {
+    console.warn(err);
+    notify.error("Failed to sync plugin");
   }
-
+}
 </script>

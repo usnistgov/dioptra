@@ -12,39 +12,28 @@
     :hideCreateBtn="true"
     :loading="isLoading"
   >
-    <template #body-cell-taskName="props">
-      {{ props.row.task.name }}
-    </template>
-    <template #body-cell-taskOutputParams="props">
-      <q-chip
-        v-for="param in props.row.task.outputParams"
-        color="purple"
-        text-color="white"
-        dense
-      >
-        {{ param.name }}: {{ param.parameterType.name }}
-      </q-chip>
-    </template>
     <template #body-cell-download="props">
       <q-btn
         :href="props.row.fileUrl"
         :download="`artifact-${props.row?.id}`"
         color="primary"
-        round
+        round dense flat
         icon="download"
-        size="sm"
+        size="md"
         @click.stop
-      />
+      >
+        <q-tooltip>Download Artifact</q-tooltip>
+      </q-btn>
     </template>
   </TableComponent>
 </template>
 
 <script setup>
-import TableComponent from '@/components/TableComponent.vue'
 import { ref, onMounted } from 'vue'
-import * as api from '@/services/dataApi'
 import { useRouter, useRoute } from 'vue-router'
+import * as api from '@/services/dataApi'
 import * as notify from '../notify'
+import TableComponent from '@/components/table/TableComponent.vue'
 
 const openWindow = window
 const router = useRouter()
@@ -52,13 +41,77 @@ const route = useRoute()
 
 const props = defineProps(['artifactIds'])
 const selected = ref([])
-
-onMounted(() => {
-  getArtifacts()
-})
-
 const artifacts = ref([])
 const isLoading = ref(false)
+
+const columns = [
+  { 
+    name: 'id', 
+    label: 'Artifact ID', 
+    field: 'id', 
+    align: 'left', 
+    styleType: 'icon-badge', 
+    conceptType: 'artifact',
+    includeIcon: true,
+    size: 'md',
+    uppercase: false,
+    formatLabel: 'Artifact #{label}',
+    clickable: true,
+    field: (row) => {
+      if (!row.task) return "-";
+      return {
+        name: row.id,
+        to: `/artifacts/${row.id}` 
+      };
+    },
+  },
+  { 
+    name: 'description', 
+    label: 'Description', 
+    field: 'description', 
+    align: 'left', 
+    styleType: 'long-text',
+    maxWidth: '250px' 
+  },
+  { 
+    name: 'taskName', 
+    label: 'Task Name', 
+    align: 'left',
+    styleType: 'icon-badge',
+    conceptType: 'task',
+    chipType: 'outline',
+    uppercase: false,
+    field: (row) => {
+      if (!row.task) return "-";
+      return {
+        name: row.task.name,
+        to: `/plugins/${row.task.pluginResourceId}/files/${row.task.pluginFileResourceId}` 
+      };
+    },
+  },
+  { 
+    name: 'taskOutputParams', 
+    label: 'Task Output Params', 
+    // Pass the array directly to the component
+    field: row => row.task?.outputParams || [], 
+    align: 'left',
+    styleType: 'parameter-list',
+    parameterType: 'output',
+    style: 'min-width: 250px'
+  },
+  { 
+    name: 'download', 
+    label: 'Download', 
+    align: 'center',
+    headerStyle: 'width: 50px'
+  },
+]
+
+onMounted(() => {
+  if (props.artifactIds && props.artifactIds.length) {
+    getArtifacts()
+  }
+})
 
 async function getArtifacts() {
   isLoading.value = true
@@ -85,11 +138,4 @@ async function getArtifacts() {
 }
 
 
-const columns = [
-  { name: 'id', label: 'ID', field: 'id', align: 'left', sortable: true },
-  { name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true },
-  { name: 'taskName', label: 'Task Name', align: 'left' },
-  { name: 'taskOutputParams', label: 'Task Output Params', align: 'left' },
-  { name: 'download', label: 'Download', align: 'center' },
-]
 </script>

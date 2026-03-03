@@ -176,3 +176,8 @@ legend {
   color: inherit !important;
   text-decoration: none !important;
 }
+
+.font-mono {
+  font-family:  monospace,Courier, 'Courier New'; 
+  letter-spacing:.4px;
+}

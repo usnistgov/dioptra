@@ -2,7 +2,8 @@
   <div class="row items-center justify-between">
     <div class="row items-center">
       <PageTitle 
-        :title="route.params.id === 'new' ? 'Create Entrypoint' : copyAtEditStart?.name"
+        :subtitle="pageSubtitle"
+        conceptType="entrypoint" 
       />
       <q-chip
         v-if="route.params.id !== 'new'"
@@ -31,90 +32,78 @@
       />
     </div>
   </div>
+
   <fieldset class="q-px-lg q-mt-lg" :class="history ? `disabled` : ``">
     <legend>Basic Info</legend>
-    <q-form ref="basicInfoForm" greedy :style="{ 'pointer-events': history ? 'none' : '' }">
+    <q-form ref="basicInfoForm" greedy :style="{ 'pointer-events': history ? 'auto' : '' }">
       <div class="row">
         <div :class="`${isMobile ? 'col-12' : 'col-6'} q-mr-xl`">
+          
           <q-input 
             outlined 
             dense 
             v-model.trim="entryPoint.name"
             :rules="[requiredRule]"
-            class="q-mb-sm q-mt-md"
+            class="q-mb-md q-mt-md"
             aria-required="true"
             :disable="history"
+            input-class="text-h6 text-weight-bold"
           >
             <template v-slot:before>
-              <label :class="`field-label`">Name:</label>
+              <label class="field-label" style="width: 60px">Name:</label>
             </template>
           </q-input>
-          <q-select
-            outlined 
-            v-model="entryPoint.group" 
+
+          <ResourcePicker
+            v-model="entryPoint.group"
+            type="group"
             :options="store.groups"
-            option-label="name"
             option-value="id"
-            emit-value
-            map-options
-            dense
-            :rules="[requiredRule]"
-            aria-required="true"
+            @filter="getGroups"
             :disable="history"
-            class="q-mb-sm"
-          >
-            <template v-slot:before>
-              <div class="field-label">Group:</div>
-            </template>  
-          </q-select>
-          <q-select
-            v-if="!history"
-            outlined
-            dense
-            v-model="entryPoint.queues"
-            use-input
-            use-chips
-            multiple
-            map-options
-            option-label="name"
-            option-value="id"
-            input-debounce="100"
-            :options="queues"
-            @filter="getQueues"
+            input-debounce="300"
             class="q-mb-md"
-            :disable="history"
           >
             <template v-slot:before>
-              <div class="field-label">Queues:</div>
-            </template>  
-            <template v-slot:selected-item="scope">
-              <q-chip
-                :label="scope.opt.name"
-                removable
-                dense
-                @remove="scope.removeAtIndex(scope.index)"
-                :tabindex="scope.tabindex"
-                color="primary"
-                text-color="white"
-              />
+              <label class="field-label" style="width: 60px">Group:</label>
             </template>
-          </q-select>
+          </ResourcePicker>
+
+          <ResourcePicker
+            v-if="!history"
+            v-model="entryPoint.queues"
+            type="queue"
+            :options="queues"
+            option-value="id"
+            @filter="getQueues"
+            :disable="history"
+            input-debounce="300"
+            class="q-mb-md"
+            chip-outline
+          >
+            <template v-slot:before>
+               <label class="field-label" style="width: 60px">Queues:</label>
+            </template>
+          </ResourcePicker>
+
           <div v-else class="row items-center q-mb-md">
-            <label class="field-label">Queues:</label>
+            <label class="field-label" style="width: 60px">Queues:</label>
             <div 
               class="col" 
-              style="border: 1px solid lightgray; border-radius: 4px; padding: 5px 8px; margin-left: 6px;"
+              style="border: 1px solid lightgray; border-radius: 4px; padding: 5px 8px; margin-left: 10px;"
             >
               <q-icon
                 name="sym_o_info"
-                size="2em"
+                size="1.5em"
                 color="grey"
                 class="q-mr-sm"
               />
-              Queues are not yet available in Entrypoint snapshots
+              <span class="text-grey-7">Queues not available in snapshots</span>
             </div>
           </div>
+
         </div>
+
         <div class="col">
           <q-input 
             outlined 
@@ -123,10 +112,11 @@
             type="textarea"
             :disable="history"
             class="q-mt-md"
-            input-style="height: 173px"
+            input-style="height: 173px; line-height: 1.5;"
+            input-class="text-body1 text-grey-8"
           >
             <template v-slot:before>
-              <label :class="`field-label`">Description:</label>
+              <label class="field-label">Description:</label>
             </template>
           </q-input>
         </div>
@@ -152,6 +142,12 @@
           @create="selectedParam = null; showEntrypointParamDialog = true;"
           style="margin-top: 0;"
         >
+                  <template #body-cell-name="props">
+            <div style="font-size: 15px;">
+              {{ props.row.name }}
+            </div>
+          </template>
+
           <template #body-cell-defaultValue="props">
             <q-chip
               v-if="props.row.defaultValue === null"
@@ -192,6 +188,7 @@
           </template>
         </TableComponent>
       </div>
+
       <div class="col">
         <TableComponent
           :rows="entryPoint.artifactParameters"
@@ -206,43 +203,58 @@
           :showAll="true"
           rightCaption="*Click parameter to edit, or X to delete"
           style="margin-top: 0;"
-          @create="showArtifactParamDialog = true"
+          @create="selectedArtifactParam = null; showArtifactParamDialog = true"
         >
           <template #body-cell-name="props">
-            <div style="font-size: 18px;">
+            <div style="font-size: 15px;">
               {{ props.row.name }}
-              <q-btn icon="edit" round size="sm" color="primary" flat />
             </div>
-            <q-popup-edit v-model="props.row.name" v-slot="scope">
-              <q-input v-model="scope.value" dense autofocus counter @keyup.enter="scope.set" />
-            </q-popup-edit>
           </template>
-          <template #body-cell-outputParams="props">
-            <div v-for="(param, i) in props.row.outputParams" :key="i">
-              <q-chip
-                color="purple"
-                text-color="white"
-                dense
-                clickable
-                removable
-                @click="handleSelectedParam('edit', props, i, 'outputParams', 'artifacts'); showEditArtifactParamDialog = true; console.log('param = ', param)"
-                @remove="entryPoint.artifactParameters[props.rowIndex].outputParams.splice(i, 1)"
-                :label="`${param.name}: ${param.parameterType.name}`"
-              />
-              <div v-if="!param.parameterType" class="text-white q-mr-sm q-my-xs bg-red q-pa-xs rounded-borders">
-                Resolve missing type above
-              </div>
-            </div>
-            <q-btn
-              round
-              size="xs"
-              icon="add"
-              color="grey-5"
-              text-color="black"
-              class="q-mr-xs q-my-xs"
-              @click="handleSelectedParam('create', props, i, 'outputParams', 'artifacts'); showEditArtifactParamDialog = true"
+          
+          <template #body-cell-actions="props">
+            <q-btn 
+              icon="edit"
+              round size="sm"
+              color="primary"
+              flat
+              class="q-mr-sm"
+              @click="
+                selectedArtifactParam = props.row;
+                selectedArtifactParamIndex = props.rowIndex;
+                showArtifactParamDialog = true;
+              "
+            />
+            <q-btn 
+              icon="sym_o_delete"
+              round size="sm"
+              color="negative"
+              flat
+              @click="selectedArtifactParamProps = props; showDeleteDialogArtifactParam = true"
             />
           </template>
+          
+          <template #body-cell-outputParams="props">
+            <div class='row q-gutter-x-md justify-between'>
+             <ParameterList 
+                :items="props.row.outputParams" 
+                type="output" 
+                @click="(param, i) => { handleSelectedParam('edit', props, i, 'outputParams', 'artifacts'); showEditArtifactParamDialog = true; }"
+             />
+              <div>
+                <q-btn
+                  round
+                  size="xs"
+                  icon="add"
+                  color="grey-5"
+                  text-color="black"
+                  class="q-mr-xs q-my-xs"
+                  @click="handleSelectedParam('create', props, 0, 'outputParams', 'artifacts'); showEditArtifactParamDialog = true"
+                />
+                <q-tooltip> Add Output Parameters </q-tooltip> 
+              </div>
+            </div>
+          </template>
+
           <template #body-cell-delete="props">
             <q-btn 
               icon="sym_o_delete"
@@ -260,7 +272,7 @@
   <fieldset class="q-px-lg q-mt-lg q-pt-lg" :class="history ? `disabled` : ``">
     <legend>Task Graph Info</legend>
     <div class="row" :style="{ 'pointer-events': history ? 'none' : '' }">
-      <div :class="`${isMobile ? 'col-12 q-mb-xl' : 'col-6'} q-mr-xl`">
+      <div :class="`${isMobile ? 'col-12 q-mb-xl' : 'col-6'} q-mr-lg`">
         <h2>Task Graph</h2>
         <p class="text-caption q-mb-none text-grey-8 q-pl-xs">
           Use "Add to Task Graph" button in Plugin Tasks table to insert YAML, and 
@@ -285,55 +297,45 @@
       
       <div class="col">
         <h2>Task Plugins</h2>
+        <div class="q-ma-none text-grey-8" >Attached Plugins:</div>
         <AssignPluginsDropdown
           v-model:selectedPlugins="entryPoint.plugins"
           v-model:pluginIDsToUpdate="pluginIDsToUpdate"
           v-model:pluginIDsToRemove="pluginIDsToRemove"
-          class="q-mt-lg"
+          class="q-mt-sm"
         />
+         <div class="q-mt-md text-grey-8" >Function Tasks:</div>
         <TableComponent
           :rows="tasks"
           :columns="taskColumns"
-          title="Function Tasks"
           :hideToggleDraft="true"
           :hideSearch="true"
           :disableSelect="true"
           :hideOpenBtn="true"
           :hideDeleteBtn="true"
           :hideCreateBtn=true
+          style = "margin-top:10px !important"
         >
+          <template #body-cell-pluginName="props">
+            <BadgeIcon :label="props.row.pluginName" type="plugin" :show-icon="true" size="sm" :mini="true" :uppercase="false" />
+          </template>
+
+          <template #body-cell-taskName="props">
+            <ResourceName :text="props.row.name" concept-type="task" :minimal="true" />
+          </template>
+
           <template #body-cell-inputParams="props">
-            <div v-for="(param, i) in props.row.inputParams" :key="i">
-              <q-chip
-                color="indigo"
-                text-color="white"
-                dense
-                clickable
-                class="q-mr-none"
-              >
-                {{ `${param.name}` }}
-                <span v-if="param.required" class="text-red">*</span>
-                : {{ param.parameterType.name }}
-              </q-chip>
-            </div>
+            <ParameterList :items="props.row.inputParams" type="input" />
           </template>
+
           <template #body-cell-outputParams="props">
-            <div v-for="(param, i) in props.row.outputParams" :key="i">
-              <q-chip
-                color="purple"
-                text-color="white"
-                dense
-                clickable
-                class="q-mr-none"
-              >
-                {{ `${param.name}` }}
-                <span v-if="param.required" class="text-red">*</span>
-                : {{ param.parameterType.name }}
-              </q-chip>
-            </div>
+            <ParameterList :items="props.row.outputParams" type="output" />
           </template>
+
           <template #body-cell-add="props">
-            <q-btn icon="add" round size="xs" color="grey-5" text-color="black" @click="addToTaskGraph(props.row)" />
+            <q-btn icon="add" round size="xs" color="grey-5" text-color="black" @click="addToTaskGraph(props.row)">
+               <q-tooltip>Add to Task Graph YAML</q-tooltip>
+            </q-btn>
           </template>
         </TableComponent>
       </div>
@@ -362,40 +364,41 @@
       
       <div class="col">
         <h2>Artifact Task Plugins</h2>
+        <div class="q-ma-none text-grey-8" >Attached Plugins:</div>
         <AssignPluginsDropdown
           v-model:selectedPlugins="entryPoint.artifactPlugins"
           v-model:pluginIDsToUpdate="artifactPluginIDsToUpdate"
           v-model:pluginIDsToRemove="artifactPluginIDsToRemove"
           class="q-mt-lg"
         />
+         <div class="q-mt-md text-grey-8" >Artifact Tasks:</div>
         <TableComponent
           :rows="artifactTasks"
           :columns="artifactTaskColumns"
-          title="Artifact Tasks"
           :hideToggleDraft="true"
           :hideSearch="true"
           :disableSelect="true"
           :hideOpenBtn="true"
           :hideDeleteBtn="true"
           :hideCreateBtn=true
+          style="margin-top:10px !important"
         >
-          <template #body-cell-outputParams="props">
-            <div v-for="(param, i) in props.row.outputParams" :key="i">
-              <q-chip
-                color="purple"
-                text-color="white"
-                dense
-                clickable
-                class="q-mr-none"
-              >
-                {{ `${param.name}` }}
-                <span v-if="param.required" class="text-red">*</span>
-                : {{ param.parameterType.name }}
-              </q-chip>
-            </div>
+          <template #body-cell-pluginName="props">
+            <BadgeIcon :label="props.row.pluginName" type="plugin" :show-icon="true" :mini="true"  :uppercase="false" size="sm" />
           </template>
+
+          <template #body-cell-taskName="props">
+            <ResourceName :text="props.row.name" concept-type="task" :minimal="true" />
+          </template>
+
+          <template #body-cell-outputParams="props">
+            <ParameterList :items="props.row.outputParams" type="output" />
+          </template>
+
           <template #body-cell-add="props">
-            <q-btn icon="add" round size="xs" color="grey-5" text-color="black" @click="addToArtifactGraph(props.row)" />
+            <q-btn icon="add" round size="xs" color="grey-5" text-color="black" @click="addToArtifactGraph(props.row)">
+               <q-tooltip>Add to Artifact Graph YAML</q-tooltip>
+            </q-btn>
           </template>
         </TableComponent>
       </div>
@@ -449,7 +452,8 @@
   />
   <ArtifactParamDialog
     v-model="showArtifactParamDialog"
-    @submit="addArtifactParam"
+    :editParam="selectedArtifactParam"
+    @submit="handleArtifactParamSubmit"
   />
   <LeaveFormDialog 
     v-model="showLeaveDialog"
@@ -497,13 +501,19 @@
   import * as api from '@/services/dataApi'
   import * as notify from '../notify'
   import PageTitle from '@/components/PageTitle.vue'
-  import TableComponent from '@/components/TableComponent.vue'
+  import TableComponent from '@/components/table/TableComponent.vue'
   import LeaveFormDialog from '@/dialogs/LeaveFormDialog.vue'
   import ReturnToFormDialog from '@/dialogs/ReturnToFormDialog.vue'
   import InfoPopupDialog from '@/dialogs/InfoPopupDialog.vue'
   import ArtifactParamDialog from '@/dialogs/ArtifactParamDialog.vue'
   import EditPluginTaskParamDialog from '@/dialogs/EditPluginTaskParamDialog.vue'
   import AssignPluginsDropdown from '@/components/AssignPluginsDropdown.vue'
+  import ResourcePicker from "@/components/ResourcePicker.vue";
+  
+
+  import ResourceName from '@/components/table/cells/ResourceName.vue'
+  import BadgeIcon from '@/components/table/cells/BadgeIcon.vue'
+  import ParameterList from '@/components/table/cells/ParameterList.vue'
 
   const route = useRoute()
   
@@ -513,6 +523,20 @@
 
   const isMobile = inject('isMobile')
   const darkMode = inject('darkMode')
+
+  const selectedArtifactParam = ref(null)
+  const selectedArtifactParamIndex = ref(-1)
+
+  function handleArtifactParamSubmit(param) {
+    if (selectedArtifactParam.value) {
+      // Update existing parameter
+      entryPoint.value.artifactParameters[selectedArtifactParamIndex.value] = { ...param }
+    } else {
+      // Create new parameter
+      entryPoint.value.artifactParameters.push({ ...param })
+    }
+    showArtifactParamDialog.value = false
+  }
 
   const history = computed(() => {
     return store.showRightDrawer
@@ -535,6 +559,7 @@
     artifactPlugins: [],
   })
 
+
   const ORIGINAL_COPY = {
     name: '',
     group: store.loggedInGroup.id,
@@ -547,6 +572,20 @@
     plugins: [],
     artifactPlugins: [],
   }
+
+  const pageSubtitle = computed(() => {
+    if (route.params.id === 'new') {
+      return 'Create Entrypoint'
+    }
+    
+    // 2. Handling History / Snapshots
+    if (history.value && store.selectedSnapshot) {
+      return `${entryPoint.value.name || 'Loading...'} (Snapshot ${store.selectedSnapshot.snapshot})`
+    }
+    
+    // 3. Standard view 
+    return copyAtEditStart.value?.name || entryPoint.value.name || 'Loading...'
+  })
 
   const valuesChangedFromOriginal = computed(() => {
     for (const key in ORIGINAL_COPY) {
@@ -682,23 +721,23 @@
 
   const artifactColumns = [
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, },
-    { name: 'outputParams', label: 'Output Parameters', align: 'right', field: 'outputParams', sortable: false, classes: 'vertical-top' },
-    { name: 'delete', label: 'Delete', align: 'center', },
+    { name: 'outputParams', label: 'Output Parameters', align: 'left', field: 'outputParams', sortable: false, classes: 'vertical-top' },
+    { name: 'actions', label: 'Actions', align: 'center', },
   ]
 
   const taskColumns = [
     { name: 'pluginName', label: 'Plugin', align: 'left', field: 'pluginName', sortable: true, },
     { name: 'taskName', label: 'Task', align: 'left', field: 'name', sortable: true, },
-    { name: 'inputParams', label: 'Input Parameters', align: 'right', field: 'inputParams', sortable: false, classes: 'vertical-top' },
-    { name: 'outputParams', label: 'Output Parameters', align: 'right', field: 'outputParams', sortable: false, classes: 'vertical-top' },
-    { name: 'add', label: 'Add to Task Graph', align: 'center', sortable: false, },
+    { name: 'inputParams', label: 'Input Params', align: 'left', field: 'inputParams', sortable: false, classes: 'vertical-top' },
+    { name: 'outputParams', label: 'Output Params', align: 'left', field: 'outputParams', sortable: false, classes: 'vertical-top' },
+    { name: 'add', label: 'Add to Graph', align: 'center', sortable: false, },
   ]
 
   const artifactTaskColumns = [
     { name: 'pluginName', label: 'Plugin', align: 'left', field: 'pluginName', sortable: true, },
     { name: 'taskName', label: 'Task', align: 'left', field: 'name', sortable: true, },
-    { name: 'outputParams', label: 'Output Parameters', align: 'right', field: 'outputParams', sortable: false, classes: 'vertical-top' },
-    { name: 'add', label: 'Add to Artifact Output Graph', align: 'center', sortable: false, },
+    { name: 'outputParams', label: 'Output Params', align: 'left', field: 'outputParams', sortable: false, classes: 'vertical-top' },
+    { name: 'add', label: 'Add to Graph', align: 'center', sortable: false, },
   ]
 
   const showReturnDialog = ref(false)
@@ -785,10 +824,11 @@
         delete submitObject[key]
       }
     }
-    // turn objects into ids
-    submitObject.queues = submitObject.queues.map(q => q.id)
-    submitObject.plugins = submitObject.plugins.map(p => p.id)
-    submitObject.artifactPlugins = submitObject.artifactPlugins.map(p => p.id)
+    
+
+    submitObject.queues = submitObject.queues.map(q => (q && typeof q === 'object') ? q.id : q)
+    submitObject.plugins = submitObject.plugins.map(p => (p && typeof p === 'object') ? p.id : p)
+    submitObject.artifactPlugins = submitObject.artifactPlugins.map(p => (p && typeof p === 'object') ? p.id : p)
 
     submitObject.artifactParameters = submitObject.artifactParameters.map((param) => ({
       ...param,
@@ -890,7 +930,7 @@
       try {
         const res = await api.getData('plugins', {
           search: val,
-          rowsPerPage: 0, // get all
+          rowsPerPage: 0, 
           index: 0
         })
         plugins.value = res.data.data

@@ -1,18 +1,33 @@
 <template>
-  <table 
-    class="text-left"
-    :class="{ 'no-pointer': disabled }"
-  >
-    <tr v-for="(row, index) in rows" :key="index" :class="{ 'disabled': disabled }">
-      <td class="text-bold" :style="{ 'min-width': firstColumnMinWidth }">{{ row.label }}</td>
-      <td :style="secondColumnFullWidth ? { width: '100%' } : {}">
-        <!-- Render as plain text OR use a custom slot -->
-        <slot :name="row.slot" v-bind="row.props">
-          {{ row.value }}
-        </slot>
-      </td>
-    </tr>
-  </table>
+  <q-markup-table flat bordered separator="cell" class="text-left" style="width: fit-content; max-width: 100%;">
+    <tbody>
+      <tr
+        v-for="(row, index) in rows"
+        :key="index"
+        :class="{ disabled: disabled }"
+      >
+        <td
+          class="text-weight-bold"
+          :class="
+            $q.dark.isActive ? 'bg-blue-grey-10 text-grey-4' : 'bg-grey-2 text-grey-9'
+          "
+          :style="{ minWidth: firstColumnMinWidth, width: firstColumnMinWidth }"
+        >
+          {{ row.label }}
+        </td>
+
+        <td
+          :style="
+            secondColumnFullWidth ? { width: '100%' } : { minWidth: '20vw' }
+          "
+        >
+          <slot :name="row.slot" v-bind="row.props">
+            {{ row.value }}
+          </slot>
+        </td>
+      </tr>
+    </tbody>
+  </q-markup-table>
 </template>
 
 <script setup>
@@ -33,10 +48,12 @@ defineProps({
     type: Boolean,
     default: false
   }
-})
+});
+
 </script>
 
 <style scoped>
+
   table {
     border-collapse: collapse;
   }
@@ -49,10 +66,7 @@ defineProps({
     padding: 10px;
   }
 
-  td:nth-child(2) {
-    min-width: 20vw;
-  }
-
+ 
   .body--dark td:first-child {
     background-color: rgb(31, 39, 45);
     color: rgb(146, 164, 179);
@@ -69,4 +83,14 @@ defineProps({
   .disabled {
     pointer-events: none;
   }
+
+.disabled {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+ td:nth-child(2) {
+    min-width: 20vw;
+  }
+
 </style>

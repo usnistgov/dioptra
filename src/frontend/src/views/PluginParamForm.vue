@@ -1,6 +1,9 @@
 <template>
   <div class="row items-center justify-between">
-      <PageTitle :title="route.params.id === 'new' ? 'Create Plugin Parameter' : copyAtEditStart?.name" />
+      <PageTitle 
+        :subtitle="route.params.id === 'new' ? 'Create Plugin Parameter' : copyAtEditStart?.name"
+        conceptType="parameterType" 
+      />
       <q-btn 
         v-if="route.params.id !== 'new'"
         color="negative"
@@ -277,6 +280,8 @@ const basicInfoForm = ref()
 
 async function submit() {
   basicInfoForm.value.validate().then(success => {
+    if (!success) return; 
+    
     if(jsonError.value) return
     if(route.params.id === 'new') {
       createPluginParamType()
