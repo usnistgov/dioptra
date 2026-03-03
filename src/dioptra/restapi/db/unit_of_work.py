@@ -16,9 +16,12 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 import contextlib
 from types import TracebackType
-from typing import Literal, Type
+from typing import Literal, Type, cast
+
+from flask_login import current_user
 
 from dioptra.restapi.db.db import db
+from dioptra.restapi.db.models.users import User
 from dioptra.restapi.db.repository.drafts import DraftsRepository
 from dioptra.restapi.db.repository.experiments import ExperimentRepository
 from dioptra.restapi.db.repository.groups import GroupRepository
@@ -39,7 +42,7 @@ class UnitOfWork(contextlib.AbstractContextManager):
         self.session = db.session
         self.user_repo = UserRepository(self.session)
         self.group_repo = GroupRepository(self.session)
-        self.queue_repo = QueueRepository(self.session)
+        self.queue_repo = QueueRepository(self.session, cast(User, current_user))
         self.drafts_repo = DraftsRepository(self.session)
         self.experiment_repo = ExperimentRepository(self.session)
         self.type_repo = TypeRepository(self.session)

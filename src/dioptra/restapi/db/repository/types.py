@@ -19,7 +19,9 @@ The type repository: data operations related to types
 """
 
 from collections.abc import Iterable, Sequence, Set
-from typing import Any, Final, overload
+from typing import Any, Final, cast, overload
+
+from flask_login import current_user
 
 import dioptra.restapi.db.repository.utils as utils
 from dioptra.restapi.db.models import (
@@ -27,6 +29,7 @@ from dioptra.restapi.db.models import (
     PluginTaskParameterType,
     Resource,
     Tag,
+    User,
 )
 
 
@@ -288,4 +291,9 @@ class TypeRepository:
         Raises:
             EntityDoesNotExistError: if the type does not exist
         """
+        user = cast(User, current_user)
+        resource = utils.get_resource(self.session, type_)
+
+        utils.assert_can_delete_resource(self.session, user, resource)
+
         utils.delete_resource(self.session, type_)

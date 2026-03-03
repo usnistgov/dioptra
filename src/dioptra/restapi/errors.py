@@ -585,6 +585,28 @@ class ImportFailedError(DioptraError):
         self._reason = reason
 
 
+class UserPermissionsError(DioptraError):
+    """
+    The user does not have the proper permissions to perform the requested action.
+    Args:
+        permission: the permission requested (e.g. "read" or "write"
+        kwargs: the attribute value pairs used to request the entity
+    """
+
+    def __init__(self, permission: str, **kwargs: typing.Any):
+        super().__init__(
+            "".join(
+                [
+                    f"User does not have permission to {permission}",
+                    *add_attribute_values(**kwargs),
+                    ".",
+                ]
+            )
+        )
+        self.permission = permission
+        self.entity_attributes = kwargs
+
+
 class UserNotInGroupError(DioptraError):
     """A given user is not in a given group."""
 
@@ -762,6 +784,28 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
         api: The main REST |Api| object.
     """
     log: BoundLogger = kwargs.get("log", LOGGER.new())
+
+    @api.errorhandler(UserPermissionsError)
+    def handle_user_permission_error(error: UserPermissionsError):
+        log.debug(
+            "No write permissions on Entity",
+            permssion=error.permission,
+            **error.entity_attributes,
+        )
+        return error_result(
+            error,
+            http.HTTPStatus.FORBIDDEN,
+            {"permission": error.permission, **error.entity_attributes},
+        )
+
+    @api.errorhandler(UserNotInGroupError)
+    def handle_user_not_in_group_error(error: UserNotInGroupError):
+        log.debug("User not in group", user_id=error.user_id, group_id=error.group_id)
+        return error_result(
+            error,
+            http.HTTPStatus.FORBIDDEN,
+            {"user_id": error.user_id, "group_id": error.group_id},
+        )
 
     @api.errorhandler(EntityDoesNotExistError)
     def handle_resource_does_not_exist_error(error: EntityDoesNotExistError):

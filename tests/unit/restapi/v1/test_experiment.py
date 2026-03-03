@@ -508,7 +508,7 @@ def test_delete_experiment_by_id(
       and the response indicates it is no longer found.
     """
     experiment_to_delete = registered_experiments["experiment3"]
-    dioptra_client.experiments.delete_by_id(experiment_to_delete["id"])
+    r = dioptra_client.experiments.delete_by_id(experiment_to_delete["id"])
     assert_experiment_is_not_found(
         dioptra_client, experiment_id=experiment_to_delete["id"]
     )

@@ -153,6 +153,18 @@ class GroupRepository:
             raise EntityDoesNotExistError("group", group_id=group.group_id)
 
         if exists_result is ExistenceResult.EXISTS:
+            members_stmt = sa.select(GroupMember).where(
+                GroupMember.group_id == group.group_id
+            )
+            members = self.session.scalar(members_stmt)
+            self.session.delete(members)
+
+            managers_stmt = sa.select(GroupManager).where(
+                GroupManager.group_id == group.group_id
+            )
+            managers = self.session.scalar(managers_stmt)
+            self.session.delete(managers)
+
             lock = GroupLock(GroupLockTypes.DELETE, group)
             self.session.add(lock)
 

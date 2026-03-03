@@ -19,7 +19,9 @@ The experiments repository: data operations related to experiments
 """
 
 from collections.abc import Iterable, Sequence
-from typing import Any, Final, overload
+from typing import Any, Final, cast, overload
+
+from flask_login import current_user
 
 import dioptra.restapi.db.repository.utils as utils
 from dioptra.restapi.db.models import (
@@ -28,6 +30,7 @@ from dioptra.restapi.db.models import (
     Group,
     Resource,
     Tag,
+    User,
 )
 
 
@@ -315,6 +318,10 @@ class ExperimentRepository:
         Raises:
             EntityDoesNotExistError: if the experiment does not exist
         """
+        user = cast(User, current_user)
+        resource = utils.get_resource(self.session, experiment)
+
+        utils.assert_can_delete_resource(self.session, user, resource)
 
         utils.delete_resource(self.session, experiment)
 

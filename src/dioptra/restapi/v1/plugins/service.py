@@ -34,6 +34,8 @@ from dioptra.restapi.errors import (
     EntityExistsError,
     QueryParameterNotUniqueError,
     SortParameterValidationError,
+    UserNotInGroupError,
+    UserPermissionsError,
 )
 from dioptra.restapi.utils import find_non_unique
 from dioptra.restapi.v1 import utils
@@ -179,6 +181,14 @@ class PluginService(object):
 
         filters = []
 
+        # only return resources the current user is a member of with read permissions
+        groups_stmt = select(models.GroupMember).where(
+            models.GroupMember.user_id == current_user.user_id,
+            models.GroupMember.read,
+        )
+        group_ids = {group.group_id for group in db.session.scalars(groups_stmt).all()}
+        filters.append(models.Resource.group_id.in_(group_ids))
+
         if group_id is not None:
             filters.append(models.Resource.group_id == group_id)
 
@@ -300,6 +310,13 @@ class PluginIdService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get plugin by id", plugin_id=plugin_id)
 
+        # only return resources the current user is a member of with read permissions
+        groups_stmt = select(models.GroupMember).where(
+            models.GroupMember.user_id == current_user.user_id,
+            models.GroupMember.read,
+        )
+        group_ids = {group.group_id for group in db.session.scalars(groups_stmt).all()}
+
         stmt = (
             select(models.Plugin)
             .join(models.Resource)
@@ -308,6 +325,7 @@ class PluginIdService(object):
                 models.Plugin.resource_snapshot_id
                 == models.Resource.latest_snapshot_id,
                 models.Resource.is_deleted == False,  # noqa: E712
+                models.Resource.group_id.in_(group_ids),
             )
         )
         plugin = db.session.scalar(stmt)
@@ -374,6 +392,18 @@ class PluginIdService(object):
         plugin_files = plugin_dict["plugin_files"]
         group_id = plugin.resource.group_id
 
+        group_stmt = select(models.GroupMember).where(
+            models.GroupMember.user_id == current_user.user_id,
+            models.GroupMember.group_id == plugin.resource.group_id,
+            models.GroupMember.write,
+        )
+        group_member = db.session.scalar(group_stmt)
+
+        if group_member is None:
+            raise UserPermissionsError(
+                "write", user_id=current_user.user_id, group_id=group_id
+            )
+
         if name != plugin.name:
             duplicate = self._plugin_name_service.get(name, group_id=group_id, log=log)
             if duplicate is not None:
@@ -423,12 +453,30 @@ class PluginIdService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         stmt = select(models.Resource).filter_by(
-            resource_id=plugin_id, resource_type=PLUGIN_RESOURCE_TYPE, is_deleted=False
+            resource_id=plugin_id,
+            resource_type=PLUGIN_RESOURCE_TYPE,
+            is_deleted=False,
         )
         plugin_resource = db.session.scalar(stmt)
 
         if plugin_resource is None:
             raise EntityDoesNotExistError(PLUGIN_RESOURCE_TYPE, plugin_id=plugin_id)
+
+        group_stmt = select(models.GroupMember).where(
+            models.GroupMember.user_id == current_user.user_id,
+            models.GroupMember.group_id == plugin_resource.group_id,
+        )
+        group_member = db.session.scalar(group_stmt)
+
+        if group_member is None:
+            raise UserNotInGroupError(
+                user_id=current_user.user_id, group_id=plugin_resource.group_id
+            )
+
+        if not group_member.write:
+            raise UserPermissionsError(
+                "write", user_id=current_user.user_id, group_id=plugin_resource.group_id
+            )
 
         deleted_resource_lock = models.ResourceLock(
             resource_lock_type=resource_lock_types.DELETE,
@@ -491,6 +539,13 @@ class PluginIdsService(object):
             EntityDoesNotExistError: If the plugin is not found and `error_if_not_found`
                 is True.
         """
+        # only return resources the current user is a member of with read permissions
+        groups_stmt = select(models.GroupMember).where(
+            models.GroupMember.user_id == current_user.user_id,
+            models.GroupMember.read,
+        )
+        group_ids = {group.group_id for group in db.session.scalars(groups_stmt).all()}
+
         latest_plugins_stmt = (
             select(models.Plugin)
             .join(models.Resource)
@@ -499,6 +554,7 @@ class PluginIdsService(object):
                 models.Resource.is_deleted == False,  # noqa: E712
                 models.Resource.latest_snapshot_id
                 == models.Plugin.resource_snapshot_id,
+                models.Resource.group_id.in_(group_ids),
             )
         )
         plugins = db.session.scalars(latest_plugins_stmt).all()
@@ -603,6 +659,13 @@ class PluginNameService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get plugin by name", plugin_name=name, group_id=group_id)
 
+        # only return resources the current user is a member of with read permissions
+        groups_stmt = select(models.GroupMember).where(
+            models.GroupMember.user_id == current_user.user_id,
+            models.GroupMember.read,
+        )
+        group_ids = {group.group_id for group in db.session.scalars(groups_stmt).all()}
+
         stmt = (
             select(models.Plugin)
             .join(models.Resource)
@@ -612,6 +675,7 @@ class PluginNameService(object):
                 models.Resource.is_deleted == False,  # noqa: E712
                 models.Resource.latest_snapshot_id
                 == models.Plugin.resource_snapshot_id,
+                models.Resource.group_id.in_(group_ids),
             )
         )
         plugin = db.session.scalar(stmt)
@@ -653,6 +717,13 @@ class PluginFileNameService(object):
             plugin_id=plugin_id,
         )
 
+        # only return resources the current user is a member of with read permissions
+        groups_stmt = select(models.GroupMember).where(
+            models.GroupMember.user_id == current_user.user_id,
+            models.GroupMember.read,
+        )
+        group_ids = {group.group_id for group in db.session.scalars(groups_stmt).all()}
+
         stmt = (
             select(models.PluginFile)
             .join(models.Resource)
@@ -662,6 +733,7 @@ class PluginFileNameService(object):
                 models.Resource.is_deleted == False,  # noqa: E712
                 models.Resource.latest_snapshot_id
                 == models.PluginFile.resource_snapshot_id,
+                models.Resource.group_id.in_(group_ids),
             )
         )
         plugin_file = db.session.scalar(stmt)
@@ -837,6 +909,14 @@ class PluginIdFileService(object):
 
         filters = []
 
+        # only return resources the current user is a member of with read permissions
+        groups_stmt = select(models.GroupMember).where(
+            models.GroupMember.user_id == current_user.user_id,
+            models.GroupMember.read,
+        )
+        group_ids = {group.group_id for group in db.session.scalars(groups_stmt).all()}
+        filters.append(models.Resource.group_id.in_(group_ids))
+
         if search_string:
             filters.append(
                 construct_sql_query_filters(
@@ -947,13 +1027,31 @@ class PluginIdFileService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         stmt = select(models.Resource).filter_by(
-            resource_id=plugin_id, resource_type=PLUGIN_RESOURCE_TYPE, is_deleted=False
+            resource_id=plugin_id,
+            resource_type=PLUGIN_RESOURCE_TYPE,
+            is_deleted=False,
         )
 
         plugin_resource = db.session.scalar(stmt)
 
         if plugin_resource is None:
             raise EntityDoesNotExistError(PLUGIN_RESOURCE_TYPE, plugin_id=plugin_id)
+
+        group_stmt = select(models.GroupMember).where(
+            models.GroupMember.user_id == current_user.user_id,
+            models.GroupMember.group_id == plugin_resource.group_id,
+        )
+        group_member = db.session.scalar(group_stmt)
+
+        if group_member is None:
+            raise UserNotInGroupError(
+                user_id=current_user.user_id, group_id=plugin_resource.group_id
+            )
+
+        if not group_member.write:
+            raise UserPermissionsError(
+                "write", user_id=current_user.user_id, group_id=plugin_resource.group_id
+            )
 
         latest_plugin_files_stmt = (
             select(models.PluginFile)
@@ -1010,6 +1108,14 @@ class PluginIdSnapshotIdService(object):
             resource_id=plugin_id,
             resource_snapshot_id=plugin_snapshot_id,
         )
+
+        # only return resources the current user is a member of with read permissions
+        groups_stmt = select(models.GroupMember).where(
+            models.GroupMember.user_id == current_user.user_id,
+            models.GroupMember.read,
+        )
+        group_ids = {group.group_id for group in db.session.scalars(groups_stmt).all()}
+
         plugin_resource_snapshot_stmt = (
             select(models.Plugin)
             .join(models.Resource)
@@ -1017,6 +1123,7 @@ class PluginIdSnapshotIdService(object):
                 models.Plugin.resource_id == plugin_id,
                 models.Plugin.resource_snapshot_id == plugin_snapshot_id,
                 models.Resource.is_deleted == False,  # noqa: E712
+                models.Resource.group_id.in_(group_ids),
             )
         )
         plugin = db.session.scalar(plugin_resource_snapshot_stmt)
@@ -1047,10 +1154,19 @@ class PluginIdSnapshotIdService(object):
             plugin_snapshot_id=plugin_snapshot_id,
             plugin_file_snapshot_id=plugin_file_snapshot_id,
         )
+
+        # only return resources the current user is a member of with read permissions
+        groups_stmt = select(models.GroupMember).where(
+            models.GroupMember.user_id == current_user.user_id,
+            models.GroupMember.read,
+        )
+        group_ids = {group.group_id for group in db.session.scalars(groups_stmt).all()}
+
         plugin_plugin_file_stmt = select(models.PluginPluginFile).where(
             models.PluginPluginFile.plugin_file_resource_snapshot_id
             == plugin_file_snapshot_id,
             models.PluginPluginFile.plugin_resource_snapshot_id == plugin_snapshot_id,
+            models.Resource.group_id.in_(group_ids),
         )
         return db.session.scalar(plugin_plugin_file_stmt)
 
@@ -1115,6 +1231,12 @@ class PluginIdFileIdService(object):
             "Get plugin file by id", plugin_id=plugin_id, plugin_file_id=plugin_file_id
         )
 
+        # only return resources the current user is a member of with read permissions
+        groups_stmt = select(models.GroupMember).where(
+            models.GroupMember.user_id == current_user.user_id, models.GroupMember.read
+        )
+        group_ids = {group.group_id for group in db.session.scalars(groups_stmt).all()}
+
         latest_plugin_stmt = (
             select(models.Plugin)
             .join(models.Resource)
@@ -1123,6 +1245,7 @@ class PluginIdFileIdService(object):
                 models.Plugin.resource_snapshot_id
                 == models.Resource.latest_snapshot_id,
                 models.Resource.is_deleted == False,  # noqa: E712
+                models.Resource.group_id.in_(group_ids),
             )
         )
         plugin = db.session.scalar(latest_plugin_stmt)
@@ -1287,6 +1410,13 @@ class PluginIdFileIdService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
+        # only allow deletion of resources the current user has write permissions on
+        groups_stmt = select(models.GroupMember).where(
+            models.GroupMember.user_id == current_user.user_id,
+            models.GroupMember.write,
+        )
+        group_ids = {group.group_id for group in db.session.scalars(groups_stmt).all()}
+
         plugin_stmt = (
             select(models.Plugin)
             .join(models.Resource)
@@ -1295,6 +1425,7 @@ class PluginIdFileIdService(object):
                 models.Resource.is_deleted == False,  # noqa: E712
                 models.Resource.latest_snapshot_id
                 == models.Plugin.resource_snapshot_id,
+                models.Resource.group_id.in_(group_ids),
             )
         )
         plugin = db.session.scalar(plugin_stmt)

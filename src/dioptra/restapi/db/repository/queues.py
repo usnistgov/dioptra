@@ -22,7 +22,8 @@ from collections.abc import Iterable, Sequence
 from typing import Any, Final, overload
 
 import dioptra.restapi.db.repository.utils as utils
-from dioptra.restapi.db.models import Group, Queue, Resource, Tag
+from dioptra.restapi.db.models import Group, Queue, Resource, Tag, User
+from dioptra.restapi.db.permissions import permissioned_write
 
 
 class QueueRepository:
@@ -40,8 +41,9 @@ class QueueRepository:
         "description": Queue.description,
     }
 
-    def __init__(self, session: utils.CompatibleSession[utils.S]):
+    def __init__(self, session: utils.CompatibleSession[utils.S], user: User):
         self.session = session
+        self.user = user
 
     def create(self, queue: Queue) -> None:
         """
@@ -113,6 +115,7 @@ class QueueRepository:
 
         self.session.add(queue)
 
+    @permissioned_write(resource_arg="queue")
     def delete(self, queue: Queue | int) -> None:
         """
         Delete a queue.  No-op if the queue is already deleted.
@@ -124,7 +127,6 @@ class QueueRepository:
         Raises:
             EntityDoesNotExistError: if the queue does not exist
         """
-
         utils.delete_resource(self.session, queue)
 
     @overload
