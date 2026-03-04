@@ -269,18 +269,29 @@ class ArtifactService(object):
                 construct_sql_query_filters(search_string, SEARCHABLE_FIELDS)
             )
 
-        allowed_deleted_values = [False, True] if show_deleted else [False]
 
-        stmt = (
+        if not show_deleted:
+            stmt = (
             select(func.count(models.Artifact.resource_id))
             .join(models.Resource)
             .where(
                 *filters,
-                models.Resource.is_deleted in allowed_deleted_values,  # noqa: E712
+                models.Resource.is_deleted == False,  # noqa: E712
                 models.Resource.latest_snapshot_id
                 == models.Artifact.resource_snapshot_id,
             )
         )
+        else: 
+            stmt = (
+                select(func.count(models.Artifact.resource_id))
+                .join(models.Resource)
+                .where(
+                    *filters,
+                    models.Resource.latest_snapshot_id
+                    == models.Artifact.resource_snapshot_id,
+                )
+            )
+
 
         if output_params:
             stmt = self._apply_ouput_params_filter(stmt, output_params)
@@ -298,19 +309,32 @@ class ArtifactService(object):
         if total_num_artifacts == 0:
             return [], total_num_artifacts
 
-        # get latest artifact snapshots
-        latest_artifacts_stmt = (
-            select(models.Artifact)
-            .join(models.Resource)
-            .where(
-                *filters,
-                models.Resource.is_deleted in allowed_deleted_values,  # noqa: E712
-                models.Resource.latest_snapshot_id
-                == models.Artifact.resource_snapshot_id,
+        if not show_deleted:
+            # get latest artifact snapshots
+            latest_artifacts_stmt = (
+                select(models.Artifact)
+                .join(models.Resource)
+                .where(
+                    *filters,
+                    models.Resource.is_deleted == False,  # noqa: E712
+                    models.Resource.latest_snapshot_id
+                    == models.Artifact.resource_snapshot_id,
+                )
+                .offset(page_index)
+                .limit(page_length)
             )
-            .offset(page_index)
-            .limit(page_length)
-        )
+        else:
+            latest_artifacts_stmt = (
+                select(models.Artifact)
+                .join(models.Resource)
+                .where(
+                    *filters,
+                    models.Resource.latest_snapshot_id
+                    == models.Artifact.resource_snapshot_id,
+                )
+                .offset(page_index)
+                .limit(page_length)
+            )
 
         if output_params:
             latest_artifacts_stmt = self._apply_ouput_params_filter(

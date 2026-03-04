@@ -50,6 +50,7 @@ def assert_retrieving_resource_works(
     descending: bool | None = None,
     search: str | None = None,
     paging_info: dict[str, Any] | None = None,
+    show_deleted: bool | None = None
 ) -> None:
     """Build the query string from the provided parameters"""
     query_string: dict[str, Any] = {}
@@ -69,6 +70,9 @@ def assert_retrieving_resource_works(
     if paging_info is not None:
         query_string["index"] = paging_info["index"]
         query_string["page_length"] = paging_info["page_length"]
+
+    if show_deleted is not None:
+        query_string["show_deleted"] = show_deleted
 
     response = dioptra_client.get(**query_string)
 

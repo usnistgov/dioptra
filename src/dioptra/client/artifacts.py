@@ -78,6 +78,7 @@ class ArtifactsCollectionClient(CollectionClient[T]):
         sort_by: str | None = None,
         descending: bool | None = None,
         search: str | None = None,
+        show_deleted: bool | None = False,
     ) -> T:
         """Get a list of artifacts.
 
@@ -114,6 +115,9 @@ class ArtifactsCollectionClient(CollectionClient[T]):
 
         if group_id is not None:
             params["groupId"] = group_id
+
+        if show_deleted is not None:
+            params["showDeleted"] = show_deleted
 
         return self._session.get(
             self.url,
