@@ -221,7 +221,7 @@ class ArtifactService(object):
 
         return utils.ArtifactDict(artifact=new_artifact, has_draft=False)
 
-    def get(
+    def get(  # noqa: C901
         self,
         group_id: int | None,
         search_string: str,
@@ -269,19 +269,18 @@ class ArtifactService(object):
                 construct_sql_query_filters(search_string, SEARCHABLE_FIELDS)
             )
 
-
         if not show_deleted:
             stmt = (
-            select(func.count(models.Artifact.resource_id))
-            .join(models.Resource)
-            .where(
-                *filters,
-                models.Resource.is_deleted == False,  # noqa: E712
-                models.Resource.latest_snapshot_id
-                == models.Artifact.resource_snapshot_id,
+                select(func.count(models.Artifact.resource_id))
+                .join(models.Resource)
+                .where(
+                    *filters,
+                    models.Resource.is_deleted == False,  # noqa: E712
+                    models.Resource.latest_snapshot_id
+                    == models.Artifact.resource_snapshot_id,
+                )
             )
-        )
-        else: 
+        else:
             stmt = (
                 select(func.count(models.Artifact.resource_id))
                 .join(models.Resource)
@@ -291,7 +290,6 @@ class ArtifactService(object):
                     == models.Artifact.resource_snapshot_id,
                 )
             )
-
 
         if output_params:
             stmt = self._apply_ouput_params_filter(stmt, output_params)

@@ -208,7 +208,7 @@ class EntrypointService(object):
             entry_point=new_entrypoint, queues=queues, has_draft=False
         )
 
-    def get(
+    def get(  # noqa: C901
         self,
         group_id: int | None,
         search_string: str,
@@ -263,7 +263,7 @@ class EntrypointService(object):
                     == models.EntryPoint.resource_snapshot_id,
                 )
             )
-        else: 
+        else:
             stmt = (
                 select(func.count(models.EntryPoint.resource_id))
                 .join(models.Resource)
