@@ -260,7 +260,7 @@ class ExperimentIdService(object):
 
         entrypoints = self._uow.experiment_repo.get_entrypoints(
             experiment,
-            DeletionPolicy.NOT_DELETED,
+            deletion_policy=DeletionPolicy.ANY,
         )
 
         has_draft = self._uow.drafts_repo.has_draft_modification(
