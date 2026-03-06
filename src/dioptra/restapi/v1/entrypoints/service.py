@@ -16,27 +16,23 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform entrypoint endpoint operations."""
 
-from typing import Any, Final, Iterable
+from typing import Any, Final, Iterable, cast
 
 import structlog
 from flask_login import current_user
 from injector import inject
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.db import db, models
+from dioptra.restapi.db import models
+from dioptra.restapi.db.models.users import User
 from dioptra.restapi.db.repository.utils.common import DeletionPolicy
 from dioptra.restapi.db.unit_of_work import UnitOfWork, UnitOfWorkService
-from dioptra.restapi.errors import (
-    EntityDoesNotExistError,
-    QueryParameterNotUniqueError,
-)
-from dioptra.restapi.utils import find_non_unique
+from dioptra.restapi.errors import EntityDoesNotExistError
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.plugins.service import (
     PluginIdsService,
     get_plugin_task_parameter_types_by_id,
 )
-from dioptra.restapi.v1.queues.service import RESOURCE_TYPE as QUEUE_RESOURCE_TYPE
 from dioptra.restapi.v1.shared.search_parser import parse_search_text
 from dioptra.restapi.v1.shared.task_engine_yaml.service import (
     coerce_entrypoint_default_param_types,
@@ -131,6 +127,7 @@ class EntrypointService(object):
         )
 
         queues = self._uow.queue_repo.get(queue_ids, DeletionPolicy.NOT_DELETED)
+
         plugins = [
             plugin["plugin"]
             for plugin in self._plugin_ids_service.get(
@@ -153,23 +150,16 @@ class EntrypointService(object):
             for artifact_plugin in artifact_plugins
         ]
 
-        all_plugins = _deduplicate_plugins(plugins, artifact_plugins)
-        new_entrypoint.children.extend(plugin.resource for plugin in all_plugins)
-        new_entrypoint.children.extend(queue.resource for queue in queues)
-
-        try:
+        with self._uow(commit):
             self._uow.entrypoint_repo.create(new_entrypoint)
-        except Exception:
-            self._uow.rollback()
-            raise
+            self._uow.entrypoint_repo.create_queues(new_entrypoint, queues=queues)
+            self._uow.entrypoint_repo.create_plugins(new_entrypoint, plugins=plugins)
 
-        if commit:
-            self._uow.commit()
-            log.debug(
-                "Entrypoint registration successful",
-                entrypoint_id=new_entrypoint.resource_id,
-                name=new_entrypoint.name,
-            )
+        log.debug(
+            "Entrypoint registration successful",
+            entrypoint_id=new_entrypoint.resource_id,
+            name=new_entrypoint.name,
+        )
 
         return utils.EntrypointDict(
             entry_point=new_entrypoint, queues=queues, has_draft=False
@@ -282,44 +272,24 @@ class EntrypointIdService(UnitOfWorkService):
         # Get a specific snapshot if entrypoint_snapshot_id is specified
         if entrypoint_snapshot_id is None:
             entrypoint = self._uow.entrypoint_repo.get_one(
-                entrypoint_id, DeletionPolicy.NOT_DELETED, error_if_not_found=True
+                entrypoint_id, DeletionPolicy.NOT_DELETED
             )
         else:
             entrypoint = self._uow.entrypoint_repo.get_one_snapshot(
                 entrypoint_snapshot_id, DeletionPolicy.NOT_DELETED
             )
 
-        if entrypoint is None:
-            raise EntityDoesNotExistError(RESOURCE_TYPE, entrypoint_id=entrypoint_id)
-
-        if entrypoint is None:
-            raise EntityDoesNotExistError(
-                RESOURCE_TYPE,
-                entrypoint_id=entrypoint_id,
-                entrypoint_snapshot_id=entrypoint_snapshot_id,
-            )
-
-        queue_ids = list(
-            {
-                int(resource.resource_id)
-                for resource in entrypoint.children
-                if resource.resource_type == "queue" and not resource.is_deleted
-            }
+        queues = self._uow.entrypoint_repo.get_queues(
+            entrypoint, DeletionPolicy.NOT_DELETED
         )
-        queues = self._uow.queue_repo.get(queue_ids, DeletionPolicy.NOT_DELETED)
-
-        if len(queues) != len(queue_ids):
-            queue_ids_missing = set(queue_ids) - {queue.resource_id for queue in queues}
-            log.debug("Queue not found", queue_ids=list(queue_ids_missing))
-            raise EntityDoesNotExistError("queue", resource_ids=queue_ids_missing)
 
         has_draft = self._uow.drafts_repo.has_draft_modification(
             entrypoint,
-            current_user,
+            cast(User, current_user),
         )
 
         return utils.EntrypointDict(
-            entry_point=entrypoint, queues=queues, has_draft=has_draft
+            entry_point=entrypoint, queues=list(queues), has_draft=has_draft
         )
 
     def modify(
@@ -356,38 +326,12 @@ class EntrypointIdService(UnitOfWorkService):
         Raises:
             EntityDoesNotExistError: If the entrypoint is not found
             EntityExistsError: If the entrypoint name already exists.
-            QueryParameterNotUniqueError: If the values for the "name" parameter in the
-                parameters list is not unique
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         entrypoint = self._uow.entrypoint_repo.get_one(
-            entrypoint_id, DeletionPolicy.ANY
+            entrypoint_id, DeletionPolicy.NOT_DELETED
         )
-
-        if not entrypoint:
-            raise EntityDoesNotExistError("entrypoint", resource_id=entrypoint_id)
-        elif entrypoint.resource.is_deleted:
-            raise EntityDoesNotExistError("entrypoint", resource_id=entrypoint_id)
-
-        entrypoint_param_duplicates = find_non_unique("name", parameters)
-        if len(entrypoint_param_duplicates) > 0:
-            raise QueryParameterNotUniqueError(
-                RESOURCE_TYPE, name=entrypoint_param_duplicates
-            )
-
-        artifact_parameter_duplicates = find_non_unique("name", artifact_parameters)
-        if len(artifact_parameter_duplicates) > 0:
-            raise QueryParameterNotUniqueError(
-                RESOURCE_TYPE, name=artifact_parameter_duplicates
-            )
-
-        queues = self._uow.queue_repo.get(queue_ids, DeletionPolicy.NOT_DELETED)
-
-        if len(queues) != len(queue_ids):
-            queue_ids_missing = set(queue_ids) - {queue.resource_id for queue in queues}
-            log.debug("Queue not found", queue_ids=list(queue_ids_missing))
-            raise EntityDoesNotExistError("queue", resource_ids=queue_ids_missing)
 
         new_entrypoint = models.EntryPoint(
             name=name,
@@ -411,18 +355,11 @@ class EntrypointIdService(UnitOfWorkService):
         )
 
         all_plugins = _deduplicate_plugins(plugins, artifact_plugins)
-        new_entrypoint.children.clear()
-        new_entrypoint.children.extend(plugin.resource for plugin in all_plugins)
-        new_entrypoint.children.extend(queue.resource for queue in queues)
 
-        try:
+        with self._uow(commit):
             self._uow.entrypoint_repo.create_snapshot(new_entrypoint)
-        except Exception:
-            self._uow.rollback()
-            raise
-
-        if commit:
-            self._uow.commit()
+            queues = self._uow.entrypoint_repo.set_queues(new_entrypoint, queue_ids)
+            self._uow.entrypoint_repo.set_plugins(new_entrypoint, all_plugins)
 
         log.debug(
             "Entrypoint modification successful",
@@ -432,7 +369,7 @@ class EntrypointIdService(UnitOfWorkService):
         )
 
         return utils.EntrypointDict(
-            entry_point=new_entrypoint, queues=queues, has_draft=False
+            entry_point=new_entrypoint, queues=list(queues), has_draft=False
         )
 
     def delete(self, entrypoint_id: int, **kwargs) -> dict[str, Any]:
@@ -612,11 +549,8 @@ class EntrypointIdPluginsService(object):
         log.debug("Get entrypoint by id", entrypoint_id=entrypoint_id)
 
         entrypoint = self._uow.entrypoint_repo.get_one(
-            entrypoint_id, DeletionPolicy.NOT_DELETED, error_if_not_found=True
+            entrypoint_id, DeletionPolicy.NOT_DELETED
         )
-
-        if entrypoint is None:
-            raise EntityDoesNotExistError(RESOURCE_TYPE, entrypoint_id=entrypoint_id)
 
         return _get_entrypoint_plugin_snapshots(entrypoint)
 
@@ -624,7 +558,6 @@ class EntrypointIdPluginsService(object):
         self,
         entrypoint_id: int,
         plugin_ids: list[int],
-        commit: bool = True,
         **kwargs,
     ) -> list[utils.PluginWithFilesDict]:
         """Append plugins to an entrypoint.
@@ -633,7 +566,6 @@ class EntrypointIdPluginsService(object):
             entrypoint_id: The unique id of the entrypoint.
             plugin_ids: The plugins to be appended. If a plugin is already attached
                 to the entrypoint, it is synced to the latest snapshot.
-            commit: If True, commit the transaction. Defaults to True.
 
         Returns:
             The updated entrypoint object.
@@ -645,7 +577,7 @@ class EntrypointIdPluginsService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         entrypoint = self._uow.entrypoint_repo.get_one(
-            entrypoint_id, DeletionPolicy.NOT_DELETED, error_if_not_found=True
+            entrypoint_id, DeletionPolicy.NOT_DELETED
         )
 
         # make sure the ids are unique
@@ -664,7 +596,6 @@ class EntrypointIdPluginsService(object):
             resource=entrypoint.resource,
             creator=current_user,
         )
-        db.session.add(new_entrypoint)
 
         # copy over the existing plugins (except the ones which need to be updated)
         plugins = _copy_plugins(
@@ -684,30 +615,20 @@ class EntrypointIdPluginsService(object):
             plugins.append(new_plugin.plugin)
 
         # artifact plugins stay the same, task plugins are changing
-        artifact_plugins = _copy_artifact_plugins(
+        _copy_artifact_plugins(
             artifact_plugins=entrypoint.entry_point_artifact_plugins,
             target_entrypoint=new_entrypoint,
         )
 
-        new_entrypoint.children.clear()
+        with self._uow:
+            self._uow.entrypoint_repo.create_snapshot(new_entrypoint)
+            self._uow.entrypoint_repo.add_plugins(new_entrypoint, plugin_ids)
 
-        all_plugins = _deduplicate_plugins(plugins, artifact_plugins)
-        new_entrypoint.children.extend(plugin.resource for plugin in all_plugins)
-
-        queue_resources = [
-            resource
-            for resource in entrypoint.children
-            if resource.resource_type == "queue"
-        ]
-        new_entrypoint.children.extend(queue_resources)
-
-        if commit:
-            db.session.commit()
-            log.debug(
-                "Plugins appended to Entrypoint successfully",
-                entrypoint_id=entrypoint_id,
-                plugin_ids=plugin_ids,
-            )
+        log.debug(
+            "Plugins appended to Entrypoint successfully",
+            entrypoint_id=entrypoint_id,
+            plugin_ids=plugin_ids,
+        )
 
         return _get_entrypoint_plugin_snapshots(new_entrypoint)
 
@@ -736,7 +657,7 @@ class EntrypointIdPluginsIdService(UnitOfWorkService):
         log.debug("Get entrypoint by id", entrypoint_id=entrypoint_id)
 
         entrypoint = self._uow.entrypoint_repo.get_one(
-            entrypoint_id, DeletionPolicy.NOT_DELETED, error_if_not_found=True
+            entrypoint_id, DeletionPolicy.NOT_DELETED
         )
 
         plugin = [
@@ -758,7 +679,6 @@ class EntrypointIdPluginsIdService(UnitOfWorkService):
         self,
         entrypoint_id: int,
         plugin_id: int,
-        commit: bool = True,
         **kwargs,
     ) -> dict[str, Any]:
         """Remove a plugin from an entrypoint.
@@ -766,7 +686,6 @@ class EntrypointIdPluginsIdService(UnitOfWorkService):
         Args:
             entrypoint_id: The unique id of the entrypoint.
             plugin_id: The plugin to be removed.
-            commit: If True, commit the transaction. Defaults to True.
 
         Returns:
             A dictionary reporting the status of the request.
@@ -777,9 +696,12 @@ class EntrypointIdPluginsIdService(UnitOfWorkService):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         entrypoint = self._uow.entrypoint_repo.get_one(
-            entrypoint_id, DeletionPolicy.NOT_DELETED, error_if_not_found=True
+            entrypoint_id, DeletionPolicy.NOT_DELETED
         )
 
+        # should this be a no-op? i.e. return success and don't make a new snapshot
+        # the other repo implementations changed resource deletion to be a no-op if not
+        # found instead of raising an error
         plugin_ids = {
             plugin.plugin.resource_id for plugin in entrypoint.entry_point_plugins
         }
@@ -801,7 +723,6 @@ class EntrypointIdPluginsIdService(UnitOfWorkService):
             resource=entrypoint.resource,
             creator=current_user,
         )
-        db.session.add(new_entrypoint)
 
         artifact_plugins = _copy_artifact_plugins(
             artifact_plugins=entrypoint.entry_point_artifact_plugins,
@@ -809,7 +730,7 @@ class EntrypointIdPluginsIdService(UnitOfWorkService):
         )
 
         # copy all plugins but the one targeted for deletion
-        plugins = _copy_plugins(
+        _copy_plugins(
             plugins=filter(
                 lambda p: p.plugin.resource_id != plugin_id,
                 entrypoint.entry_point_plugins,
@@ -817,25 +738,18 @@ class EntrypointIdPluginsIdService(UnitOfWorkService):
             target_entrypoint=new_entrypoint,
         )
 
-        new_entrypoint.children.clear()
+        with self._uow():
+            self._uow.entrypoint_repo.create_snapshot(new_entrypoint)
+            # if the removed plugin is also an artifact plugin do not remove the
+            # resource dependency relationship
+            if not plugin_id in artifact_plugins:
+                self._uow.entrypoint_repo.unlink_child(new_entrypoint, plugin_id)
 
-        all_plugins = _deduplicate_plugins(plugins, artifact_plugins)
-        new_entrypoint.children.extend(plugin.resource for plugin in all_plugins)
-
-        queue_resources = [
-            resource
-            for resource in entrypoint.children
-            if resource.resource_type == "queue"
-        ]
-        new_entrypoint.children.extend(queue_resources)
-
-        if commit:
-            db.session.commit()
-            log.debug(
-                "Plugin removed from entrypoint",
-                entrypoint_id=entrypoint_id,
-                plugin_id=plugin_id,
-            )
+        log.debug(
+            "Plugin removed from entrypoint",
+            entrypoint_id=entrypoint_id,
+            plugin_id=plugin_id,
+        )
 
         return {"status": "Success", "id": [plugin_id]}
 
@@ -882,9 +796,7 @@ class EntrypointIdArtifactPluginsService(object):
         log.debug("Get entrypoint by id", entrypoint_id=entrypoint_id)
 
         entrypoint = self._uow.entrypoint_repo.get_one(
-            entrypoint_id,
-            DeletionPolicy.NOT_DELETED,
-            error_if_not_found=True,
+            entrypoint_id, DeletionPolicy.NOT_DELETED
         )
 
         return _get_entrypoint_artifact_plugin_snapshots(entrypoint)
@@ -893,7 +805,6 @@ class EntrypointIdArtifactPluginsService(object):
         self,
         entrypoint_id: int,
         artifact_plugin_ids: list[int],
-        commit: bool = True,
         **kwargs,
     ) -> list[utils.PluginWithFilesDict]:
         """Append artifact plugins to an entrypoint.
@@ -903,7 +814,6 @@ class EntrypointIdArtifactPluginsService(object):
             artifact_plugin_ids: The plugins to be appended. If an artifact
                 plugin is already attached to the entrypoint, it is synced to
                 the latest snapshot.
-            commit: If True, commit the transaction. Defaults to True.
 
         Returns:
             The updated entrypoint object.
@@ -915,7 +825,7 @@ class EntrypointIdArtifactPluginsService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         entrypoint = self._uow.entrypoint_repo.get_one(
-            entrypoint_id, DeletionPolicy.NOT_DELETED, error_if_not_found=True
+            entrypoint_id, DeletionPolicy.NOT_DELETED
         )
 
         artifact_plugin_id_set = set(artifact_plugin_ids)
@@ -933,7 +843,6 @@ class EntrypointIdArtifactPluginsService(object):
             resource=entrypoint.resource,
             creator=current_user,
         )
-        db.session.add(new_entrypoint)
 
         # plugins stay the same, artifact plugins are changing
         plugins = _copy_plugins(
@@ -959,25 +868,15 @@ class EntrypointIdArtifactPluginsService(object):
             new_entrypoint.entry_point_artifact_plugins.append(new_plugin)
             artifact_plugins.append(new_plugin.plugin)
 
-        new_entrypoint.children.clear()
+        with self._uow:
+            self._uow.entrypoint_repo.create_snapshot(new_entrypoint)
+            self._uow.entrypoint_repo.add_plugins(new_entrypoint, artifact_plugin_ids)
 
-        all_plugins = _deduplicate_plugins(plugins, artifact_plugins)
-        new_entrypoint.children.extend(plugin.resource for plugin in all_plugins)
-
-        queue_resources = [
-            resource
-            for resource in entrypoint.children
-            if resource.resource_type == "queue"
-        ]
-        new_entrypoint.children.extend(queue_resources)
-
-        if commit:
-            db.session.commit()
-            log.debug(
-                "Artifact Plugins appended to Entrypoint successfully",
-                entrypoint_id=entrypoint_id,
-                plugin_ids=artifact_plugin_ids,
-            )
+        log.debug(
+            "Artifact Plugins appended to Entrypoint successfully",
+            entrypoint_id=entrypoint_id,
+            plugin_ids=artifact_plugin_ids,
+        )
 
         return _get_entrypoint_artifact_plugin_snapshots(new_entrypoint)
 
@@ -1008,7 +907,7 @@ class EntrypointIdArtifactPluginsIdService(UnitOfWorkService):
         log.debug("Get entrypoint by id", entrypoint_id=entrypoint_id)
 
         entrypoint = self._uow.entrypoint_repo.get_one(
-            entrypoint_id, DeletionPolicy.NOT_DELETED, error_if_not_found=True
+            entrypoint_id, DeletionPolicy.NOT_DELETED
         )
 
         artifact_plugin = [
@@ -1034,7 +933,6 @@ class EntrypointIdArtifactPluginsIdService(UnitOfWorkService):
         self,
         entrypoint_id: int,
         artifact_plugin_id: int,
-        commit: bool = True,
         **kwargs,
     ) -> dict[str, Any]:
         """Remove an artifact plugin from an entrypoint.
@@ -1042,7 +940,6 @@ class EntrypointIdArtifactPluginsIdService(UnitOfWorkService):
         Args:
             entrypoint_id: The unique id of the entrypoint.
             artifact_plugin_id: The artifact plugin to be removed.
-            commit: If True, commit the transaction. Defaults to True.
 
         Returns:
             A dictionary reporting the status of the request.
@@ -1053,7 +950,7 @@ class EntrypointIdArtifactPluginsIdService(UnitOfWorkService):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         entrypoint = self._uow.entrypoint_repo.get_one(
-            entrypoint_id, DeletionPolicy.NOT_DELETED, error_if_not_found=True
+            entrypoint_id, DeletionPolicy.NOT_DELETED
         )
 
         artifact_plugin_ids = {
@@ -1080,7 +977,6 @@ class EntrypointIdArtifactPluginsIdService(UnitOfWorkService):
             resource=entrypoint.resource,
             creator=current_user,
         )
-        db.session.add(new_entrypoint)
 
         # plugins stay the same, artifact plugins are changing
         plugins = _copy_plugins(
@@ -1088,7 +984,7 @@ class EntrypointIdArtifactPluginsIdService(UnitOfWorkService):
         )
 
         # copy over artifact plugins but the one targeted for deletion
-        artifact_plugins = _copy_artifact_plugins(
+        _copy_artifact_plugins(
             artifact_plugins=filter(
                 lambda a: a.plugin.resource_id != artifact_plugin_id,
                 entrypoint.entry_point_artifact_plugins,
@@ -1096,25 +992,20 @@ class EntrypointIdArtifactPluginsIdService(UnitOfWorkService):
             target_entrypoint=new_entrypoint,
         )
 
-        new_entrypoint.children.clear()
+        with self._uow():
+            self._uow.entrypoint_repo.create_snapshot(new_entrypoint)
+            # if the removed plugin is also an artifact plugin do not remove the
+            # resource dependency relationship
+            if not artifact_plugin_id in plugins:
+                self._uow.entrypoint_repo.unlink_child(
+                    new_entrypoint, artifact_plugin_id
+                )
 
-        all_plugins = _deduplicate_plugins(plugins, artifact_plugins)
-        new_entrypoint.children.extend(plugin.resource for plugin in all_plugins)
-
-        queue_resources = [
-            resource
-            for resource in entrypoint.children
-            if resource.resource_type == "queue"
-        ]
-        new_entrypoint.children.extend(queue_resources)
-
-        if commit:
-            db.session.commit()
-            log.debug(
-                "Artifact Plugin removed from entrypoint",
-                entrypoint_id=entrypoint_id,
-                artifact_plugin_id=artifact_plugin_id,
-            )
+        log.debug(
+            "Artifact Plugin removed from entrypoint",
+            entrypoint_id=entrypoint_id,
+            artifact_plugin_id=artifact_plugin_id,
+        )
 
         return {"status": "Success", "id": [artifact_plugin_id]}
 
@@ -1204,7 +1095,7 @@ class EntrypointIdQueuesService(UnitOfWorkService):
         )
 
         entrypoint = self._uow.entrypoint_repo.get_one(
-            entrypoint_id, DeletionPolicy.NOT_DELETED, error_if_not_found=True
+            entrypoint_id, DeletionPolicy.NOT_DELETED
         )
 
         queue_ids = list(
@@ -1222,7 +1113,6 @@ class EntrypointIdQueuesService(UnitOfWorkService):
         self,
         entrypoint_id: int,
         queue_ids: list[int],
-        commit: bool = True,
         **kwargs,
     ) -> list[models.Queue] | None:
         """Append one or more Queues to an entrypoint
@@ -1230,7 +1120,6 @@ class EntrypointIdQueuesService(UnitOfWorkService):
         Args:
             entrypoint_id: The unique id of the entrypoint.
             queue_ids: The list of queue ids to append.
-            commit: If True, commit the transaction. Defaults to True.
 
         Returns:
             The updated list of queues resource objects.
@@ -1244,11 +1133,10 @@ class EntrypointIdQueuesService(UnitOfWorkService):
             "Append queues to an entrypoint by resource id", resource_id=entrypoint_id
         )
 
-        queues = self._uow.entrypoint_repo.add_queues(entrypoint_id, queue_ids)
+        with self._uow():
+            queues = self._uow.entrypoint_repo.add_queues(entrypoint_id, queue_ids)
 
-        if commit:
-            db.session.commit()
-            log.debug("Queues appended successfully", queue_ids=queue_ids)
+        log.debug("Queues appended successfully", queue_ids=queue_ids)
 
         return list(queues)
 
@@ -1256,7 +1144,6 @@ class EntrypointIdQueuesService(UnitOfWorkService):
         self,
         entrypoint_id: int,
         queue_ids: list[int],
-        commit: bool = True,
         **kwargs,
     ) -> list[models.Queue]:
         """Modify the list of queues for an entrypoint.
@@ -1266,7 +1153,6 @@ class EntrypointIdQueuesService(UnitOfWorkService):
             queue_ids: The list of queue ids to append.
             error_if_not_found: If True, raise an error if the resource is not found.
                 Defaults to False.
-            commit: If True, commit the transaction. Defaults to True.
 
         Returns:
             The updated queue resource object.
@@ -1278,31 +1164,10 @@ class EntrypointIdQueuesService(UnitOfWorkService):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        entrypoint = self._uow.entrypoint_repo.get_one(
-            entrypoint_id, DeletionPolicy.NOT_DELETED, error_if_not_found=True
-        )
+        with self._uow():
+            queues = self._uow.entrypoint_repo.set_queues(entrypoint_id, queue_ids)
 
-        if entrypoint is None:
-            raise EntityDoesNotExistError(RESOURCE_TYPE, entrypoint_id=entrypoint_id)
-
-        queues = self._uow.queue_repo.get(queue_ids, DeletionPolicy.NOT_DELETED)
-
-        if len(queues) != len(queue_ids):
-            queue_ids_missing = set(queue_ids) - {queue.resource_id for queue in queues}
-            log.debug("Queue not found", queue_ids=list(queue_ids_missing))
-            raise EntityDoesNotExistError("queue", resource_ids=queue_ids_missing)
-
-        plugin_resources = [
-            resource
-            for resource in entrypoint.children
-            if resource.resource_type == "plugin"
-        ]
-        queue_resources = [queue.resource for queue in queues]
-        entrypoint.children = plugin_resources + queue_resources
-
-        if commit:
-            db.session.commit()
-            log.debug("Entrypoint queues updated successfully", queue_ids=queue_ids)
+        log.debug("Entrypoint queues updated successfully", queue_ids=queue_ids)
 
         return list(queues)
 
@@ -1317,9 +1182,9 @@ class EntrypointIdQueuesService(UnitOfWorkService):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        queue_ids = self._uow.entrypoint_repo.unlink_queues(entrypoint_id)
+        with self._uow():
+            queue_ids = self._uow.entrypoint_repo.unlink_queues(entrypoint_id)
 
-        db.session.commit()
         log.debug(
             "Queues removed from entrypoint",
             entrypoint_id=entrypoint_id,
@@ -1344,29 +1209,9 @@ class EntrypointIdQueuesIdService(UnitOfWorkService):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        entrypoint = self._uow.entrypoint_repo.get_one(
-            entrypoint_id, DeletionPolicy.NOT_DELETED, error_if_not_found=True
-        )
+        with self._uow():
+            self._uow.entrypoint_repo.unlink_child(entrypoint_id, queue_id)
 
-        queue_resources = {
-            resource.resource_id: resource
-            for resource in entrypoint.children
-            if resource.resource_type == "queue"
-        }
-
-        removed_queue = queue_resources.pop(queue_id, None)
-
-        if removed_queue is None:
-            raise EntityDoesNotExistError(QUEUE_RESOURCE_TYPE, queue_id=queue_id)
-
-        plugin_resources = [
-            resource
-            for resource in entrypoint.children
-            if resource.resource_type == "plugin"
-        ]
-        entrypoint.children = plugin_resources + list(queue_resources.values())
-
-        db.session.commit()
         log.debug("Queue removed", entrypoint_id=entrypoint_id, queue_id=queue_id)
 
         return {"status": "Success", "id": [queue_id]}
@@ -1530,14 +1375,6 @@ def _create_artifact_parameters(
 ) -> Iterable[models.EntryPointArtifactParameter]:
     if artifact_parameters is None or len(artifact_parameters) == 0:
         return []
-    for artifact in artifact_parameters:
-        duplicates = find_non_unique("name", artifact["output_params"])
-        if len(duplicates) > 0:
-            raise QueryParameterNotUniqueError(
-                "artifact output parameter",
-                artifact_parameter_name=artifact["name"],
-                parameter_names=duplicates,
-            )
 
     type_ids = [
         parameter["parameter_type_id"]

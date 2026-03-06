@@ -23,7 +23,6 @@ from typing import Any, Final, overload
 
 import dioptra.restapi.db.repository.utils as utils
 from dioptra.restapi.db.models import Group, Queue, Resource, Tag
-from dioptra.restapi.errors import EntityDoesNotExistError
 
 
 class QueueRepository:
@@ -167,7 +166,6 @@ class QueueRepository:
         self,
         resource_id: int,
         deletion_policy: utils.DeletionPolicy,
-        error_if_not_found=False,
     ) -> Queue:
         """
         Get the latest snapshot of the given queue resource; require that
@@ -177,7 +175,6 @@ class QueueRepository:
             resource_id: A resource ID
             deletion_policy: Whether to look at deleted queues, non-deleted
                 queues, or all queues
-            error_if_not_found: If True, raise an error if the queue is not found.
 
         Returns:
             A Queue object
@@ -190,14 +187,9 @@ class QueueRepository:
             EntityDeletedError: if the queue is deleted, but policy was to find
                 a non-deleted queue
         """
-        queue = utils.get_one_latest_snapshot(
+        return utils.get_one_latest_snapshot(
             self.session, Queue, resource_id, deletion_policy
         )
-
-        if queue is None and error_if_not_found:
-            raise EntityDoesNotExistError("queue", entrypoint_id=resource_id)
-
-        return queue
 
     def get_by_name(
         self,

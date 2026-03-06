@@ -313,11 +313,21 @@ class QueryParameterValidationError(DioptraError):
         self.parameters = kwargs
 
 
-class QueryParameterNotUniqueError(QueryParameterValidationError):
-    """Query Parameters failed unique validatation check."""
+class InputParameterNotUniqueError(DioptraError):
+    """Input Parameters failed unique validatation check."""
 
     def __init__(self, type: str, **kwargs):
-        super().__init__(type, "unique", **kwargs)
+        super().__init__(
+            "".join(
+                [
+                    f"{type} Parameters must be unique",
+                    *add_attribute_values(**kwargs),
+                    ".",
+                ]
+            )
+        )
+        self.resource_type = type
+        self.parameters = kwargs
 
 
 class EntrypointParameterTypeMismatchError(DioptraError):

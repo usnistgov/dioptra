@@ -264,7 +264,7 @@ class ExperimentRepository:
         self,
         experiment: Experiment | int,
         children: Iterable[EntryPoint | int],
-    ) -> list[EntryPoint]:
+    ) -> Sequence[EntryPoint]:
         """
         Add the given entry points as children of the given experiment.
 

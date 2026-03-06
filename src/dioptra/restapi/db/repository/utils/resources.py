@@ -476,6 +476,49 @@ def get_snapshot_by_name(
     return resource
 
 
+def create_resource_children(
+    session: CompatibleSession[S],
+    child_class: typing.Type[ResourceT],
+    parent: m.Resource | m.ResourceSnapshot,
+    new_children: Iterable[m.Resource | ResourceT | int],
+) -> Sequence[ResourceT]:
+    """
+    Appends the children of the given resource to the given children.
+
+    This is distinct from `set_resource_children` and `append_resource_children` as the
+    parent does not need to exist in the database yet. Therefore parent cannot be an id.
+
+    It is intended to be used when a new resource is being created. The function can be
+    called once per child type.
+
+    Args:
+        session: An SQLAlchemy session
+        child_class: A ResourceSnapshot subclass, which represents which type
+            of resource is being set (the child type)
+        parent: A resource or snapshot
+        new_children: The children to set
+
+    Returns:
+        The new children, as their latest snapshots
+
+    Raises:
+        EntityDoesNotExistError: if parent or any child does not exist
+        EntityDeletedError: if parent or any child is deleted
+    """
+    assert_resources_exist(session, new_children, DeletionPolicy.NOT_DELETED)
+
+    child_snaps = get_latest_snapshots(
+        session,
+        child_class,
+        new_children,
+        DeletionPolicy.ANY,
+    )
+
+    parent.children.extend(child.resource for child in child_snaps)
+
+    return child_snaps
+
+
 def set_resource_children(
     session: CompatibleSession[S],
     child_class: typing.Type[ResourceT],
@@ -483,8 +526,10 @@ def set_resource_children(
     new_children: Iterable[m.Resource | ResourceT | int],
 ) -> Sequence[ResourceT]:
     """
-    Set the children of the given resource to the given children.  This
-    replaces all existing children with the given resources.
+    Set the children of the given resource to the given children.  This replaces all
+    existing children of child_class resource type with the given resources. It does not
+    modify children of different resource types.
+
 
     Args:
         session: An SQLAlchemy session
@@ -495,7 +540,7 @@ def set_resource_children(
         new_children: The children to set
 
     Returns:
-        The new children, as their latest snapshots
+        The new children of child_class type, as their latest snapshots
 
     Raises:
         EntityDoesNotExistError: if parent or any child does not exist
@@ -519,10 +564,13 @@ def set_resource_children(
         DeletionPolicy.ANY,
     )
 
-    # Direct assignment like:
-    #     parent.children = [child.resource for child in child_snaps]
-    # produces a mypy typing error.
+    # TODO: better way to access resource type?
+    #       pass it in? wait for EntityType feature to be implemented?
+    resource_type = child_class.__mapper_args__["polymorphic_identity"]
+    keep = [child for child in parent.children if child.resource_type != resource_type]
+
     parent.children.clear()
+    parent.children.extend(keep)
     parent.children.extend(child.resource for child in child_snaps)
 
     return child_snaps
@@ -953,6 +1001,7 @@ __all__ = [
     "add_resource_lock_types",
     "append_resource_children",
     "apply_resource_deletion_policy",
+    "create_resource_children",
     "delete_resource",
     "get_by_filters_paged",
     "get_latest_child_snapshots",

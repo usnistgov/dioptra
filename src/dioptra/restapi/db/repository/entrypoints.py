@@ -24,15 +24,12 @@ from typing import Any, Final, overload
 import dioptra.restapi.db.repository.utils as utils
 from dioptra.restapi.db.models import (
     EntryPoint,
-    Experiment,
     Group,
     Plugin,
     Queue,
     Resource,
-    ResourceSnapshot,
     Tag,
 )
-from dioptra.restapi.errors import EntityDoesNotExistError
 
 
 class EntrypointRepository:
@@ -82,7 +79,7 @@ class EntrypointRepository:
 
         self.session.add(entrypoint)
 
-    def create_snapshot(self, entrypoint: Experiment):
+    def create_snapshot(self, entrypoint: EntryPoint):
         """
         Create a new entrypoint snapshot.
 
@@ -150,7 +147,6 @@ class EntrypointRepository:
         self,
         resource_id: int,
         deletion_policy: utils.DeletionPolicy,
-        error_if_not_found=False,
     ) -> EntryPoint:
         """
         Get the latest snapshot of the given entrypoint resource; require that
@@ -173,14 +169,9 @@ class EntrypointRepository:
             EntityDeletedError: if the entrypoint is deleted, but policy was to
                 find a non-deleted entrypoint
         """
-        entrypoint = utils.get_one_latest_snapshot(
+        return utils.get_one_latest_snapshot(
             self.session, EntryPoint, resource_id, deletion_policy
         )
-
-        if entrypoint is None and error_if_not_found:
-            raise EntityDoesNotExistError("entry_point", entrypoint_id=resource_id)
-
-        return entrypoint
 
     def get_one_snapshot(
         self,
@@ -239,25 +230,23 @@ class EntrypointRepository:
             self.session, EntryPoint, name, group, deletion_policy
         )
 
-    def get_entrypoints(
+    def get_queues(
         self,
         entrypoint: EntryPoint | int,
         deletion_policy: utils.DeletionPolicy = utils.DeletionPolicy.NOT_DELETED,
-    ) -> Sequence[EntryPoint]:
+    ) -> Sequence[Queue]:
         """
-        Get the child entry points of the given entrypoint as their latest
+        Get the child queues of the given entrypoint as their latest
         snapshots.  If an EntryPoint object is given, the returned sequence
         may be shorter than len(entrypoint.children) if any of the children
         don't exist, or were filtered out due to deletion policy.
 
         Args:
-            entrypoint: An EntryPoint object or resource_id integer primary key
-                value
-            deletion_policy: Whether to look at deleted entry points,
-                non-deleted entry points, or all entry points
+            entrypoint: An EntryPoint object or resource_id integer primary key value
+            deletion_policy: Whether to look at deleted, non-deleted, or all queues
 
         Returns:
-            The entry points
+            The queues
 
         Raises:
             EntityDoesNotExistError: if parent does not exist
@@ -266,10 +255,31 @@ class EntrypointRepository:
 
         return utils.get_latest_child_snapshots(
             self.session,
-            EntryPoint,
+            Queue,
             entrypoint,
             deletion_policy,
         )
+
+    def create_queues(
+        self,
+        entrypoint: EntryPoint,
+        queues: Iterable[Queue | Resource | int],
+    ) -> Sequence[Queue]:
+        """
+        Add the given entry points as children of the given experiment.
+
+        Args:
+            entrypoint: An EntryPoint object
+            queus: The queues to add as children
+
+        Returns:
+            The list of queue children, as latest snapshots.
+
+        Raises:
+            EntityDoesNotExistError: if parent or any new child does not exist
+            EntityDeletedError: if parent or any new child is deleted
+        """
+        return utils.create_resource_children(self.session, Queue, entrypoint, queues)
 
     def add_queues(
         self,
@@ -280,8 +290,8 @@ class EntrypointRepository:
         Add the given entry points as children of the given experiment.
 
         Args:
-            experiment: An Experiment object or resource_id integer primary key value
-            children: The entry points to add
+            entrypoint: An EntryPoint object or resource_id integer primary key value
+            queus: The queues to add as children
 
         Returns:
             The complete list of queue children, as latest snapshots (including both
@@ -293,6 +303,138 @@ class EntrypointRepository:
         """
         snaps = utils.append_resource_children(self.session, Queue, entrypoint, queues)
         return [snap for snap in snaps if isinstance(snap, Queue)]
+
+    def set_queues(
+        self,
+        entrypoint: EntryPoint | int,
+        queues: Iterable[Queue | Resource | int],
+    ) -> Sequence[Queue]:
+        """
+        Set the child queues of the given entrypoint.
+        This replaces all existing queues with the given resources.
+
+        Args:
+            entrypoint: An EntryPoint object or resource_id integer primary key value
+            queues: The queues to set as children
+
+        Returns:
+            The child queues, as their latest snapshots
+
+        Raises:
+            EntityDoesNotExistError: if experiment or any entry point not exist
+            EntityDeletedError: if experiment or any entry point is deleted
+        """
+
+        return utils.set_resource_children(
+            self.session,
+            Queue,
+            entrypoint,
+            queues,
+        )
+
+    def get_plugins(
+        self,
+        entrypoint: EntryPoint | int,
+        deletion_policy: utils.DeletionPolicy = utils.DeletionPolicy.NOT_DELETED,
+    ) -> Sequence[Plugin]:
+        """
+        Get the child plugins of the given entrypoint as their latest
+        snapshots.  If an EntryPoint object is given, the returned sequence
+        may be shorter than len(entrypoint.children) if any of the children
+        don't exist, or were filtered out due to deletion policy.
+
+        Args:
+            entrypoint: An EntryPoint object or resource_id integer primary key value
+            deletion_policy: Whether to look at deleted, non-deleted, or all plugins
+
+        Returns:
+            The plugins
+
+        Raises:
+            EntityDoesNotExistError: if parent does not exist
+            EntityDeletedError: if parent is deleted
+        """
+
+        return utils.get_latest_child_snapshots(
+            self.session,
+            Plugin,
+            entrypoint,
+            deletion_policy,
+        )
+
+    def create_plugins(
+        self,
+        entrypoint: EntryPoint,
+        plugins: Iterable[Plugin | Resource | int],
+    ) -> Sequence[Plugin]:
+        """
+        Add the plugins points as children of the given entrypoint.
+
+        Args:
+            entrypoint: An EntryPoint object
+            plugins: The plugins to add as children
+
+        Returns:
+            The list of newly created plugin children, as latest snapshots.
+
+        Raises:
+            EntityDoesNotExistError: if parent or any new child does not exist
+            EntityDeletedError: if parent or any new child is deleted
+        """
+        return utils.create_resource_children(self.session, Plugin, entrypoint, plugins)
+
+    def add_plugins(
+        self,
+        entrypoint: EntryPoint | int,
+        plugins: Iterable[Plugin | Resource | int],
+    ) -> Sequence[Plugin]:
+        """
+        Add the plugins points as children of the given entrypoint.
+
+        Args:
+            entrypoint: An EntryPoint object or resource_id integer primary key value
+            plugins: The plugins to add as children
+
+        Returns:
+            The complete list of plugin children, as latest snapshots (including both
+            pre-existing and new children).
+
+        Raises:
+            EntityDoesNotExistError: if parent or any new child does not exist
+            EntityDeletedError: if parent or any new child is deleted
+        """
+        snaps = utils.append_resource_children(
+            self.session, Plugin, entrypoint, plugins
+        )
+        return [snap for snap in snaps if isinstance(snap, Plugin)]
+
+    def set_plugins(
+        self,
+        entrypoint: EntryPoint | int,
+        plugins: Iterable[Plugin | Resource | int],
+    ) -> Sequence[Plugin]:
+        """
+        Set the child queues of the given entrypoint.
+        This replaces all existing queues with the given resources.
+
+        Args:
+            entrypoint: An EntryPoint object or resource_id integer primary key value
+            queues: The queues to set as children
+
+        Returns:
+            The child queues, as their latest snapshots
+
+        Raises:
+            EntityDoesNotExistError: if experiment or any entry point not exist
+            EntityDeletedError: if experiment or any entry point is deleted
+        """
+
+        return utils.set_resource_children(
+            self.session,
+            Plugin,
+            entrypoint,
+            plugins,
+        )
 
     def unlink_child(
         self,
@@ -311,6 +453,7 @@ class EntrypointRepository:
         Raises:
             EntityDoesNotExistError: if parent or child do not exist
         """
+        # TODO: need to verify correct resource type is being unlinked
         utils.unlink_child(self.session, entrypoint, child)
 
     def unlink_queues(
@@ -336,7 +479,7 @@ class EntrypointRepository:
         Delete an entrypoint.  No-op if the entrypoint is already deleted.
 
         Args:
-            entrypoint: A Experiment object or resource_id primary key value
+            entrypoint: A EntryPoint object or resource_id primary key value
                 identifying an entrypoint resource
 
         Raises:

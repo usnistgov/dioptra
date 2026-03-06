@@ -351,7 +351,7 @@ def assert_entrypoint_must_have_unique_param_names(
         plugins=plugin_ids,
         artifact_plugins=artifact_plugin_ids,
     )
-    assert response.status_code == HTTPStatus.CONFLICT
+    assert response.status_code == HTTPStatus.BAD_REQUEST
 
 
 def assert_retrieving_all_queues_for_entrypoint_works(
