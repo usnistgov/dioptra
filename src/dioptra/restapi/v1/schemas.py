@@ -286,6 +286,17 @@ class SortByGetQueryParametersSchema(Schema):
         load_default=False,
     )
 
+class ShowDeletedQueryParametersSchema(Schema):
+    """A schema for specifying whether to show deleted resources."""
+
+    showDeleted = fields.Bool(
+        attribute="show_deleted",
+        metadata={
+            "description": "Boolean indicating whether to include deleted resources in the results."
+        },
+        load_default=False,
+    )
+
 
 class ResourceGetQueryParameters(
     PagingQueryParametersSchema,

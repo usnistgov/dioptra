@@ -135,6 +135,7 @@ class ExperimentService(object):
         page_length: int,
         sort_by_string: str,
         descending: bool,
+        show_deleted: bool = False,
         **kwargs,
     ) -> tuple[list[utils.ExperimentDict], int]:
         """Fetch a list of experiments, optionally filtering by search string and paging
@@ -169,7 +170,7 @@ class ExperimentService(object):
                 page_length,
                 sort_by_string,
                 descending,
-                DeletionPolicy.NOT_DELETED,
+                DeletionPolicy.NOT_DELETED if not show_deleted else DeletionPolicy.ANY,
             )
         )
 
@@ -180,7 +181,7 @@ class ExperimentService(object):
                 entrypoints=list(
                     self._uow.experiment_repo.get_entrypoints(
                         experiment,
-                        DeletionPolicy.NOT_DELETED,
+                        DeletionPolicy.NOT_DELETED if not show_deleted else DeletionPolicy.ANY,
                     )
                 ),
                 queue=None,
@@ -246,7 +247,7 @@ class ExperimentIdService(object):
 
         experiment = self._uow.experiment_repo.get(
             experiment_id,
-            DeletionPolicy.NOT_DELETED,
+            DeletionPolicy.ANY,
         )
 
         if experiment is None:
@@ -259,7 +260,7 @@ class ExperimentIdService(object):
 
         entrypoints = self._uow.experiment_repo.get_entrypoints(
             experiment,
-            DeletionPolicy.NOT_DELETED,
+            DeletionPolicy.ANY,
         )
 
         has_draft = self._uow.drafts_repo.has_draft_modification(
