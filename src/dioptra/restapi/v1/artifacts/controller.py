@@ -94,7 +94,6 @@ class ArtifactEndpoint(Resource):
         page_length = parsed_query_params["page_length"]
         sort_by_string = parsed_query_params["sort_by"]
         descending = parsed_query_params["descending"]
-        show_deleted = parsed_query_params["show_deleted"]
 
         artifacts, total_num_artifacts = self._artifact_service.get(
             group_id=group_id,
@@ -104,7 +103,6 @@ class ArtifactEndpoint(Resource):
             page_length=page_length,
             sort_by_string=sort_by_string,
             descending=descending,
-            show_deleted=show_deleted,
             log=log,
         )
         return utils.build_paging_envelope(

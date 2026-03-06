@@ -216,7 +216,6 @@ class EntrypointService(object):
         page_length: int,
         sort_by_string: str,
         descending: bool,
-        show_deleted: bool = False,
         **kwargs,
     ) -> tuple[list[utils.EntrypointDict], int]:
         """Fetch a list of entrypoints, optionally filtering by search string and paging
@@ -252,27 +251,16 @@ class EntrypointService(object):
                 construct_sql_query_filters(search_string, SEARCHABLE_FIELDS)
             )
 
-        if not show_deleted:
-            stmt = (
-                select(func.count(models.EntryPoint.resource_id))
-                .join(models.Resource)
-                .where(
-                    *filters,
-                    models.Resource.is_deleted == False,  # noqa: E712
-                    models.Resource.latest_snapshot_id
-                    == models.EntryPoint.resource_snapshot_id,
-                )
+        stmt = (
+            select(func.count(models.EntryPoint.resource_id))
+            .join(models.Resource)
+            .where(
+                *filters,
+                models.Resource.is_deleted == False,  # noqa: E712
+                models.Resource.latest_snapshot_id
+                == models.EntryPoint.resource_snapshot_id,
             )
-        else:
-            stmt = (
-                select(func.count(models.EntryPoint.resource_id))
-                .join(models.Resource)
-                .where(
-                    *filters,
-                    models.Resource.latest_snapshot_id
-                    == models.EntryPoint.resource_snapshot_id,
-                )
-            )
+        )
 
         total_num_entrypoints = db.session.scalars(stmt).first()
 
@@ -287,31 +275,18 @@ class EntrypointService(object):
         if total_num_entrypoints == 0:
             return [], total_num_entrypoints
 
-        if not show_deleted:
-            entrypoints_stmt = (
-                select(models.EntryPoint)
-                .join(models.Resource)
-                .where(
-                    *filters,
-                    models.Resource.is_deleted == False,  # noqa: E712
-                    models.Resource.latest_snapshot_id
-                    == models.EntryPoint.resource_snapshot_id,
-                )
-                .offset(page_index)
-                .limit(page_length)
+        entrypoints_stmt = (
+            select(models.EntryPoint)
+            .join(models.Resource)
+            .where(
+                *filters,
+                models.Resource.is_deleted == False,  # noqa: E712
+                models.Resource.latest_snapshot_id
+                == models.EntryPoint.resource_snapshot_id,
             )
-        else:
-            entrypoints_stmt = (
-                select(models.EntryPoint)
-                .join(models.Resource)
-                .where(
-                    *filters,
-                    models.Resource.latest_snapshot_id
-                    == models.EntryPoint.resource_snapshot_id,
-                )
-                .offset(page_index)
-                .limit(page_length)
-            )
+            .offset(page_index)
+            .limit(page_length)
+        )
 
         if sort_by_string and sort_by_string in SORTABLE_FIELDS:
             sort_column = SORTABLE_FIELDS[sort_by_string]

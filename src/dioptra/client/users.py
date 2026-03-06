@@ -35,7 +35,6 @@ class UsersCollectionClient(CollectionClient[T]):
         index: int = 0,
         page_length: int = 10,
         search: str | None = None,
-        show_deleted: bool | None = None,
     ) -> T:
         """Get a list of Dioptra users.
 
@@ -53,9 +52,6 @@ class UsersCollectionClient(CollectionClient[T]):
             "index": index,
             "pageLength": page_length,
         }
-
-        if show_deleted is not None:
-            params["showDeleted"] = show_deleted
 
         if search is not None:
             params["search"] = search
