@@ -175,6 +175,7 @@ class EntrypointRepository:
 
     def get_one_snapshot(
         self,
+        resource_id: int,
         snapshot_id: int,
         deletion_policy: utils.DeletionPolicy,
     ) -> EntryPoint:
@@ -183,6 +184,7 @@ class EntrypointRepository:
         that exactly one is found, or raise an exception.
 
         Args:
+            snapshot_id: A resource ID
             snapshot_id: A resource snapshot ID
             deletion_policy: Whether to look at deleted entrypoints, non-deleted
                 entrypoints, or all entrypoints
@@ -199,7 +201,7 @@ class EntrypointRepository:
                 find a non-deleted entrypoint
         """
         return utils.get_one_snapshot(
-            self.session, EntryPoint, snapshot_id, deletion_policy
+            self.session, EntryPoint, resource_id, snapshot_id, deletion_policy
         )
 
     def get_by_name(
@@ -330,7 +332,45 @@ class EntrypointRepository:
             Queue,
             entrypoint,
             queues,
+            "queue",
         )
+
+    def unlink_queue(
+        self,
+        entrypoint: EntryPoint | int,
+        queue: Queue | int,
+    ):
+        """
+        "Unlink" the given child resource from the given entrypoint.  This
+        only severs the relationship; it does not delete either resource.  If
+        there is no parent/child relationship, this is a no-op.
+
+        Args:
+            experiment: An entrypoint or resource_id integer primary key value
+            child: A queue or plugin or resource_id integer primary key value
+
+        Raises:
+            EntityDoesNotExistError: if parent or child do not exist
+        """
+        utils.unlink_child(self.session, entrypoint, queue, "queue")
+
+    def unlink_queues(
+        self,
+        entrypoint: EntryPoint | int,
+    ) -> Sequence[int]:
+        """
+        "Unlink" the given child resource from the given entrypoint.  This
+        only severs the relationship; it does not delete either resource.  If
+        there is no parent/child relationship, this is a no-op.
+
+        Args:
+            experiment: An entrypoint or resource_id integer primary key value
+            child: A queue or plugin or resource_id integer primary key value
+
+        Raises:
+            EntityDoesNotExistError: if parent or child do not exist
+        """
+        return utils.unlink_children(self.session, entrypoint, "queue")
 
     def get_plugins(
         self,
@@ -434,12 +474,13 @@ class EntrypointRepository:
             Plugin,
             entrypoint,
             plugins,
+            "plugin",
         )
 
-    def unlink_child(
+    def unlink_plugin(
         self,
         entrypoint: EntryPoint | int,
-        child: Queue | Plugin | int,
+        plugin: Plugin | int,
     ):
         """
         "Unlink" the given child resource from the given entrypoint.  This
@@ -453,26 +494,7 @@ class EntrypointRepository:
         Raises:
             EntityDoesNotExistError: if parent or child do not exist
         """
-        # TODO: need to verify correct resource type is being unlinked
-        utils.unlink_child(self.session, entrypoint, child)
-
-    def unlink_queues(
-        self,
-        entrypoint: EntryPoint | int,
-    ) -> Sequence[int]:
-        """
-        "Unlink" the given child resource from the given entrypoint.  This
-        only severs the relationship; it does not delete either resource.  If
-        there is no parent/child relationship, this is a no-op.
-
-        Args:
-            experiment: An entrypoint or resource_id integer primary key value
-            child: A queue or plugin or resource_id integer primary key value
-
-        Raises:
-            EntityDoesNotExistError: if parent or child do not exist
-        """
-        return utils.unlink_children(self.session, entrypoint, "queue")
+        utils.unlink_child(self.session, entrypoint, plugin, "plugin")
 
     def delete(self, entrypoint: EntryPoint | int) -> None:
         """

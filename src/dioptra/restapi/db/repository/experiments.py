@@ -256,6 +256,7 @@ class ExperimentRepository:
             EntryPoint,
             experiment,
             children,
+            "entry_point",
         )
 
         return child_snaps
@@ -302,7 +303,7 @@ class ExperimentRepository:
         Raises:
             EntityDoesNotExistError: if parent or child do not exist
         """
-        utils.unlink_child(self.session, experiment, entrypoint)
+        utils.unlink_child(self.session, experiment, entrypoint, "entry_point")
 
     def delete(self, experiment: Experiment | int) -> None:
         """

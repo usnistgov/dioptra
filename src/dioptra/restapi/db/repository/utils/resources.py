@@ -242,6 +242,7 @@ def get_one_latest_snapshot(
 def get_one_snapshot(
     session: CompatibleSession[S],
     snap_class: typing.Type[ResourceT],
+    resource: int | m.Resource,
     snapshot: int | m.ResourceSnapshot,
     deletion_policy: DeletionPolicy,
 ) -> ResourceT:
@@ -253,8 +254,8 @@ def get_one_snapshot(
         session: An SQLAlchemy session
         snap_class: A ResourceSnapshot subclass, which represents the type
             of resource to get
-        resource: A resource, resource snapshot, or integer resource ID,
-            for which to obtain the latest snapshot
+        resource: A resource or integer resource ID
+        snapshot: A resource snapshot or integer snapshot ID
         deletion_policy: Whether to look at deleted resources, non-deleted
             resources, or all resources
 
@@ -269,12 +270,16 @@ def get_one_snapshot(
         EntityDeletedError: if the resource is deleted, but policy was to find
             a non-deleted resource
     """
+    resource_id = get_resource_id(resource)
     snapshot_id = get_resource_snapshot_id(snapshot)
 
     stmt = (
         sa.select(snap_class)
         .join(m.Resource)
-        .where(snap_class.resource_snapshot_id == snapshot_id)
+        .where(
+            m.Resource.resource_id == resource_id,
+            snap_class.resource_snapshot_id == snapshot_id,
+        )
     )
 
     snapshot_obj = session.scalar(stmt)
@@ -524,6 +529,7 @@ def set_resource_children(
     child_class: typing.Type[ResourceT],
     parent: m.Resource | m.ResourceSnapshot | int,
     new_children: Iterable[m.Resource | ResourceT | int],
+    child_resource_type: str,
 ) -> Sequence[ResourceT]:
     """
     Set the children of the given resource to the given children.  This replaces all
@@ -564,13 +570,13 @@ def set_resource_children(
         DeletionPolicy.ANY,
     )
 
-    # TODO: better way to access resource type?
-    #       pass it in? wait for EntityType feature to be implemented?
-    resource_type = child_class.__mapper_args__["polymorphic_identity"]
-    keep = [child for child in parent.children if child.resource_type != resource_type]
+    # TODO: class and resource_type will be encapsulated in EntityType in the future
+    children_to_keep = [
+        child for child in parent.children if child.resource_type != child_resource_type
+    ]
 
     parent.children.clear()
-    parent.children.extend(keep)
+    parent.children.extend(children_to_keep)
     parent.children.extend(child.resource for child in child_snaps)
 
     return child_snaps
@@ -650,6 +656,7 @@ def unlink_child(
     session: CompatibleSession[S],
     parent: m.Resource | m.ResourceSnapshot | int,
     child: m.Resource | m.ResourceSnapshot | int,
+    child_resource_type: str,
 ):
     """
     "Unlink" the given child from the given parent.  This only severs the
@@ -681,7 +688,7 @@ def unlink_child(
     child_id = get_resource_id(child)
 
     for idx, child in enumerate(parent.children):
-        if child.resource_id == child_id:
+        if child.resource_id == child_id and child.resource_type == child_resource_type:
             del parent.children[idx]
             break
 
