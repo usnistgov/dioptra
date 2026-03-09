@@ -286,6 +286,7 @@ class SortByGetQueryParametersSchema(Schema):
         load_default=False,
     )
 
+
 class ShowDeletedQueryParametersSchema(Schema):
     """A schema for specifying whether to show deleted resources."""
 

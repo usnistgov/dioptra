@@ -132,6 +132,6 @@ class ExperimentGetQueryParameters(
     GroupIdQueryParametersSchema,
     SearchQueryParametersSchema,
     SortByGetQueryParametersSchema,
-    ShowDeletedQueryParametersSchema
+    ShowDeletedQueryParametersSchema,
 ):
     """The query parameters for the GET method of the /experiments endpoint."""

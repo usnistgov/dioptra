@@ -181,7 +181,9 @@ class ExperimentService(object):
                 entrypoints=list(
                     self._uow.experiment_repo.get_entrypoints(
                         experiment,
-                        DeletionPolicy.NOT_DELETED if not show_deleted else DeletionPolicy.ANY,
+                        DeletionPolicy.NOT_DELETED
+                        if not show_deleted
+                        else DeletionPolicy.ANY,
                     )
                 ),
                 queue=None,
@@ -261,7 +263,9 @@ class ExperimentIdService(object):
         entrypoints = self._uow.experiment_repo.get_entrypoints(
             experiment,
             # does this make sense?
-            DeletionPolicy.ANY if experiment.resource.is_deleted else DeletionPolicy.NOT_DELETED,
+            DeletionPolicy.ANY
+            if experiment.resource.is_deleted
+            else DeletionPolicy.NOT_DELETED,
         )
 
         has_draft = self._uow.drafts_repo.has_draft_modification(

@@ -598,7 +598,7 @@ class ExperimentsCollectionClient(CollectionClient[T]):
         sort_by: str | None = None,
         descending: bool | None = None,
         search: str | None = None,
-        show_deleted: bool | None = None
+        show_deleted: bool | None = None,
     ) -> T:
         """Get a list of experiments.
 

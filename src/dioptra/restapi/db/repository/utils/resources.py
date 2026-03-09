@@ -267,7 +267,13 @@ def get_latest_child_snapshots(
         EntityDeletedError: if parent is deleted
     """
 
-    assert_resource_exists(session, parent, deletion_policy=DeletionPolicy.NOT_DELETED if deletion_policy is not DeletionPolicy.ANY else DeletionPolicy.ANY)
+    assert_resource_exists(
+        session,
+        parent,
+        deletion_policy=DeletionPolicy.NOT_DELETED
+        if deletion_policy is not DeletionPolicy.ANY
+        else DeletionPolicy.ANY,
+    )
 
     child_resources: Sequence[m.Resource | int]
     if isinstance(parent, (m.Resource, m.ResourceSnapshot)):
