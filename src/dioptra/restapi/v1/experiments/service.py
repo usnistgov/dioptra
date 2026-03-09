@@ -170,7 +170,7 @@ class ExperimentService(object):
                 page_length,
                 sort_by_string,
                 descending,
-                DeletionPolicy.NOT_DELETED if not show_deleted else DeletionPolicy.ANY,
+                DeletionPolicy.ANY if show_deleted else DeletionPolicy.NOT_DELETED,
             )
         )
 
@@ -262,10 +262,7 @@ class ExperimentIdService(object):
 
         entrypoints = self._uow.experiment_repo.get_entrypoints(
             experiment,
-            # does this make sense?
-            DeletionPolicy.ANY
-            if experiment.resource.is_deleted
-            else DeletionPolicy.NOT_DELETED,
+            DeletionPolicy.ANY,
         )
 
         has_draft = self._uow.drafts_repo.has_draft_modification(
