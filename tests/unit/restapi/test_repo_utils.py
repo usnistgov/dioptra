@@ -22,6 +22,7 @@ import pytest
 
 import dioptra.restapi.db.models as models
 import dioptra.restapi.db.repository.utils as utils
+from dioptra.restapi.db.repository.utils.common import DeletionPolicy
 import tests.unit.restapi.lib.helpers as helpers
 from dioptra.restapi.db.models.constants import group_lock_types, resource_lock_types
 from dioptra.restapi.db.repository.queues import QueueRepository
@@ -1354,12 +1355,23 @@ def test_get_latest_child_snapshots_parent_deleted(
     db_session.add_all((exp, lock))
     db_session.commit()
 
-    utils.get_latest_child_snapshots(
-        db_session,
-        models.Queue,
-        exp,
-        deletion_policy,
-    )
+
+    if deletion_policy is not DeletionPolicy.ANY:
+        with pytest.raises(EntityDeletedError):
+            utils.get_latest_child_snapshots(
+                db_session,
+                models.Queue,
+                exp,
+                deletion_policy,
+            )
+    else:
+        utils.get_latest_child_snapshots(
+                db_session,
+                models.Queue,
+                exp,
+                deletion_policy,
+        )
+
 
 
 def test_get_snapshot_by_name(
