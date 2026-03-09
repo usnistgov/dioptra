@@ -260,7 +260,8 @@ class ExperimentIdService(object):
 
         entrypoints = self._uow.experiment_repo.get_entrypoints(
             experiment,
-            DeletionPolicy.ANY,
+            # does this make sense?
+            DeletionPolicy.ANY if experiment.resource.is_deleted else DeletionPolicy.NOT_DELETED,
         )
 
         has_draft = self._uow.drafts_repo.has_draft_modification(

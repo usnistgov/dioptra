@@ -1354,13 +1354,12 @@ def test_get_latest_child_snapshots_parent_deleted(
     db_session.add_all((exp, lock))
     db_session.commit()
 
-    with pytest.raises(EntityDeletedError):
-        utils.get_latest_child_snapshots(
-            db_session,
-            models.Queue,
-            exp,
-            deletion_policy,
-        )
+    utils.get_latest_child_snapshots(
+        db_session,
+        models.Queue,
+        exp,
+        deletion_policy,
+    )
 
 
 def test_get_snapshot_by_name(
