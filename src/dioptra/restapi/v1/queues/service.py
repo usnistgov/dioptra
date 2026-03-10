@@ -106,6 +106,7 @@ class QueueService(object):
         page_length: int,
         sort_by_string: str,
         descending: bool,
+        show_deleted: bool = False,
         **kwargs,
     ) -> tuple[list[utils.QueueDict], int]:
         """Fetch a list of queues, optionally filtering by search string and paging
@@ -139,7 +140,7 @@ class QueueService(object):
             page_length,
             sort_by_string,
             descending,
-            DeletionPolicy.NOT_DELETED,
+            DeletionPolicy.ANY if show_deleted else DeletionPolicy.NOT_DELETED,
         )
 
         queues_dict: dict[int, utils.QueueDict] = {
@@ -200,12 +201,6 @@ class QueueIdService(object):
 
         if not queue:
             if error_if_not_found:
-                raise EntityDoesNotExistError("queue", resource_id=queue_id)
-            else:
-                return None
-        elif queue.resource.is_deleted:
-            if error_if_not_found:
-                # treat "deleted" as if "not found"?
                 raise EntityDoesNotExistError("queue", resource_id=queue_id)
             else:
                 return None

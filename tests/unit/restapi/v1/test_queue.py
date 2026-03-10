@@ -199,7 +199,7 @@ def assert_queue_name_matches_expected_name(
     )
 
 
-def assert_queue_is_not_found(
+def assert_queue_is_deleted(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     queue_id: int,
 ) -> None:
@@ -213,7 +213,7 @@ def assert_queue_is_not_found(
         AssertionError: If the response status code is not 404.
     """
     response = dioptra_client.queues.get_by_id(queue_id)
-    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response.status_code == HTTPStatus.OK and response.json()["deleted"]
 
 
 def assert_queue_is_not_associated_with_entrypoint(
@@ -497,7 +497,9 @@ def test_delete_queue_by_id(
     queue_to_delete = entrypoint["queues"][0]
 
     dioptra_client.queues.delete_by_id(queue_to_delete["id"])
-    assert_queue_is_not_found(dioptra_client, queue_id=queue_to_delete["id"])
+    assert_queue_is_deleted(dioptra_client, queue_id=queue_to_delete["id"])
+
+    # note: this should probably change when entrypoints are changed to repo
     assert_queue_is_not_associated_with_entrypoint(
         dioptra_client, entrypoint_id=entrypoint["id"], queue_id=queue_to_delete["id"]
     )

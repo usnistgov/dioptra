@@ -144,6 +144,21 @@ def assert_plugin_parameter_type_is_not_found(
     response = dioptra_client.plugin_parameter_types.get_by_id(id)
     assert response.status_code == HTTPStatus.NOT_FOUND
 
+def assert_plugin_parameter_type_is_deleted(
+    dioptra_client: DioptraClient[DioptraResponseProtocol], id: int
+) -> None:
+    """Assert that a plugin parameter type is not found.
+
+    Args:
+        client: The Flask test client.
+        id: The id of the plugin parameter type to retrieve.
+
+    Raises:
+        AssertionError: If the response status code is not 404.
+    """
+    response = dioptra_client.plugin_parameter_types.get_by_id(id)
+    assert response.status_code == HTTPStatus.OK and response.json()["deleted"]
+
 
 def assert_cannot_rename_invalid_plugin_parameter_type(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
@@ -607,7 +622,7 @@ def test_delete_plugin_parameter_type(
         dioptra_client, id=plugin_param_type1["id"], expected=plugin_param_type1
     )
     dioptra_client.plugin_parameter_types.delete_by_id(plugin_param_type1["id"])
-    assert_plugin_parameter_type_is_not_found(dioptra_client, plugin_param_type1["id"])
+    assert_plugin_parameter_type_is_deleted(dioptra_client, plugin_param_type1["id"])
 
 
 def test_modify_plugin_parameter_type(

@@ -214,7 +214,7 @@ def assert_experiment_name_matches_expected_name(
     )
 
 
-def assert_experiment_is_not_found(
+def assert_experiment_is_deleted(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     experiment_id: int,
 ) -> None:
@@ -509,7 +509,7 @@ def test_delete_experiment_by_id(
     """
     experiment_to_delete = registered_experiments["experiment3"]
     dioptra_client.experiments.delete_by_id(experiment_to_delete["id"])
-    assert_experiment_is_not_found(
+    assert_experiment_is_deleted(
         dioptra_client, experiment_id=experiment_to_delete["id"]
     )
 
