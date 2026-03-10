@@ -64,6 +64,7 @@ CONFIG: Final[str] = "config"
 PLUGINS: Final[str] = "plugins"
 ARTIFACT_PLUGINS: Final[str] = "artifactPlugins"
 BUNDLE: Final[str] = "bundle"
+DYNAMIC_GLOBAL_PARAMETERS: Final[str] = "dynamicGlobalParameters"
 
 T = TypeVar("T")
 
@@ -504,6 +505,26 @@ class EntrypointsSnapshotCollectionClient(SnapshotsSubCollectionClient[T]):
             BUNDLE,
             output_path=bundle_path,
             params=params,
+        )
+
+    def get_task_graph_global_params(
+        self, entrypoint_id: int, entrypoint_snapshot_id: int, swaps: dict[str, str]
+    ) -> T:
+        """Get the global parameters used by an entrypoint graph with specified swap tasks.
+
+        Args:
+            entrypoint_id: The entrypoint id, an integer.
+            entrypoint_snapshot_id: The entrypoint snapshot id, an integer.
+            swaps: The selected task for each swappable step in the entrypoint graph.
+
+        Returns:
+            The response from the Dioptra API.
+        """
+        return self._session.get(
+            self.build_sub_collection_url(entrypoint_id),
+            str(entrypoint_snapshot_id),
+            DYNAMIC_GLOBAL_PARAMETERS,
+            params={"swaps": ",".join([f"{k}:{v}" for k, v in swaps.items()])},
         )
 
 

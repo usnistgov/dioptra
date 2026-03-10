@@ -912,3 +912,122 @@ def mockup_mlflow(monkeypatch: MonkeyPatch) -> mock_mlflow.MockMlflowClient:
         mlflow.artifacts, "download_artifacts", mock_mlflow.download_artifacts
     )
     return mock_mlflow.MockMlflowClient()
+
+swap_plugins = {
+    "plugin1": {"filename": "plugin1.py", "tasks": {"task1": ["arg1"]}},
+    "plugin9": {
+        "filename": "plugin9.py",
+        "tasks": {
+            "task2": ["arg2", "arg3"],
+            "task4": ["arg5"],
+        },
+    },
+    "plugin13": {
+        "filename": "plugin13.py",
+        "tasks": {
+            "task10": ["arg3", "arg4"],
+        },
+    },
+}
+
+swap_entrypoints = {
+    "swap_test.yml": {
+        "name": "swap_test",
+        "params": ["global1", "global3", "global6", "global9", "global12"],
+    },
+    "no_swap_test.yml": {
+        "name": "no_swap_test",
+        "params": ["global1", "global6", "global12"],
+    },
+}
+
+@pytest.fixture
+@freeze_time("Apr 1st, 2025 11:00am", auto_tick_seconds=1)
+def registered_swap_plugins(
+    client: FlaskClient,
+    auth_account: dict[str, Any],
+    registered_plugin_parameter_types: dict[str, Any],
+) -> dict[str, Any]:
+    output = {}
+
+    string_type_response = registered_plugin_parameter_types["string"]
+
+    for plugin_name in swap_plugins:
+        plugin_response = actions.register_plugin(
+            client,
+            name=plugin_name,
+            description=f"{plugin_name} description",
+            group_id=auth_account["groups"][0]["id"],
+        ).get_json()
+
+        plugin_tasks = swap_plugins[plugin_name]["tasks"]
+
+        tasks = [
+            {
+                "name": t,
+                "inputParams": [
+                    {"name": arg, "parameterType": string_type_response["id"]}
+                    for arg in plugin_tasks[t]
+                ],
+                "outputParams": [
+                    {"name": "out", "parameterType": string_type_response["id"]}
+                ],
+            }
+            for t in plugin_tasks
+        ]
+
+        plugin_filename = swap_plugins[plugin_name]["filename"]
+
+        plugin_file_contents = ""
+
+        plugin_file_response = actions.register_plugin_file(
+            client,
+            plugin_id=plugin_response["id"],
+            description="The plugin file with tasks.",
+            filename=plugin_filename,
+            contents=plugin_file_contents,
+            function_tasks=tasks,
+        ).get_json()
+
+        output[plugin_name] = plugin_response
+    return output
+
+
+@pytest.fixture
+@freeze_time("Apr 1st, 2025 11:00am", auto_tick_seconds=1)
+def registered_swap_entrypoints(
+    client: FlaskClient,
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+    registered_swap_plugins: dict[str, Any],
+) -> dict[str, Any]:
+    output = {}
+
+    for fname in swap_entrypoints:
+        entrypoint = swap_entrypoints[fname]
+
+        with (Path(__file__).absolute().parent / "entrypoint_swaps" / fname).open(
+            "r"
+        ) as f:
+            task_graph = f.read()
+            parameters = [
+                {"name": p, "defaultValue": "default", "parameterType": "string"}
+                for p in entrypoint["params"]
+            ]
+
+        plugin_ids = [plugin["id"] for plugin in list(registered_swap_plugins.values())]
+        queue_ids = [queue["id"] for queue in list(registered_queues.values())]
+
+        entrypoint_response = actions.register_entrypoint(
+            client,
+            name=entrypoint["name"],
+            description="The first entrypoint.",
+            group_id=auth_account["groups"][0]["id"],
+            task_graph=task_graph,
+            parameters=parameters,
+            plugin_ids=plugin_ids,
+            queue_ids=queue_ids,
+        ).get_json()
+
+        output[entrypoint["name"]] = entrypoint_response
+    return output

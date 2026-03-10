@@ -53,6 +53,8 @@ from dioptra.restapi.v1.shared.tags.controller import (
 from dioptra.restapi.v1.shared.task_engine_yaml.service import TaskEngineYamlService
 
 from .schema import (
+    DynamicGlobalParametersRequestSchema,
+    DynamicGlobalParametersResponseSchema,
     EntrypointArtifactPluginMutableFieldsSchema,
     EntrypointDraftSchema,
     EntrypointGetQueryParameters,
@@ -65,6 +67,7 @@ from .schema import (
 from .service import (
     RESOURCE_TYPE,
     SEARCHABLE_FIELDS,
+    DynamicGlobalParametersService,
     EntrypointIdArtifactPluginsIdService,
     EntrypointIdArtifactPluginsService,
     EntrypointIdPluginsIdService,
@@ -706,6 +709,50 @@ class EntrypointIdQueuesId(Resource):
             request_id=str(uuid.uuid4()), resource="Entrypoint", request_type="GET"
         )
         return self._entrypoint_id_queues_id_service.delete(id, queueId, log=log)
+
+
+@api.route("/<int:id>/snapshots/<int:snapshotId>/dynamicGlobalParameters")
+@api.param("id", "ID for the Entrypoint resource.")
+@api.param("snapshotId", "Snapshot ID for the Entrypoint snapshot.")
+class DynamicGlobalParametersEntrypoint(Resource):
+    @inject
+    def __init__(
+        self,
+        dynamic_global_parameters_service: DynamicGlobalParametersService,
+        *args,
+        **kwargs,
+    ) -> None:
+        """Initialize the workflow resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            entrypoint_validate_service: An EntrypointValidateService object.
+        """
+        self._dynamic_global_parameters_service = dynamic_global_parameters_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    @accepts(query_params_schema=DynamicGlobalParametersRequestSchema, api=api)
+    @responds(schema=DynamicGlobalParametersResponseSchema, api=api)
+    def get(self, id: int, snapshotId: int):
+        """Finds the global parameters for the given entrypoint + swap choice dictionary."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="DynamicGlobalParameters",
+            request_type="GET",
+        )
+
+        entrypoint_id = id
+        entrypoint_snapshot_id = snapshotId
+        swap_choices = request.parsed_query_params["swaps"]  # type: ignore
+
+        return self._dynamic_global_parameters_service.get_params(
+            entrypoint_id=entrypoint_id,
+            entrypoint_snapshot_id=entrypoint_snapshot_id,
+            swaps=swap_choices,
+            logger=log,
+        )
 
 
 EntrypointDraftResource = generate_resource_drafts_endpoint(
