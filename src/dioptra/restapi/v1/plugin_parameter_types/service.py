@@ -172,7 +172,9 @@ class PluginParameterTypeService(object):
             page_length,
             sort_by_string,
             descending,
-            repoutils.DeletionPolicy.ANY if show_deleted else repoutils.DeletionPolicy.NOT_DELETED,
+            repoutils.DeletionPolicy.ANY
+            if show_deleted
+            else repoutils.DeletionPolicy.NOT_DELETED,
         )
 
         plugin_parameter_types_dict: dict[int, utils.PluginParameterTypeDict] = {
