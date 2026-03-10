@@ -44,10 +44,9 @@ def render_swaps_graph(graph: dict[str, Any], swaps: dict[str, str]) -> dict[str
                 task_name = task_name[1:]
 
                 try:
-
                     # this is just an alias that maps to one of 3 full task invocations
-                    # it is NOT necessarily the name of the task 
-                    task_alias = swaps[task_name] 
+                    # it is NOT necessarily the name of the task
+                    task_alias = swaps[task_name]
 
                     used_swaps.add(task_name)
 
