@@ -15,7 +15,7 @@
       />
     </div>
 
-    <nav aria-label="Breadcrumb" style="font-size: 1.2em;">
+    <nav aria-label="Breadcrumb" style="font-size: 1.2em">
       <q-breadcrumbs class="text-grey">
         <template #separator>
           <q-icon name="arrow_forward" />
@@ -37,41 +37,41 @@
 </template>
 
 <script setup>
-import { computed, inject, ref } from 'vue'
-import { useRoute } from 'vue-router'
-import * as api from '@/services/dataApi'
+import { computed, inject, ref } from "vue"
+import { useRoute } from "vue-router"
+import * as api from "@/services/dataApi"
 
 const props = defineProps({
   title: {
     type: String,
     required: true,
-    default: '',
+    default: "",
   },
   draftLabel: {
     type: String,
-    default: '',
+    default: "",
   },
 })
 
-const darkMode = inject('darkMode')
+const darkMode = inject("darkMode")
 const route = useRoute()
-const objName = ref('')
+const objName = ref("")
 
-const path = computed(() => route.path.split('/').filter(Boolean))
+const path = computed(() => route.path.split("/").filter(Boolean))
 
 const sectionLabel = computed(() => {
-  return path.value[0] === 'pluginParams' ? 'Plugin Parameters' : path.value[0]
+  return path.value[0] === "pluginParams" ? "Plugin Parameters" : path.value[0]
 })
 
 const parentObjectRoute = computed(() => {
-  if (route.name === 'pluginFile') {
+  if (route.name === "pluginFile") {
     return {
       label: objName.value,
       to: `/plugins/${route.params.id}`,
     }
   }
 
-  if (route.name === 'createExperimentJob') {
+  if (route.name === "createExperimentJob") {
     return {
       label: objName.value,
       to: `/experiments/${route.params.id}`,
@@ -84,9 +84,9 @@ const parentObjectRoute = computed(() => {
 const breadcrumbs = computed(() => {
   const crumbs = [
     {
-      label: 'Home',
-      icon: 'home',
-      to: '/',
+      label: "Home",
+      icon: "home",
+      to: "/",
     },
   ]
 
@@ -95,7 +95,7 @@ const breadcrumbs = computed(() => {
       label: sectionLabel.value,
       to: path.value[1] ? `/${path.value[0]}` : undefined,
       current: path.value.length === 1,
-      class: 'text-capitalize',
+      class: "text-capitalize",
     })
   }
 
@@ -117,18 +117,18 @@ const breadcrumbs = computed(() => {
   return crumbs
 })
 
-if (route.name === 'pluginFile') {
-  getName('plugins')
-} else if (route.name === 'createExperimentJob') {
-  getName('experiments')
+if (route.name === "pluginFile") {
+  getName("plugins")
+} else if (route.name === "createExperimentJob") {
+  getName("experiments")
 }
 
 async function getName(type) {
   try {
     const res = await api.getItem(type, route.params.id)
     objName.value = res.data.name
-  } catch(err) {
+  } catch (err) {
     console.log(err)
-  } 
+  }
 }
 </script>

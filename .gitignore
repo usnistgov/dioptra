@@ -436,3 +436,4 @@ mlruns/
 !tests/**/lib
 !src/**/tags
 !src/**/lib
+!src/frontend/.prettierrc.json
