@@ -1,11 +1,12 @@
 <template>
   <div>
-    <div class="row items-baseline q-mb-sm">
+    <div class="q-mb-sm">
       <h1 class="q-mb-none">
         {{ title }}
       </h1>
+
       <q-badge
-        v-if="props.draftLabel"
+        v-if="draftLabel"
         :label="draftLabel"
         outline
         color="primary"
@@ -13,35 +14,22 @@
         :class="darkMode ? 'text-white' : ''"
       />
     </div>
+
     <nav aria-label="Breadcrumb" style="font-size: 1.2em;">
       <q-breadcrumbs class="text-grey">
-        <template v-slot:separator>
-          <q-icon
-            name="arrow_forward"
-          />
+        <template #separator>
+          <q-icon name="arrow_forward" />
         </template>
-        <q-breadcrumbs-el label="Home" icon="home" to="/" />
-        <q-breadcrumbs-el 
-          :label="path[0] === 'pluginParams' ? 'Plugin Parameters' : path[0]" 
-          :to="path[1] ? `/${path[0]}` : ''" 
-          :aria-current="`${path.length === 1 ? 'true' : 'false'}`"
-          class="text-capitalize"
-        />
+
         <q-breadcrumbs-el
-          v-if="route.name === 'pluginFile'"
-          :label="`${objName}`"
-          :to="`/plugins/${route.params.id}`"
-        />
-        <q-breadcrumbs-el
-          v-if="route.name === 'createExperimentJob'"
-          :label="`${objName}`"
-          :to="`/experiments/${route.params.id}`"
-        />
-        <q-breadcrumbs-el
-          v-if="path[1]"
-          :label="title"
-          aria-disabled="true"
-          aria-current="page"
+          v-for="(crumb, index) in breadcrumbs"
+          :key="`${crumb.label}-${index}`"
+          :label="crumb.label"
+          :icon="crumb.icon"
+          :to="crumb.to"
+          :aria-current="crumb.current ? 'page' : 'false'"
+          :aria-disabled="crumb.disabled ? 'true' : 'false'"
+          :class="crumb.class"
         />
       </q-breadcrumbs>
     </nav>
@@ -49,38 +37,98 @@
 </template>
 
 <script setup>
-  import { useRoute } from 'vue-router'
-  import { ref, computed, inject } from 'vue'
-  import * as api from '@/services/dataApi'
+import { computed, inject, ref } from 'vue'
+import { useRoute } from 'vue-router'
+import * as api from '@/services/dataApi'
 
-  const props = defineProps(['title', 'draftLabel'])
+const props = defineProps({
+  title: {
+    type: String,
+    required: true,
+    default: '',
+  },
+  draftLabel: {
+    type: String,
+    default: '',
+  },
+})
 
-  const darkMode = inject('darkMode')
+const darkMode = inject('darkMode')
+const route = useRoute()
+const objName = ref('')
 
-  const route = useRoute()
+const path = computed(() => route.path.split('/').filter(Boolean))
 
-  const path = computed(() => {
-    return route.path.split('/').slice(1)
-  })
+const sectionLabel = computed(() => {
+  return path.value[0] === 'pluginParams' ? 'Plugin Parameters' : path.value[0]
+})
 
-
-  const objName = ref('')
-
-  if(route.name === 'pluginFile') {
-    getName('plugins')
+const parentObjectRoute = computed(() => {
+  if (route.name === 'pluginFile') {
+    return {
+      label: objName.value,
+      to: `/plugins/${route.params.id}`,
+    }
   }
-  if(route.name === 'createExperimentJob') {
-    getName('experiments')
+
+  if (route.name === 'createExperimentJob') {
+    return {
+      label: objName.value,
+      to: `/experiments/${route.params.id}`,
+    }
   }
 
-  async function getName(type) {
-    try {
-      const res = await api.getItem(type, route.params.id)
-      objName.value = res.data.name
-    } catch(err) {
-      console.log(err)
-    } 
+  return null
+})
+
+const breadcrumbs = computed(() => {
+  const crumbs = [
+    {
+      label: 'Home',
+      icon: 'home',
+      to: '/',
+    },
+  ]
+
+  if (path.value[0]) {
+    crumbs.push({
+      label: sectionLabel.value,
+      to: path.value[1] ? `/${path.value[0]}` : undefined,
+      current: path.value.length === 1,
+      class: 'text-capitalize',
+    })
   }
 
+  if (parentObjectRoute.value?.label) {
+    crumbs.push({
+      label: parentObjectRoute.value.label,
+      to: parentObjectRoute.value.to,
+    })
+  }
 
+  if (path.value[1]) {
+    crumbs.push({
+      label: props.title,
+      current: true,
+      disabled: true,
+    })
+  }
+
+  return crumbs
+})
+
+if (route.name === 'pluginFile') {
+  getName('plugins')
+} else if (route.name === 'createExperimentJob') {
+  getName('experiments')
+}
+
+async function getName(type) {
+  try {
+    const res = await api.getItem(type, route.params.id)
+    objName.value = res.data.name
+  } catch(err) {
+    console.log(err)
+  } 
+}
 </script>
