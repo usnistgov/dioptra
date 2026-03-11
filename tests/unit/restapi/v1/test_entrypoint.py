@@ -1521,7 +1521,7 @@ test_cases_for_file["no_swap_test"] = [
 
 test_cases_for_file["swap_test"] = [
     {
-        "swaps": {"step2_choice": "task2", "step3_choice": "task1"},
+        "swaps": {"step2_choice": "taskalias1", "step3_choice": "taskalias3"},
         "globals": ["global1", "global3", "global6", "global9"],
         "sort_order": [  # it can be any of these three orders
             ["step1", "step2", "step3", "step4"],
@@ -1531,19 +1531,19 @@ test_cases_for_file["swap_test"] = [
         "active_plugins": ["plugin1", "plugin9"],
     },
     {
-        "swaps": {"step2_choice": "task2", "step3_choice": "task2"},
+        "swaps": {"step2_choice": "taskalias1", "step3_choice": "taskalias4"},
         "globals": ["global1", "global3", "global6", "global12"],
         "sort_order": [["step1", "step2", "step3", "step4"]],
         "active_plugins": ["plugin1", "plugin9"],
     },
     {
-        "swaps": {"step2_choice": "task10", "step3_choice": "task1"},
+        "swaps": {"step2_choice": "taskalias2", "step3_choice": "taskalias3"},
         "globals": ["global1", "global6", "global9"],
         "sort_order": [["step1", "step3", "step4", "step2"]],
         "active_plugins": ["plugin1", "plugin9", "plugin13"],
     },
     {
-        "swaps": {"step2_choice": "task10", "step3_choice": "task2"},
+        "swaps": {"step2_choice": "taskalias2", "step3_choice": "taskalias4"},
         "globals": ["global1", "global6", "global12"],
         "sort_order": [["step1", "step3", "step4", "step2"]],
         "active_plugins": ["plugin1", "plugin9", "plugin13"],
