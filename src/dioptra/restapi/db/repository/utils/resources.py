@@ -563,6 +563,83 @@ def unlink_child(
             break
 
 
+def unlink_parents(
+    session: CompatibleSession[S],
+    child: m.Resource | m.ResourceSnapshot | int,
+):
+    """
+    "Unlink" the all parents from the given child.  This only severs the
+    relationship; it does not delete either resource.  If there is no
+    parent/child relationship, this is a no-op.
+
+    Args:
+        session: An SQLAlchemy session
+        child: A resource, snapshot, or resource_id integer primary key
+            value
+
+    Raises:
+        EntityDoesNotExistError: if the child do not exist
+    """
+
+    child = get_one_resource(session, child, DeletionPolicy.ANY)
+    child.parents.clear()
+
+
+def get_one_resource(
+    session: CompatibleSession[S],
+    resource: m.Resource | m.ResourceSnapshot | int,
+    deletion_policy: DeletionPolicy,
+) -> m.Resource:
+    """
+    Get the a resource given the resource, resource snapshot, or resource ID; require
+    that exactly one is found, or raise an exception.
+
+    Args:
+        session: An SQLAlchemy session
+        resource: A resource or resource snapshot or integer resource ID
+        deletion_policy: Whether to look at deleted resources, non-deleted
+            resources, or all resources
+
+    Returns:
+        A resource
+
+    Raises:
+        EntityDoesNotExistError: if the resource does not exist in the database
+            (deleted or not)
+        EntityExistsError: if the resource exists and is not deleted, but
+            policy was to find a deleted resource
+        EntityDeletedError: if the resource is deleted, but policy was to find
+            a non-deleted resource
+    """
+    resource_id = get_resource_id(resource)
+
+    stmt = sa.select(m.Resource).where(m.Resource.resource_id == resource_id)
+    resource_obj = session.scalar(stmt)
+
+    if resource_obj is None:
+        existence_result = ExistenceResult.DOES_NOT_EXIST
+    elif resource_obj.is_deleted:
+        existence_result = ExistenceResult.DELETED
+    else:
+        existence_result = ExistenceResult.EXISTS
+
+    resource_type = resource_obj.resource_type if resource_obj is not None else None
+
+    # Here, we combine the passed-in deletion policy with existence, to
+    # determine the exception.
+    assert_exists(
+        deletion_policy,
+        existence_result,
+        resource_type,
+        resource_id,
+    )
+
+    # The above assert_exists() function would have raised an exception, so
+    # latest can't be None here.
+    assert resource_obj is not None
+    return resource_obj
+
+
 def delete_resource(
     session: CompatibleSession[S], resource: m.Resource | m.ResourceSnapshot | int
 ) -> None:
@@ -841,8 +918,10 @@ __all__ = [
     "get_latest_child_snapshots",
     "get_latest_snapshots",
     "get_one_latest_snapshot",
+    "get_one_resource",
     "get_resource_lock_types",
     "get_snapshot_by_name",
     "set_resource_children",
+    "unlink_parents",
     "unlink_child",
 ]
