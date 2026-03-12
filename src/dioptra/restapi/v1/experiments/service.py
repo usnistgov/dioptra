@@ -162,7 +162,9 @@ class ExperimentService(object):
 
         search_struct = parse_search_text(search_string)
 
-        deletion_policy = DeletionPolicy.ANY if show_deleted else DeletionPolicy.NOT_DELETED
+        deletion_policy = (
+            DeletionPolicy.ANY if show_deleted else DeletionPolicy.NOT_DELETED
+        )
 
         experiments, total_num_experiments = (
             self._uow.experiment_repo.get_by_filters_paged(
