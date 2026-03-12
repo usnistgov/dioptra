@@ -528,11 +528,24 @@ def test_plugin_parameter_type_show_deleted(
     expected_without = {
         registered_plugin_parameter_types["plugin_param_type1"]["id"],
         registered_plugin_parameter_types["plugin_param_type2"]["id"],
+        registered_plugin_parameter_types["string"]["id"],
+        registered_plugin_parameter_types["number"]["id"],
+        registered_plugin_parameter_types["null"]["id"],
+        registered_plugin_parameter_types["integer"]["id"],
+        registered_plugin_parameter_types["boolean"]["id"],
+        registered_plugin_parameter_types["any"]["id"],
     }
     expected_with = {
         registered_plugin_parameter_types["plugin_param_type1"]["id"],
         registered_plugin_parameter_types["plugin_param_type2"]["id"],
         registered_plugin_parameter_types["plugin_param_type3"]["id"],
+        registered_plugin_parameter_types["string"]["id"],
+        registered_plugin_parameter_types["number"]["id"],
+        registered_plugin_parameter_types["null"]["id"],
+        registered_plugin_parameter_types["integer"]["id"],
+        registered_plugin_parameter_types["boolean"]["id"],
+        registered_plugin_parameter_types["any"]["id"],
+
     }
 
     routines.run_show_deleted_tests(

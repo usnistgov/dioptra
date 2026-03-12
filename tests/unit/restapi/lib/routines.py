@@ -257,13 +257,12 @@ def run_show_deleted_tests(
     # Verify deleted resources are hidden
     response_no_show_deleted = client.get()
     assert response_no_show_deleted.status_code == HTTPStatus.OK
-    print(response_no_show_deleted.json(), flush=True)
     ids_no_show_deleted = {item["id"] for item in response_no_show_deleted.json()["data"]}
     assert ids_no_show_deleted == expected_ids_without_show_deleted
 
     # Verify that passing show_deleted == True includes the deleted resource
     response_with_show_deleted = client.get(show_deleted=True)
     assert response_with_show_deleted.status_code == HTTPStatus.OK
-    print(response_with_show_deleted.json(), flush=True)
     ids_with_show_deleted = {item["id"] for item in response_with_show_deleted.json()["data"]}
+
     assert ids_with_show_deleted == expected_ids_with_show_deleted
