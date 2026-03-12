@@ -2,7 +2,7 @@
   <PageTitle 
     title="Tags"
     resourceType="tag"
-    subtitle="Keywords for Organizing Resources"
+    subtitle="Keywords for organizing resources"
   />
   <TableComponent 
     :rows="tags"

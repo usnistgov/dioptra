@@ -1,5 +1,5 @@
 <template>
-  <PageTitle title="Experiments" resourceType="experiment" subtitle="Container for Job Runs" />
+  <PageTitle title="Experiments" resourceType="experiment" subtitle="Container for Job runs" />
   <TableComponent 
     :rows="experiments"
     :columns="columns"

@@ -2,7 +2,7 @@
   <PageTitle 
     title="Queues" 
     resourceType="queue"
-    subtitle="Job Queue Monitored by Workers"
+    subtitle="Job Queues monitored by workers"
   />
   <TableComponent 
     :rows="queues"

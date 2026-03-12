@@ -2,7 +2,7 @@
   <PageTitle 
     title="Groups"
     resourceType="group"
-    subtitle="Controls Access to Shared Resources"
+    subtitle="Controls access to shared resources"
   />
   <TableComponent 
     :rows="userGroups"
