@@ -4,6 +4,7 @@
       <PageTitle 
         :title="title"
         :draftLabel="resourceDraft ? 'Resource Draft' : 'Draft'"
+        resourceType="queue"
       />
     </div>
     <div>

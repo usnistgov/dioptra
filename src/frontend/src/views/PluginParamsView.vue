@@ -1,5 +1,9 @@
 <template>
-  <PageTitle title="Plugin Parameters" />
+  <PageTitle 
+    title="Plugin Parameters"
+    resourceType="parameterType"
+    subtitle="Used for type validation in Entrypoints and Artifacts"
+  />
   <TableComponent
     :rows="pluginParameterTypes"
     :columns="columns"

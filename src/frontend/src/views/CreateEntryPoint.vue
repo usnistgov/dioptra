@@ -3,6 +3,7 @@
     <div class="row items-center">
       <PageTitle 
         :title="route.params.id === 'new' ? 'Create Entrypoint' : copyAtEditStart?.name"
+        resourceType="entrypoint"
       />
       <q-chip
         v-if="route.params.id !== 'new'"

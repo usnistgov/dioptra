@@ -1,7 +1,7 @@
 <template>
   <div class="row items-center justify-between">
     <div class="row items-center">
-      <PageTitle :title="route.params.id === 'new' ? 'Create Queue' : copyAtEditStart?.name" />
+      <PageTitle :title="route.params.id === 'new' ? 'Create Queue' : copyAtEditStart?.name" resourceType="queue" />
         <q-chip
           v-if="route.params.id !== 'new'"
           class="q-ml-md"

@@ -1,6 +1,6 @@
 <template>
   <div class="row items-center justify-between">
-    <PageTitle :title="title" />
+    <PageTitle :title="title" resourceType="file" />
     <q-btn 
       v-if="route.params.fileId !== 'new'"
       color="negative"

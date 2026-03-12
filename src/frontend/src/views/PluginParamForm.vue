@@ -1,6 +1,6 @@
 <template>
   <div class="row items-center justify-between">
-      <PageTitle :title="route.params.id === 'new' ? 'Create Plugin Parameter' : copyAtEditStart?.name" />
+      <PageTitle :title="route.params.id === 'new' ? 'Create Plugin Parameter' : copyAtEditStart?.name" resourceType="parameterType" />
       <q-btn 
         v-if="route.params.id !== 'new'"
         color="negative"

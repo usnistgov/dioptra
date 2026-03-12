@@ -1,5 +1,5 @@
 <template>
-  <PageTitle title="Plugins" />
+  <PageTitle title="Plugins" resourceType="plugin" subtitle="Containers for Tasks and Files" />
 
   <TableComponent
     :rows="plugins"

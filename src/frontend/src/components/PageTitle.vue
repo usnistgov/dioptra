@@ -1,19 +1,34 @@
 <template>
   <div>
-    <div class="q-mb-sm">
-      <h1 class="q-mb-none">
-        {{ title }}
-      </h1>
-
-      <q-badge
-        v-if="draftLabel"
-        :label="draftLabel"
-        outline
-        color="primary"
-        class="q-ml-md"
-        :class="darkMode ? 'text-white' : ''"
+    <div class="row items-center q-mb-sm">
+      <q-avatar
+        :icon="styles.icon"
+        :color="styles.color"
+        text-color="white"
+        font-size="34px"
+        class="q-mr-sm"
       />
+      <div class="row items-baseline">
+        <h1 class="q-mb-none">
+          {{ title }}
+        </h1>
+        <q-badge
+          v-if="draftLabel"
+          :label="draftLabel"
+          outline
+          color="primary"
+          class="q-ml-md"
+          :class="darkMode ? 'text-white' : ''"
+        />
+      </div>
     </div>
+    <p
+      v-if="subtitle"
+      class="q-mb-xs text-subtitle2"
+      :class="darkMode ? 'text-grey-5' : 'text-grey-8'"
+    >
+      {{ subtitle }}
+    </p>
 
     <nav aria-label="Breadcrumb" style="font-size: 1.2em">
       <q-breadcrumbs class="text-grey">
@@ -40,6 +55,7 @@
 import { computed, inject, ref } from "vue"
 import { useRoute } from "vue-router"
 import * as api from "@/services/dataApi"
+import { getResourceStyle } from "@/services/resourceStyles"
 
 const props = defineProps({
   title: {
@@ -51,11 +67,22 @@ const props = defineProps({
     type: String,
     default: "",
   },
+  resourceType: {
+    type: String,
+    required: true,
+  },
+  subtitle: {
+    type: String,
+  },
 })
 
 const darkMode = inject("darkMode")
 const route = useRoute()
 const objName = ref("")
+
+const styles = computed(() => {
+  return getResourceStyle(props.resourceType, darkMode.value)
+})
 
 const path = computed(() => route.path.split("/").filter(Boolean))
 

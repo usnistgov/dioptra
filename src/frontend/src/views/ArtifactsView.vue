@@ -1,5 +1,5 @@
 <template>
-  <PageTitle title="Artifacts" />
+  <PageTitle title="Artifacts" resourceType="artifact" subtitle="Objects saved from Jobs" />
   <TableComponent
     :rows="artifacts"
     :columns="columns"

@@ -1,5 +1,9 @@
 <template>
-  <PageTitle title="Groups" />
+  <PageTitle 
+    title="Groups"
+    resourceType="group"
+    subtitle="Controls Access to Shared Resources"
+  />
   <TableComponent 
     :rows="userGroups"
     :columns="columns"
