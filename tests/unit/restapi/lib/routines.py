@@ -252,17 +252,18 @@ def run_show_deleted_tests(
     expected_ids_without_show_deleted: set[int],
     expected_ids_with_show_deleted: set[int],
 ) -> None:
-    # Delete the target resource.
     client.delete_by_id(delete_id)
 
-    # Verify default behavior (deleted resources are hidden).
-    response_no_deleted = client.get()
-    assert response_no_deleted.status_code == HTTPStatus.OK
-    ids_no_deleted = {item["id"] for item in response_no_deleted.json()}
-    assert ids_no_deleted == expected_ids_without_show_deleted
+    # Verify deleted resources are hidden
+    response_no_show_deleted = client.get()
+    assert response_no_show_deleted.status_code == HTTPStatus.OK
+    print(response_no_show_deleted.json(), flush=True)
+    ids_no_show_deleted = {item["id"] for item in response_no_show_deleted.json()["data"]}
+    assert ids_no_show_deleted == expected_ids_without_show_deleted
 
-    # Verify that passing ``showDeleted=True`` includes the deleted resource.
-    response_with_deleted = client.get(show_deleted=True)
-    assert response_with_deleted.status_code == HTTPStatus.OK
-    ids_with_deleted = {item["id"] for item in response_with_deleted.json()}
-    assert ids_with_deleted == expected_ids_with_show_deleted
+    # Verify that passing show_deleted == True includes the deleted resource
+    response_with_show_deleted = client.get(show_deleted=True)
+    assert response_with_show_deleted.status_code == HTTPStatus.OK
+    print(response_with_show_deleted.json(), flush=True)
+    ids_with_show_deleted = {item["id"] for item in response_with_show_deleted.json()["data"]}
+    assert ids_with_show_deleted == expected_ids_with_show_deleted
