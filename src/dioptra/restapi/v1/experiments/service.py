@@ -162,6 +162,8 @@ class ExperimentService(object):
 
         search_struct = parse_search_text(search_string)
 
+        deletion_policy = DeletionPolicy.ANY if show_deleted else DeletionPolicy.NOT_DELETED
+
         experiments, total_num_experiments = (
             self._uow.experiment_repo.get_by_filters_paged(
                 group_id,
@@ -170,7 +172,7 @@ class ExperimentService(object):
                 page_length,
                 sort_by_string,
                 descending,
-                DeletionPolicy.ANY if show_deleted else DeletionPolicy.NOT_DELETED,
+                deletion_policy,
             )
         )
 
@@ -181,9 +183,7 @@ class ExperimentService(object):
                 entrypoints=list(
                     self._uow.experiment_repo.get_entrypoints(
                         experiment,
-                        DeletionPolicy.NOT_DELETED
-                        if not show_deleted
-                        else DeletionPolicy.ANY,
+                        deletion_policy,
                     )
                 ),
                 queue=None,

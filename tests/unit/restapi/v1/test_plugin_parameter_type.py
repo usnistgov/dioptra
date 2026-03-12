@@ -223,20 +223,24 @@ def assert_cannot_rename_plugin_parameter_type_to_existing_name(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     id: int,
     existing_name: str,
-    new_structure: dict[str, Any],
-    new_description: str,
+    new_structure: dict[str, Any] | None,
+    new_description: str | None,
 ) -> None:
-    """Assert that attempting to rename a Plugin Parameter Type to an existing
-    name using the API fails.
+    """Assert that attempting to rename a Plugin Parameter Type to an existing name fails.
+
+    The API returns a ``409 CONFLICT`` when the new name collides with an existing
+    resource. ``new_structure`` and ``new_description`` are optional – passing ``None``
+    indicates that the field should be omitted from the request payload.
 
     Args:
-        client: The Flask test client.
-        id: The id of the plugin parameter type to rename.
-        existing_name: The name of an existing plugin parameter type.
-        new_structure: The new structure to assign to the plugin parameter type.
+        dioptra_client: The Dioptra client.
+        id: The ID of the plugin parameter type to rename.
+        existing_name: The name that already exists.
+        new_structure: The new structure payload (or ``None`` to leave unchanged).
+        new_description: The new description (or ``None`` to leave unchanged).
 
     Raises:
-        AssertionError: If the response status code is not 400.
+        AssertionError: If the response status code is not ``HTTPStatus.CONFLICT``.
     """
     response = dioptra_client.plugin_parameter_types.modify_by_id(
         plugin_parameter_type_id=id,
@@ -506,6 +510,39 @@ def test_plugin_parameter_type_group_query(
         dioptra_client,
         expected=plugin_param_type_expected_list,
         group_id=auth_account["groups"][0]["id"],
+    )
+
+
+def test_plugin_parameter_type_show_deleted(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_plugin_parameter_types: dict[str, Any],
+) -> None:
+    """Test that deleted types only appear when the show_deleted parameter is passed.
+
+    Given an authenticated user and registered types, this test validates the
+        following sequence of actions:
+
+    - Not passing the show_deleted parameter returns only the not deleted types
+    - The deleted types are included in the response when the show_deleted parameter is passed.
+    """
+    plugin_type_to_delete = registered_plugin_parameter_types["plugin_param_type3"]
+
+    expected_without = {
+        registered_plugin_parameter_types["plugin_param_type1"]["id"],
+        registered_plugin_parameter_types["plugin_param_type2"]["id"],
+    }
+    expected_with = {
+        registered_plugin_parameter_types["plugin_param_type1"]["id"],
+        registered_plugin_parameter_types["plugin_param_type2"]["id"],
+        registered_plugin_parameter_types["plugin_param_type3"]["id"],
+    }
+
+    routines.run_show_deleted_tests(
+        client=dioptra_client.plugin_parameter_types,
+        delete_id=plugin_type_to_delete["id"],
+        expected_ids_without_show_deleted=expected_without,
+        expected_ids_with_show_deleted=expected_with,
     )
 
 

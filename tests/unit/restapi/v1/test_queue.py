@@ -399,6 +399,39 @@ def test_queue_group_query(
     )
 
 
+def test_queue_show_deleted(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+) -> None:
+    """Test that deleted queues only appear when the show_deleted parameter is passed.
+
+    Given an authenticated user and registered queues, this test validates the
+        following sequence of actions:
+
+    - Not passing the show_deleted parameter returns only the not deleted queues
+    - The deleted queues are included in the response when the show_deleted parameter is passed.
+    """
+    queue_to_delete = registered_queues["queue3"]
+
+    expected_without = {
+        registered_queues["queue1"]["id"],
+        registered_queues["queue2"]["id"],
+    }
+    expected_with = {
+        registered_queues["queue1"]["id"],
+        registered_queues["queue2"]["id"],
+        registered_queues["queue3"]["id"],
+    }
+
+    routines.run_show_deleted_tests(
+        client=dioptra_client.queues,
+        delete_id=queue_to_delete["id"],
+        expected_ids_without_show_deleted=expected_without,
+        expected_ids_with_show_deleted=expected_with,
+    )
+
+
 def test_cannot_register_existing_queue_name(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],

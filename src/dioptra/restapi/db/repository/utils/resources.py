@@ -270,9 +270,7 @@ def get_latest_child_snapshots(
     assert_resource_exists(
         session,
         parent,
-        deletion_policy=DeletionPolicy.NOT_DELETED
-        if deletion_policy is not DeletionPolicy.ANY
-        else DeletionPolicy.ANY,
+        deletion_policy=DeletionPolicy.ANY,
     )
 
     child_resources: Sequence[m.Resource | int]

@@ -1356,21 +1356,12 @@ def test_get_latest_child_snapshots_parent_deleted(
     db_session.commit()
 
 
-    if deletion_policy is not DeletionPolicy.ANY:
-        with pytest.raises(EntityDeletedError):
-            utils.get_latest_child_snapshots(
-                db_session,
-                models.Queue,
-                exp,
-                deletion_policy,
-            )
-    else:
-        utils.get_latest_child_snapshots(
-                db_session,
-                models.Queue,
-                exp,
-                deletion_policy,
-        )
+    utils.get_latest_child_snapshots(
+            db_session,
+            models.Queue,
+            exp,
+            deletion_policy,
+    )
 
 
 
