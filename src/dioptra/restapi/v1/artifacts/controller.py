@@ -24,7 +24,7 @@ from tempfile import TemporaryDirectory
 from urllib.parse import unquote
 
 import structlog
-from flask import Response, request, send_file
+from flask import Response, after_this_request, request, send_file
 from flask_accepts import accepts, responds
 from flask_login import login_required
 from flask_restx import Namespace, Resource
@@ -252,7 +252,8 @@ class ArtifactIdContentsEndpoint(Resource):
         Returns:
             A list of the files associated with artifact.
         """
-        return _handle_artifact_contents(
+
+        contents_result, result_for_deletion = _handle_artifact_contents(
             job_run_store=self._job_run_store,
             artifact=self._artifact_id_service.get(artifact_id=id)["artifact"],
             log=LOGGER.new(
@@ -262,6 +263,14 @@ class ArtifactIdContentsEndpoint(Resource):
                 id=id,
             ),
         )
+
+        @after_this_request
+        def cleanup(response):
+            if result_for_deletion is not None:
+                result_for_deletion.unlink(missing_ok=True)
+            return response
+
+        return contents_result
 
 
 @api.route("/<int:id>/snapshots/<int:snapshotId>/contents")
@@ -301,7 +310,7 @@ class ArtifactSnapshotIdContentsEndpoint(Resource):
         Returns:
             A list of the files associated with artifact.
         """
-        return _handle_artifact_contents(
+        contents_result, result_for_deletion = _handle_artifact_contents(
             job_run_store=self._job_run_store,
             artifact=self._artifact_snapshot_id_service.get(
                 artifact_id=id, artifact_snapshot_id=snapshotId
@@ -314,6 +323,14 @@ class ArtifactSnapshotIdContentsEndpoint(Resource):
                 snapshotId=snapshotId,
             ),
         )
+
+        @after_this_request
+        def cleanup(response):
+            if result_for_deletion is not None:
+                result_for_deletion.unlink(missing_ok=True)
+            return response
+
+        return contents_result
 
 
 ArtifactSnapshotsResource = generate_resource_snapshots_endpoint(
@@ -379,10 +396,7 @@ def _handle_artifact_contents(
             download_name=result.name,
         )
 
-        # cleaning time
-        result.unlink(missing_ok=True)
-
-        return file_result
+        return file_result, result
 
 
 def _download_artifacts(
