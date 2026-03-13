@@ -47,7 +47,7 @@ class UnitOfWork(contextlib.AbstractContextManager):
         self.experiment_repo = ExperimentRepository(self.session)
         self.entrypoint_repo = EntrypointRepository(self.session)
         self.type_repo = TypeRepository(self.session)
-        self.do_commit = True
+        self._do_commit = True
 
     def commit(self) -> None:
         self.session.commit()
@@ -56,7 +56,7 @@ class UnitOfWork(contextlib.AbstractContextManager):
         self.session.rollback()
 
     def __call__(self, commit: bool = True):
-        self.do_commit = commit
+        self._do_commit = commit
         return self
 
     def __exit__(
@@ -64,16 +64,20 @@ class UnitOfWork(contextlib.AbstractContextManager):
         exc_type: Type[BaseException] | None,
         exc_value: BaseException | None,
         traceback: TracebackType | None,
-    ) -> Literal[False]:
+    ) -> None:
+        if not self._do_commit:
+            self._do_commit = True
+            return
+
         # Rollback if exiting due to a thrown exception
         if exc_type:
             self.rollback()
-        elif self.do_commit:
-            self.commit()
 
-        self.do_commit = True
+        self.commit()
 
-        return False
+        self._do_commit = True
+
+        return None
 
 
 class UnitOfWorkService:

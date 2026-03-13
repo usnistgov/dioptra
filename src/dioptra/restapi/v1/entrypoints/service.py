@@ -126,8 +126,6 @@ class EntrypointService(object):
             creator=current_user,
         )
 
-        queues = self._uow.queue_repo.get(queue_ids, DeletionPolicy.NOT_DELETED)
-
         plugins = [
             plugin["plugin"]
             for plugin in self._plugin_ids_service.get(
@@ -152,7 +150,7 @@ class EntrypointService(object):
 
         with self._uow(commit):
             self._uow.entrypoint_repo.create(new_entrypoint)
-            self._uow.entrypoint_repo.create_queues(new_entrypoint, queues=queues)
+            queues = self._uow.entrypoint_repo.create_queues(new_entrypoint, queues=queue_ids)
             self._uow.entrypoint_repo.create_plugins(new_entrypoint, plugins=plugins)
 
         log.debug(
@@ -162,7 +160,7 @@ class EntrypointService(object):
         )
 
         return utils.EntrypointDict(
-            entry_point=new_entrypoint, queues=queues, has_draft=False
+            entry_point=new_entrypoint, queues=list(queues), has_draft=False
         )
 
     def get(
@@ -214,6 +212,9 @@ class EntrypointService(object):
 
         # TODO: do we want to issue a query for every entrypoint to get child snapshots?
         #       this is how it was done in experiments
+        # James: get_many_queues that takes list of entrypoints and returns list of lists
+        #        then use zip iterator to build entrypoint_dicts
+        #        do this for experiments as well.
         entrypoint_dicts = {
             entrypoint.resource_id: utils.EntrypointDict(
                 entry_point=entrypoint,
@@ -433,6 +434,8 @@ class EntrypointSnapshotIdService(UnitOfWorkService):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("get plugin files", resource_snapshot_id=entrypoint_snapshot_id)
 
+        # change this to new repo method
+        # should not call other service methods from a service method
         entry_point = self.get(
             entrypoint_id=entrypoint_id,
             entrypoint_snapshot_id=entrypoint_snapshot_id,
@@ -573,6 +576,7 @@ class EntrypointIdPluginsService(object):
         )
 
         # make sure the ids are unique
+        # TODO: add schema post hook to dedupe
         plugin_id_set = set(plugin_ids)
         plugin_ids = list(plugin_id_set)
 

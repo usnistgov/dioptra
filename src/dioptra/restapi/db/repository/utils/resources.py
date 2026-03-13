@@ -175,6 +175,41 @@ def get_latest_snapshots(
     return snaps
 
 
+def get_one_resource(
+    session: CompatibleSession[S],
+    resource: int | m.Resource | m.ResourceSnapshot,
+    deletion_policy: DeletionPolicy,
+) -> m.Resource:
+    """
+    Get the given resource according to the given deletion_policy; require that exactly
+    one is found, or raise an exception.
+
+    Args:
+        session: An SQLAlchemy session
+        resource: A resource, resource snapshot, or integer resource ID,
+            for which to obtain the latest snapshot
+        deletion_policy: Whether to look at deleted resources, non-deleted
+            resources, or all resources
+
+    Returns:
+        A resource
+
+    Raises:
+        EntityDoesNotExistError: if the resource does not exist in the database
+            (deleted or not)
+        EntityExistsError: if the resource exists and is not deleted, but
+            policy was to find a deleted resource
+        EntityDeletedError: if the resource is deleted, but policy was to find
+            a non-deleted resource
+    """
+    assert_resource_exists(session, resource, deletion_policy)
+
+    retrieved = session.get(m.Resource, resource)
+
+    assert retrieved is not None
+    return retrieved
+
+
 def get_one_latest_snapshot(
     session: CompatibleSession[S],
     snap_class: typing.Type[ResourceT],
@@ -553,15 +588,9 @@ def set_resource_children(
         EntityDeletedError: if parent or any child is deleted
     """
 
-    assert_resource_exists(session, parent, DeletionPolicy.NOT_DELETED)
     assert_resources_exist(session, new_children, DeletionPolicy.NOT_DELETED)
 
-    if isinstance(parent, int):
-        temp = session.get(m.Resource, parent)
-        # I just checked parent exists above, so the above .get() should not
-        # return None.
-        assert temp is not None
-        parent = temp
+    parent = get_one_resource(session, parent, DeletionPolicy.NOT_DELETED)
 
     child_snaps = get_latest_snapshots(
         session,
