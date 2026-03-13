@@ -1,5 +1,9 @@
 <template>
-  <PageTitle title="Plugins" resourceType="plugin" subtitle="Containers for Tasks and Files" />
+  <PageTitle 
+    title="Plugins" 
+    resourceType="plugin" 
+    subtitle="Units of code that define Tasks" 
+  />
 
   <TableComponent
     :rows="plugins"

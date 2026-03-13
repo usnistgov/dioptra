@@ -3,7 +3,7 @@
     v-if="route.name !== 'experimentJobs'"
     :title="title"
     resourceType="job"
-    subtitle="Runs of Entrypoints"
+    subtitle="Parameterized executions of Entrypoints"
   />
   <TableComponent 
     :rows="jobs"

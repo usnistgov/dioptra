@@ -2,7 +2,7 @@
   <PageTitle 
     title="Plugin Parameters"
     resourceType="parameterType"
-    subtitle="Used for type validation in Entrypoints and Artifacts"
+    subtitle="Handle type validation in Entrypoints"
   />
   <TableComponent
     :rows="pluginParameterTypes"
