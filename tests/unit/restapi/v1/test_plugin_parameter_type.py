@@ -77,7 +77,7 @@ def assert_retrieving_plugin_parameter_type_by_id_works(
 
     Args:
         dioptra_client: The Flask test client.
-        id: The id of the plugin parameter type to retrieve.
+        id: The ID of the plugin parameter type to retrieve.
         expected: The expected response from the API.
 
     Raises:
@@ -95,7 +95,7 @@ def assert_plugin_parameter_type_name_matches_expected_name(
 
     Args:
         dioptra_client: The Flask test client.
-        id: The id of the plugin parameter type to retrieve.
+        id: The ID of the plugin parameter type to retrieve.
         expected_name: The expected name of the plugin parameter type.
 
     Raises:
@@ -118,7 +118,7 @@ def assert_deleting_plugin_parameter_type_by_id_works(
 
     Args:
         dioptra_client: The Flask test client.
-        id: The id of the plugin parameter type to delete.
+        id: The ID of the plugin parameter type to delete.
         expected: The expected response from the API.
 
     Raises:
@@ -136,7 +136,7 @@ def assert_plugin_parameter_type_is_not_found(
 
     Args:
         dioptra_client: The Flask test client.
-        id: The id of the plugin parameter type to retrieve.
+        id: The ID of the plugin parameter type to retrieve.
 
     Raises:
         AssertionError: If the response status code is not 404.
@@ -151,7 +151,7 @@ def assert_plugin_parameter_type_is_deleted(
 
     Args:
         dioptra_client: The Flask test client.
-        id: The id of the plugin parameter type to retrieve.
+        id: The ID of the plugin parameter type to retrieve.
 
     Raises:
         AssertionError: If the response status code is not 404.
@@ -170,7 +170,7 @@ def assert_cannot_rename_invalid_plugin_parameter_type(
 
     Args:
         dioptra_client: The Flask test client.
-        id: The id of the plugin parameter type to rename.
+        id: The ID of the plugin parameter type to rename.
         json_payload: The full payload to be sent to the API.
 
     Raises:
@@ -233,8 +233,8 @@ def assert_cannot_rename_plugin_parameter_type_to_existing_name(
         dioptra_client: The Dioptra client.
         id: The ID of the plugin parameter type to rename.
         existing_name: The name that already exists.
-        new_structure: The new structure payload (or ``None`` to leave unchanged).
-        new_description: The new description (or ``None`` to leave unchanged).
+        new_structure: The new structure payload (or None to leave unchanged).
+        new_description: The new description (or None to leave unchanged).
 
     Raises:
         AssertionError: If the response status code is not 400.
@@ -256,7 +256,7 @@ def assert_cannot_delete_invalid_plugin_parameter_type(
 
     Args:
         dioptra_client: The Flask test client.
-        id: The id of the plugin parameter type to delete.
+        id: The ID of the plugin parameter type to delete.
         json_payload: The full payload to be sent to the API.
 
     Raises:
