@@ -24,7 +24,7 @@ from tempfile import TemporaryDirectory
 from urllib.parse import unquote
 
 import structlog
-from flask import Response, after_this_request, request, send_file
+from flask import Response, request, send_file, after_this_request
 from flask_accepts import accepts, responds
 from flask_login import login_required
 from flask_restx import Namespace, Resource
@@ -252,7 +252,7 @@ class ArtifactIdContentsEndpoint(Resource):
         Returns:
             A list of the files associated with artifact.
         """
-
+        
         contents_result, result_for_deletion = _handle_artifact_contents(
             job_run_store=self._job_run_store,
             artifact=self._artifact_id_service.get(artifact_id=id)["artifact"],
@@ -267,7 +267,10 @@ class ArtifactIdContentsEndpoint(Resource):
         @after_this_request
         def cleanup(response):
             if result_for_deletion is not None:
-                result_for_deletion.unlink(missing_ok=True)
+                try: 
+                    result_for_deletion.unlink(missing_ok=True)
+                except Exception as e:
+                    pass
             return response
 
         return contents_result
@@ -324,6 +327,7 @@ class ArtifactSnapshotIdContentsEndpoint(Resource):
             ),
         )
 
+
         @after_this_request
         def cleanup(response):
             if result_for_deletion is not None:
@@ -331,6 +335,7 @@ class ArtifactSnapshotIdContentsEndpoint(Resource):
             return response
 
         return contents_result
+    
 
 
 ArtifactSnapshotsResource = generate_resource_snapshots_endpoint(
@@ -395,8 +400,9 @@ def _handle_artifact_contents(
             as_attachment=False,
             download_name=result.name,
         )
-
+        
         return file_result, result
+    
 
 
 def _download_artifacts(
