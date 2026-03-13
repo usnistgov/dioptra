@@ -371,12 +371,18 @@ def _handle_artifact_contents(
             path=path,
             file_type=file_type,
         )
-        return send_file(
+
+        file_result = send_file(
             path_or_file=result,
             mimetype=mimetype,
             as_attachment=False,
             download_name=result.name,
         )
+
+        # cleaning time
+        result.unlink(missing_ok=True)
+
+        return file_result
 
 
 def _download_artifacts(

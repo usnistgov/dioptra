@@ -516,6 +516,7 @@ def test_get_contents(
         artifact_id=existing_artifact["id"]
     )
     assert contents.exists()
+    contents.unlink(missing_ok=True)
 
 
 def test_get_file_listing(
