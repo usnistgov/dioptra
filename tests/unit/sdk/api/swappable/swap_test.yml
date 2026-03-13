@@ -12,7 +12,19 @@ step2:
       task10:
         arg3: $step3.out
         arg4: $step4
-
+    taskalias5:
+      task: task11
+      kwargs:
+        arg3: $step3.out
+        arg4: $step4
+    taskalias6:
+      task: task12
+      args: [$step3.out]
+      kwargs:
+        arg4: $step4
+    taskalias7:
+      task13: [$step3.out, $step4]
+      
 step4:
   task4:
     arg5: $global6

@@ -92,8 +92,9 @@ transformed:
         max_iter: $max_iter
         patch_shape: $patch_shape
     attach:
-      augment_patch:
-        data_flow: $dataset.testing
+      task: augment_patch
+      args: [$dataset.testing]
+      kwargs:
         adv_data_dir: $output_dir
         patch_dir: $patch_dir
         model: $model
