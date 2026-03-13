@@ -99,6 +99,7 @@ class PluginParameterTypeEndpoint(Resource):
         page_length = parsed_query_params["page_length"]
         sort_by_string = parsed_query_params["sort_by"]
         descending = parsed_query_params["descending"]
+        show_deleted = parsed_query_params["show_deleted"]
 
         (
             plugin_parameter_types,
@@ -111,6 +112,7 @@ class PluginParameterTypeEndpoint(Resource):
             sort_by_string=sort_by_string,
             descending=descending,
             log=log,
+            show_deleted=show_deleted,
         )
         return utils.build_paging_envelope(
             V1_PLUGIN_PARAMETER_TYPES_ROUTE,

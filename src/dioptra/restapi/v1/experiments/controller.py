@@ -117,6 +117,7 @@ class ExperimentEndpoint(Resource):
         page_length = parsed_query_params["page_length"]
         sort_by_string = parsed_query_params["sort_by"]
         descending = parsed_query_params["descending"]
+        show_deleted = parsed_query_params["show_deleted"]
 
         experiments, total_num_experiments = self._experiment_service.get(
             group_id=group_id,
@@ -126,6 +127,7 @@ class ExperimentEndpoint(Resource):
             sort_by_string=sort_by_string,
             descending=descending,
             log=log,
+            show_deleted=show_deleted,
         )
         return utils.build_paging_envelope(
             "experiments",

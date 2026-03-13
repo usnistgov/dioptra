@@ -883,6 +883,7 @@ def test_register_plugin_file(
                         "group": string_parameter_type["group"],
                         "url": string_url,
                         "name": string_parameter_type["name"],
+                        "deleted": False,
                     },
                     "required": True,
                 },
@@ -893,6 +894,7 @@ def test_register_plugin_file(
                         "group": string_parameter_type["group"],
                         "url": string_url,
                         "name": string_parameter_type["name"],
+                        "deleted": False,
                     },
                     "required": True,
                 },
@@ -905,6 +907,7 @@ def test_register_plugin_file(
                         "group": string_parameter_type["group"],
                         "url": string_url,
                         "name": string_parameter_type["name"],
+                        "deleted": False,
                     },
                 }
             ],

@@ -183,6 +183,7 @@ class QueuesCollectionClient(CollectionClient[T]):
         sort_by: str | None = None,
         descending: bool | None = None,
         search: str | None = None,
+        show_deleted: bool | None = None,
     ) -> T:
         """Get a list of queues.
 
@@ -218,6 +219,9 @@ class QueuesCollectionClient(CollectionClient[T]):
 
         if group_id is not None:
             params["groupId"] = group_id
+
+        if show_deleted is not None:
+            params["showDeleted"] = show_deleted
 
         return self._session.get(
             self.url,

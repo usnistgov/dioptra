@@ -214,7 +214,7 @@ def assert_experiment_name_matches_expected_name(
     )
 
 
-def assert_experiment_is_not_found(
+def assert_experiment_is_deleted(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     experiment_id: int,
 ) -> None:
@@ -228,7 +228,7 @@ def assert_experiment_is_not_found(
         AssertionError: If the response status code is not 404.
     """
     response = dioptra_client.experiments.get_by_id(experiment_id)
-    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response.status_code == HTTPStatus.OK and response.json()["deleted"]
 
 
 def assert_retrieving_all_entrypoints_for_experiment_works(
@@ -463,6 +463,39 @@ def test_experiment_get_by_id(
     )
 
 
+def test_experiment_show_deleted(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_experiments: dict[str, Any],
+) -> None:
+    """Test that deleted experiments only appear when the show_deleted parameter is passed.
+
+    Given an authenticated user and registered experiments, this test validates the
+        following sequence of actions:
+
+    - Not passing the show_deleted parameter returns only the not deleted experiments
+    - The deleted experiments are included in the response when the show_deleted parameter is passed.
+    """
+    experiment_to_delete = registered_experiments["experiment3"]
+    # Expected ID sets
+    expected_without = {
+        registered_experiments["experiment1"]["id"],
+        registered_experiments["experiment2"]["id"],
+    }
+    expected_with = {
+        registered_experiments["experiment1"]["id"],
+        registered_experiments["experiment2"]["id"],
+        registered_experiments["experiment3"]["id"],
+    }
+    # Use the shared routine to perform the test.
+    routines.run_show_deleted_tests(
+        client=dioptra_client.experiments,
+        delete_id=experiment_to_delete["id"],
+        expected_ids_without_show_deleted=expected_without,
+        expected_ids_with_show_deleted=expected_with,
+    )
+
+
 def test_rename_experiment(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
@@ -509,7 +542,7 @@ def test_delete_experiment_by_id(
     """
     experiment_to_delete = registered_experiments["experiment3"]
     dioptra_client.experiments.delete_by_id(experiment_to_delete["id"])
-    assert_experiment_is_not_found(
+    assert_experiment_is_deleted(
         dioptra_client, experiment_id=experiment_to_delete["id"]
     )
 

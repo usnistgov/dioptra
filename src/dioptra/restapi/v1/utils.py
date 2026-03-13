@@ -50,6 +50,7 @@ class PluginParameterTypeRefDict(TypedDict):
     group: GroupRefDict
     url: str
     name: str
+    deleted: bool
 
 
 class PluginTaskInputParameterDict(TypedDict):
@@ -172,6 +173,7 @@ def build_experiment_ref(experiment: models.Experiment) -> dict[str, Any]:
         "name": experiment.name,
         "group": build_group_ref(experiment.resource.owner),
         "url": build_url(f"{EXPERIMENTS}/{experiment.resource_id}"),
+        "deleted": experiment.resource.is_deleted,
     }
 
 
@@ -194,6 +196,7 @@ def build_experiment_snapshot_ref(experiment: models.Experiment) -> dict[str, An
             f"{EXPERIMENTS}/{experiment.resource_id}/snapshots/"
             f"{experiment.resource_snapshot_id}"
         ),
+        "deleted": experiment.resource.is_deleted,
     }
 
 
@@ -272,6 +275,7 @@ def build_plugin_ref(plugin: models.Plugin) -> dict[str, Any]:
         "name": plugin.name,
         "group": build_group_ref(plugin.resource.owner),
         "url": build_url(f"{PLUGINS}/{plugin.resource_id}"),
+        "deleted": plugin.resource.is_deleted,
     }
 
 
@@ -330,6 +334,7 @@ def build_plugin_snapshot_ref(plugin: models.Plugin) -> dict[str, Any]:
         "url": build_url(
             f"{PLUGINS}/{plugin.resource_id}/snapshots/{plugin.resource_snapshot_id}"
         ),
+        "deleted": plugin.resource.is_deleted,
     }
 
 
@@ -353,6 +358,7 @@ def build_plugin_file_ref(plugin_file: models.PluginFile) -> dict[str, Any]:
             f"{PLUGINS}/{plugin_id}/{PLUGIN_FILES}/{plugin_file.resource_id}"
         ),
         "tasks": build_plugin_task(plugin_file.tasks),
+        "deleted": plugin_file.resource.is_deleted,
     }
 
 
@@ -370,6 +376,7 @@ def build_entrypoint_ref(entrypoint: models.EntryPoint) -> dict[str, Any]:
         "name": entrypoint.name,
         "group": build_group_ref(entrypoint.resource.owner),
         "url": build_url(f"{ENTRYPOINTS}/{entrypoint.resource_id}"),
+        "deleted": entrypoint.resource.is_deleted,
     }
 
 
@@ -391,6 +398,7 @@ def build_entrypoint_snapshot_ref(entrypoint: models.EntryPoint) -> dict[str, An
             f"{ENTRYPOINTS}/{entrypoint.resource_id}"
             f"/snapshots/{entrypoint.resource_snapshot_id}"
         ),
+        "deleted": entrypoint.resource.is_deleted,
     }
 
 
@@ -408,6 +416,7 @@ def build_model_ref(model: models.MlModel) -> dict[str, Any]:
         "name": model.name,
         "group": build_group_ref(model.resource.owner),
         "url": f"{MODELS}/{model.resource_id}",
+        "deleted": model.resource.is_deleted,
     }
 
 
@@ -425,6 +434,7 @@ def build_queue_ref(queue: models.Queue) -> dict[str, Any]:
         "name": queue.name,
         "group": build_group_ref(queue.resource.owner),
         "url": build_url(f"{QUEUES}/{queue.resource_id}"),
+        "deleted": queue.resource.is_deleted,
     }
 
 
@@ -445,6 +455,7 @@ def build_queue_snapshot_ref(queue: models.Queue) -> dict[str, Any]:
         "url": build_url(
             f"{QUEUES}/{queue.resource_id}/snapshots/{queue.resource_snapshot_id}"
         ),
+        "deleted": queue.resource.is_deleted,
     }
 
 
@@ -465,6 +476,7 @@ def build_plugin_parameter_type_ref(
         "name": plugin_param_type.name,
         "group": build_group_ref(plugin_param_type.resource.owner),
         "url": build_url(f"{PLUGIN_PARAMETER_TYPES}/{plugin_param_type.resource_id}"),
+        "deleted": plugin_param_type.resource.is_deleted,
     }
 
 
@@ -481,6 +493,7 @@ def build_artifact_ref(artifact: models.Artifact) -> dict[str, Any]:
         "id": artifact.resource_id,
         "group": build_group_ref(artifact.resource.owner),
         "url": build_url(f"{ARTIFACTS}/{artifact.resource_id}"),
+        "deleted": artifact.resource.is_deleted,
     }
 
 

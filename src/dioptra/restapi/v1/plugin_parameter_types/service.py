@@ -136,6 +136,7 @@ class PluginParameterTypeService(object):
         page_length: int,
         sort_by_string: str,
         descending: bool,
+        show_deleted: bool = False,
         **kwargs,
     ) -> tuple[list[utils.PluginParameterTypeDict], int]:
         """Fetch a list of plugin parameter types, optionally filtering by
@@ -171,7 +172,9 @@ class PluginParameterTypeService(object):
             page_length,
             sort_by_string,
             descending,
-            repoutils.DeletionPolicy.NOT_DELETED,
+            repoutils.DeletionPolicy.ANY
+            if show_deleted
+            else repoutils.DeletionPolicy.NOT_DELETED,
         )
 
         plugin_parameter_types_dict: dict[int, utils.PluginParameterTypeDict] = {
@@ -238,7 +241,7 @@ class PluginParameterTypeIdService(object):
         )
 
         plugin_parameter_type = self._uow.type_repo.get(
-            plugin_parameter_type_id, repoutils.DeletionPolicy.NOT_DELETED
+            plugin_parameter_type_id, repoutils.DeletionPolicy.ANY
         )
 
         if plugin_parameter_type is None:

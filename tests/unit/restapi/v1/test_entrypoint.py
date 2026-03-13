@@ -264,7 +264,7 @@ def assert_entrypoint_is_not_found(
     assert response.status_code == HTTPStatus.NOT_FOUND
 
 
-def assert_entrypoint_is_not_associated_with_experiment(
+def assert_entrypoint_is_still_associated_with_experiment(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     experiment_id: int,
     entrypoint_id: int,
@@ -283,7 +283,7 @@ def assert_entrypoint_is_not_associated_with_experiment(
     response = dioptra_client.experiments.get_by_id(experiment_id)
     experiment = response.json()
     entrypoint_ids = set(entrypoint["id"] for entrypoint in experiment["entrypoints"])
-    assert response.status_code == HTTPStatus.OK and entrypoint_id not in entrypoint_ids
+    assert response.status_code == HTTPStatus.OK and entrypoint_id in entrypoint_ids
 
 
 def assert_cannot_rename_entrypoint_with_existing_name(
@@ -865,7 +865,7 @@ def test_delete_entrypoint_by_id(
     assert_entrypoint_is_not_found(
         dioptra_client, entrypoint_id=entrypoint_to_delete["id"]
     )
-    assert_entrypoint_is_not_associated_with_experiment(
+    assert_entrypoint_is_still_associated_with_experiment(
         dioptra_client,
         experiment_id=experiment["id"],
         entrypoint_id=entrypoint_to_delete["id"],

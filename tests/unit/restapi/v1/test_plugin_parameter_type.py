@@ -46,7 +46,7 @@ def assert_retrieving_plugin_parameter_types_works(
     """Assert that retrieving plugin parameter types works.
 
     Args:
-        client: The Flask test client.
+        dioptra_client: The Flask test client.
         expected: The expected response from the API.
         group_id: The group of the plugin parameter type.
         search: The search query parameters.
@@ -76,8 +76,8 @@ def assert_retrieving_plugin_parameter_type_by_id_works(
     """Assert that retrieving a plugin parameter type by id works.
 
     Args:
-        client: The Flask test client.
-        id: The id of the plugin parameter type to retrieve.
+        dioptra_client: The Flask test client.
+        id: The ID of the plugin parameter type to retrieve.
         expected: The expected response from the API.
 
     Raises:
@@ -94,8 +94,8 @@ def assert_plugin_parameter_type_name_matches_expected_name(
     """Assert that the name of a plugin parameter type matches the expected name.
 
     Args:
-        client: The Flask test client.
-        id: The id of the plugin parameter type to retrieve.
+        dioptra_client: The Flask test client.
+        id: The ID of the plugin parameter type to retrieve.
         expected_name: The expected name of the plugin parameter type.
 
     Raises:
@@ -117,8 +117,8 @@ def assert_deleting_plugin_parameter_type_by_id_works(
     """Assert that deleting a plugin parameter type by id works.
 
     Args:
-        client: The Flask test client.
-        id: The id of the plugin parameter type to delete.
+        dioptra_client: The Flask test client.
+        id: The ID of the plugin parameter type to delete.
         expected: The expected response from the API.
 
     Raises:
@@ -135,14 +135,29 @@ def assert_plugin_parameter_type_is_not_found(
     """Assert that a plugin parameter type is not found.
 
     Args:
-        client: The Flask test client.
-        id: The id of the plugin parameter type to retrieve.
+        dioptra_client: The Flask test client.
+        id: The ID of the plugin parameter type to retrieve.
 
     Raises:
         AssertionError: If the response status code is not 404.
     """
     response = dioptra_client.plugin_parameter_types.get_by_id(id)
     assert response.status_code == HTTPStatus.NOT_FOUND
+
+def assert_plugin_parameter_type_is_deleted(
+    dioptra_client: DioptraClient[DioptraResponseProtocol], id: int
+) -> None:
+    """Assert that a plugin parameter type is not found.
+
+    Args:
+        dioptra_client: The Flask test client.
+        id: The ID of the plugin parameter type to retrieve.
+
+    Raises:
+        AssertionError: If the response status code is not 404.
+    """
+    response = dioptra_client.plugin_parameter_types.get_by_id(id)
+    assert response.status_code == HTTPStatus.OK and response.json()["deleted"]
 
 
 def assert_cannot_rename_invalid_plugin_parameter_type(
@@ -154,8 +169,8 @@ def assert_cannot_rename_invalid_plugin_parameter_type(
     parameters using the API fails.
 
     Args:
-        client: The Flask test client.
-        id: The id of the plugin parameter type to rename.
+        dioptra_client: The Flask test client.
+        id: The ID of the plugin parameter type to rename.
         json_payload: The full payload to be sent to the API.
 
     Raises:
@@ -174,7 +189,7 @@ def assert_cannot_create_invalid_plugin_parameter_type(
     parameters using the API fails.
 
     Args:
-        client: The Flask test client.
+        dioptra_client: The Flask test client.
         json_payload: The full payload to be sent to the API.
 
     Raises:
@@ -191,7 +206,7 @@ def assert_cannot_create_existing_plugin_parameter_type(
     name using the API fails.
 
     Args:
-        client: The Flask test client.
+        dioptra_client: The Flask test client.
         name: The name of the plugin parameter type.
         group_id: The group of the plugin parameter type.
 
@@ -208,17 +223,18 @@ def assert_cannot_rename_plugin_parameter_type_to_existing_name(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     id: int,
     existing_name: str,
-    new_structure: dict[str, Any],
-    new_description: str,
+    new_structure: dict[str, Any] | None,
+    new_description: str | None,
 ) -> None:
     """Assert that attempting to rename a Plugin Parameter Type to an existing
     name using the API fails.
 
     Args:
-        client: The Flask test client.
-        id: The id of the plugin parameter type to rename.
-        existing_name: The name of an existing plugin parameter type.
-        new_structure: The new structure to assign to the plugin parameter type.
+        dioptra_client: The Dioptra client.
+        id: The ID of the plugin parameter type to rename.
+        existing_name: The name that already exists.
+        new_structure: The new structure payload (or None to leave unchanged).
+        new_description: The new description (or None to leave unchanged).
 
     Raises:
         AssertionError: If the response status code is not 400.
@@ -239,8 +255,8 @@ def assert_cannot_delete_invalid_plugin_parameter_type(
     parameters using the API fails.
 
     Args:
-        client: The Flask test client.
-        id: The id of the plugin parameter type to delete.
+        dioptra_client: The Flask test client.
+        id: The ID of the plugin parameter type to delete.
         json_payload: The full payload to be sent to the API.
 
     Raises:
@@ -494,6 +510,52 @@ def test_plugin_parameter_type_group_query(
     )
 
 
+def test_plugin_parameter_type_show_deleted(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_plugin_parameter_types: dict[str, Any],
+) -> None:
+    """Test that deleted types only appear when the show_deleted parameter is passed.
+
+    Given an authenticated user and registered types, this test validates the
+        following sequence of actions:
+
+    - Not passing the show_deleted parameter returns only the not deleted types
+    - The deleted types are included in the response when the show_deleted parameter is passed.
+    """
+    plugin_type_to_delete = registered_plugin_parameter_types["plugin_param_type3"]
+
+    expected_without = {
+        registered_plugin_parameter_types["plugin_param_type1"]["id"],
+        registered_plugin_parameter_types["plugin_param_type2"]["id"],
+        registered_plugin_parameter_types["string"]["id"],
+        registered_plugin_parameter_types["number"]["id"],
+        registered_plugin_parameter_types["null"]["id"],
+        registered_plugin_parameter_types["integer"]["id"],
+        registered_plugin_parameter_types["boolean"]["id"],
+        registered_plugin_parameter_types["any"]["id"],
+    }
+    expected_with = {
+        registered_plugin_parameter_types["plugin_param_type1"]["id"],
+        registered_plugin_parameter_types["plugin_param_type2"]["id"],
+        registered_plugin_parameter_types["plugin_param_type3"]["id"],
+        registered_plugin_parameter_types["string"]["id"],
+        registered_plugin_parameter_types["number"]["id"],
+        registered_plugin_parameter_types["null"]["id"],
+        registered_plugin_parameter_types["integer"]["id"],
+        registered_plugin_parameter_types["boolean"]["id"],
+        registered_plugin_parameter_types["any"]["id"],
+
+    }
+
+    routines.run_show_deleted_tests(
+        client=dioptra_client.plugin_parameter_types,
+        delete_id=plugin_type_to_delete["id"],
+        expected_ids_without_show_deleted=expected_without,
+        expected_ids_with_show_deleted=expected_with,
+    )
+
+
 def test_create_plugin_parameter_type(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
@@ -607,7 +669,7 @@ def test_delete_plugin_parameter_type(
         dioptra_client, id=plugin_param_type1["id"], expected=plugin_param_type1
     )
     dioptra_client.plugin_parameter_types.delete_by_id(plugin_param_type1["id"])
-    assert_plugin_parameter_type_is_not_found(dioptra_client, plugin_param_type1["id"])
+    assert_plugin_parameter_type_is_deleted(dioptra_client, plugin_param_type1["id"])
 
 
 def test_modify_plugin_parameter_type(

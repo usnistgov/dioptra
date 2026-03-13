@@ -199,7 +199,7 @@ def assert_queue_name_matches_expected_name(
     )
 
 
-def assert_queue_is_not_found(
+def assert_queue_is_deleted(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     queue_id: int,
 ) -> None:
@@ -213,7 +213,7 @@ def assert_queue_is_not_found(
         AssertionError: If the response status code is not 404.
     """
     response = dioptra_client.queues.get_by_id(queue_id)
-    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response.status_code == HTTPStatus.OK and response.json()["deleted"]
 
 
 def assert_queue_is_not_associated_with_entrypoint(
@@ -399,6 +399,39 @@ def test_queue_group_query(
     )
 
 
+def test_queue_show_deleted(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+) -> None:
+    """Test that deleted queues only appear when the show_deleted parameter is passed.
+
+    Given an authenticated user and registered queues, this test validates the
+        following sequence of actions:
+
+    - Not passing the show_deleted parameter returns only the not deleted queues
+    - The deleted queues are included in the response when the show_deleted parameter is passed.
+    """
+    queue_to_delete = registered_queues["queue3"]
+
+    expected_without = {
+        registered_queues["queue1"]["id"],
+        registered_queues["queue2"]["id"],
+    }
+    expected_with = {
+        registered_queues["queue1"]["id"],
+        registered_queues["queue2"]["id"],
+        registered_queues["queue3"]["id"],
+    }
+
+    routines.run_show_deleted_tests(
+        client=dioptra_client.queues,
+        delete_id=queue_to_delete["id"],
+        expected_ids_without_show_deleted=expected_without,
+        expected_ids_with_show_deleted=expected_with,
+    )
+
+
 def test_cannot_register_existing_queue_name(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
@@ -497,7 +530,9 @@ def test_delete_queue_by_id(
     queue_to_delete = entrypoint["queues"][0]
 
     dioptra_client.queues.delete_by_id(queue_to_delete["id"])
-    assert_queue_is_not_found(dioptra_client, queue_id=queue_to_delete["id"])
+    assert_queue_is_deleted(dioptra_client, queue_id=queue_to_delete["id"])
+
+    # note: this should probably change when entrypoints are changed to repo
     assert_queue_is_not_associated_with_entrypoint(
         dioptra_client, entrypoint_id=entrypoint["id"], queue_id=queue_to_delete["id"]
     )
