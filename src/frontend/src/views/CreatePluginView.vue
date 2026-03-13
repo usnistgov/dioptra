@@ -1,5 +1,5 @@
 <template>
-  <PageTitle title="Create Plugin" />
+  <PageTitle title="Create Plugin" resourceType="plugin" />
   <div :style="{ width: isMobile ? '100%' : isMedium ? '60%' : '50%' }">
     <fieldset class="q-mt-lg">
       <legend>Basic Info</legend>

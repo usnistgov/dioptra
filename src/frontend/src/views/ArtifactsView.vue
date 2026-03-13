@@ -1,5 +1,9 @@
 <template>
-  <PageTitle title="Artifacts" />
+  <PageTitle 
+    title="Artifacts" 
+    resourceType="artifact" 
+    subtitle="Stored output objects from Jobs" 
+  />
   <TableComponent
     :rows="artifacts"
     :columns="columns"

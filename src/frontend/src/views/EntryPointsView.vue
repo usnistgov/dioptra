@@ -1,6 +1,8 @@
 <template>
   <PageTitle 
     title="Entrypoints"
+    resourceType="entrypoint"
+    subtitle="Reusable workflows composed of Tasks"
   />
   <TableComponent 
     :rows="entrypoints"

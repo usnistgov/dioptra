@@ -1,7 +1,9 @@
 <template>
   <PageTitle
     v-if="route.name !== 'experimentJobs'"
-    :title="title" 
+    :title="title"
+    resourceType="job"
+    subtitle="Parameterized executions of Entrypoints"
   />
   <TableComponent 
     :rows="jobs"

@@ -1,5 +1,9 @@
 <template>
-  <PageTitle title="Queues" />
+  <PageTitle 
+    title="Queues" 
+    resourceType="queue"
+    subtitle="Manage Job execution for specific worker environments"
+  />
   <TableComponent 
     :rows="queues"
     :columns="showDrafts ? draftColumns : columns"

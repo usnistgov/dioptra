@@ -1,6 +1,6 @@
 <template>
   <div class="row items-center">
-    <PageTitle :title="`Artifact ${route.params.id}`" />
+    <PageTitle :title="`Artifact ${route.params.id}`" resourceType="artifact" />
     <q-chip
       v-if="route.params.id !== 'new'"
       class="q-ml-lg"

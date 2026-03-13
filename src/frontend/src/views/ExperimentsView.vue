@@ -1,5 +1,9 @@
 <template>
-  <PageTitle title="Experiments" />
+  <PageTitle 
+    title="Experiments" 
+    resourceType="experiment" 
+    subtitle="Containers for logically organizing Entrypoints and Jobs" 
+  />
   <TableComponent 
     :rows="experiments"
     :columns="columns"

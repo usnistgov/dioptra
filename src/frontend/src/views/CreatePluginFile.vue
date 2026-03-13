@@ -1,6 +1,6 @@
 <template>
   <div class="row items-center justify-between">
-    <PageTitle :title="title" />
+    <PageTitle :title="title" resourceType="file" />
     <q-btn 
       v-if="route.params.fileId !== 'new'"
       color="negative"
@@ -441,7 +441,7 @@
 
   onMounted(async () => {
     if(route.params.fileId === 'new') {
-      title.value = 'Create File'
+      title.value = 'Create Plugin File'
       if(store.savedForms.files[route.params.id]) {
         pluginFile.value = JSON.parse(JSON.stringify(store.savedForms.files[route.params.id]))
         copyAtEditStart.value = JSON.parse(JSON.stringify(store.savedForms.files[route.params.id]))
@@ -459,7 +459,7 @@
         tasks: res.data.tasks,
         description: res.data.description
       }
-      title.value = `Edit ${res.data.filename}`
+      title.value = res.data.filename
       copyAtEditStart.value = JSON.parse(JSON.stringify(pluginFile.value))
     } catch(err) {
       notify.error(err.response.data.message)
@@ -690,7 +690,7 @@
       await api.deleteFile(route.params.id, route.params.fileId)
       showDeleteFileDialog.value = false
       notify.success(`Successfully deleted '${pluginFile.value.filename}'`)
-      router.push(`/plugins/${route.params.id}/files`)
+      router.push(`/plugins/${route.params.id}`)
     } catch(err) {
       notify.error(err.response.data.message);
     }

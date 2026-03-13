@@ -1,5 +1,9 @@
 <template>
-  <PageTitle title="Tags" />
+  <PageTitle 
+    title="Tags"
+    resourceType="tag"
+    subtitle="Keywords for organizing resources"
+  />
   <TableComponent 
     :rows="tags"
     :columns="columns"
