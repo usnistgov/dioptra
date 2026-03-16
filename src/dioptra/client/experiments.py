@@ -410,7 +410,7 @@ class ExperimentJobsSubCollectionClient(SubCollectionClient[T]):
 
             Primarily used for testing or to reset a job that has failed, whose cause
             has been remedied, in order to re-run the job.
-            
+
         Args:
             experiment_id: The experiment id, an integer.
             job_id: The job id, an integer.
