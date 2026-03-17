@@ -22,6 +22,7 @@ registered, renamed, deleted, and locked/unlocked as expected through the REST A
 """
 
 from http import HTTPStatus
+from tempfile import TemporaryDirectory
 from typing import Any, Tuple, cast
 
 import pytest
@@ -512,11 +513,12 @@ def test_get_contents(
     - The user is able to successfully retrieve the contents for an artifact
     """
     existing_artifact = registered_artifacts["artifact1"]
-    contents = dioptra_client.artifacts.get_contents(
-        artifact_id=existing_artifact["id"]
-    )
-    assert contents.exists()
-    contents.unlink(missing_ok=True)
+    with TemporaryDirectory() as tmp_dir:
+        contents = dioptra_client.artifacts.get_contents(
+            artifact_id=existing_artifact["id"],
+            output_dir=tmp_dir
+        )
+        assert contents.exists()
 
 
 def test_get_file_listing(
