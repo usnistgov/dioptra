@@ -24,7 +24,7 @@ from tempfile import TemporaryDirectory
 from urllib.parse import unquote
 
 import structlog
-from flask import Response, after_this_request, request, send_file
+from flask import Response, request, send_file
 from flask_accepts import accepts, responds
 from flask_login import login_required
 from flask_restx import Namespace, Resource
@@ -264,6 +264,7 @@ class ArtifactIdContentsEndpoint(Resource):
             ),
         )
 
+
 @api.route("/<int:id>/snapshots/<int:snapshotId>/contents")
 @api.param("id", "Snapshot ID for the Artifact resource.")
 @api.param("snapshotId", "Snapshot ID for the Artifact resource.")
@@ -314,6 +315,7 @@ class ArtifactSnapshotIdContentsEndpoint(Resource):
                 snapshotId=snapshotId,
             ),
         )
+
 
 ArtifactSnapshotsResource = generate_resource_snapshots_endpoint(
     api=api,
@@ -377,6 +379,7 @@ def _handle_artifact_contents(
             as_attachment=False,
             download_name=result.name,
         )
+
 
 def _download_artifacts(
     job_run_store: JobRunStoreProtocol,
