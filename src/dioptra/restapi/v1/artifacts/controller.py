@@ -253,7 +253,7 @@ class ArtifactIdContentsEndpoint(Resource):
             A list of the files associated with artifact.
         """
 
-        contents_result, result_for_deletion = _handle_artifact_contents(
+        return  _handle_artifact_contents(
             job_run_store=self._job_run_store,
             artifact=self._artifact_id_service.get(artifact_id=id)["artifact"],
             log=LOGGER.new(
@@ -263,18 +263,6 @@ class ArtifactIdContentsEndpoint(Resource):
                 id=id,
             ),
         )
-
-        @after_this_request
-        def cleanup(response):
-            if result_for_deletion is not None:
-                try:
-                    result_for_deletion.unlink(missing_ok=True)
-                except Exception:
-                    pass
-            return response
-
-        return contents_result
-
 
 @api.route("/<int:id>/snapshots/<int:snapshotId>/contents")
 @api.param("id", "Snapshot ID for the Artifact resource.")
@@ -313,7 +301,7 @@ class ArtifactSnapshotIdContentsEndpoint(Resource):
         Returns:
             A list of the files associated with artifact.
         """
-        contents_result, result_for_deletion = _handle_artifact_contents(
+        return _handle_artifact_contents(
             job_run_store=self._job_run_store,
             artifact=self._artifact_snapshot_id_service.get(
                 artifact_id=id, artifact_snapshot_id=snapshotId
@@ -326,15 +314,6 @@ class ArtifactSnapshotIdContentsEndpoint(Resource):
                 snapshotId=snapshotId,
             ),
         )
-
-        @after_this_request
-        def cleanup(response):
-            if result_for_deletion is not None:
-                result_for_deletion.unlink(missing_ok=True)
-            return response
-
-        return contents_result
-
 
 ArtifactSnapshotsResource = generate_resource_snapshots_endpoint(
     api=api,
@@ -392,15 +371,12 @@ def _handle_artifact_contents(
             file_type=file_type,
         )
 
-        file_result = send_file(
+        return send_file(
             path_or_file=result,
             mimetype=mimetype,
             as_attachment=False,
             download_name=result.name,
         )
-
-        return file_result, result
-
 
 def _download_artifacts(
     job_run_store: JobRunStoreProtocol,
@@ -421,7 +397,7 @@ def _download_artifacts(
             file_type = FileTypes.TAR_GZ
 
         archive = shutil.make_archive(
-            result.name,
+            str(result / result.name),
             format=file_type.format,
             root_dir=result.parent,
             base_dir=result.name,
