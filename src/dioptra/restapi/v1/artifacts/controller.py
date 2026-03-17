@@ -253,7 +253,7 @@ class ArtifactIdContentsEndpoint(Resource):
             A list of the files associated with artifact.
         """
 
-        return  _handle_artifact_contents(
+        return _handle_artifact_contents(
             job_run_store=self._job_run_store,
             artifact=self._artifact_id_service.get(artifact_id=id)["artifact"],
             log=LOGGER.new(
@@ -335,7 +335,7 @@ ArtifactSnapshotsIdResource = generate_resource_snapshots_id_endpoint(
 
 def _handle_artifact_contents(
     job_run_store: JobRunStoreProtocol, artifact: models.Artifact, log: BoundLogger
-) -> tuple[Response, Path]:
+) -> Response:
     parsed_query_params = request.parsed_query_params  # type: ignore # noqa: F841
 
     path: str | None = parsed_query_params.get("path")
