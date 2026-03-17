@@ -44,14 +44,19 @@ def render_swaps_graph(graph: dict[str, Any], swaps: dict[str, str]) -> dict[str
                 task_name = task_name[1:]
 
                 try:
-                    swapped_name = swaps[task_name]
+                    # this is just an alias that maps to one of 3 full task invocations
+                    # it is NOT necessarily the name of the task
+                    task_alias = swaps[task_name]
+
                     used_swaps.add(task_name)
 
                     try:
-                        swap = task_defn[swapped_name]
-                        rendered_graph[step][swapped_name] = swap
+                        swap = task_defn[task_alias]
+
+                        # the name of the step should be mapped directly to the content the alias maps to
+                        rendered_graph[step] = swap
                     except KeyError:
-                        not_found_tasks.add(swapped_name)
+                        not_found_tasks.add(task_alias)
                 except KeyError:
                     not_found_swaps.add(task_name)
             else:
