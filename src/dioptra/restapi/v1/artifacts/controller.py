@@ -356,7 +356,7 @@ ArtifactSnapshotsIdResource = generate_resource_snapshots_id_endpoint(
 
 def _handle_artifact_contents(
     job_run_store: JobRunStoreProtocol, artifact: models.Artifact, log: BoundLogger
-) -> Response:
+) -> tuple[Response, Path]:
     parsed_query_params = request.parsed_query_params  # type: ignore # noqa: F841
 
     path: str | None = parsed_query_params.get("path")
