@@ -1,8 +1,12 @@
 <template>
   <div class="row items-center justify-between">
-      <PageTitle :title="route.params.id === 'new' ? 'Create Plugin Parameter' : copyAtEditStart?.name" resourceType="parameterType" />
+      <PageTitle 
+        :title="route.params.id === 'new' ? 'Create Plugin Parameter' : copyAtEditStart?.name" 
+        resourceType="parameterType"
+        :deleted="pluginParamType?.deleted" 
+      />
       <q-btn 
-        v-if="route.params.id !== 'new'"
+        v-if="route.params.id !== 'new' && !pluginParamType.deleted"
         color="negative"
         icon="sym_o_delete" 
         label="Delete Plugin Parameter" 
@@ -10,7 +14,7 @@
       />
   </div>
   <div :class="`row q-my-lg ${isMobile ? '' : 'q-gutter-x-xl'}`">
-    <fieldset :class="isMobile ? 'col-12' : 'col'">
+    <fieldset :class="isMobile ? 'col-12' : 'col'" :disabled="pluginParamType.deleted">
       <legend>Basic Info</legend>
       <q-form ref="basicInfoForm" class="q-ma-lg">
         <q-input 
@@ -20,6 +24,7 @@
           :rules="[requiredRule]"
           aria-required="true"
           class="q-mb-sm"
+          :disable="pluginParamType.deleted"
         >
           <template v-slot:before>
             <label :class="`field-label`">Name:</label>
@@ -37,6 +42,7 @@
           :rules="[requiredRule]"
           id="pluginGroup"
           class="q-mb-sm"
+          :disable="pluginParamType.deleted"
         >
           <template #before>
             <label for="pluginGroup" class="field-label">Group:</label>
@@ -48,6 +54,7 @@
           type="textarea"
           dense
           id="pluginDescription"
+          :disable="pluginParamType.deleted"
         >
           <template #before>
             <label for="pluginDescription" class="field-label">Description:</label>
@@ -55,7 +62,7 @@
         </q-input>
       </q-form>
     </fieldset>
-    <fieldset :class="isMobile ? 'col-12' : 'col'" class="q-pa-lg">
+    <fieldset :class="isMobile ? 'col-12' : 'col'" class="q-pa-lg" :disabled="pluginParamType.deleted">
       <legend>Structure</legend>
       <q-file
         v-model="uploadedFile"
@@ -66,6 +73,7 @@
         accept=".json, text/x-json"
         @update:model-value="processFile"
         class="q-mt-xs q-mb-sm"
+        :disable="pluginParamType.deleted"
       >
         <template v-slot:before>
           <label :class="`field-label`">Structure:</label>
@@ -81,6 +89,8 @@
         :showError="jsonError"
         style="min-height: 234px;"
         maxHeight="425px"
+        :readOnly="pluginParamType.deleted"
+        :style="pluginParamType.deleted ? { opacity: 0.6 } : {}"
       />
     </fieldset>
   </div>

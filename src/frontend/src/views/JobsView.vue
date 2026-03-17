@@ -21,6 +21,7 @@
       : router.push(`/jobs/${selected[0].id}`)
     )"
     :loading="isLoading"
+    :hideCreateBtn="route.name === 'experimentJobs' && experiment?.deleted"
   >
     <template #body-cell-experiment="props">
       {{ props.row.experiment.name }}
@@ -104,10 +105,12 @@
     title.value = 'Jobs'
   }
 
+  const experiment = ref()
+
   async function getExperiment() {
     try {
       const res = await api.getItem('experiments', route.params.id)
-      title.value = `${res.data.name} Jobs`
+      experiment.value = res.data
     } catch(err) {
       console.log('err = ', err)
     } 

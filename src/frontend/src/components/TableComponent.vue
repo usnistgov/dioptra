@@ -7,6 +7,7 @@
     :filter="filter"
     :selection="selection"
     v-model:selected="selected"
+    v-model:showDeleted="showDeleted"
     :row-key="props.rowKey"
     :class="'q-mt-lg'"
     flat
@@ -71,6 +72,13 @@
               <q-tooltip v-if="props.row.name.length >= 20" max-width="30vw" style="overflow-wrap: break-word">
                 {{ props.row.name }}
               </q-tooltip>
+              <q-chip
+                v-if="props.row.deleted"
+                label="Deleted"
+                outline
+                :color="`${darkMode ? 'grey-4' : 'red'}`"
+                dense
+              />
             </div>
             <div v-else-if="col.name === 'description'">
               {{ truncateString(props.row.description, 40) }}
@@ -85,7 +93,7 @@
                 color="primary" 
                 text-color="white"
                 clickable
-                @click.stop
+                @click.stop="!props.row.deleted && $emit('editTags', props.row)"
                 class="q-my-none"
               >
                 {{ tag.name.length <= 18 ? tag.name : tag.name.replace(/(.{17})..+/, "$1…") }}
@@ -94,6 +102,7 @@
                 </q-tooltip>
               </q-chip>
               <q-btn
+                v-if="props.row.deleted !== true"
                 round
                 size="xs"
                 icon="add"
@@ -111,7 +120,7 @@
               {{ col.value }}
             </div>
             <q-btn
-              v-if="col.name === 'delete'"
+              v-if="col.name === 'delete' && props.row.deleted !== true"
               round
               color="negative"
               icon="sym_o_delete"
@@ -137,6 +146,14 @@
 
     <template #top-right>
       <slot name="jobLogSlot" />
+      <q-toggle
+        v-if="showDeletedToggle"
+        v-model="showDeleted"
+        color="red"
+        label="Show Deleted"
+        class="q-mr-lg"
+        @click="refreshTable()"
+      />
       <q-btn
         v-if="!hideCreateBtn" 
         color="primary" 
@@ -206,6 +223,10 @@
     type: String,
     default: 'id'
   },
+  showDeletedToggle: {
+    type: Boolean,
+    default: false
+  }
 })
   const emit = defineEmits([
     'open', 
@@ -255,6 +276,7 @@
   const selected = defineModel('selected')
   //const showDrafts = ref(false)
   const showDrafts = defineModel('showDrafts')
+  const showDeleted = defineModel('showDeleted')
 
   function selectResource(tableProps) {
     if(props.disableSelect || props.selection !== 'multiple') return
@@ -289,8 +311,8 @@
   })
 
   function getSelectedColor(selected) {
-    if(darkMode.value && selected) return 'bg-deep-purple-10'
-    else if(selected) return 'bg-blue-grey-1'
+    // if(darkMode.value && selected) return 'bg-deep-purple-10'
+    // else if(selected) return 'bg-blue-grey-1'
   }
 
   const pagination = ref({
@@ -417,6 +439,9 @@
 }
 
 function highlightRow(rowProps) {
+  if(rowProps.row.deleted === true) {
+    return darkMode.value ? 'bg-red-6' : 'bg-red-2'
+  }
   if(props.disabledRowKeys.includes(rowProps.row[props.rowKey])) return
   if(!props.highlightRow) return
   if(!rowProps.expand) return

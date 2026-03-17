@@ -9,6 +9,8 @@
     :columns="columns"
     title="Experiments"
     v-model:selected="selected"
+    v-model:showDeleted="showDeleted"
+    :showDeletedToggle="true"
     @open="openTab => (openTab
       ? openWindow.open(`/experiments/${selected[0].id}`, '_blank')
       : router.push(`/experiments/${selected[0].id}`)
@@ -62,6 +64,7 @@
   const showDeleteDialog = ref(false)
   const showTagsDialog = ref(false)
   const editObjTags = ref({})
+  const showDeleted = ref(false)
 
   const experiments = ref([])
 
@@ -82,7 +85,7 @@
 
     try {
         const [res] = await Promise.all([
-            api.getData('experiments', pagination, false),
+            api.getData('experiments', pagination, false, showDeleted.value),
             minLoadTimePromise
         ]);
         
