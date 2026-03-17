@@ -24,40 +24,40 @@ FILES_LOCATION = "entrypoint_swaps_files"
 
 available_swaps = {
     "output/output_load_defend.yml": {
-        "load": "load_artifacts_for_job",
-        "transform_data": "augment_data"
+        "load": "load_artifact",
+        "transform_data": "augment"
     },
     "output/output_load_fgm.yml": {
-        "load": "load_artifacts_for_job",
-        "transform_data": "attack_fgm"
+        "load": "load_artifact",
+        "transform_data": "attack"
     },
     "output/output_load_patch_apply.yml": {
-        "load": "load_artifacts_for_job",
-        "transform_data": "augment_patch"
+        "load": "load_artifact",
+        "transform_data": "attach"
     },
     "output/output_load_patch_gen.yml": {
-        "load": "load_artifacts_for_job",
-        "transform_data": "attack_patch"
+        "load": "load_artifact",
+        "transform_data": "patch"
     },
     "output/output_passthrough_defend.yml": {
-        "load": "passthrough",
-        "transform_data": "augment_data"
+        "load": "ignore",
+        "transform_data": "augment"
     },
     "output/output_passthrough_fgm.yml": {
-        "load": "passthrough",
-        "transform_data": "attack_fgm"
+        "load": "ignore",
+        "transform_data": "attack"
     },
     "output/output_passthrough_passthrough.yml": {
-        "load": "passthrough",
-        "transform_data": "passthrough_dataset"
+        "load": "ignore",
+        "transform_data": "ignore"
     },
     "output/output_passthrough_patch_apply.yml": {
-        "load": "passthrough",
-        "transform_data": "augment_patch"
+        "load": "ignore",
+        "transform_data": "attach"
     },
     "output/output_passthrough_patch_gen.yml": {
-        "load": "passthrough",
-        "transform_data": "attack_patch"
+        "load": "ignore",
+        "transform_data": "patch"
     }
 }
 
@@ -109,8 +109,8 @@ def test_without_swaps(yaml_file: str):
     extra = set(["load", "transform_data", "extra"])
     with pytest.raises(Exception, match=f"Swaps {extra} were provided but not used."):
         rendered_graph = render_swaps_graph(graph, {
-            "load": "passthrough",
-            "transform_data": "attack_patch",
+            "load": "ignore",
+            "transform_data": "patch",
             "extra": "function_name"
         })
 
@@ -133,14 +133,14 @@ def test_swap_errors(yaml_file: str):
     extra = set(["extra"])
     with pytest.raises(Exception, match=f"Swaps {extra} were provided but not used."):
         rendered_graph = render_swaps_graph(graph, {
-            "load": "passthrough",
-            "transform_data": "attack_patch",
+            "load": "ignore",
+            "transform_data": "patch",
             "extra": "function_name"
         })
 
     nonexistant = set(["nonexistant"])
     with pytest.raises(Exception, match=f"Tasks {nonexistant} requested for swaps but were not found."):
         rendered_graph = render_swaps_graph(graph, {
-            "load": "passthrough",
+            "load": "ignore",
             "transform_data": "nonexistant",
         })

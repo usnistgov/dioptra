@@ -4,13 +4,27 @@ step1:
 
 step2:
   ?step2_choice:
-    task2:
-      arg2: $step1.out
-      arg3: $global3
-    task10:
-      arg3: $step3.out
-      arg4: $step4
-
+    taskalias1:
+      task2:
+        arg2: $step1.out
+        arg3: $global3
+    taskalias2:
+      task10:
+        arg3: $step3.out
+        arg4: $step4
+    taskalias5:
+      task: task11
+      kwargs:
+        arg3: $step3.out
+        arg4: $step4
+    taskalias6:
+      task: task12
+      args: [$step3.out]
+      kwargs:
+        arg4: $step4
+    taskalias7:
+      task13: [$step3.out, $step4]
+      
 step4:
   task4:
     arg5: $global6
@@ -19,8 +33,10 @@ step4:
 
 step3:
   ?step3_choice:
-    task1:
-      arg1: $global9
-    task2:
-      arg2: $global12
-      arg3: $step1.out
+    taskalias3:
+      task1:
+        arg1: $global9
+    taskalias4:
+      task2:
+        arg2: $global12
+        arg3: $step1.out

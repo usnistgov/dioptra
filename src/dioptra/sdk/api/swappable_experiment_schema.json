@@ -31,11 +31,21 @@
                 }
             },
             "patternProperties": {
-                "^\\?.*": { "$ref": "#/$defs/swap_choice" }               
+                "^\\?.*": { 
+                    "$ref": "#/$defs/swap_choice"
+                }               
             },
             "additionalProperties": false
         },
         "swap_choice": {
+            "title": "Alias for the swap choice.",
+            "type": "object",
+            "patternProperties": {
+                "^(?!\\?).*": { "$ref": "#/$defs/swap_choice_content" } 
+            },
+            "additionalProperties": false
+        },
+        "swap_choice_content": {
             "oneOf": [
                 {
                     "$ref": "#/$defs/swap_positional_invocation"
@@ -93,7 +103,8 @@
                 "^(?!\\?|dependencies$).*": { "type": "object"}
             },
             "minProperties": 1,
-            "maxProperties": 2
+            "maxProperties": 2,
+            "additionalProperties": false
         },
         "mixed_invocation": {
             "title": "Mixed position/keyword invocation",
