@@ -38,6 +38,7 @@ from dioptra.restapi.errors import (
     DioptraError,
     DraftDoesNotExistError,
     DraftResourceModificationsCommitError,
+    EmptyGraphError,
     EntityDoesNotExistError,
     GitError,
     ImportFailedError,
@@ -66,6 +67,7 @@ from dioptra.restapi.v1.plugins.service import (
     PluginNameService,
     PluginService,
 )
+from dioptra.restapi.v1.shared.swaps.service import SwapsValidationService
 from dioptra.restapi.v1.shared.io_file_service import IOFileService
 from dioptra.restapi.v1.shared.resource_service import (
     ResourceIdService,
@@ -1358,3 +1360,81 @@ class ValidateEntrypointService(object):
             return {"schema_valid": False, "schema_issues": issues}
 
         return {"schema_valid": True, "schema_issues": []}
+
+
+class ValidateSwapsGraphService(object):
+    """The service for validating swaps in an entrypoint task graph."""
+
+    @inject
+    def __init__(
+        self,
+        swaps_validation_service: SwapsValidationService,
+    ) -> None:
+        """Initialize the entrypoint service.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            swaps_validation_service: A SwapsValidationService object.
+        """
+
+        self._swaps_validation_service = swaps_validation_service
+
+    def validate(
+        self,
+        swaps_graph: str,
+        plugin_snapshot_ids: list[int],
+        **kwargs
+    ):
+        """Validate a task graph containing swaps, and provide the tasks associated with each swap.
+
+        Args:
+            group_id: The ID of the group validating the entrypoint resource.
+            swaps_graph: The swap graph for validation.
+            global_params: A list of global parameters needed for the swaps graph. 
+            plugin_snapshot_ids: A list of identifiers for the plugin snapshots that
+                will be attached to the Entrypoint resource.
+
+        Returns:
+            A dictionary containing the validation result. The dictionary contains three keys:
+                - "schema_valid": A boolean indicating whether the schema is valid.
+                - "swap_errors": A list of issues found in the schema, if any.
+                - "swaps": A list of mappings mapping swap names to 
+
+        Raises:
+            DioptraError: If two or more plugin_snapshot_ids point at the same
+                resource_id.
+        """
+
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+
+        swaps_graph_yaml = yaml.safe_load(swaps_graph)
+
+        if swaps_graph_yaml is None:
+            raise EmptyGraphError("Provided task graph is empty.")
+
+        plugin_plugin_files = views.get_plugin_plugin_files_from_plugin_snapshot_ids(
+            plugin_snapshot_ids=plugin_snapshot_ids, logger=log
+        )
+
+        lookup_dict = self._swaps_validation_service.build_task_lookup_dict(
+            plugins=plugin_plugin_files
+        )
+
+        schema_issues = self._swaps_validation_service.swaps_graph_validation(
+            pre_rendered_task_graph=swaps_graph_yaml
+        )
+
+        output_issues, tasks = self._swaps_validation_service.validate_swap_output_matches(
+            pre_rendered_task_graph=swaps_graph_yaml,
+            task_lookup_dict=lookup_dict,
+        )
+
+        schema_valid = output_issues == [] and schema_issues == []
+
+        return {
+            "schema_valid": schema_valid,
+            "swap_errors": output_issues + schema_issues,
+            "swaps": tasks
+        }
+    
