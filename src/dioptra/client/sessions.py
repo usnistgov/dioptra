@@ -397,6 +397,7 @@ class BaseDioptraRequestsSession(DioptraSession[T], ABC, Generic[T]):
         with output_path.open(mode="wb") as f:
             for chunk in response.iter_content(chunk_size=self.DOWNLOAD_CHUNK_SIZE):
                 f.write(chunk)
+        f.close()
 
         return output_path
 
