@@ -28,6 +28,13 @@
     />
   </div>
 
+  <q-banner v-if="experiment.deleted" dense class="text-white bg-red q-mt-md">
+    <template v-slot:avatar>
+      <q-icon name="error"/>
+    </template>
+    <span class="text-bold">This Experiment has been deleted.  Info is read only.</span>
+  </q-banner>
+
   <q-expansion-item
     v-model="showMetadata"
     class="shadow-1 overflow-hidden q-mt-lg"

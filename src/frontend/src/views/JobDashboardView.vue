@@ -56,21 +56,23 @@
               />
             </div>
           </template>
-          <template #experiment="{ name = '', id, snapshotId }">
-            <RouterLink :to="`/experiments/${id}?snapshotId=${snapshotId}`">
-              {{ name.length < 18 ? name : name.replace(/(.{18})..+/, "$1…") }}
-              <q-tooltip v-if="name.length > 18" max-width="30vw" style="overflow-wrap: break-word">
-                {{ name }}
-              </q-tooltip>
-            </RouterLink>
+          <template #experiment="{ experiment }">
+            <ResourceBadge
+              :resource=experiment
+              resourceType="experiment"
+            />
           </template>
-          <template #entrypoint="{ name = '', id, snapshotId }">
-            <RouterLink :to="`/entrypoints/${id}?snapshotId=${snapshotId}`">
-              {{ name.length < 18 ? name : name.replace(/(.{18})..+/, "$1…") }}
-              <q-tooltip v-if="name.length > 18" max-width="30vw" style="overflow-wrap: break-word">
-                {{ name }}
-              </q-tooltip>
-            </RouterLink>
+          <template #entrypoint="{ entrypoint }">
+            <ResourceBadge
+              :resource=entrypoint
+              resourceType="entrypoint"
+            />
+          </template>
+          <template #queue="{ queue }">
+            <ResourceBadge
+              :resource="queue"
+              resourceType="queue"
+            />
           </template>
           <template #status="{ status = '' }">
             <JobStatus
@@ -490,12 +492,16 @@ const overviewRows = computed(() => [
   { label: 'Created On', value: formatDate(job.value?.createdOn) },
   { label: 'Created by', value: job.value?.user.username },
   { label: 'Experiment', slot: 'experiment', 
-    props: { name: job.value?.experiment.name, id: job.value?.experiment.id, snapshotId: job.value?.experiment.snapshotId }
+    props: { experiment: job.value?.experiment }
   },
   { label: 'Entrypoint', slot: 'entrypoint',
-    props: { name: job.value?.entrypoint.name, id: job.value?.entrypoint.id, snapshotId: job.value?.entrypoint.snapshotId }
+    props: { entrypoint: job.value?.entrypoint }
   },
-  { label: 'Queue', value: job.value?.queue.name },
+  { 
+  label: 'Queue', 
+  slot: 'queue',
+  props: { queue: job.value?.queue }
+  },
   { label: 'Timeout', value: job.value?.timeout },
   { label: 'Tags', slot: 'tags', props: { tags: job.value?.tags }  },
 ])

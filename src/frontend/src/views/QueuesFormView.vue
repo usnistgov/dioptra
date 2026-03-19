@@ -33,6 +33,12 @@
       />
     </div>
   </div>
+  <q-banner v-if="queue.deleted" dense class="text-white bg-red q-mt-md">
+    <template v-slot:avatar>
+      <q-icon name="error"/>
+    </template>
+    <span class="text-bold">This Queue has been deleted.  Info is read only.</span>
+  </q-banner>
   <div :style="{ width: isMobile ? '100%' : isMedium ? '60%' : '50%' }" :class="history ? `disabled` : ``">
     <fieldset class="q-mt-lg" :disabled="queue.deleted || history">
       <legend>Basic Info</legend>

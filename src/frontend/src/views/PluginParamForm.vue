@@ -13,6 +13,12 @@
         @click="showDeleteDialog = true"
       />
   </div>
+  <q-banner v-if="pluginParamType.deleted" dense class="text-white bg-red q-mt-md">
+    <template v-slot:avatar>
+      <q-icon name="error"/>
+    </template>
+    <span class="text-bold">This Plugin Pararameter Type has been deleted.  Info is read only.</span>
+  </q-banner>
   <div :class="`row q-my-lg ${isMobile ? '' : 'q-gutter-x-xl'}`">
     <fieldset :class="isMobile ? 'col-12' : 'col'" :disabled="pluginParamType.deleted">
       <legend>Basic Info</legend>

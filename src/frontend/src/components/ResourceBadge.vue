@@ -13,12 +13,12 @@
       size="xs"
       class="q-mr-sm"
     />
-    {{ resource.name }}
+    {{ resource?.name }}
 
-    <span v-if="resource.deleted" class="q-ml-sm">
+    <span v-if="resource?.deleted" class="q-ml-sm">
       ❌
     </span>
-    <q-tooltip v-if="resource.deleted">
+    <q-tooltip v-if="resource?.deleted">
       This <span class="text-capitalize">{{ resourceType }}</span> has been deleted
     </q-tooltip>
     <q-tooltip v-else class="text-capitalize">
