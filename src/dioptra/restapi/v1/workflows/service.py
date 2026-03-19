@@ -1430,7 +1430,7 @@ class ValidateSwapsGraphService(object):
             task_lookup_dict=lookup_dict,
         )
 
-        schema_valid = output_issues == [] and schema_issues == []
+        schema_valid = schema_issues == []
 
         return {
             "schema_valid": schema_valid,
