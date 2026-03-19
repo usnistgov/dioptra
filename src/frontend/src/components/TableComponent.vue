@@ -146,14 +146,6 @@
 
     <template #top-right>
       <slot name="jobLogSlot" />
-      <q-toggle
-        v-if="showDeletedToggle"
-        v-model="showDeleted"
-        color="red"
-        label="Show Deleted"
-        class="q-mr-lg"
-        @click="refreshTable()"
-      />
       <q-btn
         v-if="!hideCreateBtn" 
         color="primary" 
@@ -161,6 +153,14 @@
         label="Create" 
         class="q-mr-lg" 
         @click="$emit('create')"
+      />
+      <q-toggle
+        v-if="showDeletedToggle"
+        v-model="showDeleted"
+        color="red"
+        label="Show Deleted"
+        class="q-mr-lg"
+        @click="refreshTable()"
       />
       <q-input 
         v-if="!hideSearch" 
@@ -445,7 +445,7 @@
 
 function highlightRow(rowProps) {
   if(rowProps.row.deleted === true) {
-    return darkMode.value ? 'bg-red-10' : 'bg-red-1'
+    return darkMode.value ? 'bg-red-8' : 'bg-red-light'
   }
   if(props.disabledRowKeys.includes(rowProps.row[props.rowKey])) return
   if(!props.highlightRow) return

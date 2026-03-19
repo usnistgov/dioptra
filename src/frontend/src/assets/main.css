@@ -176,3 +176,7 @@ legend {
   color: inherit !important;
   text-decoration: none !important;
 }
+
+.bg-red-light {
+  background-color: rgba(244, 67, 54, 0.02);
+}
