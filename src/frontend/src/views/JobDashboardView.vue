@@ -290,6 +290,7 @@ import PlotlyGraph from '@/components/PlotlyGraph.vue'
 import CodeEditor from '@/components/CodeEditor.vue'
 import JobArtifactsTable from '@/components/JobArtifactsTable.vue'
 import { useLoginStore } from '@/stores/LoginStore.ts'
+import ResourceBadge from '@/components/ResourceBadge.vue'
 
 const store = useLoginStore()
 

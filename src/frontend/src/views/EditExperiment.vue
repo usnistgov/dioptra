@@ -228,7 +228,11 @@ const history = computed(() => {
 })
 
 onMounted(() => {
-  getExperiment()
+  if(route.query.snapshotId && !store.showRightDrawer) {
+    store.showRightDrawer = true
+  } else {
+    getExperiment()
+  }
 })
 
 async function getExperiment() {
@@ -332,6 +336,7 @@ watch(() => history.value, (newVal) => {
 watch(() => store.selectedSnapshot, (newVal) => {
   if(newVal) {
     experiment.value = newVal
+    ORIGINAL_EXPERIMENT.value = newVal
   } else {
     getExperiment()
   }

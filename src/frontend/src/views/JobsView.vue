@@ -24,13 +24,22 @@
     :hideCreateBtn="route.name === 'experimentJobs' && experiment?.deleted"
   >
     <template #body-cell-experiment="props">
-      {{ props.row.experiment.name }}
+      <ResourceBadge
+        :resource="props.row.experiment"
+        resourceType="experiment"
+      />
     </template>
     <template #body-cell-entrypoint="props">
-      {{ props.row.entrypoint.name }}
+      <ResourceBadge
+        :resource="props.row.entrypoint"
+        resourceType="entrypoint"
+      />
     </template>
     <template #body-cell-queue="props">
-      {{ props.row.queue.name }}
+      <ResourceBadge
+        :resource="props.row.queue"
+        resourceType="queue"
+      />
     </template>
     <template #body-cell-status="props">
       <JobStatus :status="props.row.status" />
@@ -71,6 +80,7 @@
   import ArtifactsDialog from '@/dialogs/ArtifactsDialog.vue'
   import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
   import JobStatus from '@/components/JobStatus.vue'
+  import ResourceBadge from '@/components/ResourceBadge.vue'
 
   const openWindow = window
   const route = useRoute()

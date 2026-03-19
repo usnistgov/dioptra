@@ -21,10 +21,9 @@
     :loading="isLoading"
   >
     <template #body-cell-job="props">
-      <q-btn
-        color="primary"
-        :to="`/jobs/${props.row.job}`"
-        :label="`View Job ${props.row.job}`"
+      <ResourceBadge
+        :resource="{name: `Job ${props.row.job}`, url: `/jobs/${props.row.job}`, id: props.row.job}"
+        resourceType="job"
       />
     </template>
     <template #body-cell-taskName="props">
@@ -81,6 +80,7 @@ import * as notify from '../notify'
 import PageTitle from '@/components/PageTitle.vue'
 import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
 import { useRouter } from 'vue-router'
+import ResourceBadge from '@/components/ResourceBadge.vue'
 
 const openWindow = window
 const router = useRouter()

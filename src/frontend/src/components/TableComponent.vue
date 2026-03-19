@@ -37,7 +37,7 @@
       >
         <q-td v-for="col in props.cols" :key="col.name" :props="props" :style="props.expand ? {'border-bottom': 'none'} : {}">
           <q-menu
-            v-if="selection !== 'multiple'"
+            v-if="selection !== 'multiple' && !highlightSelection"
             context-menu
             @show="props.selected = true"
           >
@@ -226,6 +226,10 @@
   showDeletedToggle: {
     type: Boolean,
     default: false
+  },
+  highlightSelection: {
+    type: Boolean,
+    default: false
   }
 })
   const emit = defineEmits([
@@ -311,8 +315,9 @@
   })
 
   function getSelectedColor(selected) {
-    // if(darkMode.value && selected) return 'bg-deep-purple-10'
-    // else if(selected) return 'bg-blue-grey-1'
+    if (!props.highlightSelection) return
+    if(darkMode.value && selected) return 'bg-deep-purple-10'
+    else if(selected) return 'bg-blue-grey-1'
   }
 
   const pagination = ref({
@@ -440,7 +445,7 @@
 
 function highlightRow(rowProps) {
   if(rowProps.row.deleted === true) {
-    return darkMode.value ? 'bg-red-6' : 'bg-red-2'
+    return darkMode.value ? 'bg-red-10' : 'bg-red-1'
   }
   if(props.disabledRowKeys.includes(rowProps.row[props.rowKey])) return
   if(!props.highlightRow) return

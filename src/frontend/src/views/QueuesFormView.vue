@@ -168,7 +168,9 @@ const valuesChangedFromEditStart = computed(() => {
 
 
 onMounted(async () => {
-  if(store.savedForms?.queue && route.params.id === 'new') {
+  if(route.query.snapshotId && !store.showRightDrawer) {
+    store.showRightDrawer = true
+  } else if(store.savedForms?.queue && route.params.id === 'new') {
     copyAtEditStart.value = JSON.parse(JSON.stringify(queue.value))
     showReturnDialog.value = true
     queue.value = store.savedForms.queue
@@ -308,6 +310,7 @@ watch(() => store.selectedSnapshot, (q) => {
       group: q.group.id,
       description: q.description,
     }
+    copyAtEditStart.value = queue.value
   } else {
     getQueue()
   }
