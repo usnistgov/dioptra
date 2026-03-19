@@ -14,24 +14,37 @@
       class="q-mr-sm"
     />
     {{ resource?.name }}
-
-    <span v-if="resource?.deleted" class="q-ml-sm">
+    <span
+      v-if="resource?.deleted"
+      class="q-ml-sm"
+    >
       ❌
     </span>
     <q-tooltip v-if="resource?.deleted">
       This <span class="text-capitalize">{{ resourceType }}</span> has been deleted
     </q-tooltip>
-    <q-tooltip v-else class="text-capitalize">
-      Go To: {{ resourceType }}
-      ( ID {{ resource.id }}{{ resource.snapshotId ? `, Snapshot ${resource.snapshotId}` : '' }} )
+    <q-tooltip
+      v-else
+      class="text-capitalize"
+    >
+      Go To: {{ resourceType }} (ID {{ resource.id
+      }}{{ resource.snapshotId ? `, Snapshot ${resource.snapshotId}` : "" }})
     </q-tooltip>
 
     <q-menu context-menu>
       <q-list dense>
-        <q-item clickable v-close-popup @click.stop="openResource">
+        <q-item
+          clickable
+          v-close-popup
+          @click.stop="openResource"
+        >
           <q-item-section>Open</q-item-section>
         </q-item>
-        <q-item clickable v-close-popup @click.stop="openInNewTab">
+        <q-item
+          clickable
+          v-close-popup
+          @click.stop="openInNewTab"
+        >
           <q-item-section>Open In New Tab</q-item-section>
         </q-item>
       </q-list>

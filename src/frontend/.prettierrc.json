@@ -1,3 +1,5 @@
 {
-  "semi": false
+  "semi": false,
+  "printWidth": 120,
+  "singleAttributePerLine": true
 }
