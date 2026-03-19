@@ -1280,6 +1280,7 @@ def test_delete_plugin_file_by_id(
     )
     routines.run_deleted_resource_snapshot_test(
         dioptra_client.plugins.files.snapshots,
+        registered_plugin["id"],
         deleted_resource=plugin_file_to_delete
     )
 

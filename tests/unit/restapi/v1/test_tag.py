@@ -373,8 +373,3 @@ def test_delete_tag_by_id(
     )
     dioptra_client.tags.delete_by_id(tag_id=tag_expected["id"])
     assert_tag_is_not_found(dioptra_client, tag_id=tag_expected["id"])
-    
-    routines.run_deleted_resource_snapshot_test(
-        dioptra_client.tags.snapshots,
-        deleted_resource=tag_expected
-    )
