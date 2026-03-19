@@ -545,6 +545,10 @@ def test_delete_experiment_by_id(
     assert_experiment_is_deleted(
         dioptra_client, experiment_id=experiment_to_delete["id"]
     )
+    routines.run_deleted_resource_snapshot_test(
+        dioptra_client.experiments.snapshots,
+        deleted_resource=experiment_to_delete
+    )
 
 
 def test_experiment_get_entrypoints(

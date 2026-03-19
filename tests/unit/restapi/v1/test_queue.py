@@ -536,6 +536,12 @@ def test_delete_queue_by_id(
     assert_queue_is_not_associated_with_entrypoint(
         dioptra_client, entrypoint_id=entrypoint["id"], queue_id=queue_to_delete["id"]
     )
+    
+    routines.run_deleted_resource_snapshot_test(
+        dioptra_client.queues.snapshots,
+        deleted_resource=queue_to_delete
+    )
+
 
 
 def test_manage_existing_queue_draft(

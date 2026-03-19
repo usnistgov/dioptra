@@ -1067,6 +1067,11 @@ def test_delete_job(
     job_to_delete = registered_jobs["job1"]
     dioptra_client.jobs.delete_by_id(job_to_delete["id"])
     assert_job_is_not_found(dioptra_client, job_id=job_to_delete["id"])
+    
+    routines.run_deleted_resource_snapshot_test(
+        dioptra_client.jobs.snapshots,
+        deleted_resource=job_to_delete
+    )
 
 
 def test_job_get_status(

@@ -819,6 +819,10 @@ def test_delete_plugin_by_id(
     plugin_to_delete = registered_plugins["plugin1"]
     dioptra_client.plugins.delete_by_id(plugin_id=plugin_to_delete["id"])
     assert_plugin_is_not_found(dioptra_client, plugin_id=plugin_to_delete["id"])
+    routines.run_deleted_resource_snapshot_test(
+        dioptra_client.plugins.snapshots,
+        deleted_resource=plugin_to_delete
+    )
 
 
 # -- Tests Plugin Files ----------------------------------------------------------------
@@ -1273,6 +1277,10 @@ def test_delete_plugin_file_by_id(
         dioptra_client,
         plugin_id=registered_plugin["id"],
         plugin_file_id=plugin_file_to_delete["id"],
+    )
+    routines.run_deleted_resource_snapshot_test(
+        dioptra_client.plugins.files.snapshots,
+        deleted_resource=plugin_file_to_delete
     )
 
 

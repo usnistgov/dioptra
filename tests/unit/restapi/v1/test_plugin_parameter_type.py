@@ -670,6 +670,10 @@ def test_delete_plugin_parameter_type(
     )
     dioptra_client.plugin_parameter_types.delete_by_id(plugin_param_type1["id"])
     assert_plugin_parameter_type_is_deleted(dioptra_client, plugin_param_type1["id"])
+    routines.run_deleted_resource_snapshot_test(
+        dioptra_client.plugin_parameter_types.snapshots,
+        deleted_resource=plugin_param_type1
+    )
 
 
 def test_modify_plugin_parameter_type(

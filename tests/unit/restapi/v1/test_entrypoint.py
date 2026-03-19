@@ -871,6 +871,11 @@ def test_delete_entrypoint_by_id(
         entrypoint_id=entrypoint_to_delete["id"],
     )
 
+    routines.run_deleted_resource_snapshot_test(
+        dioptra_client.entrypoints.snapshots,
+        deleted_resource=entrypoint_to_delete
+    )
+
 
 def test_manage_existing_entrypoint_draft(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
