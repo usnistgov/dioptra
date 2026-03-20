@@ -42,13 +42,13 @@ Login or Sign Up
 
 Open the web UI and either **log in** with an existing account or **sign up** for a new one.
 
-.. figure:: _static/screenshots/login_dioptra.png
+.. figure:: ../hello_world/_static/screenshots/login_dioptra.png
    :alt: Screenshot of the Dioptra login page with sign-in and sign-up options.
    :width: 900px
    :figclass: border-image clickable-image
 
 .. note::
-   More info is available at :ref:`how_to_create_a_user` (forthcoming)
+   More info is available at :ref:`how-to-create-users-and-groups` (forthcoming)
 
 Groups
 ------
@@ -73,19 +73,19 @@ We call it `tensorflow-cpu` because this tutorial assumes only CPU resources are
 By making it **public**, all users in the Public group can submit jobs to it.
 
 .. note::
-   For more info, see our how-to on Queue creation: :ref:`how_to_create_a_queue`
+   For more info, see our how-to on Queue creation: :ref:`how-to-create-queues`
 
-.. figure:: _static/screenshots/queues_dioptra.png
+.. figure:: ../hello_world/_static/screenshots/queues_dioptra.png
    :alt: Screenshot of the queue creation form with "tensorflow-cpu" entered as the name.
    :figclass: border-image clickable-image
 
 .. note::
    To learn more about the purpose of groups and queues, refer to these explanation materials:
 
-   - :ref:`explanation-groups` (forthcoming)
-   - :ref:`explanation-queues` (forthcoming)
+   - :ref:`explanation-users-and-groups` (forthcoming)
+   - :ref:`explanation-queues-and-workers` (forthcoming)
 
 Next Steps
 ----------
 
-Now that Dioptra is set up, let's begin: :ref:`tutorial-1-part-1`
+Now that Dioptra is set up, let's begin: :ref:`tutorial-running-your-first-plugin-task`

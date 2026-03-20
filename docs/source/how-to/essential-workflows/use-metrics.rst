@@ -32,7 +32,7 @@ Prerequisites
       * :ref:`how-to-prepare-deployment` -  A deployment of Dioptra is required.
       * :ref:`how-to-set-up-the-python-client` - Connect to the Python Client from within the job.
 
-.. _how-to-create-users-user-creation-workflow:
+.. _how-to-use-metrics-metric-logging-workflow:
 
 Metric Logging Workflow
 -----------------------
@@ -64,6 +64,7 @@ Log a metric as part of a job using the Python client.
       Note that from a job, you can use ``os.environ["__JOB_ID"]`` to get the current job's ID. 
 
       .. automethod:: dioptra.client.jobs.JobsCollectionClient.append_metric_by_id
+         :noindex:
 
 
 .. rst-class:: header-on-a-card header-steps
@@ -88,14 +89,17 @@ Retrieve metrics from a job or view them in the GUI.
       Use the client to retrieve the latest metrics associated with the job.
 
       .. automethod:: dioptra.client.jobs.JobsCollectionClient.get_metrics_by_id
+         :noindex:
 
       Alternatively, you can retrieve the full metric history for a job.
 
       .. automethod:: dioptra.client.jobs.JobsCollectionClient.get_metrics_snapshots_by_id
+         :noindex:
 
       It is also possible to retrieve the metrics across all jobs in an experiment.
 
       .. automethod:: dioptra.client.experiments.ExperimentsCollectionClient.get_metrics_by_id
+         :noindex:
 
 
 .. rst-class:: fancy-header header-seealso

@@ -41,7 +41,7 @@ job if these types don't align.
 .. _explanation-artifacts-artifact-tasks:
 
 Plugin Artifact Tasks
---------------
+---------------------
 
 **Plugin Artifact tasks** are a type of plugin task that details the serialization
 and deserialization of a given artifact type. When an output of a function task is designated to be 

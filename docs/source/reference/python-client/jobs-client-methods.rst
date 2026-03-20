@@ -77,7 +77,7 @@ Get Job Parameters
 ~~~~~~~~~~~~~~~~~~
 
       
-    .. automethod:: dioptra.client.jobs.JobsCollectionClient.get_artifact_parameters
+    .. automethod:: dioptra.client.jobs.JobsCollectionClient.get_parameters
 
 Get Artifact Parameters
 ~~~~~~~~~~~~~~~~~~~~~~~

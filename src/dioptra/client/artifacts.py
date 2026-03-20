@@ -190,6 +190,7 @@ class ArtifactsCollectionClient(CollectionClient[T]):
             Both plugin_snapshot_id and must be None or not None. If None, then the
             artifact is unavailable for use as input into another job and may only be
             downloaded.
+
         Args:
             artifact_id: The artifact id, an integer.
             plugin_snapshot_id: the plugin snapshot id of the plugin containing the

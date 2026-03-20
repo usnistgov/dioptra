@@ -51,7 +51,7 @@ Prerequisites
 .. _how-to-create-queues-queue-creation-workflow:
 
 Queue Creation Workflow
-----------------------
+-----------------------
 
 Follow these steps to create and register a new queue. You can perform these actions via the Graphical User Interface (GUI) or programmatically using the Python Client.
 
@@ -59,7 +59,7 @@ Follow these steps to create and register a new queue. You can perform these act
 
 
 Step 1: Create the Queue
-~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 Register a queue for a specific group, with a name and a description.
 
@@ -79,6 +79,7 @@ Register a queue for a specific group, with a name and a description.
       Use the client to create the queue.
 
       .. automethod:: dioptra.client.queues.QueuesCollectionClient.create
+         :noindex:
 
 .. rst-class:: header-on-a-card header-steps
 
@@ -102,6 +103,7 @@ Step 2: Associate your Queue with Existing Entrypoints
       Use the client to update the entrypoint with the id of the queue.
 
       .. automethod:: dioptra.client.entrypoints.EntrypointQueuesSubCollectionClient.modify_by_id
+         :noindex:
 
 
 .. rst-class:: fancy-header header-seealso

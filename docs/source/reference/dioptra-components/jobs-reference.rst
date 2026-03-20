@@ -111,6 +111,7 @@ Using Python Client
 **Submit a Job through an Experiment**
 
     .. automethod:: dioptra.client.experiments.ExperimentJobsSubCollectionClient.create
+      :noindex:
 
 .. _reference-jobs-rest-api:
 

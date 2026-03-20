@@ -89,7 +89,7 @@ Manager Roles
 .. _reference-groups-registration-interfaces:
 
 Registration Interfaces
---------------------
+-----------------------
 
 Custom groups cannot be created in Dioptra at this time. 
 

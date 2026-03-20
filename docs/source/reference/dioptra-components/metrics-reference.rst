@@ -45,7 +45,7 @@ A metric has the following attributes. Note that the ``name`` and ``step`` value
    - ``Infinity`` will become ``"inf"``
    - ``-Infinity`` will become ``"-inf"``
 
-.. _reference-experiments-optional-attributes:
+.. _reference-metrics-optional-attributes:
 
 Optional Attributes
 ~~~~~~~~~~~~~~~~~~~
@@ -70,14 +70,17 @@ Using Python Client
 **Retrieve the metrics with the highest step number for the job.**
 
    .. automethod:: dioptra.client.jobs.JobsCollectionClient.get_metrics_by_id
+      :noindex:
 
 **Retrieve the full metric history for a job for a given name.**
 
    .. automethod:: dioptra.client.jobs.JobsCollectionClient.get_metrics_snapshots_by_id
+      :noindex:
 
 **Retrieve the metrics with the highest step number for all jobs in an experiment**
 
    .. automethod:: dioptra.client.experiments.ExperimentsCollectionClient.get_metrics_by_id
+      :noindex:
 
 
 .. _reference-metrics-rest-api:
@@ -115,6 +118,7 @@ Using Python Client
 **Post metrics for a job.**
 
    .. automethod:: dioptra.client.jobs.JobsCollectionClient.append_metric_by_id
+      :noindex:
 
 
 .. _reference-metrics-registration-rest-api:
@@ -134,4 +138,4 @@ See the :http:post:`POST /api/v1/jobs/{int:id}/metrics </api/v1/jobs/{id}/metric
 See Also
 ---------
 
-* :ref:`<how-to-logging-metrics>` 
+* :ref:`how-to-logging-metrics` 

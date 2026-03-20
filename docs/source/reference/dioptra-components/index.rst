@@ -50,14 +50,14 @@ Plugins
 - ``Plugin Parameter Type``: Either a built-in or user-defined type, used for type validation. ``Function Task Inputs``, ``Function Task Outputs``, ``Artifact Task Outputs``, ``Entrypoint Parameters`` and the outputs from ``Entrypoint Artifact Parameters`` all have associated ``Plugin Parameter Types``.
 
 Plugin Function Tasks 
-~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
 
 - ``Function Task``: A registered Python function within a ``Plugin`` file that defines some computational task, used in the ``Task Graph`` in ``Entrypoints``.
 - ``Function Task Input``: An input into a ``Function Task`` registered as part of the task definition.  Has an associated ``Plugin Parameter Type`` for type validation.
 - ``Function Task Output``: The output of a ``Function Task`` registered as part of the task definition.  Has an associated ``Plugin Parameter Type`` for type validation. A ``Function Task Output`` can be fed in as a ``Function Task Input`` via the ``Task Graph``, or saved as an ``Artifact`` via the ``Artifact Output Graph``.
 
 Plugin Artifact Tasks and Artifacts
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - ``Artifact``: The output of a ``Function Task`` that has been saved to disk via the serialize method of an ``Artifact Task``.
 - ``Artifact Task``: A registered subclass of *ArtifactTaskInterface* that defines serialization, deserialization, and validation logic for an ``Artifact`` type. Used to save ``Artifacts`` in the ``Artifact Output Graph`` in ``Entrypoints``, and also to load saved ``Artifacts`` as ``Entrypoint Artifact Parameters`` at ``Job`` runtime.
