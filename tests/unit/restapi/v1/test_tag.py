@@ -27,7 +27,6 @@ import pytest
 
 from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
-from tests.unit.restapi.lib import routines
 
 from ..lib import helpers
 from ..test_utils import assert_retrieving_resource_works
