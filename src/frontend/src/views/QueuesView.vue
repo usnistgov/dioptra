@@ -19,7 +19,7 @@
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
     @create="router.push('/queues/new')"
     :loading="isLoading"
-    :showDeletedToggle="true"
+    :showDeletedToggle="!showDrafts"
   >
     <template #body-cell-hasDraft="props">
       <q-btn
