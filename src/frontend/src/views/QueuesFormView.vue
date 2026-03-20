@@ -7,7 +7,7 @@
         :deleted="queue.deleted"
       />
         <q-chip
-          v-if="route.params.id !== 'new' && !queue.deleted"
+          v-if="route.params.id !== 'new'"
           class="q-ml-md"
           :color="`${darkMode ? 'grey-9' : ''}`"
           label="View History"
@@ -39,8 +39,8 @@
     </template>
     <span class="text-bold">This Queue has been deleted.  Info is read only.</span>
   </q-banner>
-  <div :style="{ width: isMobile ? '100%' : isMedium ? '60%' : '50%' }" :class="history ? `disabled` : ``">
-    <fieldset class="q-mt-lg" :disabled="queue.deleted || history">
+  <div :style="{ width: isMobile ? '100%' : isMedium ? '60%' : '50%' }">
+    <fieldset class="q-mt-lg" >
       <legend>Basic Info</legend>
         <q-form ref="form" class="q-ma-lg">
           <q-input 

@@ -3,7 +3,7 @@
     <div class="row items-center">
       <PageTitle :title="ORIGINAL_EXPERIMENT?.name" resourceType="experiment" :deleted="experiment.deleted" />
       <q-chip
-        v-if="route.params.id !== 'new' && !experiment.deleted"
+        v-if="route.params.id !== 'new'"
         class="q-ml-lg"
         :color="`${darkMode ? 'grey-9' : ''}`"
         label="View History"
@@ -57,133 +57,131 @@
       </q-item-section>
     </template>
     <q-card class="q-pa-md">
-      <fieldset
-        :disabled="experiment.deleted || history"
-        style="border: none; padding: 0; margin: 0;"
+      <KeyValueTable 
+        :rows="metadataRows"
+        :style="{ pointerEvents: history || experiment.deleted ? 'none' : 'auto', }"
+        :secondColumnFullWidth="true"
       >
-        <KeyValueTable 
-          :rows="metadataRows"
-          :style="{ pointerEvents: history || experiment.deleted ? 'none' : 'auto', }"
-          :secondColumnFullWidth="true"
-        >
-          <template #name="{ }">
-            {{ experiment?.name }}
-            <q-btn icon="edit" round size="sm" color="primary" flat />
-            <q-popup-edit
-              v-model="experiment.name" 
-              auto-save 
-              v-slot="scope"
-              :validate="requiredRule"
-            >
-              <q-input 
-                v-model.trim="scope.value"
-                dense
-                autofocus
-                counter
-                @keyup.enter="scope.set"
-                :error="invalidName"
-                :error-message="nameError"
-                @update:model-value="checkName"
-              />
-            </q-popup-edit>
-          </template>
-          <template #group="{ }">
-            <q-select
-              outlined 
-              v-model="experiment.group" 
-              :options="store.groups"
-              option-label="name"
-              option-value="id"
-              emit-value
-              map-options
-              dense
-              :rules="[requiredRule]"
-              aria-required="true"
-              :disable="history"
-              hide-bottom-space
-            />
-          </template>
-          <template #description="{ }">
-            <div class="row items-center no-wrap">
-              <div style="white-space: pre-line; overflow-wrap: break-word; ">
-                {{ experiment?.description }}
-              </div>
-              <q-btn icon="edit" round size="sm" color="primary" flat class="q-ml-xs" />
-            </div>
-            <q-popup-edit v-model.trim="experiment.description" auto-save v-slot="scope" buttons>
-              <q-input
-                v-model="scope.value"
-                dense
-                autofocus
-                counter
-                type="textarea"
-                @keyup.enter.stop
-              />
-            </q-popup-edit>
-          </template>
-          <template #entrypoints="{ }">
-            <q-select
-              v-if="!history"
-              outlined
-              v-model="experiment.entrypoints"
-              use-input
-              use-chips
-              multiple
-              map-options
-              option-label="name"
-              option-value="id"
-              input-debounce="300"
-              :options="entrypoints"
-              @filter="getEntrypoints"
-              :disable="history || experiment.deleted"
-            >
-              <template v-slot:selected>
-                <q-chip
-                  v-for="(entrypoint, i) in experiment.entrypoints"
-                  :key="entrypoint.id"
-                  color="secondary"
-                  :label="entrypoint.name"
-                  class="text-white"
-                  removable
-                  @remove="experiment.entrypoints.splice(i, 1)"
-                />
-              </template>  
-            </q-select>
-            <div class="row items-center" v-if="history">
-              <q-icon
-                name="sym_o_info"
-                size="2.5em"
-                color="grey"
-                class="q-mr-sm"
-              />
-              <div style="flex: 1; white-space: normal; word-break: break-word;">
-                Entrypoints are not yet available in Experiment snapshots
-              </div>
-            </div>
-          </template>
-        </KeyValueTable>
-        <div class="float-right q-my-sm" >
-          <q-btn
-            outline  
-            color="primary" 
-            label="Revert"
-            class="q-mr-lg cancel-btn"
-            @click="revertValues"
-            :disable="!valuesChanged"
-          />
-          <q-btn
-            label="Save"
-            color="primary"
-            @click="updateExperiment"
-            :disable="!valuesChanged"
-            style="min-width: 100px;"
+        <template #name="{ }">
+          <span :disabled="history || experiment.deleted">{{ experiment?.name }}</span>
+          <q-btn icon="edit" round size="sm" color="primary" flat :disable="history || experiment.deleted" />
+          <q-popup-edit
+            v-model="experiment.name" 
+            auto-save 
+            v-slot="scope"
+            :validate="requiredRule"
+            :disable="history || experiment.deleted"
           >
-            <q-tooltip v-if="!valuesChanged">
-              No changes detected — nothing to save
-            </q-tooltip>
-          </q-btn>
-        </div>
-      </fieldset>
+            <q-input 
+              v-model.trim="scope.value"
+              dense
+              autofocus
+              counter
+              @keyup.enter="scope.set"
+              :error="invalidName"
+              :error-message="nameError"
+              @update:model-value="checkName"
+              :disable="history || experiment.deleted"
+            />
+          </q-popup-edit>
+        </template>
+        <template #group="{ }">
+          <q-select
+            outlined 
+            v-model="experiment.group" 
+            :options="store.groups"
+            option-label="name"
+            option-value="id"
+            emit-value
+            map-options
+            dense
+            :rules="[requiredRule]"
+            aria-required="true"
+            :disable="history || experiment.deleted"
+            hide-bottom-space
+          />
+        </template>
+        <template #description="{ }">
+          <div class="row items-center no-wrap">
+            <div style="white-space: pre-line; overflow-wrap: break-word;" :disabled="history || experiment.deleted">
+              {{ experiment?.description }}
+            </div>
+            <q-btn icon="edit" round size="sm" color="primary" flat class="q-ml-xs" :disable="history || experiment.deleted" />
+          </div>
+          <q-popup-edit v-model.trim="experiment.description" auto-save v-slot="scope" buttons>
+            <q-input
+              v-model="scope.value"
+              dense
+              autofocus
+              counter
+              type="textarea"
+              @keyup.enter.stop
+              :disable="history || experiment.deleted"
+            />
+          </q-popup-edit>
+        </template>
+        <template #entrypoints="{ }">
+          <q-select
+            v-if="!history"
+            outlined
+            v-model="experiment.entrypoints"
+            use-input
+            use-chips
+            multiple
+            map-options
+            option-label="name"
+            option-value="id"
+            input-debounce="300"
+            :options="entrypoints"
+            @filter="getEntrypoints"
+            :disable="history || experiment.deleted"
+          >
+            <template v-slot:selected>
+              <q-chip
+                v-for="(entrypoint, i) in experiment.entrypoints"
+                :key="entrypoint.id"
+                color="secondary"
+                :label="entrypoint.name"
+                class="text-white"
+                :removable="!history && !experiment.deleted"
+                @remove="experiment.entrypoints.splice(i, 1)"
+              />
+            </template>  
+          </q-select>
+          <div class="row items-center" v-if="history">
+            <q-icon
+              name="sym_o_info"
+              size="2.5em"
+              color="grey"
+              class="q-mr-sm"
+            />
+            <div style="flex: 1; white-space: normal; word-break: break-word;">
+              Entrypoints are not yet available in Experiment snapshots
+            </div>
+          </div>
+        </template>
+      </KeyValueTable>
+      <div class="float-right q-my-sm" >
+        <q-btn
+          outline  
+          color="primary" 
+          label="Revert"
+          class="q-mr-lg cancel-btn"
+          @click="revertValues"
+          :disable="!valuesChanged"
+        />
+        <q-btn
+          label="Save"
+          color="primary"
+          @click="updateExperiment"
+          :disable="!valuesChanged"
+          style="min-width: 100px;"
+        >
+          <q-tooltip v-if="!valuesChanged">
+            No changes detected — nothing to save
+          </q-tooltip>
+        </q-btn>
+      </div>
     </q-card>
   </q-expansion-item>
 
