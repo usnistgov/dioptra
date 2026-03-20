@@ -29,7 +29,7 @@ import pytest
 
 from dioptra.client.base import DioptraResponseProtocol, FieldNameCollisionError
 from dioptra.client.client import DioptraClient
-
+from ..lib.asserts import assert_retrieving_deleted_resource_snapshots_works
 from ..lib import helpers, routines
 from ..test_utils import assert_retrieving_resource_works, assert_searchable_field_works
 
@@ -869,6 +869,11 @@ def test_delete_entrypoint_by_id(
         dioptra_client,
         experiment_id=experiment["id"],
         entrypoint_id=entrypoint_to_delete["id"],
+    )
+
+    assert_retrieving_deleted_resource_snapshots_works(
+        dioptra_client.entrypoints.snapshots,
+        entrypoint_to_delete["id"],
     )
 
 

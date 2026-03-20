@@ -359,6 +359,25 @@ def assert_retrieving_snapshots_works(
     assert response.status_code == HTTPStatus.OK and response.json()["data"] == expected
 
 
+def assert_retrieving_deleted_resource_snapshots_works(
+    snapshots_client: SnapshotsSubCollectionClient,
+    *resource_ids: int,
+) -> None:
+    """Assert that retrieving a snapshot by id works even if the resource is deleted.
+
+    Args:
+        snapshots_client: The SnapshotsSubCollectionClient client.
+        resource_id: The id of the resource to retrieve snapshots for.
+
+    Raises:
+        AssertionError: If the response status code is not 200 or if the resource
+            is not marked deleted.
+    """
+    response = snapshots_client.get(*resource_ids)
+    assert response.status_code == HTTPStatus.OK and response.json()['data'][0]['deleted']
+
+
+
 def assert_retrieving_snapshot_by_id_works(
     snapshots_client: SnapshotsSubCollectionClient,
     *resource_ids: int,

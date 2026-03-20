@@ -38,6 +38,7 @@ from ..test_utils import (
     assert_searchable_field_works,
     match_normalized_json,
 )
+from ..lib.asserts import assert_retrieving_deleted_resource_snapshots_works
 
 # -- Assertions Plugins ----------------------------------------------------------------
 
@@ -820,6 +821,11 @@ def test_delete_plugin_by_id(
     dioptra_client.plugins.delete_by_id(plugin_id=plugin_to_delete["id"])
     assert_plugin_is_not_found(dioptra_client, plugin_id=plugin_to_delete["id"])
 
+    assert_retrieving_deleted_resource_snapshots_works(
+        dioptra_client.plugins.snapshots,
+        plugin_to_delete["id"],
+    )
+
 
 # -- Tests Plugin Files ----------------------------------------------------------------
 
@@ -1273,7 +1279,14 @@ def test_delete_plugin_file_by_id(
         dioptra_client,
         plugin_id=registered_plugin["id"],
         plugin_file_id=plugin_file_to_delete["id"],
+    )    
+    
+    assert_retrieving_deleted_resource_snapshots_works(
+        dioptra_client.plugins.files.snapshots,
+        registered_plugin["id"],
+        plugin_file_to_delete["id"],
     )
+
 
 
 # -- Tests Plugin Drafts ---------------------------------------------------------------

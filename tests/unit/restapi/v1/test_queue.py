@@ -28,6 +28,7 @@ import pytest
 
 from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
+from ..lib.asserts import assert_retrieving_deleted_resource_snapshots_works
 
 from ..lib import helpers, routines
 from ..test_utils import assert_retrieving_resource_works
@@ -535,6 +536,11 @@ def test_delete_queue_by_id(
     # note: this should probably change when entrypoints are changed to repo
     assert_queue_is_not_associated_with_entrypoint(
         dioptra_client, entrypoint_id=entrypoint["id"], queue_id=queue_to_delete["id"]
+    )
+    
+    assert_retrieving_deleted_resource_snapshots_works(
+        dioptra_client.queues.snapshots,
+        queue_to_delete["id"],
     )
 
 

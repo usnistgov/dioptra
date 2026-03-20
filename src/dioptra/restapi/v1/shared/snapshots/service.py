@@ -80,7 +80,7 @@ class ResourceSnapshotsService(object):
         log.debug("Get resource snapshots by id", resource_id=resource_id)
 
         stmt = select(models.Resource).filter_by(
-            resource_id=resource_id, resource_type=self._resource_type, is_deleted=False
+            resource_id=resource_id, resource_type=self._resource_type
         )
         resource = db.session.scalars(stmt).first()
 
@@ -105,7 +105,6 @@ class ResourceSnapshotsService(object):
             .where(
                 *filters,
                 models.Resource.resource_id == resource_id,
-                models.Resource.is_deleted == False,  # noqa: E712
             )
         )
         total_num_snapshots = db.session.scalars(stmt).unique().first()
@@ -127,7 +126,6 @@ class ResourceSnapshotsService(object):
             .where(
                 *filters,
                 models.Resource.resource_id == resource_id,
-                models.Resource.is_deleted == False,  # noqa: E712
             )
             .order_by(self.resource_model.created_on)
             .offset(page_index)
@@ -183,7 +181,7 @@ class ResourceSnapshotsIdService(object):
         log.debug("Get resource snapshot by id", resource_id=resource_id)
 
         stmt = select(models.Resource).filter_by(
-            resource_id=resource_id, resource_type=self._resource_type, is_deleted=False
+            resource_id=resource_id, resource_type=self._resource_type
         )
         resource = db.session.scalars(stmt).first()
 
@@ -201,7 +199,6 @@ class ResourceSnapshotsIdService(object):
             .where(
                 models.ResourceSnapshot.resource_snapshot_id == snapshot_id,
                 models.Resource.resource_id == resource_id,
-                models.Resource.is_deleted == False,  # noqa: E712
             )
         )
         snapshot = db.session.scalars(stmt).first()
