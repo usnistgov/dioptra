@@ -104,7 +104,7 @@ See **available methods** for the ``SnapshotsSubCollectionClient``:
 In addition to the standard snapshot methods, the Artifacts client includes specific methods for downloading snapshot content:
 
 Download Snapshot Contents
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     .. automethod:: dioptra.client.artifacts.ArtifactsSnapshotCollectionClient.get_contents
 

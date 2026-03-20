@@ -69,10 +69,12 @@ Step 1: Locate Entrypoints to attach to the Experiment
       **Groups:**
 
       .. automethod:: dioptra.client.groups.GroupsCollectionClient.get
+         :noindex:
 
       **Queues:**
 
       .. automethod:: dioptra.client.entrypoints.EntrypointsCollectionClient.get
+         :noindex:
 
 .. rst-class:: header-on-a-card header-steps
 
@@ -104,6 +106,7 @@ Step 2: Locate Entrypoints to attach to the Experiment
       **Experiment client CREATE method:**
 
       .. automethod:: dioptra.client.experiments.ExperimentsCollectionClient.create
+         :noindex:
 
 
 

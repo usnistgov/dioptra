@@ -53,7 +53,7 @@ Workflow
 .. rst-class:: header-on-a-card header-steps
 
 Step 1: Add two New Plugin Parameter Types
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You'll use the python ``dict`` type and the ``bytes`` type in your next Function Task and Artifact Task, so go ahead and add them now:
 
@@ -68,7 +68,7 @@ You'll use the python ``dict`` type and the ``bytes`` type in your next Function
 .. rst-class:: header-on-a-card header-steps
 
 Step 2: Create the "rescale_and_graph_array" Plugin
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You want to create a plugin that utilizes a saved numpy array as an *input*.
 
@@ -123,7 +123,7 @@ Your second plugin task outputs a Matplotlib figure as a PNG image. To view this
 .. rst-class:: header-on-a-card header-steps
 
 Step 4: Create "rescale_and_graph_array" Entrypoint
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Now define a **new Entrypoint** that loads the array, transforms it, and saves the plot.
 
@@ -213,7 +213,7 @@ Now define a **new Entrypoint** that loads the array, transforms it, and saves t
 .. rst-class:: header-on-a-card header-steps
 
 Step 5: Create Experiment and Run a Job
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Finally, test it out.
 
@@ -269,6 +269,6 @@ You're now ready to design your own workflows in Dioptra by combining multiple p
 .. rst-class:: header-on-a-card header-seealso
 
 Keep Learning 
----------
+-------------
 This tutorial demonstrated the core functionalities of Dioptra. To see more interesting and complicated uses of
 these capabilities, view the :ref:`advanced tutorials <tutorial-advanced-tutorials>` which utilize the Python Client for more complex workflows. 

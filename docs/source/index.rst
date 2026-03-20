@@ -33,7 +33,7 @@ Below are some useful guides to help get you started. To see the entire list of 
 Understand Dioptra
 ^^^^^^^^^^^^^^^^^^^
 
-- :ref:`Motivation for Dioptra <explanation-motivation-for-dioptra>` - What is Dioptra for and how does it compare to other tools?
+- :ref:`Motivation for Dioptra <explanation-why-use-dioptra>` - What is Dioptra for and how does it compare to other tools?
 - :ref:`Workflow Architecture <explanation-workflow-architecture>` - Learn how all the high level Dioptra components orchestrate together to execute jobs
 
 .. rst-class:: header-on-a-card

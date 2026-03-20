@@ -75,18 +75,22 @@ Using Python Client
 **Retrieve a list of artifact resources**
 
    .. automethod:: dioptra.client.artifacts.ArtifactsCollectionClient.get
+      :noindex:
 
 **Retrieve an artifact using its ID**
 
    .. automethod:: dioptra.client.artifacts.ArtifactsCollectionClient.get_by_id
+      :noindex:
 
 **Retrieve the file listing associated with an artifact using its ID**
 
    .. automethod:: dioptra.client.artifacts.ArtifactsCollectionClient.get_files
+      :noindex:
 
 **Retrieve the contents of an artifact using its ID**
 
    .. automethod:: dioptra.client.artifacts.ArtifactsCollectionClient.get_contents
+      :noindex:
 
 .. _reference-artifacts-retrieval-rest-api:
 
@@ -120,6 +124,7 @@ Using Python Client
 **Create an Artifact**
 
    .. automethod:: dioptra.client.artifacts.ArtifactsCollectionClient.create
+      :noindex:
 
 
 Using REST API

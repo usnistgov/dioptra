@@ -44,7 +44,7 @@ Workflow
 .. rst-class:: header-on-a-card header-steps
 
 Step 1: Make "sample_and_transform" Plugin
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The ``sample_and_transform`` plugin will include multiple functions, each registered as a plugin task.
 Other than containing more functions, you will create the plugin the same way as before.
@@ -76,7 +76,7 @@ The tasks include:
 .. rst-class:: header-on-a-card header-steps
 
 Step 2: Create "sample_and_transform" Entrypoint
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The ``sample_and_transform_ep`` entrypoint will demonstrate a **multi-step task graph**. You will be able to pass arrays from one task to the next and re-use the ``print_stats`` task multiple times.
 

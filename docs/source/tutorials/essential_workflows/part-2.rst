@@ -195,7 +195,7 @@ Now add the task to the graph and bind the parameters.
 .. rst-class:: header-on-a-card header-steps
 
 Step 6: Create an Experiment and Run Jobs
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You will create an Experiment and then run multiple Jobs within it using different parameters.
 
