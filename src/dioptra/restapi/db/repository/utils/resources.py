@@ -543,24 +543,11 @@ def unlink_child(
     Raises:
         EntityDoesNotExistError: if parent or child do not exist
     """
-    assert_resource_exists(session, parent, DeletionPolicy.ANY)
-    assert_resource_exists(session, child, DeletionPolicy.ANY)
 
-    # We need a parent object...
-    if isinstance(parent, int):
-        temp = session.get(m.Resource, parent)
-        # I just checked parent exists above, so the above .get() should not
-        # return None.
-        assert temp is not None
-        parent = temp
+    parent_obj = get_one_resource(session, parent, DeletionPolicy.ANY)
+    child_obj = get_one_resource(session, child, DeletionPolicy.ANY)
 
-    # ... but a child ID
-    child_id = get_resource_id(child)
-
-    for idx, child in enumerate(parent.children):
-        if child.resource_id == child_id:
-            del parent.children[idx]
-            break
+    parent_obj.children.remove(child_obj)
 
 
 def unlink_parents(
