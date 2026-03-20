@@ -28,6 +28,7 @@ import pytest
 
 from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
+from ..lib.asserts import assert_retrieving_deleted_resource_snapshots_works
 
 from ..lib import helpers, routines
 from ..test_utils import assert_retrieving_resource_works
@@ -537,11 +538,10 @@ def test_delete_queue_by_id(
         dioptra_client, entrypoint_id=entrypoint["id"], queue_id=queue_to_delete["id"]
     )
     
-    routines.run_deleted_resource_snapshot_test(
+    assert_retrieving_deleted_resource_snapshots_works(
         dioptra_client.queues.snapshots,
-        deleted_resource=queue_to_delete
+        queue_to_delete["id"],
     )
-
 
 
 def test_manage_existing_queue_draft(

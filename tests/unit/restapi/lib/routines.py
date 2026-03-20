@@ -212,20 +212,6 @@ def run_resource_snapshots_tests(
     )
 
 
-def run_deleted_resource_snapshot_test(
-    client: SnapshotsSubCollectionClient[DioptraResponseProtocol],
-    *resource_ids: str | int,
-    deleted_resource: dict[str, Any],
-):
-    # Validate retrieval of snapshots
-    asserts.assert_retrieving_deleted_resource_snapshots_works(
-        client,
-        *resource_ids,
-        deleted_resource["id"],
-    )
-
-
-
 def run_resource_tag_tests(
     client: TagsSubCollectionClient[DioptraResponseProtocol],
     *resource_ids: str | int,

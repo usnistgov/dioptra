@@ -37,6 +37,7 @@ from dioptra.sdk.utilities.logging import forward_job_logs_to_api
 from ..lib import asserts, helpers, mock_rq, routines
 from ..test_utils import assert_retrieving_resource_works
 
+from ..lib.asserts import assert_retrieving_deleted_resource_snapshots_works
 
 @pytest.fixture
 def registered_job_logs(dioptra_client, registered_jobs):
@@ -1067,10 +1068,10 @@ def test_delete_job(
     job_to_delete = registered_jobs["job1"]
     dioptra_client.jobs.delete_by_id(job_to_delete["id"])
     assert_job_is_not_found(dioptra_client, job_id=job_to_delete["id"])
-    
-    routines.run_deleted_resource_snapshot_test(
+
+    assert_retrieving_deleted_resource_snapshots_works(
         dioptra_client.jobs.snapshots,
-        deleted_resource=job_to_delete
+        job_to_delete["id"],
     )
 
 

@@ -30,6 +30,7 @@ from dioptra.client.client import DioptraClient
 
 from ..lib import helpers, routines
 from ..test_utils import assert_retrieving_resource_works
+from ..lib.asserts import assert_retrieving_deleted_resource_snapshots_works
 
 # -- Assertions ------------------------------------------------------------------------
 
@@ -670,9 +671,10 @@ def test_delete_plugin_parameter_type(
     )
     dioptra_client.plugin_parameter_types.delete_by_id(plugin_param_type1["id"])
     assert_plugin_parameter_type_is_deleted(dioptra_client, plugin_param_type1["id"])
-    routines.run_deleted_resource_snapshot_test(
+
+    assert_retrieving_deleted_resource_snapshots_works(
         dioptra_client.plugin_parameter_types.snapshots,
-        deleted_resource=plugin_param_type1
+        plugin_param_type1["id"],
     )
 
 

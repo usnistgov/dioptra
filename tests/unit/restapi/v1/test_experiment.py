@@ -30,6 +30,7 @@ from dioptra.client.client import DioptraClient
 
 from ..lib import helpers, routines
 from ..test_utils import assert_retrieving_resource_works
+from ..lib.asserts import assert_retrieving_deleted_resource_snapshots_works
 
 # -- Assertions ------------------------------------------------------------------------
 
@@ -545,9 +546,10 @@ def test_delete_experiment_by_id(
     assert_experiment_is_deleted(
         dioptra_client, experiment_id=experiment_to_delete["id"]
     )
-    routines.run_deleted_resource_snapshot_test(
+
+    assert_retrieving_deleted_resource_snapshots_works(
         dioptra_client.experiments.snapshots,
-        deleted_resource=experiment_to_delete
+        experiment_to_delete["id"],
     )
 
 
