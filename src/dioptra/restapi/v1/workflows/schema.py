@@ -384,7 +384,8 @@ class ValidateSwapsGraphResponseSchema(Schema):
             ),
         },
     )
-    schemaIssues = fields.Nested(
+    
+    swapErrors = fields.Nested(
         ValidateEntrypointIssueSchema,
         attribute="swap_errors",
         metadata={"description": "A list of validation issues detected in the schema."},
