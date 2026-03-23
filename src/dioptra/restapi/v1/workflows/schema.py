@@ -384,7 +384,7 @@ class ValidateSwapsGraphResponseSchema(Schema):
             ),
         },
     )
-    
+
     swapErrors = fields.Nested(
         ValidateEntrypointIssueSchema,
         attribute="swap_errors",
