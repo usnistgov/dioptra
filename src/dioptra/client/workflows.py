@@ -30,6 +30,7 @@ RESOURCE_IMPORT: Final[str] = "resourceImport"
 DRAFT_COMMIT: Final[str] = "draftCommit"
 SWAPS: Final[str] = "swaps"
 
+
 class WorkflowsCollectionClient(CollectionClient[T]):
     """The client for managing Dioptra's /workflows collection.
 

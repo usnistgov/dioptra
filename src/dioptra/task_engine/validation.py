@@ -125,7 +125,9 @@ def get_json_schema(default: bool = False) -> dict:
     return schema
 
 
-def _schema_validate(experiment_desc: Mapping[str, Any], schema_provider: Callable | None = None) -> list[ValidationIssue]:
+def _schema_validate(
+    experiment_desc: Mapping[str, Any], schema_provider: Callable | None = None
+) -> list[ValidationIssue]:
     """
     Validate the given declarative experiment description against a JSON-Schema
     schema.

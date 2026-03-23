@@ -352,18 +352,22 @@ class ValidateSwapsGraphRequestSchema(Schema):
         },
     )
 
+
 class TaskRefSchema(Schema):
     pluginSnapshotId = fields.Integer(
         attribute="plugin_snapshot_id",
-        metadata={"description": "The plugin snapshot ID for the plugin containing this task"}
+        metadata={
+            "description": "The plugin snapshot ID for the plugin containing this task"
+        },
     )
     pluginFileName = fields.String(
         attribute="pluginfile_filename",
-        metadata={"description": "The filename of the plugin file containing this task"}
+        metadata={
+            "description": "The filename of the plugin file containing this task"
+        },
     )
     taskName = fields.String(
-        attribute="task_name",
-        metadata={"description": "The name of the task"}
+        attribute="task_name", metadata={"description": "The name of the task"}
     )
 
 
@@ -398,4 +402,3 @@ class ValidateSwapsGraphResponseSchema(Schema):
             "description": "Mapping of swap names to a mapping of choice aliases to task references."
         },
     )
-

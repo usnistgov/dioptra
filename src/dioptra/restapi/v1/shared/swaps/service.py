@@ -14,13 +14,16 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from typing import Any, Sequence
+from typing import Any
 
-from dioptra.task_engine.validation import _schema_validate
-from dioptra.task_engine.issues import IssueSeverity, IssueType, ValidationIssue
+from dioptra.restapi.db.models.plugins import (
+    FunctionTask,
+    PluginPluginFile,
+    PluginTaskOutputParameter,
+)
 from dioptra.sdk.api.swappable_validation import get_json_schema
-from dioptra.restapi.v1.shared.task_engine_yaml.protocols import PluginPluginFileProtocol, PluginProtocol, PluginTaskProtocol
-from dioptra.restapi.db.models.plugins import FunctionTask, Plugin, PluginPluginFile, PluginTaskOutputParameter
+from dioptra.task_engine.issues import IssueSeverity, IssueType, ValidationIssue
+from dioptra.task_engine.validation import _schema_validate
 
 
 class SwapsValidationService(object):
@@ -28,32 +31,26 @@ class SwapsValidationService(object):
         self,
         pre_rendered_task_graph: dict[str, Any],
     ) -> list[ValidationIssue]:
-        
         return _schema_validate(pre_rendered_task_graph, get_json_schema)
-        
+
     def validate_swap_output_matches(
-        self,
-        pre_rendered_task_graph: dict[str, Any],
-        task_lookup_dict: dict[str, Any]
+        self, pre_rendered_task_graph: dict[str, Any], task_lookup_dict: dict[str, Any]
     ) -> tuple[list[ValidationIssue], dict[str, Any]]:
+        mismatched_aliases = {}
+        swap_tasks: dict[str, Any] = {}
+        collected_no_tasks_found = []
 
-        mismatched_aliases = dict()
-        swap_tasks : dict[str,Any] = dict()
-        collected_no_tasks_found = list()
-
-
-        for step, task in pre_rendered_task_graph.items():
+        for _step, task in pre_rendered_task_graph.items():
             for swap_name, aliased_defns in task.items():
-                if swap_name.startswith('?'):
-
+                if swap_name.startswith("?"):
                     output_types = set()
-                    swap_dict = dict()
+                    swap_dict = {}
 
                     for alias, definition in aliased_defns.items():
                         # figure out whether its long or short form
-                        if 'task' in definition:
+                        if "task" in definition:
                             # long version
-                            task_name = definition['task']
+                            task_name = definition["task"]
                         else:
                             # short version - should be exactly one key in here
                             task_name = list(definition.keys())[0]
@@ -61,23 +58,35 @@ class SwapsValidationService(object):
                         # get the output type of task_name in the plugin
                         if task_name in task_lookup_dict:
                             swap_dict[alias] = {
-                                "plugin_snapshot_id": task_lookup_dict[task_name]["plugin_snapshot_id"],
-                                "pluginfile_filename": task_lookup_dict[task_name]["pluginfile_filename"],
+                                "plugin_snapshot_id": task_lookup_dict[task_name][
+                                    "plugin_snapshot_id"
+                                ],
+                                "pluginfile_filename": task_lookup_dict[task_name][
+                                    "pluginfile_filename"
+                                ],
                                 "task_name": task_lookup_dict[task_name]["task_name"],
                             }
-                            
 
-                            output_parameters: list[PluginTaskOutputParameter] = task_lookup_dict[task_name]['output_parameters']
-                            output_types.add(tuple([parameter.parameter_type.name for parameter in output_parameters]))
+                            output_parameters: list[PluginTaskOutputParameter] = (
+                                task_lookup_dict[task_name]["output_parameters"]
+                            )
+                            output_types.add(
+                                tuple(
+                                    [
+                                        parameter.parameter_type.name
+                                        for parameter in output_parameters
+                                    ]
+                                )
+                            )
                         else:
                             collected_no_tasks_found.append(
                                 ValidationIssue(
                                     type_=IssueType.SEMANTIC,
                                     severity=IssueSeverity.ERROR,
-                                    message=f"In swap '{swap_name}', task with name '{task_name}' not found in registered tasks."
+                                    message=f"In swap '{swap_name}', task with name '{task_name}' not found in registered tasks.",
                                 )
                             )
-                            
+
                     swap_tasks[swap_name] = swap_dict
 
                     if len(output_types) > 1:
@@ -85,20 +94,17 @@ class SwapsValidationService(object):
 
         return collected_no_tasks_found + [
             ValidationIssue(
-                type_= IssueType.TYPE,
-                severity = IssueSeverity.ERROR,
-                message = f"Swap '{swap_name}' contains mismatched output types: {types}"
-            ) for swap_name, types in mismatched_aliases.items()
+                type_=IssueType.TYPE,
+                severity=IssueSeverity.ERROR,
+                message=f"Swap '{swap_name}' contains mismatched output types: {types}",
+            )
+            for swap_name, types in mismatched_aliases.items()
         ], swap_tasks
-    
-    def build_task_lookup_dict(
-        self,
-        plugins: list[PluginPluginFile]
-    ):
-        lookup = dict()
-        
-        for pair in plugins:
 
+    def build_task_lookup_dict(self, plugins: list[PluginPluginFile]):
+        lookup = {}
+
+        for pair in plugins:
             plugin = pair.plugin
             file = pair.plugin_file
 
@@ -110,7 +116,7 @@ class SwapsValidationService(object):
                         "plugin_snapshot_id": plugin.resource_snapshot_id,
                         "pluginfile_filename": file.filename,
                         "task_name": task.plugin_task_name,
-                        "output_parameters": task.output_parameters
+                        "output_parameters": task.output_parameters,
                     }
 
         return lookup
