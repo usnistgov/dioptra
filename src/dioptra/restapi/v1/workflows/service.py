@@ -67,13 +67,13 @@ from dioptra.restapi.v1.plugins.service import (
     PluginNameService,
     PluginService,
 )
+from dioptra.restapi.v1.shared.entrypoint_swaps.service import SwapsValidationService
 from dioptra.restapi.v1.shared.io_file_service import IOFileService
 from dioptra.restapi.v1.shared.resource_service import (
     ResourceIdService,
     ResourceService,
 )
 from dioptra.restapi.v1.shared.signature_analysis import get_plugin_signatures
-from dioptra.restapi.v1.shared.entrypoint_swaps.service import SwapsValidationService
 from dioptra.restapi.v1.shared.task_engine_yaml.service import TaskEngineYamlService
 from dioptra.restapi.v1.utils import PluginParameterTypeDict, PluginWithFilesDict
 from dioptra.sdk.utilities.paths import set_cwd
