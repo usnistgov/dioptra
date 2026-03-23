@@ -330,3 +330,76 @@ class ValidateEntrypointResponseSchema(Schema):
         metadata={"description": "A list of validation issues detected in the schema."},
         many=True,
     )
+
+
+class ValidateSwapsGraphRequestSchema(Schema):
+    """The inputs needed to validate a pre-rendered graph containing swaps."""
+
+    swapsGraph = fields.String(
+        attribute="swaps_graph",
+        metadata={"description": "Pre-rendered graph containing swaps."},
+        required=True,
+    )
+    pluginSnapshotIds = fields.List(
+        fields.Integer(),
+        attribute="plugin_snapshot_ids",
+        data_key="pluginSnapshots",
+        metadata={
+            "description": (
+                "A list of IDs for the Plugin Snapshots that will be attached to the "
+                "Entrypoint resource."
+            )
+        },
+    )
+
+
+class TaskRefSchema(Schema):
+    pluginSnapshotId = fields.Integer(
+        attribute="plugin_snapshot_id",
+        metadata={
+            "description": "The plugin snapshot ID for the plugin containing this task"
+        },
+    )
+    pluginFileName = fields.String(
+        attribute="pluginfile_filename",
+        metadata={
+            "description": "The filename of the plugin file containing this task"
+        },
+    )
+    taskName = fields.String(
+        attribute="task_name", metadata={"description": "The name of the task"}
+    )
+
+
+class ValidateSwapsGraphResponseSchema(Schema):
+    """The response for the validateEntrypoint endpoint."""
+
+    schemaValid = fields.Bool(
+        attribute="schema_valid",
+        metadata={
+            "description": (
+                "Indicates whether the proposed pre-rendered swaps graph "
+                "is valid. If False, the schemaIssues field will contain a list of "
+                "validation issues."
+            ),
+        },
+    )
+
+    swapErrors = fields.Nested(
+        ValidateEntrypointIssueSchema,
+        attribute="swap_errors",
+        metadata={"description": "A list of validation issues detected in the schema."},
+        many=True,
+    )
+
+    swaps = fields.Dict(
+        keys=fields.Str(),
+        values=fields.Dict(
+            keys=fields.Str(),
+            values=fields.Nested(TaskRefSchema),
+        ),
+        attribute="swaps",
+        metadata={
+            "description": "Mapping of swap names to a mapping of choice aliases to task references."
+        },
+    )

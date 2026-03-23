@@ -1,0 +1,22 @@
+greeting_step:
+  ?greeting_swap:
+    hello_choice:
+      hello:
+        name: $name
+    goodbye_choice:
+      greet:
+        greeting: Goodbye
+        name: $name
+    shout_choice:
+      task: shout
+      args: [abcd]
+    shout_choice2:
+      task: shout
+      kwargs:
+        greeting: abc
+    load_random:
+      load_dataset_from_tfds:
+        name: idontknowthat
+shout_step:
+  shout:
+    greeting: $greeting_step.greeting

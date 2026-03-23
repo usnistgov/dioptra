@@ -564,7 +564,14 @@ class UserPasswordError(DioptraError):
 
 
 class EntrypointSwapsRenderError(DioptraError):
-    """Password Error."""
+    """Entrypoint Swaps Rendering Error."""
+
+    def __init__(self, message: str):
+        super().__init__(message)
+
+
+class EmptyGraphError(DioptraError):
+    """Empty Graph Error."""
 
     def __init__(self, message: str):
         super().__init__(message)

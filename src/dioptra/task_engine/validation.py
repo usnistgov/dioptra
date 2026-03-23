@@ -17,7 +17,7 @@
 import json
 import pathlib
 from collections.abc import Iterable, Mapping, Sequence
-from typing import Any, Union
+from typing import Any, Callable, Union
 
 from dioptra.sdk.exceptions.base import BaseTaskEngineError
 from dioptra.task_engine import type_registry, type_validation, types, util
@@ -125,7 +125,9 @@ def get_json_schema(default: bool = False) -> dict:
     return schema
 
 
-def _schema_validate(experiment_desc: Mapping[str, Any]) -> list[ValidationIssue]:
+def _schema_validate(
+    experiment_desc: Mapping[str, Any], schema_provider: Callable | None = None
+) -> list[ValidationIssue]:
     """
     Validate the given declarative experiment description against a JSON-Schema
     schema.
@@ -138,8 +140,10 @@ def _schema_validate(experiment_desc: Mapping[str, Any]) -> list[ValidationIssue
         A list of ValidationIssue objects; will be an empty list if the
         experiment description was valid.
     """
-
-    schema = get_json_schema()
+    if schema_provider is not None:
+        schema = schema_provider()
+    else:
+        schema = get_json_schema()
 
     error_messages = util.schema_validate(
         experiment_desc, schema, _instance_path_to_description

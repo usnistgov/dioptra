@@ -36,12 +36,15 @@ from .schema import (
     SignatureAnalysisSchema,
     ValidateEntrypointRequestSchema,
     ValidateEntrypointResponseSchema,
+    ValidateSwapsGraphRequestSchema,
+    ValidateSwapsGraphResponseSchema,
 )
 from .service import (
     DraftCommitService,
     ResourceImportService,
     SignatureAnalysisService,
     ValidateEntrypointService,
+    ValidateSwapsGraphService,
 )
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -197,5 +200,41 @@ class ValidateEntrypointEndpoint(Resource):
             plugin_snapshot_ids=plugin_snapshot_ids,
             entrypoint_parameters=parameters,
             entrypoint_artifacts=artifact_parameters,
+            log=log,
+        )
+
+
+@api.route("/validateEntrypoint/swaps")
+class ValidateSwapsGraphEndpoint(Resource):
+    @inject
+    def __init__(
+        self, validate_swaps_service: ValidateSwapsGraphService, *args, **kwargs
+    ) -> None:
+        """Initialize the workflow resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            entrypoint_validate_service: An EntrypointValidateService object.
+        """
+        self._validate_swaps_service = validate_swaps_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    @accepts(schema=ValidateSwapsGraphRequestSchema, api=api)
+    @responds(schema=ValidateSwapsGraphResponseSchema, api=api)
+    def post(self):
+        """Validates the proposed inputs for an entrypoint."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="ValidateSwapsGraph",
+            request_type="POST",
+        )
+        parsed_obj = request.parsed_obj  # pyright: ignore
+        task_graph = parsed_obj["swaps_graph"]
+        plugin_snapshot_ids = parsed_obj["plugin_snapshot_ids"]
+        return self._validate_swaps_service.validate(
+            swaps_graph=task_graph,
+            plugin_snapshot_ids=plugin_snapshot_ids,
             log=log,
         )
