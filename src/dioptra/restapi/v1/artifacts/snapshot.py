@@ -22,6 +22,7 @@ from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
 from dioptra.restapi.errors import EntityDoesNotExistError
+from dioptra.restapi.v1.entity_types import EntityTypes
 
 RESOURCE_TYPE: Final[str] = "artifact"
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -64,7 +65,7 @@ class ArtifactSnapshotIdService(object):
 
         if artifact is None:
             raise EntityDoesNotExistError(
-                RESOURCE_TYPE,
+                EntityTypes.ARTIFACT,
                 artifact_id=artifact_id,
                 artifact_snapshot_id=artifact_snapshot_id,
             )

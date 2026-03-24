@@ -697,7 +697,9 @@ def add_resource_lock_types(
 
     if ResourceLockType.READONLY in existing_lock_types:
         if types_to_add:
-            raise e.ReadOnlyLockError(resource_type, resource_id=resource_id)
+            raise e.ReadOnlyLockError(
+                resource_type.db_schema_name, resource_id=resource_id
+            )
 
     else:
         # here, we really need the Resource object; ResourceLock's

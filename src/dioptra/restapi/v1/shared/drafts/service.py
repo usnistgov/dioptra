@@ -34,6 +34,7 @@ from dioptra.restapi.errors import (
     InvalidDraftBaseResourceSnapshotError,
     MalformedDraftResourceError,
 )
+from dioptra.restapi.v1.entity_types import EntityTypes
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -357,7 +358,10 @@ class ResourceIdDraftService(object):
         )
 
         if resource is None or resource.resource_type != self._resource_type:
-            raise EntityDoesNotExistError(self._resource_type, resource_id=resource_id)
+            raise EntityDoesNotExistError(
+                EntityTypes.get_from_string(self._resource_type),
+                resource_id=resource_id,
+            )
 
         num_other_drafts = self._uow.drafts_repo.get_num_draft_modifications(
             # probably should not reference a flask detail like this from

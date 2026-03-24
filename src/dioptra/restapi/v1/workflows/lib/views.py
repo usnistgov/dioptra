@@ -343,7 +343,9 @@ def get_resource_snapshot(
     snapshot = db.session.scalar(snapshot_stmt)
 
     if snapshot is None:
-        raise EntityDoesNotExistError(resource_type, snapshot_id=snapshot_id)
+        raise EntityDoesNotExistError(
+            EntityTypes.get_from_string(resource_type), snapshot_id=snapshot_id
+        )
 
     return snapshot
 

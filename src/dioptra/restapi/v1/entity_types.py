@@ -149,6 +149,7 @@ class EntityTypes(Enum):
     EXPERIMENT = "experiment", "Experiment"
     # --- Model-Related Entities ---
     ML_MODEL = "ml_model", "M.L. Model"
+    ML_FLOW_RUN = "ml_flow_run", "M.L. Flow Run"
     ML_MODEL_VERSION = "ml_model_version", "M.L. Model Version"
     # --- Artifact-Related Entities ---
     ARTIFACT = ("artifact", "Artifact")
