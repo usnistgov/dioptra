@@ -23,14 +23,15 @@ registered, renamed, deleted, and locked/unlocked as expected through the REST A
 
 from http import HTTPStatus
 from tempfile import TemporaryDirectory
-from typing import Any, Tuple, cast
+from typing import Any, cast
 
+import mlflow
 import pytest
 
 from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
 
-from ..lib import helpers
+from ..lib import helpers, mock_mlflow
 from ..test_utils import assert_retrieving_resource_works, assert_searchable_field_works
 
 # -- Assertions ------------------------------------------------------------------------
@@ -284,6 +285,35 @@ def test_create_artifact(
     )
 
 
+def test_register_artifact_with_missing_mlflow_run_returns_not_found(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_jobs: dict[str, Any],
+    registered_mlflowrun_incomplete: dict[str, Any],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    run_id = registered_mlflowrun_incomplete["job1"]["mlflowRunId"]
+
+    def missing_run(
+        self: mock_mlflow.MockMlflowClient, run_id: str
+    ) -> mock_mlflow.MockMlflowRun:
+        raise mlflow.exceptions.MlflowException("Run not found")
+
+    monkeypatch.setattr(mock_mlflow.MockMlflowClient, "get_run", missing_run)
+
+    response = dioptra_client.artifacts.create(
+        group_id=auth_account["groups"][0]["id"],
+        job_id=registered_jobs["job1"]["id"],
+        artifact_uri=f"s3://bucket/runs/1/{run_id}/artifacts/model_v1.artifact",
+        description="artifact with missing run",
+    )
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response.json()["error"] == "MlflowRunNotFoundError"
+    assert response.json()["detail"] == {}
+    assert "Failed to locate mlflow run" in response.json()["message"]
+
+
 def test_artifacts_get_all(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
@@ -515,8 +545,7 @@ def test_get_contents(
     existing_artifact = registered_artifacts["artifact1"]
     with TemporaryDirectory() as tmp_dir:
         contents = dioptra_client.artifacts.get_contents(
-            artifact_id=existing_artifact["id"],
-            output_dir=tmp_dir
+            artifact_id=existing_artifact["id"], output_dir=tmp_dir
         )
         assert contents.exists()
 

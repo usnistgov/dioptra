@@ -31,6 +31,7 @@ from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
 from dioptra.restapi.v1 import utils
+from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.schemas import IdStatusResponseSchema
 
 from .schema import (
@@ -50,7 +51,7 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 def generate_resource_drafts_endpoint(
     api: Namespace,
-    resource_name: str,
+    resource_type: EntityType,
     route_prefix: str,
     request_schema: Type[Schema],
 ) -> Resource:
@@ -59,7 +60,7 @@ def generate_resource_drafts_endpoint(
 
     Args:
         api: The API namespace
-        resource_name: The name of the resource
+        resource_type: The type of the resource
         request_schema: The request schema type
 
     Returns:
@@ -83,7 +84,7 @@ def generate_resource_drafts_endpoint(
             *args,
             **kwargs,
         ) -> None:
-            self._draft_service = draft_service.build(resource_type=resource_name)
+            self._draft_service = draft_service.build(resource_type=resource_type)
             super().__init__(*args, **kwargs)
 
         @login_required
@@ -142,14 +143,14 @@ def generate_resource_drafts_endpoint(
 
 
 def generate_resource_drafts_id_endpoint(
-    api: Namespace, resource_name: str, request_schema: Type[Schema]
+    api: Namespace, resource_type: EntityType, request_schema: Type[Schema]
 ) -> Resource:
     """
     Generates an Resource class for modifying and deleting Drafts
 
     Args:
         api: The API namespace
-        resource_name: The name of the resource
+        resource_type: The type of the resource
         request_schema: The request schema type
 
     Returns:
@@ -165,7 +166,9 @@ def generate_resource_drafts_id_endpoint(
         model_name = "DraftsId" + "".join(request_schema.__name__.rsplit("Schema", 1))
 
     @api.route("/drafts/<int:draftId>")
-    @api.param("draftId", f"ID for the Draft of the {resource_name} resource.")
+    @api.param(
+        "draftId", f"ID for the Draft of the {resource_type.display_name} resource."
+    )
     class ResourcesDraftsIdEndpoint(Resource):
         @inject
         def __init__(
@@ -174,7 +177,7 @@ def generate_resource_drafts_id_endpoint(
             *args,
             **kwargs,
         ) -> None:
-            self._draft_id_service = draft_id_service.build(resource_type=resource_name)
+            self._draft_id_service = draft_id_service.build(resource_type=resource_type)
             super().__init__(*args, **kwargs)
 
         @login_required
@@ -220,14 +223,14 @@ def generate_resource_drafts_id_endpoint(
 
 
 def generate_resource_id_draft_endpoint(
-    api: Namespace, resource_name: str, request_schema: Type[Schema]
+    api: Namespace, resource_type: EntityType, request_schema: Type[Schema]
 ) -> Resource:
     """
     Generates an Resource class for managing the Draft of an existing resource.
 
     Args:
         api: The API namespace
-        resource_name: The name of the resource
+        resource_type: The type of the resource
         request_schema: The request schema type
 
     Returns:
@@ -259,7 +262,7 @@ def generate_resource_id_draft_endpoint(
             *args,
             **kwargs,
         ) -> None:
-            self._id_draft_service = id_draft_service.build(resource_type=resource_name)
+            self._id_draft_service = id_draft_service.build(resource_type=resource_type)
             super().__init__(*args, **kwargs)
 
         @login_required
@@ -322,7 +325,7 @@ def generate_resource_id_draft_endpoint(
 
 def generate_nested_resource_drafts_endpoint(
     api: Namespace,
-    resource_name: str,
+    resource_type: EntityType,
     resource_route: str,
     base_resource_route: str,
     request_schema: Type[Schema],
@@ -332,7 +335,7 @@ def generate_nested_resource_drafts_endpoint(
 
     Args:
         api: The API namespace
-        resource_name: The name of the nested resource
+        resource_type: The type of the nested resource
         resource_route: The route of the nested resource
         base_resource_route: The route of the base resource
         request_schema: The request schema type
@@ -360,7 +363,7 @@ def generate_nested_resource_drafts_endpoint(
             *args,
             **kwargs,
         ) -> None:
-            self._draft_service = draft_service.build(resource_type=resource_name)
+            self._draft_service = draft_service.build(resource_type=resource_type)
             super().__init__(*args, **kwargs)
 
         @login_required
@@ -420,7 +423,7 @@ def generate_nested_resource_drafts_endpoint(
 
 def generate_nested_resource_drafts_id_endpoint(
     api: Namespace,
-    resource_name: str,
+    resource_type: EntityType,
     resource_route: str,
     request_schema: Type[Schema],
 ) -> Resource:
@@ -429,7 +432,7 @@ def generate_nested_resource_drafts_id_endpoint(
 
     Args:
         api: The API namespace
-        resource_name: The name of the resource
+        resource_type: The type of the resource
         resource_route: The route of the resource
         request_schema: The request schema type
 
@@ -448,7 +451,7 @@ def generate_nested_resource_drafts_id_endpoint(
         )
 
     @api.route(f"/<int:id>/{resource_route}/drafts/<int:draftId>")
-    @api.param("draftId", f"ID for the Draft of the {resource_name} resource.")
+    @api.param("draftId", f"ID for the Draft of the {resource_type} resource.")
     class ResourcesDraftsIdEndpoint(Resource):
         @inject
         def __init__(
@@ -457,7 +460,7 @@ def generate_nested_resource_drafts_id_endpoint(
             *args,
             **kwargs,
         ) -> None:
-            self._draft_id_service = draft_id_service.build(resource_type=resource_name)
+            self._draft_id_service = draft_id_service.build(resource_type=resource_type)
             super().__init__(*args, **kwargs)
 
         @login_required
@@ -502,7 +505,7 @@ def generate_nested_resource_drafts_id_endpoint(
 
 def generate_nested_resource_id_draft_endpoint(
     api: Namespace,
-    resource_name: str,
+    resource_type: EntityType,
     resource_route: str,
     request_schema: Type[Schema],
 ) -> Resource:
@@ -511,7 +514,7 @@ def generate_nested_resource_id_draft_endpoint(
 
     Args:
         api: The API namespace
-        resource_name: The name of the resource
+        resource_type: The type of the resource
         resource_route: The route of the resource
         request_schema: The request schema type
 
@@ -549,7 +552,7 @@ def generate_nested_resource_id_draft_endpoint(
             *args,
             **kwargs,
         ) -> None:
-            self._id_draft_service = id_draft_service.build(resource_type=resource_name)
+            self._id_draft_service = id_draft_service.build(resource_type=resource_type)
             super().__init__(*args, **kwargs)
 
         @login_required

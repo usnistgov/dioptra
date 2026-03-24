@@ -30,6 +30,9 @@ from structlog.stdlib import BoundLogger
 from dioptra.restapi.db import models
 from dioptra.restapi.v1 import utils
 
+if typing.TYPE_CHECKING:
+    from dioptra.restapi.v1.entity_types import EntityType
+
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
@@ -58,6 +61,17 @@ def add_attribute_values(**kwargs: typing.Any) -> list[str]:
         f"{sep(index)} {key} having value ({value})"
         for index, (key, value) in enumerate(kwargs.items())
     ]
+
+
+def normalize_public_entity_type(entity_type: "EntityType") -> "EntityType":
+    """Map internal-only entity sentinels to public-facing resource labels."""
+
+    from dioptra.restapi.v1.entity_types import EntityType
+
+    if entity_type is EntityType.NONE:
+        return EntityType.RESOURCE
+
+    return entity_type
 
 
 class DioptraError(Exception):
@@ -89,18 +103,40 @@ class EntityDoesNotExistError(DioptraError):
         kwargs: the attribute value pairs used to request the entity
     """
 
-    def __init__(self, entity_type: str | None = None, **kwargs: typing.Any):
+    def __init__(self, entity_type: "EntityType", **kwargs: typing.Any):
+        entity_type = normalize_public_entity_type(entity_type)
         super().__init__(
-            "".join(
+            " ".join(
                 [
-                    "Failed to locate ",
-                    "an entity" if entity_type is None else entity_type,
+                    f"Failed to locate {entity_type.display_name}",
                     *add_attribute_values(**kwargs),
                     ".",
                 ]
             )
         )
-        self.entity_type = "unknown" if entity_type is None else entity_type
+        self.entity_type = entity_type
+        self.entity_attributes = kwargs
+
+
+class EntityRelationshipDoesNotExistError(DioptraError):
+    """
+    The requested entity relationship does not exist.
+    Args:
+        entity_types: the entity types
+        kwargs: the attribute value pairs used to request the entity
+    """
+
+    def __init__(self, entity_types: list["EntityType"], **kwargs: typing.Any):
+        super().__init__(
+            " ".join(
+                [
+                    f"Failed to locate relationship between {[e.display_name for e in entity_types]}",
+                    *add_attribute_values(**kwargs),
+                    ".",
+                ]
+            )
+        )
+        self.entity_types = entity_types
         self.entity_attributes = kwargs
 
 
@@ -113,14 +149,17 @@ class EntityExistsError(DioptraError):
         kwargs: the attribute value pairs used to request the entity
     """
 
-    def __init__(self, entity_type: str | None, existing_id: int, **kwargs: typing.Any):
+    def __init__(
+        self, entity_type: "EntityType", existing_id: int, **kwargs: typing.Any
+    ):
+        entity_type = normalize_public_entity_type(entity_type)
         super().__init__(
             "".join(
                 [
                     "The ",
-                    "entity" if entity_type is None else entity_type,
+                    entity_type.display_name,
                     *add_attribute_values(**kwargs),
-                    " is not available.",
+                    " already exists.",
                 ]
             )
         )
@@ -138,12 +177,15 @@ class EntityDeletedError(DioptraError):
         kwargs: the attribute value pairs used to request the entity
     """
 
-    def __init__(self, entity_type: str | None, existing_id: int, **kwargs: typing.Any):
+    def __init__(
+        self, entity_type: "EntityType", existing_id: int, **kwargs: typing.Any
+    ):
+        entity_type = normalize_public_entity_type(entity_type)
         super().__init__(
             "".join(
                 [
                     "The ",
-                    "entity" if entity_type is None else entity_type,
+                    entity_type.display_name,
                     *add_attribute_values(**kwargs),
                     " is deleted.",
                 ]
@@ -169,11 +211,11 @@ class LockError(DioptraError):
 class ReadOnlyLockError(LockError):
     """The type has a read-only lock and cannot be modified."""
 
-    def __init__(self, type: str | None = None, **kwargs: typing.Any):
+    def __init__(self, type: "EntityType", **kwargs: typing.Any):
         super().__init__(
             "".join(
                 [
-                    f"The {type or 'resource'} type",
+                    f"The {type.display_name} type",
                     *add_attribute_values(**kwargs),
                     " has a read-only lock and cannot be modified.",
                 ]
@@ -225,6 +267,21 @@ class DraftDoesNotExistError(DioptraError):
         self.entity_attributes = kwargs
 
 
+class DraftBaseResourceDoesNotExistError(DioptraError):
+    """The requested draft base resource does not exist."""
+
+    def __init__(self, base_resource_id: int):
+        super().__init__(
+            "".join(
+                [
+                    "The requested draft base resource",
+                    *add_attribute_values(base_resource_id=base_resource_id),
+                    " does not exist.",
+                ]
+            )
+        )
+
+
 class DraftAlreadyExistsError(DioptraError):
     """The draft already exists."""
 
@@ -247,7 +304,7 @@ class DraftResourceModificationsCommitError(DioptraError):
     ):
         super().__init__(
             f"Draft modifications for a [{resource_type}] with id: {resource_id} "
-            "could not be commited."
+            "could not be committed."
         )
         self.draft = draft
         self.base_snapshot = base_snapshot
@@ -295,6 +352,21 @@ class PluginTaskArtifactTaskOverlapError(DioptraError):
         )
 
 
+class PluginTaskDoesNotExistError(DioptraError):
+    """The requested plugin task does not exist."""
+
+    def __init__(self, **kwargs: typing.Any):
+        super().__init__(
+            "".join(
+                [
+                    "The plugin task",
+                    *add_attribute_values(**kwargs),
+                    " does not exist.",
+                ]
+            )
+        )
+
+
 class QueryParameterValidationError(DioptraError):
     """Input parameters failed validation."""
 
@@ -314,7 +386,7 @@ class QueryParameterValidationError(DioptraError):
 
 
 class QueryParameterNotUniqueError(QueryParameterValidationError):
-    """Query Parameters failed unique validatation check."""
+    """Query Parameters failed unique validation check."""
 
     def __init__(self, type: str, **kwargs):
         super().__init__(type, "unique", **kwargs)
@@ -450,12 +522,27 @@ class JobMlflowRunNotSetError(DioptraError):
         )
 
 
+class MlflowRunNotFoundError(DioptraError):
+    """The requested mlflow run id was not found in the mlflow database."""
+
+    def __init__(self, mlflow_run_id: str):
+        super().__init__(
+            " ".join(
+                [
+                    "Failed to locate mlflow run",
+                    *add_attribute_values(run_id=mlflow_run_id),
+                    "in the mlflow database.",
+                ]
+            )
+        )
+
+
 class EntityDependencyError(DioptraError):
     """
     Base Error for dependency problems between entities.
 
     Args:
-        message: a message describing the dependecy error
+        message: a message describing the dependency error
     """
 
     def __init__(self, message: str):
@@ -699,11 +786,14 @@ class DraftBaseInvalidError(DioptraError):
     """
 
     def __init__(
-        self, base_resource_id: int, parent_type: str, child_type: str
+        self,
+        base_resource_id: int,
+        parent_type: "EntityType",
+        child_type: "EntityType",
     ) -> None:
         msg = (
-            f"Invalid draft base resource ID: resource type {parent_type!r}"
-            f" is not a valid parent of resource type {child_type!r}:"
+            f"Invalid draft base resource ID: resource type {parent_type.display_name!r}"
+            f" is not a valid parent of resource type {child_type.display_name!r}:"
             f" {base_resource_id}"
         )
         super().__init__(msg)
@@ -753,7 +843,7 @@ def error_result(
     }, status.value
 
 
-# Silenced Complexity error for this function since it is a straitfoward registration of
+# Silenced Complexity error for this function since it is a straightforward registration of
 # error handlers
 def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
     """Registers the error handlers with the main application.
@@ -771,7 +861,25 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
         return error_result(
             error,
             http.HTTPStatus.NOT_FOUND,
-            {"entity_type": error.entity_type, **error.entity_attributes},
+            {"entity_type": error.entity_type.db_table_name, **error.entity_attributes},
+        )
+
+    @api.errorhandler(EntityRelationshipDoesNotExistError)
+    def handle_resource_relationship_does_not_exist_error(
+        error: EntityRelationshipDoesNotExistError,
+    ):
+        log.debug(
+            "Entity relationship not found",
+            entity_types=error.entity_types,
+            **error.entity_attributes,
+        )
+        return error_result(
+            error,
+            http.HTTPStatus.NOT_FOUND,
+            {
+                "entity_types": [e.db_table_name for e in error.entity_types],
+                **error.entity_attributes,
+            },
         )
 
     @api.errorhandler(EntityExistsError)
@@ -786,7 +894,7 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
             error,
             http.HTTPStatus.CONFLICT,
             {
-                "entity_type": error.entity_type,
+                "entity_type": error.entity_type.db_table_name,
                 "existing_id": error.existing_id,
                 "entity_attributes": {**error.entity_attributes},
             },
@@ -813,6 +921,13 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
 
     @api.errorhandler(DraftDoesNotExistError)
     def handle_draft_does_not_exist(error: DraftDoesNotExistError):
+        log.debug(error.to_message())
+        return error_result(error, http.HTTPStatus.NOT_FOUND, {})
+
+    @api.errorhandler(DraftBaseResourceDoesNotExistError)
+    def handle_draft_base_resource_does_not_exist(
+        error: DraftBaseResourceDoesNotExistError,
+    ):
         log.debug(error.to_message())
         return error_result(error, http.HTTPStatus.NOT_FOUND, {})
 
@@ -874,6 +989,11 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
             },
         )
 
+    @api.errorhandler(PluginTaskDoesNotExistError)
+    def handle_plugin_task_does_not_exist_error(error: PluginTaskDoesNotExistError):
+        log.debug(error.to_message())
+        return error_result(error, http.HTTPStatus.NOT_FOUND, {})
+
     @api.errorhandler(UserDoesNotExistError)
     def handle_user_does_not_exist_error(error: UserDoesNotExistError):
         log.debug(error.to_message())
@@ -893,6 +1013,11 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
     def handle_user_password_error(error: UserPasswordError):
         log.debug(error.to_message())
         return error_result(error, http.HTTPStatus.UNAUTHORIZED, {})
+
+    @api.errorhandler(MlflowRunNotFoundError)
+    def handle_mlflow_run_not_found_error(error: MlflowRunNotFoundError):
+        log.debug(error.to_message())
+        return error_result(error, http.HTTPStatus.NOT_FOUND, {})
 
     @api.errorhandler(JobStoreError)
     def handle_mlflow_error(error: JobStoreError):
