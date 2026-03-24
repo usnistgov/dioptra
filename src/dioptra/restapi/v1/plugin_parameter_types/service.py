@@ -104,7 +104,7 @@ class PluginParameterTypeService(object):
         )
 
         resource = models.Resource(
-            resource_type=EntityTypes.PLUGIN_TASK_PARAMETER_TYPE.get_db_schema_name(),
+            resource_type=EntityTypes.PLUGIN_TASK_PARAMETER_TYPE.db_schema_name,
             owner=group,
         )
         new_plugin_parameter_type = models.PluginTaskParameterType(

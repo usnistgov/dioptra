@@ -195,9 +195,9 @@ class JobService(object):
 
         if entrypoint_id not in set(experiment_entry_point_ids):
             raise EntityNotRegisteredError(
-                EntityTypes.EXPERIMENT.get_db_schema_name(),
+                EntityTypes.EXPERIMENT.db_schema_name,
                 experiment_id,
-                EntityTypes.ENTRYPOINT.get_db_schema_name(),
+                EntityTypes.ENTRYPOINT.db_schema_name,
                 entrypoint_id,
             )
 
@@ -223,9 +223,9 @@ class JobService(object):
 
         if queue_id not in set(entry_point_queue_ids):
             raise EntityNotRegisteredError(
-                EntityTypes.ENTRYPOINT.get_db_schema_name(),
+                EntityTypes.ENTRYPOINT.db_schema_name,
                 entrypoint_id,
-                EntityTypes.QUEUE.get_db_schema_name(),
+                EntityTypes.QUEUE.db_schema_name,
                 queue_id,
             )
 
@@ -252,7 +252,7 @@ class JobService(object):
 
         # Create the new Job resource and record the assigned entrypoint parameter values
         job_resource = models.Resource(
-            resource_type=EntityTypes.JOB.get_db_schema_name(),
+            resource_type=EntityTypes.JOB.db_schema_name,
             owner=experiment.resource.owner,
         )
 
@@ -475,7 +475,7 @@ class JobService(object):
             jobs_stmt = jobs_stmt.order_by(sort_column)
         elif sort_by_string and sort_by_string not in SORTABLE_FIELDS:
             raise SortParameterValidationError(
-                EntityTypes.JOB.get_db_schema_name(), sort_by_string
+                EntityTypes.JOB.db_schema_name, sort_by_string
             )
 
         jobs = list(db.session.scalars(jobs_stmt).all())
@@ -547,7 +547,7 @@ class JobIdService(object):
 
         stmt = select(models.Resource).filter_by(
             resource_id=job_id,
-            resource_type=EntityTypes.JOB.get_db_schema_name(),
+            resource_type=EntityTypes.JOB.db_schema_name,
             is_deleted=False,
         )
         job_resource = db.session.scalars(stmt).first()
@@ -985,7 +985,7 @@ class ExperimentJobService(object):
             jobs_stmt = jobs_stmt.order_by(sort_column)
         elif sort_by_string and sort_by_string not in SORTABLE_FIELDS:
             raise SortParameterValidationError(
-                EntityTypes.JOB.get_db_schema_name(), sort_by_string
+                EntityTypes.JOB.db_schema_name, sort_by_string
             )
 
         jobs = list(db.session.scalars(jobs_stmt).all())
@@ -1529,7 +1529,7 @@ class JobLogService(object):
             page_stmt = page_stmt.order_by(sort_column, models.JobLog.id)
         elif sort_by_string:
             raise SortParameterValidationError(
-                EntityTypes.JOB.get_db_schema_name(), sort_by_string
+                EntityTypes.JOB.db_schema_name, sort_by_string
             )
         else:
             # default: just by id

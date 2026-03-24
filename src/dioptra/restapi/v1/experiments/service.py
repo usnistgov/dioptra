@@ -86,7 +86,7 @@ class ExperimentService(object):
 
         owner = self._uow.group_repo.get_one(group_id, DeletionPolicy.NOT_DELETED)
 
-        resource = models.Resource(EntityTypes.EXPERIMENT.get_db_schema_name(), owner)
+        resource = models.Resource(EntityTypes.EXPERIMENT.db_schema_name, owner)
         new_experiment = models.Experiment(
             description,
             resource,
@@ -317,13 +317,17 @@ class ExperimentIdService(object):
 
         if not experiment:
             if error_if_not_found:
-                raise EntityDoesNotExistError("experiment", resource_id=experiment_id)
+                raise EntityDoesNotExistError(
+                    EntityTypes.EXPERIMENT, resource_id=experiment_id
+                )
             else:
                 return None
         elif experiment.resource.is_deleted:
             if error_if_not_found:
                 # treat "deleted" as if "not found"?
-                raise EntityDoesNotExistError("experiment", resource_id=experiment_id)
+                raise EntityDoesNotExistError(
+                    EntityTypes.EXPERIMENT, resource_id=experiment_id
+                )
             else:
                 return None
 

@@ -116,7 +116,7 @@ class ModelService(object):
         group = self._group_id_service.get(group_id, error_if_not_found=True)
 
         resource = models.Resource(
-            resource_type=EntityTypes.ML_MODEL.get_db_schema_name(), owner=group
+            resource_type=EntityTypes.ML_MODEL.db_schema_name, owner=group
         )
 
         ml_model = models.MlModel(
@@ -228,7 +228,7 @@ class ModelService(object):
             latest_ml_models_stmt = latest_ml_models_stmt.order_by(sort_column)
         elif sort_by_string and sort_by_string not in MODEL_SORTABLE_FIELDS:
             raise SortParameterValidationError(
-                EntityTypes.ML_MODEL.get_db_schema_name(), sort_by_string
+                EntityTypes.ML_MODEL.db_schema_name, sort_by_string
             )
 
         ml_models = db.session.scalars(latest_ml_models_stmt).all()
@@ -473,7 +473,7 @@ class ModelIdService(object):
 
         stmt = select(models.Resource).filter_by(
             resource_id=model_id,
-            resource_type=EntityTypes.ML_MODEL.get_db_schema_name(),
+            resource_type=EntityTypes.ML_MODEL.db_schema_name,
             is_deleted=False,
         )
         model_resource = db.session.scalars(stmt).first()
@@ -546,7 +546,7 @@ class ModelIdVersionsService(object):
         artifact = artifact_dict["artifact"]
 
         resource = models.Resource(
-            resource_type=EntityTypes.ML_MODEL_VERSION.get_db_schema_name(), owner=group
+            resource_type=EntityTypes.ML_MODEL_VERSION.db_schema_name, owner=group
         )
         new_version = models.MlModelVersion(
             description=description,

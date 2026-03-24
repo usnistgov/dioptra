@@ -365,7 +365,7 @@ class Resource(db.Model):  # type: ignore[name-defined]
     def __post_init__(self) -> None:
         timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
         self.created_on = timestamp
-        self.__entity_type__ = EntityTypes.get_from_string(self.resource_type)
+        self.__entity_type__ = EntityTypes.get_from_string(str(self.resource_type))
 
 
 class SharedResource(db.Model):  # type: ignore[name-defined]

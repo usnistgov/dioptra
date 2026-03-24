@@ -179,7 +179,7 @@ class TagService(object):
             tags_stmt = tags_stmt.order_by(sort_column)
         elif sort_by_string and sort_by_string not in SORTABLE_FIELDS:
             raise SortParameterValidationError(
-                EntityTypes.TAG.db_schema_name(), sort_by_string
+                EntityTypes.TAG.db_schema_name, sort_by_string
             )
 
         tags = list(db.session.scalars(tags_stmt).all())

@@ -156,7 +156,7 @@ class EntrypointService(object):
         )
 
         resource = models.Resource(
-            resource_type=EntityTypes.ENTRYPOINT.get_db_schema_name(),
+            resource_type=EntityTypes.ENTRYPOINT.db_schema_name,
             owner=group,
         )
 
@@ -301,7 +301,7 @@ class EntrypointService(object):
             entrypoints_stmt = entrypoints_stmt.order_by(sort_column)
         elif sort_by_string and sort_by_string not in SORTABLE_FIELDS:
             raise SortParameterValidationError(
-                EntityTypes.ENTRYPOINT.get_db_schema_name(), sort_by_string
+                EntityTypes.ENTRYPOINT.db_schema_name, sort_by_string
             )
 
         entrypoints = list(db.session.scalars(entrypoints_stmt).unique().all())
@@ -473,12 +473,12 @@ class EntrypointIdService(object):
         duplicates = find_non_unique("name", parameters)
         if len(duplicates) > 0:
             raise QueryParameterNotUniqueError(
-                EntityTypes.ENTRYPOINT.get_db_schema_name(), name=duplicates
+                EntityTypes.ENTRYPOINT.db_schema_name, name=duplicates
             )
         artifact_parameter_duplicates = find_non_unique("name", artifact_parameters)
         if len(artifact_parameter_duplicates) > 0:
             raise QueryParameterNotUniqueError(
-                EntityTypes.ENTRYPOINT.get_db_schema_name(),
+                EntityTypes.ENTRYPOINT.db_schema_name,
                 name=artifact_parameter_duplicates,
             )
 
@@ -554,7 +554,7 @@ class EntrypointIdService(object):
 
         stmt = select(models.Resource).filter_by(
             resource_id=entrypoint_id,
-            resource_type=EntityTypes.ENTRYPOINT.get_db_schema_name(),
+            resource_type=EntityTypes.ENTRYPOINT.db_schema_name,
             is_deleted=False,
         )
         entrypoint_resource = db.session.scalars(stmt).first()

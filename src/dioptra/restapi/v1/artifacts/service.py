@@ -198,8 +198,7 @@ class ArtifactService(object):
         group = self._group_id_service.get(group_id, error_if_not_found=True, log=log)
 
         resource = models.Resource(
-            resource_type=EntityTypes.ARTIFACT.get_db_schema_name(),
-            ## "artifact",
+            resource_type=EntityTypes.ARTIFACT.db_schema_name,
             owner=group,
         )
         new_artifact = models.Artifact(
@@ -329,7 +328,7 @@ class ArtifactService(object):
             latest_artifacts_stmt = latest_artifacts_stmt.order_by(sort_column)
         elif sort_by_string and sort_by_string not in SORTABLE_FIELDS:
             raise SortParameterValidationError(
-                EntityTypes.ARTIFACT.get_db_schema_name(), sort_by_string
+                EntityTypes.ARTIFACT.db_schema_name, sort_by_string
             )
 
         artifacts = db.session.scalars(latest_artifacts_stmt).all()

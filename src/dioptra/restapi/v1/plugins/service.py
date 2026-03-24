@@ -233,7 +233,7 @@ class PluginService(object):
             latest_plugins_stmt = latest_plugins_stmt.order_by(sort_column)
         elif sort_by_string and sort_by_string not in PLUGIN_SORTABLE_FIELDS:
             raise SortParameterValidationError(
-                EntityTypes.PLUGIN.get_db_schema_name(), sort_by_string
+                EntityTypes.PLUGIN.db_schema_name, sort_by_string
             )
 
         plugins = db.session.scalars(latest_plugins_stmt).all()
@@ -426,7 +426,7 @@ class PluginIdService(object):
 
         stmt = select(models.Resource).filter_by(
             resource_id=plugin_id,
-            resource_type=EntityTypes.PLUGIN.get_db_schema_name(),
+            resource_type=EntityTypes.PLUGIN.db_schema_name,
             is_deleted=False,
         )
         plugin_resource = db.session.scalar(stmt)
@@ -443,7 +443,7 @@ class PluginIdService(object):
         plugin_file_resources = [
             child
             for child in plugin_resource.children
-            if child.resource_type == EntityTypes.PLUGIN_FILE.get_db_schema_name()
+            if child.resource_type == EntityTypes.PLUGIN_FILE.db_schema_name
         ]
         plugin_file_ids = [
             plugin_file_resource.resource_id
@@ -766,7 +766,7 @@ class PluginIdFileService(object):
         db.session.add(new_plugin)
 
         resource = models.Resource(
-            resource_type=EntityTypes.PLUGIN_FILE.get_db_schema_name(),
+            resource_type=EntityTypes.PLUGIN_FILE.db_schema_name,
             owner=new_plugin.resource.owner,
         )
         new_plugin_file = models.PluginFile(
@@ -911,7 +911,7 @@ class PluginIdFileService(object):
             latest_plugin_files_stmt = latest_plugin_files_stmt.order_by(sort_column)
         elif sort_by_string and sort_by_string not in PLUGIN_FILE_SORTABLE_FIELDS:
             raise SortParameterValidationError(
-                EntityTypes.PLUGIN_FILE.get_db_schema_name(), sort_by_string
+                EntityTypes.PLUGIN_FILE.db_schema_name, sort_by_string
             )
 
         plugin_files_dict: dict[int, utils.PluginFileDict] = {
@@ -953,7 +953,7 @@ class PluginIdFileService(object):
 
         stmt = select(models.Resource).filter_by(
             resource_id=plugin_id,
-            resource_type=EntityTypes.PLUGIN.get_db_schema_name(),
+            resource_type=EntityTypes.PLUGIN.db_schema_name,
             is_deleted=False,
         )
 

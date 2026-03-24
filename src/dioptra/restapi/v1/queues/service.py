@@ -77,7 +77,7 @@ class QueueService(object):
         group = self._uow.group_repo.get_one(group_id, DeletionPolicy.NOT_DELETED)
 
         resource = models.Resource(
-            resource_type=EntityTypes.QUEUE.get_db_schema_name(), owner=group
+            resource_type=EntityTypes.QUEUE.db_schema_name, owner=group
         )
         new_queue = models.Queue(
             name=name, description=description, resource=resource, creator=current_user

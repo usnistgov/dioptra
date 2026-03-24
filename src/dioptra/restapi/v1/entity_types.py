@@ -99,7 +99,7 @@ class EntityTypes(Enum):
         Returns:
             _type_: Fallback to DB-compatible name
         """
-        return self.db_schema_name
+        return str(self._db_schema_name)
 
     def __repr__(self):
         """Default for print and pprint
@@ -107,10 +107,10 @@ class EntityTypes(Enum):
         Returns:
             _type_: Fallback to DB-compatible name
         """
-        return self.db_schema_name
+        return str(self._db_schema_name)
 
-    db_schema_name: str  # DB-compatible name representation
-    ui_print_name: str  # Yser-friendly name representation
+    _db_schema_name: str  # DB-compatible name representation
+    _ui_print_name: str  # User(UI)-friendly name representation
 
     def __new__(
         cls,
@@ -130,8 +130,8 @@ class EntityTypes(Enum):
         new_instance._value_ = (
             original_name  # Set default value to make sure the Enum base works
         )
-        new_instance.db_schema_name = original_name
-        new_instance.ui_print_name = readable_name
+        new_instance._db_schema_name = original_name
+        new_instance._ui_print_name = readable_name
         return new_instance
 
     NONE = "none", "Entity of Type NONE"
@@ -195,30 +195,33 @@ class EntityTypes(Enum):
         # there is a facade, protecting EntityType functionality
         return to_snake_case(text_to_snake)
 
-    def get_db_schema_name(self) -> str:
+    @property
+    def db_schema_name(self) -> str:
         """Returns current instance name/key
 
         Returns:
             str: returns inst-ENUM.all-lower-case - snake
         """
-        return self.to_snake_case(self.db_schema_name)
+        return self.to_snake_case(self._db_schema_name)
 
-    def get_original_name(self) -> str:
+    @property
+    def original_name(self) -> str:
         """Returns current Entity's key/db-schema-safe Name
 
         Returns:
             str: returns inst-ENUM.schema_name
         """
-        return self.db_schema_name
+        return str(self._db_schema_name)
 
-    def get_print_name(self) -> str:
+    @property
+    def print_name(self) -> str:
         """Returns current instance Human-Readable Name
 
         Returns:
             str: returns inst-ENUM.print_name
 
         """
-        return self.ui_print_name
+        return str(self._ui_print_name)
 
     def get_an_article(self) -> str:
         """Returns proper form on an indefinite article
@@ -226,4 +229,4 @@ class EntityTypes(Enum):
         Returns:
             str: The article applicable to the EntityType instance
         """
-        return "an" if self.ui_print_name.strip()[0].lower() in "aeiou" else "a"
+        return "an" if self._ui_print_name.strip()[0].lower() in "aeiou" else "a"

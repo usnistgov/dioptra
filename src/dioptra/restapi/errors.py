@@ -88,13 +88,13 @@ class DioptraError(Exception):
             entity_type (EntityTypes | None): the actual argument [EntityTypes | None] that came into the Error
 
         Returns:
-            str: Either 'entity' or 'EntityTypes.get_print_name()' as a string
+            str: Either 'entity' or 'EntityTypes.print_name' as a string
         """
         resolved_entity = entity_type if entity_type else EntityTypes.NONE
         return (
             "entity"
             if resolved_entity == EntityTypes.NONE
-            else f"{resolved_entity.get_print_name()}"
+            else f"{resolved_entity.print_name}"
         )
 
 
@@ -112,7 +112,7 @@ class EntityDoesNotExistError(DioptraError):
             " ".join(
                 [
                     "Failed to locate",
-                    f"{resolved_entity.get_an_article()} {resolved_entity.get_print_name()}",
+                    f"{resolved_entity.get_an_article()} {resolved_entity.print_name}",
                     *add_attribute_values(**kwargs),
                     ".",
                 ]
@@ -731,8 +731,8 @@ class DraftBaseInvalidError(DioptraError):
         child_type: EntityTypes,
     ) -> None:
         msg = (
-            f"Invalid draft base resource ID: resource type {parent_type.get_print_name()!r}"
-            f" is not a valid parent of resource type {child_type.get_print_name()!r}:"
+            f"Invalid draft base resource ID: resource type {parent_type.print_name!r}"
+            f" is not a valid parent of resource type {child_type.print_name!r}:"
             f" {base_resource_id}"
         )
         super().__init__(msg)
