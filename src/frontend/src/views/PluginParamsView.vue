@@ -9,6 +9,8 @@
     :columns="columns"
     title="Plugin Parameter Types"
     v-model:selected="selected"
+    v-model:showDeleted="showDeleted"
+    :showDeletedToggle="true"
     @open="openTab => (openTab
       ? openWindow.open(`/pluginParams/${selected[0].id}`, '_blank')
       : router.push(`/pluginParams/${selected[0].id}`)
@@ -56,6 +58,7 @@
   const selected = ref([])
   const showAddDialog = ref(false)
   const showDeleteDialog = ref(false)
+  const showDeleted = ref(false)
   const showTagsDialog = ref(false)
   const editObjTags = ref({})
 
@@ -75,7 +78,7 @@
 
     try {
       const [res] = await Promise.all([
-        api.getData('pluginParameterTypes', pagination),
+        api.getData('pluginParameterTypes', pagination, false, showDeleted.value),
         minLoadTimePromise
       ]);
         

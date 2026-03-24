@@ -136,7 +136,7 @@ interface Pagination {
   search: string,
 }
 
-export async function getData<T extends ItemType>(type: T, pagination: Pagination, showDrafts: boolean = false) {
+export async function getData<T extends ItemType>(type: T, pagination: Pagination, showDrafts: boolean = false, showDeleted = false) {
   const res = await axios.get(`/api/${type}/${showDrafts ? 'drafts/' : ''}`, {
     params: {
       index: pagination.index,
@@ -145,6 +145,7 @@ export async function getData<T extends ItemType>(type: T, pagination: Paginatio
       draftType: showDrafts ? 'new' : '',
       sortBy: pagination.sortBy,
       descending: pagination.descending,
+      showDeleted,
     },
   })
 

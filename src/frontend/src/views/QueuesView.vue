@@ -12,15 +12,18 @@
     @open="openQueue($event)"
     v-model:selected="selected"
     v-model:showDrafts="showDrafts"
+    v-model:showDeleted="showDeleted"
     @request="getQueues"
     ref="tableRef"
     :showToggleDraft="true"
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
     @create="router.push('/queues/new')"
     :loading="isLoading"
+    :showDeletedToggle="!showDrafts"
   >
     <template #body-cell-hasDraft="props">
       <q-btn
+        v-show="!props.row.deleted"
         round
         size="sm"
         :icon="props.row.hasDraft ? 'edit' : 'add'"
@@ -57,6 +60,7 @@
   const router = useRouter()
 
   const showDeleteDialog = ref(false)
+  const showDeleted = ref(false)
   const showTagsDialog = ref(false)
 
   const queues = ref([])
@@ -92,7 +96,7 @@
 
     try {
       const [res] = await Promise.all([
-        api.getData('queues', pagination, showDrafts),
+        api.getData('queues', pagination, showDrafts, showDeleted.value),
         minLoadTimePromise
       ]);
         

@@ -9,6 +9,8 @@
     :columns="columns"
     title="Experiments"
     v-model:selected="selected"
+    v-model:showDeleted="showDeleted"
+    :showDeletedToggle="true"
     @open="openTab => (openTab
       ? openWindow.open(`/experiments/${selected[0].id}`, '_blank')
       : router.push(`/experiments/${selected[0].id}`)
@@ -21,14 +23,12 @@
     :loading="isLoading"
   >
     <template #body-cell-entrypoints="props">
-      <q-chip
+      <ResourceBadge 
         v-for="(entrypoint, i) in props.row.entrypoints"
         :key="i"
-        color="secondary" 
-        text-color="white"
-      >
-        {{ entrypoint.name }}
-      </q-chip>
+        :resource="entrypoint"
+        resourceType="entrypoint"
+      />
     </template>
   </TableComponent>
 
@@ -55,6 +55,7 @@
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'
   import PageTitle from '@/components/PageTitle.vue'
   import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
+  import ResourceBadge from '@/components/ResourceBadge.vue'
   
   const router = useRouter()
   const openWindow = window
@@ -62,6 +63,7 @@
   const showDeleteDialog = ref(false)
   const showTagsDialog = ref(false)
   const editObjTags = ref({})
+  const showDeleted = ref(false)
 
   const experiments = ref([])
 
@@ -71,7 +73,7 @@
     { name: 'id', label: 'ID', align: 'left', field: 'id', sortable: false, },
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, },
     { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true },
-    { name: 'entrypoints', label: 'Entry Points', align: 'left', field: 'entrypoints', sortable: false },
+    { name: 'entrypoints', label: 'Entrypoints', align: 'left', field: 'entrypoints', sortable: false },
     { name: 'tags', label: 'Tags', align: 'left', sortable: false },
   ]
 
@@ -82,7 +84,7 @@
 
     try {
         const [res] = await Promise.all([
-            api.getData('experiments', pagination, false),
+            api.getData('experiments', pagination, false, showDeleted.value),
             minLoadTimePromise
         ]);
         

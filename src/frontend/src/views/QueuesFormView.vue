@@ -1,7 +1,11 @@
 <template>
   <div class="row items-center justify-between">
     <div class="row items-center">
-      <PageTitle :title="route.params.id === 'new' ? 'Create Queue' : copyAtEditStart?.name" resourceType="queue" />
+      <PageTitle 
+        :title="route.params.id === 'new' ? 'Create Queue' : copyAtEditStart?.name"
+        resourceType="queue" 
+        :deleted="queue.deleted"
+      />
         <q-chip
           v-if="route.params.id !== 'new'"
           class="q-ml-md"
@@ -20,7 +24,7 @@
     </div>
     <div>
       <q-btn 
-        v-if="route.params.id !== 'new'"
+        v-if="route.params.id !== 'new' && !queue.deleted"
         :color="history ? 'red-3' : 'negative'" 
         icon="sym_o_delete" 
         label="Delete Queue"
@@ -29,8 +33,14 @@
       />
     </div>
   </div>
-  <div :style="{ width: isMobile ? '100%' : isMedium ? '60%' : '50%' }" :class="history ? `disabled` : ``">
-    <fieldset class="q-mt-lg" :style="{ 'pointer-events': history ? 'none' : '' }">
+  <q-banner v-if="queue.deleted" dense class="text-white bg-red q-mt-md">
+    <template v-slot:avatar>
+      <q-icon name="error"/>
+    </template>
+    <span class="text-bold">This Queue has been deleted.  Info is read only.</span>
+  </q-banner>
+  <div :style="{ width: isMobile ? '100%' : isMedium ? '60%' : '50%' }">
+    <fieldset class="q-mt-lg" >
       <legend>Basic Info</legend>
         <q-form ref="form" class="q-ma-lg">
           <q-input 
@@ -40,6 +50,7 @@
             :rules="[requiredRule]"
             aria-required="true"
             class="q-mb-sm"
+            :disable="queue.deleted || history"
           >
             <template v-slot:before>
               <label :class="`field-label`">Name:</label>
@@ -57,6 +68,7 @@
             :rules="[requiredRule]"
             id="queueGroup"
             class="q-mb-sm"
+            :disable="queue.deleted || history"
           >
             <template #before>
               <label for="queueGroup" class="field-label">Group:</label>
@@ -68,6 +80,7 @@
             type="textarea"
             dense
             id="queueDescription"
+            :disable="queue.deleted || history"
           >
             <template #before>
               <label for="queueDescription" class="field-label">Description:</label>
@@ -161,7 +174,9 @@ const valuesChangedFromEditStart = computed(() => {
 
 
 onMounted(async () => {
-  if(store.savedForms?.queue && route.params.id === 'new') {
+  if(route.query.snapshotId && !store.showRightDrawer) {
+    store.showRightDrawer = true
+  } else if(store.savedForms?.queue && route.params.id === 'new') {
     copyAtEditStart.value = JSON.parse(JSON.stringify(queue.value))
     showReturnDialog.value = true
     queue.value = store.savedForms.queue
@@ -301,6 +316,7 @@ watch(() => store.selectedSnapshot, (q) => {
       group: q.group.id,
       description: q.description,
     }
+    copyAtEditStart.value = queue.value
   } else {
     getQueue()
   }

@@ -1,8 +1,8 @@
 export const RESOURCE_STYLES = {
   entrypoint: {
     icon: "account_tree",
-    color: "orange-13",
-    darkColor: "orange-5",
+    color: "orange-10",
+    darkColor: "orange-11",
   },
   experiment: {
     icon: "science",

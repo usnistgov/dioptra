@@ -604,6 +604,7 @@
         plugins: ep.plugins,
         artifactPlugins: ep.artifactPlugins
       }
+      copyAtEditStart.value = entryPoint.value
     } else {
       getEntrypoint()
     }

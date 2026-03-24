@@ -13,12 +13,21 @@
           {{ title }}
         </h1>
         <q-badge
+          v-if="deleted"
+          label="Deleted"
+          color="red"
+          class="q-ml-md"
+          :class="darkMode ? 'text-white' : ''"
+          style="font-size: 16px; padding: 3px 6px;"
+        />
+        <q-badge
           v-if="draftLabel"
           :label="draftLabel"
           outline
           color="primary"
           class="q-ml-md"
           :class="darkMode ? 'text-white' : ''"
+          style="font-size: 16px; padding: 3px 6px;"
         />
       </div>
     </div>
@@ -74,6 +83,9 @@ const props = defineProps({
   subtitle: {
     type: String,
   },
+  deleted: {
+    type: Boolean
+  }
 })
 
 const darkMode = inject("darkMode")

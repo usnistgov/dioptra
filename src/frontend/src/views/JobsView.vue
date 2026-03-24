@@ -21,15 +21,25 @@
       : router.push(`/jobs/${selected[0].id}`)
     )"
     :loading="isLoading"
+    :hideCreateBtn="route.name === 'experimentJobs' && experiment?.deleted"
   >
     <template #body-cell-experiment="props">
-      {{ props.row.experiment.name }}
+      <ResourceBadge
+        :resource="props.row.experiment"
+        resourceType="experiment"
+      />
     </template>
     <template #body-cell-entrypoint="props">
-      {{ props.row.entrypoint.name }}
+      <ResourceBadge
+        :resource="props.row.entrypoint"
+        resourceType="entrypoint"
+      />
     </template>
     <template #body-cell-queue="props">
-      {{ props.row.queue.name }}
+      <ResourceBadge
+        :resource="props.row.queue"
+        resourceType="queue"
+      />
     </template>
     <template #body-cell-status="props">
       <JobStatus :status="props.row.status" />
@@ -70,6 +80,7 @@
   import ArtifactsDialog from '@/dialogs/ArtifactsDialog.vue'
   import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
   import JobStatus from '@/components/JobStatus.vue'
+  import ResourceBadge from '@/components/ResourceBadge.vue'
 
   const openWindow = window
   const route = useRoute()
@@ -104,10 +115,12 @@
     title.value = 'Jobs'
   }
 
+  const experiment = ref()
+
   async function getExperiment() {
     try {
       const res = await api.getItem('experiments', route.params.id)
-      title.value = `${res.data.name} Jobs`
+      experiment.value = res.data
     } catch(err) {
       console.log('err = ', err)
     } 

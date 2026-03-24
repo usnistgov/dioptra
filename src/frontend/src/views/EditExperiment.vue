@@ -1,7 +1,7 @@
 <template>
   <div class="row items-center justify-between">
     <div class="row items-center">
-      <PageTitle :title="ORIGINAL_EXPERIMENT?.name" resourceType="experiment" />
+      <PageTitle :title="ORIGINAL_EXPERIMENT?.name" resourceType="experiment" :deleted="experiment.deleted" />
       <q-chip
         v-if="route.params.id !== 'new'"
         class="q-ml-lg"
@@ -19,7 +19,7 @@
       </q-chip>
     </div>
     <q-btn 
-      v-if="route.params.id !== 'new'"
+      v-if="route.params.id !== 'new' && !experiment.deleted"
       :color="history ? 'red-3' : 'negative'" 
       icon="sym_o_delete" 
       label="Delete Experiment" 
@@ -27,6 +27,13 @@
       :disable="history"
     />
   </div>
+
+  <q-banner v-if="experiment.deleted" dense class="text-white bg-red q-mt-md">
+    <template v-slot:avatar>
+      <q-icon name="error"/>
+    </template>
+    <span class="text-bold">This Experiment has been deleted.  Info is read only.</span>
+  </q-banner>
 
   <q-expansion-item
     v-model="showMetadata"
@@ -49,23 +56,21 @@
         </q-item-label>
       </q-item-section>
     </template>
-    <q-card 
-      class="q-pa-md"
-      :class="history ? 'disabled' : ''"
-    >
+    <q-card class="q-pa-md">
       <KeyValueTable 
         :rows="metadataRows"
-        :style="{ pointerEvents: history ? 'none' : 'auto', }"
+        :style="{ pointerEvents: history || experiment.deleted ? 'none' : 'auto', }"
         :secondColumnFullWidth="true"
       >
         <template #name="{ }">
-          {{ experiment?.name }}
-          <q-btn icon="edit" round size="sm" color="primary" flat />
+          <span :disabled="history || experiment.deleted">{{ experiment?.name }}</span>
+          <q-btn icon="edit" round size="sm" color="primary" flat :disable="history || experiment.deleted" />
           <q-popup-edit
             v-model="experiment.name" 
             auto-save 
             v-slot="scope"
             :validate="requiredRule"
+            :disable="history || experiment.deleted"
           >
             <q-input 
               v-model.trim="scope.value"
@@ -76,6 +81,7 @@
               :error="invalidName"
               :error-message="nameError"
               @update:model-value="checkName"
+              :disable="history || experiment.deleted"
             />
           </q-popup-edit>
         </template>
@@ -91,16 +97,16 @@
             dense
             :rules="[requiredRule]"
             aria-required="true"
-            :disable="history"
+            :disable="history || experiment.deleted"
             hide-bottom-space
           />
         </template>
         <template #description="{ }">
           <div class="row items-center no-wrap">
-            <div style="white-space: pre-line; overflow-wrap: break-word; ">
+            <div style="white-space: pre-line; overflow-wrap: break-word;" :disabled="history || experiment.deleted">
               {{ experiment?.description }}
             </div>
-            <q-btn icon="edit" round size="sm" color="primary" flat class="q-ml-xs" />
+            <q-btn icon="edit" round size="sm" color="primary" flat class="q-ml-xs" :disable="history || experiment.deleted" />
           </div>
           <q-popup-edit v-model.trim="experiment.description" auto-save v-slot="scope" buttons>
             <q-input
@@ -110,6 +116,7 @@
               counter
               type="textarea"
               @keyup.enter.stop
+              :disable="history || experiment.deleted"
             />
           </q-popup-edit>
         </template>
@@ -127,8 +134,7 @@
             input-debounce="300"
             :options="entrypoints"
             @filter="getEntrypoints"
-            :disable="history"
-              
+            :disable="history || experiment.deleted"
           >
             <template v-slot:selected>
               <q-chip
@@ -137,7 +143,7 @@
                 color="secondary"
                 :label="entrypoint.name"
                 class="text-white"
-                removable
+                :removable="!history && !experiment.deleted"
                 @remove="experiment.entrypoints.splice(i, 1)"
               />
             </template>  
@@ -227,7 +233,11 @@ const history = computed(() => {
 })
 
 onMounted(() => {
-  getExperiment()
+  if(route.query.snapshotId && !store.showRightDrawer) {
+    store.showRightDrawer = true
+  } else {
+    getExperiment()
+  }
 })
 
 async function getExperiment() {
@@ -331,6 +341,7 @@ watch(() => history.value, (newVal) => {
 watch(() => store.selectedSnapshot, (newVal) => {
   if(newVal) {
     experiment.value = newVal
+    ORIGINAL_EXPERIMENT.value = newVal
   } else {
     getExperiment()
   }
