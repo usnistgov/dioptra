@@ -28,9 +28,7 @@ import sqlalchemy.orm as sao
 
 import dioptra.restapi.db.models as m
 import dioptra.restapi.errors as e
-from dioptra.restapi.db.models.constants import (
-    resource_lock_types,
-)
+from dioptra.restapi.db.models.constants import resource_lock_types
 from dioptra.restapi.db.repository.utils.checks import (
     assert_exists,
     assert_group_exists,
@@ -45,8 +43,10 @@ from dioptra.restapi.db.repository.utils.common import (
     S,
     get_group_id,
     get_resource_id,
+    get_resource_type,
 )
 from dioptra.restapi.db.repository.utils.search import construct_sql_query_filters
+from dioptra.restapi.v1.entity_types import EntityType
 
 # May be bound to a resource-type-specific ResourceSnapshot subclass,
 # i.e. represents our python class representation of a resource type.
@@ -219,13 +219,13 @@ def get_one_latest_snapshot(
 
     resource_id: int | None
     if latest:
-        resource_type = latest.resource_type
+        resource_type = get_resource_type(latest)
         resource_id = latest.resource_id
     elif isinstance(resource, (m.Resource, m.ResourceSnapshot)):
-        resource_type = resource.resource_type
+        resource_type = get_resource_type(resource)
         resource_id = get_resource_id(resource)
     else:  # resource is an int
-        resource_type = None
+        resource_type = EntityType.NONE
         resource_id = resource
 
     # Here, we combine the passed-in deletion policy with existence, to
@@ -589,7 +589,7 @@ def delete_resource(
 
     if exists_result is ExistenceResult.DOES_NOT_EXIST:
         resource_id = get_resource_id(resource)
-        resource_type = None if isinstance(resource, int) else resource.resource_type
+        resource_type = get_resource_type(resource)
         raise e.EntityDoesNotExistError(resource_type, resource_id=resource_id)
 
     elif exists_result is ExistenceResult.EXISTS:
@@ -674,13 +674,8 @@ def add_resource_lock_types(
     See Also:
         - :py:func:`delete_resource`
     """
-
-    if isinstance(resource, (m.Resource, m.ResourceSnapshot)):
-        resource_type = resource.resource_type
-    else:
-        resource_type = None
-
     resource_id = get_resource_id(resource)
+    resource_type = get_resource_type(resource)
 
     existing_lock_types = get_resource_lock_types(session, resource)
     types_to_add = lock_types - existing_lock_types

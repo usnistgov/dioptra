@@ -14,16 +14,14 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from typing import Final
-
 import structlog
 from sqlalchemy import select
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
 from dioptra.restapi.errors import EntityDoesNotExistError
+from dioptra.restapi.v1.entity_types import EntityType
 
-RESOURCE_TYPE: Final[str] = "artifact"
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 # This service has been split out to avoid a circular dependency with the jobs.service
@@ -64,7 +62,7 @@ class ArtifactSnapshotIdService(object):
 
         if artifact is None:
             raise EntityDoesNotExistError(
-                RESOURCE_TYPE,
+                EntityType.ARTIFACT,
                 artifact_id=artifact_id,
                 artifact_snapshot_id=artifact_snapshot_id,
             )

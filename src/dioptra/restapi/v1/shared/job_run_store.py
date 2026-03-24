@@ -27,7 +27,10 @@ from mlflow.tracking import MlflowClient
 from structlog.stdlib import BoundLogger
 from upath import UPath
 
-from dioptra.restapi.errors import EntityDoesNotExistError, JobStoreError
+from dioptra.restapi.errors import (
+    JobStoreError,
+    MlflowRunNotFoundError,
+)
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -185,7 +188,7 @@ class MlFlowJobRunStore:
         try:
             self._client.get_run(run_id)
         except mlflow.exceptions.MlflowException as e:
-            raise EntityDoesNotExistError("MlFlowRun", run_id=run_id) from e
+            raise MlflowRunNotFoundError(mlflow_run_id=run_id) from e
 
         # mflow run id should be an element in the uri path
         # depending on the uri format is likely not stable

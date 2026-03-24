@@ -24,6 +24,7 @@ import typing
 from sqlalchemy.orm import Session, scoped_session
 
 import dioptra.restapi.db.models as m
+from dioptra.restapi.v1.entity_types import EntityType
 
 # General ORM-using code ought to be compatible with "plain" SQLAlchemy or
 # flask_sqlalchemy's ORM sessions (the latter are of generic type
@@ -181,6 +182,28 @@ def get_resource_snapshot_id(snapshot: m.ResourceSnapshot | int) -> int | None:
     return snapshot_id
 
 
+def get_resource_type(
+    resource: m.ResourceSnapshot | m.Resource | m.DraftResource | int,
+) -> EntityType:
+    """
+    Helper for retrieving the EntityType of a resource. If resource is provided as an ID,
+    no lookup is performed, and EntityType.NONE is returned.
+
+    Args:
+        A resource snapshot, resource, draft resource, or integer resource ID
+
+    Returns:
+        An EntityType enum
+    """
+
+    if isinstance(resource, int):
+        resource_type = EntityType.NONE
+    else:
+        resource_type = EntityType.get_from_db_table_name(resource.resource_type)
+
+    return resource_type
+
+
 __all__ = [
     "CompatibleSession",
     "DeletionPolicy",
@@ -191,4 +214,5 @@ __all__ = [
     "get_resource_id",
     "get_resource_snapshot_id",
     "get_user_id",
+    "get_resource_type",
 ]
