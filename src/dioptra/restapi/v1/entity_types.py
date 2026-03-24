@@ -147,13 +147,11 @@ class EntityTypes(Enum):
     RESOURCE = "resource", "Resource"
     WORKFLOW = "workflow", "Workflow"
     EXPERIMENT = "experiment", "Experiment"
-
-    ML_FLOW_RUN = "ml_flow_run", "M.L. Flow Run"
+    # --- Model-Related Entities ---
     ML_MODEL = "ml_model", "M.L. Model"
     ML_MODEL_VERSION = "ml_model_version", "M.L. Model Version"
     # --- Artifact-Related Entities ---
     ARTIFACT = ("artifact", "Artifact")
-    HAS_DRAFT = ("has_draft", "Has Draft")
     ARTIFACT_OUTPUT_PARAMETER = (
         "artifact_output_parameter",
         "'Artifact Output Parameter'",
