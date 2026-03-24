@@ -20,12 +20,7 @@ from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
 from dioptra.restapi.errors import DioptraError, EntityDoesNotExistError
-from dioptra.restapi.v1.entrypoints.service import (
-    RESOURCE_TYPE as ENTRYPOINT_RESOURCE_TYPE,
-)
-from dioptra.restapi.v1.experiments.service import (
-    RESOURCE_TYPE as EXPERIMENT_RESOURCE_TYPE,
-)
+from dioptra.restapi.v1.entity_types import EntityType
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -53,7 +48,7 @@ def get_entry_point(
     entry_point = db.session.scalar(entry_point_stmt)
 
     if entry_point is None:
-        raise EntityDoesNotExistError(ENTRYPOINT_RESOURCE_TYPE, job_id=job_id)
+        raise EntityDoesNotExistError(EntityType.ENTRY_POINT, job_id=job_id)
 
     return entry_point
 
@@ -79,7 +74,7 @@ def get_experiment(job_id: int, logger: BoundLogger | None = None) -> models.Exp
     experiment = db.session.scalar(experiment_stmt)
 
     if experiment is None:
-        raise EntityDoesNotExistError(EXPERIMENT_RESOURCE_TYPE, job_id=job_id)
+        raise EntityDoesNotExistError(EntityType.EXPERIMENT, job_id=job_id)
 
     return experiment
 
@@ -109,7 +104,7 @@ def get_entry_point_plugin_files(
     entry_point = db.session.scalar(entry_point_resource_snapshot_stmt)
 
     if entry_point is None:
-        raise EntityDoesNotExistError(ENTRYPOINT_RESOURCE_TYPE, job_id=job_id)
+        raise EntityDoesNotExistError(EntityType.ENTRY_POINT, job_id=job_id)
 
     plugin_plugin_files = [
         plugin_plugin_file
@@ -348,7 +343,9 @@ def get_resource_snapshot(
     snapshot = db.session.scalar(snapshot_stmt)
 
     if snapshot is None:
-        raise EntityDoesNotExistError(resource_type, snapshot_id=snapshot_id)
+        raise EntityDoesNotExistError(
+            EntityType.get_from_db_table_name(resource_type), snapshot_id=snapshot_id
+        )
 
     return snapshot
 

@@ -51,9 +51,11 @@ from dioptra.restapi.db.repository.utils import (
     get_resource_snapshot_id,
     get_user_id,
 )
+from dioptra.restapi.db.repository.utils.common import get_resource_type
 from dioptra.restapi.errors import (
     DraftAlreadyExistsError,
     DraftBaseInvalidError,
+    DraftBaseResourceDoesNotExistError,
     DraftDoesNotExistError,
     DraftModificationRequiredError,
     DraftSnapshotIdInvalidError,
@@ -61,6 +63,7 @@ from dioptra.restapi.errors import (
     EntityDeletedError,
     EntityDoesNotExistError,
 )
+from dioptra.restapi.v1.entity_types import EntityType
 
 
 class DraftType(enum.Enum):
@@ -86,13 +89,14 @@ class DraftsRepository:
         Raises:
             DraftAlreadyExistsError: if the draft already exists
             EntityDoesNotExistError: if the draft creator or target owner does
-                not exist, or if the payload's base_resource_id refers to a
-                resource which does not exist
+                not exist
             EntityDeletedError: if the draft creator or target owner is deleted,
                 or if the payload's base_resource_id refers to a deleted
                 resource
             UserNotInGroupError: if the draft creator user is not a member of
                 the draft target owner group
+            DraftBaseResourceDoesNotExistError: if the payload's
+                base_resource_id refers to a resource which does not exist
             DraftBaseInvalidError: if the payload's base_resource_id refers
                 to a resource of a type which is not legal to be a parent
                 of the draft's resource type
@@ -134,20 +138,21 @@ class DraftsRepository:
 
             if result:
                 is_deleted, parent_resource_type, child_resource_type = result
+                parent_entity_type = EntityType.get_from_db_table_name(
+                    parent_resource_type
+                )
+
                 if is_deleted:
-                    raise EntityDeletedError(parent_resource_type, base_resource_id)
+                    raise EntityDeletedError(parent_entity_type, base_resource_id)
 
                 if not child_resource_type:
                     raise DraftBaseInvalidError(
                         base_resource_id,
-                        parent_resource_type,
-                        draft.resource_type,
+                        parent_entity_type,
+                        get_resource_type(draft),
                     )
             else:
-                raise EntityDoesNotExistError(
-                    None,
-                    resource_id=base_resource_id,
-                )
+                raise DraftBaseResourceDoesNotExistError(base_resource_id)
 
         # TODO: verify that the draft payload is for a draft resource, not a
         # draft modification?  Any other sanity checks necessary?
@@ -197,9 +202,11 @@ class DraftsRepository:
 
         resource_obj = self.get_resource(resource_id, DeletionPolicy.ANY)
         if not resource_obj:
-            raise EntityDoesNotExistError(None, resource_id=resource_id)
+            raise EntityDoesNotExistError(EntityType.RESOURCE, resource_id=resource_id)
         elif resource_obj.is_deleted:
-            raise EntityDeletedError(None, resource_id, resource_id=resource_id)
+            raise EntityDeletedError(
+                EntityType.RESOURCE, resource_id, resource_id=resource_id
+            )
 
         assert_snapshot_exists(self._session, resource_snapshot_id)
 
