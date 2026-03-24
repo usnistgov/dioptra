@@ -50,6 +50,7 @@ from dioptra.restapi.errors import (
     UserIsManagerError,
     UserNeedsAGroupError,
 )
+from dioptra.restapi.v1.entity_types import EntityTypes
 
 GROUP_CREATOR_MANAGER_PERMISSIONS: Final[dict[str, bool]] = {
     "owner": True,
@@ -62,8 +63,6 @@ GROUP_CREATOR_MEMBER_PERMISSIONS: Final[dict[str, bool]] = {
     "share_read": True,
     "share_write": True,
 }
-
-from dioptra.restapi.v1.entity_types import EntityTypes
 
 
 class GroupRepository:

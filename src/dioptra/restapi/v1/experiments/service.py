@@ -16,7 +16,7 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform experiment endpoint operations."""
 
-from typing import Any, Final
+from typing import Any
 
 import structlog
 from flask_login import current_user
