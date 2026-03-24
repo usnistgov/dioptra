@@ -49,6 +49,10 @@ from .custom_schema_fields import FileUpload, MultiFileUpload
 
 DOTS_REGEX = re.compile(r"^\.\.\.+$")
 
+# -- Pre-Compiled Regular Expressions ------------------------------------------
+REGEX_CAMEL_TO_SNAKE = re.compile(r"(?<!^)(?=[A-Z])")
+REGEX_REPLACE_MULTIPLE_SPACES = re.compile(r"\s+")
+
 
 class ParametersSchema(TypedDict, total=False):
     """A schema of the parameters that can be passed to the |RequestParser|."""
@@ -461,3 +465,38 @@ def find_non_unique(name: str, parameters: Iterable[dict[str, Any]]) -> list[str
     name_count.update([parameter[name] for parameter in parameters])
     # create a list of all name values that appear more than once
     return [key for key in name_count.keys() if name_count[key] > 1]
+
+
+def to_snake_case(text_to_snake: str) -> str:
+    """Converts a string to lower-case snake_case format.
+    Handles various input formats like camelCase, PascalCase,
+    and strings with spaces, comas, hyphens, colons,
+    semicolons, or hyphens. (General language utility)
+
+    Args:
+        text_to_snake (str):  text to format to snake case
+
+    Returns:
+        str: Snake-case formatted name-type string
+    """
+    # Bail out for empty input
+    if not text_to_snake:
+        return ""
+    # Replace punctuation with spaces
+    text_to_snake = (
+        text_to_snake.replace("-", " ")
+        .replace(",", " ")
+        .replace(".", " ")
+        .replace(";", " ")
+        .replace(":", " ")
+    )
+    # Replace spaces with underscores and convert to lowercase
+    # Insert underscore before uppercase letters in camelCase/PascalCase
+    # Handles cases like:
+    #   "PascalCase" -> "Pascal_Case" and
+    #   "varInCamelCase" -> "var_In_Camel_Case"
+    text_to_snake = REGEX_CAMEL_TO_SNAKE.sub(" ", text_to_snake)
+    # Clean multiple spaces by collapsing them, if they happen
+    text_to_snake = REGEX_REPLACE_MULTIPLE_SPACES.sub(" ", text_to_snake).strip()
+    # Replace spaces with underscores
+    return text_to_snake.replace(" ", "_").lower()

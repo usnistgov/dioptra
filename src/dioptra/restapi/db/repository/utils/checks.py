@@ -42,6 +42,7 @@ from dioptra.restapi.db.repository.utils.common import (
     get_resource_snapshot_id,
     get_user_id,
 )
+from dioptra.restapi.v1.entity_types import EntityTypes
 
 
 def user_exists(session: CompatibleSession[S], user: m.User | int) -> ExistenceResult:
@@ -414,7 +415,9 @@ def assert_user_exists(
 
     user_id = get_user_id(user)
 
-    assert_exists(deletion_policy, existence_result, "user", user_id, user_id=user_id)
+    assert_exists(
+        deletion_policy, existence_result, EntityTypes.USER, user_id, user_id=user_id
+    )
 
 
 def assert_group_exists(
@@ -451,7 +454,7 @@ def assert_group_exists(
     assert_exists(
         deletion_policy,
         existence_result,
-        "group",
+        EntityTypes.GROUP,
         group_id,
         group_id=group_id,
     )
@@ -492,9 +495,9 @@ def assert_resource_exists(
 
     resource_id = get_resource_id(resource)
     if isinstance(resource, int):
-        resource_type = None
+        resource_type = EntityTypes.NONE
     else:
-        resource_type = resource.resource_type
+        resource_type = resource.__entity_type__
 
     assert_exists(
         deletion_policy,
@@ -666,9 +669,9 @@ def assert_snapshot_exists(
 
     if not snapshot_exists(session, snapshot):
         if isinstance(snapshot, int):
-            resource_type = None
+            resource_type = EntityTypes.NONE
         else:
-            resource_type = snapshot.resource_type
+            resource_type = snapshot.__entity_type__
 
         snapshot_id = get_resource_snapshot_id(snapshot)
 
@@ -727,7 +730,7 @@ def assert_user_does_not_exist(
     _assert_does_not_exist(
         deletion_policy,
         existence_result,
-        "user",
+        EntityTypes.USER,
         user_id,
         user_id=user_id,
     )
@@ -766,7 +769,7 @@ def assert_group_does_not_exist(
     _assert_does_not_exist(
         deletion_policy,
         existence_result,
-        "group",
+        EntityTypes.GROUP,
         group_id,
         group_id=group_id,
     )
@@ -805,9 +808,9 @@ def assert_resource_does_not_exist(
 
     resource_id = get_resource_id(resource)
     if isinstance(resource, int):
-        resource_type = None
+        resource_type = EntityTypes.NONE
     else:
-        resource_type = resource.resource_type
+        resource_type = resource.__entity_type__
 
     _assert_does_not_exist(
         deletion_policy,
@@ -836,9 +839,9 @@ def assert_snapshot_does_not_exist(
 
     if snapshot_exists(session, snapshot):
         if isinstance(snapshot, int):
-            resource_type = None
+            resource_type = EntityTypes.NONE
         else:
-            resource_type = snapshot.resource_type
+            resource_type = snapshot.__entity_type__
 
         snapshot_id = get_resource_snapshot_id(snapshot)
 
@@ -963,7 +966,7 @@ def assert_can_create_snapshot(
 def assert_exists(
     deletion_policy: DeletionPolicy,
     existence_result: ExistenceResult,
-    obj_type: str | None,
+    obj_type: EntityTypes | None,
     obj_id: int | None,
     **kwargs,
 ) -> None:
@@ -1100,7 +1103,7 @@ def _assert_exists_multi(
 def _assert_does_not_exist(
     deletion_policy: DeletionPolicy,
     existence_result: ExistenceResult,
-    obj_type: str | None,
+    obj_type: EntityTypes | None,
     obj_id: int | None,
     **kwargs,
 ):
@@ -1186,13 +1189,15 @@ def check_user_collision(session: CompatibleSession[S], user: m.User) -> None:
     user_id = session.scalar(stmt)
 
     if user_id is not None:
-        raise e.EntityExistsError("User", user_id, username=user.username)
+        raise e.EntityExistsError(EntityTypes.USER, user_id, username=user.username)
 
     stmt = sa.select(m.User.user_id).where(m.User.email_address == user.email_address)
     user_id = session.scalar(stmt)
 
     if user_id is not None:
-        raise e.EntityExistsError("User", user_id, email_address=user.email_address)
+        raise e.EntityExistsError(
+            EntityTypes.USER, user_id, email_address=user.email_address
+        )
 
 
 def assert_resource_name_available(

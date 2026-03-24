@@ -61,6 +61,7 @@ from dioptra.restapi.errors import (
     EntityDeletedError,
     EntityDoesNotExistError,
 )
+from dioptra.restapi.v1.entity_types import EntityTypes
 
 
 class DraftType(enum.Enum):
@@ -134,14 +135,21 @@ class DraftsRepository:
 
             if result:
                 is_deleted, parent_resource_type, child_resource_type = result
+                if isinstance(parent_resource_type, int):
+                    parent_entity_type = EntityTypes.NONE
+                else:
+                    parent_entity_type = EntityTypes.get_from_string(
+                        parent_resource_type
+                    )
+
                 if is_deleted:
-                    raise EntityDeletedError(parent_resource_type, base_resource_id)
+                    raise EntityDeletedError(parent_entity_type, base_resource_id)
 
                 if not child_resource_type:
                     raise DraftBaseInvalidError(
                         base_resource_id,
-                        parent_resource_type,
-                        draft.resource_type,
+                        parent_entity_type,
+                        EntityTypes.get_from_string(draft.resource_type),
                     )
             else:
                 raise EntityDoesNotExistError(

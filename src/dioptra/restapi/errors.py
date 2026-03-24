@@ -29,6 +29,7 @@ from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
 from dioptra.restapi.v1 import utils
+from dioptra.restapi.v1.entity_types import EntityTypes
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -80,6 +81,22 @@ class DioptraError(Exception):
 
         return f"{self.message} Cause: {self.__cause__}"
 
+    def to_entity_or_type_message(self, entity_type: EntityTypes | None) -> str:
+        """Returns 'entity' or actual EntityTypes printable Entity-Name
+
+        Args:
+            entity_type (EntityTypes | None): the actual argument [EntityTypes | None] that came into the Error
+
+        Returns:
+            str: Either 'entity' or 'EntityTypes.get_print_name()' as a string
+        """
+        resolved_entity = entity_type if entity_type else EntityTypes.NONE
+        return (
+            "entity"
+            if resolved_entity == EntityTypes.NONE
+            else f"{resolved_entity.get_print_name()}"
+        )
+
 
 class EntityDoesNotExistError(DioptraError):
     """
@@ -89,18 +106,19 @@ class EntityDoesNotExistError(DioptraError):
         kwargs: the attribute value pairs used to request the entity
     """
 
-    def __init__(self, entity_type: str | None = None, **kwargs: typing.Any):
+    def __init__(self, entity_type: EntityTypes | None, **kwargs: typing.Any):
+        resolved_entity = entity_type if entity_type else EntityTypes.NONE
         super().__init__(
-            "".join(
+            " ".join(
                 [
-                    "Failed to locate ",
-                    "an entity" if entity_type is None else entity_type,
+                    "Failed to locate",
+                    f"{resolved_entity.get_an_article()} {resolved_entity.get_print_name()}",
                     *add_attribute_values(**kwargs),
                     ".",
                 ]
             )
         )
-        self.entity_type = "unknown" if entity_type is None else entity_type
+        self.entity_type = "unknown" if entity_type is None else resolved_entity
         self.entity_attributes = kwargs
 
 
@@ -113,18 +131,22 @@ class EntityExistsError(DioptraError):
         kwargs: the attribute value pairs used to request the entity
     """
 
-    def __init__(self, entity_type: str | None, existing_id: int, **kwargs: typing.Any):
+    def __init__(
+        self, entity_type: EntityTypes | None, existing_id: int, **kwargs: typing.Any
+    ):
+        resolved_entity = entity_type if entity_type else EntityTypes.NONE
         super().__init__(
             "".join(
                 [
                     "The ",
-                    "entity" if entity_type is None else entity_type,
+                    self.to_entity_or_type_message(resolved_entity),
                     *add_attribute_values(**kwargs),
-                    " is not available.",
+                    ### " is not available.",
+                    " already exists.",
                 ]
             )
         )
-        self.entity_type = entity_type
+        self.entity_type = resolved_entity
         self.entity_attributes = kwargs
         self.existing_id = existing_id
 
@@ -138,12 +160,16 @@ class EntityDeletedError(DioptraError):
         kwargs: the attribute value pairs used to request the entity
     """
 
-    def __init__(self, entity_type: str | None, existing_id: int, **kwargs: typing.Any):
+    def __init__(
+        self, entity_type: EntityTypes | None, existing_id: int, **kwargs: typing.Any
+    ):
+
+        resolved_entity = entity_type if entity_type else EntityTypes.NONE
         super().__init__(
             "".join(
                 [
                     "The ",
-                    "entity" if entity_type is None else entity_type,
+                    self.to_entity_or_type_message(resolved_entity),
                     *add_attribute_values(**kwargs),
                     " is deleted.",
                 ]
@@ -247,7 +273,7 @@ class DraftResourceModificationsCommitError(DioptraError):
     ):
         super().__init__(
             f"Draft modifications for a [{resource_type}] with id: {resource_id} "
-            "could not be commited."
+            "could not be committed."
         )
         self.draft = draft
         self.base_snapshot = base_snapshot
@@ -314,7 +340,7 @@ class QueryParameterValidationError(DioptraError):
 
 
 class QueryParameterNotUniqueError(QueryParameterValidationError):
-    """Query Parameters failed unique validatation check."""
+    """Query Parameters failed unique validation check."""
 
     def __init__(self, type: str, **kwargs):
         super().__init__(type, "unique", **kwargs)
@@ -455,7 +481,7 @@ class EntityDependencyError(DioptraError):
     Base Error for dependency problems between entities.
 
     Args:
-        message: a message describing the dependecy error
+        message: a message describing the dependency error
     """
 
     def __init__(self, message: str):
@@ -699,11 +725,14 @@ class DraftBaseInvalidError(DioptraError):
     """
 
     def __init__(
-        self, base_resource_id: int, parent_type: str, child_type: str
+        self,
+        base_resource_id: int,
+        parent_type: EntityTypes,
+        child_type: EntityTypes,
     ) -> None:
         msg = (
-            f"Invalid draft base resource ID: resource type {parent_type!r}"
-            f" is not a valid parent of resource type {child_type!r}:"
+            f"Invalid draft base resource ID: resource type {parent_type.get_print_name()!r}"
+            f" is not a valid parent of resource type {child_type.get_print_name()!r}:"
             f" {base_resource_id}"
         )
         super().__init__(msg)
@@ -753,7 +782,7 @@ def error_result(
     }, status.value
 
 
-# Silenced Complexity error for this function since it is a straitfoward registration of
+# Silenced Complexity error for this function since it is a straightforward registration of
 # error handlers
 def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
     """Registers the error handlers with the main application.
