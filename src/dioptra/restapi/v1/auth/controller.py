@@ -35,6 +35,14 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 api: Namespace = Namespace("Authentication", description="Authentication endpoint")
 
 
+@api.route("/test")
+class TestResource(Resource):
+    """Methods for the /auth/test endpoint."""
+
+    def get(self):
+        return {"message": "success"}
+
+
 @api.route("/login")
 class LoginResource(Resource):
     """Methods for the /auth/login endpoint."""
