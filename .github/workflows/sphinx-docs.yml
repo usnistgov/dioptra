@@ -36,6 +36,9 @@ jobs:
           cache-dependency-glob: "uv.lock"
           python-version: "3.11"
 
+      - name: Generate openapi.yml
+        uses: ./.github/actions/generate-openapi
+
       - name: build the documentation
         run: uvx -p "3.11" tox run -e docs
 
