@@ -27,7 +27,7 @@
     "vue": "^3.5.28",
     "vue-codemirror": "^6.1.1",
     "vue-router": "^5.0.2",
-    "yaml": "^2.8.2"
+    "yaml": "^2.8.3"
   },
   "devDependencies": {
     "@quasar/vite-plugin": "^1.10.0",
