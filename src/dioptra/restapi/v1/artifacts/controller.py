@@ -18,13 +18,14 @@
 
 import mimetypes
 import shutil
+import tempfile
 import uuid
 from pathlib import Path
-from tempfile import TemporaryDirectory
+from typing import Generator
 from urllib.parse import unquote
 
 import structlog
-from flask import Response, request, send_file
+from flask import Response, request
 from flask_accepts import accepts, responds
 from flask_login import login_required
 from flask_restx import Namespace, Resource
@@ -252,6 +253,7 @@ class ArtifactIdContentsEndpoint(Resource):
         Returns:
             A list of the files associated with artifact.
         """
+
         return _handle_artifact_contents(
             job_run_store=self._job_run_store,
             artifact=self._artifact_id_service.get(artifact_id=id)["artifact"],
@@ -363,20 +365,34 @@ def _handle_artifact_contents(
             constraint="file_type query parameter may not be provided for a file",
         )
 
-    with TemporaryDirectory() as tmp_dir:
-        mimetype, result = _download_artifacts(
-            job_run_store=job_run_store,
-            tmp_dir=tmp_dir,
-            artifact=artifact,
-            path=path,
-            file_type=file_type,
-        )
-        return send_file(
-            path_or_file=result,
-            mimetype=mimetype,
-            as_attachment=False,
-            download_name=result.name,
-        )
+    tmp_dir = tempfile.mkdtemp()
+
+    mimetype, result_path = _download_artifacts(
+        job_run_store=job_run_store,
+        tmp_dir=tmp_dir,
+        artifact=artifact,
+        path=path,
+        file_type=file_type,
+    )
+
+    def generate() -> Generator:
+        with result_path.open("rb") as f:
+            yield from f
+        shutil.rmtree(tmp_dir)
+
+    response = Response(
+        generate(),
+        mimetype=mimetype,
+        direct_passthrough=True,
+    )
+
+    response.headers.set(
+        "Content-Disposition",
+        "attachment",
+        filename=result_path.name,
+    )
+
+    return response
 
 
 def _download_artifacts(
@@ -398,7 +414,7 @@ def _download_artifacts(
             file_type = FileTypes.TAR_GZ
 
         archive = shutil.make_archive(
-            result.name,
+            str(Path(tmp_dir) / result.name),
             format=file_type.format,
             root_dir=result.parent,
             base_dir=result.name,
