@@ -44,7 +44,6 @@ from dioptra.restapi.db.db import (
     optionalstr,
     text_,
 )
-from dioptra.restapi.v1.entity_types import EntityTypes
 
 from .constants import resource_lock_types
 from .locks import ResourceLock
@@ -184,16 +183,12 @@ class DraftResource(db.Model):  # type: ignore[name-defined]
     # Additional settings
     __table_args__ = (Index(None, "group_id", "resource_type", "user_id"),)
 
-    # EntityMapping
-    __entity_type__: EntityTypes = EntityTypes.NONE
-
     # Initialize default values using dataclass __post_init__ method
     # https://docs.python.org/3/library/dataclasses.html#dataclasses.__post_init__
     def __post_init__(self) -> None:
         timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
         self.created_on = timestamp
         self.last_modified_on = timestamp
-        self.__entity_type__ = EntityTypes.get_from_string(self.resource_type)
 
 
 class ResourceSnapshot(db.Model):  # type: ignore[name-defined]
@@ -250,15 +245,11 @@ class ResourceSnapshot(db.Model):  # type: ignore[name-defined]
         "polymorphic_on": "resource_type",
     }
 
-    # EntityMapping
-    __entity_type__: EntityTypes = EntityTypes.NONE
-
     # Initialize default values using dataclass __post_init__ method
     # https://docs.python.org/3/library/dataclasses.html#dataclasses.__post_init__
     def __post_init__(self) -> None:
         timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
         self.created_on = timestamp
-        self.__entity_type__ = EntityTypes.get_from_string(self.resource_type)
 
 
 class Resource(db.Model):  # type: ignore[name-defined]
@@ -357,15 +348,11 @@ class Resource(db.Model):  # type: ignore[name-defined]
         Index(None, "group_id", "resource_type"),
     )
 
-    # EntityMapping
-    __entity_type__: EntityTypes = EntityTypes.NONE
-
     # Initialize default values using dataclass __post_init__ method
     # https://docs.python.org/3/library/dataclasses.html#dataclasses.__post_init__
     def __post_init__(self) -> None:
         timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
         self.created_on = timestamp
-        self.__entity_type__ = EntityTypes.get_from_string(str(self.resource_type))
 
 
 class SharedResource(db.Model):  # type: ignore[name-defined]

@@ -25,7 +25,7 @@ from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
 from dioptra.restapi.errors import BackendDatabaseError, EntityDoesNotExistError
-from dioptra.restapi.v1.entity_types import EntityTypes
+from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -88,7 +88,7 @@ class ResourceSnapshotsService(object):
         if resource is None:
             if error_if_not_found:
                 raise EntityDoesNotExistError(
-                    EntityTypes.get_from_string(self._resource_type),
+                    EntityType.get_from_string(self._resource_type),
                     resource_id=resource_id,
                 )
 
@@ -190,7 +190,7 @@ class ResourceSnapshotsIdService(object):
         if resource is None:
             if error_if_not_found:
                 raise EntityDoesNotExistError(
-                    EntityTypes.get_from_string(self._resource_type),
+                    EntityType.get_from_string(self._resource_type),
                     resource_id=resource_id,
                 )
 
@@ -209,7 +209,7 @@ class ResourceSnapshotsIdService(object):
         if snapshot is None:
             if error_if_not_found:
                 raise EntityDoesNotExistError(
-                    EntityTypes.get_from_string(self._resource_type + "_snapshot"),
+                    EntityType.get_from_string(self._resource_type + "_snapshot"),
                     snapshot_id=snapshot_id,
                 )
 

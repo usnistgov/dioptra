@@ -30,7 +30,7 @@ from structlog.stdlib import BoundLogger
 from dioptra.restapi.db import models
 from dioptra.restapi.routes import V1_JOBS_ROUTE
 from dioptra.restapi.v1 import utils
-from dioptra.restapi.v1.entity_types import EntityTypes
+from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.schemas import IdStatusResponseSchema
 from dioptra.restapi.v1.shared.snapshots.controller import (
     generate_resource_snapshots_endpoint,
@@ -472,7 +472,7 @@ class JobIdLogEndpoint(Resource):
 JobSnapshotsResource = generate_resource_snapshots_endpoint(
     api=api,
     resource_model=models.Job,
-    resource_name=EntityTypes.JOB.db_schema_name,
+    resource_name=EntityType.JOB.db_schema_name,
     route_prefix=V1_JOBS_ROUTE,
     searchable_fields=SEARCHABLE_FIELDS,
     page_schema=JobPageSchema,
@@ -481,16 +481,16 @@ JobSnapshotsResource = generate_resource_snapshots_endpoint(
 JobSnapshotsIdResource = generate_resource_snapshots_id_endpoint(
     api=api,
     resource_model=models.Job,
-    resource_name=EntityTypes.JOB.db_schema_name,
+    resource_name=EntityType.JOB.db_schema_name,
     response_schema=JobSchema,
     build_fn=utils.build_job,
 )
 
 JobTagsResource = generate_resource_tags_endpoint(
     api=api,
-    resource_name=EntityTypes.JOB.db_schema_name,
+    resource_name=EntityType.JOB.db_schema_name,
 )
 JobTagsIdResource = generate_resource_tags_id_endpoint(
     api=api,
-    resource_name=EntityTypes.JOB.db_schema_name,
+    resource_name=EntityType.JOB.db_schema_name,
 )

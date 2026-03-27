@@ -44,7 +44,7 @@ from dioptra.restapi.errors import (
     InvalidYamlError,
 )
 from dioptra.restapi.utils import read_json_file, verify_filename_is_safe
-from dioptra.restapi.v1.entity_types import EntityTypes
+from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.entrypoints.service import (
     EntrypointIdArtifactPluginsService,
     EntrypointIdPluginsService,
@@ -1152,7 +1152,7 @@ class DraftCommitService(object):
             resource = views.get_resource(draft.payload["resource_id"])
             if resource is None:
                 raise EntityDoesNotExistError(
-                    EntityTypes.get_from_string(draft.resource_type),
+                    EntityType.get_from_string(draft.resource_type),
                     resource_id=draft.payload["resource_id"],
                 )
 

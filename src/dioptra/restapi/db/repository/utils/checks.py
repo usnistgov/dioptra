@@ -40,9 +40,10 @@ from dioptra.restapi.db.repository.utils.common import (
     get_group_id,
     get_resource_id,
     get_resource_snapshot_id,
+    get_resource_type,
     get_user_id,
 )
-from dioptra.restapi.v1.entity_types import EntityTypes
+from dioptra.restapi.v1.entity_types import EntityType
 
 
 def user_exists(session: CompatibleSession[S], user: m.User | int) -> ExistenceResult:
@@ -416,7 +417,7 @@ def assert_user_exists(
     user_id = get_user_id(user)
 
     assert_exists(
-        deletion_policy, existence_result, EntityTypes.USER, user_id, user_id=user_id
+        deletion_policy, existence_result, EntityType.USER, user_id, user_id=user_id
     )
 
 
@@ -454,7 +455,7 @@ def assert_group_exists(
     assert_exists(
         deletion_policy,
         existence_result,
-        EntityTypes.GROUP,
+        EntityType.GROUP,
         group_id,
         group_id=group_id,
     )
@@ -494,15 +495,11 @@ def assert_resource_exists(
     existence_result = resource_exists(session, resource)
 
     resource_id = get_resource_id(resource)
-    if isinstance(resource, int):
-        resource_type = EntityTypes.NONE
-    else:
-        resource_type = resource.__entity_type__
 
     assert_exists(
         deletion_policy,
         existence_result,
-        resource_type,
+        get_resource_type(resource),
         resource_id,
         resource_id=resource_id,
     )
@@ -600,13 +597,10 @@ def assert_resource_modifiable(
 
     modifiable = resource_modifiable(session, resource)
 
-    if isinstance(resource, (m.Resource, m.ResourceSnapshot)):
-        resource_type = resource.resource_type
-    else:
-        resource_type = None
-
     if not modifiable:
-        raise e.ReadOnlyLockError(resource_type, resource_id=get_resource_id(resource))
+        raise e.ReadOnlyLockError(
+            get_resource_type(resource), resource_id=get_resource_id(resource)
+        )
 
 
 def assert_resource_type(
@@ -636,7 +630,7 @@ def assert_resource_type(
     if isinstance(resource, int):
         resource_obj = session.get(m.Resource, resource)
         if not resource_obj:
-            raise e.EntityDoesNotExistError(None, resource_id=resource)
+            raise e.EntityDoesNotExistError(EntityType.NONE, resource_id=resource)
         resource = resource_obj
 
     if isinstance(resource, (m.Resource, m.ResourceSnapshot)):
@@ -668,14 +662,11 @@ def assert_snapshot_exists(
     """
 
     if not snapshot_exists(session, snapshot):
-        if isinstance(snapshot, int):
-            resource_type = EntityTypes.NONE
-        else:
-            resource_type = snapshot.__entity_type__
-
         snapshot_id = get_resource_snapshot_id(snapshot)
 
-        raise e.EntityDoesNotExistError(resource_type, resource_snapshot_id=snapshot_id)
+        raise e.EntityDoesNotExistError(
+            get_resource_type(snapshot), resource_snapshot_id=snapshot_id
+        )
 
 
 def assert_draft_exists(
@@ -730,7 +721,7 @@ def assert_user_does_not_exist(
     _assert_does_not_exist(
         deletion_policy,
         existence_result,
-        EntityTypes.USER,
+        EntityType.USER,
         user_id,
         user_id=user_id,
     )
@@ -769,7 +760,7 @@ def assert_group_does_not_exist(
     _assert_does_not_exist(
         deletion_policy,
         existence_result,
-        EntityTypes.GROUP,
+        EntityType.GROUP,
         group_id,
         group_id=group_id,
     )
@@ -807,15 +798,11 @@ def assert_resource_does_not_exist(
     existence_result = resource_exists(session, resource)
 
     resource_id = get_resource_id(resource)
-    if isinstance(resource, int):
-        resource_type = EntityTypes.NONE
-    else:
-        resource_type = resource.__entity_type__
 
     _assert_does_not_exist(
         deletion_policy,
         existence_result,
-        resource_type,
+        get_resource_type(resource),
         resource_id,
         resource_id=resource_id,
     )
@@ -838,11 +825,6 @@ def assert_snapshot_does_not_exist(
     """
 
     if snapshot_exists(session, snapshot):
-        if isinstance(snapshot, int):
-            resource_type = EntityTypes.NONE
-        else:
-            resource_type = snapshot.__entity_type__
-
         snapshot_id = get_resource_snapshot_id(snapshot)
 
         # The snapshot exists (see the "if" statement above), therefore
@@ -850,7 +832,7 @@ def assert_snapshot_does_not_exist(
         assert snapshot_id is not None
 
         raise e.EntityExistsError(
-            resource_type,
+            get_resource_type(snapshot),
             snapshot_id,
             resource_snapshot_id=snapshot_id,
         )
@@ -966,7 +948,7 @@ def assert_can_create_snapshot(
 def assert_exists(
     deletion_policy: DeletionPolicy,
     existence_result: ExistenceResult,
-    obj_type: EntityTypes | None,
+    obj_type: EntityType,
     obj_id: int | None,
     **kwargs,
 ) -> None:
@@ -1053,10 +1035,7 @@ def _assert_exists_multi(
     if expected_number is not None and len(existence_result) < expected_number:
         # Got some objects with null IDs; treat as not exist.  Can't identify
         # the relevant children with numeric IDs, so just use None.
-        raise e.EntityDoesNotExistError(
-            None,
-            resource_id=None,
-        )
+        raise e.EntityDoesNotExistError(EntityType.NONE, resource_id=None)
 
     elif any(
         status == ExistenceResult.DOES_NOT_EXIST for status in existence_result.values()
@@ -1067,7 +1046,7 @@ def _assert_exists_multi(
             if res is ExistenceResult.DOES_NOT_EXIST
         )
 
-        raise e.EntityDoesNotExistError(None, resource_ids=dne_ids)
+        raise e.EntityDoesNotExistError(EntityType.NONE, resource_ids=dne_ids)
 
     elif deletion_policy is DeletionPolicy.NOT_DELETED and any(
         status == ExistenceResult.DELETED for status in existence_result.values()
@@ -1082,7 +1061,9 @@ def _assert_exists_multi(
         # deleted... so just pick the first deleted ID.
         first_deleted_id = next(deleted_ids)
 
-        raise e.EntityDeletedError(None, first_deleted_id, resource_id=first_deleted_id)
+        raise e.EntityDeletedError(
+            EntityType.NONE, first_deleted_id, resource_id=first_deleted_id
+        )
 
     elif deletion_policy is DeletionPolicy.DELETED and any(
         status == ExistenceResult.EXISTS for status in existence_result.values()
@@ -1097,13 +1078,15 @@ def _assert_exists_multi(
         # so just pick the first existing ID.
         first_existing_id = next(exists_ids)
 
-        raise e.EntityExistsError(None, first_existing_id, id=first_existing_id)
+        raise e.EntityExistsError(
+            EntityType.NONE, first_existing_id, id=first_existing_id
+        )
 
 
 def _assert_does_not_exist(
     deletion_policy: DeletionPolicy,
     existence_result: ExistenceResult,
-    obj_type: EntityTypes | None,
+    obj_type: EntityType,
     obj_id: int | None,
     **kwargs,
 ):
@@ -1189,14 +1172,14 @@ def check_user_collision(session: CompatibleSession[S], user: m.User) -> None:
     user_id = session.scalar(stmt)
 
     if user_id is not None:
-        raise e.EntityExistsError(EntityTypes.USER, user_id, username=user.username)
+        raise e.EntityExistsError(EntityType.USER, user_id, username=user.username)
 
     stmt = sa.select(m.User.user_id).where(m.User.email_address == user.email_address)
     user_id = session.scalar(stmt)
 
     if user_id is not None:
         raise e.EntityExistsError(
-            EntityTypes.USER, user_id, email_address=user.email_address
+            EntityType.USER, user_id, email_address=user.email_address
         )
 
 
@@ -1240,7 +1223,7 @@ def assert_resource_name_available(
     existing_id = session.scalar(stmt)
     if existing_id:
         raise e.EntityExistsError(
-            None,
+            EntityType.NONE,
             existing_id,
             name=snap.name,
             group_id=snap.resource.owner.group_id,
@@ -1291,7 +1274,7 @@ def assert_snapshot_name_available(
     existing_id = session.scalar(stmt)
     if existing_id:
         raise e.EntityExistsError(
-            None,
+            EntityType.NONE,
             existing_id,
             name=snap.name,
             group_id=snap.resource.group_id,

@@ -28,7 +28,7 @@ from structlog.stdlib import BoundLogger
 from upath import UPath
 
 from dioptra.restapi.errors import EntityDoesNotExistError, JobStoreError
-from dioptra.restapi.v1.entity_types import EntityTypes
+from dioptra.restapi.v1.entity_types import EntityType
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -186,7 +186,7 @@ class MlFlowJobRunStore:
         try:
             self._client.get_run(run_id)
         except mlflow.exceptions.MlflowException as e:
-            raise EntityDoesNotExistError(EntityTypes.ML_FLOW_RUN, run_id=run_id) from e
+            raise EntityDoesNotExistError(EntityType.ML_FLOW_RUN, run_id=run_id) from e
 
         # mflow run id should be an element in the uri path
         # depending on the uri format is likely not stable

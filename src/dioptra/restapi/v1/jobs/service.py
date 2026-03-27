@@ -43,7 +43,7 @@ from dioptra.restapi.errors import (
 )
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.artifacts.snapshot import ArtifactSnapshotIdService
-from dioptra.restapi.v1.entity_types import EntityTypes
+from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.entrypoints.service import EntrypointIdService
 from dioptra.restapi.v1.experiments.service import ExperimentIdService
 from dioptra.restapi.v1.groups.service import GroupIdService
@@ -195,9 +195,9 @@ class JobService(object):
 
         if entrypoint_id not in set(experiment_entry_point_ids):
             raise EntityNotRegisteredError(
-                EntityTypes.EXPERIMENT.db_schema_name,
+                EntityType.EXPERIMENT.db_schema_name,
                 experiment_id,
-                EntityTypes.ENTRYPOINT.db_schema_name,
+                EntityType.ENTRY_POINT.db_schema_name,
                 entrypoint_id,
             )
 
@@ -223,9 +223,9 @@ class JobService(object):
 
         if queue_id not in set(entry_point_queue_ids):
             raise EntityNotRegisteredError(
-                EntityTypes.ENTRYPOINT.db_schema_name,
+                EntityType.ENTRY_POINT.db_schema_name,
                 entrypoint_id,
-                EntityTypes.QUEUE.db_schema_name,
+                EntityType.QUEUE.db_schema_name,
                 queue_id,
             )
 
@@ -252,7 +252,7 @@ class JobService(object):
 
         # Create the new Job resource and record the assigned entrypoint parameter values
         job_resource = models.Resource(
-            resource_type=EntityTypes.JOB.db_schema_name,
+            resource_type=EntityType.JOB.db_schema_name,
             owner=experiment.resource.owner,
         )
 
@@ -475,7 +475,7 @@ class JobService(object):
             jobs_stmt = jobs_stmt.order_by(sort_column)
         elif sort_by_string and sort_by_string not in SORTABLE_FIELDS:
             raise SortParameterValidationError(
-                EntityTypes.JOB.db_schema_name, sort_by_string
+                EntityType.JOB.db_schema_name, sort_by_string
             )
 
         jobs = list(db.session.scalars(jobs_stmt).all())
@@ -516,7 +516,7 @@ class JobIdService(object):
         job = db.session.scalars(stmt).first()
 
         if job is None:
-            raise EntityDoesNotExistError(EntityTypes.JOB, job_id=job_id)
+            raise EntityDoesNotExistError(EntityType.JOB, job_id=job_id)
 
         artifacts_stmt = (
             select(models.Artifact)
@@ -547,13 +547,13 @@ class JobIdService(object):
 
         stmt = select(models.Resource).filter_by(
             resource_id=job_id,
-            resource_type=EntityTypes.JOB.db_schema_name,
+            resource_type=EntityType.JOB.db_schema_name,
             is_deleted=False,
         )
         job_resource = db.session.scalars(stmt).first()
 
         if job_resource is None:
-            raise EntityDoesNotExistError(EntityTypes.JOB, job_id=job_id)
+            raise EntityDoesNotExistError(EntityType.JOB, job_id=job_id)
 
         deleted_resource_lock = models.ResourceLock(
             resource_lock_type="delete",
@@ -649,7 +649,7 @@ class JobIdStatusService(object):
         job = db.session.scalars(stmt).first()
 
         if job is None:
-            raise EntityDoesNotExistError(EntityTypes.JOB, job_id=job_id)
+            raise EntityDoesNotExistError(EntityType.JOB, job_id=job_id)
 
         return {"status": job.status, "id": job.resource_id}
 
@@ -985,7 +985,7 @@ class ExperimentJobService(object):
             jobs_stmt = jobs_stmt.order_by(sort_column)
         elif sort_by_string and sort_by_string not in SORTABLE_FIELDS:
             raise SortParameterValidationError(
-                EntityTypes.JOB.db_schema_name, sort_by_string
+                EntityType.JOB.db_schema_name, sort_by_string
             )
 
         jobs = list(db.session.scalars(jobs_stmt).all())
@@ -1035,7 +1035,7 @@ class ExperimentJobIdService(object):
 
         if experiment_job is None:
             raise EntityDoesNotExistError(
-                EntityTypes.JOB, job_id=job_id, experiment_id=experiment_id
+                EntityType.JOB, job_id=job_id, experiment_id=experiment_id
             )
 
         return self._job_id_service.get(job_id=job_id, log=log)
@@ -1060,7 +1060,7 @@ class ExperimentJobIdService(object):
 
         if experiment_job is None:
             raise EntityDoesNotExistError(
-                EntityTypes.JOB, job_id=job_id, experiment_id=experiment_id
+                EntityType.JOB, job_id=job_id, experiment_id=experiment_id
             )
 
         return self._job_id_service.delete(
@@ -1529,7 +1529,7 @@ class JobLogService(object):
             page_stmt = page_stmt.order_by(sort_column, models.JobLog.id)
         elif sort_by_string:
             raise SortParameterValidationError(
-                EntityTypes.JOB.db_schema_name, sort_by_string
+                EntityType.JOB.db_schema_name, sort_by_string
             )
         else:
             # default: just by id

@@ -34,14 +34,14 @@ from dioptra.restapi.errors import (
     PluginParameterTypeMatchesBuiltinTypeError,
 )
 from dioptra.restapi.v1 import utils
-from dioptra.restapi.v1.entity_types import EntityTypes
+from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.shared.search_parser import parse_search_text
 from dioptra.task_engine.type_registry import BUILTIN_TYPES
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 RESOURCE_TYPE: Final[str] = "plugin_task_parameter_type"
-RT = EntityTypes.PLUGIN_TASK_PARAMETER_TYPE
+RT = EntityType.PLUGIN_TASK_PARAMETER_TYPE
 
 
 class PluginParameterTypeService(object):
@@ -104,7 +104,7 @@ class PluginParameterTypeService(object):
         )
 
         resource = models.Resource(
-            resource_type=EntityTypes.PLUGIN_TASK_PARAMETER_TYPE.db_schema_name,
+            resource_type=EntityType.PLUGIN_TASK_PARAMETER_TYPE.db_schema_name,
             owner=group,
         )
         new_plugin_parameter_type = models.PluginTaskParameterType(
@@ -252,7 +252,7 @@ class PluginParameterTypeIdService(object):
         if plugin_parameter_type is None:
             if error_if_not_found:
                 raise EntityDoesNotExistError(
-                    EntityTypes.PLUGIN_TASK_PARAMETER_TYPE,
+                    EntityType.PLUGIN_TASK_PARAMETER_TYPE,
                     plugin_parameter_type_id=plugin_parameter_type_id,
                 )
 
@@ -420,7 +420,7 @@ class PluginParameterTypeNameService(object):
         if plugin_parameter_type is None:
             if error_if_not_found:
                 raise EntityDoesNotExistError(
-                    EntityTypes.PLUGIN_TASK_PARAMETER_TYPE, name=name, group_id=group_id
+                    EntityType.PLUGIN_TASK_PARAMETER_TYPE, name=name, group_id=group_id
                 )
 
             return None
@@ -592,7 +592,7 @@ def get_plugin_task_parameter_types_by_id(
         returned_parameter_type_ids = {x.resource_id for x in parameter_types}
         ids_not_found = id_list - returned_parameter_type_ids
         raise EntityDoesNotExistError(
-            EntityTypes.PLUGIN_TASK_PARAMETER_TYPE,
+            EntityType.PLUGIN_TASK_PARAMETER_TYPE,
             num_expected=num_ids,
             num_found=len(parameter_types),
             ids_not_found=sorted(ids_not_found),

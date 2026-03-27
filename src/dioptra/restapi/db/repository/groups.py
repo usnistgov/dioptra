@@ -50,7 +50,7 @@ from dioptra.restapi.errors import (
     UserIsManagerError,
     UserNeedsAGroupError,
 )
-from dioptra.restapi.v1.entity_types import EntityTypes
+from dioptra.restapi.v1.entity_types import EntityType
 
 GROUP_CREATOR_MANAGER_PERMISSIONS: Final[dict[str, bool]] = {
     "owner": True,
@@ -107,7 +107,7 @@ class GroupRepository:
             # Assume this name uniqueness constraint applies with respect to
             # all groups, not just non-deleted groups.
             raise EntityExistsError(
-                EntityTypes.GROUP, dupe_group.group_id, name=group.name
+                EntityType.GROUP, dupe_group.group_id, name=group.name
             )
 
         # Because we may be creating a new user, we need to check things
@@ -121,7 +121,7 @@ class GroupRepository:
         elif user_exists_result is ExistenceResult.DELETED:
             # Should probably enforce this until instructed otherwise
             raise EntityDeletedError(
-                EntityTypes.USER,
+                EntityType.USER,
                 group.creator.user_id,
                 user_id=group.creator.user_id,
             )
@@ -153,7 +153,7 @@ class GroupRepository:
 
         exists_result = group_exists(self.session, group)
         if exists_result is ExistenceResult.DOES_NOT_EXIST:
-            raise EntityDoesNotExistError(EntityTypes.GROUP, group_id=group.group_id)
+            raise EntityDoesNotExistError(EntityType.GROUP, group_id=group.group_id)
 
         if exists_result is ExistenceResult.EXISTS:
             lock = GroupLock(GroupLockTypes.DELETE, group)
@@ -217,7 +217,7 @@ class GroupRepository:
         else:
             existence_result = ExistenceResult.EXISTS
 
-        assert_exists(deletion_policy, existence_result, EntityTypes.GROUP, group_id)
+        assert_exists(deletion_policy, existence_result, EntityType.GROUP, group_id)
 
         # The above assert_exists() function would have raised an exception,
         # so group can't be none here.

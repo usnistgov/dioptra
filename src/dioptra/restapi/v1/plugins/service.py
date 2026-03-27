@@ -37,7 +37,7 @@ from dioptra.restapi.errors import (
 )
 from dioptra.restapi.utils import find_non_unique
 from dioptra.restapi.v1 import utils
-from dioptra.restapi.v1.entity_types import EntityTypes
+from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.groups.service import GroupIdService
 from dioptra.restapi.v1.plugin_parameter_types.service import (
     get_plugin_task_parameter_types_by_id,
@@ -117,7 +117,7 @@ class PluginService(object):
         duplicate = self._plugin_name_service.get(name, group_id=group_id, log=log)
         if duplicate is not None:
             raise EntityExistsError(
-                EntityTypes.PLUGIN,
+                EntityType.PLUGIN,
                 duplicate.resource_id,
                 name=name,
                 group_id=group_id,
@@ -233,7 +233,7 @@ class PluginService(object):
             latest_plugins_stmt = latest_plugins_stmt.order_by(sort_column)
         elif sort_by_string and sort_by_string not in PLUGIN_SORTABLE_FIELDS:
             raise SortParameterValidationError(
-                EntityTypes.PLUGIN.db_schema_name, sort_by_string
+                EntityType.PLUGIN.db_schema_name, sort_by_string
             )
 
         plugins = db.session.scalars(latest_plugins_stmt).all()
@@ -316,7 +316,7 @@ class PluginIdService(object):
 
         if plugin is None:
             if error_if_not_found:
-                raise EntityDoesNotExistError(EntityTypes.PLUGIN, plugin_id=plugin_id)
+                raise EntityDoesNotExistError(EntityType.PLUGIN, plugin_id=plugin_id)
 
             return None
 
@@ -380,7 +380,7 @@ class PluginIdService(object):
             duplicate = self._plugin_name_service.get(name, group_id=group_id, log=log)
             if duplicate is not None:
                 raise EntityExistsError(
-                    EntityTypes.PLUGIN,
+                    EntityType.PLUGIN,
                     duplicate.resource_id,
                     name=name,
                     group_id=group_id,
@@ -426,13 +426,13 @@ class PluginIdService(object):
 
         stmt = select(models.Resource).filter_by(
             resource_id=plugin_id,
-            resource_type=EntityTypes.PLUGIN.db_schema_name,
+            resource_type=EntityType.PLUGIN.db_schema_name,
             is_deleted=False,
         )
         plugin_resource = db.session.scalar(stmt)
 
         if plugin_resource is None:
-            raise EntityDoesNotExistError(EntityTypes.PLUGIN, plugin_id=plugin_id)
+            raise EntityDoesNotExistError(EntityType.PLUGIN, plugin_id=plugin_id)
 
         deleted_resource_lock = models.ResourceLock(
             resource_lock_type=resource_lock_types.DELETE,
@@ -443,7 +443,7 @@ class PluginIdService(object):
         plugin_file_resources = [
             child
             for child in plugin_resource.children
-            if child.resource_type == EntityTypes.PLUGIN_FILE.db_schema_name
+            if child.resource_type == EntityType.PLUGIN_FILE.db_schema_name
         ]
         plugin_file_ids = [
             plugin_file_resource.resource_id
@@ -512,7 +512,7 @@ class PluginIdsService(object):
                 plugin.resource_id for plugin in plugins
             }
             raise EntityDoesNotExistError(
-                EntityTypes.PLUGIN, plugin_ids=list(plugin_ids_missing)
+                EntityType.PLUGIN, plugin_ids=list(plugin_ids_missing)
             )
 
         # extract list of plugin ids
@@ -623,7 +623,7 @@ class PluginNameService(object):
         if plugin is None:
             if error_if_not_found:
                 raise EntityDoesNotExistError(
-                    EntityTypes.PLUGIN, name=name, group_id=group_id
+                    EntityType.PLUGIN, name=name, group_id=group_id
                 )
 
         return plugin
@@ -673,7 +673,7 @@ class PluginFileNameService(object):
         if plugin_file is None:
             if error_if_not_found:
                 raise EntityDoesNotExistError(
-                    EntityTypes.PLUGIN_FILE, plugin_id=plugin_id, filename=filename
+                    EntityType.PLUGIN_FILE, plugin_id=plugin_id, filename=filename
                 )
 
             return None
@@ -750,7 +750,7 @@ class PluginIdFileService(object):
         )
         if duplicate is not None:
             raise EntityExistsError(
-                EntityTypes.PLUGIN_FILE,
+                EntityType.PLUGIN_FILE,
                 duplicate.resource_id,
                 filename=filename,
                 plugin_id=plugin_id,
@@ -766,7 +766,7 @@ class PluginIdFileService(object):
         db.session.add(new_plugin)
 
         resource = models.Resource(
-            resource_type=EntityTypes.PLUGIN_FILE.db_schema_name,
+            resource_type=EntityType.PLUGIN_FILE.db_schema_name,
             owner=new_plugin.resource.owner,
         )
         new_plugin_file = models.PluginFile(
@@ -862,7 +862,7 @@ class PluginIdFileService(object):
         plugin = db.session.scalar(latest_plugin_stmt)
 
         if plugin is None:
-            raise EntityDoesNotExistError(EntityTypes.PLUGIN, plugin_id=plugin_id)
+            raise EntityDoesNotExistError(EntityType.PLUGIN, plugin_id=plugin_id)
 
         latest_plugin_files_count_stmt = (
             select(func.count(models.PluginFile.resource_id))
@@ -911,7 +911,7 @@ class PluginIdFileService(object):
             latest_plugin_files_stmt = latest_plugin_files_stmt.order_by(sort_column)
         elif sort_by_string and sort_by_string not in PLUGIN_FILE_SORTABLE_FIELDS:
             raise SortParameterValidationError(
-                EntityTypes.PLUGIN_FILE.db_schema_name, sort_by_string
+                EntityType.PLUGIN_FILE.db_schema_name, sort_by_string
             )
 
         plugin_files_dict: dict[int, utils.PluginFileDict] = {
@@ -953,14 +953,14 @@ class PluginIdFileService(object):
 
         stmt = select(models.Resource).filter_by(
             resource_id=plugin_id,
-            resource_type=EntityTypes.PLUGIN.db_schema_name,
+            resource_type=EntityType.PLUGIN.db_schema_name,
             is_deleted=False,
         )
 
         plugin_resource = db.session.scalar(stmt)
 
         if plugin_resource is None:
-            raise EntityDoesNotExistError(EntityTypes.PLUGIN, plugin_id=plugin_id)
+            raise EntityDoesNotExistError(EntityType.PLUGIN, plugin_id=plugin_id)
 
         latest_plugin_files_stmt = (
             select(models.PluginFile)
@@ -1030,7 +1030,7 @@ class PluginIdSnapshotIdService(object):
 
         if plugin is None:
             raise EntityDoesNotExistError(
-                EntityTypes.PLUGIN,
+                EntityType.PLUGIN,
                 plugin_id=plugin_id,
                 plugin_snapshot_id=plugin_snapshot_id,
             )
@@ -1084,7 +1084,7 @@ class PluginTaskIdService(object):
 
         if task is None:
             raise EntityDoesNotExistError(
-                EntityTypes.PLUGIN_TASK,
+                EntityType.PLUGIN_TASK,
                 task_id=task_id,
             )
         return task
@@ -1136,7 +1136,7 @@ class PluginIdFileIdService(object):
 
         if plugin is None:
             if error_if_not_found:
-                raise EntityDoesNotExistError(EntityTypes.PLUGIN, plugin_id=plugin_id)
+                raise EntityDoesNotExistError(EntityType.PLUGIN, plugin_id=plugin_id)
 
             return None
 
@@ -1156,7 +1156,7 @@ class PluginIdFileIdService(object):
         if plugin_file is None:
             if error_if_not_found:
                 raise EntityDoesNotExistError(
-                    EntityTypes.PLUGIN_FILE,
+                    EntityType.PLUGIN_FILE,
                     plugin_id=plugin_id,
                     plugin_file_id=plugin_file_id,
                 )
@@ -1233,7 +1233,7 @@ class PluginIdFileIdService(object):
             )
             if duplicate is not None:
                 raise EntityExistsError(
-                    EntityTypes.PLUGIN_FILE,
+                    EntityType.PLUGIN_FILE,
                     duplicate.resource_id,
                     filename=filename,
                     plugin_id=plugin_id,
@@ -1307,7 +1307,7 @@ class PluginIdFileIdService(object):
         plugin = db.session.scalar(plugin_stmt)
 
         if plugin is None:
-            raise EntityDoesNotExistError(EntityTypes.PLUGIN, plugin_id=plugin_id)
+            raise EntityDoesNotExistError(EntityType.PLUGIN, plugin_id=plugin_id)
 
         plugin_file_stmt = (
             select(models.PluginFile)
@@ -1324,7 +1324,7 @@ class PluginIdFileIdService(object):
 
         if plugin_file is None:
             raise EntityDoesNotExistError(
-                EntityTypes.PLUGIN_FILE,
+                EntityType.PLUGIN_FILE,
                 plugin_id=plugin_id,
                 plugin_file_id=plugin_file_id,
             )

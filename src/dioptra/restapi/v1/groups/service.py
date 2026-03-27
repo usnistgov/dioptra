@@ -27,7 +27,7 @@ from dioptra.restapi.db import models
 from dioptra.restapi.db.repository.utils import DeletionPolicy
 from dioptra.restapi.db.unit_of_work import UnitOfWork
 from dioptra.restapi.errors import EntityDoesNotExistError, EntityExistsError
-from dioptra.restapi.v1.entity_types import EntityTypes
+from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.shared.search_parser import parse_search_text
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -175,7 +175,7 @@ class GroupIdService(object):
 
         if group is None:
             if error_if_not_found:
-                raise EntityDoesNotExistError(EntityTypes.GROUP, group_id=group_id)
+                raise EntityDoesNotExistError(EntityType.GROUP, group_id=group_id)
 
             return None
 
@@ -212,13 +212,13 @@ class GroupIdService(object):
 
         if group is None:
             if error_if_not_found:
-                raise EntityDoesNotExistError(EntityTypes.GROUP, group_id=group_id)
+                raise EntityDoesNotExistError(EntityType.GROUP, group_id=group_id)
 
             return None
 
         duplicate = self._uow.group_repo.get_by_name(name, DeletionPolicy.ANY)
         if duplicate is not None:
-            raise EntityExistsError(EntityTypes.GROUP, duplicate.group_id, name=name)
+            raise EntityExistsError(EntityType.GROUP, duplicate.group_id, name=name)
 
         current_timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
         group.last_modified_on = current_timestamp

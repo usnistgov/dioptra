@@ -35,7 +35,7 @@ from dioptra.restapi.errors import (
 )
 from dioptra.restapi.utils import find_non_unique
 from dioptra.restapi.v1 import utils
-from dioptra.restapi.v1.entity_types import EntityTypes
+from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.groups.service import GroupIdService
 from dioptra.restapi.v1.plugins.service import (
     PluginIdsService,
@@ -140,7 +140,7 @@ class EntrypointService(object):
         duplicate = self._entrypoint_name_service.get(name, group_id=group_id, log=log)
         if duplicate is not None:
             raise EntityExistsError(
-                EntityTypes.ENTRYPOINT,
+                EntityType.ENTRY_POINT,
                 duplicate.resource_id,
                 name=name,
                 group_id=group_id,
@@ -156,7 +156,7 @@ class EntrypointService(object):
         )
 
         resource = models.Resource(
-            resource_type=EntityTypes.ENTRYPOINT.db_schema_name,
+            resource_type=EntityType.ENTRY_POINT.db_schema_name,
             owner=group,
         )
 
@@ -301,7 +301,7 @@ class EntrypointService(object):
             entrypoints_stmt = entrypoints_stmt.order_by(sort_column)
         elif sort_by_string and sort_by_string not in SORTABLE_FIELDS:
             raise SortParameterValidationError(
-                EntityTypes.ENTRYPOINT.db_schema_name, sort_by_string
+                EntityType.ENTRY_POINT.db_schema_name, sort_by_string
             )
 
         entrypoints = list(db.session.scalars(entrypoints_stmt).unique().all())
@@ -404,7 +404,7 @@ class EntrypointIdService(object):
 
         if entrypoint is None:
             raise EntityDoesNotExistError(
-                EntityTypes.ENTRYPOINT,
+                EntityType.ENTRY_POINT,
                 entrypoint_id=entrypoint_id,
                 entrypoint_snapshot_id=entrypoint_snapshot_id,
             )
@@ -473,12 +473,12 @@ class EntrypointIdService(object):
         duplicates = find_non_unique("name", parameters)
         if len(duplicates) > 0:
             raise QueryParameterNotUniqueError(
-                EntityTypes.ENTRYPOINT.db_schema_name, name=duplicates
+                EntityType.ENTRY_POINT.db_schema_name, name=duplicates
             )
         artifact_parameter_duplicates = find_non_unique("name", artifact_parameters)
         if len(artifact_parameter_duplicates) > 0:
             raise QueryParameterNotUniqueError(
-                EntityTypes.ENTRYPOINT.db_schema_name,
+                EntityType.ENTRY_POINT.db_schema_name,
                 name=artifact_parameter_duplicates,
             )
 
@@ -492,7 +492,7 @@ class EntrypointIdService(object):
             )
             if duplicate is not None:
                 raise EntityExistsError(
-                    EntityTypes.ENTRYPOINT,
+                    EntityType.ENTRY_POINT,
                     duplicate.resource_id,
                     name=name,
                     group_id=group_id,
@@ -554,14 +554,14 @@ class EntrypointIdService(object):
 
         stmt = select(models.Resource).filter_by(
             resource_id=entrypoint_id,
-            resource_type=EntityTypes.ENTRYPOINT.db_schema_name,
+            resource_type=EntityType.ENTRY_POINT.db_schema_name,
             is_deleted=False,
         )
         entrypoint_resource = db.session.scalars(stmt).first()
 
         if entrypoint_resource is None:
             raise EntityDoesNotExistError(
-                EntityTypes.ENTRYPOINT, entrypoint_id=entrypoint_id
+                EntityType.ENTRY_POINT, entrypoint_id=entrypoint_id
             )
 
         deleted_resource_lock = models.ResourceLock(
@@ -605,7 +605,7 @@ class EntrypointSnapshotIdService(object):
 
         if entry_point is None:
             raise EntityDoesNotExistError(
-                EntityTypes.ENTRYPOINT,
+                EntityType.ENTRY_POINT,
                 entrypoint_id=entrypoint_id,
                 entrypoint_snapshot_id=entrypoint_snapshot_id,
             )
@@ -887,7 +887,7 @@ class EntrypointIdPluginsIdService(object):
 
         if not plugin:
             raise EntityDoesNotExistError(
-                EntityTypes.ENTRYPOINT_PLUGIN,
+                EntityType.ENTRY_POINT_PLUGIN,
                 entrypoint_id=entrypoint_id,
                 plugin_id=plugin_id,
             )
@@ -927,7 +927,7 @@ class EntrypointIdPluginsIdService(object):
         }
         if plugin_id not in plugin_ids:
             raise EntityDoesNotExistError(
-                EntityTypes.ENTRYPOINT_PLUGIN,
+                EntityType.ENTRY_POINT_PLUGIN,
                 entrypoint_id=entrypoint_id,
                 plugin_id=plugin_id,
             )
@@ -1178,7 +1178,7 @@ class EntrypointIdArtifactPluginsIdService(object):
 
         if not artifact_plugin:
             raise EntityDoesNotExistError(
-                EntityTypes.ENTRYPOINT_PLUGIN,
+                EntityType.ENTRY_POINT_PLUGIN,
                 entrypoint_id=entrypoint_id,
                 plugin_id=artifact_plugin_id,
             )
@@ -1221,7 +1221,7 @@ class EntrypointIdArtifactPluginsIdService(object):
         }
         if artifact_plugin_id not in artifact_plugin_ids:
             raise EntityDoesNotExistError(
-                EntityTypes.ENTRYPOINT_PLUGIN,
+                EntityType.ENTRY_POINT_PLUGIN,
                 entrypoint_id=entrypoint_id,
                 artifact_plugin_id=artifact_plugin_id,
             )
@@ -1321,7 +1321,7 @@ class EntrypointIdsService(object):
                 entrypoint.resource_id for entrypoint in entrypoints
             }
             raise EntityDoesNotExistError(
-                EntityTypes.ENTRYPOINT, entrypoint_ids=list(entrypoint_ids_missing)
+                EntityType.ENTRY_POINT, entrypoint_ids=list(entrypoint_ids_missing)
             )
 
         return entrypoints
@@ -1541,7 +1541,7 @@ class EntrypointIdQueuesIdService(object):
         removed_queue = queue_resources.pop(queue_id, None)
 
         if removed_queue is None:
-            raise EntityDoesNotExistError(EntityTypes.QUEUE, queue_id=queue_id)
+            raise EntityDoesNotExistError(EntityType.QUEUE, queue_id=queue_id)
 
         plugin_resources = [
             resource
@@ -1600,7 +1600,7 @@ class EntrypointNameService(object):
         if entrypoint is None:
             if error_if_not_found:
                 raise EntityDoesNotExistError(
-                    EntityTypes.ENTRYPOINT, name=name, group_id=group_id
+                    EntityType.ENTRY_POINT, name=name, group_id=group_id
                 )
 
             return None

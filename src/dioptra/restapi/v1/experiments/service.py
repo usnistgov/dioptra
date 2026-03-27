@@ -28,7 +28,7 @@ from dioptra.restapi.db.repository.utils import DeletionPolicy
 from dioptra.restapi.db.unit_of_work import UnitOfWork
 from dioptra.restapi.errors import EntityDoesNotExistError
 from dioptra.restapi.v1 import utils
-from dioptra.restapi.v1.entity_types import EntityTypes
+from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.entrypoints.service import EntrypointIdsService
 from dioptra.restapi.v1.shared.search_parser import parse_search_text
 
@@ -86,7 +86,7 @@ class ExperimentService(object):
 
         owner = self._uow.group_repo.get_one(group_id, DeletionPolicy.NOT_DELETED)
 
-        resource = models.Resource(EntityTypes.EXPERIMENT.db_schema_name, owner)
+        resource = models.Resource(EntityType.EXPERIMENT.db_schema_name, owner)
         new_experiment = models.Experiment(
             description,
             resource,
@@ -256,7 +256,7 @@ class ExperimentIdService(object):
         if experiment is None:
             if error_if_not_found:
                 raise EntityDoesNotExistError(
-                    EntityTypes.EXPERIMENT, experiment_id=experiment_id
+                    EntityType.EXPERIMENT, experiment_id=experiment_id
                 )
 
             return None
@@ -318,7 +318,7 @@ class ExperimentIdService(object):
         if not experiment:
             if error_if_not_found:
                 raise EntityDoesNotExistError(
-                    EntityTypes.EXPERIMENT, resource_id=experiment_id
+                    EntityType.EXPERIMENT, resource_id=experiment_id
                 )
             else:
                 return None
@@ -326,7 +326,7 @@ class ExperimentIdService(object):
             if error_if_not_found:
                 # treat "deleted" as if "not found"?
                 raise EntityDoesNotExistError(
-                    EntityTypes.EXPERIMENT, resource_id=experiment_id
+                    EntityType.EXPERIMENT, resource_id=experiment_id
                 )
             else:
                 return None

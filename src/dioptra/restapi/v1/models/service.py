@@ -34,7 +34,7 @@ from dioptra.restapi.errors import (
 )
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.artifacts.service import ArtifactIdService
-from dioptra.restapi.v1.entity_types import EntityTypes
+from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.groups.service import GroupIdService
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 
@@ -107,7 +107,7 @@ class ModelService(object):
         duplicate = self._model_name_service.get(name, group_id=group_id, log=log)
         if duplicate is not None:
             raise EntityExistsError(
-                EntityTypes.ML_MODEL,
+                EntityType.ML_MODEL,
                 duplicate.resource_id,
                 name=name,
                 group_id=group_id,
@@ -116,7 +116,7 @@ class ModelService(object):
         group = self._group_id_service.get(group_id, error_if_not_found=True)
 
         resource = models.Resource(
-            resource_type=EntityTypes.ML_MODEL.db_schema_name, owner=group
+            resource_type=EntityType.ML_MODEL.db_schema_name, owner=group
         )
 
         ml_model = models.MlModel(
@@ -228,7 +228,7 @@ class ModelService(object):
             latest_ml_models_stmt = latest_ml_models_stmt.order_by(sort_column)
         elif sort_by_string and sort_by_string not in MODEL_SORTABLE_FIELDS:
             raise SortParameterValidationError(
-                EntityTypes.ML_MODEL.db_schema_name, sort_by_string
+                EntityType.ML_MODEL.db_schema_name, sort_by_string
             )
 
         ml_models = db.session.scalars(latest_ml_models_stmt).all()
@@ -352,7 +352,7 @@ class ModelIdService(object):
 
         if ml_model is None:
             if error_if_not_found:
-                raise EntityDoesNotExistError(EntityTypes.ML_MODEL, model_id=model_id)
+                raise EntityDoesNotExistError(EntityType.ML_MODEL, model_id=model_id)
 
             return None
 
@@ -431,7 +431,7 @@ class ModelIdService(object):
             duplicate = self._model_name_service.get(name, group_id=group_id, log=log)
             if duplicate is not None:
                 raise EntityExistsError(
-                    EntityTypes.ML_MODEL,
+                    EntityType.ML_MODEL,
                     duplicate.resource_id,
                     name=name,
                     group_id=group_id,
@@ -473,13 +473,13 @@ class ModelIdService(object):
 
         stmt = select(models.Resource).filter_by(
             resource_id=model_id,
-            resource_type=EntityTypes.ML_MODEL.db_schema_name,
+            resource_type=EntityType.ML_MODEL.db_schema_name,
             is_deleted=False,
         )
         model_resource = db.session.scalars(stmt).first()
 
         if model_resource is None:
-            raise EntityDoesNotExistError(EntityTypes.ML_MODEL, model_id=model_id)
+            raise EntityDoesNotExistError(EntityType.ML_MODEL, model_id=model_id)
 
         deleted_resource_lock = models.ResourceLock(
             resource_lock_type="delete",
@@ -546,7 +546,7 @@ class ModelIdVersionsService(object):
         artifact = artifact_dict["artifact"]
 
         resource = models.Resource(
-            resource_type=EntityTypes.ML_MODEL_VERSION.db_schema_name, owner=group
+            resource_type=EntityType.ML_MODEL_VERSION.db_schema_name, owner=group
         )
         new_version = models.MlModelVersion(
             description=description,
@@ -739,7 +739,7 @@ class ModelIdVersionsNumberService(object):
         if latest_version is None:
             if error_if_not_found:
                 raise EntityDoesNotExistError(
-                    EntityTypes.ML_MODEL_VERSION,
+                    EntityType.ML_MODEL_VERSION,
                     model_id=model_id,
                     version_number=version_number,
                 )
@@ -855,7 +855,7 @@ class ModelNameService(object):
         if ml_model is None:
             if error_if_not_found:
                 raise EntityDoesNotExistError(
-                    EntityTypes.ML_MODEL, name=name, group_id=group_id
+                    EntityType.ML_MODEL, name=name, group_id=group_id
                 )
 
             return None

@@ -36,7 +36,7 @@ from dioptra.restapi.errors import QueryParameterValidationError
 from dioptra.restapi.routes import V1_ARTIFACTS_ROUTE
 from dioptra.restapi.utils import verify_filename_is_safe
 from dioptra.restapi.v1 import utils
-from dioptra.restapi.v1.entity_types import EntityTypes
+from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.file_types import FileTypes
 from dioptra.restapi.v1.shared.job_run_store import JobRunStoreProtocol
 from dioptra.restapi.v1.shared.snapshots.controller import (
@@ -58,7 +58,7 @@ from .snapshot import ArtifactSnapshotIdService
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 api: Namespace = Namespace(
-    EntityTypes.ARTIFACT.print_name, description="Artifacts endpoint"
+    EntityType.ARTIFACT.print_name, description="Artifacts endpoint"
 )
 
 
@@ -82,7 +82,7 @@ class ArtifactEndpoint(Resource):
         """Gets a list of all Artifact resources."""
         log = LOGGER.new(
             request_id=str(uuid.uuid4()),
-            resource=EntityTypes.ARTIFACT.print_name,
+            resource=EntityType.ARTIFACT.print_name,
             request_type="GET",
         )
         parsed_query_params = request.parsed_query_params  # noqa: F841
@@ -126,7 +126,7 @@ class ArtifactEndpoint(Resource):
         """Creates an Artifact resource."""
         log = LOGGER.new(
             request_id=str(uuid.uuid4()),
-            resource=EntityTypes.ARTIFACT.print_name,
+            resource=EntityType.ARTIFACT.print_name,
             request_type="POST",
         )
         log.debug("Request received")
@@ -165,7 +165,7 @@ class ArtifactIdEndpoint(Resource):
         """Gets an Artifact resource."""
         log = LOGGER.new(
             request_id=str(uuid.uuid4()),
-            resource=EntityTypes.ARTIFACT.print_name,
+            resource=EntityType.ARTIFACT.print_name,
             request_type="GET",
             id=id,
         )
@@ -180,7 +180,7 @@ class ArtifactIdEndpoint(Resource):
         """Modifies an Artifact resource."""
         log = LOGGER.new(
             request_id=str(uuid.uuid4()),
-            resource=EntityTypes.ARTIFACT.print_name,
+            resource=EntityType.ARTIFACT.print_name,
             request_type="PUT",
             id=id,
         )
@@ -216,7 +216,7 @@ class ArtifactIdFilesEndpoint(Resource):
         """Gets a list of all files associated with an Artifact resource."""
         log = LOGGER.new(
             request_id=str(uuid.uuid4()),
-            resource=EntityTypes.ARTIFACT.print_name,
+            resource=EntityType.ARTIFACT.print_name,
             request_type="GET",
             id=id,
         )
@@ -268,7 +268,7 @@ class ArtifactIdContentsEndpoint(Resource):
             artifact=self._artifact_id_service.get(artifact_id=id)["artifact"],
             log=LOGGER.new(
                 request_id=str(uuid.uuid4()),
-                resource=EntityTypes.ARTIFACT.print_name,
+                resource=EntityType.ARTIFACT.print_name,
                 request_type="GET",
                 id=id,
             ),
@@ -319,7 +319,7 @@ class ArtifactSnapshotIdContentsEndpoint(Resource):
             ),
             log=LOGGER.new(
                 request_id=str(uuid.uuid4()),
-                resource=EntityTypes.ARTIFACT.print_name,
+                resource=EntityType.ARTIFACT.print_name,
                 request_type="GET",
                 id=id,
                 snapshotId=snapshotId,
@@ -330,7 +330,7 @@ class ArtifactSnapshotIdContentsEndpoint(Resource):
 ArtifactSnapshotsResource = generate_resource_snapshots_endpoint(
     api=api,
     resource_model=models.Artifact,
-    resource_name=EntityTypes.ARTIFACT.db_schema_name,
+    resource_name=EntityType.ARTIFACT.db_schema_name,
     route_prefix=V1_ARTIFACTS_ROUTE,
     searchable_fields=SEARCHABLE_FIELDS,
     page_schema=ArtifactPageSchema,
@@ -339,7 +339,7 @@ ArtifactSnapshotsResource = generate_resource_snapshots_endpoint(
 ArtifactSnapshotsIdResource = generate_resource_snapshots_id_endpoint(
     api=api,
     resource_model=models.Artifact,
-    resource_name=EntityTypes.ARTIFACT.db_schema_name,
+    resource_name=EntityType.ARTIFACT.db_schema_name,
     response_schema=ArtifactSchema,
     build_fn=utils.build_artifact,
 )
@@ -358,7 +358,7 @@ def _handle_artifact_contents(
         except ValueError as e:
             log.error("Query Parameter validation failed.", error=e)
             raise QueryParameterValidationError(
-                EntityTypes.ARTIFACT.db_schema_name,
+                EntityType.ARTIFACT.db_schema_name,
                 constraint="invalid path query parameter",
             ) from None
 
@@ -366,12 +366,12 @@ def _handle_artifact_contents(
 
     if not artifact.is_dir and path is not None:
         raise QueryParameterValidationError(
-            EntityTypes.ARTIFACT.db_schema_name,
+            EntityType.ARTIFACT.db_schema_name,
             constraint="path query parameter may not be provided for a file",
         )
     if not artifact.is_dir and file_type is not None:
         raise QueryParameterValidationError(
-            EntityTypes.ARTIFACT.db_schema_name,
+            EntityType.ARTIFACT.db_schema_name,
             constraint="file_type query parameter may not be provided for a file",
         )
 

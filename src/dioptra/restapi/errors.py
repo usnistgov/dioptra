@@ -29,7 +29,7 @@ from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
 from dioptra.restapi.v1 import utils
-from dioptra.restapi.v1.entity_types import EntityTypes
+from dioptra.restapi.v1.entity_types import EntityType
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -81,22 +81,6 @@ class DioptraError(Exception):
 
         return f"{self.message} Cause: {self.__cause__}"
 
-    def to_entity_or_type_message(self, entity_type: EntityTypes | None) -> str:
-        """Returns 'entity' or actual EntityTypes printable Entity-Name
-
-        Args:
-            entity_type (EntityTypes | None): the actual argument [EntityTypes | None] that came into the Error
-
-        Returns:
-            str: Either 'entity' or 'EntityTypes.print_name' as a string
-        """
-        resolved_entity = entity_type if entity_type else EntityTypes.NONE
-        return (
-            "entity"
-            if resolved_entity == EntityTypes.NONE
-            else f"{resolved_entity.print_name}"
-        )
-
 
 class EntityDoesNotExistError(DioptraError):
     """
@@ -106,19 +90,17 @@ class EntityDoesNotExistError(DioptraError):
         kwargs: the attribute value pairs used to request the entity
     """
 
-    def __init__(self, entity_type: EntityTypes | None, **kwargs: typing.Any):
-        resolved_entity = entity_type if entity_type else EntityTypes.NONE
+    def __init__(self, entity_type: EntityType, **kwargs: typing.Any):
         super().__init__(
             " ".join(
                 [
-                    "Failed to locate",
-                    f"{resolved_entity.get_an_article()} {resolved_entity.print_name}",
+                    f"Failed to locate {entity_type.print_name}",
                     *add_attribute_values(**kwargs),
                     ".",
                 ]
             )
         )
-        self.entity_type = "unknown" if entity_type is None else resolved_entity
+        self.entity_type = entity_type
         self.entity_attributes = kwargs
 
 
@@ -131,22 +113,18 @@ class EntityExistsError(DioptraError):
         kwargs: the attribute value pairs used to request the entity
     """
 
-    def __init__(
-        self, entity_type: EntityTypes | None, existing_id: int, **kwargs: typing.Any
-    ):
-        resolved_entity = entity_type if entity_type else EntityTypes.NONE
+    def __init__(self, entity_type: EntityType, existing_id: int, **kwargs: typing.Any):
         super().__init__(
             "".join(
                 [
                     "The ",
-                    self.to_entity_or_type_message(resolved_entity),
+                    entity_type.print_name,
                     *add_attribute_values(**kwargs),
-                    ### " is not available.",
                     " already exists.",
                 ]
             )
         )
-        self.entity_type = resolved_entity
+        self.entity_type = entity_type
         self.entity_attributes = kwargs
         self.existing_id = existing_id
 
@@ -160,16 +138,12 @@ class EntityDeletedError(DioptraError):
         kwargs: the attribute value pairs used to request the entity
     """
 
-    def __init__(
-        self, entity_type: EntityTypes | None, existing_id: int, **kwargs: typing.Any
-    ):
-
-        resolved_entity = entity_type if entity_type else EntityTypes.NONE
+    def __init__(self, entity_type: EntityType, existing_id: int, **kwargs: typing.Any):
         super().__init__(
             "".join(
                 [
                     "The ",
-                    self.to_entity_or_type_message(resolved_entity),
+                    entity_type.print_name,
                     *add_attribute_values(**kwargs),
                     " is deleted.",
                 ]
@@ -195,11 +169,11 @@ class LockError(DioptraError):
 class ReadOnlyLockError(LockError):
     """The type has a read-only lock and cannot be modified."""
 
-    def __init__(self, type: str | None = None, **kwargs: typing.Any):
+    def __init__(self, type: EntityType, **kwargs: typing.Any):
         super().__init__(
             "".join(
                 [
-                    f"The {type or 'resource'} type",
+                    f"The {type.print_name} type",
                     *add_attribute_values(**kwargs),
                     " has a read-only lock and cannot be modified.",
                 ]
@@ -727,8 +701,8 @@ class DraftBaseInvalidError(DioptraError):
     def __init__(
         self,
         base_resource_id: int,
-        parent_type: EntityTypes,
-        child_type: EntityTypes,
+        parent_type: EntityType,
+        child_type: EntityType,
     ) -> None:
         msg = (
             f"Invalid draft base resource ID: resource type {parent_type.print_name!r}"
@@ -800,7 +774,7 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
         return error_result(
             error,
             http.HTTPStatus.NOT_FOUND,
-            {"entity_type": error.entity_type, **error.entity_attributes},
+            {"entity_type": error.entity_type.print_name, **error.entity_attributes},
         )
 
     @api.errorhandler(EntityExistsError)
@@ -815,7 +789,7 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
             error,
             http.HTTPStatus.CONFLICT,
             {
-                "entity_type": error.entity_type,
+                "entity_type": error.entity_type.print_name,
                 "existing_id": error.existing_id,
                 "entity_attributes": {**error.entity_attributes},
             },

@@ -35,7 +35,7 @@ from dioptra.restapi.errors import (
     SortParameterValidationError,
 )
 from dioptra.restapi.v1 import utils
-from dioptra.restapi.v1.entity_types import EntityTypes
+from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.groups.service import GroupIdService
 from dioptra.restapi.v1.jobs.service import JobIdMlflowrunService, JobIdService
 from dioptra.restapi.v1.plugins.service import (
@@ -102,7 +102,7 @@ class ArtifactTaskHelper(object):
             )
             if plugin_plugin_file is None:
                 raise EntityDoesNotExistError(
-                    EntityTypes.PLUGIN_TASK,
+                    EntityType.PLUGIN_TASK,
                     task_id=task_id,
                     plugin_snapshot_id=plugin_snapshot_id,
                 )
@@ -190,15 +190,13 @@ class ArtifactService(object):
         # check if an artifact with the same uri and job_id has already been created
         duplicate = _find_artifact(job_artifacts, uri)
         if duplicate is not None:
-            raise EntityExistsError(
-                EntityTypes.ARTIFACT, duplicate.resource_id, uri=uri
-            )
+            raise EntityExistsError(EntityType.ARTIFACT, duplicate.resource_id, uri=uri)
         artifact = self._job_run_store.find_artifact(run_id=mlflow_run_id, uri=uri)
 
         group = self._group_id_service.get(group_id, error_if_not_found=True, log=log)
 
         resource = models.Resource(
-            resource_type=EntityTypes.ARTIFACT.db_schema_name,
+            resource_type=EntityType.ARTIFACT.db_schema_name,
             owner=group,
         )
         new_artifact = models.Artifact(
@@ -328,7 +326,7 @@ class ArtifactService(object):
             latest_artifacts_stmt = latest_artifacts_stmt.order_by(sort_column)
         elif sort_by_string and sort_by_string not in SORTABLE_FIELDS:
             raise SortParameterValidationError(
-                EntityTypes.ARTIFACT.db_schema_name, sort_by_string
+                EntityType.ARTIFACT.db_schema_name, sort_by_string
             )
 
         artifacts = db.session.scalars(latest_artifacts_stmt).all()
@@ -447,7 +445,7 @@ class ArtifactIdService(object):
         artifact = db.session.scalars(stmt).first()
 
         if artifact is None:
-            raise EntityDoesNotExistError(EntityTypes.ARTIFACT, artifact_id=artifact_id)
+            raise EntityDoesNotExistError(EntityType.ARTIFACT, artifact_id=artifact_id)
 
         drafts_stmt = (
             select(models.DraftResource.draft_resource_id)
