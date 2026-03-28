@@ -33,6 +33,7 @@ from injector import inject
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
+from dioptra.restapi.db.repository.artifacts import ArtifactRepository
 from dioptra.restapi.errors import QueryParameterValidationError
 from dioptra.restapi.routes import V1_ARTIFACTS_ROUTE
 from dioptra.restapi.utils import verify_filename_is_safe
@@ -54,7 +55,6 @@ from .schema import (
 )
 from .service import (
     RESOURCE_TYPE,
-    SEARCHABLE_FIELDS,
     ArtifactIdService,
     ArtifactService,
 )
@@ -323,7 +323,7 @@ ArtifactSnapshotsResource = generate_resource_snapshots_endpoint(
     resource_model=models.Artifact,
     resource_name=RESOURCE_TYPE,
     route_prefix=V1_ARTIFACTS_ROUTE,
-    searchable_fields=SEARCHABLE_FIELDS,
+    searchable_fields=ArtifactRepository.SEARCHABLE_FIELDS,
     page_schema=ArtifactPageSchema,
     build_fn=utils.build_artifact,
 )

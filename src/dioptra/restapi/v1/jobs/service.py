@@ -19,48 +19,32 @@
 import datetime
 import math
 from collections.abc import Iterable
-from typing import Any, Final, cast
+from typing import Any, Final
 
 import structlog
 from flask_login import current_user
 from injector import inject
-from sqlalchemy import delete, func, select
-from sqlalchemy.orm import aliased
+from sqlalchemy import delete, select
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
+from dioptra.restapi.db.repository.jobs import JobRepository
+from dioptra.restapi.db.repository.utils.common import DeletionPolicy
+from dioptra.restapi.db.unit_of_work import UnitOfWork, UnitOfWorkService
 from dioptra.restapi.errors import (
-    BackendDatabaseError,
     DioptraError,
     EntityDoesNotExistError,
-    EntityNotRegisteredError,
     JobArtifactParameterMissingError,
     JobInvalidParameterNameError,
     JobInvalidStatusTransitionError,
     JobMlflowRunAlreadySetError,
     JobParameterMissingError,
-    SortParameterValidationError,
 )
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.artifacts.snapshot import ArtifactSnapshotIdService
-from dioptra.restapi.v1.entrypoints.service import (
-    RESOURCE_TYPE as ENTRYPOINT_RESOURCE_TYPE,
-)
-from dioptra.restapi.v1.entrypoints.service import (
-    EntrypointIdService,
-)
-from dioptra.restapi.v1.experiments.service import (
-    RESOURCE_TYPE as EXPERIMENT_RESOURCE_TYPE,
-)
-from dioptra.restapi.v1.experiments.service import (
-    ExperimentIdService,
-)
-from dioptra.restapi.v1.groups.service import GroupIdService
-from dioptra.restapi.v1.queues.service import RESOURCE_TYPE as QUEUE_RESOURCE_TYPE
-from dioptra.restapi.v1.queues.service import QueueIdService
-from dioptra.restapi.v1.shared.job_run_store import JobRunStoreProtocol
+from dioptra.restapi.v1.entrypoints.service import EntrypointIdService
 from dioptra.restapi.v1.shared.rq_service import RQServiceV1
-from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
+from dioptra.restapi.v1.shared.search_parser import parse_search_text
 from dioptra.restapi.v1.shared.task_engine_yaml.service import (
     check_artifact_param_type_mismatch,
     coerce_entrypoint_param_types,
@@ -71,39 +55,6 @@ from .schema import JobLogSeverity
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 RESOURCE_TYPE: Final[str] = "job"
-SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
-    "description": lambda x: models.Job.description.like(x),
-    "status": lambda x: models.Job.status.like(x),
-    "timeout": lambda x: models.Job.timeout.like(x),
-    "tag": lambda x: models.Job.tags.any(models.Tag.name.like(x, escape="/")),
-}
-SORTABLE_FIELDS: Final[dict[str, Any]] = {
-    "id": models.Resource.resource_id,
-    "description": models.Job.description,
-    "createdOn": models.Job.created_on,
-    "lastModifiedOn": models.Resource.last_modified_on,
-    "status": models.Job.status,
-    "experiment": models.Experiment.name,
-    "entrypoint": models.EntryPoint.name,
-    "queue": models.Queue.name,
-}
-SEARCHABLE_LOG_FIELDS: Final[dict[str, Any]] = {
-    "severity": lambda x: models.JobLog.severity.like(x),
-    "message": lambda x: models.JobLog.message.like(x),
-    "logger_name": lambda x: models.JobLog.logger_name.like(x),
-}
-SORTABLE_LOG_FIELDS: Final[dict[str, Any]] = {
-    "severity": models.JobLog.severity,
-    "logger_name": models.JobLog.logger_name,
-    "created_on": models.JobLog.created_on,
-}
-JOB_STATUS_TRANSITIONS: Final[dict[str, Any]] = {
-    "queued": {"started", "deferred", "reset"},
-    "started": {"finished", "failed", "reset"},
-    "deferred": {"started", "reset"},
-    "failed": {"reset"},
-    "finished": {"reset"},
-}
 
 
 class JobService(object):
@@ -112,30 +63,23 @@ class JobService(object):
     @inject
     def __init__(
         self,
-        experiment_id_service: ExperimentIdService,
-        queue_id_service: QueueIdService,
         entrypoint_id_service: EntrypointIdService,
-        group_id_service: GroupIdService,
         artifact_snapshot_id_service: ArtifactSnapshotIdService,
         rq_service: RQServiceV1,
+        uow: UnitOfWork,
     ) -> None:
         """Initialize the job service.
 
         All arguments are provided via dependency injection.
 
         Args:
-            experiment_id_service: An ExperimentIdService object.
-            queue_id_service: A QueueIdService object.
             entrypoint_id_service: An EntrypointIdService object.
-            group_id_service: A GroupIdService object.
             rq_service: An RQServiceV1 object.
         """
-        self._experiment_id_service = experiment_id_service
-        self._queue_id_service = queue_id_service
         self._entrypoint_id_service = entrypoint_id_service
         self._artifact_snapshot_id_service = artifact_snapshot_id_service
-        self._group_id_service = group_id_service
         self._rq_service = rq_service
+        self._uow = uow
 
     def create(
         self,
@@ -176,72 +120,16 @@ class JobService(object):
         status = "queued"
 
         # Validate the provided experiment_id and fetch the ORM object
-        experiment_dict = cast(
-            utils.ExperimentDict,
-            self._experiment_id_service.get(
-                experiment_id, error_if_not_found=True, log=log
-            ),
-        )
-        experiment = experiment_dict["experiment"]
-        # Validate that the provided entrypoint_id is registered to the experiment
-        parent_experiment = aliased(models.Experiment)
-        experiment_entry_point_ids_stmt = (
-            select(models.EntryPoint.resource_id)
-            .join(
-                models.resource_dependencies_table,
-                models.EntryPoint.resource_id
-                == models.resource_dependencies_table.c.child_resource_id,
-            )
-            .join(
-                parent_experiment,
-                parent_experiment.resource_id
-                == models.resource_dependencies_table.c.parent_resource_id,
-            )
-            .where(parent_experiment.resource_id == experiment_id)
-        )
-        experiment_entry_point_ids = list(
-            db.session.scalars(experiment_entry_point_ids_stmt).all()
+        experiment = self._uow.experiment_repo.get_one(
+            experiment_id, DeletionPolicy.NOT_DELETED
         )
 
-        if entrypoint_id not in set(experiment_entry_point_ids):
-            raise EntityNotRegisteredError(
-                EXPERIMENT_RESOURCE_TYPE,
-                experiment_id,
-                ENTRYPOINT_RESOURCE_TYPE,
-                entrypoint_id,
-            )
-
-        # Validate that the provided queue_id is registered to the entrypoint
-        parent_entry_point = aliased(models.EntryPoint)
-        entry_point_queue_ids_stmt = (
-            select(models.Queue.resource_id)
-            .join(
-                models.resource_dependencies_table,
-                models.Queue.resource_id
-                == models.resource_dependencies_table.c.child_resource_id,
-            )
-            .join(
-                parent_entry_point,
-                parent_entry_point.resource_id
-                == models.resource_dependencies_table.c.parent_resource_id,
-            )
-            .where(parent_entry_point.resource_id.in_(experiment_entry_point_ids))
+        self._uow.job_repo.assert_resources_registered(
+            entrypoint_id, experiment_id, queue_id
         )
-        entry_point_queue_ids = list(
-            db.session.scalars(entry_point_queue_ids_stmt).all()
-        )
-
-        if queue_id not in set(entry_point_queue_ids):
-            raise EntityNotRegisteredError(
-                ENTRYPOINT_RESOURCE_TYPE, entrypoint_id, QUEUE_RESOURCE_TYPE, queue_id
-            )
 
         # Fetch the validated queue
-        queue_dict = cast(
-            utils.QueueDict,
-            self._queue_id_service.get(queue_id, error_if_not_found=True, log=log),
-        )
-        queue = queue_dict["queue"]
+        queue = self._uow.queue_repo.get_one(queue_id, DeletionPolicy.NOT_DELETED)
 
         # Fetch the validated entrypoint
         entrypoint_dict = self._entrypoint_id_service.get(
@@ -297,7 +185,6 @@ class JobService(object):
             resource=job_resource,
             creator=current_user,
         )
-        db.session.add(new_job)
         new_job.entry_point_job = models.EntryPointJob(
             job_resource=job_resource,
             entry_point=entrypoint,
@@ -308,21 +195,28 @@ class JobService(object):
             job_resource=job_resource,
             experiment=experiment,
         )
-        new_job.queue_job = models.QueueJob(
-            job_resource=job_resource,
-            queue=queue,
-        )
-        db.session.commit()
+        new_job.queue_job = models.QueueJob(job_resource=job_resource, queue=queue)
+
+        try:
+            self._uow.job_repo.create(new_job)
+        except Exception:
+            self._uow.rollback()
+            raise
+
+        self._uow.commit()
+
         self._rq_service.submit(
             job_id=new_job.resource_id,
             experiment_id=experiment_id,
             queue=queue.name,
             timeout=timeout,
         )
+
         log.debug(
             "Job registration successful",
             job_id=new_job.resource_id,
         )
+
         return utils.JobDict(
             job=new_job,
             artifacts=[],
@@ -347,8 +241,8 @@ class JobService(object):
 
                 value = artifact_value_ids[artifact_parameter.name]
                 # if no artifact found, will raise EntityDoesNotExist
-                artifact = self._artifact_snapshot_id_service.get(
-                    artifact_id=value["id"], artifact_snapshot_id=value["snapshot_id"]
+                artifact = self._uow.artifact_repo.get_one_snapshot(
+                    value["snapshot_id"], DeletionPolicy.NOT_DELETED
                 )
 
                 # test that types match -- including the order
@@ -422,78 +316,31 @@ class JobService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get full list of jobs")
 
-        filters = []
+        search_struct = parse_search_text(search_string)
 
-        if group_id is not None:
-            filters.append(models.Resource.group_id == group_id)
-
-        if search_string:
-            filters.append(
-                construct_sql_query_filters(search_string, SEARCHABLE_FIELDS)
-            )
-
-        stmt = (
-            select(func.count(models.Job.resource_id))
-            .join(models.Resource)
-            .where(
-                *filters,
-                models.Resource.is_deleted == False,  # noqa: E712
-                models.Resource.latest_snapshot_id == models.Job.resource_snapshot_id,
-            )
-        )
-        total_num_jobs = db.session.scalars(stmt).first()
-
-        if total_num_jobs is None:
-            log.error(
-                "The database query returned a None when counting the number of "
-                "groups when it should return a number.",
-                sql=str(stmt),
-            )
-            raise BackendDatabaseError
-
-        if total_num_jobs == 0:
-            return [], total_num_jobs
-
-        jobs_stmt = (
-            select(models.Job)
-            .join(models.Resource)
-            .join(models.Job.experiment_job)
-            .join(models.ExperimentJob.experiment)
-            .join(models.Job.entry_point_job)
-            .join(models.EntryPointJob.entry_point)
-            .join(models.Job.queue_job)
-            .join(models.QueueJob.queue)
-            .where(
-                *filters,
-                models.Resource.is_deleted == False,  # noqa: E712
-                models.Resource.latest_snapshot_id == models.Job.resource_snapshot_id,
-            )
-            .offset(page_index)
-            .limit(page_length)
+        jobs, total_num_jobs = self._uow.job_repo.get_by_filters_paged(
+            group_id,
+            None,
+            search_struct,
+            page_index,
+            page_length,
+            sort_by_string,
+            descending,
+            DeletionPolicy.NOT_DELETED,
         )
 
-        if sort_by_string and sort_by_string in SORTABLE_FIELDS:
-            sort_column = SORTABLE_FIELDS[sort_by_string]
-            if descending:
-                sort_column = sort_column.desc()
-            else:
-                sort_column = sort_column.asc()
-            jobs_stmt = jobs_stmt.order_by(sort_column)
-        elif sort_by_string and sort_by_string not in SORTABLE_FIELDS:
-            raise SortParameterValidationError(RESOURCE_TYPE, sort_by_string)
+        artifacts = self._uow.artifact_repo.get_by_job(
+            *[job.resource_id for job in jobs],
+            deletion_policy=DeletionPolicy.NOT_DELETED,
+        )
 
-        jobs = list(db.session.scalars(jobs_stmt).all())
-        return _build_job_dict(jobs), total_num_jobs
+        return _build_job_dicts(list(jobs), list(artifacts)), total_num_jobs
 
 
-class JobIdService(object):
+class JobIdService(UnitOfWorkService):
     """The service methods for registering and managing jobs by their unique id."""
 
-    def get(
-        self,
-        job_id: int,
-        **kwargs,
-    ) -> utils.JobDict:
+    def get(self, job_id: int, **kwargs) -> utils.JobDict:
         """Fetch a job by its unique id.
 
         Args:
@@ -508,33 +355,21 @@ class JobIdService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get job by id", job_id=job_id)
 
-        stmt = (
-            select(models.Job)
-            .join(models.Resource)
-            .where(
-                models.Job.resource_id == job_id,
-                models.Job.resource_snapshot_id == models.Resource.latest_snapshot_id,
-                models.Resource.is_deleted == False,  # noqa: E712
-            )
-        )
-        job = db.session.scalars(stmt).first()
+        job = self._uow.job_repo.get(job_id, DeletionPolicy.ANY)
 
-        if job is None:
-            raise EntityDoesNotExistError(RESOURCE_TYPE, job_id=job_id)
+        if not job:
+            raise EntityDoesNotExistError(RESOURCE_TYPE, resource_id=job_id)
 
-        artifacts_stmt = (
-            select(models.Artifact)
-            .join(models.Resource)
-            .where(
-                models.Artifact.job_id == job_id,
-                models.Resource.is_deleted == False,  # noqa: E712
-            )
+        elif job.resource.is_deleted:
+            raise EntityDoesNotExistError(RESOURCE_TYPE, resource_id=job_id)
+
+        artifacts = self._uow.artifact_repo.get_by_job(
+            job_id, deletion_policy=DeletionPolicy.NOT_DELETED
         )
-        artifacts = list(db.session.scalars(artifacts_stmt).all())
 
         return utils.JobDict(
             job=job,
-            artifacts=artifacts,
+            artifacts=list(artifacts),
             has_draft=False,
         )
 
@@ -549,20 +384,10 @@ class JobIdService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        stmt = select(models.Resource).filter_by(
-            resource_id=job_id, resource_type=RESOURCE_TYPE, is_deleted=False
-        )
-        job_resource = db.session.scalars(stmt).first()
+        with self._uow:
+            # No-op if already deleted
+            self._uow.job_repo.delete(job_id)
 
-        if job_resource is None:
-            raise EntityDoesNotExistError(RESOURCE_TYPE, job_id=job_id)
-
-        deleted_resource_lock = models.ResourceLock(
-            resource_lock_type="delete",
-            resource=job_resource,
-        )
-        db.session.add(deleted_resource_lock)
-        db.session.commit()
         log.debug("Job deleted", job_id=job_id)
 
         return {"status": "Success", "id": [job_id]}
@@ -582,10 +407,16 @@ class JobIdService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
 
-        entry_point_param_values_stmt = select(models.EntryPointParameterValue).where(
-            models.EntryPointParameterValue.job_resource_id == job_id,
+        job = self._uow.job_repo.get_one(
+            resource_id=job_id, deletion_policy=DeletionPolicy.NOT_DELETED
         )
-        return list(db.session.scalars(entry_point_param_values_stmt).unique().all())
+
+        if job is None:
+            raise EntityDoesNotExistError(RESOURCE_TYPE, resource_id=job_id)
+
+        log.debug("Retrieved entrypoint parameter values", job_id=job_id)
+
+        return job.entry_point_job.entry_point_parameter_values
 
     def get_artifact_values(
         self, job_id: int, **kwargs
@@ -602,32 +433,19 @@ class JobIdService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
 
-        entry_point_artifact_values_stmt = select(
-            models.EntryPointArtifactParameterValue
-        ).where(
-            models.EntryPointArtifactParameterValue.job_resource_id == job_id,
+        job = self._uow.job_repo.get_one(
+            resource_id=job_id, deletion_policy=DeletionPolicy.NOT_DELETED
         )
-        return list(db.session.scalars(entry_point_artifact_values_stmt).unique().all())
+
+        log.debug("Retrieved entrypoint artifact parameter values", job_id=job_id)
+
+        return job.entry_point_job.entry_point_artifact_parameter_values
 
 
-class JobIdStatusService(object):
+class JobIdStatusService(UnitOfWorkService):
     """The service methods for retrieving the status of a job by unique id."""
 
-    @inject
-    def __init__(
-        self,
-    ) -> None:
-        """Initialize the job status service.
-
-        All arguments are provided via dependency injection.
-        """
-        pass
-
-    def get(
-        self,
-        job_id: int,
-        **kwargs,
-    ) -> dict[str, Any]:
+    def get(self, job_id: int, **kwargs) -> dict[str, Any]:
         """Fetch a job's status by its unique id.
 
         Args:
@@ -639,40 +457,21 @@ class JobIdStatusService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get job status by id", job_id=job_id)
 
-        stmt = (
-            select(models.Job)
-            .join(models.Resource)
-            .where(
-                models.Job.resource_id == job_id,
-                models.Job.resource_snapshot_id == models.Resource.latest_snapshot_id,
-                models.Resource.is_deleted == False,  # noqa: E712
-            )
-        )
-        job = db.session.scalars(stmt).first()
+        job = self._uow.job_repo.get(job_id, DeletionPolicy.ANY)
 
-        if job is None:
-            raise EntityDoesNotExistError(RESOURCE_TYPE, job_id=job_id)
+        if not job:
+            raise EntityDoesNotExistError(RESOURCE_TYPE, resource_id=job_id)
+
+        elif job.resource.is_deleted:
+            raise EntityDoesNotExistError(RESOURCE_TYPE, resource_id=job_id)
 
         return {"status": job.status, "id": job.resource_id}
 
 
-class JobIdMetricsService(object):
+class JobIdMetricsService(UnitOfWorkService):
     """The service methods for retrieving the metrics of a job by unique id."""
 
-    @inject
-    def __init__(self, job_id_service: JobIdService) -> None:
-        """Initialize the job metrics service.
-
-        All arguments are provided via dependency injection.
-
-        """
-        self._job_id_service = job_id_service
-
-    def get(
-        self,
-        job_id: int,
-        **kwargs,
-    ) -> list[dict[str, Any]]:
+    def get(self, job_id: int, **kwargs) -> list[dict[str, Any]]:
         """Fetch a job's metrics by its unique id.
 
         Args:
@@ -685,10 +484,7 @@ class JobIdMetricsService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get job metrics by id", job_id=job_id)
 
-        stmt = select(models.JobMetric).where(
-            models.JobMetric.is_latest, models.JobMetric.job_resource_id == job_id
-        )
-        job_metrics = list(db.session.scalars(stmt).all())
+        job_metrics = self._uow.job_repo.get_latest_metrics(job_id)
 
         return [
             {
@@ -722,20 +518,14 @@ class JobIdMetricsService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Update job metrics by id", job_id=job_id)
 
-        job_dict = self._job_id_service.get(job_id, error_if_not_found=True)
+        job = self._uow.job_repo.get_one(job_id, DeletionPolicy.NOT_DELETED)
 
-        job = job_dict["job"]
-
-        stmt = select(models.JobMetric).where(
-            models.JobMetric.step == metric_step,
-            models.JobMetric.job_resource_id == job_id,
-            models.JobMetric.name == metric_name,
+        metric = self._uow.job_repo.get_metric_step(
+            job_id, metric_name=metric_name, metric_step=metric_step
         )
 
-        metric: models.JobMetric | None = db.session.scalars(stmt).first()
-
         value, special_value = _prepare_metric_value(metric_value)
-        ts = (
+        timestamp = (
             metric_timestamp
             if metric_timestamp is not None
             else datetime.datetime.now(tz=datetime.timezone.utc)
@@ -747,17 +537,17 @@ class JobIdMetricsService(object):
                 value=value,
                 special_value=special_value,
                 step=metric_step,
-                timestamp=ts,
+                timestamp=timestamp,
                 job_resource=job.resource,
             )
 
-            db.session.add(new_metric)
+            self._uow.job_repo.add_metric(new_metric)
         else:
             metric.value = metric_value
             metric.special_value = special_value
-            metric.timestamp = ts
+            metric.timestamp = timestamp
 
-        db.session.commit()
+        self._uow.commit()
 
         return {
             "name": metric_name,
@@ -765,22 +555,9 @@ class JobIdMetricsService(object):
         }
 
 
-class JobIdMetricsSnapshotsService(object):
+class JobIdMetricsSnapshotsService(UnitOfWorkService):
     """The service methods for retrieving the historical metrics of a
     job by unique id and metric name."""
-
-    @inject
-    def __init__(
-        self,
-        job_id_mlflowrun_service: "JobIdMlflowrunService",
-        job_run_store: JobRunStoreProtocol,
-    ) -> None:
-        """Initialize the job metrics snapshots service.
-
-        All arguments are provided via dependency injection.
-        """
-        self._job_id_mlflowrun_service = job_id_mlflowrun_service
-        self._job_run_store = job_run_store
 
     def get(
         self,
@@ -808,12 +585,7 @@ class JobIdMetricsSnapshotsService(object):
             metric_name=metric_name,
         )
 
-        job_metrics_stmt = select(models.JobMetric).where(
-            models.JobMetric.job_resource_id == job_id,
-            models.JobMetric.name == metric_name,
-        )
-
-        history = list(db.session.scalars(job_metrics_stmt).unique().all())
+        history = self._uow.job_repo.get_metric_history(job_id, metric_name)
 
         metrics_page = [
             {
@@ -831,24 +603,21 @@ class JobIdMetricsSnapshotsService(object):
         return metrics_page, len(history)
 
 
-class ExperimentJobService(object):
+class ExperimentJobService(UnitOfWorkService):
     """The service methods for submitting and retrieving jobs within an experiment
     namespace."""
 
     @inject
-    def __init__(
-        self, experiment_id_service: ExperimentIdService, job_service: JobService
-    ) -> None:
+    def __init__(self, job_service: JobService, uow: UnitOfWork) -> None:
         """Initialize the ExperimentIdJob service.
 
         All arguments are provided via dependency injection.
 
         Args:
-            experiment_id_service: An ExperimentIdService object.
             job_service: A JobService object.
         """
-        self._experiment_id_service = experiment_id_service
         self._job_service = job_service
+        self._uow = uow
 
     def create(
         self,
@@ -879,6 +648,10 @@ class ExperimentJobService(object):
             The newly created job object.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
+        # TODO: this breaks rule of injecting other services. this service is really
+        #       just a facade for the job service. Should the controller use the jobs
+        #       service instead? I think that breaks the rule of services having a 1-1
+        #       relationship with endpoints.
         return self._job_service.create(
             experiment_id=experiment_id,
             queue_id=queue_id,
@@ -922,94 +695,30 @@ class ExperimentJobService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get full list of jobs for experiment", experiment_id=experiment_id)
 
-        filters = []
+        search_struct = parse_search_text(search_string)
 
-        if search_string:
-            filters.append(
-                construct_sql_query_filters(search_string, SEARCHABLE_FIELDS)
-            )
-
-        cte_job_ids = (
-            select(models.ExperimentJob.job_resource_id)
-            .join(models.Resource)
-            .where(
-                models.ExperimentJob.experiment_id == experiment_id,
-                models.Resource.is_deleted == False,  # noqa: E712
-            )
-            .cte()
-        )
-        stmt = (
-            select(func.count(models.Job.resource_id))
-            .join(models.Resource)
-            .where(
-                *filters,
-                models.Job.resource_id.in_(select(cte_job_ids)),
-                models.Resource.is_deleted == False,  # noqa: E712
-                models.Resource.latest_snapshot_id == models.Job.resource_snapshot_id,
-            )
-        )
-        total_num_jobs = db.session.scalars(stmt).first()
-
-        if total_num_jobs is None:
-            log.error(
-                "The database query returned a None when counting the number of "
-                "experiment jobs when it should return a number.",
-                sql=str(stmt),
-            )
-            raise BackendDatabaseError
-
-        if total_num_jobs == 0:
-            return [], total_num_jobs
-
-        jobs_stmt = (
-            select(models.Job)
-            .join(models.Resource)
-            .join(models.Job.entry_point_job)
-            .join(models.EntryPointJob.entry_point)
-            .join(models.Job.queue_job)
-            .join(models.QueueJob.queue)
-            .where(
-                *filters,
-                models.Job.resource_id.in_(select(cte_job_ids)),
-                models.Resource.is_deleted == False,  # noqa: E712
-                models.Resource.latest_snapshot_id == models.Job.resource_snapshot_id,
-            )
-            .offset(page_index)
-            .limit(page_length)
+        jobs, total_num_jobs = self._uow.job_repo.get_by_filters_paged(
+            None,
+            experiment_id,
+            search_struct,
+            page_index,
+            page_length,
+            sort_by_string,
+            descending,
+            DeletionPolicy.NOT_DELETED,
         )
 
-        if sort_by_string and sort_by_string in SORTABLE_FIELDS:
-            sort_column = SORTABLE_FIELDS[sort_by_string]
-            if descending:
-                sort_column = sort_column.desc()
-            else:
-                sort_column = sort_column.asc()
-            jobs_stmt = jobs_stmt.order_by(sort_column)
-        elif sort_by_string and sort_by_string not in SORTABLE_FIELDS:
-            raise SortParameterValidationError(RESOURCE_TYPE, sort_by_string)
+        artifacts = self._uow.artifact_repo.get_by_job(
+            *[job.resource_id for job in jobs],
+            deletion_policy=DeletionPolicy.NOT_DELETED,
+        )
 
-        jobs = list(db.session.scalars(jobs_stmt).all())
-        return _build_job_dict(jobs), total_num_jobs
+        return _build_job_dicts(list(jobs), list(artifacts)), total_num_jobs
 
 
-class ExperimentJobIdService(object):
+class ExperimentJobIdService(UnitOfWorkService):
     """The service methods for getting or deleting a specific job within an experiment
     namespace."""
-
-    @inject
-    def __init__(
-        self, experiment_id_service: ExperimentIdService, job_id_service: JobIdService
-    ) -> None:
-        """Initialize the ExperimentIdJob service.
-
-        All arguments are provided via dependency injection.
-
-        Args:
-            experiment_id_service: An ExperimentIdService object.
-            job_service: A JobService object.
-        """
-        self._experiment_id_service = experiment_id_service
-        self._job_id_service = job_id_service
 
     def get(self, experiment_id: int, job_id: int, **kwargs) -> utils.JobDict:
         """Fetch a job by its unique id under a given experiment namespace.
@@ -1027,18 +736,21 @@ class ExperimentJobIdService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        experiment_job_stmt = select(models.ExperimentJob).where(
-            models.ExperimentJob.experiment_id == experiment_id,
-            models.ExperimentJob.job_resource_id == job_id,
+        job = self._uow.job_repo.get_one(job_id, DeletionPolicy.NOT_DELETED)
+
+        # TODO: is this good practice, or should the job repository have a separate
+        #       getter that handles checking the experiment?
+        if (
+            job.experiment_job.experiment_id != experiment_id
+            or job.experiment_job.experiment.resource.is_deleted
+        ):
+            raise EntityDoesNotExistError(RESOURCE_TYPE, resource_id=job_id)
+
+        artifacts = self._uow.artifact_repo.get_by_job(
+            job_id, deletion_policy=DeletionPolicy.NOT_DELETED
         )
-        experiment_job = db.session.scalar(experiment_job_stmt)
 
-        if experiment_job is None:
-            raise EntityDoesNotExistError(
-                RESOURCE_TYPE, job_id=job_id, experiment_id=experiment_id
-            )
-
-        return self._job_id_service.get(job_id=job_id, log=log)
+        return utils.JobDict(job=job, artifacts=list(artifacts), has_draft=False)
 
     def delete(self, experiment_id: int, job_id: int, **kwargs) -> dict[str, Any]:
         """Delete a job.
@@ -1052,39 +764,27 @@ class ExperimentJobIdService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        experiment_job_stmt = select(models.ExperimentJob).where(
-            models.ExperimentJob.experiment_id == experiment_id,
-            models.ExperimentJob.job_resource_id == job_id,
-        )
-        experiment_job = db.session.scalar(experiment_job_stmt)
+        job = self._uow.job_repo.get_one(job_id, DeletionPolicy.NOT_DELETED)
 
-        if experiment_job is None:
-            raise EntityDoesNotExistError(
-                RESOURCE_TYPE, job_id=job_id, experiment_id=experiment_id
-            )
+        # TODO: is this good practice, or should the job repository have a separate
+        #       getter that handles checking the experiment?
+        if (
+            job.experiment_job.experiment_id != experiment_id
+            or job.experiment_job.experiment.resource.is_deleted
+        ):
+            raise EntityDoesNotExistError(RESOURCE_TYPE, resource_id=job_id)
 
-        return self._job_id_service.delete(
-            job_id=job_id,
-            log=log,
-        )
+        with self._uow:
+            # No-op if already deleted
+            self._uow.job_repo.delete(job)
+
+        log.debug("Job deleted", job_id=job_id)
+
+        return {"status": "Success", "id": [job_id]}
 
 
-class ExperimentJobIdStatusService(object):
+class ExperimentJobIdStatusService(UnitOfWorkService):
     """The service methods for retrieving the status of a job by unique id."""
-
-    @inject
-    def __init__(
-        self,
-        experiment_job_id_service: ExperimentJobIdService,
-    ) -> None:
-        """Initialize the job status service.
-
-        All arguments are provided via dependency injection.
-
-        Args:
-            experiment_job_id_service: An ExperimentJobIdService object.
-        """
-        self._experiment_job_id_service = experiment_job_id_service
 
     def get(
         self,
@@ -1104,10 +804,15 @@ class ExperimentJobIdStatusService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get job status by id", job_id=job_id)
 
-        job_dict = self._experiment_job_id_service.get(
-            experiment_id, job_id, error_if_not_found=True, log=log
-        )
-        job = job_dict["job"]
+        job = self._uow.job_repo.get_one(job_id, DeletionPolicy.NOT_DELETED)
+
+        # TODO: is this good practice, or should the job repository have a separate
+        #       getter that handles checking the experiment?
+        if (
+            job.experiment_job.experiment_id != experiment_id
+            or job.experiment_job.experiment.resource.is_deleted
+        ):
+            raise EntityDoesNotExistError(RESOURCE_TYPE, resource_id=job_id)
 
         return {"status": job.status, "id": job.resource_id}
 
@@ -1134,11 +839,19 @@ class ExperimentJobIdStatusService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Modify job status by id", job_id=job_id, status=status)
 
-        job_dict = self._experiment_job_id_service.get(experiment_id, job_id, log=log)
-        job = job_dict["job"]
+        job = self._uow.job_repo.get_one(job_id, DeletionPolicy.NOT_DELETED)
 
-        if status not in JOB_STATUS_TRANSITIONS.get(job.status, set()):
+        # TODO: is this good practice, or should the job repository have a separate
+        #       getter that handles checking the experiment?
+        if (
+            job.experiment_job.experiment_id != experiment_id
+            or job.experiment_job.experiment.resource.is_deleted
+        ):
+            raise EntityDoesNotExistError(RESOURCE_TYPE, resource_id=job_id)
+
+        if status not in JobRepository.JOB_STATUS_TRANSITIONS.get(job.status, set()):
             raise JobInvalidStatusTransitionError
+
         if status == "reset":
             db.session.execute(
                 delete(models.JobMlflowRun).where(
@@ -1154,45 +867,32 @@ class ExperimentJobIdStatusService(object):
             resource=job.resource,
             creator=job.creator,
         )
-        db.session.add(new_job)
         new_job.entry_point_job = job.entry_point_job
         new_job.experiment_job = job.experiment_job
         new_job.queue_job = job.queue_job
 
+        try:
+            self._uow.job_repo.create_snapshot(new_job)
+        except Exception:
+            self._uow.rollback()
+            raise
+
         if commit:
-            db.session.commit()
-            log.debug(
-                "Job status modification successful",
-                job_id=job_id,
-                status=status,
-            )
+            self._uow.commit()
+
+        log.debug(
+            "Job status modification successful",
+            job_id=job_id,
+            status=status,
+        )
 
         return {"status": new_job.status, "id": job.resource_id}
 
 
-class ExperimentJobIdMlflowrunService(object):
+class ExperimentJobIdMlflowrunService(UnitOfWorkService):
     """The service methods for managing the mlflow run id of a job by unique id."""
 
-    @inject
-    def __init__(
-        self,
-        experiment_job_id_service: ExperimentJobIdService,
-    ) -> None:
-        """Initialize the job status service.
-
-        All arguments are provided via dependency injection.
-
-        Args:
-            experiment_job_id_service: An ExperimentJobIdService object.
-        """
-        self._experiment_job_id_service = experiment_job_id_service
-
-    def get(
-        self,
-        experiment_id: int,
-        job_id: int,
-        **kwargs,
-    ) -> dict[str, Any]:
+    def get(self, experiment_id: int, job_id: int, **kwargs) -> dict[str, Any]:
         """Fetch a job's mlflow run id by its unique id.
 
         Args:
@@ -1205,10 +905,15 @@ class ExperimentJobIdMlflowrunService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get job status by id", job_id=job_id)
 
-        job_dict = self._experiment_job_id_service.get(
-            experiment_id, job_id, error_if_not_found=True, log=log
-        )
-        job = job_dict["job"]
+        job = self._uow.job_repo.get_one(job_id, DeletionPolicy.NOT_DELETED)
+
+        # TODO: is this good practice, or should the job repository have a separate
+        #       getter that handles checking the experiment?
+        if (
+            job.experiment_job.experiment_id != experiment_id
+            or job.experiment_job.experiment.resource.is_deleted
+        ):
+            raise EntityDoesNotExistError(RESOURCE_TYPE, resource_id=job_id)
 
         mlflow_run_id = (
             job.mlflow_run.mlflow_run_id.hex if job.mlflow_run is not None else None
@@ -1240,8 +945,15 @@ class ExperimentJobIdMlflowrunService(object):
             "Set the job's mlflow run id", job_id=job_id, mlflow_run_id=mlflow_run_id
         )
 
-        job_dict = self._experiment_job_id_service.get(experiment_id, job_id, log=log)
-        job = job_dict["job"]
+        job = self._uow.job_repo.get_one(job_id, DeletionPolicy.NOT_DELETED)
+
+        # TODO: is this good practice, or should the job repository have a separate
+        #       getter that handles checking the experiment?
+        if (
+            job.experiment_job.experiment_id != experiment_id
+            or job.experiment_job.experiment.resource.is_deleted
+        ):
+            raise EntityDoesNotExistError(RESOURCE_TYPE, resource_id=job_id)
 
         if job.mlflow_run is not None:
             raise JobMlflowRunAlreadySetError
@@ -1251,39 +963,28 @@ class ExperimentJobIdMlflowrunService(object):
             mlflow_run_id=mlflow_run_id,
         )
 
+        # try:
+        # self._uow.job_repo.create_snapshot(new_job)
+        # except Exception:
+        # self._uow.rollback()
+        # raise
+
         if commit:
-            db.session.commit()
-            log.debug(
-                "Setting Job mlflow run id successful",
-                job_id=job_id,
-                mlflow_run_id=mlflow_run_id,
-            )
+            self._uow.commit()
+
+        log.debug(
+            "Setting Job mlflow run id successful",
+            job_id=job_id,
+            mlflow_run_id=mlflow_run_id,
+        )
 
         return {"mlflow_run_id": job.mlflow_run.mlflow_run_id.hex}
 
 
-class JobIdMlflowrunService(object):
+class JobIdMlflowrunService(UnitOfWorkService):
     """The service methods for managing the mlflow run id of a job by unique id."""
 
-    @inject
-    def __init__(
-        self,
-        job_id_service: JobIdService,
-    ) -> None:
-        """Initialize the job status service.
-
-        All arguments are provided via dependency injection.
-
-        Args:
-            job_id_service: An JobIdService object.
-        """
-        self._job_id_service = job_id_service
-
-    def get(
-        self,
-        job_id: int,
-        **kwargs,
-    ) -> str | None:
+    def get(self, job_id: int, **kwargs) -> str | None:
         """Fetch a job's mlflow run id by its unique id.
 
         Args:
@@ -1299,8 +1000,7 @@ class JobIdMlflowrunService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get job status by id", job_id=job_id)
 
-        job_dict = self._job_id_service.get(job_id, log=log)
-        job = job_dict["job"]
+        job = self._uow.job_repo.get_one(job_id, DeletionPolicy.NOT_DELETED)
 
         return job.mlflow_run.mlflow_run_id.hex if job.mlflow_run is not None else None
 
@@ -1327,8 +1027,7 @@ class JobIdMlflowrunService(object):
             "Set the job's mlflow run id", job_id=job_id, mlflow_run_id=mlflow_run_id
         )
 
-        job_dict = self._job_id_service.get(job_id, log=log)
-        job = job_dict["job"]
+        job = self._uow.job_repo.get_one(job_id, DeletionPolicy.NOT_DELETED)
 
         if job.mlflow_run is not None:
             raise JobMlflowRunAlreadySetError
@@ -1339,31 +1038,19 @@ class JobIdMlflowrunService(object):
         )
 
         if commit:
-            db.session.commit()
-            log.debug(
-                "Setting Job mlflow run id successful",
-                job_id=job_id,
-                mlflow_run_id=mlflow_run_id,
-            )
+            self._uow.commit()
+
+        log.debug(
+            "Setting Job mlflow run id successful",
+            job_id=job_id,
+            mlflow_run_id=mlflow_run_id,
+        )
 
         return {"mlflow_run_id": job.mlflow_run.mlflow_run_id.hex}
 
 
-class ExperimentMetricsService(object):
+class ExperimentMetricsService(UnitOfWorkService):
     """The service methods for retrieving metrics attached to jobs in the experiment."""
-
-    @inject
-    def __init__(
-        self,
-        experiment_jobs_service: ExperimentJobService,
-        job_id_metrics_service: JobIdMetricsService,
-    ) -> None:
-        """Initialize the experiment service.
-
-        All arguments are provided via dependency injection.
-        """
-        self._job_id_metrics_service = job_id_metrics_service
-        self._experiment_jobs_service = experiment_jobs_service
 
     def get(
         self,
@@ -1395,29 +1082,34 @@ class ExperimentMetricsService(object):
             resource_id=experiment_id,
         )
 
-        jobs, num_jobs = self._experiment_jobs_service.get(
+        search_struct = parse_search_text(search_string)
+
+        jobs, total_num_jobs = self._uow.job_repo.get_by_filters_paged(
+            None,
             experiment_id,
-            search_string=search_string,
-            page_index=page_index,
-            page_length=page_length,
-            sort_by_string=sort_by_string,
-            descending=descending,
-            **kwargs,
+            search_struct,
+            page_index,
+            page_length,
+            sort_by_string,
+            descending,
+            DeletionPolicy.NOT_DELETED,
         )
 
-        job_ids = [job["job"].resource_id for job in jobs]
-
+        # TODO: should not loop over this query
         metrics_for_jobs = [
-            {"id": job_id, "metrics": self._job_id_metrics_service.get(job_id)}
-            for job_id in job_ids
+            {
+                "id": job.resource_id,
+                "metrics": self._uow.job_repo.get_latest_metrics(job.resource_id),
+            }
+            for job in jobs
         ]
-        return metrics_for_jobs, num_jobs
+        return metrics_for_jobs, total_num_jobs
 
 
 class JobLogService(object):
     @inject
-    def __init__(self, job_id_service: JobIdService):
-        self._job_id_service = job_id_service
+    def __init__(self, uow: UnitOfWork):
+        self._uow = uow
 
     def add_logs(
         self, job_resource_id: int, records: Iterable[dict[str, Any]], **kwargs
@@ -1432,25 +1124,11 @@ class JobLogService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Add job logs", job_id=job_resource_id)
-        job_dict = self._job_id_service.get(job_resource_id, error_if_not_found=True)
-        # can't be None since error_if_not_found is True: the .get() call would
-        # error instead of returning None.
-        assert job_dict is not None
 
-        job = job_dict["job"]
-        job_logs: list[models.JobLog] = []
+        job_logs = self._uow.job_repo.add_logs(job_resource_id, records)
 
-        for record in records:
-            job_log = models.JobLog(
-                severity=record["severity"].name,
-                logger_name=record["logger_name"],
-                message=record["message"],
-                job_resource=job.resource,
-            )
-            db.session.add(job_log)
-            job_logs.append(job_log)
+        self._uow.commit()
 
-        db.session.commit()
         response = [
             {
                 "severity": JobLogSeverity[log.severity],
@@ -1464,8 +1142,8 @@ class JobLogService(object):
 
     def get_logs(
         self,
-        job_resource_id: int,
-        index: int,
+        job_id: int,
+        page_index: int,
         page_length: int,
         search_string: str,
         sort_by_string: str,
@@ -1477,7 +1155,7 @@ class JobLogService(object):
         Get log records from the database, for the given job.
 
         Args:
-            job_resource_id: The resource ID of a job
+            job_id: The resource ID of a job
             index: Zero-based index of the first log record to return
             page_length: The number of records to return
             search_string: A search string used to filter results.
@@ -1492,63 +1170,25 @@ class JobLogService(object):
         """
 
         log: BoundLogger = kwargs.get("log", LOGGER.new())
-        log.debug("Get job logs", job_id=job_resource_id)
+        log.debug("Get job logs", job_id=job_id)
 
-        filters = []
+        search_struct = parse_search_text(search_string)
 
-        if search_string:
-            filters.append(
-                construct_sql_query_filters(search_string, SEARCHABLE_LOG_FIELDS)
-            )
-
-        count_stmt = (
-            select(func.count())
-            .select_from(models.JobLog)
-            .where(*filters, models.JobLog.job_resource_id == job_resource_id)
+        logs, total_num_logs = self._uow.job_repo.get_logs(
+            job_id,
+            search_struct,
+            page_index,
+            page_length,
+            sort_by_string,
+            descending,
+            severity,
         )
-        if severity:
-            count_stmt = count_stmt.where(models.JobLog.severity.in_(severity))
-        total_count = db.session.scalar(count_stmt)
-        # "select count(*) ..." can't produce None
-        assert total_count is not None
-
-        page_stmt = (
-            select(models.JobLog)
-            .where(*filters, models.JobLog.job_resource_id == job_resource_id)
-            .offset(index)
-            .limit(page_length)
-        )
-
-        if severity:
-            page_stmt = page_stmt.where(models.JobLog.severity.in_(severity))
-
-        if sort_by_string and sort_by_string in SORTABLE_LOG_FIELDS:
-            sort_column = SORTABLE_LOG_FIELDS[sort_by_string]
-            sort_column = sort_column.desc() if descending else sort_column.asc()
-            # primary: user sort, secondary: id
-            page_stmt = page_stmt.order_by(sort_column, models.JobLog.id)
-        elif sort_by_string:
-            raise SortParameterValidationError(RESOURCE_TYPE, sort_by_string)
-        else:
-            # default: just by id
-            page_stmt = page_stmt.order_by(models.JobLog.id)
-
-        log_objs = db.session.scalars(page_stmt)
-
-        records = []
-        for log_obj in log_objs:
-            record = {
-                "severity": JobLogSeverity[log_obj.severity],
-                "logger_name": log_obj.logger_name,
-                "message": log_obj.message,
-                "created_on": log_obj.created_on,
-            }
-            records.append(record)
-
-        return records, total_count
+        return logs, total_num_logs
 
 
-def _build_job_dict(jobs: list[models.Job]) -> list[utils.JobDict]:
+def _build_job_dicts(
+    jobs: list[models.Job], artifacts: list[models.Artifact]
+) -> list[utils.JobDict]:
     job_dicts: dict[int, utils.JobDict] = {
         job.resource_id: utils.JobDict(
             job=job,
@@ -1558,16 +1198,7 @@ def _build_job_dict(jobs: list[models.Job]) -> list[utils.JobDict]:
         for job in jobs
     }
 
-    job_ids = [job.resource_id for job in jobs]
-    artifacts_stmt = (
-        select(models.Artifact)
-        .join(models.Resource)
-        .where(
-            models.Artifact.job_id.in_(job_ids),
-            models.Resource.is_deleted == False,  # noqa: E712
-        )
-    )
-    for artifact in db.session.scalars(artifacts_stmt).all():
+    for artifact in artifacts:
         job_dicts[artifact.job_id]["artifacts"].append(artifact)
 
     return list(job_dicts.values())
