@@ -182,7 +182,9 @@ def get_resource_snapshot_id(snapshot: m.ResourceSnapshot | int) -> int | None:
     return snapshot_id
 
 
-def get_resource_type(resource: m.ResourceSnapshot | m.Resource | m.DraftResource | int) -> EntityType:
+def get_resource_type(
+    resource: m.ResourceSnapshot | m.Resource | m.DraftResource | int,
+) -> EntityType:
     if isinstance(resource, int):
         resource_type = EntityType.NONE
     else:

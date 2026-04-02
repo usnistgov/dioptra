@@ -36,7 +36,7 @@ class ResourceSnapshotsService(object):
     def __init__(
         self,
         resource_model: Type[models.ResourceSnapshot],
-        resource_type: str,
+        resource_type: EntityType,
         searchable_fields: dict[str, Any],
     ) -> None:
         """Initialize the draft service.
@@ -81,14 +81,14 @@ class ResourceSnapshotsService(object):
         log.debug("Get resource snapshots by id", resource_id=resource_id)
 
         stmt = select(models.Resource).filter_by(
-            resource_id=resource_id, resource_type=self._resource_type
+            resource_id=resource_id, resource_type=self._resource_type.db_schema_name
         )
         resource = db.session.scalars(stmt).first()
 
         if resource is None:
             if error_if_not_found:
                 raise EntityDoesNotExistError(
-                    EntityType.get_from_string(self._resource_type),
+                    self._resource_type,
                     resource_id=resource_id,
                 )
 
@@ -134,7 +134,7 @@ class ResourceSnapshotsService(object):
             .limit(page_length)
         )
         snapshots = [
-            {self._resource_type: snapshot, "has_draft": None}
+            {self._resource_type.db_schema_name: snapshot, "has_draft": None}
             for snapshot in db.session.scalars(stmt).unique()
         ]
 
@@ -146,7 +146,7 @@ class ResourceSnapshotsIdService(object):
     def __init__(
         self,
         resource_model: Type[models.ResourceSnapshot],
-        resource_type: str,
+        resource_type: EntityType,
     ) -> None:
         """Initialize the draft service.
 
@@ -183,14 +183,14 @@ class ResourceSnapshotsIdService(object):
         log.debug("Get resource snapshot by id", resource_id=resource_id)
 
         stmt = select(models.Resource).filter_by(
-            resource_id=resource_id, resource_type=self._resource_type
+            resource_id=resource_id, resource_type=self._resource_type.db_schema_name
         )
         resource = db.session.scalars(stmt).first()
 
         if resource is None:
             if error_if_not_found:
                 raise EntityDoesNotExistError(
-                    EntityType.get_from_string(self._resource_type),
+                    self._resource_type,
                     resource_id=resource_id,
                 )
 
@@ -209,10 +209,10 @@ class ResourceSnapshotsIdService(object):
         if snapshot is None:
             if error_if_not_found:
                 raise EntityDoesNotExistError(
-                    EntityType.get_from_string(self._resource_type + "_snapshot"),
+                    self._resource_type,
                     snapshot_id=snapshot_id,
                 )
 
             return None
 
-        return {self._resource_type: snapshot, "has_draft": None}
+        return {self._resource_type.db_schema_name: snapshot, "has_draft": None}

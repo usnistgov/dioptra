@@ -136,7 +136,9 @@ class DraftsRepository:
 
             if result:
                 is_deleted, parent_resource_type, child_resource_type = result
-                parent_entity_type = get_resource_type(parent_resource_type)
+                parent_entity_type = EntityType.get_from_db_schema_name(
+                    parent_resource_type
+                )
 
                 if is_deleted:
                     raise EntityDeletedError(parent_entity_type, base_resource_id)

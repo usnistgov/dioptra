@@ -197,25 +197,25 @@ class QueueIdEndpoint(Resource):
 
 QueueDraftResource = generate_resource_drafts_endpoint(
     api,
-    resource_name=EntityType.QUEUE.db_schema_name,
+    resource_type=EntityType.QUEUE,
     route_prefix=V1_QUEUES_ROUTE,
     request_schema=QueueSchema,
 )
 QueueDraftIdResource = generate_resource_drafts_id_endpoint(
     api,
-    resource_name=EntityType.QUEUE.db_schema_name,
+    resource_type=EntityType.QUEUE,
     request_schema=QueueMutableFieldsSchema,
 )
 QueueIdDraftResource = generate_resource_id_draft_endpoint(
     api,
-    resource_name=EntityType.QUEUE.db_schema_name,
+    resource_type=EntityType.QUEUE,
     request_schema=QueueMutableFieldsSchema,
 )
 
 QueueSnapshotsResource = generate_resource_snapshots_endpoint(
     api=api,
     resource_model=models.Queue,
-    resource_name=EntityType.QUEUE.db_schema_name,
+    resource_type=EntityType.QUEUE,
     route_prefix=V1_QUEUES_ROUTE,
     searchable_fields=QueueRepository.SEARCHABLE_FIELDS,
     page_schema=QueuePageSchema,
@@ -224,7 +224,7 @@ QueueSnapshotsResource = generate_resource_snapshots_endpoint(
 QueueSnapshotsIdResource = generate_resource_snapshots_id_endpoint(
     api=api,
     resource_model=models.Queue,
-    resource_name=EntityType.QUEUE.db_schema_name,
+    resource_type=EntityType.QUEUE,
     response_schema=QueueSchema,
     build_fn=utils.build_queue,
 )

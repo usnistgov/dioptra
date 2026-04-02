@@ -45,7 +45,7 @@ class ResourceDraftsService(object):
     @inject
     def __init__(
         self,
-        resource_type: str,
+        resource_type: EntityType,
         uow: UnitOfWork,
     ) -> None:
         """Initialize the draft service.
@@ -95,7 +95,7 @@ class ResourceDraftsService(object):
 
         drafts, total_num_drafts = self._uow.drafts_repo.get_by_filters_paged(
             draft_type_enum,
-            self._resource_type,
+            self._resource_type.db_schema_name,
             # probably should not reference a flask detail like this from
             # a service.
             current_user,
@@ -141,7 +141,7 @@ class ResourceDraftsService(object):
         }
 
         draft = models.DraftResource(
-            self._resource_type,
+            self._resource_type.db_schema_name,
             toplevel_data,
             owner,
             # probably should not reference a flask detail like this from
@@ -169,7 +169,7 @@ class ResourceDraftsIdService(object):
     @inject
     def __init__(
         self,
-        resource_type: str,
+        resource_type: EntityType,
         uow: UnitOfWork,
     ) -> None:
         """Initialize the draft service.
@@ -210,7 +210,7 @@ class ResourceDraftsIdService(object):
             # probably should not reference a flask detail like this from
             # a service.
             draft_id,
-            self._resource_type,
+            self._resource_type.db_schema_name,
             current_user,
         )
 
@@ -283,7 +283,7 @@ class ResourceIdDraftService(object):
     """The service methods for managing the draft for an existing resource."""
 
     @inject
-    def __init__(self, resource_type: str, uow: UnitOfWork):
+    def __init__(self, resource_type: EntityType, uow: UnitOfWork):
         self._resource_type = resource_type
         self._uow = uow
 
@@ -357,9 +357,12 @@ class ResourceIdDraftService(object):
             DeletionPolicy.ANY,
         )
 
-        if resource is None or resource.resource_type != self._resource_type:
+        if (
+            resource is None
+            or resource.resource_type != self._resource_type.db_schema_name
+        ):
             raise EntityDoesNotExistError(
-                EntityType.get_from_string(self._resource_type),
+                self._resource_type,
                 resource_id=resource_id,
             )
 
@@ -378,7 +381,7 @@ class ResourceIdDraftService(object):
         }
 
         draft = models.DraftResource(
-            resource_type=self._resource_type,
+            resource_type=self._resource_type.db_schema_name,
             target_owner=resource.owner,
             payload=draft_payload,
             creator=current_user,

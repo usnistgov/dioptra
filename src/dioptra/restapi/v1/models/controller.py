@@ -333,25 +333,25 @@ class ModelIdVersionsNumberEndpoint(Resource):
 
 ModelDraftResource = generate_resource_drafts_endpoint(
     api,
-    resource_name=EntityType.ML_MODEL.db_schema_name,
+    resource_type=EntityType.ML_MODEL,
     route_prefix=V1_MODELS_ROUTE,
     request_schema=ModelSchema,
 )
 ModelDraftIdResource = generate_resource_drafts_id_endpoint(
     api,
-    resource_name=EntityType.ML_MODEL.db_schema_name,
+    resource_type=EntityType.ML_MODEL,
     request_schema=ModelSchema(exclude=["groupId"]),
 )
 ModelIdDraftResource = generate_resource_id_draft_endpoint(
     api,
-    resource_name=EntityType.ML_MODEL.db_schema_name,
+    resource_type=EntityType.ML_MODEL,
     request_schema=ModelSchema(exclude=["groupId"]),
 )
 
 ModelSnapshotsResource = generate_resource_snapshots_endpoint(
     api=api,
     resource_model=models.MlModel,
-    resource_name=EntityType.ML_MODEL.db_schema_name,
+    resource_type=EntityType.ML_MODEL,
     route_prefix=V1_MODELS_ROUTE,
     searchable_fields=MODEL_SEARCHABLE_FIELDS,
     page_schema=ModelPageSchema,
@@ -360,7 +360,7 @@ ModelSnapshotsResource = generate_resource_snapshots_endpoint(
 ModelSnapshotsIdResource = generate_resource_snapshots_id_endpoint(
     api=api,
     resource_model=models.MlModel,
-    resource_name=EntityType.ML_MODEL.db_schema_name,
+    resource_type=EntityType.ML_MODEL,
     response_schema=ModelSchema,
     build_fn=utils.build_model,
 )

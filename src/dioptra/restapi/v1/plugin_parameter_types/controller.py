@@ -227,27 +227,27 @@ class PluginParameterTypeIdEndpoint(Resource):
 
 PluginParameterTypeDraftResource = generate_resource_drafts_endpoint(
     api=api,
-    resource_name=EntityType.PLUGIN_TASK_PARAMETER_TYPE.db_schema_name,
+    resource_type=EntityType.PLUGIN_TASK_PARAMETER_TYPE,
     route_prefix=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
     request_schema=PluginParameterTypeSchema,
 )
 
 PluginParameterTypeDraftIdResource = generate_resource_drafts_id_endpoint(
     api=api,
-    resource_name=EntityType.PLUGIN_TASK_PARAMETER_TYPE.db_schema_name,
+    resource_type=EntityType.PLUGIN_TASK_PARAMETER_TYPE,
     request_schema=PluginParameterTypeMutableFieldsSchema,
 )
 
 PluginParameterTypeIdDraftIdResource = generate_resource_id_draft_endpoint(
     api=api,
-    resource_name=EntityType.PLUGIN_TASK_PARAMETER_TYPE.db_schema_name,
+    resource_type=EntityType.PLUGIN_TASK_PARAMETER_TYPE,
     request_schema=PluginParameterTypeMutableFieldsSchema,
 )
 
 PluginParameterTypeSnapshotsResource = generate_resource_snapshots_endpoint(
     api=api,
     resource_model=models.PluginTaskParameterType,
-    resource_name=EntityType.PLUGIN_TASK_PARAMETER_TYPE.db_schema_name,
+    resource_type=EntityType.PLUGIN_TASK_PARAMETER_TYPE,
     route_prefix=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
     searchable_fields=TypeRepository.SEARCHABLE_FIELDS,
     page_schema=PluginParameterTypePageSchema,
@@ -256,7 +256,7 @@ PluginParameterTypeSnapshotsResource = generate_resource_snapshots_endpoint(
 PluginParameterTypeSnapshotsIdResource = generate_resource_snapshots_id_endpoint(
     api=api,
     resource_model=models.PluginTaskParameterType,
-    resource_name=EntityType.PLUGIN_TASK_PARAMETER_TYPE.db_schema_name,
+    resource_type=EntityType.PLUGIN_TASK_PARAMETER_TYPE,
     response_schema=PluginParameterTypeSchema,
     build_fn=utils.build_plugin_parameter_type,
 )

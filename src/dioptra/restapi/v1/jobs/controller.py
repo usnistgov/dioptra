@@ -472,7 +472,7 @@ class JobIdLogEndpoint(Resource):
 JobSnapshotsResource = generate_resource_snapshots_endpoint(
     api=api,
     resource_model=models.Job,
-    resource_name=EntityType.JOB.db_schema_name,
+    resource_type=EntityType.JOB,
     route_prefix=V1_JOBS_ROUTE,
     searchable_fields=SEARCHABLE_FIELDS,
     page_schema=JobPageSchema,
@@ -481,7 +481,7 @@ JobSnapshotsResource = generate_resource_snapshots_endpoint(
 JobSnapshotsIdResource = generate_resource_snapshots_id_endpoint(
     api=api,
     resource_model=models.Job,
-    resource_name=EntityType.JOB.db_schema_name,
+    resource_type=EntityType.JOB,
     response_schema=JobSchema,
     build_fn=utils.build_job,
 )
