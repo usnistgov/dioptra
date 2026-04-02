@@ -43,7 +43,7 @@ jobs:
         run: uvx -p "3.11" tox run -e docs
 
       - name: archive the documentation
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: docs-build
           path: docs/build
