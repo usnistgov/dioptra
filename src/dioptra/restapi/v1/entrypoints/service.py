@@ -150,7 +150,9 @@ class EntrypointService(object):
 
         with self._uow(commit):
             self._uow.entrypoint_repo.create(new_entrypoint)
-            queues = self._uow.entrypoint_repo.create_queues(new_entrypoint, queues=queue_ids)
+            queues = self._uow.entrypoint_repo.create_queues(
+                new_entrypoint, queues=queue_ids
+            )
             self._uow.entrypoint_repo.create_plugins(new_entrypoint, plugins=plugins)
 
         log.debug(

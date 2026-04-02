@@ -177,17 +177,16 @@ def get_latest_snapshots(
 
 def get_one_resource(
     session: CompatibleSession[S],
-    resource: int | m.Resource | m.ResourceSnapshot,
+    resource: m.Resource | m.ResourceSnapshot | int,
     deletion_policy: DeletionPolicy,
 ) -> m.Resource:
     """
-    Get the given resource according to the given deletion_policy; require that exactly
-    one is found, or raise an exception.
+    Get the a resource given the resource, resource snapshot, or resource ID; require
+    that exactly one is found, or raise an exception.
 
     Args:
         session: An SQLAlchemy session
-        resource: A resource, resource snapshot, or integer resource ID,
-            for which to obtain the latest snapshot
+        resource: A resource or resource snapshot or integer resource ID
         deletion_policy: Whether to look at deleted resources, non-deleted
             resources, or all resources
 
@@ -202,12 +201,33 @@ def get_one_resource(
         EntityDeletedError: if the resource is deleted, but policy was to find
             a non-deleted resource
     """
-    assert_resource_exists(session, resource, deletion_policy)
+    resource_id = get_resource_id(resource)
 
-    retrieved = session.get(m.Resource, resource)
+    stmt = sa.select(m.Resource).where(m.Resource.resource_id == resource_id)
+    resource_obj = session.scalar(stmt)
 
-    assert retrieved is not None
-    return retrieved
+    if resource_obj is None:
+        existence_result = ExistenceResult.DOES_NOT_EXIST
+    elif resource_obj.is_deleted:
+        existence_result = ExistenceResult.DELETED
+    else:
+        existence_result = ExistenceResult.EXISTS
+
+    resource_type = resource_obj.resource_type if resource_obj is not None else None
+
+    # Here, we combine the passed-in deletion policy with existence, to
+    # determine the exception.
+    assert_exists(
+        deletion_policy,
+        existence_result,
+        resource_type,
+        resource_id,
+    )
+
+    # The above assert_exists() function would have raised an exception, so
+    # latest can't be None here.
+    assert resource_obj is not None
+    return resource_obj
 
 
 def get_one_latest_snapshot(
