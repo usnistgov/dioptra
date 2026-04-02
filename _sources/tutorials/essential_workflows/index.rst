@@ -18,7 +18,7 @@
 .. _tutorial-learning-the-essentials:
 
 Learning the Essentials
-=================
+=======================
 
 This tutorial builds off the simple :ref:`Hello World tutorial <tutorial-hello-world-in-dioptra>` and showcases the 
 core functionality of Dioptra. Throughout the sections, you will **create reusable workflows** in Dioptra of **increasing complexity**. 

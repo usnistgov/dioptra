@@ -491,11 +491,11 @@ document.write(`
 <li><p><strong>Saves</strong> the resulting <strong>PNG file as a new artifact</strong></p></li>
 </ul>
 <p>To accomplish this, you’ll need to perform the following:</p>
-<ol class="arabic simple">
+<ul class="simple">
 <li><p><strong>Create a new Artifact Handler</strong> that is capable of serializing Matplotlib figures to PNG files</p></li>
 <li><p><strong>Define a new Plugin</strong> that reads in a Numpy array as an input and produces a Matplotlib figure as an artifact</p></li>
 <li><p><strong>Define a new Entrypoint</strong> to use the new plugin and new artifact handler</p></li>
-</ol>
+</ul>
 <p>Once all that is done, we can run a job for this Entrypoint and <strong>select the previously saved NumPy Array</strong> as the <strong>Artifact Input Parameter</strong>.</p>
 </section>
 </section>
@@ -519,7 +519,7 @@ document.write(`
 <h3>Step 2: Create the “rescale_and_graph_array” Plugin<a class="headerlink" href="#step-2-create-the-rescale-and-graph-array-plugin" title="Permalink to this headline">#</a></h3>
 <p>You want to create a plugin that utilizes a saved numpy array as an <em>input</em>.</p>
 <ol class="arabic simple">
-<li><p>Go to the <strong>Plugins</strong> tab and click <strong>Create Plugin</strong>.</p></li>
+<li><p>Go to the <strong>Plugins</strong> tab and click <strong>Create</strong>.</p></li>
 <li><p>Name it <code class="docutils literal notranslate"><span class="pre">rescale_and_graph_array</span></code> and add a short description.</p></li>
 <li><p><strong>Open</strong> the Plugin. <strong>Create</strong> a new file named <code class="docutils literal notranslate"><span class="pre">rescale_and_graph_array.py</span></code>.</p></li>
 <li><p>Copy and paste the code below.</p></li>
@@ -665,8 +665,8 @@ document.write(`
 <p>Your second plugin task outputs a Matplotlib figure as a PNG image. To view this output, you need to save it as an artifact. You will <strong>add a new artifact plugin task</strong> that serializes a Matplotlib object as a PNG.</p>
 <ol class="arabic simple">
 <li><p>In the <strong>Plugins</strong> tab, open your <code class="docutils literal notranslate"><span class="pre">artifacts</span></code> Plugin from the previous <a class="reference internal" href="part-5.html#tutorial-saving-artifacts-step-1-create-an-artifact-plugin"><span class="std std-ref">tutorial step</span></a>.</p></li>
-<li><p><strong>Add the new artifact plugin class code</strong> to the bottom of the file to define <code class="docutils literal notranslate"><span class="pre">PngBytesArtifactTask</span></code>.</p></li>
-<li><p><strong>Register</strong> it in your plugin the same way as the <code class="docutils literal notranslate"><span class="pre">NumpyArrayArtifactTask</span></code> (see <a class="reference internal" href="part-5.html#tutorial-saving-artifacts-step-2-register-artifact-task"><span class="std std-ref">Step 2: Register Artifact Task</span></a>).</p>
+<li><p>Open the <code class="docutils literal notranslate"><span class="pre">artifacts.py</span></code> file. <strong>Add the new artifact plugin class code</strong> to the bottom of the file to define <code class="docutils literal notranslate"><span class="pre">PngBytesArtifactTask</span></code>.</p></li>
+<li><p><strong>Register</strong> this new Artifact Task in your plugin the same way as the <code class="docutils literal notranslate"><span class="pre">NumpyArrayArtifactTask</span></code> (see <a class="reference internal" href="part-5.html#tutorial-saving-artifacts-step-2-register-artifact-task"><span class="std std-ref">Step 2: Register Artifact Task</span></a>).</p>
 <ul class="simple">
 <li><p><strong>Name</strong>: <code class="docutils literal notranslate"><span class="pre">PngBytesArtifactTask</span></code></p></li>
 <li><p><strong>Output Parameters - Name</strong>: <code class="docutils literal notranslate"><span class="pre">output</span></code></p></li>
@@ -674,11 +674,11 @@ document.write(`
 </ul>
 </li>
 </ol>
-<p><strong>Add this class to the bottom of the file:</strong></p>
+<p><strong>Code to paste to the bottom of the artifacts.py file:</strong></p>
 <div class="code-panel python admonition">
 <p class="admonition-title">artifacts.py (add to bottom)</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Paste this after the definition of &#39;NumpyArrayArtifactTask&#39;</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">PngBytesArtifactClass</span><span class="p">(</span><span class="n">ArtifactTaskInterface</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">PngBytesArtifactTask</span><span class="p">(</span><span class="n">ArtifactTaskInterface</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Save PNG bytes in working_dir and return the PNG path. Deserialize returns PNG bytes.&quot;&quot;&quot;</span>
 
     <span class="nd">@staticmethod</span>
@@ -706,7 +706,6 @@ document.write(`
 </pre></div>
 </div>
 </div>
-<p><strong>then register the Artifact Task</strong></p>
 <ol class="arabic simple" start="6">
 <li><p>Click <strong>Submit File</strong> to save your changes to <code class="docutils literal notranslate"><span class="pre">artifacts.py</span></code></p></li>
 </ol>
@@ -715,18 +714,18 @@ document.write(`
 <h3>Step 4: Create “rescale_and_graph_array” Entrypoint<a class="headerlink" href="#step-4-create-rescale-and-graph-array-entrypoint" title="Permalink to this headline">#</a></h3>
 <p>Now define a <strong>new Entrypoint</strong> that loads the array, transforms it, and saves the plot.</p>
 <ol class="arabic simple">
-<li><p>Go to the <strong>Entrypoints</strong> tab.</p></li>
+<li><p>Go to the <strong>Entrypoints</strong> tab and view the Entrypoints table.</p></li>
 </ol>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Dioptra saves <strong>Snapshots</strong> of Resources each time Resources are modified. If an Entrypoint is referencing an old Plugin snapshot, Dioptra will warn you.
-Feel free to sync this Plugin now or to ignore this warning - it is irrelevant for this portion of the tutorial.</p>
+<p><strong>Note</strong>: Dioptra saves <strong>Snapshots</strong> of Resources each time Resources are modified. Notice that the artifacts Plugin, which we just updated, is now out of sync for the <code class="docutils literal notranslate"><span class="pre">sample_and_transform</span></code> Entrypoint. If an Entrypoint is referencing an old Plugin snapshot, Dioptra will warn you.</p>
+<p>Feel free to sync this Plugin now or to ignore this warning - it is irrelevant for this portion of the tutorial.</p>
 <figure class="border-image clickable-image align-default">
 <img alt="Screenshot showing Plugin attached to entrypoint as being outdated" src="../../_images/entrypoints_plugin_out_of_date_dioptra_1_1.png" style="width: 100%;" />
 </figure>
 </div>
 <ol class="arabic simple" start="2">
-<li><p>Click <strong>Create Entrypoint</strong>.</p></li>
+<li><p>Click <strong>Create</strong> in the Entrypoints table.</p></li>
 <li><p>Name the new Entrypoint <code class="docutils literal notranslate"><span class="pre">rescale_and_graph_array_ep</span></code>. Attach <code class="docutils literal notranslate"><span class="pre">tensorflow-cpu</span></code> as a <strong>Queue</strong> and provide a <strong>description</strong>.</p></li>
 </ol>
 <p><strong>Add Parameters:</strong></p>
@@ -758,10 +757,9 @@ Feel free to sync this Plugin now or to ignore this warning - it is irrelevant f
 </div>
 <p><strong>Define Task Graph:</strong></p>
 <ol class="arabic simple" start="6">
-<li><p>In the <strong>Task Plugins</strong> and <strong>Artifact Task Plugins</strong> windows, select the relevant plugins.</p>
+<li><p>In the <strong>Task Plugins</strong> window, select the relevant plugin:</p>
 <ul class="simple">
 <li><p><strong>Task Plugins</strong>: <code class="docutils literal notranslate"><span class="pre">rescale_and_graph_array</span></code></p></li>
-<li><p><strong>Artifact Task Plugins</strong>: <code class="docutils literal notranslate"><span class="pre">artifacts</span></code></p></li>
 </ul>
 </li>
 <li><p>Copy the <strong>Task Graph</strong> YAML below into the <strong>Task Graph editor</strong>.</p></li>
@@ -786,14 +784,19 @@ Feel free to sync this Plugin now or to ignore this warning - it is irrelevant f
 </div>
 <p><strong>Define Artifact Output Graph:</strong></p>
 <ol class="arabic simple" start="8">
-<li><p>Copy the <strong>Artifact Output Graph</strong> YAML below and paste it into the code editor for the <strong>Artifact Output Graph</strong>. It saves the generated matplotlib figure from step 2.</p></li>
+<li><p>In the <strong>Artifact Task Plugins</strong> window, select the relevant plugin:</p>
+<ul class="simple">
+<li><p><strong>Artifact Task Plugins</strong>: <code class="docutils literal notranslate"><span class="pre">artifacts</span></code></p></li>
+</ul>
+</li>
+<li><p>Then, copy the <strong>Artifact Output Graph</strong> YAML below and paste it into the code editor for the <strong>Artifact Output Graph</strong>. It saves the generated matplotlib figure from step 2.</p></li>
 </ol>
 <div class="code-panel yaml admonition">
 <p class="admonition-title">rescale_and_graph_array: Artifact Output Task Graph YAML</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">save_graph</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">contents</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$viz_step</span>
 <span class="w">  </span><span class="nt">task</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">PngBytesArtifactClass</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">PngBytesArtifactTask</span>
 </pre></div>
 </div>
 </div>
@@ -803,7 +806,7 @@ Feel free to sync this Plugin now or to ignore this warning - it is irrelevant f
 <p><span class="caption-text">Showing how the Artifact Input Parameter is used in the task graph to produce a new output (a Matplotlib figure) which is then saved in the Artifact Output Graph</span><a class="headerlink" href="#id2" title="Permalink to this image">#</a></p>
 </figcaption>
 </figure>
-<ol class="arabic simple" start="9">
+<ol class="arabic simple" start="10">
 <li><p>Click <strong>Validate Inputs</strong> - it should pass.</p></li>
 <li><p>Click <strong>Submit Entrypoint</strong>.</p></li>
 </ol>

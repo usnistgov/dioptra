@@ -488,9 +488,9 @@ document.write(`
 <p>Before Dioptra can save objects to disk, it needs to know how to serialize and deserialize them. This is handled by an <strong>Artifact Task</strong>.</p>
 <p>Just like before, you will create a new plugin, but this time you’ll define <strong>artifact tasks</strong> instead of function tasks..</p>
 <ol class="arabic simple">
-<li><p>Go to the <strong>Plugins</strong> tab and click <strong>Create Plugin</strong>.</p></li>
+<li><p>Go to the <strong>Plugins</strong> tab and click <strong>Create</strong>.</p></li>
 <li><p>Name it <code class="docutils literal notranslate"><span class="pre">artifacts</span></code> and add a short description.</p></li>
-<li><p><strong>Create a new Python file</strong> in the plugin called <code class="docutils literal notranslate"><span class="pre">artifacts.py</span></code>.</p></li>
+<li><p>In the <code class="docutils literal notranslate"><span class="pre">artifacts</span></code> Plugin, click <strong>create</strong> to make a new Python file - call this file <code class="docutils literal notranslate"><span class="pre">artifacts.py</span></code> and add a description.</p></li>
 <li><p><strong>Copy and paste</strong> the code below.</p></li>
 </ol>
 <div class="code-panel python admonition">
@@ -527,6 +527,9 @@ document.write(`
 </pre></div>
 </div>
 </div>
+<ol class="arabic simple" start="5">
+<li><p>Do <strong>not</strong> click <strong>Import Function Tasks</strong> - that button does not support Artifact Tasks currently. You will learn how to register Artifact Tasks in the <a class="reference internal" href="#tutorial-saving-artifacts-step-2-register-artifact-task"><span class="std std-ref">next step</span></a>.</p></li>
+</ol>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>This plugin defines a single Artifact Task: <code class="docutils literal notranslate"><span class="pre">NumpyArrayArtifactTask</span></code>.</p>
@@ -555,6 +558,7 @@ document.write(`
 </ul>
 </li>
 </ol>
+<p><strong>Click the purple plus</strong> button to add the output parameter. Click <strong>Confirm</strong> to finish registration.</p>
 <figure class="border-image clickable-image align-default" id="id1">
 <img alt="Screenshot of a job producing an artifact." src="../../_images/create_artifact_task_numpy_array_dioptra_1_1.png" style="width: 100%;" />
 <figcaption>
@@ -563,21 +567,24 @@ document.write(`
 </figure>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Whereas a plugin task gets its name from the Python function name, an artifact plugin task gets its name from the subclass name (in this case, <code class="docutils literal notranslate"><span class="pre">NumpyArrayArtifactTask</span></code>).</p>
+<p>Whereas a Plugin Task gets its name from the <em>Python function name</em>, an Artifact Plugin Task gets its name from the <em>subclass name</em> (in this case, <code class="docutils literal notranslate"><span class="pre">NumpyArrayArtifactTask</span></code>).</p>
 <p>The output parameter type tells Dioptra what kind of object to expect after the <code class="docutils literal notranslate"><span class="pre">deserialize</span></code> method is run.</p>
+<div class="admonition-learn-more admonition">
+<p class="admonition-title">Learn More</p>
 <p>Learn more in <a class="reference internal" href="../../explanation/components/plugin-explanation.html#explanation-plugins"><span class="std std-ref">Plugins Explanation</span></a> and <a class="reference internal" href="../../reference/dioptra-components/plugin-reference.html#reference-plugins"><span class="std std-ref">Plugins Reference</span></a>.</p>
 </div>
+</div>
 <ol class="arabic simple" start="4">
-<li><p>Click <strong>Submit File</strong>.</p></li>
+<li><p>Click <strong>Submit File</strong> to save the Plugin File.</p></li>
 </ol>
 </section>
 <section class="header-on-a-card header-steps" id="step-3-modify-entrypoint-to-save-artifacts">
 <h3>Step 3: Modify Entrypoint to Save Artifacts<a class="headerlink" href="#step-3-modify-entrypoint-to-save-artifacts" title="Permalink to this headline">#</a></h3>
 <p>Next, you will modify <strong>sample_and_transform_ep</strong> to include an artifact-saving task. Nothing about the <a class="reference internal" href="part-3.html#tutorial-building-a-multi-step-workflow-step-1-make-sample-and-transform-plugin"><span class="std std-ref">sample_and_transform Plugin</span></a> itself needs to change.</p>
 <ol class="arabic simple">
-<li><p>Open <code class="docutils literal notranslate"><span class="pre">sample_and_transform_ep</span></code>.</p></li>
-<li><p>In the <strong>Artifact Info</strong> window (toward the bottom), select your new <code class="docutils literal notranslate"><span class="pre">artifacts</span></code> Plugin.</p></li>
-<li><p>Click <strong>Add to Output Graph</strong>.</p></li>
+<li><p>Open <code class="docutils literal notranslate"><span class="pre">sample_and_transform_ep</span></code> from the <a class="reference internal" href="part-3.html#tutorial-building-a-multi-step-workflow-step-2-create-sample-and-transform-entrypoint"><span class="std std-ref">previous tutorial step</span></a></p></li>
+<li><p>Scroll down. In the <strong>Artifact Info</strong> window, select your new <code class="docutils literal notranslate"><span class="pre">artifacts</span></code> Plugin.</p></li>
+<li><p>Click <strong>Add to Artifact Output Graph</strong>.</p></li>
 <li><p>Rename the step to <code class="docutils literal notranslate"><span class="pre">save_numpy_artifact</span></code>.</p></li>
 <li><p>Set the contents equal to the output from the final step of your task graph (e.g., <code class="docutils literal notranslate"><span class="pre">$transform_step</span></code> or whatever the last step was named).</p></li>
 </ol>
@@ -601,8 +608,15 @@ document.write(`
 <ol class="arabic simple">
 <li><p>Navigate back to your <strong>Experiments</strong> and select the <code class="docutils literal notranslate"><span class="pre">Sample</span> <span class="pre">and</span> <span class="pre">Transform</span> <span class="pre">Exp</span></code> from the <a class="reference internal" href="part-3.html#tutorial-building-a-multi-step-workflow"><span class="std std-ref">previous step</span></a>.</p></li>
 <li><p>Create a <strong>new job</strong> using the entrypoint you just edited (<code class="docutils literal notranslate"><span class="pre">sample_and_transform_ep</span></code>).</p></li>
-<li><p>Select your <strong>desired parameters</strong> and add a <strong>description</strong> to the Job.</p></li>
-<li><p>Click <strong>Submit Job</strong>.</p>
+<li><p>Select your <strong>desired parameters</strong> - for example:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">sample_size</span></code> = <strong>1000</strong></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mean</span></code> = <strong>-5</strong></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">var</span></code> = <strong>10</strong></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">transform_type</span></code> = <strong>“square”</strong></p></li>
+</ul>
+</li>
+<li><p>Add a <strong>description</strong>, then click <strong>Submit Job</strong>.</p>
 <ul class="simple">
 <li><p>Note: Ignore the <strong>Artifact Parameters</strong> editor - this is for loading past Artifacts as <em>inputs</em>, something that will be explained in the <a class="reference internal" href="part-6.html#tutorial-using-saved-artifacts"><span class="std std-ref">next step</span></a></p></li>
 </ul>

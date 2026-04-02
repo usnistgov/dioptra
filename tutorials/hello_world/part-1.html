@@ -508,7 +508,7 @@ document.write(`
 <p>We must create a container for our code and register the task in the system.</p>
 <ol class="arabic simple">
 <li><p>In the GUI, navigate to the <strong>Plugins</strong> tab.</p></li>
-<li><p>Click <strong>Create Plugin</strong>.</p></li>
+<li><p>Click the <strong>Create</strong> button in the Plugins table.</p></li>
 <li><p>Enter the name <code class="docutils literal notranslate"><span class="pre">hello_world_plugin</span></code> and add a short description. Click <strong>Submit</strong>.</p></li>
 </ol>
 <figure class="border-image clickable-image align-default" id="id1">
@@ -518,7 +518,7 @@ document.write(`
 </figcaption>
 </figure>
 <ol class="arabic simple" start="4">
-<li><p>In the plugin list, <strong>click the row</strong> corresponding to the Hello World Plugin you just created to go to the Plugin Files table.</p></li>
+<li><p>In the plugin list, <strong>click the row</strong> corresponding to the Hello World Plugin you just created to go to the <strong>Plugin Files table</strong>.</p></li>
 </ol>
 <figure class="border-image clickable-image align-default" id="id2">
 <img alt="Screenshot of the plugin creation / registration modal" src="../../_images/hello_world_plugin_files_table_dioptra_1_1.png" style="width: 900px;" />
@@ -532,13 +532,14 @@ document.write(`
 </ol>
 <p><strong>Register the Task</strong></p>
 <ol class="arabic simple" start="7">
-<li><p>In the <strong>Task Form</strong> (on the right side of the editor), register the function:</p>
+<li><p>In the <strong>Task Form</strong> (on the right side of the editor), register the function. Click the <strong>Create</strong> button under the Plugin Function Tasks table. Enter the following:</p>
 <ul class="simple">
 <li><p><strong>Task Name:</strong> <code class="docutils literal notranslate"><span class="pre">hello_world</span></code> (Must match the Python function name exactly).</p></li>
 <li><p><strong>Input/Output Parameters:</strong> <em>Leave blank</em> - Our function has no inputs and returns no outputs.</p></li>
 </ul>
 </li>
 </ol>
+<p>Click the <strong>Confirm</strong> button to finish task registration.</p>
 <figure class="border-image clickable-image align-default" id="id3">
 <img alt="Screenshot of the task registration" src="../../_images/register_hello_world_function_task_Dioptra_1_1.png" style="width: 900px;" />
 <figcaption>
@@ -561,14 +562,15 @@ document.write(`
 Our workflow is one with a single task only.</p>
 <ol class="arabic simple">
 <li><p>Navigate to the <strong>Entrypoints</strong> tab.</p></li>
-<li><p>Click <strong>Create Entrypoint</strong>.</p></li>
-<li><p>Name it <code class="docutils literal notranslate"><span class="pre">hello_world_entrypoint</span></code>.</p></li>
+<li><p>Click the <strong>Create</strong> button in the Entrypoints table.</p></li>
+<li><p>Name it <code class="docutils literal notranslate"><span class="pre">hello_world_entrypoint</span></code> and add a brief description.</p></li>
+<li><p>In the Queues section, attach the <code class="docutils literal notranslate"><span class="pre">tensorflow-cpu</span></code> Queue we created in the <a class="reference internal" href="part-0.html#tutorial-setup-dioptra-in-the-gui"><span class="std std-ref">setup step</span></a> of this tutorial.</p></li>
 </ol>
 <figure class="border-image clickable-image align-default">
 <img alt="Screenshot of entrypoint creation metadata" src="../../_images/create_hello_world_ep_metadata_dioptra_1_1.png" style="width: 900px;" />
 </figure>
-<ol class="arabic simple" start="4">
-<li><p>In the <strong>Task Plugins</strong> window, select the <code class="docutils literal notranslate"><span class="pre">hello_world_plugin</span></code> we created in <a class="reference internal" href="#tutorial-running-hello-world-step-2-create-the-plugin"><span class="std std-ref">Step 2</span></a>.</p></li>
+<ol class="arabic simple" start="5">
+<li><p>Scroll down. In the <strong>Task Plugins</strong> window, select the <code class="docutils literal notranslate"><span class="pre">hello_world_plugin</span></code> we created <a class="reference internal" href="#tutorial-running-hello-world-step-2-create-the-plugin"><span class="std std-ref">earlier</span></a>.</p></li>
 <li><p>In the <strong>Task Graph YAML</strong> editor, paste the following YAML:</p></li>
 </ol>
 <div class="code-panel yaml admonition">
@@ -578,7 +580,7 @@ Our workflow is one with a single task only.</p>
 </pre></div>
 </div>
 </div>
-<ol class="arabic simple" start="6">
+<ol class="arabic simple" start="7">
 <li><p>Click <strong>Validate Inputs</strong> (it should pass as there are no parameters).</p></li>
 </ol>
 <figure class="border-image clickable-image align-default" id="id5">
@@ -587,7 +589,7 @@ Our workflow is one with a single task only.</p>
 <p><span class="caption-text">Defining the workflow structure in the Entrypoint editor.</span><a class="headerlink" href="#id5" title="Permalink to this image">#</a></p>
 </figcaption>
 </figure>
-<ol class="arabic simple" start="7">
+<ol class="arabic simple" start="8">
 <li><p>Click <strong>Submit Entrypoint</strong>.</p></li>
 </ol>
 </section>
@@ -595,7 +597,7 @@ Our workflow is one with a single task only.</p>
 <h3>Step 4: Create Experiment &amp; Job<a class="headerlink" href="#step-4-create-experiment-job" title="Permalink to this headline">#</a></h3>
 <p>To execute the entrypoint, we must place it inside an Experiment and run it as a Job.</p>
 <ol class="arabic simple">
-<li><p>Navigate to the <strong>Experiments</strong> tab and click <strong>Create Experiment</strong>.</p></li>
+<li><p>Navigate to the <strong>Experiments</strong> tab and click the <strong>Create</strong> button in the Experiments table.</p></li>
 <li><p>Name it <code class="docutils literal notranslate"><span class="pre">hello_world_experiment</span></code>.</p></li>
 <li><p>In the Entrypoint dropdown, select <code class="docutils literal notranslate"><span class="pre">hello_world_entrypoint</span></code>.</p></li>
 </ol>
@@ -610,8 +612,8 @@ Our workflow is one with a single task only.</p>
 <li><p>Once the experiment is created, <strong>click on the experiment</strong> - the Experiment’s Job page should appear.</p></li>
 <li><p>In the jobs table, click <strong>Create</strong>.</p></li>
 <li><p>Select the <code class="docutils literal notranslate"><span class="pre">hello_world_entrypoint</span></code>.</p></li>
-<li><p>Select the queue you created in the <a class="reference internal" href="part-0.html#tutorial-setup-dioptra-in-the-gui-step-3-create-a-queue"><span class="std std-ref">previous tutorial</span></a> (<code class="docutils literal notranslate"><span class="pre">tensorflow-cpu</span></code>).</p></li>
-<li><p>Click <strong>Submit Job</strong>.</p></li>
+<li><p>Select the <code class="docutils literal notranslate"><span class="pre">tensorflow-cpu</span></code> queue (which we created in <a class="reference internal" href="part-0.html#tutorial-setup-dioptra-in-the-gui"><span class="std std-ref">the previous tutorial step</span></a>) - attach it now if you forgot to attach it previously.</p></li>
+<li><p>Add a short description, and then click <strong>Submit Job</strong>.</p></li>
 </ol>
 <figure class="border-image clickable-image align-default" id="id7">
 <img alt="Screenshot of the Job submission modal." src="../../_images/running_hello_world_job_dioptra_1_1.png" style="width: 900px;" />
@@ -633,10 +635,10 @@ Our workflow is one with a single task only.</p>
 <p><span class="caption-text">Viewing the execution logs.</span><a class="headerlink" href="#id8" title="Permalink to this image">#</a></p>
 </figcaption>
 </figure>
-<p>You should see the following message generated by <code class="docutils literal notranslate"><span class="pre">hello_world_plugin.plugin</span></code>:</p>
+<p>You should see the following message generated by <code class="docutils literal notranslate"><span class="pre">hello_world_plugin.plugin_1</span></code>:</p>
 <div class="code-panel console admonition">
 <p class="admonition-title">Job Log Output</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">[info     ] Hello, World! Welcome to Dioptra. [hello_world_plugin.plugin]</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">[info     ] Hello, World! Welcome to Dioptra. [hello_world_plugin.plugin_1]</span>
 </pre></div>
 </div>
 </div>

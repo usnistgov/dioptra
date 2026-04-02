@@ -44,24 +44,24 @@ Workflow
 .. rst-class:: header-on-a-card header-steps
 
 Step 1: Make "sample_and_transform" Plugin
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The ``sample_and_transform`` plugin will include multiple functions, each registered as a plugin task.
 Other than containing more functions, you will create the plugin the same way as before.
 
 The tasks include:
 
-- **sample_normal_distribution**: sample a NumPy array
-- **add_noise**: perturb the array with additive noise sampled from a normal distribution
-- **nonlinear_transform**: apply a configurable transformation (e.g. square each value)
-- **print_stats**: log mean, variance, min, max of the current state of the array
+1. **sample_normal_distribution**: sample a NumPy array
+2. **add_noise**: perturb the array with additive noise sampled from a normal distribution
+3. **nonlinear_transform**: apply a configurable transformation (e.g. square each value)
+4. **print_stats**: log mean, variance, min, max of the current state of the array
 
-**Steps** 
+**Plugin Creation Steps** 
 
-1. Go to the **Plugins** tab and click **Create Plugin**.
+1. Go to the **Plugins** tab and click the **Create** button in the Plugins table.
 2. Name it ``sample_and_transform`` and add a short description.
-3. Add a new file named ``sample_and_transform.py`` and paste the code below.
-4. Import functions via **Import Function Tasks** (same as in :ref:`tutorial-1-part-2-register-the-task`).
+3. Open the Plugin you just created and then click **Create** to add a new file. Name the file ``sample_and_transform.py``, add a description, then **paste the Python code** code below into the code editor.
+4. Import functions via **Import Function Tasks** (same as in :ref:`tutorial-1-part-2-register-the-task`). Fix any Parameter Type errors as needed.
 
 .. admonition:: sample_and_transform.py
     :class: code-panel python
@@ -69,26 +69,31 @@ The tasks include:
     .. literalinclude:: ../../../../docs/source/documentation_code/plugins/essential_workflows_tutorial/sample_and_transform.py
        :language: python
 
+5. Click **Submit File** to save the Plugin file. 
+
+.. _tutorial-building-a-multi-step-workflow-step-2-create-sample-and-transform-entrypoint:
+
 .. rst-class:: header-on-a-card header-steps
 
 Step 2: Create "sample_and_transform" Entrypoint
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The ``sample_and_transform_ep`` entrypoint will demonstrate a **multi-step task graph**. You will be able to pass arrays from one task to the next and re-use the ``print_stats`` task multiple times.
 
-Parameters for this entrypoint:
 
-- ``sample_size`` (int)
-- ``mean`` (float)
-- ``var`` (float)
-- ``transform_type`` (str, e.g. ``square``)
-
-*Note*: Do not set default values for any of these Entrypoint Parameters. 
-
-**Steps** 
+**Entrypoint Creations Steps** 
 
 1. Create a new entrypoint named ``sample_and_transform_ep``. Add a description and attach the ``tensorflow-cpu`` Queue.
-2. Under the **Entrypoint Parameters** window, add the four parameters listed above, ensuring you select the correct types (``int``, ``float``, ``float``, ``string``).
+2. Under the **Entrypoint Parameters** window, add the four parameters listed below, ensuring you select the correct types (``integer``, ``float``, ``float``, ``string``).
+
+Parameters for this entrypoint:
+
+- ``sample_size`` (integer)
+- ``mean`` (float)
+- ``var`` (float)
+- ``transform_type`` (string)
+
+*Note*: **Turn off the default value** option for all of these Entrypoint Parameters. 
 
 .. figure:: ../../images/screenshots/entrypoints/create_sample_and_transform_ep_dioptra_1_1.png
    :alt: Screenshot of the sample_and_transform_ep parameters window.
@@ -105,15 +110,15 @@ Step 3: Build the Task Graph
 You are going to build a task graph with **six steps**:
 
 1. ``draw_normal`` (generates draws)
-2. ``print_stats`` (on array from step 1)
-3. ``add_noise`` (adds noise to draws)
-4. ``print_stats`` (on array from step 3 with noise added)
-5. ``transform`` (applies chosen transform)
-6. ``print_stats`` (on array from step 5 after transformation)
+2. ``print_stats`` (logs stats from the output of step 1)
+3. ``add_noise`` (adds noise to draws from step 1)
+4. ``print_stats`` (logs stats from the output of step 3 - the array with added noise)
+5. ``transform`` (applies chosen transform to the output from step 3)
+6. ``print_stats`` (logs stats from the output of step 5 - the transformed array)
 
 Key ideas:
 
-- Reference outputs of earlier tasks (e.g., use ``draws`` from step 1 in step 2).
+- Reference outputs of earlier tasks (e.g., use ``output`` from step 1 as input to step 2).
 - Re-use the same task (``print_stats``) multiple times with different inputs.
 
 **Steps** 
@@ -153,8 +158,8 @@ Because this workflow is conceptually different, make a new experiment for organ
 
 **Steps** 
 
-1. Navigate to **Experiments** and click **Create Experiment**.
-2. Name it ``Sample and Transform Exp``.
+1. Navigate to **Experiments** and click **Create**.
+2. Name the new Experiment ``Sample and Transform Exp``. Add a description. 
 3. Add the ``sample_and_transform_ep`` entrypoint to the experiment.
 4. Click **Submit Experiment**.
 
@@ -174,7 +179,7 @@ It's time to execute the multi-step workflow.
    - ``var`` = **10**
    - ``transform_type`` = **"square"**
 
-4. Click **Submit Job**.
+4. Add a **Description**, then click **Submit Job**.
 
 .. figure:: ../../images/screenshots/jobs/execute_multi_step_workflow_job_dioptra_1_1.png
    :alt: Creating a job that uses entrypoint 3 with specific parameters.
@@ -213,9 +218,9 @@ Conclusion
 
 You now know how to:
 
-- Register multiple tasks in a single plugin
-- Build a multi-step entrypoint task graph
-- Reference outputs and repeat tasks
-- Run experiments with complex workflows
+- **Register multiple tasks** in a single plugin
+- Build a **multi-step entrypoint** task graph
+- **Reference outputs** and repeat tasks
+- Run **experiments with complex workflows**
 
 Next, you will learn how to :ref:`save the output of a task as an artifact <tutorial-saving-artifacts>`.

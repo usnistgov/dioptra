@@ -20,7 +20,7 @@
 
 
 Set Up Dioptra in the GUI
-=====================
+=========================
 
 Before running your first plugin task, we need to prepare the environment.
 

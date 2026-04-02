@@ -516,37 +516,31 @@ text fields that exactly match <code class="docutils literal notranslate"><span 
 <section id="id1">
 <h3><a class="toc-backref" href="#id6">Wildcard <code class="docutils literal notranslate"><span class="pre">?</span></code></a><a class="headerlink" href="#id1" title="Permalink to this headline">#</a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">?</span></code> character can be used as a wildcard to represent a single character.</p>
-<dl>
+<dl class="simple">
 <dt>Example usage:</dt><dd><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">search_term_?</span></code> - will search for all text fields that start with <code class="docutils literal notranslate"><span class="pre">search_term_</span></code> and only</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">search_term_?</span></code> - will search for all text fields that start with <code class="docutils literal notranslate"><span class="pre">search_term_</span></code> and only have one additional character.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">search_term_??</span></code> - will search for all text fields that start with <code class="docutils literal notranslate"><span class="pre">search_term_</span></code> and have two additional characters.</p></li>
 </ul>
-<p>have one additional character.</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">search_term_??</span></code> - will search for all text fields that start with <code class="docutils literal notranslate"><span class="pre">search_term_</span></code> and have</p></li>
-</ul>
-<p>two additional characters.</p>
 </dd>
 </dl>
 </section>
 <section id="quoted-search-terms">
 <h3><a class="toc-backref" href="#id7">Quoted Search Terms <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></a><a class="headerlink" href="#quoted-search-terms" title="Permalink to this headline">#</a></h3>
 <p>Search terms quoted with <code class="docutils literal notranslate"><span class="pre">&quot;</span></code> can contain spaces and other characters.</p>
-<dl>
+<dl class="simple">
 <dt>Example usage:</dt><dd><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;search</span> <span class="pre">\&quot;this\&quot;,</span> <span class="pre">and</span> <span class="pre">'that'&quot;</span></code> - will search for all text fields that exactly</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;search</span> <span class="pre">\&quot;this\&quot;,</span> <span class="pre">and</span> <span class="pre">'that'&quot;</span></code> - will search for all text fields that exactly match <code class="docutils literal notranslate"><span class="pre">search</span> <span class="pre">&quot;this&quot;,</span> <span class="pre">and</span> <span class="pre">'that'</span></code></p></li>
 </ul>
-<p>match <code class="docutils literal notranslate"><span class="pre">search</span> <span class="pre">&quot;this&quot;,</span> <span class="pre">and</span> <span class="pre">'that'</span></code></p>
 </dd>
 </dl>
 </section>
 <section id="combining-search-terms">
 <h3><a class="toc-backref" href="#id8">Combining Search Terms <code class="docutils literal notranslate"><span class="pre">,</span></code></a><a class="headerlink" href="#combining-search-terms" title="Permalink to this headline">#</a></h3>
 <p>Search terms can be combined using commas.</p>
-<dl>
+<dl class="simple">
 <dt>Example usage:</dt><dd><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">search_term_1,</span> <span class="pre">search_terms_*,</span> <span class="pre">&quot;search_term_3&quot;</span></code> - will search for all text fields that</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">search_term_1,</span> <span class="pre">search_terms_*,</span> <span class="pre">&quot;search_term_3&quot;</span></code> - will search for all text fields that match <code class="docutils literal notranslate"><span class="pre">search_term_1</span></code>, start with <code class="docutils literal notranslate"><span class="pre">search_terms_</span></code> and match <code class="docutils literal notranslate"><span class="pre">search_term_3</span></code>.</p></li>
 </ul>
-<p>match <code class="docutils literal notranslate"><span class="pre">search_term_1</span></code>, start with <code class="docutils literal notranslate"><span class="pre">search_terms_</span></code> and match <code class="docutils literal notranslate"><span class="pre">search_term_3</span></code>.</p>
 </dd>
 </dl>
 </section>
@@ -555,27 +549,14 @@ text fields that exactly match <code class="docutils literal notranslate"><span 
 <p>The name of a field, for example <code class="docutils literal notranslate"><span class="pre">tag</span></code>, <code class="docutils literal notranslate"><span class="pre">name</span></code>, <code class="docutils literal notranslate"><span class="pre">description</span></code>, etc. can be used to search
 for resources.</p>
 <p>Note that quotation marks should be used to include spaces in a single search term.</p>
-<dl>
+<dl class="simple">
 <dt>Example usage:</dt><dd><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">tag:my_search_tag</span></code> - will search the tags of resources of this type for text which exactly matches</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tag:my_search_tag</span></code> - will search the tags of resources of this type for text that exactly matches <code class="docutils literal notranslate"><span class="pre">my_search_tag</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">name:experiment_1</span></code> - will search the names of resources of this type for text that exactly matches <code class="docutils literal notranslate"><span class="pre">experiment_1</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">description:*LLM*</span></code> - will search the descriptions of resources of this type for text containing <code class="docutils literal notranslate"><span class="pre">LLM</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tag:tag1,tag:tag2</span></code> - will search the tags of resources of this type for text that exactly matches <code class="docutils literal notranslate"><span class="pre">tag1</span></code> or <code class="docutils literal notranslate"><span class="pre">tag2</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tag:&quot;this</span> <span class="pre">is</span> <span class="pre">a</span> <span class="pre">tag</span> <span class="pre">with</span> <span class="pre">spaces&quot;</span></code> - will search the tags of resources of this type for text that exactly matches <code class="docutils literal notranslate"><span class="pre">this</span> <span class="pre">is</span> <span class="pre">a</span> <span class="pre">tag</span> <span class="pre">with</span> <span class="pre">spaces</span></code></p></li>
 </ul>
-<p><code class="docutils literal notranslate"><span class="pre">my_search_tag</span></code></p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">name:experiment_1</span></code> - will search the names of resources of this type for text that exactly matches</p></li>
-</ul>
-<p><code class="docutils literal notranslate"><span class="pre">experiment_1</span></code></p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">description:*LLM*</span></code> - will search the descriptions of resources of this type for text containing</p></li>
-</ul>
-<p><code class="docutils literal notranslate"><span class="pre">LLM</span></code></p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">tag:tag1,tag:tag2</span></code> - will search the tags of resources of this type for text which exactly matches</p></li>
-</ul>
-<p><code class="docutils literal notranslate"><span class="pre">tag1</span></code> or <code class="docutils literal notranslate"><span class="pre">tag2</span></code></p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">tag:&quot;this</span> <span class="pre">is</span> <span class="pre">a</span> <span class="pre">tag</span> <span class="pre">with</span> <span class="pre">spaces&quot;</span></code> - will search the tags of resources of this type for text which</p></li>
-</ul>
-<p>exactly matches <code class="docutils literal notranslate"><span class="pre">this</span> <span class="pre">is</span> <span class="pre">a</span> <span class="pre">tag</span> <span class="pre">with</span> <span class="pre">spaces</span></code></p>
 </dd>
 </dl>
 </section>
@@ -584,8 +565,8 @@ for resources.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">\</span></code> character can be used to escape characters mentioned above that should be ignored by the query language.</p>
 <dl class="simple">
 <dt>Example usage:</dt><dd><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">tag:\*</span></code> - will search the tags of resources of this type for text which exactly matches <code class="docutils literal notranslate"><span class="pre">*</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">tag\:</span></code> - will search the tags of resources of this type for text which exactly matches <code class="docutils literal notranslate"><span class="pre">tag:</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tag:\*</span></code> - will search the tags of resources of this type for text that exactly matches <code class="docutils literal notranslate"><span class="pre">*</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tag\:</span></code> - will search the tags of resources of this type for text that exactly matches <code class="docutils literal notranslate"><span class="pre">tag:</span></code></p></li>
 </ul>
 </dd>
 </dl>

@@ -78,6 +78,7 @@ Choose your preferred client, then in your python interpreter, run the following
         *Full Client Method Documentation:*
 
         .. automethod:: dioptra.client.connect_json_dioptra_client
+            :noindex:
 
    .. group-tab:: Response Client
 
@@ -96,6 +97,7 @@ Choose your preferred client, then in your python interpreter, run the following
         *Full Client Method Documentation:*
 
         .. automethod:: dioptra.client.connect_response_dioptra_client
+            :noindex:
 
 .. rst-class:: header-on-a-card header-steps
 
@@ -162,6 +164,7 @@ In your python interpreter, set the username, email, and password, then use the 
 *Full Client Method Documentation:*
 
 .. automethod:: dioptra.client.users.UsersCollectionClient.create
+    :noindex:
 
 
 .. rst-class:: header-on-a-card header-steps
@@ -207,11 +210,12 @@ In your python interpreter, run the following code:
 *Full Client Method Documentation:*
 
 .. automethod:: dioptra.client.auth.AuthCollectionClient.login
+    :noindex:
 
 .. rst-class:: header-on-a-card header-steps
 
 Step 5: Retrieve the IDs of Resources (optional)
-~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 There are many resource IDs you will need for access to downstream methods in the client.
 
@@ -236,6 +240,7 @@ Some of these include:
 
 
         .. automethod:: dioptra.client.groups.GroupsCollectionClient.get
+            :noindex:
 
 
     .. tab:: Get User IDs
@@ -251,6 +256,7 @@ Some of these include:
 
 
         .. automethod:: dioptra.client.users.UsersCollectionClient.get
+            :noindex:
 
     .. tab:: Get Queue IDs
 
@@ -265,6 +271,7 @@ Some of these include:
         *Full Client Method Documentation:*
 
         .. automethod:: dioptra.client.queues.QueuesCollectionClient.get
+            :noindex:
 
     .. tab:: Get Parameter Type IDs
 
@@ -278,3 +285,4 @@ Some of these include:
         *Full Client Method Documentation:*
 
         .. automethod:: dioptra.client.plugin_parameter_types.PluginParameterTypesCollectionClient.get
+            :noindex:

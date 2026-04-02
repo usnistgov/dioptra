@@ -492,18 +492,18 @@ document.write(`
 <p>The <code class="docutils literal notranslate"><span class="pre">sample_and_transform</span></code> plugin will include multiple functions, each registered as a plugin task.
 Other than containing more functions, you will create the plugin the same way as before.</p>
 <p>The tasks include:</p>
-<ul class="simple">
+<ol class="arabic simple">
 <li><p><strong>sample_normal_distribution</strong>: sample a NumPy array</p></li>
 <li><p><strong>add_noise</strong>: perturb the array with additive noise sampled from a normal distribution</p></li>
 <li><p><strong>nonlinear_transform</strong>: apply a configurable transformation (e.g. square each value)</p></li>
 <li><p><strong>print_stats</strong>: log mean, variance, min, max of the current state of the array</p></li>
-</ul>
-<p><strong>Steps</strong></p>
+</ol>
+<p><strong>Plugin Creation Steps</strong></p>
 <ol class="arabic simple">
-<li><p>Go to the <strong>Plugins</strong> tab and click <strong>Create Plugin</strong>.</p></li>
+<li><p>Go to the <strong>Plugins</strong> tab and click the <strong>Create</strong> button in the Plugins table.</p></li>
 <li><p>Name it <code class="docutils literal notranslate"><span class="pre">sample_and_transform</span></code> and add a short description.</p></li>
-<li><p>Add a new file named <code class="docutils literal notranslate"><span class="pre">sample_and_transform.py</span></code> and paste the code below.</p></li>
-<li><p>Import functions via <strong>Import Function Tasks</strong> (same as in <a class="reference internal" href="part-2.html#tutorial-1-part-2-register-the-task"><span class="std std-ref">Step 3: Register the Task</span></a>).</p></li>
+<li><p>Open the Plugin you just created and then click <strong>Create</strong> to add a new file. Name the file <code class="docutils literal notranslate"><span class="pre">sample_and_transform.py</span></code>, add a description, then <strong>paste the Python code</strong> code below into the code editor.</p></li>
+<li><p>Import functions via <strong>Import Function Tasks</strong> (same as in <a class="reference internal" href="part-2.html#tutorial-1-part-2-register-the-task"><span class="std std-ref">Step 3: Register the Task</span></a>). Fix any Parameter Type errors as needed.</p></li>
 </ol>
 <div class="code-panel python admonition">
 <p class="admonition-title">sample_and_transform.py</p>
@@ -584,23 +584,26 @@ Other than containing more functions, you will create the plugin the same way as
 </pre></div>
 </div>
 </div>
+<ol class="arabic simple" start="5">
+<li><p>Click <strong>Submit File</strong> to save the Plugin file.</p></li>
+</ol>
 </section>
 <section class="header-on-a-card header-steps" id="step-2-create-sample-and-transform-entrypoint">
-<h3>Step 2: Create “sample_and_transform” Entrypoint<a class="headerlink" href="#step-2-create-sample-and-transform-entrypoint" title="Permalink to this headline">#</a></h3>
+<span id="tutorial-building-a-multi-step-workflow-step-2-create-sample-and-transform-entrypoint"></span><h3>Step 2: Create “sample_and_transform” Entrypoint<a class="headerlink" href="#step-2-create-sample-and-transform-entrypoint" title="Permalink to this headline">#</a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">sample_and_transform_ep</span></code> entrypoint will demonstrate a <strong>multi-step task graph</strong>. You will be able to pass arrays from one task to the next and re-use the <code class="docutils literal notranslate"><span class="pre">print_stats</span></code> task multiple times.</p>
-<p>Parameters for this entrypoint:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">sample_size</span></code> (int)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">mean</span></code> (float)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">var</span></code> (float)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">transform_type</span></code> (str, e.g. <code class="docutils literal notranslate"><span class="pre">square</span></code>)</p></li>
-</ul>
-<p><em>Note</em>: Do not set default values for any of these Entrypoint Parameters.</p>
-<p><strong>Steps</strong></p>
+<p><strong>Entrypoint Creations Steps</strong></p>
 <ol class="arabic simple">
 <li><p>Create a new entrypoint named <code class="docutils literal notranslate"><span class="pre">sample_and_transform_ep</span></code>. Add a description and attach the <code class="docutils literal notranslate"><span class="pre">tensorflow-cpu</span></code> Queue.</p></li>
-<li><p>Under the <strong>Entrypoint Parameters</strong> window, add the four parameters listed above, ensuring you select the correct types (<code class="docutils literal notranslate"><span class="pre">int</span></code>, <code class="docutils literal notranslate"><span class="pre">float</span></code>, <code class="docutils literal notranslate"><span class="pre">float</span></code>, <code class="docutils literal notranslate"><span class="pre">string</span></code>).</p></li>
+<li><p>Under the <strong>Entrypoint Parameters</strong> window, add the four parameters listed below, ensuring you select the correct types (<code class="docutils literal notranslate"><span class="pre">integer</span></code>, <code class="docutils literal notranslate"><span class="pre">float</span></code>, <code class="docutils literal notranslate"><span class="pre">float</span></code>, <code class="docutils literal notranslate"><span class="pre">string</span></code>).</p></li>
 </ol>
+<p>Parameters for this entrypoint:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">sample_size</span></code> (integer)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mean</span></code> (float)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">var</span></code> (float)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">transform_type</span></code> (string)</p></li>
+</ul>
+<p><em>Note</em>: <strong>Turn off the default value</strong> option for all of these Entrypoint Parameters.</p>
 <figure class="border-image clickable-image align-default" id="id1">
 <img alt="Screenshot of the sample_and_transform_ep parameters window." src="../../_images/create_sample_and_transform_ep_dioptra_1_1.png" style="width: 900px;" />
 <figcaption>
@@ -613,15 +616,15 @@ Other than containing more functions, you will create the plugin the same way as
 <p>You are going to build a task graph with <strong>six steps</strong>:</p>
 <ol class="arabic simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">draw_normal</span></code> (generates draws)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">print_stats</span></code> (on array from step 1)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">add_noise</span></code> (adds noise to draws)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">print_stats</span></code> (on array from step 3 with noise added)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">transform</span></code> (applies chosen transform)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">print_stats</span></code> (on array from step 5 after transformation)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">print_stats</span></code> (logs stats from the output of step 1)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">add_noise</span></code> (adds noise to draws from step 1)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">print_stats</span></code> (logs stats from the output of step 3 - the array with added noise)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">transform</span></code> (applies chosen transform to the output from step 3)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">print_stats</span></code> (logs stats from the output of step 5 - the transformed array)</p></li>
 </ol>
 <p>Key ideas:</p>
 <ul class="simple">
-<li><p>Reference outputs of earlier tasks (e.g., use <code class="docutils literal notranslate"><span class="pre">draws</span></code> from step 1 in step 2).</p></li>
+<li><p>Reference outputs of earlier tasks (e.g., use <code class="docutils literal notranslate"><span class="pre">output</span></code> from step 1 as input to step 2).</p></li>
 <li><p>Re-use the same task (<code class="docutils literal notranslate"><span class="pre">print_stats</span></code>) multiple times with different inputs.</p></li>
 </ul>
 <p><strong>Steps</strong></p>
@@ -705,8 +708,8 @@ Other than containing more functions, you will create the plugin the same way as
 <p>Because this workflow is conceptually different, make a new experiment for organizational purposes.</p>
 <p><strong>Steps</strong></p>
 <ol class="arabic simple">
-<li><p>Navigate to <strong>Experiments</strong> and click <strong>Create Experiment</strong>.</p></li>
-<li><p>Name it <code class="docutils literal notranslate"><span class="pre">Sample</span> <span class="pre">and</span> <span class="pre">Transform</span> <span class="pre">Exp</span></code>.</p></li>
+<li><p>Navigate to <strong>Experiments</strong> and click <strong>Create</strong>.</p></li>
+<li><p>Name the new Experiment <code class="docutils literal notranslate"><span class="pre">Sample</span> <span class="pre">and</span> <span class="pre">Transform</span> <span class="pre">Exp</span></code>. Add a description.</p></li>
 <li><p>Add the <code class="docutils literal notranslate"><span class="pre">sample_and_transform_ep</span></code> entrypoint to the experiment.</p></li>
 <li><p>Click <strong>Submit Experiment</strong>.</p></li>
 </ol>
@@ -725,7 +728,7 @@ Other than containing more functions, you will create the plugin the same way as
 <li><p><code class="docutils literal notranslate"><span class="pre">transform_type</span></code> = <strong>“square”</strong></p></li>
 </ul>
 </li>
-<li><p>Click <strong>Submit Job</strong>.</p></li>
+<li><p>Add a <strong>Description</strong>, then click <strong>Submit Job</strong>.</p></li>
 </ol>
 <figure class="border-image clickable-image align-default" id="id3">
 <img alt="Creating a job that uses entrypoint 3 with specific parameters." src="../../_images/execute_multi_step_workflow_job_dioptra_1_1.png" style="width: 900px;" />
@@ -759,10 +762,10 @@ Other than containing more functions, you will create the plugin the same way as
 <h2>Conclusion<a class="headerlink" href="#conclusion" title="Permalink to this headline">#</a></h2>
 <p>You now know how to:</p>
 <ul class="simple">
-<li><p>Register multiple tasks in a single plugin</p></li>
-<li><p>Build a multi-step entrypoint task graph</p></li>
-<li><p>Reference outputs and repeat tasks</p></li>
-<li><p>Run experiments with complex workflows</p></li>
+<li><p><strong>Register multiple tasks</strong> in a single plugin</p></li>
+<li><p>Build a <strong>multi-step entrypoint</strong> task graph</p></li>
+<li><p><strong>Reference outputs</strong> and repeat tasks</p></li>
+<li><p>Run <strong>experiments with complex workflows</strong></p></li>
 </ul>
 <p>Next, you will learn how to <a class="reference internal" href="part-5.html#tutorial-saving-artifacts"><span class="std std-ref">save the output of a task as an artifact</span></a>.</p>
 </section>

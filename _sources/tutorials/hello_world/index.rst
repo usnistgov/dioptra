@@ -18,7 +18,7 @@
 .. _tutorial-hello-world-in-dioptra:
 
 Hello World in Dioptra
-=================
+======================
 
 This tutorial will guide you through setting up Dioptra in the Graphical User Interface (GUI) and running 
 a simple plugin task. This tutorial serves as a first introduction to using 

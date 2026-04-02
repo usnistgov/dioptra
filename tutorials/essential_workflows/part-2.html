@@ -515,17 +515,20 @@ you will compare outputs and observe how different <strong>sample sizes</strong>
 </section>
 <section class="header-on-a-card header-steps" id="step-2-create-the-plugin">
 <h3>Step 2: Create the Plugin<a class="headerlink" href="#step-2-create-the-plugin" title="Permalink to this headline">#</a></h3>
-<p>You will now create a new plugin with one task. This task accepts four parameters:
-* <code class="docutils literal notranslate"><span class="pre">random_seed</span></code>
-* <code class="docutils literal notranslate"><span class="pre">sample_size</span></code>
-* <code class="docutils literal notranslate"><span class="pre">mean</span></code>
-* <code class="docutils literal notranslate"><span class="pre">var</span></code></p>
+<p>You will now create a new plugin with one task. This task accepts four parameters:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">random_seed</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sample_size</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mean</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">var</span></code></p></li>
+</ul>
 <p>The function samples a normal distribution, logs the mean, and then returns the array.</p>
+<p><strong>Steps</strong></p>
 <ol class="arabic simple">
-<li><p>Go to the <strong>Plugins</strong> tab and click <strong>Create Plugin</strong>.</p></li>
-<li><p>Name it <code class="docutils literal notranslate"><span class="pre">sample_normal</span></code> and add a short description.</p></li>
-<li><p>In the plugin list, <strong>click the row</strong> corresponding to the Sample Normal Plugin you just created to go to the Plugin Files table.</p></li>
-<li><p>Add a new Python file named <code class="docutils literal notranslate"><span class="pre">sample_normal.py</span></code>.</p></li>
+<li><p>Go to the <strong>Plugins</strong> tab and click the <strong>Create</strong> button in the Plugins table.</p></li>
+<li><p>Name it <code class="docutils literal notranslate"><span class="pre">sample_normal</span></code> and add a short description. Click <strong>Submit</strong> to save the Plugin.</p></li>
+<li><p>In the plugin list, <strong>click the row</strong> corresponding to the <code class="docutils literal notranslate"><span class="pre">sample_normal</span></code> Plugin you just created to go to the Plugin Files table.</p></li>
+<li><p>Click the <strong>Create</strong> button to add a new Python file. Name it <code class="docutils literal notranslate"><span class="pre">sample_normal.py</span></code> and add a description.</p></li>
 <li><p>Paste the code below into the editor.</p></li>
 </ol>
 <div class="code-panel python admonition">
@@ -572,7 +575,7 @@ you will compare outputs and observe how different <strong>sample sizes</strong>
 </section>
 <section class="header-on-a-card header-steps" id="step-3-register-the-task">
 <span id="tutorial-1-part-2-register-the-task"></span><h3>Step 3: Register the Task<a class="headerlink" href="#step-3-register-the-task" title="Permalink to this headline">#</a></h3>
-<p>Unlike in the <a class="reference internal" href="../hello_world/index.html#tutorial-hello-world-in-dioptra"><span class="std std-ref">Hello World</span></a> simple logging function task with no inputs/outputs, this Task requires us to register the inputs and outputs along with their Types. Using Dioptra’s autodetect functionality will help here.</p>
+<p>Unlike in simple logging function task with no inputs/outputs from the <a class="reference internal" href="../hello_world/index.html#tutorial-hello-world-in-dioptra"><span class="std std-ref">Hello World</span></a> tutorial, this task requires us to register the inputs and outputs along with their Parameter Types. Using Dioptra’s autodetect functionality will help here.</p>
 <ol class="arabic simple">
 <li><p>Click <strong>Import Function Tasks</strong> (top right of the editor) to auto-detect functions from <code class="docutils literal notranslate"><span class="pre">sample_normal.py</span></code>.</p></li>
 </ol>
@@ -600,7 +603,8 @@ you will compare outputs and observe how different <strong>sample sizes</strong>
 <li><p>Click the <code class="docutils literal notranslate"><span class="pre">output</span></code> badge.</p></li>
 <li><p>Set <strong>Name</strong> to <code class="docutils literal notranslate"><span class="pre">output</span></code> and <strong>Type</strong> to <code class="docutils literal notranslate"><span class="pre">NumpyArray</span></code>.</p></li>
 </ul>
-<p>Once you’ve corrected the errors, <strong>save</strong> the plugin file by clicking <strong>submit</strong>.</p>
+<p><em>Alternatively</em>, you could go back and edit the name of your Plugin Parameter Type to <code class="docutils literal notranslate"><span class="pre">np_ndarray</span></code>.</p>
+<p>Once you’ve corrected the errors, <strong>save</strong> the plugin file by clicking <strong>Submit File</strong>.</p>
 <div class="admonition-learn-more admonition">
 <p class="admonition-title">Learn More</p>
 <ul class="simple">
@@ -618,7 +622,7 @@ you will compare outputs and observe how different <strong>sample sizes</strong>
 <li><p>In the <strong>Entrypoint Parameters</strong> window, click <strong>Add Parameter</strong>:</p>
 <ul class="simple">
 <li><p><strong>Name:</strong> <code class="docutils literal notranslate"><span class="pre">sample_size</span></code></p></li>
-<li><p><strong>Type:</strong> <code class="docutils literal notranslate"><span class="pre">int</span></code></p></li>
+<li><p><strong>Type:</strong> <code class="docutils literal notranslate"><span class="pre">integer</span></code></p></li>
 <li><p><strong>Default value:</strong> <code class="docutils literal notranslate"><span class="pre">100</span></code></p></li>
 </ul>
 </li>
@@ -644,7 +648,7 @@ you will compare outputs and observe how different <strong>sample sizes</strong>
 </figcaption>
 </figure>
 <ol class="arabic simple" start="3">
-<li><p>Edit the YAML to bind the parameters. Map <code class="docutils literal notranslate"><span class="pre">sample_size</span></code> to the entrypoint parameter (<code class="docutils literal notranslate"><span class="pre">$sample_size</span></code>) and hardcode the others to something reasonable (e.g. <code class="docutils literal notranslate"><span class="pre">random_seed=0</span></code>, <code class="docutils literal notranslate"><span class="pre">mean=10</span></code>, <code class="docutils literal notranslate"><span class="pre">var=10</span></code>)</p></li>
+<li><p>Edit the YAML to bind the parameters. Map <code class="docutils literal notranslate"><span class="pre">sample_size</span></code> to the entrypoint parameter (<code class="docutils literal notranslate"><span class="pre">$sample_size</span></code>) and hardcode the others to something reasonable (e.g. <code class="docutils literal notranslate"><span class="pre">random_seed=0</span></code>, <code class="docutils literal notranslate"><span class="pre">mean=10</span></code>, <code class="docutils literal notranslate"><span class="pre">var=10</span></code>). Rename the <strong>step-name</strong> to <code class="docutils literal notranslate"><span class="pre">draw_and_log</span></code>.</p></li>
 </ol>
 <figure class="border-image clickable-image align-default" id="id6">
 <img alt="Screenshot of editing parameters in Entrypoint 2 task graph." src="../../_images/task_graph_editor_sample_normal_dioptra_1_1.png" style="width: 900px;" />
@@ -699,14 +703,14 @@ you will compare outputs and observe how different <strong>sample sizes</strong>
 <p><strong>Job with Sample Size 100:</strong></p>
 <div class="code-panel console admonition">
 <p class="admonition-title">Log Output (Small Sample)</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">Plugin 2 - The mean value of the draws was 10.2565, which was 0.2565 different from the passed-in mean (2.56%). [Passed-in Parameters]Seed: 0; Mean: 10; Variance: 10; Sample Size: 100</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">[info     ] Plugin 2 - The mean value of the draws was 10.2565, which was 0.2565 different from the passed-in mean (2.56%). [Passed-in Parameters]Seed: 0; Mean: 10; Variance: 10; Sample Size: 100; [sample_normal.sample_normal]</span>
 </pre></div>
 </div>
 </div>
 <p><strong>Job with Sample Size 10,000:</strong></p>
 <div class="code-panel console admonition">
 <p class="admonition-title">Log Output (Large Sample)</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">Plugin 2 - The mean value of the draws was 9.9971, which was 0.0029 different from the passed-in mean (0.03%). [Passed-in Parameters]Seed: 0; Mean: 10; Variance: 10; Sample Size: 100000</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">[info     ] Plugin 2 - The mean value of the draws was 10.0200, which was 0.0200 different from the passed-in mean (0.20%). [Passed-in Parameters]Seed: 0; Mean: 10; Variance: 10; Sample Size: 10000; [sample_normal.sample_normal]</span>
 </pre></div>
 </div>
 </div>

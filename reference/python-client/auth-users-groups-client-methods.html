@@ -487,55 +487,55 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section id="auth-users-and-groups-client-methods">
-<span id="reference-auth-client-methods"></span><h1>Auth, Users, and Groups Client Methods<a class="headerlink" href="#auth-users-and-groups-client-methods" title="Permalink to this headline">#</a></h1>
+<span id="reference-auth-users-groups-client-methods"></span><h1>Auth, Users, and Groups Client Methods<a class="headerlink" href="#auth-users-and-groups-client-methods" title="Permalink to this headline">#</a></h1>
 <p>This page lists all relevant methods for Dioptra Authentication, User management, and Group management that are available via the Python Client.</p>
 <div class="contents local topic" id="contents">
 <p class="topic-title">Contents</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="#requirements" id="id2">Requirements</a></p></li>
-<li><p><a class="reference internal" href="#authentication-methods" id="id3">Authentication Methods</a></p>
+<li><p><a class="reference internal" href="#requirements" id="id1">Requirements</a></p></li>
+<li><p><a class="reference internal" href="#authentication-methods" id="id2">Authentication Methods</a></p>
 <ul>
-<li><p><a class="reference internal" href="#login" id="id4">Login</a></p></li>
-<li><p><a class="reference internal" href="#logout" id="id5">Logout</a></p></li>
+<li><p><a class="reference internal" href="#login" id="id3">Login</a></p></li>
+<li><p><a class="reference internal" href="#logout" id="id4">Logout</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#users-general-methods" id="id6">Users - General Methods</a></p>
+<li><p><a class="reference internal" href="#users-general-methods" id="id5">Users - General Methods</a></p>
 <ul>
-<li><p><a class="reference internal" href="#get-all-users" id="id7">Get All Users</a></p></li>
-<li><p><a class="reference internal" href="#create-user" id="id8">Create User</a></p></li>
-<li><p><a class="reference internal" href="#get-user-by-id" id="id9">Get User by ID</a></p></li>
-<li><p><a class="reference internal" href="#change-user-password-by-id" id="id10">Change User Password by ID</a></p></li>
+<li><p><a class="reference internal" href="#get-all-users" id="id6">Get All Users</a></p></li>
+<li><p><a class="reference internal" href="#create-user" id="id7">Create User</a></p></li>
+<li><p><a class="reference internal" href="#get-user-by-id" id="id8">Get User by ID</a></p></li>
+<li><p><a class="reference internal" href="#change-user-password-by-id" id="id9">Change User Password by ID</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#users-current-user-methods" id="id11">Users - Current User Methods</a></p>
+<li><p><a class="reference internal" href="#users-current-user-methods" id="id10">Users - Current User Methods</a></p>
 <ul>
-<li><p><a class="reference internal" href="#get-current-user" id="id12">Get Current User</a></p></li>
-<li><p><a class="reference internal" href="#modify-current-user" id="id13">Modify Current User</a></p></li>
-<li><p><a class="reference internal" href="#change-current-user-password" id="id14">Change Current User Password</a></p></li>
-<li><p><a class="reference internal" href="#delete-current-user" id="id15">Delete Current User</a></p></li>
+<li><p><a class="reference internal" href="#get-current-user" id="id11">Get Current User</a></p></li>
+<li><p><a class="reference internal" href="#modify-current-user" id="id12">Modify Current User</a></p></li>
+<li><p><a class="reference internal" href="#change-current-user-password" id="id13">Change Current User Password</a></p></li>
+<li><p><a class="reference internal" href="#delete-current-user" id="id14">Delete Current User</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#groups-methods" id="id16">Groups Methods</a></p>
+<li><p><a class="reference internal" href="#groups-methods" id="id15">Groups Methods</a></p>
 <ul>
-<li><p><a class="reference internal" href="#get-all-groups" id="id17">Get All Groups</a></p></li>
-<li><p><a class="reference internal" href="#get-group-by-id" id="id18">Get Group by ID</a></p></li>
+<li><p><a class="reference internal" href="#get-all-groups" id="id16">Get All Groups</a></p></li>
+<li><p><a class="reference internal" href="#get-group-by-id" id="id17">Get Group by ID</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#see-also" id="id19">See Also</a></p></li>
+<li><p><a class="reference internal" href="#see-also" id="id18">See Also</a></p></li>
 </ul>
 </div>
 <section id="requirements">
-<h2><a class="toc-backref" href="#id2">Requirements</a><a class="headerlink" href="#requirements" title="Permalink to this headline">#</a></h2>
+<h2><a class="toc-backref" href="#id1">Requirements</a><a class="headerlink" href="#requirements" title="Permalink to this headline">#</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="../../how-to/setup-dioptra/install-dioptra-explanation.html#explanation-install-dioptra"><span class="std std-ref">Install Dioptra</span></a> - an installation and deployment of Dioptra must be available</p></li>
 <li><p><a class="reference internal" href="../../how-to/essential-workflows/setup-python-client.html#how-to-set-up-the-python-client"><span class="std std-ref">Set Up the Python Client</span></a> - the Python client must be configured and initialized</p></li>
 </ul>
 </section>
 <section id="authentication-methods">
-<span id="id1"></span><h2><a class="toc-backref" href="#id3">Authentication Methods</a><a class="headerlink" href="#authentication-methods" title="Permalink to this headline">#</a></h2>
+<span id="reference-auth-client-methods"></span><h2><a class="toc-backref" href="#id2">Authentication Methods</a><a class="headerlink" href="#authentication-methods" title="Permalink to this headline">#</a></h2>
 <p>After <a class="reference internal" href="../../how-to/essential-workflows/setup-python-client.html#how-to-set-up-the-python-client"><span class="std std-ref">importing and initializing the client</span></a>, these methods can be executed via <code class="docutils literal notranslate"><span class="pre">client.auth.METHOD_NAME()</span></code>.</p>
 <section id="login">
-<h3><a class="toc-backref" href="#id4">Login</a><a class="headerlink" href="#login" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id3">Login</a><a class="headerlink" href="#login" title="Permalink to this headline">#</a></h3>
 <blockquote>
 <div><dl class="py method">
 <dt class="sig sig-object py" id="dioptra.client.auth.AuthCollectionClient.login">
@@ -557,7 +557,7 @@ document.write(`
 </div></blockquote>
 </section>
 <section id="logout">
-<h3><a class="toc-backref" href="#id5">Logout</a><a class="headerlink" href="#logout" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id4">Logout</a><a class="headerlink" href="#logout" title="Permalink to this headline">#</a></h3>
 <blockquote>
 <div><dl class="py method">
 <dt class="sig sig-object py" id="dioptra.client.auth.AuthCollectionClient.logout">
@@ -577,10 +577,10 @@ document.write(`
 </section>
 </section>
 <section id="users-general-methods">
-<span id="reference-users-client-methods"></span><h2><a class="toc-backref" href="#id6">Users - General Methods</a><a class="headerlink" href="#users-general-methods" title="Permalink to this headline">#</a></h2>
+<span id="reference-users-client-methods"></span><h2><a class="toc-backref" href="#id5">Users - General Methods</a><a class="headerlink" href="#users-general-methods" title="Permalink to this headline">#</a></h2>
 <p>These methods relate to general user management and retrieval. They can be executed via <code class="docutils literal notranslate"><span class="pre">client.users.METHOD_NAME()</span></code>.</p>
 <section id="get-all-users">
-<h3><a class="toc-backref" href="#id7">Get All Users</a><a class="headerlink" href="#get-all-users" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id6">Get All Users</a><a class="headerlink" href="#get-all-users" title="Permalink to this headline">#</a></h3>
 <blockquote>
 <div><dl class="py method">
 <dt class="sig sig-object py" id="dioptra.client.users.UsersCollectionClient.get">
@@ -605,7 +605,7 @@ defaults to None.</p></li>
 </div></blockquote>
 </section>
 <section id="create-user">
-<h3><a class="toc-backref" href="#id8">Create User</a><a class="headerlink" href="#create-user" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id7">Create User</a><a class="headerlink" href="#create-user" title="Permalink to this headline">#</a></h3>
 <blockquote>
 <div><dl class="py method">
 <dt class="sig sig-object py" id="dioptra.client.users.UsersCollectionClient.create">
@@ -628,7 +628,7 @@ defaults to None.</p></li>
 </div></blockquote>
 </section>
 <section id="get-user-by-id">
-<h3><a class="toc-backref" href="#id9">Get User by ID</a><a class="headerlink" href="#get-user-by-id" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id8">Get User by ID</a><a class="headerlink" href="#get-user-by-id" title="Permalink to this headline">#</a></h3>
 <blockquote>
 <div><dl class="py method">
 <dt class="sig sig-object py" id="dioptra.client.users.UsersCollectionClient.get_by_id">
@@ -647,7 +647,7 @@ defaults to None.</p></li>
 </div></blockquote>
 </section>
 <section id="change-user-password-by-id">
-<h3><a class="toc-backref" href="#id10">Change User Password by ID</a><a class="headerlink" href="#change-user-password-by-id" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id9">Change User Password by ID</a><a class="headerlink" href="#change-user-password-by-id" title="Permalink to this headline">#</a></h3>
 <blockquote>
 <div><dl class="py method">
 <dt class="sig sig-object py" id="dioptra.client.users.UsersCollectionClient.change_password_by_id">
@@ -674,10 +674,10 @@ this is incorrect.</p></li>
 </section>
 </section>
 <section id="users-current-user-methods">
-<span id="reference-users-current-client-methods"></span><h2><a class="toc-backref" href="#id11">Users - Current User Methods</a><a class="headerlink" href="#users-current-user-methods" title="Permalink to this headline">#</a></h2>
+<span id="reference-users-current-client-methods"></span><h2><a class="toc-backref" href="#id10">Users - Current User Methods</a><a class="headerlink" href="#users-current-user-methods" title="Permalink to this headline">#</a></h2>
 <p>These methods interact specifically with the currently authenticated user session (the user logged in via the client).</p>
 <section id="get-current-user">
-<h3><a class="toc-backref" href="#id12">Get Current User</a><a class="headerlink" href="#get-current-user" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id11">Get Current User</a><a class="headerlink" href="#get-current-user" title="Permalink to this headline">#</a></h3>
 <blockquote>
 <div><dl class="py method">
 <dt class="sig sig-object py" id="dioptra.client.users.UsersCollectionClient.get_current">
@@ -693,7 +693,7 @@ this is incorrect.</p></li>
 </div></blockquote>
 </section>
 <section id="modify-current-user">
-<h3><a class="toc-backref" href="#id13">Modify Current User</a><a class="headerlink" href="#modify-current-user" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id12">Modify Current User</a><a class="headerlink" href="#modify-current-user" title="Permalink to this headline">#</a></h3>
 <blockquote>
 <div><dl class="py method">
 <dt class="sig sig-object py" id="dioptra.client.users.UsersCollectionClient.modify_current_user">
@@ -715,7 +715,7 @@ this is incorrect.</p></li>
 </div></blockquote>
 </section>
 <section id="change-current-user-password">
-<h3><a class="toc-backref" href="#id14">Change Current User Password</a><a class="headerlink" href="#change-current-user-password" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id13">Change Current User Password</a><a class="headerlink" href="#change-current-user-password" title="Permalink to this headline">#</a></h3>
 <blockquote>
 <div><dl class="py method">
 <dt class="sig sig-object py" id="dioptra.client.users.UsersCollectionClient.change_current_user_password">
@@ -738,7 +738,7 @@ change will fail if this is incorrect.</p></li>
 </div></blockquote>
 </section>
 <section id="delete-current-user">
-<h3><a class="toc-backref" href="#id15">Delete Current User</a><a class="headerlink" href="#delete-current-user" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id14">Delete Current User</a><a class="headerlink" href="#delete-current-user" title="Permalink to this headline">#</a></h3>
 <blockquote>
 <div><dl class="py method">
 <dt class="sig sig-object py" id="dioptra.client.users.UsersCollectionClient.delete_current_user">
@@ -759,14 +759,14 @@ fail if this is incorrect.</p>
 </section>
 </section>
 <section id="groups-methods">
-<span id="reference-groups-client-methods"></span><h2><a class="toc-backref" href="#id16">Groups Methods</a><a class="headerlink" href="#groups-methods" title="Permalink to this headline">#</a></h2>
+<span id="reference-groups-client-methods"></span><h2><a class="toc-backref" href="#id15">Groups Methods</a><a class="headerlink" href="#groups-methods" title="Permalink to this headline">#</a></h2>
 <p>These methods relate to group management and retrieval. They can be executed via <code class="docutils literal notranslate"><span class="pre">client.groups.METHOD_NAME()</span></code>.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>Groups are only partially implemented in Dioptra currently. All users are created under a single “Public” group. At this time, the creation of custom groups is not yet supported.</p>
 </div>
 <section id="get-all-groups">
-<h3><a class="toc-backref" href="#id17">Get All Groups</a><a class="headerlink" href="#get-all-groups" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id16">Get All Groups</a><a class="headerlink" href="#get-all-groups" title="Permalink to this headline">#</a></h3>
 <blockquote>
 <div><dl class="py method">
 <dt class="sig sig-object py" id="dioptra.client.groups.GroupsCollectionClient.get">
@@ -791,7 +791,7 @@ defaults to None.</p></li>
 </div></blockquote>
 </section>
 <section id="get-group-by-id">
-<h3><a class="toc-backref" href="#id18">Get Group by ID</a><a class="headerlink" href="#get-group-by-id" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id17">Get Group by ID</a><a class="headerlink" href="#get-group-by-id" title="Permalink to this headline">#</a></h3>
 <blockquote>
 <div><dl class="py method">
 <dt class="sig sig-object py" id="dioptra.client.groups.GroupsCollectionClient.get_by_id">
@@ -811,7 +811,7 @@ defaults to None.</p></li>
 </section>
 </section>
 <section class="fancy-header header-seealso" id="see-also">
-<h2><a class="toc-backref" href="#id19">See Also</a><a class="headerlink" href="#see-also" title="Permalink to this headline">#</a></h2>
+<h2><a class="toc-backref" href="#id18">See Also</a><a class="headerlink" href="#see-also" title="Permalink to this headline">#</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="../../how-to/essential-workflows/setup-python-client.html#how-to-set-up-the-python-client"><span class="std std-ref">How to set up the Python Client</span></a></p></li>
 <li><p><a class="reference internal" href="../../explanation/components/users-groups-explanation.html#explanation-users-and-groups"><span class="std std-ref">Explanation: Users and Groups</span></a></p></li>

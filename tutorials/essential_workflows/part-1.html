@@ -484,11 +484,11 @@ The essential steps are:</p>
 <li><p>Create an Entrypoint workflow that sequences specific tasks</p></li>
 <li><p>Run the Entrypoint as a Job within an Experiment</p></li>
 </ol>
-<figure class="border-image clickable-image align-default" id="id2">
+<figure class="border-image clickable-image align-default" id="id1">
 <img alt="Diagram showing steps needed to run Python functions in Dioptra." src="images/dioptra_workflow.png" />
 <figcaption>
 <p><span class="caption-text"><strong>Dioptra Workflow Overview</strong>
-The four essential steps needed to run Python functions in Dioptra.</span><a class="headerlink" href="#id2" title="Permalink to this image">#</a></p>
+The four essential steps needed to run Python functions in Dioptra.</span><a class="headerlink" href="#id1" title="Permalink to this image">#</a></p>
 </figcaption>
 </figure>
 <p>The power of Dioptra is that it lets users reuse tasks and workflows across experiments.
@@ -558,10 +558,10 @@ In this tutorial, we’ll use the UI.</p>
 </pre></div>
 </div>
 </div>
-<figure class="big-image border-image clickable-image align-default" id="id3">
+<figure class="big-image border-image clickable-image align-default" id="id2">
 <img alt="Screenshot of the plugin creation process in Dioptra." src="../../_images/plugin_1_add_file.png" style="width: 900px;" />
 <figcaption>
-<p><span class="caption-text">Adding a Python file during Plugin creation</span><a class="headerlink" href="#id3" title="Permalink to this image">#</a></p>
+<p><span class="caption-text">Adding a Python file during Plugin creation</span><a class="headerlink" href="#id2" title="Permalink to this image">#</a></p>
 </figcaption>
 </figure>
 <div class="admonition note">
@@ -570,7 +570,7 @@ In this tutorial, we’ll use the UI.</p>
 </div>
 </section>
 <section id="register-the-plugin-task">
-<span id="id1"></span><h3>Register the Plugin Task<a class="headerlink" href="#register-the-plugin-task" title="Permalink to this headline">#</a></h3>
+<span id="tutorial-1-part-1-register-your-first-plugin"></span><h3>Register the Plugin Task<a class="headerlink" href="#register-the-plugin-task" title="Permalink to this headline">#</a></h3>
 <p>Functions must be registered as tasks before they can be used in Entrypoints.</p>
 <div class="admonition-steps-finalizing admonition">
 <p class="admonition-title">Steps (finalizing)</p>
@@ -601,7 +601,7 @@ In this tutorial, we’ll use the UI.</p>
 </li>
 <li><p>In the <strong>Task Graph Info</strong> window, do the following:</p>
 <ol class="arabic simple">
-<li><p>Select the Plugin we made in <span class="xref std std-ref">tutorial-1-part-1-make-your-first-plugin</span> in the <strong>Task Plugins</strong> window</p></li>
+<li><p>Select the Plugin we made in <a class="reference internal" href="#tutorial-1-part-1-make-your-first-plugin"><span class="std std-ref">Make Your First Plugin</span></a> in the <strong>Task Plugins</strong> window</p></li>
 <li><p>In the <strong>Task Graph Info</strong> tab, paste the YAML below into the Task Graph YAML editor.</p></li>
 </ol>
 </li>
@@ -615,13 +615,13 @@ In this tutorial, we’ll use the UI.</p>
 </pre></div>
 </div>
 </div>
-<figure class="border-image clickable-image align-default" id="id4">
+<figure class="border-image clickable-image align-default" id="id3">
 <img alt="Screenshot of the Entrypoint task graph editor with YAML pasted in." src="../../_images/entrypoint_1_task_graph.png" style="width: 900px;" />
 <figcaption>
-<p><span class="caption-text">Defining the Entrypoint task graph in the UI</span><a class="headerlink" href="#id4" title="Permalink to this image">#</a></p>
+<p><span class="caption-text">Defining the Entrypoint task graph in the UI</span><a class="headerlink" href="#id3" title="Permalink to this image">#</a></p>
 </figcaption>
 </figure>
-<p>Note that we used the name of our registered task, <code class="docutils literal notranslate"><span class="pre">sample_normal_distribution_print_mean</span></code>, as defined in <span class="xref std std-ref">tutorial-1-part-1-make-your-first-plugin</span></p>
+<p>Note that we used the name of our registered task, <code class="docutils literal notranslate"><span class="pre">sample_normal_distribution_print_mean</span></code>, as defined in <a class="reference internal" href="#tutorial-1-part-1-make-your-first-plugin"><span class="std std-ref">Make Your First Plugin</span></a></p>
 <div class="admonition-steps-finalizing admonition">
 <p class="admonition-title">Steps (finalizing)</p>
 <ol class="arabic simple" start="5">
@@ -659,26 +659,26 @@ In this tutorial, we’ll use the UI.</p>
 <li><p>Click <strong>Submit Job</strong>.</p></li>
 </ol>
 </div>
-<figure class="big-image border-image clickable-image align-default" id="id5">
+<figure class="big-image border-image clickable-image align-default" id="id4">
 <img alt="Screenshot of creating a job from the experiment page." src="../../_images/create_job.png" style="width: 900px;" />
 <figcaption>
-<p><span class="caption-text">Submitting a job from the Experiment page</span><a class="headerlink" href="#id5" title="Permalink to this image">#</a></p>
+<p><span class="caption-text">Submitting a job from the Experiment page</span><a class="headerlink" href="#id4" title="Permalink to this image">#</a></p>
 </figcaption>
 </figure>
 <p>The job will first appear as <strong>Queued</strong>, then change to <strong>Finished</strong> after a short time.</p>
-<figure class="big-image border-image clickable-image align-default" id="id6">
+<figure class="big-image border-image clickable-image align-default" id="id5">
 <img alt="Screenshot showing a finished job in Dioptra." src="../../_images/job_1_finished.png" style="width: 900px;" />
 <figcaption>
-<p><span class="caption-text">Job status changes from Queued to Finished</span><a class="headerlink" href="#id6" title="Permalink to this image">#</a></p>
+<p><span class="caption-text">Job status changes from Queued to Finished</span><a class="headerlink" href="#id5" title="Permalink to this image">#</a></p>
 </figcaption>
 </figure>
 <section id="inspect-logs">
 <h3>Inspect Logs<a class="headerlink" href="#inspect-logs" title="Permalink to this headline">#</a></h3>
 <p>In the <strong>Jobs</strong> tab, click the job we just ran. Navigate to the logs tab.</p>
-<figure class="big-image border-image clickable-image align-default" id="id7">
+<figure class="big-image border-image clickable-image align-default" id="id6">
 <img alt="Screenshot showing a finished job in Dioptra." src="../../_images/job_1_dashboard_logs.png" style="width: 900px;" />
 <figcaption>
-<p><span class="caption-text">The logs generated by our first job.</span><a class="headerlink" href="#id7" title="Permalink to this image">#</a></p>
+<p><span class="caption-text">The logs generated by our first job.</span><a class="headerlink" href="#id6" title="Permalink to this image">#</a></p>
 </figcaption>
 </figure>
 <p>Notice that the logger name <code class="docutils literal notranslate"><span class="pre">plugin_1.plugin_1</span></code> generated the following message:</p>
@@ -726,6 +726,33 @@ Next, we’ll add <strong>inputs and outputs</strong> to our Plugin Task so you 
             </div>
             
             
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#make-your-first-plugin">Make Your First Plugin</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#create-the-plugin-in-the-ui">Create the Plugin in the UI</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#add-a-python-file">Add a Python File</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#register-the-plugin-task">Register the Plugin Task</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#create-an-entrypoint">Create an Entrypoint</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#make-an-experiment">Make an Experiment</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-a-job">Run a Job</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#inspect-logs">Inspect Logs</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#conclusion">Conclusion</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
               
             
           </div>

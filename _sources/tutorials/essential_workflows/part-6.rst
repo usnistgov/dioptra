@@ -40,9 +40,9 @@ In this example, you will build a new workflow that:
 
 To accomplish this, you'll need to perform the following:
 
-1. **Create a new Artifact Handler** that is capable of serializing Matplotlib figures to PNG files
-2. **Define a new Plugin** that reads in a Numpy array as an input and produces a Matplotlib figure as an artifact 
-3. **Define a new Entrypoint** to use the new plugin and new artifact handler
+- **Create a new Artifact Handler** that is capable of serializing Matplotlib figures to PNG files
+- **Define a new Plugin** that reads in a Numpy array as an input and produces a Matplotlib figure as an artifact 
+- **Define a new Entrypoint** to use the new plugin and new artifact handler
 
 Once all that is done, we can run a job for this Entrypoint and **select the previously saved NumPy Array** as the **Artifact Input Parameter**. 
 
@@ -53,7 +53,7 @@ Workflow
 .. rst-class:: header-on-a-card header-steps
 
 Step 1: Add two New Plugin Parameter Types
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You'll use the python ``dict`` type and the ``bytes`` type in your next Function Task and Artifact Task, so go ahead and add them now:
 
@@ -68,11 +68,11 @@ You'll use the python ``dict`` type and the ``bytes`` type in your next Function
 .. rst-class:: header-on-a-card header-steps
 
 Step 2: Create the "rescale_and_graph_array" Plugin
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You want to create a plugin that utilizes a saved numpy array as an *input*.
 
-1. Go to the **Plugins** tab and click **Create Plugin**.
+1. Go to the **Plugins** tab and click **Create**.
 2. Name it ``rescale_and_graph_array`` and add a short description.
 3. **Open** the Plugin. **Create** a new file named ``rescale_and_graph_array.py``.
 4. Copy and paste the code below.
@@ -100,14 +100,14 @@ Step 3: Add Another Artifact Task
 Your second plugin task outputs a Matplotlib figure as a PNG image. To view this output, you need to save it as an artifact. You will **add a new artifact plugin task** that serializes a Matplotlib object as a PNG.
 
 1. In the **Plugins** tab, open your ``artifacts`` Plugin from the previous :ref:`tutorial step <tutorial-saving-artifacts-step-1-create-an-artifact-plugin>`.
-2. **Add the new artifact plugin class code** to the bottom of the file to define ``PngBytesArtifactTask``.
-3. **Register** it in your plugin the same way as the ``NumpyArrayArtifactTask`` (see :ref:`tutorial-saving-artifacts-step-2-register-artifact-task`).
+2. Open the ``artifacts.py`` file. **Add the new artifact plugin class code** to the bottom of the file to define ``PngBytesArtifactTask``.
+3. **Register** this new Artifact Task in your plugin the same way as the ``NumpyArrayArtifactTask`` (see :ref:`tutorial-saving-artifacts-step-2-register-artifact-task`).
 
    * **Name**: ``PngBytesArtifactTask``
    * **Output Parameters - Name**: ``output``
    * **Output Parameters - Type**: ``bytes``
 
-**Add this class to the bottom of the file:**
+**Code to paste to the bottom of the artifacts.py file:**
 
 .. admonition:: artifacts.py (add to bottom)
     :class: code-panel python
@@ -117,21 +117,21 @@ Your second plugin task outputs a Matplotlib figure as a PNG image. To view this
        :start-after: # [pngbytes-plugin-definition]
        :end-before: # [end-pngbytes-plugin-definition]
 
-**then register the Artifact Task** 
 
 6. Click **Submit File** to save your changes to ``artifacts.py``
 
 .. rst-class:: header-on-a-card header-steps
 
 Step 4: Create "rescale_and_graph_array" Entrypoint
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Now define a **new Entrypoint** that loads the array, transforms it, and saves the plot.
 
-1. Go to the **Entrypoints** tab. 
+1. Go to the **Entrypoints** tab and view the Entrypoints table.
 
 .. note:: 
-   Dioptra saves **Snapshots** of Resources each time Resources are modified. If an Entrypoint is referencing an old Plugin snapshot, Dioptra will warn you. 
+   **Note**: Dioptra saves **Snapshots** of Resources each time Resources are modified. Notice that the artifacts Plugin, which we just updated, is now out of sync for the ``sample_and_transform`` Entrypoint. If an Entrypoint is referencing an old Plugin snapshot, Dioptra will warn you. 
+   
    Feel free to sync this Plugin now or to ignore this warning - it is irrelevant for this portion of the tutorial. 
 
    .. figure:: ../../images/screenshots/entrypoints/entrypoints_plugin_out_of_date_dioptra_1_1.png
@@ -141,7 +141,7 @@ Now define a **new Entrypoint** that loads the array, transforms it, and saves t
 
 
 
-2. Click **Create Entrypoint**.
+2. Click **Create** in the Entrypoints table.
 3. Name the new Entrypoint ``rescale_and_graph_array_ep``. Attach ``tensorflow-cpu`` as a **Queue** and provide a **description**. 
 
 **Add Parameters:**
@@ -170,12 +170,12 @@ Now define a **new Entrypoint** that loads the array, transforms it, and saves t
 
 **Define Task Graph:**
 
-6. In the **Task Plugins** and **Artifact Task Plugins** windows, select the relevant plugins.
+6. In the **Task Plugins** window, select the relevant plugin:
 
    * **Task Plugins**: ``rescale_and_graph_array``
-   * **Artifact Task Plugins**: ``artifacts`` 
 
-7. Copy the **Task Graph** YAML below into the **Task Graph editor**.
+7. Copy the **Task Graph** YAML below into the **Task Graph editor**. 
+
 
 .. admonition:: rescale_and_graph_array_ep: Task Graph YAML
     :class: code-panel yaml
@@ -187,13 +187,17 @@ Now define a **new Entrypoint** that loads the array, transforms it, and saves t
    Note the reference to ``$artifact_input_array`` in the task graph. This is referencing the loaded artifact.
 
 **Define Artifact Output Graph:**
+  
+8. In the **Artifact Task Plugins** window, select the relevant plugin:
 
-8. Copy the **Artifact Output Graph** YAML below and paste it into the code editor for the **Artifact Output Graph**. It saves the generated matplotlib figure from step 2.
+   * **Artifact Task Plugins**: ``artifacts``
+
+9. Then, copy the **Artifact Output Graph** YAML below and paste it into the code editor for the **Artifact Output Graph**. It saves the generated matplotlib figure from step 2.
 
 .. admonition:: rescale_and_graph_array: Artifact Output Task Graph YAML
     :class: code-panel yaml
 
-    .. literalinclude:: ../../../../docs/source/documentation_code/task_graphs/essential_workflows_tutorial/save_graph_artifacts.yaml
+    .. literalinclude:: ../../../../docs/source/documentation_code/artifact_task_graphs/essential_workflows_tutorial/save_graph_artifacts.yaml
        :language: yaml
 
 .. figure:: ../../images/screenshots/entrypoints/artifact_output_and_task_graph_dioptra_1_1.png
@@ -203,13 +207,13 @@ Now define a **new Entrypoint** that loads the array, transforms it, and saves t
 
    Showing how the Artifact Input Parameter is used in the task graph to produce a new output (a Matplotlib figure) which is then saved in the Artifact Output Graph
 
-9. Click **Validate Inputs** - it should pass.
-10. Click **Submit Entrypoint**.
+10. Click **Validate Inputs** - it should pass.
+11. Click **Submit Entrypoint**.
 
 .. rst-class:: header-on-a-card header-steps
 
 Step 5: Create Experiment and Run a Job
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Finally, test it out.
 
@@ -265,6 +269,6 @@ You're now ready to design your own workflows in Dioptra by combining multiple p
 .. rst-class:: header-on-a-card header-seealso
 
 Keep Learning 
----------
+-------------
 This tutorial demonstrated the core functionalities of Dioptra. To see more interesting and complicated uses of
 these capabilities, view the :ref:`advanced tutorials <tutorial-advanced-tutorials>` which utilize the Python Client for more complex workflows. 

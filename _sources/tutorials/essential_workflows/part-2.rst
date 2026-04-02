@@ -69,6 +69,7 @@ Step 2: Create the Plugin
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You will now create a new plugin with one task. This task accepts four parameters:
+
 * ``random_seed``
 * ``sample_size``
 * ``mean``
@@ -76,10 +77,12 @@ You will now create a new plugin with one task. This task accepts four parameter
 
 The function samples a normal distribution, logs the mean, and then returns the array.
 
-1. Go to the **Plugins** tab and click **Create Plugin**.
-2. Name it ``sample_normal`` and add a short description.
-3. In the plugin list, **click the row** corresponding to the Sample Normal Plugin you just created to go to the Plugin Files table.
-4. Add a new Python file named ``sample_normal.py``.
+**Steps** 
+
+1. Go to the **Plugins** tab and click the **Create** button in the Plugins table.
+2. Name it ``sample_normal`` and add a short description. Click **Submit** to save the Plugin. 
+3. In the plugin list, **click the row** corresponding to the ``sample_normal`` Plugin you just created to go to the Plugin Files table.
+4. Click the **Create** button to add a new Python file. Name it ``sample_normal.py`` and add a description.
 5. Paste the code below into the editor.
 
 .. admonition:: sample_normal.py
@@ -95,7 +98,7 @@ The function samples a normal distribution, logs the mean, and then returns the 
 Step 3: Register the Task
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Unlike in the :ref:`Hello World <tutorial-hello-world-in-dioptra>` simple logging function task with no inputs/outputs, this Task requires us to register the inputs and outputs along with their Types. Using Dioptra's autodetect functionality will help here.
+Unlike in simple logging function task with no inputs/outputs from the :ref:`Hello World <tutorial-hello-world-in-dioptra>` tutorial, this task requires us to register the inputs and outputs along with their Parameter Types. Using Dioptra's autodetect functionality will help here.
 
 1. Click **Import Function Tasks** (top right of the editor) to auto-detect functions from ``sample_normal.py``.
 
@@ -123,7 +126,9 @@ Unlike in the :ref:`Hello World <tutorial-hello-world-in-dioptra>` simple loggin
 * Click the ``output`` badge.
 * Set **Name** to ``output`` and **Type** to ``NumpyArray``.
 
-Once you've corrected the errors, **save** the plugin file by clicking **submit**.
+*Alternatively*, you could go back and edit the name of your Plugin Parameter Type to ``np_ndarray``.
+
+Once you've corrected the errors, **save** the plugin file by clicking **Submit File**.
 
 .. admonition:: Learn More
 
@@ -143,7 +148,7 @@ You will create an entrypoint that accepts a parameter, allowing you to change t
 4. In the **Entrypoint Parameters** window, click **Add Parameter**:
 
    - **Name:** ``sample_size``
-   - **Type:** ``int``
+   - **Type:** ``integer``
    - **Default value:** ``100``
 
 .. figure:: ../../images/screenshots/entrypoints/create_entrypoint_parameter_sample_size_dioptra_1_1.png
@@ -170,7 +175,7 @@ Now add the task to the graph and bind the parameters.
 
    Using "Add To Task Graph" to automatically populate the YAML editor.
 
-3. Edit the YAML to bind the parameters. Map ``sample_size`` to the entrypoint parameter (``$sample_size``) and hardcode the others to something reasonable (e.g. ``random_seed=0``, ``mean=10``, ``var=10``)
+3. Edit the YAML to bind the parameters. Map ``sample_size`` to the entrypoint parameter (``$sample_size``) and hardcode the others to something reasonable (e.g. ``random_seed=0``, ``mean=10``, ``var=10``). Rename the **step-name** to ``draw_and_log``.
 
 
 .. figure:: ../../images/screenshots/entrypoints/task_graph_editor_sample_normal_dioptra_1_1.png
@@ -190,7 +195,7 @@ Now add the task to the graph and bind the parameters.
 .. rst-class:: header-on-a-card header-steps
 
 Step 6: Create an Experiment and Run Jobs
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You will create an Experiment and then run multiple Jobs within it using different parameters.
 
@@ -237,7 +242,7 @@ Once the jobs finish, inspect the logs for each.
 
    .. code-block:: console
 
-      Plugin 2 - The mean value of the draws was 10.2565, which was 0.2565 different from the passed-in mean (2.56%). [Passed-in Parameters]Seed: 0; Mean: 10; Variance: 10; Sample Size: 100
+      [info     ] Plugin 2 - The mean value of the draws was 10.2565, which was 0.2565 different from the passed-in mean (2.56%). [Passed-in Parameters]Seed: 0; Mean: 10; Variance: 10; Sample Size: 100; [sample_normal.sample_normal]
 
 **Job with Sample Size 10,000:**
 
@@ -246,7 +251,7 @@ Once the jobs finish, inspect the logs for each.
 
    .. code-block:: console
 
-      Plugin 2 - The mean value of the draws was 9.9971, which was 0.0029 different from the passed-in mean (0.03%). [Passed-in Parameters]Seed: 0; Mean: 10; Variance: 10; Sample Size: 100000
+      [info     ] Plugin 2 - The mean value of the draws was 10.0200, which was 0.0200 different from the passed-in mean (0.20%). [Passed-in Parameters]Seed: 0; Mean: 10; Variance: 10; Sample Size: 10000; [sample_normal.sample_normal]
 
 Notice that the sample mean was much closer to the distribution mean when the sample size was larger.
 

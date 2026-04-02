@@ -78,6 +78,7 @@ Using Python Client
 **Create a Queue**
 
     .. automethod:: dioptra.client.queues.QueuesCollectionClient.create
+        :noindex:
 
 
 .. _reference-queues-rest-api:

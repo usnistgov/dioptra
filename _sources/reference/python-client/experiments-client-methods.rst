@@ -18,7 +18,7 @@
 .. _reference-experiments-client-methods:
 
 Experiments Client Methods
-=================
+==========================
 
 This page lists all relevant methods for Dioptra :ref:`Experiments <explanation-experiments-and-jobs>` that are available via the Python Client. 
 
@@ -161,7 +161,6 @@ Set Job Status by ID
 ~~~~~~~~~~~~~~~~~~~~
       
     .. automethod:: dioptra.client.experiments.ExperimentJobsSubCollectionClient.set_status
-        
 
 Delete a Job by ID
 ~~~~~~~~~~~~~~~~~~

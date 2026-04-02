@@ -280,4 +280,4 @@ See Also
 ---------
 
 * :ref:`how-to-create-parameter-types` - Learn how to create parameter types
-* :ref:`Parameter Types Reference <reference-plugin-parameter-types>` - Parameter Types Reference page.
+* :ref:`Parameter Types Reference <reference-parameter-types>` - Parameter Types Reference page.

@@ -192,7 +192,7 @@ See :ref:`how-to-data-mounts` for details.
 
 .. seealso::
 
-   :ref:`how-to-download-data` - Information about downloading example datasets.
+   :ref:`how-to-add-a-dataset` - Information about downloading example datasets.
 
 Interactive Prompt Example
 --------------------------
