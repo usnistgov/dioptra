@@ -16,7 +16,7 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 import contextlib
 from types import TracebackType
-from typing import Literal, Type
+from typing import Type
 
 from injector import inject
 

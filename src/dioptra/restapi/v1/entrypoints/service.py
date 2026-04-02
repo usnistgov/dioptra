@@ -848,7 +848,7 @@ class EntrypointIdArtifactPluginsService(object):
         )
 
         # plugins stay the same, artifact plugins are changing
-        plugins = _copy_plugins(
+        _copy_plugins(
             plugins=entrypoint.entry_point_plugins, target_entrypoint=new_entrypoint
         )
 
