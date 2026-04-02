@@ -222,7 +222,7 @@ jobs:
         uses: ./.github/actions/install-rekor-cli
 
       - name: Install cosign
-        uses: sigstore/cosign-installer@v3.9.2
+        uses: sigstore/cosign-installer@v4.1.1
 
       - name: Extract first image tag
         id: extract_tag
