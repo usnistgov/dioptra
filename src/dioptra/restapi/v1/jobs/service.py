@@ -43,20 +43,10 @@ from dioptra.restapi.errors import (
 )
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.artifacts.snapshot import ArtifactSnapshotIdService
-from dioptra.restapi.v1.entrypoints.service import (
-    RESOURCE_TYPE as ENTRYPOINT_RESOURCE_TYPE,
-)
-from dioptra.restapi.v1.entrypoints.service import (
-    EntrypointIdService,
-)
-from dioptra.restapi.v1.experiments.service import (
-    RESOURCE_TYPE as EXPERIMENT_RESOURCE_TYPE,
-)
-from dioptra.restapi.v1.experiments.service import (
-    ExperimentIdService,
-)
+from dioptra.restapi.v1.entity_types import EntityType
+from dioptra.restapi.v1.entrypoints.service import EntrypointIdService
+from dioptra.restapi.v1.experiments.service import ExperimentIdService
 from dioptra.restapi.v1.groups.service import GroupIdService
-from dioptra.restapi.v1.queues.service import RESOURCE_TYPE as QUEUE_RESOURCE_TYPE
 from dioptra.restapi.v1.queues.service import QueueIdService
 from dioptra.restapi.v1.shared.job_run_store import JobRunStoreProtocol
 from dioptra.restapi.v1.shared.rq_service import RQServiceV1
@@ -70,7 +60,7 @@ from .schema import JobLogSeverity
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
-RESOURCE_TYPE: Final[str] = "job"
+
 SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
     "description": lambda x: models.Job.description.like(x),
     "status": lambda x: models.Job.status.like(x),
@@ -205,9 +195,9 @@ class JobService(object):
 
         if entrypoint_id not in set(experiment_entry_point_ids):
             raise EntityNotRegisteredError(
-                EXPERIMENT_RESOURCE_TYPE,
+                EntityType.EXPERIMENT.db_schema_name,
                 experiment_id,
-                ENTRYPOINT_RESOURCE_TYPE,
+                EntityType.ENTRY_POINT.db_schema_name,
                 entrypoint_id,
             )
 
@@ -233,7 +223,10 @@ class JobService(object):
 
         if queue_id not in set(entry_point_queue_ids):
             raise EntityNotRegisteredError(
-                ENTRYPOINT_RESOURCE_TYPE, entrypoint_id, QUEUE_RESOURCE_TYPE, queue_id
+                EntityType.ENTRY_POINT.db_schema_name,
+                entrypoint_id,
+                EntityType.QUEUE.db_schema_name,
+                queue_id,
             )
 
         # Fetch the validated queue
@@ -259,7 +252,8 @@ class JobService(object):
 
         # Create the new Job resource and record the assigned entrypoint parameter values
         job_resource = models.Resource(
-            resource_type=RESOURCE_TYPE, owner=experiment.resource.owner
+            resource_type=EntityType.JOB.db_schema_name,
+            owner=experiment.resource.owner,
         )
 
         entrypoint_parameter_values = [
@@ -480,7 +474,9 @@ class JobService(object):
                 sort_column = sort_column.asc()
             jobs_stmt = jobs_stmt.order_by(sort_column)
         elif sort_by_string and sort_by_string not in SORTABLE_FIELDS:
-            raise SortParameterValidationError(RESOURCE_TYPE, sort_by_string)
+            raise SortParameterValidationError(
+                EntityType.JOB.db_schema_name, sort_by_string
+            )
 
         jobs = list(db.session.scalars(jobs_stmt).all())
         return _build_job_dict(jobs), total_num_jobs
@@ -520,7 +516,7 @@ class JobIdService(object):
         job = db.session.scalars(stmt).first()
 
         if job is None:
-            raise EntityDoesNotExistError(RESOURCE_TYPE, job_id=job_id)
+            raise EntityDoesNotExistError(EntityType.JOB, job_id=job_id)
 
         artifacts_stmt = (
             select(models.Artifact)
@@ -550,12 +546,14 @@ class JobIdService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         stmt = select(models.Resource).filter_by(
-            resource_id=job_id, resource_type=RESOURCE_TYPE, is_deleted=False
+            resource_id=job_id,
+            resource_type=EntityType.JOB.db_schema_name,
+            is_deleted=False,
         )
         job_resource = db.session.scalars(stmt).first()
 
         if job_resource is None:
-            raise EntityDoesNotExistError(RESOURCE_TYPE, job_id=job_id)
+            raise EntityDoesNotExistError(EntityType.JOB, job_id=job_id)
 
         deleted_resource_lock = models.ResourceLock(
             resource_lock_type="delete",
@@ -651,7 +649,7 @@ class JobIdStatusService(object):
         job = db.session.scalars(stmt).first()
 
         if job is None:
-            raise EntityDoesNotExistError(RESOURCE_TYPE, job_id=job_id)
+            raise EntityDoesNotExistError(EntityType.JOB, job_id=job_id)
 
         return {"status": job.status, "id": job.resource_id}
 
@@ -986,7 +984,9 @@ class ExperimentJobService(object):
                 sort_column = sort_column.asc()
             jobs_stmt = jobs_stmt.order_by(sort_column)
         elif sort_by_string and sort_by_string not in SORTABLE_FIELDS:
-            raise SortParameterValidationError(RESOURCE_TYPE, sort_by_string)
+            raise SortParameterValidationError(
+                EntityType.JOB.db_schema_name, sort_by_string
+            )
 
         jobs = list(db.session.scalars(jobs_stmt).all())
         return _build_job_dict(jobs), total_num_jobs
@@ -1035,7 +1035,7 @@ class ExperimentJobIdService(object):
 
         if experiment_job is None:
             raise EntityDoesNotExistError(
-                RESOURCE_TYPE, job_id=job_id, experiment_id=experiment_id
+                EntityType.JOB, job_id=job_id, experiment_id=experiment_id
             )
 
         return self._job_id_service.get(job_id=job_id, log=log)
@@ -1060,7 +1060,7 @@ class ExperimentJobIdService(object):
 
         if experiment_job is None:
             raise EntityDoesNotExistError(
-                RESOURCE_TYPE, job_id=job_id, experiment_id=experiment_id
+                EntityType.JOB, job_id=job_id, experiment_id=experiment_id
             )
 
         return self._job_id_service.delete(
@@ -1528,7 +1528,9 @@ class JobLogService(object):
             # primary: user sort, secondary: id
             page_stmt = page_stmt.order_by(sort_column, models.JobLog.id)
         elif sort_by_string:
-            raise SortParameterValidationError(RESOURCE_TYPE, sort_by_string)
+            raise SortParameterValidationError(
+                EntityType.JOB.db_schema_name, sort_by_string
+            )
         else:
             # default: just by id
             page_stmt = page_stmt.order_by(models.JobLog.id)

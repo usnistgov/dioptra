@@ -37,6 +37,7 @@ from dioptra.restapi.errors import QueryParameterValidationError
 from dioptra.restapi.routes import V1_ARTIFACTS_ROUTE
 from dioptra.restapi.utils import verify_filename_is_safe
 from dioptra.restapi.v1 import utils
+from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.file_types import FileTypes
 from dioptra.restapi.v1.shared.job_run_store import JobRunStoreProtocol
 from dioptra.restapi.v1.shared.snapshots.controller import (
@@ -52,17 +53,14 @@ from .schema import (
     ArtifactPageSchema,
     ArtifactSchema,
 )
-from .service import (
-    RESOURCE_TYPE,
-    SEARCHABLE_FIELDS,
-    ArtifactIdService,
-    ArtifactService,
-)
+from .service import SEARCHABLE_FIELDS, ArtifactIdService, ArtifactService
 from .snapshot import ArtifactSnapshotIdService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
-api: Namespace = Namespace("Artifacts", description="Artifacts endpoint")
+api: Namespace = Namespace(
+    EntityType.ARTIFACT.print_name, description="Artifacts endpoint"
+)
 
 
 @api.route("/")
@@ -84,7 +82,9 @@ class ArtifactEndpoint(Resource):
     def get(self):
         """Gets a list of all Artifact resources."""
         log = LOGGER.new(
-            request_id=str(uuid.uuid4()), resource="Artifact", request_type="GET"
+            request_id=str(uuid.uuid4()),
+            resource=EntityType.ARTIFACT.print_name,
+            request_type="GET",
         )
         parsed_query_params = request.parsed_query_params  # noqa: F841
 
@@ -127,7 +127,9 @@ class ArtifactEndpoint(Resource):
     def post(self):
         """Creates an Artifact resource."""
         log = LOGGER.new(
-            request_id=str(uuid.uuid4()), resource="Artifact", request_type="POST"
+            request_id=str(uuid.uuid4()),
+            resource=EntityType.ARTIFACT.print_name,
+            request_type="POST",
         )
         log.debug("Request received")
         parsed_obj = request.parsed_obj
@@ -164,7 +166,10 @@ class ArtifactIdEndpoint(Resource):
     def get(self, id: int):
         """Gets an Artifact resource."""
         log = LOGGER.new(
-            request_id=str(uuid.uuid4()), resource="Artifact", request_type="GET", id=id
+            request_id=str(uuid.uuid4()),
+            resource=EntityType.ARTIFACT.print_name,
+            request_type="GET",
+            id=id,
         )
 
         artifact = self._artifact_id_service.get(id, log=log)
@@ -176,7 +181,10 @@ class ArtifactIdEndpoint(Resource):
     def put(self, id: int):
         """Modifies an Artifact resource."""
         log = LOGGER.new(
-            request_id=str(uuid.uuid4()), resource="Artifact", request_type="PUT", id=id
+            request_id=str(uuid.uuid4()),
+            resource=EntityType.ARTIFACT.print_name,
+            request_type="PUT",
+            id=id,
         )
         parsed_obj = request.parsed_obj  # type: ignore
         artifact = self._artifact_id_service.modify(
@@ -209,7 +217,10 @@ class ArtifactIdFilesEndpoint(Resource):
     def get(self, id: int):
         """Gets a list of all files associated with an Artifact resource."""
         log = LOGGER.new(
-            request_id=str(uuid.uuid4()), resource="Artifact", request_type="GET", id=id
+            request_id=str(uuid.uuid4()),
+            resource=EntityType.ARTIFACT.print_name,
+            request_type="GET",
+            id=id,
         )
 
         listing = self._artifact_id_service.get_listing(
@@ -260,7 +271,7 @@ class ArtifactIdContentsEndpoint(Resource):
             artifact=self._artifact_id_service.get(artifact_id=id)["artifact"],
             log=LOGGER.new(
                 request_id=str(uuid.uuid4()),
-                resource="Artifact",
+                resource=EntityType.ARTIFACT.print_name,
                 request_type="GET",
                 id=id,
             ),
@@ -311,7 +322,7 @@ class ArtifactSnapshotIdContentsEndpoint(Resource):
             ),
             log=LOGGER.new(
                 request_id=str(uuid.uuid4()),
-                resource="Artifact",
+                resource=EntityType.ARTIFACT.print_name,
                 request_type="GET",
                 id=id,
                 snapshotId=snapshotId,
@@ -322,7 +333,7 @@ class ArtifactSnapshotIdContentsEndpoint(Resource):
 ArtifactSnapshotsResource = generate_resource_snapshots_endpoint(
     api=api,
     resource_model=models.Artifact,
-    resource_name=RESOURCE_TYPE,
+    resource_type=EntityType.ARTIFACT,
     route_prefix=V1_ARTIFACTS_ROUTE,
     searchable_fields=SEARCHABLE_FIELDS,
     page_schema=ArtifactPageSchema,
@@ -331,7 +342,7 @@ ArtifactSnapshotsResource = generate_resource_snapshots_endpoint(
 ArtifactSnapshotsIdResource = generate_resource_snapshots_id_endpoint(
     api=api,
     resource_model=models.Artifact,
-    resource_name=RESOURCE_TYPE,
+    resource_type=EntityType.ARTIFACT,
     response_schema=ArtifactSchema,
     build_fn=utils.build_artifact,
 )
@@ -350,19 +361,20 @@ def _handle_artifact_contents(
         except ValueError as e:
             log.error("Query Parameter validation failed.", error=e)
             raise QueryParameterValidationError(
-                RESOURCE_TYPE, constraint="invalid path query parameter"
+                EntityType.ARTIFACT.db_schema_name,
+                constraint="invalid path query parameter",
             ) from None
 
     file_type: FileTypes | None = parsed_query_params.get("file_type")
 
     if not artifact.is_dir and path is not None:
         raise QueryParameterValidationError(
-            RESOURCE_TYPE,
+            EntityType.ARTIFACT.db_schema_name,
             constraint="path query parameter may not be provided for a file",
         )
     if not artifact.is_dir and file_type is not None:
         raise QueryParameterValidationError(
-            RESOURCE_TYPE,
+            EntityType.ARTIFACT.db_schema_name,
             constraint="file_type query parameter may not be provided for a file",
         )
 

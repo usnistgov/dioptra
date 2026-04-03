@@ -32,6 +32,7 @@ from dioptra.restapi.errors import (
     EntityExistsError,
     SortParameterValidationError,
 )
+from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.groups.service import GroupIdService
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 
@@ -96,7 +97,7 @@ class TagService(object):
         duplicate = self._tag_name_service.get(name, group_id=group_id, log=log)
         if duplicate is not None:
             raise EntityExistsError(
-                RESOURCE_TYPE, duplicate.tag_id, name=name, group_id=group_id
+                EntityType.TAG, duplicate.tag_id, name=name, group_id=group_id
             )
 
         group = self._group_id_service.get(group_id, error_if_not_found=True)
@@ -177,7 +178,9 @@ class TagService(object):
                 sort_column = sort_column.asc()
             tags_stmt = tags_stmt.order_by(sort_column)
         elif sort_by_string and sort_by_string not in SORTABLE_FIELDS:
-            raise SortParameterValidationError(RESOURCE_TYPE, sort_by_string)
+            raise SortParameterValidationError(
+                EntityType.TAG.db_schema_name, sort_by_string
+            )
 
         tags = list(db.session.scalars(tags_stmt).all())
 
@@ -229,7 +232,7 @@ class TagIdService(object):
 
         if tag is None:
             if error_if_not_found:
-                raise EntityDoesNotExistError(RESOURCE_TYPE, tag_id=tag_id)
+                raise EntityDoesNotExistError(EntityType.TAG, tag_id=tag_id)
 
             return None
 
@@ -273,7 +276,7 @@ class TagIdService(object):
             duplicate = self._tag_name_service.get(name, group_id=group_id, log=log)
             if duplicate is not None:
                 raise EntityExistsError(
-                    RESOURCE_TYPE, duplicate.tag_id, name=name, group_id=group_id
+                    EntityType.TAG, duplicate.tag_id, name=name, group_id=group_id
                 )
 
         current_timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
@@ -313,7 +316,7 @@ class TagIdService(object):
         tag = db.session.scalar(stmt)
 
         if tag is None:
-            raise EntityDoesNotExistError(RESOURCE_TYPE, tag_id=tag_id)
+            raise EntityDoesNotExistError(EntityType.TAG, tag_id=tag_id)
 
         tag_id = tag.tag_id
         db.session.delete(tag)
@@ -373,7 +376,7 @@ class TagIdResourcesService(object):
 
         if tag is None:
             if error_if_not_found:
-                raise EntityDoesNotExistError(RESOURCE_TYPE, tag_id=tag_id)
+                raise EntityDoesNotExistError(EntityType.TAG, tag_id=tag_id)
 
             return None
 
@@ -446,7 +449,7 @@ class TagNameService(object):
         if tag is None:
             if error_if_not_found:
                 raise EntityDoesNotExistError(
-                    RESOURCE_TYPE, name=name, group_id=group_id
+                    EntityType.TAG, name=name, group_id=group_id
                 )
 
             return None

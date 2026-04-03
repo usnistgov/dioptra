@@ -30,6 +30,7 @@ from structlog.stdlib import BoundLogger
 from dioptra.restapi.db import models
 from dioptra.restapi.routes import V1_ENTRYPOINTS_ROUTE
 from dioptra.restapi.v1 import utils
+from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.file_types import FileTypes, plugin_pluginfiles_to_bundle
 from dioptra.restapi.v1.queues.schema import QueueRefSchema
 from dioptra.restapi.v1.schemas import (
@@ -63,7 +64,6 @@ from .schema import (
     EntrypointSchema,
 )
 from .service import (
-    RESOURCE_TYPE,
     SEARCHABLE_FIELDS,
     EntrypointIdArtifactPluginsIdService,
     EntrypointIdArtifactPluginsService,
@@ -711,25 +711,25 @@ class EntrypointIdQueuesId(Resource):
 
 EntrypointDraftResource = generate_resource_drafts_endpoint(
     api,
-    resource_name=RESOURCE_TYPE,
+    resource_type=EntityType.ENTRY_POINT,
     route_prefix=V1_ENTRYPOINTS_ROUTE,
     request_schema=EntrypointDraftSchema,
 )
 EntrypointDraftIdResource = generate_resource_drafts_id_endpoint(
     api,
-    resource_name=RESOURCE_TYPE,
+    resource_type=EntityType.ENTRY_POINT,
     request_schema=EntrypointDraftSchema(exclude=["groupId"]),
 )
 EntrypointIdDraftResource = generate_resource_id_draft_endpoint(
     api,
-    resource_name=RESOURCE_TYPE,
+    resource_type=EntityType.ENTRY_POINT,
     request_schema=EntrypointDraftSchema(exclude=["groupId", "pluginIds"]),
 )
 
 EntrypointSnapshotsResource = generate_resource_snapshots_endpoint(
     api=api,
     resource_model=models.EntryPoint,
-    resource_name=RESOURCE_TYPE,
+    resource_type=EntityType.ENTRY_POINT,
     route_prefix=V1_ENTRYPOINTS_ROUTE,
     searchable_fields=SEARCHABLE_FIELDS,
     page_schema=EntrypointPageSchema,
@@ -738,16 +738,16 @@ EntrypointSnapshotsResource = generate_resource_snapshots_endpoint(
 EntrypointSnapshotsIdResource = generate_resource_snapshots_id_endpoint(
     api=api,
     resource_model=models.EntryPoint,
-    resource_name=RESOURCE_TYPE,
+    resource_type=EntityType.ENTRY_POINT,
     response_schema=EntrypointSchema,
     build_fn=utils.build_entrypoint,
 )
 
 EntrypointTagsResource = generate_resource_tags_endpoint(
     api=api,
-    resource_name=RESOURCE_TYPE,
+    resource_name=EntityType.ENTRY_POINT.db_schema_name,
 )
 EntrypointTagsIdResource = generate_resource_tags_id_endpoint(
     api=api,
-    resource_name=RESOURCE_TYPE,
+    resource_name=EntityType.ENTRY_POINT.db_schema_name,
 )
