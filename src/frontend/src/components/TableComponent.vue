@@ -10,6 +10,7 @@
     v-model:showDeleted="showDeleted"
     :row-key="props.rowKey"
     :class="'q-mt-lg'"
+    :style="sortIconStyle"
     flat
     bordered
     dense
@@ -22,8 +23,22 @@
   >
     <template v-slot:header="props">
       <q-tr :props="props">
-        <q-th v-for="col in props.cols" :key="col.name" :props="props">
-          {{ col.label }}
+        <q-th 
+          v-for="col in props.cols" 
+          :key="col.name" 
+          :props="props"
+          class="text-weight-bold text-uppercase text-subtitle1"
+          :style="darkMode ? {} : {'background-color': '#f5f5f5'}"
+        >
+          <span class="header-label"
+            :class="darkMode ? 'header-label--dark' : 'header-label--light'">
+              {{ col.label }}
+          </span>
+          <q-icon 
+            v-if="col.sortable"
+            :name="getSortIcon(col.name)"
+            class="sort-icon"
+          />
         </q-th>
       </q-tr>
     </template> 
@@ -230,6 +245,10 @@
   highlightSelection: {
     type: Boolean,
     default: false
+  },
+  defaultSort: {
+    type: Object,
+    default: { sortBy: 'lastModifiedOn', descending: true }
   }
 })
   const emit = defineEmits([
@@ -275,6 +294,17 @@
     }
     return $q.dark.mode
   })
+
+  const sortIconStyle = computed(() => ({
+    '--sort-icon-color': darkMode.value ? '#90CAF9' : '#1976D2'
+  }))
+
+  function getSortIcon(colName) {
+    if (pagination.value.sortBy === colName) {
+      return pagination.value.descending ? 'arrow_downward' : 'arrow_upward'
+    }
+    return 'unfold_more'
+  }
 
   const filter = ref('')
   const selected = defineModel('selected')
@@ -323,8 +353,8 @@
   const pagination = ref({
     page: 1,
     rowsPerPage: props.showAll ? 0 : 15,
-    sortBy: '',
-    descending: false,
+    sortBy: props.defaultSort.sortBy,
+    descending: props.defaultSort.descending,
   })
 
   const tableRef = ref()
@@ -340,24 +370,20 @@
 
   let invalidSearchNotification = notify.wait()
 
-  // watch(() => props.rows, (newVal) => {
-  //   loading.value = false
-  // })
-
-  function onRequest(props) {
-    const searchError = checkSearch(props.filter)
+  function onRequest(requestProps) {
+    const searchError = checkSearch(requestProps.filter)
 
     invalidSearchNotification()
     if(searchError.length) {
       invalidSearchNotification = notify.wait(searchError)
       return
     }
-    pagination.value = { ...props.pagination }
-    const paginationOptions = props.pagination
-    const { page, rowsPerPage } = props.pagination
+    pagination.value = requestProps.pagination
+    const paginationOptions = requestProps.pagination
+    const { page, rowsPerPage } = requestProps.pagination
     const index = (page - 1) * rowsPerPage
     paginationOptions.index = index
-    paginationOptions.search = props.filter
+    paginationOptions.search = requestProps.filter
     emit('request', paginationOptions, showDrafts.value)
   }
 
@@ -473,9 +499,35 @@ function truncateString(str, limit) {
 
 <style scoped>
 
+  :deep(.q-table__sort-icon) {
+    display: none !important;
+  }
+
   .disabled-row {
     pointer-events: none;
     opacity: 0.5;
   }
 
+  .sort-icon {
+    font-size: 1.5em;
+    color: var(--sort-icon-color);
+    margin-left: 4px;
+    margin-bottom: 3px;
+  }
+
+  .header-label {
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding-right: 4px;
+  }
+
+  .header-label--light {
+      color: #546e7a;
+  }
+
+  .header-label--dark {
+      color: #cbe8f5;
+  }
 </style>

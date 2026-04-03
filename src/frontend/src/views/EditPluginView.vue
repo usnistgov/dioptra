@@ -252,6 +252,7 @@ const fileColumns = [
   { name: 'functionTasks', label: 'Function Tasks', align: 'left', sortable: false, },
   { name: 'artifactTasks', label: 'Artifact Tasks', align: 'left', sortable: false, },
   { name: 'tags', label: 'Tags', align: 'left', field: 'tags', sortable: false },
+  { name: 'lastModifiedOn', label: 'Last Modified', align: 'left', field: 'lastModifiedOn', sortable: true },
 ]
 
 async function getFiles(pagination) {

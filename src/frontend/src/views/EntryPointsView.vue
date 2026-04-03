@@ -169,9 +169,10 @@
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, },
     { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true, },
     { name: 'taskGraph', label: 'Task Graph', align: 'left', field: 'taskGraph',sortable: false, },
-    { name: 'tags', label: 'Tags', align: 'left', field: 'tags', sortable: false },
     { name: 'plugins', label: 'Plugins', align: 'left', field: 'plugins', sortable: false },
     { name: 'artifactPlugins', label: 'Artifact Plugins', align: 'left', field: 'artifactPlugins', sortable: false },
+    { name: 'tags', label: 'Tags', align: 'left', field: 'tags', sortable: false },
+    { name: 'lastModifiedOn', label: 'Last Modified', align: 'left', field: 'lastModifiedOn', sortable: true },
   ]
 
   const selected = ref([])

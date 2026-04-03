@@ -94,6 +94,7 @@
     { name: 'description', label: 'Description', field: 'description',align: 'left', sortable: true },
     { name: 'files', label: 'Number of Files', align: 'left', field: 'files', sortable: false },
     { name: 'tags', label: 'Tags', align: 'left', sortable: false },
+    { name: 'lastModifiedOn', label: 'Last Modified', align: 'left', field: 'lastModifiedOn', sortable: true },
   ]
 
   async function deletePlugin() {

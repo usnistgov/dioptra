@@ -75,6 +75,7 @@
     { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true },
     { name: 'entrypoints', label: 'Entrypoints', align: 'left', field: 'entrypoints', sortable: false },
     { name: 'tags', label: 'Tags', align: 'left', sortable: false },
+    { name: 'lastModifiedOn', label: 'Last Modified', align: 'left', field: 'lastModifiedOn', sortable: true },
   ]
 
   const selected = ref([])

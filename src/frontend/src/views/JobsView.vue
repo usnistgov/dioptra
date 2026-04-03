@@ -22,6 +22,7 @@
     )"
     :loading="isLoading"
     :hideCreateBtn="route.name === 'experimentJobs' && experiment?.deleted"
+    :defaultSort="{sortBy: 'id', descending: true}"
   >
     <template #body-cell-experiment="props">
       <ResourceBadge
@@ -93,6 +94,7 @@
     { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true, style: 'width: 275px',},
     { name: 'status', label: 'Status', align: 'left', field: 'status', sortable: true },
     { name: 'tags', label: 'Tags', align: 'left', field: 'tags', sortable: false, },
+    { name: 'lastModifiedOn', label: 'Last Modified', align: 'left', field: 'lastModifiedOn', sortable: true },
   ]
 
   if(route.name === 'allJobs') {
@@ -136,11 +138,6 @@ async function getJobs(pagination, showDrafts) {
     isLoading.value = true
     const minLoadTimePromise = new Promise(resolve => setTimeout(resolve, 300));
 
-    // default sort by id descending
-    if(!pagination.sortBy) {
-      pagination.sortBy = 'id'
-      pagination.descending = true
-    }
     try {
       let res
       if(route.name === 'experimentJobs') {
@@ -157,7 +154,6 @@ async function getJobs(pagination, showDrafts) {
         await minLoadTimePromise;
         return;
       }
-      console.log('jobs res = ', res)
       jobs.value = res.data.data
       tableRef.value.updateTotalRows(res.data.totalNumResults)
     } catch(err) {

@@ -127,6 +127,7 @@
         class="q-mb-lg"
         ref="tableRef"
         :loading="isLoading"
+        :defaultSort="{sortBy: 'created_on', descending: false}"
       >
         <template #body-cell-message="props">
           <CodeEditor

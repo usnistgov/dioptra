@@ -11,6 +11,7 @@
     :hideDeleteBtn="true"
     :hideCreateBtn="true"
     :loading="isLoading"
+    :defaultSort="{sortBy: 'id', descending: true}"
   >
     <template #body-cell-taskName="props">
       {{ props.row.task.name }}
@@ -90,6 +91,7 @@ const columns = [
   { name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true },
   { name: 'taskName', label: 'Task Name', align: 'left' },
   { name: 'taskOutputParams', label: 'Task Output Params', align: 'left' },
+  { name: 'lastModifiedOn', label: 'Last Modified', align: 'left', field: 'lastModifiedOn', sortable: true },
   { name: 'download', label: 'Download', align: 'center' },
 ]
 </script>
