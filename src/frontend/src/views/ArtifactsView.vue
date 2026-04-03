@@ -19,6 +19,7 @@
     :hideCreateBtn="true"
     :hideDeleteBtn="true"
     :loading="isLoading"
+    :defaultSort="{sortBy: 'id', descending: true}"
   >
     <template #body-cell-job="props">
       <ResourceBadge
@@ -124,11 +125,12 @@ async function getArtifacts(pagination) {
 }
 
 const columns = [
-  { name: 'id', label: 'ID', align: 'left', field: 'id', sortable: false, },
+  { name: 'id', label: 'ID', align: 'left', field: 'id', sortable: true, },
   { name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true },
   { name: 'job', label: 'Job', align: 'left' },
   { name: 'taskName', label: 'Task Name', align: 'left' },
   { name: 'taskOutputParams', label: 'Task Output Params', align: 'left' },
+  { name: 'lastModifiedOn', label: 'Last Modified', align: 'left', field: 'lastModifiedOn', sortable: true },
   { name: 'download', label: 'Download', align: 'center' },
 ]
 
