@@ -121,6 +121,9 @@ def generate_resource_drafts_endpoint(
                 index=page_index,
                 length=page_length,
                 total_num_elements=total_num_drafts,
+                sort_by=None,
+                descending=None,
+                show_deleted=None,
             )
 
         @login_required
@@ -395,6 +398,9 @@ def generate_nested_resource_drafts_endpoint(
                 index=page_index,
                 length=page_length,
                 total_num_elements=total_num_drafts,
+                sort_by=None,
+                descending=None,
+                show_deleted=None,
             )
 
         @login_required

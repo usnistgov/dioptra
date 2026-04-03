@@ -98,6 +98,7 @@ class TagEndpoint(Resource):
             total_num_elements=total_num_tags,
             sort_by=sort_by_string,
             descending=descending,
+            show_deleted=None,
         )
 
     @login_required
@@ -229,4 +230,7 @@ class TagIdResourceEndpoint(Resource):
             index=page_index,
             length=page_length,
             total_num_elements=total_num_resources,
+            sort_by=None,
+            descending=None,
+            show_deleted=None,
         )

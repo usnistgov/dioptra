@@ -1291,6 +1291,7 @@ def build_paging_envelope(
     total_num_elements: int,
     sort_by: Optional[str] = None,
     descending: Optional[bool] = None,
+    show_deleted: Optional[bool] = None,
 ) -> dict[str, Any]:
     """Build the paging envelope for a response.
 
@@ -1307,6 +1308,7 @@ def build_paging_envelope(
         total_num_elements: The total number of elements in the collection.
         sort_by: The name of the column to sort.
         descending: Boolean indicating whether to sort by descending or not.
+        show_deleted: Boolean indicating whether to include deleted resources.
 
     Returns:
         The paging envelope for the response.
@@ -1328,6 +1330,9 @@ def build_paging_envelope(
             draft_type=draft_type,
             index=0,
             length=length,
+            sort_by=sort_by,
+            descending=descending,
+            show_deleted=show_deleted,
         ),
         "data": [build_fn(x) for x in data],
     }
@@ -1341,6 +1346,9 @@ def build_paging_envelope(
             draft_type=draft_type,
             index=prev_index,
             length=length,
+            sort_by=sort_by,
+            descending=descending,
+            show_deleted=show_deleted,
         )
         paged_data["prev"] = prev_url
 
@@ -1353,6 +1361,9 @@ def build_paging_envelope(
             draft_type=draft_type,
             index=next_index,
             length=length,
+            sort_by=sort_by,
+            descending=descending,
+            show_deleted=show_deleted,
         )
         paged_data["next"] = next_url
 
@@ -1366,6 +1377,9 @@ def build_paging_url(
     draft_type: str | None,
     index: int,
     length: int,
+    sort_by: str | None = None,
+    descending: bool | None = None,
+    show_deleted: bool | None = None,
 ) -> str:
     """Build a URL for a paged resource endpoint.
 
@@ -1375,6 +1389,9 @@ def build_paging_url(
         draft_type: The type of drafts to return.
         index: The starting index of the current page.
         length: The number of results to return per page.
+        sort_by: The name of the column to sort.
+        descending: Boolean indicating whether to sort by descending or not.
+        show_deleted: Boolean indicating whether to include deleted resources.
 
     Returns:
         A quoted URL string for the paged resource endpoint.
@@ -1389,6 +1406,14 @@ def build_paging_url(
 
     if draft_type:
         query_params["draft_type"] = draft_type
+
+    if sort_by:
+        query_params["sortBy"] = sort_by
+        if descending is not None:
+            query_params["descending"] = descending
+
+    if show_deleted is not None:
+        query_params["showDeleted"] = show_deleted
 
     return build_url(route_prefix, query_params)
 

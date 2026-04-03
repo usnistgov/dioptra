@@ -157,6 +157,7 @@ class PluginEndpoint(Resource):
             total_num_elements=total_num_plugins,
             sort_by=sort_by_string,
             descending=descending,
+            show_deleted=None,
         )
 
     @login_required
@@ -298,6 +299,7 @@ class PluginIdFilesEndpoint(Resource):
             total_num_elements=total_num_plugin_files,
             sort_by=sort_by_string,
             descending=descending,
+            show_deleted=None,
         )
 
     @login_required

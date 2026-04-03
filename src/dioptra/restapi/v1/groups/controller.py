@@ -91,6 +91,8 @@ class GroupEndpoint(Resource):
             index=page_index,
             length=page_length,
             total_num_elements=total_num_groups,
+            sort_by=None,
+            descending=None,
         )
 
     @login_required

@@ -54,6 +54,7 @@ SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
     "tag": lambda x: models.Artifact.tags.any(models.Tag.name.like(x, escape="/")),
 }
 SORTABLE_FIELDS: Final[dict[str, Any]] = {
+    "id": models.Resource.resource_id,
     "uri": models.Artifact.uri,
     "createdOn": models.Artifact.created_on,
     "lastModifiedOn": models.Resource.last_modified_on,

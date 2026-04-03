@@ -122,6 +122,7 @@ class ModelEndpoint(Resource):
             total_num_elements=total_num_models,
             sort_by=sort_by_string,
             descending=descending,
+            show_deleted=None,
         )
 
     @login_required
@@ -253,6 +254,9 @@ class ModelIdVersionsEndpoint(Resource):
             index=page_index,
             length=page_length,
             total_num_elements=total_num_versions,
+            sort_by=None,
+            descending=None,
+            show_deleted=None,
         )
 
     @login_required

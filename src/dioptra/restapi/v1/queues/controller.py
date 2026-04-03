@@ -114,6 +114,7 @@ class QueueEndpoint(Resource):
             total_num_elements=total_num_queues,
             sort_by=sort_by_string,
             descending=descending,
+            show_deleted=show_deleted,
         )
 
     @login_required

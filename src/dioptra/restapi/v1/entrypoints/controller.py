@@ -133,6 +133,7 @@ class EntrypointEndpoint(Resource):
             total_num_elements=total_num_entrypoints,
             sort_by=sort_by_string,
             descending=descending,
+            show_deleted=None,
         )
 
     @login_required
