@@ -63,6 +63,49 @@ SORTABLE_FIELDS: Final[dict[str, Any]] = {
 }
 
 
+def apply_output_params_filter(stmt: Select, output_params: list[int]) -> Select:
+    # creates a comparison for each outuput parameter and makes
+    # sure the type is correct for that parameter_number
+    for index, p in enumerate(output_params):
+        task_alias = aliased(models.ArtifactTask)
+        parameter_alias = aliased(models.PluginTaskOutputParameter)
+        type_alias = aliased(models.PluginTaskParameterType)
+        stmt = (
+            stmt.join(models.Artifact.task.of_type(task_alias))
+            .join(models.ArtifactTask.output_parameters.of_type(parameter_alias))
+            .join(
+                type_alias,
+                type_alias.resource_snapshot_id
+                == parameter_alias.plugin_task_parameter_type_resource_snapshot_id,
+            )
+            .where(
+                type_alias.resource_id == p,
+                parameter_alias.parameter_number == index,
+            )
+        )
+
+    # verifies that the number of parameters is what we are looking for
+    # prevents picking up artifacts which match the ones we are looking
+    # for, but have more parameters
+    count_subquery = (
+        select(
+            models.PluginTaskOutputParameter.task_id,
+            func.count().label("param_count"),
+        )
+        .group_by(models.PluginTaskOutputParameter.task_id)
+        .subquery()
+    )
+    task_alias = aliased(models.ArtifactTask)
+    stmt = (
+        stmt.join(models.Artifact.task.of_type(task_alias))
+        .join(count_subquery, task_alias.task_id == count_subquery.c.task_id)
+        .where(
+            count_subquery.c.param_count == len(output_params),
+        )
+    )
+    return stmt
+
+
 class ArtifactTaskHelper(object):
     @inject
     def __init__(
@@ -281,7 +324,7 @@ class ArtifactService(object):
         )
 
         if output_params:
-            stmt = self._apply_ouput_params_filter(stmt, output_params)
+            stmt = apply_output_params_filter(stmt, output_params)
 
         total_num_artifacts = db.session.scalars(stmt).first()
 
@@ -311,7 +354,7 @@ class ArtifactService(object):
         )
 
         if output_params:
-            latest_artifacts_stmt = self._apply_ouput_params_filter(
+            latest_artifacts_stmt = apply_output_params_filter(
                 latest_artifacts_stmt, output_params
             )
 
@@ -344,50 +387,6 @@ class ArtifactService(object):
             artifacts_dict[resource_id]["has_draft"] = True
 
         return list(artifacts_dict.values()), total_num_artifacts
-
-    def _apply_ouput_params_filter(
-        self, stmt: Select, output_params: list[int]
-    ) -> Select:
-        # creates a comparison for each outuput parameter and makes
-        # sure the type is correct for that parameter_number
-        for index, p in enumerate(output_params):
-            task_alias = aliased(models.ArtifactTask)
-            parameter_alias = aliased(models.PluginTaskOutputParameter)
-            type_alias = aliased(models.PluginTaskParameterType)
-            stmt = (
-                stmt.join(models.Artifact.task.of_type(task_alias))
-                .join(models.ArtifactTask.output_parameters.of_type(parameter_alias))
-                .join(
-                    type_alias,
-                    type_alias.resource_snapshot_id
-                    == parameter_alias.plugin_task_parameter_type_resource_snapshot_id,
-                )
-                .where(
-                    type_alias.resource_id == p,
-                    parameter_alias.parameter_number == index,
-                )
-            )
-
-        # verifies that the number of parameters is what we are looking for
-        # prevents picking up artifacts which match the ones we are looking
-        # for, but have more parameters
-        count_subquery = (
-            select(
-                models.PluginTaskOutputParameter.task_id,
-                func.count().label("param_count"),
-            )
-            .group_by(models.PluginTaskOutputParameter.task_id)
-            .subquery()
-        )
-        task_alias = aliased(models.ArtifactTask)
-        stmt = (
-            stmt.join(models.Artifact.task.of_type(task_alias))
-            .join(count_subquery, task_alias.task_id == count_subquery.c.task_id)
-            .where(
-                count_subquery.c.param_count == len(output_params),
-            )
-        )
-        return stmt
 
 
 class ArtifactIdService(object):
