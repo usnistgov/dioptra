@@ -141,6 +141,7 @@ class ExperimentEndpoint(Resource):
             total_num_elements=total_num_experiments,
             sort_by=sort_by_string,
             descending=descending,
+            show_deleted=show_deleted,
         )
 
     @login_required
@@ -295,6 +296,7 @@ class ExperimentIdJobEndpoint(Resource):
             total_num_elements=total_num_jobs,
             sort_by=sort_by_string,
             descending=descending,
+            show_deleted=None,
         )
 
     @login_required
@@ -547,6 +549,7 @@ class ExperimentIdMetricsEndpoint(Resource):
             total_num_elements=total_num_jobs,
             sort_by=None,
             descending=None,
+            show_deleted=None,
         )
 
 

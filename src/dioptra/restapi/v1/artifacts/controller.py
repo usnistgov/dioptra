@@ -118,6 +118,7 @@ class ArtifactEndpoint(Resource):
             total_num_elements=total_num_artifacts,
             sort_by=sort_by_string,
             descending=descending,
+            show_deleted=None,
         )
 
     @login_required

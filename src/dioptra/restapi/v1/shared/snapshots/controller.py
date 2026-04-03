@@ -124,6 +124,9 @@ def generate_resource_snapshots_endpoint(
                 index=page_index,
                 length=page_length,
                 total_num_elements=total_num_snapshots,
+                sort_by=None,
+                descending=None,
+                show_deleted=None,
             )
 
     return ResourceSnapshotsEndpoint
@@ -300,6 +303,9 @@ def generate_nested_resource_snapshots_endpoint(
                 index=page_index,
                 length=page_length,
                 total_num_elements=total_num_snapshots,
+                sort_by=None,
+                descending=None,
+                show_deleted=None,
             )
 
     return ResourceSnapshotsEndpoint

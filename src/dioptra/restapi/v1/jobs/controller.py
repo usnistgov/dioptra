@@ -128,6 +128,7 @@ class JobEndpoint(Resource):
             total_num_elements=total_num_jobs,
             sort_by=sort_by_string,
             descending=descending,
+            show_deleted=None,
         )
 
 
@@ -413,6 +414,7 @@ class JobIdMetricsSnapshotsEndpoint(Resource):
             total_num_elements=total_num_metrics,
             sort_by=None,
             descending=None,
+            show_deleted=None,
         )
 
 
@@ -457,6 +459,7 @@ class JobIdLogEndpoint(Resource):
             total_num_elements=total,
             sort_by=sort_by_string,
             descending=descending,
+            show_deleted=None,
         )
 
         return page
