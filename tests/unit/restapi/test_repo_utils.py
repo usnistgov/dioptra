@@ -1310,6 +1310,21 @@ def test_get_one_latest_snapshot(db_session, resource_status, deletion_policy):
         assert latest_snap == expected_latest_snaps[0]
 
 
+def test_get_one_resource(db_session, resource_status, deletion_policy):
+
+    snap, status = resource_status
+
+    exc = helpers.expected_exception_for_combined_status((status,), deletion_policy)
+
+    if exc:
+        with pytest.raises(exc):
+            utils.get_one_resource(db_session, snap, deletion_policy)
+    else:
+        resource = utils.get_one_resource(db_session, snap.resource_id, deletion_policy)
+
+        assert resource == snap.resource
+
+
 def test_get_latest_child_snapshots(db_session, resource_parent_combo, deletion_policy):
 
     parent, child_snaps, _ = resource_parent_combo
@@ -1829,6 +1844,38 @@ def test_unlink_child_child_not_exist(db_session, fake_data, account):
 
     with pytest.raises(EntityDoesNotExistError):
         utils.unlink_child(db_session, exp, 999999)
+
+
+def test_unlink_parents(db_session, fake_data, account):
+    qres = models.Resource("queue", account.group)
+    q = models.Queue("", qres, account.user, "queue1")
+
+    epres1 = models.Resource("entry_point", account.group)
+    ep1 = models.EntryPoint(
+        "", epres1, account.user, "ep1", "graph:", "artifacts_input:", [], []
+    )
+
+    epres2 = models.Resource("entry_point", account.group)
+    ep2 = models.EntryPoint(
+        "", epres2, account.user, "ep2", "graph:", "artifacts_input:", [], []
+    )
+
+    qres.parents.extend((ep1.resource, ep2.resource))
+    db_session.add(q)
+    db_session.commit()
+
+    assert len(q.parents) == 2
+    utils.unlink_parents(db_session, q)
+    db_session.commit()
+
+    assert q.parents == []
+    assert ep1.children == []
+    assert ep2.children == []
+
+
+def test_unlink_parents_parent_not_exist(db_session):
+    with pytest.raises(EntityDoesNotExistError):
+        utils.unlink_parents(db_session, -1)
 
 
 def test_filter_all_unsorted(db_session, queue_filter_setup):
