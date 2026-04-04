@@ -17,9 +17,11 @@
 """The schemas for serializing/deserializing Entrypoint resources."""
 
 from marshmallow import Schema, fields, validate
+from marshmallow.exceptions import ValidationError
 
 from dioptra.restapi.v1.plugins.schema import (
     ALLOWED_PLUGIN_TASK_PARAMETER_REGEX,
+    PluginSnapshotRefSchema,
     PluginTaskContainerSchema,
     PluginTaskParameterSchema,
 )
@@ -322,3 +324,69 @@ class EntrypointGetQueryParameters(
     SortByGetQueryParametersSchema,
 ):
     """The query parameters for the GET method of the /entrypoints endpoint."""
+
+
+class DelimitedKeyValuePairs(fields.Field):
+    def __init__(
+        self,
+        *,
+        delimiter: str = ",",
+        equality: str = ":",
+        **additional_metadata,
+    ) -> None:
+        super().__init__(**additional_metadata)
+        self.delimiter = delimiter
+        self.equality = equality
+
+    def _deserialize(self, value, attr, data, **kwargs) -> dict[str, str]:
+        try:
+            if value == "":
+                return {}
+            return {
+                str(pair.split(self.equality)[0]): str(pair.split(self.equality)[1])
+                for pair in value.split(self.delimiter)
+            }
+        except Exception as e:
+            raise ValidationError(
+                f"{attr} is not a delimited list {value}. List format should be key{self.equality}value{self.delimiter}key2{self.equality}value2{self.delimiter}key3{self.equality}value3."
+            ) from e
+
+
+class DynamicGlobalParametersRequestSchema(Schema):
+    swaps = DelimitedKeyValuePairs(
+        attribute="swaps",
+        data_key="swaps",
+        metadata={
+            "description": (
+                "A list of swap choices to be applied to the entrypoint task graph."
+            )
+        },
+    )
+
+
+class DynamicGlobalParametersResponseSchema(Schema):
+    globalParameters = fields.List(
+        fields.String(),
+        attribute="entrypoint_params",
+        data_key="entrypointParams",
+        metadata={
+            "description": (
+                "A list of global parameters used in the entrypoint task graph."
+            )
+        },
+    )
+    topologicalSort = fields.List(
+        fields.String(),
+        attribute="topological_sort",
+        data_key="topologicalSort",
+        metadata={
+            "description": ("A list of task names topologically sorted by dependency.")
+        },
+    )
+    activePlugins = fields.Nested(
+        PluginSnapshotRefSchema,
+        attribute="active_plugins",
+        data_key="activePlugins",
+        metadata={"description": ("A list of plugin objects used in the entrypoint.")},
+        many=True,
+    )
