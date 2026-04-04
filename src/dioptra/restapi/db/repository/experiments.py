@@ -256,6 +256,7 @@ class ExperimentRepository:
             EntryPoint,
             experiment,
             children,
+            "entry_point",
         )
 
         return child_snaps
@@ -264,7 +265,7 @@ class ExperimentRepository:
         self,
         experiment: Experiment | int,
         children: Iterable[EntryPoint | int],
-    ) -> list[EntryPoint]:
+    ) -> Sequence[EntryPoint]:
         """
         Add the given entry points as children of the given experiment.
 
@@ -302,7 +303,7 @@ class ExperimentRepository:
         Raises:
             EntityDoesNotExistError: if parent or child do not exist
         """
-        utils.unlink_child(self.session, experiment, entrypoint)
+        utils.unlink_child(self.session, experiment, entrypoint, "entry_point")
 
     def delete(self, experiment: Experiment | int) -> None:
         """

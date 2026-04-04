@@ -311,10 +311,7 @@ class ExperimentIdService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        experiment = self._uow.experiment_repo.get(
-            experiment_id,
-            DeletionPolicy.ANY,
-        )
+        experiment = self._uow.experiment_repo.get(experiment_id, DeletionPolicy.ANY)
 
         if not experiment:
             if error_if_not_found:
@@ -375,6 +372,7 @@ class ExperimentIdService(object):
 
         with self._uow:
             self._uow.experiment_repo.delete(experiment_id)
+
         log.debug("Experiment deleted", experiment_id=experiment_id)
 
         return {"status": "Success", "id": [experiment_id]}
@@ -479,7 +477,6 @@ class ExperimentIdEntrypointsService(object):
         self,
         experiment_id: int,
         entrypoint_ids: list[int],
-        error_if_not_found: bool = False,
         commit: bool = True,
         **kwargs,
     ) -> list[models.EntryPoint]:
@@ -488,16 +485,12 @@ class ExperimentIdEntrypointsService(object):
         Args:
             experiment_id: The unique id of the experiment.
             entrypoint_ids: The list of entrypoint ids to append.
-            error_if_not_found: If True, raise an error if the resource is not found.
-                Defaults to False.
             commit: If True, commit the transaction. Defaults to True.
 
         Returns:
             The updated entrypoint resource object.
 
         Raises:
-            EntityDoesNotExistError: If the resource is not found and
-                `error_if_not_found` is True.
             EntityDoesNotExistError: If one or more entrypoints are not found.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
