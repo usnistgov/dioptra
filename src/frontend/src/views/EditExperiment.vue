@@ -121,33 +121,14 @@
           </q-popup-edit>
         </template>
         <template #entrypoints="{ }">
-          <q-select
-            v-if="!history"
-            outlined
+          <ResourcePicker
             v-model="experiment.entrypoints"
-            use-input
-            use-chips
-            multiple
-            map-options
-            option-label="name"
-            option-value="id"
-            input-debounce="300"
             :options="entrypoints"
             @filter="getEntrypoints"
+            resourceType="entrypoint"
+            v-if="!history"
             :disable="history || experiment.deleted"
-          >
-            <template v-slot:selected>
-              <ResourceBadge
-                v-for="(entrypoint, i) in experiment.entrypoints"
-                :key="entrypoint.id"
-                :resource="entrypoint"
-                resourceType="entrypoint"
-                :removable="!history && !experiment.deleted"
-                @remove="experiment.entrypoints.splice(i, 1)"
-                :clickable="false"
-              />
-            </template>  
-          </q-select>
+          />
           <div class="row items-center" v-if="history">
             <q-icon
               name="sym_o_info"
@@ -205,7 +186,7 @@ import PageTitle from '@/components/PageTitle.vue'
 import DeleteDialog from '@/dialogs/DeleteDialog.vue'
 import KeyValueTable from '@/components/KeyValueTable.vue'
 import JobsView from './JobsView.vue'
-import ResourceBadge from '@/components/ResourceBadge.vue'
+import ResourcePicker from '@/components/ResourcePicker.vue'
 
 const route = useRoute()
 
