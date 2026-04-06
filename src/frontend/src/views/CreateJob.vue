@@ -9,25 +9,21 @@
         <legend>Basic Info</legend>
         <div class="q-ma-lg">
           <q-form ref="basicInfoForm" greedy>
-            <q-select
-              outlined
-              dense
+            <ResourcePicker
               v-model="job.experiment"
-              clearable
-              option-label="name"
-              input-debounce="100"
               :options="experiments"
+              resourceType="experiment"
+              label="Experiment:"
+              :multiple="false"
+              clearable
               @filter="getExperiments"
               :rules="[requiredRule]"
               :disable="Object.hasOwn(route.params, 'id') || (!Object.hasOwn(route.params, 'id') && experiments.length === 0)"
               class="q-mb-lg"
-              :class="{'error': experimentError}"
-              @update:model-value="job.entrypoint = ''; job.queue = ''; basicInfoForm.reset()"
+              :class="{ 'error': experimentError }"
+              @update:model-value="() => { job.entrypoint = ''; job.queue = ''; basicInfoForm.reset() }"
             >
-              <template v-slot:before>
-                <div class="field-label">Experiment:</div>
-              </template>
-              <template v-slot:hint>
+              <template #hint>
                 <span 
                   v-if="!Object.hasOwn(route.params, 'id') && experiments.length === 0"
                   :style="{ 'color': experimentError ? '#C10015' : 'grey' }"
@@ -38,7 +34,7 @@
                   </router-link>
                 </span>
               </template>
-            </q-select>
+            </ResourcePicker>
             <q-select
               outlined
               dense
@@ -439,6 +435,7 @@
   import { useLoginStore } from '@/stores/LoginStore'
   import AppendResource from '@/dialogs/AppendResource.vue'
   import TableComponent from '@/components/TableComponent.vue'
+  import ResourcePicker from '@/components/ResourcePicker.vue'
 
   const store = useLoginStore()
 
