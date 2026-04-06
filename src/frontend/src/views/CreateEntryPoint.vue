@@ -68,38 +68,16 @@
               <div class="field-label">Group:</div>
             </template>  
           </q-select>
-          <q-select
+          <ResourcePicker
             v-if="!history"
-            outlined
-            dense
             v-model="entryPoint.queues"
-            use-input
-            use-chips
-            multiple
-            map-options
-            option-label="name"
-            option-value="id"
-            input-debounce="100"
             :options="queues"
+            resourceType="queue"
+            label="Queues:"
             @filter="getQueues"
             class="q-mb-md"
             :disable="history"
-          >
-            <template v-slot:before>
-              <div class="field-label">Queues:</div>
-            </template>  
-            <template v-slot:selected-item="scope">
-              <q-chip
-                :label="scope.opt.name"
-                removable
-                dense
-                @remove="scope.removeAtIndex(scope.index)"
-                :tabindex="scope.tabindex"
-                color="primary"
-                text-color="white"
-              />
-            </template>
-          </q-select>
+          />
           <div v-else class="row items-center q-mb-md">
             <label class="field-label">Queues:</label>
             <div 
@@ -505,6 +483,7 @@
   import ArtifactParamDialog from '@/dialogs/ArtifactParamDialog.vue'
   import EditPluginTaskParamDialog from '@/dialogs/EditPluginTaskParamDialog.vue'
   import AssignPluginsDropdown from '@/components/AssignPluginsDropdown.vue'
+  import ResourcePicker from '@/components/ResourcePicker.vue'
 
   const route = useRoute()
   
