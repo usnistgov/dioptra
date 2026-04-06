@@ -1,6 +1,5 @@
 <template>
   <q-select
-    v-bind="$attrs"
     :options="options"
     :model-value="modelValue"
     @update:model-value="(val) => $emit('update:model-value', val)"
@@ -12,6 +11,7 @@
     option-label="name"
     option-value="id"
     input-debounce="300"
+    v-bind="$attrs"
   >
     <template v-slot:before>
       <div v-if="label" class="field-label">{{ label }}</div>
@@ -22,7 +22,9 @@
         :resourceType="resourceType"
         :removable="!$attrs.disable"
         :clickable="false"
+        :stacked="stackedBadges"
         @remove="scope.removeAtIndex(scope.index)"
+        @sync="$emit('sync', scope.opt, scope.index)"
       />
     </template>
     <template v-else v-slot:selected>
@@ -87,9 +89,13 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
+  stackedBadges: {
+    type: Boolean,
+    default: false,
+  },
 })
 
-defineEmits(["update:model-value"]);
+defineEmits(["update:model-value", "sync"]);
 
 </script>
 
