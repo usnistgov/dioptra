@@ -28,7 +28,7 @@
           :key="col.name" 
           :props="props"
           class="text-weight-bold text-uppercase text-subtitle1"
-          :style="darkMode ? {} : {'background-color': '#f5f5f5'}"
+          :style="darkMode ? {} : {'background-color': '#edebeb'}"
         >
           <span class="header-label"
             :class="darkMode ? 'header-label--dark' : 'header-label--light'">
@@ -36,7 +36,7 @@
           </span>
           <q-icon 
             v-if="col.sortable"
-            :name="getSortIcon(col.name)"
+            :name="getSortIcon(col.field)"
             class="sort-icon"
           />
         </q-th>
