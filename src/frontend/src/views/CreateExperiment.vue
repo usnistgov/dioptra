@@ -50,38 +50,15 @@
       </fieldset>
     </div>
     <fieldset :class="`${isMobile ? 'col-12 q-mt-lg' : 'col'}`">
-      <legend>Entrypoint</legend>
+      <legend>Entrypoints</legend>
       <div class="q-ma-lg">
-        <q-select
-          outlined
+        <ResourcePicker
           v-model="experiment.entrypoints"
-          use-input
-          use-chips
-          multiple
-          map-options
-          option-label="name"
-          option-value="id"
-          input-debounce="300"
           :options="entrypoints"
           @filter="getEntrypoints"
-          class="q-mb-md"
-        >
-          <template v-slot:before>
-            <div class="field-label">Entrypoints:</div>
-          </template>
-          <template v-slot:selected>
-            <ResourceBadge
-              v-for="(entrypoint, i) in experiment.entrypoints"
-              :key="entrypoint.id"
-              :resource="entrypoint"
-              resourceType="entrypoint"
-              :removable="true"
-              :clickable="false"
-              @remove="experiment.entrypoints.splice(i, 1)"
-            />
-          </template>  
-        </q-select>
-
+          resourceType="entrypoint"
+          label="Entrypoints:"
+        />
         <q-btn
           color="primary"
           icon="add"
@@ -127,7 +104,7 @@
   import * as notify from '../notify'
   import PageTitle from '@/components/PageTitle.vue'
   import ReturnToFormDialog from '@/dialogs/ReturnToFormDialog.vue'
-  import ResourceBadge from '@/components/ResourceBadge.vue'
+  import ResourcePicker from '@/components/ResourcePicker.vue'
 
   const route = useRoute()
   

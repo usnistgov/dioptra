@@ -100,7 +100,9 @@ const styles = computed(() => {
 
 const formattedUrl = computed(() => {
   const url = props.resource?.url?.replace(/^\/api\/v1/, "")
-  if (!url) return null
+  if (!url) {
+    return `/${props.resourceType}s/${props.resource.id}`
+  }
 
   const parts = url.split("/").filter(Boolean)
 
