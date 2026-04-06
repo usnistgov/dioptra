@@ -1,5 +1,5 @@
 <template>
-  <span class="q-gutter-x-xs">
+  <span class="q-gutter-x-xs" :class="{ 'rb-stacked': props.stacked }">
     <q-chip
       :color="styles.color"
       square
@@ -91,7 +91,9 @@ const props = defineProps({
   resource: Object,
   resourceType: String,
   removable: { type: Boolean, default: false },
-  clickable: { type: Boolean, default: true }
+  clickable: { type: Boolean, default: true },
+  // When true, place the badge on its own line
+  stacked: { type: Boolean, default: false }
 })
 
 const styles = computed(() => {
@@ -137,3 +139,11 @@ function openResource(event) {
   router.push(formattedUrl.value)
 }
 </script>
+
+<style scoped>
+.rb-stacked {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+}
+</style>
