@@ -35,38 +35,13 @@
       </span>
     </template>
     <template #body-cell-plugins="props">
-      <span
+      <ResourceBadge
         v-for="(plugin, i) in props.row.plugins"
         :key="i"
-      >
-        <q-chip
-          color="secondary" 
-          text-color="white"
-          clickable
-          @click.stop="editEntrypoint = props.row; pluginType = 'plugins'; showAssignPluginsDialog = true"
-        >
-          {{ plugin.name }}
-          <q-badge
-            v-if="!plugin.latestSnapshot" 
-            color="red" 
-            label="outdated" 
-            rounded
-            class="q-ml-xs"
-          />
-        </q-chip>
-        <q-btn
-          v-if="!plugin.latestSnapshot"
-          round 
-          color="red" 
-          icon="sync"
-          size="sm"
-          @click.stop="syncPlugin(props.row.id, plugin.id, plugin.name, 'plugins')"
-        >
-          <q-tooltip>
-            Sync to latest version of plugin
-          </q-tooltip>
-        </q-btn>
-      </span>
+        :resource="plugin"
+        resourceType="plugin"
+        @sync="() => syncPlugin(props.row.id, plugin.id, plugin.name, 'plugins')"
+      />
       <q-btn
         round
         size="sm"
@@ -75,39 +50,14 @@
         class="q-ml-sm"
       />
     </template>
-      <template #body-cell-artifactPlugins="props">
-      <span
+    <template #body-cell-artifactPlugins="props">
+      <ResourceBadge
         v-for="(plugin, i) in props.row.artifactPlugins"
         :key="i"
-      >
-        <q-chip
-          color="secondary" 
-          text-color="white"
-          clickable
-          @click.stop="editEntrypoint = props.row; pluginType = 'artifactPlugins'; showAssignPluginsDialog = true"
-        >
-          {{ plugin.name }}
-          <q-badge
-            v-if="!plugin.latestSnapshot" 
-            color="red" 
-            label="outdated" 
-            rounded
-            class="q-ml-xs"
-          />
-        </q-chip>
-        <q-btn
-          v-if="!plugin.latestSnapshot"
-          round 
-          color="red" 
-          icon="sync"
-          size="sm"
-          @click.stop="syncPlugin(props.row.id, plugin.id, plugin.name, 'artifactPlugins')"
-        >
-          <q-tooltip>
-            Sync to latest version of plugin
-          </q-tooltip>
-        </q-btn>
-      </span>
+        :resource="plugin"
+        resourceType="plugin"
+        @sync="() => syncPlugin(props.row.id, plugin.id, plugin.name, 'artifactPlugins')"
+      />
       <q-btn
         round
         size="sm"
@@ -160,6 +110,7 @@
   import PageTitle from '@/components/PageTitle.vue'
   import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
   import AssignPluginsDialog from '@/dialogs/AssignPluginsDialog.vue'
+  import ResourceBadge from '@/components/ResourceBadge.vue'
 
   const openWindow = window
   const router = useRouter()

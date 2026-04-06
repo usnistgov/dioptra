@@ -70,13 +70,13 @@
             <div class="field-label">Entrypoints:</div>
           </template>
           <template v-slot:selected>
-            <q-chip
+            <ResourceBadge
               v-for="(entrypoint, i) in experiment.entrypoints"
               :key="entrypoint.id"
-              color="secondary"
-              :label="entrypoint.name"
-              class="text-white"
-              removable
+              :resource="entrypoint"
+              resourceType="entrypoint"
+              :removable="true"
+              :clickable="false"
               @remove="experiment.entrypoints.splice(i, 1)"
             />
           </template>  
@@ -127,6 +127,7 @@
   import * as notify from '../notify'
   import PageTitle from '@/components/PageTitle.vue'
   import ReturnToFormDialog from '@/dialogs/ReturnToFormDialog.vue'
+  import ResourceBadge from '@/components/ResourceBadge.vue'
 
   const route = useRoute()
   
@@ -234,13 +235,14 @@
   }
 
   async function addorModifyExperiment() {
-    experiment.value.entrypoints.forEach((entrypoint, index, array) => {
+    const experimentCopy = JSON.parse(JSON.stringify(experiment.value))
+    experimentCopy.entrypoints.forEach((entrypoint, index, array) => {
       if(typeof entrypoint === 'object') {
         array[index] = entrypoint.id
       }
     })
     try {
-      await api.addItem('experiments', experiment.value)
+      await api.addItem('experiments', experimentCopy)
       store.savedForms.experiment = null
       notify.success(`Successfully created '${experiment.value.name}'`)
       router.push('/experiments')

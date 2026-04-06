@@ -16,8 +16,9 @@
     :hideOpenBtn="true"
     :hideDeleteBtn="true"
     :highlightSelection="true"
+    :defaultSort="{sortBy: 'snapshotCreatedOn', descending: true}"
   >
-    <template #body-cell-timestamp="props">
+    <template #body-cell-snapshotCreatedOn="props">
       <div :data-snapshot-id="props.row.snapshot">
         {{
           new Intl.DateTimeFormat('en-US', { 
@@ -129,7 +130,7 @@ watch(selected, (newVal) => {
 })
 
 const columns = [
-  { name: 'timestamp', label: 'Created On', align: 'left', field: 'snapshotCreatedOn', sortable: true, },
+  { name: 'snapshotCreatedOn', label: 'Created On', align: 'left', field: 'snapshotCreatedOn', sortable: true, },
 ]
 
 
