@@ -5,9 +5,9 @@
     :model-value="modelValue"
     @update:model-value="(val) => $emit('update:model-value', val)"
     outlined
+    dense
     use-input
-    use-chips
-    multiple
+    :multiple="multiple"
     map-options
     option-label="name"
     option-value="id"
@@ -16,7 +16,7 @@
     <template v-slot:before>
       <div v-if="label" class="field-label">{{ label }}</div>
     </template>
-    <template v-slot:selected-item="scope">
+    <template v-if="multiple" v-slot:selected-item="scope">
       <ResourceBadge
         :resource="scope.opt"
         :resourceType="resourceType"
@@ -24,7 +24,16 @@
         :clickable="false"
         @remove="scope.removeAtIndex(scope.index)"
       />
-    </template>  
+    </template>
+    <template v-else v-slot:selected>
+      <ResourceBadge
+        v-if="modelValue && typeof modelValue === 'object'"
+        :resource="modelValue"
+        :resourceType="resourceType"
+        :removable="false"
+        :clickable="false"
+      />
+    </template>
     <template v-slot:option="scope">
       <q-item 
         v-bind="scope.itemProps"
@@ -42,6 +51,9 @@
         </q-item-section>
       </q-item>
     </template>
+    <template v-slot:hint>
+      <slot name="hint" />
+    </template>
   </q-select>
 </template>
 
@@ -58,7 +70,7 @@ const styles = computed(() => {
 
 const props = defineProps({
   modelValue: {
-    type: Array,
+    // Accept array for multi-select and object/null for single-select
     default: () => [],
   },
   options: {
@@ -70,9 +82,19 @@ const props = defineProps({
   },
   label: {
     type: String
-  }
+  },
+  multiple: {
+    type: Boolean,
+    default: true,
+  },
 })
 
 defineEmits(["update:model-value"]);
 
 </script>
+
+<style scoped>
+:deep(.q-field__append) {
+  margin-top: 3px;
+}
+</style> 
