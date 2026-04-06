@@ -6,45 +6,16 @@
   >
     <template #title>
       <label id="modalTitle">
-        Assign {{ childResourceType }} for '{{ parentResourceObj.name }}'
+        Assign <span class="text-capitalize">{{ childResourceType }}</span> for '{{ parentResourceObj.name }}'
       </label>
     </template>
-    <q-select
-      outlined
-      dense
+    <ResourcePicker
       v-model="childResourceObjs"
-      use-input
-      use-chips
-      multiple
-      option-label="name"
-      option-value="id"
-      input-debounce="100"
       :options="childResourceOptions"
+      :resourceType="childResourceTypeSingular"
+      :label="childLabel"
       @filter="getChildResources"
-    >
-      <template v-slot:before>
-        <div class="field-label text-capitalize">{{ childResourceType }}:</div>
-      </template>
-      <template v-slot:selected>
-        <div>
-          <div
-            v-for="(resource, i) in childResourceObjs"
-            :key="resource.id"
-            :class="i > 0 ? 'q-mt-xs' : ''"
-            >
-              <q-chip
-                removable
-                color="secondary"
-                text-color="white"
-                class="q-ml-xs "
-                @remove="childResourceObjs.splice(i, 1)"
-              >
-                {{ resource.name }}
-              </q-chip>
-          </div>
-        </div>
-      </template>
-    </q-select>
+    />
   </DialogComponent>
 </template>
 
@@ -53,6 +24,7 @@
   import DialogComponent from './DialogComponent.vue'
   import * as api from '@/services/dataApi'
   import * as notify from '../notify'
+  import ResourcePicker from '@/components/ResourcePicker.vue'
 
 
   const props = defineProps(['parentResourceType', 'parentResourceObj', 'childResourceType' ])
@@ -68,9 +40,18 @@
   const childResourceOptions = ref([])
   const originalChildIds = ref()
 
+  const childResourceTypeSingular = computed(() => {
+    const t = props.childResourceType || ''
+    return t.endsWith('s') ? t.slice(0, -1) : t
+  })
+
+  const childLabel = computed(() => {
+    const t = props.childResourceType || ''
+    return `${t.charAt(0).toUpperCase()}${t.slice(1)}:`
+  })
+
   watch(showDialog, (newVal) => {
     if(newVal) {
-      console.log('props = ', props.parentResourceObj)
       childResourceObjs.value = JSON.parse(JSON.stringify(props.parentResourceObj[props.childResourceType]))
       originalChildIds.value = JSON.parse(JSON.stringify(props.parentResourceObj[props.childResourceType].map((obj) => obj.id)))
     }
@@ -115,7 +96,7 @@
           rowsPerPage: 0, // get all
           index: 0
         })
-        childResourceOptions.value = res.data.data.filter((ep) => !selectedChildIds.value.includes(ep.id))
+        childResourceOptions.value = res.data.data
       } catch(err) {
         notify.error(err.response.data.message)
       } 
