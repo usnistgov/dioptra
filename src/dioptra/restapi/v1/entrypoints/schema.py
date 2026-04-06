@@ -390,3 +390,86 @@ class DynamicGlobalParametersResponseSchema(Schema):
         metadata={"description": ("A list of plugin objects used in the entrypoint.")},
         many=True,
     )
+
+class ValidateSwapsRequestSchema(Schema):
+    """The schema for validating swaps on an entrypoint."""
+    groupId = fields.Integer(
+        attribute="group_id",
+        data_key="groupId",
+        metadata={
+            "description": "ID of the group for the entrypoint."
+        },
+    )
+    swapsGraph = fields.String(
+        attribute="swaps_graph",
+        data_key="swapsGraph",
+        required=True,
+        metadata={
+            "description": "YAML string representing the swaps graph to validate."
+        },
+    )
+    artifactGraph = fields.String(
+        attribute="artifact_graph",
+        data_key="artifactGraph",
+        metadata={
+            "description": "YAML string representing the artifact graph."
+        },
+    )
+    entrypointParameters = fields.List(
+        fields.Dict(),
+        attribute="entrypoint_parameters",
+        data_key="entrypointParameters",
+        metadata={
+            "description": "List of entrypoint parameters."
+        },
+    )
+    entrypointArtifacts = fields.List(
+        fields.Dict(),
+        attribute="entrypoint_artifacts",
+        data_key="entrypointArtifacts",
+        metadata={
+            "description": "List of entrypoint artifacts."
+        },
+    )
+    globals = fields.Dict(
+        attribute="globals",
+        data_key="globals",
+        metadata={
+            "description": "Global parameters dictionary."
+        },
+    )
+    pluginSnapshotIds = fields.List(
+        fields.Integer(),
+        attribute="plugin_snapshot_ids",
+        data_key="pluginSnapshotIds",
+        required=True,
+        metadata={
+            "description": "List of plugin snapshot IDs required for validation."
+        },
+    )
+
+class ValidateSwapsResponseSchema(Schema):
+    """The schema for the response from validating swaps on an entrypoint."""
+    schemaValid = fields.Boolean(
+        attribute="schema_valid",
+        data_key="schemaValid",
+        metadata={
+            "description": "Whether the swaps graph schema is valid."
+        },
+    )
+    missingGlobalParams = fields.List(
+        fields.String(),
+        attribute="missing_global_params",
+        data_key="missingGlobalParams",
+        metadata={
+            "description": "List of global parameters required by the swaps graph that are not declared on the entrypoint."
+        },
+    )
+    validationErrors = fields.List(
+        fields.Dict(),
+        attribute="rendered_validation_errors",
+        data_key="validationErrors",
+        metadata={
+            "description": "List of validation errors found in the swaps graph."
+        },
+    )

@@ -65,6 +65,7 @@ PLUGINS: Final[str] = "plugins"
 ARTIFACT_PLUGINS: Final[str] = "artifactPlugins"
 BUNDLE: Final[str] = "bundle"
 DYNAMIC_GLOBAL_PARAMETERS: Final[str] = "dynamicGlobalParameters"
+VALIDATE_SWAPS: Final[str] = "validate"
 
 T = TypeVar("T")
 
@@ -528,6 +529,7 @@ class EntrypointsSnapshotCollectionClient(SnapshotsSubCollectionClient[T]):
         )
 
 
+
 class EntrypointsCollectionClient(CollectionClient[T]):
     """The client for managing Dioptra's /entrypoints collection.
 
@@ -693,6 +695,14 @@ class EntrypointsCollectionClient(CollectionClient[T]):
                 1,
                 entrypoint_snapshot_id=2,
                 file_type=FileTypes.TAR_GZ,
+            )
+
+            # POST /api/v1/entrypoints/1/snapshots/2/validateSwaps
+            client.entrypoints.snapshots.validate_swaps(
+                1,
+                entrypoint_snapshot_id=2,
+                swaps_graph="swaps: ...",
+                plugin_snapshot_ids=[1, 2, 3],
             )
         """
         return self._snapshots
@@ -952,3 +962,51 @@ class EntrypointsCollectionClient(CollectionClient[T]):
             The response from the Dioptra API.
         """
         return self._session.delete(self.url, str(entrypoint_id))
+
+    def validate(
+        self,
+        group_id: int,
+        swaps_graph: str,
+        plugin_snapshot_ids: list[int],
+        artifact_graph: str | None = None,
+        entrypoint_parameters: list[dict[str, Any]] | None = None,
+        entrypoint_artifacts: list[dict[str, Any]] | None = None,
+        globals: dict[str, Any] | None = None,
+    ) -> T:
+        """Validate a swaps graph.
+
+        Args:
+            group_id: The group id, an integer.
+            swaps_graph: YAML string representing the swaps graph to validate.
+            plugin_snapshot_ids: List of plugin snapshot IDs required for validation.
+            artifact_graph: YAML string representing the artifact graph. Optional, defaults to None.
+            entrypoint_parameters: List of entrypoint parameters. Optional, defaults to None.
+            entrypoint_artifacts: List of entrypoint artifacts. Optional, defaults to None.
+            globals: Global parameters dictionary. Optional, defaults to None.
+
+        Returns:
+            The response from the Dioptra API containing validation results.
+        """
+        json_: dict[str, Any] = {
+            "groupId": group_id,
+            "swapsGraph": swaps_graph,
+            "pluginSnapshotIds": plugin_snapshot_ids,
+        }
+
+        if artifact_graph is not None:
+            json_["artifactGraph"] = artifact_graph
+
+        if entrypoint_parameters is not None:
+            json_["entrypointParameters"] = entrypoint_parameters
+
+        if entrypoint_artifacts is not None:
+            json_["entrypointArtifacts"] = entrypoint_artifacts
+
+        if globals is not None:
+            json_["globals"] = globals
+
+        return self._session.post(
+            self.url,
+            VALIDATE_SWAPS,
+            json_=json_,
+        )

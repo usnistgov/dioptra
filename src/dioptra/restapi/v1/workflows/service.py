@@ -57,7 +57,6 @@ from dioptra.restapi.v1.plugin_parameter_types.service import (
     PluginParameterTypeIdService,
     PluginParameterTypeNameService,
     PluginParameterTypeService,
-    get_plugin_task_parameter_types_by_id,
 )
 from dioptra.restapi.v1.plugins.schema import ALLOWED_PLUGIN_FILENAME_REGEX
 from dioptra.restapi.v1.plugins.service import (
@@ -68,6 +67,9 @@ from dioptra.restapi.v1.plugins.service import (
     PluginService,
 )
 from dioptra.restapi.v1.shared.entrypoint_swaps.service import SwapsValidationService
+from dioptra.restapi.v1.shared.entrypoint_validation import (
+    build_entrypoint_data_adapter,
+)
 from dioptra.restapi.v1.shared.io_file_service import IOFileService
 from dioptra.restapi.v1.shared.resource_service import (
     ResourceIdService,
@@ -1207,32 +1209,6 @@ class DraftCommitService(object):
         return {"status": "Success", "id": resource_ids}
 
 
-@dataclass
-class EntryPointParameterDataAdapter(object):
-    parameter_type: str
-    name: str
-    default_value: str | None
-
-
-@dataclass
-class TaskOutputParameterDataAdapter(object):
-    parameter_number: int
-    name: str
-    parameter_type: models.PluginTaskParameterType
-
-
-@dataclass
-class EntryPointArtifactDataAdapter(object):
-    name: str
-    output_parameters: list[TaskOutputParameterDataAdapter]
-
-
-@dataclass
-class EntryPointDataAdapter(object):
-    task_graph: str
-    artifact_graph: str
-    parameters: list[EntryPointParameterDataAdapter]
-    artifact_parameters: list[EntryPointArtifactDataAdapter]
 
 
 class ValidateEntrypointService(object):
@@ -1295,38 +1271,14 @@ class ValidateEntrypointService(object):
             entrypoint_artifacts=entrypoint_artifacts,
         )
 
-        type_ids = [
-            parameter["parameter_type_id"]
-            for artifact in entrypoint_artifacts
-            for parameter in artifact["output_params"]
-        ]
-        id_type_map = get_plugin_task_parameter_types_by_id(ids=type_ids, log=log)
-        entrypoint = EntryPointDataAdapter(
-            task_graph=task_graph,
-            artifact_graph=artifact_graph,
-            parameters=[
-                EntryPointParameterDataAdapter(
-                    parameter_type=param["parameter_type"],
-                    name=param["name"],
-                    default_value=param["default_value"],
-                )
-                for param in entrypoint_parameters
-            ],
-            artifact_parameters=[
-                EntryPointArtifactDataAdapter(
-                    name=artifact["name"],
-                    output_parameters=[
-                        TaskOutputParameterDataAdapter(
-                            name=param["name"],
-                            parameter_number=p,
-                            parameter_type=id_type_map[param["parameter_type_id"]],
-                        )
-                        for p, param in enumerate(artifact["output_params"])
-                    ],
-                )
-                for artifact in entrypoint_artifacts
-            ],
+        entrypoint = build_entrypoint_data_adapter(
+            task_graph,
+            artifact_graph,
+            entrypoint_parameters,
+            entrypoint_artifacts,
+            log
         )
+
         plugin_parameter_types = views.get_plugin_parameter_types(
             group_id=group_id, logger=log
         )
@@ -1434,3 +1386,4 @@ class ValidateSwapsGraphService(object):
             "swap_errors": output_issues + schema_issues,
             "swaps": tasks,
         }
+

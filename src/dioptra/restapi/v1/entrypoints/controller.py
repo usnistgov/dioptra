@@ -63,6 +63,8 @@ from .schema import (
     EntrypointPluginMutableFieldsSchema,
     EntrypointPluginSchema,
     EntrypointSchema,
+    ValidateSwapsRequestSchema,
+    ValidateSwapsResponseSchema,
 )
 from .service import (
     RESOURCE_TYPE,
@@ -77,6 +79,10 @@ from .service import (
     EntrypointIdService,
     EntrypointService,
     EntrypointSnapshotIdService,
+)
+
+from dioptra.restapi.v1.shared.entrypoint_swaps.service import (
+    EntrypointSwapsValidationService
 )
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -752,6 +758,52 @@ class DynamicGlobalParametersEntrypoint(Resource):
             entrypoint_snapshot_id=entrypoint_snapshot_id,
             swaps=swap_choices,
             logger=log,
+        )
+
+
+@api.route("/validate")
+class ValidateSwapsEntrypoint(Resource):
+    @inject
+    def __init__(
+        self,
+        entrypoint_swaps_validation_service: EntrypointSwapsValidationService,
+        *args,
+        **kwargs,
+    ) -> None:
+        """Initialize the validate swaps resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            entrypoint_swaps_validation_service: An EntrypointSwapsValidationService object.
+        """
+        self._entrypoint_swaps_validation_service = entrypoint_swaps_validation_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    @accepts(schema=ValidateSwapsRequestSchema, api=api)
+    @responds(schema=ValidateSwapsResponseSchema, api=api)
+    def post(self):
+        """Validates a swaps graph."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="ValidateSwaps",
+            request_type="POST",
+        )
+
+        parsed_obj = request.parsed_obj  # type: ignore
+        swaps_graph = parsed_obj["swaps_graph"]
+        plugin_snapshot_ids = parsed_obj["plugin_snapshot_ids"]
+
+        return self._entrypoint_swaps_validation_service.validate(
+            group_id=parsed_obj.get("group_id"),
+            swaps_graph=swaps_graph,
+            artifact_graph=parsed_obj.get("artifact_graph", ""),
+            entrypoint_parameters=parsed_obj.get("entrypoint_parameters", []),
+            entrypoint_artifacts=parsed_obj.get("entrypoint_artifacts", []),
+            plugin_snapshot_ids=plugin_snapshot_ids,
+            globals=parsed_obj.get("globals", {}),
+            log=log,
         )
 
 

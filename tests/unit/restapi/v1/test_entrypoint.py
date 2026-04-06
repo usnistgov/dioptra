@@ -35,7 +35,6 @@ from ..test_utils import assert_retrieving_resource_works, assert_searchable_fie
 
 # -- Assertions ------------------------------------------------------------------------
 
-
 def assert_entrypoint_response_contents_matches_expectations(
     response: dict[str, Any], expected_contents: dict[str, Any]
 ) -> None:
@@ -71,7 +70,7 @@ def assert_entrypoint_response_contents_matches_expectations(
         "queues",
         "tags",
         "deleted",
-}
+    }
     assert set(response.keys()) == expected_keys
 
     # Validate the non-Ref fields
@@ -138,7 +137,6 @@ def assert_entrypoint_response_contents_matches_expectations(
         assert isinstance(param["parameterType"], str)
     assert response["parameters"] == expected_contents["parameters"]
 
-
 def assert_retrieving_entrypoint_by_id_works(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     entrypoint_id: int,
@@ -157,7 +155,6 @@ def assert_retrieving_entrypoint_by_id_works(
     """
     response = dioptra_client.entrypoints.get_by_id(entrypoint_id)
     assert response.status_code == HTTPStatus.OK and response.json() == expected
-
 
 def assert_retrieving_entrypoints_works(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
@@ -192,7 +189,6 @@ def assert_retrieving_entrypoints_works(
         paging_info=paging_info,
     )
 
-
 def assert_registering_existing_entrypoint_name_fails(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     name: str,
@@ -223,7 +219,6 @@ def assert_registering_existing_entrypoint_name_fails(
     )
     assert response.status_code == HTTPStatus.CONFLICT
 
-
 def assert_entrypoint_name_matches_expected_name(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     entrypoint_id: int,
@@ -246,7 +241,6 @@ def assert_entrypoint_name_matches_expected_name(
         and response.json()["name"] == expected_name
     )
 
-
 def assert_entrypoint_is_not_found(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     entrypoint_id: int,
@@ -262,7 +256,6 @@ def assert_entrypoint_is_not_found(
     """
     response = dioptra_client.queues.get_by_id(entrypoint_id)
     assert response.status_code == HTTPStatus.NOT_FOUND
-
 
 def assert_entrypoint_is_not_associated_with_experiment(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
@@ -284,7 +277,6 @@ def assert_entrypoint_is_not_associated_with_experiment(
     experiment = response.json()
     entrypoint_ids = set(entrypoint["id"] for entrypoint in experiment["entrypoints"])
     assert response.status_code == HTTPStatus.OK and entrypoint_id not in entrypoint_ids
-
 
 def assert_cannot_rename_entrypoint_with_existing_name(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
@@ -325,7 +317,6 @@ def assert_cannot_rename_entrypoint_with_existing_name(
     )
     assert response.status_code == HTTPStatus.BAD_REQUEST
 
-
 def assert_entrypoint_must_have_unique_param_names(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     name: str,
@@ -353,7 +344,6 @@ def assert_entrypoint_must_have_unique_param_names(
     )
     assert response.status_code == HTTPStatus.CONFLICT
 
-
 def assert_retrieving_all_queues_for_entrypoint_works(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     entrypoint_id: int,
@@ -364,7 +354,6 @@ def assert_retrieving_all_queues_for_entrypoint_works(
         response.status_code == HTTPStatus.OK
         and [queue_ref["id"] for queue_ref in response.json()] == expected
     )
-
 
 def assert_append_queues_to_entrypoint_works(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
@@ -380,7 +369,6 @@ def assert_append_queues_to_entrypoint_works(
         and [queue_ref["id"] for queue_ref in response.json()] == expected
     )
 
-
 def assert_retrieving_all_plugin_snapshots_for_entrypoint_works(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     entrypoint_id: int,
@@ -391,7 +379,6 @@ def assert_retrieving_all_plugin_snapshots_for_entrypoint_works(
         response.status_code == HTTPStatus.OK
         and [plugin_snapshot["id"] for plugin_snapshot in response.json()] == expected
     )
-
 
 def assert_append_plugins_to_entrypoint_works(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
@@ -408,7 +395,6 @@ def assert_append_plugins_to_entrypoint_works(
         and [plugin_snapshot["id"] for plugin_snapshot in response_json] == expected
     )
 
-
 def assert_retrieving_plugin_snapshots_by_id_for_entrypoint_works(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     entrypoint_id: int,
@@ -419,7 +405,6 @@ def assert_retrieving_plugin_snapshots_by_id_for_entrypoint_works(
         entrypoint_id=entrypoint_id, plugin_id=plugin_id
     )
     assert response.status_code == HTTPStatus.OK and response.json()["id"] == expected
-
 
 def assert_registering_entrypoint_with_no_queues_succeeds(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
@@ -465,9 +450,7 @@ def assert_registering_entrypoint_with_no_queues_succeeds(
     assert_correct_emptiness(entry_point, "parameters", entry_point_data)
     assert_correct_emptiness(entry_point, "plugins", entry_point_data)
 
-
 # -- Tests -----------------------------------------------------------------------------
-
 
 def test_create_entrypoint(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
@@ -574,7 +557,6 @@ def test_create_entrypoint(
         queue_ids=queue_ids,
     )
 
-
 def test_entrypoint_get_all(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
@@ -596,7 +578,6 @@ def test_entrypoint_get_all(
     assert_retrieving_entrypoints_works(
         dioptra_client, expected=entrypoint_expected_list
     )
-
 
 @pytest.mark.parametrize(
     "field, value, expected_count",
@@ -624,7 +605,6 @@ def test_entrypoint_searchable_fields(
         value=search_value,
         expected_count=expected_count,
     )
-
 
 @pytest.mark.parametrize(
     "sortBy, descending , expected",
@@ -683,7 +663,6 @@ def test_entrypoint_sort(
         expected=expected_entrypoints,
     )
 
-
 def test_entrypoint_search_query(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
@@ -709,7 +688,6 @@ def test_entrypoint_search_query(
         dioptra_client, expected=entrypoint_expected_list, search="*"
     )
 
-
 def test_entrypoint_group_query(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
@@ -731,7 +709,6 @@ def test_entrypoint_group_query(
         expected=entrypoint_expected_list,
         group_id=auth_account["groups"][0]["id"],
     )
-
 
 def test_cannot_register_existing_entrypoint_name(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
@@ -762,7 +739,6 @@ def test_cannot_register_existing_entrypoint_name(
         plugin_ids=plugin_ids,
         queue_ids=queue_ids,
     )
-
 
 def test_rename_entrypoint(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
@@ -843,7 +819,6 @@ def test_rename_entrypoint(
         existing_queue_ids=entrypoint_to_rename["queues"],
     )
 
-
 def test_delete_entrypoint_by_id(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
@@ -870,7 +845,6 @@ def test_delete_entrypoint_by_id(
         experiment_id=experiment["id"],
         entrypoint_id=entrypoint_to_delete["id"],
     )
-
 
 def test_manage_existing_entrypoint_draft(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
@@ -979,7 +953,6 @@ def test_manage_existing_entrypoint_draft(
         draft_expected=draft_expected,
         draft_mod_expected=draft_mod_expected,
     )
-
 
 def test_manage_new_entrypoint_drafts(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
@@ -1103,7 +1076,6 @@ def test_manage_new_entrypoint_drafts(
         group_id=group_id,
     )
 
-
 def test_client_raises_error_on_field_name_collision(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
@@ -1167,7 +1139,6 @@ def test_client_raises_error_on_field_name_collision(
             **draft,
         )
 
-
 def test_manage_entrypoint_snapshots(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
@@ -1207,7 +1178,6 @@ def test_manage_entrypoint_snapshots(
         drop_additional_fields=["queues"],
     )
 
-
 def test_tag_entrypoint(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
@@ -1218,7 +1188,6 @@ def test_tag_entrypoint(
 
     Given an authenticated user and registered entrypoints, this test validates the
     following sequence of actions:
-
     """
     entrypoint = registered_entrypoints["entrypoint1"]
     tag_ids = [tag["id"] for tag in registered_tags.values()]
@@ -1229,7 +1198,6 @@ def test_tag_entrypoint(
         entrypoint["id"],
         tag_ids=tag_ids,
     )
-
 
 def test_get_all_queues_for_entrypoint(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
@@ -1249,7 +1217,6 @@ def test_get_all_queues_for_entrypoint(
         entrypoint_id=entrypoint_id,
         expected=expected_queue_ids,
     )
-
 
 def test_append_queues_to_entrypoint(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
@@ -1275,7 +1242,6 @@ def test_append_queues_to_entrypoint(
         expected=expected_queue_ids,
     )
 
-
 def test_modify_queues_for_entrypoint(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
@@ -1299,7 +1265,6 @@ def test_modify_queues_for_entrypoint(
         expected=expected_queue_ids,
     )
 
-
 def test_delete_all_queues_for_entrypoint(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
@@ -1318,7 +1283,6 @@ def test_delete_all_queues_for_entrypoint(
         entrypoint_id=entrypoint_id,
         expected=[],
     )
-
 
 def test_delete_queue_by_id_for_entrypoint(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
@@ -1344,7 +1308,6 @@ def test_delete_queue_by_id_for_entrypoint(
         expected=expected_queue_ids,
     )
 
-
 def test_get_plugin_snapshots_for_entrypoint(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
@@ -1363,7 +1326,6 @@ def test_get_plugin_snapshots_for_entrypoint(
         entrypoint_id=entrypoint_id,
         expected=expected_plugin_ids,
     )
-
 
 def test_append_plugins_to_entrypoint(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
@@ -1386,7 +1348,6 @@ def test_append_plugins_to_entrypoint(
         expected=expected_plugin_ids,
     )
 
-
 def test_get_plugin_snapshot_by_id_for_entrypoint(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
@@ -1406,7 +1367,6 @@ def test_get_plugin_snapshot_by_id_for_entrypoint(
         plugin_id=expected_plugin_id,
         expected=expected_plugin_id,
     )
-
 
 def test_delete_plugin_snapshot_by_id_for_entrypoint(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
@@ -1430,7 +1390,6 @@ def test_delete_plugin_snapshot_by_id_for_entrypoint(
         entrypoint_id=entrypoint_id,
         expected=[],
     )
-
 
 def test_create_entrypoint_with_empty_queues_plugins_params(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
@@ -1468,7 +1427,6 @@ def test_create_entrypoint_with_empty_queues_plugins_params(
         assert_message="Failed to create EntryPoint with 3 EMPTY entities: [queues=[], plugins=[], parameters=[]]",
     )
 
-
 def test_create_entrypoint_with_none_queues_plugins_params(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
@@ -1504,7 +1462,6 @@ def test_create_entrypoint_with_none_queues_plugins_params(
         entry_point=none_entry_point,
         assert_message="Failed to create EntryPoint with 3 None entities: [queues=None, plugins=None, parameters=None]",
     )
-
 
 test_cases_for_file = {}
 
@@ -1550,7 +1507,7 @@ test_cases_for_file["swap_test"] = [
     },
 ]
 
-def _test_dynamic_globals_endpoint(    
+def _test_dynamic_globals_endpoint(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_swap_entrypoints: dict[str, Any],
@@ -1564,7 +1521,7 @@ def _test_dynamic_globals_endpoint(
         expected_globals = case["globals"]
         expected_sort_order = case["sort_order"]
         expected_active_plugins = case["active_plugins"]
-    
+
         evaluated = (
             dioptra_client.entrypoints.snapshots.get_task_graph_global_params(
                 entrypoint_id=registered_swap_entrypoints[file]["id"],
@@ -1587,9 +1544,9 @@ def test_dynamic_globals_endpoint_swaps(
     registered_swap_entrypoints: dict[str, Any],
 ):
     _test_dynamic_globals_endpoint(
-        dioptra_client=dioptra_client, 
-        auth_account=auth_account, 
-        registered_swap_entrypoints=registered_swap_entrypoints, 
+        dioptra_client=dioptra_client,
+        auth_account=auth_account,
+        registered_swap_entrypoints=registered_swap_entrypoints,
         file="swap_test"
     )
 
@@ -1599,9 +1556,9 @@ def test_dynamic_globals_endpoint_with_swaps(
     registered_swap_entrypoints: dict[str, Any],
 ):
     _test_dynamic_globals_endpoint(
-        dioptra_client=dioptra_client, 
-        auth_account=auth_account, 
-        registered_swap_entrypoints=registered_swap_entrypoints, 
+        dioptra_client=dioptra_client,
+        auth_account=auth_account,
+        registered_swap_entrypoints=registered_swap_entrypoints,
         file="no_swap_test"
     )
 
@@ -1627,9 +1584,9 @@ def test_dynamic_globals_endpoint_without_swaps(
     registered_swap_entrypoints: dict[str, Any],
 ):
     _test_dynamic_globals_endpoint(
-        dioptra_client=dioptra_client, 
-        auth_account=auth_account, 
-        registered_swap_entrypoints=registered_swap_entrypoints, 
+        dioptra_client=dioptra_client,
+        auth_account=auth_account,
+        registered_swap_entrypoints=registered_swap_entrypoints,
         file="no_swap_test"
     )
 
@@ -1644,8 +1601,6 @@ def test_dynamic_globals_endpoint_too_many_swaps(
 
     for case in test_cases:
         swaps = case["swaps"]
-
-
 
         too_many = swaps
         too_many["extra"] = "task10"
@@ -1673,7 +1628,6 @@ def test_dynamic_globals_endpoint_nonexistent_swaps(
     for case in test_cases:
         swaps = case["swaps"]
 
-
         imaginary = swaps
         imaginary["step3_choice"] = "doesnt_exist2"
 
@@ -1689,5 +1643,173 @@ def test_dynamic_globals_endpoint_nonexistent_swaps(
 
         assert imaginary_tasks.status_code == HTTPStatus.BAD_REQUEST
 
+def test_validate_swaps_graph(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_plugin_parameter_types: dict[str, Any],
+) -> None:
+    """Test that the validate function can validate a swaps graph.
 
+    Given an authenticated user, this test validates the following sequence of actions:
 
+    - The user creates a plugin with tasks for a swaps graph
+    - The user creates a swaps graph with swappable tasks
+    - The user validates the swaps graph using the client's validate function
+    - The validation response is checked for success
+    """
+    group_id = auth_account["default_group_id"]
+
+    # Create a plugin for the swaps graph
+    registered_plugin = dioptra_client.plugins.create(
+        group_id=group_id,
+        name="swaps_test_plugin",
+        description="Plugin for testing swaps validation.",
+    ).json()
+
+    # Add a plugin file with tasks for the swaps graph
+    filename = "tasks.py"
+    description = "The task plugin file for swaps testing."
+    contents = textwrap.dedent(
+        """"from dioptra import pyplugs
+
+        @pyplugs.register
+        def task1(input_param: str) -> str:
+            return f"task1 result: {input_param}"
+
+        @pyplugs.register
+        def task2(input_param: str) -> str:
+            return f"task2 result: {input_param}"
+
+        @pyplugs.register
+        def task3(input_param: str) -> str:
+            return f"task3 result: {input_param}"
+
+        @pyplugs.register
+        def task4(input_param: str) -> str:
+            return f"task4 result: {input_param}"
+        """
+    )
+    string_parameter_type = registered_plugin_parameter_types["string"]
+    tasks = [
+        {
+            "name": "task1",
+            "inputParams": [
+                {
+                    "name": "input_param",
+                    "parameterType": string_parameter_type["id"],
+                    "required": True,
+                },
+            ],
+            "outputParams": [
+                {
+                    "name": "output",
+                    "parameterType": string_parameter_type["id"],
+                },
+            ],
+        },
+        {
+            "name": "task2",
+            "inputParams": [
+                {
+                    "name": "input_param",
+                    "parameterType": string_parameter_type["id"],
+                    "required": True,
+                },
+            ],
+            "outputParams": [
+                {
+                    "name": "output",
+                    "parameterType": string_parameter_type["id"],
+                },
+            ],
+        },
+        {
+            "name": "task3",
+            "inputParams": [
+                {
+                    "name": "input_param",
+                    "parameterType": string_parameter_type["id"],
+                    "required": True,
+                },
+            ],
+            "outputParams": [
+                {
+                    "name": "output",
+                    "parameterType": string_parameter_type["id"],
+                },
+            ],
+        },
+        {
+            "name": "task4",
+            "inputParams": [
+                {
+                    "name": "input_param",
+                    "parameterType": string_parameter_type["id"],
+                    "required": True,
+                },
+            ],
+            "outputParams": [
+                {
+                    "name": "output",
+                    "parameterType": string_parameter_type["id"],
+                },
+            ],
+        },
+    ]
+    dioptra_client.plugins.files.create(
+        plugin_id=registered_plugin["id"],
+        filename=filename,
+        description=description,
+        contents=contents,
+        function_tasks=tasks,
+        artifact_tasks=None,
+    )
+
+    # Retrieve the latest plugin snapshot identifier
+    plugin_snapshot_id = dioptra_client.plugins.get_by_id(
+        registered_plugin["id"]
+    ).json()["snapshot"]
+
+    # Create a swaps graph with swappable tasks
+    swaps_graph = textwrap.dedent("""
+        # Swaps graph with swappable tasks
+        graph:
+          step1:
+            task: task1
+            input_param: $input_param
+          step2:
+            ?step2_choice:
+              alias1:
+                task: task2
+                input_param: $input_param
+              alias2:
+                task: task3
+                input_param: $input_param
+          step3:
+            task: task4
+            input_param: $input_param
+    """)
+
+    # Validate the swaps graph
+    response = dioptra_client.entrypoints.validate(
+        group_id=group_id,
+        swaps_graph=swaps_graph,
+        plugin_snapshot_ids=[plugin_snapshot_id],
+        entrypoint_parameters=[
+            {
+                "name": "input_param",
+                "defaultValue": "test_value",
+                "parameterType": "string",
+            }
+        ],
+    )
+
+    print(response.json(), flush=True)
+
+    # Check that the response is successful
+    assert response.status_code == HTTPStatus.OK
+
+    # Check that the response contains validation results
+    validation_result = response.json()
+    assert "issues" in validation_result
+    assert isinstance(validation_result["issues"], list)
