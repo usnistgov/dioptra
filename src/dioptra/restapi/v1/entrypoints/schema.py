@@ -16,7 +16,7 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The schemas for serializing/deserializing Entrypoint resources."""
 
-from marshmallow import Schema, fields, validate
+from marshmallow import Schema, fields, validate, pre_dump
 from marshmallow.exceptions import ValidationError
 
 from dioptra.restapi.v1.plugins.schema import (
@@ -35,6 +35,7 @@ from dioptra.restapi.v1.schemas import (
     generate_base_resource_ref_schema,
     generate_base_resource_schema,
 )
+from dioptra.task_engine.issues import ValidationIssue
 
 
 class EntrypointPluginFileSchema(Schema):
@@ -447,6 +448,34 @@ class ValidateSwapsRequestSchema(Schema):
             "description": "List of plugin snapshot IDs required for validation."
         },
     )
+    
+class ValidateEntrypointIssueSchema(Schema):
+    """The response for the validateEntrypoint endpoint."""
+
+    type_ = fields.String(
+        attribute="type",
+        data_key="type",
+        metadata={"description": "The validation issue type."},
+    )
+    severity = fields.String(
+        attribute="severity",
+        metadata={"description": "The severity of the validation issue."},
+    )
+    message = fields.String(
+        attribute="message",
+        metadata={"description": "A message describing the validation issue."},
+    )
+
+    @pre_dump
+    def stringify_enums(self, data, **kwargs):
+        if isinstance(data, ValidationIssue):
+            return {
+                "type": data.type.name,
+                "severity": data.severity.name,
+                "message": data.message,
+            }
+
+        return data
 
 class ValidateSwapsResponseSchema(Schema):
     """The schema for the response from validating swaps on an entrypoint."""
@@ -465,11 +494,10 @@ class ValidateSwapsResponseSchema(Schema):
             "description": "List of global parameters required by the swaps graph that are not declared on the entrypoint."
         },
     )
-    validationErrors = fields.List(
-        fields.Dict(),
+    validationErrors = fields.Nested(
+        ValidateEntrypointIssueSchema,
         attribute="rendered_validation_errors",
-        data_key="validationErrors",
-        metadata={
-            "description": "List of validation errors found in the swaps graph."
-        },
+        data_key="renderedValidationErrors",
+        metadata={"description": "A list of validation issues detected in the schema."},
+        many=True,
     )

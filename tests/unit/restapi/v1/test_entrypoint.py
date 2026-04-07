@@ -1646,7 +1646,7 @@ def test_dynamic_globals_endpoint_nonexistent_swaps(
 def test_validate_swaps_graph(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
-    registered_plugin_parameter_types: dict[str, Any],
+    registered_swaps_validation_plugin: dict[str, Any],
 ) -> None:
     """Test that the validate function can validate a swaps graph.
 
@@ -1658,136 +1658,26 @@ def test_validate_swaps_graph(
     - The validation response is checked for success
     """
     group_id = auth_account["default_group_id"]
-
-    # Create a plugin for the swaps graph
-    registered_plugin = dioptra_client.plugins.create(
-        group_id=group_id,
-        name="swaps_test_plugin",
-        description="Plugin for testing swaps validation.",
-    ).json()
-
-    # Add a plugin file with tasks for the swaps graph
-    filename = "tasks.py"
-    description = "The task plugin file for swaps testing."
-    contents = textwrap.dedent(
-        """"from dioptra import pyplugs
-
-        @pyplugs.register
-        def task1(input_param: str) -> str:
-            return f"task1 result: {input_param}"
-
-        @pyplugs.register
-        def task2(input_param: str) -> str:
-            return f"task2 result: {input_param}"
-
-        @pyplugs.register
-        def task3(input_param: str) -> str:
-            return f"task3 result: {input_param}"
-
-        @pyplugs.register
-        def task4(input_param: str) -> str:
-            return f"task4 result: {input_param}"
-        """
-    )
-    string_parameter_type = registered_plugin_parameter_types["string"]
-    tasks = [
-        {
-            "name": "task1",
-            "inputParams": [
-                {
-                    "name": "input_param",
-                    "parameterType": string_parameter_type["id"],
-                    "required": True,
-                },
-            ],
-            "outputParams": [
-                {
-                    "name": "output",
-                    "parameterType": string_parameter_type["id"],
-                },
-            ],
-        },
-        {
-            "name": "task2",
-            "inputParams": [
-                {
-                    "name": "input_param",
-                    "parameterType": string_parameter_type["id"],
-                    "required": True,
-                },
-            ],
-            "outputParams": [
-                {
-                    "name": "output",
-                    "parameterType": string_parameter_type["id"],
-                },
-            ],
-        },
-        {
-            "name": "task3",
-            "inputParams": [
-                {
-                    "name": "input_param",
-                    "parameterType": string_parameter_type["id"],
-                    "required": True,
-                },
-            ],
-            "outputParams": [
-                {
-                    "name": "output",
-                    "parameterType": string_parameter_type["id"],
-                },
-            ],
-        },
-        {
-            "name": "task4",
-            "inputParams": [
-                {
-                    "name": "input_param",
-                    "parameterType": string_parameter_type["id"],
-                    "required": True,
-                },
-            ],
-            "outputParams": [
-                {
-                    "name": "output",
-                    "parameterType": string_parameter_type["id"],
-                },
-            ],
-        },
-    ]
-    dioptra_client.plugins.files.create(
-        plugin_id=registered_plugin["id"],
-        filename=filename,
-        description=description,
-        contents=contents,
-        function_tasks=tasks,
-        artifact_tasks=None,
-    )
-
-    # Retrieve the latest plugin snapshot identifier
-    plugin_snapshot_id = dioptra_client.plugins.get_by_id(
-        registered_plugin["id"]
-    ).json()["snapshot"]
+    plugin_snapshot_id = registered_swaps_validation_plugin["plugin_snapshot_id"]
 
     # Create a swaps graph with swappable tasks
     swaps_graph = textwrap.dedent("""
         # Swaps graph with swappable tasks
         graph:
           step1:
-            task: task1
-            input_param: $input_param
+            task1:
+              input_param: $input_param
           step2:
             ?step2_choice:
               alias1:
-                task: task2
-                input_param: $input_param
+                task2:
+                  input_param: $input_param
               alias2:
                 task: task3
-                input_param: $input_param
+                args: [$input_param]
           step3:
-            task: task4
-            input_param: $input_param
+            task4:
+              input_param: $input_param
     """)
 
     # Validate the swaps graph
@@ -1804,12 +1694,155 @@ def test_validate_swaps_graph(
         ],
     )
 
-    print(response.json(), flush=True)
+    # Check that the response is successful
+    assert response.status_code == HTTPStatus.OK
+
+    # Check that the response contains validation results
+    validation_result = response.json()
+    assert "renderedValidationErrors" in validation_result
+    assert isinstance(validation_result["renderedValidationErrors"], list)
+    assert "missingGlobalParams" in validation_result
+    assert isinstance(validation_result["missingGlobalParams"], list)
+    assert "schemaValid" in validation_result
+    assert isinstance(validation_result["schemaValid"], bool)
+
+def test_validate_swaps_graph_bad_schema(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+) -> None:
+    """Test that validation fails for a swaps graph with bad schema.
+
+    Given an authenticated user, this test validates that:
+    - A swaps graph with invalid YAML structure fails schema validation
+    - The validation response indicates schema validation failure
+    """
+    group_id = auth_account["default_group_id"]
+
+    bad_schema_graph = textwrap.dedent("""
+        step1:
+            task1:
+                input_param: $input_param
+        step1:
+            task1:
+                input_param: $input_param
+    """)
+
+    # Validate the swaps graph
+    response = dioptra_client.entrypoints.validate(
+        group_id=group_id,
+        swaps_graph=bad_schema_graph,
+        plugin_snapshot_ids=[],
+        entrypoint_parameters=[],
+    )
+
+    # Check that the response is successful (validation is informational, not blocking)
+    assert response.status_code == HTTPStatus.OK
+
+    # Check that the response contains validation results
+    validation_result = response.json()
+    assert "schemaValid" in validation_result
+    assert validation_result["schemaValid"] is False
+    assert "renderedValidationErrors" in validation_result
+    assert isinstance(validation_result["renderedValidationErrors"], list)
+
+def test_validate_swaps_graph_missing_globals(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_swaps_validation_plugin: dict[str, Any],
+) -> None:
+    """Test that validation fails when required global parameters are missing.
+
+    Given an authenticated user, this test validates that:
+    - A swaps graph that requires global parameters fails validation
+    - The validation response indicates missing global parameters
+    """
+    group_id = auth_account["default_group_id"]
+    plugin_snapshot_id = registered_swaps_validation_plugin["plugin_snapshot_id"]
+
+    # Create a swaps graph that uses a global parameter
+    swaps_graph = textwrap.dedent("""
+        step1:
+            task1:
+                input_param: $missing_param
+        step2:
+            task2:
+                input_param: $missing_param
+    """)
+
+    # Validate the swaps graph without declaring the required global parameter
+    response = dioptra_client.entrypoints.validate(
+        group_id=group_id,
+        swaps_graph=swaps_graph,
+        plugin_snapshot_ids=[plugin_snapshot_id],
+        entrypoint_parameters=[
+            {
+                "name": "input_param",
+                "defaultValue": "test_value",
+                "parameterType": "string",
+            }
+        ],
+    )
 
     # Check that the response is successful
     assert response.status_code == HTTPStatus.OK
 
     # Check that the response contains validation results
     validation_result = response.json()
-    assert "issues" in validation_result
-    assert isinstance(validation_result["issues"], list)
+    print(validation_result, flush=True)
+    assert "missingGlobalParams" in validation_result
+    assert "missing_param" in validation_result["missingGlobalParams"]
+    assert len(validation_result["missingGlobalParams"]) > 0
+
+def test_validate_swaps_graph_rendered_errors(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_swaps_validation_plugin: dict[str, Any],
+) -> None:
+    """Test that validation catches errors in rendered swap combinations.
+
+    Given an authenticated user, this test validates that:
+    - A swaps graph with invalid swap combinations fails validation
+    - The validation response contains rendered validation errors
+    """
+    group_id = auth_account["default_group_id"]
+    plugin_snapshot_id = registered_swaps_validation_plugin["plugin_snapshot_id"]
+
+    # Create a swaps graph with a swap that references a non-existent task
+    swaps_graph = textwrap.dedent("""
+        step1:
+            task1:
+                input_param: $input_param
+        step2:
+            ?step2_choice:
+                alias1:
+                    task2:
+                        input_param: $input_param
+                alias2:
+                    task: non_existent_task
+                    args: [$input_param]
+    """)
+
+    # Validate the swaps graph
+    response = dioptra_client.entrypoints.validate(
+        group_id=group_id,
+        swaps_graph=swaps_graph,
+        plugin_snapshot_ids=[plugin_snapshot_id],
+        entrypoint_parameters=[
+            {
+                "name": "input_param",
+                "defaultValue": "test_value",
+                "parameterType": "string",
+            }
+        ],
+    )
+
+    # Check that the response is successful
+    assert response.status_code == HTTPStatus.OK
+
+    # Check that the response contains validation results with rendered errors
+    validation_result = response.json()
+    assert "renderedValidationErrors" in validation_result
+    assert len(validation_result["renderedValidationErrors"]) > 0
+    # Check that the error message mentions the non-existent task
+    error_messages = [error["message"] for error in validation_result["renderedValidationErrors"]]
+    assert any("non_existent_task" in msg for msg in error_messages)

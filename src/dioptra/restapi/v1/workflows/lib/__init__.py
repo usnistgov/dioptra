@@ -14,10 +14,8 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from . import views
 from .clone_git_repository import clone_git_repository
 
 __all__ = [
-    "views",
     "clone_git_repository",
 ]
