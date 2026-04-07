@@ -27,11 +27,6 @@ from dioptra.task_engine.validation import _schema_validate
 
 
 class SwapsValidationService(object):
-    def swaps_graph_validation(
-        self,
-        pre_rendered_task_graph: dict[str, Any],
-    ) -> list[ValidationIssue]:
-        return _schema_validate(pre_rendered_task_graph, get_json_schema)
 
     def validate_swap_output_matches(
         self, pre_rendered_task_graph: dict[str, Any], task_lookup_dict: dict[str, Any]

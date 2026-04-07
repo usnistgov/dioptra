@@ -1181,7 +1181,7 @@ def _manually_validate(experiment_desc: Mapping[str, Any]) -> list[ValidationIss
     return issues
 
 
-def validate(experiment_desc: Mapping[str, Any]) -> list[ValidationIssue]:
+def validate(experiment_desc: Mapping[str, Any], schema_provider: Callable | None) -> list[ValidationIssue]:
     """
     Validate the given declarative experiment description.
 
@@ -1194,7 +1194,7 @@ def validate(experiment_desc: Mapping[str, Any]) -> list[ValidationIssue]:
         experiment description was valid.
     """
 
-    issues = _schema_validate(experiment_desc)
+    issues = _schema_validate(experiment_desc, schema_provider)
 
     # If the description is not schema-valid, the basic structure is incorrect,
     # so we won't even try to dig inside it to check anything.

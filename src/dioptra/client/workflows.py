@@ -28,7 +28,6 @@ VALIDATE_ENTRYPOINT: Final[str] = "validateEntrypoint"
 SIGNATURE_ANALYSIS: Final[str] = "pluginTaskSignatureAnalysis"
 RESOURCE_IMPORT: Final[str] = "resourceImport"
 DRAFT_COMMIT: Final[str] = "draftCommit"
-SWAPS: Final[str] = "swaps"
 
 
 class WorkflowsCollectionClient(CollectionClient[T]):
@@ -173,25 +172,3 @@ class WorkflowsCollectionClient(CollectionClient[T]):
         }
 
         return self._session.post(self.url, VALIDATE_ENTRYPOINT, json_=json_)
-
-    def validate_swaps_graph(
-        self,
-        swaps_graph: str,
-        plugin_snapshots: list[int],
-    ) -> T:
-        """Validate a pre-rendered graph which may contain swaps.
-
-        Args:
-            swaps_graph: The pre-rendered graph containing swaps.
-            plugin_snapshots: A list of identifiers for the plugin snapshots that will
-                be attached to the Entrypoint resource.
-
-        Returns:
-            The response from the Dioptra API.
-        """
-        json_ = {
-            "swapsGraph": swaps_graph,
-            "pluginSnapshots": plugin_snapshots,
-        }
-
-        return self._session.post(self.url, VALIDATE_ENTRYPOINT, SWAPS, json_=json_)

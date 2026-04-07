@@ -16,7 +16,7 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Final, cast
+from typing import Any, Callable, Final, cast
 
 import structlog
 import yaml
@@ -101,7 +101,7 @@ class TaskEngineYamlService(object):
             "artifact_inputs": artifact_inputs,
         }
 
-    def validate(self, task_engine_dict: dict[str, Any]) -> list[ValidationIssue]:
+    def validate(self, task_engine_dict: dict[str, Any], schema_provider: Callable | None) -> list[ValidationIssue]:
         """Validate the given task engine dictionary.
 
         Args:
@@ -111,7 +111,7 @@ class TaskEngineYamlService(object):
             A list of ValidationIssue objects. The list will be empty if the task engine
             dictionary is valid.
         """
-        return validate_task_engine_dict(task_engine_dict)
+        return validate_task_engine_dict(task_engine_dict, schema_provider)
 
     def _add_artifact_parameter_types(
         self,

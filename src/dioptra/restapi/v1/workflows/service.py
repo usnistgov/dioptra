@@ -25,6 +25,7 @@ from tempfile import TemporaryDirectory
 from typing import Any, Final, cast
 
 import jsonschema
+from dioptra.sdk.api.swappable_validation import get_json_schema
 import structlog
 import tomli as toml
 import yaml
@@ -1242,6 +1243,7 @@ class ValidateEntrypointService(object):
     def __init__(
         self,
         task_engine_yaml_service: TaskEngineYamlService,
+        swaps_validation_service: SwapsValidationService,
     ) -> None:
         """Initialize the entrypoint service.
 
@@ -1251,6 +1253,7 @@ class ValidateEntrypointService(object):
             task_engine_yaml_service: A TaskEngineYamlService object.
         """
         self._task_engine_yaml_service = task_engine_yaml_service
+        self._swaps_validation_service = swaps_validation_service
 
     def validate(
         self,
@@ -1351,73 +1354,19 @@ class ValidateEntrypointService(object):
                     )
                 ],
             }
-
-        issues = self._task_engine_yaml_service.validate(
-            task_engine_dict=task_engine_dict
-        )
-
-        if issues:
-            return {"schema_valid": False, "schema_issues": issues}
-
-        return {"schema_valid": True, "schema_issues": []}
-
-
-class ValidateSwapsGraphService(object):
-    """The service for validating swaps in an entrypoint task graph."""
-
-    @inject
-    def __init__(
-        self,
-        swaps_validation_service: SwapsValidationService,
-    ) -> None:
-        """Initialize the entrypoint service.
-
-        All arguments are provided via dependency injection.
-
-        Args:
-            swaps_validation_service: A SwapsValidationService object.
-        """
-
-        self._swaps_validation_service = swaps_validation_service
-
-    def validate(self, swaps_graph: str, plugin_snapshot_ids: list[int], **kwargs):
-        """Validate a task graph containing swaps, and provide the tasks associated with each swap.
-
-        Args:
-            group_id: The ID of the group validating the entrypoint resource.
-            swaps_graph: The swap graph for validation.
-            global_params: A list of global parameters needed for the swaps graph.
-            plugin_snapshot_ids: A list of identifiers for the plugin snapshots that
-                will be attached to the Entrypoint resource.
-
-        Returns:
-            A dictionary containing the validation result. The dictionary contains three keys:
-                - "schema_valid": A boolean indicating whether the schema is valid.
-                - "swap_errors": A list of issues found in the schema, if any.
-                - "swaps": A list of mappings mapping swap names to
-
-        Raises:
-            DioptraError: If two or more plugin_snapshot_ids point at the same
-                resource_id.
-        """
-
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
-
-        swaps_graph_yaml = yaml.safe_load(swaps_graph)
+        
+        swaps_graph_yaml = yaml.safe_load(task_graph)
 
         if swaps_graph_yaml is None:
             raise EmptyGraphError("Provided task graph is empty.")
-
-        plugin_plugin_files = views.get_plugin_plugin_files_from_plugin_snapshot_ids(
-            plugin_snapshot_ids=plugin_snapshot_ids, logger=log
-        )
 
         lookup_dict = self._swaps_validation_service.build_task_lookup_dict(
             plugins=plugin_plugin_files
         )
 
-        schema_issues = self._swaps_validation_service.swaps_graph_validation(
-            pre_rendered_task_graph=swaps_graph_yaml
+        schema_issues = self._task_engine_yaml_service.validate(
+            task_engine_dict=task_engine_dict,
+            schema_provider=get_json_schema
         )
 
         output_issues, tasks = (
@@ -1431,6 +1380,7 @@ class ValidateSwapsGraphService(object):
 
         return {
             "schema_valid": schema_valid,
-            "swap_errors": output_issues + schema_issues,
+            "schema_issues": schema_issues,
+            "swap_issues": output_issues,
             "swaps": tasks,
         }
