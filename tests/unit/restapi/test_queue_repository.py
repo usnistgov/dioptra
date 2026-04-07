@@ -308,6 +308,7 @@ def test_queue_delete(queue_repo, db_session: DBSession, queue_snap_setup):
     queue_repo.delete(queues[0])
     db_session.commit()
     assert queues[0].resource.is_deleted
+    assert queues[0].resource.parents == []
 
     # Second time should be a no-op
     queue_repo.delete(queues[0])

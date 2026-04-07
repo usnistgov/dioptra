@@ -297,6 +297,7 @@ class QueueIdService(object):
 
         with self._uow:
             # No-op if already deleted
+            self._uow.queue_repo.unlink_entrypoints(queue_id)
             self._uow.queue_repo.delete(queue_id)
 
         log.debug("Queue deleted", queue_id=queue_id)
