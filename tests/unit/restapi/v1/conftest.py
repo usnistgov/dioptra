@@ -998,36 +998,179 @@ def registered_swap_plugins(
 def registered_swap_entrypoints(
     client: FlaskClient,
     auth_account: dict[str, Any],
-    registered_queues: dict[str, Any],
     registered_swap_plugins: dict[str, Any],
+    registered_plugin_parameter_types: dict[str, Any],
 ) -> dict[str, Any]:
     output = {}
 
-    for fname in swap_entrypoints:
-        entrypoint = swap_entrypoints[fname]
-
-        with (Path(__file__).absolute().parent / "entrypoint_swaps" / fname).open(
-            "r"
+    for filename in swap_entrypoints:
+        with open(
+            Path(__file__).absolute().parent / "entrypoint_swaps" / filename, "r"
         ) as f:
             task_graph = f.read()
-            parameters = [
-                {"name": p, "defaultValue": "default", "parameterType": "string"}
-                for p in entrypoint["params"]
-            ]
 
-        plugin_ids = [plugin["id"] for plugin in list(registered_swap_plugins.values())]
-        queue_ids = [queue["id"] for queue in list(registered_queues.values())]
+        params = swap_entrypoints[filename]["params"]
+        parameters = [
+            {
+                "name": param,
+                "defaultValue": "default",
+                "parameterType": "string",
+            }
+            for param in params
+        ]
 
-        entrypoint_response = actions.register_entrypoint(
+        plugin_ids = [
+            registered_swap_plugins[plugin_name]["id"]
+            for plugin_name in swap_plugins
+        ]
+
+        response = actions.register_entrypoint(
             client,
-            name=entrypoint["name"],
-            description="The first entrypoint.",
+            name=swap_entrypoints[filename]["name"],
+            description="A swap entrypoint.",
             group_id=auth_account["groups"][0]["id"],
             task_graph=task_graph,
             parameters=parameters,
             plugin_ids=plugin_ids,
-            queue_ids=queue_ids,
+            queue_ids=[],
         ).get_json()
 
-        output[entrypoint["name"]] = entrypoint_response
+        output[filename.replace(".yml", "")] = response
+
     return output
+
+@pytest.fixture
+@freeze_time("Apr 1st, 2025 9:00am", auto_tick_seconds=1)
+def registered_swaps_validation_plugin(
+    client: FlaskClient,
+    auth_account: dict[str, Any],
+    registered_plugin_parameter_types: dict[str, Any],
+) -> dict[str, Any]:
+    """Fixture for creating a plugin with tasks for swaps validation testing.
+
+    Returns a dictionary containing:
+    - plugin: The registered plugin
+    - plugin_snapshot_id: The latest snapshot ID of the plugin
+    - tasks: The task definitions
+    """
+    group_id = auth_account["default_group_id"]
+    string_parameter_type = registered_plugin_parameter_types["string"]
+
+    # Create a plugin for the swaps graph
+    registered_plugin = actions.register_plugin(
+        client,
+        name="swaps_validation_plugin",
+        description="Plugin for testing swaps validation.",
+        group_id=group_id,
+    ).get_json()
+
+    # Add a plugin file with tasks for the swaps graph
+    filename = "tasks.py"
+    description = "The task plugin file for swaps testing."
+    contents = textwrap.dedent(
+        """"from dioptra import pyplugs
+
+        @pyplugs.register
+        def task1(input_param: str) -> str:
+            return f"task1 result: {input_param}"
+
+        @pyplugs.register
+        def task2(input_param: str) -> str:
+            return f"task2 result: {input_param}"
+
+        @pyplugs.register
+        def task3(input_param: str) -> str:
+            return f"task3 result: {input_param}"
+
+        @pyplugs.register
+        def task4(input_param: str) -> str:
+            return f"task4 result: {input_param}"
+        """
+    )
+    tasks = [
+        {
+            "name": "task1",
+            "inputParams": [
+                {
+                    "name": "input_param",
+                    "parameterType": string_parameter_type["id"],
+                    "required": True,
+                },
+            ],
+            "outputParams": [
+                {
+                    "name": "output",
+                    "parameterType": string_parameter_type["id"],
+                },
+            ],
+        },
+        {
+            "name": "task2",
+            "inputParams": [
+                {
+                    "name": "input_param",
+                    "parameterType": string_parameter_type["id"],
+                    "required": True,
+                },
+            ],
+            "outputParams": [
+                {
+                    "name": "output",
+                    "parameterType": string_parameter_type["id"],
+                },
+            ],
+        },
+        {
+            "name": "task3",
+            "inputParams": [
+                {
+                    "name": "input_param",
+                    "parameterType": string_parameter_type["id"],
+                    "required": True,
+                },
+            ],
+            "outputParams": [
+                {
+                    "name": "output",
+                    "parameterType": string_parameter_type["id"],
+                },
+            ],
+        },
+        {
+            "name": "task4",
+            "inputParams": [
+                {
+                    "name": "input_param",
+                    "parameterType": string_parameter_type["id"],
+                    "required": True,
+                },
+            ],
+            "outputParams": [
+                {
+                    "name": "output",
+                    "parameterType": string_parameter_type["id"],
+                },
+            ],
+        },
+    ]
+    actions.register_plugin_file(
+        client,
+        plugin_id=registered_plugin["id"],
+        filename=filename,
+        description=description,
+        contents=contents,
+        function_tasks=tasks,
+        artifact_tasks=None,
+    )
+
+    # Retrieve the latest plugin snapshot identifier
+    plugin_snapshot = actions.get_plugin_parameter_types(client).get_json()
+    # Get the plugin snapshot from the plugin response
+    plugin_snapshot_id = registered_plugin["snapshot"]
+
+    return {
+        "plugin": registered_plugin,
+        "plugin_snapshot_id": plugin_snapshot_id,
+        "tasks": tasks,
+        "string_parameter_type": string_parameter_type,
+    }

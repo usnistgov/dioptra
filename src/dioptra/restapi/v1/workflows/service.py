@@ -81,7 +81,7 @@ from dioptra.restapi.v1.utils import PluginParameterTypeDict, PluginWithFilesDic
 from dioptra.sdk.utilities.paths import set_cwd
 from dioptra.task_engine.issues import IssueSeverity, IssueType, ValidationIssue
 
-from .lib import views
+from dioptra.restapi.v1.shared import views
 from .lib.clone_git_repository import clone_git_repository
 from .schema import (
     ResourceImportResolveNameConflictsStrategy,

@@ -15,13 +15,9 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-import json
-
-from itertools import product
-
 import yaml
-from src.dioptra.restapi.db import models
-from src.dioptra.restapi.errors import EmptyGraphError
+from dioptra.restapi.db import models
+from dioptra.restapi.errors import EmptyGraphError
 import structlog
 from structlog.stdlib import BoundLogger
 from typing import Any
@@ -30,9 +26,7 @@ from injector import inject
 from dioptra.task_engine.issues import IssueSeverity, IssueType, ValidationIssue
 from dioptra.restapi.v1.entrypoints.service import EntrypointIdService, EntrypointSnapshotIdService
 from dioptra.restapi.v1.shared.task_engine_yaml.service import TaskEngineYamlService
-from dioptra.restapi.v1.workflows.lib.views import get_plugin_plugin_files_from_plugin_snapshot_ids
-from dioptra.sdk.utilities.entrypoint_swaps import render_swaps_graph
-from dioptra.task_engine import util
+from dioptra.restapi.v1.shared.views import get_plugin_plugin_files_from_plugin_snapshot_ids
 from dioptra.task_engine.issues import IssueSeverity, IssueType, ValidationIssue
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
