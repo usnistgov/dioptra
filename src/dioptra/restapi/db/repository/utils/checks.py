@@ -606,7 +606,7 @@ def assert_resource_modifiable(
 def assert_resource_type(
     session: CompatibleSession[S],
     resource: m.Resource | m.ResourceSnapshot | int,
-    resource_type: str,
+    resource_type: EntityType,
 ) -> None:
     """
     Check the resource type of the given resource or snapshot.  If a snapshot
@@ -634,13 +634,15 @@ def assert_resource_type(
         resource = resource_obj
 
     if isinstance(resource, (m.Resource, m.ResourceSnapshot)):
-        if resource.resource_type != resource_type:
-            raise e.MismatchedResourceTypeError(resource_type, resource.resource_type)
+        if resource.resource_type != resource_type.db_table_name:
+            raise e.MismatchedResourceTypeError(
+                resource_type.db_table_name, resource.resource_type
+            )
 
     if isinstance(resource, m.ResourceSnapshot):
-        if resource.resource.resource_type != resource_type:
+        if resource.resource.resource_type != resource_type.db_table_name:
             raise e.MismatchedResourceTypeError(
-                resource_type, resource.resource.resource_type
+                resource_type.db_table_name, resource.resource.resource_type
             )
 
 
@@ -867,7 +869,7 @@ def assert_draft_does_not_exist(
 
 
 def assert_can_create_resource(
-    session: CompatibleSession[S], snap: m.ResourceSnapshot, resource_type: str
+    session: CompatibleSession[S], snap: m.ResourceSnapshot, resource_type: EntityType
 ):
     """
     Check whether the given snapshot+resource may be created.  There may also
@@ -906,7 +908,7 @@ def assert_can_create_resource(
 
 
 def assert_can_create_snapshot(
-    session: CompatibleSession[S], snap: m.ResourceSnapshot, resource_type: str
+    session: CompatibleSession[S], snap: m.ResourceSnapshot, resource_type: EntityType
 ):
     """
     Check whether the given snapshot may be created, of an existing resource.

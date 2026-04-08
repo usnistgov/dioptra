@@ -43,6 +43,7 @@ from dioptra.restapi.db.repository.utils.common import (
     S,
     get_group_id,
     get_resource_id,
+    get_resource_snapshot_id,
     get_resource_type,
 )
 from dioptra.restapi.db.repository.utils.search import construct_sql_query_filters
@@ -174,6 +175,101 @@ def get_latest_snapshots(
     return snaps
 
 
+def get_exact_latest_snapshots(
+    session: CompatibleSession[S],
+    snap_class: typing.Type[ResourceT],
+    resources: Iterable[int | m.Resource | m.ResourceSnapshot],
+    deletion_policy: DeletionPolicy,
+) -> Sequence[ResourceT]:
+    """
+    Get the latest snapshots of the given resources.  If "resources"
+    is passed as snapshots already, they are not assumed to be the latest.
+    The database is still queried and a list of possibly different snapshots
+    is returned.
+
+    Args:
+        session: An SQLAlchemy session
+        snap_class: A ResourceSnapshot subclass, which represents the type
+            of resource to get
+        resources: An iterable of resources, resource snapshots, or integer
+            resource IDs, for which to obtain the latest snapshots
+        deletion_policy: Whether to look at deleted resources, non-deleted
+            resources, or all resources
+
+    Returns:
+        A list of snapshots matching the given IDs
+    """
+    snaps = get_latest_snapshots(session, snap_class, resources, deletion_policy)
+
+    if len(snaps) != len(list(resources)):
+        missing_resource_ids = set(resources) - {
+            get_resource_id(resource) for resource in resources
+        }
+        raise e.EntityDoesNotExistError(
+            EntityType.NONE, resource_ids=missing_resource_ids
+        )
+
+    return snaps
+
+
+def get_one_resource(
+    session: CompatibleSession[S],
+    resource: m.Resource | m.ResourceSnapshot | int,
+    deletion_policy: DeletionPolicy,
+) -> m.Resource:
+    """
+    Get the a resource given the resource, resource snapshot, or resource ID; require
+    that exactly one is found, or raise an exception.
+
+    Args:
+        session: An SQLAlchemy session
+        resource: A resource or resource snapshot or integer resource ID
+        deletion_policy: Whether to look at deleted resources, non-deleted
+            resources, or all resources
+
+    Returns:
+        A resource
+
+    Raises:
+        EntityDoesNotExistError: if the resource does not exist in the database
+            (deleted or not)
+        EntityExistsError: if the resource exists and is not deleted, but
+            policy was to find a deleted resource
+        EntityDeletedError: if the resource is deleted, but policy was to find
+            a non-deleted resource
+    """
+    resource_id = get_resource_id(resource)
+
+    stmt = sa.select(m.Resource).where(m.Resource.resource_id == resource_id)
+    resource_obj = session.scalar(stmt)
+
+    if resource_obj is None:
+        existence_result = ExistenceResult.DOES_NOT_EXIST
+    elif resource_obj.is_deleted:
+        existence_result = ExistenceResult.DELETED
+    else:
+        existence_result = ExistenceResult.EXISTS
+
+    if resource_obj is None:
+        resource_type = EntityType.NONE
+    else:
+        resource_type = EntityType.get_from_db_table_name(resource_obj.resource_type)
+
+    # Here, we combine the passed-in deletion policy with existence, to
+    # determine the exception.
+    assert_exists(
+        deletion_policy,
+        existence_result,
+        resource_type,
+        resource_id,
+    )
+
+    # The above assert_exists() function would have raised an exception, so
+    # latest can't be None here.
+    assert resource_obj is not None
+    return resource_obj
+
+
 def get_one_latest_snapshot(
     session: CompatibleSession[S],
     snap_class: typing.Type[ResourceT],
@@ -236,6 +332,74 @@ def get_one_latest_snapshot(
     # latest can't be None here.
     assert latest is not None
     return latest
+
+
+def get_one_snapshot(
+    session: CompatibleSession[S],
+    snap_class: typing.Type[ResourceT],
+    resource: int | m.Resource,
+    snapshot: int | m.ResourceSnapshot,
+    deletion_policy: DeletionPolicy,
+) -> ResourceT:
+    """
+    Get the a specific resource snapshot given the resource snapshot ID; require that
+    exactly one is found, or raise an exception.
+
+    Args:
+        session: An SQLAlchemy session
+        snap_class: A ResourceSnapshot subclass, which represents the type
+            of resource to get
+        resource: A resource or integer resource ID
+        snapshot: A resource snapshot or integer snapshot ID
+        deletion_policy: Whether to look at deleted resources, non-deleted
+            resources, or all resources
+
+    Returns:
+        A snapshot
+
+    Raises:
+        EntityDoesNotExistError: if the resource does not exist in the database
+            (deleted or not)
+        EntityExistsError: if the resource exists and is not deleted, but
+            policy was to find a deleted resource
+        EntityDeletedError: if the resource is deleted, but policy was to find
+            a non-deleted resource
+    """
+    resource_id = get_resource_id(resource)
+    snapshot_id = get_resource_snapshot_id(snapshot)
+
+    stmt = (
+        sa.select(snap_class)
+        .join(m.Resource)
+        .where(
+            m.Resource.resource_id == resource_id,
+            snap_class.resource_snapshot_id == snapshot_id,
+        )
+    )
+
+    snapshot_obj = session.scalar(stmt)
+
+    if snapshot_obj is None:
+        existence_result = ExistenceResult.DOES_NOT_EXIST
+    elif snapshot_obj.resource.is_deleted:
+        existence_result = ExistenceResult.DELETED
+    else:
+        existence_result = ExistenceResult.EXISTS
+
+    # Here, we combine the passed-in deletion policy with existence, to
+    # determine the exception.
+    assert_exists(
+        deletion_policy,
+        existence_result,
+        get_resource_type(snapshot_obj or snapshot),
+        resource_id,
+        snapshot_id=snapshot_id,
+    )
+
+    # The above assert_exists() function would have raised an exception, so
+    # latest can't be None here.
+    assert snapshot_obj is not None
+    return snapshot_obj
 
 
 def get_latest_child_snapshots(
@@ -401,15 +565,59 @@ def get_snapshot_by_name(
     return resource
 
 
+def create_resource_children(
+    session: CompatibleSession[S],
+    child_class: typing.Type[ResourceT],
+    parent: m.Resource | m.ResourceSnapshot,
+    new_children: Iterable[m.Resource | ResourceT | int],
+) -> Sequence[ResourceT]:
+    """
+    Appends the children of the given resource to the given children.
+
+    This is distinct from `set_resource_children` and `append_resource_children` as the
+    parent does not need to exist in the database yet. Therefore parent cannot be an id.
+
+    It is intended to be used when a new resource is being created. The function can be
+    called once per child type.
+
+    Args:
+        session: An SQLAlchemy session
+        child_class: A ResourceSnapshot subclass, which represents which type
+            of resource is being set (the child type)
+        parent: A resource or snapshot
+        new_children: The children to set
+
+    Returns:
+        The new children, as their latest snapshots
+
+    Raises:
+        EntityDoesNotExistError: if parent or any child does not exist
+        EntityDeletedError: if parent or any child is deleted
+    """
+    child_snaps = get_exact_latest_snapshots(
+        session,
+        child_class,
+        new_children,
+        DeletionPolicy.ANY,
+    )
+
+    parent.children.extend(child.resource for child in child_snaps)
+
+    return child_snaps
+
+
 def set_resource_children(
     session: CompatibleSession[S],
     child_class: typing.Type[ResourceT],
     parent: m.Resource | m.ResourceSnapshot | int,
     new_children: Iterable[m.Resource | ResourceT | int],
+    child_resource_type: EntityType,
 ) -> Sequence[ResourceT]:
     """
-    Set the children of the given resource to the given children.  This
-    replaces all existing children with the given resources.
+    Set the children of the given resource to the given children.  This replaces all
+    existing children of child_class resource type with the given resources. It does not
+    modify children of different resource types.
+
 
     Args:
         session: An SQLAlchemy session
@@ -420,22 +628,16 @@ def set_resource_children(
         new_children: The children to set
 
     Returns:
-        The new children, as their latest snapshots
+        The new children of child_class type, as their latest snapshots
 
     Raises:
         EntityDoesNotExistError: if parent or any child does not exist
         EntityDeletedError: if parent or any child is deleted
     """
 
-    assert_resource_exists(session, parent, DeletionPolicy.NOT_DELETED)
     assert_resources_exist(session, new_children, DeletionPolicy.NOT_DELETED)
 
-    if isinstance(parent, int):
-        temp = session.get(m.Resource, parent)
-        # I just checked parent exists above, so the above .get() should not
-        # return None.
-        assert temp is not None
-        parent = temp
+    parent = get_one_resource(session, parent, DeletionPolicy.NOT_DELETED)
 
     child_snaps = get_latest_snapshots(
         session,
@@ -444,10 +646,14 @@ def set_resource_children(
         DeletionPolicy.ANY,
     )
 
-    # Direct assignment like:
-    #     parent.children = [child.resource for child in child_snaps]
-    # produces a mypy typing error.
+    children_to_keep = [
+        child
+        for child in parent.children
+        if child.resource_type != child_resource_type.db_table_name
+    ]
+
     parent.children.clear()
+    parent.children.extend(children_to_keep)
     parent.children.extend(child.resource for child in child_snaps)
 
     return child_snaps
@@ -458,7 +664,7 @@ def append_resource_children(
     child_class: typing.Type[ResourceT],
     parent: m.Resource | m.ResourceSnapshot | int,
     new_children: Iterable[m.Resource | ResourceT | int],
-) -> list[ResourceT]:
+) -> Sequence[ResourceT]:
     """
     Add the given children to the given parent.
 
@@ -527,6 +733,7 @@ def unlink_child(
     session: CompatibleSession[S],
     parent: m.Resource | m.ResourceSnapshot | int,
     child: m.Resource | m.ResourceSnapshot | int,
+    child_resource_type: EntityType,
 ):
     """
     "Unlink" the given child from the given parent.  This only severs the
@@ -558,9 +765,58 @@ def unlink_child(
     child_id = get_resource_id(child)
 
     for idx, child in enumerate(parent.children):
-        if child.resource_id == child_id:
+        if (
+            child.resource_id == child_id
+            and child.resource_type == child_resource_type.db_table_name
+        ):
             del parent.children[idx]
             break
+
+
+def unlink_children(
+    session: CompatibleSession[S],
+    parent: m.Resource | m.ResourceSnapshot | int,
+    resource_type: EntityType,
+) -> list[int]:
+    """
+    "Unlink" children of the given type from the given parent. If type is None,
+    unlink all children. This only severs the relationship; it does not delete either
+    resource.  If there is no parent/child relationship, this is a no-op.
+
+    Args:
+        session: An SQLAlchemy session
+        parent: A resource, snapshot, or resource_id integer primary key
+            value
+        child: A resource, snapshot, or resource_id integer primary key
+            value
+
+    Raises:
+        EntityDoesNotExistError: if parent or child do not exist
+    """
+    assert_resource_exists(session, parent, DeletionPolicy.ANY)
+
+    # We need a parent object...
+    if isinstance(parent, int):
+        temp = session.get(m.Resource, parent)
+        # I just checked parent exists above, so the above .get() should not
+        # return None.
+        assert temp is not None
+        parent = temp
+
+    resource_ids = {child.resource_id for child in parent.children}
+    if resource_type is EntityType.NONE:
+        parent.children.clear()
+    else:
+        children = [
+            child
+            for child in parent.children
+            if child.resource_type != resource_type.db_table_name
+        ]
+        resource_ids = resource_ids - {child.resource_id for child in children}
+        parent.children.clear()
+        parent.children.extend(children)
+
+    return list(resource_ids)
 
 
 def delete_resource(
@@ -831,13 +1087,17 @@ __all__ = [
     "add_resource_lock_types",
     "append_resource_children",
     "apply_resource_deletion_policy",
+    "create_resource_children",
     "delete_resource",
     "get_by_filters_paged",
     "get_latest_child_snapshots",
     "get_latest_snapshots",
+    "get_exact_latest_snapshots",
     "get_one_latest_snapshot",
+    "get_one_snapshot",
     "get_resource_lock_types",
     "get_snapshot_by_name",
     "set_resource_children",
     "unlink_child",
+    "unlink_children",
 ]

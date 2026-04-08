@@ -166,11 +166,8 @@ class JobService(object):
         status = "queued"
 
         # Validate the provided experiment_id and fetch the ORM object
-        experiment_dict = cast(
-            utils.ExperimentDict,
-            self._experiment_id_service.get(
-                experiment_id, error_if_not_found=True, log=log
-            ),
+        experiment_dict = self._experiment_id_service.get(
+            experiment_id, error_if_not_found=True, log=log
         )
         experiment = experiment_dict["experiment"]
         # Validate that the provided entrypoint_id is registered to the experiment

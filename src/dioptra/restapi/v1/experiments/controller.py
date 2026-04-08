@@ -17,7 +17,6 @@
 """The module defining the endpoints for Experiment resources."""
 
 import uuid
-from typing import cast
 from urllib.parse import unquote
 
 import structlog
@@ -192,10 +191,7 @@ class ExperimentIdEndpoint(Resource):
             request_type="GET",
             id=id,
         )
-        experiment = cast(
-            models.Experiment,
-            self._experiment_id_service.get(id, error_if_not_found=True, log=log),
-        )
+        experiment = self._experiment_id_service.get(id, log=log)
         return utils.build_experiment(experiment)
 
     @login_required
@@ -222,16 +218,12 @@ class ExperimentIdEndpoint(Resource):
             id=id,
         )
         parsed_obj = request.parsed_obj  # type: ignore
-        experiment = cast(
-            utils.ExperimentDict,
-            self._experiment_id_service.modify(
-                id,
-                name=parsed_obj["name"],
-                description=parsed_obj["description"],
-                entrypoint_ids=parsed_obj["entrypoint_ids"],
-                error_if_not_found=True,
-                log=log,
-            ),
+        experiment = self._experiment_id_service.modify(
+            id,
+            name=parsed_obj["name"],
+            description=parsed_obj["description"],
+            entrypoint_ids=parsed_obj["entrypoint_ids"],
+            log=log,
         )
         return utils.build_experiment(experiment)
 
@@ -592,11 +584,8 @@ class ExperimentIdEntrypointsEndpoint(Resource):
             request_id=str(uuid.uuid4()), resource="Experiment", request_type="POST"
         )
         parsed_obj = request.parsed_obj  # type: ignore
-        entrypoints = cast(
-            list[models.EntryPoint],
-            self._experiment_id_entrypoints.append(
-                id, entrypoint_ids=parsed_obj["ids"], error_if_not_found=True, log=log
-            ),
+        entrypoints = self._experiment_id_entrypoints.append(
+            id, entrypoint_ids=parsed_obj["ids"], error_if_not_found=True, log=log
         )
         return [utils.build_entrypoint_ref(entrypoint) for entrypoint in entrypoints]
 
