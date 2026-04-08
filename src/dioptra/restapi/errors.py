@@ -874,6 +874,17 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
             {"entity_type": error.entity_type.db_table_name, **error.entity_attributes},
         )
 
+    @api.errorhandler(EntityDeletedError)
+    def handle_entity_deleted_error(error: EntityDeletedError):
+        log.debug(
+            "Entity deleted", entity_type=error.entity_type, **error.entity_attributes
+        )
+        return error_result(
+            error,
+            http.HTTPStatus.NOT_FOUND,
+            {"entity_type": error.entity_type.db_table_name, **error.entity_attributes},
+        )
+
     @api.errorhandler(EntityRelationshipDoesNotExistError)
     def handle_resource_relationship_does_not_exist_error(
         error: EntityRelationshipDoesNotExistError,

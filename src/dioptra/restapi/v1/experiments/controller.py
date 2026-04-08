@@ -474,7 +474,6 @@ class ExperimentIdJobIdMlflowrunEndpoint(Resource):
             experiment_id=id,
             job_id=jobId,
             mlflow_run_id=parsed_obj["mlflow_run_id"],
-            error_if_not_found=True,
             log=log,
         )
 

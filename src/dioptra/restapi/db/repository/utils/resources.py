@@ -175,6 +175,42 @@ def get_latest_snapshots(
     return snaps
 
 
+def get_latest_snapshots_where(
+    session: CompatibleSession[S],
+    snap_class: typing.Type[ResourceT],
+    *where_clauses: sa.ColumnExpressionArgument,
+    deletion_policy: DeletionPolicy,
+) -> Sequence[ResourceT]:
+    """
+    Get the latest snapshot(s) of the given resource(s), filtered by the given where
+    clause(s).
+
+    Args:
+        session: An SQLAlchemy session
+        snap_class: A ResourceSnapshot subclass, which represents the type
+            of resource to get
+        resources: A single or iterable of resources, resource snapshots,
+            or integer resource IDs, for which to obtain the latest snapshots
+        deletion_policy: Whether to look at deleted resources, non-deleted
+            resources, or all resources
+
+    Returns:
+        A snapshot/list of snapshots, or None/empty list if none were found
+        with the given ID(s)
+    """
+    stmt = (
+        sa.select(snap_class)
+        .join(m.Resource)
+        .where(
+            *where_clauses,
+            snap_class.resource_snapshot_id == m.Resource.latest_snapshot_id,
+        )
+    )
+    stmt = apply_resource_deletion_policy(stmt, deletion_policy)
+
+    return session.scalars(stmt).all()
+
+
 def get_exact_latest_snapshots(
     session: CompatibleSession[S],
     snap_class: typing.Type[ResourceT],
@@ -978,6 +1014,7 @@ def get_by_filters_paged(
     sort_by: str | None,
     descending: bool,
     deletion_policy: DeletionPolicy = DeletionPolicy.NOT_DELETED,
+    additional_query_terms: list[typing.Callable[[sa.Select], sa.Select]] | None = None,
 ) -> tuple[Sequence[ResourceT], int]:
     """
     Get some resources according to search criteria.
@@ -1018,9 +1055,13 @@ def get_by_filters_paged(
         EntityDoesNotExistError: if the given group does not exist
         EntityDeletedError: if the given group is deleted
     """
+    if additional_query_terms is None:
+        additional_query_terms = []
+
     sql_filter = construct_sql_query_filters(filters, searchable_fields)
     if sort_by and sort_by not in sortable_fields:
         raise e.SortParameterValidationError("resource", sort_by)
+
     group_id = None if group is None else get_group_id(group)
 
     if group_id is not None:
@@ -1040,6 +1081,10 @@ def get_by_filters_paged(
         count_stmt = count_stmt.where(sql_filter)
 
     count_stmt = apply_resource_deletion_policy(count_stmt, deletion_policy)
+
+    for query_term in additional_query_terms:
+        count_stmt = query_term(count_stmt)
+
     current_count = session.scalar(count_stmt)
 
     # For mypy: a "SELECT count(*)..." query should never return NULL.
@@ -1073,8 +1118,12 @@ def get_by_filters_paged(
         page_stmt = page_stmt.order_by(sort_criteria)
 
         page_stmt = page_stmt.offset(page_start)
+
         if page_length > 0:
             page_stmt = page_stmt.limit(page_length)
+
+        for query_term in additional_query_terms:
+            page_stmt = query_term(page_stmt)
 
         snaps = session.scalars(page_stmt).all()
 
@@ -1092,6 +1141,7 @@ __all__ = [
     "get_by_filters_paged",
     "get_latest_child_snapshots",
     "get_latest_snapshots",
+    "get_latest_snapshots_where",
     "get_exact_latest_snapshots",
     "get_one_latest_snapshot",
     "get_one_snapshot",
