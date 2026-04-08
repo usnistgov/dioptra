@@ -34,6 +34,7 @@ from structlog.stdlib import BoundLogger
 from werkzeug.datastructures import FileStorage
 
 from dioptra.restapi.db import db, models
+from dioptra.restapi.db.unit_of_work import UnitOfWork
 from dioptra.restapi.errors import (
     DioptraError,
     DraftDoesNotExistError,
@@ -57,7 +58,6 @@ from dioptra.restapi.v1.plugin_parameter_types.service import (
     PluginParameterTypeIdService,
     PluginParameterTypeNameService,
     PluginParameterTypeService,
-    get_plugin_task_parameter_types_by_id,
 )
 from dioptra.restapi.v1.plugins.schema import ALLOWED_PLUGIN_FILENAME_REGEX
 from dioptra.restapi.v1.plugins.service import (
@@ -572,7 +572,9 @@ class ResourceImportService(object):
                         select(models.PluginFile)
                         .join(models.Resource)
                         .where(
-                            models.PluginFile.plugin_id == existing.resource_id,
+                            models.PluginFile.plugin.has(
+                                models.Resource.resource_id == existing.resource_id
+                            ),
                             models.Resource.is_deleted == False,  # noqa: E712
                             models.Resource.latest_snapshot_id
                             == models.PluginFile.resource_snapshot_id,
@@ -1241,6 +1243,7 @@ class ValidateEntrypointService(object):
     def __init__(
         self,
         task_engine_yaml_service: TaskEngineYamlService,
+        uow: UnitOfWork,
     ) -> None:
         """Initialize the entrypoint service.
 
@@ -1250,6 +1253,7 @@ class ValidateEntrypointService(object):
             task_engine_yaml_service: A TaskEngineYamlService object.
         """
         self._task_engine_yaml_service = task_engine_yaml_service
+        self._uow = uow
 
     def validate(
         self,
@@ -1299,7 +1303,7 @@ class ValidateEntrypointService(object):
             for artifact in entrypoint_artifacts
             for parameter in artifact["output_params"]
         ]
-        id_type_map = get_plugin_task_parameter_types_by_id(ids=type_ids, log=log)
+        id_type_map = self._uow.type_repo.get_exact(type_ids)
         entrypoint = EntryPointDataAdapter(
             task_graph=task_graph,
             artifact_graph=artifact_graph,

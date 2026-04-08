@@ -170,7 +170,7 @@ def get_latest_snapshots(
     if isinstance(resources, (int, m.Resource, m.ResourceSnapshot)):
         snaps = session.scalar(stmt)
     else:
-        snaps = session.scalars(stmt).all()
+        snaps = session.scalars(stmt).unique().all()
 
     return snaps
 

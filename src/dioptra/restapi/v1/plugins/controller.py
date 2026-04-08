@@ -28,6 +28,7 @@ from injector import inject
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
+from dioptra.restapi.db.repository.plugins import PluginRepository
 from dioptra.restapi.routes import V1_PLUGIN_FILES_ROUTE, V1_PLUGINS_ROUTE
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.entity_types import EntityType
@@ -68,8 +69,6 @@ from .schema import (
     PluginSchema,
 )
 from .service import (
-    PLUGIN_FILE_SEARCHABLE_FIELDS,
-    PLUGIN_SEARCHABLE_FIELDS,
     PluginIdFileIdService,
     PluginIdFileService,
     PluginIdService,
@@ -90,7 +89,7 @@ PluginFileSnapshotsResource = generate_nested_resource_snapshots_endpoint(
     resource_type=EntityType.PLUGIN_FILE,
     resource_route=V1_PLUGIN_FILES_ROUTE,
     base_resource_route=V1_PLUGINS_ROUTE,
-    searchable_fields=PLUGIN_FILE_SEARCHABLE_FIELDS,
+    searchable_fields=PluginRepository.FILE_SEARCHABLE_FIELDS,
     page_schema=PluginFilePageSchema,
     build_fn=utils.build_plugin_file,
 )
@@ -519,7 +518,7 @@ PluginSnapshotsResource = generate_resource_snapshots_endpoint(
     resource_model=models.Plugin,
     resource_type=EntityType.PLUGIN,
     route_prefix=V1_PLUGINS_ROUTE,
-    searchable_fields=PLUGIN_SEARCHABLE_FIELDS,
+    searchable_fields=PluginRepository.SEARCHABLE_FIELDS,
     page_schema=PluginPageSchema,
     build_fn=build_plugin,
 )

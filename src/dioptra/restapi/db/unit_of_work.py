@@ -27,6 +27,7 @@ from dioptra.restapi.db.repository.entrypoints import EntrypointRepository
 from dioptra.restapi.db.repository.experiments import ExperimentRepository
 from dioptra.restapi.db.repository.groups import GroupRepository
 from dioptra.restapi.db.repository.jobs import JobRepository
+from dioptra.restapi.db.repository.plugins import PluginRepository
 from dioptra.restapi.db.repository.queues import QueueRepository
 from dioptra.restapi.db.repository.types import TypeRepository
 from dioptra.restapi.db.repository.users import UserRepository
@@ -55,6 +56,7 @@ class UnitOfWork(contextlib.AbstractContextManager):
         self.drafts_repo = DraftsRepository(self.session)
         self.experiment_repo = ExperimentRepository(self.session)
         self.entrypoint_repo = EntrypointRepository(self.session)
+        self.plugin_repo = PluginRepository(self.session)
         self.type_repo = TypeRepository(self.session)
         self.job_repo = JobRepository(self.session)
         self.artifact_repo = ArtifactRepository(self.session)
