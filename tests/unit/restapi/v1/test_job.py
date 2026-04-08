@@ -1404,23 +1404,8 @@ def test_get_logs_bad_job_id(dioptra_client, registered_jobs, registered_job_log
         1,
         3,
     )
-    returned_page = resp.json()
 
-    # Validate that createdOn timestamps are present in the logs, then remove them for a
-    # predictable comparison.
-    for log in returned_page["data"]:
-        assert "createdOn" in log
-        del log["createdOn"]
-
-    # Should it be a 404?
-    assert returned_page == {
-        "index": 1,
-        "isComplete": True,
-        "totalNumResults": 0,
-        "first": "/api/v1/jobs/999999/log?index=0&pageLength=3",
-        "prev": "/api/v1/jobs/999999/log?index=0&pageLength=3",
-        "data": [],
-    }
+    assert resp.status_code == HTTPStatus.NOT_FOUND
 
 
 def test_forward_job_logs_using_loggers(

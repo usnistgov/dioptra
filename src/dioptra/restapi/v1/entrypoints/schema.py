@@ -16,8 +16,12 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The schemas for serializing/deserializing Entrypoint resources."""
 
-from marshmallow import Schema, fields, validate
+from typing import Any
 
+from marshmallow import Schema, fields, validate, validates
+
+from dioptra.restapi.errors import InputParameterNotUniqueError
+from dioptra.restapi.utils import find_non_unique
 from dioptra.restapi.v1.plugins.schema import (
     ALLOWED_PLUGIN_TASK_PARAMETER_REGEX,
     PluginTaskContainerSchema,
@@ -218,6 +222,28 @@ class EntrypointMutableFieldsSchema(Schema):
         load_only=True,
         load_default=list,
     )
+
+    @validates("parameters")
+    def validate_parameters(self, parameters: list[dict[str, Any]]):
+        duplicates = find_non_unique("name", parameters)
+        if len(duplicates) > 0:
+            raise InputParameterNotUniqueError("Entrypoint", duplicates=duplicates)
+
+    @validates("artifactParameters")
+    def validate_artifact_parameters(self, parameters: list[dict[str, Any]]):
+        duplicates = find_non_unique("name", parameters)
+        if len(duplicates) > 0:
+            raise InputParameterNotUniqueError(
+                "Entrypoint Artifact", duplicates=duplicates
+            )
+        for parameter in parameters:
+            duplicates = find_non_unique("name", parameter["output_params"])
+            if len(duplicates) > 0:
+                raise InputParameterNotUniqueError(
+                    "Entrypoint Artifact Output",
+                    artifact_name=parameter["name"],
+                    duplicates=duplicates,
+                )
 
 
 class EntrypointPluginMutableFieldsSchema(Schema):

@@ -191,7 +191,7 @@ class UserService(object):
             return group
 
         default_group = models.Group(name=DEFAULT_GROUP_NAME, creator=user)
-        with self._uow:
+        with self._uow():
             self._uow.group_repo.create(default_group)
         # Register the built-in plugin parameter types when creating a new group.
         self._builtin_plugin_parameter_type_service.create_all(
@@ -371,7 +371,7 @@ class UserCurrentService(object):
         user_id = current_user.user_id
         username = current_user.username
 
-        with self._uow:
+        with self._uow():
             self._uow.user_repo.delete(current_user)
 
         log.debug("User account deleted", user_id=user_id, username=username)
@@ -553,7 +553,8 @@ def load_user(user_id: str) -> models.User | None:
         A user object if the user is found, otherwise None.
     """
     # Should injection be used for UnitOfWork here?
-    uow = UnitOfWork()
+    # TODO: resolve this
+    uow = UnitOfWork(None, None)  # type: ignore
     user = uow.user_repo.get_by_alternative_id(uuid.UUID(user_id))
 
     return user

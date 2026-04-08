@@ -17,7 +17,6 @@
 """The module defining the endpoints for Experiment resources."""
 
 import uuid
-from typing import cast
 from urllib.parse import unquote
 
 import structlog
@@ -32,6 +31,7 @@ from dioptra.restapi.db import models
 from dioptra.restapi.db.repository.experiments import ExperimentRepository
 from dioptra.restapi.routes import V1_EXPERIMENTS_ROUTE
 from dioptra.restapi.v1 import utils
+from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.entrypoints.schema import EntrypointRefSchema
 from dioptra.restapi.v1.jobs.schema import (
     ExperimentJobGetQueryParameters,
@@ -73,7 +73,6 @@ from .schema import (
     ExperimentSchema,
 )
 from .service import (
-    RESOURCE_TYPE,
     ExperimentIdEntrypointsIdService,
     ExperimentIdEntrypointsService,
     ExperimentIdService,
@@ -192,10 +191,7 @@ class ExperimentIdEndpoint(Resource):
             request_type="GET",
             id=id,
         )
-        experiment = cast(
-            models.Experiment,
-            self._experiment_id_service.get(id, error_if_not_found=True, log=log),
-        )
+        experiment = self._experiment_id_service.get(id, log=log)
         return utils.build_experiment(experiment)
 
     @login_required
@@ -222,16 +218,12 @@ class ExperimentIdEndpoint(Resource):
             id=id,
         )
         parsed_obj = request.parsed_obj  # type: ignore
-        experiment = cast(
-            utils.ExperimentDict,
-            self._experiment_id_service.modify(
-                id,
-                name=parsed_obj["name"],
-                description=parsed_obj["description"],
-                entrypoint_ids=parsed_obj["entrypoint_ids"],
-                error_if_not_found=True,
-                log=log,
-            ),
+        experiment = self._experiment_id_service.modify(
+            id,
+            name=parsed_obj["name"],
+            description=parsed_obj["description"],
+            entrypoint_ids=parsed_obj["entrypoint_ids"],
+            log=log,
         )
         return utils.build_experiment(experiment)
 
@@ -482,7 +474,6 @@ class ExperimentIdJobIdMlflowrunEndpoint(Resource):
             experiment_id=id,
             job_id=jobId,
             mlflow_run_id=parsed_obj["mlflow_run_id"],
-            error_if_not_found=True,
             log=log,
         )
 
@@ -592,11 +583,8 @@ class ExperimentIdEntrypointsEndpoint(Resource):
             request_id=str(uuid.uuid4()), resource="Experiment", request_type="POST"
         )
         parsed_obj = request.parsed_obj  # type: ignore
-        entrypoints = cast(
-            list[models.EntryPoint],
-            self._experiment_id_entrypoints.append(
-                id, entrypoint_ids=parsed_obj["ids"], error_if_not_found=True, log=log
-            ),
+        entrypoints = self._experiment_id_entrypoints.append(
+            id, entrypoint_ids=parsed_obj["ids"], error_if_not_found=True, log=log
         )
         return [utils.build_entrypoint_ref(entrypoint) for entrypoint in entrypoints]
 
@@ -664,25 +652,25 @@ class ExperimentIdEntrypointsId(Resource):
 
 ExperimentDraftResource = generate_resource_drafts_endpoint(
     api,
-    resource_name=RESOURCE_TYPE,
+    resource_type=EntityType.EXPERIMENT,
     route_prefix=V1_EXPERIMENTS_ROUTE,
     request_schema=ExperimentDraftSchema,
 )
 ExperimentDraftIdResource = generate_resource_drafts_id_endpoint(
     api,
-    resource_name=RESOURCE_TYPE,
+    resource_type=EntityType.EXPERIMENT,
     request_schema=ExperimentDraftSchema(exclude=["groupId"]),
 )
 ExperimentIdDraftResource = generate_resource_id_draft_endpoint(
     api,
-    resource_name=RESOURCE_TYPE,
+    resource_type=EntityType.EXPERIMENT,
     request_schema=ExperimentDraftSchema(exclude=["groupId"]),
 )
 
 ExperimentSnapshotsResource = generate_resource_snapshots_endpoint(
     api=api,
     resource_model=models.Experiment,
-    resource_name=RESOURCE_TYPE,
+    resource_type=EntityType.EXPERIMENT,
     route_prefix=V1_EXPERIMENTS_ROUTE,
     searchable_fields=ExperimentRepository.SEARCHABLE_FIELDS,
     page_schema=ExperimentPageSchema,
@@ -691,15 +679,15 @@ ExperimentSnapshotsResource = generate_resource_snapshots_endpoint(
 ExperimentSnapshotsIdResource = generate_resource_snapshots_id_endpoint(
     api=api,
     resource_model=models.Experiment,
-    resource_name=RESOURCE_TYPE,
+    resource_type=EntityType.EXPERIMENT,
     response_schema=ExperimentSchema,
     build_fn=utils.build_experiment,
 )
 
 ExperimentTagsResource = generate_resource_tags_endpoint(
     api=api,
-    resource_name=RESOURCE_TYPE,
+    resource_name=EntityType.EXPERIMENT.db_table_name,
 )
 ExperimentTagsIdResource = generate_resource_tags_id_endpoint(
-    api=api, resource_name=RESOURCE_TYPE
+    api=api, resource_name=EntityType.EXPERIMENT.db_table_name
 )

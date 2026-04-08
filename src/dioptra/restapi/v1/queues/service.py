@@ -16,7 +16,7 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform queue endpoint operations."""
 
-from typing import Any, Final
+from typing import Any
 
 import structlog
 from flask_login import current_user
@@ -28,11 +28,10 @@ from dioptra.restapi.db.repository.utils import DeletionPolicy
 from dioptra.restapi.db.unit_of_work import UnitOfWork
 from dioptra.restapi.errors import EntityDoesNotExistError
 from dioptra.restapi.v1 import utils
+from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.shared.search_parser import parse_search_text
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
-
-RESOURCE_TYPE: Final[str] = "queue"
 
 
 class QueueService(object):
@@ -77,7 +76,9 @@ class QueueService(object):
 
         group = self._uow.group_repo.get_one(group_id, DeletionPolicy.NOT_DELETED)
 
-        resource = models.Resource(resource_type=RESOURCE_TYPE, owner=group)
+        resource = models.Resource(
+            resource_type=EntityType.QUEUE.db_table_name, owner=group
+        )
         new_queue = models.Queue(
             name=name, description=description, resource=resource, creator=current_user
         )
@@ -201,7 +202,7 @@ class QueueIdService(object):
 
         if not queue:
             if error_if_not_found:
-                raise EntityDoesNotExistError("queue", resource_id=queue_id)
+                raise EntityDoesNotExistError(EntityType.QUEUE, resource_id=queue_id)
             else:
                 return None
 
@@ -247,13 +248,13 @@ class QueueIdService(object):
 
         if not queue:
             if error_if_not_found:
-                raise EntityDoesNotExistError("queue", resource_id=queue_id)
+                raise EntityDoesNotExistError(EntityType.QUEUE, resource_id=queue_id)
             else:
                 return None
         elif queue.resource.is_deleted:
             if error_if_not_found:
                 # treat "deleted" as if "not found"?
-                raise EntityDoesNotExistError("queue", resource_id=queue_id)
+                raise EntityDoesNotExistError(EntityType.QUEUE, resource_id=queue_id)
             else:
                 return None
 
@@ -263,6 +264,7 @@ class QueueIdService(object):
             resource=queue.resource,
             creator=current_user,
         )
+
         try:
             self._uow.queue_repo.create_snapshot(new_queue)
         except Exception:
@@ -348,7 +350,9 @@ class QueueIdsService(object):
         if len(queues) != len(queue_ids) and error_if_not_found:
             queue_ids_missing = set(queue_ids) - {queue.resource_id for queue in queues}
             log.debug("Queue not found", queue_ids=list(queue_ids_missing))
-            raise EntityDoesNotExistError("queue", resource_ids=queue_ids_missing)
+            raise EntityDoesNotExistError(
+                EntityType.QUEUE, resource_ids=queue_ids_missing
+            )
 
         return list(queues)
 
@@ -398,7 +402,7 @@ class QueueNameService(object):
 
         if queue is None:
             if error_if_not_found:
-                raise EntityDoesNotExistError(RESOURCE_TYPE, name=name)
+                raise EntityDoesNotExistError(EntityType.QUEUE, name=name)
 
             return None
 

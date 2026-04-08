@@ -31,6 +31,7 @@ from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
 from dioptra.restapi.v1 import utils
+from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.schemas import ResourceGetQueryParameters
 
 from .service import ResourceSnapshotsIdService, ResourceSnapshotsService
@@ -41,7 +42,7 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 def generate_resource_snapshots_endpoint(
     api: Namespace,
     resource_model: Type[models.ResourceSnapshot],
-    resource_name: str,
+    resource_type: EntityType,
     route_prefix: str,
     searchable_fields: dict[str, Any],
     page_schema: Type[Schema],
@@ -52,7 +53,7 @@ def generate_resource_snapshots_endpoint(
     Args:
         api: The API
         resource_model: The ORM class for the resource snapshot.
-        resource_name: The name of the resource.
+        resource_type: The type of the resource.
         route_prefix: The prefix to append to the API URL.
         searchable_fields: A dictionary where the keys are the fields that can be
             searched and the values control how the query is constructed in the where
@@ -73,7 +74,7 @@ def generate_resource_snapshots_endpoint(
         model_name = "Snapshots" + "".join(page_schema.__name__.rsplit("Schema", 1))
 
     @api.route("/<int:id>/snapshots")
-    @api.param("id", f"ID for the {resource_name} resource.")
+    @api.param("id", f"ID for the {resource_type} resource.")
     class ResourceSnapshotsEndpoint(Resource):
         @inject
         def __init__(
@@ -84,7 +85,7 @@ def generate_resource_snapshots_endpoint(
         ) -> None:
             self._snapshots_service = snapshots_service.build(
                 resource_model=resource_model,
-                resource_type=resource_name,
+                resource_type=resource_type,
                 searchable_fields=searchable_fields,
             )
             super().__init__(*args, **kwargs)
@@ -135,7 +136,7 @@ def generate_resource_snapshots_endpoint(
 def generate_resource_snapshots_id_endpoint(
     api: Namespace,
     resource_model: Type[models.ResourceSnapshot],
-    resource_name: str,
+    resource_type: EntityType,
     response_schema: Type[Schema],
     build_fn: Callable,
 ) -> Resource:
@@ -144,7 +145,7 @@ def generate_resource_snapshots_id_endpoint(
     Args:
         api: The API
         resource_model: The ORM class for the resource snapshot.
-        resource_name: The name of the resource.
+        resource_type: The type of the resource.
         response_schema: The Marshmallow schema for the response.
         build_fn: A function that builds the response object.
 
@@ -163,8 +164,8 @@ def generate_resource_snapshots_id_endpoint(
         )
 
     @api.route("/<int:id>/snapshots/<int:snapshotId>")
-    @api.param("id", f"ID for the {resource_name} resource.")
-    @api.param("snapshotId", f"Snapshot ID for the {resource_name} resource.")
+    @api.param("id", f"ID for the {resource_type} resource.")
+    @api.param("snapshotId", f"Snapshot ID for the {resource_type} resource.")
     class ResourcesSnapshotsIdEndpoint(Resource):
         @inject
         def __init__(
@@ -175,7 +176,7 @@ def generate_resource_snapshots_id_endpoint(
         ) -> None:
             self._snapshots_id_service = snapshots_id_service.build(
                 resource_model=resource_model,
-                resource_type=resource_name,
+                resource_type=resource_type,
             )
             super().__init__(*args, **kwargs)
 
@@ -203,7 +204,7 @@ def generate_resource_snapshots_id_endpoint(
 def generate_nested_resource_snapshots_endpoint(
     api: Namespace,
     resource_model: Type[models.ResourceSnapshot],
-    resource_name: str,
+    resource_type: EntityType,
     resource_route: str,
     base_resource_route: str,
     searchable_fields: dict[str, Any],
@@ -215,7 +216,7 @@ def generate_nested_resource_snapshots_endpoint(
     Args:
         api: The API
         resource_model: The ORM class for the resource snapshot.
-        resource_name: The name of the resource.
+        resource_type: The type of the resource.
         route_prefix: The prefix to append to the API URL.
         searchable_fields: A dictionary where the keys are the fields that can be
             searched and the values control how the query is constructed in the where
@@ -241,8 +242,8 @@ def generate_nested_resource_snapshots_endpoint(
     resource_id = f"{route_singular}Id"
 
     @api.route(f"/<int:id>/{resource_route}/<int:{resource_id}>/snapshots")
-    @api.param("id", f"ID for the {resource_name}.")
-    @api.param(f"{resource_id}", f"ID for the {resource_name}.")
+    @api.param("id", f"ID for the {resource_type}.")
+    @api.param(f"{resource_id}", f"ID for the {resource_type}.")
     class ResourceSnapshotsEndpoint(Resource):
         @inject
         def __init__(
@@ -253,7 +254,7 @@ def generate_nested_resource_snapshots_endpoint(
         ) -> None:
             self._snapshots_service = snapshots_service.build(
                 resource_model=resource_model,
-                resource_type=resource_name,
+                resource_type=resource_type,
                 searchable_fields=searchable_fields,
             )
             super().__init__(*args, **kwargs)
@@ -314,7 +315,7 @@ def generate_nested_resource_snapshots_endpoint(
 def generate_nested_resource_snapshots_id_endpoint(
     api: Namespace,
     resource_model: Type[models.ResourceSnapshot],
-    resource_name: str,
+    resource_type: EntityType,
     resource_route: str,
     response_schema: Type[Schema],
     build_fn: Callable,
@@ -324,7 +325,7 @@ def generate_nested_resource_snapshots_id_endpoint(
     Args:
         api: The API
         resource_model: The ORM class for the resource snapshot.
-        resource_name: The name of the resource.
+        resource_type: The type of the resource.
         response_schema: The Marshmallow schema for the response.
         build_fn: A function that builds the response object.
 
@@ -348,8 +349,8 @@ def generate_nested_resource_snapshots_id_endpoint(
     @api.route(
         f"/<int:id>/{resource_route}/<int:{resource_id}>/snapshots/<int:snapshotId>"
     )
-    @api.param("id", f"ID for the {resource_name}.")
-    @api.param(f"{resource_id}", f"ID for the {resource_name}.")
+    @api.param("id", f"ID for the {resource_type.display_name}.")
+    @api.param(f"{resource_id}", f"ID for the {resource_type.display_name}.")
     @api.param("snapshotId", "ID for the Snapshot.")
     class ResourcesSnapshotsIdEndpoint(Resource):
         @inject
@@ -361,7 +362,7 @@ def generate_nested_resource_snapshots_id_endpoint(
         ) -> None:
             self._snapshots_id_service = snapshots_id_service.build(
                 resource_model=resource_model,
-                resource_type=resource_name,
+                resource_type=resource_type,
             )
             super().__init__(*args, **kwargs)
 
