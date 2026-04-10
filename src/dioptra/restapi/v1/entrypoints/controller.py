@@ -28,6 +28,7 @@ from injector import inject
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
+from dioptra.restapi.db.repository.entrypoints import EntrypointRepository
 from dioptra.restapi.routes import V1_ENTRYPOINTS_ROUTE
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.entity_types import EntityType
@@ -64,7 +65,6 @@ from .schema import (
     EntrypointSchema,
 )
 from .service import (
-    SEARCHABLE_FIELDS,
     EntrypointIdArtifactPluginsIdService,
     EntrypointIdArtifactPluginsService,
     EntrypointIdPluginsIdService,
@@ -731,7 +731,7 @@ EntrypointSnapshotsResource = generate_resource_snapshots_endpoint(
     resource_model=models.EntryPoint,
     resource_type=EntityType.ENTRY_POINT,
     route_prefix=V1_ENTRYPOINTS_ROUTE,
-    searchable_fields=SEARCHABLE_FIELDS,
+    searchable_fields=EntrypointRepository.SEARCHABLE_FIELDS,
     page_schema=EntrypointPageSchema,
     build_fn=utils.build_entrypoint,
 )

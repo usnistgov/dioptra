@@ -301,7 +301,6 @@ class FakeData(object):
         creator: models.User,
         group: models.Group,
         plugin: models.Plugin,
-        plugin_files: list[models.PluginFile],
         queue: models.Queue,
         include_description: bool = False,
     ) -> models.EntryPoint:
@@ -311,7 +310,6 @@ class FakeData(object):
             creator: The user that created the entry point.
             group: The group that owns the entry point.
             plugin: A plugin associated with the entry point.
-            plugin_files: Plugin files associated with the entry point.
             queue: A queue associated with the entry point.
             include_description: Whether to generate a fake description for the entry
                 point.
@@ -335,23 +333,20 @@ class FakeData(object):
                 hello_world: $name
             """
         )
+        artifact_graph = ""
+        artifact_parameters = []
         description = self._faker.sentence() if include_description else None
         entry_point_resource = models.Resource(resource_type="entry_point", owner=group)
         entry_point = models.EntryPoint(
             name=entry_point_name,
             task_graph=task_graph,
             parameters=entry_point_parameters,
+            artifact_graph=artifact_graph,
+            artifact_parameters=artifact_parameters,
             description=description,
             resource=entry_point_resource,
             creator=creator,
         )
-        entry_point_plugin_files = [
-            models.EntryPointPluginFile(
-                entry_point=entry_point, plugin=plugin, plugin_file=plugin_file
-            )
-            for plugin_file in plugin_files
-        ]
-        entry_point.entry_point_plugin_files.extend(entry_point_plugin_files)
         entry_point.children.append(queue.resource)
         return entry_point
 
