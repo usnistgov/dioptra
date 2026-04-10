@@ -239,7 +239,7 @@
   <fieldset class="q-px-lg q-mt-lg q-pt-lg" :class="history ? `disabled` : ``">
     <legend>Task Graph Info</legend>
     <div class="row" :style="{ 'pointer-events': history ? 'none' : '' }">
-      <div :class="`${isMobile ? 'col-12 q-mb-xl' : 'col-6'} q-mr-xl`">
+      <div :class="`${isMobile ? 'col-12 q-mb-xl' : 'col-5'} q-mr-xl`">
         <h2>Task Graph</h2>
         <p class="text-caption q-mb-none text-grey-8 q-pl-xs">
           Use "Add to Task Graph" button in Plugin Tasks table to insert YAML, and 
@@ -271,7 +271,7 @@
           class="q-mt-lg"
         />
         <TableComponent
-          :rows="tasks"
+          :rows="filteredTasks"
           :columns="taskColumns"
           title="Function Tasks"
           :hideToggleDraft="true"
@@ -280,7 +280,21 @@
           :hideOpenBtn="true"
           :hideDeleteBtn="true"
           :hideCreateBtn=true
+          :rowClass="functionTaskRowClass"
         >
+          <template #jobLogSlot>
+            <q-select
+              v-model="selectedOutputType"
+              :options="outputTypeOptions"
+              label="filter by output type"
+              dense
+              outlined
+              emit-value
+              map-options
+              clearable
+              style="min-width: 240px"
+            />
+          </template>
           <template #body-cell-inputParams="props">
             <div v-for="(param, i) in props.row.inputParams" :key="i">
               <q-chip
@@ -311,10 +325,114 @@
               </q-chip>
             </div>
           </template>
+          <template #body-cell-swappableWith="props">
+            <div class="q-gutter-xs">
+              <q-chip
+                v-for="(name, i) in (swappableMeta.byName.get(props.row.name) || [])"
+                :key="i"
+                dense
+                square
+                color="primary"
+                text-color="white"
+                class="q-mr-none"
+              >
+                {{ name }}
+              </q-chip>
+              <span v-if="!(swappableMeta.byName.get(props.row.name)?.length)">—</span>
+            </div>
+          </template>
           <template #body-cell-add="props">
-            <q-btn icon="add" round size="xs" color="grey-5" text-color="black" @click="addToTaskGraph(props.row)" />
+            <q-btn
+              v-if="(swappableMeta.byName.get(props.row.name)?.length)"
+              icon="add"
+              round
+              size="xs"
+              color="grey-5"
+              text-color="black"
+            >
+              <q-menu :auto-close="false" @before-show="initSwapMenu(props.row)">
+                <div class="q-pa-sm" style="min-width: 280px">
+                  <div class="text-caption q-mb-sm">Select tasks to include</div>
+                  <q-list dense>
+                    <q-item
+                      v-for="opt in [props.row.name, ...(swappableMeta.byName.get(props.row.name) || [])]"
+                      :key="opt"
+                      clickable
+                    >
+                      <q-item-section avatar>
+                        <q-checkbox
+                          dense
+                          :model-value="isSelectedSwap(props.row.name, opt)"
+                          @update:model-value="val => setSelectedSwap(props.row.name, opt, val)"
+                        />
+                      </q-item-section>
+                      <q-item-section>{{ opt }}</q-item-section>
+                    </q-item>
+                  </q-list>
+
+                  <q-separator class="q-my-sm" />
+
+                  <q-input v-model="swapNameByBase[props.row.name]" dense outlined label="Swap Name" />
+
+                  <div class="row justify-end q-gutter-sm q-mt-sm">
+                    <q-btn flat label="Cancel" v-close-popup />
+                    <q-btn color="primary" label="Submit" @click="submitSwap(props.row)" v-close-popup />
+                  </div>
+                </div>
+              </q-menu>
+            </q-btn>
+
+            <q-btn
+              v-else
+              icon="add"
+              round
+              size="xs"
+              color="grey-5"
+              text-color="black"
+              @click="addToTaskGraph(props.row)"
+            />
           </template>
         </TableComponent>
+
+        <div class="q-mt-md">
+          <h2 class="text-subtitle1 q-mb-sm">Function Tasks By Output</h2>
+          <q-tree :nodes="tasksTree" node-key="id" :default-expand-all="true">
+            <template v-slot:default-header="prop">
+              <div
+                class="row items-center no-wrap q-pa-xs q-mb-xs rounded-borders"
+                :class="darkMode ? 'bg-grey-9' : 'bg-grey-2'"
+                :style="{ border: darkMode ? '1px solid #555' : '1px solid #e0e0e0', width: '100%' }"
+              >
+                <div class="col">
+                  <span v-if="prop.node.children && prop.node.children.length">
+                    Function Tasks with output <b>{{ prop.node.outputType }}</b>
+                  </span>
+                  <span v-else>
+                    {{ prop.node.label }}
+                  </span>
+                </div>
+                <div class="row items-center q-gutter-xs">
+                  <q-btn
+                    v-if="prop.node.children && prop.node.children.length > 1"
+                    label="Add Swappable Task"
+                    size="sm"
+                    color="primary"
+                  />
+                  <q-btn
+                    v-if="!prop.node.children || prop.node.children.length === 0"
+                    round
+                    dense
+                    size="xs"
+                    icon="add"
+                    color="grey-5"
+                    text-color="black"
+                    @click.stop="addToTaskGraph(tasksByName.get(prop.node.taskName))"
+                  />
+                </div>
+              </div>
+            </template>
+          </q-tree>
+        </div>
       </div>
     </div>
   </fieldset>
@@ -618,6 +736,7 @@
         })
       })
     })
+    console.log('tasks.value = ', tasks.value)
   }, { deep: true })
 
   watch(() => entryPoint.value.artifactPlugins, () => {
@@ -671,7 +790,20 @@
     { name: 'pluginName', label: 'Plugin', align: 'left', field: 'pluginName', sortable: true, },
     { name: 'taskName', label: 'Task', align: 'left', field: 'name', sortable: true, },
     { name: 'inputParams', label: 'Input Parameters', align: 'right', field: 'inputParams', sortable: false, classes: 'vertical-top' },
-    { name: 'outputParams', label: 'Output Parameters', align: 'right', field: 'outputParams', sortable: false, classes: 'vertical-top' },
+    { 
+      name: 'outputParams', 
+      label: 'Output Parameters', 
+      align: 'right', 
+      field: 'outputParams', 
+      sortable: true, 
+      classes: 'vertical-top',
+      sort: (a, b) => {
+        const typeA = a?.[0]?.parameterType?.name || a?.[0]?.parameterType?.id || ''
+        const typeB = b?.[0]?.parameterType?.name || b?.[0]?.parameterType?.id || ''
+        return String(typeA).localeCompare(String(typeB))
+      }
+    },
+    { name: 'swappableWith', label: 'Swappable With', align: 'left', field: 'name', sortable: false, classes: 'vertical-top' },
     { name: 'add', label: 'Add to Task Graph', align: 'center', sortable: false, },
   ]
 
@@ -850,6 +982,151 @@
 
   const queues = ref([])
   const plugins = ref([])
+
+  // Swappable tasks: group by output param type and color-code rows
+  function getOutputTypeKey(task) {
+    const p = task?.outputParams?.[0]
+    return p?.parameterType?.name || p?.parameterType?.id || 'none'
+  }
+
+  const swappableMeta = computed(() => {
+    const paletteLight = ['bg-blue-1','bg-green-1','bg-amber-1','bg-cyan-1','bg-orange-1','bg-teal-1','bg-lime-1','bg-grey-2','bg-brown-1']
+    const paletteDark  = ['bg-blue-10','bg-green-10','bg-amber-10','bg-cyan-10','bg-orange-10','bg-teal-10','bg-lime-10','bg-grey-8','bg-brown-8']
+
+    const palette = (darkMode?.value ? paletteDark : paletteLight)
+    const groups = new Map()
+    const byName = new Map()
+    let idx = 0
+    for (const t of tasks.value) {
+      const key = getOutputTypeKey(t)
+      if (!groups.has(key)) {
+        const colorClass = key === 'none' ? '' : palette[idx % palette.length]
+        groups.set(key, { colorClass, names: [] })
+        if (key !== 'none') idx++
+      }
+      groups.get(key).names.push(t.name)
+    }
+    for (const [, info] of groups) {
+      for (const name of info.names) {
+        byName.set(name, info.names.filter(n => n !== name))
+      }
+    }
+    return { groups, byName }
+  })
+
+  function functionTaskRowClass(rowProps) {
+    const key = getOutputTypeKey(rowProps.row)
+    const info = swappableMeta.value.groups.get(key)
+    return info?.colorClass || ''
+  }
+
+  // Build QTree nodes grouped by first output parameter type
+  const tasksTree = computed(() => {
+    const groups = new Map()
+    for (const t of tasks.value) {
+      const p = t?.outputParams?.[0]
+      const typeKey = p?.parameterType?.name || p?.parameterType?.id || 'none'
+      if (!groups.has(typeKey)) groups.set(typeKey, [])
+      groups.get(typeKey).push(t)
+    }
+    const nodes = []
+    for (const [typeKey, arr] of groups) {
+      const labelType = String(typeKey)
+      nodes.push({
+        id: `type-${labelType}`,
+        label: `Function Tasks with output ${labelType}`,
+        outputType: labelType,
+        children: arr.map((t) => ({
+          id: `task-${t.pluginName || 'plugin'}-${t.name}`,
+          label: t.name,
+          taskName: t.name,
+        }))
+      })
+    }
+    return nodes
+  })
+
+  // Build YAML for swappable tasks via q-menu
+  const tasksByName = computed(() => {
+    const m = new Map()
+    for (const t of tasks.value) {
+      if (!m.has(t.name)) m.set(t.name, t)
+    }
+    return m
+  })
+
+  // Filter Function Tasks by selected output type
+  const selectedOutputType = ref(null)
+
+  const outputTypeCounts = computed(() => {
+    const counts = new Map()
+    for (const t of tasks.value) {
+      const key = String(getOutputTypeKey(t))
+      counts.set(key, (counts.get(key) || 0) + 1)
+    }
+    return counts
+  })
+
+  const outputTypeOptions = computed(() => {
+    const opts = Array.from(outputTypeCounts.value.entries())
+      .map(([type, count]) => ({ label: `${type} (${count})`, value: type }))
+      .sort((a, b) => a.label.localeCompare(b.label))
+    opts.unshift({ label: 'All', value: null })
+    return opts
+  })
+
+  const filteredTasks = computed(() => {
+    const sel = selectedOutputType.value
+    if (!sel) return tasks.value
+    return tasks.value.filter(t => String(getOutputTypeKey(t)) === sel)
+  })
+
+  const swapSelections = reactive({}) // base task name -> string[] of selected task names
+  const swapNameByBase = reactive({}) // base task name -> swap variable name
+
+  function isSelectedSwap(base, name) {
+    return (swapSelections[base] || []).includes(name)
+  }
+
+  function setSelectedSwap(base, name, val) {
+    const list = swapSelections[base] || (swapSelections[base] = [])
+    if (val) {
+      if (!list.includes(name)) list.push(name)
+    } else {
+      swapSelections[base] = list.filter(n => n !== name)
+    }
+  }
+
+  function initSwapMenu(row) {
+    if (!swapSelections[row.name]) swapSelections[row.name] = [row.name]
+    if (!swapNameByBase[row.name]) swapNameByBase[row.name] = '<swap_name>'
+  }
+
+  function submitSwap(row) {
+    const selected = (swapSelections[row.name] && swapSelections[row.name].length)
+      ? swapSelections[row.name]
+      : [row.name]
+    const swapName = (swapNameByBase[row.name] && swapNameByBase[row.name].trim())
+      ? swapNameByBase[row.name].trim()
+      : '<swap_name>'
+
+    let yaml = `<step-name>:\n  ?${swapName}:\n`
+    selected.forEach((taskName) => {
+      const t = tasksByName.value.get(taskName)
+      yaml += `    ${taskName}:\n`
+      if (t?.inputParams?.length) {
+        t.inputParams.forEach((p) => {
+          yaml += `      ${p.name}: <input-value>\n`
+        })
+      }
+    })
+    yaml = yaml.trimEnd()
+    if (entryPoint.value.taskGraph.trim().length === 0) {
+      entryPoint.value.taskGraph = yaml
+    } else {
+      entryPoint.value.taskGraph += `\n${yaml}`
+    }
+  }
 
   async function getQueues(val = '', update) {
     update(async () => {

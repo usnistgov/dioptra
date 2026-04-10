@@ -45,8 +45,15 @@
     <template v-slot:body="props">
       <!-- props.row[field] - field needs to be unique ID, pass this in as a prop, or just use id -->
       <q-tr 
-        :class="`${getSelectedColor(props.selected)} cursor-pointer ${highlightRow(props)} ${disableRow(props)}` " 
+        :class="[
+          getSelectedColor(props.selected),
+          'cursor-pointer',
+          highlightRow(props),
+          disableRow(props),
+          typeof rowClass === 'function' ? rowClass(props) : rowClass
+        ]" 
         :props="props"
+        :style="typeof rowStyle === 'function' ? rowStyle(props) : rowStyle"
         @click="openResource(props, $event); selectResource(props)"
         @auxclick="onAuxClick(props, $event)"
       >
@@ -249,6 +256,14 @@
   defaultSort: {
     type: Object,
     default: { sortBy: 'lastModifiedOn', descending: true }
+  },
+  rowClass: {
+    type: [String, Function],
+    default: null
+  },
+  rowStyle: {
+    type: [Object, Function],
+    default: null
   }
 })
   const emit = defineEmits([
