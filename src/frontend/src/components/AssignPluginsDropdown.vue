@@ -16,6 +16,7 @@
 import { ref, watch } from 'vue'
 import * as api from '@/services/dataApi'
 import ResourcePicker from '@/components/ResourcePicker.vue'
+import * as notify from '../notify'
 
 const selectedPlugins = defineModel('selectedPlugins')
 const originalSelectedPluginIds = ref([])
@@ -51,8 +52,10 @@ async function syncPlugin(pluginId, index) {
     const res = await api.getItem('plugins', pluginId)
     selectedPlugins.value.splice(index, 1, res.data)
     pluginIDsToUpdate.value.push(pluginId)
+    notify.success(`Synced '${res.data.name}'`)
   } catch(err) {
     console.warn(err)
+    notify.error(err?.response?.data?.message || 'Failed to sync plugin')
   }
 }
 

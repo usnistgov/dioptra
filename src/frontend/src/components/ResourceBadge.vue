@@ -10,34 +10,53 @@
       @click.stop="openResource"
       @auxclick.stop="onAuxClick"
     >
-      <q-icon
-        v-if="styles.icon"
-        :name="styles.icon"
-        size="xs"
-        class="q-mr-sm"
-      />
-      {{ resource?.name }}
-      <span
-        v-if="resource?.deleted"
-        class="q-ml-sm"
-      >
-        ❌
+      <span ref="chipTarget" class="rb-label">
+        <q-icon
+          v-if="styles.icon"
+          :name="styles.icon"
+          size="xs"
+          class="q-mr-sm"
+        />
+        {{ resource?.name }}
+        <span
+          v-if="resource?.deleted"
+          class="q-ml-sm"
+        >
+          ❌
+        </span>
+
+        <q-badge
+          v-if="resource?.latestSnapshot === false"
+          color="red"
+          label="outdated"
+          rounded
+          class="q-ml-xs"
+        />
       </span>
 
-      <q-badge
+      <q-btn
         v-if="resource?.latestSnapshot === false"
+        round
+        dense
         color="red"
-        label="outdated"
-        rounded
+        icon="sync"
+        size="xs"
+        padding="xs"
         class="q-ml-xs"
-      />
+        @click.stop="$emit('sync')"
+      >
+        <q-tooltip>
+          Sync to latest version
+        </q-tooltip>
+      </q-btn>
 
-      <q-tooltip v-if="resource?.deleted">
+      <q-tooltip v-if="resource?.deleted" :target="chipTarget">
         This <span class="text-capitalize">{{ resourceType }}</span> has been deleted
       </q-tooltip>
       <q-tooltip
         v-else-if="props.clickable"
         class="text-capitalize"
+        :target="chipTarget"
       >
         Go To: {{ resourceType }} (ID {{ resource.id
         }}{{ resource.snapshotId ? `, Snapshot ${resource.snapshotId}` : "" }})
@@ -63,23 +82,12 @@
       </q-menu>
     </q-chip>
 
-    <q-btn
-      v-if="resource?.latestSnapshot === false"
-      round
-      color="red"
-      icon="sync"
-      size="sm"
-      @click.stop="$emit('sync')"
-    >
-      <q-tooltip>
-        Sync to latest version
-      </q-tooltip>
-    </q-btn>
+
   </span>
 </template>
 
 <script setup>
-import { computed, inject } from "vue"
+import { computed, inject, ref } from "vue"
 import { getResourceStyle } from "@/services/resourceStyles"
 import { useRouter } from "vue-router"
 
@@ -95,6 +103,8 @@ const props = defineProps({
   // When true, place the badge on its own line
   stacked: { type: Boolean, default: false }
 })
+
+const chipTarget = ref()
 
 const styles = computed(() => {
   return getResourceStyle(props.resourceType, darkMode.value)

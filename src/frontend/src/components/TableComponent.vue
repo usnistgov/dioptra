@@ -52,7 +52,7 @@
       >
         <q-td v-for="col in props.cols" :key="col.name" :props="props" :style="props.expand ? {'border-bottom': 'none'} : {}">
           <q-menu
-            v-if="selection !== 'multiple' && !highlightSelection"
+            v-if="selection !== 'multiple' && !highlightSelection && !disableSelect"
             context-menu
             @show="props.selected = true"
           >
