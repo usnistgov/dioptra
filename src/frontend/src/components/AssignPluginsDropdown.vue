@@ -1,66 +1,22 @@
 <template>
-  <q-select
-    outlined
-    dense
+  <ResourcePicker
     v-model="selectedPlugins"
-    use-input
-    use-chips
-    multiple
-    option-label="name"
-    option-value="id"
-    input-debounce="100"
     :options="pluginOptions"
+    resourceType="plugin"
+    label="Plugins:"
     @filter="getPlugins"
     @add="(added) => addPlugin(added.value)"
     @remove="(removed) => removePlugin(removed.value)"
-  >
-    <template v-slot:before>
-      <div class="field-label">Plugins:</div>
-    </template>
-    <template v-slot:selected>
-      <div>
-        <div
-          v-for="(plugin, i) in selectedPlugins"
-          :key="plugin.id"
-          :class="i > 0 ? 'q-mt-xs' : ''"
-          >
-            <q-chip
-              removable
-              color="secondary"
-              text-color="white"
-              class="q-ml-xs "
-              @remove="selectedPlugins.splice(i, 1); removePlugin(plugin)"
-            >
-              {{ plugin.name }}
-              <q-badge
-                v-if="!plugin.latestSnapshot" 
-                color="red" 
-                label="outdated" 
-                rounded
-                class="q-ml-xs"
-              />
-            </q-chip>
-            <q-btn
-              v-if="!plugin.latestSnapshot"
-              round 
-              color="red" 
-              icon="sync"
-              size="sm"
-              @click.stop="syncPlugin(plugin.id, i)"
-            >
-              <q-tooltip>
-                Sync to latest version of plugin
-              </q-tooltip>
-            </q-btn>
-        </div>
-      </div>
-    </template>
-  </q-select>
+    :stacked-badges="true"
+    @sync="(plugin, index) => syncPlugin(plugin.id, index)"
+  />
 </template>
 
 <script setup>
 import { ref, watch } from 'vue'
 import * as api from '@/services/dataApi'
+import ResourcePicker from '@/components/ResourcePicker.vue'
+import * as notify from '../notify'
 
 const selectedPlugins = defineModel('selectedPlugins')
 const originalSelectedPluginIds = ref([])
@@ -96,8 +52,10 @@ async function syncPlugin(pluginId, index) {
     const res = await api.getItem('plugins', pluginId)
     selectedPlugins.value.splice(index, 1, res.data)
     pluginIDsToUpdate.value.push(pluginId)
+    notify.success(`Synced '${res.data.name}'`)
   } catch(err) {
     console.warn(err)
+    notify.error(err?.response?.data?.message || 'Failed to sync plugin')
   }
 }
 

@@ -68,38 +68,16 @@
               <div class="field-label">Group:</div>
             </template>  
           </q-select>
-          <q-select
+          <ResourcePicker
             v-if="!history"
-            outlined
-            dense
             v-model="entryPoint.queues"
-            use-input
-            use-chips
-            multiple
-            map-options
-            option-label="name"
-            option-value="id"
-            input-debounce="100"
             :options="queues"
+            resourceType="queue"
+            label="Queues:"
             @filter="getQueues"
             class="q-mb-md"
             :disable="history"
-          >
-            <template v-slot:before>
-              <div class="field-label">Queues:</div>
-            </template>  
-            <template v-slot:selected-item="scope">
-              <q-chip
-                :label="scope.opt.name"
-                removable
-                dense
-                @remove="scope.removeAtIndex(scope.index)"
-                :tabindex="scope.tabindex"
-                color="primary"
-                text-color="white"
-              />
-            </template>
-          </q-select>
+          />
           <div v-else class="row items-center q-mb-md">
             <label class="field-label">Queues:</label>
             <div 
@@ -303,6 +281,13 @@
           :hideDeleteBtn="true"
           :hideCreateBtn=true
         >
+          <template #body-cell-pluginName="props">
+            <ResourceBadge
+              :resource="props.row.plugin"
+              resourceType="plugin"
+              @sync="syncPlugin(props.row.plugin)"
+            />
+          </template>
           <template #body-cell-inputParams="props">
             <div v-for="(param, i) in props.row.inputParams" :key="i">
               <q-chip
@@ -380,6 +365,13 @@
           :hideDeleteBtn="true"
           :hideCreateBtn=true
         >
+          <template #body-cell-pluginName="props">
+            <ResourceBadge
+              :resource="props.row.plugin"
+              resourceType="plugin"
+              @sync="syncPlugin(props.row.plugin, 'artifactPlugins')"
+            />
+          </template>
           <template #body-cell-outputParams="props">
             <div v-for="(param, i) in props.row.outputParams" :key="i">
               <q-chip
@@ -505,6 +497,8 @@
   import ArtifactParamDialog from '@/dialogs/ArtifactParamDialog.vue'
   import EditPluginTaskParamDialog from '@/dialogs/EditPluginTaskParamDialog.vue'
   import AssignPluginsDropdown from '@/components/AssignPluginsDropdown.vue'
+  import ResourcePicker from '@/components/ResourcePicker.vue'
+  import ResourceBadge from '@/components/ResourceBadge.vue'
 
   const route = useRoute()
   
@@ -632,10 +626,9 @@
     tasks.value = []
     entryPoint.value.plugins.forEach((plugin) => {
       if(typeof plugin === 'number') return
-      const pluginName = plugin.name
       plugin.files.forEach((file) => {
         file.tasks.functions.forEach((fTask) => {
-          tasks.value.push({ ...fTask, pluginName: pluginName })
+          tasks.value.push({ ...fTask, pluginName: plugin.name, plugin })
         })
       })
     })
@@ -645,10 +638,9 @@
     artifactTasks.value = []
     entryPoint.value.artifactPlugins.forEach((plugin) => {
       if(typeof plugin === 'number') return
-      const pluginName = plugin.name
       plugin.files.forEach((file) => {
         file.tasks.artifacts.forEach((fTask) => {
-          artifactTasks.value.push({ ...fTask, pluginName: pluginName })
+          artifactTasks.value.push({ ...fTask, pluginName: plugin.name, plugin })
         })
       })
     })
@@ -1061,6 +1053,26 @@
 
   function addArtifactOutputParam(newParam) {
     entryPoint.value.artifactParameters[selectedTaskProps.value.rowIndex][selectedTaskProps.value.inputOrOutputParams].push(newParam)
+  }
+
+  async function syncPlugin(plugin, type = "plugins") {
+    try {
+      const res = await api.getItem('plugins', plugin.id)
+
+      const index = entryPoint.value[type].findIndex(p => p.id === plugin.id)
+      entryPoint.value[type].splice(index, 1, res.data)
+
+      if (type === 'plugins' && !pluginIDsToUpdate.value.includes(plugin.id)) {
+        pluginIDsToUpdate.value.push(plugin.id)
+      } else if (type === 'artifactPlugins' && !artifactPluginIDsToUpdate.value.includes(plugin.id)) {
+        artifactPluginIDsToUpdate.value.push(plugin.id)
+      }
+
+      notify.success(`Synced '${res.data.name}'`)
+    } catch (err) {
+      console.warn(err)
+      notify.error(err?.response?.data?.message || 'Failed to sync plugin')
+    }
   }
 
 </script>

@@ -9,25 +9,21 @@
         <legend>Basic Info</legend>
         <div class="q-ma-lg">
           <q-form ref="basicInfoForm" greedy>
-            <q-select
-              outlined
-              dense
+            <ResourcePicker
               v-model="job.experiment"
-              clearable
-              option-label="name"
-              input-debounce="100"
               :options="experiments"
+              resourceType="experiment"
+              label="Experiment:"
+              :multiple="false"
+              clearable
               @filter="getExperiments"
               :rules="[requiredRule]"
               :disable="Object.hasOwn(route.params, 'id') || (!Object.hasOwn(route.params, 'id') && experiments.length === 0)"
               class="q-mb-lg"
-              :class="{'error': experimentError}"
-              @update:model-value="job.entrypoint = ''; job.queue = ''; basicInfoForm.reset()"
+              :class="{ 'error': experimentError }"
+              @update:model-value="() => { job.entrypoint = ''; job.queue = ''; basicInfoForm.reset() }"
             >
-              <template v-slot:before>
-                <div class="field-label">Experiment:</div>
-              </template>
-              <template v-slot:hint>
+              <template #hint>
                 <span 
                   v-if="!Object.hasOwn(route.params, 'id') && experiments.length === 0"
                   :style="{ 'color': experimentError ? '#C10015' : 'grey' }"
@@ -38,46 +34,36 @@
                   </router-link>
                 </span>
               </template>
-            </q-select>
-            <q-select
-              outlined
-              dense
+            </ResourcePicker>
+            <ResourcePicker
               v-model="job.entrypoint"
-              clearable
-              option-label="name"
-              option-value="id"
-              input-debounce="100"
               :options="entrypoints"
+              resourceType="entrypoint"
+              label="Entrypoint:"
+              :multiple="false"
+              clearable
               @filter="getEntrypoints"
               :rules="[requiredRule]"
               :class="{ 'error': entrypointError }"
-              :style="{ 'margin-bottom': entrypointField?.hasError ? '' : '25px' }"
               :disable="!job.experiment || allowableEntrypointIds.length === 0"
-              @update:model-value="job.queue = ''; basicInfoForm.reset()"
-              ref="entrypointField"
+              @update:model-value="() => { job.queue = ''; basicInfoForm.reset() }"
+              class="q-mb-lg"
             >
-              <template v-slot:before>
-                <div class="field-label">Entrypoint:</div>
-              </template>  
-              <template v-slot:hint>
+              <template #hint>
                 <span v-if="!job.experiment">Select experiment first</span>
                 <span 
                   v-else-if="allEntrypoints.length === 0"
-                  :style="{ 'color': entrypointError ? '#C10015' : 'grey' }"
+                  :style="{ color: entrypointError ? '#C10015' : 'grey' }"
                 >
                   No existing Entrypoints.  Create one
-                  <router-link to="/entrypoints/new">
-                    here
-                  </router-link>
+                  <router-link to="/entrypoints/new">here</router-link>
                 </span>
                 <span 
                   v-else-if="allowableEntrypointIds.length === 0"
-                  :style="{ 'color': entrypointError ? '#C10015' : 'grey' }"
+                  :style="{ color: entrypointError ? '#C10015' : 'grey' }"
                 >
                   {{ job.experiment.name }} has no Entrypoints, add 
-                  <a href="#" @click="showAppendEntrypointDialog = true">
-                    here
-                  </a>
+                  <a href="#" @click="showAppendEntrypointDialog = true">here</a>
                 </span>
                 <span v-else>
                   If you don't see your desired Entrypoint, 
@@ -86,9 +72,9 @@
                   </a>
                 </span>
               </template>
-            </q-select>
+            </ResourcePicker>
             <div
-              v-if="entrypointField?.hasError"
+              v-if="entrypointError"
               style="margin: 3px 0 10px 118px; font-size: 11px; color: #818181;"
             >
               If you don't see your desired Entrypoint, 
@@ -96,41 +82,32 @@
                 register it with the "{{ job?.experiment?.name }}" Experiment first
               </a>
             </div>
-            <q-select
-              outlined
-              dense
+            <ResourcePicker
               v-model="job.queue"
-              clearable
-              option-label="name"
-              input-debounce="100"
               :options="queues"
+              resourceType="queue"
+              label="Queue:"
+              :multiple="false"
+              clearable
               @filter="getQueues"
               :rules="[requiredRule]"
-              :class="{ 'error': queueError }"
-              :style="{ 'margin-bottom': queueField?.hasError ? '' : '25px' }"
+              :class="{ error: queueError }"
               :disable="!job.entrypoint || allowableQueueIds.length === 0"
-              ref="queueField"
+              class="q-mb-lg"
             >
-              <template v-slot:before>
-                <div class="field-label">Queue:</div>
-              </template>
-              <template v-slot:hint>
+              <template #hint>
                 <span v-if="!job.experiment && !job.entrypoint">Select Experiment and Entrypoint first</span>
                 <span v-else-if="!job.entrypoint">Select Entrypoint first</span>
-                <span v-else-if="allQueues.length === 0" :style="{ 'color': queueError ? '#C10015' : 'grey' }">
+                <span v-else-if="allQueues.length === 0" :style="{ color: queueError ? '#C10015' : 'grey' }">
                   No current Queues.  Create one
-                  <router-link to="/queues">
-                    here
-                  </router-link>
+                  <router-link to="/queues">here</router-link>
                 </span>
                 <span 
                   v-else-if="allowableQueueIds.length === 0"
-                  :style="{ 'color': queueError ? '#C10015' : 'grey' }"
-                  >
+                  :style="{ color: queueError ? '#C10015' : 'grey' }"
+                >
                   {{ job.entrypoint.name }} has no Queues, add 
-                  <a href="#" @click="showAppendQueueDialog = true">
-                    here
-                  </a>
+                  <a href="#" @click="showAppendQueueDialog = true">here</a>
                 </span>
                 <span v-else>
                   If you don't see your desired Queue, 
@@ -139,9 +116,9 @@
                   </a>
                 </span>
               </template>
-            </q-select>
+            </ResourcePicker>
             <div
-              v-if="queueField?.hasError"
+              v-if="queueError"
               style="margin: 3px 0 10px 118px; font-size: 11px; color: #818181;"
             >
               If you don't see your desired Queue,
@@ -439,6 +416,7 @@
   import { useLoginStore } from '@/stores/LoginStore'
   import AppendResource from '@/dialogs/AppendResource.vue'
   import TableComponent from '@/components/TableComponent.vue'
+  import ResourcePicker from '@/components/ResourcePicker.vue'
 
   const store = useLoginStore()
 

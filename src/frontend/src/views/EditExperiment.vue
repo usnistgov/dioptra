@@ -121,33 +121,14 @@
           </q-popup-edit>
         </template>
         <template #entrypoints="{ }">
-          <q-select
-            v-if="!history"
-            outlined
+          <ResourcePicker
             v-model="experiment.entrypoints"
-            use-input
-            use-chips
-            multiple
-            map-options
-            option-label="name"
-            option-value="id"
-            input-debounce="300"
             :options="entrypoints"
             @filter="getEntrypoints"
+            resourceType="entrypoint"
+            v-if="!history"
             :disable="history || experiment.deleted"
-          >
-            <template v-slot:selected>
-              <q-chip
-                v-for="(entrypoint, i) in experiment.entrypoints"
-                :key="entrypoint.id"
-                color="secondary"
-                :label="entrypoint.name"
-                class="text-white"
-                :removable="!history && !experiment.deleted"
-                @remove="experiment.entrypoints.splice(i, 1)"
-              />
-            </template>  
-          </q-select>
+          />
           <div class="row items-center" v-if="history">
             <q-icon
               name="sym_o_info"
@@ -205,6 +186,7 @@ import PageTitle from '@/components/PageTitle.vue'
 import DeleteDialog from '@/dialogs/DeleteDialog.vue'
 import KeyValueTable from '@/components/KeyValueTable.vue'
 import JobsView from './JobsView.vue'
+import ResourcePicker from '@/components/ResourcePicker.vue'
 
 const route = useRoute()
 
@@ -314,16 +296,17 @@ function revertValues() {
 }
 
 async function updateExperiment() {
-  experiment.value.entrypoints.forEach((entrypoint, index, array) => {
+  const experimentCopy = JSON.parse(JSON.stringify(experiment.value))
+  experimentCopy.entrypoints.forEach((entrypoint, index, array) => {
     if(typeof entrypoint === 'object') {
       array[index] = entrypoint.id
     }
   })
   try {
     const res = await api.updateItem('experiments', route.params.id, {
-      name: experiment.value.name,
-      description: experiment.value.description,
-      entrypoints: experiment.value.entrypoints
+      name: experimentCopy.name,
+      description: experimentCopy.description,
+      entrypoints: experimentCopy.entrypoints
     })
     getExperiment()
     notify.success(`Successfully updated '${res.data.name}'`)

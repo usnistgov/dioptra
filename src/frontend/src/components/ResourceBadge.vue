@@ -1,69 +1,110 @@
 <template>
-  <q-chip
-    :color="styles.color"
-    square
-    outline
-    clickable
-    @click.stop="openResource"
-    @auxclick.stop="onAuxClick"
-  >
-    <q-icon
-      v-if="styles.icon"
-      :name="styles.icon"
-      size="xs"
-      class="q-mr-sm"
-    />
-    {{ resource?.name }}
-    <span
-      v-if="resource?.deleted"
-      class="q-ml-sm"
+  <span class="q-gutter-x-xs" :class="{ 'rb-stacked': props.stacked }">
+    <q-chip
+      :color="styles.color"
+      square
+      outline
+      :clickable="props.clickable"
+      :removable="removable"
+      @remove="$emit('remove')"
+      @click.stop="openResource"
+      @auxclick.stop="onAuxClick"
     >
-      ❌
-    </span>
-    <q-tooltip v-if="resource?.deleted">
-      This <span class="text-capitalize">{{ resourceType }}</span> has been deleted
-    </q-tooltip>
-    <q-tooltip
-      v-else
-      class="text-capitalize"
-    >
-      Go To: {{ resourceType }} (ID {{ resource.id
-      }}{{ resource.snapshotId ? `, Snapshot ${resource.snapshotId}` : "" }})
-    </q-tooltip>
+      <span ref="chipTarget" class="rb-label">
+        <q-icon
+          v-if="styles.icon"
+          :name="styles.icon"
+          size="xs"
+          class="q-mr-sm"
+        />
+        {{ resource?.name }}
+        <span
+          v-if="resource?.deleted"
+          class="q-ml-sm"
+        >
+          ❌
+        </span>
 
-    <q-menu context-menu>
-      <q-list dense>
-        <q-item
-          clickable
-          v-close-popup
-          @click.stop="openResource"
-        >
-          <q-item-section>Open</q-item-section>
-        </q-item>
-        <q-item
-          clickable
-          v-close-popup
-          @click.stop="openInNewTab"
-        >
-          <q-item-section>Open In New Tab</q-item-section>
-        </q-item>
-      </q-list>
-    </q-menu>
-  </q-chip>
+        <q-badge
+          v-if="resource?.latestSnapshot === false"
+          color="red"
+          label="outdated"
+          rounded
+          class="q-ml-xs"
+        />
+      </span>
+
+      <q-btn
+        v-if="resource?.latestSnapshot === false"
+        round
+        dense
+        color="red"
+        icon="sync"
+        size="xs"
+        padding="xs"
+        class="q-ml-xs"
+        @click.stop="$emit('sync')"
+      >
+        <q-tooltip>
+          Sync to latest version
+        </q-tooltip>
+      </q-btn>
+
+      <q-tooltip v-if="resource?.deleted" :target="chipTarget">
+        This <span class="text-capitalize">{{ resourceType }}</span> has been deleted
+      </q-tooltip>
+      <q-tooltip
+        v-else-if="props.clickable"
+        class="text-capitalize"
+        :target="chipTarget"
+      >
+        Go To: {{ resourceType }} (ID {{ resource.id
+        }}{{ resource.snapshotId ? `, Snapshot ${resource.snapshotId}` : "" }})
+      </q-tooltip>
+
+      <q-menu context-menu>
+        <q-list dense>
+          <q-item
+            clickable
+            v-close-popup
+            @click.stop="openResource"
+          >
+            <q-item-section>Open</q-item-section>
+          </q-item>
+          <q-item
+            clickable
+            v-close-popup
+            @click.stop="openInNewTab"
+          >
+            <q-item-section>Open In New Tab</q-item-section>
+          </q-item>
+        </q-list>
+      </q-menu>
+    </q-chip>
+
+
+  </span>
 </template>
 
 <script setup>
-import { computed, inject } from "vue"
+import { computed, inject, ref } from "vue"
 import { getResourceStyle } from "@/services/resourceStyles"
 import { useRouter } from "vue-router"
 
+const emit = defineEmits(['sync', 'remove'])
 const router = useRouter()
 const darkMode = inject("darkMode")
 
 const props = defineProps({
   resource: Object,
   resourceType: String,
+  removable: { type: Boolean, default: false },
+  clickable: { type: Boolean, default: true },
+  // When true, place the badge on its own line
+  stacked: { type: Boolean, default: false }
 })
+
+const chipTarget = ref()
 
 const styles = computed(() => {
   return getResourceStyle(props.resourceType, darkMode.value)
@@ -71,7 +112,9 @@ const styles = computed(() => {
 
 const formattedUrl = computed(() => {
   const url = props.resource?.url?.replace(/^\/api\/v1/, "")
-  if (!url) return null
+  if (!url) {
+    return `/${props.resourceType}s/${props.resource.id}`
+  }
 
   const parts = url.split("/").filter(Boolean)
 
@@ -106,3 +149,11 @@ function openResource(event) {
   router.push(formattedUrl.value)
 }
 </script>
+
+<style scoped>
+.rb-stacked {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+}
+</style>
