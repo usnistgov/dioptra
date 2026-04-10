@@ -295,12 +295,10 @@ def test_validate_entrypoint_workflow_with_error(
 
     # Set up the entrypoint inputs
     #
-    # NOTE: The task graph misspells the task "hello_world" as "hello_wrld".
+    # Schema is invalid because a step must be an object,
     task_graph = textwrap.dedent(
         """# my entrypoint graph
-        hello_step:
-          hello_wrld:
-            name: $name
+        hello_step: []
         """
     )
     plugin_snapshots = [plugin_snapshot_id]

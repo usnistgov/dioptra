@@ -25,7 +25,6 @@ from tempfile import TemporaryDirectory
 from typing import Any, Final, cast
 
 import jsonschema
-from dioptra.sdk.api.swappable_validation import get_json_schema
 import structlog
 import tomli as toml
 import yaml
@@ -77,8 +76,10 @@ from dioptra.restapi.v1.shared.resource_service import (
 from dioptra.restapi.v1.shared.signature_analysis import get_plugin_signatures
 from dioptra.restapi.v1.shared.task_engine_yaml.service import TaskEngineYamlService
 from dioptra.restapi.v1.utils import PluginParameterTypeDict, PluginWithFilesDict
+from dioptra.sdk.api.swappable_validation import get_swappable_experiment_schema
 from dioptra.sdk.utilities.paths import set_cwd
 from dioptra.task_engine.issues import IssueSeverity, IssueType, ValidationIssue
+from src.dioptra.task_engine.validation import _schema_validate
 
 from .lib import views
 from .lib.clone_git_repository import clone_git_repository
@@ -1354,29 +1355,35 @@ class ValidateEntrypointService(object):
                     )
                 ],
             }
-        
-        swaps_graph_yaml = yaml.safe_load(task_graph)
 
-        if swaps_graph_yaml is None:
-            raise EmptyGraphError("Provided task graph is empty.")
+        # This schema is the experiment description, but with swaps graphs.
+        merged_schema = get_swappable_experiment_schema()
 
-        lookup_dict = self._swaps_validation_service.build_task_lookup_dict(
-            plugins=plugin_plugin_files
-        )
-
-        schema_issues = self._task_engine_yaml_service.validate(
-            task_engine_dict=task_engine_dict,
-            schema_provider=get_json_schema
-        )
-
-        output_issues, tasks = (
-            self._swaps_validation_service.validate_swap_output_matches(
-                pre_rendered_task_graph=swaps_graph_yaml,
-                task_lookup_dict=lookup_dict,
-            )
-        )
-
+        # Using this instead of _task_engine_yaml_service.validate, because that one requires a rendered task graph
+        # which we are no longer guaranteed to have. _task_engine_yaml_service.validate should remain unchanged (to
+        # preserve the task engine's functionality) and also be used in a new, heavier validation endpoint
+        schema_issues = _schema_validate(task_engine_dict, merged_schema)
         schema_valid = schema_issues == []
+
+        output_issues = []
+        tasks = {}
+
+        if schema_valid:
+            lookup_dict = self._swaps_validation_service.build_task_lookup_dict(
+                plugins=plugin_plugin_files
+            )
+
+            swaps_graph_yaml = yaml.safe_load(task_graph)
+
+            if swaps_graph_yaml is None:
+                raise EmptyGraphError("Provided task graph is empty.")
+
+            output_issues, tasks = (
+                self._swaps_validation_service.validate_swap_output_matches(
+                    pre_rendered_task_graph=swaps_graph_yaml,
+                    task_lookup_dict=lookup_dict,
+                )
+            )
 
         return {
             "schema_valid": schema_valid,

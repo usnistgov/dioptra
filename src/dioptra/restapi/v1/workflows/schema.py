@@ -310,6 +310,7 @@ class ValidateEntrypointIssueSchema(Schema):
 
         return data
 
+
 class TaskRefSchema(Schema):
     pluginSnapshotId = fields.Integer(
         attribute="plugin_snapshot_id",
@@ -326,6 +327,7 @@ class TaskRefSchema(Schema):
     taskName = fields.String(
         attribute="task_name", metadata={"description": "The name of the task"}
     )
+
 
 class ValidateEntrypointResponseSchema(Schema):
     """The response for the validateEntrypoint endpoint."""

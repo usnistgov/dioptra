@@ -958,7 +958,7 @@ def registered_multi_task_plugin(
         group_id=auth_account["default_group_id"],
         name="swap_test_plugin",
         description="A plugin exposing four tasks.",
-    ).json()
+    ).get_json()
 
     filename = "tasks.py"
     description = "The task plugin file exposing four tasks."
@@ -1063,15 +1063,19 @@ def registered_multi_task_plugin(
         artifact_tasks=None,
     )
 
-    plugin_snapshot_id = actions.get_plugin(client, registered_plugin["id"]).json()["snapshot"]
+    plugin_snapshot_id = client.get(
+        f"/api/v1/plugins/{registered_plugin['id']}"
+    ).get_json()["snapshot"]
+
+
     return plugin_snapshot_id
 
 @pytest.fixture
 @freeze_time("Apr 1st, 2025 11:00am", auto_tick_seconds=1)
-def registered_swap_entrypoints(
+def registered_swap_plugins(
     client: FlaskClient,
     auth_account: dict[str, Any],
-    registered_swap_plugins: dict[str, Any],
+    registered_plugin_parameter_types: dict[str, Any]
 ) -> dict[str, Any]:
     output = {}
 
@@ -1118,3 +1122,41 @@ def registered_swap_entrypoints(
     return output
 
 
+@pytest.fixture
+@freeze_time("Apr 1st, 2025 11:00am", auto_tick_seconds=1)
+def registered_swap_entrypoints(
+    client: FlaskClient,
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+    registered_swap_plugins: dict[str, Any],
+) -> dict[str, Any]:
+    output = {}
+
+    for fname in swap_entrypoints:
+        entrypoint = swap_entrypoints[fname]
+
+        with (Path(__file__).absolute().parent / "entrypoint_swaps" / fname).open(
+            "r"
+        ) as f:
+            task_graph = f.read()
+            parameters = [
+                {"name": p, "defaultValue": "default", "parameterType": "string"}
+                for p in entrypoint["params"]
+            ]
+
+        plugin_ids = [plugin["id"] for plugin in list(registered_swap_plugins.values())]
+        queue_ids = [queue["id"] for queue in list(registered_queues.values())]
+
+        entrypoint_response = actions.register_entrypoint(
+            client,
+            name=entrypoint["name"],
+            description="The first entrypoint.",
+            group_id=auth_account["groups"][0]["id"],
+            task_graph=task_graph,
+            parameters=parameters,
+            plugin_ids=plugin_ids,
+            queue_ids=queue_ids,
+        ).get_json()
+
+        output[entrypoint["name"]] = entrypoint_response
+    return output

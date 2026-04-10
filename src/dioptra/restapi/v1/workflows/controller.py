@@ -36,15 +36,12 @@ from .schema import (
     SignatureAnalysisSchema,
     ValidateEntrypointRequestSchema,
     ValidateEntrypointResponseSchema,
-    ValidateSwapsGraphRequestSchema,
-    ValidateSwapsGraphResponseSchema,
 )
 from .service import (
     DraftCommitService,
     ResourceImportService,
     SignatureAnalysisService,
     ValidateEntrypointService,
-    ValidateSwapsGraphService,
 )
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()

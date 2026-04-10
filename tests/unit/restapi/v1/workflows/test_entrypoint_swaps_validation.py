@@ -49,7 +49,8 @@ def test_validate_swaps_graph_success(
     )
 
     response = dioptra_client.workflows.validate_entrypoint(
-        swaps_graph=swaps_graph,
+        group_id=auth_account["default_group_id"],
+        task_graph=swaps_graph,
         plugin_snapshots=[plugin_snapshot_id],
         entrypoint_parameters=[]
 
@@ -82,8 +83,9 @@ def test_validate_swaps_graph_invalid_task(
     parameters = [
     ]
 
-    response = dioptra_client.workflows.validate_swaps_graph(
-        swaps_graph=swaps_graph,
+    response = dioptra_client.workflows.validate_entrypoint(
+        group_id=auth_account["default_group_id"],
+        task_graph=swaps_graph,
         plugin_snapshots=[plugin_snapshot_id],
         entrypoint_parameters=[]
     )
@@ -113,11 +115,14 @@ def test_validate_swaps_graph_mixed_output_error(
         """
     )
 
-    response = dioptra_client.workflows.validate_swaps_graph(
-        swaps_graph=swaps_graph,
+    response = dioptra_client.workflows.validate_entrypoint(
+        group_id=auth_account["default_group_id"],
+        task_graph=swaps_graph,
         plugin_snapshots=[plugin_snapshot_id],
         entrypoint_parameters=[]
     )
+    print(response.json(), flush=True)
+
     assert (
         response.status_code == HTTPStatus.OK
         and response.json()["schemaValid"]
