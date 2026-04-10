@@ -311,6 +311,24 @@ class ValidateEntrypointIssueSchema(Schema):
         return data
 
 
+class TaskRefSchema(Schema):
+    pluginSnapshotId = fields.Integer(
+        attribute="plugin_snapshot_id",
+        metadata={
+            "description": "The plugin snapshot ID for the plugin containing this task"
+        },
+    )
+    pluginFileName = fields.String(
+        attribute="pluginfile_filename",
+        metadata={
+            "description": "The filename of the plugin file containing this task"
+        },
+    )
+    taskName = fields.String(
+        attribute="task_name", metadata={"description": "The name of the task"}
+    )
+
+
 class ValidateEntrypointResponseSchema(Schema):
     """The response for the validateEntrypoint endpoint."""
 
@@ -329,4 +347,23 @@ class ValidateEntrypointResponseSchema(Schema):
         attribute="schema_issues",
         metadata={"description": "A list of validation issues detected in the schema."},
         many=True,
+    )
+
+    swapIssues = fields.Nested(
+        ValidateEntrypointIssueSchema,
+        attribute="swap_issues",
+        metadata={"description": "A list of validation issues detected in the schema."},
+        many=True,
+    )
+
+    swaps = fields.Dict(
+        keys=fields.Str(),
+        values=fields.Dict(
+            keys=fields.Str(),
+            values=fields.Nested(TaskRefSchema),
+        ),
+        attribute="swaps",
+        metadata={
+            "description": "Mapping of swap names to a mapping of choice aliases to task references."
+        },
     )

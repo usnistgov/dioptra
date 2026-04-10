@@ -943,10 +943,139 @@ swap_entrypoints = {
 
 @pytest.fixture
 @freeze_time("Apr 1st, 2025 11:00am", auto_tick_seconds=1)
-def registered_swap_plugins(
+def registered_multi_task_plugin(
     client: FlaskClient,
     auth_account: dict[str, Any],
     registered_plugin_parameter_types: dict[str, Any],
+) -> int:
+    """Create a plugin with multiple tasks for testing swaps validation.
+
+    Returns:
+        The plugin snapshot ID.
+    """
+    registered_plugin = actions.register_plugin(
+        client,
+        group_id=auth_account["default_group_id"],
+        name="swap_test_plugin",
+        description="A plugin exposing four tasks.",
+    ).get_json()
+
+    filename = "tasks.py"
+    description = "The task plugin file exposing four tasks."
+    contents = textwrap.dedent(
+        """from dioptra import pyplugs
+
+        @pyplugs.register
+        def task_one(name: str) -> str:
+            return f'Task One says hello to {name}!'
+
+        @pyplugs.register
+        def task_two(name: str) -> str:
+            return f'Task Two greets {name}!'
+
+        @pyplugs.register
+        def task_three(name: str) -> str:
+            return f'Task Three welcomes {name}!'
+
+        @pyplugs.register
+        def task_int(name: str) -> int:
+            return len(name)
+        """
+    )
+
+    string_parameter_type = registered_plugin_parameter_types["string"]
+    integer_parameter_type = registered_plugin_parameter_types["integer"]
+
+    tasks = [
+        {
+            "name": "task_one",
+            "inputParams": [
+                {
+                    "name": "name",
+                    "parameterType": string_parameter_type["id"],
+                    "required": True,
+                }
+            ],
+            "outputParams": [
+                {
+                    "name": "greeting",
+                    "parameterType": string_parameter_type["id"],
+                }
+            ],
+        },
+        {
+            "name": "task_two",
+            "inputParams": [
+                {
+                    "name": "name",
+                    "parameterType": string_parameter_type["id"],
+                    "required": True,
+                }
+            ],
+            "outputParams": [
+                {
+                    "name": "greeting",
+                    "parameterType": string_parameter_type["id"],
+                }
+            ],
+        },
+        {
+            "name": "task_three",
+            "inputParams": [
+                {
+                    "name": "name",
+                    "parameterType": string_parameter_type["id"],
+                    "required": True,
+                }
+            ],
+            "outputParams": [
+                {
+                    "name": "greeting",
+                    "parameterType": string_parameter_type["id"],
+                }
+            ],
+        },
+        {
+            "name": "task_int",
+            "inputParams": [
+                {
+                    "name": "name",
+                    "parameterType": string_parameter_type["id"],
+                    "required": True,
+                }
+            ],
+            "outputParams": [
+                {
+                    "name": "value",
+                    "parameterType": integer_parameter_type["id"],
+                }
+            ],
+        },
+    ]
+
+    actions.register_plugin_file(
+        client,
+        plugin_id=registered_plugin["id"],
+        filename=filename,
+        description=description,
+        contents=contents,
+        function_tasks=tasks,
+        artifact_tasks=None,
+    )
+
+    plugin_snapshot_id = client.get(
+        f"/api/v1/plugins/{registered_plugin['id']}"
+    ).get_json()["snapshot"]
+
+
+    return plugin_snapshot_id
+
+@pytest.fixture
+@freeze_time("Apr 1st, 2025 11:00am", auto_tick_seconds=1)
+def registered_swap_plugins(
+    client: FlaskClient,
+    auth_account: dict[str, Any],
+    registered_plugin_parameter_types: dict[str, Any]
 ) -> dict[str, Any]:
     output = {}
 
