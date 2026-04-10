@@ -32,8 +32,8 @@ from dioptra.restapi.errors import (
     BackendDatabaseError,
     EntityDoesNotExistError,
     EntityExistsError,
+    InputParameterNotUniqueError,
     PluginTaskDoesNotExistError,
-    QueryParameterNotUniqueError,
     SortParameterValidationError,
 )
 from dioptra.restapi.utils import find_non_unique
@@ -1362,7 +1362,7 @@ def _construct_input_params(
 ) -> Iterable[models.PluginTaskInputParameter]:
     duplicates = find_non_unique("name", parameters)
     if len(duplicates) > 0:
-        raise QueryParameterNotUniqueError(
+        raise InputParameterNotUniqueError(
             "artifact task input parameter",
             plugin_task_name=task_name,
             input_param_names=duplicates,
@@ -1385,7 +1385,7 @@ def _construct_output_params(
 ) -> Iterable[models.PluginTaskOutputParameter]:
     duplicates = find_non_unique("name", parameters)
     if len(duplicates) > 0:
-        raise QueryParameterNotUniqueError(
+        raise InputParameterNotUniqueError(
             "artifact task output parameter",
             plugin_task_name=task_name,
             output_param_names=duplicates,
@@ -1469,7 +1469,7 @@ def _add_plugin_tasks(
         "name", itertools.chain(function_tasks, artifact_tasks)
     )
     if len(duplicates) > 0:
-        raise QueryParameterNotUniqueError("plugin task", task_names=duplicates)
+        raise InputParameterNotUniqueError("plugin task", task_names=duplicates)
 
     parameter_type_ids_to_orm = get_referenced_parameter_types(
         function_tasks=function_tasks, artifact_tasks=artifact_tasks, log=log

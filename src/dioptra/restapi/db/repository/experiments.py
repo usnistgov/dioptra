@@ -29,6 +29,7 @@ from dioptra.restapi.db.models import (
     Resource,
     Tag,
 )
+from dioptra.restapi.v1.entity_types import EntityType
 
 
 class ExperimentRepository:
@@ -71,7 +72,9 @@ class ExperimentRepository:
             MismatchedResourceTypeError: if the snapshot or resource's type is
                 not "experiment"
         """
-        utils.assert_can_create_resource(self.session, experiment, "experiment")
+        utils.assert_can_create_resource(
+            self.session, experiment, EntityType.EXPERIMENT
+        )
         utils.assert_resource_name_available(self.session, experiment)
 
         self.session.add(experiment)
@@ -97,7 +100,9 @@ class ExperimentRepository:
             MismatchedResourceTypeError: if the snapshot or resource's type is
                 not "experiment"
         """
-        utils.assert_can_create_snapshot(self.session, experiment, "experiment")
+        utils.assert_can_create_snapshot(
+            self.session, experiment, EntityType.EXPERIMENT
+        )
         utils.assert_snapshot_name_available(self.session, experiment)
 
         # Assume that the new snapshot's created_on timestamp is later than the
@@ -229,6 +234,29 @@ class ExperimentRepository:
             deletion_policy,
         )
 
+    def create_entrypoints(
+        self,
+        experiment: Experiment,
+        entrypoints: Iterable[EntryPoint | Resource | int],
+    ) -> Sequence[EntryPoint]:
+        """
+        Add the given entry points as children of the given experiment.
+
+        Args:
+            entrypoint: An EntryPoint object
+            queus: The queues to add as children
+
+        Returns:
+            The list of queue children, as latest snapshots.
+
+        Raises:
+            EntityDoesNotExistError: if parent or any new child does not exist
+            EntityDeletedError: if parent or any new child is deleted
+        """
+        return utils.create_resource_children(
+            self.session, EntryPoint, experiment, entrypoints
+        )
+
     def set_entrypoints(
         self,
         experiment: Experiment | int,
@@ -256,6 +284,7 @@ class ExperimentRepository:
             EntryPoint,
             experiment,
             children,
+            EntityType.ENTRY_POINT,
         )
 
         return child_snaps
@@ -264,7 +293,7 @@ class ExperimentRepository:
         self,
         experiment: Experiment | int,
         children: Iterable[EntryPoint | int],
-    ) -> list[EntryPoint]:
+    ) -> Sequence[EntryPoint]:
         """
         Add the given entry points as children of the given experiment.
 
@@ -302,7 +331,7 @@ class ExperimentRepository:
         Raises:
             EntityDoesNotExistError: if parent or child do not exist
         """
-        utils.unlink_child(self.session, experiment, entrypoint)
+        utils.unlink_child(self.session, experiment, entrypoint, EntityType.ENTRY_POINT)
 
     def delete(self, experiment: Experiment | int) -> None:
         """
