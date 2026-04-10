@@ -55,9 +55,10 @@
             {{ prettyBytes(artifact.fileSize) }}
           </template>
           <template #job>
-            <RouterLink :to="`/jobs/${artifact?.job}`">
-              {{ artifact?.job }}
-            </RouterLink>
+          <ResourceBadge
+            :resource="{name: `Job ${artifact.job}`, url: `/jobs/${artifact.job}`, id: artifact.job}"
+            resourceType="job"
+          />
           </template>
           <template #plugin="{ plugin = {} }">
             <div class="row items-end">
@@ -68,64 +69,24 @@
                 <q-icon name="sym_o_warning" size="2.5em" />
                 The attached plugin has been deleted.
               </div>
-              <q-select
-                label="Plugin"
+              <ResourcePicker
                 v-model="artifact.plugin"
-                @filter="getPlugins"
                 :options="plugins"
-                option-label="name"
-                input-debounce="100"
-                dense
-                outlined
-                use-input
-                class="q-mt-sm q-ml-md col"
+                resourceType="plugin"
+                :multiple="false"
+                class="q-mt-sm"
+                @filter="getPlugins"
+                @sync="(p) => syncPlugin(p.id)"
               >
-                <template v-slot:option="scope">
-                  <q-item v-bind="scope.itemProps">
-                    <q-item-section>
-                      <q-item-label>{{ scope.opt.name }}</q-item-label>
-                      <q-item-label caption
-                        >Number of Files:
-                        {{ scope.opt.files.length }}</q-item-label
-                      >
-                      <q-item-label caption
-                        >Number of artifact tasks:
-                        {{ countTasks(scope.opt) }}</q-item-label
-                      >
-                    </q-item-section>
-                  </q-item>
-                </template>
-                <template v-slot:selected-item="scope">
-                  <q-item-label class="q-my-sm">
-                    <q-chip
-                      :label="plugin.name"
-                      color="secondary"
-                      text-color="white"
-                      v-if="Object.keys(plugin).length > 0"
-                    >
-                      <q-badge
-                        v-if="!plugin.latestSnapshot"
-                        color="red"
-                        label="outdated"
-                        rounded
-                        class="q-ml-xs"
-                      />
-                    </q-chip>
-                    <q-btn
-                      v-if="
-                        !plugin.latestSnapshot && Object.keys(plugin).length > 0
-                      "
-                      round
-                      color="red"
-                      icon="sync"
-                      size="sm"
-                      @click.stop="syncPlugin(plugin.id)"
-                    >
-                      <q-tooltip> Sync to latest version of plugin </q-tooltip>
-                    </q-btn>
+                <template #option-extra="{ opt }">
+                  <q-item-label caption>
+                    Number of Files: {{ opt.files.length }}
+                  </q-item-label>
+                  <q-item-label caption>
+                    Number of artifact tasks: {{ countTasks(opt) }}
                   </q-item-label>
                 </template>
-              </q-select>
+              </ResourcePicker>
             </div>
             <q-select
               dense
@@ -364,6 +325,8 @@ import * as notify from "../notify";
 import { useLoginStore } from "@/stores/LoginStore.ts";
 import { useQuasar } from "quasar";
 import CodeEditor from '@/components/CodeEditor.vue'
+import ResourcePicker from '@/components/ResourcePicker.vue'
+import ResourceBadge from '@/components/ResourceBadge.vue'
 
 const $q = useQuasar();
 
@@ -532,11 +495,11 @@ async function syncPlugin(pluginID) {
         originalTaskFound = true;
       }
     });
-    if (!originalTaskFound) {
-      notify.info(
-        `Task "${artifact.value.task.name}" not found in latest file, please select a new artifact task.`
-      );
-    }
+    // if (!originalTaskFound) {
+    //   notify.info(
+    //     `Task "${artifact.value.task.name}" not found in latest file, please select a new artifact task.`
+    //   );
+    // }
   } catch (err) {
     console.warn(err);
   }
@@ -596,6 +559,7 @@ async function submit() {
       taskId: selectedArtifactTask.value.id,
     });
     notify.success(`Successfully updated artifact '${route.params.id}'`);
+    router.push(`/artifacts`)
   } catch (err) {
     notify.error(err.response.data.message);
   }

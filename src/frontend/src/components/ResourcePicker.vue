@@ -34,6 +34,7 @@
         :resourceType="resourceType"
         :removable="false"
         :clickable="false"
+        @sync="$emit('sync', modelValue)"
       />
     </template>
     <template v-slot:option="scope">
@@ -50,6 +51,7 @@
           <q-item-label caption v-if="scope.opt.description">
             {{ scope.opt.description }} 
           </q-item-label>
+          <slot name="option-extra" :opt="scope.opt" />
         </q-item-section>
       </q-item>
     </template>
