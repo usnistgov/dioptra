@@ -178,19 +178,6 @@ class SwapsValidationService(object):
         entrypoint_artifacts: list[dict[str, Any]],
         log: BoundLogger,
     ) -> list["ValidationIssue"]:
-        """Validate all combinations of swaps in the task graph.
-
-        Args:
-            task_graph: The task graph dictionary.
-            task_lookup_dict: Dictionary mapping task names to task metadata.
-            task_engine_yaml_service: Service for building and validating task engine YAML.
-            entrypoint_data: The entrypoint data adapter.
-            plugin_parameter_types: Plugin parameter types.
-            plugin_plugin_files: Plugin plugin files.
-
-        Returns:
-            A list of all validation issues found across all swap combinations.
-        """
         import json
         from itertools import product
 
@@ -246,16 +233,6 @@ class SwapsValidationService(object):
         return all_issues
 
 class EntrypointSwapsValidationService(object):
-    """Service that validates a swaps graph in the context of an entrypoint.
-
-    It performs three checks:
-    1. Uses :class:`DynamicGlobalParametersService` to determine which global
-       parameters are required by the swaps graph.
-    2. Ensures those globals are declared on the entrypoint (via
-       :class:`EntrypointIdService`).
-    3. Delegates to :class:`SwapsValidationService` for schema validation and
-       output‑type matching.
-    """
 
     @inject
     def __init__(
@@ -281,19 +258,6 @@ class EntrypointSwapsValidationService(object):
         globals: dict[str, Any],
         **kwargs,
     ) -> dict[str, Any]:
-        """Validate swaps graph against an entrypoint.
-
-        Args:
-            entrypoint_id: ID of the entrypoint to validate against.
-            entrypoint_snapshot_id: Optional snapshot ID; ``None`` means latest.
-            swaps_graph: YAML string of the swaps graph.
-            plugin_snapshot_ids: Plugin snapshots required for output validation.
-        Returns:
-            Dictionary with keys:
-                * schema_valid - boolean value describing whether the graph passes schema validation
-                * rendered_validation_errors - a list of validation errors that occured across all combinations of swaps
-                * missing_global_params - a list of global parameters required by the graph that were not declared as entrypoint parameters.
-        """
 
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 

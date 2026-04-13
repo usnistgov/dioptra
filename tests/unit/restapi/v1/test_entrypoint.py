@@ -1660,7 +1660,6 @@ def test_validate_swaps_graph(
     group_id = auth_account["default_group_id"]
     plugin_snapshot_id = registered_swaps_validation_plugin["plugin_snapshot_id"]
 
-    # Create a swaps graph with swappable tasks
     swaps_graph = textwrap.dedent("""
         # Swaps graph with swappable tasks
         graph:
@@ -1680,7 +1679,6 @@ def test_validate_swaps_graph(
               input_param: $input_param
     """)
 
-    # Validate the swaps graph
     response = dioptra_client.entrypoints.validate(
         group_id=group_id,
         swaps_graph=swaps_graph,
@@ -1694,10 +1692,8 @@ def test_validate_swaps_graph(
         ],
     )
 
-    # Check that the response is successful
     assert response.status_code == HTTPStatus.OK
 
-    # Check that the response contains validation results
     validation_result = response.json()
     assert "renderedValidationErrors" in validation_result
     assert isinstance(validation_result["renderedValidationErrors"], list)
@@ -1710,24 +1706,16 @@ def test_validate_swaps_graph_bad_schema(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
 ) -> None:
-    """Test that validation fails for a swaps graph with bad schema.
-
-    Given an authenticated user, this test validates that:
-    - A swaps graph with invalid YAML structure fails schema validation
-    - The validation response indicates schema validation failure
-    """
     group_id = auth_account["default_group_id"]
 
     bad_schema_graph = textwrap.dedent("""
         step1:
             task1:
-                input_param: $input_param
         step1:
             task1:
                 input_param: $input_param
     """)
 
-    # Validate the swaps graph
     response = dioptra_client.entrypoints.validate(
         group_id=group_id,
         swaps_graph=bad_schema_graph,
@@ -1735,10 +1723,8 @@ def test_validate_swaps_graph_bad_schema(
         entrypoint_parameters=[],
     )
 
-    # Check that the response is successful (validation is informational, not blocking)
     assert response.status_code == HTTPStatus.OK
 
-    # Check that the response contains validation results
     validation_result = response.json()
     assert "schemaValid" in validation_result
     assert validation_result["schemaValid"] is False
@@ -1750,16 +1736,9 @@ def test_validate_swaps_graph_missing_globals(
     auth_account: dict[str, Any],
     registered_swaps_validation_plugin: dict[str, Any],
 ) -> None:
-    """Test that validation fails when required global parameters are missing.
-
-    Given an authenticated user, this test validates that:
-    - A swaps graph that requires global parameters fails validation
-    - The validation response indicates missing global parameters
-    """
     group_id = auth_account["default_group_id"]
     plugin_snapshot_id = registered_swaps_validation_plugin["plugin_snapshot_id"]
 
-    # Create a swaps graph that uses a global parameter
     swaps_graph = textwrap.dedent("""
         step1:
             task1:
@@ -1769,7 +1748,6 @@ def test_validate_swaps_graph_missing_globals(
                 input_param: $missing_param
     """)
 
-    # Validate the swaps graph without declaring the required global parameter
     response = dioptra_client.entrypoints.validate(
         group_id=group_id,
         swaps_graph=swaps_graph,
@@ -1783,10 +1761,8 @@ def test_validate_swaps_graph_missing_globals(
         ],
     )
 
-    # Check that the response is successful
     assert response.status_code == HTTPStatus.OK
 
-    # Check that the response contains validation results
     validation_result = response.json()
     print(validation_result, flush=True)
     assert "missingGlobalParams" in validation_result
@@ -1798,16 +1774,9 @@ def test_validate_swaps_graph_rendered_errors(
     auth_account: dict[str, Any],
     registered_swaps_validation_plugin: dict[str, Any],
 ) -> None:
-    """Test that validation catches errors in rendered swap combinations.
-
-    Given an authenticated user, this test validates that:
-    - A swaps graph with invalid swap combinations fails validation
-    - The validation response contains rendered validation errors
-    """
     group_id = auth_account["default_group_id"]
     plugin_snapshot_id = registered_swaps_validation_plugin["plugin_snapshot_id"]
 
-    # Create a swaps graph with a swap that references a non-existent task
     swaps_graph = textwrap.dedent("""
         step1:
             task1:
@@ -1822,7 +1791,6 @@ def test_validate_swaps_graph_rendered_errors(
                     args: [$input_param]
     """)
 
-    # Validate the swaps graph
     response = dioptra_client.entrypoints.validate(
         group_id=group_id,
         swaps_graph=swaps_graph,
@@ -1836,13 +1804,10 @@ def test_validate_swaps_graph_rendered_errors(
         ],
     )
 
-    # Check that the response is successful
     assert response.status_code == HTTPStatus.OK
 
-    # Check that the response contains validation results with rendered errors
     validation_result = response.json()
     assert "renderedValidationErrors" in validation_result
     assert len(validation_result["renderedValidationErrors"]) > 0
-    # Check that the error message mentions the non-existent task
     error_messages = [error["message"] for error in validation_result["renderedValidationErrors"]]
     assert any("non_existent_task" in msg for msg in error_messages)
