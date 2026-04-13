@@ -79,7 +79,7 @@ from dioptra.restapi.v1.utils import PluginParameterTypeDict, PluginWithFilesDic
 from dioptra.sdk.api.swappable_validation import get_swappable_experiment_schema
 from dioptra.sdk.utilities.paths import set_cwd
 from dioptra.task_engine.issues import IssueSeverity, IssueType, ValidationIssue
-from src.dioptra.task_engine.validation import _schema_validate
+from dioptra.task_engine.validation import _schema_validate
 
 from .lib import views
 from .lib.clone_git_repository import clone_git_repository
@@ -1365,8 +1365,8 @@ class ValidateEntrypointService(object):
         schema_issues = _schema_validate(task_engine_dict, merged_schema)
         schema_valid = schema_issues == []
 
-        output_issues = []
-        tasks = {}
+        output_issues: list[ValidationIssue] = []
+        tasks: dict[str, Any] = {}
 
         if schema_valid:
             lookup_dict = self._swaps_validation_service.build_task_lookup_dict(

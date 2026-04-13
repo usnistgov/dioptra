@@ -33,7 +33,7 @@ def get_json_schema(default: bool = False) -> dict:
     return schema
 
 
-def get_swappable_experiment_schema():
+def get_swappable_experiment_schema() -> dict:
     base_schema = dioptra.task_engine.validation.get_json_schema()
     swappable_schema = get_json_schema()
 
