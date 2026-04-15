@@ -127,6 +127,21 @@ class QueueRepository:
 
         utils.delete_resource(self.session, queue)
 
+    def unlink_entrypoints(self, queue: Queue | int) -> None:
+        """
+        "Unlink" the all parent entry points from the given queue.  This
+        only severs the relationship; it does not delete either resource.  If
+        there is no parent/child relationship, this is a no-op.
+
+        Args:
+            queue: An queue or resource_id integer primary key value
+
+        Raises:
+            EntityDoesNotExistError: if parent or child do not exist
+        """
+
+        utils.unlink_parents(self.session, queue)
+
     @overload
     def get(
         self,

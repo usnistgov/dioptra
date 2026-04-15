@@ -222,6 +222,39 @@ def test_resource_import_update(
     )
 
 
+def test_resource_import_update_deleted_queue(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    resources_tar_file: NamedTemporaryFile,
+):
+    group_id = auth_account["groups"][0]["id"]
+    description_to_replace = "original description"
+
+    entrypoint_response = dioptra_client.entrypoints.create(
+        group_id=group_id,
+        name="Hello World",
+        task_graph="",
+        description=description_to_replace,
+    )
+    dioptra_client.plugins.create(
+        group_id=group_id, name="hello_world", description=description_to_replace
+    )
+    dioptra_client.plugin_parameter_types.create(
+        group_id=group_id, name="message", description=description_to_replace
+    )
+    queue_response = dioptra_client.queues.create(group_id=group_id, name="queue")
+    dioptra_client.entrypoints.queues.create(
+        entrypoint_response.json()["id"], [queue_response.json()["id"]]
+    )
+    dioptra_client.queues.delete_by_id(queue_response.json()["id"])
+    assert_resource_import_update_works(
+        dioptra_client,
+        group_id=group_id,
+        archive_file=resources_tar_file,
+        description=description_to_replace,
+    )
+
+
 def test_resource_import_overwrite(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
