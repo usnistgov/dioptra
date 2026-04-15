@@ -97,7 +97,7 @@
 </template>
 
 <script setup>
-  import { ref, inject, computed, watch, onMounted } from 'vue'
+  import { ref, inject, computed, onMounted } from 'vue'
   import { useLoginStore } from '@/stores/LoginStore.ts'
   import { useRouter, useRoute, onBeforeRouteLeave } from 'vue-router'
   import * as api from '@/services/dataApi'
@@ -180,11 +180,7 @@
   const showReturnDialog = ref(false)
 
   onMounted(() => {
-    if(route.query.snapshotId && !store.showRightDrawer) {
-      store.showRightDrawer = true
-    } else {
-      getExperiment()
-    }
+    getExperiment()
   })
 
   async function getExperiment() {
@@ -261,18 +257,5 @@
 
   const confirmLeave = ref(false)
   const toPath = ref()
-
-  watch(() => store.selectedSnapshot, (newVal) => {
-    if(newVal) {
-      experiment.value = {
-        name: newVal.name,
-        group: newVal.group,
-        description: newVal.description
-      }
-      title.value = `View ${experiment.value.name}`
-    } else {
-      getExperiment()
-    }
-  })
 
 </script>

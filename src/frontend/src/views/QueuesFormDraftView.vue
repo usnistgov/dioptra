@@ -288,11 +288,7 @@ function clearForm() {
 
 watch(() => store.selectedSnapshot, (q) => {
   if(q) {
-    queue.value = {
-      name: q.name,
-      group: q.group.id,
-      description: q.description,
-    }
+    queue.value = q
   } else {
     getQueue()
   }

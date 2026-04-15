@@ -582,18 +582,7 @@
 
   watch(() => store.selectedSnapshot, (ep) => {
     if(ep) {
-      entryPoint.value = {
-        name: ep.name,
-        group: ep.group.id,
-        description: ep.description,
-        parameters: ep.parameters,
-        artifactParameters: ep.artifactParameters,
-        taskGraph: ep.taskGraph,
-        artifactGraph: ep.artifactGraph,
-        queues: ep.queues,
-        plugins: ep.plugins,
-        artifactPlugins: ep.artifactPlugins
-      }
+      entryPoint.value = ep
       copyAtEditStart.value = entryPoint.value
     } else {
       getEntrypoint()
