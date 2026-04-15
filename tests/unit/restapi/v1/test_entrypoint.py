@@ -1567,6 +1567,7 @@ def test_dynamic_globals_endpoint_forgot_swaps(
     auth_account: dict[str, Any],
     registered_swap_entrypoints: dict[str, Any],
 ):
+    
     forgot_swaps = (
         dioptra_client.entrypoints.snapshots.get_task_graph_global_params(
             entrypoint_id=registered_swap_entrypoints["swap_test"]["id"],
@@ -1649,13 +1650,6 @@ def test_validate_swaps_graph(
     registered_swaps_validation_plugin: dict[str, Any],
 ) -> None:
     """Test that the validate function can validate a swaps graph.
-
-    Given an authenticated user, this test validates the following sequence of actions:
-
-    - The user creates a plugin with tasks for a swaps graph
-    - The user creates a swaps graph with swappable tasks
-    - The user validates the swaps graph using the client's validate function
-    - The validation response is checked for success
     """
     group_id = auth_account["default_group_id"]
     plugin_snapshot_id = registered_swaps_validation_plugin["plugin_snapshot_id"]
@@ -1705,22 +1699,30 @@ def test_validate_swaps_graph(
 def test_validate_swaps_graph_bad_schema(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
+    registered_swaps_validation_plugin: dict[str, Any],
 ) -> None:
+    """Test that the validate function can validate a swaps with a bad schema.
+    """
     group_id = auth_account["default_group_id"]
 
     bad_schema_graph = textwrap.dedent("""
         step1:
-            task1:
-        step1:
-            task1:
-                input_param: $input_param
-    """)
+            ?step1_choice:
+                task: []
+                kwargs: []
+    """) # for keyword invocations, task must be a string, and kwargs must be an object
 
     response = dioptra_client.entrypoints.validate(
         group_id=group_id,
         swaps_graph=bad_schema_graph,
         plugin_snapshot_ids=[],
-        entrypoint_parameters=[],
+        entrypoint_parameters=[
+            {
+                "name": "input_param",
+                "defaultValue": "test_value",
+                "parameterType": "string",
+            }
+        ],
     )
 
     assert response.status_code == HTTPStatus.OK
@@ -1728,24 +1730,29 @@ def test_validate_swaps_graph_bad_schema(
     validation_result = response.json()
     assert "schemaValid" in validation_result
     assert validation_result["schemaValid"] is False
-    assert "renderedValidationErrors" in validation_result
-    assert isinstance(validation_result["renderedValidationErrors"], list)
 
 def test_validate_swaps_graph_missing_globals(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_swaps_validation_plugin: dict[str, Any],
 ) -> None:
+    """Test that the validate function can validate a swaps with missing global parameters.
+    """
     group_id = auth_account["default_group_id"]
     plugin_snapshot_id = registered_swaps_validation_plugin["plugin_snapshot_id"]
 
     swaps_graph = textwrap.dedent("""
         step1:
             task1:
-                input_param: $missing_param
+                input_param: $missing_param1
         step2:
-            task2:
-                input_param: $missing_param
+            ?step2_choice:
+                alias1:
+                    task2:
+                        input_param: $missing_param2
+                alias2:
+                    task3:
+                        input_param: $missing_param3
     """)
 
     response = dioptra_client.entrypoints.validate(
@@ -1764,19 +1771,20 @@ def test_validate_swaps_graph_missing_globals(
     assert response.status_code == HTTPStatus.OK
 
     validation_result = response.json()
-    print(validation_result, flush=True)
     assert "missingGlobalParams" in validation_result
-    assert "missing_param" in validation_result["missingGlobalParams"]
-    assert len(validation_result["missingGlobalParams"]) > 0
+    assert "missing_param1" in validation_result["missingGlobalParams"]
+    assert "missing_param2" in validation_result["missingGlobalParams"]
+    assert "missing_param3" in validation_result["missingGlobalParams"]
 
 def test_validate_swaps_graph_rendered_errors(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_swaps_validation_plugin: dict[str, Any],
 ) -> None:
+    """Test that the validate function can validate a swaps graph with errors after rendering.
+    """
     group_id = auth_account["default_group_id"]
     plugin_snapshot_id = registered_swaps_validation_plugin["plugin_snapshot_id"]
-
     swaps_graph = textwrap.dedent("""
         step1:
             task1:
@@ -1790,6 +1798,7 @@ def test_validate_swaps_graph_rendered_errors(
                     task: non_existent_task
                     args: [$input_param]
     """)
+
 
     response = dioptra_client.entrypoints.validate(
         group_id=group_id,

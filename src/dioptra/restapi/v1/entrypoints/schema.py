@@ -16,7 +16,7 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The schemas for serializing/deserializing Entrypoint resources."""
 
-from marshmallow import Schema, fields, validate, pre_dump
+from marshmallow import Schema, fields, pre_dump, validate
 from marshmallow.exceptions import ValidationError
 
 from dioptra.restapi.v1.plugins.schema import (
@@ -392,14 +392,14 @@ class DynamicGlobalParametersResponseSchema(Schema):
         many=True,
     )
 
+
 class ValidateSwapsRequestSchema(Schema):
     """The schema for validating swaps on an entrypoint."""
+
     groupId = fields.Integer(
         attribute="group_id",
         data_key="groupId",
-        metadata={
-            "description": "ID of the group for the entrypoint."
-        },
+        metadata={"description": "ID of the group for the entrypoint."},
     )
     swapsGraph = fields.String(
         attribute="swaps_graph",
@@ -412,31 +412,22 @@ class ValidateSwapsRequestSchema(Schema):
     artifactGraph = fields.String(
         attribute="artifact_graph",
         data_key="artifactGraph",
-        metadata={
-            "description": "YAML string representing the artifact graph."
-        },
+        metadata={"description": "YAML string representing the artifact graph."},
     )
-    entrypointParameters = fields.List(
-        fields.Dict(),
+    entrypointParameters = fields.Nested(
+        EntrypointParameterSchema,
         attribute="entrypoint_parameters",
         data_key="entrypointParameters",
-        metadata={
-            "description": "List of entrypoint parameters."
-        },
+        many=True,
+        metadata={"description": "Proposed parameters for the Entrypoint resource."},
     )
-    entrypointArtifacts = fields.List(
-        fields.Dict(),
+    entrypointArtifacts = fields.Nested(
+        EntrypointArtifactSchema,
         attribute="entrypoint_artifacts",
         data_key="entrypointArtifacts",
+        many=True,
         metadata={
-            "description": "List of entrypoint artifacts."
-        },
-    )
-    globals = fields.Dict(
-        attribute="globals",
-        data_key="globals",
-        metadata={
-            "description": "Global parameters dictionary."
+            "description": "Proposed artifact inputs for the Entrypoint resource."
         },
     )
     pluginSnapshotIds = fields.List(
@@ -448,7 +439,8 @@ class ValidateSwapsRequestSchema(Schema):
             "description": "List of plugin snapshot IDs required for validation."
         },
     )
-    
+
+
 class ValidateEntrypointIssueSchema(Schema):
     """The response for the validateEntrypoint endpoint."""
 
@@ -477,14 +469,14 @@ class ValidateEntrypointIssueSchema(Schema):
 
         return data
 
+
 class ValidateSwapsResponseSchema(Schema):
     """The schema for the response from validating swaps on an entrypoint."""
+
     schemaValid = fields.Boolean(
         attribute="schema_valid",
         data_key="schemaValid",
-        metadata={
-            "description": "Whether the swaps graph schema is valid."
-        },
+        metadata={"description": "Whether the swaps graph schema is valid."},
     )
     missingGlobalParams = fields.List(
         fields.String(),

@@ -17,7 +17,6 @@
 """The server-side functions that perform workflows endpoint operations."""
 
 from collections import defaultdict
-from dataclasses import dataclass
 from hashlib import sha256
 from io import BytesIO
 from pathlib import Path
@@ -66,6 +65,7 @@ from dioptra.restapi.v1.plugins.service import (
     PluginNameService,
     PluginService,
 )
+from dioptra.restapi.v1.shared import views
 from dioptra.restapi.v1.shared.entrypoint_swaps.service import SwapsValidationService
 from dioptra.restapi.v1.shared.entrypoint_validation import (
     build_entrypoint_data_adapter,
@@ -83,7 +83,6 @@ from dioptra.sdk.utilities.paths import set_cwd
 from dioptra.task_engine.issues import IssueSeverity, IssueType, ValidationIssue
 from dioptra.task_engine.validation import _schema_validate
 
-from dioptra.restapi.v1.shared import views
 from .lib.clone_git_repository import clone_git_repository
 from .schema import (
     ResourceImportResolveNameConflictsStrategy,
@@ -1211,8 +1210,6 @@ class DraftCommitService(object):
         return {"status": "Success", "id": resource_ids}
 
 
-
-
 class ValidateEntrypointService(object):
     """The service for validating the inputs to an entrypoint resource."""
 
@@ -1276,11 +1273,7 @@ class ValidateEntrypointService(object):
         )
 
         entrypoint = build_entrypoint_data_adapter(
-            task_graph,
-            artifact_graph,
-            entrypoint_parameters,
-            entrypoint_artifacts,
-            log
+            task_graph, artifact_graph, entrypoint_parameters, entrypoint_artifacts, log
         )
 
         plugin_parameter_types = views.get_plugin_parameter_types(
@@ -1343,4 +1336,3 @@ class ValidateEntrypointService(object):
             "swap_issues": output_issues,
             "swaps": tasks,
         }
-

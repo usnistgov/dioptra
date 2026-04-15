@@ -42,6 +42,9 @@ from dioptra.restapi.v1.shared.drafts.controller import (
     generate_resource_drafts_id_endpoint,
     generate_resource_id_draft_endpoint,
 )
+from dioptra.restapi.v1.shared.entrypoint_swaps.service import (
+    EntrypointSwapsValidationService,
+)
 from dioptra.restapi.v1.shared.snapshots.controller import (
     generate_resource_snapshots_endpoint,
     generate_resource_snapshots_id_endpoint,
@@ -79,10 +82,6 @@ from .service import (
     EntrypointIdService,
     EntrypointService,
     EntrypointSnapshotIdService,
-)
-
-from dioptra.restapi.v1.shared.entrypoint_swaps.service import (
-    EntrypointSwapsValidationService
 )
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -791,7 +790,7 @@ class ValidateSwapsEntrypoint(Resource):
             request_type="POST",
         )
 
-        parsed_obj = request.parsed_obj  # type: ignore
+        parsed_obj = request.parsed_obj
         swaps_graph = parsed_obj["swaps_graph"]
         plugin_snapshot_ids = parsed_obj["plugin_snapshot_ids"]
 
@@ -802,7 +801,6 @@ class ValidateSwapsEntrypoint(Resource):
             entrypoint_parameters=parsed_obj.get("entrypoint_parameters", []),
             entrypoint_artifacts=parsed_obj.get("entrypoint_artifacts", []),
             plugin_snapshot_ids=plugin_snapshot_ids,
-            globals=parsed_obj.get("globals", {}),
             log=log,
         )
 

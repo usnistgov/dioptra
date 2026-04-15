@@ -1132,30 +1132,22 @@ def registered_swap_entrypoints(
 ) -> dict[str, Any]:
     output = {}
 
-    for filename in swap_entrypoints:
-        with open(
-            Path(__file__).absolute().parent / "entrypoint_swaps" / filename, "r"
-        ) as f:
+    for fname in swap_entrypoints:
+        entrypoint = swap_entrypoints[fname]
+
+        with (Path(__file__).absolute().parent / "entrypoint_swaps" / fname).open("r") as f:
             task_graph = f.read()
-
-        params = swap_entrypoints[filename]["params"]
+        
         parameters = [
-            {
-                "name": param,
-                "defaultValue": "default",
-                "parameterType": "string",
-            }
-            for param in params
+            {"name": p, "defaultValue": "default", "parameterType": "string"}
+            for p in entrypoint["params"]
         ]
-
-        plugin_ids = [
-            registered_swap_plugins[plugin_name]["id"]
-            for plugin_name in swap_plugins
-        ]
+        
+        plugin_ids = [plugin["id"] for plugin in list(registered_swap_plugins.values())]
 
         response = actions.register_entrypoint(
             client,
-            name=swap_entrypoints[filename]["name"],
+            name=entrypoint["name"],
             description="A swap entrypoint.",
             group_id=auth_account["groups"][0]["id"],
             task_graph=task_graph,
@@ -1164,7 +1156,7 @@ def registered_swap_entrypoints(
             queue_ids=[],
         ).get_json()
 
-        output[entrypoint["name"]] = entrypoint_response
+        output[entrypoint["name"]] = response
     return output
 
 @pytest.fixture
@@ -1184,7 +1176,6 @@ def registered_swaps_validation_plugin(
     group_id = auth_account["default_group_id"]
     string_parameter_type = registered_plugin_parameter_types["string"]
 
-    # Create a plugin for the swaps graph
     registered_plugin = actions.register_plugin(
         client,
         name="swaps_validation_plugin",
@@ -1192,7 +1183,6 @@ def registered_swaps_validation_plugin(
         group_id=group_id,
     ).get_json()
 
-    # Add a plugin file with tasks for the swaps graph
     filename = "tasks.py"
     description = "The task plugin file for swaps testing."
     contents = textwrap.dedent(
@@ -1290,11 +1280,11 @@ def registered_swaps_validation_plugin(
         function_tasks=tasks,
         artifact_tasks=None,
     )
+    
+    plugin_snapshot_id = client.get(
+        f"/api/v1/plugins/{registered_plugin['id']}"
+    ).get_json()["snapshot"]
 
-    # Retrieve the latest plugin snapshot identifier
-    plugin_snapshot = actions.get_plugin_parameter_types(client).get_json()
-    # Get the plugin snapshot from the plugin response
-    plugin_snapshot_id = registered_plugin["snapshot"]
 
     return {
         "plugin": registered_plugin,

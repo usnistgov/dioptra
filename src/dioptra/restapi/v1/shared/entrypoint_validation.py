@@ -17,39 +17,51 @@
 """Service for building entrypoint data adapters for validation."""
 
 from dataclasses import dataclass
-from structlog.stdlib import BoundLogger
 from typing import Any
 
+from structlog.stdlib import BoundLogger
+
 from dioptra.restapi.db import models
-from dioptra.restapi.v1.plugin_parameter_types.service import get_plugin_task_parameter_types_by_id
+from dioptra.restapi.v1.plugin_parameter_types.service import (
+    get_plugin_task_parameter_types_by_id,
+)
+
 
 @dataclass
 class EntryPointParameterDataAdapter(object):
     """Data adapter for entrypoint parameters."""
+
     parameter_type: str
     name: str
     default_value: str | None
 
+
 @dataclass
 class TaskOutputParameterDataAdapter(object):
     """Data adapter for task output parameters."""
+
     parameter_number: int
     name: str
     parameter_type: models.PluginTaskParameterType
 
+
 @dataclass
 class EntryPointArtifactDataAdapter(object):
     """Data adapter for entrypoint artifacts."""
+
     name: str
     output_parameters: list[TaskOutputParameterDataAdapter]
+
 
 @dataclass
 class EntryPointDataAdapter(object):
     """Data adapter for entrypoint data."""
+
     task_graph: str
     artifact_graph: str
     parameters: list[EntryPointParameterDataAdapter]
     artifact_parameters: list[EntryPointArtifactDataAdapter]
+
 
 def build_entrypoint_data_adapter(
     task_graph: str,
@@ -73,7 +85,7 @@ def build_entrypoint_data_adapter(
         for artifact in entrypoint_artifacts
         for parameter in artifact["output_params"]
     ]
-    
+
     id_type_map = get_plugin_task_parameter_types_by_id(ids=type_ids, log=log)
 
     return EntryPointDataAdapter(

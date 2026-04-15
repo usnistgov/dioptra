@@ -1629,19 +1629,7 @@ class DynamicGlobalParametersService(object):
         except Exception as e:
             raise EntrypointSwapsRenderError(str(e)) from e
 
-        vars = rendered.keys()
-        needed_vars = set()
-        used_tasks = set()
-
-        for step in rendered:
-            for task in rendered[step]:
-                used_tasks.add(task)
-                for ref in util.get_references(rendered[step][task]):
-                    potential_step_name = ref.split(".")[0]
-                    if potential_step_name not in vars:
-                        needed_vars.add(
-                            ref
-                        )  # if it is not a step output, it must be a global param
+        needed_vars, used_tasks = self.get_required_globals(rendered)
 
         topsorted = util.get_sorted_steps(rendered)
 
@@ -1673,7 +1661,6 @@ class DynamicGlobalParametersService(object):
         active_plugins = []
 
         for epp in entry_point.entry_point_plugins:
-            # print(epp)
             if epp.plugin.name in active_plugin_names:
                 active_plugins.append(epp.plugin)
 
@@ -1682,6 +1669,25 @@ class DynamicGlobalParametersService(object):
             "topological_sort": topsorted,
             "active_plugins": active_plugins,
         }
+
+    def get_required_globals(
+        self, rendered: dict[str, Any]
+    ) -> tuple[set[str], set[str]]:
+        vars = rendered.keys()
+        needed_vars = set()
+        used_tasks = set()
+
+        for step in rendered:
+            for task in rendered[step]:
+                used_tasks.add(task)
+                for ref in util.get_references(rendered[step][task]):
+                    potential_step_name = ref.split(".")[0]
+                    if potential_step_name not in vars:
+                        needed_vars.add(
+                            ref
+                        )  # if it is not a step output, it must be a global param
+
+        return needed_vars, used_tasks
 
 
 def _get_entrypoint_plugin_snapshots(

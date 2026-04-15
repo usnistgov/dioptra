@@ -529,7 +529,6 @@ class EntrypointsSnapshotCollectionClient(SnapshotsSubCollectionClient[T]):
         )
 
 
-
 class EntrypointsCollectionClient(CollectionClient[T]):
     """The client for managing Dioptra's /entrypoints collection.
 
@@ -971,7 +970,6 @@ class EntrypointsCollectionClient(CollectionClient[T]):
         artifact_graph: str | None = None,
         entrypoint_parameters: list[dict[str, Any]] | None = None,
         entrypoint_artifacts: list[dict[str, Any]] | None = None,
-        globals: dict[str, Any] | None = None,
     ) -> T:
         """Validate a swaps graph.
 
@@ -982,7 +980,6 @@ class EntrypointsCollectionClient(CollectionClient[T]):
             artifact_graph: YAML string representing the artifact graph. Optional, defaults to None.
             entrypoint_parameters: List of entrypoint parameters. Optional, defaults to None.
             entrypoint_artifacts: List of entrypoint artifacts. Optional, defaults to None.
-            globals: Global parameters dictionary. Optional, defaults to None.
 
         Returns:
             The response from the Dioptra API containing validation results.
@@ -1001,9 +998,6 @@ class EntrypointsCollectionClient(CollectionClient[T]):
 
         if entrypoint_artifacts is not None:
             json_["entrypointArtifacts"] = entrypoint_artifacts
-
-        if globals is not None:
-            json_["globals"] = globals
 
         return self._session.post(
             self.url,

@@ -121,7 +121,6 @@ def test_validate_swaps_graph_mixed_output_error(
         plugin_snapshots=[plugin_snapshot_id],
         entrypoint_parameters=[]
     )
-    print(response.json(), flush=True)
 
     assert (
         response.status_code == HTTPStatus.OK
