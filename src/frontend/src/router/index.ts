@@ -110,7 +110,8 @@ const router = createRouter({
         },
         {
           path: '/jobs/:id',
-          component: () => import('../views/JobDashboardView.vue')
+          component: () => import('../views/JobDashboardView.vue'),
+          name: 'jobDashboard'
         },
       ]
     },
@@ -180,7 +181,8 @@ router.beforeEach(async (to, from) => {
 
   const backButton = window.event?.type === 'popstate'
   const backToSameType = to.meta?.type === from.meta?.type
-  if(backButton && backToSameType) {
+  const jobBackToExperiment = to.name === 'experimentJobs' && from.name === 'jobDashboard'
+  if(backButton && (backToSameType || jobBackToExperiment)) {
     to.meta.backButton = true
   }
 
