@@ -179,13 +179,6 @@ const router = createRouter({
 router.beforeEach(async (to, from) => {
   const store = useLoginStore()
 
-  const backButton = window.event?.type === 'popstate'
-  const backToSameType = to.meta?.type === from.meta?.type
-  const jobBackToExperiment = to.name === 'experimentJobs' && from.name === 'jobDashboard'
-  if(backButton && (backToSameType || jobBackToExperiment)) {
-    to.meta.backButton = true
-  }
-
   // on every route change, close snapshot drawer if open
   if(store.showRightDrawer) {
     store.showRightDrawer = false
@@ -222,6 +215,20 @@ async function callGetLoginStatus() {
     store.loggedInUser = ''
   }
 }
+
+router.afterEach((to, from) => {
+  // remember pagination when clicking into a resource then going back to the table
+  const backButton = window.event?.type === 'popstate'
+  const backToSameType = to.meta?.type === from.meta?.type
+  const jobBackToExperiment = to.name === 'experimentJobs' && from.name === 'jobDashboard'
+  const viaBadgeLink = window.history.state?.viaBadgeLink === true
+  if (viaBadgeLink) {
+    to.meta.viaBadgeLink = true
+  }
+  if(backButton && (backToSameType || jobBackToExperiment || from.meta?.viaBadgeLink)) {
+    to.meta.backButton = true
+  }
+})
 
 
 export default router

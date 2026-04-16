@@ -146,7 +146,7 @@ function openResource(event) {
     return
   }
 
-  router.push(formattedUrl.value)
+  router.push({ path: formattedUrl.value, state: { viaBadgeLink: true } })
 }
 </script>
 
