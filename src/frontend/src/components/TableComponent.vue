@@ -36,7 +36,7 @@
           </span>
           <q-icon 
             v-if="col.sortable"
-            :name="getSortIcon(col.field)"
+            :name="getSortIcon(col.name)"
             class="sort-icon"
           />
         </q-th>
