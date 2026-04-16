@@ -634,10 +634,10 @@
     pluginFile.value.tasks[selectedTaskProps.value.functionsOrArtifacts][selectedTaskProps.value.rowIndex][selectedTaskProps.value.inputOrOutputParams].push(newParam)
   }
 
-  onBeforeRouteLeave((to, from, next) => {
+  onBeforeRouteLeave((to, from) => {
     toPath.value = to.path
     if(confirmLeave.value || !valuesChangedFromEditStart.value) {
-      next(true)
+      return true
     } else if(route.params.fileId === 'new') {
       leaveForm()
     } else {

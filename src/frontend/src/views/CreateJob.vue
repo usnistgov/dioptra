@@ -930,16 +930,16 @@
     }
   })
 
-  onBeforeRouteLeave((to, from, next) => {
+  onBeforeRouteLeave((to, from) => {
     toPath.value = to.path
     if(!valuesChanged.value) {
       store.savedForms.jobs[expJobOrAllJobs.value] = null
-      next(true)
+      return true
     } else if(confirmLeave.value) {
-      next(true)
+      return true
     } else {
       store.savedForms.jobs[expJobOrAllJobs.value] = job.value
-      next(true)
+      return true
     }
   })
 

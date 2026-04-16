@@ -269,16 +269,16 @@ const showReturnDialog = ref(false)
 const confirmLeave = ref(false)
 const toPath = ref()
 
-onBeforeRouteLeave((to, from, next) => {
+onBeforeRouteLeave((to, from) => {
   toPath.value = to.path
   if(confirmLeave.value) {
-    next(true)
+    return true
   } else if(valuesChangedFromOriginal.value && route.params.id === 'new') {
     store.savedForms.pluginParamType = pluginParamType.value
-    next(true)
+    return true
   } else {
     store.savedForms.pluginParamType = null
-    next(true)
+    return true
   }
 })
 

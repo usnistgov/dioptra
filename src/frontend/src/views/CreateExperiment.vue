@@ -246,16 +246,16 @@
     })
   }
 
-  onBeforeRouteLeave((to, from, next) => {
+  onBeforeRouteLeave((to, from) => {
     toPath.value = to.path
     if(confirmLeave.value) {
-      next(true)
+      return true
     } else if(valuesChangedFromOriginal.value) {
       store.savedForms.experiment = experiment.value
-      next(true)
+      return true
     } else {
       store.savedForms.experiment = null
-      next(true)
+      return true
     }
   })
 

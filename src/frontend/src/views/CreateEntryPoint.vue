@@ -924,10 +924,10 @@
   const confirmLeave = ref(false)
   const toPath = ref()
 
-  onBeforeRouteLeave((to, from, next) => {
+  onBeforeRouteLeave((to, from) => {
     toPath.value = to.path
     if(confirmLeave.value || !valuesChangedFromEditStart.value || history.value) {
-      next(true)
+      return true
     } else if(route.params.id === 'new') {
       leaveForm()
     } else {

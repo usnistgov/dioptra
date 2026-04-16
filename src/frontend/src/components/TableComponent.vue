@@ -211,6 +211,8 @@
 
 <script setup>
   import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue'
+  import { useRoute } from 'vue-router'
+  import { useLoginStore } from '@/stores/LoginStore'
   import { useQuasar } from 'quasar'
   import * as notify from '../notify'
 
@@ -287,6 +289,8 @@
   })
 
   const $q = useQuasar()
+  const route = useRoute()
+  const loginStore = useLoginStore()
 
   const darkMode = computed(() => {
     if($q.dark.mode === 'auto') {
@@ -359,7 +363,17 @@
 
   const tableRef = ref()
   onMounted(() => {
-    // get initial data from server (1st page)
+    // Restore cached pagination when arriving via back; otherwise use defaults
+    const key = route.path
+    const cached = loginStore.tablePaginationCache[key]
+    if (route.meta.backButton && cached) {
+      pagination.value = { ...pagination.value, ...cached }
+      // consume one-shot flag
+      route.meta.backButton = false
+    } else if(cached) {
+      delete loginStore.tablePaginationCache[key]
+    }
+    // get initial data from server with current pagination
     tableRef.value.requestServerInteraction()
   })
 
@@ -379,6 +393,15 @@
       return
     }
     pagination.value = requestProps.pagination
+    // cache current pagination keyed by route path
+    if(route.path !== '/') {
+      loginStore.tablePaginationCache[route.path] = {
+        page: pagination.value.page,
+        rowsPerPage: pagination.value.rowsPerPage,
+        sortBy: pagination.value.sortBy,
+        descending: pagination.value.descending,
+      }
+    }
     const paginationOptions = requestProps.pagination
     const { page, rowsPerPage } = requestProps.pagination
     const index = (page - 1) * rowsPerPage
