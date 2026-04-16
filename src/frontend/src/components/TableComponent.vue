@@ -368,6 +368,7 @@
     const cached = loginStore.tablePaginationCache[key]
     if (route.meta.backButton && cached) {
       pagination.value = { ...pagination.value, ...cached }
+      showDeleted.value = cached.showDeleted
       // consume one-shot flag
       route.meta.backButton = false
     } else if(cached) {
@@ -400,6 +401,7 @@
         rowsPerPage: pagination.value.rowsPerPage,
         sortBy: pagination.value.sortBy,
         descending: pagination.value.descending,
+        showDeleted: props.showDeleted
       }
     }
     const paginationOptions = requestProps.pagination
