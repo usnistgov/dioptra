@@ -2,6 +2,8 @@ import { createRouter, createWebHistory, START_LOCATION } from 'vue-router'
 import { useLoginStore } from '@/stores/LoginStore'
 import HomeView from '../views/HomeView.vue'
 import * as api from '@/services/dataApi'
+import { scroll } from 'quasar'
+const { getScrollTarget, setVerticalScrollPosition } = scroll
 
 const router = createRouter({
   history: createWebHistory(),
@@ -228,6 +230,13 @@ router.afterEach((to, from) => {
   if(backButton && (backToSameType || jobBackToExperiment || from.meta?.viaBadgeLink)) {
     to.meta.backButton = true
   }
+
+  // Reset scroll on forward navigations
+  // if (!backButton) {
+  //   const el = document.querySelector('.q-page-container') as HTMLElement | null
+  //   const target = el ? getScrollTarget(el) : window
+  //   setVerticalScrollPosition(target, 0)
+  // }
 })
 
 

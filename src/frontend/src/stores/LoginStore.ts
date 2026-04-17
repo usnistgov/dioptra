@@ -57,6 +57,8 @@ export const useLoginStore = defineStore('login', () => {
     rowsPerPage: number
     sortBy?: string
     descending?: boolean
+    lastScrollPosition?: number,
+    search?: string
   }>>({})
 
   // computed()'s are getters

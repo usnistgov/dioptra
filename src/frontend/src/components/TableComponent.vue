@@ -210,7 +210,7 @@
 </template>
 
 <script setup>
-  import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue'
+  import { ref, watch, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
   import { useRoute } from 'vue-router'
   import { useLoginStore } from '@/stores/LoginStore'
   import { useQuasar } from 'quasar'
@@ -232,6 +232,7 @@
   showAll: Boolean,
   highlightRow: Boolean,
   selection: String,
+  loading: Boolean,
   disabledRowKeys: {
     type: Array,
     default: []
@@ -348,6 +349,18 @@
     if(newVal !== oldVal) selected.value = []
   })
 
+  watch(() => props.loading, async (newVal) => {
+    if(!newVal) {
+      await nextTick()
+      // after loading, scroll to saved position
+      if(route.meta.backButton && loginStore.tablePaginationCache[route.path]) {
+        window.scrollTo({
+          top: loginStore.tablePaginationCache[route.path].lastScrollPosition,
+        })
+      }
+    }
+  })
+
   function getSelectedColor(selected) {
     if (!props.highlightSelection) return
     if(darkMode.value && selected) return 'bg-deep-purple-10'
@@ -369,8 +382,7 @@
     if (route.meta.backButton && cached) {
       pagination.value = { ...pagination.value, ...cached }
       showDeleted.value = cached.showDeleted
-      // consume one-shot flag
-      route.meta.backButton = false
+      filter.value = cached.search
     } else if(cached) {
       delete loginStore.tablePaginationCache[key]
     }
@@ -394,16 +406,6 @@
       return
     }
     pagination.value = requestProps.pagination
-    // cache current pagination keyed by route path
-    if(route.path !== '/') {
-      loginStore.tablePaginationCache[route.path] = {
-        page: pagination.value.page,
-        rowsPerPage: pagination.value.rowsPerPage,
-        sortBy: pagination.value.sortBy,
-        descending: pagination.value.descending,
-        showDeleted: props.showDeleted
-      }
-    }
     const paginationOptions = requestProps.pagination
     const { page, rowsPerPage } = requestProps.pagination
     const index = (page - 1) * rowsPerPage
@@ -457,8 +459,23 @@
     return ''
   }
 
+  const path = route.path
+
   onBeforeUnmount(() => {
     invalidSearchNotification()
+
+    // cache current pagination keyed by route path
+    if(route.path !== '/') {
+      loginStore.tablePaginationCache[path] = {
+        page: pagination.value.page,
+        rowsPerPage: pagination.value.rowsPerPage,
+        sortBy: pagination.value.sortBy,
+        descending: pagination.value.descending,
+        showDeleted: props.showDeleted,
+        search: filter.value,
+        lastScrollPosition: window.scrollY
+      }
+    }
   })
 
   function updateTotalRows(totalRows) {
