@@ -1,25 +1,38 @@
 <template>
-  <DialogComponent 
-    v-model="showDialog"
-    @emitSubmit="submitPlugins"
-    :hideDraftBtn="true"
-  >
-    <template #title>
-      <label id="modalTitle">
-        Assign {{ pluginType === 'plugins' ? 'Plugins' : 'Artifact Plugins' }} for '{{ editObj.name }}'
-      </label>
-    </template>
-    <AssignPluginsDropdown
-      v-model:selectedPlugins="selectedPlugins"
-      v-model:pluginIDsToUpdate="pluginIDsToUpdate"
-      v-model:pluginIDsToRemove="pluginIDsToRemove"
-    />
-  </DialogComponent>
+  <q-dialog v-model="showDialog">
+    <q-card style="min-width: 35%;">
+      <q-card-section class="bg-primary text-white text-h6">
+        <div class="text-h6">Assign {{ pluginType === 'plugins' ? 'Plugins' : 'Artifact Plugins' }} for '{{ editObj.name }}'</div>
+      </q-card-section>
+      <q-card-section>
+        <AssignPluginsDropdown
+          v-model:selectedPlugins="selectedPlugins"
+          v-model:pluginIDsToUpdate="pluginIDsToUpdate"
+          v-model:pluginIDsToRemove="pluginIDsToRemove"
+        />
+      </q-card-section>
+      <q-separator />
+      <q-card-actions align="right">
+        <q-btn 
+          outline
+          color="primary cancel-btn" 
+          label="Cancel" 
+          v-close-popup 
+          class="q-mr-xs"
+        />
+        <q-btn
+          label="Confirm"
+          color="primary"
+          type="submit"
+          @click="submitPlugins()"
+        />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
 </template>
 
 <script setup>
   import { ref, onUpdated } from 'vue'
-  import DialogComponent from './DialogComponent.vue'
   import * as api from '@/services/dataApi'
   import * as notify from '../notify'
   import AssignPluginsDropdown from '@/components/AssignPluginsDropdown.vue'
@@ -52,7 +65,7 @@
         await api.removePluginFromEntrypoint(props.editObj.id, pluginId, props.pluginType)
       }
       notify.success(`Successfully updated plugins for '${props.editObj.name}'`)
-      emit('refreshTable')
+      emit('refreshTable', props.editObj.id)
       showDialog.value = false
     } catch (err) {
       notify.error(err.response.data.message);

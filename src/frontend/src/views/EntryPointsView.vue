@@ -94,7 +94,7 @@
     v-model="showAssignPluginsDialog"
     :pluginType="pluginType"
     :editObj="editEntrypoint"
-    @refreshTable="tableRef.refreshTable()"
+    @refreshTable="(id) => updateSingleEntrypoint(id)"
   />
 </template>
 
@@ -181,10 +181,22 @@
   async function syncPlugin(entrypointId, pluginId, pluginName, pluginType) {
     try {
       await api.addPluginsToEntrypoint(entrypointId, [pluginId], pluginType)
-      tableRef.value.refreshTable()
+      await updateSingleEntrypoint(entrypointId)
       notify.success(`Successfully updated plugin '${pluginName}' to latest version`)
     } catch(err) {
       console.warn(err)
+      notify.error(err.response.data.message);
+    }
+  }
+
+  async function updateSingleEntrypoint(entrypointId) {
+    try {
+      const res = await api.getItem('entrypoints', entrypointId)
+      const idx = entrypoints.value.findIndex((e) => e.id === entrypointId)
+      entrypoints.value[idx] = res.data
+    } catch(err) {
+      console.warn(err)
+      notify.error(err.response.data.message);
     }
   }
 
