@@ -232,6 +232,15 @@ router.afterEach((to, from) => {
   if(backButton && (backToSameType || jobBackToExperiment || from.meta?.viaBadgeLink)) {
     to.meta.backButton = true
   }
+
+  // ensure only to and from pagination settings are stored
+  const store = useLoginStore()
+  const keep = new Set<string>([to.path, from.path])
+  Object.keys(store.tablePaginationCache).forEach((k) => {
+    if (!keep.has(k)) {
+      delete (store.tablePaginationCache as any)[k]
+    }
+  })
 })
 
 

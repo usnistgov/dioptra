@@ -252,6 +252,10 @@
   defaultSort: {
     type: Object,
     default: { sortBy: 'lastModifiedOn', descending: true }
+  },
+  preserveSort: {
+    type: Boolean,
+    default: true
   }
 })
   const emit = defineEmits([
@@ -465,7 +469,7 @@
     invalidSearchNotification()
 
     // cache current pagination keyed by route path
-    if(route.path !== '/') {
+    if(props.preserveSort) {
       loginStore.tablePaginationCache[path] = {
         page: pagination.value.page,
         rowsPerPage: pagination.value.rowsPerPage,

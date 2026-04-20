@@ -3,20 +3,20 @@
     :rows="snapshots"
     :columns="columns"
     v-model:selected="selected"
-    :title="props.maxHeight ? '' : 'Snapshots'"
+    title="Snapshots"
     :hideCreateBtn="true"
     :hideSearch="true"
     rowKey="snapshot"
     :showAll="true"
     :style="{ 
       marginTop: '0', 
-      maxHeight: props.maxHeight ? props.maxHeight + 'px' : '',
-      height: props.maxHeight ? '' : 'calc(100vh - 50px)'
+      height: 'calc(100vh - 50px)'
     }"
     :hideOpenBtn="true"
     :hideDeleteBtn="true"
     :highlightSelection="true"
     :defaultSort="{sortBy: 'snapshotCreatedOn', descending: true}"
+    :preserveSort="false"
   >
     <template #body-cell-snapshotCreatedOn="props">
       <div :data-snapshot-id="props.row.snapshot">
@@ -50,7 +50,7 @@ import TableComponent from '@/components/TableComponent.vue'
 import { ref, watch, nextTick } from 'vue'
 import * as api from '@/services/dataApi'
 
-const props = defineProps(['showDialogHistory', 'type', 'id', 'maxHeight'])
+const props = defineProps(['showDialogHistory', 'type', 'id'])
 
 const store = useLoginStore()
 const route = useRoute()
