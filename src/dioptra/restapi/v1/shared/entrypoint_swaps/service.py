@@ -413,7 +413,7 @@ class EntrypointSwapsValidationService(object):
             g for g in collected_required_globals if g not in declared_globals
         ]
         return {
-            "schema_valid": schema_valid,
+            "schema_issues": schema_issues,
             "swap_issues": output_issues,
             "rendered_validation_errors": collected_rendered_validation_issues,
             "missing_global_params": missing_globals,

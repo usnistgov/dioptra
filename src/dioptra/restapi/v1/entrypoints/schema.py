@@ -473,11 +473,20 @@ class ValidateEntrypointIssueSchema(Schema):
 class ValidateSwapsResponseSchema(Schema):
     """The schema for the response from validating swaps on an entrypoint."""
 
-    schemaValid = fields.Boolean(
-        attribute="schema_valid",
-        data_key="schemaValid",
-        metadata={"description": "Whether the swaps graph schema is valid."},
+    schemaIssues = fields.Nested(
+        ValidateEntrypointIssueSchema,
+        attribute="schema_issues",
+        metadata={"description": "A list of validation issues detected in the schema."},
+        many=True,
     )
+    
+    swapIssues = fields.Nested(
+        ValidateEntrypointIssueSchema,
+        attribute="swap_issues",
+        metadata={"description": "A list of validation issues detected in the schema."},
+        many=True,
+    )
+
     missingGlobalParams = fields.List(
         fields.String(),
         attribute="missing_global_params",

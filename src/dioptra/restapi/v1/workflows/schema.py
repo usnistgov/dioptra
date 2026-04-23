@@ -340,16 +340,6 @@ class ChoiceAliasToTaskRefSchema(Schema):
 class ValidateEntrypointResponseSchema(Schema):
     """The response for the validateEntrypoint endpoint."""
 
-    schemaValid = fields.Bool(
-        attribute="schema_valid",
-        metadata={
-            "description": (
-                "Indicates whether the proposed inputs for the Entrypoint resource "
-                "are valid. If False, the schemaIssues field will contain a list of "
-                "validation issues."
-            ),
-        },
-    )
     schemaIssues = fields.Nested(
         ValidateEntrypointIssueSchema,
         attribute="schema_issues",

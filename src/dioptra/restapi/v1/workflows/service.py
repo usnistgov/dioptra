@@ -1331,7 +1331,6 @@ class ValidateEntrypointService(object):
             )
 
         return {
-            "schema_valid": schema_valid,
             "schema_issues": schema_issues,
             "swap_issues": output_issues,
             "swaps": tasks,
