@@ -1984,7 +1984,7 @@ class SwapsValidationService(object):
         schema_issues = self.swaps_graph_validation(pre_rendered_task_graph=swaps_yaml)
         schema_valid = len(schema_issues) == 0
 
-        output_issues = []
+        output_issues: list[ValidationIssue] = []
         collected_rendered_validation_issues = []
         collected_required_globals = set()
 
