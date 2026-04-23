@@ -43,7 +43,7 @@
             </div>
           </template>
           <template #body-cell-inputParams="props">
-            <div class="column items-end fit q-mt-sm">
+            <div class="column items-end">
               <q-chip
                 v-for="(param, i) in props.row.inputParams"
                 :key="i"
@@ -60,12 +60,13 @@
                 dense
                 color="orange"
                 text-color="white"
+                square
                 label="No params listed"
               />
             </div>
           </template>
           <template #body-cell-outputParams="props">
-            <div class="column items-end fit q-mt-sm">
+            <div class="column items-end">
               <q-chip
                 v-for="(param, i) in props.row.outputParams"
                 :key="i"
@@ -79,6 +80,7 @@
                 dense
                 color="orange"
                 text-color="white"
+                square
                 label="No params listed"
               />
             </div>
@@ -115,6 +117,7 @@
                     dense
                     color="orange"
                     text-color="white"
+                    square
                     label="No params listed"
                   />
                 </div>
@@ -135,6 +138,7 @@
                     dense
                     color="orange"
                     text-color="white"
+                    square
                     label="No params listed"
                   />
                 </div>
@@ -359,3 +363,12 @@ function deepEqual(obj1, obj2, ignoreKeys = []) {
 
 
 </script>
+
+
+<style scoped>
+  /* make inputParams and outputParams cells top-aligned */
+  :deep(.q-table tbody td:nth-child(3)),
+  :deep(.q-table tbody td:nth-child(4)) {
+    vertical-align: top;
+  }
+</style>
