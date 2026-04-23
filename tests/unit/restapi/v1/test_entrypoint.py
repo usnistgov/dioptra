@@ -1693,8 +1693,10 @@ def test_validate_swaps_graph(
     assert isinstance(validation_result["renderedValidationErrors"], list)
     assert "missingGlobalParams" in validation_result
     assert isinstance(validation_result["missingGlobalParams"], list)
-    assert "schemaValid" in validation_result
-    assert isinstance(validation_result["schemaValid"], bool)
+    assert "schemaIssues" in validation_result
+    assert isinstance(validation_result["schemaIssues"], list)
+    assert "swapIssues" in validation_result
+    assert isinstance(validation_result["swapIssues"], list)
 
 def test_validate_non_swaps_graph(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
@@ -1737,8 +1739,10 @@ def test_validate_non_swaps_graph(
     assert isinstance(validation_result["renderedValidationErrors"], list)
     assert "missingGlobalParams" in validation_result
     assert isinstance(validation_result["missingGlobalParams"], list)
-    assert "schemaValid" in validation_result
-    assert isinstance(validation_result["schemaValid"], bool)
+    assert "schemaIssues" in validation_result
+    assert isinstance(validation_result["schemaIssues"], list)
+    assert "swapIssues" in validation_result
+    assert isinstance(validation_result["swapIssues"], list)
 
 def test_validate_swaps_graph_bad_schema(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
@@ -1772,8 +1776,8 @@ def test_validate_swaps_graph_bad_schema(
     assert response.status_code == HTTPStatus.OK
 
     validation_result = response.json()
-    assert "schemaValid" in validation_result
-    assert validation_result["schemaValid"] is False
+    assert "schemaIssues" in validation_result
+    assert len(validation_result["schemaIssues"]) > 0
 
 def test_validate_swaps_graph_missing_globals(
     dioptra_client: DioptraClient[DioptraResponseProtocol],

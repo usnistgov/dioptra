@@ -57,7 +57,6 @@ def assert_entrypoint_inputs_are_valid(
     )
     assert (
         response.status_code == HTTPStatus.OK
-        and response.json()["schemaValid"]
         and not response.json()["schemaIssues"]
     )
 
@@ -91,7 +90,6 @@ def assert_entrypoint_inputs_are_invalid(
     )
     assert (
         response.status_code == HTTPStatus.OK
-        and not response.json()["schemaValid"]
         and response.json()["schemaIssues"]
     )
 

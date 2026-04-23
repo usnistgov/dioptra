@@ -57,7 +57,6 @@ def test_validate_swaps_graph_success(
     )
     assert (
         response.status_code == HTTPStatus.OK
-        and response.json()["schemaValid"]
         and len(response.json()["swapIssues"]) == 0
     )
 
@@ -91,7 +90,6 @@ def test_validate_swaps_graph_invalid_task(
     )
     assert (
         response.status_code == HTTPStatus.OK
-        and response.json()["schemaValid"]
         and len(response.json()["swapIssues"]) > 0
     )
 
@@ -124,6 +122,6 @@ def test_validate_swaps_graph_mixed_output_error(
 
     assert (
         response.status_code == HTTPStatus.OK
-        and response.json()["schemaValid"]
+        and len(response.json()["schemaIssues"]) == 0
         and len(response.json()["swapIssues"]) > 0
     )

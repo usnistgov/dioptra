@@ -30,6 +30,7 @@ from structlog.stdlib import BoundLogger
 from dioptra.restapi.db import models
 from dioptra.restapi.routes import V1_ENTRYPOINTS_ROUTE
 from dioptra.restapi.v1 import utils
+from dioptra.restapi.v1.entrypoints.service import SwapsValidationService
 from dioptra.restapi.v1.file_types import FileTypes, plugin_pluginfiles_to_bundle
 from dioptra.restapi.v1.queues.schema import QueueRefSchema
 from dioptra.restapi.v1.schemas import (
@@ -41,9 +42,6 @@ from dioptra.restapi.v1.shared.drafts.controller import (
     generate_resource_drafts_endpoint,
     generate_resource_drafts_id_endpoint,
     generate_resource_id_draft_endpoint,
-)
-from dioptra.restapi.v1.shared.entrypoint_swaps.service import (
-    EntrypointSwapsValidationService,
 )
 from dioptra.restapi.v1.shared.snapshots.controller import (
     generate_resource_snapshots_endpoint,
@@ -765,7 +763,7 @@ class ValidateSwapsEntrypoint(Resource):
     @inject
     def __init__(
         self,
-        entrypoint_swaps_validation_service: EntrypointSwapsValidationService,
+        swaps_validation_service: SwapsValidationService,
         *args,
         **kwargs,
     ) -> None:
@@ -776,7 +774,7 @@ class ValidateSwapsEntrypoint(Resource):
         Args:
             entrypoint_swaps_validation_service: An EntrypointSwapsValidationService object.
         """
-        self._entrypoint_swaps_validation_service = entrypoint_swaps_validation_service
+        self._swaps_validation_service = swaps_validation_service
         super().__init__(*args, **kwargs)
 
     @login_required
@@ -794,7 +792,7 @@ class ValidateSwapsEntrypoint(Resource):
         swaps_graph = parsed_obj["swaps_graph"]
         plugin_snapshot_ids = parsed_obj["plugin_snapshot_ids"]
 
-        return self._entrypoint_swaps_validation_service.validate(
+        return self._swaps_validation_service.validate(
             group_id=parsed_obj.get("group_id"),
             swaps_graph=swaps_graph,
             artifact_graph=parsed_obj.get("artifact_graph", ""),

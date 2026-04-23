@@ -50,6 +50,7 @@ from dioptra.restapi.v1.entrypoints.service import (
     EntrypointIdService,
     EntrypointNameService,
     EntrypointService,
+    SwapsValidationService,
 )
 from dioptra.restapi.v1.plugin_parameter_types.service import (
     BuiltinPluginParameterTypeService,
@@ -66,7 +67,6 @@ from dioptra.restapi.v1.plugins.service import (
     PluginService,
 )
 from dioptra.restapi.v1.shared import views
-from dioptra.restapi.v1.shared.entrypoint_swaps.service import SwapsValidationService
 from dioptra.restapi.v1.shared.entrypoint_validation import (
     build_entrypoint_data_adapter,
 )

@@ -479,7 +479,7 @@ class ValidateSwapsResponseSchema(Schema):
         metadata={"description": "A list of validation issues detected in the schema."},
         many=True,
     )
-    
+
     swapIssues = fields.Nested(
         ValidateEntrypointIssueSchema,
         attribute="swap_issues",
