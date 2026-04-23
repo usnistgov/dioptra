@@ -1,5 +1,5 @@
 <template>
-  <q-dialog v-model="showDialog">
+  <q-dialog v-model="showDialog" @show="onDialogShow">
     <q-card style="display: inline-block; width: auto; max-width: 800px;">
       <q-card-section class="bg-primary text-white text-h6">
         Import Plugin Tasks
@@ -29,6 +29,7 @@
           v-model:selected="selectedTasks"
           selection="multiple"
           row-key="name"
+          :loading="loading"
         >
           <template #body-cell-name="props">
             <div style="font-size: 18px;">
@@ -117,7 +118,10 @@
                     label="No params listed"
                   />
                 </div>
-                <div class="column items-end" style="width: 142px; padding-left: 0; padding-right: 0;">
+                <div 
+                  class="column items-end"
+                  :style="{width: outputParamsWidth ? outputParamsWidth + 'px' : '172px',}"
+                >
                   <q-chip
                     v-for="(param, i) in dupliateTasksWithDifferentParams[row.name].outputParams"
                     :key="i"
@@ -164,7 +168,7 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, nextTick } from 'vue'
 import * as api from '@/services/dataApi'
 import TableComponent from '@/components/TableComponent.vue'
 import * as notify from '../notify'
@@ -176,6 +180,10 @@ const showDialog = defineModel()
 
 const existingTasksCopy = ref([])
 
+const tableRef = ref()
+const outputParamsWidth = ref(0)
+const loading = ref(true)
+
 watch(() => showDialog.value, (newVal) => {
   if(newVal) {
     tasks.value = []
@@ -185,6 +193,30 @@ watch(() => showDialog.value, (newVal) => {
     suggestPluginTasks()
   }
 })
+
+function getColumnWidthPxByLabel(label) {
+  const tableEl = (tableRef.value && tableRef.value.$el) || null
+  if (!tableEl) return 0
+  const spans = tableEl.querySelectorAll('.header-label')
+  for (let i = 0; i < spans.length; i++) {
+    const s = spans[i]
+    if ((s.textContent || '').trim() === label) {
+      const th = s.closest('th')
+      if (th && th.getClientRects().length > 0 && th.offsetParent !== null) {
+        // minus 8 to account for the left padding in the table headers
+        return th.getBoundingClientRect().width - 8
+      }
+    }
+  }
+  return 0
+}
+
+function onDialogShow() {
+  // Let QDialog/QTable finish layout in the next frame
+  requestAnimationFrame(() => {
+    outputParamsWidth.value = getColumnWidthPxByLabel("Output Parameters")
+  })
+}
 
 const tasks = ref([])
 const selectedTasks = ref([])
@@ -231,6 +263,7 @@ async function suggestPluginTasks() {
     selectedTasks.value = tasks.value.filter(
       task => !Object.keys(dupliateIdenticalTasks.value).includes(task.name)
     )
+    loading.value = false
   } catch(err) {
     console.warn(err)
     notify.error(err.response.data.message)
