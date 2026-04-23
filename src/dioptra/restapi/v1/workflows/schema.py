@@ -329,6 +329,14 @@ class TaskRefSchema(Schema):
     )
 
 
+class ChoiceAliasToTaskRefSchema(Schema):
+    alias_map = fields.Dict(
+        keys=fields.Str(),
+        values=fields.Nested(TaskRefSchema),
+        metadata={"description": "Mapping of choice alias to task reference."},
+    )
+
+
 class ValidateEntrypointResponseSchema(Schema):
     """The response for the validateEntrypoint endpoint."""
 
@@ -358,10 +366,7 @@ class ValidateEntrypointResponseSchema(Schema):
 
     swaps = fields.Dict(
         keys=fields.Str(),
-        values=fields.Dict(
-            keys=fields.Str(),
-            values=fields.Nested(TaskRefSchema),
-        ),
+        values=fields.Nested(ChoiceAliasToTaskRefSchema),
         attribute="swaps",
         metadata={
             "description": "Mapping of swap names to a mapping of choice aliases to task references."
