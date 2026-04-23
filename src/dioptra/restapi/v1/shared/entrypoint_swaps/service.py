@@ -343,14 +343,29 @@ class EntrypointSwapsValidationService(object):
             pre_rendered_task_graph=swaps_yaml
         )
         schema_valid = len(schema_issues) == 0
+
+        
+        # Perform Swap Output Matching
+        plugin_plugin_files = get_plugin_plugin_files_from_plugin_snapshot_ids(
+            plugin_snapshot_ids=plugin_snapshot_ids, logger=log
+        )
+
+        # build a lookup dictionary for tasks from the plugin files
+        task_lookup_dict = self._swaps_validation_service.build_task_lookup_dict(
+            plugin_plugin_files
+        )
+
+        # validate that swap outputs match across the graph
+        output_issues, _ = self._swaps_validation_service.validate_swap_output_matches(
+            pre_rendered_task_graph=swaps_yaml,
+            task_lookup_dict=task_lookup_dict,
+        )
+
         collected_rendered_validation_issues = []
         collected_required_globals = set()
 
         # no sense doing all this if the yaml was incorrect to begin with
         if schema_valid:
-            plugin_plugin_files = get_plugin_plugin_files_from_plugin_snapshot_ids(
-                plugin_snapshot_ids=plugin_snapshot_ids, logger=log
-            )
 
             swaps = self._swaps_validation_service.extract_swaps(
                 swaps_yaml
@@ -389,14 +404,17 @@ class EntrypointSwapsValidationService(object):
                 collected_required_globals.update(required_globals)
                 collected_rendered_validation_issues.extend(rendered_validation_issues)
 
+        # compile a set of all declared parameter names
         declared_globals = {p["name"] for p in entrypoint_parameters}
         declared_globals.update({a["name"] for a in entrypoint_artifacts})
+
 
         missing_globals = [
             g for g in collected_required_globals if g not in declared_globals
         ]
         return {
             "schema_valid": schema_valid,
+            "swap_issues": output_issues,
             "rendered_validation_errors": collected_rendered_validation_issues,
             "missing_global_params": missing_globals,
         }
