@@ -160,7 +160,7 @@
         </q-td>
       </q-tr>
       <q-tr v-show="props.expand" :props="props" :class="`${highlightRow(props)} ${disableRow(props)}`" no-hover>
-        <q-td colspan="100%" @click="props.selected = !props.selected" style="cursor: pointer;">
+        <q-td colspan="100%">
           <!-- <div class="text-left ">Additional info for {{ props.row.name }}.</div> -->
           <slot name="expandedSlot" :row="props.row" :rowProps="props" />
         </q-td>

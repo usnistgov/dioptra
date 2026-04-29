@@ -92,55 +92,57 @@
             />
           </template>
           <template #expandedSlot="{ row, rowProps }">
-            <div class="row" v-if="Object.hasOwn(dupliateIdenticalTasks, row.name)" @vue:mounted="expandRow(row, rowProps)">
-              Duplicate task with identical params already exist in your plugin file.
-            </div>
-            <div v-if="Object.hasOwn(dupliateTasksWithDifferentParams, row.name)" @vue:mounted="expandRow(row, rowProps)">
-              <div class="row">
-                Duplicate task.  Importing will overwrite the existing params below.
+            <div @click="rowProps.selected = !rowProps.selected" style="cursor: pointer;">
+              <div class="row" v-if="Object.hasOwn(dupliateIdenticalTasks, row.name)" @vue:mounted="expandRow(row, rowProps)">
+                Duplicate task with identical params already exist in your plugin file.
               </div>
-              <div class="row justify-end">
-                <div class="column items-end">
-                  <q-chip
-                    v-for="(param, i) in dupliateTasksWithDifferentParams[row.name].inputParams"
-                    :key="i"
-                    color="indigo"
-                    text-color="white"
-                    dense
-                  >
-                    {{ `${param.name}` }}
-                    <span v-if="param.required" class="text-red">*</span>
-                    {{ `: ${param.type}` }}
-                  </q-chip>
-                  <q-chip
-                    v-if="dupliateTasksWithDifferentParams[row.name].inputParams.length === 0"
-                    dense
-                    color="orange"
-                    text-color="white"
-                    square
-                    label="No params listed"
-                  />
+              <div v-if="Object.hasOwn(dupliateTasksWithDifferentParams, row.name)" @vue:mounted="expandRow(row, rowProps)">
+                <div class="row">
+                  Duplicate task.  Importing will overwrite the existing params below.
                 </div>
-                <div 
-                  class="column items-end"
-                  :style="{width: outputParamsWidth ? outputParamsWidth + 'px' : '172px',}"
-                >
-                  <q-chip
-                    v-for="(param, i) in dupliateTasksWithDifferentParams[row.name].outputParams"
-                    :key="i"
-                    color="purple"
-                    text-color="white"
-                    dense
-                    :label="`${param.name}: ${param.type}`"
-                  />
-                  <q-chip
-                    v-if="dupliateTasksWithDifferentParams[row.name].outputParams.length === 0"
-                    dense
-                    color="orange"
-                    text-color="white"
-                    square
-                    label="No params listed"
-                  />
+                <div class="row justify-end">
+                  <div class="column items-end">
+                    <q-chip
+                      v-for="(param, i) in dupliateTasksWithDifferentParams[row.name].inputParams"
+                      :key="i"
+                      color="indigo"
+                      text-color="white"
+                      dense
+                    >
+                      {{ `${param.name}` }}
+                      <span v-if="param.required" class="text-red">*</span>
+                      {{ `: ${param.type}` }}
+                    </q-chip>
+                    <q-chip
+                      v-if="dupliateTasksWithDifferentParams[row.name].inputParams.length === 0"
+                      dense
+                      color="orange"
+                      text-color="white"
+                      square
+                      label="No params listed"
+                    />
+                  </div>
+                  <div 
+                    class="column items-end"
+                    :style="{width: outputParamsWidth ? outputParamsWidth + 'px' : '172px',}"
+                  >
+                    <q-chip
+                      v-for="(param, i) in dupliateTasksWithDifferentParams[row.name].outputParams"
+                      :key="i"
+                      color="purple"
+                      text-color="white"
+                      dense
+                      :label="`${param.name}: ${param.type}`"
+                    />
+                    <q-chip
+                      v-if="dupliateTasksWithDifferentParams[row.name].outputParams.length === 0"
+                      dense
+                      color="orange"
+                      text-color="white"
+                      square
+                      label="No params listed"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
