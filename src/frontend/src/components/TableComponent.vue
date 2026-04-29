@@ -46,7 +46,13 @@
     <template v-slot:body="props">
       <!-- props.row[field] - field needs to be unique ID, pass this in as a prop, or just use id -->
       <q-tr 
-        :class="`${getSelectedColor(props.selected)} cursor-pointer ${highlightRow(props)} ${disableRow(props)} ${props.expand ? 'row-top-border' : ''}`" 
+        :class="`
+          cursor-pointer 
+          ${getSelectedColor(props.selected)}
+          ${highlightRow(props)}
+          ${disableRow(props)} 
+          ${props.expand ? 'row-top-border' : ''}
+        `" 
         :props="props"
         @click="openResource(props, $event); selectResource(props)"
         @auxclick="onAuxClick(props, $event)"
@@ -584,7 +590,8 @@ function truncateString(str, limit) {
   }
 
   :deep(tr.row-top-border .q-td) {
-    border-top: 1px solid #263238;
+    /* Draw a top separator on the main row even with collapsed borders */
+    box-shadow: inset 0 1px 0 #263238;
   }
 
   :deep(.q-table__container table),
@@ -592,4 +599,5 @@ function truncateString(str, limit) {
     border-collapse: collapse;
     border-spacing: 0;
   }
+
 </style>
