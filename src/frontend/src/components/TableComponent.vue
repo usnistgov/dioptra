@@ -46,10 +46,11 @@
     <template v-slot:body="props">
       <!-- props.row[field] - field needs to be unique ID, pass this in as a prop, or just use id -->
       <q-tr 
-        :class="`${getSelectedColor(props.selected)} cursor-pointer ${highlightRow(props)} ${disableRow(props)}` " 
+        :class="`${getSelectedColor(props.selected)} cursor-pointer ${highlightRow(props)} ${disableRow(props)} ${props.expand ? 'row-top-border' : ''}`" 
         :props="props"
         @click="openResource(props, $event); selectResource(props)"
         @auxclick="onAuxClick(props, $event)"
+        :no-hover="props.expand"
       >
         <q-td v-for="col in props.cols" :key="col.name" :props="props" :style="props.expand ? {'border-bottom': 'none'} : {}">
           <q-menu
@@ -152,8 +153,8 @@
           </slot>
         </q-td>
       </q-tr>
-      <q-tr v-show="props.expand" :props="props" :class="`${highlightRow(props)}`">
-        <q-td colspan="100%">
+      <q-tr v-show="props.expand" :props="props" :class="`${highlightRow(props)} ${disableRow(props)}`" no-hover>
+        <q-td colspan="100%" @click="props.selected = !props.selected" style="cursor: pointer;">
           <!-- <div class="text-left ">Additional info for {{ props.row.name }}.</div> -->
           <slot name="expandedSlot" :row="props.row" :rowProps="props" />
         </q-td>
@@ -517,17 +518,17 @@
 }
 
 function highlightRow(rowProps) {
-  if(rowProps.row.deleted === true) {
-    return darkMode.value ? 'bg-red-8' : 'bg-red-light'
-  }
-  if(props.disabledRowKeys.includes(rowProps.row[props.rowKey])) return
-  if(!props.highlightRow) return
-  if(!rowProps.expand) return
-  if(darkMode.value) {
-    return 'bg-yellow-8 text-black'
-  } else {
-    return 'bg-yellow-8'
-  }
+    if(rowProps.row.deleted === true) {
+      return darkMode.value ? 'bg-red-8' : 'bg-red-light'
+    }
+    if(props.disabledRowKeys.includes(rowProps.row[props.rowKey])) return
+    if(!props.highlightRow) return
+    if(!rowProps.expand) return
+    if(darkMode.value) {
+      return 'bg-yellow-8 text-dark-gray row-bottom-border'
+    } else {
+      return 'bg-yellow row-bottom-border'
+    }
 }
 
 function disableRow(rowProps) {
@@ -576,5 +577,19 @@ function truncateString(str, limit) {
 
   .header-label--dark {
       color: #cbe8f5;
+  }
+
+  :deep(tr.row-bottom-border .q-td) {
+    border-bottom: 1px solid #263238;
+  }
+
+  :deep(tr.row-top-border .q-td) {
+    border-top: 1px solid #263238;
+  }
+
+  :deep(.q-table__container table),
+  :deep(.q-table__middle table) {
+    border-collapse: collapse;
+    border-spacing: 0;
   }
 </style>

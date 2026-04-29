@@ -278,8 +278,8 @@ async function suggestPluginTasks() {
 const taskColumns = [
   { name: 'select', label: 'Select', align: 'center', },
   { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: false,  },
-  { name: 'inputParams', label: 'Input Parameters', field: 'inputParams', align: 'right', sortable: false, style: 'width: 150px', },
-  { name: 'outputParams', label: 'Output Parameters', field: 'outputParams', align: 'right', sortable: false, style: 'width: 150px' },
+  { name: 'inputParams', label: 'Input Parameters', field: 'inputParams', align: 'right', sortable: false, style: 'width: 175px', },
+  { name: 'outputParams', label: 'Output Parameters', field: 'outputParams', align: 'right', sortable: false, style: 'width: 175px' },
 ]
 
 async function submit() {

@@ -60,6 +60,10 @@ p {
   color: #cecece !important;
 }
 
+.text-dark-gray {
+  color: #323232;
+}
+
 .body--dark .q-field__messages [role="alert"] {
   color: #ff5353 !important;
   font-weight: 500;
