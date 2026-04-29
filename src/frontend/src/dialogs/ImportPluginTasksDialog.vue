@@ -2,7 +2,7 @@
   <q-dialog v-model="showDialog" @show="onDialogShow">
     <q-card style="display: inline-block; width: auto; max-width: 800px;">
       <q-card-section class="bg-primary text-white text-h6">
-        Import Plugin Tasks
+        Import Plugin Function Tasks
       </q-card-section>
 
       <q-card-section style="max-height: 75vh" class="scroll">
