@@ -78,7 +78,10 @@ from dioptra.restapi.v1.shared.resource_service import (
 from dioptra.restapi.v1.shared.signature_analysis import get_plugin_signatures
 from dioptra.restapi.v1.shared.task_engine_yaml.service import TaskEngineYamlService
 from dioptra.restapi.v1.utils import PluginParameterTypeDict, PluginWithFilesDict
-from dioptra.sdk.api.swappable_validation import get_swappable_experiment_schema
+from dioptra.sdk.api.swappable_validation import (
+    get_swappable_experiment_schema,
+    get_swappable_json_schema_resources,
+)
 from dioptra.sdk.utilities.paths import set_cwd
 from dioptra.task_engine.issues import IssueSeverity, IssueType, ValidationIssue
 from dioptra.task_engine.validation import _schema_validate
@@ -1307,7 +1310,11 @@ class ValidateEntrypointService(object):
         # Using this instead of _task_engine_yaml_service.validate, because that one requires a rendered task graph
         # which we are no longer guaranteed to have. _task_engine_yaml_service.validate should remain unchanged (to
         # preserve the task engine's functionality) and also be used in a new, heavier validation endpoint
-        schema_issues = _schema_validate(task_engine_dict, merged_schema)
+        schema_issues = _schema_validate(
+            task_engine_dict,
+            merged_schema,
+            resources=get_swappable_json_schema_resources(),
+        )
         schema_valid = schema_issues == []
 
         output_issues: list[ValidationIssue] = []

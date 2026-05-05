@@ -53,6 +53,7 @@ def schema_validate(
     instance: Any,
     schema: Union[dict[str, Any], bool],
     location_desc_callback: Optional[Callable[[Sequence[Union[int, str]]], str]] = None,
+    resources: list[tuple[str, dict]] | None = None,
 ) -> list[str]:
     """
     Validate the given instance against the given JSON-Schema.
@@ -72,11 +73,20 @@ def schema_validate(
     # Make use of a more complex API to try to produce better schema
     # validation error messages.
     registry = referencing.Registry()
+
+    if resources is not None and len(resources) > 0:
+        res = [
+            (id, referencing.Resource.from_contents(schema)) for id, schema in resources
+        ]
+        registry = registry.with_resources(res)
+
     validator_class = jsonschema.validators.validator_for(schema)
     validator = validator_class(schema=schema, registry=registry)
 
     error_messages = [
-        validation_error_to_message(error, schema, location_desc_callback)
+        validation_error_to_message(
+            error, schema, location_desc_callback, registry=registry
+        )
         for error in validator.iter_errors(instance)
     ]
 

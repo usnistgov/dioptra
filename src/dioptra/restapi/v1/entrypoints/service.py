@@ -1735,10 +1735,17 @@ class SwapsValidationService(object):
         self,
         pre_rendered_task_graph: dict[str, Any],
     ) -> list[ValidationIssue]:
-        from dioptra.sdk.api.swappable_validation import get_json_schema
+        from dioptra.sdk.api.swappable_validation import (
+            get_swap_graph_schema,
+            get_swappable_json_schema_resources,
+        )
         from dioptra.task_engine.validation import _schema_validate
 
-        return _schema_validate(pre_rendered_task_graph, get_json_schema())
+        return _schema_validate(
+            pre_rendered_task_graph,
+            get_swap_graph_schema(),
+            resources=get_swappable_json_schema_resources(),
+        )
 
     def validate_swap_output_matches(
         self, pre_rendered_task_graph: dict[str, Any], task_lookup_dict: dict[str, Any]

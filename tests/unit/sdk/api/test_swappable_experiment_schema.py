@@ -1,7 +1,7 @@
 import pytest
 import yaml
 
-from dioptra.sdk.api.swappable_validation import get_json_schema
+from dioptra.sdk.api.swappable_validation import get_swap_graph_schema, get_swappable_json_schema_resources
 from dioptra.task_engine.util import schema_validate
 from pathlib import Path
 
@@ -22,4 +22,4 @@ def test_swappable_experiment_schema(yaml_file):
         data = f.read()
     graph = yaml.safe_load(data)
 
-    assert schema_validate(graph, get_json_schema()) == []
+    assert schema_validate(graph, get_swap_graph_schema(), resources=get_swappable_json_schema_resources()) == []

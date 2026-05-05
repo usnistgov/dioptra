@@ -3,10 +3,11 @@ import pathlib
 
 import dioptra.task_engine.validation
 
-SCHEMA_FILENAME = "swappable_experiment_schema.json"
+SWAP_SCHEMA_FILENAME = "swappable_experiment_schema.json"
+GRAPH_SCHEMA_FILENAME = "swap_graph.json"
 
 
-def get_json_schema(default: bool = False) -> dict:
+def get_json_schema(default: bool = False, filename: str | None = None) -> dict:
     """
     Read and parse the declarative experiment description JSON-Schema file. Will first
     look in a ".dioptra" folder to see if an altered version is available, otherwise
@@ -20,11 +21,13 @@ def get_json_schema(default: bool = False) -> dict:
         The schema, as parsed JSON
     """
     # attempt to get the override first
-    schema_path = pathlib.Path(".dioptra") / SCHEMA_FILENAME
+    filename = filename or SWAP_SCHEMA_FILENAME
+
+    schema_path = pathlib.Path(".dioptra") / filename
     if default or not schema_path.exists():
         # Currently assumes the schema json file and this source file are in the
         # same directory.
-        schema_path = pathlib.Path(__file__).with_name(SCHEMA_FILENAME)
+        schema_path = pathlib.Path(__file__).with_name(filename)
 
     schema: dict
     with schema_path.open("r", encoding="utf-8") as fp:
@@ -33,13 +36,19 @@ def get_json_schema(default: bool = False) -> dict:
     return schema
 
 
+def get_swap_graph_schema() -> dict:
+    """Retrieve a schema which defines just a swap graph."""
+    return get_json_schema(filename=GRAPH_SCHEMA_FILENAME)
+
+
+def get_swappable_json_schema_resources() -> list[tuple[str, dict]]:
+    """Retrieve the resources needed for swappable JSON schemas."""
+    return [
+        ("swap_graph.json", get_json_schema(filename=GRAPH_SCHEMA_FILENAME)),
+        ("experiment_schema.json", dioptra.task_engine.validation.get_json_schema()),
+    ]
+
+
 def get_swappable_experiment_schema() -> dict:
-    base_schema = dioptra.task_engine.validation.get_json_schema()
-    swappable_schema = get_json_schema()
-
-    if "$defs" in base_schema and "$defs" in swappable_schema:
-        # since the definitions have the same keys, we can just replace the definitions
-        # in the original schema with the ones from the swappable schema.
-        base_schema["$defs"].update(swappable_schema["$defs"])
-
-    return base_schema
+    """Retrieve an experiment schema which takes swaps into account in the graph portion."""
+    return get_json_schema()
