@@ -62,25 +62,7 @@
             "$ref": "experiment_schema.json#/$defs/positional_invocation"
         },
         "keyword_invocation": {
-            "title": "Keyword invocation",
-            "type": "object",
-            "not": {
-                "$comment": "If the 'task' property is present, we always treat as a mixed invocation.",
-                "required": [
-                    "task"
-                ]
-            },
-            "properties": {
-                "dependencies": {
-                    "$ref": "#/$defs/step_dependencies"
-                }
-            },
-            "patternProperties": {
-                "^(?!\\?|dependencies$).*": { "type": "object"}
-            },
-            "minProperties": 1,
-            "maxProperties": 2,
-            "additionalProperties": false
+            "$ref": "experiment_schema.json#/$defs/keyword_invocation"
         },
         "mixed_invocation": {
             "$ref": "experiment_schema.json#/$defs/mixed_invocation"

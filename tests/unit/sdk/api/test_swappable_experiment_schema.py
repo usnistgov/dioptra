@@ -22,4 +22,29 @@ def test_swappable_experiment_schema(yaml_file):
         data = f.read()
     graph = yaml.safe_load(data)
 
-    assert schema_validate(graph, get_swap_graph_schema(), resources=get_swappable_json_schema_resources()) == []
+    errors = schema_validate(graph, get_swap_graph_schema(), resources=get_swappable_json_schema_resources())
+
+    assert errors == []
+
+@pytest.mark.parametrize(
+    "yaml_file",
+    [
+        'question_mark_task.yml',
+        'question_mark_task_in_swap.yml',
+    ],
+)
+
+def test_question_mark_not_swap_fails(yaml_file):
+    """A YAML file that contains a task name starting with a question mark should
+    not be valid. The swap graph schema expects a proper swap structure for keys 
+    that begin with ?. This test ensures that such a file produces validation errors.
+    """
+    yaml_path = Path(__file__).absolute().parent / FILES_LOCATION / yaml_file
+    with yaml_path.open("r") as f:
+        data = f.read()
+    graph = yaml.safe_load(data)
+
+    errors = schema_validate(
+        graph, get_swap_graph_schema(), resources=get_swappable_json_schema_resources()
+    )
+    assert errors != []

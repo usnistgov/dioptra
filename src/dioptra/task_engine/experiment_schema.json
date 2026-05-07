@@ -355,12 +355,12 @@
                     "$ref": "#/$defs/step_dependencies"
                 }
             },
-            "additionalProperties": {
-                "$comment": "The task plugin short name + kwargs",
-                "type": "object"
+            "patternProperties": {
+                "^(?!\\?|dependencies$).*": { "type": "object"}
             },
             "minProperties": 1,
-            "maxProperties": 2
+            "maxProperties": 2,
+            "additionalProperties": false
         },
         "mixed_invocation": {
             "title": "Mixed position/keyword invocation",
