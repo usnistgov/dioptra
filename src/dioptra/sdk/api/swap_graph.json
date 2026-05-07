@@ -59,7 +59,34 @@
             ]
         },
         "positional_invocation": {
-            "$ref": "experiment_schema.json#/$defs/positional_invocation"
+            "title": "Positional invocation",
+            "type": "object",
+            "not": {
+                "$comment": "If the 'task' property is present, we always treat as a mixed invocation.",
+                "required": [
+                    "task"
+                ]
+            },
+            "properties": {
+                "dependencies": {
+                    "$ref": "#/$defs/step_dependencies"
+                }
+            },
+            "patternProperties": {
+                "^(?!\\?|dependencies$).*": { 
+                    "$comment": "The task plugin short name + arg value(s)",
+                    "type": [
+                        "string",
+                        "number",
+                        "boolean",
+                        "null",
+                        "array"
+                    ]
+                }
+            },
+            "minProperties": 1,
+            "maxProperties": 2,
+            "additionalProperties": false
         },
         "keyword_invocation": {
             "title": "Keyword invocation",
