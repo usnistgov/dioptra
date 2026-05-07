@@ -355,12 +355,8 @@
                     "$ref": "#/$defs/step_dependencies"
                 }
             },
-            "patternProperties": {
-                "^(?!\\?|dependencies$).*": { "type": "object"}
-            },
             "minProperties": 1,
-            "maxProperties": 2,
-            "additionalProperties": false
+            "maxProperties": 2
         },
         "mixed_invocation": {
             "title": "Mixed position/keyword invocation",
