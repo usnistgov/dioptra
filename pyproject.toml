@@ -160,7 +160,7 @@ dev = [
 ]
 docs = [
     "Markdown>=3.4.0",
-    "mistune<2",
+    "mistune<4",
     "plantuml-markdown>=3.11.1",
     "pydata-sphinx-theme>=0.13.3",
     "pymdown-extensions>=9.4",
