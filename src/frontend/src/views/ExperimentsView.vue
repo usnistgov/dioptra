@@ -23,10 +23,8 @@
     :loading="isLoading"
   >
     <template #body-cell-entrypoints="props">
-      <ResourceBadge 
-        v-for="(entrypoint, i) in props.row.entrypoints"
-        :key="i"
-        :resource="entrypoint"
+      <ResourceBadgeList
+        :resources="props.row.entrypoints"
         resourceType="entrypoint"
       />
     </template>
@@ -55,7 +53,7 @@
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'
   import PageTitle from '@/components/PageTitle.vue'
   import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
-  import ResourceBadge from '@/components/ResourceBadge.vue'
+  import ResourceBadgeList from '@/components/ResourceBadgeList.vue'
   
   const router = useRouter()
   const openWindow = window
