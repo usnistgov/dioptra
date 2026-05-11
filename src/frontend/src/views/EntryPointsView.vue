@@ -35,32 +35,36 @@
       </span>
     </template>
     <template #body-cell-plugins="props">
-      <ResourceBadgeList
-        :resources="props.row.plugins"
-        resourceType="plugin"
-        @sync="plugin => syncPlugin(props.row.id, plugin.id, plugin.name, 'plugins')"
-      />
-      <q-btn
-        round
-        size="sm"
-        icon="add"
-        @click.stop="editEntrypoint = props.row; pluginType = 'plugins'; showAssignPluginsDialog = true"
-        class="q-ml-sm"
-      />
+      <div class="resource-badge-list-cell">
+        <ResourceBadgeList
+          :resources="props.row.plugins"
+          resourceType="plugin"
+          @sync="plugin => syncPlugin(props.row.id, plugin.id, plugin.name, 'plugins')"
+        />
+        <q-btn
+          round
+          size="sm"
+          icon="add"
+          @click.stop="editEntrypoint = props.row; pluginType = 'plugins'; showAssignPluginsDialog = true"
+          class="resource-badge-list-cell__add"
+        />
+      </div>
     </template>
     <template #body-cell-artifactPlugins="props">
-      <ResourceBadgeList
-        :resources="props.row.artifactPlugins"
-        resourceType="plugin"
-        @sync="plugin => syncPlugin(props.row.id, plugin.id, plugin.name, 'artifactPlugins')"
-      />
-      <q-btn
-        round
-        size="sm"
-        icon="add"
-        @click.stop="editEntrypoint = props.row; pluginType = 'artifactPlugins'; showAssignPluginsDialog = true"
-        class="q-ml-sm"
-      />
+      <div class="resource-badge-list-cell">
+        <ResourceBadgeList
+          :resources="props.row.artifactPlugins"
+          resourceType="plugin"
+          @sync="plugin => syncPlugin(props.row.id, plugin.id, plugin.name, 'artifactPlugins')"
+        />
+        <q-btn
+          round
+          size="sm"
+          icon="add"
+          @click.stop="editEntrypoint = props.row; pluginType = 'artifactPlugins'; showAssignPluginsDialog = true"
+          class="resource-badge-list-cell__add"
+        />
+      </div>
     </template>
   </TableComponent>
 
@@ -197,3 +201,22 @@
   }
 
 </script>
+
+<style scoped>
+.resource-badge-list-cell {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.resource-badge-list-cell__add {
+  flex: 0 0 auto;
+}
+
+.resource-badge-list-cell :deep(.resource-badge-list) {
+  display: contents;
+}
+</style>
