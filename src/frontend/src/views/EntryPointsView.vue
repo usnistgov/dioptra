@@ -35,12 +35,10 @@
       </span>
     </template>
     <template #body-cell-plugins="props">
-      <ResourceBadge
-        v-for="(plugin, i) in props.row.plugins"
-        :key="i"
-        :resource="plugin"
+      <ResourceBadgeList
+        :resources="props.row.plugins"
         resourceType="plugin"
-        @sync="() => syncPlugin(props.row.id, plugin.id, plugin.name, 'plugins')"
+        @sync="plugin => syncPlugin(props.row.id, plugin.id, plugin.name, 'plugins')"
       />
       <q-btn
         round
@@ -51,12 +49,10 @@
       />
     </template>
     <template #body-cell-artifactPlugins="props">
-      <ResourceBadge
-        v-for="(plugin, i) in props.row.artifactPlugins"
-        :key="i"
-        :resource="plugin"
+      <ResourceBadgeList
+        :resources="props.row.artifactPlugins"
         resourceType="plugin"
-        @sync="() => syncPlugin(props.row.id, plugin.id, plugin.name, 'artifactPlugins')"
+        @sync="plugin => syncPlugin(props.row.id, plugin.id, plugin.name, 'artifactPlugins')"
       />
       <q-btn
         round
@@ -110,7 +106,7 @@
   import PageTitle from '@/components/PageTitle.vue'
   import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
   import AssignPluginsDialog from '@/dialogs/AssignPluginsDialog.vue'
-  import ResourceBadge from '@/components/ResourceBadge.vue'
+  import ResourceBadgeList from '@/components/ResourceBadgeList.vue'
 
   const openWindow = window
   const router = useRouter()
