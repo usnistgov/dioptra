@@ -55,9 +55,10 @@ const props = defineProps({
     required: true,
   },
   limit: {
-    type: Number,
+    // pass limit null if you dont want to truncate the list at all
+    type: [Number, null],
     default: 3,
-    validator: (value) => Number.isFinite(value) && value > 0,
+    validator: (value) => value === null || (Number.isFinite(value) && value > 0),
   },
   removable: {
     type: Boolean,
@@ -69,9 +70,15 @@ const props = defineProps({
   },
 })
 
-const visibleResources = computed(() => props.resources.slice(0, props.limit))
+const visibleResources = computed(() => {
+  if (props.limit === null) return props.resources
+  return props.resources.slice(0, props.limit)
+})
 
-const hiddenResources = computed(() => props.resources.slice(props.limit))
+const hiddenResources = computed(() => {
+  if (props.limit === null) return []
+  return props.resources.slice(props.limit)
+})
 
 const darkMode = inject("darkMode")
 

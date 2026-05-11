@@ -46,7 +46,7 @@
           size="sm"
           icon="add"
           @click.stop="editEntrypoint = props.row; pluginType = 'plugins'; showAssignPluginsDialog = true"
-          class="resource-badge-list-cell__add"
+          class="q-ml-xs"
         />
       </div>
     </template>
@@ -62,7 +62,7 @@
           size="sm"
           icon="add"
           @click.stop="editEntrypoint = props.row; pluginType = 'artifactPlugins'; showAssignPluginsDialog = true"
-          class="resource-badge-list-cell__add"
+          class="q-ml-xs"
         />
       </div>
     </template>
@@ -207,13 +207,6 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px 8px;
-  max-width: 100%;
-  min-width: 0;
-}
-
-.resource-badge-list-cell__add {
-  flex: 0 0 auto;
 }
 
 .resource-badge-list-cell :deep(.resource-badge-list) {

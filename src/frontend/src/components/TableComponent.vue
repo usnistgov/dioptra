@@ -109,7 +109,7 @@
                 {{ props.row.description }}
               </q-tooltip>
             </div>
-            <div v-else-if="col.name === 'tags'">
+            <div v-else-if="col.name === 'tags'" class="tag-list-cell">
               <q-chip
                 v-for="(tag, i) in visibleTags(props.row.tags)"
                 :key="i"
@@ -117,7 +117,6 @@
                 text-color="white"
                 clickable
                 @click.stop="!props.row.deleted && $emit('editTags', props.row)"
-                class="q-my-none"
               >
                 {{ formatTagName(tag) }}
                 <q-tooltip v-if="hasLongTagName(tag)" max-width="30vw" style="overflow-wrap: break-word">
@@ -129,7 +128,6 @@
                 outline
                 clickable
                 :color="darkMode ? 'grey-4' : 'grey-7'"
-                class="q-my-none"
                 @click.stop
               >
                 +{{ hiddenTags(props.row.tags).length }} more
@@ -143,7 +141,6 @@
                       text-color="white"
                       clickable
                       @click.stop="!props.row.deleted && $emit('editTags', props.row)"
-                      class="q-my-none"
                     >
                       {{ formatTagName(tag) }}
                       <q-tooltip v-if="hasLongTagName(tag)" max-width="30vw" style="overflow-wrap: break-word">
@@ -653,8 +650,13 @@ function formatTagName(tag) {
   .tag-chip-menu {
     display: flex;
     flex-wrap: wrap;
-    row-gap: 8px;
     max-width: 300px;
+  }
+
+  .tag-list-cell {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
   }
 
 </style>
