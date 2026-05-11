@@ -1244,6 +1244,15 @@ class ValidateEntrypointService(object):
     ) -> dict[str, Any]:
         """Validate the proposed inputs to an entrypoint resource.
 
+        This is a lighter-weight validation step intended to be used during code editing.
+        For in-depth validation, use entrypoints.service.SwapsValidationService.validate.
+
+        This validation checks the following:
+            * Validates the experiment description against a JSON schema which accounts for swaps
+            (though swaps are not required).
+            * Validates that all the output types for tasks in a given swap match.
+            * Collects all the tasks needed for the given graph and provides it in the response.
+
         Args:
             group_id: The ID of the group validating the entrypoint resource.
             task_graph: The proposed task graph for the entrypoint resource.

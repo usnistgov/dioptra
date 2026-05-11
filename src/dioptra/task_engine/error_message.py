@@ -182,8 +182,8 @@ def _extract_schema_by_schema_path(
                 "#"
             ):
                 filename = next_path_component[:-1]  # remove the '#'
+
                 # Attempt to resolve via provided registry first
-                print("Registry", list(registry), flush=True)
                 external_schema = registry.contents(filename)
                 result_schema = _extract_schema_by_schema_path(
                     schema_path_it, full_schema, external_schema, registry=registry

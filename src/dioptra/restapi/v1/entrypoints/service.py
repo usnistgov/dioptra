@@ -371,6 +371,7 @@ class EntrypointIdService(object):
         self,
         entrypoint_name_service: "EntrypointNameService",
         queue_ids_service: QueueIdsService,
+        swaps_validation_service: "SwapsValidationService",
     ) -> None:
         """Initialize the entrypoint service.
 
@@ -382,6 +383,7 @@ class EntrypointIdService(object):
         """
         self._entrypoint_name_service = entrypoint_name_service
         self._queue_ids_service = queue_ids_service
+        self._swaps_validation_service = swaps_validation_service
 
     def get(
         self,
@@ -523,6 +525,21 @@ class EntrypointIdService(object):
             resource=entrypoint.resource,
             creator=current_user,
         )
+
+        # Validate swaps graph before committing the entrypoint
+        self._swaps_validation_service.validate(
+            group_id=group_id,
+            swaps_graph=task_graph,
+            artifact_graph=artifact_graph,
+            entrypoint_parameters=parameters,
+            entrypoint_artifacts=artifact_parameters,
+            plugin_snapshot_ids=[
+                plugin.plugin_resource_snapshot_id
+                for plugin in entrypoint.entry_point_plugins
+            ],
+            log=log,
+        )
+
         db.session.add(new_entrypoint)
 
         plugin_resources = _copy_plugins(
@@ -1967,6 +1984,17 @@ class SwapsValidationService(object):
     ) -> dict[str, Any]:
         """Validation for a proposed entrypoint which may contain swaps, looping over swap combinations.
 
+        This is a heavier validation step intended to be used before an entrypoint is saved.
+        For lighter validation, use workflows.service.ValidateEntrypointService.validate.
+
+        This validation checks the following:
+            * Validates just the graph against a JSON schema which accounts for swaps (though swaps are not
+            required).
+            * Validates that all the output types for tasks in a given swap match.
+            * Iterates over swaps, renders the graph using different swap combinations, and performs in-depth
+            validation on the experiment with the rendered graph.
+            * Validates that all global parameters required for the graph are declared as entrypoint inputs.
+
         Args:
             group_id: The group ID.
             swaps_graph: The task graph dictionary.
@@ -1981,7 +2009,6 @@ class SwapsValidationService(object):
 
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        print(swaps_graph, flush=True)
         swaps_yaml = yaml.safe_load(swaps_graph)
 
         if swaps_yaml is None:

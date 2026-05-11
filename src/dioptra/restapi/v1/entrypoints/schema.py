@@ -399,6 +399,7 @@ class ValidateSwapsRequestSchema(Schema):
     groupId = fields.Integer(
         attribute="group_id",
         data_key="groupId",
+        required=True,
         metadata={"description": "ID of the group for the entrypoint."},
     )
     swapsGraph = fields.String(

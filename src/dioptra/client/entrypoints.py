@@ -696,11 +696,10 @@ class EntrypointsCollectionClient(CollectionClient[T]):
                 file_type=FileTypes.TAR_GZ,
             )
 
-            # POST /api/v1/entrypoints/1/snapshots/2/validateSwaps
-            client.entrypoints.snapshots.validate_swaps(
+            # POST /api/v1/entrypoints/1/validate
+            client.entrypoints.validate(
                 1,
-                entrypoint_snapshot_id=2,
-                swaps_graph="swaps: ...",
+                graph="swaps: ...",
                 plugin_snapshot_ids=[1, 2, 3],
             )
         """
@@ -965,13 +964,14 @@ class EntrypointsCollectionClient(CollectionClient[T]):
     def validate(
         self,
         group_id: int,
-        swaps_graph: str,
+        graph: str,
         plugin_snapshot_ids: list[int],
         artifact_graph: str | None = None,
         entrypoint_parameters: list[dict[str, Any]] | None = None,
         entrypoint_artifacts: list[dict[str, Any]] | None = None,
     ) -> T:
-        """Validate a swaps graph.
+        """Validate the inputs to an entrypoint including a task graph which may contain swaps,
+        an artifact graph, entrypoint parameters, and entrypoint artifact inputs.
 
         Args:
             group_id: The group id, an integer.
@@ -986,7 +986,7 @@ class EntrypointsCollectionClient(CollectionClient[T]):
         """
         json_: dict[str, Any] = {
             "groupId": group_id,
-            "swapsGraph": swaps_graph,
+            "swapsGraph": graph,
             "pluginSnapshotIds": plugin_snapshot_ids,
         }
 

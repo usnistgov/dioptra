@@ -1675,7 +1675,7 @@ def test_validate_swaps_graph(
 
     response = dioptra_client.entrypoints.validate(
         group_id=group_id,
-        swaps_graph=swaps_graph,
+        graph=swaps_graph,
         plugin_snapshot_ids=[plugin_snapshot_id],
         entrypoint_parameters=[
             {
@@ -1721,7 +1721,7 @@ def test_validate_non_swaps_graph(
 
     response = dioptra_client.entrypoints.validate(
         group_id=group_id,
-        swaps_graph=swaps_graph,
+        graph=swaps_graph,
         plugin_snapshot_ids=[plugin_snapshot_id],
         entrypoint_parameters=[
             {
@@ -1762,7 +1762,7 @@ def test_validate_swaps_graph_bad_schema(
 
     response = dioptra_client.entrypoints.validate(
         group_id=group_id,
-        swaps_graph=bad_schema_graph,
+        graph=bad_schema_graph,
         plugin_snapshot_ids=[],
         entrypoint_parameters=[
             {
@@ -1805,7 +1805,7 @@ def test_validate_swaps_graph_missing_globals(
 
     response = dioptra_client.entrypoints.validate(
         group_id=group_id,
-        swaps_graph=swaps_graph,
+        graph=swaps_graph,
         plugin_snapshot_ids=[plugin_snapshot_id],
         entrypoint_parameters=[
             {
@@ -1850,7 +1850,7 @@ def test_validate_swaps_graph_rendered_errors(
 
     response = dioptra_client.entrypoints.validate(
         group_id=group_id,
-        swaps_graph=swaps_graph,
+        graph=swaps_graph,
         plugin_snapshot_ids=[plugin_snapshot_id],
         entrypoint_parameters=[
             {
