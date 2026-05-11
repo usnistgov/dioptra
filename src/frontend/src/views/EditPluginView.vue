@@ -12,7 +12,7 @@
     <q-expansion-item
     v-model="showMetadata"
     class="shadow-1 overflow-hidden q-mt-lg"
-    style="border-radius: 10px; width: 40%"
+    style="border-radius: 10px; max-width: 600px;"
     header-style="font-size: 22px"
     header-class="bg-primary text-white"
     expand-icon-class="text-white"

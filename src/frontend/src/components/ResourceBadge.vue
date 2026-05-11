@@ -17,7 +17,7 @@
           size="xs"
           class="q-mr-sm"
         />
-        {{ resource?.name }}
+        {{ truncateString(resource?.name, 30)}}
         <span
           v-if="resource?.deleted"
           class="q-ml-sm"
@@ -58,7 +58,7 @@
         class="text-capitalize"
         :target="chipTarget"
       >
-        Go To: {{ resourceType }} (ID {{ resource.id
+        Go To: {{ resourceType }}{{ resource.name.length > 30 ? `: "${resource.name}"` : '' }} (ID {{ resource.id
         }}{{ resource.snapshotId ? `, Snapshot ${resource.snapshotId}` : "" }})
       </q-tooltip>
 
@@ -152,6 +152,12 @@ function openResource(event) {
     query: { ...r.query },
     state: { viaBadgeLink: true }
   })
+}
+
+function truncateString(str, limit) { 
+  if(!str) return ''
+  if(str?.length < limit) return str 
+  return str?.slice(0, limit > 3 ? limit - 3 : limit) + '...'; 
 }
 </script>
 
