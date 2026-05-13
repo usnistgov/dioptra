@@ -38,6 +38,7 @@ from dioptra.restapi.errors import (
     EntrypointSwapsRenderError,
     QueryParameterNotUniqueError,
     SortParameterValidationError,
+    InvalidYamlError
 )
 from dioptra.restapi.utils import find_non_unique
 from dioptra.restapi.v1 import utils
@@ -54,8 +55,17 @@ from dioptra.restapi.v1.shared.task_engine_yaml.service import (
     coerce_entrypoint_default_param_types,
 )
 from dioptra.restapi.v1.shared.views import (
+    get_plugin_parameter_types,
     get_plugin_plugin_files_from_plugin_snapshot_ids,
 )
+from dioptra.restapi.v1.shared.entrypoint_validation import (
+    build_entrypoint_data_adapter,
+)
+from dioptra.sdk.api.swappable_validation import (
+    get_swappable_experiment_schema,
+    get_swappable_json_schema_resources,
+)
+from dioptra.task_engine.validation import _schema_validate
 from dioptra.sdk.utilities.entrypoint_swaps import render_swaps_graph
 from dioptra.task_engine import util
 from dioptra.task_engine.issues import IssueSeverity, IssueType, ValidationIssue
@@ -190,6 +200,7 @@ class EntrypointService(object):
             entrypoint_parameters=parameters,
             entrypoint_artifacts=artifact_parameters,
             plugin_snapshot_ids=plugin_ids,
+            rendered_validation=True,
             log=log,
         )
 
@@ -537,6 +548,7 @@ class EntrypointIdService(object):
                 plugin.plugin_resource_snapshot_id
                 for plugin in entrypoint.entry_point_plugins
             ],
+            rendered_validation=True,
             log=log,
         )
 
@@ -1980,17 +1992,20 @@ class SwapsValidationService(object):
         entrypoint_parameters: list[dict[str, Any]],
         entrypoint_artifacts: list[dict[str, Any]],
         plugin_snapshot_ids: list[int],
+        rendered_validation: bool = False,
         **kwargs,
     ) -> dict[str, Any]:
-        """Validation for a proposed entrypoint which may contain swaps, looping over swap combinations.
+        """Validation for a proposed entrypoint which may contain swaps.
 
-        This is a heavier validation step intended to be used before an entrypoint is saved.
-        For lighter validation, use workflows.service.ValidateEntrypointService.validate.
+        
 
         This validation checks the following:
             * Validates just the graph against a JSON schema which accounts for swaps (though swaps are not
             required).
             * Validates that all the output types for tasks in a given swap match.
+            * Collects all the tasks needed for the given graph and provides it in the response.
+
+        If the rendered_validation flag is set, this entrypoint also:
             * Iterates over swaps, renders the graph using different swap combinations, and performs in-depth
             validation on the experiment with the rendered graph.
             * Validates that all global parameters required for the graph are declared as entrypoint inputs.
@@ -2002,7 +2017,7 @@ class SwapsValidationService(object):
             entrypoint_parameters: A list of entrypoint parameters.
             entrypoint_artifacts: A list of entrypoint artifacts parameters.
             plugin_snapshot_ids: A list of plugin snapshot IDs needed for the entrypoint.
-
+            rendered_validation: Whether to perform in-depth validation by looping over swaps to render the task graph.
         Returns:
             A ValidateSwapsResponseSchema object.
         """
@@ -2014,66 +2029,115 @@ class SwapsValidationService(object):
         if swaps_yaml is None:
             raise EmptyGraphError("Provided swaps graph is empty.")
 
-        # check for pre-render schema issues
-        schema_issues = self.swaps_graph_validation(pre_rendered_task_graph=swaps_yaml)
-        schema_valid = len(schema_issues) == 0
+
+
+        #### Pre-render Schema Issues
+        entrypoint = build_entrypoint_data_adapter(
+            swaps_graph, artifact_graph, entrypoint_parameters, entrypoint_artifacts, log
+        )
+
+        plugin_parameter_types = get_plugin_parameter_types(
+            group_id=group_id, logger=log
+        )
+        plugin_plugin_files = get_plugin_plugin_files_from_plugin_snapshot_ids(
+            plugin_snapshot_ids=plugin_snapshot_ids, logger=log
+        )
+
+        try:
+            task_engine_dict = self._task_engine_yaml_service.build_dict(
+                entry_point=entrypoint,  # pyright: ignore
+                plugin_plugin_files=plugin_plugin_files,  # pyright: ignore
+                plugin_parameter_types=plugin_parameter_types,  # pyright: ignore
+                logger=log,
+            )
+        except InvalidYamlError as e:
+            return {
+                "schema_valid": False,
+                "schema_issues": [
+                    ValidationIssue(
+                        type_=IssueType.SYNTAX,
+                        severity=IssueSeverity.ERROR,
+                        message=str(e),
+                    )
+                ],
+            }
+
+        merged_schema = get_swappable_experiment_schema()
+
+        # Using this instead of _task_engine_yaml_service.validate, because that one requires a rendered task graph
+        # which we are no longer guaranteed to have. _task_engine_yaml_service.validate should remain unchanged (to
+        # preserve the task engine's functionality) and also be used in a new, heavier validation endpoint
+        schema_issues = _schema_validate(
+            task_engine_dict,
+            merged_schema,
+            resources=get_swappable_json_schema_resources(),
+        )
+        schema_valid = schema_issues == []
+
+        #### Pre-render Schema Issues complete
+
+
 
         output_issues: list[ValidationIssue] = []
         collected_rendered_validation_issues = []
         collected_required_globals = set()
+        tasks: dict[str, Any] = {}
 
         if schema_valid:
-            # perform swap output matching
-            plugin_plugin_files = get_plugin_plugin_files_from_plugin_snapshot_ids(
-                plugin_snapshot_ids=plugin_snapshot_ids, logger=log
-            )
+            #### Perform swap output matching
 
             # build a lookup dictionary for tasks from the plugin files
             task_lookup_dict = self.build_task_lookup_dict(plugin_plugin_files)
 
             # validate that swap outputs match across the graph
-            output_issues, _ = self.validate_swap_output_matches(
+            output_issues, tasks = self.validate_swap_output_matches(
                 pre_rendered_task_graph=swaps_yaml,
                 task_lookup_dict=task_lookup_dict,
             )
-            # extract a mapping of swaps to possible swap choices
-            swaps = self.extract_swaps(
-                swaps_yaml
-            )  # { swap1: [alias1, alias2, alias3], swap2: [alias4, alias5, alias6], etc. }
-            swap_names = list(swaps.keys())  # [swap1, swap2, etc.]
 
-            combinations = []
+            #### Swap output matching and task retrieval complete
 
-            # create a list of swap choice combinations to try
-            for swap_name in swap_names:
-                for alias in swaps[swap_name]:
-                    current_swap_choice = {
-                        s: swaps[s][0] for s in swaps.keys() if s != swap_name
-                    }  # keeping the first swap from every *other* swap, as we vary the *current* swap, O(n) instead of O(w*x*y*z*...)!
-                    current_swap_choice[swap_name] = alias
 
-                    combinations.append(current_swap_choice)
+            #### Specifically for saving and modifying entrypoints, perform in-depth validation
+            if rendered_validation:
+                # extract a mapping of swaps to possible swap choices
+                swaps = self.extract_swaps(
+                    swaps_yaml
+                )  # { swap1: [alias1, alias2, alias3], swap2: [alias4, alias5, alias6], etc. }
+                swap_names = list(swaps.keys())  # [swap1, swap2, etc.]
 
-            combinations = [{}] if combinations == [] else combinations  #
+                combinations = []
 
-            # loop over the combinations, render each, and validate as a normal experiment description
-            for combination in combinations:
-                rendered_validation_issues, required_globals = (
-                    self.validate_single_swap_combinations(
-                        artifact_graph=artifact_graph,
-                        task_graph_yaml=swaps_yaml,
-                        plugin_plugin_files=plugin_plugin_files,
-                        plugin_parameter_types=self._entrypoint_snapshot_id_service.get_group_plugin_parameter_types(
-                            group_id=group_id, logger=log
-                        ),
-                        entrypoint_parameters=entrypoint_parameters,
-                        entrypoint_artifacts=entrypoint_artifacts,
-                        swap_choices=combination,
-                        log=log,
+                # create a list of swap choice combinations to try
+                for swap_name in swap_names:
+                    for alias in swaps[swap_name]:
+                        current_swap_choice = {
+                            s: swaps[s][0] for s in swaps.keys() if s != swap_name
+                        }  # keeping the first swap from every *other* swap, as we vary the *current* swap, O(n) instead of O(w*x*y*z*...)!
+                        current_swap_choice[swap_name] = alias
+
+                        combinations.append(current_swap_choice)
+
+                combinations = [{}] if combinations == [] else combinations  #
+
+                # loop over the combinations, render each, and validate as a normal experiment description
+                for combination in combinations:
+                    rendered_validation_issues, required_globals = (
+                        self.validate_single_swap_combinations(
+                            artifact_graph=artifact_graph,
+                            task_graph_yaml=swaps_yaml,
+                            plugin_plugin_files=plugin_plugin_files,
+                            plugin_parameter_types=self._entrypoint_snapshot_id_service.get_group_plugin_parameter_types(
+                                group_id=group_id, logger=log
+                            ),
+                            entrypoint_parameters=entrypoint_parameters,
+                            entrypoint_artifacts=entrypoint_artifacts,
+                            swap_choices=combination,
+                            log=log,
+                        )
                     )
-                )
-                collected_required_globals.update(required_globals)
-                collected_rendered_validation_issues.extend(rendered_validation_issues)
+                    collected_required_globals.update(required_globals)
+                    collected_rendered_validation_issues.extend(rendered_validation_issues)
 
         # compile a set of all declared parameter names
         declared_globals = {p["name"] for p in entrypoint_parameters}
@@ -2089,6 +2153,7 @@ class SwapsValidationService(object):
             "swap_issues": output_issues,
             "rendered_validation_errors": collected_rendered_validation_issues,
             "missing_global_params": missing_globals,
+            "swaps": tasks,
         }
 
 

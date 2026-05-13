@@ -67,9 +67,6 @@ from dioptra.restapi.v1.plugins.service import (
     PluginService,
 )
 from dioptra.restapi.v1.shared import views
-from dioptra.restapi.v1.shared.entrypoint_validation import (
-    build_entrypoint_data_adapter,
-)
 from dioptra.restapi.v1.shared.io_file_service import IOFileService
 from dioptra.restapi.v1.shared.resource_service import (
     ResourceIdService,
@@ -78,13 +75,7 @@ from dioptra.restapi.v1.shared.resource_service import (
 from dioptra.restapi.v1.shared.signature_analysis import get_plugin_signatures
 from dioptra.restapi.v1.shared.task_engine_yaml.service import TaskEngineYamlService
 from dioptra.restapi.v1.utils import PluginParameterTypeDict, PluginWithFilesDict
-from dioptra.sdk.api.swappable_validation import (
-    get_swappable_experiment_schema,
-    get_swappable_json_schema_resources,
-)
 from dioptra.sdk.utilities.paths import set_cwd
-from dioptra.task_engine.issues import IssueSeverity, IssueType, ValidationIssue
-from dioptra.task_engine.validation import _schema_validate
 
 from .lib.clone_git_repository import clone_git_repository
 from .schema import (
@@ -1211,143 +1202,3 @@ class DraftCommitService(object):
         if draft.payload["base_resource_id"] is not None:
             resource_ids = [draft.payload["base_resource_id"]] + resource_ids
         return {"status": "Success", "id": resource_ids}
-
-
-class ValidateEntrypointService(object):
-    """The service for validating the inputs to an entrypoint resource."""
-
-    @inject
-    def __init__(
-        self,
-        task_engine_yaml_service: TaskEngineYamlService,
-        swaps_validation_service: SwapsValidationService,
-    ) -> None:
-        """Initialize the entrypoint service.
-
-        All arguments are provided via dependency injection.
-
-        Args:
-            task_engine_yaml_service: A TaskEngineYamlService object.
-        """
-        self._task_engine_yaml_service = task_engine_yaml_service
-        self._swaps_validation_service = swaps_validation_service
-
-    def validate(
-        self,
-        group_id: int,
-        task_graph: str,
-        artifact_graph: str,
-        plugin_snapshot_ids: list[int],
-        entrypoint_parameters: list[dict[str, Any]],
-        entrypoint_artifacts: list[dict[str, Any]],
-        **kwargs,
-    ) -> dict[str, Any]:
-        """Validate the proposed inputs to an entrypoint resource.
-
-        This is a lighter-weight validation step intended to be used during code editing.
-        For in-depth validation, use entrypoints.service.SwapsValidationService.validate.
-
-        This validation checks the following:
-            * Validates the experiment description against a JSON schema which accounts for swaps
-            (though swaps are not required).
-            * Validates that all the output types for tasks in a given swap match.
-            * Collects all the tasks needed for the given graph and provides it in the response.
-
-        Args:
-            group_id: The ID of the group validating the entrypoint resource.
-            task_graph: The proposed task graph for the entrypoint resource.
-            artifact_graph: The proposed artifact graph for the entrypoint resource.
-            plugin_snapshot_ids: A list of identifiers for the plugin snapshots that
-                will be attached to the Entrypoint resource.
-            entrypoint_parameters: The proposed list of parameters for the entrypoint
-                resource.
-            entrypoint_artifacts: The proposed list of Artifacts for the entrypoint
-                resource.
-
-        Returns:
-            A dictionary containing the validation result. The dictionary contains two
-            keys:
-                - "schema_valid": A boolean indicating whether the schema is valid.
-                - "schema_issues": A list of issues found in the schema, if any.
-
-        Raises:
-            DioptraError: If two or more plugin_snapshot_ids point at the same
-                resource_id.
-        """
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
-        log.debug(
-            "Validating input for an entrypoint resource",
-            task_graph=task_graph,
-            artifact_graph=artifact_graph,
-            plugin_ids=plugin_snapshot_ids,
-            entrypoint_parameters=entrypoint_parameters,
-            entrypoint_artifacts=entrypoint_artifacts,
-        )
-
-        entrypoint = build_entrypoint_data_adapter(
-            task_graph, artifact_graph, entrypoint_parameters, entrypoint_artifacts, log
-        )
-
-        plugin_parameter_types = views.get_plugin_parameter_types(
-            group_id=group_id, logger=log
-        )
-        plugin_plugin_files = views.get_plugin_plugin_files_from_plugin_snapshot_ids(
-            plugin_snapshot_ids=plugin_snapshot_ids, logger=log
-        )
-        try:
-            task_engine_dict = self._task_engine_yaml_service.build_dict(
-                entry_point=entrypoint,  # pyright: ignore
-                plugin_plugin_files=plugin_plugin_files,  # pyright: ignore
-                plugin_parameter_types=plugin_parameter_types,  # pyright: ignore
-                logger=log,
-            )
-        except InvalidYamlError as e:
-            return {
-                "schema_valid": False,
-                "schema_issues": [
-                    ValidationIssue(
-                        type_=IssueType.SYNTAX,
-                        severity=IssueSeverity.ERROR,
-                        message=str(e),
-                    )
-                ],
-            }
-
-        # This schema is the experiment description, but with swaps graphs.
-        merged_schema = get_swappable_experiment_schema()
-
-        # Using this instead of _task_engine_yaml_service.validate, because that one requires a rendered task graph
-        # which we are no longer guaranteed to have. _task_engine_yaml_service.validate should remain unchanged (to
-        # preserve the task engine's functionality) and also be used in a new, heavier validation endpoint
-        schema_issues = _schema_validate(
-            task_engine_dict,
-            merged_schema,
-            resources=get_swappable_json_schema_resources(),
-        )
-        schema_valid = schema_issues == []
-
-        output_issues: list[ValidationIssue] = []
-        tasks: dict[str, Any] = {}
-
-        if schema_valid:
-            lookup_dict = self._swaps_validation_service.build_task_lookup_dict(
-                plugins=plugin_plugin_files
-            )
-
-            swaps_graph_yaml = yaml.safe_load(task_graph)
-
-            if swaps_graph_yaml is None:
-                raise EmptyGraphError("Provided task graph is empty.")
-
-            output_issues, tasks = (
-                self._swaps_validation_service.validate_swap_output_matches(
-                    pre_rendered_task_graph=swaps_graph_yaml,
-                    task_lookup_dict=lookup_dict,
-                )
-            )
-
-        return {
-            "schema_issues": schema_issues,
-            "swap_issues": output_issues,
-            "swaps": tasks,
-        }

@@ -1684,6 +1684,7 @@ def test_validate_swaps_graph(
                 "parameterType": "string",
             }
         ],
+        rendered_validation=True,
     )
 
     assert response.status_code == HTTPStatus.OK
@@ -1729,7 +1730,8 @@ def test_validate_non_swaps_graph(
                 "defaultValue": "test_value",
                 "parameterType": "string",
             }
-        ],
+        ],        
+        rendered_validation=True,
     )
 
     assert response.status_code == HTTPStatus.OK
@@ -1771,6 +1773,7 @@ def test_validate_swaps_graph_bad_schema(
                 "parameterType": "string",
             }
         ],
+        rendered_validation=True,
     )
 
     assert response.status_code == HTTPStatus.OK
@@ -1814,6 +1817,7 @@ def test_validate_swaps_graph_missing_globals(
                 "parameterType": "string",
             }
         ],
+        rendered_validation=True,
     )
 
     assert response.status_code == HTTPStatus.OK
@@ -1859,6 +1863,7 @@ def test_validate_swaps_graph_rendered_errors(
                 "parameterType": "string",
             }
         ],
+        rendered_validation=True,
     )
 
     assert response.status_code == HTTPStatus.OK
@@ -1868,3 +1873,498 @@ def test_validate_swaps_graph_rendered_errors(
     assert len(validation_result["renderedValidationErrors"]) > 0
     error_messages = [error["message"] for error in validation_result["renderedValidationErrors"]]
     assert any("non_existent_task" in msg for msg in error_messages)
+
+# -- Assertions ------------------------------------------------------------------------
+
+
+def assert_entrypoint_inputs_are_valid(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    group_id: int,
+    task_graph: str,
+    plugin_snapshots: list[int],
+    entrypoint_parameters: list[dict[str, Any]],
+) -> None:
+    """Asserts that the entrypoint yaml is valid.
+
+    Args:
+        dioptra_client: The Dioptra client.
+        group_id: The ID of the group validating the entrypoint resource.
+        task_graph: The proposed task graph for the entrypoint resource.
+        plugin_snapshots: A list of identifiers for the plugin snapshots that will be
+            attached to the Entrypoint resource.
+        entrypoint_parameters: The proposed list of parameters for the entrypoint
+            resource.
+
+    Raises:
+        AssertionError: If the entrypoint yaml is invalid.
+    """
+    response = dioptra_client.entrypoints.validate(
+        group_id=group_id,
+        graph=task_graph,
+        plugin_snapshot_ids=plugin_snapshots,
+        entrypoint_parameters=entrypoint_parameters,
+        rendered_validation=False
+    )
+    assert (
+        response.status_code == HTTPStatus.OK
+        and not response.json()["schemaIssues"]
+    )
+
+
+def assert_entrypoint_inputs_are_invalid(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    group_id: int,
+    task_graph: str,
+    plugin_snapshots: list[int],
+    entrypoint_parameters: list[dict[str, Any]],
+) -> None:
+    """Asserts that the entrypoint yaml is invalid.
+
+    Args:
+        dioptra_client: The Dioptra client.
+        group_id: The ID of the group validating the entrypoint resource.
+        task_graph: The proposed task graph for the entrypoint resource.
+        plugin_snapshots: A list of identifiers for the plugin snapshots that will be
+            attached to the Entrypoint resource.
+        entrypoint_parameters: The proposed list of parameters for the entrypoint
+            resource.
+
+    Raises:
+        AssertionError: If the entrypoint yaml is valid.
+    """
+    response = dioptra_client.entrypoints.validate(
+        group_id=group_id,
+        graph=task_graph,
+        plugin_snapshot_ids=plugin_snapshots,
+        entrypoint_parameters=entrypoint_parameters,
+        rendered_validation=False
+    )
+    assert (
+        response.status_code == HTTPStatus.OK
+        and response.json()["schemaIssues"]
+    )
+
+
+def assert_multiple_snapshots_for_plugin_raise_error(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    group_id: int,
+    task_graph: str,
+    plugin_snapshots: list[int],
+    entrypoint_parameters: list[dict[str, Any]],
+) -> None:
+    """Asserts that passing multiple snapshots for the same plugin raises an error.
+
+    Args:
+        dioptra_client: The Dioptra client.
+        group_id: The ID of the group validating the entrypoint resource.
+        task_graph: The proposed task graph for the entrypoint resource.
+        plugin_snapshots: A list of identifiers for the plugin snapshots that will be
+            attached to the Entrypoint resource.
+        entrypoint_parameters: The proposed list of parameters for the entrypoint
+            resource.
+
+    Raises:
+        AssertionError: If the client does not return a 400 error.
+    """
+    response = dioptra_client.entrypoints.validate(
+        group_id=group_id,
+        graph=task_graph,
+        plugin_snapshot_ids=plugin_snapshots,
+        entrypoint_parameters=entrypoint_parameters,
+        rendered_validation=False
+    )
+    assert (
+        response.status_code == HTTPStatus.BAD_REQUEST
+        and "Only one snapshot ID per resource ID is allowed."
+        in response.json()["message"]
+    )
+
+
+# -- Tests -----------------------------------------------------------------------------
+
+
+def test_validate_unrendered_entrypoint(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_plugin_parameter_types: dict[str, Any],
+) -> None:
+    """Test that correct entrypoint inputs pass validation.
+
+    Given an authenticated user, this test validates the following sequence of actions:
+
+    - A user creates the plugin "hello_world".
+    - A user adds a plugin file with a single task "hello_world".
+    - The user correctly sets up a proposed entrypoint input consisting of a task graph
+      and global parameters.
+    - The entrypoint input validates successfully.
+    """
+    # Create a plugin
+    registered_plugin = dioptra_client.plugins.create(
+        group_id=auth_account["default_group_id"],
+        name="hello_world",
+        description="The hello world plugin.",
+    ).json()
+
+    # Add a plugin file with a single task
+    filename = "tasks.py"
+    description = "The task plugin file for hello world."
+    contents = textwrap.dedent(
+        """"from dioptra import pyplugs
+
+        @pyplugs.register
+        def hello_world(name: str) -> str:
+            return f'Hello, {name}!'"
+        """
+    )
+    string_parameter_type = registered_plugin_parameter_types["string"]
+    tasks = [
+        {
+            "name": "hello_world",
+            "inputParams": [
+                {
+                    "name": "name",
+                    "parameterType": string_parameter_type["id"],
+                    "required": True,
+                },
+            ],
+            "outputParams": [
+                {
+                    "name": "greeting",
+                    "parameterType": string_parameter_type["id"],
+                },
+            ],
+        },
+    ]
+    dioptra_client.plugins.files.create(
+        plugin_id=registered_plugin["id"],
+        filename=filename,
+        description=description,
+        contents=contents,
+        function_tasks=tasks,
+        artifact_tasks=None,
+    )
+
+    # Retrieve the latest plugin snapshot identifier (adding the plugin file creates a
+    # new snapshot)
+    plugin_snapshot_id = dioptra_client.plugins.get_by_id(
+        registered_plugin["id"]
+    ).json()["snapshot"]
+
+    # Set up the entrypoint inputs
+    task_graph = textwrap.dedent(
+        """# my entrypoint graph
+        hello_step:
+          hello_world:
+            name: $name
+        """
+    )
+    plugin_snapshots = [plugin_snapshot_id]
+    parameters = [
+        {
+            "name": "name",
+            "defaultValue": "User",
+            "parameterType": "string",
+        },
+    ]
+    assert_entrypoint_inputs_are_valid(
+        dioptra_client,
+        group_id=auth_account["default_group_id"],
+        task_graph=task_graph,
+        plugin_snapshots=plugin_snapshots,
+        entrypoint_parameters=parameters,
+    )
+
+
+def test_validate_unrendered_entrypoint_with_error(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_plugin_parameter_types: dict[str, Any],
+) -> None:
+    """Test that an incorrect entrypoint input fails validation.
+
+    Given an authenticated user, this test validates the following sequence of actions:
+
+    - A user creates the plugin "hello_world".
+    - A user adds a plugin file with a single task "hello_world".
+    - The user incorrectly sets up a proposed entrypoint input consisting of a task
+      graph and global parameters. The task graph misspells the task "hello_world" as
+      "hello_wrld".
+    - The entrypoint input fails validation.
+    """
+    # Create a plugin
+    registered_plugin = dioptra_client.plugins.create(
+        group_id=auth_account["default_group_id"],
+        name="hello_world",
+        description="The hello world plugin.",
+    ).json()
+
+    # Add a plugin file with a single task
+    filename = "tasks.py"
+    description = "The task plugin file for hello world."
+    contents = textwrap.dedent(
+        """"from dioptra import pyplugs
+
+        @pyplugs.register
+        def hello_world(name: str) -> str:
+            return f'Hello, {name}!'"
+        """
+    )
+    string_parameter_type = registered_plugin_parameter_types["string"]
+    tasks = [
+        {
+            "name": "hello_world",
+            "inputParams": [
+                {
+                    "name": "name",
+                    "parameterType": string_parameter_type["id"],
+                    "required": True,
+                },
+            ],
+            "outputParams": [
+                {
+                    "name": "greeting",
+                    "parameterType": string_parameter_type["id"],
+                },
+            ],
+        },
+    ]
+    dioptra_client.plugins.files.create(
+        plugin_id=registered_plugin["id"],
+        filename=filename,
+        description=description,
+        contents=contents,
+        function_tasks=tasks,
+        artifact_tasks=None,
+    )
+
+    # Retrieve the latest plugin snapshot identifier (adding the plugin file creates a
+    # new snapshot)
+    plugin_snapshot_id = dioptra_client.plugins.get_by_id(
+        registered_plugin["id"]
+    ).json()["snapshot"]
+
+    # Set up the entrypoint inputs
+    #
+    # Schema is invalid because a step must be an object,
+    task_graph = textwrap.dedent(
+        """# my entrypoint graph
+        hello_step: []
+        """
+    )
+    plugin_snapshots = [plugin_snapshot_id]
+    parameters = [
+        {
+            "name": "name",
+            "defaultValue": "User",
+            "parameterType": "string",
+        },
+    ]
+    assert_entrypoint_inputs_are_invalid(
+        dioptra_client,
+        group_id=auth_account["default_group_id"],
+        task_graph=task_graph,
+        plugin_snapshots=plugin_snapshots,
+        entrypoint_parameters=parameters,
+    )
+
+
+def test_validation_rejects_multi_snapshots_for_same_plugin_resource(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_plugin_parameter_types: dict[str, Any],
+) -> None:
+    """Test that passing multiple snapshots for the same plugin raises an error.
+
+    Given an authenticated user, this test validates the following sequence of actions:
+
+    - A user creates the plugin "hello_world".
+    - A user adds a plugin file with a single task "hello_world".
+    - The user incorrectly sets up a proposed entrypoint input consisting of a task
+      graph and global parameters by passing a list of two plugin snapshots that point
+      at the same plugin resource.
+    - The client returns a 400 status code.
+    """
+    # Create a plugin
+    registered_plugin = dioptra_client.plugins.create(
+        group_id=auth_account["default_group_id"],
+        name="hello_world",
+        description="The hello world plugin.",
+    ).json()
+
+    # Add a plugin file with a single task
+    filename = "tasks.py"
+    description = "The task plugin file for hello world."
+    contents = textwrap.dedent(
+        """"from dioptra import pyplugs
+
+        @pyplugs.register
+        def hello_world(name: str) -> str:
+            return f'Hello, {name}!'"
+        """
+    )
+    string_parameter_type = registered_plugin_parameter_types["string"]
+    tasks = [
+        {
+            "name": "hello_world",
+            "inputParams": [
+                {
+                    "name": "name",
+                    "parameterType": string_parameter_type["id"],
+                    "required": True,
+                },
+            ],
+            "outputParams": [
+                {
+                    "name": "greeting",
+                    "parameterType": string_parameter_type["id"],
+                },
+            ],
+        },
+    ]
+    dioptra_client.plugins.files.create(
+        plugin_id=registered_plugin["id"],
+        filename=filename,
+        description=description,
+        contents=contents,
+        function_tasks=tasks,
+        artifact_tasks=None,
+    )
+
+    # Retrieve the latest plugin snapshot identifier (adding the plugin file creates a
+    # new snapshot)
+    plugin_snapshot_id = dioptra_client.plugins.get_by_id(
+        registered_plugin["id"]
+    ).json()["snapshot"]
+
+    # Set up the entrypoint inputs
+    task_graph = textwrap.dedent(
+        """# my entrypoint graph
+        hello_step:
+          hello_world:
+            name: $name
+        """
+    )
+    plugin_snapshots = [registered_plugin["snapshot"], plugin_snapshot_id]
+    parameters = [
+        {
+            "name": "name",
+            "defaultValue": "User",
+            "parameterType": "string",
+        },
+    ]
+    assert_multiple_snapshots_for_plugin_raise_error(
+        dioptra_client,
+        group_id=auth_account["default_group_id"],
+        task_graph=task_graph,
+        plugin_snapshots=plugin_snapshots,
+        entrypoint_parameters=parameters,
+    )
+
+
+def test_validate_swaps_graph_success(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_multi_task_plugin: int,
+) -> None:
+    """Test a valid swaps graph.
+    """
+    plugin_snapshot_id = registered_multi_task_plugin
+
+    swaps_graph = textwrap.dedent(
+        """
+        step1:
+          ?swap1:
+            alias1:
+              task_one: arthur
+            alias2:
+              task: task_two
+              args: [lancelot]
+            alias3:
+              task: task_three
+              kwargs:
+                name: galahad
+        measure:
+          task_int: $step1
+
+        """
+    )
+
+    response = dioptra_client.entrypoints.validate(
+        group_id=auth_account["default_group_id"],
+        graph=swaps_graph,
+        plugin_snapshot_ids=[plugin_snapshot_id],
+        entrypoint_parameters=[],
+        rendered_validation=False,
+    )
+    assert (
+        response.status_code == HTTPStatus.OK
+        and len(response.json()["swapIssues"]) == 0
+    )
+
+def test_validate_swaps_graph_invalid_task(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_multi_task_plugin: int,
+) -> None:
+    """Test that use of nonexistent tasks in a swap returns an error.
+    """
+
+    plugin_snapshot_id = registered_multi_task_plugin
+
+    swaps_graph = textwrap.dedent(
+        """
+        step1:
+          ?swap1:
+            alias1:
+              task: nonexistent_task
+        """
+    )
+
+    parameters = [
+    ]
+
+    response = dioptra_client.entrypoints.validate(
+        group_id=auth_account["default_group_id"],
+        graph=swaps_graph,
+        plugin_snapshot_ids=[plugin_snapshot_id],
+        entrypoint_parameters=[],
+        rendered_validation=False
+    )
+    assert (
+        response.status_code == HTTPStatus.OK
+        and len(response.json()["swapIssues"]) > 0
+    )
+
+def test_validate_swaps_graph_mixed_output_error(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_multi_task_plugin: int,
+) -> None:
+    """Test that it errors for different types within a single swap.
+    """
+    plugin_snapshot_id = registered_multi_task_plugin
+
+    swaps_graph = textwrap.dedent(
+        """
+        step1:
+          ?swap1:
+            alias_str:
+              task: task_one
+            alias_int:
+              task: task_int
+        """
+    )
+
+    response = dioptra_client.entrypoints.validate(
+        group_id=auth_account["default_group_id"],
+        graph=swaps_graph,
+        plugin_snapshot_ids=[plugin_snapshot_id],
+        entrypoint_parameters=[],
+        rendered_validation=False
+    )
+
+    assert (
+        response.status_code == HTTPStatus.OK
+        and len(response.json()["schemaIssues"]) == 0
+        and len(response.json()["swapIssues"]) > 0
+    )

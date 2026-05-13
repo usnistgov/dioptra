@@ -440,6 +440,12 @@ class ValidateSwapsRequestSchema(Schema):
             "description": "List of plugin snapshot IDs required for validation."
         },
     )
+    renderedValidation = fields.Bool(
+        attribute="rendered_validation",
+        data_key="renderedValidation",
+        metadata={"description": "A boolean indicating whether to attempt to loop"
+        " over swaps render the graph for in-depth validation."},
+    )
 
 
 class ValidateEntrypointIssueSchema(Schema):

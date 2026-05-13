@@ -799,6 +799,7 @@ class ValidateSwapsEntrypoint(Resource):
             entrypoint_parameters=parsed_obj.get("entrypoint_parameters", []),
             entrypoint_artifacts=parsed_obj.get("entrypoint_artifacts", []),
             plugin_snapshot_ids=plugin_snapshot_ids,
+            rendered_validation=parsed_obj.get("rendered_validation", False),
             log=log,
         )
 
