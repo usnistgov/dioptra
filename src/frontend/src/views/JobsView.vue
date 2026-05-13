@@ -24,24 +24,6 @@
     :hideCreateBtn="route.name === 'experimentJobs' && experiment?.deleted"
     :defaultSort="{sortBy: 'id', descending: true}"
   >
-    <template #body-cell-experiment="props">
-      <ResourceBadge
-        :resource="props.row.experiment"
-        resourceType="experiment"
-      />
-    </template>
-    <template #body-cell-entrypoint="props">
-      <ResourceBadge
-        :resource="props.row.entrypoint"
-        resourceType="entrypoint"
-      />
-    </template>
-    <template #body-cell-queue="props">
-      <ResourceBadge
-        :resource="props.row.queue"
-        resourceType="queue"
-      />
-    </template>
     <template #body-cell-status="props">
       <JobStatus :status="props.row.status" />
     </template>
@@ -81,7 +63,6 @@
   import ArtifactsDialog from '@/dialogs/ArtifactsDialog.vue'
   import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
   import JobStatus from '@/components/JobStatus.vue'
-  import ResourceBadge from '@/components/ResourceBadge.vue'
 
   const openWindow = window
   const route = useRoute()
@@ -89,8 +70,8 @@
 
   const columns = [
     { name: 'id', label: 'ID', align: 'left', field: 'id', sortable: true, },
-    { name: 'entrypoint', label: 'Entrypoint', align: 'left', field: 'entrypoint', sortable: true, },
-    { name: 'queue', label: 'Queue', align: 'left', field: 'queue', sortable: true, },
+    { name: 'entrypoint', label: 'Entrypoint', align: 'left', field: 'entrypoint', sortable: true, resourceType: 'entrypoint' },
+    { name: 'queue', label: 'Queue', align: 'left', field: 'queue', sortable: true, resourceType: "queue" },
     { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true, style: 'width: 275px',},
     { name: 'status', label: 'Status', align: 'left', field: 'status', sortable: true },
     { name: 'tags', label: 'Tags', align: 'left', field: 'tags', sortable: false, },
@@ -99,7 +80,7 @@
 
   if(route.name === 'allJobs') {
     columns.splice(2, 0, 
-      { name: 'experiment', label: 'Experiment', align: 'left', field: 'experiment', sortable: true, }
+      { name: 'experiment', label: 'Experiment', align: 'left', field: 'experiment', sortable: true, resourceType: "experiment" }
     )
   }
 

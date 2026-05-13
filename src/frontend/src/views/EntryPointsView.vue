@@ -18,6 +18,8 @@
     ref="tableRef"
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
     @create="router.push('/entrypoints/new')"
+    @syncResource="({ row, col, resource }) => syncPlugin(row.id, resource.id, resource.name, col.name)"
+    @addResource="({ row, col }) => { editEntrypoint = row; pluginType = col.name; showAssignPluginsDialog = true }"
     :loading="isLoading"
   >
     <template #body-cell-group="props">
@@ -33,38 +35,6 @@
       <span v-else class="text-negative">
         EMPTY
       </span>
-    </template>
-    <template #body-cell-plugins="props">
-      <div class="resource-badge-list-cell">
-        <ResourceBadgeList
-          :resources="props.row.plugins"
-          resourceType="plugin"
-          @sync="plugin => syncPlugin(props.row.id, plugin.id, plugin.name, 'plugins')"
-        />
-        <q-btn
-          round
-          size="sm"
-          icon="add"
-          @click.stop="editEntrypoint = props.row; pluginType = 'plugins'; showAssignPluginsDialog = true"
-          class="q-ml-xs"
-        />
-      </div>
-    </template>
-    <template #body-cell-artifactPlugins="props">
-      <div class="resource-badge-list-cell">
-        <ResourceBadgeList
-          :resources="props.row.artifactPlugins"
-          resourceType="plugin"
-          @sync="plugin => syncPlugin(props.row.id, plugin.id, plugin.name, 'artifactPlugins')"
-        />
-        <q-btn
-          round
-          size="sm"
-          icon="add"
-          @click.stop="editEntrypoint = props.row; pluginType = 'artifactPlugins'; showAssignPluginsDialog = true"
-          class="q-ml-xs"
-        />
-      </div>
     </template>
   </TableComponent>
 
@@ -110,7 +80,6 @@
   import PageTitle from '@/components/PageTitle.vue'
   import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
   import AssignPluginsDialog from '@/dialogs/AssignPluginsDialog.vue'
-  import ResourceBadgeList from '@/components/ResourceBadgeList.vue'
 
   const openWindow = window
   const router = useRouter()
@@ -120,8 +89,8 @@
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, },
     { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true, },
     { name: 'taskGraph', label: 'Task Graph', align: 'left', field: 'taskGraph',sortable: false, },
-    { name: 'plugins', label: 'Plugins', align: 'left', field: 'plugins', sortable: false },
-    { name: 'artifactPlugins', label: 'Artifact Plugins', align: 'left', field: 'artifactPlugins', sortable: false },
+    { name: 'plugins', label: 'Plugins', align: 'left', field: 'plugins', sortable: false, resourceType: 'plugin', showResourceAdd: true },
+    { name: 'artifactPlugins', label: 'Artifact Plugins', align: 'left', field: 'artifactPlugins', sortable: false, resourceType: 'plugin', showResourceAdd: true },
     { name: 'tags', label: 'Tags', align: 'left', field: 'tags', sortable: false },
     { name: 'lastModifiedOn', label: 'Last Modified', align: 'left', field: 'lastModifiedOn', sortable: true },
   ]
@@ -201,15 +170,3 @@
   }
 
 </script>
-
-<style scoped>
-.resource-badge-list-cell {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.resource-badge-list-cell :deep(.resource-badge-list) {
-  display: contents;
-}
-</style>

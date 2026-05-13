@@ -21,12 +21,6 @@
     :loading="isLoading"
     :defaultSort="{sortBy: 'id', descending: true}"
   >
-    <template #body-cell-job="props">
-      <ResourceBadge
-        :resource="{name: `Job ${props.row.job}`, url: `/jobs/${props.row.job}`, id: props.row.job}"
-        resourceType="job"
-      />
-    </template>
     <template #body-cell-taskName="props">
       {{ props.row.task.name }}
     </template>
@@ -81,7 +75,6 @@ import * as notify from '../notify'
 import PageTitle from '@/components/PageTitle.vue'
 import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
 import { useRouter } from 'vue-router'
-import ResourceBadge from '@/components/ResourceBadge.vue'
 
 const openWindow = window
 const router = useRouter()
@@ -127,7 +120,13 @@ async function getArtifacts(pagination) {
 const columns = [
   { name: 'id', label: 'ID', align: 'left', field: 'id', sortable: true, },
   { name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true },
-  { name: 'job', label: 'Job', align: 'left' },
+  { name: 'job', label: 'Job', align: 'left', resourceType: "job",     
+    field: row => ({
+      name: `Job ${row.job}`,
+      url: `/jobs/${row.job}`,
+      id: row.job,
+    }),
+  },
   { name: 'taskName', label: 'Task Name', align: 'left' },
   { name: 'taskOutputParams', label: 'Task Output Params', align: 'left' },
   { name: 'lastModifiedOn', label: 'Last Modified', align: 'left', field: 'lastModifiedOn', sortable: true },

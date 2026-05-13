@@ -21,14 +21,7 @@
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
     @create="router.push('/experiments/new')"
     :loading="isLoading"
-  >
-    <template #body-cell-entrypoints="props">
-      <ResourceBadgeList
-        :resources="props.row.entrypoints"
-        resourceType="entrypoint"
-      />
-    </template>
-  </TableComponent>
+  />
 
   <DeleteDialog 
     v-model="showDeleteDialog"
@@ -53,7 +46,6 @@
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'
   import PageTitle from '@/components/PageTitle.vue'
   import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
-  import ResourceBadgeList from '@/components/ResourceBadgeList.vue'
   
   const router = useRouter()
   const openWindow = window
@@ -71,7 +63,7 @@
     { name: 'id', label: 'ID', align: 'left', field: 'id', sortable: false, },
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, },
     { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true },
-    { name: 'entrypoints', label: 'Entrypoints', align: 'left', field: 'entrypoints', sortable: false },
+    { name: 'entrypoints', label: 'Entrypoints', align: 'left', field: 'entrypoints', sortable: false, resourceType: 'entrypoint' },
     { name: 'tags', label: 'Tags', align: 'left', sortable: false },
     { name: 'lastModifiedOn', label: 'Last Modified', align: 'left', field: 'lastModifiedOn', sortable: true },
   ]

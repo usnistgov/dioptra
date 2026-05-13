@@ -164,6 +164,21 @@
             <div v-else-if="col.name === 'createdOn' || col.name === 'created_on' || col.name === 'lastModifiedOn'">
               {{ formatDate(col.value) }}
             </div>
+            <div v-else-if="col.resourceType" class="resource-badge-list-cell">
+              <ResourceBadgeList
+                :resources="Array.isArray(col.value) ? col.value : [col.value]"
+                :resourceType="col.resourceType"
+                @sync="resource => $emit('syncResource', { row: props.row, col, resource })"
+              />
+              <q-btn
+                v-if="col.showResourceAdd && props.row.deleted !== true"
+                round
+                size="sm"
+                icon="add"
+                class="q-ml-xs"
+                @click.stop="$emit('addResource', { row: props.row, col })"
+              />
+            </div>
             <div v-else-if="!Array.isArray(col.value)">
               <!-- if value is an array, then render it with a custom slot -->
               {{ col.value }}
@@ -248,6 +263,7 @@
   import { useRoute } from 'vue-router'
   import { useLoginStore } from '@/stores/LoginStore'
   import { useQuasar } from 'quasar'
+  import ResourceBadgeList from '@/components/ResourceBadgeList.vue'
   import * as notify from '../notify'
 
   const props = defineProps({
@@ -303,7 +319,9 @@
     'request', 
     'expand', 
     'editTags', 
-    'create'
+    'create',
+    'syncResource',
+    'addResource'
   ])
 
   const selection =  computed(() => {
@@ -657,6 +675,16 @@ function formatTagName(tag) {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
+  }
+
+  .resource-badge-list-cell {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .resource-badge-list-cell :deep(.resource-badge-list) {
+    display: contents;
   }
 
 </style>

@@ -280,14 +280,8 @@
           :hideOpenBtn="true"
           :hideDeleteBtn="true"
           :hideCreateBtn=true
+          @syncResource="({ resource }) => syncPlugin(resource)"
         >
-          <template #body-cell-pluginName="props">
-            <ResourceBadge
-              :resource="props.row.plugin"
-              resourceType="plugin"
-              @sync="syncPlugin(props.row.plugin)"
-            />
-          </template>
           <template #body-cell-inputParams="props">
             <div v-for="(param, i) in props.row.inputParams" :key="i">
               <q-chip
@@ -364,14 +358,8 @@
           :hideOpenBtn="true"
           :hideDeleteBtn="true"
           :hideCreateBtn=true
+          @syncResource="({ resource }) => syncPlugin(resource, 'artifactPlugins')"
         >
-          <template #body-cell-pluginName="props">
-            <ResourceBadge
-              :resource="props.row.plugin"
-              resourceType="plugin"
-              @sync="syncPlugin(props.row.plugin, 'artifactPlugins')"
-            />
-          </template>
           <template #body-cell-outputParams="props">
             <div v-for="(param, i) in props.row.outputParams" :key="i">
               <q-chip
@@ -498,7 +486,6 @@
   import EditPluginTaskParamDialog from '@/dialogs/EditPluginTaskParamDialog.vue'
   import AssignPluginsDropdown from '@/components/AssignPluginsDropdown.vue'
   import ResourcePicker from '@/components/ResourcePicker.vue'
-  import ResourceBadge from '@/components/ResourceBadge.vue'
 
   const route = useRoute()
   
@@ -628,7 +615,7 @@
       if(typeof plugin === 'number') return
       plugin.files.forEach((file) => {
         file.tasks.functions.forEach((fTask) => {
-          tasks.value.push({ ...fTask, pluginName: plugin.name, plugin })
+          tasks.value.push({ ...fTask, plugin })
         })
       })
     })
@@ -640,7 +627,7 @@
       if(typeof plugin === 'number') return
       plugin.files.forEach((file) => {
         file.tasks.artifacts.forEach((fTask) => {
-          artifactTasks.value.push({ ...fTask, pluginName: plugin.name, plugin })
+          artifactTasks.value.push({ ...fTask, plugin })
         })
       })
     })
@@ -681,7 +668,7 @@
   ]
 
   const taskColumns = [
-    { name: 'pluginName', label: 'Plugin', align: 'left', field: 'pluginName', sortable: true, },
+    { name: 'plugin', label: 'Plugin', align: 'left', field: 'plugin', sortable: true, resourceType: "plugin", sort: (a, b) => a.name.localeCompare(b.name), },
     { name: 'taskName', label: 'Task', align: 'left', field: 'name', sortable: true, },
     { name: 'inputParams', label: 'Input Parameters', align: 'right', field: 'inputParams', sortable: false, classes: 'vertical-top' },
     { name: 'outputParams', label: 'Output Parameters', align: 'right', field: 'outputParams', sortable: false, classes: 'vertical-top' },
@@ -689,7 +676,7 @@
   ]
 
   const artifactTaskColumns = [
-    { name: 'pluginName', label: 'Plugin', align: 'left', field: 'pluginName', sortable: true, },
+    { name: 'plugin', label: 'Plugin', align: 'left', field: 'plugin', sortable: true, resourceType: "plugin", sort: (a, b) => a.name.localeCompare(b.name), },
     { name: 'taskName', label: 'Task', align: 'left', field: 'name', sortable: true, },
     { name: 'outputParams', label: 'Output Parameters', align: 'right', field: 'outputParams', sortable: false, classes: 'vertical-top' },
     { name: 'add', label: 'Add to Artifact Output Graph', align: 'center', sortable: false, },
