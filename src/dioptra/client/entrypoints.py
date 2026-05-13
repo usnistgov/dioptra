@@ -701,7 +701,7 @@ class EntrypointsCollectionClient(CollectionClient[T]):
                 1,
                 graph="swaps: ...",
                 plugin_snapshot_ids=[1, 2, 3],
-                rendered_validation=True
+                rendered_validation=True,
             )
         """
         return self._snapshots
@@ -970,7 +970,7 @@ class EntrypointsCollectionClient(CollectionClient[T]):
         artifact_graph: str | None = None,
         entrypoint_parameters: list[dict[str, Any]] | None = None,
         entrypoint_artifacts: list[dict[str, Any]] | None = None,
-        rendered_validation: bool = False
+        rendered_validation: bool = False,
     ) -> T:
         """Validate the inputs to an entrypoint including a task graph which may contain swaps,
         an artifact graph, entrypoint parameters, and entrypoint artifact inputs.
@@ -990,7 +990,7 @@ class EntrypointsCollectionClient(CollectionClient[T]):
             "groupId": group_id,
             "swapsGraph": graph,
             "pluginSnapshotIds": plugin_snapshot_ids,
-            "renderedValidation": rendered_validation
+            "renderedValidation": rendered_validation,
         }
 
         if artifact_graph is not None:

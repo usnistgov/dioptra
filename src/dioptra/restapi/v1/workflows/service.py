@@ -37,11 +37,9 @@ from dioptra.restapi.errors import (
     DioptraError,
     DraftDoesNotExistError,
     DraftResourceModificationsCommitError,
-    EmptyGraphError,
     EntityDoesNotExistError,
     GitError,
     ImportFailedError,
-    InvalidYamlError,
 )
 from dioptra.restapi.utils import read_json_file, verify_filename_is_safe
 from dioptra.restapi.v1.entrypoints.service import (
@@ -50,7 +48,6 @@ from dioptra.restapi.v1.entrypoints.service import (
     EntrypointIdService,
     EntrypointNameService,
     EntrypointService,
-    SwapsValidationService,
 )
 from dioptra.restapi.v1.plugin_parameter_types.service import (
     BuiltinPluginParameterTypeService,
@@ -73,7 +70,6 @@ from dioptra.restapi.v1.shared.resource_service import (
     ResourceService,
 )
 from dioptra.restapi.v1.shared.signature_analysis import get_plugin_signatures
-from dioptra.restapi.v1.shared.task_engine_yaml.service import TaskEngineYamlService
 from dioptra.restapi.v1.utils import PluginParameterTypeDict, PluginWithFilesDict
 from dioptra.sdk.utilities.paths import set_cwd
 

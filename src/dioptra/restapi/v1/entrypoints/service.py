@@ -36,9 +36,9 @@ from dioptra.restapi.errors import (
     EntityDoesNotExistError,
     EntityExistsError,
     EntrypointSwapsRenderError,
+    InvalidYamlError,
     QueryParameterNotUniqueError,
     SortParameterValidationError,
-    InvalidYamlError
 )
 from dioptra.restapi.utils import find_non_unique
 from dioptra.restapi.v1 import utils
@@ -49,6 +49,9 @@ from dioptra.restapi.v1.plugins.service import (
 )
 from dioptra.restapi.v1.queues.service import RESOURCE_TYPE as QUEUE_RESOURCE_TYPE
 from dioptra.restapi.v1.queues.service import QueueIdsService
+from dioptra.restapi.v1.shared.entrypoint_validation import (
+    build_entrypoint_data_adapter,
+)
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 from dioptra.restapi.v1.shared.task_engine_yaml.service import (
     TaskEngineYamlService,
@@ -58,17 +61,14 @@ from dioptra.restapi.v1.shared.views import (
     get_plugin_parameter_types,
     get_plugin_plugin_files_from_plugin_snapshot_ids,
 )
-from dioptra.restapi.v1.shared.entrypoint_validation import (
-    build_entrypoint_data_adapter,
-)
 from dioptra.sdk.api.swappable_validation import (
     get_swappable_experiment_schema,
     get_swappable_json_schema_resources,
 )
-from dioptra.task_engine.validation import _schema_validate
 from dioptra.sdk.utilities.entrypoint_swaps import render_swaps_graph
 from dioptra.task_engine import util
 from dioptra.task_engine.issues import IssueSeverity, IssueType, ValidationIssue
+from dioptra.task_engine.validation import _schema_validate
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 PLUGIN_RESOURCE_TYPE: Final[str] = "entry_point_plugin"
@@ -1997,8 +1997,6 @@ class SwapsValidationService(object):
     ) -> dict[str, Any]:
         """Validation for a proposed entrypoint which may contain swaps.
 
-        
-
         This validation checks the following:
             * Validates just the graph against a JSON schema which accounts for swaps (though swaps are not
             required).
@@ -2029,11 +2027,13 @@ class SwapsValidationService(object):
         if swaps_yaml is None:
             raise EmptyGraphError("Provided swaps graph is empty.")
 
-
-
         #### Pre-render Schema Issues
         entrypoint = build_entrypoint_data_adapter(
-            swaps_graph, artifact_graph, entrypoint_parameters, entrypoint_artifacts, log
+            swaps_graph,
+            artifact_graph,
+            entrypoint_parameters,
+            entrypoint_artifacts,
+            log,
         )
 
         plugin_parameter_types = get_plugin_parameter_types(
@@ -2076,8 +2076,6 @@ class SwapsValidationService(object):
 
         #### Pre-render Schema Issues complete
 
-
-
         output_issues: list[ValidationIssue] = []
         collected_rendered_validation_issues = []
         collected_required_globals = set()
@@ -2096,7 +2094,6 @@ class SwapsValidationService(object):
             )
 
             #### Swap output matching and task retrieval complete
-
 
             #### Specifically for saving and modifying entrypoints, perform in-depth validation
             if rendered_validation:
@@ -2137,7 +2134,9 @@ class SwapsValidationService(object):
                         )
                     )
                     collected_required_globals.update(required_globals)
-                    collected_rendered_validation_issues.extend(rendered_validation_issues)
+                    collected_rendered_validation_issues.extend(
+                        rendered_validation_issues
+                    )
 
         # compile a set of all declared parameter names
         declared_globals = {p["name"] for p in entrypoint_parameters}
