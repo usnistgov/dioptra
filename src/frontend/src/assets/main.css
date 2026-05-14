@@ -38,10 +38,6 @@ p {
   font-size: 1.2em
 }
 
-.body--dark * {
-  font-weight: 500;
-}
-
 .body--dark a {
   color: #51bef4;
 }
@@ -183,4 +179,8 @@ legend {
 
 .bg-red-light {
   background-color: rgba(244, 67, 54, 0.06);
+}
+
+.bg-red-dark-soft {
+  background-color: rgba(160, 0, 5, .1);
 }

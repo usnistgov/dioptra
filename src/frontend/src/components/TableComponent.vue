@@ -21,6 +21,7 @@
     :rows-per-page-options="props.showAll ? [0] : [5,10,15,20,25,50,0]"
     :hideBottom="props.hideBottom && rows.length > 0"
     :loading="loading"
+    color="primary"
   >
     <template v-slot:header="props">
       <q-tr :props="props">
@@ -574,7 +575,7 @@
 
 function highlightRow(rowProps) {
     if(rowProps.row.deleted === true) {
-      return darkMode.value ? 'bg-red-8' : 'bg-red-light'
+      return darkMode.value ? 'bg-red-dark-soft' : 'bg-red-light'
     }
     if(props.disabledRowKeys.includes(rowProps.row[props.rowKey])) return
     if(!props.highlightRow) return
@@ -617,6 +618,10 @@ function formatTagName(tag) {
 </script>
 
 <style scoped>
+
+  :deep(.q-table td) {
+    font-size: 14px;
+  }
 
   :deep(.q-table__sort-icon) {
     display: none !important;
