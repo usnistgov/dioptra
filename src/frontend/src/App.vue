@@ -24,7 +24,6 @@
 <script setup lang="ts">
   import { RouterView, useRoute } from 'vue-router'
   import NavBar from '@/components/NavBar.vue'
-  import AccessibilityTest from '@/components/AccessibilityTest.vue'
   import { useQuasar } from 'quasar'
   import { computed, provide } from 'vue'
   import { useLoginStore } from '@/stores/LoginStore'
