@@ -92,14 +92,8 @@
 
   async function getQueues(pagination, showDrafts) {
     isLoading.value = true
-    const minLoadTimePromise = new Promise(resolve => setTimeout(resolve, 300)); 
-
     try {
-      const [res] = await Promise.all([
-        api.getData('queues', pagination, showDrafts, showDeleted.value),
-        minLoadTimePromise
-      ]);
-        
+      const res = await api.getData('queues', pagination, showDrafts, showDeleted.value)
       queues.value = res.data.data;
       tableRef.value.updateTotalRows(res.data.totalNumResults);
     } catch(err) {

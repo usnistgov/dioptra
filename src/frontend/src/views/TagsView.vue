@@ -67,14 +67,8 @@
 
   async function getTags(pagination) {
     isLoading.value = true
-    const minLoadTimePromise = new Promise(resolve => setTimeout(resolve, 300)); 
-
     try {
-      const [res] = await Promise.all([
-        api.getData('tags', pagination),
-        minLoadTimePromise
-      ]);
-      
+      const res = await api.getData('tags', pagination)
       tags.value = res.data.data;
       tableRef.value.updateTotalRows(res.data.totalNumResults);
     } catch(err) {

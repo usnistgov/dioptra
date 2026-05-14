@@ -63,20 +63,11 @@ const isLoading = ref(false)
 
 async function getArtifacts() {
   isLoading.value = true
-  const minLoadTimePromise = new Promise(resolve => setTimeout(resolve, 300))
-
   try {
-    const artifactsPromise = Promise.all(
+    const responses = await Promise.all(
       props.artifactIds.map(id => api.getItem('artifacts', id))
     )
-
-    const [responses] = await Promise.all([
-      artifactsPromise,
-      minLoadTimePromise
-    ])
-
     artifacts.value = responses.map(r => r.data)
-
   } catch (err) {
     console.warn(err)
     notify.error(err.response?.data?.message || 'Error loading artifacts')

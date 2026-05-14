@@ -117,23 +117,14 @@
 
 async function getJobs(pagination, showDrafts) {
     isLoading.value = true
-    const minLoadTimePromise = new Promise(resolve => setTimeout(resolve, 300));
-
     try {
       let res
       if(route.name === 'experimentJobs') {
-        [res] = await Promise.all([
-          api.getJobs(route.params.id, pagination, showDrafts),
-          minLoadTimePromise
-        ]);
+        res = await api.getJobs(route.params.id, pagination, showDrafts)
       } else if(route.name === 'allJobs') {
-        [res] = await Promise.all([
-          api.getData('jobs', pagination, false),
-          minLoadTimePromise
-        ]);
+        res = await api.getData('jobs', pagination, false)
       } else {
-        await minLoadTimePromise;
-        return;
+        return
       }
       jobs.value = res.data.data
       tableRef.value.updateTotalRows(res.data.totalNumResults)

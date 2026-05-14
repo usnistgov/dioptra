@@ -96,17 +96,12 @@ const isLoading = ref(false)
 
 async function getArtifacts(pagination) {
   isLoading.value = true
-  const minLoadTimePromise = new Promise(resolve => setTimeout(resolve, 300)); 
   if(!pagination.sortBy) {
     pagination.sortBy = 'job'
     pagination.descending = true
   }
   try {
-    const [res] = await Promise.all([
-      api.getData('artifacts', pagination),
-      minLoadTimePromise
-    ]);
-    
+    const res = await api.getData('artifacts', pagination)
     artifacts.value = res.data.data
     tableRef.value.updateTotalRows(res.data.totalNumResults)
   } catch(err) {

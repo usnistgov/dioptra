@@ -70,14 +70,8 @@
 
   async function getPlugins(pagination) {
     isLoading.value = true
-    const minLoadTimePromise = new Promise(resolve => setTimeout(resolve, 300)); 
-
     try {
-      const [res] = await Promise.all([
-        api.getData('plugins', pagination),
-        minLoadTimePromise
-      ]);
-      
+      const res = await api.getData('plugins', pagination)
       plugins.value = res.data.data;
       tableRef.value.updateTotalRows(res.data.totalNumResults);
     } catch(err) {

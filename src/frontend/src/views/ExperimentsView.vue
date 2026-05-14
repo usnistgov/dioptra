@@ -71,14 +71,8 @@
   const selected = ref([])
   async function getExperiments(pagination) {
     isLoading.value = true
-    const minLoadTimePromise = new Promise(resolve => setTimeout(resolve, 300)); 
-
     try {
-        const [res] = await Promise.all([
-            api.getData('experiments', pagination, false, showDeleted.value),
-            minLoadTimePromise
-        ]);
-        
+        const res = await api.getData('experiments', pagination, false, showDeleted.value)
         experiments.value = res.data.data;
         tableRef.value.updateTotalRows(res.data.totalNumResults);
     } catch(err) {

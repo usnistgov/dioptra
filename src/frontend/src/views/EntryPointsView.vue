@@ -113,15 +113,8 @@
 
   async function getEntrypoints(pagination, showDrafts) {
     isLoading.value = true
-      
-    const minLoadTimePromise = new Promise(resolve => setTimeout(resolve, 300)); 
-
     try {
-      const [res] = await Promise.all([
-        api.getData('entrypoints', pagination, showDrafts),
-        minLoadTimePromise
-      ]);
-        
+      const res = await api.getData('entrypoints', pagination, showDrafts)
       entrypoints.value = res.data.data;
       tableRef.value.updateTotalRows(res.data.totalNumResults);
     } catch(err) {

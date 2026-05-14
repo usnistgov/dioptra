@@ -361,14 +361,8 @@ const isLoading = ref(false)
 
 async function getLogs(pagination) {
   isLoading.value = true
-  const minLoadTimePromise = new Promise(resolve => setTimeout(resolve, 300)); 
-
   try {
-    const [res] = await Promise.all([
-      api.getJobLogs(job.value.id, pagination, selectedSeverity.value),
-      minLoadTimePromise
-    ])
-
+    const res = await api.getJobLogs(job.value.id, pagination, selectedSeverity.value)
     jobLogs.value = res.data.data
     logTotalNumber.value = res.data.totalNumResults
     tableRef.value.updateTotalRows(res.data.totalNumResults)
