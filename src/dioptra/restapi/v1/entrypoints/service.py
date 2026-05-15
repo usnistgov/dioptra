@@ -2214,6 +2214,7 @@ def _copy_artifact_plugins(
         }.values()
     )
 
+
 def _extract_task_name_from_definition(definition: dict[str, Any]):
     if "task" in definition:
         # long version
@@ -2222,6 +2223,7 @@ def _extract_task_name_from_definition(definition: dict[str, Any]):
         # short version - should be exactly one key in here
         task_name = list(definition.keys())[0]
     return task_name
+
 
 def _deduplicate_plugin_resources(
     plugin_resources: list[models.Resource],
