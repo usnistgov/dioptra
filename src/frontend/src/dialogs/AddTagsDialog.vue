@@ -6,7 +6,7 @@
   >
     <template #title>
       <label id="modalTitle">
-        {{editTag ? 'Edit Tag' : 'Register Tag'}}
+        {{editTag ? 'Edit Tag' : 'Create Tag'}}
       </label>
     </template>
     <q-input 

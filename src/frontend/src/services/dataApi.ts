@@ -9,7 +9,7 @@ axios.interceptors.request.use(function (config) {
   return config
 })
 
-type ItemType = keyof UpdateParams
+export type ResourceType = keyof UpdateParams | 'jobs'
 
 type CreateParams = {
   plugins: {
@@ -128,15 +128,15 @@ interface EntrypointParameters {
   parameterType: string
 }
 
-interface Pagination {
-  rowsPerPage: number,
-  index: number,
-  sortBy: string,
-  descending: boolean,
-  search: string,
+export interface Pagination {
+  rowsPerPage: number
+  index: number
+  sortBy?: string
+  descending?: boolean
+  search?: string
 }
 
-export async function getData<T extends ItemType>(type: T, pagination: Pagination, showDrafts: boolean = false, showDeleted = false) {
+export async function getData<T extends ResourceType>(type: T, pagination: Pagination, showDrafts: boolean = false, showDeleted = false) {
   const res = await axios.get(`/api/${type}/${showDrafts ? 'drafts/' : ''}`, {
     params: {
       index: pagination.index,
@@ -168,7 +168,7 @@ export async function getData<T extends ItemType>(type: T, pagination: Paginatio
   return res
 }
 
-export async function getSnapshots<T extends ItemType>(type: T, id: number) {
+export async function getSnapshots<T extends ResourceType>(type: T, id: number) {
   const res =  await axios.get(`/api/${type}/${id}/snapshots`, {
     params: {
       pageLength: 100
@@ -186,7 +186,7 @@ export async function getSnapshots<T extends ItemType>(type: T, id: number) {
   return res
 }
 
-export async function getSnapshot<T extends ItemType>(type: T, id: number, snapshotId: number) {
+export async function getSnapshot<T extends ResourceType>(type: T, id: number, snapshotId: number) {
   return await axios.get(`/api/${type}/${id}/snapshots/${snapshotId}`)
 
 }
@@ -274,7 +274,7 @@ export async function getJobLogs(id: number, pagination: Pagination, severity?: 
   return res
 }
 
-export async function getItem<T extends ItemType>(type: T, id: number, isDraft: boolean = false) {
+export async function getItem<T extends ResourceType>(type: T, id: number, isDraft: boolean = false) {
   // isDraft here means regular draft, not resource draft
   const res =  await axios.get(`/api/${type}/${isDraft ? 'drafts/' : ''}${id}`)
   if(isDraft && res.data) {
@@ -284,13 +284,13 @@ export async function getItem<T extends ItemType>(type: T, id: number, isDraft: 
   return res
 }
 
-export async function getResourceDraft<T extends ItemType>(type: T, id: number) {
+export async function getResourceDraft<T extends ResourceType>(type: T, id: number) {
   const res = await axios.get(`/api/${type}/${id}/draft`)
   Object.assign(res.data, res.data.payload)
   return res
 }
 
-export async function updateItem<T extends ItemType>(type: T, id: number, params: UpdateParams[T]) {
+export async function updateItem<T extends ResourceType>(type: T, id: number, params: UpdateParams[T]) {
   return await axios.put(`/api/${type}/${id}`, params)
 }
 
@@ -322,7 +322,7 @@ export async function addDraft<T extends keyof CreateParams>(type: T, params: Cr
   }
 }
 
-export async function updateDraft<T extends ItemType>(type: T, draftId: string, params: UpdateParams[T]) {
+export async function updateDraft<T extends ResourceType>(type: T, draftId: string, params: UpdateParams[T]) {
   return await axios.put(`/api/${type}/drafts/${draftId}`, params)
 }
 
@@ -336,15 +336,15 @@ export async function updateDraftLinkedtoQueue(queueId: number, name: string, de
    })
 }
 
-export async function deleteItem<T extends ItemType>(type: T, id: number) {
+export async function deleteItem<T extends ResourceType>(type: T, id: number) {
   return await axios.delete(`/api/${type}/${id}`)
 }
 
-export async function deleteDraft<T extends ItemType>(type: T, draftId: number) {
+export async function deleteDraft<T extends ResourceType>(type: T, draftId: number) {
   return await axios.delete(`/api/${type}/drafts/${draftId}`)
 }
 
-export async function deleteResourceDraft<T extends ItemType>(type: T, id: number) {
+export async function deleteResourceDraft<T extends ResourceType>(type: T, id: number) {
   return await axios.delete(`/api/${type}/${id}/draft`)
 }
 
@@ -396,7 +396,7 @@ export async function deleteFile(pluginID: string, fileID: string) {
   return await axios.delete(`/api/plugins/${pluginID}/files/${fileID}`)
 }
 
-export async function updateTags<T extends ItemType>(type: T, id: number, tagIDs: Array<number>, fileId?: number) {
+export async function updateTags<T extends ResourceType>(type: T, id: number, tagIDs: Array<number>, fileId?: number) {
   if(type === 'files') {
     return await axios.put(`/api/plugins/${id}/files/${fileId}/tags/`, { ids: tagIDs })
   }
@@ -452,11 +452,11 @@ export async function removePluginFromEntrypoint(entrypointId: string, pluginId:
   return await axios.delete(`/api/entrypoints/${entrypointId}/${pluginType}/${pluginId}`)
 }
 
-export async function appendResource<T extends ItemType>(parentResourceType: T, parentResourceId: number, childResourceType: T, ids: number[]) {
+export async function appendResource<T extends ResourceType>(parentResourceType: T, parentResourceId: number, childResourceType: T, ids: number[]) {
   return await axios.post(`/api/${parentResourceType}/${parentResourceId}/${childResourceType}`, {ids})
 }
 
-export async function removeResourceFromResource<T extends ItemType>(parentResourceType: T, parentResourceId: number, childResourceType: T, id: number) {
+export async function removeResourceFromResource<T extends ResourceType>(parentResourceType: T, parentResourceId: number, childResourceType: T, id: number) {
   return await axios.delete(`/api/${parentResourceType}/${parentResourceId}/${childResourceType}/${id}`)
 }
 

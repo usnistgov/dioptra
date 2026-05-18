@@ -5,7 +5,7 @@
     subtitle="Reusable workflows composed of Tasks"
   />
   <TableComponent 
-    :rows="entrypoints"
+    :rows="rows"
     :columns="columns"
     title="Entrypoints"
     v-model:selected="selected"
@@ -14,7 +14,7 @@
       : router.push(`/entrypoints/${selected[0].id}`)
     )"
     @delete="showDeleteDialog = true"
-    @request="getEntrypoints"
+    @request="getData"
     ref="tableRef"
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
     @create="router.push('/entrypoints/new')"
@@ -50,7 +50,7 @@
   </InfoPopupDialog>
   <DeleteDialog 
     v-model="showDeleteDialog"
-    @submit="deleteEntryPoint"
+    @submit="deleteRow"
     type="Entry Point"
     :name="selected.length ? selected[0].name : ''"
   />
@@ -80,6 +80,7 @@
   import PageTitle from '@/components/PageTitle.vue'
   import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
   import AssignPluginsDialog from '@/dialogs/AssignPluginsDialog.vue'
+  import { useTableUtils } from '@/services/useTableUtils'
 
   const openWindow = window
   const router = useRouter()
@@ -95,47 +96,24 @@
     { name: 'lastModifiedOn', label: 'Last Modified', align: 'left', field: 'lastModifiedOn', sortable: true },
   ]
 
-  const selected = ref([])
-
   const showTaskGraphDialog = ref(false)
   const displayYaml = ref('')
 
-  const tableRef = ref(null)
-  
-  const isLoading = ref(false)
-
-  const entrypoints = ref([])
-
-  const showDeleteDialog = ref(false)
   const showAssignPluginsDialog = ref(false)
   const editEntrypoint = ref('')
   const pluginType = ref('')
 
-  async function getEntrypoints(pagination, showDrafts) {
-    isLoading.value = true
-    try {
-      const res = await api.getData('entrypoints', pagination, showDrafts)
-      entrypoints.value = res.data.data;
-      tableRef.value.updateTotalRows(res.data.totalNumResults);
-    } catch(err) {
-      console.log('err = ', err);
-      notify.error(err.response.data.message);
-    } finally {
-      isLoading.value = false;
-    }
-  }
 
-  async function deleteEntryPoint() {
-    try {
-      await api.deleteItem('entrypoints', selected.value[0].id)
-      notify.success(`Successfully deleted '${selected.value[0].name}'`)
-      showDeleteDialog.value = false
-      selected.value = []
-      tableRef.value.refreshTable()
-    } catch(err) {
-      notify.error(err.response.data.message);
-    }
-  }
+  const {
+    rows,
+    isLoading,
+    showDeleted,
+    tableRef,
+    selected,
+    showDeleteDialog,
+    getData,
+    deleteRow,
+  } = useTableUtils('entrypoints')
 
   const editObjTags = ref({})
   const showTagsDialog = ref(false)
@@ -154,8 +132,8 @@
   async function updateSingleEntrypoint(entrypointId) {
     try {
       const res = await api.getItem('entrypoints', entrypointId)
-      const idx = entrypoints.value.findIndex((e) => e.id === entrypointId)
-      entrypoints.value[idx] = res.data
+      const idx = rows.value.findIndex((e) => e.id === entrypointId)
+      rows.value[idx] = res.data
     } catch(err) {
       console.warn(err)
       notify.error(err.response.data.message);

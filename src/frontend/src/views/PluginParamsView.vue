@@ -5,7 +5,7 @@
     subtitle="Handle type validation in Entrypoints"
   />
   <TableComponent
-    :rows="pluginParameterTypes"
+    :rows="rows"
     :columns="columns"
     title="Plugin Parameter Types"
     v-model:selected="selected"
@@ -16,7 +16,7 @@
       : router.push(`/pluginParams/${selected[0].id}`)
     )"
     @delete="showDeleteDialog = true"
-    @request="getPluginParameterTypes"
+    @request="getData"
     ref="tableRef"
     :hideToggleDraft="true"
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
@@ -30,7 +30,7 @@
 
   <DeleteDialog 
     v-model="showDeleteDialog"
-    @submit="deletePlugin"
+    @submit="deleteRow"
     type="Plugin Parameter Type"
     :name="selected.length ? selected[0].name : ''"
   />
@@ -46,25 +46,17 @@
   import TableComponent from '@/components/TableComponent.vue'
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'
   import { ref, watch } from 'vue'
-  import * as api from '@/services/dataApi'
-  import * as notify from '../notify'
   import PageTitle from '@/components/PageTitle.vue'
   import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
   import { useRouter } from 'vue-router'
+  import { useTableUtils } from '@/services/useTableUtils'
 
   const openWindow = window
   const router = useRouter()
 
-  const selected = ref([])
   const showAddDialog = ref(false)
-  const showDeleteDialog = ref(false)
-  const showDeleted = ref(false)
   const showTagsDialog = ref(false)
   const editObjTags = ref({})
-
-  const pluginParameterTypes = ref([])
-
-  const isLoading = ref(false)
 
   const editing = ref(false)
 
@@ -72,19 +64,16 @@
   if(!newVal) editing.value = false
   })
 
-  async function getPluginParameterTypes(pagination) {
-    isLoading.value = true
-    try {
-      const res = await api.getData('pluginParameterTypes', pagination, false, showDeleted.value)
-      pluginParameterTypes.value = res.data.data;
-      tableRef.value.updateTotalRows(res.data.totalNumResults);
-    } catch(err) {
-      console.log('err = ', err);
-      notify.error(err.response.data.message);
-    } finally {
-      isLoading.value = false;
-    }
-  }
+  const {
+    rows,
+    isLoading,
+    showDeleted,
+    tableRef,
+    selected,
+    showDeleteDialog,
+    getData,
+    deleteRow,
+  } = useTableUtils('pluginParameterTypes')
 
   const columns = [
     { name: 'id', label: 'ID', align: 'left', field: 'id', sortable: false },
@@ -94,19 +83,5 @@
     { name: 'lastModifiedOn', label: 'Last Modified', align: 'left', field: 'lastModifiedOn', sortable: true },
     { name: 'tags', label: 'Tags', align: 'left', sortable: false },
   ]
-
-  async function deletePlugin() {
-    try {
-      await api.deleteItem('pluginParameterTypes', selected.value[0].id)
-      notify.success(`Successfully deleted '${selected.value[0].name}'`)
-      showDeleteDialog.value = false
-      selected.value = []
-      tableRef.value.refreshTable()
-    } catch(err) {
-      notify.error(err.response.data.message);
-    }
-  }
-
-  const tableRef = ref(null)
 
 </script>

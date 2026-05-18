@@ -5,13 +5,13 @@
     subtitle="Keywords for organizing resources"
   />
   <TableComponent 
-    :rows="tags"
+    :rows="rows"
     :columns="columns"
     title="Tags"
     @delete="showDeleteDialog = true"
-    @edit="editing = true; showAddDialog = true"
+    @open="editing = true; showAddDialog = true"
     v-model:selected="selected"
-    @request="getTags"
+    @request="getData"
     ref="tableRef"
     @create="showAddDialog = true"
     :loading="isLoading"
@@ -31,7 +31,7 @@
   />
   <DeleteDialog 
     v-model="showDeleteDialog"
-    @submit="deleteTag"
+    @submit="deleteRow"
     type="Tag"
     :name="selected.length ? selected[0].name : ''"
   />
@@ -45,18 +45,9 @@
   import AddTagsDialog from '@/dialogs/AddTagsDialog.vue'
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'
   import PageTitle from '@/components/PageTitle.vue'
-  import { useLoginStore } from '@/stores/LoginStore'
-
-  const store = useLoginStore()
+  import { useTableUtils } from '@/services/useTableUtils'
 
   const showAddDialog = ref(false)
-  const showDeleteDialog = ref(false)
-
-  const tags = ref([])
-
-  const isLoading = ref(false)
-
-  const tableRef = ref(null)
 
   const columns = [
     { name: 'id', label: 'ID', align: 'left', field: 'id', sortable: false },
@@ -65,19 +56,16 @@
     { name: 'lastModifiedOn', label: 'Last Modified', align: 'left', field: 'lastModifiedOn', sortable: true },
   ]
 
-  async function getTags(pagination) {
-    isLoading.value = true
-    try {
-      const res = await api.getData('tags', pagination)
-      tags.value = res.data.data;
-      tableRef.value.updateTotalRows(res.data.totalNumResults);
-    } catch(err) {
-      console.log('err = ', err);
-      notify.error(err.response.data.message);
-    } finally {
-      isLoading.value = false;
-    }
-  }
+  const {
+    rows,
+    isLoading,
+    showDeleted,
+    tableRef,
+    selected,
+    showDeleteDialog,
+    getData,
+    deleteRow,
+  } = useTableUtils('tags')
 
   async function addTag(name, group) {
     try {
@@ -105,23 +93,10 @@
     }
   }
 
-  const selected = ref([])
   const editing = ref(false)
 
   watch(showAddDialog, (newVal) => {
     if(!newVal) editing.value = false
   })
-
-  async function deleteTag() {
-    try {
-      await api.deleteItem('tags', selected.value[0].id)
-      notify.success(`Successfully deleted Tag '${selected.value[0].name}'`)
-      showDeleteDialog.value = false
-      selected.value = []
-      tableRef.value.refreshTable()
-    } catch(err) {
-      notify.error(err.response.data.message);
-    }
-  }
 
 </script>

@@ -6,7 +6,7 @@
     subtitle="Parameterized executions of Entrypoints"
   />
   <TableComponent 
-    :rows="jobs"
+    :rows="rows"
     :columns="columns"
     title="Jobs"
     v-model:selected="selected"
@@ -31,7 +31,7 @@
 
   <DeleteDialog 
     v-model="showDeleteDialog"
-    @submit="deleteJob"
+    @submit="deleteRow"
     type="Job"
     :name="selected[0]?.description || `Job ID: ${selected[0]?.id}`"
   />
@@ -63,6 +63,7 @@
   import ArtifactsDialog from '@/dialogs/ArtifactsDialog.vue'
   import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
   import JobStatus from '@/components/JobStatus.vue'
+  import { useTableUtils } from '@/services/useTableUtils'
 
   const openWindow = window
   const route = useRoute()
@@ -84,12 +85,6 @@
     )
   }
 
-  const artifactColumns = [
-    { name: 'id', label: 'id', align: 'left', field: 'id', sortable: true, },
-  ]
-
-  const selected = ref([])
-
   const title = ref('')
 
   if(route.name === 'experimentJobs') {
@@ -109,52 +104,39 @@
     } 
   }
 
-  const jobs = ref([])
-
-  const isLoading = ref(false)
-
-  const tableRef = ref(null)
+  const {
+    rows,
+    isLoading,
+    showDeleted,
+    tableRef,
+    selected,
+    showDeleteDialog,
+    getData,
+    deleteRow,
+  } = useTableUtils('jobs')
 
 async function getJobs(pagination, showDrafts) {
-    isLoading.value = true
     try {
-      let res
       if(route.name === 'experimentJobs') {
-        res = await api.getJobs(route.params.id, pagination, showDrafts)
+        isLoading.value = true
+        const res = await api.getJobs(route.params.id, pagination, showDrafts)
+        rows.value = res.data.data
+        tableRef.value?.updateTotalRows(res.data.totalNumResults)
+        isLoading.value = false;
       } else if(route.name === 'allJobs') {
-        res = await api.getData('jobs', pagination, false)
-      } else {
-        return
+        await getData(pagination, showDrafts)
       }
-      jobs.value = res.data.data
-      tableRef.value.updateTotalRows(res.data.totalNumResults)
     } catch(err) {
       console.log('err = ', err)
       notify.error(err.response.data.message)
-    } finally {
-      isLoading.value = false;
     }
   }
 
-  const showDeleteDialog = ref(false)
   const showArtifactsDialog = ref(false)
   const showTagsDialog = ref(false)
   const editObjTags = ref({})
 
   const jobId = ref('')
-
-  async function deleteJob() {
-    try {
-      const jobId = JSON.parse(JSON.stringify(selected.value[0].id))
-      await api.deleteItem('jobs', selected.value[0].id)
-      notify.success(`Successfully deleted job ${jobId}`)
-      showDeleteDialog.value = false
-      selected.value = []
-      tableRef.value.refreshTable()
-    } catch(err) {
-      notify.error(err.response.data.message);
-    }
-  }
 
   function pushToJobRoute() {
     if(route.name === 'experimentJobs') {

@@ -6,7 +6,7 @@
   />
 
   <TableComponent
-    :rows="plugins"
+    :rows="rows"
     :columns="columns"
     title="Plugins"
     v-model:selected="selected"  
@@ -15,7 +15,7 @@
       : router.push(`/plugins/${selected[0].id}`)
     )"
     @delete="showDeleteDialog = true"
-    @request="getPlugins"
+    @request="getData"
     ref="tableRef"
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
     @create="router.push('/plugins/new')"
@@ -32,7 +32,7 @@
 
   <DeleteDialog 
     v-model="showDeleteDialog"
-    @submit="deletePlugin"
+    @submit="deleteRow"
     type="Plugin"
     :name="selected.length ? selected[0].name : ''"
   />
@@ -49,38 +49,27 @@
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'
   import { ref } from 'vue'
   import { useRouter } from 'vue-router'
-  import * as api from '@/services/dataApi'
-  import * as notify from '../notify'
   import PageTitle from '@/components/PageTitle.vue'
   import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
+  import { useTableUtils } from '@/services/useTableUtils'
 
   const openWindow = window
 
   const router = useRouter()
 
-  const selected = ref([])
-
-  const showDeleteDialog = ref(false)
   const showTagsDialog = ref(false)
   const editObjTags = ref({})
 
-  const plugins = ref([])
-
-  const isLoading = ref(false)
-
-  async function getPlugins(pagination) {
-    isLoading.value = true
-    try {
-      const res = await api.getData('plugins', pagination)
-      plugins.value = res.data.data;
-      tableRef.value.updateTotalRows(res.data.totalNumResults);
-    } catch(err) {
-      console.log('err = ', err);
-      notify.error(err.response.data.message);
-    } finally {
-      isLoading.value = false;
-    }
-  }
+  const {
+    rows,
+    isLoading,
+    showDeleted,
+    tableRef,
+    selected,
+    showDeleteDialog,
+    getData,
+    deleteRow,
+  } = useTableUtils('plugins')
 
   const columns = [
     { name: 'id', label: 'ID', align: 'left', field: 'id', sortable: false, },
@@ -90,19 +79,5 @@
     { name: 'tags', label: 'Tags', align: 'left', sortable: false },
     { name: 'lastModifiedOn', label: 'Last Modified', align: 'left', field: 'lastModifiedOn', sortable: true },
   ]
-
-  async function deletePlugin() {
-    try {
-      await api.deleteItem('plugins', selected.value[0].id)
-      notify.success(`Successfully deleted '${selected.value[0].name}'`)
-      showDeleteDialog.value = false
-      selected.value = []
-      tableRef.value.refreshTable()
-    } catch(err) {
-      notify.error(err.response.data.message);
-    }
-  }
-
-  const tableRef = ref(null)
 
 </script>
