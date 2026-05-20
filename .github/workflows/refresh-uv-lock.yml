@@ -1,0 +1,148 @@
+# This Software (Dioptra) is being made available as a public service by the
+# National Institute of Standards and Technology (NIST), an Agency of the United
+# States Department of Commerce. This software was developed in part by employees of
+# NIST and in part by NIST contractors. Copyright in portions of this software that
+# were developed by NIST contractors has been licensed or assigned to NIST. Pursuant
+# to Title 17 United States Code Section 105, works of NIST employees are not
+# subject to copyright protection in the United States. However, NIST may hold
+# international copyright in software created by its employees and domestic
+# copyright (or licensing rights) in portions of software that were assigned or
+# licensed to NIST. To the extent that NIST holds copyright in this software, it is
+# being made available under the Creative Commons Attribution 4.0 International
+# license (CC BY 4.0). The disclaimers of the CC BY 4.0 license apply to all parts
+# of the software developed or licensed by NIST.
+#
+# ACCESS THE FULL CC BY 4.0 LICENSE HERE:
+# https://creativecommons.org/licenses/by/4.0/legalcode
+name: Refresh uv.lock
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_branch:
+        description: Branch to refresh from.
+        required: true
+        default: dev
+        type: string
+      dry_run:
+        description: Preview the refresh without pushing or opening a pull request.
+        required: true
+        default: false
+        type: boolean
+  schedule:
+    - cron: "37 8 * * 1"
+
+permissions:
+  actions: write
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: refresh-uv-lock-dev
+  cancel-in-progress: false
+
+env:
+  AUTOMATION_BRANCH: automation/refresh-uv-lock-dev
+  COMMIT_MESSAGE: "build: refresh uv.lock"
+  DRY_RUN: ${{ inputs.dry_run || false }}
+  PR_TITLE: "build: refresh uv.lock"
+  TARGET_BRANCH: ${{ inputs.target_branch || 'dev' }}
+
+jobs:
+  refresh:
+    runs-on: ubuntu-24.04
+    env:
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.target_branch || 'dev' }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+          python-version: "3.11"
+
+      - name: Refresh uv.lock
+        run: uv lock --upgrade
+
+      - name: Guard changed files
+        id: guard
+        run: |
+          changed_files="$(git status --porcelain=v1 --untracked-files=all | sed -E 's/^...//')"
+
+          if [ -z "$changed_files" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "uv.lock is already current for ${TARGET_BRANCH}."
+            exit 0
+          fi
+
+          echo "Changed files:"
+          printf '%s\n' "$changed_files"
+
+          invalid_files="$(printf '%s\n' "$changed_files" | grep -vx 'uv.lock' || true)"
+          if [ -n "$invalid_files" ]; then
+            echo "uv lock --upgrade modified files other than uv.lock:" >&2
+            printf '%s\n' "$invalid_files" >&2
+            exit 1
+          fi
+
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Report dry run
+        if: ${{ steps.guard.outputs.changed == 'true' && env.DRY_RUN == 'true' }}
+        run: |
+          echo "Dry run requested. No branch, commit, pull request, or workflow dispatch will be created."
+          echo "uv.lock changed for ${TARGET_BRANCH}."
+          git diff --stat -- uv.lock
+          echo "Would recreate ${AUTOMATION_BRANCH} from ${TARGET_BRANCH}."
+          echo "Would commit uv.lock with subject: ${COMMIT_MESSAGE}"
+          echo "Would open or update a pull request into ${TARGET_BRANCH}."
+          echo "Would dispatch tox-tests.yml and sphinx-docs.yml against ${AUTOMATION_BRANCH}."
+
+      - name: Commit and push refresh
+        if: ${{ steps.guard.outputs.changed == 'true' && env.DRY_RUN != 'true' }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git checkout -B "${AUTOMATION_BRANCH}"
+          git add uv.lock
+          git commit -m "${COMMIT_MESSAGE}"
+
+          remote_sha="$(git ls-remote --heads origin "${AUTOMATION_BRANCH}" | cut -f1)"
+          if [ -n "$remote_sha" ]; then
+            git push --force-with-lease="refs/heads/${AUTOMATION_BRANCH}:${remote_sha}" origin "HEAD:refs/heads/${AUTOMATION_BRANCH}"
+          else
+            git push origin "HEAD:refs/heads/${AUTOMATION_BRANCH}"
+          fi
+
+      - name: Open or update pull request
+        if: ${{ steps.guard.outputs.changed == 'true' && env.DRY_RUN != 'true' }}
+        run: |
+          pr_body="${RUNNER_TEMP}/refresh-uv-lock-pr-body.md"
+          cat > "$pr_body" <<EOF
+          This pull request refreshes \`uv.lock\` for \`${TARGET_BRANCH}\`.
+
+          The refresh workflow ran \`uv lock --upgrade\`, which updates locked packages within the constraints in \`pyproject.toml\`.
+
+          After opening or updating this pull request, the workflow dispatches tox tests and the Sphinx documentation build against \`${AUTOMATION_BRANCH}\`.
+          EOF
+
+          pr_number="$(gh pr list --repo "${GITHUB_REPOSITORY}" --head "${AUTOMATION_BRANCH}" --base "${TARGET_BRANCH}" --state open --json number --jq '.[0].number // ""')"
+          if [ -n "$pr_number" ]; then
+            gh pr edit "$pr_number" --repo "${GITHUB_REPOSITORY}" --title "${PR_TITLE}" --body-file "$pr_body" --base "${TARGET_BRANCH}"
+            echo "Updated pull request #${pr_number}."
+          else
+            gh pr create --repo "${GITHUB_REPOSITORY}" --base "${TARGET_BRANCH}" --head "${AUTOMATION_BRANCH}" --title "${PR_TITLE}" --body-file "$pr_body"
+          fi
+
+      - name: Dispatch validation workflows
+        if: ${{ steps.guard.outputs.changed == 'true' && env.DRY_RUN != 'true' }}
+        run: |
+          gh workflow run tox-tests.yml --repo "${GITHUB_REPOSITORY}" --ref "${AUTOMATION_BRANCH}"
+          gh workflow run sphinx-docs.yml --repo "${GITHUB_REPOSITORY}" --ref "${AUTOMATION_BRANCH}"
