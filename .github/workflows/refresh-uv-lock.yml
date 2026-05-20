@@ -105,6 +105,7 @@ jobs:
           echo "Would dispatch tox-tests.yml and sphinx-docs.yml against ${AUTOMATION_BRANCH}."
 
       - name: Commit and push refresh
+        id: refresh-branch
         if: ${{ steps.guard.outputs.changed == 'true' && env.DRY_RUN != 'true' }}
         run: |
           git config user.name "github-actions[bot]"
@@ -121,7 +122,10 @@ jobs:
             git push origin "HEAD:refs/heads/${AUTOMATION_BRANCH}"
           fi
 
+          echo "head_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
       - name: Open or update pull request
+        id: pull-request
         if: ${{ steps.guard.outputs.changed == 'true' && env.DRY_RUN != 'true' }}
         run: |
           pr_body="${RUNNER_TEMP}/refresh-uv-lock-pr-body.md"
@@ -130,7 +134,7 @@ jobs:
 
           The refresh workflow ran \`uv lock --upgrade\`, which updates locked packages within the constraints in \`pyproject.toml\`.
 
-          After opening or updating this pull request, the workflow dispatches tox tests and the Sphinx documentation build against \`${AUTOMATION_BRANCH}\`.
+          After opening or updating this pull request, the workflow dispatches tox tests and the Sphinx documentation build against \`${AUTOMATION_BRANCH}\` and reports their results here.
           EOF
 
           pr_number="$(gh pr list --repo "${GITHUB_REPOSITORY}" --head "${AUTOMATION_BRANCH}" --base "${TARGET_BRANCH}" --state open --json number --jq '.[0].number // ""')"
@@ -138,11 +142,28 @@ jobs:
             gh pr edit "$pr_number" --repo "${GITHUB_REPOSITORY}" --title "${PR_TITLE}" --body-file "$pr_body" --base "${TARGET_BRANCH}"
             echo "Updated pull request #${pr_number}."
           else
-            gh pr create --repo "${GITHUB_REPOSITORY}" --base "${TARGET_BRANCH}" --head "${AUTOMATION_BRANCH}" --title "${PR_TITLE}" --body-file "$pr_body"
+            pr_url="$(gh pr create --repo "${GITHUB_REPOSITORY}" --base "${TARGET_BRANCH}" --head "${AUTOMATION_BRANCH}" --title "${PR_TITLE}" --body-file "$pr_body")"
+            pr_number="$(gh pr view "$pr_url" --repo "${GITHUB_REPOSITORY}" --json number --jq '.number')"
           fi
 
+          echo "pr_number=${pr_number}" >> "$GITHUB_OUTPUT"
+
       - name: Dispatch validation workflows
+        id: dispatch-validation
         if: ${{ steps.guard.outputs.changed == 'true' && env.DRY_RUN != 'true' }}
         run: |
+          dispatch_started_at="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+          echo "dispatch_started_at=${dispatch_started_at}" >> "$GITHUB_OUTPUT"
           gh workflow run tox-tests.yml --repo "${GITHUB_REPOSITORY}" --ref "${AUTOMATION_BRANCH}"
           gh workflow run sphinx-docs.yml --repo "${GITHUB_REPOSITORY}" --ref "${AUTOMATION_BRANCH}"
+
+      - name: Monitor validation workflows
+        if: ${{ steps.guard.outputs.changed == 'true' && env.DRY_RUN != 'true' }}
+        uses: ./.github/actions/monitor-refresh-validation
+        with:
+          repository: ${{ github.repository }}
+          pr-number: ${{ steps.pull-request.outputs.pr_number }}
+          head-branch: ${{ env.AUTOMATION_BRANCH }}
+          source-branch: ${{ env.TARGET_BRANCH }}
+          head-sha: ${{ steps.refresh-branch.outputs.head_sha }}
+          dispatch-started-at: ${{ steps.dispatch-validation.outputs.dispatch_started_at }}
