@@ -293,7 +293,7 @@ def test_entrypoint_create_user_not_member(
     entrypoint = make_entrypoint(account.user, account.group)
 
     user2 = models.User("user2", "pass2", "user2@example.org")
-    group2 = models.Group("group2", user2)
+    group2 = models.Group("group2", user2, public=False)
     db_session.add(group2)
     db_session.commit()
 

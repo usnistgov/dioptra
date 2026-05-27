@@ -68,16 +68,7 @@
             label="Directory Upload"
           />
           <br />
-          <q-select
-            v-model="group"
-            outlined
-            emit-value
-            map-options
-            :options="store.groups"
-            option-label="name"
-            option-value="id"
-            label="Group"
-          />
+          <q-input outlined :model-value="store.loggedInGroup.name" disable label="Group" />
           <q-input
             v-model="configPath"
             outlined

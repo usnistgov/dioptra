@@ -51,7 +51,13 @@ api: Namespace = Namespace("Users", description="Users endpoint")
 @api.route("/")
 class UserEndpoint(Resource):
     @inject
-    def __init__(self, user_service: UserService, *args, **kwargs) -> None:
+    def __init__(
+        self,
+        user_service: UserService,
+        user_current_service: UserCurrentService,
+        *args,
+        **kwargs,
+    ) -> None:
         """Initialize the user resource.
 
         All arguments are provided via dependency injection.
@@ -60,6 +66,7 @@ class UserEndpoint(Resource):
             user_service: A UserService object.
         """
         self._user_service = user_service
+        self._user_current_service = user_current_service
         super().__init__(*args, **kwargs)
 
     @login_required
@@ -112,7 +119,8 @@ class UserEndpoint(Resource):
             confirm_password=str(parsed_obj["confirm_password"]),
             log=log,
         )
-        return utils.build_current_user(user)
+        groups = self._user_current_service.get_accessible_groups(user)
+        return utils.build_current_user(user, groups=groups)
 
 
 @api.route("/<int:id>")
@@ -200,7 +208,8 @@ class UserCurrentEndpoint(Resource):
             request_id=str(uuid.uuid4()), resource="User", request_type="GET"
         )
         user = self._user_current_service.get(log=log)
-        return utils.build_current_user(user)
+        groups = self._user_current_service.get_accessible_groups(user)
+        return utils.build_current_user(user, groups=groups)
 
     @login_required
     @accepts(schema=UserDeleteSchema, api=api)
@@ -232,7 +241,8 @@ class UserCurrentEndpoint(Resource):
             error_if_not_found=True,
             log=log,
         )
-        return utils.build_current_user(user)
+        groups = self._user_current_service.get_accessible_groups(user)
+        return utils.build_current_user(user, groups=groups)
 
 
 @api.route("/current/password")

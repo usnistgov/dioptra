@@ -32,6 +32,7 @@ from dioptra.restapi.db.models.constants import resource_lock_types
 from dioptra.restapi.db.repository.utils.checks import (
     assert_exists,
     assert_group_exists,
+    assert_resource_children_same_owner_group,
     assert_resource_exists,
     assert_resources_exist,
     resource_exists,
@@ -599,6 +600,14 @@ def create_resource_children(
         for child in child_snaps
         if child.resource_id not in existing_child_ids
     ]
+
+    assert_resource_children_same_owner_group(
+        session,
+        parent,
+        new_children_to_add,
+        deletion_policy=DeletionPolicy.NOT_DELETED,
+    )
+
     parent.children.extend(new_children_to_add)
 
     return child_snaps
@@ -644,6 +653,13 @@ def set_resource_children(
         DeletionPolicy.ANY,
     )
     new_children_resources = [child.resource for child in child_snaps]
+
+    assert_resource_children_same_owner_group(
+        session,
+        parent,
+        child_snaps,
+        deletion_policy=DeletionPolicy.NOT_DELETED,
+    )
 
     children_to_keep = [
         child
@@ -702,6 +718,13 @@ def append_resource_children(
         new_child_ids,
         # we already checked above that all children existed anyway...
         DeletionPolicy.ANY,
+    )
+
+    assert_resource_children_same_owner_group(
+        session,
+        parent,
+        new_child_snaps,
+        deletion_policy=DeletionPolicy.NOT_DELETED,
     )
 
     parent.children.extend(

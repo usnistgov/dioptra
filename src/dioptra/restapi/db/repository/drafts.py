@@ -43,7 +43,7 @@ from dioptra.restapi.db.repository.utils import (
     assert_resource_exists,
     assert_snapshot_exists,
     assert_user_exists,
-    assert_user_in_group,
+    assert_user_in_group_or_group_public,
     draft_exists,
     get_draft_id,
     get_group_id,
@@ -106,7 +106,9 @@ class DraftsRepository:
             self._session, draft.target_owner, DeletionPolicy.NOT_DELETED
         )
         assert_user_exists(self._session, draft.creator, DeletionPolicy.NOT_DELETED)
-        assert_user_in_group(self._session, draft.creator, draft.target_owner)
+        assert_user_in_group_or_group_public(
+            self._session, draft.creator, draft.target_owner
+        )
 
         base_resource_id = draft.payload["base_resource_id"]
         if base_resource_id is not None:
@@ -195,7 +197,9 @@ class DraftsRepository:
             self._session, draft.target_owner, DeletionPolicy.NOT_DELETED
         )
         assert_user_exists(self._session, draft.creator, DeletionPolicy.NOT_DELETED)
-        assert_user_in_group(self._session, draft.creator, draft.target_owner)
+        assert_user_in_group_or_group_public(
+            self._session, draft.creator, draft.target_owner
+        )
 
         resource_id = draft.payload["resource_id"]
         resource_snapshot_id = draft.payload["resource_snapshot_id"]

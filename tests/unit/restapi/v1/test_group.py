@@ -81,6 +81,8 @@ def assert_group_response_contents_matches_expectations(
     expected_keys = {
         "id",
         "name",
+        "public",
+        "deleted",
         "user",
         "members",
         "createdOn",
@@ -91,10 +93,14 @@ def assert_group_response_contents_matches_expectations(
     # Validate the non-Ref fields
     assert isinstance(response["id"], int)
     assert isinstance(response["name"], str)
+    assert isinstance(response["public"], bool)
+    assert isinstance(response["deleted"], bool)
     assert isinstance(response["createdOn"], str)
     assert isinstance(response["lastModifiedOn"], str)
 
     assert response["name"] == expected_contents["name"]
+    if "public" in expected_contents:
+        assert response["public"] == expected_contents["public"]
 
     assert helpers.is_iso_format(response["createdOn"])
     assert helpers.is_iso_format(response["lastModifiedOn"])
@@ -183,10 +189,10 @@ def assert_registering_existing_group_name_fails(
         name: The name to assign to the new group.
 
     Raises:
-        AssertionError: If the response status code is not 400.
+        AssertionError: If the response status code is not 409.
     """
     response = actions.register_group(client, name=name)
-    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert response.status_code == HTTPStatus.CONFLICT
 
 
 def assert_group_name_matches_expected_name(
@@ -225,20 +231,30 @@ def assert_cannot_rename_group_with_existing_name(
         name: The name of an existing group.
 
     Raises:
-        AssertionError: If the response status code is not 400.
+        AssertionError: If the response status code is not 409.
     """
     response = modify_group(
         client=client,
         group_id=group_id,
         new_name=existing_name,
     )
-    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert response.status_code == HTTPStatus.CONFLICT
+
+
+def assert_creator_has_full_permissions(response: dict[str, Any], user_id: int) -> None:
+    member = next((m for m in response["members"] if m["user"]["id"] == user_id), None)
+    assert member is not None
+    assert member["permissions"]["read"] is True
+    assert member["permissions"]["write"] is True
+    assert member["permissions"]["shareRead"] is True
+    assert member["permissions"]["shareWrite"] is True
+    assert member["permissions"]["owner"] is True
+    assert member["permissions"]["admin"] is True
 
 
 # -- Tests -----------------------------------------------------------------------------
 
 
-@pytest.mark.v1_test
 def test_create_group(
     client: FlaskClient,
     dioptra_client: DioptraClient[DioptraResponseProtocol],
@@ -264,8 +280,10 @@ def test_create_group(
         expected_contents={
             "name": name,
             "user_id": user_id,
+            "public": True,
         },
     )
+    assert_creator_has_full_permissions(group_expected, user_id)
     assert_retrieving_group_by_id_works(
         dioptra_client, group_id=group_expected["id"], expected=group_expected
     )
@@ -288,10 +306,21 @@ def test_group_get_all(
     assert_retrieving_groups_works(dioptra_client, expected=group_expected_list)
 
 
+@pytest.mark.parametrize(
+    "search,expected_group_names",
+    [
+        ("name:public", ["public"]),
+        ("public", ["public"]),
+        ("pub*", ["public"]),
+        ("name:pub", []),
+    ],
+)
 def test_group_search_query(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_groups: dict[str, Any],
+    search: str,
+    expected_group_names: list[str],
 ) -> None:
     """Test that groups can be queried with a search term.
 
@@ -302,24 +331,17 @@ def test_group_search_query(
       that match the wildcard '*'.
     - The returned list of groups matches the expected matches from the query.
     """
-    group_expected_list = [registered_groups["public"]]
+    group_expected_list = [registered_groups[name] for name in expected_group_names]
     assert_retrieving_groups_works(
-        dioptra_client, expected=group_expected_list, search="name:public"
+        dioptra_client,
+        expected=group_expected_list,
+        search=search,
     )
-    assert_retrieving_groups_works(
-        dioptra_client, expected=group_expected_list, search="public"
-    )
-    assert_retrieving_groups_works(
-        dioptra_client, expected=group_expected_list, search="pub*"
-    )
-    assert_retrieving_groups_works(dioptra_client, expected=[], search="name:pub")
 
 
-@pytest.mark.v1_test
 def test_cannot_register_existing_group_name(
     client: FlaskClient,
     auth_account: dict[str, Any],
-    registered_groups: dict[str, Any],
 ) -> None:
     """Test that registering a group with an existing name fails.
 
@@ -329,16 +351,14 @@ def test_cannot_register_existing_group_name(
     - The user attempts to register a second group with the same name.
     - The request fails with an appropriate error message and response code.
     """
-    existing_group = registered_groups["group1"]
+    existing_group = actions.register_group(client, name="group_for_dupe").get_json()
     assert_registering_existing_group_name_fails(client, name=existing_group["name"])
 
 
-@pytest.mark.v1_test
 def test_rename_group(
     client: FlaskClient,
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
-    registered_groups: dict[str, Any],
 ) -> None:
     """Test that a group can be renamed.
 
@@ -353,8 +373,8 @@ def test_rename_group(
     - The request fails with an appropriate error message and response code.
     """
     updated_group_name = "updated_name"
-    group_to_rename = registered_groups["group1"]
-    existing_group = registered_groups["group2"]
+    group_to_rename = actions.register_group(client, name="rename_group_1").get_json()
+    existing_group = actions.register_group(client, name="rename_group_2").get_json()
 
     modify_group(client, group_id=group_to_rename["id"], new_name=updated_group_name)
     assert_group_name_matches_expected_name(
@@ -365,3 +385,72 @@ def test_rename_group(
         group_id=group_to_rename["id"],
         existing_name=existing_group["name"],
     )
+
+
+def test_cannot_modify_default_public_group(
+    client: FlaskClient,
+    auth_account: dict[str, Any],
+    registered_groups: dict[str, Any],
+) -> None:
+    response = modify_group(client, group_id=1, new_name="new_public_name")
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+
+
+def test_group_show_deleted(
+    client: FlaskClient,
+    auth_account: dict[str, Any],
+) -> None:
+    """Test that deleted groups only appear when show_deleted is passed."""
+    group1 = actions.register_group(client, name="show_deleted_group1").get_json()
+    group2 = actions.register_group(client, name="show_deleted_group2").get_json()
+    group3 = actions.register_group(client, name="show_deleted_group3").get_json()
+
+    expected_without = {1, group1["id"], group2["id"]}
+    expected_with = {1, group1["id"], group2["id"], group3["id"]}
+
+    delete_response = client.delete(
+        f"/{V1_ROOT}/{V1_GROUPS_ROUTE}/{group3['id']}",
+        follow_redirects=True,
+    )
+    assert delete_response.status_code == HTTPStatus.OK
+
+    response_no_show_deleted = client.get(
+        f"/{V1_ROOT}/{V1_GROUPS_ROUTE}/",
+        follow_redirects=True,
+    )
+    assert response_no_show_deleted.status_code == HTTPStatus.OK
+    ids_no_show_deleted = {
+        item["id"] for item in response_no_show_deleted.get_json()["data"]
+    }
+    assert ids_no_show_deleted == expected_without
+
+    response_with_show_deleted = client.get(
+        f"/{V1_ROOT}/{V1_GROUPS_ROUTE}/?showDeleted=true",
+        follow_redirects=True,
+    )
+    assert response_with_show_deleted.status_code == HTTPStatus.OK
+    ids_with_show_deleted = {
+        item["id"] for item in response_with_show_deleted.get_json()["data"]
+    }
+    assert ids_with_show_deleted == expected_with
+
+
+def test_cannot_delete_default_public_group(
+    client: FlaskClient,
+    auth_account: dict[str, Any],
+    registered_groups: dict[str, Any],
+) -> None:
+    response = client.delete(f"/{V1_ROOT}/{V1_GROUPS_ROUTE}/1", follow_redirects=True)
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+
+
+def test_cannot_create_non_public_group(
+    client: FlaskClient,
+    auth_account: dict[str, Any],
+) -> None:
+    response = client.post(
+        f"/{V1_ROOT}/{V1_GROUPS_ROUTE}/",
+        json={"name": "non_public", "public": False},
+        follow_redirects=True,
+    )
+    assert response.status_code == HTTPStatus.BAD_REQUEST

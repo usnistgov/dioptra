@@ -35,7 +35,10 @@ from dioptra.restapi.errors import (
     UserPasswordChangeError,
     UserPasswordError,
 )
-from dioptra.restapi.v1.groups.service import GroupMemberService
+from dioptra.restapi.v1.groups.service import (
+    PROTECTED_PUBLIC_GROUP_ID,
+    GroupMemberService,
+)
 from dioptra.restapi.v1.plugin_parameter_types.service import (
     BuiltinPluginParameterTypeService,
 )
@@ -187,10 +190,10 @@ class UserService(object):
         Returns:
             The group object if found, otherwise None.
         """
-        if (group := self._uow.group_repo.get_by_name(DEFAULT_GROUP_NAME)) is not None:
+        if (group := self._uow.group_repo.get(PROTECTED_PUBLIC_GROUP_ID)) is not None:
             return group
 
-        default_group = models.Group(name=DEFAULT_GROUP_NAME, creator=user)
+        default_group = models.Group(name=DEFAULT_GROUP_NAME, creator=user, public=True)
         with self._uow:
             self._uow.group_repo.create(default_group)
         # Register the built-in plugin parameter types when creating a new group.
@@ -321,6 +324,19 @@ class UserCurrentService(object):
             raise NoCurrentUserError
 
         return cast(models.User, current_user)
+
+    def get_accessible_groups(
+        self,
+        user: models.User,
+        deletion_policy: DeletionPolicy = DeletionPolicy.NOT_DELETED,
+    ) -> list[models.Group]:
+        """Return groups accessible to the provided user.
+
+        Accessible groups are those that are public or where the user is a member.
+        """
+        return list(
+            self._uow.group_repo.get_all_for_user(user.user_id, deletion_policy)
+        )
 
     def modify(
         self, username: str, email_address: str, commit: bool = True, **kwargs

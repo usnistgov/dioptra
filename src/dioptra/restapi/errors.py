@@ -760,6 +760,27 @@ class MismatchedResourceTypeError(DioptraError):
         self.found_type = found_type
 
 
+class CrossGroupResourceAssociationError(DioptraError):
+    """Resources from different groups cannot be associated."""
+
+    def __init__(
+        self,
+        parent_resource_id: int | None,
+        parent_group_id: int,
+        mismatched_children: list[tuple[int, int]],
+    ) -> None:
+        msg = (
+            "Cross-group resource association is not allowed: "
+            f"parent resource {parent_resource_id} belongs to group {parent_group_id}, "
+            f"but child resources belong to different groups: {mismatched_children}"
+        )
+        super().__init__(msg)
+
+        self.parent_resource_id = parent_resource_id
+        self.parent_group_id = parent_group_id
+        self.mismatched_children = mismatched_children
+
+
 class MalformedDraftResourceError(DioptraError):
     """A draft resource payload was malformed"""
 

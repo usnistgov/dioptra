@@ -1,92 +1,75 @@
 <template>
-  <DialogComponent
+  <DialogComponent 
     v-model="showDialog"
-    :hideDraftBtn="true"
     @emitSubmit="emitAddOrEdit"
+    :hideDraftBtn="true"
   >
     <template #title>
       <label id="modalTitle">
-        {{ editTag ? "Edit Tag" : "Create Tag" }}
+        {{editTag ? 'Edit Tag' : 'Create Tag'}}
       </label>
     </template>
-    <q-input
-      id="name"
-      v-model.trim="name"
-      class="q-mb-xs"
-      outlined
-      dense
-      autofocus
+    <q-input 
+      class="q-mb-xs" 
+      outlined 
+      dense 
+      v-model.trim="name"  
+      autofocus 
       :rules="[requiredRule]"
+      id="name"
     >
       <template #before>
-        <label
-          for="name"
-          class="field-label"
-          >Name:</label
-        >
+        <label for="name" class="field-label">Name:</label>
       </template>
     </q-input>
-    <q-select
-      id="group"
-      v-model="group"
-      outlined
-      :options="store.groups"
-      option-label="name"
-      option-value="id"
-      emit-value
-      map-options
-      dense
-      :rules="[requiredRule]"
-    >
+    <q-input outlined dense :model-value="store.loggedInGroup.name" disable>
       <template #before>
-        <label
-          for="group"
-          class="field-label"
-          >Group:</label
-        >
+        <label class="field-label">Group:</label>
       </template>
-    </q-select>
+    </q-input>
   </DialogComponent>
 </template>
 
 <script setup>
-import { ref, watch } from "vue";
-import DialogComponent from "./DialogComponent.vue";
-import { useLoginStore } from "@/stores/LoginStore.ts";
+  import { ref, watch } from 'vue'
+  import DialogComponent from './DialogComponent.vue'
+  import { useLoginStore } from '@/stores/LoginStore.ts'
 
-const store = useLoginStore();
+  const store = useLoginStore()
 
-const props = defineProps(["editTag"]);
-const emit = defineEmits(["addTag", "updateTag"]);
+  const props = defineProps(['editTag'])
+  const emit = defineEmits(['addTag', 'updateTag'])
 
-function requiredRule(val) {
-  return !!val || "This field is required";
-}
-
-const showDialog = defineModel();
-
-const name = ref("");
-const locked = ref(true);
-const group = ref("");
-
-watch(showDialog, (newVal) => {
-  if (newVal) {
-    name.value = props.editTag.name;
-    group.value = props.editTag.group;
-  } else {
-    name.value = "";
-    locked.value = true;
+  function requiredRule(val) {
+    return (!!val) || "This field is required"
   }
-  if (!group.value) {
-    group.value = store.loggedInGroup.id;
-  }
-});
 
-function emitAddOrEdit() {
-  if (props.editTag) {
-    emit("updateTag", name.value, props.editTag.id);
-  } else {
-    emit("addTag", name.value, group.value);
+  const showDialog = defineModel()
+
+  const name = ref('')
+  const locked = ref(true)
+  const group = ref('')
+
+  watch(showDialog, (newVal) => {
+    if(newVal) {
+      name.value = props.editTag.name
+      group.value = props.editTag.group
+    }
+    else {
+      name.value = ''
+      locked.value = true
+    }
+    if (!group.value) {
+      group.value = store.loggedInGroup.id
+    }
+  })
+
+  function emitAddOrEdit() {
+    if(props.editTag) {
+      emit('updateTag', name.value, props.editTag.id)
+    } else {
+      emit('addTag', name.value, group.value)
+    }
   }
-}
+
 </script>
