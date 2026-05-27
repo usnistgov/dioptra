@@ -99,7 +99,7 @@ def get_group_id(group: m.Group | int) -> int | None:
     return group_id
 
 
-def get_resource_id(resource: m.Resource | m.ResourceSnapshot | int) -> int | None:
+def get_resource_id(resource: m.Resource | m.ResourceSnapshot | int) -> int:
     """
     Helper for APIs which allow a Resource/ResourceSnapshot object or
     resource_id integer primary key value.  This normalizes the value to the

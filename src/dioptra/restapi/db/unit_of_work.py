@@ -16,10 +16,13 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 import contextlib
 from types import TracebackType
-from typing import Literal, Type
+from typing import Type
+
+from injector import inject
 
 from dioptra.restapi.db.db import db
 from dioptra.restapi.db.repository.drafts import DraftsRepository
+from dioptra.restapi.db.repository.entrypoints import EntrypointRepository
 from dioptra.restapi.db.repository.experiments import ExperimentRepository
 from dioptra.restapi.db.repository.groups import GroupRepository
 from dioptra.restapi.db.repository.queues import QueueRepository
@@ -42,7 +45,9 @@ class UnitOfWork(contextlib.AbstractContextManager):
         self.queue_repo = QueueRepository(self.session)
         self.drafts_repo = DraftsRepository(self.session)
         self.experiment_repo = ExperimentRepository(self.session)
+        self.entrypoint_repo = EntrypointRepository(self.session)
         self.type_repo = TypeRepository(self.session)
+        self._do_commit = True
 
     def commit(self) -> None:
         self.session.commit()
@@ -50,16 +55,39 @@ class UnitOfWork(contextlib.AbstractContextManager):
     def rollback(self) -> None:
         self.session.rollback()
 
+    def __call__(self, commit: bool = True):
+        self._do_commit = commit
+        return self
+
     def __exit__(
         self,
         exc_type: Type[BaseException] | None,
         exc_value: BaseException | None,
         traceback: TracebackType | None,
-    ) -> Literal[False]:
+    ) -> None:
+        if not self._do_commit:
+            self._do_commit = True
+            return
+
         # Rollback if exiting due to a thrown exception
         if exc_type:
             self.rollback()
-        else:
-            self.commit()
 
-        return False
+        self.commit()
+
+        self._do_commit = True
+
+        return None
+
+
+class UnitOfWorkService:
+    @inject
+    def __init__(self, uow: UnitOfWork) -> None:
+        """Initialize the UnitOfWork service.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            uow: A UnitOfWork instance
+        """
+        self._uow = uow

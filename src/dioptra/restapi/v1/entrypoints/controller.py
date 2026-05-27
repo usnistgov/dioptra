@@ -28,6 +28,7 @@ from injector import inject
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
+from dioptra.restapi.db.repository.entrypoints import EntrypointRepository
 from dioptra.restapi.routes import V1_ENTRYPOINTS_ROUTE
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.entity_types import EntityType
@@ -64,7 +65,6 @@ from .schema import (
     EntrypointSchema,
 )
 from .service import (
-    SEARCHABLE_FIELDS,
     EntrypointIdArtifactPluginsIdService,
     EntrypointIdArtifactPluginsService,
     EntrypointIdPluginsIdService,
@@ -111,6 +111,7 @@ class EntrypointEndpoint(Resource):
         page_length = parsed_query_params["page_length"]
         sort_by_string = parsed_query_params["sort_by"]
         descending = parsed_query_params["descending"]
+        show_deleted = parsed_query_params["show_deleted"]
 
         entrypoints, total_num_entrypoints = self._entrypoint_service.get(
             group_id=group_id,
@@ -119,6 +120,7 @@ class EntrypointEndpoint(Resource):
             page_length=page_length,
             sort_by_string=sort_by_string,
             descending=descending,
+            show_deleted=show_deleted,
             log=log,
         )
         return utils.build_paging_envelope(
@@ -133,7 +135,7 @@ class EntrypointEndpoint(Resource):
             total_num_elements=total_num_entrypoints,
             sort_by=sort_by_string,
             descending=descending,
-            show_deleted=None,
+            show_deleted=show_deleted,
         )
 
     @login_required
@@ -669,7 +671,7 @@ class EntrypointIdQueuesEndpoint(Resource):
         )
         parsed_obj = request.parsed_obj  # type: ignore
         queues = self._entrypoint_id_queues_service.modify(
-            id, queue_ids=parsed_obj["ids"], error_if_not_found=True, log=log
+            id, queue_ids=parsed_obj["ids"], log=log
         )
         return [utils.build_queue_ref(queue) for queue in queues]
 
@@ -680,9 +682,7 @@ class EntrypointIdQueuesEndpoint(Resource):
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="Entrypoint", request_type="DELETE"
         )
-        return self._entrypoint_id_queues_service.delete(
-            id, error_if_not_found=True, log=log
-        )
+        return self._entrypoint_id_queues_service.delete(id, log=log)
 
 
 @api.route("/<int:id>/queues/<int:queueId>")
@@ -731,7 +731,7 @@ EntrypointSnapshotsResource = generate_resource_snapshots_endpoint(
     resource_model=models.EntryPoint,
     resource_type=EntityType.ENTRY_POINT,
     route_prefix=V1_ENTRYPOINTS_ROUTE,
-    searchable_fields=SEARCHABLE_FIELDS,
+    searchable_fields=EntrypointRepository.SEARCHABLE_FIELDS,
     page_schema=EntrypointPageSchema,
     build_fn=utils.build_entrypoint,
 )

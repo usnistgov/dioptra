@@ -17,7 +17,6 @@
 """The module defining the endpoints for Experiment resources."""
 
 import uuid
-from typing import cast
 from urllib.parse import unquote
 
 import structlog
@@ -192,10 +191,7 @@ class ExperimentIdEndpoint(Resource):
             request_type="GET",
             id=id,
         )
-        experiment = cast(
-            models.Experiment,
-            self._experiment_id_service.get(id, error_if_not_found=True, log=log),
-        )
+        experiment = self._experiment_id_service.get(id, log=log)
         return utils.build_experiment(experiment)
 
     @login_required
@@ -222,16 +218,12 @@ class ExperimentIdEndpoint(Resource):
             id=id,
         )
         parsed_obj = request.parsed_obj  # type: ignore
-        experiment = cast(
-            utils.ExperimentDict,
-            self._experiment_id_service.modify(
-                id,
-                name=parsed_obj["name"],
-                description=parsed_obj["description"],
-                entrypoint_ids=parsed_obj["entrypoint_ids"],
-                error_if_not_found=True,
-                log=log,
-            ),
+        experiment = self._experiment_id_service.modify(
+            id,
+            name=parsed_obj["name"],
+            description=parsed_obj["description"],
+            entrypoint_ids=parsed_obj["entrypoint_ids"],
+            log=log,
         )
         return utils.build_experiment(experiment)
 
@@ -404,7 +396,7 @@ class ExperimentIdJobIdStatusEndpoint(Resource):
             job_id=jobId,
         )
         return self._experiment_job_id_status_service.get(
-            experiment_id=id, job_id=jobId, error_if_not_found=True, log=log
+            experiment_id=id, job_id=jobId, log=log
         )
 
     @login_required
@@ -424,7 +416,6 @@ class ExperimentIdJobIdStatusEndpoint(Resource):
             experiment_id=id,
             job_id=jobId,
             status=parsed_obj["status"],
-            error_if_not_found=True,
             log=log,
         )
 
@@ -462,7 +453,7 @@ class ExperimentIdJobIdMlflowrunEndpoint(Resource):
             job_id=jobId,
         )
         return self._experiment_job_id_mlflowrun_service.get(
-            experiment_id=id, job_id=jobId, error_if_not_found=True, log=log
+            experiment_id=id, job_id=jobId, log=log
         )
 
     @login_required
@@ -482,7 +473,6 @@ class ExperimentIdJobIdMlflowrunEndpoint(Resource):
             experiment_id=id,
             job_id=jobId,
             mlflow_run_id=parsed_obj["mlflow_run_id"],
-            error_if_not_found=True,
             log=log,
         )
 
@@ -533,7 +523,6 @@ class ExperimentIdMetricsEndpoint(Resource):
             page_length=page_length,
             sort_by_string=sort_by_string,
             descending=descending,
-            error_if_not_found=True,
             log=log,
         )
 
@@ -592,11 +581,8 @@ class ExperimentIdEntrypointsEndpoint(Resource):
             request_id=str(uuid.uuid4()), resource="Experiment", request_type="POST"
         )
         parsed_obj = request.parsed_obj  # type: ignore
-        entrypoints = cast(
-            list[models.EntryPoint],
-            self._experiment_id_entrypoints.append(
-                id, entrypoint_ids=parsed_obj["ids"], error_if_not_found=True, log=log
-            ),
+        entrypoints = self._experiment_id_entrypoints.append(
+            id, entrypoint_ids=parsed_obj["ids"], log=log
         )
         return [utils.build_entrypoint_ref(entrypoint) for entrypoint in entrypoints]
 
@@ -610,7 +596,7 @@ class ExperimentIdEntrypointsEndpoint(Resource):
         )
         parsed_obj = request.parsed_obj  # type: ignore
         entrypoints = self._experiment_id_entrypoints.modify(
-            id, entrypoint_ids=parsed_obj["ids"], error_if_not_found=True, log=log
+            id, entrypoint_ids=parsed_obj["ids"], log=log
         )
         return [utils.build_entrypoint_ref(entrypoint) for entrypoint in entrypoints]
 
@@ -621,9 +607,7 @@ class ExperimentIdEntrypointsEndpoint(Resource):
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="Experiment", request_type="DELETE"
         )
-        return self._experiment_id_entrypoints.delete(
-            id, error_if_not_found=True, log=log
-        )
+        return self._experiment_id_entrypoints.delete(id, log=log)
 
 
 @api.route("/<int:id>/entrypoints/<int:entrypointId>")

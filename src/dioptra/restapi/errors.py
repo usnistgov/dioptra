@@ -385,11 +385,21 @@ class QueryParameterValidationError(DioptraError):
         self.parameters = kwargs
 
 
-class QueryParameterNotUniqueError(QueryParameterValidationError):
-    """Query Parameters failed unique validation check."""
+class InputParameterNotUniqueError(DioptraError):
+    """Input Parameters failed unique validation check."""
 
     def __init__(self, type: str, **kwargs):
-        super().__init__(type, "unique", **kwargs)
+        super().__init__(
+            "".join(
+                [
+                    f"{type} Parameters must be unique",
+                    *add_attribute_values(**kwargs),
+                    ".",
+                ]
+            )
+        )
+        self.resource_type = type
+        self.parameters = kwargs
 
 
 class EntrypointParameterTypeMismatchError(DioptraError):
@@ -878,6 +888,25 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
             http.HTTPStatus.NOT_FOUND,
             {
                 "entity_types": [e.db_table_name for e in error.entity_types],
+                **error.entity_attributes,
+            },
+        )
+
+    @api.errorhandler(EntityDeletedError)
+    def handle_resource_deleted_error(
+        error: EntityDeletedError,
+    ):
+        log.debug(
+            "Entity deleted",
+            entity_type=error.entity_type.display_name,
+            **error.entity_attributes,
+        )
+        return error_result(
+            error,
+            http.HTTPStatus.LOCKED,
+            {
+                "entity_type": error.entity_type.db_table_name,
+                "existing_id": error.existing_id,
                 **error.entity_attributes,
             },
         )

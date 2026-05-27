@@ -9,6 +9,8 @@
     :columns="columns"
     title="Entrypoints"
     v-model:selected="selected"
+    v-model:showDeleted="showDeleted"
+    :showDeletedToggle="true"
     @open="openTab => (openTab
       ? openWindow.open(`/entrypoints/${selected[0].id}`, '_blank')
       : router.push(`/entrypoints/${selected[0].id}`)
@@ -103,7 +105,6 @@
   const editEntrypoint = ref('')
   const pluginType = ref('')
 
-
   const {
     rows,
     isLoading,
@@ -114,6 +115,39 @@
     getData,
     deleteRow,
   } = useTableUtils('entrypoints')
+
+  async function getEntrypoints(pagination, showDrafts) {
+    isLoading.value = true
+
+    const minLoadTimePromise = new Promise(resolve => setTimeout(resolve, 300)); 
+
+    try {
+      const [res] = await Promise.all([
+        api.getData('entrypoints', pagination, showDrafts, showDeleted.value),
+        minLoadTimePromise
+      ]);
+
+      entrypoints.value = res.data.data;
+      tableRef.value.updateTotalRows(res.data.totalNumResults);
+    } catch(err) {
+      console.log('err = ', err);
+      notify.error(err.response.data.message);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  async function deleteEntryPoint() {
+    try {
+      await api.deleteItem('entrypoints', selected.value[0].id)
+      notify.success(`Successfully deleted '${selected.value[0].name}'`)
+      showDeleteDialog.value = false
+      selected.value = []
+      tableRef.value.refreshTable()
+    } catch(err) {
+      notify.error(err.response.data.message);
+    }
+  }
 
   const editObjTags = ref({})
   const showTagsDialog = ref(false)

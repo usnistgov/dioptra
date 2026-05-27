@@ -23,6 +23,7 @@ from typing import Any, Final, overload
 
 import dioptra.restapi.db.repository.utils as utils
 from dioptra.restapi.db.models import Group, Queue, Resource, Tag
+from dioptra.restapi.v1.entity_types import EntityType
 
 
 class QueueRepository:
@@ -72,7 +73,7 @@ class QueueRepository:
         #   owns the resource.  I think this will become more complicated when
         #   we implement shares and permissions.
 
-        utils.assert_can_create_resource(self.session, queue, "queue")
+        utils.assert_can_create_resource(self.session, queue, EntityType.QUEUE)
         utils.assert_resource_name_available(self.session, queue)
 
         self.session.add(queue)
@@ -105,7 +106,7 @@ class QueueRepository:
         #   owns the resource.  I think this will become more complicated when
         #   we implement shares and permissions.
 
-        utils.assert_can_create_snapshot(self.session, queue, "queue")
+        utils.assert_can_create_snapshot(self.session, queue, EntityType.QUEUE)
         utils.assert_snapshot_name_available(self.session, queue)
 
         # Assume that the new snapshot's created_on timestamp is later than the

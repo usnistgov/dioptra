@@ -4,6 +4,7 @@
       <PageTitle 
         :title="route.params.id === 'new' ? 'Create Entrypoint' : copyAtEditStart?.name"
         resourceType="entrypoint"
+        :deleted="entryPoint.deleted"
       />
       <q-chip
         v-if="route.params.id !== 'new'"
@@ -23,18 +24,24 @@
     </div>
     <div>
       <q-btn 
-        v-if="route.params.id !== 'new'"
+        v-if="route.params.id !== 'new' && !entryPoint.deleted"
         :color="history ? 'red-3' : 'negative'" 
         icon="sym_o_delete" 
         label="Delete Entrypoint"
         @click="showDeleteDialogEntrypoint = true; objectForDeletion = entryPoint"
-        :disable="history"
+        :disable="history || entryPoint.deleted"
       />
     </div>
   </div>
-  <fieldset class="q-px-lg q-mt-lg" :class="history ? `disabled` : ``">
+  <q-banner v-if="entryPoint.deleted" dense class="text-white bg-red q-mt-md">
+    <template v-slot:avatar>
+      <q-icon name="error"/>
+    </template>
+    <span class="text-bold">This Entrypoint has been deleted. Info is read only.</span>
+  </q-banner>
+  <fieldset class="q-px-lg q-mt-lg" :class="(history || entryPoint.deleted) ? `disabled` : ``">
     <legend>Basic Info</legend>
-    <q-form ref="basicInfoForm" greedy :style="{ 'pointer-events': history ? 'none' : '' }">
+    <q-form ref="basicInfoForm" greedy :style="{ 'pointer-events': (history || entryPoint.deleted) ? 'none' : '' }">
       <div class="row">
         <div :class="`${isMobile ? 'col-12' : 'col-6'} q-mr-xl`">
           <q-input 
@@ -44,7 +51,7 @@
             :rules="[requiredRule]"
             class="q-mb-sm q-mt-md"
             aria-required="true"
-            :disable="history"
+            :disable="history || entryPoint.deleted"
           >
             <template v-slot:before>
               <label :class="`field-label`">Name:</label>
@@ -61,7 +68,7 @@
             dense
             :rules="[requiredRule]"
             aria-required="true"
-            :disable="history"
+            :disable="history || entryPoint.deleted"
             class="q-mb-sm"
           >
             <template v-slot:before>
@@ -76,7 +83,7 @@
             label="Queues:"
             @filter="getQueues"
             class="q-mb-md"
-            :disable="history"
+            :disable="history || entryPoint.deleted"
           />
           <div v-else class="row items-center q-mb-md">
             <label class="field-label">Queues:</label>
@@ -100,7 +107,7 @@
             dense 
             v-model.trim="entryPoint.description"
             type="textarea"
-            :disable="history"
+            :disable="history || entryPoint.deleted"
             class="q-mt-md"
             input-style="height: 173px"
           >
@@ -113,9 +120,9 @@
     </q-form>
   </fieldset>
 
-  <fieldset class="q-px-lg q-mt-lg q-py-lg" :class="history ? `disabled` : ``">
+  <fieldset class="q-px-lg q-mt-lg q-py-lg" :class="(history || entryPoint.deleted) ? `disabled` : ``">
     <legend>Parameters</legend>
-    <div class="row" :style="{ 'pointer-events': history ? 'none' : '' }">
+    <div class="row" :style="{ 'pointer-events': (history || entryPoint.deleted) ? 'none' : '' }">
       <div :class="`${isMobile ? 'col-12' : 'col-6'} q-mr-xl column`">
         <TableComponent
           title="Entrypoint Parameters"
@@ -236,9 +243,9 @@
     </div>
   </fieldset>
 
-  <fieldset class="q-px-lg q-mt-lg q-pt-lg" :class="history ? `disabled` : ``">
+  <fieldset class="q-px-lg q-mt-lg q-pt-lg" :class="(history || entryPoint.deleted) ? `disabled` : ``">
     <legend>Task Graph Info</legend>
-    <div class="row" :style="{ 'pointer-events': history ? 'none' : '' }">
+    <div class="row" :style="{ 'pointer-events': (history || entryPoint.deleted) ? 'none' : '' }">
       <div :class="`${isMobile ? 'col-12 q-mb-xl' : 'col-6'} q-mr-xl`">
         <h2>Task Graph</h2>
         <p class="text-caption q-mb-none text-grey-8 q-pl-xs">
@@ -251,7 +258,7 @@
           placeholder="# task graph yaml file"
           :showError="taskGraphError"
           :autocompletions="autocompletions"
-          :readOnly="history"
+          :readOnly="history || entryPoint.deleted"
           style="min-height: 200px;"
         />  
         <q-btn
@@ -269,6 +276,7 @@
           v-model:pluginIDsToUpdate="pluginIDsToUpdate"
           v-model:pluginIDsToRemove="pluginIDsToRemove"
           class="q-mt-lg"
+          :disable="entryPoint.deleted"
         />
         <TableComponent
           :rows="tasks"
@@ -320,9 +328,9 @@
     </div>
   </fieldset>
 
-  <fieldset class="q-px-lg q-mt-lg q-pt-lg" :class="history ? `disabled` : ``">
+  <fieldset class="q-px-lg q-mt-lg q-pt-lg" :class="(history || entryPoint.deleted) ? `disabled` : ``">
     <legend>Artifact Info</legend>
-    <div class="row" :style="{ 'pointer-events': history ? 'none' : '' }">
+    <div class="row" :style="{ 'pointer-events': (history || entryPoint.deleted) ? 'none' : '' }">
       <div :class="`${isMobile ? 'col-12 q-mb-xl' : 'col-6'} q-mr-xl`">
         <h2>Artifact Output Graph</h2>
         <p class="text-caption q-mb-none text-grey-8 q-pl-xs">
@@ -335,7 +343,7 @@
           language="yaml"
           :autocompletions="autocompletions"
           placeholder="# task graph yaml file"
-          :readOnly="history"
+          :readOnly="history || entryPoint.deleted"
           style="min-height: 200px;"
         />  
       </div>
@@ -347,6 +355,7 @@
           v-model:pluginIDsToUpdate="artifactPluginIDsToUpdate"
           v-model:pluginIDsToRemove="artifactPluginIDsToRemove"
           class="q-mt-lg"
+          :disable="entryPoint.deleted"
         />
         <TableComponent
           :rows="artifactTasks"
@@ -395,7 +404,7 @@
       @click="submit()" 
       :color="history ? 'blue-2' : 'primary'" 
       label="Submit EntryPoint"
-      :disable="history || !enableSubmit"
+      :disable="history || entryPoint.deleted || !enableSubmit"
     >
       <q-tooltip v-if="!enableSubmit">
         No changes detected — nothing to save

@@ -39,6 +39,7 @@ from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
 from dioptra.restapi.db import db as restapi_db
 from dioptra.restapi.db.repository.drafts import DraftsRepository
+from dioptra.restapi.db.repository.entrypoints import EntrypointRepository
 from dioptra.restapi.db.repository.experiments import ExperimentRepository
 from dioptra.restapi.db.repository.groups import GroupRepository
 from dioptra.restapi.db.repository.queues import QueueRepository
@@ -322,6 +323,13 @@ def experiment_repo(db_session: DBSession) -> ExperimentRepository:
 @pytest.fixture
 def type_repo(db_session: DBSession) -> TypeRepository:
     repo = TypeRepository(db_session)
+
+    return repo
+
+
+@pytest.fixture
+def entrypoint_repo(db_session: DBSession) -> EntrypointRepository:
+    repo = EntrypointRepository(db_session)
 
     return repo
 

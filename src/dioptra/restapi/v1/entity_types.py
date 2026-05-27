@@ -64,4 +64,4 @@ class EntityType(Enum):
         try:
             return EntityType[db_table_name.upper()]
         except KeyError as e:
-            raise DioptraError("Invalid EntityType: {db_table_name}") from e
+            raise DioptraError(f"Invalid EntityType: {db_table_name}") from e

@@ -29,8 +29,9 @@ import pytest
 
 from dioptra.client.base import DioptraResponseProtocol, FieldNameCollisionError
 from dioptra.client.client import DioptraClient
-from ..lib.asserts import assert_retrieving_deleted_resource_snapshots_works
+
 from ..lib import helpers, routines
+from ..lib.asserts import assert_retrieving_deleted_resource_snapshots_works
 from ..test_utils import assert_retrieving_resource_works, assert_searchable_field_works
 
 # -- Assertions ------------------------------------------------------------------------
@@ -71,7 +72,7 @@ def assert_entrypoint_response_contents_matches_expectations(
         "queues",
         "tags",
         "deleted",
-}
+    }
     assert set(response.keys()) == expected_keys
 
     # Validate the non-Ref fields
@@ -264,6 +265,46 @@ def assert_entrypoint_is_not_found(
     assert response.status_code == HTTPStatus.NOT_FOUND
 
 
+def assert_modifying_deleted_entrypoint_fails(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    entrypoint_id: int,
+    name: str,
+    task_graph: str,
+    artifact_graph: str,
+    description: str,
+    parameters: list[dict[str, Any]],
+    artifact_parameters: list[dict[str, Any]],
+    queues: list[int],
+) -> None:
+    """Assert that modifying a deleted entrypoint fails.
+
+    Args:
+        dioptra_client: The Dioptra test client.
+        entrypoint_id: The id of the entrypoint to modify.
+        name: The new name.
+        task_graph: The new task graph.
+        artifact_graph: The new artifact graph.
+        description: The new description.
+        parameters: The new parameters.
+        artifact_parameters: The new artifact parameters.
+        queues: The new queue ids.
+
+    Raises:
+        AssertionError: If the response status code is not 423.
+    """
+    response = dioptra_client.entrypoints.modify_by_id(
+        entrypoint_id,
+        name=name,
+        task_graph=task_graph,
+        artifact_graph=artifact_graph,
+        description=description,
+        parameters=parameters,
+        artifact_parameters=artifact_parameters,
+        queues=queues,
+    )
+    assert response.status_code == HTTPStatus.LOCKED
+
+
 def assert_entrypoint_is_still_associated_with_experiment(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     experiment_id: int,
@@ -282,7 +323,7 @@ def assert_entrypoint_is_still_associated_with_experiment(
     """
     response = dioptra_client.experiments.get_by_id(experiment_id)
     experiment = response.json()
-    entrypoint_ids = set(entrypoint["id"] for entrypoint in experiment["entrypoints"])
+    entrypoint_ids = {entrypoint["id"] for entrypoint in experiment["entrypoints"]}
     assert response.status_code == HTTPStatus.OK and entrypoint_id in entrypoint_ids
 
 
@@ -351,7 +392,7 @@ def assert_entrypoint_must_have_unique_param_names(
         plugins=plugin_ids,
         artifact_plugins=artifact_plugin_ids,
     )
-    assert response.status_code == HTTPStatus.CONFLICT
+    assert response.status_code == HTTPStatus.BAD_REQUEST
 
 
 def assert_retrieving_all_queues_for_entrypoint_works(
@@ -456,9 +497,9 @@ def assert_registering_entrypoint_with_no_queues_succeeds(
         plugins=entry_point["plugins"],
         artifact_plugins=entry_point["artifact_plugins"],
     )
-    assert (
-        entrypoint_response and entrypoint_response.status_code == HTTPStatus.OK
-    ), assert_message
+    assert entrypoint_response and entrypoint_response.status_code == HTTPStatus.OK, (
+        assert_message
+    )
     # Assert the return values match what was expected
     entry_point_data = entrypoint_response.json()
     assert_correct_emptiness(entry_point, "queues", entry_point_data)
@@ -733,6 +774,81 @@ def test_entrypoint_group_query(
     )
 
 
+def test_entrypoint_get_by_id(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+) -> None:
+    """Test that entrypoints can be retrieved by their unique ID.
+
+    Given an authenticated user and registered entrypoints:
+    - User retrieves a single entrypoint by its ID
+    - Response is a single entrypoint with a matching ID
+    """
+    entrypoint2_expected = registered_entrypoints["entrypoint2"]
+
+    assert_retrieving_entrypoint_by_id_works(
+        dioptra_client,
+        entrypoint_id=entrypoint2_expected["id"],
+        expected=entrypoint2_expected,
+    )
+
+
+def test_entrypoint_get_deleted_by_id(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+) -> None:
+    """Test that deleted entrypoints can still be retrieved by their unique ID.
+
+    Given an authenticated user and registered entrypoints:
+    - User deletes an entrypoint
+    - User retrieves the deleted entrypoint by ID
+    - Response is the deleted entrypoint (should succeed)
+    """
+    entrypoint_to_delete = registered_entrypoints["entrypoint1"]
+
+    dioptra_client.entrypoints.delete_by_id(entrypoint_to_delete["id"])
+    entrypoint_to_delete["deleted"] = True
+
+    # Verify it can still be retrieved by ID
+    assert_retrieving_entrypoint_by_id_works(
+        dioptra_client,
+        entrypoint_id=entrypoint_to_delete["id"],
+        expected=entrypoint_to_delete,
+    )
+
+
+def test_entrypoint_modify_deleted_fails(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+) -> None:
+    """Test that modifying a deleted entrypoint fails.
+
+    Given an authenticated user and registered entrypoints:
+    - User deletes an entrypoint
+    - User attempts to modify the deleted entrypoint
+    - Request fails with 423 LOCKED error
+    """
+    entrypoint_to_delete = registered_entrypoints["entrypoint1"]
+    entrypoint_id = entrypoint_to_delete["id"]
+
+    dioptra_client.entrypoints.delete_by_id(entrypoint_id)
+
+    assert_modifying_deleted_entrypoint_fails(
+        dioptra_client,
+        entrypoint_id=entrypoint_id,
+        name="new_name",
+        task_graph=entrypoint_to_delete["taskGraph"],
+        artifact_graph=entrypoint_to_delete["artifactGraph"],
+        description="new description",
+        parameters=entrypoint_to_delete["parameters"],
+        artifact_parameters=entrypoint_to_delete["artifactParameters"],
+        queues=[q["id"] for q in entrypoint_to_delete["queues"]],
+    )
+
+
 def test_cannot_register_existing_entrypoint_name(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
@@ -875,6 +991,40 @@ def test_delete_entrypoint_by_id(
         dioptra_client.entrypoints.snapshots,
         entrypoint_to_delete["id"],
     )
+
+
+def test_entrypoint_show_deleted(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+) -> None:
+    """Test that deleted entrypoints only appear when the show_deleted parameter is passed.
+
+    Given an authenticated user and registered entrypoints, this test validates:
+    - Not passing show_deleted returns only non-deleted entrypoints
+    - show_deleted=True includes the deleted entrypoint
+    """
+    entrypoint_to_delete = registered_entrypoints["entrypoint3"]
+    delete_id = entrypoint_to_delete["id"]
+
+    # Delete the entrypoint first
+    dioptra_client.entrypoints.delete_by_id(delete_id)
+
+    # Verify deleted entrypoints are hidden by default
+    response_no_show_deleted = dioptra_client.entrypoints.get()
+    assert response_no_show_deleted.status_code == HTTPStatus.OK
+    ids_no_show_deleted = {
+        item["id"] for item in response_no_show_deleted.json()["data"]
+    }
+    assert delete_id not in ids_no_show_deleted
+
+    # Verify that passing show_deleted=True includes the deleted entrypoint
+    response_with_show_deleted = dioptra_client.entrypoints.get(show_deleted=True)
+    assert response_with_show_deleted.status_code == HTTPStatus.OK
+    ids_with_show_deleted = {
+        item["id"] for item in response_with_show_deleted.json()["data"]
+    }
+    assert delete_id in ids_with_show_deleted
 
 
 def test_manage_existing_entrypoint_draft(
@@ -1350,6 +1500,34 @@ def test_delete_queue_by_id_for_entrypoint(
     )
 
 
+def test_modify_queues_for_deleted_entrypoint_fails(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+) -> None:
+    """Test that modifying queues on a deleted entrypoint fails.
+
+    Given an authenticated user, registered entrypoints, and registered queues,
+    this test validates the following sequence of actions:
+    - A user deletes an entrypoint.
+    - A user attempts to modify the queues on the deleted entrypoint.
+    - The request fails with a 423 LOCKED error.
+    """
+    entrypoint_to_delete = registered_entrypoints["entrypoint3"]
+    entrypoint_id = entrypoint_to_delete["id"]
+
+    dioptra_client.entrypoints.delete_by_id(entrypoint_id)
+
+    expected_queue_ids = [
+        queue["id"] for queue in list(registered_queues.values())[:-1]
+    ]
+    response = dioptra_client.entrypoints.queues.modify_by_id(
+        entrypoint_id=entrypoint_id, queue_ids=expected_queue_ids
+    )
+    assert response.status_code == HTTPStatus.LOCKED
+
+
 def test_get_plugin_snapshots_for_entrypoint(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
@@ -1435,6 +1613,110 @@ def test_delete_plugin_snapshot_by_id_for_entrypoint(
         entrypoint_id=entrypoint_id,
         expected=[],
     )
+
+
+def test_append_plugins_to_deleted_entrypoint_fails(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_plugin_with_files: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+) -> None:
+    """Test that appending plugins to a deleted entrypoint fails.
+
+    Given an authenticated user, registered entrypoints, and registered plugins,
+    this test validates the following sequence of actions:
+    - A user deletes an entrypoint.
+    - A user attempts to append plugins to the deleted entrypoint.
+    - The request fails with a 423 LOCKED error.
+    """
+    entrypoint_to_delete = registered_entrypoints["entrypoint3"]
+    entrypoint_id = entrypoint_to_delete["id"]
+
+    dioptra_client.entrypoints.delete_by_id(entrypoint_id)
+
+    expected_plugin_ids = [registered_plugin_with_files["plugin"]["id"]]
+    response = dioptra_client.entrypoints.plugins.create(
+        entrypoint_id=entrypoint_id, plugin_ids=expected_plugin_ids
+    )
+    assert response.status_code == HTTPStatus.LOCKED
+
+
+def test_delete_plugin_from_deleted_entrypoint_fails(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_plugin_with_files: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+) -> None:
+    """Test that deleting a plugin from a deleted entrypoint fails.
+
+    Given an authenticated user, registered entrypoints, and registered plugins,
+    this test validates the following sequence of actions:
+    - A user deletes an entrypoint.
+    - A user attempts to delete a plugin from the deleted entrypoint.
+    - The request fails with a 423 LOCKED error.
+    """
+    entrypoint_to_delete = registered_entrypoints["entrypoint1"]
+    entrypoint_id = entrypoint_to_delete["id"]
+    plugin_id_to_delete = registered_plugin_with_files["plugin"]["id"]
+
+    dioptra_client.entrypoints.delete_by_id(entrypoint_id)
+
+    response = dioptra_client.entrypoints.plugins.delete_by_id(
+        entrypoint_id=entrypoint_id, plugin_id=plugin_id_to_delete
+    )
+    assert response.status_code == HTTPStatus.LOCKED
+
+
+def test_append_artifact_plugins_to_deleted_entrypoint_fails(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_artifact_plugins: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+) -> None:
+    """Test that appending artifact plugins to a deleted entrypoint fails.
+
+    Given an authenticated user, registered entrypoints, and registered plugins,
+    this test validates the following sequence of actions:
+    - A user deletes an entrypoint.
+    - A user attempts to append artifact plugins to the deleted entrypoint.
+    - The request fails with a 423 LOCKED error.
+    """
+    entrypoint_to_delete = registered_entrypoints["entrypoint3"]
+    entrypoint_id = entrypoint_to_delete["id"]
+
+    dioptra_client.entrypoints.delete_by_id(entrypoint_id)
+
+    expected_plugin_ids = [registered_artifact_plugins["artifact_plugin"]["plugin_id"]]
+    response = dioptra_client.entrypoints.artifact_plugins.create(
+        entrypoint_id=entrypoint_id, artifact_plugin_ids=expected_plugin_ids
+    )
+    assert response.status_code == HTTPStatus.LOCKED
+
+
+def test_delete_artifact_plugin_from_deleted_entrypoint_fails(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_artifact_plugins: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+) -> None:
+    """Test that deleting an artifact plugin from a deleted entrypoint fails.
+
+    Given an authenticated user, registered entrypoints, and registered plugins,
+    this test validates the following sequence of actions:
+    - A user deletes an entrypoint.
+    - A user attempts to delete an artifact plugin from the deleted entrypoint.
+    - The request fails with a 423 LOCKED error.
+    """
+    entrypoint_to_delete = registered_entrypoints["entrypoint1"]
+    entrypoint_id = entrypoint_to_delete["id"]
+    artifact_plugin_id = registered_artifact_plugins["artifact_plugin"]["plugin_id"]
+
+    dioptra_client.entrypoints.delete_by_id(entrypoint_id)
+
+    response = dioptra_client.entrypoints.artifact_plugins.delete_by_id(
+        entrypoint_id=entrypoint_id, artifact_plugin_id=artifact_plugin_id
+    )
+    assert response.status_code == HTTPStatus.LOCKED
 
 
 def test_create_entrypoint_with_empty_queues_plugins_params(

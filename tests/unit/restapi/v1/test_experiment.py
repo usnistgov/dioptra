@@ -29,8 +29,8 @@ from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
 
 from ..lib import helpers, routines
-from ..test_utils import assert_retrieving_resource_works
 from ..lib.asserts import assert_retrieving_deleted_resource_snapshots_works
+from ..test_utils import assert_retrieving_resource_works
 
 # -- Assertions ------------------------------------------------------------------------
 
@@ -524,6 +524,68 @@ def test_rename_experiment(
         dioptra_client,
         experiment_id=experiment_to_rename["id"],
         expected_name=updated_experiment_name,
+    )
+
+
+def test_modify_experiment_replaces_entrypoints(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_experiments: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+) -> None:
+    """Test that modifying an experiment replaces associated entrypoints.
+
+    Given an authenticated user and an experiment that starts with associated
+    entrypoints, this test validates the following sequence of actions:
+
+    - The user updates the experiment with a new list containing one entrypoint.
+    - The user retrieves entrypoints for that experiment.
+    - The retrieved entrypoints match exactly the new list (not append behavior).
+    """
+    experiment_to_modify = registered_experiments["experiment1"]
+    replacement_entrypoints = [registered_entrypoints["entrypoint1"]["id"]]
+
+    dioptra_client.experiments.modify_by_id(
+        experiment_id=experiment_to_modify["id"],
+        name=experiment_to_modify["name"],
+        description=experiment_to_modify["description"],
+        entrypoints=replacement_entrypoints,
+    )
+
+    assert_experiment_entrypoints_matches_expected_entrypoints(
+        dioptra_client,
+        experiment_id=experiment_to_modify["id"],
+        expected_entrypoints=replacement_entrypoints,
+    )
+
+
+def test_modify_experiment_clears_entrypoints(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_experiments: dict[str, Any],
+) -> None:
+    """Test that modifying an experiment with an empty list clears entrypoints.
+
+    Given an authenticated user and an experiment that starts with associated
+    entrypoints, this test validates the following sequence of actions:
+
+    - The user updates the experiment with an empty list.
+    - The user retrieves entrypoints for that experiment.
+    - The retrieved entrypoints is an empty list.
+    """
+    experiment_to_modify = registered_experiments["experiment1"]
+
+    dioptra_client.experiments.modify_by_id(
+        experiment_id=experiment_to_modify["id"],
+        name=experiment_to_modify["name"],
+        description=experiment_to_modify["description"],
+        entrypoints=[],
+    )
+
+    assert_experiment_entrypoints_matches_expected_entrypoints(
+        dioptra_client,
+        experiment_id=experiment_to_modify["id"],
+        expected_entrypoints=[],
     )
 
 
