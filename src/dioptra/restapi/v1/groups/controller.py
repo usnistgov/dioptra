@@ -23,7 +23,7 @@ from urllib.parse import unquote
 import structlog
 from flask import request
 from flask_accepts import accepts, responds
-from flask_login import login_required
+from flask_login import current_user, login_required
 from flask_restx import Namespace, Resource
 from injector import inject
 from structlog.stdlib import BoundLogger
@@ -33,6 +33,7 @@ from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.schemas import IdStatusResponseSchema
 
 from .schema import (
+    GroupCreateSchema,
     GroupGetQueryParameters,
     GroupMemberMutableFieldsSchema,
     GroupMemberSchema,
@@ -74,11 +75,13 @@ class GroupEndpoint(Resource):
         search_string = unquote(parsed_query_params["search"])
         page_index = parsed_query_params["index"]
         page_length = parsed_query_params["page_length"]
+        show_deleted = parsed_query_params["show_deleted"]
 
         groups, total_num_groups = self._group_service.get(
             search_string=search_string,
             page_index=page_index,
             page_length=page_length,
+            show_deleted=show_deleted,
             log=log,
         )
         return utils.build_paging_envelope(
@@ -93,19 +96,25 @@ class GroupEndpoint(Resource):
             total_num_elements=total_num_groups,
             sort_by=None,
             descending=None,
+            show_deleted=show_deleted,
         )
 
     @login_required
-    @accepts(schema=GroupSchema, api=api)
+    @accepts(schema=GroupCreateSchema, api=api)
     @responds(schema=GroupSchema, api=api)
-    def _post(self):
+    def post(self):
         """Creates a Group resource."""
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="Group", request_type="POST"
         )
         parsed_obj = request.parsed_obj  # noqa: F841
 
-        group = self._group_service.create(name=parsed_obj["name"], log=log)
+        group = self._group_service.create(
+            name=parsed_obj["name"],
+            creator=current_user,
+            public=parsed_obj.get("public", True),
+            log=log,
+        )
         return utils.build_group(group)
 
 
@@ -139,7 +148,7 @@ class GroupIdEndpoint(Resource):
 
     @login_required
     @responds(schema=IdStatusResponseSchema, api=api)
-    def _delete(self, id: int):
+    def delete(self, id: int):
         """Deletes a Group resource."""
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="Group", request_type="DELETE", id=id
@@ -149,7 +158,7 @@ class GroupIdEndpoint(Resource):
     @login_required
     @accepts(schema=GroupMutableFieldsSchema, api=api)
     @responds(schema=GroupSchema, api=api)
-    def _put(self, id: int):
+    def put(self, id: int):
         """Modifies a Group resource."""
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="Group", request_type="PUT", id=id

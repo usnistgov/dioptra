@@ -88,7 +88,7 @@ class UserCurrentSchema(UserSchema):
     groups = fields.Nested(
         GroupRefSchema,
         attribute="groups",
-        metadata={"description": "A list of Groups the User is a part of."},
+        metadata={"description": "A list of Groups accessible to the User."},
         many=True,
         dump_only=True,
     )
