@@ -34,7 +34,7 @@ from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
 from dioptra.restapi.db.models import User
 from dioptra.restapi.db.unit_of_work import UnitOfWork
-from dioptra.restapi.routes import V1_AUTH_ROUTE, V1_ROOT
+from dioptra.restapi.routes import V1_AUTH_ROUTE, V1_ROOT, V1_USERS_ROUTE
 
 from ..lib import actions, helpers
 from ..test_utils import assert_retrieving_resource_works
@@ -440,6 +440,32 @@ def test_user_get_all(
         for user in list(registered_users.values())
     ]
     assert_retrieving_users_works(dioptra_client, expected=user_expected_list)
+
+
+@freeze_time("Apr 1st, 2025 6:00am", auto_tick_seconds=1)
+def test_current_user_includes_other_users_public_groups(
+    client: FlaskClient,
+    auth_account: dict[str, Any],
+    registered_users: dict[str, Any],
+) -> None:
+    user2 = registered_users["user2"]
+    login_response = actions.login(client, user2["username"], user2["password"])
+    assert login_response.status_code == HTTPStatus.OK
+
+    created_group = actions.register_group(client, name="user2_public_group")
+    assert created_group.status_code == HTTPStatus.OK
+    created_group_id = created_group.get_json()["id"]
+
+    login_response = actions.login(
+        client, auth_account["username"], auth_account["password"]
+    )
+    assert login_response.status_code == HTTPStatus.OK
+
+    current_user_response = client.get(f"/{V1_ROOT}/{V1_USERS_ROUTE}/current")
+    assert current_user_response.status_code == HTTPStatus.OK
+
+    group_ids = {group["id"] for group in current_user_response.get_json()["groups"]}
+    assert created_group_id in group_ids
 
 
 def test_user_search_query(

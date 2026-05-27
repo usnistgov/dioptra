@@ -109,6 +109,112 @@ def test_group_create_name_collision(group_repo, account):
         group_repo.create(g2)
 
 
+def test_group_create_name_collision_is_user_scoped(group_repo, account, db_session: DBSession):
+    other_user = User("other_user", "password2", "other_user@example.org")
+    other_group = Group(account.group.name, other_user)
+
+    group_repo.create(other_group)
+    db_session.commit()
+
+    assert other_group.group_id is not None
+
+
+def test_group_get_by_name_and_user(group_repo, account):
+    group = group_repo.get_by_name_and_user(
+        account.group.name, account.user.user_id, DeletionPolicy.NOT_DELETED
+    )
+    assert group == account.group
+
+    group = group_repo.get_by_name_and_user(
+        account.group.name, account.user.user_id, DeletionPolicy.DELETED
+    )
+    assert not group
+
+    group = group_repo.get_by_name_and_user(
+        account.group.name, account.user.user_id, DeletionPolicy.ANY
+    )
+    assert group == account.group
+
+
+def test_group_get_by_name_and_user_deleted(group_repo, account, db_session: DBSession):
+    group_repo.delete(account.group)
+    db_session.commit()
+
+    group = group_repo.get_by_name_and_user(
+        account.group.name, account.user.user_id, DeletionPolicy.NOT_DELETED
+    )
+    assert not group
+
+    group = group_repo.get_by_name_and_user(
+        account.group.name, account.user.user_id, DeletionPolicy.DELETED
+    )
+    assert group == account.group
+
+    group = group_repo.get_by_name_and_user(
+        account.group.name, account.user.user_id, DeletionPolicy.ANY
+    )
+    assert group == account.group
+
+
+def test_group_get_by_name_and_user_not_exist(group_repo, account):
+    group = group_repo.get_by_name_and_user(
+        "foo", account.user.user_id, DeletionPolicy.NOT_DELETED
+    )
+    assert not group
+
+    group = group_repo.get_by_name_and_user(
+        "foo", account.user.user_id, DeletionPolicy.DELETED
+    )
+    assert not group
+
+    group = group_repo.get_by_name_and_user(
+        "foo", account.user.user_id, DeletionPolicy.ANY
+    )
+    assert not group
+
+
+def test_group_get_all_for_user_membership_and_public(
+    group_repo, user_repo, account, db_session: DBSession
+):
+    other_user = User("other_user", "password", "other_user@example.org")
+    user_repo.create(other_user, account.group)
+    db_session.commit()
+
+    public_group = Group("public_group", other_user, public=True)
+    private_group = Group("private_group", other_user, public=False)
+    member_group = Group("member_group", other_user, public=False)
+    group_repo.create(public_group)
+    group_repo.create(private_group)
+    group_repo.create(member_group)
+    db_session.commit()
+
+    group_repo.add_member(member_group, account.user)
+    db_session.commit()
+
+    groups = group_repo.get_all_for_user(account.user.user_id)
+    group_ids = {group.group_id for group in groups}
+
+    assert account.group.group_id in group_ids
+    assert public_group.group_id in group_ids
+    assert member_group.group_id in group_ids
+    assert private_group.group_id not in group_ids
+
+
+def test_group_get_all_for_user_deletion_policy(group_repo, account, db_session: DBSession):
+    group_repo.delete(account.group)
+    db_session.commit()
+
+    groups_not_deleted = group_repo.get_all_for_user(
+        account.user.user_id, DeletionPolicy.NOT_DELETED
+    )
+    assert account.group not in groups_not_deleted
+
+    groups_deleted = group_repo.get_all_for_user(
+        account.user.user_id, DeletionPolicy.DELETED
+    )
+    assert account.group in groups_deleted
+
+
 def test_group_create_creator_collision(group_repo, account):
     user_colliding_name = User(account.user.username, "password2", "user2@example.org")
     g2 = Group("group2", user_colliding_name)
