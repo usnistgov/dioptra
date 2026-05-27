@@ -102,7 +102,11 @@ class GroupRepository:
 
         assert_group_does_not_exist(self.session, group, DeletionPolicy.ANY)
 
-        dupe_group = self.get_by_name(group.name, DeletionPolicy.ANY)
+        dupe_group = self.get_by_name_and_user(
+            group.name,
+            group.creator.user_id,
+            DeletionPolicy.ANY,
+        )
         if group.name is not None and dupe_group:
             # Assume this name uniqueness constraint applies with respect to
             # all groups, not just non-deleted groups.
@@ -225,10 +229,11 @@ class GroupRepository:
         return group
 
     def get_by_name(
-        self, name: str, deletion_policy: DeletionPolicy = DeletionPolicy.NOT_DELETED
+        self,
+        name: str,
+        deletion_policy: DeletionPolicy = DeletionPolicy.NOT_DELETED,
     ) -> Group | None:
-        """
-        Get a group by name.
+        """Get a group by name.
 
         Args:
             name: a group name
@@ -241,11 +246,41 @@ class GroupRepository:
         stmt = sa.select(Group).where(Group.name == name)
         stmt = _apply_deletion_policy(stmt, deletion_policy)
 
-        # Shouldn't we either return a list or put a unique constraint on the
-        # name column?
         group = self.session.scalar(stmt)
 
         return group
+
+    def get_by_name_and_user(
+        self,
+        name: str,
+        user_id: int,
+        deletion_policy: DeletionPolicy = DeletionPolicy.NOT_DELETED,
+    ) -> Group | None:
+        """Get a group by name scoped to a creator user."""
+        stmt = sa.select(Group).where(Group.name == name, Group.user_id == user_id)
+        stmt = _apply_deletion_policy(stmt, deletion_policy)
+        group = self.session.scalar(stmt)
+        return group
+
+    def get_all_for_user(
+        self,
+        user_id: int,
+        deletion_policy: DeletionPolicy = DeletionPolicy.NOT_DELETED,
+    ) -> Sequence[Group]:
+        """Get all groups accessible to a user.
+
+        Accessibility is defined as either direct membership in the group or the group
+        being public.
+        """
+        stmt = (
+            sa.select(Group)
+            .outerjoin(GroupMember, Group.group_id == GroupMember.group_id)
+            .where(sa.or_(Group.public.is_(True), GroupMember.user_id == user_id))
+            .distinct()
+            .order_by(Group.group_id)
+        )
+        stmt = _apply_deletion_policy(stmt, deletion_policy)
+        return self.session.scalars(stmt).all()
 
     def get_by_filters_paged(
         self,

@@ -71,24 +71,17 @@
               <label :class="`field-label`">Name:</label>
             </template>
           </q-input>
-          <q-select
-            v-model="entryPoint.group"
+          <q-input
             outlined
-            :options="store.groups"
-            option-label="name"
-            option-value="id"
-            emit-value
-            map-options
             dense
-            :rules="[requiredRule]"
-            aria-required="true"
-            :disable="history || entryPoint.deleted"
+            :model-value="groupDisplayName"
+            disable
             class="q-mb-sm"
           >
             <template #before>
               <div class="field-label">Group:</div>
             </template>
-          </q-select>
+          </q-input>
           <ResourcePicker
             v-if="!history"
             v-model="entryPoint.queues"
@@ -753,6 +746,21 @@ const valuesChangedFromEditStart = computed(() => {
 });
 
 const tasks = ref([]);
+const groupDisplayName = computed(() => {
+  if (route.params.id === "new") {
+    return store.loggedInGroup.name;
+  }
+  const groupValue = entryPoint.value?.group;
+  if (groupValue && typeof groupValue === "object" && "name" in groupValue) {
+    return groupValue.name;
+  }
+  const groupId = groupValue && typeof groupValue === "object" && "id" in groupValue ? groupValue.id : groupValue;
+  if (typeof groupId === "number") {
+    const group = store.groups.find((g) => g.id === groupId);
+    if (group) return group.name;
+  }
+  return store.loggedInGroup.name;
+});
 const artifactTasks = ref([]);
 
 watch(
