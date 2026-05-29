@@ -17,6 +17,7 @@ examples/**/s3
 
 # all files starting with . or ~
 .*
+!src/frontend/.nvmrc
 ~*
 
 # os generated files
