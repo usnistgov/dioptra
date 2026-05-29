@@ -63,6 +63,11 @@ At a minimum, you should run this before opening a merge request on your branch:
     uvx tox run -e lint -- --select I --fix src/dioptra
     uvx tox run -e format -- src/dioptra
 
+If commiting any frontend changes, run the following from the src/frontend directory to lint and format frontend code:
+
+    npm run lint
+    npm run format
+
 ### Type check your files
 
 This project uses [mypy](https://mypy.readthedocs.io/en/stable/) to type check code and uses [tox](https://tox.wiki/en/stable/) to run it.
