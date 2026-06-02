@@ -13,8 +13,10 @@
     "preview": "vite preview",
     "build-only": "vite build",
     "type-check": "vue-tsc --build --force",
-    "lint": "eslint . --fix",
-    "format": "prettier --write src/"
+    "lint": "eslint . --fix && prettier --write src/",
+    "format": "prettier --write src/",
+    "lint:check": "eslint .",
+    "format:check": "prettier --check src/ vite.config.ts eslint.config.js"
   },
   "dependencies": {
     "@codemirror/lang-python": "^6.2.1",
