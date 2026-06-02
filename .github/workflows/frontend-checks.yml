@@ -1,0 +1,42 @@
+name: Frontend checks
+
+on:
+  pull_request:
+    branches:
+      - "main"
+      - "dev"
+    paths:
+      - "src/frontend/**"
+      - ".github/workflows/frontend-checks.yml"
+  push:
+    branches:
+      - "main"
+      - "dev"
+    paths:
+      - "src/frontend/**"
+      - ".github/workflows/frontend-checks.yml"
+
+jobs:
+  lint-and-format:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: src/frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: src/frontend
+        run: npm ci
+
+      - name: Check ESLint
+        working-directory: src/frontend
+        run: npm run lint:check
+
+      - name: Check Prettier
+        working-directory: src/frontend
+        run: npm run format:check
