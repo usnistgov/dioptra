@@ -1,13 +1,25 @@
 <template>
-  <table 
+  <table
     class="text-left"
     :class="{ 'no-pointer': disabled }"
   >
-    <tr v-for="(row, index) in rows" :key="index" :class="{ 'disabled': disabled }">
-      <td class="text-bold" :style="{ 'min-width': firstColumnMinWidth }">{{ row.label }}</td>
+    <tr
+      v-for="(row, index) in rows"
+      :key="index"
+      :class="{ disabled: disabled }"
+    >
+      <td
+        class="text-bold"
+        :style="{ 'min-width': firstColumnMinWidth }"
+      >
+        {{ row.label }}
+      </td>
       <td :style="secondColumnFullWidth ? { width: '100%' } : {}">
         <!-- Render as plain text OR use a custom slot -->
-        <slot :name="row.slot" v-bind="row.props">
+        <slot
+          :name="row.slot"
+          v-bind="row.props"
+        >
           {{ row.value }}
         </slot>
       </td>
@@ -19,54 +31,54 @@
 defineProps({
   rows: {
     type: Array,
-    required: true
+    required: true,
   },
   disabled: {
     type: Boolean,
-    default: false
+    default: false,
   },
   firstColumnMinWidth: {
     type: String,
-    default: '150px'
+    default: "150px",
   },
   secondColumnFullWidth: {
     type: Boolean,
-    default: false
-  }
-})
+    default: false,
+  },
+});
 </script>
 
 <style scoped>
-  table {
-    border-collapse: collapse;
-  }
+table {
+  border-collapse: collapse;
+}
 
-  td {
-    border: 1px solid #cecece;
-  }
+td {
+  border: 1px solid #cecece;
+}
 
-  td {
-    padding: 10px;
-  }
+td {
+  padding: 10px;
+}
 
-  td:nth-child(2) {
-    min-width: 20vw;
-  }
+td:nth-child(2) {
+  min-width: 20vw;
+}
 
-  .body--dark td:first-child {
-    background-color: rgb(31, 39, 45);
-    color: rgb(146, 164, 179);
-  }
+.body--dark td:first-child {
+  background-color: rgb(31, 39, 45);
+  color: rgb(146, 164, 179);
+}
 
-  .body--light td:first-child {
-    background-color: rgb(246, 247, 249);
-  }
+.body--light td:first-child {
+  background-color: rgb(246, 247, 249);
+}
 
-  .no-pointer {
-    cursor: not-allowed;
-  }
+.no-pointer {
+  cursor: not-allowed;
+}
 
-  .disabled {
-    pointer-events: none;
-  }
+.disabled {
+  pointer-events: none;
+}
 </style>

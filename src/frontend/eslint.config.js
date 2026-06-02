@@ -1,9 +1,9 @@
-import js from "@eslint/js"
-import eslintConfigPrettier from "eslint-config-prettier"
-import eslintPluginPrettier from "eslint-plugin-prettier"
-import eslintPluginVue from "eslint-plugin-vue"
-import globals from "globals"
-import typescriptEslint from "typescript-eslint"
+import js from "@eslint/js";
+import eslintConfigPrettier from "eslint-config-prettier";
+import eslintPluginPrettier from "eslint-plugin-prettier";
+import eslintPluginVue from "eslint-plugin-vue";
+import globals from "globals";
+import typescriptEslint from "typescript-eslint";
 
 export default typescriptEslint.config(
   { ignores: ["**/*.d.ts", "**/coverage/**", "**/dist/**"] },
@@ -20,6 +20,16 @@ export default typescriptEslint.config(
     },
     rules: {
       "prettier/prettier": "warn",
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+          destructuredArrayIgnorePattern: "^_",
+        },
+      ],
     },
   },
   {
@@ -44,7 +54,19 @@ export default typescriptEslint.config(
       "prettier/prettier": "warn",
       "vue/attribute-hyphenation": "off",
       "vue/v-on-event-hyphenation": "off",
+      "vue/require-prop-types": "off",
+      "vue/require-default-prop": "off",
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+          destructuredArrayIgnorePattern: "^_",
+        },
+      ],
     },
   },
   eslintConfigPrettier,
-)
+);
