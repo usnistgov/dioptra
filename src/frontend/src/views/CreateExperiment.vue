@@ -1,26 +1,32 @@
 <template>
-  <PageTitle :title="title" resourceType="experiment" />
+  <PageTitle
+    :title="title"
+    resourceType="experiment"
+  />
   <div :class="`row q-my-lg`">
     <div :class="`${isMobile ? 'col-12' : 'col-5'} q-mr-xl`">
       <fieldset>
         <legend>Basic Info</legend>
         <div class="q-ma-lg">
-          <q-form ref="basicInfoForm" greedy>
-            <q-input 
-              outlined 
-              dense 
+          <q-form
+            ref="basicInfoForm"
+            greedy
+          >
+            <q-input
               v-model.trim="experiment.name"
+              outlined
+              dense
               :rules="[requiredRule]"
               class="q-mb-sm q-mt-md"
               aria-required="true"
             >
-              <template v-slot:before>
+              <template #before>
                 <label :class="`field-label`">Name:</label>
               </template>
             </q-input>
             <q-select
-              outlined 
-              v-model="experiment.group" 
+              v-model="experiment.group"
+              outlined
               :options="store.groups"
               option-label="name"
               option-value="id"
@@ -30,18 +36,18 @@
               :rules="[requiredRule]"
               aria-required="true"
             >
-              <template v-slot:before>
+              <template #before>
                 <div class="field-label">Group:</div>
-              </template>  
+              </template>
             </q-select>
-            <q-input 
-              outlined 
-              dense 
+            <q-input
               v-model.trim="experiment.description"
+              outlined
+              dense
               class="q-mb-sm q-mt-sm"
               type="textarea"
             >
-              <template v-slot:before>
+              <template #before>
                 <label :class="`field-label`">Description:</label>
               </template>
             </q-input>
@@ -55,207 +61,204 @@
         <ResourcePicker
           v-model="experiment.entrypoints"
           :options="entrypoints"
-          @filter="getEntrypoints"
           resourceType="entrypoint"
           label="Entrypoints:"
+          @filter="getEntrypoints"
         />
         <q-btn
           color="primary"
           icon="add"
           label="Create new Entrypoint"
           class="q-mt-lg"
-          @click="router.push('/entrypoints/new')" 
+          @click="router.push('/entrypoints/new')"
         />
       </div>
     </fieldset>
   </div>
 
   <div class="float-right">
-      <q-btn
-        outline  
-        color="primary" 
-        label="Cancel"
-        class="q-mr-lg cancel-btn"
-        @click="confirmLeave = true; router.back()"
-      />
-      <q-btn  
-        @click="submit()" 
-        color="primary"
-        label="Submit Experiment"
-        :disable="!valuesChangedFromOriginal"
-      >
-        <q-tooltip v-if="!valuesChangedFromOriginal">
-          No changes detected — nothing to save
-        </q-tooltip>
-      </q-btn>
-    </div>
-
-    <ReturnToFormDialog
-      v-model="showReturnDialog"
-      @cancel="clearForm"
+    <q-btn
+      outline
+      color="primary"
+      label="Cancel"
+      class="q-mr-lg cancel-btn"
+      @click="
+        confirmLeave = true;
+        router.back();
+      "
     />
+    <q-btn
+      color="primary"
+      label="Submit Experiment"
+      :disable="!valuesChangedFromOriginal"
+      @click="submit()"
+    >
+      <q-tooltip v-if="!valuesChangedFromOriginal"> No changes detected — nothing to save </q-tooltip>
+    </q-btn>
+  </div>
+
+  <ReturnToFormDialog
+    v-model="showReturnDialog"
+    @cancel="clearForm"
+  />
 </template>
 
 <script setup>
-  import { ref, inject, computed, onMounted } from 'vue'
-  import { useLoginStore } from '@/stores/LoginStore.ts'
-  import { useRouter, useRoute, onBeforeRouteLeave } from 'vue-router'
-  import * as api from '@/services/dataApi'
-  import * as notify from '../notify'
-  import PageTitle from '@/components/PageTitle.vue'
-  import ReturnToFormDialog from '@/dialogs/ReturnToFormDialog.vue'
-  import ResourcePicker from '@/components/ResourcePicker.vue'
+import { ref, inject, computed, onMounted } from "vue";
+import { useLoginStore } from "@/stores/LoginStore.ts";
+import { useRouter, onBeforeRouteLeave } from "vue-router";
+import * as api from "@/services/dataApi";
+import * as notify from "../notify";
+import PageTitle from "@/components/PageTitle.vue";
+import ReturnToFormDialog from "@/dialogs/ReturnToFormDialog.vue";
+import ResourcePicker from "@/components/ResourcePicker.vue";
 
-  const route = useRoute()
-  
-  const router = useRouter()
+const router = useRouter();
 
-  const store = useLoginStore()
+const store = useLoginStore();
 
-  const isMobile = inject('isMobile')
-  const isMedium = inject('isMedium')
-  const darkMode = inject('darkMode')
+const isMobile = inject("isMobile");
 
-  function requiredRule(val) {
-    return (!!val) || "This field is required"
-  }
+function requiredRule(val) {
+  return !!val || "This field is required";
+}
 
-  let experiment = ref({
-    name: '',
+const experiment = ref({
+  name: "",
+  group: store.loggedInGroup.id,
+  description: "",
+  entrypoints: [],
+});
+
+function clearForm() {
+  experiment.value = {
+    name: "",
     group: store.loggedInGroup.id,
-    description: '',
+    description: "",
     entrypoints: [],
-  })
+  };
+  basicInfoForm.value.reset();
+  store.savedForms.experiment = null;
+}
 
-  function clearForm() {
-    experiment.value = {
-      name: '',
-      group: store.loggedInGroup.id,
-      description: '',
-      entrypoints: [],
-    }
-    basicInfoForm.value.reset()
-    store.savedForms.experiment = null
-    
-  }
-
-  async function checkIfStillValid() {
-    for(let index = store.savedForms.experiment.entrypoints.length - 1; index >= 0; index--) {
-      let id = store.savedForms.experiment.entrypoints[index].id
-      try {
-        const res =  await api.getItem('entrypoints', id)
-      } catch(err) {
-        await store.savedForms.experiment.entrypoints.splice(index, 1)
-        console.warn(err)
-      } 
+async function checkIfStillValid() {
+  for (let index = store.savedForms.experiment.entrypoints.length - 1; index >= 0; index--) {
+    const id = store.savedForms.experiment.entrypoints[index].id;
+    try {
+      await api.getItem("entrypoints", id);
+    } catch (err) {
+      await store.savedForms.experiment.entrypoints.splice(index, 1);
+      console.warn(err);
     }
   }
+}
 
-  const basicInfoForm = ref(null)
+const basicInfoForm = ref(null);
 
-  let copyAtEditStart = ref({
-    name: '',
-    group: store.loggedInGroup.id,
-    description: '',
-    entrypoints: [],
-  })
+const copyAtEditStart = ref({
+  name: "",
+  group: store.loggedInGroup.id,
+  description: "",
+  entrypoints: [],
+});
 
-  const ORIGINAL_COPY = {
-    name: '',
-    group: store.loggedInGroup.id,
-    description: '',
-    entrypoints: [],
-  }
+const ORIGINAL_COPY = {
+  name: "",
+  group: store.loggedInGroup.id,
+  description: "",
+  entrypoints: [],
+};
 
-  const valuesChangedFromOriginal = computed(() => {
-    for (const key in ORIGINAL_COPY) {
-      if(JSON.stringify(ORIGINAL_COPY[key]) !== JSON.stringify(experiment.value[key])) {
-        return true
-      }
+const valuesChangedFromOriginal = computed(() => {
+  for (const key in ORIGINAL_COPY) {
+    if (JSON.stringify(ORIGINAL_COPY[key]) !== JSON.stringify(experiment.value[key])) {
+      return true;
     }
-    return false
-  })
+  }
+  return false;
+});
 
-  const title = ref('')
-  const showReturnDialog = ref(false)
+const title = ref("");
+const showReturnDialog = ref(false);
 
-  onMounted(() => {
-    getExperiment()
-  })
+onMounted(() => {
+  getExperiment();
+});
 
-  async function getExperiment() {
-    title.value = 'Create Experiment'
-    if(store.savedForms?.experiment) {
-      showReturnDialog.value = true
-      await checkIfStillValid()
-      copyAtEditStart.value = JSON.parse(JSON.stringify({
+async function getExperiment() {
+  title.value = "Create Experiment";
+  if (store.savedForms?.experiment) {
+    showReturnDialog.value = true;
+    await checkIfStillValid();
+    copyAtEditStart.value = JSON.parse(
+      JSON.stringify({
         name: store.savedForms.experiment.name,
         group: store.savedForms.experiment.group,
         description: store.savedForms.experiment.description,
         entrypoints: store.savedForms.experiment.entrypoints,
-      }))
-      experiment.value = store.savedForms.experiment
+      }),
+    );
+    experiment.value = store.savedForms.experiment;
+  }
+}
+
+function submit() {
+  basicInfoForm.value.validate().then((success) => {
+    if (success) {
+      confirmLeave.value = true;
+      addorModifyExperiment();
     }
-  }
+  });
+}
 
-  function submit() {
-    basicInfoForm.value.validate().then(success => {
-      if(success) {
-        confirmLeave.value = true
-        addorModifyExperiment()
-      }
-    })
+async function addorModifyExperiment() {
+  const experimentCopy = JSON.parse(JSON.stringify(experiment.value));
+  experimentCopy.entrypoints.forEach((entrypoint, index, array) => {
+    if (typeof entrypoint === "object") {
+      array[index] = entrypoint.id;
+    }
+  });
+  try {
+    await api.addItem("experiments", experimentCopy);
+    store.savedForms.experiment = null;
+    notify.success(`Successfully created '${experiment.value.name}'`);
+    router.push("/experiments");
+  } catch (err) {
+    console.log("err = ", err);
+    notify.error(err.response.data.message);
   }
+}
 
-  async function addorModifyExperiment() {
-    const experimentCopy = JSON.parse(JSON.stringify(experiment.value))
-    experimentCopy.entrypoints.forEach((entrypoint, index, array) => {
-      if(typeof entrypoint === 'object') {
-        array[index] = entrypoint.id
-      }
-    })
+const entrypoints = ref([]);
+
+async function getEntrypoints(val = "", update) {
+  update(async () => {
     try {
-      await api.addItem('experiments', experimentCopy)
-      store.savedForms.experiment = null
-      notify.success(`Successfully created '${experiment.value.name}'`)
-      router.push('/experiments')
-    } catch(err) {
-      console.log('err = ', err)
-      notify.error(err.response.data.message)
+      const res = await api.getData("entrypoints", {
+        search: val,
+        rowsPerPage: 0, // get all
+        index: 0,
+      });
+      entrypoints.value = res.data.data;
+    } catch (err) {
+      notify.error(err.response.data.message);
     }
+  });
+}
+
+onBeforeRouteLeave((to) => {
+  toPath.value = to.path;
+  if (confirmLeave.value) {
+    return true;
+  } else if (valuesChangedFromOriginal.value) {
+    store.savedForms.experiment = experiment.value;
+    return true;
+  } else {
+    store.savedForms.experiment = null;
+    return true;
   }
+});
 
-  const entrypoints = ref([])
-
-  async function getEntrypoints(val = '', update) {
-    update(async () => {
-      try {
-        const res = await api.getData('entrypoints', {
-          search: val,
-          rowsPerPage: 0, // get all
-          index: 0
-        })
-        entrypoints.value = res.data.data
-      } catch(err) {
-        notify.error(err.response.data.message)
-      } 
-    })
-  }
-
-  onBeforeRouteLeave((to, from) => {
-    toPath.value = to.path
-    if(confirmLeave.value) {
-      return true
-    } else if(valuesChangedFromOriginal.value) {
-      store.savedForms.experiment = experiment.value
-      return true
-    } else {
-      store.savedForms.experiment = null
-      return true
-    }
-  })
-
-  const confirmLeave = ref(false)
-  const toPath = ref()
-
+const confirmLeave = ref(false);
+const toPath = ref();
 </script>
