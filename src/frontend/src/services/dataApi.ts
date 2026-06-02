@@ -294,7 +294,7 @@ export async function getResourceDraft<T extends ResourceType>(type: T, id: numb
   return res;
 }
 
-export async function updateItem<T extends ResourceType>(type: T, id: number, params: UpdateParams[T]) {
+export async function updateItem<T extends keyof UpdateParams>(type: T, id: number, params: UpdateParams[T]) {
   return await axios.put(`/api/${type}/${id}`, params);
 }
 
@@ -326,7 +326,7 @@ export async function addDraft<T extends keyof CreateParams>(type: T, params: Cr
   }
 }
 
-export async function updateDraft<T extends ResourceType>(type: T, draftId: string, params: UpdateParams[T]) {
+export async function updateDraft<T extends keyof UpdateParams>(type: T, draftId: string, params: UpdateParams[T]) {
   return await axios.put(`/api/${type}/drafts/${draftId}`, params);
 }
 
