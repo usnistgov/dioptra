@@ -35,7 +35,7 @@
 } */
 
 p {
-  font-size: 1.2em
+  font-size: 1.2em;
 }
 
 .body--dark a {
@@ -43,9 +43,9 @@ p {
 }
 
 .link {
-  cursor:pointer;
-  color:blue;
-  text-decoration:underline;
+  cursor: pointer;
+  color: blue;
+  text-decoration: underline;
 }
 
 .body--dark .link {
@@ -84,33 +84,33 @@ a.q-breadcrumbs__el:hover {
 }
 
 .q-tab:hover {
-  color: inherit
+  color: inherit;
 }
 
 .q-breadcrumbs__el:hover {
-  color: inherit
+  color: inherit;
 }
 
 .q-tab__label {
-  font-size: 18px !important
+  font-size: 18px !important;
 }
 
 .q-tooltip {
-  font-size: 14px !important
+  font-size: 14px !important;
 }
 
 .fixedButton {
   position: fixed !important;
   bottom: 80px;
-  right: 80px; 
+  right: 80px;
 }
 
-.sr-only { 
+.sr-only {
   border: 0;
   padding: 0;
   margin: 0;
   position: absolute !important;
-  height: 1px; 
+  height: 1px;
   width: 1px;
   overflow: hidden;
   clip: rect(1px 1px 1px 1px); /* IE6, IE7 - a 0 height clip, off to the bottom right of the visible 1px box */
@@ -158,11 +158,11 @@ legend {
 
 .noselect {
   -webkit-touch-callout: none; /* iOS Safari */
-    -webkit-user-select: none; /* Safari */
-     -khtml-user-select: none; /* Konqueror HTML */
-       -moz-user-select: none; /* Old versions of Firefox */
-        -ms-user-select: none; /* Internet Explorer/Edge */
-            user-select: none; /* Non-prefixed version, currently
+  -webkit-user-select: none; /* Safari */
+  -khtml-user-select: none; /* Konqueror HTML */
+  -moz-user-select: none; /* Old versions of Firefox */
+  -ms-user-select: none; /* Internet Explorer/Edge */
+  user-select: none; /* Non-prefixed version, currently
                                   supported by Chrome, Edge, Opera and Firefox */
 }
 
@@ -182,5 +182,5 @@ legend {
 }
 
 .bg-red-dark-soft {
-  background-color: rgba(160, 0, 5, .1);
+  background-color: rgba(160, 0, 5, 0.1);
 }
