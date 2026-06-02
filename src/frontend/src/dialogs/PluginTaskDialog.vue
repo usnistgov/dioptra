@@ -1,26 +1,35 @@
 <template>
-  <q-dialog v-model="showDialog" :persistent="true">
+  <q-dialog
+    v-model="showDialog"
+    :persistent="true"
+  >
     <q-card>
       <q-card-section class="bg-primary text-white text-h6">
-        <div class="text-h6">Create {{ taskType === 'functions' ? 'Function' : 'Artifact' }} Task</div>
+        <div class="text-h6">Create {{ taskType === "functions" ? "Function" : "Artifact" }} Task</div>
       </q-card-section>
       <q-card-section>
-        <q-form ref="taskForm" @submit.prevent="addTask" id="taskForm">
-          <q-input 
-            outlined 
-            dense 
+        <q-form
+          id="taskForm"
+          ref="taskForm"
+          @submit.prevent="addTask"
+        >
+          <q-input
             v-model.trim="task.name"
+            outlined
+            dense
             :rules="[requiredRule]"
             class="q-mt-sm"
           >
-            <template v-slot:before>
+            <template #before>
               <label :class="`field-label`">Task Name:</label>
             </template>
           </q-input>
-          <div class="row items-end" style="min-height: 30px;" v-if="taskType === 'functions'">
-            <label>
-              Input Parameters:
-            </label>
+          <div
+            v-if="taskType === 'functions'"
+            class="row items-end"
+            style="min-height: 30px"
+          >
+            <label> Input Parameters: </label>
             <q-chip
               v-for="(param, i) in inputParams"
               :key="i"
@@ -31,11 +40,20 @@
               @remove="inputParams.splice(i, 1)"
             >
               {{ `${param.name}` }}
-              <span v-if="param.required" class="text-red">*</span>
+              <span
+                v-if="param.required"
+                class="text-red"
+                >*</span
+              >
               {{ `: ${param.parameterType.name}` }}
             </q-chip>
           </div>
-          <q-form ref="inputParamForm" greedy @submit.prevent="addInputParam" v-if="taskType === 'functions'">
+          <q-form
+            v-if="taskType === 'functions'"
+            ref="inputParamForm"
+            greedy
+            @submit.prevent="addInputParam"
+          >
             <div class="row">
               <q-input
                 v-model.trim="inputParam.name"
@@ -44,9 +62,9 @@
                 dense
                 outlined
                 class="col q-mr-sm"
-                style="width: 300px;"
+                style="width: 300px"
               />
-              <q-select 
+              <q-select
                 v-model="inputParam.parameterType"
                 emit-value
                 option-value="id"
@@ -61,9 +79,9 @@
               />
               <div class="col">
                 <q-checkbox
+                  v-model="inputParam.required"
                   label="Required"
                   left-label
-                  v-model="inputParam.required"
                 />
               </div>
               <q-btn
@@ -75,17 +93,16 @@
                 @click="addInputParam()"
               >
                 <span class="sr-only">Add Input Parameter</span>
-                <q-tooltip>
-                  Add Input Parameter
-                </q-tooltip>
+                <q-tooltip> Add Input Parameter </q-tooltip>
               </q-btn>
             </div>
           </q-form>
-          
-          <div class="row items-end" style="min-height: 30px;">
-            <label>
-              Output Parameters:
-            </label>
+
+          <div
+            class="row items-end"
+            style="min-height: 30px"
+          >
+            <label> Output Parameters: </label>
             <q-chip
               v-for="(param, i) in outputParams"
               :key="i"
@@ -93,11 +110,15 @@
               text-color="white"
               removable
               dense
-              @remove="outputParams.splice(i, 1)"
               :label="`${param.name}: ${param.parameterType.name}`"
+              @remove="outputParams.splice(i, 1)"
             />
           </div>
-          <q-form ref="outputParamForm" greedy @submit.prevent="addOutputParam">
+          <q-form
+            ref="outputParamForm"
+            greedy
+            @submit.prevent="addOutputParam"
+          >
             <div class="row">
               <q-input
                 v-model.trim="outputParam.name"
@@ -106,9 +127,9 @@
                 dense
                 outlined
                 class="col q-mr-sm"
-                style="width: 370px;"
+                style="width: 370px"
               />
-              <q-select 
+              <q-select
                 v-model="outputParam.parameterType"
                 emit-value
                 option-value="id"
@@ -121,7 +142,10 @@
                 dense
                 :rules="[requiredRule]"
               />
-              <div class="col" v-if="taskType==='functions'"></div>
+              <div
+                v-if="taskType === 'functions'"
+                class="col"
+              ></div>
               <q-btn
                 round
                 icon="add"
@@ -131,9 +155,7 @@
                 @click="addOutputParam()"
               >
                 <span class="sr-only">Add Output Parameter</span>
-                <q-tooltip>
-                  Add Output Parameter
-                </q-tooltip>
+                <q-tooltip> Add Output Parameter </q-tooltip>
               </q-btn>
             </div>
           </q-form>
@@ -143,11 +165,11 @@
       <q-separator />
 
       <q-card-actions align="right">
-        <q-btn 
+        <q-btn
+          v-close-popup
           outline
-          color="primary cancel-btn" 
-          label="Cancel" 
-          v-close-popup 
+          color="primary cancel-btn"
+          label="Cancel"
           class="q-mr-xs"
         />
         <q-btn
@@ -162,98 +184,95 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch } from "vue";
 
-const props = defineProps(['taskType', 'pluginParameterTypes'])
+const props = defineProps(["taskType", "pluginParameterTypes"]);
 
-const emit = defineEmits(['submit'])
+const emit = defineEmits(["submit"]);
 
-const showDialog = defineModel()
+const showDialog = defineModel();
 
 const inputParam = ref({
-  name: '',
-  parameterType: '',
-  required: true
-})
+  name: "",
+  parameterType: "",
+  required: true,
+});
 const outputParam = ref({
-  name: '',
-  parameterType: ''
-})
+  name: "",
+  parameterType: "",
+});
 
-const inputParams = ref([])
-const outputParams = ref([])
+const inputParams = ref([]);
+const outputParams = ref([]);
 
-const task = ref({})
+const task = ref({});
 
-const taskForm = ref(null)
-const inputParamForm = ref(null)
-const outputParamForm = ref(null)
-
+const taskForm = ref(null);
+const inputParamForm = ref(null);
+const outputParamForm = ref(null);
 
 function requiredRule(val) {
-  return (!!val) || "This field is required"
+  return !!val || "This field is required";
 }
 
 function addTask() {
-  taskForm.value.validate().then(success => {
-    if(success) {
-      emit('submit', {
+  taskForm.value.validate().then((success) => {
+    if (success) {
+      emit("submit", {
         name: task.value.name,
         inputParams: inputParams.value,
-        outputParams: outputParams.value
-      })
-      showDialog.value = false
+        outputParams: outputParams.value,
+      });
+      showDialog.value = false;
     }
-  })
+  });
 }
 
 function addInputParam() {
-  inputParamForm.value.validate().then(success => {
+  inputParamForm.value.validate().then((success) => {
     if (success) {
-      const type = props.pluginParameterTypes.find((paramType) => paramType.id === inputParam.value.parameterType)
+      const type = props.pluginParameterTypes.find((paramType) => paramType.id === inputParam.value.parameterType);
       inputParam.value.parameterType = {
         name: type.name,
-        id: type.id
-      }
-      inputParams.value.push(inputParam.value)
-      inputParam.value = {}
-      inputParam.value.required = true
-      inputParamForm.value.reset()
+        id: type.id,
+      };
+      inputParams.value.push(inputParam.value);
+      inputParam.value = {};
+      inputParam.value.required = true;
+      inputParamForm.value.reset();
     }
-  })
+  });
 }
 
 function addOutputParam() {
-  outputParamForm.value.validate().then(success => {
+  outputParamForm.value.validate().then((success) => {
     if (success) {
-      const type = props.pluginParameterTypes.find((paramType) => paramType.id === outputParam.value.parameterType)
+      const type = props.pluginParameterTypes.find((paramType) => paramType.id === outputParam.value.parameterType);
       outputParam.value.parameterType = {
         name: type.name,
-        id: type.id
-      }
-      outputParams.value.push(outputParam.value)
-      outputParam.value = {}
-      outputParamForm.value.reset()
+        id: type.id,
+      };
+      outputParams.value.push(outputParam.value);
+      outputParam.value = {};
+      outputParamForm.value.reset();
     }
-  })
+  });
 }
 
 function resetTaskForm() {
-  task.value ={}
-  taskForm.value.reset()
-  inputParam.value = { required: true }
-  outputParam.value = {}
-  inputParams.value = []
-  outputParams.value = []
-  inputParamForm.value?.reset()
-  outputParamForm.value?.reset()
+  task.value = {};
+  taskForm.value.reset();
+  inputParam.value = { required: true };
+  outputParam.value = {};
+  inputParams.value = [];
+  outputParams.value = [];
+  inputParamForm.value?.reset();
+  outputParamForm.value?.reset();
 }
 
-
 watch(showDialog, (newVal) => {
-  if(!newVal) {
-    resetTaskForm()
+  if (!newVal) {
+    resetTaskForm();
   }
-})
-
+});
 </script>

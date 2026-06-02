@@ -59,13 +59,13 @@ export const RESOURCE_STYLES = {
     color: "grey-7",
     darkColor: "grey-5",
   },
-}
+};
 
 export function getResourceStyle(type, darkMode = false) {
-  const style = RESOURCE_STYLES[type] || RESOURCE_STYLES.default
+  const style = RESOURCE_STYLES[type] || RESOURCE_STYLES.default;
 
   return {
     ...style,
     color: darkMode ? style.darkColor : style.color,
-  }
+  };
 }
