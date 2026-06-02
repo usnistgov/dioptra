@@ -1,5 +1,5 @@
 <template>
-  <PageTitle 
+  <PageTitle
     title="Create Job"
     resourceType="job"
   />
@@ -8,7 +8,10 @@
       <fieldset>
         <legend>Basic Info</legend>
         <div class="q-ma-lg">
-          <q-form ref="basicInfoForm" greedy>
+          <q-form
+            ref="basicInfoForm"
+            greedy
+          >
             <ResourcePicker
               v-model="job.experiment"
               :options="experiments"
@@ -16,22 +19,28 @@
               label="Experiment:"
               :multiple="false"
               clearable
-              @filter="getExperiments"
               :rules="[requiredRule]"
-              :disable="Object.hasOwn(route.params, 'id') || (!Object.hasOwn(route.params, 'id') && experiments.length === 0)"
+              :disable="
+                Object.hasOwn(route.params, 'id') || (!Object.hasOwn(route.params, 'id') && experiments.length === 0)
+              "
               class="q-mb-lg"
-              :class="{ 'error': experimentError }"
-              @update:model-value="() => { job.entrypoint = ''; job.queue = ''; basicInfoForm.reset() }"
+              :class="{ error: experimentError }"
+              @filter="getExperiments"
+              @update:model-value="
+                () => {
+                  job.entrypoint = '';
+                  job.queue = '';
+                  basicInfoForm.reset();
+                }
+              "
             >
               <template #hint>
-                <span 
+                <span
                   v-if="!Object.hasOwn(route.params, 'id') && experiments.length === 0"
-                  :style="{ 'color': experimentError ? '#C10015' : 'grey' }"
+                  :style="{ color: experimentError ? '#C10015' : 'grey' }"
                 >
-                  No existing Experiments.  Create one
-                  <router-link to="/experiments/new">
-                    here
-                  </router-link>
+                  No existing Experiments. Create one
+                  <router-link to="/experiments/new"> here </router-link>
                 </span>
               </template>
             </ResourcePicker>
@@ -42,32 +51,44 @@
               label="Entrypoint:"
               :multiple="false"
               clearable
-              @filter="getEntrypoints"
               :rules="[requiredRule]"
-              :class="{ 'error': entrypointError }"
+              :class="{ error: entrypointError }"
               :disable="!job.experiment || allowableEntrypointIds.length === 0"
-              @update:model-value="() => { job.queue = ''; basicInfoForm.reset() }"
               class="q-mb-lg"
+              @filter="getEntrypoints"
+              @update:model-value="
+                () => {
+                  job.queue = '';
+                  basicInfoForm.reset();
+                }
+              "
             >
               <template #hint>
                 <span v-if="!job.experiment">Select experiment first</span>
-                <span 
+                <span
                   v-else-if="allEntrypoints.length === 0"
                   :style="{ color: entrypointError ? '#C10015' : 'grey' }"
                 >
-                  No existing Entrypoints.  Create one
+                  No existing Entrypoints. Create one
                   <router-link to="/entrypoints/new">here</router-link>
                 </span>
-                <span 
+                <span
                   v-else-if="allowableEntrypointIds.length === 0"
                   :style="{ color: entrypointError ? '#C10015' : 'grey' }"
                 >
-                  {{ job.experiment.name }} has no Entrypoints, add 
-                  <a href="#" @click="showAppendEntrypointDialog = true">here</a>
+                  {{ job.experiment.name }} has no Entrypoints, add
+                  <a
+                    href="#"
+                    @click="showAppendEntrypointDialog = true"
+                    >here</a
+                  >
                 </span>
                 <span v-else>
-                  If you don't see your desired Entrypoint, 
-                  <a href="#" @click="showAppendEntrypointDialog = true">
+                  If you don't see your desired Entrypoint,
+                  <a
+                    href="#"
+                    @click="showAppendEntrypointDialog = true"
+                  >
                     register it with the "{{ job.experiment.name }}" Experiment first
                   </a>
                 </span>
@@ -75,10 +96,13 @@
             </ResourcePicker>
             <div
               v-if="entrypointError"
-              style="margin: 3px 0 10px 118px; font-size: 11px; color: #818181;"
+              style="margin: 3px 0 10px 118px; font-size: 11px; color: #818181"
             >
-              If you don't see your desired Entrypoint, 
-              <a href="#" @click="showAppendEntrypointDialog = true">
+              If you don't see your desired Entrypoint,
+              <a
+                href="#"
+                @click="showAppendEntrypointDialog = true"
+              >
                 register it with the "{{ job?.experiment?.name }}" Experiment first
               </a>
             </div>
@@ -89,29 +113,39 @@
               label="Queue:"
               :multiple="false"
               clearable
-              @filter="getQueues"
               :rules="[requiredRule]"
               :class="{ error: queueError }"
               :disable="!job.entrypoint || allowableQueueIds.length === 0"
               class="q-mb-lg"
+              @filter="getQueues"
             >
               <template #hint>
                 <span v-if="!job.experiment && !job.entrypoint">Select Experiment and Entrypoint first</span>
                 <span v-else-if="!job.entrypoint">Select Entrypoint first</span>
-                <span v-else-if="allQueues.length === 0" :style="{ color: queueError ? '#C10015' : 'grey' }">
-                  No current Queues.  Create one
+                <span
+                  v-else-if="allQueues.length === 0"
+                  :style="{ color: queueError ? '#C10015' : 'grey' }"
+                >
+                  No current Queues. Create one
                   <router-link to="/queues">here</router-link>
                 </span>
-                <span 
+                <span
                   v-else-if="allowableQueueIds.length === 0"
                   :style="{ color: queueError ? '#C10015' : 'grey' }"
                 >
-                  {{ job.entrypoint.name }} has no Queues, add 
-                  <a href="#" @click="showAppendQueueDialog = true">here</a>
+                  {{ job.entrypoint.name }} has no Queues, add
+                  <a
+                    href="#"
+                    @click="showAppendQueueDialog = true"
+                    >here</a
+                  >
                 </span>
                 <span v-else>
-                  If you don't see your desired Queue, 
-                  <a href="#" @click="showAppendQueueDialog = true">
+                  If you don't see your desired Queue,
+                  <a
+                    href="#"
+                    @click="showAppendQueueDialog = true"
+                  >
                     register it with the "{{ job.entrypoint.name }}" Entrypoint first
                   </a>
                 </span>
@@ -119,34 +153,37 @@
             </ResourcePicker>
             <div
               v-if="queueError"
-              style="margin: 3px 0 10px 118px; font-size: 11px; color: #818181;"
+              style="margin: 3px 0 10px 118px; font-size: 11px; color: #818181"
             >
               If you don't see your desired Queue,
-              <a href="#" @click="showAppendQueueDialog = true">
+              <a
+                href="#"
+                @click="showAppendQueueDialog = true"
+              >
                 register it with the "{{ job?.entrypoint?.name }}" Entrypoint first
               </a>
             </div>
             <q-input
-              outlined 
-              v-model="job.timeout" 
+              v-model="job.timeout"
+              outlined
               dense
               aria-required="true"
               class="q-mb-lg"
               :rules="[timeUnitRule]"
             >
-              <template v-slot:before>
+              <template #before>
                 <div class="field-label">Timeout:</div>
-              </template>  
+              </template>
             </q-input>
-            <q-input 
-              outlined 
-              dense 
+            <q-input
               v-model.trim="job.description"
+              outlined
+              dense
               class="q-mb-lg"
               type="textarea"
               autogrow
             >
-              <template v-slot:before>
+              <template #before>
                 <label :class="`field-label`">Description:</label>
               </template>
             </q-input>
@@ -154,7 +191,10 @@
         </div>
       </fieldset>
     </div>
-    <fieldset :class="`${isMobile ? 'col-12 q-mt-lg' : 'col'} q-px-lg`" :disabled="job.entrypoint === ''">
+    <fieldset
+      :class="`${isMobile ? 'col-12 q-mt-lg' : 'col'} q-px-lg`"
+      :disabled="job.entrypoint === ''"
+    >
       <legend>Values</legend>
       <TableComponent
         title="Entrypoint Parameters"
@@ -165,9 +205,9 @@
         :disableSelect="true"
         :hideSearch="true"
       >
-        <template #body-cell-value="props">
-          <div style="font-size: 18px;">
-            <span v-if="props.row.value === null">
+        <template #body-cell-value="cellProps">
+          <div style="font-size: 18px">
+            <span v-if="cellProps.row.value === null">
               <q-chip
                 label="Needs Parameter Value"
                 color="negative"
@@ -176,42 +216,48 @@
               />
             </span>
             <span v-else>
-              {{ props.row.value }}
+              {{ cellProps.row.value }}
             </span>
-            <q-btn icon="edit" round size="sm" color="primary" flat />
+            <q-btn
+              icon="edit"
+              round
+              size="sm"
+              color="primary"
+              flat
+            />
           </div>
-          <q-popup-edit 
-            v-model="props.row.value"
+          <q-popup-edit
             v-slot="scope"
+            v-model="cellProps.row.value"
             buttons
           >
             <div class="text-h6">
-              {{ props.row.name }}
+              {{ cellProps.row.name }}
               <q-chip
                 v-if="scope.value === null"
                 label="Needs Parameter Value"
                 color="negative"
                 text-color="white"
-              />  
+              />
             </div>
-            <div class="text-subtitle2 text-grey-7 q-mb-md">
-              Set Entrypoint Parameter Value
-            </div>
+            <div class="text-subtitle2 text-grey-7 q-mb-md">Set Entrypoint Parameter Value</div>
             <q-input
-              outlined
               v-model="scope.value"
+              outlined
               dense
               autofocus
-              @keyup.enter="scope.set"
               class="q-mb-sm"
-              :placeholder="scope.value === null 
-                ? 'Null, please enter value' 
-                : scope.value === '' 
-                  ? '[Empty String]' 
-                  : ''"
+              :placeholder="
+                scope.value === null ? 'Null, please enter value' : scope.value === '' ? '[Empty String]' : ''
+              "
+              @keyup.enter="scope.set"
             >
-              <template v-slot:before>
-                <label :class="`field-label`" style="width: 125px;">Parameter Value:</label>
+              <template #before>
+                <label
+                  :class="`field-label`"
+                  style="width: 125px"
+                  >Parameter Value:</label
+                >
               </template>
             </q-input>
             <!-- Set Parameter to Empty String:
@@ -234,41 +280,43 @@
               label="Revert to Default Value"
               color="primary"
               class="q-mt-sm"
-              @click="scope.value = props.row.originalValue"
-              :disable="scope.value === props.row.originalValue"
+              :disable="scope.value === cellProps.row.originalValue"
+              @click="scope.value = cellProps.row.originalValue"
             />
           </q-popup-edit>
         </template>
       </TableComponent>
       <q-btn
-        v-if="!updateEntrypoint && job.entrypoint?.id === oldEntrypoint?.id && 
-        oldEntrypoint?.snapshot !== latestEntrypoint?.snapshot"
-        square 
+        v-if="
+          !updateEntrypoint &&
+          job.entrypoint?.id === oldEntrypoint?.id &&
+          oldEntrypoint?.snapshot !== latestEntrypoint?.snapshot
+        "
+        square
         color="red"
-        label="Update Values" 
+        label="Update Values"
         icon="sync"
         size="sm"
-        @click.stop="syncJobParams()"
         class="q-mr-md"
+        @click.stop="syncJobParams()"
       >
-        <q-tooltip>
-          Sync to latest version of entrypoint parameters and values.
-        </q-tooltip>
+        <q-tooltip> Sync to latest version of entrypoint parameters and values. </q-tooltip>
       </q-btn>
       <q-btn
-        v-if="updateEntrypoint && job.entrypoint?.id === oldEntrypoint?.id && 
-        job.entrypoint.snapshot === latestEntrypoint?.snapshot"
-        square 
+        v-if="
+          updateEntrypoint &&
+          job.entrypoint?.id === oldEntrypoint?.id &&
+          job.entrypoint.snapshot === latestEntrypoint?.snapshot
+        "
+        square
         color="red"
-        label="Revert Values" 
+        label="Revert Values"
         icon="sync"
         size="sm"
-        @click.stop="revertJobParams()"
         class="q-mr-md"
+        @click.stop="revertJobParams()"
       >
-        <q-tooltip>
-          Revert to original job's entrypoint parameters and values.
-        </q-tooltip>
+        <q-tooltip> Revert to original job's entrypoint parameters and values. </q-tooltip>
       </q-btn>
       <TableComponent
         title="Artifact Parameters"
@@ -279,9 +327,12 @@
         :disableSelect="true"
         :hideSearch="true"
       >
-        <template #body-cell-output="props">
-          <div v-for="param in props.row.outputParams">
-            <q-chip 
+        <template #body-cell-output="cellProps">
+          <div
+            v-for="(param, i) in cellProps.row.outputParams"
+            :key="i"
+          >
+            <q-chip
               :label="`${param.name}: ${param.parameterType.name}`"
               color="secondary"
               text-color="white"
@@ -289,20 +340,20 @@
             />
           </div>
         </template>
-        <template #body-cell-artifact="props">
+        <template #body-cell-artifact="cellProps">
           <div class="row">
             <q-select
+              v-model="cellProps.row.selectedArtifact"
               label="Artifact"
-              v-model="props.row.selectedArtifact"
               dense
               outlined
-              :options="getMatchingArtifacts(props.row.outputParams)"
+              :options="getMatchingArtifacts(cellProps.row.outputParams)"
               option-label="description"
               clearable
-              @update:model-value="onSelectArtifact(props.row)"
               class="col"
+              @update:model-value="onSelectArtifact(cellProps.row)"
             >
-              <template v-slot:option="scope">
+              <template #option="scope">
                 <q-item v-bind="scope.itemProps">
                   <q-item-section>
                     <q-item-label>Description: {{ scope.opt.description }}</q-item-label>
@@ -312,41 +363,48 @@
               </template>
             </q-select>
             <q-checkbox
-              v-model="props.row.showSnapshotDropdown"
+              v-model="cellProps.row.showSnapshotDropdown"
               checked-icon="history"
               unchecked-icon="sym_o_history"
               size="lg"
-              @update:model-value="(value) => {
-                if(!value) onSelectArtifact(props.row)
-              }"
+              @update:model-value="
+                (value) => {
+                  if (!value) onSelectArtifact(cellProps.row);
+                }
+              "
             >
-              <q-tooltip>
-                Click to select specific snapshot
-              </q-tooltip>
+              <q-tooltip> Click to select specific snapshot </q-tooltip>
             </q-checkbox>
           </div>
           <q-select
-            v-if="props.row.showSnapshotDropdown"
+            v-if="cellProps.row.showSnapshotDropdown"
+            v-model="cellProps.row.selectedArtifactSnapshot"
             label="Artifact Snapshot"
-            v-model="props.row.selectedArtifactSnapshot"
             dense
             outlined
-            :options="props.row.artifactSnapshotOptions"
+            :options="cellProps.row.artifactSnapshotOptions"
             option-label="description"
             clearable
-            @clear="props.row.showSnapshotDropdown = false; onSelectArtifact(props.row)"
-            :disable="!props.row.selectedArtifact"
+            :disable="!cellProps.row.selectedArtifact"
+            @clear="
+              cellProps.row.showSnapshotDropdown = false;
+              onSelectArtifact(cellProps.row);
+            "
           >
             <template #before>
               <q-icon name="subdirectory_arrow_right" />
             </template>
-            <template v-slot:option="scope">
+            <template #option="scope">
               <q-item v-bind="scope.itemProps">
                 <q-item-section>
                   <q-item-label>Description: {{ scope.opt.description }}</q-item-label>
                   <q-item-label caption>Job ID: {{ scope.opt.job }}</q-item-label>
-                  <q-item-label caption>Snapshot: {{ scope.opt.snapshot }} {{ scope.opt.latestSnapshot ? '(latest)' : '' }}</q-item-label>
-                  <q-item-label caption>Snapshot Created On: {{ formatDate(scope.opt.snapshotCreatedOn) }}</q-item-label>
+                  <q-item-label caption
+                    >Snapshot: {{ scope.opt.snapshot }} {{ scope.opt.latestSnapshot ? "(latest)" : "" }}</q-item-label
+                  >
+                  <q-item-label caption
+                    >Snapshot Created On: {{ formatDate(scope.opt.snapshotCreatedOn) }}</q-item-label
+                  >
                 </q-item-section>
               </q-item>
             </template>
@@ -357,28 +415,30 @@
   </div>
 
   <div :class="`float-right q-mb-lg`">
-      <q-btn
-        outline
-        color="primary" 
-        label="Cancel"
-        class="q-mr-lg cancel-btn"
-        @click="confirmLeave = true; router.back()"
-      />
-      <q-btn  
-        @click="submit()" 
-        color="primary" 
-        label="Submit Job"
+    <q-btn
+      outline
+      color="primary"
+      label="Cancel"
+      class="q-mr-lg cancel-btn"
+      @click="
+        confirmLeave = true;
+        router.back();
+      "
+    />
+    <q-btn
+      color="primary"
+      label="Submit Job"
+      @click="submit()"
+    />
+  </div>
 
-      />
-    </div>
-
-  <DeleteDialog 
+  <DeleteDialog
     v-model="showDeleteDialog"
-    @submit="deleteParam()"
     type="Parameter"
     :name="selectedParam.name"
+    @submit="deleteParam()"
   />
-  <EditJobParamDialog 
+  <EditJobParamDialog
     v-model="showEditParamDialog"
     :editParam="selectedParam"
     @updateParam="updateParam"
@@ -392,125 +452,134 @@
     parentResourceType="experiments"
     childResourceType="entrypoints"
     :parentResourceObj="job.experiment"
-    @submit="getExperiment(job.experiment.id); basicInfoForm.reset();"
+    @submit="
+      getExperiment(job.experiment.id);
+      basicInfoForm.reset();
+    "
   />
   <AppendResource
     v-model="showAppendQueueDialog"
     parentResourceType="entrypoints"
     childResourceType="queues"
     :parentResourceObj="job.entrypoint"
-    @submit="getEntrypoint(job.entrypoint.id); basicInfoForm.reset();"
+    @submit="
+      getEntrypoint(job.entrypoint.id);
+      basicInfoForm.reset();
+    "
   />
 </template>
 
 <script setup>
-  import { ref, inject, watch, computed, onMounted } from 'vue'
-  import { useRouter, onBeforeRouteLeave } from 'vue-router'
-  import DeleteDialog from '@/dialogs/DeleteDialog.vue'
-  import EditJobParamDialog from '@/dialogs/EditJobParamDialog.vue'
-  import { useRoute } from 'vue-router'
-  import * as api from '@/services/dataApi'
-  import * as notify from '../notify'
-  import PageTitle from '@/components/PageTitle.vue'
-  import ReturnToFormDialog from '@/dialogs/ReturnToFormDialog.vue'
-  import { useLoginStore } from '@/stores/LoginStore'
-  import AppendResource from '@/dialogs/AppendResource.vue'
-  import TableComponent from '@/components/TableComponent.vue'
-  import ResourcePicker from '@/components/ResourcePicker.vue'
+import { ref, inject, watch, computed, onMounted } from "vue";
+import { useRouter, onBeforeRouteLeave } from "vue-router";
+import DeleteDialog from "@/dialogs/DeleteDialog.vue";
+import EditJobParamDialog from "@/dialogs/EditJobParamDialog.vue";
+import { useRoute } from "vue-router";
+import * as api from "@/services/dataApi";
+import * as notify from "../notify";
+import PageTitle from "@/components/PageTitle.vue";
+import ReturnToFormDialog from "@/dialogs/ReturnToFormDialog.vue";
+import { useLoginStore } from "@/stores/LoginStore";
+import AppendResource from "@/dialogs/AppendResource.vue";
+import TableComponent from "@/components/TableComponent.vue";
+import ResourcePicker from "@/components/ResourcePicker.vue";
 
-  const store = useLoginStore()
+const store = useLoginStore();
 
-  const route = useRoute()
-  
-  const router = useRouter()
+const route = useRoute();
 
-  const isMobile = inject('isMobile')
+const router = useRouter();
 
-  function requiredRule(val) {
-    return (!!val) || "This field is required"
-  }
+const isMobile = inject("isMobile");
 
-  function timeUnitRule(val) {
-    return (/^\d+[hms]$/.test(val)) || "Value must be an integer followed by 'h', 'm', or 's'";
-  }
+function requiredRule(val) {
+  return !!val || "This field is required";
+}
 
-  const oldJob = ref()
-  const oldEntrypoint = ref()
-  const updateEntrypoint = ref(false)
-  const latestEntrypoint = ref()
+function timeUnitRule(val) {
+  return /^\d+[hms]$/.test(val) || "Value must be an integer followed by 'h', 'm', or 's'";
+}
 
-  const job = ref({
-    description: '',
-    timeout: '24h',
-    queue: '',
-    entrypoint: '',
-    experiment: ''
-  })
+const oldJob = ref();
+const oldEntrypoint = ref();
+const updateEntrypoint = ref(false);
+const latestEntrypoint = ref();
 
-  const valuesChanged = computed(() => {
-    return job.value.description !== '' ||
-           job.value.timeout !== '24h' ||
-           (job.value.queue !== '' && job.value.queue !== null) ||
-           job.value.entrypoint !== ''
-  })
+const job = ref({
+  description: "",
+  timeout: "24h",
+  queue: "",
+  entrypoint: "",
+  experiment: "",
+});
 
-  const parameters = ref([])
-  const artifactParameters = ref([])
+const valuesChanged = computed(() => {
+  return (
+    job.value.description !== "" ||
+    job.value.timeout !== "24h" ||
+    (job.value.queue !== "" && job.value.queue !== null) ||
+    job.value.entrypoint !== ""
+  );
+});
 
-  const computedValue = computed(() => {
-    let output = {}
-    if (parameters.value.length === 0) return output
-    parameters.value.forEach((param) => {
-      // if param value is null, dont include in payload
-      if(param.value !== null) {
-        output[param.name] = param.value
-      }
-    })
-    return output
-  })
+const parameters = ref([]);
+const artifactParameters = ref([]);
 
-  watch(() => job.value.entrypoint, (newVal) => {
-    parameters.value = []
-    if(Array.isArray(newVal?.parameters)) {
+const computedValue = computed(() => {
+  const output = {};
+  if (parameters.value.length === 0) return output;
+  parameters.value.forEach((param) => {
+    // if param value is null, dont include in payload
+    if (param.value !== null) {
+      output[param.name] = param.value;
+    }
+  });
+  return output;
+});
+
+watch(
+  () => job.value.entrypoint,
+  (newVal) => {
+    parameters.value = [];
+    if (Array.isArray(newVal?.parameters)) {
       newVal.parameters.forEach((param) => {
         // if re-running a job
-        if(history.state.oldJobId) {
-          // if entrypoint parameters are being synced or 
+        if (history.state.oldJobId) {
+          // if entrypoint parameters are being synced or
           // a different entrypoint is chosen
-          if(updateEntrypoint.value || oldJob.value.entrypoint.id !== newVal.id){
+          if (updateEntrypoint.value || oldJob.value.entrypoint.id !== newVal.id) {
             parameters.value.push({
               name: param.name,
               value: param.defaultValue,
               type: param.parameterType,
-              originalValue: param.defaultValue
-            })
-          }
-          else {
+              originalValue: param.defaultValue,
+            });
+          } else {
             // only add parameters that exist in the original job
             if (param.name in oldJob.value.values) {
               parameters.value.push({
                 name: param.name,
-                value: (history.state.oldJobId) ? oldJob.value.values[param.name] : param.defaultValue,
+                value: history.state.oldJobId ? oldJob.value.values[param.name] : param.defaultValue,
                 type: param.parameterType,
-                originalValue: param.defaultValue
-              })
+                originalValue: param.defaultValue,
+              });
             }
           }
         }
         // if creating a new job
         else {
           parameters.value.push({
-              name: param.name,
-              value: param.defaultValue,
-              type: param.parameterType,
-              originalValue: param.defaultValue
-          })
+            name: param.name,
+            value: param.defaultValue,
+            type: param.parameterType,
+            originalValue: param.defaultValue,
+          });
         }
-      })
+      });
     }
 
-    artifactParameters.value = []
-    if(Array.isArray(newVal?.artifactParameters)) {
+    artifactParameters.value = [];
+    if (Array.isArray(newVal?.artifactParameters)) {
       newVal?.artifactParameters.forEach((artifactParam) => {
         artifactParameters.value.push({
           name: artifactParam.name,
@@ -519,491 +588,509 @@
           selectedArtifactSnapshot: null,
           artifactSnapshotOptions: [],
           showSnapshotDropdown: false,
-        })
-      })
-    }
-  })
-
-  watch(() => job.value.experiment, async (newVal) => {
-    if(newVal) {
-      await getEntrypoints()
-    } else {
-      entrypointError.value = false
-    }
-  })
-
-  watch(() => job.value.entrypoint, async (newVal) => {
-    if(newVal) {
-      await getQueues()
-      if (queues.value.length == 1) {
-        job.value.queue = queues.value[0]
-      }
-    } else {
-      queueError.value = false
-    }
-  })
-
-  const basicInfoForm = ref(null)
-
-  const columns = [
-    { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, },
-    { name: 'value', label: 'Value', align: 'left', field: 'value', sortable: true, },
-    { name: 'parameterType', label: 'Type', align: 'left', field: 'type', sortable: true, },
-    // { name: 'actions', label: 'Actions', align: 'center',  },
-  ]
-
-  const artifactParamColumns = [
-    { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, },
-    { name: 'output', label: 'Output', align: 'left', field: 'outputParams', sortable: true, },
-    { name: 'artifact', label: 'Artifact', align: 'left', sortable: false, },
-  ]
-
-  const experimentError = ref(false)
-  const entrypointError = ref(false)
-  const queueError = ref(false)
-
-  function submit() {
-    basicInfoForm.value.validate().then(success => {
-      // quasar doesn't validate disabled fields, need to manually do it below
-      if(!job.experiment && experiments.value.length === 0 && !Object.hasOwn(route.params, 'id')) {
-        experimentError.value = true
-      }
-      if(job.value.experiment && !job.value.entrypoint && (allEntrypoints.value.length === 0 || allowableEntrypointIds.value.length === 0)) {
-        entrypointError.value = true
-      }
-      if(job.value.entrypoint && !job.value.queue && (allQueues.value.length === 0 || allowableQueueIds.value.length === 0)) {
-        queueError.value = true
-      }
-      if(success && job.value.experiment && job.value.entrypoint && job.value.queue) {
-        confirmLeave.value = true
-        createJob()
-      }
-      else {
-        // error
-      }
-    })
-  }
-
-  const expJobOrAllJobs = computed(() => {
-    // determine if experiment job form or all jobs form, when saving form
-    if(Object.hasOwn(route.params, 'id')) {
-      return route.params.id
-    } else {
-      return 'allJobs'
-    }
-  })
-
-  async function createJob() {
-    let payload = {
-      description: job.value.description,
-      queue: job.value.queue.id,
-      entrypoint: job.value.entrypoint.id,
-      values: computedValue.value,
-      artifactValues: {},
-      timeout: job.value.timeout,
-      entrypointSnapshot: (history.state.oldJobId && !updateEntrypoint.value) ? oldEntrypoint.value.snapshot : job.value.entrypoint.snapshot
-    }
-    artifactParameters.value.forEach((param) => {
-      if(param.selectedArtifactSnapshot) {
-        payload.artifactValues[param.name] = {
-          id: param.selectedArtifactSnapshot.id,
-          snapshotId: param.selectedArtifactSnapshot.snapshot
-        }
-      }
-    })
-    try {
-      await api.addJob(job.value.experiment.id, payload)
-      notify.success(`Successfully created job`)
-      store.savedForms.jobs[expJobOrAllJobs.value] = null
-      router.push(expJobOrAllJobs.value === 'allJobs' ? `/jobs` : `/experiments/${route.params.id}`)
-    } catch(err) {
-      // error shows when redis isn't installed, but job is still created
-      store.savedForms.jobs[expJobOrAllJobs.value] = null
-      if(err.response.data.message) {
-        notify.error(err.response.data.message)
-      }
-      if(err.response?.data?.errors?.values &&
-        Object.keys(err.response.data.errors.values).length > 0) {
-          for (const [key, value] of Object.entries(err.response.data.errors.values)) {
-            notify.error(`${key}: ${value.value}`)
-          }
-      }
-      console.log(err)
-    }
-  }
-
-  const showDeleteDialog = ref(false)
-  const selectedParam = ref({})
-  const selectedParamIndex = ref('')
-
-  function deleteParam() {
-    parameters.value = parameters.value.filter((param) => param.name !== selectedParam.value.name)
-    showDeleteDialog.value = false
-  }
-
-  const showEditParamDialog = ref(false)
-
-  function updateParam(parameter) {
-    parameters.value[selectedParamIndex.value] = { ...parameter }
-    showEditParamDialog.value = false
-  }
-
-  // const experiment = ref()
-  const experiments = ref([])
-  const queues = ref([])
-  const allQueues = ref([])
-  const entrypoints = ref([])
-  const allEntrypoints = ref([])
-
-  async function getExperiments(val = '', update) {
-    const fetchData = async () => {
-      try {
-        const res = await api.getData('experiments', {
-          search: val,
-          rowsPerPage: 0, // get all
-          index: 0
         });
-        experiments.value = res.data.data
-      } catch (err) {
-        notify.error(err.response.data.message)
+      });
+    }
+  },
+);
+
+watch(
+  () => job.value.experiment,
+  async (newVal) => {
+    if (newVal) {
+      await getEntrypoints();
+    } else {
+      entrypointError.value = false;
+    }
+  },
+);
+
+watch(
+  () => job.value.entrypoint,
+  async (newVal) => {
+    if (newVal) {
+      await getQueues();
+      if (queues.value.length == 1) {
+        job.value.queue = queues.value[0];
+      }
+    } else {
+      queueError.value = false;
+    }
+  },
+);
+
+const basicInfoForm = ref(null);
+
+const columns = [
+  { name: "name", label: "Name", align: "left", field: "name", sortable: true },
+  { name: "value", label: "Value", align: "left", field: "value", sortable: true },
+  { name: "parameterType", label: "Type", align: "left", field: "type", sortable: true },
+  // { name: 'actions', label: 'Actions', align: 'center',  },
+];
+
+const artifactParamColumns = [
+  { name: "name", label: "Name", align: "left", field: "name", sortable: true },
+  { name: "output", label: "Output", align: "left", field: "outputParams", sortable: true },
+  { name: "artifact", label: "Artifact", align: "left", sortable: false },
+];
+
+const experimentError = ref(false);
+const entrypointError = ref(false);
+const queueError = ref(false);
+
+function submit() {
+  basicInfoForm.value.validate().then((success) => {
+    // quasar doesn't validate disabled fields, need to manually do it below
+    if (!job.value.experiment && experiments.value.length === 0 && !Object.hasOwn(route.params, "id")) {
+      experimentError.value = true;
+    }
+    if (
+      job.value.experiment &&
+      !job.value.entrypoint &&
+      (allEntrypoints.value.length === 0 || allowableEntrypointIds.value.length === 0)
+    ) {
+      entrypointError.value = true;
+    }
+    if (
+      job.value.entrypoint &&
+      !job.value.queue &&
+      (allQueues.value.length === 0 || allowableQueueIds.value.length === 0)
+    ) {
+      queueError.value = true;
+    }
+    if (success && job.value.experiment && job.value.entrypoint && job.value.queue) {
+      confirmLeave.value = true;
+      createJob();
+    } else {
+      // error
+    }
+  });
+}
+
+const expJobOrAllJobs = computed(() => {
+  // determine if experiment job form or all jobs form, when saving form
+  if (Object.hasOwn(route.params, "id")) {
+    return route.params.id;
+  } else {
+    return "allJobs";
+  }
+});
+
+async function createJob() {
+  const payload = {
+    description: job.value.description,
+    queue: job.value.queue.id,
+    entrypoint: job.value.entrypoint.id,
+    values: computedValue.value,
+    artifactValues: {},
+    timeout: job.value.timeout,
+    entrypointSnapshot:
+      history.state.oldJobId && !updateEntrypoint.value ? oldEntrypoint.value.snapshot : job.value.entrypoint.snapshot,
+  };
+  artifactParameters.value.forEach((param) => {
+    if (param.selectedArtifactSnapshot) {
+      payload.artifactValues[param.name] = {
+        id: param.selectedArtifactSnapshot.id,
+        snapshotId: param.selectedArtifactSnapshot.snapshot,
+      };
+    }
+  });
+  try {
+    await api.addJob(job.value.experiment.id, payload);
+    notify.success(`Successfully created job`);
+    store.savedForms.jobs[expJobOrAllJobs.value] = null;
+    router.push(expJobOrAllJobs.value === "allJobs" ? `/jobs` : `/experiments/${route.params.id}`);
+  } catch (err) {
+    // error shows when redis isn't installed, but job is still created
+    store.savedForms.jobs[expJobOrAllJobs.value] = null;
+    if (err.response.data.message) {
+      notify.error(err.response.data.message);
+    }
+    if (err.response?.data?.errors?.values && Object.keys(err.response.data.errors.values).length > 0) {
+      for (const [key, value] of Object.entries(err.response.data.errors.values)) {
+        notify.error(`${key}: ${value.value}`);
       }
     }
-
-    if (update) {
-      // when used by the dropdown
-      await update(fetchData)
-    } else {
-      // when used by watcher
-      await fetchData()
-    }
+    console.log(err);
   }
+}
 
-  const allowableQueueIds = computed(() => {
-    if(!job.value.entrypoint) return []
-    return job.value.entrypoint.queues.map((q) => q.id)
-  })
+const showDeleteDialog = ref(false);
+const selectedParam = ref({});
+const selectedParamIndex = ref("");
 
-  async function getQueues(val = '', update) {
-    const fetchData = async () => {
-      try {
-        const res = await api.getData('queues', {
-          search: val,
-          rowsPerPage: 0, // get all
-          index: 0
-        })
-        allQueues.value = res.data.data
-        queues.value = res.data.data.filter((q) =>
-          allowableQueueIds.value.includes(q.id)
-        )
-      } catch(err) {
-        notify.error(err.response.data.message)
-      } 
-    }
+function deleteParam() {
+  parameters.value = parameters.value.filter((param) => param.name !== selectedParam.value.name);
+  showDeleteDialog.value = false;
+}
 
-    if (update) {
-      // when used by the dropdown
-      await update(fetchData)
-    } else {
-      // when used by mounted
-      await fetchData()
-    }
-  }
+const showEditParamDialog = ref(false);
 
-  const allowableEntrypointIds = computed(() => {
-    if(!job.value.experiment) return []
-    return job.value.experiment.entrypoints.map((ep) => ep.id)
-  }) 
+function updateParam(parameter) {
+  parameters.value[selectedParamIndex.value] = { ...parameter };
+  showEditParamDialog.value = false;
+}
 
-  watch(() => allowableEntrypointIds.value, (newVal) => {
-    if(newVal.length === 0) job.value.entrypoint = ''
-    else entrypointError.value = false
-  })
+// const experiment = ref()
+const experiments = ref([]);
+const queues = ref([]);
+const allQueues = ref([]);
+const entrypoints = ref([]);
+const allEntrypoints = ref([]);
 
-  watch(() => allowableQueueIds.value, (newVal) => {
-    if(newVal.length === 0) job.value.queue = ''
-    else queueError.value = false
-  })
-
-  async function getEntrypoints(val = '', update) {
-    const fetchData = async () => {
-      try {
-        const res = await api.getData('entrypoints', {
-          search: val,
-          rowsPerPage: 0, // get all
-          index: 0
-        })
-        allEntrypoints.value = res.data.data
-        entrypoints.value = res.data.data.filter((ep) => 
-          allowableEntrypointIds.value.includes(ep.id)
-        )
-      } catch(err) {
-        notify.error(err.response.data.message)
-      } 
-    }
-
-    if (update) {
-      // when used by the dropdown
-      await update(fetchData)
-    } else {
-      // when used by mounted
-      await fetchData()
-    }
-  }
-
-  async function getExperiment(id) {
-    if(!id) return
+async function getExperiments(val = "", update) {
+  const fetchData = async () => {
     try {
-      const res = await api.getItem('experiments', id)
-      job.value.experiment = res.data
-    } catch(err) {
-      console.warn(err)
-    }
-  }
-
-  async function getEntrypoint(id) {
-    if(!id) return
-    try {
-      const res = await api.getItem('entrypoints', id)
-      job.value.entrypoint = res.data
-
-      // display the old job's values when re-running a job
-      if(history.state.oldJobId && !updateEntrypoint.value) {
-        job.value.entrypoint.parameters = oldEntrypoint.value.parameters
-        job.value.values = oldJob.value.values
-      }
-    } catch(err) {
-      console.warn(err)
-    }
-  }
-
-  async function getResource(type, id) {
-    try {
-      const res = await api.getItem(type, id)
-      return res.data
-    } catch(err) {
-      console.warn(err)
-    }
-  }
-
-  const artifacts = ref([])
-
-  async function getArtifacts() {
-    try {
-      const res = await api.getData('artifacts', {
-        search: '',
+      const res = await api.getData("experiments", {
+        search: val,
         rowsPerPage: 0, // get all
-        index: 0
-      })
-      artifacts.value = res.data.data
-    } catch(err) {
-      console.log('err = ', err)
-      notify.error(err.response.data.message)
-    } 
-  }
-
-  function getMatchingArtifacts(outputParams) {
-    const outputParamTypes = outputParams.map((param) => param.parameterType.id)
-    let matchingArtifacts = []
-    artifacts.value.forEach((artifact) => {
-      if(artifact.task.outputParams) {
-        const artifactOutputTypes = artifact.task.outputParams.map((param) => param.parameterType.id)
-        if(arraysEqual(outputParamTypes, artifactOutputTypes)) {
-          matchingArtifacts.push(artifact)
-        }
-      }
-    })
-    return matchingArtifacts
-  }
-
-  async function onSelectArtifact(row) {
-    row.selectedArtifactSnapshot = null
-    if (!row.selectedArtifact) {
-      row.artifactSnapshotOptions = []
-      return
+        index: 0,
+      });
+      experiments.value = res.data.data;
+    } catch (err) {
+      notify.error(err.response.data.message);
     }
-    const list = await getMatchingArtifactSnapshots(row.outputParams, row.selectedArtifact.id)
-    row.artifactSnapshotOptions = Array.isArray(list) ? list : []
-    row.selectedArtifactSnapshot = list.find((snapshot) => snapshot.latestSnapshot)
-  }
+  };
 
-  async function getMatchingArtifactSnapshots(outputParams, artifactId) {
-    if(!artifactId) return []
-    const outputParamTypes = outputParams.map((param) => param.parameterType.id)
-    let matchingArtifactSnapshots = []
+  if (update) {
+    // when used by the dropdown
+    await update(fetchData);
+  } else {
+    // when used by watcher
+    await fetchData();
+  }
+}
+
+const allowableQueueIds = computed(() => {
+  if (!job.value.entrypoint) return [];
+  return job.value.entrypoint.queues.map((q) => q.id);
+});
+
+async function getQueues(val = "", update) {
+  const fetchData = async () => {
     try {
-      const snapRes = await api.getSnapshots('artifacts', artifactId)
-      snapRes.data.data.forEach((snapshot) => {
-      if(snapshot.task.outputParams) {
-        const artifactOutputTypes = snapshot.task.outputParams.map((param) => param.parameterType.id)
-        if(arraysEqual(outputParamTypes, artifactOutputTypes)) {
-          matchingArtifactSnapshots.push(snapshot)
+      const res = await api.getData("queues", {
+        search: val,
+        rowsPerPage: 0, // get all
+        index: 0,
+      });
+      allQueues.value = res.data.data;
+      queues.value = res.data.data.filter((q) => allowableQueueIds.value.includes(q.id));
+    } catch (err) {
+      notify.error(err.response.data.message);
+    }
+  };
+
+  if (update) {
+    // when used by the dropdown
+    await update(fetchData);
+  } else {
+    // when used by mounted
+    await fetchData();
+  }
+}
+
+const allowableEntrypointIds = computed(() => {
+  if (!job.value.experiment) return [];
+  return job.value.experiment.entrypoints.map((ep) => ep.id);
+});
+
+watch(
+  () => allowableEntrypointIds.value,
+  (newVal) => {
+    if (newVal.length === 0) job.value.entrypoint = "";
+    else entrypointError.value = false;
+  },
+);
+
+watch(
+  () => allowableQueueIds.value,
+  (newVal) => {
+    if (newVal.length === 0) job.value.queue = "";
+    else queueError.value = false;
+  },
+);
+
+async function getEntrypoints(val = "", update) {
+  const fetchData = async () => {
+    try {
+      const res = await api.getData("entrypoints", {
+        search: val,
+        rowsPerPage: 0, // get all
+        index: 0,
+      });
+      allEntrypoints.value = res.data.data;
+      entrypoints.value = res.data.data.filter((ep) => allowableEntrypointIds.value.includes(ep.id));
+    } catch (err) {
+      notify.error(err.response.data.message);
+    }
+  };
+
+  if (update) {
+    // when used by the dropdown
+    await update(fetchData);
+  } else {
+    // when used by mounted
+    await fetchData();
+  }
+}
+
+async function getExperiment(id) {
+  if (!id) return;
+  try {
+    const res = await api.getItem("experiments", id);
+    job.value.experiment = res.data;
+  } catch (err) {
+    console.warn(err);
+  }
+}
+
+async function getEntrypoint(id) {
+  if (!id) return;
+  try {
+    const res = await api.getItem("entrypoints", id);
+    job.value.entrypoint = res.data;
+
+    // display the old job's values when re-running a job
+    if (history.state.oldJobId && !updateEntrypoint.value) {
+      job.value.entrypoint.parameters = oldEntrypoint.value.parameters;
+      job.value.values = oldJob.value.values;
+    }
+  } catch (err) {
+    console.warn(err);
+  }
+}
+
+async function getResource(type, id) {
+  try {
+    const res = await api.getItem(type, id);
+    return res.data;
+  } catch (err) {
+    console.warn(err);
+  }
+}
+
+const artifacts = ref([]);
+
+async function getArtifacts() {
+  try {
+    const res = await api.getData("artifacts", {
+      search: "",
+      rowsPerPage: 0, // get all
+      index: 0,
+    });
+    artifacts.value = res.data.data;
+  } catch (err) {
+    console.log("err = ", err);
+    notify.error(err.response.data.message);
+  }
+}
+
+function getMatchingArtifacts(outputParams) {
+  const outputParamTypes = outputParams.map((param) => param.parameterType.id);
+  const matchingArtifacts = [];
+  artifacts.value.forEach((artifact) => {
+    if (artifact.task.outputParams) {
+      const artifactOutputTypes = artifact.task.outputParams.map((param) => param.parameterType.id);
+      if (arraysEqual(outputParamTypes, artifactOutputTypes)) {
+        matchingArtifacts.push(artifact);
+      }
+    }
+  });
+  return matchingArtifacts;
+}
+
+async function onSelectArtifact(row) {
+  row.selectedArtifactSnapshot = null;
+  if (!row.selectedArtifact) {
+    row.artifactSnapshotOptions = [];
+    return;
+  }
+  const list = await getMatchingArtifactSnapshots(row.outputParams, row.selectedArtifact.id);
+  row.artifactSnapshotOptions = Array.isArray(list) ? list : [];
+  row.selectedArtifactSnapshot = list.find((snapshot) => snapshot.latestSnapshot);
+}
+
+async function getMatchingArtifactSnapshots(outputParams, artifactId) {
+  if (!artifactId) return [];
+  const outputParamTypes = outputParams.map((param) => param.parameterType.id);
+  const matchingArtifactSnapshots = [];
+  try {
+    const snapRes = await api.getSnapshots("artifacts", artifactId);
+    snapRes.data.data.forEach((snapshot) => {
+      if (snapshot.task.outputParams) {
+        const artifactOutputTypes = snapshot.task.outputParams.map((param) => param.parameterType.id);
+        if (arraysEqual(outputParamTypes, artifactOutputTypes)) {
+          matchingArtifactSnapshots.push(snapshot);
         }
       }
-      })
-      matchingArtifactSnapshots.sort((a, b) => b.snapshot - a.snapshot)
-      return matchingArtifactSnapshots
-    } catch(err) {
-      console.warn(err)
-    }
+    });
+    matchingArtifactSnapshots.sort((a, b) => b.snapshot - a.snapshot);
+    return matchingArtifactSnapshots;
+  } catch (err) {
+    console.warn(err);
   }
+}
 
-  function arraysEqual(a = [], b = []) {
-    if (a.length !== b.length) return false
-    for (let i = 0; i < a.length; i++) {
-      if (a[i] !== b[i]) return false
-    }
-    return true
+function arraysEqual(a = [], b = []) {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) return false;
   }
+  return true;
+}
 
-  onMounted(async () => {
-    getArtifacts()
+onMounted(async () => {
+  getArtifacts();
 
-    // if re-running a job
-    if(history.state.oldJobId) {
-      oldJob.value = (await(api.getSnapshot('jobs', history.state.oldJobId, history.state.jobSnapshotId))).data
-      oldEntrypoint.value = (await api.getSnapshot("entrypoints", oldJob.value.entrypoint.id, oldJob.value.entrypoint.snapshotId)).data
-      latestEntrypoint.value = await getResource("entrypoints", oldJob.value.entrypoint.id)
-      await getExperiment(oldJob.value.experiment.id)
-      
-      if(allowableEntrypointIds.value.includes(oldJob.value.entrypoint.id)) {
-        await getEntrypoint(oldJob.value.entrypoint.id)
-      } else {
-        notify.error(`Entrypoint ${oldJob.value.entrypoint.name} is no longer linked to experiment ${oldJob.value.experiment.name}`)
-      }
-      if(allowableQueueIds.value.includes(oldJob.value.queue.id)) {
-        job.value.queue = await getResource('queues', oldJob.value.queue.id)
-      } else {
-        notify.error(`Queue ${oldJob.value.queue.name} is no longer linked to entrypoint ${oldJob.value.entrypoint.name}`)
-      }
-      job.value.description = oldJob.value.description
-    }
-    if(Object.hasOwn(route.params, 'id')) {
-      await getExperiment(route.params.id)
+  // if re-running a job
+  if (history.state.oldJobId) {
+    oldJob.value = (await api.getSnapshot("jobs", history.state.oldJobId, history.state.jobSnapshotId)).data;
+    oldEntrypoint.value = (
+      await api.getSnapshot("entrypoints", oldJob.value.entrypoint.id, oldJob.value.entrypoint.snapshotId)
+    ).data;
+    latestEntrypoint.value = await getResource("entrypoints", oldJob.value.entrypoint.id);
+    await getExperiment(oldJob.value.experiment.id);
+
+    if (allowableEntrypointIds.value.includes(oldJob.value.entrypoint.id)) {
+      await getEntrypoint(oldJob.value.entrypoint.id);
     } else {
-      await getExperiments()
+      notify.error(
+        `Entrypoint ${oldJob.value.entrypoint.name} is no longer linked to experiment ${oldJob.value.experiment.name}`,
+      );
     }
-
-    if(store.savedForms.jobs[expJobOrAllJobs.value] && !history.state.oldJobId) {
-      job.value = store.savedForms.jobs[expJobOrAllJobs.value]
-      // check if saved values are still valid
-      // load latest version of each resource
-      // if a child is no longer linked to parent resource, discard
-      if(job.value.experiment && job.value.experiment.id) {
-        try {
-          const res = await api.getItem('experiments', job.value.experiment.id)
-          job.value.experiment = res.data
-        } catch(err) {
-          clearForm()
-          console.warn(err)
-        }
-      }
-      if(job.value.entrypoint && job.value.entrypoint.id) {
-        try {
-          const res = await api.getItem('entrypoints', job.value.entrypoint.id)
-          if(allowableEntrypointIds.value.includes(res.data.id)) {
-            job.value.entrypoint = res.data
-          } else {
-            job.value.entrypoint = ''
-          }
-        } catch(err) {
-          job.value.entrypoint = ''
-          console.warn(err)
-        }
-      }
-      if(job.value.queue && job.value.queue.id) {
-        try {
-          const res = await api.getItem('queues', job.value.queue.id)
-          if(allowableQueueIds.value.includes(res.data.id)) {
-            job.value.queue = res.data
-          } else {
-            job.value.queue = ''
-          }
-        } catch(err) {
-          job.value.queue = ''
-          console.warn(err)
-        }
-      }
-      basicInfoForm.value.reset()
-      if(job.value.experiment && job.value.experiment.id) {
-        showReturnDialog.value = true
-      }
-    }
-  })
-
-  onBeforeRouteLeave((to, from) => {
-    toPath.value = to.path
-    if(!valuesChanged.value) {
-      store.savedForms.jobs[expJobOrAllJobs.value] = null
-      return true
-    } else if(confirmLeave.value) {
-      return true
+    if (allowableQueueIds.value.includes(oldJob.value.queue.id)) {
+      job.value.queue = await getResource("queues", oldJob.value.queue.id);
     } else {
-      store.savedForms.jobs[expJobOrAllJobs.value] = job.value
-      return true
+      notify.error(
+        `Queue ${oldJob.value.queue.name} is no longer linked to entrypoint ${oldJob.value.entrypoint.name}`,
+      );
     }
-  })
-
-  const showReturnDialog = ref(false)
-  const confirmLeave = ref(false)
-  const toPath = ref()
-
-  async function clearForm() {
-    job.value = {
-      description: '',
-      queue: '',
-      entrypoint: '',
-      timeout: '24h'
-    }
-    if(!Object.hasOwn(route.params, 'id')) {
-      job.value.experiment = ''
-    }
-    basicInfoForm.value.reset()
-    store.savedForms.jobs[expJobOrAllJobs.value] = null
-    await getExperiment(route.params.id)
+    job.value.description = oldJob.value.description;
+  }
+  if (Object.hasOwn(route.params, "id")) {
+    await getExperiment(route.params.id);
+  } else {
+    await getExperiments();
   }
 
-  const queueHint = computed(() => {
-    if(!job.value.experiment) return 'Select experiment and entrypoint first'
-    if(!job.value.entrypoint) return 'Select entrypoint first'
-    return ''
-  })
-
-  const showAppendEntrypointDialog = ref(false)
-  const showAppendQueueDialog = ref(false)
-
-  const entrypointField = ref()
-  const queueField = ref()
-
-  async function syncJobParams() {
-    try {
-      updateEntrypoint.value = true
-      await getEntrypoint(oldJob.value.entrypoint.id)
-      notify.success(`Successfully updated to use the latest entrypoint parameters and values`)
-    } catch(err) {
-      console.warn(err)
+  if (store.savedForms.jobs[expJobOrAllJobs.value] && !history.state.oldJobId) {
+    job.value = store.savedForms.jobs[expJobOrAllJobs.value];
+    // check if saved values are still valid
+    // load latest version of each resource
+    // if a child is no longer linked to parent resource, discard
+    if (job.value.experiment && job.value.experiment.id) {
+      try {
+        const res = await api.getItem("experiments", job.value.experiment.id);
+        job.value.experiment = res.data;
+      } catch (err) {
+        clearForm();
+        console.warn(err);
+      }
+    }
+    if (job.value.entrypoint && job.value.entrypoint.id) {
+      try {
+        const res = await api.getItem("entrypoints", job.value.entrypoint.id);
+        if (allowableEntrypointIds.value.includes(res.data.id)) {
+          job.value.entrypoint = res.data;
+        } else {
+          job.value.entrypoint = "";
+        }
+      } catch (err) {
+        job.value.entrypoint = "";
+        console.warn(err);
+      }
+    }
+    if (job.value.queue && job.value.queue.id) {
+      try {
+        const res = await api.getItem("queues", job.value.queue.id);
+        if (allowableQueueIds.value.includes(res.data.id)) {
+          job.value.queue = res.data;
+        } else {
+          job.value.queue = "";
+        }
+      } catch (err) {
+        job.value.queue = "";
+        console.warn(err);
+      }
+    }
+    basicInfoForm.value.reset();
+    if (job.value.experiment && job.value.experiment.id) {
+      showReturnDialog.value = true;
     }
   }
-  
-  async function revertJobParams() {
-    try {
-      updateEntrypoint.value = false
-      await getEntrypoint(oldJob.value.entrypoint.id)
-      notify.success(`Successfully updated to use the original job parameters and values`)
-    } catch(err) {
-      console.warn(err)
-    }
-  }
+});
 
-  function formatDate(dateString) {
-    const options = { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: true }
-    return new Date(dateString).toLocaleString('en-US', options)
+onBeforeRouteLeave((to) => {
+  toPath.value = to.path;
+  if (!valuesChanged.value) {
+    store.savedForms.jobs[expJobOrAllJobs.value] = null;
+    return true;
+  } else if (confirmLeave.value) {
+    return true;
+  } else {
+    store.savedForms.jobs[expJobOrAllJobs.value] = job.value;
+    return true;
   }
+});
 
+const showReturnDialog = ref(false);
+const confirmLeave = ref(false);
+const toPath = ref();
+
+async function clearForm() {
+  job.value = {
+    description: "",
+    queue: "",
+    entrypoint: "",
+    timeout: "24h",
+  };
+  if (!Object.hasOwn(route.params, "id")) {
+    job.value.experiment = "";
+  }
+  basicInfoForm.value.reset();
+  store.savedForms.jobs[expJobOrAllJobs.value] = null;
+  await getExperiment(route.params.id);
+}
+
+const showAppendEntrypointDialog = ref(false);
+const showAppendQueueDialog = ref(false);
+
+async function syncJobParams() {
+  try {
+    updateEntrypoint.value = true;
+    await getEntrypoint(oldJob.value.entrypoint.id);
+    notify.success(`Successfully updated to use the latest entrypoint parameters and values`);
+  } catch (err) {
+    console.warn(err);
+  }
+}
+
+async function revertJobParams() {
+  try {
+    updateEntrypoint.value = false;
+    await getEntrypoint(oldJob.value.entrypoint.id);
+    notify.success(`Successfully updated to use the original job parameters and values`);
+  } catch (err) {
+    console.warn(err);
+  }
+}
+
+function formatDate(dateString) {
+  const options = {
+    year: "2-digit",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  };
+  return new Date(dateString).toLocaleString("en-US", options);
+}
 </script>
 
-
 <style scoped>
-  .error :deep(.q-field__control) {
-    border: 2px solid #C10015 !important;
-  }
+.error :deep(.q-field__control) {
+  border: 2px solid #c10015 !important;
+}
 </style>

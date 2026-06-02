@@ -40,10 +40,10 @@
 </template>
 
 <script setup>
-import { computed, inject } from "vue"
-import ResourceBadge from "@/components/ResourceBadge.vue"
+import { computed, inject } from "vue";
+import ResourceBadge from "@/components/ResourceBadge.vue";
 
-defineEmits(["sync", "remove"])
+defineEmits(["sync", "remove"]);
 
 const props = defineProps({
   resources: {
@@ -68,21 +68,21 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
-})
+});
 
 const visibleResources = computed(() => {
-  if (props.limit === null) return props.resources
-  return props.resources.slice(0, props.limit)
-})
+  if (props.limit === null) return props.resources;
+  return props.resources.slice(0, props.limit);
+});
 
 const hiddenResources = computed(() => {
-  if (props.limit === null) return []
-  return props.resources.slice(props.limit)
-})
+  if (props.limit === null) return [];
+  return props.resources.slice(props.limit);
+});
 
-const darkMode = inject("darkMode")
+const darkMode = inject("darkMode");
 
-const moreChipColor = computed(() => (darkMode.value ? "grey-4" : "grey-7"))
+const moreChipColor = computed(() => (darkMode.value ? "grey-4" : "grey-7"));
 </script>
 
 <style scoped>
