@@ -404,6 +404,10 @@ node_modules/
 #mlflow
 mlruns/
 
+# agent configurations
+.claude/**
+.codex/**
+
 # ---------------------------
 # BEGIN Whitelisted Files
 # ---------------------------
