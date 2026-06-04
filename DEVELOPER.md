@@ -66,6 +66,7 @@ At a minimum, you should run this before opening a merge request on your branch:
 If commiting any frontend changes, run the following from the src/frontend directory to lint and format frontend code:
 
     npm run lint
+    npm run format
 
 ### Type check your files
 
