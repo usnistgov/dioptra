@@ -198,13 +198,16 @@ def test_resource_import_update(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     resources_tar_file: NamedTemporaryFile,
+    registered_plugin_with_files: dict[str, Any]
 ):
     group_id = auth_account["groups"][0]["id"]
     description_to_replace = "original description"
+    plugin_ids = [registered_plugin_with_files["plugin"]["id"]]
+
     task_graph = textwrap.dedent(
         """
         message:
-          shout: $name
+          hello_world: $name
         """
     )
     dioptra_client.plugin_parameter_types.create(
@@ -223,6 +226,7 @@ def test_resource_import_update(
             }
         ],
         description=description_to_replace,
+        plugins=plugin_ids,
     )
     dioptra_client.plugins.create(
         group_id=group_id, name="hello_world", description=description_to_replace
