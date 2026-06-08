@@ -209,7 +209,6 @@ class EntrypointService(object):
             for artifact_plugin in artifact_plugins
         ]
 
-
         plugin_resources = [plugin["plugin"].resource for plugin in plugins]
         artifact_plugin_resources = [
             artifact_plugin["plugin"].resource for artifact_plugin in artifact_plugins
@@ -234,7 +233,6 @@ class EntrypointService(object):
             on_save=commit,
             log=log,
         )
-
 
         # Commit only if the caller indicated the entrypoint should be saved.
         if commit:
@@ -542,8 +540,6 @@ class EntrypointIdService(object):
             resource=entrypoint.resource,
             creator=current_user,
         )
-
-
 
         db.session.add(new_entrypoint)
 
@@ -2126,7 +2122,6 @@ class SwapsValidationService(object):
 
                 # loop over the combinations, render each, and validate as a normal experiment description
                 for combination in combinations:
-
                     rendered_validation_issues, required_globals = (
                         self.validate_single_swap_combinations(
                             artifact_graph=artifact_graph,
@@ -2158,12 +2153,15 @@ class SwapsValidationService(object):
         return {
             "schema_issues": [str(i) for i in schema_issues],
             "swap_issues": [str(i) for i in output_issues],
-            "rendered_validation_errors": [str(i) for i in collected_rendered_validation_issues],
+            "rendered_validation_errors": [
+                str(i) for i in collected_rendered_validation_issues
+            ],
             "missing_global_params": missing_globals,
             "swaps": tasks,
         }
 
-    def raise_validation_errors(self,
+    def raise_validation_errors(
+        self,
         task_graph: str,
         artifact_graph: str,
         parameters: list[dict[str, Any]],
@@ -2188,9 +2186,13 @@ class SwapsValidationService(object):
         validation_errors = {}
 
         if len(validation_results["missing_global_params"]) > 0:
-            validation_errors["missing_global_params"] = validation_results["missing_global_params"]
+            validation_errors["missing_global_params"] = validation_results[
+                "missing_global_params"
+            ]
         if len(validation_results["rendered_validation_errors"]) > 0:
-            validation_errors["rendered_validation_errors"] = validation_results["rendered_validation_errors"]
+            validation_errors["rendered_validation_errors"] = validation_results[
+                "rendered_validation_errors"
+            ]
         if len(validation_results["swap_issues"]) > 0:
             validation_errors["swap_issues"] = validation_results["swap_issues"]
         if len(validation_results["schema_issues"]) > 0:
@@ -2199,11 +2201,10 @@ class SwapsValidationService(object):
         if validation_errors != {}:
             raise EntrypointValidationError(
                 message="Validation failed for provided entrypoint",
-                validation_error_dict=validation_errors
+                validation_error_dict=validation_errors,
             )
 
         return validation_results
-
 
 
 def _get_entrypoint_plugin_snapshots(
