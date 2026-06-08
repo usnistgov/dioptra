@@ -20,7 +20,7 @@ This module contains a set of tests that validate the CRUD operations and additi
 functionalities for the queue entity. The tests ensure that the queues can be
 registered, renamed, deleted, and locked/unlocked as expected through the REST API.
 """
-
+import textwrap
 import shutil
 from http import HTTPStatus
 from pathlib import Path
@@ -201,18 +201,31 @@ def test_resource_import_update(
 ):
     group_id = auth_account["groups"][0]["id"]
     description_to_replace = "original description"
+    task_graph = textwrap.dedent(
+        """
+        message:
+          shout: $name
+        """
+    )
+    dioptra_client.plugin_parameter_types.create(
+        group_id=group_id, name="message", description=description_to_replace
+    )
 
     dioptra_client.entrypoints.create(
         group_id=group_id,
         name="Hello World",
-        task_graph="",
+        task_graph=task_graph,
+        parameters=[            
+            {
+                "name": "name",
+                "defaultValue": "test",
+                "parameterType": "string",
+            }
+        ],
         description=description_to_replace,
     )
     dioptra_client.plugins.create(
         group_id=group_id, name="hello_world", description=description_to_replace
-    )
-    dioptra_client.plugin_parameter_types.create(
-        group_id=group_id, name="message", description=description_to_replace
     )
     assert_resource_import_update_works(
         dioptra_client,
@@ -225,15 +238,33 @@ def test_resource_import_update(
 def test_resource_import_overwrite(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
+    registered_plugin_parameter_types: dict[str, Any],
     resources_tar_file: NamedTemporaryFile,
 ):
     group_id = auth_account["groups"][0]["id"]
 
-    dioptra_client.entrypoints.create(
-        group_id=group_id, name="Hello World", task_graph=""
+    task_graph = textwrap.dedent(
+        """
+        message:
+          shout: $name
+        """
     )
-    dioptra_client.plugins.create(group_id=group_id, name="hello_world")
+    
+    dioptra_client.entrypoints.create(
+        group_id=group_id, name="Hello World", task_graph=task_graph, parameters=[            
+            {
+                "name": "name",
+                "defaultValue": "test",
+                "parameterType": "string",
+            }
+        ]
+    )
+
+
     dioptra_client.plugin_parameter_types.create(group_id=group_id, name="message")
+
+    dioptra_client.plugins.create(group_id=group_id, name="hello_world")
+    
     assert_resource_import_overwrite_works(
         dioptra_client, group_id=group_id, archive_file=resources_tar_file
     )

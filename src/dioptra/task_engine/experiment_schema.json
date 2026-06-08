@@ -425,8 +425,7 @@
             "properties": {
                 "name": {
                     "title": "The name of the artifact task",
-                    "type": "string",
-                    "enum": []
+                    "type": "string"
                 },
                 "args": {
                     "$comment": "Place holder for arguments for the artifact tasks. Built-up by the code.",

@@ -82,6 +82,7 @@ def run_new_resource_drafts_tests(
     )
 
     # Delete operation tests
+
     draft_client.delete(*resource_ids, draft_id=draft1_response["id"])
     asserts.assert_new_draft_is_not_found(
         draft_client, *resource_ids, draft_id=draft1_response["id"]

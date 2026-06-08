@@ -330,14 +330,16 @@ def registered_plugins(
 @pytest.fixture
 @freeze_time("Apr 1st, 2025 8:30am", auto_tick_seconds=1)
 def registered_plugin_with_files(
-    client: FlaskClient, auth_account: dict[str, Any]
+    client: FlaskClient, auth_account: dict[str, Any], registered_plugin_parameter_types: dict[str, Any]
 ) -> dict[str, Any]:
+    
     plugin_response = actions.register_plugin(
         client,
         name="plugin",
         description="The plugin with files.",
         group_id=auth_account["default_group_id"],
     ).get_json()
+
     contents = textwrap.dedent(
         """from dioptra import pyplugs
 
@@ -347,18 +349,32 @@ def registered_plugin_with_files(
         """
     )
 
+    hello_world_task = {
+        "name": "hello_world",
+        "inputParams": [{"name": "name", "parameterType": registered_plugin_parameter_types["string"]["id"]}],
+        "outputParams": [
+            {
+                "name": "hello_world_message",
+                "parameterType": registered_plugin_parameter_types["string"]["id"],
+            }
+        ],
+    }
+
     plugin_file1_response = actions.register_plugin_file(
         client,
         plugin_id=plugin_response["id"],
         filename="plugin_file_one.py",
         description="The first plugin file.",
+        function_tasks=[hello_world_task],
         contents=contents,
     ).get_json()
+
     plugin_file2_response = actions.register_plugin_file(
         client,
         plugin_id=plugin_response["id"],
         filename="plugin_file_two.py",
         description="The second plugin file.",
+        function_tasks=[hello_world_task],
         contents=contents,
     ).get_json()
     plugin_file3_response = actions.register_plugin_file(
@@ -366,8 +382,10 @@ def registered_plugin_with_files(
         plugin_id=plugin_response["id"],
         filename="plugin_file_three.py",
         description="Not Retrieved.",
+        function_tasks=[hello_world_task],
         contents=contents,
     ).get_json()
+
     return {
         "plugin": plugin_response,
         "plugin_file1": plugin_file1_response,
@@ -663,9 +681,8 @@ def registered_entrypoints(
 ) -> dict[str, Any]:
     task_graph = textwrap.dedent(
         """# my entrypoint graph
-        graph:
-          message:
-            my_entrypoint: $name
+        message:
+          hello_world: $entrypoint_param_1
         """
     )
     parameters = [
@@ -951,7 +968,7 @@ def registered_multi_task_plugin(
     """Create a plugin with multiple tasks for testing swaps validation.
 
     Returns:
-        The plugin snapshot ID.
+        The plugin ID.
     """
     registered_plugin = actions.register_plugin(
         client,
@@ -1063,12 +1080,7 @@ def registered_multi_task_plugin(
         artifact_tasks=None,
     )
 
-    plugin_snapshot_id = client.get(
-        f"/api/v1/plugins/{registered_plugin['id']}"
-    ).get_json()["snapshot"]
-
-
-    return plugin_snapshot_id
+    return registered_plugin["id"]
 
 @pytest.fixture
 @freeze_time("Apr 1st, 2025 11:00am", auto_tick_seconds=1)
@@ -1281,14 +1293,10 @@ def registered_swaps_validation_plugin(
         artifact_tasks=None,
     )
     
-    plugin_snapshot_id = client.get(
-        f"/api/v1/plugins/{registered_plugin['id']}"
-    ).get_json()["snapshot"]
-
 
     return {
         "plugin": registered_plugin,
-        "plugin_snapshot_id": plugin_snapshot_id,
+        "plugin_id": registered_plugin['id'],
         "tasks": tasks,
         "string_parameter_type": string_parameter_type,
     }

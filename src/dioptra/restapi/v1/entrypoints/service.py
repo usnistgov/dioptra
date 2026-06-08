@@ -36,6 +36,7 @@ from dioptra.restapi.errors import (
     EntityDoesNotExistError,
     EntityExistsError,
     EntrypointSwapsRenderError,
+    EntrypointValidationError,
     InvalidYamlError,
     QueryParameterNotUniqueError,
     SortParameterValidationError,
@@ -192,18 +193,6 @@ class EntrypointService(object):
         )
         db.session.add(new_entrypoint)
 
-        # Validate swaps graph before committing the entrypoint
-        self._swaps_validation_service.validate(
-            group_id=group_id,
-            swaps_graph=task_graph,
-            artifact_graph=artifact_graph,
-            entrypoint_parameters=parameters,
-            entrypoint_artifacts=artifact_parameters,
-            plugin_snapshot_ids=plugin_ids,
-            rendered_validation=True,
-            log=log,
-        )
-
         new_entrypoint.entry_point_plugins = [
             models.EntryPointPlugin(
                 entry_point=new_entrypoint,
@@ -220,6 +209,7 @@ class EntrypointService(object):
             for artifact_plugin in artifact_plugins
         ]
 
+
         plugin_resources = [plugin["plugin"].resource for plugin in plugins]
         artifact_plugin_resources = [
             artifact_plugin["plugin"].resource for artifact_plugin in artifact_plugins
@@ -231,6 +221,22 @@ class EntrypointService(object):
 
         new_entrypoint.children.extend(all_plugin_resources + queue_resources)
 
+        # if we are committing the entrypoint, we run the "rendered" validation.
+        # otherwise, we do the lighter validation.
+
+        self._swaps_validation_service.raise_validation_errors(
+            group_id=group_id,
+            task_graph=task_graph,
+            artifact_graph=artifact_graph,
+            parameters=parameters,
+            artifact_parameters=artifact_parameters,
+            plugin_ids=[plugin["plugin"].resource_snapshot_id for plugin in plugins],
+            on_save=commit,
+            log=log,
+        )
+
+
+        # Commit only if the caller indicated the entrypoint should be saved.
         if commit:
             db.session.commit()
             log.debug(
@@ -537,20 +543,7 @@ class EntrypointIdService(object):
             creator=current_user,
         )
 
-        # Validate swaps graph before committing the entrypoint
-        self._swaps_validation_service.validate(
-            group_id=group_id,
-            swaps_graph=task_graph,
-            artifact_graph=artifact_graph,
-            entrypoint_parameters=parameters,
-            entrypoint_artifacts=artifact_parameters,
-            plugin_snapshot_ids=[
-                plugin.plugin_resource_snapshot_id
-                for plugin in entrypoint.entry_point_plugins
-            ],
-            rendered_validation=True,
-            log=log,
-        )
+
 
         db.session.add(new_entrypoint)
 
@@ -567,6 +560,20 @@ class EntrypointIdService(object):
         )
 
         new_entrypoint.children = all_plugin_resources + queue_resources
+
+        self._swaps_validation_service.raise_validation_errors(
+            group_id=group_id,
+            task_graph=task_graph,
+            artifact_graph=artifact_graph,
+            parameters=parameters,
+            artifact_parameters=artifact_parameters,
+            plugin_ids=[
+                plugin.plugin_resource_snapshot_id
+                for plugin in entrypoint.entry_point_plugins
+            ],
+            on_save=commit,
+            log=log,
+        )
 
         if commit:
             db.session.commit()
@@ -2011,7 +2018,12 @@ class SwapsValidationService(object):
             plugin_snapshot_ids: A list of plugin snapshot IDs needed for the entrypoint.
             rendered_validation: Whether to perform in-depth validation by looping over swaps to render the task graph.
         Returns:
-            A ValidateSwapsResponseSchema object.
+            A dictionary containing the following fields:
+                schema_issues - if applicable, a list of schema validation issues
+                swap_issues - if applicable, a list of output matching errors for swaps.
+                rendered_validation_errors - if applicable, a list of validation errors found when
+                  validating via swap rendering.
+                missing_global_params - if applicable, a list of required global parameters that were not declared
         """
 
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -2066,12 +2078,13 @@ class SwapsValidationService(object):
             merged_schema,
             resources=get_swappable_json_schema_resources(),
         )
+
         schema_valid = schema_issues == []
 
         #### Pre-render Schema Issues complete
 
         output_issues: list[ValidationIssue] = []
-        collected_rendered_validation_issues = []
+        collected_rendered_validation_issues: list[ValidationIssue] = []
         collected_required_globals = set()
         tasks: dict[str, Any] = {}
 
@@ -2113,6 +2126,7 @@ class SwapsValidationService(object):
 
                 # loop over the combinations, render each, and validate as a normal experiment description
                 for combination in combinations:
+
                     rendered_validation_issues, required_globals = (
                         self.validate_single_swap_combinations(
                             artifact_graph=artifact_graph,
@@ -2142,12 +2156,54 @@ class SwapsValidationService(object):
         ]
 
         return {
-            "schema_issues": schema_issues,
-            "swap_issues": output_issues,
-            "rendered_validation_errors": collected_rendered_validation_issues,
+            "schema_issues": [str(i) for i in schema_issues],
+            "swap_issues": [str(i) for i in output_issues],
+            "rendered_validation_errors": [str(i) for i in collected_rendered_validation_issues],
             "missing_global_params": missing_globals,
             "swaps": tasks,
         }
+
+    def raise_validation_errors(self,
+        task_graph: str,
+        artifact_graph: str,
+        parameters: list[dict[str, Any]],
+        artifact_parameters: list[dict[str, Any]],
+        plugin_ids: list[int],
+        group_id: int,
+        log: BoundLogger,
+        on_save: bool = False,
+    ) -> dict[str, Any]:
+
+        validation_results = self.validate(
+            group_id=group_id,
+            swaps_graph=task_graph,
+            artifact_graph=artifact_graph,
+            entrypoint_parameters=parameters,
+            entrypoint_artifacts=artifact_parameters,
+            plugin_snapshot_ids=plugin_ids,
+            rendered_validation=on_save,
+            log=log,
+        )
+
+        validation_errors = {}
+
+        if len(validation_results["missing_global_params"]) > 0:
+            validation_errors["missing_global_params"] = validation_results["missing_global_params"]
+        if len(validation_results["rendered_validation_errors"]) > 0:
+            validation_errors["rendered_validation_errors"] = validation_results["rendered_validation_errors"]
+        if len(validation_results["swap_issues"]) > 0:
+            validation_errors["swap_issues"] = validation_results["swap_issues"]
+        if len(validation_results["schema_issues"]) > 0:
+            validation_errors["schema_issues"] = validation_results["schema_issues"]
+
+        if validation_errors != {}:
+            raise EntrypointValidationError(
+                message="Validation failed for provided entrypoint",
+                validation_error_dict=validation_errors
+            )
+
+        return validation_results
+
 
 
 def _get_entrypoint_plugin_snapshots(

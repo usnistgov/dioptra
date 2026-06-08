@@ -30,7 +30,6 @@ from structlog.stdlib import BoundLogger
 from dioptra.restapi.db import models
 from dioptra.restapi.routes import V1_ENTRYPOINTS_ROUTE
 from dioptra.restapi.v1 import utils
-from dioptra.restapi.v1.entrypoints.service import SwapsValidationService
 from dioptra.restapi.v1.file_types import FileTypes, plugin_pluginfiles_to_bundle
 from dioptra.restapi.v1.queues.schema import QueueRefSchema
 from dioptra.restapi.v1.schemas import (
@@ -59,13 +58,12 @@ from .schema import (
     EntrypointArtifactPluginMutableFieldsSchema,
     EntrypointDraftSchema,
     EntrypointGetQueryParameters,
-    EntrypointMutableFieldsSchema,
+    EntrypointMutableFieldsSchemaWithValidation,
     EntrypointPageSchema,
     EntrypointPluginMutableFieldsSchema,
     EntrypointPluginSchema,
     EntrypointSchema,
-    ValidateSwapsRequestSchema,
-    ValidateSwapsResponseSchema,
+    EntrypointSchemaWithValidation,
 )
 from .service import (
     RESOURCE_TYPE,
@@ -142,7 +140,7 @@ class EntrypointEndpoint(Resource):
         )
 
     @login_required
-    @accepts(schema=EntrypointSchema, api=api)
+    @accepts(schema=EntrypointSchemaWithValidation, api=api)
     @responds(schema=EntrypointSchema, api=api)
     def post(self):
         """Creates an Entrypoint resource."""
@@ -161,6 +159,7 @@ class EntrypointEndpoint(Resource):
             artifact_plugin_ids=parsed_obj.get("artifact_plugin_ids", []),
             queue_ids=parsed_obj["queue_ids"],
             group_id=int(parsed_obj["group_id"]),
+            commit=bool(parsed_obj.get("on_save", True)),
             log=log,
         )
         return utils.build_entrypoint(entrypoint)
@@ -197,7 +196,7 @@ class EntrypointIdEndpoint(Resource):
         return utils.build_entrypoint(entrypoint)
 
     @login_required
-    @accepts(schema=EntrypointMutableFieldsSchema, api=api)
+    @accepts(schema=EntrypointMutableFieldsSchemaWithValidation, api=api)
     @responds(schema=EntrypointSchema, api=api)
     def put(self, id: int):
         """Modifies an Entrypoint resource by its unique ID."""
@@ -217,6 +216,7 @@ class EntrypointIdEndpoint(Resource):
             parameters=parsed_obj["parameters"],
             artifact_parameters=parsed_obj.get("artifact_parameters", []),
             queue_ids=parsed_obj["queue_ids"],
+            commit=bool(parsed_obj.get("on_save", True)),
             log=log,
         )
         return utils.build_entrypoint(entrypoint)
@@ -755,52 +755,6 @@ class DynamicGlobalParametersEntrypoint(Resource):
             entrypoint_snapshot_id=entrypoint_snapshot_id,
             swaps=swap_choices,
             logger=log,
-        )
-
-
-@api.route("/validate")
-class ValidateSwapsEntrypoint(Resource):
-    @inject
-    def __init__(
-        self,
-        swaps_validation_service: SwapsValidationService,
-        *args,
-        **kwargs,
-    ) -> None:
-        """Initialize the validate swaps resource.
-
-        All arguments are provided via dependency injection.
-
-        Args:
-            entrypoint_swaps_validation_service: An EntrypointSwapsValidationService object.
-        """
-        self._swaps_validation_service = swaps_validation_service
-        super().__init__(*args, **kwargs)
-
-    @login_required
-    @accepts(schema=ValidateSwapsRequestSchema, api=api)
-    @responds(schema=ValidateSwapsResponseSchema, api=api)
-    def post(self):
-        """Validates a swaps graph."""
-        log = LOGGER.new(
-            request_id=str(uuid.uuid4()),
-            resource="ValidateSwaps",
-            request_type="POST",
-        )
-
-        parsed_obj = request.parsed_obj
-        swaps_graph = parsed_obj["swaps_graph"]
-        plugin_snapshot_ids = parsed_obj["plugin_snapshot_ids"]
-
-        return self._swaps_validation_service.validate(
-            group_id=parsed_obj.get("group_id"),
-            swaps_graph=swaps_graph,
-            artifact_graph=parsed_obj.get("artifact_graph", ""),
-            entrypoint_parameters=parsed_obj.get("entrypoint_parameters", []),
-            entrypoint_artifacts=parsed_obj.get("entrypoint_artifacts", []),
-            plugin_snapshot_ids=plugin_snapshot_ids,
-            rendered_validation=parsed_obj.get("rendered_validation", False),
-            log=log,
         )
 
 

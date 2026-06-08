@@ -599,6 +599,16 @@ class ImportFailedError(DioptraError):
         self._reason = reason
 
 
+class EntrypointValidationError(DioptraError):
+    """Entrypoint validation failed Error."""
+
+    def __init__(
+        self, message: str, validation_error_dict: dict[str, typing.Any] | None = None
+    ):
+        super().__init__(f"{validation_error_dict}")
+        self._validation_error_dict = validation_error_dict or {}
+
+
 class UserNotInGroupError(DioptraError):
     """A given user is not in a given group."""
 
@@ -930,6 +940,17 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
             error,
             http.HTTPStatus.BAD_REQUEST,
             {"reason": error._reason} if error._reason else {},
+        )
+
+    @api.errorhandler(EntrypointValidationError)
+    def handle_entrypoint_validation_error(error: EntrypointValidationError):
+        log.debug(error.to_message())
+        return error_result(
+            error,
+            http.HTTPStatus.BAD_REQUEST,
+            {"reason": error._validation_error_dict}
+            if error._validation_error_dict
+            else {},
         )
 
     @api.errorhandler(DioptraError)

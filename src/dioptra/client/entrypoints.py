@@ -695,14 +695,6 @@ class EntrypointsCollectionClient(CollectionClient[T]):
                 entrypoint_snapshot_id=2,
                 file_type=FileTypes.TAR_GZ,
             )
-
-            # POST /api/v1/entrypoints/1/validate
-            client.entrypoints.validate(
-                1,
-                graph="swaps: ...",
-                plugin_snapshot_ids=[1, 2, 3],
-                rendered_validation=True,
-            )
         """
         return self._snapshots
 
@@ -808,6 +800,7 @@ class EntrypointsCollectionClient(CollectionClient[T]):
         queues: list[int] | None = None,
         plugins: list[int] | None = None,
         artifact_plugins: list[int] | None = None,
+        save: bool = True,
     ) -> T:
         """Creates a entrypoint.
 
@@ -898,6 +891,8 @@ class EntrypointsCollectionClient(CollectionClient[T]):
         if artifact_plugins is not None:
             json_["artifactPlugins"] = artifact_plugins
 
+        json_["onSave"] = save
+
         return self._session.post(self.url, json_=json_)
 
     def modify_by_id(
@@ -910,6 +905,7 @@ class EntrypointsCollectionClient(CollectionClient[T]):
         parameters: list[dict[str, Any]] | None,
         artifact_parameters: list[dict[str, Any]] | None,
         queues: list[int] | None,
+        save: bool = True,
     ) -> T:
         """Modify the entrypoint matching the provided id.
 
@@ -949,6 +945,8 @@ class EntrypointsCollectionClient(CollectionClient[T]):
         if queues is not None:
             json_["queues"] = queues
 
+        json_["onSave"] = save
+
         return self._session.put(self.url, str(entrypoint_id), json_=json_)
 
     def delete_by_id(self, entrypoint_id: str | int) -> T:
@@ -961,49 +959,3 @@ class EntrypointsCollectionClient(CollectionClient[T]):
             The response from the Dioptra API.
         """
         return self._session.delete(self.url, str(entrypoint_id))
-
-    def validate(
-        self,
-        group_id: int,
-        graph: str,
-        plugin_snapshot_ids: list[int],
-        artifact_graph: str | None = None,
-        entrypoint_parameters: list[dict[str, Any]] | None = None,
-        entrypoint_artifacts: list[dict[str, Any]] | None = None,
-        rendered_validation: bool = False,
-    ) -> T:
-        """Validate the inputs to an entrypoint including a task graph which may contain swaps,
-        an artifact graph, entrypoint parameters, and entrypoint artifact inputs.
-
-        Args:
-            group_id: The group id, an integer.
-            swaps_graph: YAML string representing the swaps graph to validate.
-            plugin_snapshot_ids: List of plugin snapshot IDs required for validation.
-            artifact_graph: YAML string representing the artifact graph. Optional, defaults to None.
-            entrypoint_parameters: List of entrypoint parameters. Optional, defaults to None.
-            entrypoint_artifacts: List of entrypoint artifacts. Optional, defaults to None.
-
-        Returns:
-            The response from the Dioptra API containing validation results.
-        """
-        json_: dict[str, Any] = {
-            "groupId": group_id,
-            "swapsGraph": graph,
-            "pluginSnapshotIds": plugin_snapshot_ids,
-            "renderedValidation": rendered_validation,
-        }
-
-        if artifact_graph is not None:
-            json_["artifactGraph"] = artifact_graph
-
-        if entrypoint_parameters is not None:
-            json_["entrypointParameters"] = entrypoint_parameters
-
-        if entrypoint_artifacts is not None:
-            json_["entrypointArtifacts"] = entrypoint_artifacts
-
-        return self._session.post(
-            self.url,
-            VALIDATE_SWAPS,
-            json_=json_,
-        )

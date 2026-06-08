@@ -223,6 +223,22 @@ class EntrypointMutableFieldsSchema(Schema):
     )
 
 
+class OnSaveSchema(Schema):
+    onSave = fields.Bool(
+        attribute="on_save",
+        data_key="onSave",
+        load_default=False,
+        metadata={
+            "description": "Flag indicating whether to perform a full validation and save the entrypoint."
+        },
+    )
+
+
+class EntrypointMutableFieldsSchemaWithValidation(
+    EntrypointMutableFieldsSchema, OnSaveSchema
+): ...
+
+
 class EntrypointPluginMutableFieldsSchema(Schema):
     pluginIds = fields.List(
         fields.Integer(),
@@ -276,6 +292,9 @@ class EntrypointSchema(
         metadata={"description": "The queue for the entrypoint."},
         dump_only=True,
     )
+
+
+class EntrypointSchemaWithValidation(EntrypointSchema, OnSaveSchema): ...
 
 
 class EntrypointDraftSchema(
@@ -477,37 +496,3 @@ class ValidateEntrypointIssueSchema(Schema):
             }
 
         return data
-
-
-class ValidateSwapsResponseSchema(Schema):
-    """The schema for the response from validating swaps on an entrypoint."""
-
-    schemaIssues = fields.Nested(
-        ValidateEntrypointIssueSchema,
-        attribute="schema_issues",
-        metadata={"description": "A list of validation issues detected in the schema."},
-        many=True,
-    )
-
-    swapIssues = fields.Nested(
-        ValidateEntrypointIssueSchema,
-        attribute="swap_issues",
-        metadata={"description": "A list of validation issues detected in the schema."},
-        many=True,
-    )
-
-    missingGlobalParams = fields.List(
-        fields.String(),
-        attribute="missing_global_params",
-        data_key="missingGlobalParams",
-        metadata={
-            "description": "List of global parameters required by the swaps graph that are not declared on the entrypoint."
-        },
-    )
-    validationErrors = fields.Nested(
-        ValidateEntrypointIssueSchema,
-        attribute="rendered_validation_errors",
-        data_key="renderedValidationErrors",
-        metadata={"description": "A list of validation issues detected in the schema."},
-        many=True,
-    )
