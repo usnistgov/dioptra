@@ -1742,7 +1742,7 @@ class DynamicGlobalParametersService(object):
 
 
 class SwapsValidationService(object):
-    """Initialize the swaps validation resource.
+    """Initialize the graph validation resource.
 
     All arguments are provided via dependency injection.
 
@@ -1992,7 +1992,7 @@ class SwapsValidationService(object):
         rendered_validation: bool = False,
         **kwargs,
     ) -> dict[str, Any]:
-        """Validation for a proposed entrypoint which may contain swaps.
+        """Validation for a proposed entrypoint graph.
 
         This validation checks the following:
             * Validates just the graph against a JSON schema which accounts for swaps (though swaps are not
@@ -2012,7 +2012,7 @@ class SwapsValidationService(object):
             entrypoint_parameters: A list of entrypoint parameters.
             entrypoint_artifacts: A list of entrypoint artifacts parameters.
             plugin_snapshot_ids: A list of plugin snapshot IDs needed for the entrypoint.
-            rendered_validation: Whether to perform in-depth validation by looping over swaps to render the task graph.
+            rendered_validation: Whether to perform in-depth validation by looping over any swaps to render the task graph.
         Returns:
             A dictionary containing the following fields:
                 schema_issues - if applicable, a list of schema validation issues

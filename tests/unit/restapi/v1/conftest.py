@@ -685,6 +685,13 @@ def registered_entrypoints(
           hello_world: $entrypoint_param_1
         """
     )
+    task_graph_no_params = textwrap.dedent(
+        """# my entrypoint graph
+        message:
+          hello_world: world
+        """
+    )
+
     parameters = [
         {
             "name": "entrypoint_param_1",
@@ -749,7 +756,7 @@ def registered_entrypoints(
         name="entrypoint_no_params",
         description="No params Entry-Point.",
         group_id=auth_account["groups"][0]["id"],
-        task_graph=task_graph,
+        task_graph=task_graph_no_params,
         parameters=[],
         plugin_ids=plugin_ids,
         queue_ids=queue_ids,

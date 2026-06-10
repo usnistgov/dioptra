@@ -58,12 +58,12 @@ from .schema import (
     EntrypointArtifactPluginMutableFieldsSchema,
     EntrypointDraftSchema,
     EntrypointGetQueryParameters,
-    EntrypointMutableFieldsSchemaWithValidation,
+    EntrypointMutableFieldsSchema,
     EntrypointPageSchema,
     EntrypointPluginMutableFieldsSchema,
     EntrypointPluginSchema,
     EntrypointSchema,
-    EntrypointSchemaWithValidation,
+    ValidateOnlySchema,
 )
 from .service import (
     RESOURCE_TYPE,
@@ -140,7 +140,7 @@ class EntrypointEndpoint(Resource):
         )
 
     @login_required
-    @accepts(schema=EntrypointSchemaWithValidation, api=api)
+    @accepts(query_params_schema=ValidateOnlySchema, schema=EntrypointSchema, api=api)
     @responds(schema=EntrypointSchema, api=api)
     def post(self):
         """Creates an Entrypoint resource."""
@@ -148,6 +148,10 @@ class EntrypointEndpoint(Resource):
             request_id=str(uuid.uuid4()), resource="Entrypoint", request_type="POST"
         )
         parsed_obj = request.parsed_obj  # noqa: F841
+
+        parsed_query_params = request.parsed_query_params  # type: ignore  # noqa: F841
+        commit = not bool(parsed_query_params.get("validate_only", False))
+
         entrypoint = self._entrypoint_service.create(
             name=parsed_obj["name"],
             description=parsed_obj["description"],
@@ -159,7 +163,7 @@ class EntrypointEndpoint(Resource):
             artifact_plugin_ids=parsed_obj.get("artifact_plugin_ids", []),
             queue_ids=parsed_obj["queue_ids"],
             group_id=int(parsed_obj["group_id"]),
-            commit=bool(parsed_obj.get("on_save", True)),
+            commit=commit,
             log=log,
         )
         return utils.build_entrypoint(entrypoint)
@@ -196,7 +200,11 @@ class EntrypointIdEndpoint(Resource):
         return utils.build_entrypoint(entrypoint)
 
     @login_required
-    @accepts(schema=EntrypointMutableFieldsSchemaWithValidation, api=api)
+    @accepts(
+        query_params_schema=ValidateOnlySchema,
+        schema=EntrypointMutableFieldsSchema,
+        api=api,
+    )
     @responds(schema=EntrypointSchema, api=api)
     def put(self, id: int):
         """Modifies an Entrypoint resource by its unique ID."""
@@ -207,6 +215,8 @@ class EntrypointIdEndpoint(Resource):
             id=id,
         )
         parsed_obj = request.parsed_obj  # type: ignore # noqa: F841
+        parsed_query_params = request.parsed_query_params  # type: ignore  # noqa: F841
+        commit = not bool(parsed_query_params.get("validate_only", False))
         entrypoint = self._entrypoint_id_service.modify(
             id,
             name=parsed_obj["name"],
@@ -216,7 +226,7 @@ class EntrypointIdEndpoint(Resource):
             parameters=parsed_obj["parameters"],
             artifact_parameters=parsed_obj.get("artifact_parameters", []),
             queue_ids=parsed_obj["queue_ids"],
-            commit=bool(parsed_obj.get("on_save", True)),
+            commit=commit,
             log=log,
         )
         return utils.build_entrypoint(entrypoint)

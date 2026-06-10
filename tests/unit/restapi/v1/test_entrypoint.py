@@ -1727,7 +1727,7 @@ def test_validate_swaps_graph(
                 "parameterType": "string",
             }
         ],
-        save=False,
+        validate_only=True,
     )
 
     assert response.status_code == HTTPStatus.OK
@@ -1765,7 +1765,7 @@ def test_validate_non_swaps_graph(
             }
         ],
         plugins=[plugin_id],
-        save=False,
+        validate_only=True,
     )
 
     assert response.status_code == HTTPStatus.OK
@@ -1798,7 +1798,7 @@ def test_validate_swaps_graph_bad_schema(
             }
         ],
         plugins=[registered_swaps_validation_plugin["plugin_id"]],
-        save=False,
+        validate_only=True,
     )
 
     assert response.status_code == HTTPStatus.BAD_REQUEST
@@ -1843,7 +1843,7 @@ def test_validate_swaps_graph_missing_globals(
                 "parameterType": "string",
             }
         ],
-        save=True,
+        validate_only=False,
     )
 
     assert response.status_code == HTTPStatus.BAD_REQUEST
@@ -1890,7 +1890,7 @@ def test_validate_swaps_graph_rendered_errors(
                 "parameterType": "string",
             }
         ],
-        save=True,
+        validate_only=False,
     )
 
     assert response.status_code == HTTPStatus.BAD_REQUEST
@@ -1930,7 +1930,7 @@ def assert_entrypoint_inputs_are_valid(
         task_graph=task_graph,
         plugins=plugin_ids,
         parameters=entrypoint_parameters,
-        save=False,
+        validate_only=True,
     )
 
     assert (
@@ -1965,7 +1965,7 @@ def assert_entrypoint_inputs_are_invalid(
         task_graph=task_graph,
         plugins=plugin_ids,
         parameters=entrypoint_parameters,
-        save=False,
+        validate_only=True,
     )
 
     assert (
@@ -2183,7 +2183,7 @@ def test_validate_swaps_graph_success(
         task_graph=swaps_graph,
         plugins=[plugin_id],
         parameters=[],
-        save=False,
+        validate_only=True,
     )
     
     assert (
@@ -2215,7 +2215,7 @@ def test_validate_swaps_graph_invalid_task(
         task_graph=swaps_graph,
         plugins=[plugin_id],
         parameters=[],
-        save=False,
+        validate_only=True,
     )
 
     error_details = response.json()['detail']['reason']
@@ -2251,7 +2251,7 @@ def test_validate_swaps_graph_mixed_output_error(
         task_graph=swaps_graph,
         plugins=[plugin_id],
         parameters=[],
-        save=False,
+        validate_only=True,
     )
 
     error_details = response.json()['detail']['reason']

@@ -223,20 +223,15 @@ class EntrypointMutableFieldsSchema(Schema):
     )
 
 
-class OnSaveSchema(Schema):
-    onSave = fields.Bool(
-        attribute="on_save",
-        data_key="onSave",
+class ValidateOnlySchema(Schema):
+    validateOnly = fields.Bool(
+        attribute="validate_only",
+        data_key="validateOnly",
         load_default=False,
         metadata={
-            "description": "Flag indicating whether to perform a full validation and save the entrypoint."
+            "description": "Flag indicating whether to perform a full validation and save the entrypoint, or perform a lighter validation and not save the entrypoint."
         },
     )
-
-
-class EntrypointMutableFieldsSchemaWithValidation(
-    EntrypointMutableFieldsSchema, OnSaveSchema
-): ...
 
 
 class EntrypointPluginMutableFieldsSchema(Schema):
@@ -292,9 +287,6 @@ class EntrypointSchema(
         metadata={"description": "The queue for the entrypoint."},
         dump_only=True,
     )
-
-
-class EntrypointSchemaWithValidation(EntrypointSchema, OnSaveSchema): ...
 
 
 class EntrypointDraftSchema(
@@ -409,63 +401,6 @@ class DynamicGlobalParametersResponseSchema(Schema):
         data_key="activePlugins",
         metadata={"description": ("A list of plugin objects used in the entrypoint.")},
         many=True,
-    )
-
-
-class ValidateSwapsRequestSchema(Schema):
-    """The schema for validating swaps on an entrypoint."""
-
-    groupId = fields.Integer(
-        attribute="group_id",
-        data_key="groupId",
-        required=True,
-        metadata={"description": "ID of the group for the entrypoint."},
-    )
-    swapsGraph = fields.String(
-        attribute="swaps_graph",
-        data_key="swapsGraph",
-        required=True,
-        metadata={
-            "description": "YAML string representing the swaps graph to validate."
-        },
-    )
-    artifactGraph = fields.String(
-        attribute="artifact_graph",
-        data_key="artifactGraph",
-        metadata={"description": "YAML string representing the artifact graph."},
-    )
-    entrypointParameters = fields.Nested(
-        EntrypointParameterSchema,
-        attribute="entrypoint_parameters",
-        data_key="entrypointParameters",
-        many=True,
-        metadata={"description": "Proposed parameters for the Entrypoint resource."},
-    )
-    entrypointArtifacts = fields.Nested(
-        EntrypointArtifactSchema,
-        attribute="entrypoint_artifacts",
-        data_key="entrypointArtifacts",
-        many=True,
-        metadata={
-            "description": "Proposed artifact inputs for the Entrypoint resource."
-        },
-    )
-    pluginSnapshotIds = fields.List(
-        fields.Integer(),
-        attribute="plugin_snapshot_ids",
-        data_key="pluginSnapshotIds",
-        required=True,
-        metadata={
-            "description": "List of plugin snapshot IDs required for validation."
-        },
-    )
-    renderedValidation = fields.Bool(
-        attribute="rendered_validation",
-        data_key="renderedValidation",
-        metadata={
-            "description": "A boolean indicating whether to attempt to loop"
-            " over swaps render the graph for in-depth validation."
-        },
     )
 
 
