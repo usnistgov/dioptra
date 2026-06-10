@@ -19,6 +19,7 @@
 from typing import Any, Iterable, cast
 
 import structlog
+import yaml
 from flask_login import current_user
 from injector import inject
 from structlog.stdlib import BoundLogger
@@ -27,7 +28,10 @@ from dioptra.restapi.db import models
 from dioptra.restapi.db.models.users import User
 from dioptra.restapi.db.repository.utils.common import DeletionPolicy
 from dioptra.restapi.db.unit_of_work import UnitOfWork, UnitOfWorkService
-from dioptra.restapi.errors import EntityRelationshipDoesNotExistError
+from dioptra.restapi.errors import (
+    EntityRelationshipDoesNotExistError,
+    EntrypointSwapsRenderError,
+)
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.plugins.service import (
@@ -36,8 +40,11 @@ from dioptra.restapi.v1.plugins.service import (
 )
 from dioptra.restapi.v1.shared.search_parser import parse_search_text
 from dioptra.restapi.v1.shared.task_engine_yaml.service import (
+    TaskEngineYamlService,
     coerce_entrypoint_default_param_types,
 )
+from dioptra.sdk.utilities.entrypoint_swaps import render_swaps_graph
+from dioptra.task_engine import util
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -1156,6 +1163,98 @@ class EntrypointNameService(UnitOfWorkService):
         return self._uow.entrypoint_repo.get_by_name(
             name, group_id, DeletionPolicy.NOT_DELETED
         )
+
+
+class DynamicGlobalParametersService(object):
+    @inject
+    def __init__(
+        self,
+        entrypoint_snapshot_id_service: EntrypointSnapshotIdService,
+        task_engine_yaml_service: TaskEngineYamlService,
+    ) -> None:
+        """Initialize the entrypoint service.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            task_engine_yaml_service: A TaskEngineYamlService object.
+        """
+        self._entrypoint_snapshot_id_service = entrypoint_snapshot_id_service
+        self._task_engine_yaml_service = task_engine_yaml_service
+
+    def get_params(
+        self,
+        entrypoint_id: int,
+        entrypoint_snapshot_id: int,
+        swaps: dict[str, str],
+        logger: BoundLogger | None = None,
+    ) -> dict[str, Any]:
+        entry_point = self._entrypoint_snapshot_id_service.get(
+            entrypoint_id=entrypoint_id, entrypoint_snapshot_id=entrypoint_snapshot_id
+        )
+
+        task_graph = entry_point.task_graph
+
+        graph = yaml.safe_load(task_graph)
+
+        try:
+            rendered = render_swaps_graph(graph, swaps)
+        except Exception as e:
+            raise EntrypointSwapsRenderError(str(e)) from e
+
+        vars = rendered.keys()
+        needed_vars = set()
+        used_tasks = set()
+
+        for step in rendered:
+            for task in rendered[step]:
+                used_tasks.add(task)
+                for ref in util.get_references(rendered[step][task]):
+                    potential_step_name = ref.split(".")[0]
+                    if potential_step_name not in vars:
+                        needed_vars.add(
+                            ref
+                        )  # if it is not a step output, it must be a global param
+
+        topsorted = util.get_sorted_steps(rendered)
+
+        plugin_files = [
+            plugin_plugin_file
+            for entry_point_plugin in entry_point.entry_point_plugins
+            for plugin_plugin_file in entry_point_plugin.plugin.plugin_plugin_files
+        ]
+
+        types = self._entrypoint_snapshot_id_service.get_group_plugin_parameter_types(
+            entry_point.resource.group_id, log=logger
+        )
+
+        task_engine_yaml = self._task_engine_yaml_service.build_dict(
+            entry_point=entry_point,
+            plugin_plugin_files=plugin_files,
+            plugin_parameter_types=types,
+            logger=logger,
+        )
+
+        active_plugin_names = set()
+
+        for task in task_engine_yaml["tasks"]:
+            if task in used_tasks:
+                active_plugin_names.add(
+                    task_engine_yaml["tasks"][task]["plugin"].split(".")[0]
+                )
+
+        active_plugins = []
+
+        for epp in entry_point.entry_point_plugins:
+            # print(epp)
+            if epp.plugin.name in active_plugin_names:
+                active_plugins.append(epp.plugin)
+
+        return {
+            "entrypoint_params": list(needed_vars),
+            "topological_sort": topsorted,
+            "active_plugins": active_plugins,
+        }
 
 
 def _get_entrypoint_plugin_snapshots(
