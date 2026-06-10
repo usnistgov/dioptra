@@ -149,7 +149,7 @@ class EntrypointEndpoint(Resource):
         )
         parsed_obj = request.parsed_obj  # noqa: F841
 
-        parsed_query_params = request.parsed_query_params # noqa: F841
+        parsed_query_params = request.parsed_query_params  # noqa: F841
         commit = not bool(parsed_query_params.get("validate_only", False))
 
         entrypoint = self._entrypoint_service.create(
