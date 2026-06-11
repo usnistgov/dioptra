@@ -20,6 +20,8 @@ depends_on = None
 
 
 def upgrade():
+    """ Creates job_swaps ORM-mapped table and links it to the existing entities
+    """
     op.create_table(SWAPS_TABLE_NAME,
         sa.Column('job_id', 
                   sa.BigInteger().with_variant(sa.Integer(), 'sqlite'), 
@@ -42,4 +44,7 @@ def upgrade():
 
 
 def downgrade():
+    """ Drops job_swaps ORM-mapped table
+    """
     op.drop_table(SWAPS_TABLE_NAME)
+
