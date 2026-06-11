@@ -13,7 +13,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from "vue";
+import { ref, watch } from "vue"
 import * as api from "@/services/dataApi";
 import ResourcePicker from "@/components/ResourcePicker.vue";
 import * as notify from "../notify";
