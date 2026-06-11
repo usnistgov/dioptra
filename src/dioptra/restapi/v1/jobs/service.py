@@ -137,6 +137,7 @@ class JobService(object):
         description: str,
         timeout: str,
         entrypoint_snapshot_id: int | None = None,
+        swaps: list[dict[str, str]] | None = None,
         **kwargs,
     ) -> utils.JobDict:
         """Create a new job.
@@ -164,6 +165,11 @@ class JobService(object):
 
         # Set the default status
         status = "queued"
+
+        swaps = swaps or []
+
+        if len(swaps) > 0:
+            raise DioptraError("This feature is not yet implemented.")
 
         # Validate the provided experiment_id and fetch the ORM object
         experiment_dict = self._experiment_id_service.get(
@@ -855,6 +861,7 @@ class ExperimentJobService(object):
         description: str,
         timeout: str,
         entrypoint_snapshot_id: int | None = None,
+        swaps: list[dict[str, str]] | None = None,
         **kwargs,
     ) -> utils.JobDict:
         """Create a new job within an experiment.
@@ -883,6 +890,7 @@ class ExperimentJobService(object):
             description=description,
             timeout=timeout,
             entrypoint_snapshot_id=entrypoint_snapshot_id,
+            swaps=swaps,
             log=log,
         )
 

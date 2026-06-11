@@ -313,6 +313,22 @@ class JobSchema(JobBaseSchema):  # type: ignore
     )
 
 
+class SwapChoiceSchema(Schema):
+    """Schema for single swap choice. Consists of the name of the swap and the alias
+    of the task chosen for that swap."""
+
+    swap_name = fields.String(
+        attribute="swap_name",
+        metadata={"description": "Name of the swap."},
+        required=True,
+    )
+    task_alias = fields.String(
+        attribute="task_alias",
+        metadata={"description": "Alias of the chosen task."},
+        required=True,
+    )
+
+
 class JobCreateRequestSchema(JobSchema):
     """The schema for creating a Job resource."""
 
@@ -330,6 +346,14 @@ class JobCreateRequestSchema(JobSchema):
         },
         required=False,
         load_default=None,
+    )
+
+    swaps = fields.List(
+        fields.Nested(SwapChoiceSchema),
+        attribute="swaps",
+        metadata={"description": "List of swap definitions for the job."},
+        load_default=list,
+        required=False,
     )
 
 

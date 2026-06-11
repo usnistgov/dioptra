@@ -261,6 +261,7 @@ class ExperimentJobsSubCollectionClient(SubCollectionClient[T]):
         entrypoint_snapshot_id: int | None = None,
         values: dict[str, Any] | None = None,
         artifact_values: dict[str, Any] | None = None,
+        swaps: list[dict[str, Any]] | None = None,
         timeout: str | None = None,
         description: str | None = None,
     ) -> T:
@@ -280,6 +281,8 @@ class ExperimentJobsSubCollectionClient(SubCollectionClient[T]):
                 value that is also a dictionary that contains the keys "id" and
                 "snapshotId" whose values are the artifact resource id and the artifact
                 resource snapshot id respectively. Defaults to None.
+            swaps: A list of swap choices. Each swap choice should contain two keys - the
+                "swap_name" and the "task_alias" chosen for that swap name.
             timeout: The maximum alloted time for a job before it times out and is
                 stopped. If omitted, the job timeout will use the default set in the
                 API.
@@ -304,6 +307,9 @@ class ExperimentJobsSubCollectionClient(SubCollectionClient[T]):
 
         if description is not None:
             json_["description"] = description
+
+        if swaps is not None:
+            json_["swaps"] = swaps
 
         return self._session.post(
             self.build_sub_collection_url(experiment_id), json_=json_
