@@ -570,7 +570,9 @@ class ResourceImportService(object):
                         select(models.PluginFile)
                         .join(models.Resource)
                         .where(
-                            models.PluginFile.plugin_id == existing.resource_id,
+                            models.PluginFile.plugin.has(
+                                models.Resource.resource_id == existing.resource_id
+                            ),
                             models.Resource.is_deleted == False,  # noqa: E712
                             models.Resource.latest_snapshot_id
                             == models.PluginFile.resource_snapshot_id,
@@ -671,18 +673,20 @@ class ResourceImportService(object):
         existing_plugin_files,
         log: BoundLogger,
     ):
-        """Registers a PluginFile according to the spcified conflict strategy.
+        """Register a PluginFile according to the specified conflict strategy.
 
         Args:
-            plugin_id: The identifier of the Plugin this file belongs to
-            filename: The python filename
-            contents: The contents of the python file
-            function_tasks: The function task definitions from the toml config file.
-            function_tasks: The artifact task definitions from the toml config file.
-            conflict_strat: The strategy for resolving name conflicts
+            plugin_id: The identifier of the Plugin this file belongs to.
+            filename: The Python filename.
+            contents: The contents of the Python file.
+            function_tasks: The function task definitions from the TOML config file.
+            artifact_tasks: The artifact task definitions from the TOML config file.
+            conflict_strat: The strategy for resolving name conflicts.
+            existing_plugin_files: Existing plugin files keyed by filename.
+            log: The logger to use.
 
         Returns:
-            The registered PluginFile ORM object
+            The registered PluginFile ORM object.
         """
         if (
             conflict_strat == ResourceImportResolveNameConflictsStrategy.FAIL

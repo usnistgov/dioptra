@@ -44,6 +44,7 @@ from dioptra.restapi.db.repository.entrypoints import EntrypointRepository
 from dioptra.restapi.db.repository.experiments import ExperimentRepository
 from dioptra.restapi.db.repository.groups import GroupRepository
 from dioptra.restapi.db.repository.jobs import JobRepository
+from dioptra.restapi.db.repository.plugins import PluginRepository
 from dioptra.restapi.db.repository.queues import QueueRepository
 from dioptra.restapi.db.repository.types import TypeRepository
 from dioptra.restapi.db.repository.users import UserRepository
@@ -339,6 +340,13 @@ def type_repo(db_session: DBSession) -> TypeRepository:
 @pytest.fixture
 def entrypoint_repo(db_session: DBSession) -> EntrypointRepository:
     repo = EntrypointRepository(db_session)
+
+    return repo
+
+
+@pytest.fixture
+def plugin_repo(db_session: DBSession) -> PluginRepository:
+    repo = PluginRepository(db_session)
 
     return repo
 

@@ -170,7 +170,7 @@ def get_latest_snapshots(
     if isinstance(resources, (int, m.Resource, m.ResourceSnapshot)):
         snaps = session.scalar(stmt)
     else:
-        snaps = session.scalars(stmt).all()
+        snaps = session.scalars(stmt).unique().all()
 
     return snaps
 
@@ -428,6 +428,106 @@ def get_one_snapshot(
     # latest can't be None here.
     assert snapshot_obj is not None
     return snapshot_obj
+
+
+def get_one_latest_child_snapshot(
+    session: CompatibleSession[S],
+    child_class: typing.Type[ResourceT],
+    child_resource_type: EntityType,
+    child_resource_id: int,
+    parent_class: typing.Type[m.ResourceSnapshot],
+    parent_resource_id: int,
+    association_class: type,
+    parent_snapshot_fk: typing.Any,
+    child_snapshot_fk: typing.Any,
+    deletion_policy: DeletionPolicy,
+) -> ResourceT:
+    """
+    Get the latest child snapshot scoped to the latest parent snapshot.
+
+    This supports resources whose parent/child membership is represented by a
+    snapshot association table instead of the resource_dependencies table.
+
+    Args:
+        session: An SQLAlchemy session
+        child_class: The ResourceSnapshot subclass representing the child type
+        child_resource_type: The child entity type to use in errors
+        child_resource_id: The child resource ID
+        parent_class: The ResourceSnapshot subclass representing the parent type
+        parent_resource_id: The parent resource ID
+        association_class: The ORM class for the snapshot association table
+        parent_snapshot_fk: The association column referencing the parent snapshot
+        child_snapshot_fk: The association column referencing the child snapshot
+        deletion_policy: Whether to look at deleted child resources,
+            non-deleted child resources, or all child resources
+
+    Returns:
+        The child snapshot
+
+    Raises:
+        EntityDoesNotExistError: if the parent resource does not exist, or if the
+            child resource does not exist in the database or is not associated with
+            the parent's latest snapshot
+        EntityDeletedError: if the parent is deleted, or if the child is deleted
+            but policy was to find a non-deleted child
+        EntityExistsError: if the child exists and is not deleted, but policy was
+            to find a deleted child
+    """
+
+    assert_resource_exists(
+        session,
+        parent_resource_id,
+        deletion_policy=DeletionPolicy.NOT_DELETED,
+    )
+
+    parent_resource = sao.aliased(m.Resource)
+    parent_snapshot = sao.aliased(parent_class, flat=True)
+    child_resource = sao.aliased(m.Resource)
+
+    stmt = (
+        sa.select(child_class)
+        .join(
+            child_resource,
+            child_class.resource_id == child_resource.resource_id,
+        )
+        .join(
+            association_class,
+            child_snapshot_fk == child_class.resource_snapshot_id,
+        )
+        .join(
+            parent_snapshot,
+            parent_snapshot_fk == parent_snapshot.resource_snapshot_id,
+        )
+        .join(
+            parent_resource,
+            parent_snapshot.resource_id == parent_resource.resource_id,
+        )
+        .where(
+            child_class.resource_id == child_resource_id,
+            child_class.resource_snapshot_id == child_resource.latest_snapshot_id,
+            parent_snapshot.resource_id == parent_resource_id,
+            parent_snapshot.resource_snapshot_id == parent_resource.latest_snapshot_id,
+        )
+    )
+
+    child = session.scalars(stmt).unique().one_or_none()
+
+    if child is None:
+        existence_result = ExistenceResult.DOES_NOT_EXIST
+    elif child.resource.is_deleted:
+        existence_result = ExistenceResult.DELETED
+    else:
+        existence_result = ExistenceResult.EXISTS
+
+    assert_exists(
+        deletion_policy,
+        existence_result,
+        child_resource_type,
+        child_resource_id,
+    )
+
+    assert child is not None
+    return child
 
 
 def get_latest_child_snapshots(
@@ -999,6 +1099,7 @@ def get_by_filters_paged(
     additional_query_terms: typing.Sequence[
         typing.Callable[[sa.Select], sa.Select]
     ] = (),
+    unique_results: bool = False,
 ) -> tuple[Sequence[ResourceT], int]:
     """
     Get some resources according to search criteria.
@@ -1028,6 +1129,8 @@ def get_by_filters_paged(
             if sort_by is given
         deletion_policy: Whether to look at deleted resources, non-deleted
             resources, or all resources
+        unique_results: Whether to deduplicate the scalar result; required for
+            snapshots with joined-eager collection relationships
 
     Returns:
         A 2-tuple including the page of resources and total count of matching
@@ -1104,7 +1207,10 @@ def get_by_filters_paged(
 
         page_stmt = _apply_query_terms(page_stmt, additional_query_terms)
 
-        snaps = session.scalars(page_stmt).all()
+        scalar_result = session.scalars(page_stmt)
+        if unique_results:
+            scalar_result = scalar_result.unique()
+        snaps = scalar_result.all()
 
     return snaps, current_count
 
@@ -1131,6 +1237,7 @@ __all__ = [
     "get_latest_snapshots",
     "get_latest_snapshots_where",
     "get_exact_latest_snapshots",
+    "get_one_latest_child_snapshot",
     "get_one_latest_snapshot",
     "get_one_resource",
     "get_one_snapshot",
