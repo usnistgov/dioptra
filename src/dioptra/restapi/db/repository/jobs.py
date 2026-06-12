@@ -1,0 +1,745 @@
+# This Software (Dioptra) is being made available as a public service by the
+# National Institute of Standards and Technology (NIST), an Agency of the United
+# States Department of Commerce. This software was developed in part by employees of
+# NIST and in part by NIST contractors. Copyright in portions of this software that
+# were developed by NIST contractors has been licensed or assigned to NIST. Pursuant
+# to Title 17 United States Code Section 105, works of NIST employees are not
+# subject to copyright protection in the United States. However, NIST may hold
+# international copyright in software created by its employees and domestic
+# copyright (or licensing rights) in portions of software that were assigned or
+# licensed to NIST. To the extent that NIST holds copyright in this software, it is
+# being made available under the Creative Commons Attribution 4.0 International
+# license (CC BY 4.0). The disclaimers of the CC BY 4.0 license apply to all parts
+# of the software developed or licensed by NIST.
+#
+# ACCESS THE FULL CC BY 4.0 LICENSE HERE:
+# https://creativecommons.org/licenses/by/4.0/legalcode
+"""
+The job repository: data operations related to jobs, job metrics, and job logs
+"""
+
+from collections.abc import Iterable, Sequence
+from typing import Any, Final, overload
+
+import sqlalchemy as sa
+from sqlalchemy import func, select
+from sqlalchemy.orm import aliased
+
+import dioptra.restapi.db.repository.utils as utils
+from dioptra.restapi.db.models import (
+    EntryPoint,
+    EntryPointJob,
+    Experiment,
+    ExperimentJob,
+    Group,
+    Job,
+    Queue,
+    QueueJob,
+    Resource,
+    Tag,
+    resource_dependencies_table,
+)
+from dioptra.restapi.db.models.jobs import JobLog, JobMetric, JobMlflowRun
+from dioptra.restapi.db.repository.utils.common import DeletionPolicy
+from dioptra.restapi.errors import (
+    EntityDoesNotExistError,
+    EntityNotRegisteredError,
+    JobInvalidStatusTransitionError,
+    SortParameterValidationError,
+)
+from dioptra.restapi.v1.entity_types import EntityType
+from dioptra.restapi.v1.jobs.schema import JobLogSeverity
+
+
+class JobRepository:
+    SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
+        "description": lambda x: Job.description.like(x, escape="/"),
+        "status": lambda x: Job.status.like(x, escape="/"),
+        "timeout": lambda x: Job.timeout.like(x, escape="/"),
+        "tag": lambda x: Job.tags.any(Tag.name.like(x, escape="/")),
+    }
+    SORTABLE_FIELDS: Final[dict[str, Any]] = {
+        "id": Resource.resource_id,
+        "description": Job.description,
+        "createdOn": Job.created_on,
+        "lastModifiedOn": Resource.last_modified_on,
+        "status": Job.status,
+        "experiment": Experiment.name,
+        "entrypoint": EntryPoint.name,
+        "queue": Queue.name,
+    }
+    SEARCHABLE_LOG_FIELDS: Final[dict[str, Any]] = {
+        "severity": lambda x: JobLog.severity.like(x, escape="/"),
+        "message": lambda x: JobLog.message.like(x, escape="/"),
+        "logger_name": lambda x: JobLog.logger_name.like(x, escape="/"),
+    }
+    SORTABLE_LOG_FIELDS: Final[dict[str, Any]] = {
+        "severity": JobLog.severity,
+        "logger_name": JobLog.logger_name,
+        "created_on": JobLog.created_on,
+    }
+    JOB_STATUS_TRANSITIONS: Final[dict[str, Any]] = {
+        "queued": {"started", "deferred", "reset"},
+        "started": {"finished", "failed", "reset"},
+        "deferred": {"started", "reset"},
+        "failed": {"reset"},
+        "finished": {"reset"},
+    }
+
+    def __init__(self, session: utils.CompatibleSession[utils.S]):
+        self.session = session
+
+    def create(self, job: Job) -> None:
+        """
+        Create a new job resource.  This creates both the resource and the
+        initial snapshot.
+
+        Args:
+            job: The job to create
+
+        Raises:
+            EntityExistsError: if the job resource or snapshot already
+                exists, or the job name collides with another job in the
+                same group
+            EntityDoesNotExistError: if the group owner or user creator does
+                not exist
+            EntityDeletedError: if the job, its creator, or its group owner
+                is deleted
+            UserNotInGroupError: if the user creator is not a member of the
+                group who will own the resource
+            MismatchedResourceTypeError: if the snapshot or resource's type is
+                not "job"
+        """
+
+        # Consistency rules:
+        # - Job snapshots must be of job resources
+        # - For now, the snapshot creator must be a member of the group who
+        #   owns the resource.  I think this will become more complicated when
+        #   we implement shares and permissions.
+
+        utils.assert_can_create_resource(self.session, job, EntityType.JOB)
+
+        self.session.add(job)
+
+    def create_snapshot(self, job: Job) -> None:
+        """
+        Create a new job snapshot.
+
+        Args:
+            job: A Job object with the desired snapshot settings
+
+        Raises:
+            EntityDoesNotExistError: if the job resource or snapshot creator
+                user does not exist
+            EntityExistsError: if the snapshot already exists
+            EntityDeletedError: if the job or snapshot creator user are
+                deleted
+            UserNotInGroupError: if the snapshot creator user is not a member
+                of the group who owns the job
+            MismatchedResourceTypeError: if the snapshot or resource's type is
+                not "job"
+        """
+        # Consistency rules:
+        # - Job snapshots must be of job resources
+        # - Snapshot timestamps must be monotonically increasing(?)
+        # - For now, the snapshot creator must be a member of the group who
+        #   owns the resource.  I think this will become more complicated when
+        #   we implement shares and permissions.
+
+        utils.assert_can_create_snapshot(self.session, job, EntityType.JOB)
+
+        # Assume that the new snapshot's created_on timestamp is later than the
+        # current latest timestamp?
+
+        self.session.add(job)
+
+    def delete(self, job: Job | int) -> None:
+        """
+        Delete a job.  No-op if the job is already deleted.
+
+        Args:
+            job: A Job object or resource_id primary key value identifying
+                a job resource
+
+        Raises:
+            EntityDoesNotExistError: if the job does not exist
+        """
+
+        utils.delete_resource(self.session, job)
+
+    @overload
+    def get(
+        self,
+        resource_ids: int,
+        deletion_policy: utils.DeletionPolicy,
+    ) -> Job | None: ...
+
+    @overload
+    def get(
+        self,
+        resource_ids: Iterable[int],
+        deletion_policy: utils.DeletionPolicy,
+    ) -> Sequence[Job]: ...
+
+    def get(
+        self,
+        resource_ids: int | Iterable[int],
+        deletion_policy: utils.DeletionPolicy = utils.DeletionPolicy.NOT_DELETED,
+    ) -> Job | Sequence[Job] | None:
+        """
+        Get the latest snapshot of the given job resource.
+
+        Args:
+            resource_ids: A single or iterable of job resource IDs
+            deletion_policy: Whether to look at deleted jobs, non-deleted
+                jobs, or all jobs
+
+        Returns:
+            A Job/list of Job objects, or None/empty list if none were
+            found with the given ID(s)
+        """
+        return utils.get_latest_snapshots(
+            self.session, Job, resource_ids, deletion_policy
+        )
+
+    def get_one(
+        self,
+        job_id: int,
+        deletion_policy: utils.DeletionPolicy,
+        experiment_id: int | None = None,
+    ) -> Job:
+        """
+        Get the latest snapshot of the given job resource; require that
+        exactly one is found, or raise an exception. If an experiment is
+        provided, ensure that the job is associated with that experiment.
+
+        Args:
+            resource_id: A resource ID
+            deletion_policy: Whether to look at deleted jobs, non-deleted
+                jobs, or all jobs
+            experiment_resource_id: Whether to look at deleted jobs, non-deleted
+
+        Returns:
+            A Job object
+
+        Raises:
+            EntityDoesNotExistError: if the job does not exist in the
+                database (deleted or not)
+            EntityExistsError: if the job exists and is not deleted, but
+                policy was to find a deleted job
+            EntityDeletedError: if the job is deleted, but policy was to find
+                a non-deleted job
+        """
+        job = utils.get_one_latest_snapshot(self.session, Job, job_id, deletion_policy)
+
+        if (
+            experiment_id is not None
+            and experiment_id != job.experiment_job.experiment_id
+        ):
+            raise EntityDoesNotExistError(EntityType.JOB, resource_id=job_id)
+
+        return job
+
+    def get_by_filters_paged(
+        self,
+        group: Group | int | None,
+        experiment: Experiment | int | None,
+        filters: list[dict],
+        page_start: int,
+        page_length: int,
+        sort_by: str | None,
+        descending: bool,
+        deletion_policy: utils.DeletionPolicy = utils.DeletionPolicy.NOT_DELETED,
+    ) -> tuple[Sequence[Job], int]:
+        """
+        Get some jobs according to search criteria.
+
+        Args:
+            group: Limit jobs to those owned by this group; None to not limit
+                the search
+            filters: Search criteria, see parse_search_text()
+            page_start: Zero-based row index where the page should start
+            page_length: Maximum number of rows in the page; use <= 0 for
+                unlimited length
+            sort_by: Sort criterion; must be a key of SORTABLE_FIELDS.  None
+                to sort in an implementation-dependent way.
+            descending: Whether to sort in descending order; only applicable
+                if sort_by is given
+            deletion_policy: Whether to look at deleted jobs, non-deleted
+                jobs, or all jobs
+
+        Returns:
+            A 2-tuple including the page of jobs and total count of matching
+            jobs which exist
+
+        Raises:
+            SearchParseError: if filters includes a non-searchable field
+            SortParameterValidationError: if sort_by is a non-sortable field
+            EntityDoesNotExistError: if the given group does not exist
+            EntityDeletedError: if the given group is deleted
+        """
+
+        experiment_id = (
+            None if experiment is None else utils.get_resource_id(experiment)
+        )
+
+        additional_query_terms = []
+        if experiment_id is not None:
+            additional_query_terms.append(
+                lambda stmt: apply_experiment_filter(stmt, experiment_id)
+            )
+        if sort_by in {"experiment", "entrypoint", "queue"}:
+            additional_query_terms.append(
+                lambda stmt: apply_related_sort_join(stmt, sort_by)
+            )
+
+        return utils.get_by_filters_paged(
+            self.session,
+            Job,
+            self.SORTABLE_FIELDS,
+            self.SEARCHABLE_FIELDS,
+            group,
+            filters,
+            page_start,
+            page_length,
+            sort_by,
+            descending,
+            deletion_policy,
+            additional_query_terms,
+        )
+
+    def assert_resources_registered(
+        self, entrypoint_id: int, experiment_id: int, queue_id: int
+    ):
+        # Validate that the provided entrypoint_id is registered to the experiment
+        parent_experiment = aliased(Experiment)
+        experiment_entry_point_ids_stmt = (
+            select(EntryPoint.resource_id)
+            .join(
+                resource_dependencies_table,
+                EntryPoint.resource_id
+                == resource_dependencies_table.c.child_resource_id,
+            )
+            .join(
+                parent_experiment,
+                parent_experiment.resource_id
+                == resource_dependencies_table.c.parent_resource_id,
+            )
+            .where(parent_experiment.resource_id == experiment_id)
+        )
+        experiment_entry_point_ids = list(
+            self.session.scalars(experiment_entry_point_ids_stmt).all()
+        )
+
+        if entrypoint_id not in set(experiment_entry_point_ids):
+            raise EntityNotRegisteredError(
+                "experiment",
+                experiment_id,
+                "entry_point",
+                entrypoint_id,
+            )
+
+        # Validate that the provided queue_id is registered to the entrypoint
+        parent_entry_point = aliased(EntryPoint)
+        entry_point_queue_ids_stmt = (
+            select(Queue.resource_id)
+            .join(
+                resource_dependencies_table,
+                Queue.resource_id == resource_dependencies_table.c.child_resource_id,
+            )
+            .join(
+                parent_entry_point,
+                parent_entry_point.resource_id
+                == resource_dependencies_table.c.parent_resource_id,
+            )
+            .where(parent_entry_point.resource_id == entrypoint_id)
+        )
+        entry_point_queue_ids = list(
+            self.session.scalars(entry_point_queue_ids_stmt).all()
+        )
+
+        if queue_id not in set(entry_point_queue_ids):
+            raise EntityNotRegisteredError(
+                "entry_point", entrypoint_id, "queue", queue_id
+            )
+
+    def set_status(
+        self,
+        job_id: int,
+        status: str,
+        deletion_policy: DeletionPolicy = DeletionPolicy.NOT_DELETED,
+        experiment_id: int | None = None,
+    ) -> Job:
+        """Set a job's status by creating a new job snapshot.
+
+        The requested status is validated against the allowed transition map for
+        the job's current latest status. If the transition is not allowed,
+        JobInvalidStatusTransitionError is raised.
+
+        A requested status of "reset" is a special transition: any existing
+        MLflow run association for the job is removed, and the new job snapshot
+        is created with status "queued".
+
+        Args:
+            job_id: The job resource ID.
+            status: The requested next status.
+            deletion_policy: Whether to look at deleted jobs, non-deleted jobs,
+                or all jobs when loading the current job.
+            experiment_id: If provided, require the job to belong to this
+                experiment.
+
+        Returns:
+            The newly created job snapshot.
+
+        Raises:
+            EntityDoesNotExistError: If the job does not exist or does not belong
+                to the provided experiment.
+            EntityDeletedError: If the job is deleted and the deletion policy
+                excludes it.
+            JobInvalidStatusTransitionError: If the requested transition is
+                invalid.
+            Other repository validation errors from create_snapshot().
+        """
+        job = self.get_one(job_id, deletion_policy, experiment_id)
+
+        if status not in self.JOB_STATUS_TRANSITIONS.get(job.status, set()):
+            raise JobInvalidStatusTransitionError
+
+        new_status = status
+        if status == "reset":
+            self.session.execute(
+                sa.delete(JobMlflowRun).where(JobMlflowRun.job_resource_id == job_id)
+            )
+            new_status = "queued"
+
+        new_job = Job(
+            timeout=job.timeout,
+            status=new_status,
+            description=job.description,
+            resource=job.resource,
+            creator=job.creator,
+        )
+        new_job.entry_point_job = job.entry_point_job
+        new_job.experiment_job = job.experiment_job
+        new_job.queue_job = job.queue_job
+
+        self.create_snapshot(new_job)
+
+        return new_job
+
+    def get_latest_metrics(self, job_id: int):
+        """Get the latest metric values for a job.
+
+        Args:
+            job_id: The job resource ID.
+
+        Returns:
+            The latest metric records for the job.
+
+        Raises:
+            EntityDoesNotExistError: If the job does not exist.
+            EntityDeletedError: If the job is deleted.
+        """
+        utils.assert_resource_exists(self.session, job_id, DeletionPolicy.NOT_DELETED)
+
+        stmt = select(JobMetric).where(
+            JobMetric.is_latest, JobMetric.job_resource_id == job_id
+        )
+
+        return self.session.scalars(stmt).all()
+
+    def get_latest_metrics_for_jobs(
+        self, job_ids: Iterable[int]
+    ) -> dict[int, list[JobMetric]]:
+        """Get the latest metric values for multiple jobs.
+
+        Args:
+            job_ids: Job resource IDs to fetch latest metrics for.
+
+        Returns:
+            A mapping from job resource ID to its latest metric records. Jobs
+            without metrics are omitted from the mapping.
+        """
+        job_ids_tuple = tuple(job_ids)
+        if not job_ids_tuple:
+            return {}
+
+        stmt = select(JobMetric).where(
+            JobMetric.is_latest,
+            JobMetric.job_resource_id.in_(job_ids_tuple),
+        )
+
+        metrics_by_job_id: dict[int, list[JobMetric]] = {}
+        for metric in self.session.scalars(stmt):
+            metrics_by_job_id.setdefault(metric.job_resource_id, []).append(metric)
+
+        return metrics_by_job_id
+
+    def get_metric_step(
+        self, job_id: int, metric_name: str, metric_step: int
+    ) -> JobMetric | None:
+        """Get a single metric record by job, metric name, and step.
+
+        Args:
+            job_id: The job resource ID.
+            metric_name: The metric name.
+            metric_step: The metric step value.
+
+        Returns:
+            The matching metric record, or None if no record exists for the
+            requested metric name and step.
+
+        Raises:
+            EntityDoesNotExistError: If the job does not exist.
+            EntityDeletedError: If the job is deleted.
+        """
+        utils.assert_resource_exists(self.session, job_id, DeletionPolicy.NOT_DELETED)
+
+        stmt = select(JobMetric).where(
+            JobMetric.job_resource_id == job_id,
+            JobMetric.name == metric_name,
+            JobMetric.step == metric_step,
+        )
+
+        return self.session.scalar(stmt)
+
+    def get_metric_history(self, job_id: int, metric_name: str) -> Sequence[JobMetric]:
+        """Get all metric records for a job and metric name.
+
+        Args:
+            job_id: The job resource ID.
+            metric_name: The metric name to retrieve history for.
+
+        Returns:
+            The matching metric records, ordered by step and timestamp.
+
+        Raises:
+            EntityDoesNotExistError: If the job does not exist.
+            EntityDeletedError: If the job is deleted.
+        """
+        utils.assert_resource_exists(self.session, job_id, DeletionPolicy.NOT_DELETED)
+
+        stmt = (
+            select(JobMetric)
+            .where(
+                JobMetric.job_resource_id == job_id,
+                JobMetric.name == metric_name,
+            )
+            .order_by(
+                JobMetric.step,
+                JobMetric.timestamp,
+            )
+        )
+
+        return self.session.scalars(stmt).unique().all()
+
+    def get_metric_history_paged(
+        self,
+        job_id: int,
+        metric_name: str,
+        page_index: int,
+        page_length: int,
+    ) -> tuple[Sequence[JobMetric], int]:
+        """Get a paged metric history for a job and metric name.
+
+        Args:
+            job_id: The job resource ID.
+            metric_name: The metric name to retrieve history for.
+            page_index: Zero-based page index.
+            page_length: Maximum number of metric records to return.
+
+        Returns:
+            A tuple containing the requested page of metric records and the total
+            number of records matching the job and metric name.
+
+        Raises:
+            EntityDoesNotExistError: If the job does not exist.
+            EntityDeletedError: If the job is deleted.
+        """
+        utils.assert_resource_exists(self.session, job_id, DeletionPolicy.NOT_DELETED)
+
+        count_stmt = (
+            select(func.count())
+            .select_from(JobMetric)
+            .where(
+                JobMetric.job_resource_id == job_id,
+                JobMetric.name == metric_name,
+            )
+        )
+        total_count = self.session.scalar(count_stmt)
+        assert total_count is not None
+
+        page_stmt = (
+            select(JobMetric)
+            .where(
+                JobMetric.job_resource_id == job_id,
+                JobMetric.name == metric_name,
+            )
+            .order_by(
+                JobMetric.step,
+                JobMetric.timestamp,
+            )
+            .offset(page_index * page_length)
+            .limit(page_length)
+        )
+
+        return self.session.scalars(page_stmt).unique().all(), total_count
+
+    def add_metric(self, metric: JobMetric) -> None:
+        """Add a metric record to the current session.
+
+        Args:
+            metric: The metric record to add.
+        """
+        self.session.add(metric)
+
+    def add_logs(
+        self,
+        job_id: int,
+        records: Iterable[dict[str, Any]],
+    ) -> Sequence[JobLog]:
+        """
+        Add the given log records to the database.
+
+        Args:
+            job_resource_id: The resource ID of a job
+            records: An iterable of dicts, where each dict complies with the
+                JobLogRecordSchema marshmallow schema (after loading).
+        """
+        job = self.get_one(job_id, DeletionPolicy.NOT_DELETED)
+
+        job_logs: list[JobLog] = []
+
+        for record in records:
+            job_log = JobLog(
+                severity=record["severity"].name,
+                logger_name=record["logger_name"],
+                message=record["message"],
+                job_resource=job.resource,
+            )
+            self.session.add(job_log)
+            job_logs.append(job_log)
+
+        return job_logs
+
+    def get_logs(
+        self,
+        job_id: int,
+        filters: list[dict],
+        page_start: int,
+        page_length: int,
+        sort_by: str,
+        descending: bool,
+        severity: list[str] | None = None,
+    ) -> tuple[list[dict[str, Any]], int]:
+        """
+        Get log records from the database, for the given job.
+
+        Args:
+            job_id: The resource ID of a job
+            filters: Search criteria, see parse_search_text()
+            page_start: Zero-based index of the first log record to return
+            page_length: The number of records to return
+            sort_by: The name of the column to sort.
+            descending: Boolean indicating whether to sort by descending or not.
+            severity: list of severities to filter by
+
+        Returns:
+            A 2-tuple including (1) The list of records comprising this page,
+            each complying with JobLogRecordSchema, and (2) the total number of
+            records across all pages.
+        """
+        utils.assert_resource_exists(self.session, job_id, DeletionPolicy.NOT_DELETED)
+        sql_filter = utils.construct_sql_query_filters(
+            filters, JobRepository.SEARCHABLE_LOG_FIELDS
+        )
+
+        count_stmt = (
+            select(func.count())
+            .select_from(JobLog)
+            .where(JobLog.job_resource_id == job_id)
+        )
+        if sql_filter is not None:
+            count_stmt = count_stmt.where(sql_filter)
+        if severity:
+            count_stmt = count_stmt.where(JobLog.severity.in_(severity))
+        total_count = self.session.scalar(count_stmt)
+        # "select count(*) ..." can't produce None
+        assert total_count is not None
+
+        page_stmt = (
+            select(JobLog)
+            .where(JobLog.job_resource_id == job_id)
+            .offset(page_start)
+            .limit(page_length)
+        )
+
+        if sql_filter is not None:
+            page_stmt = page_stmt.where(sql_filter)
+
+        if severity:
+            page_stmt = page_stmt.where(JobLog.severity.in_(severity))
+
+        if sort_by and sort_by in JobRepository.SORTABLE_LOG_FIELDS:
+            sort_column = JobRepository.SORTABLE_LOG_FIELDS[sort_by]
+            sort_column = sort_column.desc() if descending else sort_column.asc()
+            # primary: user sort, secondary: id
+            page_stmt = page_stmt.order_by(sort_column, JobLog.id)
+        elif sort_by:
+            raise SortParameterValidationError(EntityType.JOB.value, sort_by)
+        else:
+            # default: just by id
+            page_stmt = page_stmt.order_by(JobLog.id)
+
+        log_objs = self.session.scalars(page_stmt)
+
+        records = []
+        for log_obj in log_objs:
+            record = {
+                "severity": JobLogSeverity[log_obj.severity],
+                "logger_name": log_obj.logger_name,
+                "message": log_obj.message,
+                "created_on": log_obj.created_on,
+            }
+            records.append(record)
+
+        return records, total_count
+
+
+def apply_experiment_filter(stmt: sa.Select, experiment_id: int) -> sa.Select:
+    cte_job_ids = (
+        select(ExperimentJob.job_resource_id)
+        .where(ExperimentJob.experiment_id == experiment_id)
+        .cte()
+    )
+    return stmt.where(Job.resource_id.in_(select(cte_job_ids)))
+
+
+def apply_related_sort_join(stmt: sa.Select, sort_by: str | None) -> sa.Select:
+    if sort_by == "experiment":
+        return stmt.join(
+            ExperimentJob, ExperimentJob.job_resource_id == Job.resource_id
+        ).join(
+            Experiment.__table__,
+            Experiment.__table__.c.resource_snapshot_id
+            == ExperimentJob.experiment_resource_snapshot_id,
+        )
+    if sort_by == "entrypoint":
+        return stmt.join(
+            EntryPointJob, EntryPointJob.job_resource_id == Job.resource_id
+        ).join(
+            EntryPoint.__table__,
+            EntryPoint.__table__.c.resource_snapshot_id
+            == EntryPointJob.entry_point_resource_snapshot_id,
+        )
+    if sort_by == "queue":
+        return stmt.join(QueueJob, QueueJob.job_resource_id == Job.resource_id).join(
+            Queue.__table__,
+            Queue.__table__.c.resource_snapshot_id
+            == QueueJob.queue_resource_snapshot_id,
+        )
+    return stmt
+
+
+def apply_severity_filter(stmt: sa.Select, severity: list[str]):
+    return stmt.select(JobLog).where(JobLog.severity.in_(severity))

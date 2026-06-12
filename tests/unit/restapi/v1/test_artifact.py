@@ -385,6 +385,8 @@ def test_artifact_searchable_fields(
 @pytest.mark.parametrize(
     "sort_by, descending , expected",
     [
+        ("id", True, ["artifact4", "artifact3", "artifact2", "artifact1"]),
+        ("id", False, ["artifact1", "artifact2", "artifact3", "artifact4"]),
         ("description", True, ["artifact2", "artifact1", "artifact4", "artifact3"]),
         ("description", False, ["artifact3", "artifact4", "artifact1", "artifact2"]),
         ("createdOn", True, ["artifact4", "artifact3", "artifact2", "artifact1"]),

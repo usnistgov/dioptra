@@ -24,7 +24,7 @@ from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
 from dioptra.restapi.db.repository.utils import DeletionPolicy
-from dioptra.restapi.db.unit_of_work import UnitOfWorkService
+from dioptra.restapi.service_context import ServiceContextService
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.shared.search_parser import parse_search_text
@@ -32,7 +32,7 @@ from dioptra.restapi.v1.shared.search_parser import parse_search_text
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
-class ExperimentService(UnitOfWorkService):
+class ExperimentService(ServiceContextService):
     """The service methods for registering and managing experiments by their unique
     id."""
 
@@ -168,7 +168,7 @@ class ExperimentService(UnitOfWorkService):
         return list(experiments_dict.values()), total_num_experiments
 
 
-class ExperimentIdService(UnitOfWorkService):
+class ExperimentIdService(ServiceContextService):
     """The service methods for registering and managing experiments by their unique
     id.
     """
@@ -284,7 +284,7 @@ class ExperimentIdService(UnitOfWorkService):
         return {"status": "Success", "id": [experiment_id]}
 
 
-class ExperimentIdEntrypointsService(UnitOfWorkService):
+class ExperimentIdEntrypointsService(ServiceContextService):
     """The service methods for managing entrypoints attached to an experiment."""
 
     def get(self, experiment_id: int, **kwargs) -> list[models.EntryPoint]:
@@ -402,7 +402,7 @@ class ExperimentIdEntrypointsService(UnitOfWorkService):
         return {"status": "Success", "id": entrypoint_ids}
 
 
-class ExperimentIdEntrypointsIdService(UnitOfWorkService):
+class ExperimentIdEntrypointsIdService(ServiceContextService):
     """The service methods for removing a entrypoint attached to an experiment."""
 
     def delete(self, experiment_id: int, entrypoint_id, **kwargs) -> dict[str, Any]:
