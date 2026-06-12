@@ -35,9 +35,9 @@ from dioptra.client.client import DioptraClient
 from dioptra.sdk.utilities.logging import forward_job_logs_to_api
 
 from ..lib import asserts, helpers, mock_rq, routines
+from ..lib.asserts import assert_retrieving_deleted_resource_snapshots_works
 from ..test_utils import assert_retrieving_resource_works
 
-from ..lib.asserts import assert_retrieving_deleted_resource_snapshots_works
 
 @pytest.fixture
 def registered_job_logs(dioptra_client, registered_jobs):
@@ -315,17 +315,47 @@ def assert_job_metrics_snapshots_matches_expectations(
     history = response.json()["data"]
 
     assert all(
-        [
-            "name" in m and "value" in m and "timestamp" in m and "step" in m
-            for m in history
-        ]
+        "name" in m and "value" in m and "timestamp" in m and "step" in m
+        for m in history
     )
     assert all(
-        [
-            any([e["name"] == m["name"] and e["value"] == e["value"] for e in expected])
-            for m in history
-        ]
+        any(e["name"] == m["name"] and e["value"] == e["value"] for e in expected)
+        for m in history
     )
+
+
+def create_experiment_with_artifact_parameter_entrypoint(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+    registered_plugin_parameter_types: dict[str, Any],
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    artifact_parameter_name = "model_artifact"
+    string_parameter_type_id = registered_plugin_parameter_types["string"]["id"]
+
+    entrypoint = dioptra_client.entrypoints.create(
+        group_id=auth_account["groups"][0]["id"],
+        name="entrypoint_with_artifact_parameter",
+        description="Entrypoint with a required artifact parameter.",
+        task_graph="# artifact input graph\ngraph: {}\n",
+        artifact_parameters=[
+            {
+                "name": artifact_parameter_name,
+                "outputParams": [
+                    {"name": "contents", "parameterType": string_parameter_type_id}
+                ],
+            }
+        ],
+        queues=[registered_queues["queue1"]["id"]],
+    ).json()
+    experiment = dioptra_client.experiments.create(
+        group_id=auth_account["groups"][0]["id"],
+        name="experiment_with_artifact_parameter_entrypoint",
+        description="Experiment with an artifact parameter entrypoint.",
+        entrypoints=[entrypoint["id"]],
+    ).json()
+
+    return experiment, entrypoint
 
 
 # -- Tests -----------------------------------------------------------------------------
@@ -545,6 +575,68 @@ def test_create_job_with_empty_values(
     assert_retrieving_job_by_id_works(
         dioptra_client, job_id=job_response["id"], expected=job_response
     )
+
+
+def test_create_job_missing_artifact_value_reports_missing_parameter(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+    registered_plugin_parameter_types: dict[str, Any],
+    monkeypatch: MonkeyPatch,
+) -> None:
+    import dioptra.restapi.v1.shared.rq_service as rq_service
+
+    monkeypatch.setattr(rq_service, "RQQueue", mock_rq.MockRQQueue)
+
+    experiment, entrypoint = create_experiment_with_artifact_parameter_entrypoint(
+        dioptra_client=dioptra_client,
+        auth_account=auth_account,
+        registered_queues=registered_queues,
+        registered_plugin_parameter_types=registered_plugin_parameter_types,
+    )
+
+    response = dioptra_client.experiments.jobs.create(
+        experiment_id=experiment["id"],
+        entrypoint_id=entrypoint["id"],
+        queue_id=registered_queues["queue1"]["id"],
+        artifact_values={},
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert response_json["error"] == "JobArtifactParameterMissingError"
+    assert "model_artifact" in response_json["message"]
+
+
+def test_create_job_invalid_artifact_value_reports_invalid_parameter(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+    registered_plugin_parameter_types: dict[str, Any],
+    monkeypatch: MonkeyPatch,
+) -> None:
+    import dioptra.restapi.v1.shared.rq_service as rq_service
+
+    monkeypatch.setattr(rq_service, "RQQueue", mock_rq.MockRQQueue)
+
+    experiment, entrypoint = create_experiment_with_artifact_parameter_entrypoint(
+        dioptra_client=dioptra_client,
+        auth_account=auth_account,
+        registered_queues=registered_queues,
+        registered_plugin_parameter_types=registered_plugin_parameter_types,
+    )
+
+    response = dioptra_client.experiments.jobs.create(
+        experiment_id=experiment["id"],
+        entrypoint_id=entrypoint["id"],
+        queue_id=registered_queues["queue1"]["id"],
+        artifact_values={"unknown_artifact": {"id": 1, "snapshotId": 1}},
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert response_json["error"] == "JobInvalidParameterNameError"
+    assert "unknown_artifact" in response_json["message"]
 
 
 def test_create_job_using_entrypoint_snapshot_id(
@@ -1062,12 +1154,17 @@ def test_delete_job(
     sequence of actions:
 
     - The user deletes a job by referencing its id.
-    - The user attempts to retrieve information about the deleted job.
-    - The request fails with an appropriate error message and response code.
+    - The user retrieves information about the deleted job.
+    - The request succeeds and returns the deleted job.
+    - The job snapshots can still be retrieved.
     """
     job_to_delete = registered_jobs["job1"]
-    dioptra_client.jobs.delete_by_id(job_to_delete["id"])
-    assert_job_is_not_found(dioptra_client, job_id=job_to_delete["id"])
+    job_id = job_to_delete["id"]
+
+    dioptra_client.jobs.delete_by_id(job_id)
+
+    response = dioptra_client.jobs.get_by_id(job_id)
+    assert response.status_code == HTTPStatus.OK
 
     assert_retrieving_deleted_resource_snapshots_works(
         dioptra_client.jobs.snapshots,
@@ -1118,6 +1215,50 @@ def test_modify_job_status(
     assert_job_status_matches_expectations(
         dioptra_client, job_id=job_to_change_status["id"], expected=new_status
     )
+
+
+def test_modify_job_status_invalid_transition(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_jobs: dict[str, Any],
+) -> None:
+    job = registered_jobs["job1"]
+
+    response = dioptra_client.experiments.jobs.set_status(
+        experiment_id=job["experiment"]["id"],
+        job_id=job["id"],
+        status="finished",
+    )
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert response.json()["error"] == "JobInvalidStatusTransitionError"
+
+
+def test_modify_job_status_reset_clears_mlflow_run(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_jobs: dict[str, Any],
+    registered_mlflowrun: dict[str, Any],
+) -> None:
+    job = registered_jobs["job1"]
+    job_id = job["id"]
+    experiment_id = job["experiment"]["id"]
+
+    response = dioptra_client.experiments.jobs.set_status(
+        experiment_id=experiment_id,
+        job_id=job_id,
+        status="reset",
+    )
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json()["status"] == "queued"
+    assert_job_status_matches_expectations(
+        dioptra_client, job_id=job_id, expected="queued"
+    )
+
+    mlflow_response = dioptra_client.jobs.get_mlflow_run_id(job_id=job_id)
+    assert mlflow_response.status_code == HTTPStatus.OK
+    assert mlflow_response.json()["mlflowRunId"] is None
 
 
 def test_manage_job_snapshots(
@@ -1404,23 +1545,8 @@ def test_get_logs_bad_job_id(dioptra_client, registered_jobs, registered_job_log
         1,
         3,
     )
-    returned_page = resp.json()
 
-    # Validate that createdOn timestamps are present in the logs, then remove them for a
-    # predictable comparison.
-    for log in returned_page["data"]:
-        assert "createdOn" in log
-        del log["createdOn"]
-
-    # Should it be a 404?
-    assert returned_page == {
-        "index": 1,
-        "isComplete": True,
-        "totalNumResults": 0,
-        "first": "/api/v1/jobs/999999/log?index=0&pageLength=3",
-        "prev": "/api/v1/jobs/999999/log?index=0&pageLength=3",
-        "data": [],
-    }
+    assert resp.status_code == HTTPStatus.NOT_FOUND
 
 
 def test_forward_job_logs_using_loggers(

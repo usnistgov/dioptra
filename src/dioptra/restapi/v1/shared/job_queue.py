@@ -14,23 +14,10 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from typing import Final
-
-import structlog
-from redis import Redis
-from rq.queue import Queue as RQQueue
-from structlog.stdlib import BoundLogger
-
-LOGGER: BoundLogger = structlog.stdlib.get_logger()
-
-TIMEOUT_24_HOURS: Final[int] = 24 * 3600
-RUN_V1_DIOPTRA_JOB_FUNC: Final[str] = "dioptra.rq.tasks.run_v1_dioptra_job"
+from typing import Protocol
 
 
-class RQServiceV1(object):
-    def __init__(self, redis: Redis) -> None:
-        self._redis = redis
-
+class JobQueueProtocol(Protocol):
     def submit(
         self,
         job_id: int,
@@ -38,25 +25,5 @@ class RQServiceV1(object):
         queue: str,
         timeout: str | None = None,
     ) -> None:
-        log: BoundLogger = LOGGER.new()
-
-        cmd_kwargs = {
-            "job_id": job_id,
-            "experiment_id": experiment_id,
-        }
-
-        log.info(
-            "Enqueuing job",
-            function=RUN_V1_DIOPTRA_JOB_FUNC,
-            job_id=job_id,
-            cmd_kwargs=cmd_kwargs,
-            timeout=timeout,
-        )
-
-        q = RQQueue(queue, default_timeout=TIMEOUT_24_HOURS, connection=self._redis)
-        q.enqueue(
-            RUN_V1_DIOPTRA_JOB_FUNC,
-            kwargs=cmd_kwargs,
-            job_id=str(job_id),
-            job_timeout=timeout if timeout else TIMEOUT_24_HOURS,
-        )
+        """Submit a job for asynchronous execution."""
+        ...

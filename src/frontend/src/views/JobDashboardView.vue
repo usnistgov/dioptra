@@ -6,15 +6,30 @@
     <div class="row items-center justify-between">
       <PageTitle
         :title="`Job ${$route.params.id} Dashboard`"
+        :deleted="job?.deleted"
         resourceType="job"
       />
       <q-btn
+        v-if="!job?.deleted"
         color="negative"
         icon="sym_o_delete"
         label="Delete Job"
         @click="showDeleteDialog = true"
       />
     </div>
+    <q-banner
+      v-if="job?.deleted"
+      dense
+      class="text-white bg-red q-mt-md"
+    >
+      <template #avatar>
+        <q-icon
+          name="warning"
+          color="white"
+        />
+      </template>
+      This Job has been deleted and cannot be modified.
+    </q-banner>
     <div class="q-my-lg">
       <q-tabs
         v-model="tab"
@@ -71,6 +86,7 @@
                 </q-tooltip>
               </q-chip>
               <q-btn
+                v-if="!job?.deleted"
                 round
                 size="xs"
                 icon="add"

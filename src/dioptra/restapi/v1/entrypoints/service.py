@@ -26,8 +26,9 @@ from structlog.stdlib import BoundLogger
 from dioptra.restapi.db import models
 from dioptra.restapi.db.models.users import User
 from dioptra.restapi.db.repository.utils.common import DeletionPolicy
-from dioptra.restapi.db.unit_of_work import UnitOfWork, UnitOfWorkService
+from dioptra.restapi.db.unit_of_work import UnitOfWork
 from dioptra.restapi.errors import EntityRelationshipDoesNotExistError
+from dioptra.restapi.service_context import ServiceContextService
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.plugins.service import (
@@ -242,7 +243,7 @@ class EntrypointService(object):
         return list(entrypoint_dicts.values()), total_num_entrypoints
 
 
-class EntrypointIdService(UnitOfWorkService):
+class EntrypointIdService(ServiceContextService):
     """The service methods for creating and managing entrypoints by
     their unique id."""
 
@@ -388,7 +389,7 @@ class EntrypointIdService(UnitOfWorkService):
         return {"status": "Success", "id": [entrypoint_id]}
 
 
-class EntrypointSnapshotIdService(UnitOfWorkService):
+class EntrypointSnapshotIdService(ServiceContextService):
     """The service methods for creating and managing entrypoints by
     their unique id."""
 
@@ -633,7 +634,7 @@ class EntrypointIdPluginsService(object):
         return _get_entrypoint_plugin_snapshots(new_entrypoint)
 
 
-class EntrypointIdPluginsIdService(UnitOfWorkService):
+class EntrypointIdPluginsIdService(ServiceContextService):
     """The service methods for creating and managing entrypoints by their unique id."""
 
     def get(
@@ -877,7 +878,7 @@ class EntrypointIdArtifactPluginsService(object):
         return _get_entrypoint_artifact_plugin_snapshots(new_entrypoint)
 
 
-class EntrypointIdArtifactPluginsIdService(UnitOfWorkService):
+class EntrypointIdArtifactPluginsIdService(ServiceContextService):
     """The service methods for creating and managing the artifact plugins for a specific
     entrypoint by their unique id."""
 
@@ -1006,7 +1007,7 @@ class EntrypointIdArtifactPluginsIdService(UnitOfWorkService):
         return {"status": "Success", "id": [artifact_plugin_id]}
 
 
-class EntrypointIdQueuesService(UnitOfWorkService):
+class EntrypointIdQueuesService(ServiceContextService):
     """The service methods for managing queues attached to an entrypoint."""
 
     def get(self, entrypoint_id: int, **kwargs) -> list[models.Queue]:
@@ -1114,7 +1115,7 @@ class EntrypointIdQueuesService(UnitOfWorkService):
         return {"status": "Success", "id": queue_ids}
 
 
-class EntrypointIdQueuesIdService(UnitOfWorkService):
+class EntrypointIdQueuesIdService(ServiceContextService):
     """The service methods for removing a queue attached to an entrypoint."""
 
     def delete(self, entrypoint_id: int, queue_id, **kwargs) -> dict[str, Any]:
@@ -1137,7 +1138,7 @@ class EntrypointIdQueuesIdService(UnitOfWorkService):
         return {"status": "Success", "id": [queue_id]}
 
 
-class EntrypointNameService(UnitOfWorkService):
+class EntrypointNameService(ServiceContextService):
     """The service methods for managing entrypoints by their name."""
 
     def get(self, name: str, group_id: int, **kwargs) -> models.EntryPoint | None:
