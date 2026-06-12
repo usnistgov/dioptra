@@ -360,6 +360,7 @@ class JobsCollectionClient(CollectionClient[T]):
         sort_by: str | None = None,
         descending: bool | None = None,
         severity: list[str] | None = None,
+        search: str | None = None,
     ) -> T:
         """
         Get log records for the given job resource. Records are returned in the order
@@ -374,6 +375,7 @@ class JobsCollectionClient(CollectionClient[T]):
             descending: Sort the returned list in descending order. Optional, defaults
                 to None.
             severity: list of severities to filter on
+            search: A search string used to filter results. Optional, defaults to None.
 
         Returns:
             The response from the Dioptra API.
@@ -392,6 +394,9 @@ class JobsCollectionClient(CollectionClient[T]):
 
         if severity:
             params["severity"] = severity
+
+        if search is not None:
+            params["search"] = search
 
         return self._session.get(self.url, str(job_id), LOG, params=params)
 
