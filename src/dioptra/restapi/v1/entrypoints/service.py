@@ -24,6 +24,7 @@ from injector import inject
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
+from dioptra.restapi.db.models.plugins import PluginTaskParameterType
 from dioptra.restapi.db.models.users import User
 from dioptra.restapi.db.repository.utils.common import DeletionPolicy, get_resource_id
 from dioptra.restapi.db.unit_of_work import UnitOfWork
@@ -31,10 +32,7 @@ from dioptra.restapi.errors import EntityRelationshipDoesNotExistError
 from dioptra.restapi.service_context import ServiceContextService
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.entity_types import EntityType
-from dioptra.restapi.v1.plugins.service import (
-    PluginIdsService,
-    get_plugin_task_parameter_types_by_id,
-)
+from dioptra.restapi.v1.plugins.service import PluginIdsService
 from dioptra.restapi.v1.shared.search_parser import parse_search_text
 from dioptra.restapi.v1.shared.task_engine_yaml.service import (
     coerce_entrypoint_default_param_types,
@@ -107,6 +105,15 @@ class EntrypointService(object):
 
         owner = self._uow.group_repo.get_one(group_id, DeletionPolicy.NOT_DELETED)
 
+        type_ids = {
+            parameter["parameter_type_id"]
+            for artifact in artifact_parameters
+            for parameter in artifact["output_params"]
+        }
+        types = self._uow.type_repo.get_exact(
+            list(type_ids), DeletionPolicy.NOT_DELETED
+        )
+
         resource = models.Resource(EntityType.ENTRY_POINT.db_table_name, owner)
         new_entrypoint = models.EntryPoint(
             name=name,
@@ -115,7 +122,7 @@ class EntrypointService(object):
             artifact_graph=artifact_graph,
             parameters=_create_parameters(parameters),
             artifact_parameters=_create_artifact_parameters(
-                artifact_parameters=artifact_parameters, log=log
+                artifact_parameters, list(types)
             ),
             resource=resource,
             creator=current_user,
@@ -331,6 +338,15 @@ class EntrypointIdService(ServiceContextService):
             entrypoint_id, DeletionPolicy.NOT_DELETED
         )
 
+        type_ids = {
+            parameter["parameter_type_id"]
+            for artifact in artifact_parameters
+            for parameter in artifact["output_params"]
+        }
+        types = self._uow.type_repo.get_exact(
+            list(type_ids), DeletionPolicy.NOT_DELETED
+        )
+
         new_entrypoint = models.EntryPoint(
             name=name,
             description=description,
@@ -338,7 +354,8 @@ class EntrypointIdService(ServiceContextService):
             artifact_graph=artifact_graph,
             parameters=_create_parameters(parameters),
             artifact_parameters=_create_artifact_parameters(
-                artifact_parameters=artifact_parameters, log=log
+                artifact_parameters,
+                list(types),
             ),
             resource=entrypoint.resource,
             creator=current_user,
@@ -449,18 +466,11 @@ class EntrypointSnapshotIdService(ServiceContextService):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("get plugin files", resource_snapshot_id=entrypoint_snapshot_id)
 
-        # change this to new repo method
-        # should not call other service methods from a service method
-        entry_point = self.get(
-            entrypoint_id=entrypoint_id,
-            entrypoint_snapshot_id=entrypoint_snapshot_id,
-            log=log,
+        return self._uow.entrypoint_repo.get_plugin_files(
+            entrypoint_id,
+            entrypoint_snapshot_id,
+            DeletionPolicy.NOT_DELETED,
         )
-        return [
-            plugin_plugin_file
-            for entry_point_plugin in entry_point.entry_point_plugins
-            for plugin_plugin_file in entry_point_plugin.plugin.plugin_plugin_files
-        ]
 
     def get_artifact_plugin_files(
         self,
@@ -480,16 +490,11 @@ class EntrypointSnapshotIdService(ServiceContextService):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("get plugin files", resource_snapshot_id=entrypoint_snapshot_id)
 
-        entry_point = self.get(
-            entrypoint_id=entrypoint_id,
-            entrypoint_snapshot_id=entrypoint_snapshot_id,
-            log=log,
+        return self._uow.entrypoint_repo.get_artifact_plugin_files(
+            entrypoint_id,
+            entrypoint_snapshot_id,
+            DeletionPolicy.NOT_DELETED,
         )
-        return [
-            plugin_plugin_file
-            for artifact_plugin in entry_point.entry_point_artifact_plugins
-            for plugin_plugin_file in artifact_plugin.plugin.plugin_plugin_files
-        ]
 
     def get_group_plugin_parameter_types(
         self, group_id: int, **kwargs
@@ -1267,17 +1272,13 @@ def _copy_parameters(
 
 
 def _create_artifact_parameters(
-    artifact_parameters: list[dict[str, Any]], log: BoundLogger
+    artifact_parameters: list[dict[str, Any]],
+    types: list[PluginTaskParameterType],
 ) -> Iterable[models.EntryPointArtifactParameter]:
     if artifact_parameters is None or len(artifact_parameters) == 0:
         return []
 
-    type_ids = [
-        parameter["parameter_type_id"]
-        for artifact in artifact_parameters
-        for parameter in artifact["output_params"]
-    ]
-    id_type_map = get_plugin_task_parameter_types_by_id(ids=type_ids, log=log)
+    id_type_map = {type_.resource_id: type_ for type_ in types}
 
     return [
         models.EntryPointArtifactParameter(

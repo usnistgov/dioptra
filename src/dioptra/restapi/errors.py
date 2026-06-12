@@ -866,7 +866,9 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
     @api.errorhandler(EntityDoesNotExistError)
     def handle_resource_does_not_exist_error(error: EntityDoesNotExistError):
         log.debug(
-            "Entity not found", entity_type=error.entity_type, **error.entity_attributes
+            "Entity not found",
+            entity_type=error.entity_type.db_table_name,
+            **error.entity_attributes,
         )
         return error_result(
             error,

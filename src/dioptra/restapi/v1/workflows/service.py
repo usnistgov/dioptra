@@ -34,6 +34,7 @@ from structlog.stdlib import BoundLogger
 from werkzeug.datastructures import FileStorage
 
 from dioptra.restapi.db import db, models
+from dioptra.restapi.db.unit_of_work import UnitOfWork
 from dioptra.restapi.errors import (
     DioptraError,
     DraftDoesNotExistError,
@@ -57,7 +58,6 @@ from dioptra.restapi.v1.plugin_parameter_types.service import (
     PluginParameterTypeIdService,
     PluginParameterTypeNameService,
     PluginParameterTypeService,
-    get_plugin_task_parameter_types_by_id,
 )
 from dioptra.restapi.v1.plugins.schema import ALLOWED_PLUGIN_FILENAME_REGEX
 from dioptra.restapi.v1.plugins.service import (
@@ -572,7 +572,9 @@ class ResourceImportService(object):
                         select(models.PluginFile)
                         .join(models.Resource)
                         .where(
-                            models.PluginFile.plugin_id == existing.resource_id,
+                            models.PluginFile.plugin.has(
+                                models.Resource.resource_id == existing.resource_id
+                            ),
                             models.Resource.is_deleted == False,  # noqa: E712
                             models.Resource.latest_snapshot_id
                             == models.PluginFile.resource_snapshot_id,
@@ -671,18 +673,20 @@ class ResourceImportService(object):
         existing_plugin_files,
         log: BoundLogger,
     ):
-        """Registers a PluginFile according to the spcified conflict strategy.
+        """Register a PluginFile according to the specified conflict strategy.
 
         Args:
-            plugin_id: The identifier of the Plugin this file belongs to
-            filename: The python filename
-            contents: The contents of the python file
-            function_tasks: The function task definitions from the toml config file.
-            function_tasks: The artifact task definitions from the toml config file.
-            conflict_strat: The strategy for resolving name conflicts
+            plugin_id: The identifier of the Plugin this file belongs to.
+            filename: The Python filename.
+            contents: The contents of the Python file.
+            function_tasks: The function task definitions from the TOML config file.
+            artifact_tasks: The artifact task definitions from the TOML config file.
+            conflict_strat: The strategy for resolving name conflicts.
+            existing_plugin_files: Existing plugin files keyed by filename.
+            log: The logger to use.
 
         Returns:
-            The registered PluginFile ORM object
+            The registered PluginFile ORM object.
         """
         if (
             conflict_strat == ResourceImportResolveNameConflictsStrategy.FAIL
@@ -1241,6 +1245,7 @@ class ValidateEntrypointService(object):
     def __init__(
         self,
         task_engine_yaml_service: TaskEngineYamlService,
+        uow: UnitOfWork,
     ) -> None:
         """Initialize the entrypoint service.
 
@@ -1250,6 +1255,7 @@ class ValidateEntrypointService(object):
             task_engine_yaml_service: A TaskEngineYamlService object.
         """
         self._task_engine_yaml_service = task_engine_yaml_service
+        self._uow = uow
 
     def validate(
         self,
@@ -1294,12 +1300,15 @@ class ValidateEntrypointService(object):
             entrypoint_artifacts=entrypoint_artifacts,
         )
 
-        type_ids = [
-            parameter["parameter_type_id"]
-            for artifact in entrypoint_artifacts
-            for parameter in artifact["output_params"]
-        ]
-        id_type_map = get_plugin_task_parameter_types_by_id(ids=type_ids, log=log)
+        type_ids = list(
+            dict.fromkeys(
+                parameter["parameter_type_id"]
+                for artifact in entrypoint_artifacts
+                for parameter in artifact["output_params"]
+            )
+        )
+        types = self._uow.type_repo.get_exact(type_ids)
+        id_type_map = {type_.resource_id: type_ for type_ in types}
         entrypoint = EntryPointDataAdapter(
             task_graph=task_graph,
             artifact_graph=artifact_graph,

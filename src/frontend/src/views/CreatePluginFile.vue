@@ -3,15 +3,29 @@
     <PageTitle
       :title="title"
       resourceType="file"
+      :deleted="pluginFile.deleted"
     />
     <q-btn
-      v-if="route.params.fileId !== 'new'"
+      v-if="route.params.fileId !== 'new' && !pluginFile.deleted"
       color="negative"
       icon="sym_o_delete"
       label="Delete Plugin File"
       @click="showDeleteFileDialog = true"
     />
   </div>
+  <q-banner
+    v-if="pluginFile.deleted"
+    dense
+    class="text-white bg-red q-mt-md"
+  >
+    <template #avatar>
+      <q-icon
+        name="warning"
+        color="white"
+      />
+    </template>
+    This Plugin File has been deleted and cannot be modified.
+  </q-banner>
   <div class="row q-my-lg">
     <fieldset :class="`${isMobile ? 'col-12 q-mb-lg' : 'col q-mr-md'}`">
       <legend>Basic Info</legend>
@@ -28,6 +42,7 @@
             :rules="[requiredRule, pythonFilenameRule]"
             class="q-mb-sm q-mt-md"
             aria-required="true"
+            :disable="pluginFile.deleted"
           >
             <template #before>
               <label :class="`field-label`">Filename:</label>
@@ -41,6 +56,7 @@
             class="q-mb-lg"
             type="textarea"
             autogrow
+            :disable="pluginFile.deleted"
           >
             <template #before>
               <label :class="`field-label`">Description:</label>
@@ -57,6 +73,7 @@
             dense
             accept=".py, text/x-python"
             class="col q-mr-lg"
+            :disable="pluginFile.deleted"
             @update:model-value="processFile"
           >
             <template #before>
@@ -69,6 +86,7 @@
           <q-btn
             label="Import Function Tasks"
             color="primary"
+            :disable="pluginFile.deleted"
             @click="showImportTasksDialog = true"
           />
         </div>
@@ -79,6 +97,7 @@
           :placeholder="'#Enter plugin file code here...'"
           style="margin-bottom: 15px"
           :showError="contentsError"
+          :readOnly="pluginFile.deleted"
         />
       </div>
     </fieldset>
@@ -93,6 +112,7 @@
         :disableSelect="true"
         :hideOpenBtn="true"
         :hideDeleteBtn="true"
+        :disableCreateBtn="pluginFile.deleted"
         rightCaption="*Click parameter to edit, or X to delete"
         @create="
           showTaskDialog = true;
@@ -103,6 +123,7 @@
           <div style="font-size: 18px">
             {{ cellProps.row.name }}
             <q-btn
+              :disable="pluginFile.deleted"
               icon="edit"
               round
               size="sm"
@@ -113,6 +134,7 @@
           <q-popup-edit
             v-slot="scope"
             v-model="cellProps.row.name"
+            :disable="pluginFile.deleted"
           >
             <q-input
               v-model="scope.value"
@@ -132,12 +154,12 @@
               color="indigo"
               text-color="white"
               dense
-              clickable
-              removable
+              :clickable="!pluginFile.deleted"
+              :removable="!pluginFile.deleted"
               @remove="pluginFile.tasks.functions[cellProps.rowIndex].inputParams.splice(i, 1)"
               @click="
-                handleSelectedParam('edit', cellProps, i, 'inputParams', 'functions');
-                showEditParamDialog = true;
+                !pluginFile.deleted &&
+                (handleSelectedParam('edit', cellProps, i, 'inputParams', 'functions'), (showEditParamDialog = true))
               "
             >
               {{ `${param.name}` }}
@@ -160,6 +182,7 @@
             </div>
           </div>
           <q-btn
+            v-if="!pluginFile.deleted"
             round
             size="xs"
             icon="add"
@@ -181,12 +204,12 @@
               color="purple"
               text-color="white"
               dense
-              clickable
-              removable
+              :clickable="!pluginFile.deleted"
+              :removable="!pluginFile.deleted"
               :label="`${param.name}: ${param.parameterType.name}`"
               @click="
-                handleSelectedParam('edit', cellProps, i, 'outputParams', 'functions');
-                showEditParamDialog = true;
+                !pluginFile.deleted &&
+                (handleSelectedParam('edit', cellProps, i, 'outputParams', 'functions'), (showEditParamDialog = true))
               "
               @remove="pluginFile.tasks.functions[cellProps.rowIndex].outputParams.splice(i, 1)"
             />
@@ -202,6 +225,7 @@
             </div>
           </div>
           <q-btn
+            v-if="!pluginFile.deleted"
             round
             size="xs"
             icon="add"
@@ -216,6 +240,7 @@
         </template>
         <template #body-cell-actions="cellProps">
           <q-btn
+            :disable="pluginFile.deleted"
             icon="sym_o_delete"
             round
             size="md"
@@ -238,6 +263,7 @@
         :disableSelect="true"
         :hideOpenBtn="true"
         :hideDeleteBtn="true"
+        :disableCreateBtn="pluginFile.deleted"
         rightCaption="*Click parameter to edit, or X to delete"
         @create="
           showTaskDialog = true;
@@ -248,6 +274,7 @@
           <div style="font-size: 18px">
             {{ cellProps.row.name }}
             <q-btn
+              :disable="pluginFile.deleted"
               icon="edit"
               round
               size="sm"
@@ -258,6 +285,7 @@
           <q-popup-edit
             v-slot="scope"
             v-model="cellProps.row.name"
+            :disable="pluginFile.deleted"
           >
             <q-input
               v-model="scope.value"
@@ -277,13 +305,14 @@
               color="purple"
               text-color="white"
               dense
-              clickable
-              removable
+              :clickable="!pluginFile.deleted"
+              :removable="!pluginFile.deleted"
               :label="`${param.name}: ${param.parameterType.name}`"
               @click="
-                handleSelectedParam('edit', cellProps, i, 'outputParams', 'artifacts');
-                showEditParamDialog = true;
-                console.log('param = ', param);
+                !pluginFile.deleted &&
+                (handleSelectedParam('edit', cellProps, i, 'outputParams', 'artifacts'),
+                (showEditParamDialog = true),
+                console.log('param = ', param))
               "
               @remove="pluginFile.tasks.artifacts[cellProps.rowIndex].outputParams.splice(i, 1)"
             />
@@ -295,6 +324,7 @@
             </div>
           </div>
           <q-btn
+            v-if="!pluginFile.deleted"
             round
             size="xs"
             icon="add"
@@ -309,6 +339,7 @@
         </template>
         <template #body-cell-actions="cellProps">
           <q-btn
+            :disable="pluginFile.deleted"
             icon="sym_o_delete"
             round
             size="md"
@@ -374,7 +405,7 @@
       color="primary"
       label="Submit File"
       type="submit"
-      :disable="!enableSubmit"
+      :disable="!enableSubmit || pluginFile.deleted"
       @click="submit()"
     >
       <q-tooltip v-if="!enableSubmit"> No changes detected — nothing to save </q-tooltip>
@@ -472,6 +503,7 @@ const pluginFile = ref({
     functions: [],
     artifacts: [],
   },
+  deleted: false,
 });
 const ORIGINAL_COPY = {
   filename: "",
@@ -548,6 +580,7 @@ onMounted(async () => {
       contents: res.data.contents,
       tasks: res.data.tasks,
       description: res.data.description,
+      deleted: res.data.deleted,
     };
     title.value = res.data.filename;
     copyAtEditStart.value = JSON.parse(JSON.stringify(pluginFile.value));
@@ -605,6 +638,7 @@ async function addOrModifyFile() {
   try {
     let res;
     const submitFile = JSON.parse(JSON.stringify(pluginFile.value));
+    delete submitFile.deleted;
     submitFile.tasks.functions.forEach((fTask) => {
       delete fTask.id;
       fTask.inputParams.forEach((param) => {
@@ -752,10 +786,10 @@ function addParam(newParam) {
   ].push(newParam);
 }
 
-onBeforeRouteLeave((to) => {
+onBeforeRouteLeave((to, from, next) => {
   toPath.value = to.path;
   if (confirmLeave.value || !valuesChangedFromEditStart.value) {
-    return true;
+    next(true);
   } else if (route.params.fileId === "new") {
     leaveForm();
   } else {

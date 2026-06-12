@@ -16,79 +16,27 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform plugin endpoint operations."""
 
-import itertools
-from typing import Any, Final, Iterable, cast
+from itertools import chain
+from typing import Any
 
 import structlog
 from flask_login import current_user
-from injector import inject
-from sqlalchemy import Integer, func, select
-from sqlalchemy.orm import aliased
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.db import db, models
-from dioptra.restapi.db.models.constants import resource_lock_types
+from dioptra.restapi.db import models
+from dioptra.restapi.db.repository.utils.common import DeletionPolicy
 from dioptra.restapi.errors import (
-    BackendDatabaseError,
     EntityDoesNotExistError,
-    EntityExistsError,
-    InputParameterNotUniqueError,
-    PluginTaskDoesNotExistError,
-    SortParameterValidationError,
 )
-from dioptra.restapi.utils import find_non_unique
+from dioptra.restapi.service_context import ServiceContextService
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.entity_types import EntityType
-from dioptra.restapi.v1.groups.service import GroupIdService
-from dioptra.restapi.v1.plugin_parameter_types.service import (
-    get_plugin_task_parameter_types_by_id,
-)
-from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
+from dioptra.restapi.v1.shared.search_parser import parse_search_text
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
-PLUGIN_SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
-    "name": lambda x: models.Plugin.name.like(x, escape="/"),
-    "description": lambda x: models.Plugin.description.like(x, escape="/"),
-    "tag": lambda x: models.Plugin.tags.any(models.Tag.name.like(x, escape="/")),
-}
-PLUGIN_FILE_SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
-    "filename": lambda x: models.PluginFile.filename.like(x, escape="/"),
-    "description": lambda x: models.PluginFile.description.like(x, escape="/"),
-    "contents": lambda x: models.PluginFile.contents.like(x, escape="/"),
-    "tag": lambda x: models.PluginFile.tags.any(models.Tag.name.like(x, escape="/")),
-}
-PLUGIN_SORTABLE_FIELDS: Final[dict[str, Any]] = {
-    "name": models.Plugin.name,
-    "createdOn": models.Plugin.created_on,
-    "lastModifiedOn": models.Resource.last_modified_on,
-    "description": models.Plugin.description,
-}
-PLUGIN_FILE_SORTABLE_FIELDS: Final[dict[str, Any]] = {
-    "filename": models.PluginFile.filename,
-    "createdOn": models.PluginFile.created_on,
-    "lastModifiedOn": models.Resource.last_modified_on,
-    "description": models.PluginFile.description,
-}
-
-
-class PluginService(object):
-    @inject
-    def __init__(
-        self, plugin_name_service: "PluginNameService", group_id_service: GroupIdService
-    ) -> None:
-        """Initialize the plugin service.
-
-        All arguments are provided via dependency injection.
-
-        Args:
-            plugin_name_service: A PluginNameService object.
-            group_id_service: A GroupIdService object.
-        """
-        self._plugin_name_service = plugin_name_service
-        self._group_id_service = group_id_service
-
+class PluginService(ServiceContextService):
     def create(
         self,
         name: str,
@@ -114,35 +62,25 @@ class PluginService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        duplicate = self._plugin_name_service.get(name, group_id=group_id, log=log)
-        if duplicate is not None:
-            raise EntityExistsError(
-                EntityType.PLUGIN,
-                duplicate.resource_id,
-                name=name,
-                group_id=group_id,
-            )
-
-        group = self._group_id_service.get(group_id, error_if_not_found=True)
+        group = self._uow.group_repo.get_one(group_id, DeletionPolicy.NOT_DELETED)
 
         resource = models.Resource(resource_type="plugin", owner=group)
         new_plugin = models.Plugin(
             name=name, description=description, resource=resource, creator=current_user
         )
-        db.session.add(new_plugin)
 
-        if commit:
-            db.session.commit()
-            log.debug(
-                "Plugin registration successful",
-                plugin_id=new_plugin.resource_id,
-                name=new_plugin.name,
-            )
+        with self._uow(commit):
+            self._uow.plugin_repo.create(new_plugin)
 
-        plugin_dict = utils.PluginWithFilesDict(
+        log.debug(
+            "Plugin registration successful",
+            plugin_id=new_plugin.resource_id,
+            name=new_plugin.name,
+        )
+
+        return utils.PluginWithFilesDict(
             plugin=new_plugin, plugin_files=[], has_draft=False
         )
-        return plugin_dict
 
     def get(
         self,
@@ -152,6 +90,7 @@ class PluginService(object):
         page_length: int,
         sort_by_string: str,
         descending: bool,
+        show_deleted: bool = False,
         **kwargs,
     ) -> tuple[list[utils.PluginWithFilesDict], int]:
         """Fetch a list of plugins, optionally filtering by search string and paging
@@ -160,177 +99,81 @@ class PluginService(object):
         Args:
             group_id: A group ID used to filter results.
             search_string: A search string used to filter results.
-            page_index: The index of the first group to be returned.
-            page_length: The maximum number of plugins to be returned.
+            page_index: The index of the first plugin file to be returned.
+            page_length: The maximum number of plugin files to be returned.
             sort_by_string: The name of the column to sort.
             descending: Boolean indicating whether to sort by descending or not.
+            show_deleted: Boolean indicating whether to include deleted plugins.
 
         Returns:
-            A tuple containing a list of plugins and the total number of plugins
-            matching the query.
+            A tuple containing a list of plugin files and the total number of
+            plugin files matching the query.
 
         Raises:
-            SearchNotImplementedError: If a search string is provided.
-            BackendDatabaseError: If the database query returns a None when counting
-                the number of plugins.
+            SearchParseError: If the search string cannot be parsed.
+            SortParameterValidationError: If the sort field is invalid.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get full list of plugins")
 
-        filters = []
+        search_struct = parse_search_text(search_string) if search_string else []
 
-        if group_id is not None:
-            filters.append(models.Resource.group_id == group_id)
-
-        if search_string:
-            filters.append(
-                construct_sql_query_filters(search_string, PLUGIN_SEARCHABLE_FIELDS)
-            )
-
-        stmt = (
-            select(func.count(models.Plugin.resource_id))
-            .join(models.Resource)
-            .where(
-                *filters,
-                models.Resource.is_deleted == False,  # noqa: E712
-                models.Resource.latest_snapshot_id
-                == models.Plugin.resource_snapshot_id,
-            )
+        deletion_policy = (
+            DeletionPolicy.ANY if show_deleted else DeletionPolicy.NOT_DELETED
         )
-        total_num_plugins = db.session.scalar(stmt)
 
-        if total_num_plugins is None:
-            log.error(
-                "The database query returned a None when counting the number of "
-                "groups when it should return a number.",
-                sql=str(stmt),
-            )
-            raise BackendDatabaseError
+        plugins, total_num_plugins = self._uow.plugin_repo.get_by_filters_paged(
+            group=group_id,
+            filters=search_struct,
+            page_start=page_index,
+            page_length=page_length,
+            sort_by=sort_by_string,
+            descending=descending,
+            deletion_policy=deletion_policy,
+        )
 
         if total_num_plugins == 0:
             return [], total_num_plugins
 
-        # get latest plugin snapshots
-        latest_plugins_stmt = (
-            select(models.Plugin)
-            .join(models.Resource)
-            .where(
-                *filters,
-                models.Resource.is_deleted == False,  # noqa: E712
-                models.Resource.latest_snapshot_id
-                == models.Plugin.resource_snapshot_id,
-            )
-            .offset(page_index)
-            .limit(page_length)
+        resource_ids_with_drafts = self._uow.drafts_repo.has_draft_modifications(
+            plugins, current_user
         )
 
-        if sort_by_string and sort_by_string in PLUGIN_SORTABLE_FIELDS:
-            sort_column = PLUGIN_SORTABLE_FIELDS[sort_by_string]
-            if descending:
-                sort_column = sort_column.desc()
-            else:
-                sort_column = sort_column.asc()
-            latest_plugins_stmt = latest_plugins_stmt.order_by(sort_column)
-        elif sort_by_string and sort_by_string not in PLUGIN_SORTABLE_FIELDS:
-            raise SortParameterValidationError(
-                EntityType.PLUGIN.db_table_name, sort_by_string
-            )
-
-        plugins = db.session.scalars(latest_plugins_stmt).all()
-
-        plugins_dict: dict[int, utils.PluginWithFilesDict] = {
-            plugin.resource_id: utils.PluginWithFilesDict(
-                plugin=plugin, plugin_files=plugin.plugin_files, has_draft=False
+        plugin_dicts = [
+            utils.PluginWithFilesDict(
+                plugin=plugin,
+                plugin_files=plugin.plugin_files,
+                has_draft=plugin.resource_id in resource_ids_with_drafts,
             )
             for plugin in plugins
-        }
+        ]
 
-        drafts_stmt = select(
-            models.DraftResource.payload["resource_id"].as_string().cast(Integer)
-        ).where(
-            models.DraftResource.payload["resource_id"]
-            .as_string()
-            .cast(Integer)
-            .in_(
-                tuple(plugin["plugin"].resource_id for plugin in plugins_dict.values())
-            ),
-            models.DraftResource.user_id == current_user.user_id,
-        )
-        for resource_id in db.session.scalars(drafts_stmt):
-            plugins_dict[resource_id]["has_draft"] = True
-
-        return list(plugins_dict.values()), total_num_plugins
+        return plugin_dicts, total_num_plugins
 
 
-class PluginIdService(object):
+class PluginIdService(ServiceContextService):
     """The service methods for registering and managing plugins by their unique id."""
 
-    @inject
-    def __init__(
-        self,
-        plugin_name_service: "PluginNameService",
-    ) -> None:
-        """Initialize the plugin service.
-
-        All arguments are provided via dependency injection.
-
-        Args:
-            plugin_name_service: A pluginNameService object.
-        """
-        self._plugin_name_service = plugin_name_service
-
-    def get(
-        self,
-        plugin_id: int,
-        error_if_not_found: bool = False,
-        **kwargs,
-    ) -> utils.PluginWithFilesDict | None:
+    def get(self, plugin_id: int, **kwargs) -> utils.PluginWithFilesDict | None:
         """Fetch a plugin by its unique id.
 
         Args:
             plugin_id: The unique id of the plugin.
-            error_if_not_found: If True, raise an error if the plugin is not found.
-                Defaults to False.
 
         Returns:
             The plugin object if found, otherwise None.
 
         Raises:
-            EntityDoesNotExistError: If the plugin is not found and `error_if_not_found`
-                is True.
+            EntityDoesNotExistError: If the plugin is not found
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get plugin by id", plugin_id=plugin_id)
 
-        stmt = (
-            select(models.Plugin)
-            .join(models.Resource)
-            .where(
-                models.Plugin.resource_id == plugin_id,
-                models.Plugin.resource_snapshot_id
-                == models.Resource.latest_snapshot_id,
-                models.Resource.is_deleted == False,  # noqa: E712
-            )
-        )
-        plugin = db.session.scalar(stmt)
-
+        plugin = self._uow.plugin_repo.get(plugin_id, DeletionPolicy.NOT_DELETED)
         if plugin is None:
-            if error_if_not_found:
-                raise EntityDoesNotExistError(EntityType.PLUGIN, plugin_id=plugin_id)
+            raise EntityDoesNotExistError(EntityType.PLUGIN, plugin_id=plugin_id)
 
-            return None
-
-        drafts_stmt = (
-            select(models.DraftResource.draft_resource_id)
-            .where(
-                models.DraftResource.payload["resource_id"].as_string().cast(Integer)
-                == plugin.resource_id,
-                models.DraftResource.user_id == current_user.user_id,
-            )
-            .exists()
-            .select()
-        )
-        has_draft = db.session.scalar(drafts_stmt)
+        has_draft = self._uow.drafts_repo.has_draft_modification(plugin, current_user)
 
         return utils.PluginWithFilesDict(
             plugin=plugin, plugin_files=plugin.plugin_files, has_draft=has_draft
@@ -341,7 +184,6 @@ class PluginIdService(object):
         plugin_id: int,
         name: str,
         description: str | None,
-        error_if_not_found: bool = False,
         commit: bool = True,
         **kwargs,
     ) -> utils.PluginWithFilesDict | None:
@@ -351,40 +193,19 @@ class PluginIdService(object):
             plugin_id: The unique id of the plugin.
             name: The new name of the plugin.
             description: The new description of the plugin.
-            error_if_not_found: If True, raise an error if the plugin is not found.
-                Defaults to False.
             commit: If True, commit the transaction. Defaults to True.
 
         Returns:
             The updated plugin object.
 
         Raises:
-            EntityDoesNotExistError: If the plugin is not found and `error_if_not_found`
-                is True.
+            EntityDoesNotExistError: If the plugin is not found.
             EntityExistsError: If the plugin name already exists.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        plugin_dict = self.get(
-            plugin_id, error_if_not_found=error_if_not_found, log=log
-        )
-
-        if plugin_dict is None:
-            return None
-
-        plugin = plugin_dict["plugin"]
-        plugin_files = plugin_dict["plugin_files"]
-        group_id = plugin.resource.group_id
-
-        if name != plugin.name:
-            duplicate = self._plugin_name_service.get(name, group_id=group_id, log=log)
-            if duplicate is not None:
-                raise EntityExistsError(
-                    EntityType.PLUGIN,
-                    duplicate.resource_id,
-                    name=name,
-                    group_id=group_id,
-                )
+        plugin = self._uow.plugin_repo.get_one(plugin_id, DeletionPolicy.NOT_DELETED)
+        plugin_files = plugin.plugin_files
 
         new_plugin = models.Plugin(
             name=name,
@@ -392,22 +213,17 @@ class PluginIdService(object):
             resource=plugin.resource,
             creator=current_user,
         )
-        db.session.add(new_plugin)
 
-        for plugin_file in plugin_files:
-            plugin_plugin_file = models.PluginPluginFile(
-                plugin=new_plugin, plugin_file=plugin_file
-            )
-            db.session.add(plugin_plugin_file)
+        with self._uow(commit):
+            self._uow.plugin_repo.create_snapshot(new_plugin)
+            self._uow.plugin_repo.associate_plugin_files(new_plugin, plugin_files)
 
-        if commit:
-            db.session.commit()
-            log.debug(
-                "Plugin modification successful",
-                plugin_id=plugin_id,
-                name=name,
-                description=description,
-            )
+        log.debug(
+            "Plugin modification successful",
+            plugin_id=plugin_id,
+            name=name,
+            description=description,
+        )
 
         return utils.PluginWithFilesDict(
             plugin=new_plugin, plugin_files=plugin_files, has_draft=False
@@ -424,40 +240,16 @@ class PluginIdService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        stmt = select(models.Resource).filter_by(
-            resource_id=plugin_id,
-            resource_type=EntityType.PLUGIN.db_table_name,
-            is_deleted=False,
-        )
-        plugin_resource = db.session.scalar(stmt)
-
-        if plugin_resource is None:
-            raise EntityDoesNotExistError(EntityType.PLUGIN, plugin_id=plugin_id)
-
-        deleted_resource_lock = models.ResourceLock(
-            resource_lock_type=resource_lock_types.DELETE,
-            resource=plugin_resource,
-        )
-        db.session.add(deleted_resource_lock)
-
-        plugin_file_resources = [
-            child
-            for child in plugin_resource.children
-            if child.resource_type == EntityType.PLUGIN_FILE.db_table_name
-        ]
+        plugin = self._uow.plugin_repo.get_one(plugin_id, DeletionPolicy.NOT_DELETED)
         plugin_file_ids = [
-            plugin_file_resource.resource_id
-            for plugin_file_resource in plugin_file_resources
+            plugin_file.resource_id for plugin_file in plugin.plugin_files
         ]
-        for plugin_file_resource in plugin_file_resources:
-            if not plugin_file_resource.is_deleted:
-                deleted_resource_lock = models.ResourceLock(
-                    resource_lock_type=resource_lock_types.DELETE,
-                    resource=plugin_file_resource,
-                )
-                db.session.add(deleted_resource_lock)
 
-        db.session.commit()
+        with self._uow():
+            self._uow.plugin_repo.delete(plugin)
+
+            for plugin_file in plugin.plugin_files:
+                self._uow.plugin_repo.delete_file(plugin_file)
 
         log.debug(
             "Plugin and associated files deleted",
@@ -472,236 +264,74 @@ class PluginIdService(object):
         }
 
 
-class PluginIdsService(object):
+class PluginIdsService(ServiceContextService):
     """The service methods for registering and managing plugins by their unique id."""
 
     def get(
         self,
         plugin_ids: list[int],
-        error_if_not_found: bool = False,
         **kwargs,
     ) -> list[utils.PluginWithFilesDict]:
-        """Fetch a plugin by its unique id.
+        """Fetch plugins by their unique ids.
 
         Args:
             plugin_ids: The unique ids of the plugins.
-            error_if_not_found: If True, raise an error if the plugin is not found.
-                Defaults to False.
 
         Returns:
-            A list of  plugin objects.
+            A list of plugin objects.
 
         Raises:
-            EntityDoesNotExistError: If the plugin is not found and `error_if_not_found`
-                is True.
+            EntityDoesNotExistError: If any plugin is not found.
         """
-        latest_plugins_stmt = (
-            select(models.Plugin)
-            .join(models.Resource)
-            .where(
-                models.Plugin.resource_id.in_(tuple(plugin_ids)),
-                models.Resource.is_deleted == False,  # noqa: E712
-                models.Resource.latest_snapshot_id
-                == models.Plugin.resource_snapshot_id,
-            )
-        )
-        plugins = db.session.scalars(latest_plugins_stmt).all()
 
-        if len(plugins) != len(plugin_ids) and error_if_not_found:
-            plugin_ids_missing = set(plugin_ids) - {
-                plugin.resource_id for plugin in plugins
-            }
-            raise EntityDoesNotExistError(
-                EntityType.PLUGIN, plugin_ids=list(plugin_ids_missing)
-            )
-
-        # extract list of plugin ids
-        plugin_ids = [plugin.resource_id for plugin in plugins]
-
-        # Build CTE that retrieves all snapshot ids for the list of plugin files
-        # associated with retrieved plugins
-        parent_plugin = aliased(models.Plugin)
-        plugin_file_snapshot_ids_cte = (
-            select(models.PluginFile.resource_snapshot_id)
-            .join(
-                models.resource_dependencies_table,
-                models.PluginFile.resource_id
-                == models.resource_dependencies_table.c.child_resource_id,
-            )
-            .join(
-                parent_plugin,
-                parent_plugin.resource_id
-                == models.resource_dependencies_table.c.parent_resource_id,
-            )
-            .where(parent_plugin.resource_id.in_(plugin_ids))
-            .cte()
+        plugins = self._uow.plugin_repo.get_exact(
+            plugin_ids, DeletionPolicy.NOT_DELETED
         )
 
-        # get the latest plugin file snapshots associated with the retrieved plugins
-        latest_plugin_files_stmt = (
-            select(models.PluginFile)
-            .join(models.Resource)
-            .where(
-                models.Resource.latest_snapshot_id.in_(
-                    select(plugin_file_snapshot_ids_cte)
-                ),
-                models.Resource.latest_snapshot_id
-                == models.PluginFile.resource_snapshot_id,
-                models.Resource.is_deleted == False,  # noqa: E712
-            )
+        resource_ids_with_drafts = self._uow.drafts_repo.has_draft_modifications(
+            plugins, current_user
         )
-        plugin_files = db.session.scalars(latest_plugin_files_stmt).unique().all()
 
-        # build a dictionary structure to re-associate plugins and plugin files
-        plugins_dict: dict[int, utils.PluginWithFilesDict] = {
-            plugin.resource_id: utils.PluginWithFilesDict(
-                plugin=plugin, plugin_files=[], has_draft=False
+        plugin_dicts = [
+            utils.PluginWithFilesDict(
+                plugin=plugin,
+                plugin_files=plugin.plugin_files,
+                has_draft=plugin.resource_id in resource_ids_with_drafts,
             )
             for plugin in plugins
-        }
-        for plugin_file in plugin_files:
-            plugins_dict[plugin_file.plugin_id]["plugin_files"].append(plugin_file)
+        ]
 
-        drafts_stmt = select(
-            models.DraftResource.payload["resource_id"].as_string().cast(Integer)
-        ).where(
-            models.DraftResource.payload["resource_id"]
-            .as_string()
-            .cast(Integer)
-            .in_(
-                tuple(plugin["plugin"].resource_id for plugin in plugins_dict.values())
-            ),
-            models.DraftResource.user_id == current_user.user_id,
-        )
-        for resource_id in db.session.scalars(drafts_stmt):
-            plugins_dict[resource_id]["has_draft"] = True
-
-        return list(plugins_dict.values())
+        return plugin_dicts
 
 
-class PluginNameService(object):
+class PluginNameService(ServiceContextService):
     """The service methods for managing plugins by their name."""
 
-    def get(
-        self,
-        name: str,
-        group_id: int,
-        error_if_not_found: bool = False,
-        **kwargs,
-    ) -> models.Plugin | None:
+    def get(self, name: str, group_id: int, **kwargs) -> models.Plugin | None:
         """Fetch a plugin by its name.
 
         Args:
             name: The name of the plugin.
-            group_id: The the group id of the plugin.
-            error_if_not_found: If True, raise an error if the plugin is not found.
-                Defaults to False.
+            group_id: The group id of the plugin.
 
         Returns:
             The plugin object if found, otherwise None.
 
         Raises:
-            EntityDoesNotExistError: If the plugin is not found and `error_if_not_found`
-                is True.
+            EntityDoesNotExistError: If the plugin is not found.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get plugin by name", plugin_name=name, group_id=group_id)
 
-        stmt = (
-            select(models.Plugin)
-            .join(models.Resource)
-            .where(
-                models.Plugin.name == name,
-                models.Resource.group_id == group_id,
-                models.Resource.is_deleted == False,  # noqa: E712
-                models.Resource.latest_snapshot_id
-                == models.Plugin.resource_snapshot_id,
-            )
+        group = self._uow.group_repo.get_one(group_id, DeletionPolicy.NOT_DELETED)
+        plugin = self._uow.plugin_repo.get_by_name(
+            name, group, DeletionPolicy.NOT_DELETED
         )
-        plugin = db.session.scalar(stmt)
-
-        if plugin is None:
-            if error_if_not_found:
-                raise EntityDoesNotExistError(
-                    EntityType.PLUGIN, name=name, group_id=group_id
-                )
 
         return plugin
 
 
-class PluginFileNameService(object):
-    """The service methods for managing plugin files by their filename."""
-
-    def get(
-        self, filename: str, plugin_id: int, error_if_not_found: bool = False, **kwargs
-    ) -> models.PluginFile | None:
-        """Fetch a plugin file by its filename.
-
-        Args:
-            filename: The filename of the plugin file.
-            plugin_id: The plugin id of the plugin to which the plugin file belongs.
-            error_if_not_found: If True, raise an error if the plugin file is not found.
-                Defaults to False.
-
-        Returns:
-            The plugin file object if found, otherwise None.
-
-        Raises:
-            EntityDoesNotExistError: If the plugin is not found and
-            `error_if_not_found` is True.
-        """
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
-        log.debug(
-            "Get plugin file by filename",
-            plugin_file_filename=filename,
-            plugin_id=plugin_id,
-        )
-
-        stmt = (
-            select(models.PluginFile)
-            .join(models.Resource)
-            .where(
-                models.PluginFile.filename == filename,
-                models.PluginFile.plugin_id == plugin_id,
-                models.Resource.is_deleted == False,  # noqa: E712
-                models.Resource.latest_snapshot_id
-                == models.PluginFile.resource_snapshot_id,
-            )
-        )
-        plugin_file = db.session.scalar(stmt)
-
-        if plugin_file is None:
-            if error_if_not_found:
-                raise EntityDoesNotExistError(
-                    EntityType.PLUGIN_FILE, plugin_id=plugin_id, filename=filename
-                )
-
-            return None
-
-        return plugin_file
-
-
-class PluginIdFileService(object):
-    @inject
-    def __init__(
-        self,
-        plugin_file_name_service: PluginFileNameService,
-        plugin_id_service: PluginIdService,
-        group_id_service: GroupIdService,
-    ) -> None:
-        """Initialize the plugin file service.
-
-        All arguments are provided via dependency injection.
-
-        Args:
-            plugin_file_name_service: A PluginFileNameService object.
-            plugin_id_service: A PluginIdService object.
-            group_id_service: A GroupIdService object.
-        """
-        self._plugin_file_name_service = plugin_file_name_service
-        self._plugin_id_service = plugin_id_service
-        self._group_id_service = group_id_service
-
+class PluginIdFileService(ServiceContextService):
     def create(
         self,
         plugin_id: int,
@@ -723,7 +353,8 @@ class PluginIdFileService(object):
             filename: The name of the plugin file.
             contents: The contents of the plugin file.
             description: The description of the plugin file.
-            tasks: The tasks associated with the plugin file.
+            function_tasks: The function tasks associated with the plugin file.
+            artifact_tasks: The artifact tasks associated with the plugin file.
             commit: If True, commit the transaction. Defaults to True.
 
         Returns:
@@ -737,24 +368,7 @@ class PluginIdFileService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Create a new plugin file", plugin_id=plugin_id, filename=filename)
 
-        # Check if plugin_id points to a Plugin that exists, and if so, retrieve it.
-        plugin_dict = cast(
-            utils.PluginWithFilesDict,
-            self._plugin_id_service.get(plugin_id, error_if_not_found=True),
-        )
-        plugin = plugin_dict["plugin"]
-
-        # Validate that the proposed filename hasn't already been used in the plugin.
-        duplicate = self._plugin_file_name_service.get(
-            filename, plugin_id=plugin_id, log=log
-        )
-        if duplicate is not None:
-            raise EntityExistsError(
-                EntityType.PLUGIN_FILE,
-                duplicate.resource_id,
-                filename=filename,
-                plugin_id=plugin_id,
-            )
+        plugin = self._uow.plugin_repo.get_one(plugin_id, DeletionPolicy.NOT_DELETED)
 
         # a new plugin file creates a new plugin snapshot
         new_plugin = models.Plugin(
@@ -763,7 +377,7 @@ class PluginIdFileService(object):
             resource=plugin.resource,
             creator=current_user,
         )
-        db.session.add(new_plugin)
+        self._uow.plugin_repo.create_snapshot(new_plugin)
 
         resource = models.Resource(
             resource_type=EntityType.PLUGIN_FILE.db_table_name,
@@ -776,26 +390,27 @@ class PluginIdFileService(object):
             resource=resource,
             creator=current_user,
         )
-        new_plugin_file.parents.append(new_plugin.resource)
-        db.session.add(new_plugin_file)
 
-        new_plugin_files = plugin.plugin_files + [new_plugin_file]
-        _associate_plugin_with_plugin_files(new_plugin, new_plugin_files)
+        with self._uow(commit):
+            self._uow.plugin_repo.create_file(new_plugin_file, plugin_id=plugin_id)
 
-        _add_plugin_tasks(
-            function_tasks=function_tasks,
-            artifact_tasks=artifact_tasks,
-            plugin_file=new_plugin_file,
-            log=log,
-        )
+            new_plugin_files = list(plugin.plugin_files) + [new_plugin_file]
+            self._uow.plugin_repo.associate_plugin_files(new_plugin, new_plugin_files)
 
-        if commit:
-            db.session.commit()
-            log.debug(
-                "Plugin file registration successful",
-                plugin_file_id=new_plugin_file.resource_id,
-                filename=new_plugin_file.filename,
+            type_ids = _get_referenced_parameter_types(function_tasks, artifact_tasks)
+            types = self._uow.type_repo.get_exact(type_ids, DeletionPolicy.NOT_DELETED)
+            self._uow.plugin_repo.add_plugin_tasks(
+                function_tasks,
+                artifact_tasks,
+                new_plugin_file,
+                list(types),
             )
+
+        log.debug(
+            "Plugin file registration successful",
+            plugin_file_id=new_plugin_file.resource_id,
+            filename=new_plugin_file.filename,
+        )
 
         return utils.PluginFileDict(
             plugin_file=new_plugin_file, plugin=plugin, has_draft=False
@@ -809,6 +424,7 @@ class PluginIdFileService(object):
         page_length: int,
         sort_by_string: str,
         descending: bool,
+        show_deleted: bool = False,
         **kwargs,
     ) -> tuple[list[utils.PluginFileDict], int]:
         """Fetch a list of plugin files associated with a plugin, optionally
@@ -821,15 +437,15 @@ class PluginIdFileService(object):
             page_length: The maximum number of plugins to be returned.
             sort_by_string: The name of the column to sort.
             descending: Boolean indicating whether to sort by descending or not.
+            show_deleted: Boolean indicating whether to include deleted plugin files.
 
         Returns:
             A tuple containing a list of plugins and the total number of plugins
             matching the query.
 
         Raises:
-            SearchNotImplementedError: If a search string is provided.
-            BackendDatabaseError: If the database query returns a None when counting
-                the number of plugins.
+            SearchParseError: If the search string cannot be parsed.
+            SortParameterValidationError: If the sort field is invalid.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug(
@@ -840,102 +456,47 @@ class PluginIdFileService(object):
             page_length=page_length,
         )
 
-        filters = []
+        plugin = self._uow.plugin_repo.get_one(plugin_id, DeletionPolicy.ANY)
 
-        if search_string:
-            filters.append(
-                construct_sql_query_filters(
-                    search_string, PLUGIN_FILE_SEARCHABLE_FIELDS
-                )
-            )
+        search_struct = parse_search_text(search_string) if search_string else []
 
-        latest_plugin_stmt = (
-            select(models.Plugin)
-            .join(models.Resource)
-            .where(
-                models.Plugin.resource_id == plugin_id,
-                models.Plugin.resource_snapshot_id
-                == models.Resource.latest_snapshot_id,
-                models.Resource.is_deleted == False,  # noqa: E712
+        log.debug(
+            "Get list of plugin files calling repo",
+            plugin_id=plugin_id,
+            search_string=search_string,
+            filters_count=len(search_struct),
+        )
+
+        deletion_policy = (
+            DeletionPolicy.ANY if show_deleted else DeletionPolicy.NOT_DELETED
+        )
+
+        plugin_files, total_num_plugin_files = (
+            self._uow.plugin_repo.get_by_filters_paged_files(
+                plugin=plugin_id,
+                filters=search_struct,
+                page_start=page_index,
+                page_length=page_length,
+                sort_by=sort_by_string,
+                descending=descending,
+                deletion_policy=deletion_policy,
             )
         )
-        plugin = db.session.scalar(latest_plugin_stmt)
-
-        if plugin is None:
-            raise EntityDoesNotExistError(EntityType.PLUGIN, plugin_id=plugin_id)
-
-        latest_plugin_files_count_stmt = (
-            select(func.count(models.PluginFile.resource_id))
-            .join(models.Resource)
-            .where(
-                *filters,
-                models.PluginFile.plugin_id == plugin_id,
-                models.Resource.is_deleted == False,  # noqa: E712
-                models.Resource.latest_snapshot_id
-                == models.PluginFile.resource_snapshot_id,
-            )
-        )
-        total_num_plugin_files = db.session.scalar(latest_plugin_files_count_stmt)
-
-        if total_num_plugin_files is None:
-            log.error(
-                "The database query returned a None when counting the number of "
-                "groups when it should return a number.",
-                sql=str(latest_plugin_files_count_stmt),
-            )
-            raise BackendDatabaseError
 
         if total_num_plugin_files == 0:
             return [], total_num_plugin_files
-
-        latest_plugin_files_stmt = (
-            select(models.PluginFile)
-            .join(models.Resource)
-            .where(
-                *filters,
-                models.PluginFile.plugin_id == plugin_id,
-                models.Resource.is_deleted == False,  # noqa: E712
-                models.Resource.latest_snapshot_id
-                == models.PluginFile.resource_snapshot_id,
-            )
-            .offset(page_index)
-            .limit(page_length)
-        )
-
-        if sort_by_string and sort_by_string in PLUGIN_FILE_SORTABLE_FIELDS:
-            sort_column = PLUGIN_FILE_SORTABLE_FIELDS[sort_by_string]
-            if descending:
-                sort_column = sort_column.desc()
-            else:
-                sort_column = sort_column.asc()
-            latest_plugin_files_stmt = latest_plugin_files_stmt.order_by(sort_column)
-        elif sort_by_string and sort_by_string not in PLUGIN_FILE_SORTABLE_FIELDS:
-            raise SortParameterValidationError(
-                EntityType.PLUGIN_FILE.db_table_name, sort_by_string
-            )
 
         plugin_files_dict: dict[int, utils.PluginFileDict] = {
             plugin_file.resource_id: utils.PluginFileDict(
                 plugin=plugin, plugin_file=plugin_file, has_draft=False
             )
-            for plugin_file in db.session.scalars(latest_plugin_files_stmt).unique()
+            for plugin_file in plugin_files
         }
 
-        drafts_stmt = select(
-            models.DraftResource.payload["resource_id"].as_string().cast(Integer)
-        ).where(
-            models.DraftResource.payload["resource_id"]
-            .as_string()
-            .cast(Integer)
-            .in_(
-                tuple(
-                    plugin_file["plugin_file"].resource_id
-                    for plugin_file in plugin_files_dict.values()
-                )
-            ),
-            models.DraftResource.user_id == current_user.user_id,
+        resource_ids_with_drafts = self._uow.drafts_repo.has_draft_modifications(
+            [pf["plugin_file"] for pf in plugin_files_dict.values()], current_user
         )
-        for resource_id in db.session.scalars(drafts_stmt):
+        for resource_id in resource_ids_with_drafts:
             plugin_files_dict[resource_id]["has_draft"] = True
 
         return list(plugin_files_dict.values()), total_num_plugin_files
@@ -951,62 +512,32 @@ class PluginIdFileService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        stmt = select(models.Resource).filter_by(
-            resource_id=plugin_id,
-            resource_type=EntityType.PLUGIN.db_table_name,
-            is_deleted=False,
-        )
+        plugin = self._uow.plugin_repo.get_one(plugin_id, DeletionPolicy.NOT_DELETED)
+        plugin_file_ids = [file.resource_id for file in plugin.plugin_files]
 
-        plugin_resource = db.session.scalar(stmt)
-
-        if plugin_resource is None:
-            raise EntityDoesNotExistError(EntityType.PLUGIN, plugin_id=plugin_id)
-
-        latest_plugin_files_stmt = (
-            select(models.PluginFile)
-            .join(models.Resource)
-            .where(
-                models.PluginFile.plugin_id == plugin_id,
-                models.Resource.is_deleted == False,  # noqa: E712
-                models.Resource.latest_snapshot_id
-                == models.PluginFile.resource_snapshot_id,
-            )
-        )
-
-        plugin_files = db.session.scalars(latest_plugin_files_stmt).unique().all()
-        num_plugin_files = len(plugin_files)
-
-        plugin_file_ids = []
-        for plugin_file in plugin_files:
-            db.session.add(
-                models.ResourceLock(
-                    resource_lock_type=resource_lock_types.DELETE,
-                    resource=plugin_file.resource,
-                )
-            )
-            plugin_file_ids.append(plugin_file.resource_id)
-
-        db.session.commit()
+        with self._uow():
+            for plugin_file in plugin.plugin_files:
+                self._uow.plugin_repo.delete_file(plugin_file)
 
         log.debug(
             "Plugin files deleted",
             plugin_id=plugin_id,
-            num_plugin_files=num_plugin_files,
+            num_plugin_files=len(plugin.plugin_files),
         )
 
         return {"status": "Success", "id": plugin_file_ids}
 
 
-class PluginIdSnapshotIdService(object):
+class PluginIdSnapshotIdService(ServiceContextService):
     def get(self, plugin_id: int, plugin_snapshot_id: int, **kwargs) -> models.Plugin:
-        """Run a query to get the Plugin for an Plugin snapshot id.
+        """Get a plugin by resource ID and snapshot ID.
 
         Args:
-            plugin_id: The plugin id of the plugin to retrieve
-            plugin_snapshot_id: The Snapshot ID of the plugin to retrieve
+            plugin_id: The plugin resource ID.
+            plugin_snapshot_id: The plugin snapshot ID.
 
         Returns:
-            The Plugin.
+            The plugin.
 
         Raises:
             EntityDoesNotExistError: If the plugin is not found
@@ -1017,86 +548,17 @@ class PluginIdSnapshotIdService(object):
             resource_id=plugin_id,
             resource_snapshot_id=plugin_snapshot_id,
         )
-        plugin_resource_snapshot_stmt = (
-            select(models.Plugin)
-            .join(models.Resource)
-            .where(
-                models.Plugin.resource_id == plugin_id,
-                models.Plugin.resource_snapshot_id == plugin_snapshot_id,
-                models.Resource.is_deleted == False,  # noqa: E712
-            )
+
+        return self._uow.plugin_repo.get_one_snapshot(
+            plugin_id, plugin_snapshot_id, DeletionPolicy.NOT_DELETED
         )
-        plugin = db.session.scalar(plugin_resource_snapshot_stmt)
-
-        if plugin is None:
-            raise EntityDoesNotExistError(
-                EntityType.PLUGIN,
-                plugin_id=plugin_id,
-                plugin_snapshot_id=plugin_snapshot_id,
-            )
-        return plugin
-
-    def get_plugin_plugin_file(
-        self, plugin_snapshot_id: int, plugin_file_snapshot_id: int, **kwargs
-    ) -> models.PluginPluginFile | None:
-        """Gets the Plugin Plugin File for this combination of plugin and plugin file.
-
-        Args:
-            plugin_snapshot_id: The Snapshot ID of the plugin
-            plugin_file_snapshot_id: The Snapshot ID of the plugin file
-
-        Returns:
-            The PluginPluginFile or None if not found
-        """
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
-        log.debug(
-            "get PluginPluginFile",
-            plugin_snapshot_id=plugin_snapshot_id,
-            plugin_file_snapshot_id=plugin_file_snapshot_id,
-        )
-        plugin_plugin_file_stmt = select(models.PluginPluginFile).where(
-            models.PluginPluginFile.plugin_file_resource_snapshot_id
-            == plugin_file_snapshot_id,
-            models.PluginPluginFile.plugin_resource_snapshot_id == plugin_snapshot_id,
-        )
-        return db.session.scalar(plugin_plugin_file_stmt)
 
 
-class PluginTaskIdService(object):
-    def get(self, task_id: int, **kwargs) -> models.PluginTask:
-        """Run a query to get the Plugin Task for a task id.
-
-        Args:
-            task_id: The ID of the task to retrieve
-
-        Returns:
-            The PluginTask.
-
-        Raises:
-            EntityDoesNotExistError: If the PluginTask is not found
-        """
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
-        log.debug("get plugin task", task_id=task_id)
-        task_snapshot_stmt = select(models.PluginTask).where(
-            models.PluginTask.task_id == task_id
-        )
-        task = db.session.scalar(task_snapshot_stmt)
-
-        if task is None:
-            raise PluginTaskDoesNotExistError(task_id=task_id)
-        return task
-
-
-class PluginIdFileIdService(object):
-    @inject
-    def __init__(self, plugin_file_name_service: PluginFileNameService):
-        self._plugin_file_name_service = plugin_file_name_service
-
+class PluginIdFileIdService(ServiceContextService):
     def get(
         self,
         plugin_id: int,
         plugin_file_id: int,
-        error_if_not_found: bool = False,
         **kwargs,
     ) -> utils.PluginFileDict | None:
         """Fetch a plugin file by its unique id.
@@ -1104,76 +566,28 @@ class PluginIdFileIdService(object):
         Args:
             plugin_id: The unique id of the plugin containing the plugin file.
             plugin_file_id: The unique id of the plugin file.
-            error_if_not_found: If True, raise an error if the plugin or plugin file is
-                not found. Defaults to False.
 
         Returns:
-            The plugin object if found, otherwise None.
+            The plugin file object.
 
         Raises:
-            EntityDoesNotExistError: If the plugin or plugin file is not found and
-                `error_if_not_found` is True.
+            EntityDoesNotExistError: If the plugin or plugin file is not found.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug(
             "Get plugin file by id", plugin_id=plugin_id, plugin_file_id=plugin_file_id
         )
 
-        latest_plugin_stmt = (
-            select(models.Plugin)
-            .join(models.Resource)
-            .where(
-                models.Plugin.resource_id == plugin_id,
-                models.Plugin.resource_snapshot_id
-                == models.Resource.latest_snapshot_id,
-                models.Resource.is_deleted == False,  # noqa: E712
-            )
+        plugin_file = self._uow.plugin_repo.get_one_file(
+            plugin_id, plugin_file_id, DeletionPolicy.ANY
         )
-        plugin = db.session.scalar(latest_plugin_stmt)
 
-        if plugin is None:
-            if error_if_not_found:
-                raise EntityDoesNotExistError(EntityType.PLUGIN, plugin_id=plugin_id)
-
-            return None
-
-        latest_plugin_file_stmt = (
-            select(models.PluginFile)
-            .join(models.Resource)
-            .where(
-                models.PluginFile.plugin_id == plugin_id,
-                models.PluginFile.resource_id == plugin_file_id,
-                models.PluginFile.resource_snapshot_id
-                == models.Resource.latest_snapshot_id,
-                models.Resource.is_deleted == False,  # noqa: E712
-            )
+        has_draft = self._uow.drafts_repo.has_draft_modification(
+            plugin_file, current_user
         )
-        plugin_file = db.session.scalar(latest_plugin_file_stmt)
-
-        if plugin_file is None:
-            if error_if_not_found:
-                raise EntityDoesNotExistError(
-                    EntityType.PLUGIN_FILE,
-                    plugin_id=plugin_id,
-                    plugin_file_id=plugin_file_id,
-                )
-
-            return None
-
-        drafts_stmt = (
-            select(models.DraftResource.draft_resource_id)
-            .where(
-                models.DraftResource.payload["resource_id"].as_string().cast(Integer)
-                == plugin_file.resource_id,
-                models.DraftResource.user_id == current_user.user_id,
-            )
-            .exists()
-            .select()
-        )
-        has_draft = db.session.scalar(drafts_stmt)
 
         return utils.PluginFileDict(
-            plugin_file=plugin_file, plugin=plugin, has_draft=has_draft
+            plugin_file=plugin_file, plugin=plugin_file.plugin, has_draft=has_draft
         )
 
     def modify(
@@ -1185,7 +599,6 @@ class PluginIdFileIdService(object):
         description: str,
         function_tasks: list[dict[str, Any]],
         artifact_tasks: list[dict[str, Any]],
-        error_if_not_found: bool = False,
         commit: bool = True,
         **kwargs,
     ) -> utils.PluginFileDict | None:
@@ -1197,44 +610,22 @@ class PluginIdFileIdService(object):
             filename: The updated filename of the plugin file.
             contents: The updated contents of the plugin file.
             description: The updated description of the plugin file.
-            tasks: The updated tasks associated with the plugin file.
-            error_if_not_found: If True, raise an error if the plugin or plugin file is
-                not found. Defaults to False.
+            function_tasks: The updated function tasks associated with the plugin file.
+            artifact_tasks: The updated artifact tasks associated with the plugin file.
             commit: If True, commit the transaction. Defaults to True.
 
         Returns:
             The updated plugin file object.
 
         Raises:
-            EntityDoesNotExistError: If the plugin or plugin file is not found and
-                `error_if_not_found` is True.
+            EntityDoesNotExistError: If the plugin or plugin file is not found.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        plugin_file_dict = self.get(
-            plugin_id=plugin_id,
-            plugin_file_id=plugin_file_id,
-            error_if_not_found=error_if_not_found,
-            log=log,
+        plugin_file = self._uow.plugin_repo.get_one_file(
+            plugin_id, plugin_file_id, DeletionPolicy.NOT_DELETED
         )
-
-        if plugin_file_dict is None:
-            return None
-
-        plugin = plugin_file_dict["plugin"]
-        plugin_file = plugin_file_dict["plugin_file"]
-
-        if filename != plugin_file.filename:
-            duplicate = self._plugin_file_name_service.get(
-                filename, plugin_id=plugin_id, log=log
-            )
-            if duplicate is not None:
-                raise EntityExistsError(
-                    EntityType.PLUGIN_FILE,
-                    duplicate.resource_id,
-                    filename=filename,
-                    plugin_id=plugin_id,
-                )
+        plugin = plugin_file.plugin
 
         # a modification to a plugin file creates a new plugin snapshot
         new_plugin = models.Plugin(
@@ -1243,7 +634,6 @@ class PluginIdFileIdService(object):
             resource=plugin.resource,
             creator=current_user,
         )
-        db.session.add(new_plugin)
 
         updated_plugin_file = models.PluginFile(
             filename=filename,
@@ -1252,28 +642,36 @@ class PluginIdFileIdService(object):
             resource=plugin_file.resource,
             creator=current_user,
         )
-        db.session.add(updated_plugin_file)
 
-        new_plugin_files = {
-            plugin_file.resource_id: plugin_file for plugin_file in plugin.plugin_files
-        }
-        new_plugin_files[updated_plugin_file.resource_id] = updated_plugin_file
-        _associate_plugin_with_plugin_files(new_plugin, list(new_plugin_files.values()))
-
-        _add_plugin_tasks(
-            function_tasks=function_tasks,
-            artifact_tasks=artifact_tasks,
-            plugin_file=updated_plugin_file,
-            log=log,
-        )
-
-        if commit:
-            db.session.commit()
-            log.debug(
-                "Plugin file modification successful",
-                plugin_file_id=updated_plugin_file.resource_id,
-                filename=updated_plugin_file.filename,
+        with self._uow(commit):
+            self._uow.plugin_repo.create_snapshot(new_plugin)
+            self._uow.plugin_repo.create_file_snapshot(
+                updated_plugin_file, plugin_id=plugin_id
             )
+
+            new_plugin_files = {
+                plugin_file.resource_id: plugin_file
+                for plugin_file in plugin.plugin_files
+            }
+            new_plugin_files[updated_plugin_file.resource_id] = updated_plugin_file
+            self._uow.plugin_repo.associate_plugin_files(
+                new_plugin, list(new_plugin_files.values())
+            )
+
+            type_ids = _get_referenced_parameter_types(function_tasks, artifact_tasks)
+            types = self._uow.type_repo.get_exact(type_ids, DeletionPolicy.NOT_DELETED)
+            self._uow.plugin_repo.add_plugin_tasks(
+                function_tasks,
+                artifact_tasks,
+                updated_plugin_file,
+                list(types),
+            )
+
+        log.debug(
+            "Plugin file modification successful",
+            plugin_file_id=updated_plugin_file.resource_id,
+            filename=updated_plugin_file.filename,
+        )
 
         return utils.PluginFileDict(
             plugin_file=updated_plugin_file, plugin=plugin, has_draft=False
@@ -1291,211 +689,49 @@ class PluginIdFileIdService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        plugin_stmt = (
-            select(models.Plugin)
-            .join(models.Resource)
-            .where(
-                models.Plugin.resource_id == plugin_id,
-                models.Resource.is_deleted == False,  # noqa: E712
-                models.Resource.latest_snapshot_id
-                == models.Plugin.resource_snapshot_id,
-            )
+        plugin_file = self._uow.plugin_repo.get_one_file(
+            plugin_id, plugin_file_id, DeletionPolicy.NOT_DELETED
         )
-        plugin = db.session.scalar(plugin_stmt)
+        plugin = self._uow.plugin_repo.get_one(plugin_id, DeletionPolicy.NOT_DELETED)
 
-        if plugin is None:
-            raise EntityDoesNotExistError(EntityType.PLUGIN, plugin_id=plugin_id)
-
-        plugin_file_stmt = (
-            select(models.PluginFile)
-            .join(models.Resource)
-            .where(
-                models.PluginFile.plugin_id == plugin_id,
-                models.PluginFile.resource_id == plugin_file_id,
-                models.Resource.is_deleted == False,  # noqa: E712
-                models.Resource.latest_snapshot_id
-                == models.PluginFile.resource_snapshot_id,
-            )
-        )
-        plugin_file = db.session.scalar(plugin_file_stmt)
-
-        if plugin_file is None:
-            raise EntityDoesNotExistError(
-                EntityType.PLUGIN_FILE,
-                plugin_id=plugin_id,
-                plugin_file_id=plugin_file_id,
-            )
-
-        # a deletion of a plugin file creates a new plugin snapshot
         new_plugin = models.Plugin(
             name=plugin.name,
             description=plugin.description,
             resource=plugin.resource,
             creator=current_user,
         )
-        db.session.add(new_plugin)
-
         new_plugin_files = [
-            plugin_file
-            for plugin_file in plugin.plugin_files
-            if plugin_file.resource_id != plugin_file_id
+            existing_plugin_file
+            for existing_plugin_file in plugin.plugin_files
+            if existing_plugin_file.resource_id != plugin_file_id
         ]
-        _associate_plugin_with_plugin_files(new_plugin, new_plugin_files)
 
-        plugin_file_id_to_return = plugin_file.resource_id  # to return to user
-        db.session.add(
-            models.ResourceLock(
-                resource_lock_type=resource_lock_types.DELETE,
-                resource=plugin_file.resource,
-            )
-        )
-        db.session.commit()
+        with self._uow():
+            self._uow.plugin_repo.create_snapshot(new_plugin)
+            self._uow.plugin_repo.associate_plugin_files(new_plugin, new_plugin_files)
+            self._uow.plugin_repo.delete_file(plugin_file)
 
         log.debug("Plugin file deleted", plugin_id=plugin_id)
-        return {"status": "Success", "id": [plugin_file_id_to_return]}
+        return {"status": "Success", "id": [plugin_file_id]}
 
 
-def _construct_input_params(
-    task_name: str,
-    parameters: list[dict[str, Any]],
-    map: dict[int, models.PluginTaskParameterType],
-) -> Iterable[models.PluginTaskInputParameter]:
-    duplicates = find_non_unique("name", parameters)
-    if len(duplicates) > 0:
-        raise InputParameterNotUniqueError(
-            "artifact task input parameter",
-            plugin_task_name=task_name,
-            input_param_names=duplicates,
-        )
-    return [
-        models.PluginTaskInputParameter(
-            name=input_param["name"],
-            parameter_number=parameter_number,
-            parameter_type=map[input_param["parameter_type_id"]],
-            required=input_param["required"],
-        )
-        for parameter_number, input_param in enumerate(parameters)
-    ]
-
-
-def _construct_output_params(
-    task_name: str,
-    parameters: list[dict[str, Any]],
-    map: dict[int, models.PluginTaskParameterType],
-) -> Iterable[models.PluginTaskOutputParameter]:
-    duplicates = find_non_unique("name", parameters)
-    if len(duplicates) > 0:
-        raise InputParameterNotUniqueError(
-            "artifact task output parameter",
-            plugin_task_name=task_name,
-            output_param_names=duplicates,
-        )
-    return [
-        models.PluginTaskOutputParameter(
-            name=output_param["name"],
-            parameter_number=parameter_number,
-            parameter_type=map[output_param["parameter_type_id"]],
-        )
-        for parameter_number, output_param in enumerate(parameters)
-    ]
-
-
-def _construct_function_task(
-    plugin_file: models.PluginFile,
-    task: dict[str, Any],
-    parameter_type_ids_to_orm: dict[int, models.PluginTaskParameterType],
-) -> models.FunctionTask:
-    return models.FunctionTask(
-        file=plugin_file,
-        plugin_task_name=task["name"],
-        input_parameters=_construct_input_params(
-            task["name"], task["input_params"], parameter_type_ids_to_orm
-        ),
-        output_parameters=_construct_output_params(
-            task["name"], task["output_params"], parameter_type_ids_to_orm
-        ),
-    )
-
-
-def _construct_artifact_task(
-    plugin_file: models.PluginFile,
-    task: dict[str, Any],
-    parameter_type_ids_to_orm: dict[int, models.PluginTaskParameterType],
-) -> models.ArtifactTask:
-    return models.ArtifactTask(
-        file=plugin_file,
-        plugin_task_name=task["name"],
-        output_parameters=_construct_output_params(
-            task["name"], task["output_params"], parameter_type_ids_to_orm
-        ),
-    )
-
-
-def get_referenced_parameter_types(
+def _get_referenced_parameter_types(
     function_tasks: list[dict[str, Any]],
     artifact_tasks: list[dict[str, Any]],
-    log: BoundLogger,
-) -> dict[int, models.PluginTaskParameterType]:
-    parameter_type_ids = list(
-        itertools.chain(
-            [
-                param["parameter_type_id"]
-                for task in function_tasks
-                for param in itertools.chain(
-                    task["input_params"], task["output_params"]
-                )
-            ],
-            [
-                param["parameter_type_id"]
-                for task in artifact_tasks
-                for param in task["output_params"]
-            ],
+) -> list[int]:
+    return list(
+        dict.fromkeys(
+            chain(
+                [
+                    param["parameter_type_id"]
+                    for task in function_tasks
+                    for param in chain(task["input_params"], task["output_params"])
+                ],
+                [
+                    param["parameter_type_id"]
+                    for task in artifact_tasks
+                    for param in task["output_params"]
+                ],
+            )
         )
     )
-
-    if not len(parameter_type_ids) > 0:
-        return {}
-
-    return get_plugin_task_parameter_types_by_id(ids=parameter_type_ids, log=log)
-
-
-def _add_plugin_tasks(
-    function_tasks: list[dict[str, Any]],
-    artifact_tasks: list[dict[str, Any]],
-    plugin_file: models.PluginFile,
-    log: BoundLogger,
-) -> None:
-    duplicates = find_non_unique(
-        "name", itertools.chain(function_tasks, artifact_tasks)
-    )
-    if len(duplicates) > 0:
-        raise InputParameterNotUniqueError("plugin task", task_names=duplicates)
-
-    parameter_type_ids_to_orm = get_referenced_parameter_types(
-        function_tasks=function_tasks, artifact_tasks=artifact_tasks, log=log
-    )
-
-    for task in function_tasks:
-        plugin_task = _construct_function_task(
-            plugin_file,
-            task=task,
-            parameter_type_ids_to_orm=parameter_type_ids_to_orm,
-        )
-        db.session.add(plugin_task)
-    for task in artifact_tasks:
-        plugin_task = _construct_artifact_task(
-            plugin_file,
-            task=task,
-            parameter_type_ids_to_orm=parameter_type_ids_to_orm,
-        )
-        db.session.add(plugin_task)
-
-
-def _associate_plugin_with_plugin_files(
-    plugin: models.Plugin, plugin_files: list[models.PluginFile]
-) -> None:
-    for plugin_file in plugin_files:
-        plugin_plugin_file = models.PluginPluginFile(
-            plugin=plugin, plugin_file=plugin_file
-        )
-        db.session.add(plugin_plugin_file)

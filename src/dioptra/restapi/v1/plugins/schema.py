@@ -17,9 +17,13 @@
 """The schemas for serializing/deserializing Plugin resources."""
 
 import re
+from itertools import chain
+from typing import Any
 
-from marshmallow import Schema, fields, validate
+from marshmallow import Schema, fields, validate, validates, validates_schema
 
+from dioptra.restapi.errors import InputParameterNotUniqueError
+from dioptra.restapi.utils import find_non_unique
 from dioptra.restapi.v1.plugin_parameter_types.schema import (
     PluginParameterTypeRefSchema,
 )
@@ -28,6 +32,7 @@ from dioptra.restapi.v1.schemas import (
     GroupIdQueryParametersSchema,
     PagingQueryParametersSchema,
     SearchQueryParametersSchema,
+    ShowDeletedQueryParametersSchema,
     SortByGetQueryParametersSchema,
     generate_base_resource_ref_schema,
     generate_base_resource_schema,
@@ -159,6 +164,22 @@ class FunctionTaskSchema(PluginTaskSchema):
         },
     )
 
+    @validates("inputParams")
+    def validate_input_parameters(self, parameters: list[dict[str, Any]]):
+        duplicates = find_non_unique("name", parameters)
+        if len(duplicates) > 0:
+            raise InputParameterNotUniqueError(
+                "Function Task Output Input Parameters", duplicates=duplicates
+            )
+
+    @validates("outputParams")
+    def validate_output_parameters(self, parameters: list[dict[str, Any]]):
+        duplicates = find_non_unique("name", parameters)
+        if len(duplicates) > 0:
+            raise InputParameterNotUniqueError(
+                "Function Task Output Parameters", duplicates=duplicates
+            )
+
 
 class ArtifactTaskSchema(PluginTaskSchema):
     """The schema for the data stored in an ArtifactTask."""
@@ -173,6 +194,14 @@ class ArtifactTaskSchema(PluginTaskSchema):
             )
         },
     )
+
+    @validates("outputParams")
+    def validate_output_parameters(self, parameters: list[dict[str, Any]]):
+        duplicates = find_non_unique("name", parameters)
+        if len(duplicates) > 0:
+            raise InputParameterNotUniqueError(
+                "Artifact Task Output Parameters", duplicates=duplicates
+            )
 
 
 class PluginTaskContainerSchema(Schema):
@@ -190,6 +219,14 @@ class PluginTaskContainerSchema(Schema):
         many=True,
         metadata={"description": ("List of artifact tasks.")},
     )
+
+    @validates_schema
+    def validate_tasks(self, data, **kwargs):
+        duplicates = find_non_unique(
+            "name", chain(data.get("functions", []), data.get("artifacts", []))
+        )
+        if len(duplicates) > 0:
+            raise InputParameterNotUniqueError("Plugin Task", task_names=duplicates)
 
 
 PluginFileRefBaseSchema = generate_base_resource_ref_schema("PluginFile")
@@ -269,6 +306,7 @@ class PluginGetQueryParameters(
     GroupIdQueryParametersSchema,
     SearchQueryParametersSchema,
     SortByGetQueryParametersSchema,
+    ShowDeletedQueryParametersSchema,
 ):
     """The query parameters for the GET method of the /plugins endpoint."""
 
@@ -336,5 +374,6 @@ class PluginFileGetQueryParameters(
     PagingQueryParametersSchema,
     SearchQueryParametersSchema,
     SortByGetQueryParametersSchema,
+    ShowDeletedQueryParametersSchema,
 ):
     """The query parameters for the GET method of the /plugins/{id}/files/ endpoint."""

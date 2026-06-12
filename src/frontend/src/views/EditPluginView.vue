@@ -3,14 +3,29 @@
     <PageTitle
       :title="ORIGINAL_PLUGIN?.name"
       resourceType="plugin"
+      :deleted="plugin?.deleted"
     />
     <q-btn
+      v-if="!plugin?.deleted"
       color="negative"
       icon="sym_o_delete"
       label="Delete Plugin"
       @click="showDeletePluginDialog = true"
     />
   </div>
+  <q-banner
+    v-if="plugin?.deleted"
+    dense
+    class="text-white bg-red q-mt-md"
+  >
+    <template #avatar>
+      <q-icon
+        name="warning"
+        color="white"
+      />
+    </template>
+    This Plugin has been deleted and cannot be modified.
+  </q-banner>
 
   <q-expansion-item
     v-model="showMetadata"
@@ -48,6 +63,7 @@
         <template #name="{}">
           {{ name }}
           <q-btn
+            v-if="!plugin?.deleted"
             icon="edit"
             round
             size="sm"
@@ -67,6 +83,7 @@
               counter
               :error="invalidName"
               :error-message="nameError"
+              :disable="plugin?.deleted"
               @keyup.enter="scope.set"
               @update:model-value="checkName"
             />
@@ -78,6 +95,7 @@
               {{ description }}
             </div>
             <q-btn
+              v-if="!plugin?.deleted"
               icon="edit"
               round
               size="sm"
@@ -98,6 +116,7 @@
               autofocus
               counter
               type="textarea"
+              :disable="plugin?.deleted"
               @keyup.enter.stop
             />
           </q-popup-edit>
@@ -127,9 +146,11 @@
   <TableComponent
     ref="tableRef"
     v-model:selected="selected"
+    v-model:showDeleted="showDeletedFiles"
     :rows="files"
     :columns="fileColumns"
     title="Plugin Files"
+    :showDeletedToggle="true"
     @open="
       (openTab) =>
         openTab
@@ -276,6 +297,7 @@ const valuesChanged = computed(() => {
 const files = ref([]);
 const selected = ref([]);
 const showDeleteDialog = ref(false);
+const showDeletedFiles = ref(false);
 const showTagsDialog = ref(false);
 const editObjTags = ref({});
 const tableRef = ref(null);
@@ -292,7 +314,7 @@ const fileColumns = [
 
 async function getFiles(pagination) {
   try {
-    const res = await api.getFiles(route.params.id, pagination);
+    const res = await api.getFiles(route.params.id, pagination, showDeletedFiles.value);
     console.log("getFiles = ", res);
     files.value = res.data.data;
     tableRef.value.updateTotalRows(res.data.totalNumResults);

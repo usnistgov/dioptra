@@ -24,78 +24,45 @@ from injector import inject
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
+from dioptra.restapi.db.repository.plugins import PluginRepository
 from dioptra.restapi.db.repository.utils.common import DeletionPolicy
 from dioptra.restapi.errors import (
     DioptraError,
-    EntityRelationshipDoesNotExistError,
     JobMlflowRunNotSetError,
 )
 from dioptra.restapi.service_context import ServiceContext, ServiceContextService
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.entity_types import EntityType
-from dioptra.restapi.v1.plugins.service import (
-    PluginIdSnapshotIdService,
-    PluginTaskIdService,
-)
 from dioptra.restapi.v1.shared.search_parser import parse_search_text
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
-class ArtifactTaskHelper(object):
-    @inject
-    def __init__(
-        self,
-        plugin_id_snapshot_id_service: PluginIdSnapshotIdService,
-        plugin_task_id_service: PluginTaskIdService,
-    ) -> None:
-        """Initialize the artifact service.
-
-        All arguments are provided via dependency injection.
-
-        Args:
-            plugin_id_snapshot_id_service: An PluginIdSnapshotIdService object.
-            plugin_task_id_service: A PluginTaskIdService object.
-        """
-        self._plugin_id_snapshot_id_service = plugin_id_snapshot_id_service
-        self._plugin_task_id_service = plugin_task_id_service
-
-    def associate_task(
-        self,
-        artifact: models.Artifact,
-        plugin_snapshot_id: int | None,
-        task_id: int | None,
-    ) -> None:
-        if task_id is not None:
-            if plugin_snapshot_id is None:
-                raise DioptraError(
-                    "plugin_snapshot_id must be provided if task_id is provided"
-                )
-
-            # verify the plugin task exists and then associate
-            plugin_task = self._plugin_task_id_service.get(task_id=task_id)
-            if not isinstance(plugin_task, models.ArtifactTask):
-                raise DioptraError("task_id provided was not an Artifact Task")
-
-            plugin_plugin_file = (
-                self._plugin_id_snapshot_id_service.get_plugin_plugin_file(
-                    plugin_snapshot_id, plugin_task.plugin_file_resource_snapshot_id
-                )
-            )
-            if plugin_plugin_file is None:
-                raise EntityRelationshipDoesNotExistError(
-                    [EntityType.PLUGIN, EntityType.PLUGIN_FILE],
-                    plugin_snapshot_id=plugin_snapshot_id,
-                    plugin_file_snapshot_id=plugin_task.plugin_file_resource_snapshot_id,
-                )
-
-            # associate this artifact with the task
-            artifact.task = plugin_task
-            artifact.plugin_plugin_file = plugin_plugin_file
-        elif plugin_snapshot_id is not None:
+def _associate_artifact_task(
+    artifact: models.Artifact,
+    plugin_repo: PluginRepository,
+    plugin_snapshot_id: int | None,
+    task_id: int | None,
+) -> None:
+    if task_id is not None:
+        if plugin_snapshot_id is None:
             raise DioptraError(
-                "task_id must be provided if plugin_snapshot_id is provided"
+                "plugin_snapshot_id must be provided if task_id is provided"
             )
+
+        plugin_task = plugin_repo.get_one_task(task_id)
+        if not isinstance(plugin_task, models.ArtifactTask):
+            raise DioptraError("task_id provided was not an Artifact Task")
+
+        plugin_plugin_file = plugin_repo.get_one_plugin_plugin_file(
+            plugin_snapshot_id,
+            plugin_task.plugin_file_resource_snapshot_id,
+        )
+
+        artifact.task = plugin_task
+        artifact.plugin_plugin_file = plugin_plugin_file
+    elif plugin_snapshot_id is not None:
+        raise DioptraError("task_id must be provided if plugin_snapshot_id is provided")
 
 
 class ArtifactService(ServiceContextService):
@@ -104,7 +71,6 @@ class ArtifactService(ServiceContextService):
     @inject
     def __init__(
         self,
-        artifact_task_helper: ArtifactTaskHelper,
         context: ServiceContext,
     ) -> None:
         """Initialize the artifact service.
@@ -112,11 +78,9 @@ class ArtifactService(ServiceContextService):
         All arguments are provided via dependency injection.
 
         Args:
-            artifact_task_helper: An ArtifactTask object.
             context: A ServiceContext instance.
         """
         super().__init__(context)
-        self._artifact_task_helper = artifact_task_helper
 
     def create(
         self,
@@ -177,8 +141,9 @@ class ArtifactService(ServiceContextService):
             creator=current_user,
         )
 
-        self._artifact_task_helper.associate_task(
+        _associate_artifact_task(
             artifact=new_artifact,
+            plugin_repo=self._uow.plugin_repo,
             plugin_snapshot_id=plugin_snapshot_id,
             task_id=task_id,
         )
@@ -264,7 +229,6 @@ class ArtifactIdService(ServiceContextService):
     @inject
     def __init__(
         self,
-        artifact_task_helper: ArtifactTaskHelper,
         context: ServiceContext,
     ) -> None:
         """Initialize the artifact service.
@@ -272,10 +236,9 @@ class ArtifactIdService(ServiceContextService):
         All arguments are provided via dependency injection.
 
         Args:
-            artifact_task_helper: A ArtifactTaskHelper object.
+            context: A ServiceContext instance.
         """
         super().__init__(context)
-        self._artifact_task_helper = artifact_task_helper
 
     def get(
         self,
@@ -338,8 +301,9 @@ class ArtifactIdService(ServiceContextService):
             file_size=artifact.file_size,  # pyright: ignore
             creator=current_user,  # pyright: ignore
         )
-        self._artifact_task_helper.associate_task(
+        _associate_artifact_task(
             artifact=new_artifact,
+            plugin_repo=self._uow.plugin_repo,
             plugin_snapshot_id=plugin_snapshot_id,
             task_id=task_id,
         )

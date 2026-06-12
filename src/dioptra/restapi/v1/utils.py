@@ -347,7 +347,7 @@ def build_plugin_file_ref(plugin_file: models.PluginFile) -> dict[str, Any]:
     Returns:
         The PluginRef dictionary.
     """
-    plugin_id = plugin_file.plugin_id
+    plugin_id = plugin_file.plugin.resource_id
 
     return {
         "id": plugin_file.resource_id,
