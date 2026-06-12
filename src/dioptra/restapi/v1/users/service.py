@@ -35,6 +35,7 @@ from dioptra.restapi.errors import (
     UserPasswordChangeError,
     UserPasswordError,
 )
+from dioptra.restapi.service_context import ServiceContextService
 from dioptra.restapi.v1.groups.service import GroupMemberService
 from dioptra.restapi.v1.plugin_parameter_types.service import (
     BuiltinPluginParameterTypeService,
@@ -191,7 +192,7 @@ class UserService(object):
             return group
 
         default_group = models.Group(name=DEFAULT_GROUP_NAME, creator=user)
-        with self._uow:
+        with self._uow():
             self._uow.group_repo.create(default_group)
         # Register the built-in plugin parameter types when creating a new group.
         self._builtin_plugin_parameter_type_service.create_all(
@@ -371,7 +372,7 @@ class UserCurrentService(object):
         user_id = current_user.user_id
         username = current_user.username
 
-        with self._uow:
+        with self._uow():
             self._uow.user_repo.delete(current_user)
 
         log.debug("User account deleted", user_id=user_id, username=username)
@@ -538,22 +539,16 @@ class UserPasswordService(object):
         return self._password_service.hash(password=password, log=log)
 
 
-def load_user(user_id: str) -> models.User | None:
-    """Load the user associated with a provided id.
+class UserLoaderService(ServiceContextService):
+    """Service used by Flask-Login to load users from session state."""
 
-    This function is intended for use with Flask-Login. The use of the alternative ID is
-    needed to support the "logout everywhere" functionality and provides a mechanism for
-    expiring sessions.
+    def load(self, user_id: str) -> models.User | None:
+        """Load the user associated with a provided alternative id.
 
+        Args:
+            user_id: A string containing a UUID that matches the user's alternative ID.
 
-    Args:
-        user_id: A string containing a UUID that matches the user's alternative ID.
-
-    Returns:
-        A user object if the user is found, otherwise None.
-    """
-    # Should injection be used for UnitOfWork here?
-    uow = UnitOfWork()
-    user = uow.user_repo.get_by_alternative_id(uuid.UUID(user_id))
-
-    return user
+        Returns:
+            A user object if the user is found, otherwise None.
+        """
+        return self._uow.user_repo.get_by_alternative_id(uuid.UUID(user_id))
