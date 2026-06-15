@@ -63,7 +63,7 @@ At a minimum, you should run this before opening a merge request on your branch:
     uvx tox run -e lint -- --select I --fix src/dioptra
     uvx tox run -e format -- src/dioptra
 
-If commiting any frontend changes, run the following from the src/frontend directory to lint and format frontend code:
+If commiting any frontend changes, run the following from the `src/frontend` directory to lint and format frontend code:
 
     npm run lint
     npm run format
@@ -97,6 +97,12 @@ This project stores its pytest-based unit tests in the `tests/` folder and uses 
 If you haven't done so yet, install `tox` as a uv tool:
 
     uv tool install --python 3.11 tox --with tox-uv
+
+### Running frontend end-to-end tests with Playwright
+
+This project stores playwright tests in the `src/frontend/tests` folder.  To run them, please ensure your frontend is running and your dev mode Flask server is stopped, then run the following from `src/frontend`
+
+    test:e2e:with-backend
 
 Developers are expected to create new unit tests to validate any new features or behavior that they contribute and to verify that all unit tests pass before opening a Pull Request.
 To run the unit tests:
