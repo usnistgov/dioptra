@@ -16,7 +16,13 @@
     "lint": "eslint . --fix && prettier --write src/",
     "format": "prettier --write src/",
     "lint:check": "eslint .",
-    "format:check": "prettier --check src/ vite.config.ts eslint.config.js"
+    "format:check": "prettier --check src/ vite.config.ts eslint.config.js",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:with-backend": "bash ./scripts/run-e2e-with-backend.sh",
+    "test:e2e:with-backend:headed": "bash ./scripts/run-e2e-with-backend.sh --headed",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:install": "playwright install chromium"
   },
   "dependencies": {
     "@codemirror/lang-python": "^6.2.1",
@@ -37,6 +43,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.60.0",
     "@quasar/vite-plugin": "^1.12.0",
     "@rushstack/eslint-patch": "^1.16.1",
     "@tsconfig/node18": "^18.2.6",
