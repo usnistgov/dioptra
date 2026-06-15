@@ -8,6 +8,8 @@ export const testUser = {
   password: "Password123!",
 };
 
+let testUserRegistered = false;
+
 export async function loginAsTestUser(page: Page): Promise<boolean> {
   await page.goto("/login");
 
@@ -54,11 +56,10 @@ export async function registerTestUser(page: Page) {
 }
 
 export async function ensureLoggedInAsTestUser(page: Page) {
-  if (await loginAsTestUser(page)) {
-    return;
+  if (!testUserRegistered) {
+    await registerTestUser(page);
+    testUserRegistered = true;
   }
-
-  await registerTestUser(page);
 
   const loggedIn = await loginAsTestUser(page);
   expect(loggedIn).toBe(true);
