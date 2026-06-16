@@ -42,6 +42,7 @@ from dioptra.restapi.db.db import (
 
 from .entry_points import EntryPoint
 from .experiments import Experiment
+from .plugins import PluginFile
 from .queues import Queue
 from .resources import ResourceSnapshot
 
@@ -302,3 +303,35 @@ class JobMetric(db.Model):  # type: ignore[name-defined]
             .scalar_subquery()
             == cls.step
         )
+
+
+class JobSwap(db.Model):  # type: ignore[name-defined]
+    """
+    Maps the jobs-swaps-plugin_files
+    """
+
+    __tablename__ = "job_swaps"
+
+    # Table fields
+    job_id: Mapped["Job"] = mapped_column(
+        ForeignKey("jobs.resource_id"), init=False, primary_key=True
+    )  # FK to jobs
+    swap_name: Mapped[text_]
+    task_alias: Mapped[text_] = mapped_column(primary_key=True)
+    plugin_file_resource_snapshot_id: Mapped["PluginFile"] = mapped_column(
+        ForeignKey("plugin_files.resource_snapshot_id"), init=False, primary_key=True
+    )  # FK to plugin_files
+
+    # PK constraints settings
+    _table_args__ = (
+        PrimaryKeyConstraint(
+            "job_id", "task_alias", "plugin_file_resource_snapshot_id"
+        ),
+        ForeignKeyConstraint(
+            ["job_id", "plugin_file_resource_snapshot_id"],
+            [
+                "jobs.resource_id",
+                "plugin_files.resource_snapshot_id",
+            ],
+        ),
+    )
