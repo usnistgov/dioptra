@@ -316,17 +316,16 @@ class JobSwap(db.Model):  # type: ignore[name-defined]
     job_id: Mapped["Job"] = mapped_column(
         ForeignKey("jobs.resource_id"), init=False, primary_key=True
     )  # FK to jobs
-    swap_name: Mapped[text_]
-    task_alias: Mapped[text_] = mapped_column(primary_key=True)
+    swap_name: Mapped[text_] = mapped_column(primary_key=True)
+    task_alias: Mapped[text_]
     plugin_file_resource_snapshot_id: Mapped["PluginFile"] = mapped_column(
-        ForeignKey("plugin_files.resource_snapshot_id"), init=False, primary_key=True
+        ForeignKey("plugin_files.resource_snapshot_id"),
+        init=False,
     )  # FK to plugin_files
 
     # PK constraints settings
     _table_args__ = (
-        PrimaryKeyConstraint(
-            "job_id", "task_alias", "plugin_file_resource_snapshot_id"
-        ),
+        PrimaryKeyConstraint("job_id", "swap_name"),
         ForeignKeyConstraint(
             ["job_id", "plugin_file_resource_snapshot_id"],
             [
