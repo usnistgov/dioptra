@@ -102,7 +102,7 @@ If you haven't done so yet, install `tox` as a uv tool:
 
 This project stores playwright tests in the `src/frontend/tests` folder.  To run them, please ensure your frontend is running and your dev mode Flask server is stopped, then run the following from `src/frontend`
 
-    test:e2e:with-backend
+    npm run test:e2e:with-backend
 
 Developers are expected to create new unit tests to validate any new features or behavior that they contribute and to verify that all unit tests pass before opening a Pull Request.
 To run the unit tests:
