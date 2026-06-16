@@ -1,0 +1,6 @@
+step1:
+  ?my_swap:
+    ?my_task:
+      arg1: $global1
+    ?my_other_task:
+      arg2: $global1

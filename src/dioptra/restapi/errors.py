@@ -661,7 +661,14 @@ class UserPasswordError(DioptraError):
 
 
 class EntrypointSwapsRenderError(DioptraError):
-    """Password Error."""
+    """Entrypoint Swaps Rendering Error."""
+
+    def __init__(self, message: str):
+        super().__init__(message)
+
+
+class EmptyGraphError(DioptraError):
+    """Empty Graph Error."""
 
     def __init__(self, message: str):
         super().__init__(message)
@@ -687,6 +694,16 @@ class ImportFailedError(DioptraError):
     def __init__(self, message: str, reason: str = ""):
         super().__init__(message)
         self._reason = reason
+
+
+class EntrypointValidationError(DioptraError):
+    """Entrypoint validation failed Error."""
+
+    def __init__(
+        self, message: str, validation_error_dict: dict[str, typing.Any] | None = None
+    ):
+        super().__init__(f"{validation_error_dict}")
+        self._validation_error_dict = validation_error_dict or {}
 
 
 class UserNotInGroupError(DioptraError):
@@ -1055,11 +1072,6 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
         log.debug(error.to_message())
         return error_result(error, http.HTTPStatus.NOT_FOUND, {})
 
-    @api.errorhandler(EntrypointSwapsRenderError)
-    def handle_entrypoint_swaps_error(error: EntrypointSwapsRenderError):
-        log.debug(error.to_message())
-        return error_result(error, http.HTTPStatus.BAD_REQUEST, {})
-
     @api.errorhandler(JobStoreError)
     def handle_mlflow_error(error: JobStoreError):
         log.debug(error.to_message())
@@ -1077,6 +1089,22 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
             error,
             http.HTTPStatus.BAD_REQUEST,
             {"reason": error._reason} if error._reason else {},
+        )
+
+    @api.errorhandler(EntrypointSwapsRenderError)
+    def handle_entrypoint_swaps_error(error: EntrypointSwapsRenderError):
+        log.debug(error.to_message())
+        return error_result(error, http.HTTPStatus.BAD_REQUEST, {})
+
+    @api.errorhandler(EntrypointValidationError)
+    def handle_entrypoint_validation_error(error: EntrypointValidationError):
+        log.debug(error.to_message())
+        return error_result(
+            error,
+            http.HTTPStatus.BAD_REQUEST,
+            {"reason": error._validation_error_dict}
+            if error._validation_error_dict
+            else {},
         )
 
     @api.errorhandler(DioptraError)
