@@ -125,7 +125,11 @@ def get_json_schema(default: bool = False) -> dict:
     return schema
 
 
-def _schema_validate(experiment_desc: Mapping[str, Any]) -> list[ValidationIssue]:
+def _schema_validate(
+    experiment_desc: Mapping[str, Any],
+    schema: dict | None = None,
+    resources: list[tuple[str, dict]] | None = None,
+) -> list[ValidationIssue]:
     """
     Validate the given declarative experiment description against a JSON-Schema
     schema.
@@ -138,11 +142,10 @@ def _schema_validate(experiment_desc: Mapping[str, Any]) -> list[ValidationIssue
         A list of ValidationIssue objects; will be an empty list if the
         experiment description was valid.
     """
-
-    schema = get_json_schema()
+    schema = schema or get_json_schema()
 
     error_messages = util.schema_validate(
-        experiment_desc, schema, _instance_path_to_description
+        experiment_desc, schema, _instance_path_to_description, resources=resources
     )
 
     issues = [
@@ -1177,7 +1180,9 @@ def _manually_validate(experiment_desc: Mapping[str, Any]) -> list[ValidationIss
     return issues
 
 
-def validate(experiment_desc: Mapping[str, Any]) -> list[ValidationIssue]:
+def validate(
+    experiment_desc: Mapping[str, Any], schema: dict | None = None
+) -> list[ValidationIssue]:
     """
     Validate the given declarative experiment description.
 
@@ -1190,7 +1195,7 @@ def validate(experiment_desc: Mapping[str, Any]) -> list[ValidationIssue]:
         experiment description was valid.
     """
 
-    issues = _schema_validate(experiment_desc)
+    issues = _schema_validate(experiment_desc, schema)
 
     # If the description is not schema-valid, the basic structure is incorrect,
     # so we won't even try to dig inside it to check anything.

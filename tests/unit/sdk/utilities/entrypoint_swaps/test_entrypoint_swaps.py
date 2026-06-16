@@ -15,61 +15,62 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from pathlib import Path
-from dioptra.sdk.utilities.entrypoint_swaps import validate_swaps_graph, render_swaps_graph
-import yaml
-import itertools
+
 import pytest
+import yaml
+
+from dioptra.sdk.utilities.entrypoint_swaps import (
+    render_swaps_graph,
+    validate_swaps_graph,
+)
 
 FILES_LOCATION = "entrypoint_swaps_files"
 
 available_swaps = {
     "output/output_load_defend.yml": {
         "load": "load_artifact",
-        "transform_data": "augment"
+        "transform_data": "augment",
     },
-    "output/output_load_fgm.yml": {
-        "load": "load_artifact",
-        "transform_data": "attack"
-    },
+    "output/output_load_fgm.yml": {"load": "load_artifact", "transform_data": "attack"},
     "output/output_load_patch_apply.yml": {
         "load": "load_artifact",
-        "transform_data": "attach"
+        "transform_data": "attach",
     },
     "output/output_load_patch_gen.yml": {
         "load": "load_artifact",
-        "transform_data": "patch"
+        "transform_data": "patch",
     },
     "output/output_passthrough_defend.yml": {
         "load": "ignore",
-        "transform_data": "augment"
+        "transform_data": "augment",
     },
-    "output/output_passthrough_fgm.yml": {
-        "load": "ignore",
-        "transform_data": "attack"
-    },
+    "output/output_passthrough_fgm.yml": {"load": "ignore", "transform_data": "attack"},
     "output/output_passthrough_passthrough.yml": {
         "load": "ignore",
-        "transform_data": "ignore"
+        "transform_data": "ignore",
     },
     "output/output_passthrough_patch_apply.yml": {
         "load": "ignore",
-        "transform_data": "attach"
+        "transform_data": "attach",
     },
     "output/output_passthrough_patch_gen.yml": {
         "load": "ignore",
-        "transform_data": "patch"
-    }
+        "transform_data": "patch",
+    },
 }
+
 
 def verify_correct_yaml(graph, all_swaps):
     issues = []
     for output_file in all_swaps.keys():
-        with (Path(__file__).absolute().parent / FILES_LOCATION / output_file).open('r') as f:
+        with (Path(__file__).absolute().parent / FILES_LOCATION / output_file).open(
+            "r"
+        ) as f:
             data = f.read()
         expected_graph = yaml.safe_load(data)
 
         swaps = all_swaps[output_file]
-        
+
         rendered_graph = render_swaps_graph(graph, swaps)
 
         assert expected_graph == rendered_graph
@@ -77,70 +78,71 @@ def verify_correct_yaml(graph, all_swaps):
 
     return issues
 
+
 @pytest.mark.parametrize(
     "yaml_file",
     [
-        'dataset_transformer.yml',
+        "dataset_transformer.yml",
     ],
 )
 def test_swap_render(yaml_file: str):
-    with (Path(__file__).absolute().parent / FILES_LOCATION / yaml_file).open('r') as f:
+    with (Path(__file__).absolute().parent / FILES_LOCATION / yaml_file).open("r") as f:
         data = f.read()
     graph = yaml.safe_load(data)
 
     issues = verify_correct_yaml(graph, available_swaps)
     assert all([issue == [] for issue in issues])
 
-@pytest.mark.parametrize(
-    "yaml_file",
-    [
-        'no_swaps_test.yml'
-    ]
-)
+
+@pytest.mark.parametrize("yaml_file", ["no_swaps_test.yml"])
 def test_without_swaps(yaml_file: str):
-    with (Path(__file__).absolute().parent / FILES_LOCATION / yaml_file).open('r') as f:
+    with (Path(__file__).absolute().parent / FILES_LOCATION / yaml_file).open("r") as f:
         data = f.read()
     graph = yaml.safe_load(data)
 
     rendered_graph = render_swaps_graph(graph, {})
     assert rendered_graph == graph
 
-
     extra = set(["load", "transform_data", "extra"])
     with pytest.raises(Exception, match=f"Swaps {extra} were provided but not used."):
-        rendered_graph = render_swaps_graph(graph, {
-            "load": "ignore",
-            "transform_data": "patch",
-            "extra": "function_name"
-        })
+        rendered_graph = render_swaps_graph(
+            graph,
+            {"load": "ignore", "transform_data": "patch", "extra": "function_name"},
+        )
 
 
 @pytest.mark.parametrize(
     "yaml_file",
     [
-        'dataset_transformer.yml',
+        "dataset_transformer.yml",
     ],
 )
-def test_swap_errors(yaml_file: str): 
-    with (Path(__file__).absolute().parent / FILES_LOCATION / yaml_file).open('r') as f:
+def test_swap_errors(yaml_file: str):
+    with (Path(__file__).absolute().parent / FILES_LOCATION / yaml_file).open("r") as f:
         data = f.read()
     graph = yaml.safe_load(data)
 
     missing = set(["load", "transform_data"])
-    with pytest.raises(Exception, match=f"Swaps {missing} needed by graph but not provided."):
+    with pytest.raises(
+        Exception, match=f"Swaps {missing} needed by graph but not provided."
+    ):
         rendered_graph = render_swaps_graph(graph, {})
 
     extra = set(["extra"])
     with pytest.raises(Exception, match=f"Swaps {extra} were provided but not used."):
-        rendered_graph = render_swaps_graph(graph, {
-            "load": "ignore",
-            "transform_data": "patch",
-            "extra": "function_name"
-        })
+        rendered_graph = render_swaps_graph(
+            graph,
+            {"load": "ignore", "transform_data": "patch", "extra": "function_name"},
+        )
 
     nonexistant = set(["nonexistant"])
-    with pytest.raises(Exception, match=f"Tasks {nonexistant} requested for swaps but were not found."):
-        rendered_graph = render_swaps_graph(graph, {
-            "load": "ignore",
-            "transform_data": "nonexistant",
-        })
+    with pytest.raises(
+        Exception, match=f"Tasks {nonexistant} requested for swaps but were not found."
+    ):
+        rendered_graph = render_swaps_graph(
+            graph,
+            {
+                "load": "ignore",
+                "transform_data": "nonexistant",
+            },
+        )

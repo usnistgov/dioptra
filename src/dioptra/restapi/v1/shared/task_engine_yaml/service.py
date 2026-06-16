@@ -101,7 +101,9 @@ class TaskEngineYamlService(object):
             "artifact_inputs": artifact_inputs,
         }
 
-    def validate(self, task_engine_dict: dict[str, Any]) -> list[ValidationIssue]:
+    def validate(
+        self, task_engine_dict: dict[str, Any], schema: dict | None = None
+    ) -> list[ValidationIssue]:
         """Validate the given task engine dictionary.
 
         Args:
@@ -111,7 +113,7 @@ class TaskEngineYamlService(object):
             A list of ValidationIssue objects. The list will be empty if the task engine
             dictionary is valid.
         """
-        return validate_task_engine_dict(task_engine_dict)
+        return validate_task_engine_dict(task_engine_dict, schema)
 
     def _add_artifact_parameter_types(
         self,

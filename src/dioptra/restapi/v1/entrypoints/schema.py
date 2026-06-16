@@ -18,7 +18,7 @@
 
 from typing import Any
 
-from marshmallow import Schema, fields, validate, validates
+from marshmallow import Schema, fields, pre_dump, validate, validates
 from marshmallow.exceptions import ValidationError
 
 from dioptra.restapi.errors import InputParameterNotUniqueError
@@ -40,6 +40,7 @@ from dioptra.restapi.v1.schemas import (
     generate_base_resource_ref_schema,
     generate_base_resource_schema,
 )
+from dioptra.task_engine.issues import ValidationIssue
 
 
 class EntrypointPluginFileSchema(Schema):
@@ -249,6 +250,17 @@ class EntrypointMutableFieldsSchema(Schema):
                 )
 
 
+class ValidateOnlySchema(Schema):
+    validateOnly = fields.Bool(
+        attribute="validate_only",
+        data_key="validateOnly",
+        load_default=False,
+        metadata={
+            "description": "Flag indicating whether to perform a full validation and save the entrypoint, or perform a lighter validation and not save the entrypoint."
+        },
+    )
+
+
 class EntrypointPluginMutableFieldsSchema(Schema):
     pluginIds = fields.List(
         fields.Integer(),
@@ -418,3 +430,32 @@ class DynamicGlobalParametersResponseSchema(Schema):
         metadata={"description": ("A list of plugin objects used in the entrypoint.")},
         many=True,
     )
+
+
+class ValidateEntrypointIssueSchema(Schema):
+    """The response for the validateEntrypoint endpoint."""
+
+    type_ = fields.String(
+        attribute="type",
+        data_key="type",
+        metadata={"description": "The validation issue type."},
+    )
+    severity = fields.String(
+        attribute="severity",
+        metadata={"description": "The severity of the validation issue."},
+    )
+    message = fields.String(
+        attribute="message",
+        metadata={"description": "A message describing the validation issue."},
+    )
+
+    @pre_dump
+    def stringify_enums(self, data, **kwargs):
+        if isinstance(data, ValidationIssue):
+            return {
+                "type": data.type.name,
+                "severity": data.severity.name,
+                "message": data.message,
+            }
+
+        return data

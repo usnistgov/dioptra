@@ -65,6 +65,7 @@ PLUGINS: Final[str] = "plugins"
 ARTIFACT_PLUGINS: Final[str] = "artifactPlugins"
 BUNDLE: Final[str] = "bundle"
 DYNAMIC_GLOBAL_PARAMETERS: Final[str] = "dynamicGlobalParameters"
+VALIDATE_SWAPS: Final[str] = "validate"
 
 T = TypeVar("T")
 
@@ -510,7 +511,7 @@ class EntrypointsSnapshotCollectionClient(SnapshotsSubCollectionClient[T]):
     def get_task_graph_global_params(
         self, entrypoint_id: int, entrypoint_snapshot_id: int, swaps: dict[str, str]
     ) -> T:
-        """Get the global parameters used by an entrypoint graph with specified swap tasks.
+        """Get the global parameters used by an entrypoint graph with specified swap tasks (if applicable).
 
         Args:
             entrypoint_id: The entrypoint id, an integer.
@@ -803,6 +804,7 @@ class EntrypointsCollectionClient(CollectionClient[T]):
         queues: list[int] | None = None,
         plugins: list[int] | None = None,
         artifact_plugins: list[int] | None = None,
+        validate_only: bool = False,
     ) -> T:
         """Creates a entrypoint.
 
@@ -826,6 +828,9 @@ class EntrypointsCollectionClient(CollectionClient[T]):
                 Optional, defaults to None.
             artifact_plugins: A list of artifact plugin ids to associate with the new
                 entrypoint. Optional, defaults to None.
+            validate_only: If set to False, this will perform full validation and save
+                the entrypoint. If false, a lighter validation will be performed and
+                the entrypoint will not be saved.
 
         Example:
             Create an entrypoint called "hello_world" with artifact input parameters and artifact output graph.
@@ -893,7 +898,9 @@ class EntrypointsCollectionClient(CollectionClient[T]):
         if artifact_plugins is not None:
             json_["artifactPlugins"] = artifact_plugins
 
-        return self._session.post(self.url, json_=json_)
+        params = {"validateOnly": validate_only}
+
+        return self._session.post(self.url, params=params, json_=json_)
 
     def modify_by_id(
         self,
@@ -905,6 +912,7 @@ class EntrypointsCollectionClient(CollectionClient[T]):
         parameters: list[dict[str, Any]] | None,
         artifact_parameters: list[dict[str, Any]] | None,
         queues: list[int] | None,
+        validate_only: bool = False,
     ) -> T:
         """Modify the entrypoint matching the provided id.
 
@@ -923,6 +931,9 @@ class EntrypointsCollectionClient(CollectionClient[T]):
                 To remove all artifact parameters, pass None.
             queues: The new list of queue ids to associate with the entrypoint. To
                 remove all associated queues, pass None.
+            validate_only: If set to False, this will perform full validation and save
+                the entrypoint. If false, a lighter validation will be performed and
+                the entrypoint will not be saved.
 
         Returns:
             The response from the Dioptra API.
@@ -944,7 +955,11 @@ class EntrypointsCollectionClient(CollectionClient[T]):
         if queues is not None:
             json_["queues"] = queues
 
-        return self._session.put(self.url, str(entrypoint_id), json_=json_)
+        params = {"validateOnly": validate_only}
+
+        return self._session.put(
+            self.url, str(entrypoint_id), params=params, json_=json_
+        )
 
     def delete_by_id(self, entrypoint_id: str | int) -> T:
         """Delete the entrypoint matching the provided id.
