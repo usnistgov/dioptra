@@ -1839,7 +1839,7 @@ class SwapsRetrievalService(object):
             entrypoint_snapshot_id: The entrypoint snapshot ID.
         Returns:
             An object of the form:
-            {"swaps": 
+            {"swaps":
                 "swap_name": [{
                     "task_name": ...,
                     "entrypoint_keyword_args": [...],
@@ -1848,7 +1848,7 @@ class SwapsRetrievalService(object):
             }
         """
         log = logger or LOGGER.new()
-        
+
         # Retrieve the snapshot entrypoint to get the graph.
         entry_point = self._entrypoint_snapshot_id_service.get(
             entrypoint_id=entrypoint_id,
@@ -1860,7 +1860,7 @@ class SwapsRetrievalService(object):
         try:
             graph = yaml.safe_load(entry_point.task_graph) or {}
         except Exception as e:
-            raise InvalidYamlError(f"Failed to load YAML: {e}")
+            raise InvalidYamlError("Failed to load YAML") from e
 
         # this looks like {'swap_name1' : ['alias1', 'alias2'], 'swap_name2': ...}
         swaps = self._swaps_validation_service.extract_swaps(graph)
