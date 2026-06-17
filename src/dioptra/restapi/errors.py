@@ -385,6 +385,24 @@ class QueryParameterValidationError(DioptraError):
         self.parameters = kwargs
 
 
+class SwapsNotFoundError(DioptraError):
+    """Could not find swaps with the given name."""
+
+    def __init__(self, swaps: list[str]):
+        super().__init__(
+            f"Could not find swaps with the given name(s): {swaps}",
+        )
+
+
+class TasksNotFoundError(DioptraError):
+    """Could not find tasks with the given name."""
+
+    def __init__(self, tasks: list[str]):
+        super().__init__(
+            f"Could not find tasks with the given name(s): {tasks}",
+        )
+
+
 class InputParameterNotUniqueError(DioptraError):
     """Input Parameters failed unique validation check."""
 

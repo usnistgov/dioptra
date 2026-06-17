@@ -432,6 +432,47 @@ class DynamicGlobalParametersResponseSchema(Schema):
     )
 
 
+class SwapInfoSchema(Schema):
+    """Schema representing a single swap option (SwapInfo)."""
+
+    taskName = fields.String(
+        attribute="task_name",
+        metadata={"description": "Name of the task that can be swapped in."},
+        required=True,
+    )
+    entrypointKeywordArgs = fields.List(
+        fields.String(),
+        attribute="entrypoint_keyword_args",
+        metadata={
+            "description": "A list of the keyword arguments that need to "
+            "be specified for this task."
+        },
+        required=True,
+    )
+    pluginFileResourceSnapshotId = fields.Integer(
+        attribute="plugin_file_resource_snapshot_id",
+        metadata={
+            "description": "Resource snapshot ID of the plugin file containing the task."
+        },
+        required=True,
+    )
+
+
+class SwapsRetrievalResponseSchema(Schema):
+    """Response schema for the swaps endpoint.
+
+    The swaps field is a mapping from the swap name to a list of SwapInfo objects.
+    """
+
+    swaps = fields.Dict(
+        keys=fields.String(),
+        values=fields.List(fields.Nested(SwapInfoSchema)),
+        attribute="swaps",
+        metadata={"description": "Mapping of swap aliases to available swap options."},
+        required=True,
+    )
+
+
 class ValidateEntrypointIssueSchema(Schema):
     """The response for the validateEntrypoint endpoint."""
 
