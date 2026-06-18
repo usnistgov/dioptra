@@ -434,7 +434,11 @@ class DynamicGlobalParametersResponseSchema(Schema):
 
 class SwapInfoSchema(Schema):
     """Schema representing a single swap option (SwapInfo)."""
-
+    taskAlias = fields.String(
+        attribute="task_alias",
+        metadata={"description": "Alias for the task definition."},
+        required=True,
+    )
     taskName = fields.String(
         attribute="task_name",
         metadata={"description": "Name of the task that can be swapped in."},
@@ -444,8 +448,7 @@ class SwapInfoSchema(Schema):
         fields.String(),
         attribute="entrypoint_keyword_args",
         metadata={
-            "description": "A list of the keyword arguments that need to "
-            "be specified for this task."
+            "description": "A list of the keyword arguments that need to be specified for this task."
         },
         required=True,
     )

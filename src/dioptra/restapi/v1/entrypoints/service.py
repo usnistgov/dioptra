@@ -1839,12 +1839,16 @@ class SwapsRetrievalService(object):
             entrypoint_snapshot_id: The entrypoint snapshot ID.
         Returns:
             An object of the form:
-            {"swaps":
-                "swap_name": [{
-                    "task_name": ...,
-                    "entrypoint_keyword_args": [...],
-                    "plugin_file_resource_snapshot_id": ...,
-                }, ...]
+            { 
+                "swaps: {
+                    "swap_name": [{
+                        "task_alias": ...,
+                        "task_name": ...,
+                        "entrypoint_keyword_args": [...],
+                        "plugin_file_resource_snapshot_id": ...,
+                    }, ...],
+                    ...
+                }
             }
         """
         log = logger or LOGGER.new()
@@ -1909,6 +1913,7 @@ class SwapsRetrievalService(object):
                                 task_name
                             ]["plugin_file_snapshot_id"]
                             swap_info = {
+                                "task_alias": alias,
                                 "task_name": task_name,
                                 "entrypoint_keyword_args": list(keyword_args),
                                 "plugin_file_resource_snapshot_id": plugin_file_resource_snapshot_id,

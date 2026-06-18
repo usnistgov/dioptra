@@ -1803,7 +1803,6 @@ def _test_dynamic_globals_endpoint(
 
         assert set(expected_globals) == set(evaluated["entrypointParams"])
 
-        print(evaluated, flush=True)
         assert evaluated["topologicalSort"] in expected_sort_order
         assert len(expected_active_plugins) == len(evaluated["activePlugins"])
         for plugin in evaluated["activePlugins"]:
@@ -2574,6 +2573,10 @@ def test_get_swaps_success(
 
     assert set(["task2", "task10"]) == set([choice["taskName"] for choice in swaps['step2_choice']])
     assert set(["task1", "task2"]) == set([choice["taskName"] for choice in swaps['step3_choice']])
+
+    assert set(["taskalias1", "taskalias2"]) == set([choice["taskAlias"] for choice in swaps['step2_choice']])
+    assert set(["taskalias3", "taskalias4"]) == set([choice["taskAlias"] for choice in swaps['step3_choice']])
+
 
     assert_swap_choice_is_correct(swaps["step2_choice"], {
         "task2" : ["global3"],
