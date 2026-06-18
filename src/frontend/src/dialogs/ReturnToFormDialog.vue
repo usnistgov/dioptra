@@ -1,22 +1,26 @@
 <template>
-  <DialogComponent
+  <DialogComponent 
     v-model="showDialog"
     :hideDraftBtn="true"
-    :persistent="true"
     @emitSubmit="showDialog = false"
     @emitCancel="$emit('cancel')"
+    :persistent="true"
   >
     <template #title>Load Unsaved Form?</template>
     <q-card-section class="q-pt-none">
-      You have previously visited this form without submitting. Load previous inputs?
+      You have previously visited this form without submitting.  Load previous inputs?
     </q-card-section>
   </DialogComponent>
 </template>
 
 <script setup>
-import DialogComponent from "./DialogComponent.vue";
+  import DialogComponent from './DialogComponent.vue'
+  import { useLoginStore } from '@/stores/LoginStore.ts'
 
-defineEmits(["cancel"]);
+  const store = useLoginStore()
 
-const showDialog = defineModel();
+  defineEmits(['cancel'])
+
+  const showDialog = defineModel()
+
 </script>
