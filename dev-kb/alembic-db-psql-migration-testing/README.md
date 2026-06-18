@@ -1,13 +1,13 @@
-# This guide describes Postgres container setup 
+# This guide describes Postgres container setup
 
 #### The environment setup can be used for testing the Alembic migration scripts compatibility with the Postgres (pSQL) database in the container
 
 
-## Docker compose (mostly self-contained) Postgres-setup 
+## Docker compose (mostly self-contained) Postgres-setup
 ##### (more error prone, but allows easier adjustments, when needed)
 
 
-## Completely manual docker Postgres-setup 
+## Completely manual docker Postgres-setup
 ##### (more error prone, but allows easier adjustments, when needed)
 
 ### !!! Important Note !!!:
@@ -33,7 +33,7 @@ print(encoded_password)
 docker pull postgres:15
 ```
 
-2.  Create a DB-hosting volume 
+2.  Create a DB-hosting volume
 ```sh
 docker volume create postgres-volume
 ```
@@ -69,7 +69,7 @@ psql -U postgres
 - Add user named `dioptra` with a `<your-dioptra-DB-password>` to the Postgress DB:
 ```SQL
 CREATE USER dioptra WITH PASSWORD '<your-dioptra-DB-password>';
-```  
+```
 
 - Create the `restapi` database and give ownership to `dioptra` user:
 ```SQL
@@ -81,12 +81,12 @@ CREATE DATABASE restapi OWNER dioptra;
 \l
 ```
 
-- (Optional) Exit psql CLI with `\q` command 
+- (Optional) Exit psql CLI with `\q` command
 - (Optional) Exit the container with `exit` command
-  
+
 
 6. After you are done - reset the container to run the scripts again by deleting the DB-containing volume
-   
+
 ```sh
 docker stop test_postgres
 docker rm test_postgres
