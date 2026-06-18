@@ -1,8 +1,8 @@
 <template>
-  <DialogComponent
+  <DialogComponent 
     v-model="showDialog"
-    :hideDraftBtn="true"
     @emitSubmit="submit"
+    :hideDraftBtn="true"
   >
     <template #title>
       <label id="modalTitle">
@@ -20,97 +20,87 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from "vue";
-import DialogComponent from "./DialogComponent.vue";
-import * as api from "@/services/dataApi";
-import * as notify from "../notify";
-import ResourcePicker from "@/components/ResourcePicker.vue";
+  import { ref, watch, computed } from 'vue'
+  import DialogComponent from './DialogComponent.vue'
+  import * as api from '@/services/dataApi'
+  import * as notify from '../notify'
+  import ResourcePicker from '@/components/ResourcePicker.vue'
 
-const props = defineProps(["parentResourceType", "parentResourceObj", "childResourceType"]);
-const emit = defineEmits(["submit"]);
 
-const showDialog = defineModel();
+  const props = defineProps(['parentResourceType', 'parentResourceObj', 'childResourceType' ])
+  const emit = defineEmits(['submit'])
 
-const childResourceObjs = ref([]);
-const selectedChildIds = computed(() => {
-  return childResourceObjs.value.map((obj) => obj.id);
-});
+  const showDialog = defineModel()
 
-const childResourceOptions = ref([]);
-const originalChildIds = ref();
+  const childResourceObjs = ref([])
+  const selectedChildIds = computed(() => {
+    return childResourceObjs.value.map((obj) => obj.id)
+  })
 
-const childResourceTypeSingular = computed(() => {
-  const t = props.childResourceType || "";
-  return t.endsWith("s") ? t.slice(0, -1) : t;
-});
+  const childResourceOptions = ref([])
+  const originalChildIds = ref()
 
-const childLabel = computed(() => {
-  const t = props.childResourceType || "";
-  return `${t.charAt(0).toUpperCase()}${t.slice(1)}:`;
-});
+  const childResourceTypeSingular = computed(() => {
+    const t = props.childResourceType || ''
+    return t.endsWith('s') ? t.slice(0, -1) : t
+  })
 
-watch(showDialog, (newVal) => {
-  if (newVal) {
-    childResourceObjs.value = JSON.parse(JSON.stringify(props.parentResourceObj[props.childResourceType]));
-    originalChildIds.value = JSON.parse(
-      JSON.stringify(props.parentResourceObj[props.childResourceType].map((obj) => obj.id)),
-    );
-  }
-});
+  const childLabel = computed(() => {
+    const t = props.childResourceType || ''
+    return `${t.charAt(0).toUpperCase()}${t.slice(1)}:`
+  })
 
-async function submit() {
-  const childIdsToAdd = [];
-  const childIdsToRemove = [];
-
-  selectedChildIds.value.forEach((id) => {
-    if (!originalChildIds.value.includes(id)) {
-      childIdsToAdd.push(id);
+  watch(showDialog, (newVal) => {
+    if(newVal) {
+      childResourceObjs.value = JSON.parse(JSON.stringify(props.parentResourceObj[props.childResourceType]))
+      originalChildIds.value = JSON.parse(JSON.stringify(props.parentResourceObj[props.childResourceType].map((obj) => obj.id)))
     }
-  });
+  })
 
-  originalChildIds.value.forEach((id) => {
-    if (!selectedChildIds.value.includes(id)) {
-      childIdsToRemove.push(id);
-    }
-  });
+  async function submit() {
+    let childIdsToAdd = []
+    let childIdsToRemove = []
 
-  try {
-    if (childIdsToAdd.length > 0) {
-      await api.appendResource(
-        props.parentResourceType,
-        props.parentResourceObj.id,
-        props.childResourceType,
-        childIdsToAdd,
-      );
-    }
-    for (const id of childIdsToRemove) {
-      await api.removeResourceFromResource(
-        props.parentResourceType,
-        props.parentResourceObj.id,
-        props.childResourceType,
-        id,
-      );
-    }
-    notify.success(`Successfully updated ${props.childResourceType} for  '${props.parentResourceObj.name}'`);
-    showDialog.value = false;
-    emit("submit");
-  } catch (err) {
-    notify.error(err.message);
-  }
-}
+    selectedChildIds.value.forEach((id) => {
+      if (!originalChildIds.value.includes(id)) {
+        childIdsToAdd.push(id)
+      }
+    })
 
-async function getChildResources(val = "", update) {
-  update(async () => {
+    originalChildIds.value.forEach((id) => {
+      if (!selectedChildIds.value.includes(id)) {
+        childIdsToRemove.push(id)
+      }
+    })
+
     try {
-      const res = await api.getData(props.childResourceType, {
-        search: val,
-        rowsPerPage: 0, // get all
-        index: 0,
-      });
-      childResourceOptions.value = res.data.data;
+      if(childIdsToAdd.length > 0) {
+        await api.appendResource(props.parentResourceType, props.parentResourceObj.id, props.childResourceType, childIdsToAdd)
+      }
+      for(const id of childIdsToRemove) {
+        await api.removeResourceFromResource(props.parentResourceType, props.parentResourceObj.id, props.childResourceType, id)
+      }
+      notify.success(`Successfully updated ${props.childResourceType} for  '${props.parentResourceObj.name}'`)
+      showDialog.value = false
+      emit('submit')
     } catch (err) {
-      notify.error(err.response.data.message);
+      notify.error(err.message)
     }
-  });
-}
+  }
+
+  async function getChildResources(val = '', update) {
+    update(async () => {
+      try {
+        const res = await api.getData(props.childResourceType, {
+          search: val,
+          rowsPerPage: 0, // get all
+          index: 0
+        })
+        childResourceOptions.value = res.data.data
+      } catch(err) {
+        notify.error(err.response.data.message)
+      } 
+    })
+  }
+
 </script>
