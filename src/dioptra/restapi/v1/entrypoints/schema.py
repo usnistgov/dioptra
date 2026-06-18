@@ -434,6 +434,7 @@ class DynamicGlobalParametersResponseSchema(Schema):
 
 class SwapInfoSchema(Schema):
     """Schema representing a single swap option (SwapInfo)."""
+
     taskAlias = fields.String(
         attribute="task_alias",
         metadata={"description": "Alias for the task definition."},

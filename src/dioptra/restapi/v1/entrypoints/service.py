@@ -1839,7 +1839,7 @@ class SwapsRetrievalService(object):
             entrypoint_snapshot_id: The entrypoint snapshot ID.
         Returns:
             An object of the form:
-            { 
+            {
                 "swaps: {
                     "swap_name": [{
                         "task_alias": ...,
