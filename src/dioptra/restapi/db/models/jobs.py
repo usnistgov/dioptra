@@ -42,7 +42,6 @@ from dioptra.restapi.db.db import (
 
 from .entry_points import EntryPoint
 from .experiments import Experiment
-from .plugins import PluginFile
 from .queues import Queue
 from .resources import ResourceSnapshot
 
