@@ -2563,30 +2563,35 @@ def test_get_swaps_success(
     assert response.status_code == HTTPStatus.OK
     response = response.json()
 
-    assert 'swaps' in response
-    swaps = response['swaps']
+    assert isinstance(response, list)
+    assert(len(response) == 4)
 
-    assert isinstance(swaps, dict)
-    assert len(swaps.keys()) == 2
-    assert "step2_choice" in swaps
-    assert "step3_choice" in swaps
+    expected = {
+        "step2_choice": {
+            "tasks": ["task2", "task10"],
+            "aliases": ["taskalias1", "taskalias2"],
+            "params": {
+                "task2" : ["global3"],
+                "task10": []
+            }
+        },
+        "step3_choice": {
+            "tasks": ["task1", "task2"],
+            "aliases": ["taskalias3", "taskalias4"],
+            "params": {
+                "task1" : ["global9"],
+                "task2": ["global12"]
+            }
+        }
+    }
 
-    assert set(["task2", "task10"]) == set([choice["taskName"] for choice in swaps['step2_choice']])
-    assert set(["task1", "task2"]) == set([choice["taskName"] for choice in swaps['step3_choice']])
-
-    assert set(["taskalias1", "taskalias2"]) == set([choice["taskAlias"] for choice in swaps['step2_choice']])
-    assert set(["taskalias3", "taskalias4"]) == set([choice["taskAlias"] for choice in swaps['step3_choice']])
-
-
-    assert_swap_choice_is_correct(swaps["step2_choice"], {
-        "task2" : ["global3"],
-        "task10": []
-    })
-
-    assert_swap_choice_is_correct(swaps["step3_choice"], {
-        "task1" : ["global9"],
-        "task2": ["global12"]
-    })
+    for swap in response:
+        print("SWAP IN RESPONSE", swap, flush=True)
+        swap_name = swap["swapName"]
+        assert swap_name in expected
+        assert swap["taskName"] in expected[swap_name]["tasks"]
+        assert swap["taskAlias"] in expected[swap_name]["aliases"]
+        assert set(swap["entrypointKeywordArgs"]) == set(expected[swap_name]["params"][swap["taskName"]])
 
 
 
@@ -2610,8 +2615,5 @@ def test_get_no_swaps_success(
     assert response.status_code == HTTPStatus.OK
     response = response.json()
 
-    assert 'swaps' in response
-    swaps = response['swaps']
-
-    assert isinstance(swaps, dict)
-    assert len(swaps.keys()) == 0
+    assert isinstance(response, list)
+    assert(len(response) == 0)

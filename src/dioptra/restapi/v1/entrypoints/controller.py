@@ -65,7 +65,7 @@ from .schema import (
     EntrypointPluginMutableFieldsSchema,
     EntrypointPluginSchema,
     EntrypointSchema,
-    SwapsRetrievalResponseSchema,
+    SwapInfoSchema,
     ValidateOnlySchema,
 )
 from .service import (
@@ -787,7 +787,7 @@ class SwapsEndpoint(Resource):
         super().__init__(*args, **kwargs)
 
     @login_required
-    @responds(schema=SwapsRetrievalResponseSchema, api=api)
+    @responds(schema=SwapInfoSchema(many=True), api=api)
     def get(self, id: int, snapshotId: int):
         """Retrieve available swaps for a given entrypoint snapshot."""
         log = LOGGER.new(

@@ -1830,7 +1830,7 @@ class SwapsRetrievalService(object):
         entrypoint_id: int,
         entrypoint_snapshot_id: int,
         logger: BoundLogger | None = None,
-    ) -> dict[str, Any]:
+    ) -> list[dict[str, Any]]:
         """
         Retrieve information about the list of swaps for a given entrypoint snapshot.
 
@@ -1839,17 +1839,16 @@ class SwapsRetrievalService(object):
             entrypoint_snapshot_id: The entrypoint snapshot ID.
         Returns:
             An object of the form:
-            {
-                "swaps: {
+            [
+                {
                     "swap_name": [{
                         "task_alias": ...,
                         "task_name": ...,
                         "entrypoint_keyword_args": [...],
                         "plugin_file_resource_snapshot_id": ...,
-                    }, ...],
-                    ...
+                    }, ...]
                 }
-            }
+            ]
         """
         log = logger or LOGGER.new()
 
@@ -1872,7 +1871,7 @@ class SwapsRetrievalService(object):
         # need this to know which entrypoint keyword args to NOT include in return
         step_names = set(graph.keys())
 
-        swaps_map: dict[str, Any] = {}
+        swaps_list: list[dict[str, Any]] = []
 
         # build a list of all plugin‑plugin‑file pairs for this entrypoint.
         plugin_plugin_files = [
@@ -1913,13 +1912,14 @@ class SwapsRetrievalService(object):
                                 task_name
                             ]["plugin_file_snapshot_id"]
                             swap_info = {
+                                "swap_name": swap_name,
                                 "task_alias": alias,
                                 "task_name": task_name,
                                 "entrypoint_keyword_args": list(keyword_args),
                                 "plugin_file_resource_snapshot_id": plugin_file_resource_snapshot_id,
                             }
 
-                            swaps_map.setdefault(swap_name, []).append(swap_info)
+                            swaps_list.append(swap_info)
 
                         else:
                             not_found_tasks.add(task_name)
@@ -1933,7 +1933,7 @@ class SwapsRetrievalService(object):
         if len(not_found_tasks) > 0:
             raise TasksNotFoundError(list(not_found_tasks))
 
-        return {"swaps": swaps_map}
+        return swaps_list
 
 
 def _get_entrypoint_plugin_snapshots(

@@ -435,6 +435,11 @@ class DynamicGlobalParametersResponseSchema(Schema):
 class SwapInfoSchema(Schema):
     """Schema representing a single swap option (SwapInfo)."""
 
+    swapName = fields.String(
+        attribute="swap_name",
+        metadata={"description": "The name of the swap this definition belongs to."},
+        required=True,
+    )
     taskAlias = fields.String(
         attribute="task_alias",
         metadata={"description": "Alias for the task definition."},
@@ -458,21 +463,6 @@ class SwapInfoSchema(Schema):
         metadata={
             "description": "Resource snapshot ID of the plugin file containing the task."
         },
-        required=True,
-    )
-
-
-class SwapsRetrievalResponseSchema(Schema):
-    """Response schema for the swaps endpoint.
-
-    The swaps field is a mapping from the swap name to a list of SwapInfo objects.
-    """
-
-    swaps = fields.Dict(
-        keys=fields.String(),
-        values=fields.List(fields.Nested(SwapInfoSchema)),
-        attribute="swaps",
-        metadata={"description": "Mapping of swap aliases to available swap options."},
         required=True,
     )
 
