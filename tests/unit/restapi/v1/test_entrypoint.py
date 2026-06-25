@@ -2586,7 +2586,6 @@ def test_get_swaps_success(
     }
 
     for swap in response:
-        print("SWAP IN RESPONSE", swap, flush=True)
         swap_name = swap["swapName"]
         assert swap_name in expected
         assert swap["taskName"] in expected[swap_name]["tasks"]
