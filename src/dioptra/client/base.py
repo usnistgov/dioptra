@@ -22,9 +22,15 @@ from dataclasses import dataclass
 from io import BufferedReader
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from posixpath import join as urljoin
-from typing import Any, ClassVar, Generic, Protocol, TypeVar
+from typing import Any, ClassVar, Generic, Protocol, TypeAlias, TypeVar
 
 T = TypeVar("T")
+
+JsonScalar: TypeAlias = str | int | float | bool | None
+JsonObject: TypeAlias = dict[str, "JsonValue"]
+JsonArray: TypeAlias = list["JsonValue"]
+JsonValue: TypeAlias = JsonScalar | JsonObject | JsonArray
+JsonObjectList: TypeAlias = list[JsonObject]
 
 DOTS_REGEX = re.compile(r"^\.\.\.+$")
 
@@ -108,11 +114,11 @@ class DioptraResponseProtocol(Protocol):
         """The response body as a string."""
         ...  # fmt: skip
 
-    def json(self) -> dict[str, Any]:
-        """Return the response body as a JSON-like Python dictionary.
+    def json(self) -> JsonValue:
+        """Return the response body as JSON-like Python data.
 
         Returns:
-            The response body as a dictionary.
+            The response body parsed from JSON.
         """
         ...  # fmt: skip
 

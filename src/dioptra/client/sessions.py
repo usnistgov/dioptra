@@ -33,6 +33,7 @@ from .base import (
     DioptraSession,
     IllegalArgumentError,
     JSONDecodeError,
+    JsonValue,
     StatusCodeError,
 )
 
@@ -102,14 +103,14 @@ def wrap_request_method(
     return wrapper
 
 
-def convert_response_to_dict(response: DioptraResponseProtocol) -> dict[str, Any]:
-    """Convert a response object to a JSON-like Python dictionary.
+def convert_response_to_dict(response: DioptraResponseProtocol) -> JsonValue:
+    """Convert a response object to JSON-like Python data.
 
     Args:
         response: A response object that follows the DioptraResponseProtocol interface.
 
     Returns:
-        A Python dictionary containing the response data.
+        Python data parsed from the response body as JSON.
 
     Raises:
         StatusCodeError: If the response status code is not in the 2xx range.
@@ -684,12 +685,12 @@ class DioptraRequestsSession(BaseDioptraRequestsSession[DioptraResponseProtocol]
         return self._put(endpoint, *parts, params=params, json_=json_)
 
 
-class DioptraRequestsSessionJson(BaseDioptraRequestsSession[dict[str, Any]]):
+class DioptraRequestsSessionJson(BaseDioptraRequestsSession[JsonValue]):
     """
     The interface for communicating with the Dioptra API using the requests library.
 
-    The responses from the HTTP methods will be JSON-like Python dictionaries. Responses
-    that are not in the 2xx range will raise an exception.
+    The responses from the HTTP methods will be JSON-like Python data. Responses that
+    are not in the 2xx range will raise an exception.
 
     Attributes:
         DOWNLOAD_CHUNK_SIZE: The number of bytes to read into memory per chunk when
@@ -698,10 +699,10 @@ class DioptraRequestsSessionJson(BaseDioptraRequestsSession[dict[str, Any]]):
 
     def get(
         self, endpoint: str, *parts, params: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
+    ) -> JsonValue:
         """Make a GET request to the API.
 
-        The response will be a JSON-like Python dictionary.
+        The response will be JSON-like Python data.
 
         Args:
             endpoint: The base URL of the API endpoint.
@@ -710,7 +711,7 @@ class DioptraRequestsSessionJson(BaseDioptraRequestsSession[dict[str, Any]]):
                 to None.
 
         Returns:
-            A Python dictionary containing the response data.
+            Python data parsed from the response body as JSON.
 
         Raises:
             APIConnectionError: If the connection to the REST API fails.
@@ -726,10 +727,10 @@ class DioptraRequestsSessionJson(BaseDioptraRequestsSession[dict[str, Any]]):
         *parts,
         params: dict[str, Any] | None = None,
         json_: dict[str, Any] | None = None,
-    ) -> dict[str, Any]:
+    ) -> JsonValue:
         """Make a PATCH request to the API.
 
-        The response will be a JSON-like Python dictionary.
+        The response will be JSON-like Python data.
 
         Args:
             endpoint: The base URL of the API endpoint.
@@ -739,7 +740,7 @@ class DioptraRequestsSessionJson(BaseDioptraRequestsSession[dict[str, Any]]):
             json_: The JSON data to include in the request. Optional, defaults to None.
 
         Returns:
-            A Python dictionary containing the response data.
+            Python data parsed from the response body as JSON.
 
         Raises:
             APIConnectionError: If the connection to the REST API fails.
@@ -759,10 +760,10 @@ class DioptraRequestsSessionJson(BaseDioptraRequestsSession[dict[str, Any]]):
         json_: dict[str, Any] | None = None,
         data: dict[str, Any] | None = None,
         files: dict[str, DioptraFile | list[DioptraFile]] | None = None,
-    ) -> dict[str, Any]:
+    ) -> JsonValue:
         """Make a POST request to the API.
 
-        The response will be a JSON-like Python dictionary.
+        The response will be JSON-like Python data.
 
         Args:
             endpoint: The base URL of the API endpoint.
@@ -776,7 +777,7 @@ class DioptraRequestsSessionJson(BaseDioptraRequestsSession[dict[str, Any]]):
                 uploaded. Optional, defaults to None.
 
         Returns:
-            A Python dictionary containing the response data.
+            Python data parsed from the response body as JSON.
 
         Raises:
             APIConnectionError: If the connection to the REST API fails.
@@ -796,10 +797,10 @@ class DioptraRequestsSessionJson(BaseDioptraRequestsSession[dict[str, Any]]):
         *parts,
         params: dict[str, Any] | None = None,
         json_: dict[str, Any] | None = None,
-    ) -> dict[str, Any]:
+    ) -> JsonValue:
         """Make a DELETE request to the API.
 
-        The response will be a JSON-like Python dictionary.
+        The response will be JSON-like Python data.
 
         Args:
             endpoint: The base URL of the API endpoint.
@@ -809,7 +810,7 @@ class DioptraRequestsSessionJson(BaseDioptraRequestsSession[dict[str, Any]]):
             json_: The JSON data to include in the request. Optional, defaults to None.
 
         Returns:
-            A Python dictionary containing the response data.
+            Python data parsed from the response body as JSON.
 
         Raises:
             APIConnectionError: If the connection to the REST API fails.
@@ -827,10 +828,10 @@ class DioptraRequestsSessionJson(BaseDioptraRequestsSession[dict[str, Any]]):
         *parts,
         params: dict[str, Any] | None = None,
         json_: dict[str, Any] | None = None,
-    ) -> dict[str, Any]:
+    ) -> JsonValue:
         """Make a PUT request to the API.
 
-        The response will be a JSON-like Python dictionary.
+        The response will be JSON-like Python data.
 
         Args:
             endpoint: The base URL of the API endpoint.
@@ -840,7 +841,7 @@ class DioptraRequestsSessionJson(BaseDioptraRequestsSession[dict[str, Any]]):
             json_: The JSON data to include in the request. Optional, defaults to None.
 
         Returns:
-            A Python dictionary containing the response data.
+            Python data parsed from the response body as JSON.
 
         Raises:
             APIConnectionError: If the connection to the REST API fails.

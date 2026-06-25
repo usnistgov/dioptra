@@ -16,11 +16,11 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 import os
 from posixpath import join as urljoin
-from typing import Any, Final, Generic, TypeVar
+from typing import Final, Generic, TypeVar
 
 from .artifacts import ArtifactsCollectionClient
 from .auth import AuthCollectionClient
-from .base import DioptraResponseProtocol, DioptraSession
+from .base import DioptraResponseProtocol, DioptraSession, JsonValue
 from .entrypoints import EntrypointsCollectionClient
 from .experiments import ExperimentsCollectionClient
 from .groups import GroupsCollectionClient
@@ -164,8 +164,8 @@ def connect_response_dioptra_client(
 
 def connect_json_dioptra_client(
     address: str | None = None,
-) -> DioptraClient[dict[str, Any]]:
-    """Connect a client to the Dioptra API that returns JSON-like Python dictionaries.
+) -> DioptraClient[JsonValue]:
+    """Connect a client to the Dioptra API that returns JSON-like Python data.
 
     In contrast to the client that returns response objects, this client will raise an
     exception for any non-2xx response status code.
@@ -185,7 +185,7 @@ def connect_json_dioptra_client(
     """
     from .sessions import DioptraRequestsSessionJson
 
-    return DioptraClient[dict[str, Any]](
+    return DioptraClient[JsonValue](
         session=DioptraRequestsSessionJson(_build_api_address(address))
     )
 
