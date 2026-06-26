@@ -1906,9 +1906,9 @@ class SwapsRetrievalService(object):
                             task_name = list(task_def.keys())[0]
 
                         if task_name in task_lookup_dict:
-                            plugin_file_resource_snapshot_id = task_lookup_dict[task_name][
-                                "plugin_file_snapshot_id"
-                            ]
+                            plugin_file_resource_snapshot_id = task_lookup_dict[
+                                task_name
+                            ]["plugin_file_snapshot_id"]
                             swap_info = {
                                 "swap_name": swap_name,
                                 "task_alias": alias,
