@@ -1883,52 +1883,43 @@ class SwapsRetrievalService(object):
         task_lookup_dict = self._swaps_validation_service.build_task_lookup_dict(
             plugin_plugin_files
         )
-        not_found_swaps = set()
         not_found_tasks = set()
 
         for swap_name in swaps:
-            swap_found = False
             for step in step_names:
-                if f"?{swap_name}" in graph[step]:
-                    swap_found = True
-                    task_defs = graph[step][f"?{swap_name}"]
-                    for alias in task_defs:
-                        task_def = task_defs[alias]
+                task_defs = graph[step][f"?{swap_name}"]
+                for alias in task_defs:
+                    task_def = task_defs[alias]
 
-                        keyword_args = (
-                            self._dynamic_global_parameters_service.get_keywords_for_one_task(
-                                task_def
-                            )
-                            - step_names
+                    keyword_args = (
+                        self._dynamic_global_parameters_service.get_keywords_for_one_task(
+                            task_def
                         )
+                        - step_names
+                    )
 
-                        if "task" in task_def:
-                            task_name = task_def["task"]
-                        else:
-                            task_name = list(task_def.keys())[0]
+                    if "task" in task_def:
+                        # long form definition
+                        task_name = task_def["task"]
+                    else:
+                        # short form definition
+                        task_name = list(task_def.keys())[0]
 
-                        if task_name in task_lookup_dict:
-                            plugin_file_resource_snapshot_id = task_lookup_dict[
-                                task_name
-                            ]["plugin_file_snapshot_id"]
-                            swap_info = {
-                                "swap_name": swap_name,
-                                "task_alias": alias,
-                                "task_name": task_name,
-                                "entrypoint_keyword_args": list(keyword_args),
-                                "plugin_file_resource_snapshot_id": plugin_file_resource_snapshot_id,
-                            }
+                    if task_name in task_lookup_dict:
+                        plugin_file_resource_snapshot_id = task_lookup_dict[
+                            task_name
+                        ]["plugin_file_snapshot_id"]
+                        swap_info = {
+                            "swap_name": swap_name,
+                            "task_alias": alias,
+                            "task_name": task_name,
+                            "entrypoint_keyword_args": list(keyword_args),
+                            "plugin_file_resource_snapshot_id": plugin_file_resource_snapshot_id,
+                        }
 
-                            swaps_list.append(swap_info)
-
-                        else:
-                            not_found_tasks.add(task_name)
-
-            if not swap_found:
-                not_found_swaps.add(swap_name)
-
-        if len(not_found_swaps) > 0:
-            raise SwapsNotFoundError(list(not_found_swaps))
+                        swaps_list.append(swap_info)
+                    else:
+                        not_found_tasks.add(task_name)
 
         if len(not_found_tasks) > 0:
             raise TasksNotFoundError(list(not_found_tasks))
