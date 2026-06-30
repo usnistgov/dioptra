@@ -484,6 +484,21 @@ def assert_registering_entrypoint_with_no_queues_succeeds(
     entry_point_data = entrypoint_response.json()
     assert_correct_emptiness(entry_point, "queues", entry_point_data)
 
+
+def assert_swap_choice_is_correct(choices, expectations):
+    """
+        expectations: mapping of task names to keyword arguments
+    """
+    
+    for task_name in expectations:
+        args = expectations[task_name]
+
+        assert any([
+            choice["taskName"] == task_name and
+            set(choice["entrypointKeywordArgs"]) == set(args) 
+            for choice in choices
+        ])
+
 # -- Tests -----------------------------------------------------------------------------
 
 def test_create_entrypoint(
@@ -1787,6 +1802,7 @@ def _test_dynamic_globals_endpoint(
         )
 
         assert set(expected_globals) == set(evaluated["entrypointParams"])
+
         assert evaluated["topologicalSort"] in expected_sort_order
         assert len(expected_active_plugins) == len(evaluated["activePlugins"])
         for plugin in evaluated["activePlugins"]:
@@ -2468,7 +2484,6 @@ def test_validate_swaps_graph_invalid_task(
         registered_plugin_parameter_types=registered_plugin_parameter_types
     )
 
-    print("RESP", modify_response.json())
     create_error_details = create_response.json()['detail']['reason']
     modify_error_details = modify_response.json()['detail']['reason']
 
@@ -2527,3 +2542,77 @@ def test_validate_swaps_graph_mixed_output_error(
         and 'swap_issues' in modify_error_details
         and len(modify_error_details["swap_issues"]) > 0
     )
+
+
+def test_get_swaps_success(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_swap_entrypoints: dict[str, Any],
+) -> None:
+    """ Test the swaps retrieval endpoint for a graph that has swaps in it.
+    """
+
+    entrypoint = registered_swap_entrypoints["swap_test"]
+    entrypoint_id = entrypoint["id"]
+    entrypoint_snapshot_id = entrypoint["snapshot"]
+
+    response = dioptra_client.entrypoints.snapshots.get_swaps(
+        entrypoint_id=entrypoint_id, entrypoint_snapshot_id=entrypoint_snapshot_id
+    )
+
+    assert response.status_code == HTTPStatus.OK
+    response = response.json()
+
+    assert isinstance(response, list)
+    assert(len(response) == 4)
+
+    expected = {
+        "step2_choice": {
+            "tasks": ["task2", "task10"],
+            "aliases": ["taskalias1", "taskalias2"],
+            "params": {
+                "task2" : ["global3"],
+                "task10": []
+            }
+        },
+        "step3_choice": {
+            "tasks": ["task1", "task2"],
+            "aliases": ["taskalias3", "taskalias4"],
+            "params": {
+                "task1" : ["global9"],
+                "task2": ["global12"]
+            }
+        }
+    }
+
+    for swap in response:
+        swap_name = swap["swapName"]
+        assert swap_name in expected
+        assert swap["taskName"] in expected[swap_name]["tasks"]
+        assert swap["taskAlias"] in expected[swap_name]["aliases"]
+        assert set(swap["entrypointKeywordArgs"]) == set(expected[swap_name]["params"][swap["taskName"]])
+
+
+
+
+def test_get_no_swaps_success(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_swap_entrypoints: dict[str, Any],
+) -> None:
+    """ Test the swaps retrieval endpoint for a graph that has no swaps in it.
+    """
+
+    entrypoint = registered_swap_entrypoints["no_swap_test"]
+    entrypoint_id = entrypoint["id"]
+    entrypoint_snapshot_id = entrypoint["snapshot"]
+
+    response = dioptra_client.entrypoints.snapshots.get_swaps(
+        entrypoint_id=entrypoint_id, entrypoint_snapshot_id=entrypoint_snapshot_id
+    )
+
+    assert response.status_code == HTTPStatus.OK
+    response = response.json()
+
+    assert isinstance(response, list)
+    assert(len(response) == 0)

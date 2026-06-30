@@ -528,6 +528,22 @@ class EntrypointsSnapshotCollectionClient(SnapshotsSubCollectionClient[T]):
             params={"swaps": ",".join([f"{k}:{v}" for k, v in swaps.items()])},
         )
 
+    def get_swaps(self, entrypoint_id: int, entrypoint_snapshot_id: int) -> T:
+        """Retrieve the list of possible swaps for a given entrypoint snapshot.
+
+        Args:
+            entrypoint_id: The entrypoint id, an integer.
+            entrypoint_snapshot_id: The entrypoint snapshot id, an integer.
+
+        Returns:
+            The response from the Dioptra API containing swap information.
+        """
+        return self._session.get(
+            self.build_sub_collection_url(entrypoint_id),
+            str(entrypoint_snapshot_id),
+            "swaps",
+        )
+
 
 class EntrypointsCollectionClient(CollectionClient[T]):
     """The client for managing Dioptra's /entrypoints collection.
