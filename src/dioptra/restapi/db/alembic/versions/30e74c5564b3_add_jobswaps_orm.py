@@ -2,7 +2,7 @@
     Address issue #823 to create Job-Swaps ORM
     https://github.com/usnistgov/dioptra/issues/823
     - Create fields as described in GitHub  issue #823
-    - Append Job-Id + Swap-Name composite PK
+    - Append Job-Resource-Id + Swap-Name composite PK
 
 Revision ID: 30e74c5564b3
 Revises: ad4f89b2288d
@@ -26,7 +26,7 @@ def upgrade():
     op.create_table(
         "job_swaps",
         sa.Column(
-            "job_id",
+            "job_resource_id",
             sa.BigInteger().with_variant(sa.Integer(), "sqlite"),
             nullable=False,
         ),
@@ -39,7 +39,9 @@ def upgrade():
         ),
         # FK - constraints to add
         sa.ForeignKeyConstraint(
-            ["job_id"], ["jobs.resource_id"], name=op.f("fk_job_swaps_job_id_jobs")
+            ["job_resource_id"],
+            ["resources.resource_id"],
+            name=op.f("fk_job_swaps_job_resource_id_resources"),
         ),
         sa.ForeignKeyConstraint(
             ["plugin_file_resource_snapshot_id"],
@@ -47,7 +49,9 @@ def upgrade():
             name=op.f("fk_job_swaps_plugin_file_resource_snapshot_id_plugin_files"),
         ),
         # PK - constraints to add
-        sa.PrimaryKeyConstraint("job_id", "swap_name", name=op.f("pk_job_swaps")),
+        sa.PrimaryKeyConstraint(
+            "job_resource_id", "swap_name", name=op.f("pk_job_swaps")
+        ),
     )
     # ### end Alembic commands ###
 

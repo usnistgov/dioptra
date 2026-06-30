@@ -172,7 +172,9 @@ class JobSwap(db.Model):  # type: ignore[name-defined]
     __tablename__ = "job_swaps"
 
     # Database fields
-    job_id: Mapped[bigint] = mapped_column(ForeignKey("jobs.resource_id"), init=False)
+    job_resource_id: Mapped[bigint] = mapped_column(
+        ForeignKey("resources.resource_id"), init=False
+    )
     swap_name: Mapped[text_]
     task_alias: Mapped[text_]
     plugin_file_resource_snapshot_id: Mapped[bigint] = mapped_column(
@@ -181,10 +183,14 @@ class JobSwap(db.Model):  # type: ignore[name-defined]
     )
 
     # Relationships
-    job: Mapped["Job"] = relationship(init=False, back_populates="job_swaps")
+    job: Mapped["Job"] = relationship(
+        init=False,
+        back_populates="job_swaps",
+        primaryjoin="foreign(JobSwap.job_resource_id) == Job.resource_id",
+    )
 
     # Additional settings
-    __table_args__ = (PrimaryKeyConstraint("job_id", "swap_name"),)
+    __table_args__ = (PrimaryKeyConstraint("job_resource_id", "swap_name"),)
 
 
 class JobMlflowRun(db.Model):  # type: ignore[name-defined]
@@ -246,6 +252,7 @@ class Job(ResourceSnapshot):
     job_swaps: Mapped[list["JobSwap"]] = relationship(
         init=False,
         back_populates="job",
+        primaryjoin="foreign(JobSwap.job_resource_id) == Job.resource_id",
     )
 
     # Additional settings
