@@ -65,6 +65,7 @@ from .schema import (
     EntrypointPluginMutableFieldsSchema,
     EntrypointPluginSchema,
     EntrypointSchema,
+    SwapInfoSchema,
     ValidateOnlySchema,
 )
 from .service import (
@@ -78,6 +79,7 @@ from .service import (
     EntrypointIdService,
     EntrypointService,
     EntrypointSnapshotIdService,
+    SwapsRetrievalService,
 )
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -765,6 +767,39 @@ class DynamicGlobalParametersEntrypoint(Resource):
             entrypoint_id=entrypoint_id,
             entrypoint_snapshot_id=entrypoint_snapshot_id,
             swaps=swap_choices,
+            logger=log,
+        )
+
+
+@api.route("/<int:id>/snapshots/<int:snapshotId>/swaps")
+@api.param("id", "ID for the Entrypoint resource.")
+@api.param("snapshotId", "Snapshot ID for the Entrypoint resource.")
+class SwapsEndpoint(Resource):
+    @inject
+    def __init__(self, swaps_service: SwapsRetrievalService, *args, **kwargs) -> None:
+        """Initialize the endpoint for retrieving a list of possible swaps
+        from the entrypoint graph.
+
+        Args:
+            swaps_service: Service providing swap information.
+        """
+        self._swaps_service = swaps_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    @responds(schema=SwapInfoSchema(many=True), api=api)
+    def get(self, id: int, snapshotId: int):
+        """Retrieve available swaps for a given entrypoint snapshot."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="Entrypoint",
+            request_type="GET",
+            id=id,
+            snapshotId=snapshotId,
+        )
+        return self._swaps_service.get_swaps(
+            entrypoint_id=id,
+            entrypoint_snapshot_id=snapshotId,
             logger=log,
         )
 

@@ -37,6 +37,7 @@ from dioptra.restapi.errors import (
     EntrypointSwapsRenderError,
     EntrypointValidationError,
     InvalidYamlError,
+    TasksNotFoundError,
 )
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.entity_types import EntityType
@@ -1321,14 +1322,20 @@ class DynamicGlobalParametersService(object):
         for step in rendered:
             for task in rendered[step]:
                 used_tasks.add(task)
-                for ref in util.get_references(rendered[step][task]):
-                    potential_step_name = ref.split(".")[0]
-                    if potential_step_name not in vars:
-                        needed_vars.add(
-                            ref
-                        )  # if it is not a step output, it must be a global param
+
+                refs = self.get_keywords_for_one_task(rendered[step][task])
+
+                needed_vars.update({ref for ref in refs if ref not in vars})
+                # if it is not a step output, it must be a global param
 
         return needed_vars, used_tasks
+
+    def get_keywords_for_one_task(self, task: dict[str, Any]) -> set[str]:
+        refs = set()
+        for ref in util.get_references(task):
+            potential_step_name = ref.split(".")[0]
+            refs.add(potential_step_name)
+        return refs
 
 
 class SwapsValidationService(object):
@@ -1467,6 +1474,7 @@ class SwapsValidationService(object):
                     # there must be a better way to check this
 
                     lookup[task.plugin_task_name] = {
+                        "plugin_file_snapshot_id": file.resource_snapshot_id,
                         "plugin_snapshot_id": plugin.resource_snapshot_id,
                         "pluginfile_filename": file.filename,
                         "task_name": task.plugin_task_name,
@@ -1795,6 +1803,128 @@ class SwapsValidationService(object):
             )
 
         return validation_results
+
+
+class SwapsRetrievalService(object):
+    """Service for retrieving available swaps for an entrypoint snapshot.
+
+    Currently this implementation returns an empty mapping. It can be extended to
+    introspect the entrypoint graph and plugin metadata to provide detailed swap
+    information.
+    """
+
+    @inject
+    def __init__(
+        self,
+        entrypoint_snapshot_id_service: EntrypointSnapshotIdService,
+        swaps_validation_service: SwapsValidationService,
+        dynamic_global_parameters_service: DynamicGlobalParametersService,
+    ) -> None:
+        self._entrypoint_snapshot_id_service = entrypoint_snapshot_id_service
+        self._swaps_validation_service = swaps_validation_service
+        self._dynamic_global_parameters_service = dynamic_global_parameters_service
+
+    def get_swaps(
+        self,
+        entrypoint_id: int,
+        entrypoint_snapshot_id: int,
+        logger: BoundLogger | None = None,
+    ) -> list[dict[str, Any]]:
+        """
+        Retrieve information about the list of swaps for a given entrypoint snapshot.
+
+        Args:
+            entrypoint_id: The entrypoint ID.
+            entrypoint_snapshot_id: The entrypoint snapshot ID.
+        Returns:
+            An object of the form:
+            [
+                {
+                    "swap_name": [{
+                        "task_alias": ...,
+                        "task_name": ...,
+                        "entrypoint_keyword_args": [...],
+                        "plugin_file_resource_snapshot_id": ...,
+                    }, ...]
+                }
+            ]
+        """
+        log = logger or LOGGER.new()
+
+        # Retrieve the snapshot entrypoint to get the graph.
+        entry_point = self._entrypoint_snapshot_id_service.get(
+            entrypoint_id=entrypoint_id,
+            entrypoint_snapshot_id=entrypoint_snapshot_id,
+            log=log,
+        )
+
+        # Load the graph YAML
+        try:
+            graph = yaml.safe_load(entry_point.task_graph) or {}
+        except Exception as e:
+            raise InvalidYamlError("Failed to load YAML") from e
+
+        # this looks like {'swap_name1' : ['alias1', 'alias2'], 'swap_name2': ...}
+        swaps = self._swaps_validation_service.extract_swaps(graph)
+
+        # need this to know which entrypoint keyword args to NOT include in return
+        step_names = set(graph.keys())
+
+        swaps_list: list[dict[str, Any]] = []
+
+        # build a list of all plugin‑plugin‑file pairs for this entrypoint.
+        plugin_plugin_files = [
+            plugin_plugin_file
+            for entry_point_plugin in entry_point.entry_point_plugins
+            for plugin_plugin_file in entry_point_plugin.plugin.plugin_plugin_files
+        ]
+
+        task_lookup_dict = self._swaps_validation_service.build_task_lookup_dict(
+            plugin_plugin_files
+        )
+        not_found_tasks = set()
+
+        for swap_name in swaps:
+            for step in step_names:
+                if f"?{swap_name}" in graph[step]:
+                    task_defs = graph[step][f"?{swap_name}"]
+                    for alias in task_defs:
+                        task_def = task_defs[alias]
+
+                        keyword_args = (
+                            self._dynamic_global_parameters_service.get_keywords_for_one_task(
+                                task_def
+                            )
+                            - step_names
+                        )
+
+                        if "task" in task_def:
+                            # long form definition
+                            task_name = task_def["task"]
+                        else:
+                            # short form definition
+                            task_name = list(task_def.keys())[0]
+
+                        if task_name in task_lookup_dict:
+                            plugin_file_resource_snapshot_id = task_lookup_dict[
+                                task_name
+                            ]["plugin_file_snapshot_id"]
+                            swap_info = {
+                                "swap_name": swap_name,
+                                "task_alias": alias,
+                                "task_name": task_name,
+                                "entrypoint_keyword_args": list(keyword_args),
+                                "plugin_file_resource_snapshot_id": plugin_file_resource_snapshot_id,
+                            }
+
+                            swaps_list.append(swap_info)
+                        else:
+                            not_found_tasks.add(task_name)
+
+        if len(not_found_tasks) > 0:
+            raise TasksNotFoundError(list(not_found_tasks))
+
+        return swaps_list
 
 
 def _get_entrypoint_plugin_snapshots(
