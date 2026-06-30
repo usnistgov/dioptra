@@ -168,6 +168,25 @@ class QueueJob(db.Model):  # type: ignore[name-defined]
     __table_args__ = (Index(None, "job_resource_id", unique=True),)
 
 
+class JobSwap(db.Model):  # type: ignore[name-defined]
+    __tablename__ = "job_swaps"
+
+    # Database fields
+    job_id: Mapped[bigint] = mapped_column(ForeignKey("jobs.resource_id"), init=False)
+    swap_name: Mapped[text_]
+    task_alias: Mapped[text_]
+    plugin_file_resource_snapshot_id: Mapped[bigint] = mapped_column(
+        ForeignKey("plugin_files.resource_snapshot_id"),
+        init=False,
+    )
+
+    # Relationships
+    job: Mapped["Job"] = relationship(init=False, back_populates="job_swaps")
+
+    # Additional settings
+    __table_args__ = (PrimaryKeyConstraint("job_id", "swap_name"),)
+
+
 class JobMlflowRun(db.Model):  # type: ignore[name-defined]
     __tablename__ = "job_mlflow_runs"
 
@@ -223,6 +242,10 @@ class Job(ResourceSnapshot):
         init=False,
         back_populates="jobs",
         overlaps="entry_point_job,experiment_job,mlflow_run,jobs",
+    )
+    job_swaps: Mapped[list["JobSwap"]] = relationship(
+        init=False,
+        back_populates="job",
     )
 
     # Additional settings
