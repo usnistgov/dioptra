@@ -40,11 +40,13 @@ from dioptra.restapi.errors import (
     JobMlflowRunAlreadySetError,
     JobParameterMissingError,
     SortParameterValidationError,
+    SwapChoiceError,
+    UnspecifiedSwapsError,
 )
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.artifacts.snapshot import ArtifactSnapshotIdService
 from dioptra.restapi.v1.entity_types import EntityType
-from dioptra.restapi.v1.entrypoints.service import EntrypointIdService
+from dioptra.restapi.v1.entrypoints.service import EntrypointIdService, SwapsRetrievalService, SwapsValidationService
 from dioptra.restapi.v1.experiments.service import ExperimentIdService
 from dioptra.restapi.v1.groups.service import GroupIdService
 from dioptra.restapi.v1.queues.service import QueueIdService
@@ -108,6 +110,8 @@ class JobService(object):
         group_id_service: GroupIdService,
         artifact_snapshot_id_service: ArtifactSnapshotIdService,
         rq_service: RQServiceV1,
+        swaps_validation_service: SwapsValidationService,
+        swaps_retrieval_service: SwapsRetrievalService,
     ) -> None:
         """Initialize the job service.
 
@@ -126,6 +130,8 @@ class JobService(object):
         self._artifact_snapshot_id_service = artifact_snapshot_id_service
         self._group_id_service = group_id_service
         self._rq_service = rq_service
+        self._swaps_validation_service = swaps_validation_service
+        self._swaps_retrieval_service = swaps_retrieval_service
 
     def create(
         self,
@@ -167,9 +173,6 @@ class JobService(object):
         status = "queued"
 
         swaps = swaps or []
-
-        if len(swaps) > 0:
-            raise DioptraError("This feature is not yet implemented.")
 
         # Validate the provided experiment_id and fetch the ORM object
         experiment_dict = self._experiment_id_service.get(
@@ -309,6 +312,50 @@ class JobService(object):
             job_resource=job_resource,
             queue=queue,
         )
+
+        job_swaps = []
+
+        retrieved_swaps = self._swaps_retrieval_service.get_swaps(
+            entrypoint_id=entrypoint.resource_id,
+            entrypoint_snapshot_id=entrypoint.resource_snapshot_id,
+        )
+
+        swap_choice_errors = []
+        used_swaps = set()
+        required_swaps = set(s["swap_name"] for s in retrieved_swaps)
+        for swap in swaps:
+            swap_name = swap["swap_name"]
+            task_alias = swap["task_alias"]
+
+            # look up the corresponding object for this swap/choice combination
+            retrieved = next((s for s in retrieved_swaps if s["swap_name"] == swap_name and s["task_alias"] == task_alias), None)
+
+            if not retrieved:
+                swap_choice_errors.append((swap_name, task_alias))
+            else: 
+                job_swap = models.JobSwap(
+                    swap_name=swap["swap_name"],
+                    task_alias=swap["task_alias"],
+                )
+                job_swap.plugin_file_resource_snapshot_id = retrieved["plugin_file_resource_snapshot_id"]
+                job_swap.job_id = new_job.resource_id
+                job_swap.job = new_job
+                job_swaps.append(job_swap)
+                
+
+                used_swaps.add(swap_name)
+        
+        unused_swaps = required_swaps - used_swaps
+
+        if len(swap_choice_errors) > 0:
+            raise SwapChoiceError(f"The following swap choices were invalid for the entrypoint: {swap_choice_errors}")
+
+        if len(unused_swaps) > 0:
+            raise UnspecifiedSwapsError(f"The following swaps were required by the entrypoint but not specified: {unused_swaps}")
+
+        new_job.job_swaps = job_swaps
+
+
         db.session.commit()
         self._rq_service.submit(
             job_id=new_job.resource_id,
@@ -320,6 +367,9 @@ class JobService(object):
             "Job registration successful",
             job_id=new_job.resource_id,
         )
+
+
+
         return utils.JobDict(
             job=new_job,
             artifacts=[],

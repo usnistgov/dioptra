@@ -1147,9 +1147,11 @@ def registered_swap_entrypoints(
     client: FlaskClient,
     auth_account: dict[str, Any],
     registered_swap_plugins: dict[str, Any],
+    registered_queues: dict[str, Any],
     registered_plugin_parameter_types: dict[str, Any],
 ) -> dict[str, Any]:
     output = {}
+    queue_ids = [queue["id"] for queue in list(registered_queues.values())]
 
     for fname in swap_entrypoints:
         entrypoint = swap_entrypoints[fname]
@@ -1172,11 +1174,32 @@ def registered_swap_entrypoints(
             task_graph=task_graph,
             parameters=parameters,
             plugin_ids=plugin_ids,
-            queue_ids=[],
+            queue_ids=queue_ids,
         ).get_json()
 
         output[entrypoint["name"]] = response
     return output
+
+@pytest.fixture
+@freeze_time("Apr 1st, 2025 12:00pm", auto_tick_seconds=1)
+def registered_swap_experiments(
+    client: FlaskClient,
+    auth_account: dict[str, Any],
+    registered_swap_entrypoints: dict[str, Any],
+) -> dict[str, Any]:
+    entrypoint_ids = [
+        entrypoint["id"] for entrypoint in registered_swap_entrypoints.values()
+    ]
+    experiment1_response = actions.register_experiment(
+        client,
+        name="swap_experiment1",
+        group_id=auth_account["default_group_id"],
+        description="test description",
+        entrypoint_ids=entrypoint_ids,
+    ).get_json()
+    return {
+        "experiment1": experiment1_response,
+    }
 
 @pytest.fixture
 @freeze_time("Apr 1st, 2025 9:00am", auto_tick_seconds=1)

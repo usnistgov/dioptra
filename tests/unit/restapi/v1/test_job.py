@@ -546,6 +546,73 @@ def test_create_job_with_empty_values(
         dioptra_client, job_id=job_response["id"], expected=job_response
     )
 
+def test_create_job_with_swaps(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+    registered_swap_experiments: dict[str, Any],
+    registered_swap_entrypoints: dict[str, Any],
+    monkeypatch: MonkeyPatch,
+):
+    # Inline import necessary to prevent circular import
+    import dioptra.restapi.v1.shared.rq_service as rq_service
+
+    monkeypatch.setattr(rq_service, "RQQueue", mock_rq.MockRQQueue)
+
+    entrypoint_name = "swap_test"
+    description = "The new job."
+    queue_id = registered_queues["queue1"]["id"]
+    experiment_id = registered_swap_experiments["experiment1"]["id"]
+    entrypoint_id = registered_swap_entrypoints[entrypoint_name]["id"]
+    values = {}
+    timeout = "24h"
+
+    job_response = dioptra_client.experiments.jobs.create(
+        experiment_id=experiment_id,
+        entrypoint_id=entrypoint_id,
+        queue_id=queue_id,
+        values=values,
+        timeout=timeout,
+        description=description,
+        swaps={
+            'step2_choice': 'taskalias1',
+            'step3_choice': 'taskalias3',
+        }
+    ).json()
+
+    (queue_snapshot_id, queue_id) = (
+        registered_queues["queue1"]["snapshot"],
+        registered_queues["queue1"]["id"],
+    )
+
+    (experiment_snapshot_id, experiment_id, group_id) = (
+        registered_swap_experiments["experiment1"]["snapshot"],
+        registered_swap_experiments["experiment1"]["id"],
+        registered_swap_experiments["experiment1"]["group"]["id"],
+    )
+
+    (entrypoint_snapshot_id, entrypoint_id) = (
+        registered_swap_entrypoints[entrypoint_name]["snapshot"],
+        registered_swap_entrypoints[entrypoint_name]["id"],
+    )
+
+    assert_job_response_contents_matches_expectations(
+        response=job_response,
+        expected_contents={
+            "description": description,
+            "timeout": timeout,
+            "values": values,
+            "user_id": auth_account["id"],
+            "group_id": group_id,
+            "queue_id": queue_id,
+            "experiment_id": experiment_id,
+            "entrypoint_id": entrypoint_id,
+            "queue_snapshot_id": queue_snapshot_id,
+            "experiment_snapshot_id": experiment_snapshot_id,
+            "entrypoint_snapshot_id": entrypoint_snapshot_id,
+        },
+    )
+
 
 def test_create_job_using_entrypoint_snapshot_id(
     dioptra_client: DioptraClient[DioptraResponseProtocol],

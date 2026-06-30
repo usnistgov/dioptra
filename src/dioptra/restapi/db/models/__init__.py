@@ -36,6 +36,7 @@ from .jobs import (
     JobMetric,
     JobMlflowRun,
     QueueJob,
+    JobSwap,
     job_log_severity_table,
     job_status_types_table,
 )
