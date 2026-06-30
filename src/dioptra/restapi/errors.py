@@ -699,6 +699,20 @@ class JobStoreError(DioptraError):
         super().__init__(message)
 
 
+class SwapChoiceError(DioptraError):
+    """Swap Choice Error."""
+
+    def __init__(self, message: str):
+        super().__init__(message)
+
+
+class UnspecifiedSwapsError(DioptraError):
+    """Unspecified Swaps Error."""
+
+    def __init__(self, message: str):
+        super().__init__(message)
+
+
 class GitError(DioptraError):
     """Git Error."""
 

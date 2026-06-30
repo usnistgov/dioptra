@@ -21,7 +21,8 @@ import math
 import re
 
 import nh3
-from marshmallow import Schema, fields, post_dump, post_load, validate
+from marshmallow import Schema, ValidationError, fields, post_dump, post_load, validate
+from marshmallow.decorators import validates_schema
 
 from dioptra.restapi.v1.artifacts.schema import ArtifactRefSchema
 from dioptra.restapi.v1.schemas import (
@@ -221,6 +222,31 @@ class JobArtifactValueSchema(Schema):
     )
 
 
+class JobSwapSchema(Schema):
+    """The schema for the data stored in a job swap choice."""
+
+    swapName = fields.String(
+        attribute="swap_name",
+        data_key="swapName",
+        metadata={"description": "Name of the swap."},
+        dump_only=True,
+    )
+    taskAlias = fields.String(
+        attribute="task_alias",
+        data_key="taskAlias",
+        metadata={"description": "Alias of the chosen task."},
+        dump_only=True,
+    )
+    pluginFileResourceSnapshotId = fields.Integer(
+        attribute="plugin_file_resource_snapshot_id",
+        data_key="pluginFileResourceSnapshotId",
+        metadata={
+            "description": "Resource snapshot ID of the plugin file containing the chosen task."
+        },
+        dump_only=True,
+    )
+
+
 class JobSchema(JobBaseSchema):  # type: ignore
     """The schema for the data stored in a Job resource."""
 
@@ -311,6 +337,28 @@ class JobSchema(JobBaseSchema):  # type: ignore
         metadata={"description": "Artifacts created by the Job resource."},
         dump_only=True,
     )
+    swaps = fields.List(
+        fields.Nested(JobSwapSchema),
+        attribute="swaps",
+        metadata={"description": "Swap choices selected for the Job resource."},
+        dump_only=True,
+    )
+
+
+class SwapChoiceSchema(Schema):
+    """Schema for single swap choice. Consists of the name of the swap and the alias
+    of the task chosen for that swap."""
+
+    swap_name = fields.String(
+        attribute="swap_name",
+        metadata={"description": "Name of the swap."},
+        required=True,
+    )
+    task_alias = fields.String(
+        attribute="task_alias",
+        metadata={"description": "Alias of the chosen task."},
+        required=True,
+    )
 
 
 class JobCreateRequestSchema(JobSchema):
@@ -331,6 +379,36 @@ class JobCreateRequestSchema(JobSchema):
         required=False,
         load_default=None,
     )
+
+    swaps = fields.List(
+        fields.Nested(SwapChoiceSchema),
+        attribute="swaps",
+        metadata={"description": "List of swap definitions for the job."},
+        load_default=list,
+        required=False,
+    )
+
+    @validates_schema
+    def validate_unique_swaps(self, data, **kwargs):
+        swaps = data.get("swaps") or []
+        seen = set()
+        duplicate_swaps = set()
+
+        for swap in swaps:
+            swap_name = swap["swap_name"]
+            if swap_name in seen:
+                duplicate_swaps.add(swap_name)
+            seen.add(swap_name)
+
+        if duplicate_swaps:
+            raise ValidationError(
+                {
+                    "swaps": [
+                        "Duplicate swap names are not allowed: "
+                        f"{sorted(duplicate_swaps)}"
+                    ]
+                }
+            )
 
 
 class JobPageSchema(BasePageSchema):

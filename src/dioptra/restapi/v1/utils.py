@@ -804,6 +804,14 @@ def build_job(job_dict: JobDict) -> dict[str, Any]:
             av.artifact_parameter.name: build_artifact_value(av.artifact)
             for av in job.entry_point_job.entry_point_artifact_parameter_values
         },
+        "swaps": [
+            {
+                "swap_name": swap.swap_name,
+                "task_alias": swap.task_alias,
+                "plugin_file_resource_snapshot_id": swap.plugin_file_resource_snapshot_id,
+            }
+            for swap in sorted(job.job_swaps, key=lambda swap: swap.swap_name)
+        ],
         "timeout": job.timeout,
         "user": build_user_ref(job.creator),
         "group": build_group_ref(job.resource.owner),
