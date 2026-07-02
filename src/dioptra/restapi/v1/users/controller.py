@@ -229,7 +229,6 @@ class UserCurrentEndpoint(Resource):
         user = self._user_current_service.modify(
             username=parsed_obj["username"],
             email_address=parsed_obj["email"],
-            error_if_not_found=True,
             log=log,
         )
         return utils.build_current_user(user)
