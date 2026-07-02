@@ -80,16 +80,9 @@ class PluginFile(ResourceSnapshot):
     contents: Mapped[optionalstr]
 
     # Relationships
-    plugin: Mapped["Plugin"] = relationship(
-        "Plugin",
-        secondary="plugin_plugin_files",
-        primaryjoin="PluginPluginFile.plugin_file_resource_snapshot_id == "
-        "PluginFile.resource_snapshot_id",
-        secondaryjoin="PluginPluginFile.plugin_resource_snapshot_id == "
-        "Plugin.resource_snapshot_id",
-        viewonly=True,
-        lazy="joined",
+    plugin_plugin_files: Mapped[list["PluginPluginFile"]] = relationship(
         init=False,
+        back_populates="plugin_file",
     )
     tasks: Mapped[list["PluginTask"]] = relationship(
         init=False, back_populates="file", lazy="joined"
@@ -123,8 +116,12 @@ class PluginPluginFile(db.Model):  # type: ignore[name-defined]
     )
 
     # Relationships
-    plugin: Mapped["Plugin"] = relationship(lazy="joined")
-    plugin_file: Mapped["PluginFile"] = relationship(lazy="joined")
+    plugin: Mapped["Plugin"] = relationship(
+        lazy="joined", back_populates="plugin_plugin_files"
+    )
+    plugin_file: Mapped["PluginFile"] = relationship(
+        lazy="joined", back_populates="plugin_plugin_files"
+    )
 
 
 class PluginTask(db.Model):  # type: ignore[name-defined]

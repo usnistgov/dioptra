@@ -604,6 +604,7 @@ class EntrypointIdService(ServiceContextService):
             ]
 
         with self._uow(commit):
+            queues = self._uow.entrypoint_repo.set_queues(new_entrypoint, queue_ids)
             self._uow.entrypoint_repo.create_snapshot(new_entrypoint)
 
             if replacing_bindings:
@@ -662,8 +663,6 @@ class EntrypointIdService(ServiceContextService):
                 on_save=on_save,
                 log=log,
             )
-            queues = self._uow.entrypoint_repo.set_queues(new_entrypoint, queue_ids)
-
         log.debug(
             "Entrypoint modification successful",
             entrypoint_id=entrypoint_id,
