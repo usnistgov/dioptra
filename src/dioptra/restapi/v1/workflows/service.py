@@ -30,6 +30,7 @@ import tomli as toml
 import yaml
 from injector import inject
 from sqlalchemy import select
+from sqlalchemy.orm import aliased
 from structlog.stdlib import BoundLogger
 from werkzeug.datastructures import FileStorage
 
@@ -568,15 +569,37 @@ class ResourceImportService(object):
                             log=log,
                         ),
                     )
+                    # TODO: move this to a new repository method when the services are
+                    #       refactored to use the data access layer.
+                    plugin_resource = aliased(models.Resource)
+                    plugin_file_resource = aliased(models.Resource)
                     latest_plugin_files_stmt = (
                         select(models.PluginFile)
-                        .join(models.Resource)
+                        .join(
+                            models.PluginPluginFile,
+                            models.PluginPluginFile.plugin_file_resource_snapshot_id
+                            == models.PluginFile.resource_snapshot_id,
+                        )
+                        .join(
+                            models.Plugin,
+                            models.Plugin.resource_snapshot_id
+                            == models.PluginPluginFile.plugin_resource_snapshot_id,
+                        )
+                        .join(
+                            plugin_resource,
+                            plugin_resource.resource_id == models.Plugin.resource_id,
+                        )
+                        .join(
+                            plugin_file_resource,
+                            plugin_file_resource.resource_id
+                            == models.PluginFile.resource_id,
+                        )
                         .where(
-                            models.PluginFile.plugin.has(
-                                models.Resource.resource_id == existing.resource_id
-                            ),
-                            models.Resource.is_deleted == False,  # noqa: E712
-                            models.Resource.latest_snapshot_id
+                            models.Plugin.resource_id == existing.resource_id,
+                            models.Plugin.resource_snapshot_id
+                            == plugin_resource.latest_snapshot_id,
+                            plugin_file_resource.is_deleted == False,  # noqa: E712
+                            plugin_file_resource.latest_snapshot_id
                             == models.PluginFile.resource_snapshot_id,
                         )
                     )

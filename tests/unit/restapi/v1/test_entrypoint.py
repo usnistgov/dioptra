@@ -1582,6 +1582,35 @@ def test_append_plugins_to_entrypoint(
     )
 
 
+def test_append_same_plugin_as_task_and_artifact_plugin(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_plugin_with_files: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+) -> None:
+    """Test that a plugin can be sequentially appended in both entrypoint roles."""
+    entrypoint_id = registered_entrypoints["entrypoint3"]["id"]
+    plugin_id = registered_plugin_with_files["plugin"]["id"]
+
+    plugin_response = dioptra_client.entrypoints.plugins.create(
+        entrypoint_id=entrypoint_id,
+        plugin_ids=[plugin_id],
+    )
+    artifact_plugin_response = dioptra_client.entrypoints.artifact_plugins.create(
+        entrypoint_id=entrypoint_id,
+        artifact_plugin_ids=[plugin_id],
+    )
+
+    assert plugin_response.status_code == HTTPStatus.OK
+    assert artifact_plugin_response.status_code == HTTPStatus.OK
+    assert [plugin_snapshot["id"] for plugin_snapshot in plugin_response.json()] == [
+        plugin_id
+    ]
+    assert [
+        plugin_snapshot["id"] for plugin_snapshot in artifact_plugin_response.json()
+    ] == [plugin_id]
+
+
 def test_get_plugin_snapshot_by_id_for_entrypoint(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],

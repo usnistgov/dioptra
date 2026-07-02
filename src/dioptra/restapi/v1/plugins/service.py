@@ -541,13 +541,14 @@ class PluginIdFileIdService(ServiceContextService):
         plugin_file = self._uow.plugin_repo.get_one_file(
             plugin_id, plugin_file_id, DeletionPolicy.ANY
         )
+        plugin = self._uow.plugin_repo.get_one(plugin_id, DeletionPolicy.NOT_DELETED)
 
         has_draft = self._uow.drafts_repo.has_draft_modification(
             plugin_file, current_user
         )
 
         return utils.PluginFileDict(
-            plugin_file=plugin_file, plugin=plugin_file.plugin, has_draft=has_draft
+            plugin_file=plugin_file, plugin=plugin, has_draft=has_draft
         )
 
     def modify(
@@ -585,7 +586,7 @@ class PluginIdFileIdService(ServiceContextService):
         plugin_file = self._uow.plugin_repo.get_one_file(
             plugin_id, plugin_file_id, DeletionPolicy.NOT_DELETED
         )
-        plugin = plugin_file.plugin
+        plugin = self._uow.plugin_repo.get_one(plugin_id, DeletionPolicy.NOT_DELETED)
 
         # a modification to a plugin file creates a new plugin snapshot
         new_plugin = models.Plugin(
