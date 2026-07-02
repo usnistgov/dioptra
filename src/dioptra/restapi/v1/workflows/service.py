@@ -564,7 +564,6 @@ class ResourceImportService(object):
                             name=Path(plugin["path"]).stem,
                             description=plugin.get("description", None),
                             group_id=group_id,
-                            error_if_not_found=True,
                             commit=False,
                             log=log,
                         ),

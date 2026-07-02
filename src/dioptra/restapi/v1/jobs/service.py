@@ -487,23 +487,22 @@ class JobIdMetricsService(ServiceContextService):
             else datetime.datetime.now(tz=datetime.timezone.utc)
         )
 
-        if metric is None:
-            new_metric = models.JobMetric(
-                name=metric_name,
-                value=value,
-                special_value=special_value,
-                step=metric_step,
-                timestamp=timestamp,
-                job_resource=job.resource,
-            )
+        with self._uow():
+            if metric is None:
+                new_metric = models.JobMetric(
+                    name=metric_name,
+                    value=value,
+                    special_value=special_value,
+                    step=metric_step,
+                    timestamp=timestamp,
+                    job_resource=job.resource,
+                )
 
-            self._uow.job_repo.add_metric(new_metric)
-        else:
-            metric.value = value
-            metric.special_value = special_value
-            metric.timestamp = timestamp
-
-        self._uow.commit()
+                self._uow.job_repo.add_metric(new_metric)
+            else:
+                metric.value = value
+                metric.special_value = special_value
+                metric.timestamp = timestamp
 
         return {
             "name": metric_name,
@@ -883,7 +882,6 @@ class JobIdMlflowrunService(ServiceContextService):
         self,
         job_id: int,
         mlflow_run_id: str,
-        commit: bool = True,
         **kwargs,
     ) -> dict[str, Any] | None:
         """Set a Job's mlflow run id by unique id
@@ -891,7 +889,6 @@ class JobIdMlflowrunService(ServiceContextService):
         Args:
             job_id: The unique id of the job.
             mlflow_run_id: The unique id of the mlflow run.
-            commit: If True, commit the transaction. Defaults to True.
 
         Returns:
             The status message job object if found, otherwise an error message.
@@ -907,13 +904,11 @@ class JobIdMlflowrunService(ServiceContextService):
         if job.mlflow_run is not None:
             raise JobMlflowRunAlreadySetError
 
-        job.mlflow_run = models.JobMlflowRun(
-            job_resource_id=job.resource_id,
-            mlflow_run_id=mlflow_run_id,
-        )
-
-        if commit:
-            self._uow.commit()
+        with self._uow():
+            job.mlflow_run = models.JobMlflowRun(
+                job_resource_id=job.resource_id,
+                mlflow_run_id=mlflow_run_id,
+            )
 
         log.debug(
             "Setting Job mlflow run id successful",

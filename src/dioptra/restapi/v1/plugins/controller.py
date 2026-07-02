@@ -203,7 +203,7 @@ class PluginIdEndpoint(Resource):
         )
         plugin = cast(
             utils.PluginWithFilesDict,
-            self._plugin_id_service.get(id, error_if_not_found=True, log=log),
+            self._plugin_id_service.get(id, log=log),
         )
         return utils.build_plugin(plugin)
 
@@ -234,7 +234,6 @@ class PluginIdEndpoint(Resource):
                 id,
                 name=parsed_obj["name"],
                 description=parsed_obj["description"],
-                error_if_not_found=True,
                 log=log,
             ),
         )
@@ -372,9 +371,7 @@ class PluginIdFileIdEndpoint(Resource):
         )
         plugin_file = cast(
             utils.PluginFileDict,
-            self._plugin_file_id_service.get(
-                id, plugin_file_id=fileId, error_if_not_found=True, log=log
-            ),
+            self._plugin_file_id_service.get(id, plugin_file_id=fileId, log=log),
         )
         return utils.build_plugin_file(plugin_file)
 
@@ -412,7 +409,6 @@ class PluginIdFileIdEndpoint(Resource):
                 function_tasks=parsed_obj["tasks"].get("functions", []),
                 artifact_tasks=parsed_obj["tasks"].get("artifacts", []),
                 description=parsed_obj["description"],
-                error_if_not_found=True,
                 log=log,
             ),
         )
