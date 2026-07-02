@@ -27,20 +27,17 @@ latest_plugins AS (
    WHERE version_number = 1
 ),
 
-plugin_files_all_versions AS (
+plugin_files_for_latest_plugins AS (
   SELECT latest_plugins.resource_id AS plugin_resource_id,
          child_resource_snapshots.resource_snapshot_id AS plugin_file_resource_snapshot_id,
          child_resource_snapshots.resource_id AS plugin_file_resource_id,
-         child_resource_snapshots.resource_type AS plugin_file_resource_type,
-         ROW_NUMBER() OVER (PARTITION BY child_resource_snapshots.resource_id ORDER BY child_resource_snapshots.created_on DESC) AS plugin_file_version_number
+         child_resource_snapshots.resource_type AS plugin_file_resource_type
     FROM latest_plugins
-         LEFT JOIN resource_dependencies
-         ON latest_plugins.resource_id = resource_dependencies.parent_resource_id
-            AND latest_plugins.resource_type = resource_dependencies.parent_resource_type
+         INNER JOIN plugin_plugin_files
+         ON latest_plugins.resource_snapshot_id = plugin_plugin_files.plugin_resource_snapshot_id
 
          INNER JOIN resource_snapshots AS child_resource_snapshots
-         ON child_resource_snapshots.resource_id = resource_dependencies.child_resource_id
-            AND child_resource_snapshots.resource_type = resource_dependencies.child_resource_type
+         ON child_resource_snapshots.resource_snapshot_id = plugin_plugin_files.plugin_file_resource_snapshot_id
 
          INNER JOIN plugin_files
          ON child_resource_snapshots.resource_snapshot_id = plugin_files.resource_snapshot_id
@@ -53,10 +50,9 @@ latest_plugin_files AS (
          plugin_file_resource_id AS resource_id,
          plugin_file_resource_type AS resource_type,
          resource_lock_type
-    FROM plugin_files_all_versions
+    FROM plugin_files_for_latest_plugins
          LEFT JOIN resource_delete_locks
-         ON plugin_files_all_versions.plugin_file_resource_id = resource_delete_locks.resource_id
-   WHERE plugin_file_version_number = 1
+         ON plugin_files_for_latest_plugins.plugin_file_resource_id = resource_delete_locks.resource_id
 )
 
 SELECT plugin_resource_id,

@@ -31,7 +31,6 @@ from dioptra.restapi.db.models import (
     Resource,
     ResourceSnapshot,
     User,
-    resource_dependency_types_table,
 )
 from dioptra.restapi.db.repository.utils import (
     CompatibleSession,
@@ -79,6 +78,7 @@ class DraftsRepository:
     def create_draft_resource(
         self,
         draft: DraftResource,
+        expected_base_resource_type: EntityType | None = None,
     ) -> None:
         """
         Create a draft resource.
@@ -108,51 +108,7 @@ class DraftsRepository:
         assert_user_exists(self._session, draft.creator, DeletionPolicy.NOT_DELETED)
         assert_user_in_group(self._session, draft.creator, draft.target_owner)
 
-        base_resource_id = draft.payload["base_resource_id"]
-        if base_resource_id is not None:
-            # trying to kill two birds with one stone here: check for base
-            # resource existence/deletion, and check for legal base/draft
-            # resource types.
-            types_stmt = (
-                sa.select(
-                    Resource.is_deleted,
-                    Resource.resource_type,
-                    resource_dependency_types_table.c.child_resource_type,
-                )
-                .select_from(Resource)
-                .where(
-                    Resource.resource_id == base_resource_id,
-                )
-                .outerjoin(
-                    resource_dependency_types_table,
-                    sa.and_(
-                        Resource.resource_type
-                        == resource_dependency_types_table.c.parent_resource_type,
-                        resource_dependency_types_table.c.child_resource_type
-                        == draft.resource_type,
-                    ),
-                )
-            )
-
-            result = self._session.execute(types_stmt).first()
-
-            if result:
-                is_deleted, parent_resource_type, child_resource_type = result
-                parent_entity_type = EntityType.get_from_db_table_name(
-                    parent_resource_type
-                )
-
-                if is_deleted:
-                    raise EntityDeletedError(parent_entity_type, base_resource_id)
-
-                if not child_resource_type:
-                    raise DraftBaseInvalidError(
-                        base_resource_id,
-                        parent_entity_type,
-                        get_resource_type(draft),
-                    )
-            else:
-                raise DraftBaseResourceDoesNotExistError(base_resource_id)
+        self._assert_base_resource_valid(draft, expected_base_resource_type)
 
         # TODO: verify that the draft payload is for a draft resource, not a
         # draft modification?  Any other sanity checks necessary?
@@ -162,6 +118,7 @@ class DraftsRepository:
     def create_draft_modification(
         self,
         draft: DraftResource,
+        expected_base_resource_type: EntityType | None = None,
     ):
         """
         Create a draft modification of an existing resource.
@@ -228,6 +185,8 @@ class DraftsRepository:
                 resource_owner_id,
             )
 
+        self._assert_base_resource_valid(draft, expected_base_resource_type)
+
         # I guess a user may not have more than one draft modification per
         # resource?
         if self.has_draft_modification(resource_obj, draft.creator):
@@ -239,6 +198,35 @@ class DraftsRepository:
         # a draft resource?  Any other sanity checks necessary?
 
         self._session.add(draft)
+
+    def _assert_base_resource_valid(
+        self,
+        draft: DraftResource,
+        expected_base_resource_type: EntityType | None,
+    ) -> None:
+        base_resource_id = draft.payload["base_resource_id"]
+        if base_resource_id is None:
+            return
+
+        base_resource = self.get_resource(base_resource_id, DeletionPolicy.ANY)
+        if base_resource is None:
+            raise DraftBaseResourceDoesNotExistError(base_resource_id)
+
+        parent_entity_type = EntityType.get_from_db_table_name(
+            base_resource.resource_type
+        )
+        if base_resource.is_deleted:
+            raise EntityDeletedError(parent_entity_type, base_resource_id)
+
+        if (
+            expected_base_resource_type is not None
+            and base_resource.resource_type != expected_base_resource_type.db_table_name
+        ):
+            raise DraftBaseInvalidError(
+                base_resource_id,
+                parent_entity_type,
+                get_resource_type(draft),
+            )
 
     def get(
         self,
