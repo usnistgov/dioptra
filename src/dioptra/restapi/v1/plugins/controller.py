@@ -494,6 +494,7 @@ PluginIdDraftResource = generate_resource_id_draft_endpoint(
 PluginFileDraftResource = generate_nested_resource_drafts_endpoint(
     api,
     resource_type=EntityType.PLUGIN_FILE,
+    base_resource_type=EntityType.PLUGIN,
     resource_route=V1_PLUGIN_FILES_ROUTE,
     base_resource_route=V1_PLUGINS_ROUTE,
     request_schema=PluginFileSchema(exclude=["groupId"]),
@@ -507,6 +508,7 @@ PluginFileDraftIdResource = generate_nested_resource_drafts_id_endpoint(
 PluginFileIdDraftResource = generate_nested_resource_id_draft_endpoint(
     api,
     resource_type=EntityType.PLUGIN_FILE,
+    base_resource_type=EntityType.PLUGIN,
     resource_route=V1_PLUGIN_FILES_ROUTE,
     request_schema=PluginFileSchema(exclude=["groupId"]),
 )
