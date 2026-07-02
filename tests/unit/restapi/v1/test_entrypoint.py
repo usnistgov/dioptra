@@ -462,6 +462,18 @@ def assert_retrieving_plugin_snapshots_by_id_for_entrypoint_works(
     assert response.status_code == HTTPStatus.OK and response.json()["id"] == expected
 
 
+def assert_retrieving_all_artifact_plugin_snapshots_for_entrypoint_works(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    entrypoint_id: int,
+    expected: list[int],
+) -> None:
+    response = dioptra_client.entrypoints.artifact_plugins.get(entrypoint_id)
+    assert (
+        response.status_code == HTTPStatus.OK
+        and [plugin_snapshot["id"] for plugin_snapshot in response.json()] == expected
+    )
+
+
 def assert_registering_entrypoint_with_no_queues_succeeds(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     entry_point: dict[str, Any],
@@ -1608,6 +1620,108 @@ def test_delete_plugin_snapshot_by_id_for_entrypoint(
     dioptra_client.entrypoints.plugins.delete_by_id(
         entrypoint_id=entrypoint_id, plugin_id=plugin_id_to_delete
     )
+    assert_retrieving_all_plugin_snapshots_for_entrypoint_works(
+        dioptra_client,
+        entrypoint_id=entrypoint_id,
+        expected=[],
+    )
+
+
+def test_delete_task_plugin_preserves_shared_artifact_plugin(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_plugin_with_files: dict[str, Any],
+) -> None:
+    """Deleting a task plugin keeps the same plugin's artifact role attached."""
+    plugin_id = registered_plugin_with_files["plugin"]["id"]
+    response = dioptra_client.entrypoints.create(
+        group_id=auth_account["groups"][0]["id"],
+        name="shared_plugin_delete_task",
+        task_graph="graph: {}",
+        artifact_graph="",
+        description="Entrypoint with shared task and artifact plugin.",
+        parameters=[],
+        artifact_parameters=[],
+        queues=[],
+        plugins=[plugin_id],
+        artifact_plugins=[plugin_id],
+    )
+    assert response.status_code == HTTPStatus.OK
+    entrypoint_id = response.json()["id"]
+
+    response = dioptra_client.entrypoints.plugins.delete_by_id(
+        entrypoint_id=entrypoint_id,
+        plugin_id=plugin_id,
+    )
+    assert response.status_code == HTTPStatus.OK
+
+    assert_retrieving_all_plugin_snapshots_for_entrypoint_works(
+        dioptra_client,
+        entrypoint_id=entrypoint_id,
+        expected=[],
+    )
+    assert_retrieving_all_artifact_plugin_snapshots_for_entrypoint_works(
+        dioptra_client,
+        entrypoint_id=entrypoint_id,
+        expected=[plugin_id],
+    )
+
+    response = dioptra_client.entrypoints.artifact_plugins.delete_by_id(
+        entrypoint_id=entrypoint_id,
+        artifact_plugin_id=plugin_id,
+    )
+    assert response.status_code == HTTPStatus.OK
+    assert_retrieving_all_artifact_plugin_snapshots_for_entrypoint_works(
+        dioptra_client,
+        entrypoint_id=entrypoint_id,
+        expected=[],
+    )
+
+
+def test_delete_artifact_plugin_preserves_shared_task_plugin(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_plugin_with_files: dict[str, Any],
+) -> None:
+    """Deleting an artifact plugin keeps the same plugin's task role attached."""
+    plugin_id = registered_plugin_with_files["plugin"]["id"]
+    response = dioptra_client.entrypoints.create(
+        group_id=auth_account["groups"][0]["id"],
+        name="shared_plugin_delete_artifact",
+        task_graph="graph: {}",
+        artifact_graph="",
+        description="Entrypoint with shared task and artifact plugin.",
+        parameters=[],
+        artifact_parameters=[],
+        queues=[],
+        plugins=[plugin_id],
+        artifact_plugins=[plugin_id],
+    )
+    assert response.status_code == HTTPStatus.OK
+    entrypoint_id = response.json()["id"]
+
+    response = dioptra_client.entrypoints.artifact_plugins.delete_by_id(
+        entrypoint_id=entrypoint_id,
+        artifact_plugin_id=plugin_id,
+    )
+    assert response.status_code == HTTPStatus.OK
+
+    assert_retrieving_all_artifact_plugin_snapshots_for_entrypoint_works(
+        dioptra_client,
+        entrypoint_id=entrypoint_id,
+        expected=[],
+    )
+    assert_retrieving_all_plugin_snapshots_for_entrypoint_works(
+        dioptra_client,
+        entrypoint_id=entrypoint_id,
+        expected=[plugin_id],
+    )
+
+    response = dioptra_client.entrypoints.plugins.delete_by_id(
+        entrypoint_id=entrypoint_id,
+        plugin_id=plugin_id,
+    )
+    assert response.status_code == HTTPStatus.OK
     assert_retrieving_all_plugin_snapshots_for_entrypoint_works(
         dioptra_client,
         entrypoint_id=entrypoint_id,

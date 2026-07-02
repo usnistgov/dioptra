@@ -106,7 +106,7 @@ def entrypoint_with_queues(request, db_session, account, fake_data):
 
 @pytest.fixture(params=_CHILD_COUNT_COMBOS)
 def entrypoint_with_plugins(request, db_session, account):
-    """EntryPoint with 0/1/2 plugins as children."""
+    """EntryPoint with 0/1/2 associated plugins."""
     ep = make_entrypoint(account.user, account.group)
     db_session.add(ep)
 
@@ -114,7 +114,7 @@ def entrypoint_with_plugins(request, db_session, account):
     for i in range(request.param):
         plugin = make_plugin(account.user, account.group, name=f"plugin{i}")
         db_session.add(plugin)
-        ep.children.append(plugin.resource)
+        ep.entry_point_plugins.append(models.EntryPointPlugin(ep, plugin=plugin))
         plugins.append(plugin)
 
     db_session.commit()
@@ -123,7 +123,7 @@ def entrypoint_with_plugins(request, db_session, account):
 
 @pytest.fixture(params=_CHILD_COUNT_COMBOS)
 def entrypoint_with_both_children(request, db_session, account, fake_data):
-    """EntryPoint with equal numbers of queues and plugins as children."""
+    """EntryPoint with equal numbers of child queues and associated plugins."""
     ep = make_entrypoint(account.user, account.group)
     db_session.add(ep)
 
@@ -135,7 +135,7 @@ def entrypoint_with_both_children(request, db_session, account, fake_data):
         db_session.add(queue)
         db_session.add(plugin)
         ep.children.append(queue.resource)
-        ep.children.append(plugin.resource)
+        ep.entry_point_plugins.append(models.EntryPointPlugin(ep, plugin=plugin))
         queues.append(queue)
         plugins.append(plugin)
 
@@ -164,14 +164,14 @@ def entrypoint_with_queues_no_commit(request, db_session, account, fake_data):
 
 @pytest.fixture(params=_CHILD_COUNT_COMBOS)
 def entrypoint_with_plugins_no_commit(request, db_session, account):
-    """EntryPoint with 0/1/2 plugins as children - does NOT add to session."""
+    """EntryPoint with 0/1/2 associated plugins - does NOT add to session."""
     ep = make_entrypoint(account.user, account.group)
 
     plugins = []
     for i in range(request.param):
         plugin = make_plugin(account.user, account.group, name=f"plugin{i}")
         db_session.add(plugin)
-        ep.children.append(plugin.resource)
+        ep.entry_point_plugins.append(models.EntryPointPlugin(ep, plugin=plugin))
         plugins.append(plugin)
 
     return ep, plugins
@@ -190,7 +190,7 @@ def entrypoint_with_both_children_no_commit(request, db_session, account, fake_d
         db_session.add(queue)
         db_session.add(plugin)
         ep.children.append(queue.resource)
-        ep.children.append(plugin.resource)
+        ep.entry_point_plugins.append(models.EntryPointPlugin(ep, plugin=plugin))
         queues.append(queue)
         plugins.append(plugin)
 
@@ -379,8 +379,7 @@ def test_entrypoint_create_with_plugins(
     result = entrypoint_repo.get_one(ep.resource_id, utils.DeletionPolicy.NOT_DELETED)
     assert result == ep
 
-    stored_plugins = entrypoint_repo.get_plugins(ep, utils.DeletionPolicy.NOT_DELETED)
-    assert len(stored_plugins) == len(plugins)
+    assert len(result.entry_point_plugins) == len(plugins)
 
 
 def test_entrypoint_create_with_both_children(
@@ -398,7 +397,7 @@ def test_entrypoint_create_with_both_children(
     assert result == ep
 
     stored_queues = entrypoint_repo.get_queues(ep, utils.DeletionPolicy.NOT_DELETED)
-    stored_plugins = entrypoint_repo.get_plugins(ep, utils.DeletionPolicy.NOT_DELETED)
+    stored_plugins = [assoc.plugin for assoc in result.entry_point_plugins]
 
     assert len(stored_queues) == len(queues)
     assert len(stored_plugins) == len(plugins)
@@ -1117,25 +1116,94 @@ def test_entrypoint_get_one_snapshot_deleted(
 
 # endregion
 
-# ============================================================================
-# region EntrypointRepository.get_plugins() tests
-# ============================================================================
+def test_entrypoint_get_one_entrypoint_plugin_success(
+    db_session: DBSession, account, entrypoint_repo
+):
+    plugin = make_plugin(account.user, account.group, name="plugin")
+    db_session.add(plugin)
+    db_session.commit()
+
+    ep = make_entrypoint(account.user, account.group)
+    entrypoint_repo.create(ep)
+    entrypoint_repo.create_entrypoint_plugins(ep, [plugin])
+    db_session.commit()
+
+    result = entrypoint_repo.get_one_entrypoint_plugin(
+        ep.resource_id,
+        plugin.resource_id,
+        utils.DeletionPolicy.NOT_DELETED,
+    )
+    assert isinstance(result, models.EntryPointPlugin)
+    assert result.plugin == plugin
 
 
-def test_entrypoint_get_plugins(entrypoint_with_plugins, entrypoint_repo):
-    ep, plugins = entrypoint_with_plugins
-    result = entrypoint_repo.get_plugins(ep, utils.DeletionPolicy.NOT_DELETED)
-    assert len(result) == len(plugins)
+def test_entrypoint_get_one_entrypoint_plugin_missing_relationship(
+    db_session: DBSession, account, entrypoint_repo
+):
+    plugin = make_plugin(account.user, account.group, name="plugin")
+    db_session.add(plugin)
+    db_session.commit()
+
+    ep = make_entrypoint(account.user, account.group)
+    entrypoint_repo.create(ep)
+    db_session.commit()
+
+    with pytest.raises(errors.EntityRelationshipDoesNotExistError):
+        entrypoint_repo.get_one_entrypoint_plugin(
+            ep.resource_id,
+            plugin.resource_id,
+            utils.DeletionPolicy.NOT_DELETED,
+        )
+
+
+def test_entrypoint_get_one_entrypoint_artifact_plugin_success(
+    db_session: DBSession, account, entrypoint_repo
+):
+    plugin = make_plugin(account.user, account.group, name="plugin")
+    db_session.add(plugin)
+    db_session.commit()
+
+    ep = make_entrypoint(account.user, account.group)
+    entrypoint_repo.create(ep)
+    entrypoint_repo.create_entrypoint_artifact_plugins(ep, [plugin])
+    db_session.commit()
+
+    result = entrypoint_repo.get_one_entrypoint_artifact_plugin(
+        ep.resource_id,
+        plugin.resource_id,
+        utils.DeletionPolicy.NOT_DELETED,
+    )
+    assert isinstance(result, models.EntryPointArtifactPlugin)
+    assert result.plugin == plugin
+
+
+def test_entrypoint_get_one_entrypoint_artifact_plugin_missing_relationship(
+    db_session: DBSession, account, entrypoint_repo
+):
+    plugin = make_plugin(account.user, account.group, name="plugin")
+    db_session.add(plugin)
+    db_session.commit()
+
+    ep = make_entrypoint(account.user, account.group)
+    entrypoint_repo.create(ep)
+    db_session.commit()
+
+    with pytest.raises(errors.EntityRelationshipDoesNotExistError):
+        entrypoint_repo.get_one_entrypoint_artifact_plugin(
+            ep.resource_id,
+            plugin.resource_id,
+            utils.DeletionPolicy.NOT_DELETED,
+        )
 
 
 # endregion
 
 # ============================================================================
-# region EntrypointRepository.create_plugins() tests
+# region EntrypointRepository.create_entrypoint_plugins() tests
 # ============================================================================
 
 
-def test_entrypoint_create_plugins_success(
+def test_entrypoint_create_entrypoint_plugins_success(
     db_session: DBSession, account, entrypoint_repo
 ):
     plugin1 = make_plugin(account.user, account.group, name="plugin1")
@@ -1146,74 +1214,15 @@ def test_entrypoint_create_plugins_success(
     entrypoint_repo.create(ep)
     db_session.commit()
 
-    result = entrypoint_repo.create_plugins(ep, [plugin1])
+    result = entrypoint_repo.create_entrypoint_plugins(ep, [plugin1])
     assert len(result) == 1
+    assert len(ep.entry_point_plugins) == 1
+    assert ep.entry_point_plugins[0].plugin == plugin1
 
-    stored_plugins = entrypoint_repo.get_plugins(ep, utils.DeletionPolicy.NOT_DELETED)
-    assert len(stored_plugins) == 1
-    assert plugin1 in stored_plugins
-
-
-# endregion
-
-# ============================================================================
-# region EntrypointRepository.add_plugins() tests
-# ============================================================================
+    assert [assoc.plugin for assoc in ep.entry_point_plugins] == [plugin1]
 
 
-def test_entrypoint_add_plugins_success(
-    db_session: DBSession, account, entrypoint_repo
-):
-    plugin1 = make_plugin(account.user, account.group, name="plugin1")
-    plugin2 = make_plugin(account.user, account.group, name="plugin2")
-    db_session.add_all((plugin1, plugin2))
-    db_session.commit()
-
-    ep = make_entrypoint(account.user, account.group)
-    entrypoint_repo.create(ep)
-
-    ep.children.append(plugin1.resource)
-    db_session.commit()
-
-    result = entrypoint_repo.add_plugins(ep, [plugin2])
-    assert len(result) == 2
-    assert plugin1 in result
-    assert plugin2 in result
-
-
-# endregion
-
-# ============================================================================
-# region EntrypointRepository.set_plugins() tests
-# ============================================================================
-
-
-def test_entrypoint_set_plugins_success(
-    db_session: DBSession, account, entrypoint_repo
-):
-    plugin1 = make_plugin(account.user, account.group, name="plugin1")
-    plugin2 = make_plugin(account.user, account.group, name="plugin2")
-    db_session.add_all((plugin1, plugin2))
-    db_session.commit()
-
-    ep = make_entrypoint(account.user, account.group)
-    entrypoint_repo.create(ep)
-
-    ep.children.append(plugin1.resource)
-
-    result = entrypoint_repo.set_plugins(ep.resource_id, [plugin2])
-    assert len(result) == 1
-    assert plugin2 in result
-
-
-# endregion
-
-# ============================================================================
-# region EntrypointRepository.unlink_plugin() tests
-# ============================================================================
-
-
-def test_entrypoint_unlink_plugin_success(
+def test_entrypoint_create_entrypoint_artifact_plugins_success(
     db_session: DBSession, account, entrypoint_repo
 ):
     plugin1 = make_plugin(account.user, account.group, name="plugin1")
@@ -1222,14 +1231,102 @@ def test_entrypoint_unlink_plugin_success(
 
     ep = make_entrypoint(account.user, account.group)
     entrypoint_repo.create(ep)
-
-    ep.children.append(plugin1.resource)
     db_session.commit()
 
-    entrypoint_repo.unlink_plugin(ep, plugin1)
+    result = entrypoint_repo.create_entrypoint_artifact_plugins(ep, [plugin1])
+    assert len(result) == 1
+    assert len(ep.entry_point_artifact_plugins) == 1
+    assert ep.entry_point_artifact_plugins[0].plugin == plugin1
 
-    result = entrypoint_repo.get_plugins(ep, utils.DeletionPolicy.NOT_DELETED)
-    assert len(result) == 0
+    assert [assoc.plugin for assoc in ep.entry_point_artifact_plugins] == [plugin1]
+
+
+# endregion
+
+# ============================================================================
+# region EntrypointRepository.copy_entrypoint_plugins() tests
+# ============================================================================
+
+
+def test_entrypoint_copy_entrypoint_plugins_success(
+    db_session: DBSession, account, entrypoint_repo
+):
+    plugin1 = make_plugin(account.user, account.group, name="plugin1")
+    plugin2 = make_plugin(account.user, account.group, name="plugin2")
+    db_session.add_all((plugin1, plugin2))
+    db_session.commit()
+
+    source_ep = make_entrypoint(account.user, account.group, name="source")
+    target_ep = make_entrypoint(account.user, account.group, name="target")
+    entrypoint_repo.create(source_ep)
+    entrypoint_repo.create(target_ep)
+    entrypoint_repo.create_entrypoint_plugins(source_ep, [plugin1, plugin2])
+    db_session.commit()
+
+    result = entrypoint_repo.copy_entrypoint_plugins(
+        source_ep,
+        target_ep,
+        exclude_plugin_ids={plugin2.resource_id},
+    )
+
+    assert list(result) == [plugin1]
+    assert [plugin.plugin for plugin in target_ep.entry_point_plugins] == [plugin1]
+
+
+def test_entrypoint_copy_entrypoint_artifact_plugins_success(
+    db_session: DBSession, account, entrypoint_repo
+):
+    plugin1 = make_plugin(account.user, account.group, name="plugin1")
+    plugin2 = make_plugin(account.user, account.group, name="plugin2")
+    db_session.add_all((plugin1, plugin2))
+    db_session.commit()
+
+    source_ep = make_entrypoint(account.user, account.group, name="source")
+    target_ep = make_entrypoint(account.user, account.group, name="target")
+    entrypoint_repo.create(source_ep)
+    entrypoint_repo.create(target_ep)
+    entrypoint_repo.create_entrypoint_artifact_plugins(source_ep, [plugin1, plugin2])
+    db_session.commit()
+
+    result = entrypoint_repo.copy_entrypoint_artifact_plugins(
+        source_ep,
+        target_ep,
+        exclude_plugin_ids={plugin2.resource_id},
+    )
+
+    assert list(result) == [plugin1]
+    assert [plugin.plugin for plugin in target_ep.entry_point_artifact_plugins] == [
+        plugin1
+    ]
+
+
+# endregion
+
+# ============================================================================
+# region EntrypointRepository.set_entrypoint_plugins() tests
+# ============================================================================
+
+
+def test_entrypoint_set_entrypoint_plugins_success(
+    db_session: DBSession, account, entrypoint_repo
+):
+    plugin1 = make_plugin(account.user, account.group, name="plugin1")
+    plugin2 = make_plugin(account.user, account.group, name="plugin2")
+    db_session.add_all((plugin1, plugin2))
+    db_session.commit()
+
+    ep = make_entrypoint(account.user, account.group)
+    entrypoint_repo.create(ep)
+
+    plugin_result, artifact_plugin_result = entrypoint_repo.set_entrypoint_plugins(
+        ep,
+        plugins=[plugin2],
+        artifact_plugins=[plugin1],
+    )
+    assert list(plugin_result) == [plugin2]
+    assert list(artifact_plugin_result) == [plugin1]
+    assert [plugin.plugin for plugin in ep.entry_point_plugins] == [plugin2]
+    assert [plugin.plugin for plugin in ep.entry_point_artifact_plugins] == [plugin1]
 
 
 # endregion

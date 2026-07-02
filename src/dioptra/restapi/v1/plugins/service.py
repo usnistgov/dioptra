@@ -264,46 +264,6 @@ class PluginIdService(ServiceContextService):
         }
 
 
-class PluginIdsService(ServiceContextService):
-    """The service methods for registering and managing plugins by their unique id."""
-
-    def get(
-        self,
-        plugin_ids: list[int],
-        **kwargs,
-    ) -> list[utils.PluginWithFilesDict]:
-        """Fetch plugins by their unique ids.
-
-        Args:
-            plugin_ids: The unique ids of the plugins.
-
-        Returns:
-            A list of plugin objects.
-
-        Raises:
-            EntityDoesNotExistError: If any plugin is not found.
-        """
-
-        plugins = self._uow.plugin_repo.get_exact(
-            plugin_ids, DeletionPolicy.NOT_DELETED
-        )
-
-        resource_ids_with_drafts = self._uow.drafts_repo.has_draft_modifications(
-            plugins, current_user
-        )
-
-        plugin_dicts = [
-            utils.PluginWithFilesDict(
-                plugin=plugin,
-                plugin_files=plugin.plugin_files,
-                has_draft=plugin.resource_id in resource_ids_with_drafts,
-            )
-            for plugin in plugins
-        ]
-
-        return plugin_dicts
-
-
 class PluginNameService(ServiceContextService):
     """The service methods for managing plugins by their name."""
 
