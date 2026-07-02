@@ -90,7 +90,6 @@ class UserService(object):
         email_address: str,
         password: str,
         confirm_password: str,
-        commit: bool = True,
         **kwargs,
     ) -> models.User:
         """Create a new user.
@@ -101,7 +100,6 @@ class UserService(object):
                 unique.
             password: The password for the new user.
             confirm_password: The password confirmation for the new user.
-            commit: If True, commit the transaction. Defaults to True.
 
         Returns:
             The new user object.
@@ -130,14 +128,13 @@ class UserService(object):
         )
         # If this user was created at the same time as the group, i.e. as the
         # creator/initial member, we need not create the user separately.
-        if new_user != default_group.creator:
-            self._uow.user_repo.create(
-                new_user, default_group, **DEFAULT_GROUP_PERMISSIONS
-            )
+        with self._uow():
+            if new_user != default_group.creator:
+                self._uow.user_repo.create(
+                    new_user, default_group, **DEFAULT_GROUP_PERMISSIONS
+                )
 
-        if commit:
-            self._uow.commit()
-            log.debug("User registration successful", user_id=new_user.user_id)
+        log.debug("User registration successful", user_id=new_user.user_id)
 
         return new_user
 
@@ -323,15 +320,12 @@ class UserCurrentService(object):
 
         return cast(models.User, current_user)
 
-    def modify(
-        self, username: str, email_address: str, commit: bool = True, **kwargs
-    ) -> models.User:
+    def modify(self, username: str, email_address: str, **kwargs) -> models.User:
         """Modifies the current user
 
         Args:
             username: The user's current username.
             email_address: The user's current email_address.
-            commit: If True, commit the transaction. Defaults to True.
 
         Returns:
             The current user object.
@@ -339,13 +333,11 @@ class UserCurrentService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Modify user account", user_id=current_user.user_id)
 
-        current_timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
-        current_user.username = username
-        current_user.email_address = email_address
-        current_user.last_modified_on = current_timestamp
-
-        if commit:
-            self._uow.commit()
+        with self._uow():
+            current_timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
+            current_user.username = username
+            current_user.email_address = email_address
+            current_user.last_modified_on = current_timestamp
 
         return cast(models.User, current_user)
 
@@ -474,7 +466,6 @@ class UserPasswordService(object):
         current_password: str,
         new_password: str,
         confirm_new_password: str,
-        commit: bool = True,
         **kwargs,
     ) -> dict[str, Any]:
         """Change a user's password.
@@ -485,7 +476,6 @@ class UserPasswordService(object):
             new_password: The user's new password, to replace the current one after
                 authentication.
             confirm_new_password: Confirmation of the new password.
-            commit: If True, commit the transaction. Defaults to True.
 
         Returns:
             A dictionary containing the password change success message if the password
@@ -513,16 +503,14 @@ class UserPasswordService(object):
         ):
             raise UserPasswordChangeError("New password matches old password.")
 
-        timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
-        user.password = self._password_service.hash(password=new_password, log=log)
-        user.alternative_id = uuid.uuid4()
-        user.last_modified_on = timestamp
-        user.password_expire_on = timestamp + datetime.timedelta(
-            days=DAYS_TO_EXPIRE_PASSWORD_DEFAULT
-        )
-
-        if commit:
-            self._uow.commit()
+        with self._uow():
+            timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
+            user.password = self._password_service.hash(password=new_password, log=log)
+            user.alternative_id = uuid.uuid4()
+            user.last_modified_on = timestamp
+            user.password_expire_on = timestamp + datetime.timedelta(
+                days=DAYS_TO_EXPIRE_PASSWORD_DEFAULT
+            )
 
         return {"status": "Password Change Success", "username": user.username}
 
