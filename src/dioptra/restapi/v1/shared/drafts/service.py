@@ -21,7 +21,7 @@ from typing import Any, cast
 
 import structlog
 from flask_login import current_user
-from injector import inject
+from injector import NoInject, inject
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
@@ -49,6 +49,7 @@ class ResourceDraftsService(object):
         self,
         resource_type: EntityType,
         uow: UnitOfWork,
+        base_resource_type: NoInject[EntityType | None] = None,
     ) -> None:
         """Initialize the draft service.
 
@@ -58,6 +59,7 @@ class ResourceDraftsService(object):
             group_id_service: A GroupIdService object.
         """
         self._resource_type = resource_type
+        self._base_resource_type = base_resource_type
         self._uow = uow
 
     def get(
@@ -152,7 +154,10 @@ class ResourceDraftsService(object):
         )
 
         try:
-            self._uow.drafts_repo.create_draft_resource(draft)
+            self._uow.drafts_repo.create_draft_resource(
+                draft,
+                expected_base_resource_type=self._base_resource_type,
+            )
         except Exception:
             self._uow.rollback()
             raise
@@ -299,8 +304,14 @@ class ResourceIdDraftService(object):
     """The service methods for managing the draft for an existing resource."""
 
     @inject
-    def __init__(self, resource_type: EntityType, uow: UnitOfWork):
+    def __init__(
+        self,
+        resource_type: EntityType,
+        uow: UnitOfWork,
+        base_resource_type: NoInject[EntityType | None] = None,
+    ):
         self._resource_type = resource_type
+        self._base_resource_type = base_resource_type
         self._uow = uow
 
     def get(
@@ -404,7 +415,10 @@ class ResourceIdDraftService(object):
         )
 
         try:
-            self._uow.drafts_repo.create_draft_modification(draft)
+            self._uow.drafts_repo.create_draft_modification(
+                draft,
+                expected_base_resource_type=self._base_resource_type,
+            )
         except Exception:
             self._uow.rollback()
             raise
