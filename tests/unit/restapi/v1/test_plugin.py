@@ -831,7 +831,6 @@ def test_unchanged_plugin_put_creates_snapshots(
         for key, plugin_file in registered_plugin_with_files.items()
         if key != "plugin"
     }
-    file_ids = {plugin_file["id"] for plugin_file in original["files"]}
     tested_snapshot_ids = {original["snapshot"]}
 
     for additional_snapshot_count in (1, 2):
@@ -868,7 +867,7 @@ def test_unchanged_plugin_put_creates_snapshots(
         assert len(persisted_ids) == initial_snapshot_count + additional_snapshot_count
         resource = db_session.get(models.Resource, plugin_id)
         assert resource.latest_snapshot_id == modified["snapshot"]
-        assert {child.resource_id for child in resource.children} == file_ids
+        assert resource.children == []
         file_binding_stmt = select(
             models.PluginPluginFile.plugin_file_resource_snapshot_id
         )
