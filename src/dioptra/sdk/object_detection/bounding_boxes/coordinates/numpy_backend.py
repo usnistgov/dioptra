@@ -74,8 +74,12 @@ class NumpyBoundingBoxCoordinates(BoundingBoxCoordinates):
     ) -> npt.NDArray:
         cell_h: float = self.cell_height
         cell_w: float = self.cell_width
-        max_i: int = self.cell_nrow
-        max_j: int = self.cell_ncol
+        # The largest valid cell index is one less than the number of cells
+        # along each axis.  Clamping to cell_nrow/cell_ncol (the counts) would
+        # allow an out-of-range index for boxes whose center lands on the far
+        # image edge (a normalized coordinate >= 1.0).
+        max_i: int = self.cell_nrow - 1
+        max_j: int = self.cell_ncol - 1
 
         i: npt.NDArray = np.min(
             np.stack(
