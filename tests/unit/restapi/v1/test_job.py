@@ -892,6 +892,74 @@ def test_metrics(
     )
 
 
+def test_get_metrics_for_deleted_job(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_jobs: dict[str, Any],
+) -> None:
+    job_id = registered_jobs["job1"]["id"]
+
+    _ = dioptra_client.jobs.append_metric_by_id(  # noqa: F841
+        job_id=job_id,
+        metric_name="accuracy",
+        metric_value=4.0,
+    ).json()
+    _ = dioptra_client.jobs.append_metric_by_id(  # noqa: F841
+        job_id=job_id,
+        metric_name="accuracy",
+        metric_value=4.1,
+    ).json()
+    _ = dioptra_client.jobs.append_metric_by_id(  # noqa: F841
+        job_id=job_id,
+        metric_name="roc_auc",
+        metric_value=0.99,
+    ).json()
+
+    response = dioptra_client.jobs.delete_by_id(job_id)
+    assert response.status_code == HTTPStatus.OK
+
+    assert_job_metrics_matches_expectations(
+        dioptra_client,
+        job_id=job_id,
+        expected=[
+            {"name": "accuracy", "value": 4.1},
+            {"name": "roc_auc", "value": 0.99},
+        ],
+    )
+
+
+def test_get_metric_snapshots_for_deleted_job(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_jobs: dict[str, Any],
+) -> None:
+    job_id = registered_jobs["job1"]["id"]
+
+    _ = dioptra_client.jobs.append_metric_by_id(  # noqa: F841
+        job_id=job_id,
+        metric_name="accuracy",
+        metric_value=4.0,
+    ).json()
+    _ = dioptra_client.jobs.append_metric_by_id(  # noqa: F841
+        job_id=job_id,
+        metric_name="accuracy",
+        metric_value=4.1,
+    ).json()
+
+    response = dioptra_client.jobs.delete_by_id(job_id)
+    assert response.status_code == HTTPStatus.OK
+
+    assert_job_metrics_snapshots_matches_expectations(
+        dioptra_client,
+        job_id=job_id,
+        metric_name="accuracy",
+        expected=[
+            {"name": "accuracy", "value": 4.1},
+            {"name": "accuracy", "value": 4.0},
+        ],
+    )
+
+
 def test_metrics_special_float_values(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
@@ -1595,6 +1663,32 @@ def test_get_logs_bad_job_id(dioptra_client, registered_jobs, registered_job_log
     )
 
     assert resp.status_code == HTTPStatus.NOT_FOUND
+
+
+def test_get_logs_for_deleted_job(dioptra_client, registered_jobs, registered_job_logs):
+    job = registered_jobs["job1"]
+    job_resource_id = job["id"]
+
+    response = dioptra_client.jobs.delete_by_id(job_resource_id)
+    assert response.status_code == HTTPStatus.OK
+
+    resp = dioptra_client.jobs.get_logs_by_id(job_resource_id)
+    returned_page = resp.json()
+
+    # Validate that createdOn timestamps are present in the logs, then remove them for a
+    # predictable comparison.
+    for log in returned_page["data"]:
+        assert "createdOn" in log
+        del log["createdOn"]
+
+    assert resp.status_code == HTTPStatus.OK
+    assert returned_page == {
+        "index": 0,
+        "isComplete": True,
+        "totalNumResults": 5,
+        "first": f"/api/v1/jobs/{job_resource_id}/log?index=0&pageLength=10",
+        "data": registered_job_logs,
+    }
 
 
 def test_forward_job_logs_using_loggers(
