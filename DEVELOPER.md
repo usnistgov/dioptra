@@ -98,18 +98,28 @@ If you haven't done so yet, install `tox` as a uv tool:
 
     uv tool install --python 3.11 tox --with tox-uv
 
-### Running frontend end-to-end tests with Playwright
-
-This project stores playwright tests in the `src/frontend/tests` folder.  To run them, please ensure your frontend is running and your dev mode Flask server is stopped, then run the following from `src/frontend`
-
-    npm run test:e2e:with-backend
-
 Developers are expected to create new unit tests to validate any new features or behavior that they contribute and to verify that all unit tests pass before opening a Pull Request.
 To run the unit tests:
 
     uvx tox run -e pytest -- tests/unit
     uvx tox run -e pytest-cookiecutter
     uvx tox run -e pytest-extra
+
+### Running frontend end-to-end tests with Playwright
+
+This project stores playwright tests in the `src/frontend/tests` folder.  To run them, please do the following:
+
+1. Ensure your [frontend dev server](https://github.com/usnistgov/dioptra/blob/main/dev-kb/local-setup/README.md#6-start-front-end) is running
+
+2. Ensure your dev mode Flask server is stopped.
+
+3. If your [env-dev.cfg](https://github.com/usnistgov/dioptra/blob/main/dev-kb/local-setup/README.md#a-configuration-file-) is not in your project root or the directory above it, please specify it's location location using this command
+
+    export DIOPTRA_E2E_ENV_FILE=/path/to/env-dev.cfg
+
+4. To run the tests, execute the following from `src/frontend`
+
+    npm run test:e2e:with-backend
 
 ### Cleanup
 
