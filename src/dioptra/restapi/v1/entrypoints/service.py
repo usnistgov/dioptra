@@ -25,7 +25,7 @@ from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
 from dioptra.restapi.db.models.users import User
-from dioptra.restapi.db.repository.utils.common import DeletionPolicy
+from dioptra.restapi.db.repository.utils.common import DeletionPolicy, get_resource_id
 from dioptra.restapi.db.unit_of_work import UnitOfWork
 from dioptra.restapi.errors import EntityRelationshipDoesNotExistError
 from dioptra.restapi.service_context import ServiceContextService
@@ -344,20 +344,19 @@ class EntrypointIdService(ServiceContextService):
             creator=current_user,
         )
 
-        plugins = _copy_plugins(
+        _copy_plugins(
             plugins=entrypoint.entry_point_plugins, target_entrypoint=new_entrypoint
         )
-        artifact_plugins = _copy_artifact_plugins(
+        _copy_artifact_plugins(
             artifact_plugins=entrypoint.entry_point_artifact_plugins,
             target_entrypoint=new_entrypoint,
         )
+        plugin_ids = self._get_attached_plugin_ids(entrypoint)
 
         with self._uow(commit):
             self._uow.entrypoint_repo.create_snapshot(new_entrypoint)
             queues = self._uow.entrypoint_repo.set_queues(new_entrypoint, queue_ids)
-            self._uow.entrypoint_repo.set_plugins(
-                new_entrypoint, plugins + artifact_plugins
-            )
+            self._uow.entrypoint_repo.set_plugins(new_entrypoint, plugin_ids)
 
         log.debug(
             "Entrypoint modification successful",
@@ -369,6 +368,17 @@ class EntrypointIdService(ServiceContextService):
         return utils.EntrypointDict(
             entry_point=new_entrypoint, queues=list(queues), has_draft=False
         )
+
+    @staticmethod
+    def _get_attached_plugin_ids(entrypoint: models.EntryPoint) -> list[int]:
+        plugin_ids = [
+            get_resource_id(entrypoint_plugin.plugin)
+            for entrypoint_plugin in entrypoint.entry_point_plugins
+        ] + [
+            get_resource_id(entrypoint_plugin.plugin)
+            for entrypoint_plugin in entrypoint.entry_point_artifact_plugins
+        ]
+        return [plugin_id for plugin_id in dict.fromkeys(plugin_ids) if plugin_id]
 
     def delete(self, entrypoint_id: int, **kwargs) -> dict[str, Any]:
         """Delete a entrypoint.

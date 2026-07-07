@@ -31,7 +31,7 @@ import pytest
 
 from dioptra.client import DioptraClient, DioptraFile
 from dioptra.client.base import DioptraResponseProtocol
-from dioptra.client.utils import select_one_or_more_files
+from dioptra.client.utils import select_files_in_directory, select_one_or_more_files
 
 # -- Assertions ------------------------------------------------------------------------
 
@@ -41,23 +41,23 @@ def assert_imported_resources_match_expected(
     expected: dict[str, Any],
 ):
     response = dioptra_client.plugins.get()
-    response_plugins = set(plugin["name"] for plugin in response.json()["data"])
-    expected_plugins = set(Path(plugin["path"]).stem for plugin in expected["plugins"])
+    response_plugins = {plugin["name"] for plugin in response.json()["data"]}
+    expected_plugins = {Path(plugin["path"]).stem for plugin in expected["plugins"]}
     assert (
         response.status_code == HTTPStatus.OK and response_plugins == expected_plugins
     )
 
     response = dioptra_client.plugin_parameter_types.get()
-    response_types = set(param["name"] for param in response.json()["data"])
-    expected_types = set(param["name"] for param in expected["plugin_param_types"])
+    response_types = {param["name"] for param in response.json()["data"]}
+    expected_types = {param["name"] for param in expected["plugin_param_types"]}
     assert (
         response.status_code == HTTPStatus.OK
         and response_types & expected_types == expected_types
     )
 
     response = dioptra_client.entrypoints.get()
-    response_entrypoints = set(ep["name"] for ep in response.json()["data"])
-    expected_entrypoints = set(ep["name"] for ep in expected["entrypoints"])
+    response_entrypoints = {ep["name"] for ep in response.json()["data"]}
+    expected_entrypoints = {ep["name"] for ep in expected["entrypoints"]}
     assert (
         response.status_code == HTTPStatus.OK
         and response_entrypoints == expected_entrypoints
@@ -253,6 +253,29 @@ def test_resource_import_update_deleted_queue(
         archive_file=resources_tar_file,
         description=description_to_replace,
     )
+
+
+def test_resource_import_update_dioptra_optic(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+):
+    group_id = auth_account["groups"][0]["id"]
+    extra_path = Path(__file__).parents[5] / "extra"
+    response = dioptra_client.workflows.import_resources(
+        group_id=group_id,
+        source=select_files_in_directory(extra_path, recursive=True),
+        config_path="dioptra_optic.toml",
+        resolve_name_conflicts_strategy="update",
+    )
+    assert response.status_code == HTTPStatus.OK
+
+    response = dioptra_client.workflows.import_resources(
+        group_id=group_id,
+        source=select_files_in_directory(extra_path, recursive=True),
+        config_path="dioptra_optic.toml",
+        resolve_name_conflicts_strategy="update",
+    )
+    assert response.status_code == HTTPStatus.OK
 
 
 def test_resource_import_overwrite(
