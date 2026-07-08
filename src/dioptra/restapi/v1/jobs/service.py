@@ -22,8 +22,6 @@ from collections.abc import Iterable
 from typing import Any, Final, cast
 
 import structlog
-import yaml
-
 from flask_login import current_user
 from injector import inject
 from sqlalchemy import delete, func, select
@@ -65,8 +63,6 @@ from dioptra.restapi.v1.shared.task_engine_yaml.service import (
     check_artifact_param_type_mismatch,
     coerce_entrypoint_param_types,
 )
-from dioptra.restapi.v1.shared.task_engine_yaml.service import TaskEngineYamlService
-from dioptra.sdk.utilities.entrypoint_swaps import render_swaps_graph
 
 from .schema import JobLogSeverity
 
@@ -685,9 +681,9 @@ class JobIdService(object):
         )
         return list(db.session.scalars(entry_point_artifact_values_stmt).unique().all())
 
+
 class JobConfigService(object):
-    """Service to retrieve the rendered YAML configuration for a Job.
-    """
+    """Service to retrieve the rendered YAML configuration for a Job."""
 
     @inject
     def __init__(
@@ -717,8 +713,8 @@ class JobConfigService(object):
 
         if job is None:
             raise EntityDoesNotExistError(EntityType.JOB, job_id=job_id)
-        
-        swap_choices = {swap.swap_name : swap.task_alias for swap in job.job_swaps}
+
+        swap_choices = {swap.swap_name: swap.task_alias for swap in job.job_swaps}
 
         entrypoint = job.entry_point_job.entry_point
 
@@ -729,7 +725,7 @@ class JobConfigService(object):
             swap_choices=swap_choices,
         )["graph"]
 
-        return { "graph" : rendered }
+        return {"graph": rendered}
 
 
 class JobIdStatusService(object):

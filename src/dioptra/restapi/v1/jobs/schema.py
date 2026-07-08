@@ -542,8 +542,8 @@ class JobLogGetQueryParameters(
 
 
 class JobConfigSchema(Schema):
-    """Schema for the rendered YAML configuration of a Job.
-    """
+    """Schema for the rendered YAML configuration of a Job."""
+
     graph = fields.Dict(
         keys=fields.String(),
         values=fields.Raw(),

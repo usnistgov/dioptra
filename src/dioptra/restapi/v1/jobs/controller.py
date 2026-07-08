@@ -46,6 +46,7 @@ from dioptra.restapi.v1.workflows.lib.export_job_parameters import (
 )
 
 from .schema import (
+    JobConfigSchema,
     JobGetQueryParameters,
     JobLogGetQueryParameters,
     JobLogRecordSchema,
@@ -58,10 +59,10 @@ from .schema import (
     MetricsSchema,
     MetricsSnapshotPageSchema,
     MetricsSnapshotsGetQueryParameters,
-    JobConfigSchema,
 )
 from .service import (
     SEARCHABLE_FIELDS,
+    JobConfigService,
     JobIdMetricsService,
     JobIdMetricsSnapshotsService,
     JobIdMlflowrunService,
@@ -69,7 +70,6 @@ from .service import (
     JobIdStatusService,
     JobLogService,
     JobService,
-    JobConfigService,
 )
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -183,7 +183,10 @@ class JobConfigEndpoint(Resource):
     def get(self, id: int):
         """Return the YAML configuration dictionary for the specified Job."""
         log = LOGGER.new(
-            request_id=str(uuid.uuid4()), resource="JobConfig", request_type="GET", id=id
+            request_id=str(uuid.uuid4()),
+            resource="JobConfig",
+            request_type="GET",
+            id=id,
         )
         return self._job_config_service.get(job_id=id, log=log)
 

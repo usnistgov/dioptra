@@ -42,7 +42,6 @@ from dioptra.restapi.v1.type_coercions import (
     STRING_PARAM_TYPE,
     coerce_to_type,
 )
-from dioptra.sdk.utilities.entrypoint_swaps import render_swaps_graph
 from dioptra.task_engine.issues import ValidationIssue
 from dioptra.task_engine.type_registry import BUILTIN_TYPES
 from dioptra.task_engine.validation import validate as validate_task_engine_dict

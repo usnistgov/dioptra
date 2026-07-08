@@ -52,8 +52,6 @@ from dioptra.restapi.v1.shared.tags.controller import (
     generate_resource_tags_endpoint,
     generate_resource_tags_id_endpoint,
 )
-from dioptra.restapi.v1.shared.task_engine_yaml.service import TaskEngineYamlService
-from dioptra.sdk.utilities.entrypoint_swaps import render_swaps_graph
 
 from .schema import (
     DynamicGlobalParametersRequestSchema,
@@ -66,8 +64,8 @@ from .schema import (
     EntrypointPluginMutableFieldsSchema,
     EntrypointPluginSchema,
     EntrypointSchema,
-    SwapInfoSchema,
     SwapConfigParametersSchema,
+    SwapInfoSchema,
     ValidateOnlySchema,
 )
 from .service import (
@@ -327,15 +325,14 @@ class EntryPointSnapshotConfigEndpoint(Resource):
             snapshotId=snapshotId,
         )
 
-        parsed_query_params = request.parsed_query_params # noqa: F841
+        query_params = request.args.to_dict()
 
         return self._entrypoint_config_service.get_config(
             id=id,
             snapshotId=snapshotId,
             log=log,
-            swap_choices=parsed_query_params
+            swap_choices=query_params,
         )
-
 
 
 @api.route("/<int:id>/snapshots/<int:snapshotId>/plugins/bundle")

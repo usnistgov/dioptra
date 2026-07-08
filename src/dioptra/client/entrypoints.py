@@ -389,7 +389,10 @@ class EntrypointsSnapshotCollectionClient(SnapshotsSubCollectionClient[T]):
         super().__init__(session=session, root_collection=root_collection)
 
     def get_config(
-        self, entrypoint_id: str | int, entrypoint_snapshot_id: str | int
+        self,
+        entrypoint_id: str | int,
+        entrypoint_snapshot_id: str | int,
+        swap_parameters: dict[str, str] | None = None,
     ) -> T:
         """Get the config for the entrypoint matching the provided snapshot id.
 
@@ -404,6 +407,7 @@ class EntrypointsSnapshotCollectionClient(SnapshotsSubCollectionClient[T]):
             self.build_sub_collection_url(entrypoint_id),
             str(entrypoint_snapshot_id),
             CONFIG,
+            params=swap_parameters,
         )
 
     def get_plugins_bundle(

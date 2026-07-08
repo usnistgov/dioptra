@@ -2544,6 +2544,60 @@ def test_validate_swaps_graph_mixed_output_error(
     )
 
 
+def test_entrypoint_swaps_config(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_swap_entrypoints: dict[str, Any],
+):
+    entrypoint = registered_swap_entrypoints["swap_test"]
+
+    response = dioptra_client.entrypoints.snapshots.get_config(
+        entrypoint["id"], entrypoint["snapshot"], swap_parameters={"step2_choice": "taskalias1", "step3_choice": "taskalias4" }
+    )
+
+    assert response.status_code == HTTPStatus.OK
+
+    response_json = response.json()
+    assert 'task2' in response_json['graph']['step2']
+    assert 'task2' in response_json['graph']['step3']
+
+
+def test_entrypoint_swaps_config_unspecified(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_swap_entrypoints: dict[str, Any],
+):
+    entrypoint = registered_swap_entrypoints["swap_test"]
+
+    # oops forgot to specify swaps
+    response = dioptra_client.entrypoints.snapshots.get_config(
+        entrypoint["id"], entrypoint["snapshot"], swap_parameters={}
+    )
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+
+    response_json = response.json()
+
+    assert 'step2_choice' in response_json['message']
+    assert 'step3_choice' in response_json['message']
+
+def test_entrypoint_swaps_config(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_swap_entrypoints: dict[str, Any],
+):
+    entrypoint = registered_swap_entrypoints["swap_test"]
+
+    # oops step4_choice doesn't exist
+    response = dioptra_client.entrypoints.snapshots.get_config(
+        entrypoint["id"], entrypoint["snapshot"], swap_parameters={"step2_choice": "taskalias1", "step3_choice": "taskalias4", "step4_choice": "taskalias1"}
+    )
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+
+    response_json = response.json()
+    assert 'step4_choice' in response_json['message']
+
 def test_get_swaps_success(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
