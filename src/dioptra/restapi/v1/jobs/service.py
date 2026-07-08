@@ -612,53 +612,6 @@ class JobIdService(object):
             has_draft=False,
         )
 
-
-class JobConfigService(object):
-    """Service to retrieve the rendered YAML configuration for a Job.
-    """
-
-    @inject
-    def __init__(
-        self,
-        entrypoint_config_service: EntrypointConfigService,
-    ) -> None:
-        self._entrypoint_config_service = entrypoint_config_service
-
-    def get(self, job_id: int, **kwargs) -> dict[str, Any]:
-        """Return the rendered YAML configuration dictionary for the given job.
-
-        Args:
-            job_id: The unique identifier of the Job.
-
-        Returns:
-            A dictionary matching JobConfigSchema.
-        """
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
-
-        job_stmt = (
-            select(models.Job)
-            .join(models.EntryPointJob)
-            .join(models.EntryPoint)
-            .where(models.Job.resource_id == job_id)
-        )
-        job = db.session.scalars(job_stmt).first()
-
-        if job is None:
-            raise EntityDoesNotExistError(EntityType.JOB, job_id=job_id)
-        
-        swap_choices = {swap.swap_name : swap.task_alias for swap in job.job_swaps}
-
-        entrypoint = job.entry_point_job.entry_point
-
-        rendered = self._entrypoint_config_service.get_config(
-            id=entrypoint.resource_id,
-            snapshotId=entrypoint.resource_snapshot_id,
-            log=log,
-            swap_choices=swap_choices,
-        )["graph"]
-
-        return { "graph" : rendered }
-
     def delete(self, job_id: int, **kwargs) -> dict[str, Any]:
         """Delete a job.
 
@@ -731,6 +684,52 @@ class JobConfigService(object):
             models.EntryPointArtifactParameterValue.job_resource_id == job_id,
         )
         return list(db.session.scalars(entry_point_artifact_values_stmt).unique().all())
+
+class JobConfigService(object):
+    """Service to retrieve the rendered YAML configuration for a Job.
+    """
+
+    @inject
+    def __init__(
+        self,
+        entrypoint_config_service: EntrypointConfigService,
+    ) -> None:
+        self._entrypoint_config_service = entrypoint_config_service
+
+    def get(self, job_id: int, **kwargs) -> dict[str, Any]:
+        """Return the rendered YAML configuration dictionary for the given job.
+
+        Args:
+            job_id: The unique identifier of the Job.
+
+        Returns:
+            A dictionary matching JobConfigSchema.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+
+        job_stmt = (
+            select(models.Job)
+            .join(models.EntryPointJob)
+            .join(models.EntryPoint)
+            .where(models.Job.resource_id == job_id)
+        )
+        job = db.session.scalars(job_stmt).first()
+
+        if job is None:
+            raise EntityDoesNotExistError(EntityType.JOB, job_id=job_id)
+        
+        swap_choices = {swap.swap_name : swap.task_alias for swap in job.job_swaps}
+
+        entrypoint = job.entry_point_job.entry_point
+
+        rendered = self._entrypoint_config_service.get_config(
+            id=entrypoint.resource_id,
+            snapshotId=entrypoint.resource_snapshot_id,
+            log=log,
+            swap_choices=swap_choices,
+        )["graph"]
+
+        return { "graph" : rendered }
 
 
 class JobIdStatusService(object):
