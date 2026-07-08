@@ -107,9 +107,10 @@ To run the unit tests:
 
 ### Running frontend end-to-end tests with Playwright
 
-This project stores playwright tests in the `src/frontend/tests` folder.  To run them, please do the following:
+This project stores Playwright tests in the `src/frontend/tests` folder.  To run them, please do the following:
 
 1. Ensure your [frontend dev server](https://github.com/usnistgov/dioptra/blob/main/dev-kb/local-setup/README.md#6-start-front-end) is running.
+If you haven't installed the frontend packages, in `src/frontend` run `npm install` to make sure Playwright is installed.
 
 2. Ensure your dev mode Flask server is stopped.  The test script starts its own backend using a test database.
 
