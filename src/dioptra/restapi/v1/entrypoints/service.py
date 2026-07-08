@@ -1234,6 +1234,54 @@ class EntrypointNameService(UnitOfWorkService):
         )
 
 
+class EntrypointConfigService(UnitOfWorkService):
+    @inject
+    def __init__(
+        self,
+        entrypoint_snapshot_id_service: EntrypointSnapshotIdService,
+        yaml_service: TaskEngineYamlService,
+    ):
+        self._entrypoint_snapshot_id_service = entrypoint_snapshot_id_service
+        self._yaml_service = yaml_service
+
+    def get_config(self,
+        id: int,
+        snapshotId: int,
+        log: BoundLogger,
+        swap_choices: dict[str, str] | None = None,
+    ):
+        swap_choices = swap_choices if swap_choices else {}
+
+        entry_point = self._entrypoint_snapshot_id_service.get(
+            entrypoint_id=id, entrypoint_snapshot_id=snapshotId, log=log
+        )
+        
+        plugin_files = [
+            plugin_plugin_file
+            for entry_point_plugin in entry_point.entry_point_plugins
+            for plugin_plugin_file in entry_point_plugin.plugin.plugin_plugin_files
+        ]
+        # this call is part of a HACK fully explained in extract_tasks, which is called
+        # internally by build_task_engine_dict, the service call would not be needed
+        # if this issue is more permanantly resolved
+        types = self._entrypoint_snapshot_id_service.get_group_plugin_parameter_types(
+            entry_point.resource.group_id, log=log
+        )
+        
+        config = self._yaml_service.build_dict(
+            entry_point=entry_point,  # pyright: ignore
+            plugin_plugin_files=plugin_files,  # pyright: ignore
+            plugin_parameter_types=types,  # pyright: ignore
+            logger=log
+        )
+
+        # we should be able to run this in all cases because render_swaps_graph will raise
+        # errors if the graph has unspecified swaps or if swaps are specified that aren't
+        # needed
+        config["graph"] = render_swaps_graph(config["graph"], swap_choices)
+
+        return config
+
 class DynamicGlobalParametersService(object):
     @inject
     def __init__(

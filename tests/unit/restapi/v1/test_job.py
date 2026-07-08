@@ -540,6 +540,10 @@ def test_create_job_with_swaps(
         dioptra_client, job_id=job_response["id"], expected=job_response
     )
 
+    rendered_yaml = dioptra_client.jobs.get_config(job_response['id']).json()['graph']
+    
+    assert 'task2' in rendered_yaml['step2']
+    assert 'task1' in rendered_yaml['step3']
 
 def test_create_job_with_extra_swaps(
     dioptra_client: DioptraClient[DioptraResponseProtocol],

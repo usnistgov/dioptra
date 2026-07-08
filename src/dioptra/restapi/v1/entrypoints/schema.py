@@ -18,7 +18,7 @@
 
 from typing import Any
 
-from marshmallow import Schema, fields, pre_dump, validate, validates
+from marshmallow import Schema, fields, pre_dump, validate, validates, INCLUDE
 from marshmallow.exceptions import ValidationError
 
 from dioptra.restapi.errors import InputParameterNotUniqueError
@@ -466,6 +466,10 @@ class SwapInfoSchema(Schema):
         required=True,
     )
 
+class SwapConfigParametersSchema(Schema):
+    """Schema representing swap choices as get parameters."""
+    class Meta:
+        unknown = INCLUDE
 
 class ValidateEntrypointIssueSchema(Schema):
     """The response for the validateEntrypoint endpoint."""

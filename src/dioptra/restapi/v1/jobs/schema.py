@@ -539,3 +539,13 @@ class JobLogGetQueryParameters(
         allow_none=True,
         metadata={"description": "List of severities to filter by"},
     )
+
+
+class JobConfigSchema(Schema):
+    """Schema for the rendered YAML configuration of a Job.
+    """
+    graph = fields.Dict(
+        keys=fields.String(),
+        values=fields.Raw(),
+        metadata={"description": "The task graph of the entrypoint."},
+    )
