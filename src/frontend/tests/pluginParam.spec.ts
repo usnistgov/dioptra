@@ -12,14 +12,15 @@ async function createPluginParam(page: Page, pluginParamName: string) {
   await page.keyboard.insertText("{}");
 
   const createResponsePromise = page.waitForResponse(
-    (response) =>
-      response.url().includes("/api/v1/pluginParameterTypes") &&
-      response.request().method() === "POST" &&
-      response.ok(),
+    (response) => response.url().includes("/api/v1/pluginParameterTypes") && response.request().method() === "POST",
   );
 
   await page.getByRole("button", { name: "Submit" }).click();
   const createResponse = await createResponsePromise;
+  expect(
+    createResponse.ok(),
+    `Expected POST ${createResponse.url()} to succeed, got ${createResponse.status()} ${createResponse.statusText()}`,
+  ).toBe(true);
   const createdPluginParam = await createResponse.json();
 
   await expect(

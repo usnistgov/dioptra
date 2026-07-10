@@ -8,11 +8,15 @@ export async function createQueue(page: Page, queueName: string) {
   await page.getByRole("textbox", { name: "Description:" }).fill("Created by Playwright");
 
   const createResponsePromise = page.waitForResponse(
-    (response) => response.url().includes("/api/v1/queues") && response.request().method() === "POST" && response.ok(),
+    (response) => response.url().includes("/api/v1/queues") && response.request().method() === "POST",
   );
 
   await page.getByRole("button", { name: "Submit" }).click();
   const createResponse = await createResponsePromise;
+  expect(
+    createResponse.ok(),
+    `Expected POST ${createResponse.url()} to succeed, got ${createResponse.status()} ${createResponse.statusText()}`,
+  ).toBe(true);
   const createdQueue = await createResponse.json();
 
   await expect(
@@ -41,12 +45,15 @@ export async function createEntrypoint(page: Page, entrypointName: string, queue
   await page.keyboard.insertText("graph:\n");
 
   const createResponsePromise = page.waitForResponse(
-    (response) =>
-      response.url().includes("/api/v1/entrypoints") && response.request().method() === "POST" && response.ok(),
+    (response) => response.url().includes("/api/v1/entrypoints") && response.request().method() === "POST",
   );
 
   await page.getByRole("button", { name: "Submit EntryPoint" }).click();
   const createResponse = await createResponsePromise;
+  expect(
+    createResponse.ok(),
+    `Expected POST ${createResponse.url()} to succeed, got ${createResponse.status()} ${createResponse.statusText()}`,
+  ).toBe(true);
   const createdEntrypoint = await createResponse.json();
 
   await expect(
@@ -67,11 +74,15 @@ export async function createPlugin(page: Page, pluginName: string) {
   await page.getByRole("textbox", { name: "Description:" }).fill("Created by Playwright");
 
   const createResponsePromise = page.waitForResponse(
-    (response) => response.url().includes("/api/v1/plugins") && response.request().method() === "POST" && response.ok(),
+    (response) => response.url().includes("/api/v1/plugins") && response.request().method() === "POST",
   );
 
   await page.getByRole("button", { name: "Submit" }).click();
   const createResponse = await createResponsePromise;
+  expect(
+    createResponse.ok(),
+    `Expected POST ${createResponse.url()} to succeed, got ${createResponse.status()} ${createResponse.statusText()}`,
+  ).toBe(true);
   const createdPlugin = await createResponse.json();
 
   await expect(

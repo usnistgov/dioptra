@@ -14,13 +14,15 @@ async function createPluginFile(page: Page, pluginId: number, filename: string) 
 
   const createResponsePromise = page.waitForResponse(
     (response) =>
-      response.url().includes(`/api/v1/plugins/${pluginId}/files`) &&
-      response.request().method() === "POST" &&
-      response.ok(),
+      response.url().includes(`/api/v1/plugins/${pluginId}/files`) && response.request().method() === "POST",
   );
 
   await page.getByRole("button", { name: "Submit File" }).click();
   const createResponse = await createResponsePromise;
+  expect(
+    createResponse.ok(),
+    `Expected POST ${createResponse.url()} to succeed, got ${createResponse.status()} ${createResponse.statusText()}`,
+  ).toBe(true);
   const createdPluginFile = await createResponse.json();
 
   await expect(

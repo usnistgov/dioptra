@@ -16,12 +16,15 @@ async function createExperiment(page: Page, experimentName: string, entrypointNa
   await page.getByRole("option", { name: entrypointName }).click();
 
   const createResponsePromise = page.waitForResponse(
-    (response) =>
-      response.url().includes("/api/v1/experiments") && response.request().method() === "POST" && response.ok(),
+    (response) => response.url().includes("/api/v1/experiments") && response.request().method() === "POST",
   );
 
   await page.getByRole("button", { name: "Submit Experiment" }).click();
   const createResponse = await createResponsePromise;
+  expect(
+    createResponse.ok(),
+    `Expected POST ${createResponse.url()} to succeed, got ${createResponse.status()} ${createResponse.statusText()}`,
+  ).toBe(true);
   const createdExperiment = await createResponse.json();
 
   await expect(
