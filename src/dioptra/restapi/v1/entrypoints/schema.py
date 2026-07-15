@@ -18,7 +18,7 @@
 
 from typing import Any
 
-from marshmallow import INCLUDE, Schema, fields, pre_dump, validate, validates
+from marshmallow import Schema, fields, pre_dump, validate, validates
 from marshmallow.exceptions import ValidationError
 
 from dioptra.restapi.errors import InputParameterNotUniqueError
@@ -392,7 +392,7 @@ class DelimitedKeyValuePairs(fields.Field):
             ) from e
 
 
-class DynamicGlobalParametersRequestSchema(Schema):
+class SwapChoiceRequestSchema(Schema):
     swaps = DelimitedKeyValuePairs(
         attribute="swaps",
         data_key="swaps",
@@ -467,13 +467,6 @@ class SwapInfoSchema(Schema):
     )
 
 
-class SwapConfigParametersSchema(Schema):
-    """Schema representing swap choices as get parameters."""
-
-    class Meta:
-        unknown = INCLUDE
-
-
 class ValidateEntrypointIssueSchema(Schema):
     """The response for the validateEntrypoint endpoint."""
 
@@ -501,3 +494,72 @@ class ValidateEntrypointIssueSchema(Schema):
             }
 
         return data
+
+
+class EntrypointConfigSchema(Schema):
+    types = fields.Dict(
+        keys=fields.String(),
+        values=fields.String(),
+        attribute="types",
+        allow_none=True,
+        metadata={
+            "description": ("A dictionary of types defined for this experiment."),
+        },
+        load_default=dict,
+    )
+    parameters = fields.Dict(
+        keys=fields.String(),
+        values=fields.String(),
+        attribute="parameters",
+        allow_none=True,
+        metadata={
+            "description": ("A dictionary of parameters defined for this experiment."),
+        },
+        load_default=dict,
+    )
+    tasks = fields.Dict(
+        keys=fields.String(),
+        values=fields.String(),
+        attribute="tasks",
+        allow_none=True,
+        metadata={
+            "description": ("A dictionary of tasks defined for this experiment."),
+        },
+        load_default=dict,
+    )
+    graph = fields.Dict(
+        keys=fields.String(),
+        values=fields.String(),
+        attribute="graph",
+        allow_none=True,
+        metadata={
+            "description": (
+                "A dictionary representing the task graph for this experiment."
+            ),
+        },
+        load_default=dict,
+    )
+    artifactOutputs = fields.Dict(
+        keys=fields.String(),
+        values=fields.String(),
+        attribute="artifact_outputs",
+        allow_none=True,
+        metadata={
+            "description": (
+                "A dictionary representing the artifact outputs for this experiment."
+            ),
+        },
+        load_default=dict,
+    )
+    artifactInputs = fields.Dict(
+        keys=fields.String(),
+        values=fields.String(),
+        attribute="artifact_inputs",
+        allow_none=True,
+        metadata={
+            "description": (
+                "A dictionary representing the artifact inputs for this experiment."
+            ),
+        },
+        load_default=dict,
+    )

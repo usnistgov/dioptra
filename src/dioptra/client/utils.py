@@ -192,3 +192,10 @@ def select_one_or_more_files(
         )
 
     return dioptra_files
+
+
+def delimited_values(
+    kv_dict: dict[str, str] | None, equality: str = ":", separator: str = ","
+):
+    kv_dict = kv_dict or {}
+    return separator.join([f"{k}{equality}{v}" for k, v in kv_dict.items()])

@@ -25,6 +25,7 @@ from marshmallow import Schema, ValidationError, fields, post_dump, post_load, v
 from marshmallow.decorators import validates_schema
 
 from dioptra.restapi.v1.artifacts.schema import ArtifactRefSchema
+from dioptra.restapi.v1.entrypoints.schema import EntrypointConfigSchema
 from dioptra.restapi.v1.schemas import (
     BasePageSchema,
     GroupIdQueryParametersSchema,
@@ -541,11 +542,7 @@ class JobLogGetQueryParameters(
     )
 
 
-class JobConfigSchema(Schema):
+class JobConfigSchema(EntrypointConfigSchema):
     """Schema for the rendered YAML configuration of a Job."""
 
-    graph = fields.Dict(
-        keys=fields.String(),
-        values=fields.Raw(),
-        metadata={"description": "The task graph of the entrypoint."},
-    )
+    ...

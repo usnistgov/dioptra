@@ -54,9 +54,9 @@ from dioptra.restapi.v1.shared.tags.controller import (
 )
 
 from .schema import (
-    DynamicGlobalParametersRequestSchema,
     DynamicGlobalParametersResponseSchema,
     EntrypointArtifactPluginMutableFieldsSchema,
+    EntrypointConfigSchema,
     EntrypointDraftSchema,
     EntrypointGetQueryParameters,
     EntrypointMutableFieldsSchema,
@@ -64,7 +64,7 @@ from .schema import (
     EntrypointPluginMutableFieldsSchema,
     EntrypointPluginSchema,
     EntrypointSchema,
-    SwapConfigParametersSchema,
+    SwapChoiceRequestSchema,
     SwapInfoSchema,
     ValidateOnlySchema,
 )
@@ -315,7 +315,8 @@ class EntryPointSnapshotConfigEndpoint(Resource):
         super().__init__(*args, **kwargs)
 
     @login_required
-    @accepts(query_params_schema=SwapConfigParametersSchema, api=api)
+    @accepts(query_params_schema=SwapChoiceRequestSchema, api=api)
+    @responds(schema=EntrypointConfigSchema, api=api)
     def get(self, id: int, snapshotId: int):
         log = LOGGER.new(
             request_id=str(uuid.uuid4()),
@@ -325,13 +326,15 @@ class EntryPointSnapshotConfigEndpoint(Resource):
             snapshotId=snapshotId,
         )
 
-        query_params = request.args.to_dict()
+        parsed_query_params = request.parsed_query_params  # type: ignore # noqa: F841
+
+        swap_choices = parsed_query_params["swaps"]
 
         return self._entrypoint_config_service.get_config(
             id=id,
             snapshotId=snapshotId,
             log=log,
-            swap_choices=query_params,
+            swap_choices=swap_choices,
         )
 
 
@@ -738,7 +741,7 @@ class DynamicGlobalParametersEntrypoint(Resource):
         super().__init__(*args, **kwargs)
 
     @login_required
-    @accepts(query_params_schema=DynamicGlobalParametersRequestSchema, api=api)
+    @accepts(query_params_schema=SwapChoiceRequestSchema, api=api)
     @responds(schema=DynamicGlobalParametersResponseSchema, api=api)
     def get(self, id: int, snapshotId: int):
         """Finds the global parameters for the given entrypoint + swap choice dictionary."""

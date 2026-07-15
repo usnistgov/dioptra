@@ -1250,7 +1250,7 @@ class EntrypointConfigService(UnitOfWorkService):
         snapshotId: int,
         log: BoundLogger,
         swap_choices: dict[str, str] | None = None,
-    ):
+    ) -> dict[str, Any]:
         swap_choices = swap_choices if swap_choices else {}
 
         entry_point = self._entrypoint_snapshot_id_service.get(

@@ -718,14 +718,14 @@ class JobConfigService(object):
 
         entrypoint = job.entry_point_job.entry_point
 
-        rendered = self._entrypoint_config_service.get_config(
+        rendered: dict[str, Any] = self._entrypoint_config_service.get_config(
             id=entrypoint.resource_id,
             snapshotId=entrypoint.resource_snapshot_id,
             log=log,
             swap_choices=swap_choices,
-        )["graph"]
+        )
 
-        return {"graph": rendered}
+        return rendered
 
 
 class JobIdStatusService(object):

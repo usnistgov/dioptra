@@ -2581,7 +2581,7 @@ def test_entrypoint_swaps_config_unspecified(
     assert 'step2_choice' in response_json['message']
     assert 'step3_choice' in response_json['message']
 
-def test_entrypoint_swaps_config(
+def test_entrypoint_swaps_config_nonexistent(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_swap_entrypoints: dict[str, Any],
