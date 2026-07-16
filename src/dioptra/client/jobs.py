@@ -421,7 +421,7 @@ class JobsCollectionClient(CollectionClient[T]):
 
         return self._session.post(self.url, str(job_id), LOG, json_=json_)
 
-    def get_config(self, job_id: str) -> T:
+    def get_config(self, job_id: int) -> T:
         """
         Retrieve the rendered YAML for a given job.
 
