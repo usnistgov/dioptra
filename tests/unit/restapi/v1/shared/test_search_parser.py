@@ -67,8 +67,6 @@ def test_grammar() -> None:
         r"""
         # invalid multi word field search -- needs to be quoted
         field:search all for this
-        # incorrect assignment character used
-        bad=assignment
         # invalid characters in field name
         bad-name:classification
         # invalid delimiter between search terms
@@ -91,6 +89,20 @@ def test_parse_search_text() -> None:
         {"field": "tag", "value": ["something"]},
         {"field": "name", "value": ["else"]},
         {"field": None, "value": ["extra"]},
+    ]
+
+
+def test_parse_search_text_allows_punctuation() -> None:
+    # Ordinary punctuation in an unquoted search must not cause a parse failure
+    # (previously a '.' raised SearchParseError). See issue #1209.
+    assert parse_search_text(search_text="file.txt") == [
+        {"field": None, "value": ["file.txt"]},
+    ]
+    assert parse_search_text(search_text="name:dioptra.restapi") == [
+        {"field": "name", "value": ["dioptra.restapi"]},
+    ]
+    assert parse_search_text(search_text="some/path-to_file.log") == [
+        {"field": None, "value": ["some/path-to_file.log"]},
     ]
 
 

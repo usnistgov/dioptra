@@ -22,6 +22,7 @@ on:
       - "**"
     tags:
       - "*.*.*"
+  workflow_dispatch:
 
 jobs:
   linting-and-style-checks:

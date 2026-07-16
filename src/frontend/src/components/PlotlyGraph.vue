@@ -5,24 +5,23 @@
       height: '400px',
       border: `1px solid ${$q.dark.isActive ? '#ffffff47' : '#d1d9e1'}`,
       borderRadius: '8px',
-      overflow: 'hidden'
+      overflow: 'hidden',
     }"
-  >
-  </div>
+  ></div>
 </template>
 
 <script setup>
-import { ref, onMounted, watch, computed, nextTick } from 'vue'
-import Plotly from 'plotly.js-dist-min'
-import { useQuasar } from 'quasar'
+import { ref, onMounted, watch, computed, nextTick } from "vue";
+import Plotly from "plotly.js-dist-min";
+import { useQuasar } from "quasar";
 
-const $q = useQuasar()
+const $q = useQuasar();
 
 const props = defineProps({
   data: Array,
   title: String,
-  graphClass: String
-})
+  graphClass: String,
+});
 
 /*
   Plotly expects this data format
@@ -34,28 +33,28 @@ const props = defineProps({
 */
 
 const layout = computed(() => {
-  const isDark = $q.dark.isActive
+  const isDark = $q.dark.isActive;
   return {
-    paper_bgcolor: isDark ? '#121212' : '#ffffff',
-    plot_bgcolor: isDark ? '#121212' : '#ffffff',
+    paper_bgcolor: isDark ? "#121212" : "#ffffff",
+    plot_bgcolor: isDark ? "#121212" : "#ffffff",
     font: {
-      color: isDark ? '#e0e0e0' : '#000000'
+      color: isDark ? "#e0e0e0" : "#000000",
     },
     title: {
       text: props.title,
       x: 0.05,
-      xanchor: 'left'
+      xanchor: "left",
     },
     xaxis: {
       title: {
-        text: 'Step'
+        text: "Step",
       },
-      gridcolor: isDark ? '#444' : '#ccc',
-      zerolinecolor: isDark ? '#666' : '#aaa'
+      gridcolor: isDark ? "#444" : "#ccc",
+      zerolinecolor: isDark ? "#666" : "#aaa",
     },
     yaxis: {
-      gridcolor: isDark ? '#444' : '#ccc',
-      zerolinecolor: isDark ? '#666' : '#aaa'
+      gridcolor: isDark ? "#444" : "#ccc",
+      zerolinecolor: isDark ? "#666" : "#aaa",
     },
     margin: { t: 50, r: 30, l: 50 },
     // unable to changed active bg color of selected
@@ -64,37 +63,37 @@ const layout = computed(() => {
       {
         buttons: [
           {
-            label: 'Line',
-            method: 'restyle',
-            args: [{ type: 'scatter', mode: 'lines+markers' }]
+            label: "Line",
+            method: "restyle",
+            args: [{ type: "scatter", mode: "lines+markers" }],
           },
           {
-            label: 'Bar',
-            method: 'restyle',
-            args: ['type', 'bar']
+            label: "Bar",
+            method: "restyle",
+            args: ["type", "bar"],
           },
           {
-            label: 'Scatter',
-            method: 'restyle',
-            args: [{ type: 'scatter', mode: 'markers' }]
+            label: "Scatter",
+            method: "restyle",
+            args: [{ type: "scatter", mode: "markers" }],
           },
         ],
-        direction: 'down',
+        direction: "down",
         showactive: true,
-        x: .2, // shift horizontally
-        xanchor: 'left',
+        x: 0.2, // shift horizontally
+        xanchor: "left",
         y: 1.25, // space above plot
-        bgcolor: isDark ? '#2a2a2a' : '',
-        bordercolor: isDark ? '#555' : '#ccc',
+        bgcolor: isDark ? "#2a2a2a" : "",
+        bordercolor: isDark ? "#555" : "#ccc",
         font: {
-          color: isDark ? '#e0e0e0' : '#000000'
+          color: isDark ? "#e0e0e0" : "#000000",
         },
-      }
-    ]
-  }
-})
+      },
+    ],
+  };
+});
 
-const chart = ref(null)
+const chart = ref(null);
 
 onMounted(() => {
   // Plotly.newPlot(chart.value, props.data, layout.value, { responsive: true })
@@ -104,67 +103,74 @@ onMounted(() => {
     props.data,
     {
       ...layout.value,
-      annotations: invalidAnnotations.value
+      annotations: invalidAnnotations.value,
     },
-    { responsive: true }
-  )
-})
+    { responsive: true },
+  );
+});
 
-watch(() => props.data, (newVal) => {
-    const x = newVal.map(trace => trace.x)
-    const y = newVal.map(trace => trace.y)
-    Plotly.update(chart.value, { x, y })
+watch(
+  () => props.data,
+  (newVal) => {
+    const x = newVal.map((trace) => trace.x);
+    const y = newVal.map((trace) => trace.y);
+    Plotly.update(chart.value, { x, y });
   },
-  { deep: true }
-)
+  { deep: true },
+);
 
-watch(() => props.graphClass, () => {
-  // allow DOM to apply new class layout before resizing
-  nextTick(() => {
-    Plotly.Plots.resize(chart.value)
-  })
-})
+watch(
+  () => props.graphClass,
+  () => {
+    // allow DOM to apply new class layout before resizing
+    nextTick(() => {
+      Plotly.Plots.resize(chart.value);
+    });
+  },
+);
 
-watch(() => $q.dark.isActive, () => {
-  const isDark = $q.dark.isActive
+watch(
+  () => $q.dark.isActive,
+  () => {
+    const isDark = $q.dark.isActive;
 
-  const layoutUpdate = {
-    'paper_bgcolor': isDark ? '#121212' : '#ffffff',
-    'plot_bgcolor': isDark ? '#121212' : '#ffffff',
-    'font.color': isDark ? '#e0e0e0' : '#000000',
-    'xaxis.gridcolor': isDark ? '#444' : '#ccc',
-    'xaxis.zerolinecolor': isDark ? '#666' : '#aaa',
-    'yaxis.gridcolor': isDark ? '#444' : '#ccc',
-    'yaxis.zerolinecolor': isDark ? '#666' : '#aaa',
-    'updatemenus[0].bgcolor': isDark ? '#2a2a2a' : '',
-    'updatemenus[0].bordercolor': isDark ? '#555' : '#ccc',
-    'updatemenus[0].font.color': isDark ? '#e0e0e0' : '#000000'
-  }
+    const layoutUpdate = {
+      paper_bgcolor: isDark ? "#121212" : "#ffffff",
+      plot_bgcolor: isDark ? "#121212" : "#ffffff",
+      "font.color": isDark ? "#e0e0e0" : "#000000",
+      "xaxis.gridcolor": isDark ? "#444" : "#ccc",
+      "xaxis.zerolinecolor": isDark ? "#666" : "#aaa",
+      "yaxis.gridcolor": isDark ? "#444" : "#ccc",
+      "yaxis.zerolinecolor": isDark ? "#666" : "#aaa",
+      "updatemenus[0].bgcolor": isDark ? "#2a2a2a" : "",
+      "updatemenus[0].bordercolor": isDark ? "#555" : "#ccc",
+      "updatemenus[0].font.color": isDark ? "#e0e0e0" : "#000000",
+    };
 
-  Plotly.relayout(chart.value, layoutUpdate)
-})
+    Plotly.relayout(chart.value, layoutUpdate);
+  },
+);
 
 const invalidAnnotations = computed(() => {
-  if(!props.data) return []
-  let coords = props.data[0]
-  let invalidPoints = []
+  if (!props.data) return [];
+  const coords = props.data[0];
+  const invalidPoints = [];
   coords.y.forEach((dataPoint, index) => {
-    if(!Number.isFinite(dataPoint)) {
-      invalidPoints.push({x: coords.x[index], y: dataPoint})
+    if (!Number.isFinite(dataPoint)) {
+      invalidPoints.push({ x: coords.x[index], y: dataPoint });
     }
-  })
+  });
 
-  return invalidPoints.map(invalidPoint => ({
+  return invalidPoints.map((invalidPoint) => ({
     x: invalidPoint.x,
-    y: -.15,
-    xref: 'x',
-    yref: 'paper',
-    text: '✕',
+    y: -0.15,
+    xref: "x",
+    yref: "paper",
+    text: "✕",
     showarrow: false,
-    font: { color: 'red', size: 18 },
+    font: { color: "red", size: 18 },
     hovertext: `Invalid Value: (${invalidPoint.x}, ${invalidPoint.y})`,
-    hoverlabel: { bgcolor: 'red', font: { color: 'white' } },
-  }))
-})
-
+    hoverlabel: { bgcolor: "red", font: { color: "white" } },
+  }));
+});
 </script>

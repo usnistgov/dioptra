@@ -52,11 +52,17 @@ def _define_query_grammar() -> pp.ParserElement:
     # Spaces are allowed in unquoted searches, but not when a field is specified
     space = pp.Literal(" ")
 
-    # Unquoted searches are limited to words containing alphanumerics and underscores
-    unquoted_word = pp.Combine((escape | pp.Word(pp.alphanums + "_") + ~space)[1, ...])
-    unquoted_words = (
-        pp.Combine((escape | pp.Word(pp.alphanums + "_"))[1, ...]) | space
-    )[1, ...]
+    # Characters that carry meaning in the grammar: the escape character, the
+    # wildcards, the quote characters, the field separator (':') and the list
+    # delimiter (','). These must be quoted or escaped to appear literally.
+    grammar_chars = "\\?*\"':,"
+
+    # Unquoted searches may contain any printable character that is not
+    # grammar-significant, so ordinary punctuation (for example '.', '-' or '/')
+    # no longer causes the query to fail to parse.
+    unquoted_chars = pp.Word(pp.printables, exclude_chars=grammar_chars)
+    unquoted_word = pp.Combine((escape | unquoted_chars + ~space)[1, ...])
+    unquoted_words = (pp.Combine((escape | unquoted_chars)[1, ...]) | space)[1, ...]
     # quoted searches can include any printable characters
     sgl_quoted_words = pp.Combine(
         (escape | pp.Word(pp.printables + " ", exclude_chars="\\?*'\n"))[1, ...]

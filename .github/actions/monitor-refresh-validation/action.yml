@@ -1,0 +1,46 @@
+name: Monitor refresh validation
+description: Monitor validation workflows dispatched by the uv.lock refresh workflow.
+inputs:
+  repository:
+    description: GitHub repository in OWNER/REPO form.
+    required: true
+  pr-number:
+    description: Pull request number to update.
+    required: true
+  head-branch:
+    description: Automation branch that validation workflows run against.
+    required: true
+  source-branch:
+    description: Source branch that the automation branch was rebuilt from.
+    required: true
+  head-sha:
+    description: Commit SHA on the automation branch.
+    required: true
+  dispatch-started-at:
+    description: UTC timestamp captured before dispatching validation workflows.
+    required: true
+  timeout-seconds:
+    description: Maximum seconds to wait for validation workflows.
+    required: false
+    default: "3600"
+  poll-interval-seconds:
+    description: Seconds to wait between polling attempts.
+    required: false
+    default: "30"
+runs:
+  using: composite
+  steps:
+    - name: Monitor validation workflows
+      shell: bash
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+      run: |
+        uv run --no-project python "$ACTION_PATH/monitor.py" \
+          --repository "${{ inputs.repository }}" \
+          --pr-number "${{ inputs.pr-number }}" \
+          --head-branch "${{ inputs.head-branch }}" \
+          --source-branch "${{ inputs.source-branch }}" \
+          --head-sha "${{ inputs.head-sha }}" \
+          --dispatch-started-at "${{ inputs.dispatch-started-at }}" \
+          --timeout-seconds "${{ inputs.timeout-seconds }}" \
+          --poll-interval-seconds "${{ inputs.poll-interval-seconds }}"

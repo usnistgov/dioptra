@@ -1,15 +1,19 @@
 <template>
   <div class="row items-center justify-between">
     <div class="row items-center">
-      <PageTitle :title="ORIGINAL_EXPERIMENT?.name" resourceType="experiment" :deleted="experiment.deleted" />
+      <PageTitle
+        :title="ORIGINAL_EXPERIMENT?.name"
+        resourceType="experiment"
+        :deleted="experiment.deleted"
+      />
       <q-chip
         v-if="route.params.id !== 'new'"
         class="q-ml-lg"
         :color="`${darkMode ? 'grey-9' : ''}`"
         label="View History"
         icon="history"
-        @click="store.showRightDrawer = !store.showRightDrawer"
         clickable
+        @click="store.showRightDrawer = !store.showRightDrawer"
       >
         <q-toggle
           v-model="store.showRightDrawer"
@@ -18,21 +22,25 @@
         />
       </q-chip>
     </div>
-    <q-btn 
+    <q-btn
       v-if="route.params.id !== 'new' && !experiment.deleted"
-      :color="history ? 'red-3' : 'negative'" 
-      icon="sym_o_delete" 
-      label="Delete Experiment" 
-      @click="showDeleteDialog = true"
+      :color="history ? 'red-3' : 'negative'"
+      icon="sym_o_delete"
+      label="Delete Experiment"
       :disable="history"
+      @click="showDeleteDialog = true"
     />
   </div>
 
-  <q-banner v-if="experiment.deleted" dense class="text-white bg-red q-mt-md">
-    <template v-slot:avatar>
-      <q-icon name="error"/>
+  <q-banner
+    v-if="experiment.deleted"
+    dense
+    class="text-white bg-red q-mt-md"
+  >
+    <template #avatar>
+      <q-icon name="error" />
     </template>
-    <span class="text-bold">This Experiment has been deleted.  Info is read only.</span>
+    <span class="text-bold">This Experiment has been deleted. Info is read only.</span>
   </q-banner>
 
   <q-expansion-item
@@ -45,50 +53,63 @@
   >
     <template #header>
       <q-item-section avatar>
-        <q-icon name="sym_o_science" color="white" size="md" />
+        <q-icon
+          name="sym_o_science"
+          color="white"
+          size="md"
+        />
       </q-item-section>
       <q-item-section>
-        <q-item-label>
-          {{ showMetadata ? 'Hide' : 'Show' }} "{{ ORIGINAL_EXPERIMENT.name }}" Metadata
-        </q-item-label>
-        <q-item-label caption class="text-white" v-if="ORIGINAL_EXPERIMENT.description">
+        <q-item-label> {{ showMetadata ? "Hide" : "Show" }} "{{ ORIGINAL_EXPERIMENT.name }}" Metadata </q-item-label>
+        <q-item-label
+          v-if="ORIGINAL_EXPERIMENT.description"
+          caption
+          class="text-white"
+        >
           {{ truncateString(ORIGINAL_EXPERIMENT.description, 100) }}
         </q-item-label>
       </q-item-section>
     </template>
     <q-card class="q-pa-md">
-      <KeyValueTable 
+      <KeyValueTable
         :rows="metadataRows"
-        :style="{ pointerEvents: history || experiment.deleted ? 'none' : 'auto', }"
+        :style="{ pointerEvents: history || experiment.deleted ? 'none' : 'auto' }"
         :secondColumnFullWidth="true"
       >
-        <template #name="{ }">
+        <template #name="{}">
           <span :disabled="history || experiment.deleted">{{ experiment?.name }}</span>
-          <q-btn icon="edit" round size="sm" color="primary" flat :disable="history || experiment.deleted" />
+          <q-btn
+            icon="edit"
+            round
+            size="sm"
+            color="primary"
+            flat
+            :disable="history || experiment.deleted"
+          />
           <q-popup-edit
-            v-model="experiment.name" 
-            auto-save 
             v-slot="scope"
+            v-model="experiment.name"
+            auto-save
             :validate="requiredRule"
             :disable="history || experiment.deleted"
           >
-            <q-input 
+            <q-input
               v-model.trim="scope.value"
               dense
               autofocus
               counter
-              @keyup.enter="scope.set"
               :error="invalidName"
               :error-message="nameError"
-              @update:model-value="checkName"
               :disable="history || experiment.deleted"
+              @keyup.enter="scope.set"
+              @update:model-value="checkName"
             />
           </q-popup-edit>
         </template>
-        <template #group="{ }">
+        <template #group="{}">
           <q-select
-            outlined 
-            v-model="experiment.group" 
+            v-model="experiment.group"
+            outlined
             :options="store.groups"
             option-label="name"
             option-value="id"
@@ -101,253 +122,273 @@
             hide-bottom-space
           />
         </template>
-        <template #description="{ }">
+        <template #description="{}">
           <div class="row items-center no-wrap">
-            <div style="white-space: pre-line; overflow-wrap: break-word;" :disabled="history || experiment.deleted">
+            <div
+              style="white-space: pre-line; overflow-wrap: break-word"
+              :disabled="history || experiment.deleted"
+            >
               {{ experiment?.description }}
             </div>
-            <q-btn icon="edit" round size="sm" color="primary" flat class="q-ml-xs" :disable="history || experiment.deleted" />
+            <q-btn
+              icon="edit"
+              round
+              size="sm"
+              color="primary"
+              flat
+              class="q-ml-xs"
+              :disable="history || experiment.deleted"
+            />
           </div>
-          <q-popup-edit v-model.trim="experiment.description" auto-save v-slot="scope" buttons>
+          <q-popup-edit
+            v-slot="scope"
+            v-model.trim="experiment.description"
+            auto-save
+            buttons
+          >
             <q-input
               v-model="scope.value"
               dense
               autofocus
               counter
               type="textarea"
-              @keyup.enter.stop
               :disable="history || experiment.deleted"
+              @keyup.enter.stop
             />
           </q-popup-edit>
         </template>
-        <template #entrypoints="{ }">
+        <template #entrypoints="{}">
           <ResourcePicker
+            v-if="!history"
             v-model="experiment.entrypoints"
             :options="entrypoints"
-            @filter="getEntrypoints"
             resourceType="entrypoint"
-            v-if="!history"
             :disable="history || experiment.deleted"
+            @filter="getEntrypoints"
           />
-          <div class="row items-center" v-if="history">
+          <div
+            v-if="history"
+            class="row items-center"
+          >
             <q-icon
               name="sym_o_info"
               size="2.5em"
               color="grey"
               class="q-mr-sm"
             />
-            <div style="flex: 1; white-space: normal; word-break: break-word;">
+            <div style="flex: 1; white-space: normal; word-break: break-word">
               Entrypoints are not yet available in Experiment snapshots
             </div>
           </div>
         </template>
       </KeyValueTable>
-      <div class="float-right q-my-sm" >
+      <div class="float-right q-my-sm">
         <q-btn
-          outline  
-          color="primary" 
+          outline
+          color="primary"
           label="Revert"
           class="q-mr-lg cancel-btn"
-          @click="revertValues"
           :disable="!valuesChanged"
+          @click="revertValues"
         />
         <q-btn
           label="Save"
           color="primary"
-          @click="updateExperiment"
           :disable="!valuesChanged"
-          style="min-width: 100px;"
+          style="min-width: 100px"
+          @click="updateExperiment"
         >
-          <q-tooltip v-if="!valuesChanged">
-            No changes detected — nothing to save
-          </q-tooltip>
+          <q-tooltip v-if="!valuesChanged"> No changes detected — nothing to save </q-tooltip>
         </q-btn>
       </div>
     </q-card>
   </q-expansion-item>
 
-  <JobsView /> 
+  <JobsView />
 
   <DeleteDialog
     v-model="showDeleteDialog"
-    @submit="deleteExperiment"
     type="Experiment"
     :name="experiment.name"
+    @submit="deleteExperiment"
   />
 </template>
 
 <script setup>
-import { ref, inject, computed, watch, onMounted } from 'vue'
-import { useLoginStore } from '@/stores/LoginStore.ts'
-import { useRouter, useRoute } from 'vue-router'
-import * as api from '@/services/dataApi'
-import * as notify from '../notify'
-import PageTitle from '@/components/PageTitle.vue'
-import DeleteDialog from '@/dialogs/DeleteDialog.vue'
-import KeyValueTable from '@/components/KeyValueTable.vue'
-import JobsView from './JobsView.vue'
-import ResourcePicker from '@/components/ResourcePicker.vue'
+import { ref, inject, computed, watch, onMounted } from "vue";
+import { useLoginStore } from "@/stores/LoginStore.ts";
+import { useRouter, useRoute } from "vue-router";
+import * as api from "@/services/dataApi";
+import * as notify from "../notify";
+import PageTitle from "@/components/PageTitle.vue";
+import DeleteDialog from "@/dialogs/DeleteDialog.vue";
+import KeyValueTable from "@/components/KeyValueTable.vue";
+import JobsView from "./JobsView.vue";
+import ResourcePicker from "@/components/ResourcePicker.vue";
 
-const route = useRoute()
+const route = useRoute();
 
-const router = useRouter()
+const router = useRouter();
 
-const store = useLoginStore()
-const isMobile = inject('isMobile')
-const isMedium = inject('isMedium')
-const darkMode = inject('darkMode')
+const store = useLoginStore();
+const darkMode = inject("darkMode");
 
 const experiment = ref({
-  name: '',
+  name: "",
   group: store.loggedInGroup.id,
-  description: '',
+  description: "",
   entrypoints: [],
-})
+});
 const ORIGINAL_EXPERIMENT = ref({
-  name: '',
+  name: "",
   group: store.loggedInGroup.id,
-  description: '',
+  description: "",
   entrypoints: [],
-})
+});
 
 const history = computed(() => {
-  return store.showRightDrawer
-})
+  return store.showRightDrawer;
+});
 
 onMounted(() => {
-  if(route.query.snapshotId && !store.showRightDrawer) {
-    store.showRightDrawer = true
+  if (route.query.snapshotId && !store.showRightDrawer) {
+    store.showRightDrawer = true;
   } else {
-    getExperiment()
+    getExperiment();
   }
-})
+});
 
 async function getExperiment() {
   try {
-    const res = await api.getItem('experiments', route.params.id)
-    experiment.value = res.data
-    ORIGINAL_EXPERIMENT.value = JSON.parse(JSON.stringify(experiment.value))
+    const res = await api.getItem("experiments", route.params.id);
+    experiment.value = res.data;
+    ORIGINAL_EXPERIMENT.value = JSON.parse(JSON.stringify(experiment.value));
     // copyAtEditStart.value = JSON.parse(JSON.stringify({
     //   name: res.data.name,
     //   group: res.data.group,
     //   description: res.data.description,
     //   entrypoints: res.data.entrypoints,
     // }))
-  } catch(err) {
-    console.log('err = ', err)
-    notify.error(err.response.data.message)
-  } 
-}
-
-const metadataRows = computed(() => [
-  { label: 'Name', slot: 'name' },
-  { label: 'Group', slot: 'group' },
-  { label: 'Description', slot: 'description' },
-  { label: 'Entrypoints', slot: 'entrypoints' },
-])
-
-const invalidName = ref(false)
-const nameError = ref('')
-
-function requiredRule(val) {
-  if(!val || val.length === 0) {
-    invalidName.value = true
-    nameError.value = 'Name is required'
-    return false
-  }
-  invalidName.value = false
-  nameError.value = ''
-  return true
-}
-
-function checkName(val) {
-  if(val.length === 0) {
-    invalidName.value = true
-    nameError.value = 'Name is required'
-  } else {
-    invalidName.value = false
-    nameError.value = ''
-  }
-}
-
-const entrypoints = ref([])
-
-async function getEntrypoints(val = '', update) {
-  update(async () => {
-    try {
-      const res = await api.getData('entrypoints', {
-        search: val,
-        rowsPerPage: 0, // get all
-        index: 0
-      })
-      entrypoints.value = res.data.data
-    } catch(err) {
-      notify.error(err.response.data.message)
-    } 
-  })
-}
-
-const valuesChanged = computed(() => {
-  return JSON.stringify(ORIGINAL_EXPERIMENT.value) !== JSON.stringify(experiment.value)
-})
-
-function revertValues() {
-  experiment.value = JSON.parse(JSON.stringify(ORIGINAL_EXPERIMENT.value))
-}
-
-async function updateExperiment() {
-  const experimentCopy = JSON.parse(JSON.stringify(experiment.value))
-  experimentCopy.entrypoints.forEach((entrypoint, index, array) => {
-    if(typeof entrypoint === 'object') {
-      array[index] = entrypoint.id
-    }
-  })
-  try {
-    const res = await api.updateItem('experiments', route.params.id, {
-      name: experimentCopy.name,
-      description: experimentCopy.description,
-      entrypoints: experimentCopy.entrypoints
-    })
-    getExperiment()
-    notify.success(`Successfully updated '${res.data.name}'`)
-  } catch(err) {
-    notify.error(err.response.data.message)
-  }  
-}
-
-watch(() => history.value, (newVal) => {
-  if(newVal) {
-    showMetadata.value = true
-  }
-})
-
-watch(() => store.selectedSnapshot, (newVal) => {
-  if(newVal) {
-    experiment.value = newVal
-    ORIGINAL_EXPERIMENT.value = newVal
-  } else {
-    getExperiment()
-  }
-})
-
-const showDeleteDialog = ref(false)
-
-async function deleteExperiment() {
-  try {
-    await api.deleteItem('experiments', experiment.value.id)
-    notify.success(`Successfully deleted '${experiment.value.name}'`)
-    router.push(`/experiments`)
-  } catch(err) {
+  } catch (err) {
+    console.log("err = ", err);
     notify.error(err.response.data.message);
   }
 }
 
-const showMetadata = ref(false)
+const metadataRows = computed(() => [
+  { label: "Name", slot: "name" },
+  { label: "Group", slot: "group" },
+  { label: "Description", slot: "description" },
+  { label: "Entrypoints", slot: "entrypoints" },
+]);
 
-function truncateString(str, limit) { 
-  if(!str) return ''
-  if(str?.length < limit) return str 
-  return str?.slice(0, limit > 3 ? limit - 3 : limit) + '...'; 
+const invalidName = ref(false);
+const nameError = ref("");
+
+function requiredRule(val) {
+  if (!val || val.length === 0) {
+    invalidName.value = true;
+    nameError.value = "Name is required";
+    return false;
+  }
+  invalidName.value = false;
+  nameError.value = "";
+  return true;
 }
 
+function checkName(val) {
+  if (val.length === 0) {
+    invalidName.value = true;
+    nameError.value = "Name is required";
+  } else {
+    invalidName.value = false;
+    nameError.value = "";
+  }
+}
+
+const entrypoints = ref([]);
+
+async function getEntrypoints(val = "", update) {
+  update(async () => {
+    try {
+      const res = await api.getData("entrypoints", {
+        search: val,
+        rowsPerPage: 0, // get all
+        index: 0,
+      });
+      entrypoints.value = res.data.data;
+    } catch (err) {
+      notify.error(err.response.data.message);
+    }
+  });
+}
+
+const valuesChanged = computed(() => {
+  return JSON.stringify(ORIGINAL_EXPERIMENT.value) !== JSON.stringify(experiment.value);
+});
+
+function revertValues() {
+  experiment.value = JSON.parse(JSON.stringify(ORIGINAL_EXPERIMENT.value));
+}
+
+async function updateExperiment() {
+  const experimentCopy = JSON.parse(JSON.stringify(experiment.value));
+  experimentCopy.entrypoints.forEach((entrypoint, index, array) => {
+    if (typeof entrypoint === "object") {
+      array[index] = entrypoint.id;
+    }
+  });
+  try {
+    const res = await api.updateItem("experiments", route.params.id, {
+      name: experimentCopy.name,
+      description: experimentCopy.description,
+      entrypoints: experimentCopy.entrypoints,
+    });
+    getExperiment();
+    notify.success(`Successfully updated '${res.data.name}'`);
+  } catch (err) {
+    notify.error(err.response.data.message);
+  }
+}
+
+watch(
+  () => history.value,
+  (newVal) => {
+    if (newVal) {
+      showMetadata.value = true;
+    }
+  },
+);
+
+watch(
+  () => store.selectedSnapshot,
+  (newVal) => {
+    if (newVal) {
+      experiment.value = newVal;
+      ORIGINAL_EXPERIMENT.value = newVal;
+    } else {
+      getExperiment();
+    }
+  },
+);
+
+const showDeleteDialog = ref(false);
+
+async function deleteExperiment() {
+  try {
+    await api.deleteItem("experiments", experiment.value.id);
+    notify.success(`Successfully deleted '${experiment.value.name}'`);
+    router.push(`/experiments`);
+  } catch (err) {
+    notify.error(err.response.data.message);
+  }
+}
+
+const showMetadata = ref(false);
+
+function truncateString(str, limit) {
+  if (!str) return "";
+  if (str?.length < limit) return str;
+  return str?.slice(0, limit > 3 ? limit - 3 : limit) + "...";
+}
 </script>

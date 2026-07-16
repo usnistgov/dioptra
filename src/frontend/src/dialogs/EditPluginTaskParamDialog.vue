@@ -1,27 +1,32 @@
 <template>
-  <DialogComponent 
+  <DialogComponent
     v-model="showDialog"
-    @emitSubmit="emitAddOrEdit"
     :hideDraftBtn="true"
+    @emitSubmit="emitAddOrEdit"
   >
     <template #title>
       <label id="modalTitle">
-        {{ props.editParam ? `Edit Param '${editParam.name}'` : 'Create Param' }}
+        {{ props.editParam ? `Edit Param '${editParam.name}'` : "Create Param" }}
       </label>
     </template>
     <q-input
+      id="name"
       v-model.trim="name"
       :rules="[requiredRule]"
       dense
       outlined
-      id="name"
       class="q-mb-xs"
     >
       <template #before>
-        <label for="name" class="field-label">Name:</label>
+        <label
+          for="name"
+          class="field-label"
+          >Name:</label
+        >
       </template>
     </q-input>
-    <q-select 
+    <q-select
+      id="type"
       v-model="parameterType"
       emit-value
       option-label="name"
@@ -30,67 +35,73 @@
       outlined
       dense
       :rules="[requiredRule]"
-      id="type"
     >
       <template #before>
-        <label for="type" class="field-label">Type:</label>
+        <label
+          for="type"
+          class="field-label"
+          >Type:</label
+        >
       </template>
     </q-select>
-    <div v-if="inputOrOutputParams === 'inputParams'" class="row items-center">
-      <label class="col-3" for="required">
+    <div
+      v-if="inputOrOutputParams === 'inputParams'"
+      class="row items-center"
+    >
+      <label
+        class="col-3"
+        for="required"
+      >
         Required:
       </label>
       <q-checkbox
-        v-model="required"
         id="required"
+        v-model="required"
       />
     </div>
   </DialogComponent>
 </template>
 
 <script setup>
-  import { ref, watch } from 'vue'
-  import DialogComponent from './DialogComponent.vue'
+import { ref, watch } from "vue";
+import DialogComponent from "./DialogComponent.vue";
 
-  const props = defineProps(['editParam', 'pluginParameterTypes', 'inputOrOutputParams'])
-  const emit = defineEmits(['addParam', 'updateParam'])
+const props = defineProps(["editParam", "pluginParameterTypes", "inputOrOutputParams"]);
+const emit = defineEmits(["addParam", "updateParam"]);
 
-  function requiredRule(val) {
-    return (!!val) || "This field is required"
+function requiredRule(val) {
+  return !!val || "This field is required";
+}
+
+const showDialog = defineModel();
+
+const name = ref("");
+const parameterType = ref("");
+const required = ref(true);
+
+watch(showDialog, (newVal) => {
+  if (newVal) {
+    name.value = props.editParam.name;
+    if (props.editParam.parameterType?.id) {
+      parameterType.value = props.editParam.parameterType;
+    }
+    required.value = props.editParam && Object.hasOwn(props.editParam, "required") ? props.editParam.required : true;
+  } else {
+    name.value = "";
+    parameterType.value = "";
   }
+});
 
-  const showDialog = defineModel()
-
-  const name = ref('')
-  const parameterType = ref('')
-  const required = ref(true)
-
-  watch(showDialog, (newVal) => {
-    if(newVal) {
-      name.value = props.editParam.name
-      if(props.editParam.parameterType?.id) {
-        parameterType.value = props.editParam.parameterType
-      }
-      required.value = props.editParam && Object.hasOwn(props.editParam, 'required') ? props.editParam.required : true
-    }
-    else {
-      name.value = ''
-      parameterType.value = ''
-    }
-  })
-
-  function emitAddOrEdit() {
-    let param = {name: name.value, parameterType: parameterType.value}
-    if(props.inputOrOutputParams === 'inputParams') {
-      param.required = required.value
-    }
-    if(props.editParam) {
-      emit('updateParam', param)
-    } else {
-      emit('addParam', param)
-    }
-    showDialog.value = false
+function emitAddOrEdit() {
+  const param = { name: name.value, parameterType: parameterType.value };
+  if (props.inputOrOutputParams === "inputParams") {
+    param.required = required.value;
   }
-
-
+  if (props.editParam) {
+    emit("updateParam", param);
+  } else {
+    emit("addParam", param);
+  }
+  showDialog.value = false;
+}
 </script>
