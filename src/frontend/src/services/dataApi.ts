@@ -136,7 +136,7 @@ export interface Pagination {
   search?: string
 }
 
-export async function getData<T extends ResourceType>(type: T, pagination: Pagination, showDrafts: boolean = false, showDeleted = false) {
+export async function getData<T extends keyof UpdateParams>(type: T, pagination: Pagination, showDrafts: boolean = false, showDeleted = false) {
   const res = await axios.get(`/api/${type}/${showDrafts ? 'drafts/' : ''}`, {
     params: {
       index: pagination.index,
@@ -168,7 +168,7 @@ export async function getData<T extends ResourceType>(type: T, pagination: Pagin
   return res
 }
 
-export async function getSnapshots<T extends ResourceType>(type: T, id: number) {
+export async function getSnapshots<T extends keyof UpdateParams>(type: T, id: number) {
   const res =  await axios.get(`/api/${type}/${id}/snapshots`, {
     params: {
       pageLength: 100
