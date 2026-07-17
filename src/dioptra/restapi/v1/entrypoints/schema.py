@@ -499,67 +499,61 @@ class ValidateEntrypointIssueSchema(Schema):
 class EntrypointConfigSchema(Schema):
     types = fields.Dict(
         keys=fields.String(),
-        values=fields.String(),
+        values=fields.Raw(),
         attribute="types",
         allow_none=True,
         metadata={
-            "description": ("A dictionary of types defined for this experiment."),
+            "description": "A dictionary of types defined for this experiment.",
         },
         load_default=dict,
     )
     parameters = fields.Dict(
         keys=fields.String(),
-        values=fields.String(),
+        values=fields.Raw(),
         attribute="parameters",
         allow_none=True,
         metadata={
-            "description": ("A dictionary of parameters defined for this experiment."),
+            "description": "A dictionary of parameters defined for this experiment.",
         },
         load_default=dict,
     )
     tasks = fields.Dict(
         keys=fields.String(),
-        values=fields.String(),
+        values=fields.Raw(),
         attribute="tasks",
         allow_none=True,
         metadata={
-            "description": ("A dictionary of tasks defined for this experiment."),
+            "description": "A dictionary of tasks defined for this experiment.",
         },
         load_default=dict,
     )
     graph = fields.Dict(
         keys=fields.String(),
-        values=fields.String(),
+        values=fields.Raw(),
         attribute="graph",
         allow_none=True,
         metadata={
-            "description": (
-                "A dictionary representing the task graph for this experiment."
-            ),
+            "description": "A dictionary representing the task graph for this experiment.",
         },
         load_default=dict,
     )
-    artifactOutputs = fields.Dict(
+    artifact_outputs = fields.Dict(
         keys=fields.String(),
-        values=fields.String(),
+        values=fields.Raw(),
         attribute="artifact_outputs",
         allow_none=True,
         metadata={
-            "description": (
-                "A dictionary representing the artifact outputs for this experiment."
-            ),
+            "description": "A dictionary representing the artifact outputs for this experiment.",
         },
         load_default=dict,
     )
-    artifactInputs = fields.Dict(
+    artifact_inputs = fields.Dict(
         keys=fields.String(),
-        values=fields.String(),
+        values=fields.Raw(),
         attribute="artifact_inputs",
         allow_none=True,
         metadata={
-            "description": (
-                "A dictionary representing the artifact inputs for this experiment."
-            ),
+            "description": "A dictionary representing the artifact inputs for this experiment.",
         },
         load_default=dict,
     )
