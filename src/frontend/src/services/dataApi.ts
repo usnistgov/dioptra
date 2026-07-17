@@ -136,7 +136,7 @@ export interface Pagination {
   search?: string
 }
 
-export async function getData<T extends keyof UpdateParams>(type: T, pagination: Pagination, showDrafts: boolean = false, showDeleted = false) {
+export async function getData<T extends ResourceType>(type: T, pagination: Pagination, showDrafts: boolean = false, showDeleted = false) {
   const res = await axios.get(`/api/${type}/${showDrafts ? 'drafts/' : ''}`, {
     params: {
       index: pagination.index,
@@ -168,7 +168,7 @@ export async function getData<T extends keyof UpdateParams>(type: T, pagination:
   return res
 }
 
-export async function getSnapshots<T extends keyof UpdateParams>(type: T, id: number) {
+export async function getSnapshots<T extends ResourceType>(type: T, id: number) {
   const res =  await axios.get(`/api/${type}/${id}/snapshots`, {
     params: {
       pageLength: 100
@@ -290,7 +290,7 @@ export async function getResourceDraft<T extends ResourceType>(type: T, id: numb
   return res
 }
 
-export async function updateItem<T extends ResourceType>(type: T, id: number, params: UpdateParams[T]) {
+export async function updateItem<T extends keyof UpdateParams>(type: T, id: number, params: UpdateParams[T]) {
   return await axios.put(`/api/${type}/${id}`, params)
 }
 
@@ -322,7 +322,7 @@ export async function addDraft<T extends keyof CreateParams>(type: T, params: Cr
   }
 }
 
-export async function updateDraft<T extends ResourceType>(type: T, draftId: string, params: UpdateParams[T]) {
+export async function updateDraft<T extends keyof UpdateParams>(type: T, draftId: string, params: UpdateParams[T]) {
   return await axios.put(`/api/${type}/drafts/${draftId}`, params)
 }
 
