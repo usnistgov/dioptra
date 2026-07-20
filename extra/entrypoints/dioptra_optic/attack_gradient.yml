@@ -37,15 +37,28 @@ graph:
       - random_seed
 
   adversarial_dataset:
-    fast_gradient_method:
-      model: $model_artifact
-      dataset: $dataset.test
-      target: $fgm_target
-      norm: $fgm_norm
-      eps: $fgm_eps
-      eps_step: $fgm_eps_step
-      minimal: $fgm_minimal
-      save_dataset: true
+    ?attack:
+      fgm:
+        fast_gradient_method:
+          model: $model_artifact
+          dataset: $dataset.test
+          target: $fgm_target
+          norm: $fgm_norm
+          eps: $fgm_eps
+          eps_step: $fgm_eps_step
+          minimal: $fgm_minimal
+          save_dataset: true
+      cw:
+        carlini_wagner:
+          model: $model_artifact
+          dataset: $dataset.test
+          target: $cw_target
+          norm: $cw_norm
+          confidence: $cw_confidence
+          learning_rate: $cw_learning_rate
+          max_iter: $cw_max_iter
+          initial_const: $cw_initial_const
+          save_dataset: true
     dependencies:
       - dataset
 

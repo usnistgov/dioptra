@@ -145,7 +145,7 @@ def carlini_wagner(
         None
         if target is None
         else ops.repeat(
-            [ops.one_hot(target, dataset.meta.num_classes)],
+            [target],
             dataset.meta.batch_size,
             axis=0,
         )

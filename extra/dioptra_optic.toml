@@ -310,9 +310,9 @@ plugins = [ "dioptra_optic" ]
 artifact_plugins = [ "artifacts", "dioptra_optic" ]
 
 [[entrypoints]]
-path = "entrypoints/dioptra_optic/attack_fgm.yml"
-name = "Evasion Attack: Fast Gradient Method"
-description = "Create an adversarial dataset using the fast gradient method"
+path = "entrypoints/dioptra_optic/attack_gradient.yml"
+name = "Evasion Attacks"
+description = "Create an adversarial dataset using FGM or Carlini-Wagner attack"
 params = [
   { name = "seed", type = "integer", default_value = "1286012834" },
   { name = "dataset_name", type = "string", default_value = "mnist" },
@@ -326,6 +326,12 @@ params = [
   { name = "fgm_eps", type = "float", default_value = "0.3" },
   { name = "fgm_eps_step", type = "float", default_value = "0.1" },
   { name = "fgm_minimal", type = "boolean", default_value = "false" },
+  { name = "cw_target", type = "integer", default_value = "0" },
+  { name = "cw_norm", type = "string", default_value = "inf" },
+  { name = "cw_confidence", type = "float", default_value = "0.0" },
+  { name = "cw_learning_rate", type = "float", default_value = "0.01" },
+  { name = "cw_max_iter", type = "integer", default_value = "1000" },
+  { name = "cw_initial_const", type = "float", default_value = "0.001" },
   { name = "save_dataset", type = "boolean", default_value = "true" },
 ]
 artifact_params = [
