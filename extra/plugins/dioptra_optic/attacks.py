@@ -91,7 +91,6 @@ def fast_gradient_method(
 
     return create_transformed_dataset(dataset, attack_fn, save_dataset)
 
-
 @pyplugs.register
 def carlini_wagner(
     model: keras.Model,
@@ -138,17 +137,17 @@ def carlini_wagner(
         batch_size=dataset.meta.batch_size,
         max_iter=max_iter,
         initial_const=initial_const,
-        verbose=False,
+        verbose=True,
     )
 
     y_target = (
         None
         if target is None
         else ops.repeat(
-            [target],
+            [ops.one_hot(target, dataset.meta.num_classes)],
             dataset.meta.batch_size,
             axis=0,
-        )
+        ).numpy()
     )
 
     @tf.numpy_function(Tout=(tf.float32, tf.float32))
