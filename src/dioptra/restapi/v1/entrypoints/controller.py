@@ -328,7 +328,7 @@ class EntryPointSnapshotConfigEndpoint(Resource):
 
         parsed_query_params = request.parsed_query_params  # type: ignore # noqa: F841
 
-        swap_choices = parsed_query_params["swaps"]
+        swap_choices = parsed_query_params.get("swaps", {})
 
         return self._entrypoint_config_service.get_config(
             id=id,
