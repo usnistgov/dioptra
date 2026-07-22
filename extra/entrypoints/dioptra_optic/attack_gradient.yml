@@ -64,11 +64,9 @@ graph:
           model: $model_artifact
           dataset: $dataset.test
           target: $target
-          norm: $norm
           eps: $eps
           eps_step: $eps_step
           max_iter: $max_iter
-          minimal: $minimal
           save_dataset: true
       pgd:
         projected_gradient_descent:

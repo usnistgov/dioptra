@@ -124,11 +124,9 @@ A collection of plugin tasks for evaluating evasion attacks and defenses using t
     { name = "model", type = "keras.Model", required = true },
     { name = "dataset", type = "Dataset", required = true },
     { name = "target", type = "integer", required = false },
-    { name = "norm", type = "norm", required = false },
     { name = "eps", type = "number", required = false },
     { name = "eps_step", type = "number", required = false },
     { name = "max_iter", type = "integer", required = false },
-    { name = "minimal", type = "boolean", required = false },
     { name = "save_dataset", type = "boolean", required = false },
   ]
   output_params = [ { name = "adversarial_dataset", type = "Dataset" } ]

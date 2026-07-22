@@ -99,11 +99,9 @@ def basic_iterative_method(
     model: keras.Model,
     dataset: Dataset,
     target: int | None = None,
-    norm: int | float | str = np.inf,
     eps: float = 0.3,
     eps_step: float = 0.1,
     max_iter: int = 10,
-    minimal: bool = False,
     save_dataset: bool = False,
 ) -> Dataset:
     """Generates an adversarial dataset using the Basic Iterative Method (BIM).
@@ -124,13 +122,12 @@ def basic_iterative_method(
     """
     attack = BasicIterativeMethod(
         estimator=KerasClassifier(model, clip_values=dataset.meta.value_range),
-        norm=norm,
         targeted=target is not None,
         eps=eps,
         eps_step=eps_step,
         max_iter=max_iter,
-        minimal=minimal,
         batch_size=dataset.meta.batch_size,
+        verbose=False
     )
 
     y_target = (
