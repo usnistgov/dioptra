@@ -42,22 +42,46 @@ graph:
         fast_gradient_method:
           model: $model_artifact
           dataset: $dataset.test
-          target: $fgm_target
-          norm: $fgm_norm
-          eps: $fgm_eps
-          eps_step: $fgm_eps_step
-          minimal: $fgm_minimal
+          target: $target
+          norm: $norm
+          eps: $eps
+          eps_step: $eps_step
+          minimal: $minimal
           save_dataset: true
       cw:
         carlini_wagner:
           model: $model_artifact
           dataset: $dataset.test
-          target: $cw_target
-          norm: $cw_norm
-          confidence: $cw_confidence
-          learning_rate: $cw_learning_rate
-          max_iter: $cw_max_iter
-          initial_const: $cw_initial_const
+          target: $target
+          norm: $norm
+          confidence: $confidence
+          learning_rate: $learning_rate
+          max_iter: $max_iter
+          initial_const: $initial_const
+          save_dataset: true
+      bim:
+        basic_iterative_method:
+          model: $model_artifact
+          dataset: $dataset.test
+          target: $target
+          norm: $norm
+          eps: $eps
+          eps_step: $eps_step
+          max_iter: $max_iter
+          minimal: $minimal
+          save_dataset: true
+      pgd:
+        projected_gradient_descent:
+          model: $model_artifact
+          dataset: $dataset.test
+          target: $target
+          norm: $norm
+          eps: $eps
+          eps_step: $eps_step
+          decay: $decay
+          max_iter: $max_iter
+          random_eps: $random_eps
+          num_random_init: $num_random_init
           save_dataset: true
     dependencies:
       - dataset

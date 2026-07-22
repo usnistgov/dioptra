@@ -24,6 +24,8 @@ from art.attacks.evasion import (
     CarliniL2Method,
     CarliniLInfMethod,
     FastGradientMethod,
+    BasicIterativeMethod,
+    ProjectedGradientDescent,
 )
 from art.estimators.classification import KerasClassifier
 from keras import ops
@@ -73,6 +75,125 @@ def fast_gradient_method(
         eps_step=eps_step,
         batch_size=dataset.meta.batch_size,
         minimal=minimal,
+    )
+
+    y_target = (
+        None
+        if target is None
+        else ops.repeat(
+            [ops.one_hot(target, dataset.meta.num_classes)],
+            dataset.meta.batch_size,
+            axis=0,
+        )
+    )
+
+    @tf.numpy_function(Tout=(tf.float32, tf.float32))
+    def attack_fn(x, y):
+        return attack.generate(x, y=y_target), y
+
+    return create_transformed_dataset(dataset, attack_fn, save_dataset)
+
+
+@pyplugs.register
+def basic_iterative_method(
+    model: keras.Model,
+    dataset: Dataset,
+    target: int | None = None,
+    norm: int | float | str = np.inf,
+    eps: float = 0.3,
+    eps_step: float = 0.1,
+    max_iter: int = 10,
+    minimal: bool = False,
+    save_dataset: bool = False,
+) -> Dataset:
+    """Generates an adversarial dataset using the Basic Iterative Method (BIM).
+
+    Args:
+        model: The classifier used to generate the attack.
+        dataset: The dataset to apply the attack to.
+        target: The target class index or ``None`` for an untargeted attack.
+        norm: Norm of the perturbation (``"inf"``, ``1`` or ``2``).
+        eps: Maximum perturbation.
+        eps_step: Step size for each iteration.
+        max_iter: Number of attack iterations.
+        minimal: If ``True`` compute minimal perturbation (uses ``eps_step``).
+        save_dataset: Whether to save the transformed dataset.
+
+    Returns:
+        The transformed ``Dataset``.
+    """
+    attack = BasicIterativeMethod(
+        estimator=KerasClassifier(model, clip_values=dataset.meta.value_range),
+        norm=norm,
+        targeted=target is not None,
+        eps=eps,
+        eps_step=eps_step,
+        max_iter=max_iter,
+        minimal=minimal,
+        batch_size=dataset.meta.batch_size,
+    )
+
+    y_target = (
+        None
+        if target is None
+        else ops.repeat(
+            [ops.one_hot(target, dataset.meta.num_classes)],
+            dataset.meta.batch_size,
+            axis=0,
+        )
+    )
+
+    @tf.numpy_function(Tout=(tf.float32, tf.float32))
+    def attack_fn(x, y):
+        return attack.generate(x, y=y_target), y
+
+    return create_transformed_dataset(dataset, attack_fn, save_dataset)
+
+
+@pyplugs.register
+def projected_gradient_descent(
+    model: keras.Model,
+    dataset: Dataset,
+    target: int | None = None,
+    norm: int | float | str = np.inf,
+    eps: float = 0.3,
+    eps_step: float = 0.1,
+    decay: float | None = None,
+    max_iter: int = 10,
+    random_eps: bool = True,
+    num_random_init: int = 0,
+    save_dataset: bool = False,
+) -> Dataset:
+    """Generates an adversarial dataset using Projected Gradient Descent (PGD).
+
+    Args:
+        model: The classifier used to generate the attack.
+        dataset: The dataset to apply the attack to.
+        target: The target class index or ``None`` for an untargeted attack.
+        norm: Norm of the perturbation (``"inf"``, ``1`` or ``2``).
+        eps: Maximum perturbation.
+        eps_step: Step size for each iteration.
+        decay: Optional decay factor for the step size.
+        max_iter: Number of attack iterations.
+        random_eps: Whether to start from a random point within the epsilon ball.
+        num_random_init: Number of random initializations for the attack.
+        save_dataset: Whether to save the transformed dataset.
+
+    Returns:
+        The transformed ``Dataset``.
+    """
+    attack = ProjectedGradientDescent(
+        estimator=KerasClassifier(model, clip_values=dataset.meta.value_range),
+        norm=norm,
+        targeted=target is not None,
+        eps=eps,
+        eps_step=eps_step,
+        decay=decay,
+        max_iter=max_iter,
+        random_eps=random_eps,
+        num_random_init=num_random_init,
+        batch_size=dataset.meta.batch_size,
+        verbose=False,
     )
 
     y_target = (
