@@ -399,6 +399,7 @@ class EntrypointsSnapshotCollectionClient(SnapshotsSubCollectionClient[T]):
         Args:
             entrypoint_id: The entrypoint id, an integer.
             entrypoint_snapshot_id: The entrypoint snapshot id, an integer.
+            swap_parameters: A dictionary mapping swap names to task alias choices.
 
         Returns:
             The response from the Dioptra API.

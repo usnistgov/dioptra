@@ -1235,6 +1235,8 @@ class EntrypointNameService(UnitOfWorkService):
 
 
 class EntrypointConfigService(UnitOfWorkService):
+    """Service to retrieve a rendered YAML configuration for an Entrypoint."""
+
     @inject
     def __init__(
         self,
@@ -1251,6 +1253,18 @@ class EntrypointConfigService(UnitOfWorkService):
         log: BoundLogger,
         swap_choices: dict[str, str] | None = None,
     ) -> dict[str, Any]:
+        """Return the rendered YAML configuration dictionary for the given entrypoint.
+
+        Args:
+            id: The unique identifier of the Entrypoint.
+            snapshotId: The unique snapshot identifier of the Entrypoint.
+            log: A BoundLogger object.
+            swap_choices: An optional dictionary mapping swap names to task alias choices,
+                which will be used to render the task graph.
+        Returns:
+            A dictionary matching EntrypointConfigSchema.
+        """
+        
         swap_choices = swap_choices if swap_choices else {}
 
         entry_point = self._entrypoint_snapshot_id_service.get(

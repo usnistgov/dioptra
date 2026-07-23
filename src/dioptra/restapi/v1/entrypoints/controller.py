@@ -308,8 +308,7 @@ class EntryPointSnapshotConfigEndpoint(Resource):
         All arguments are provided via dependency injection.
 
         Args:
-            entrypoint_snapshot_id_service: A EntrypointSnapshotIdService object.
-            yaml_service: A TaskEngineYamlService object
+            entrypoint_config_service: An EntrypointConfigService object.
         """
         self._entrypoint_config_service = entrypoint_config_service
         super().__init__(*args, **kwargs)
