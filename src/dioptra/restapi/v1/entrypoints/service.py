@@ -1264,7 +1264,7 @@ class EntrypointConfigService(UnitOfWorkService):
         Returns:
             A dictionary matching EntrypointConfigSchema.
         """
-        
+
         swap_choices = swap_choices if swap_choices else {}
 
         entry_point = self._entrypoint_snapshot_id_service.get(

@@ -206,7 +206,7 @@ def delimited_values(
 
     Returns:
         A string representing the dictionary.
-    
+
     """
 
     kv_dict = kv_dict or {}
