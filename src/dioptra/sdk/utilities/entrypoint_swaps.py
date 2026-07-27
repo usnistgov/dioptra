@@ -19,17 +19,23 @@ from typing import Any
 from dioptra.task_engine import validation
 
 
-def render_swaps_graph(graph: dict[str, Any], swaps: dict[str, str]) -> dict[str, Any]:
+def render_swaps_graph(
+    swaps: dict[str, str],
+    raise_unspecified: bool = True,
+) -> dict[str, Any]:
     """
     Renders a task graph given a graph containing swaps and dictionary
-    specifying the swap choices.
+    specifying the swap choices. Can perform partial renders through setting
+    raise_unspecified to False.
 
     Args:
-        graph: A dictionary object representing a task graph.
-        swaps: A dictionary mapping swap names to the selected task.
+        graph: A dictionary representing the task graph.
+        swaps: Mapping of swap names to the selected task alias.
+        raise_unspecified: Whether to raise an error for swaps that are present in
+            the graph but not supplied in swaps.
 
     Returns:
-        The rendered graph using the selected swaps.
+        The rendered graph with the provided swaps applied.
     """
     rendered_graph: dict[str, Any] = {}
 
@@ -41,30 +47,28 @@ def render_swaps_graph(graph: dict[str, Any], swaps: dict[str, str]) -> dict[str
         rendered_graph[step] = {}
         for task_name, task_defn in task.items():
             if task_name.startswith("?"):
-                task_name = task_name[1:]
+                swap_name = task_name[1:]
 
                 try:
-                    # this is just an alias that maps to one of 3 full task invocations
-                    # it is NOT necessarily the name of the task
-                    task_alias = swaps[task_name]
-
-                    used_swaps.add(task_name)
+                    task_alias = swaps[swap_name]
+                    used_swaps.add(swap_name)
 
                     try:
                         swap = task_defn[task_alias]
-
-                        # the name of the step should be mapped directly to the content the alias maps to
                         rendered_graph[step] = swap
                     except KeyError:
                         not_found_tasks.add(task_alias)
                 except KeyError:
-                    not_found_swaps.add(task_name)
+                    not_found_swaps.add(swap_name)
+                    if not raise_unspecified:
+                        # Preserve the original placeholder in the output.
+                        rendered_graph[step][task_name] = task_defn
             else:
-                rendered_graph[step][task_name] = graph[step][task_name]
+                rendered_graph[step][task_name] = task_defn
 
     unused_swaps = swaps.keys() - used_swaps
 
-    if len(not_found_swaps) > 0:
+    if raise_unspecified and len(not_found_swaps) > 0:
         raise Exception(f"Swaps {not_found_swaps} needed by graph but not provided.")
 
     if len(unused_swaps) > 0:
