@@ -1,0 +1,94 @@
+name: Frontend Playwright e2e
+
+on:
+  pull_request:
+    branches:
+      - "main"
+      - "dev"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      UV_PROJECT_ENVIRONMENT: .di-venv-e2e
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+          python-version: "3.11"
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: src/frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: src/frontend
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        working-directory: src/frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: Create Dioptra e2e env file
+        run: |
+          cat > "${RUNNER_TEMP}/dioptra-e2e.env" <<EOF
+          DIOPTRA_GIT_BRANCH=dev
+          DIOPTRA_CODE_DIR=${GITHUB_WORKSPACE}
+          DIOPTRA_DEPLOY_DIR=${RUNNER_TEMP}/dioptra-e2e
+          DIOPTRA_WORKER_LIB=tensorflow-cpu
+          DIOPTRA_ENV_NAME=.di-venv-e2e
+          EOF
+
+      - name: Run Playwright e2e tests
+        working-directory: src/frontend
+        env:
+          DIOPTRA_E2E_ENV_FILE: ${{ runner.temp }}/dioptra-e2e.env
+        run: |
+          set -eo pipefail
+
+          npm run dev -- --host 127.0.0.1 > vite.log 2>&1 &
+          VITE_PID=$!
+
+          cleanup() {
+            kill "${VITE_PID}" >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+
+          echo "Waiting for frontend at http://localhost:5173 ..."
+          for _ in {1..90}; do
+            if curl --silent --fail http://localhost:5173 >/dev/null 2>&1; then
+              break
+            fi
+            sleep 1
+          done
+
+          if ! curl --silent --fail http://localhost:5173 >/dev/null 2>&1; then
+            echo "Frontend did not become ready."
+            cat vite.log
+            exit 1
+          fi
+
+          npm run test:e2e:with-backend
+
+      - name: Upload Playwright artifacts
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: frontend-playwright-artifacts
+          path: |
+            src/frontend/playwright-report
+            src/frontend/test-results
+            src/frontend/vite.log
+          if-no-files-found: ignore

@@ -63,7 +63,7 @@ At a minimum, you should run this before opening a merge request on your branch:
     uvx tox run -e lint -- --select I --fix src/dioptra
     uvx tox run -e format -- src/dioptra
 
-If commiting any frontend changes, run the following from the src/frontend directory to lint and format frontend code:
+If commiting any frontend changes, run the following from the `src/frontend` directory to lint and format frontend code:
 
     npm run lint
     npm run format
@@ -104,6 +104,22 @@ To run the unit tests:
     uvx tox run -e pytest -- tests/unit
     uvx tox run -e pytest-cookiecutter
     uvx tox run -e pytest-extra
+
+### Running frontend end-to-end tests with Playwright
+
+This project stores Playwright tests in the `src/frontend/tests` folder.  To run them, please do the following:
+
+1. If you haven't installed the frontend packages, in `src/frontend` run `npm install` to make sure Playwright is installed. You do not need to repeat this step.
+
+2. Ensure your backend Flask server is stopped.  The test script starts it's own backend using a test database.  The test script will also start the frontend for you if it's not already running.
+
+3. If your [env-dev.cfg](https://github.com/usnistgov/dioptra/blob/main/dev-kb/local-setup/README.md#a-configuration-file-) is not in your project root or the directory above it, please specify it's location location using this command
+
+        export DIOPTRA_E2E_ENV_FILE=/path/to/env-dev.cfg
+
+4. To run the tests, execute the following from `src/frontend`
+
+        npm run test:e2e:with-backend
 
 ### Cleanup
 
