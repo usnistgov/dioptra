@@ -31,7 +31,7 @@ from .drafts import (
 )
 from .snapshots import SnapshotsSubCollectionClient
 from .tags import TagsSubCollectionClient
-from .utils import FileTypes
+from .utils import FileTypes, delimited_values
 
 DRAFT_FIELDS: Final[set[str]] = {
     "name",
@@ -389,21 +389,32 @@ class EntrypointsSnapshotCollectionClient(SnapshotsSubCollectionClient[T]):
         super().__init__(session=session, root_collection=root_collection)
 
     def get_config(
-        self, entrypoint_id: str | int, entrypoint_snapshot_id: str | int
+        self,
+        entrypoint_id: str | int,
+        entrypoint_snapshot_id: str | int,
+        swap_parameters: dict[str, str] | None = None,
     ) -> T:
         """Get the config for the entrypoint matching the provided snapshot id.
 
         Args:
             entrypoint_id: The entrypoint id, an integer.
             entrypoint_snapshot_id: The entrypoint snapshot id, an integer.
+            swap_parameters: A dictionary mapping swap names to task alias choices.
 
         Returns:
             The response from the Dioptra API.
         """
+
+        if swap_parameters is not None:
+            swaps = {"swaps": delimited_values(swap_parameters)}
+        else:
+            swaps = None
+
         return self._session.get(
             self.build_sub_collection_url(entrypoint_id),
             str(entrypoint_snapshot_id),
             CONFIG,
+            params=swaps,
         )
 
     def get_plugins_bundle(
@@ -525,7 +536,7 @@ class EntrypointsSnapshotCollectionClient(SnapshotsSubCollectionClient[T]):
             self.build_sub_collection_url(entrypoint_id),
             str(entrypoint_snapshot_id),
             DYNAMIC_GLOBAL_PARAMETERS,
-            params={"swaps": ",".join([f"{k}:{v}" for k, v in swaps.items()])},
+            params={"swaps": delimited_values(swaps)},
         )
 
     def get_swaps(self, entrypoint_id: int, entrypoint_snapshot_id: int) -> T:
