@@ -65,6 +65,7 @@ from .schema import (
     EntrypointPluginMutableFieldsSchema,
     EntrypointPluginSchema,
     EntrypointSchema,
+    SwapChoiceRequestSchema,
     SwapInfoSchema,
     ValidateOnlySchema,
 )

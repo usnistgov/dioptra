@@ -390,7 +390,8 @@ class DelimitedKeyValuePairs(fields.Field):
             raise ValidationError(
                 f"{attr} is not a delimited list {value}. List format should be key{self.equality}value{self.delimiter}key2{self.equality}value2{self.delimiter}key3{self.equality}value3."
             ) from e
-        
+
+
 class DelimitedValues(fields.Field):
     def __init__(
         self,
@@ -411,7 +412,7 @@ class DelimitedValues(fields.Field):
                 f"{attr} is not a delimited list {value}. List format should be value1{self.delimiter}value2{self.delimiter}value3."
             ) from e
 
-    
+
 class SwapChoiceRequestSchema(Schema):
     swaps = DelimitedKeyValuePairs(
         attribute="swaps",
@@ -423,20 +424,22 @@ class SwapChoiceRequestSchema(Schema):
         },
     )
 
+
 class EntrypointConfigRequestSchema(SwapChoiceRequestSchema):
     sections = DelimitedValues(
         attribute="sections",
         data_key="sections",
-        metadata={
-            "description": {
-                "A list of sections to include in the response."
-            }
-        }
+        metadata={"description": "A list of sections to include in the response."},
     )
-    partial = fields.Boolean(
+
+    partial = fields.Bool(
         attribute="partial",
-        metadata={"description": "If true, allow partial rendering of the task graph from this endpoint."},
-    )
+        data_key="partial",
+        metadata={
+            "description": "If true, allow partial rendering of the task graph from this endpoint."
+        },
+    )  #  type: ignore
+
 
 class DynamicGlobalParametersResponseSchema(Schema):
     globalParameters = fields.List(

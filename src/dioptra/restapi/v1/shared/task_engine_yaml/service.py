@@ -86,7 +86,14 @@ class TaskEngineYamlService(object):
         output = {}
 
         # assume they want everything if not provided
-        sections = sections or ["types", "parameters", "tasks", "graph", "artifact_outputs", "artifact_inputs"]
+        sections = sections or [
+            "types",
+            "parameters",
+            "tasks",
+            "graph",
+            "artifact_outputs",
+            "artifact_inputs",
+        ]
 
         if {"tasks", "types", "artifact_inputs"} & set(sections):
             tasks, parameter_types = self.extract_tasks(
@@ -101,7 +108,9 @@ class TaskEngineYamlService(object):
             if "types" in sections:
                 output["types"] = parameter_types
             if "artifact_inputs" in sections:
-                output["artifact_inputs"] = self.extract_artifact_inputs(entry_point.artifact_parameters)
+                output["artifact_inputs"] = self.extract_artifact_inputs(
+                    entry_point.artifact_parameters
+                )
 
         if "parameters" in sections:
             output["parameters"] = self.extract_parameters(entry_point)

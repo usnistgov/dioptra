@@ -413,9 +413,9 @@ class EntrypointsSnapshotCollectionClient(SnapshotsSubCollectionClient[T]):
             get_params["swaps"] = delimited_values(swap_parameters)
 
         if sections:
-            get_params["sections"] = sections
+            get_params["sections"] = ",".join(sections)
 
-        get_params["partial"] = partial
+        get_params["partial"] = str(partial)
 
         return self._session.get(
             self.build_sub_collection_url(entrypoint_id),
