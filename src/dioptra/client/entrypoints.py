@@ -402,7 +402,8 @@ class EntrypointsSnapshotCollectionClient(SnapshotsSubCollectionClient[T]):
             entrypoint_id: The entrypoint id, an integer.
             entrypoint_snapshot_id: The entrypoint snapshot id, an integer.
             swap_parameters: A dictionary mapping swap names to task alias choices.
-
+            sections: A list of sections of the job YAML to include in the response.
+            partial: If true, will not raise an error for missing swaps, and will return a partially rendered graph.
         Returns:
             The response from the Dioptra API.
         """

@@ -1264,6 +1264,7 @@ class EntrypointConfigService(UnitOfWorkService):
             swap_choices: An optional dictionary mapping swap names to task alias choices,
                 which will be used to render the task graph.
             sections: An optional list which filters the sections included in the return result.
+            partial: If true, will not raise an error for missing swaps, and will return a partially rendered graph.
         Returns:
             A dictionary matching EntrypointConfigSchema.
         """
