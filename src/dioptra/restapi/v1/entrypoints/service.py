@@ -1252,6 +1252,7 @@ class EntrypointConfigService(UnitOfWorkService):
         snapshotId: int,
         log: BoundLogger,
         swap_choices: dict[str, str] | None = None,
+        sections: list[str] | None = None
     ) -> dict[str, Any]:
         """Return the rendered YAML configuration dictionary for the given entrypoint.
 
@@ -1261,6 +1262,7 @@ class EntrypointConfigService(UnitOfWorkService):
             log: A BoundLogger object.
             swap_choices: An optional dictionary mapping swap names to task alias choices,
                 which will be used to render the task graph.
+            sections: An optional list which filters the sections included in the return result.
         Returns:
             A dictionary matching EntrypointConfigSchema.
         """
@@ -1288,6 +1290,7 @@ class EntrypointConfigService(UnitOfWorkService):
             plugin_plugin_files=plugin_files,  # pyright: ignore
             plugin_parameter_types=types,  # pyright: ignore
             logger=log,
+            sections=sections,
         )
 
         # we should be able to run this in all cases because render_swaps_graph will raise
