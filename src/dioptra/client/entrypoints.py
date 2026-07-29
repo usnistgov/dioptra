@@ -393,6 +393,8 @@ class EntrypointsSnapshotCollectionClient(SnapshotsSubCollectionClient[T]):
         entrypoint_id: str | int,
         entrypoint_snapshot_id: str | int,
         swap_parameters: dict[str, str] | None = None,
+        sections: list[str] | None = None,
+        partial: bool = False,
     ) -> T:
         """Get the config for the entrypoint matching the provided snapshot id.
 
@@ -405,16 +407,21 @@ class EntrypointsSnapshotCollectionClient(SnapshotsSubCollectionClient[T]):
             The response from the Dioptra API.
         """
 
+        get_params = {}
+
         if swap_parameters is not None:
-            swaps = {"swaps": delimited_values(swap_parameters)}
-        else:
-            swaps = None
+            get_params["swaps"] = delimited_values(swap_parameters)
+
+        if sections:
+            get_params["sections"] = sections
+
+        get_params["partial"] = partial
 
         return self._session.get(
             self.build_sub_collection_url(entrypoint_id),
             str(entrypoint_snapshot_id),
             CONFIG,
-            params=swaps,
+            params=get_params,
         )
 
     def get_plugins_bundle(

@@ -433,6 +433,10 @@ class EntrypointConfigRequestSchema(SwapChoiceRequestSchema):
             }
         }
     )
+    partial = fields.Boolean(
+        attribute="partial",
+        metadata={"description": "If true, allow partial rendering of the task graph from this endpoint."},
+    )
 
 class DynamicGlobalParametersResponseSchema(Schema):
     globalParameters = fields.List(

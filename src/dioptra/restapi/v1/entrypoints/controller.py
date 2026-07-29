@@ -326,8 +326,10 @@ class EntryPointSnapshotConfigEndpoint(Resource):
         )
 
         parsed_query_params = request.parsed_query_params  # type: ignore # noqa: F841
+
         swap_choices = parsed_query_params.get("swaps", {})
         sections = parsed_query_params.get("sections", [])
+        partial = parsed_query_params.get("partial", False)
 
         full_config = self._entrypoint_config_service.get_config(
             id=id,
@@ -335,6 +337,7 @@ class EntryPointSnapshotConfigEndpoint(Resource):
             log=log,
             swap_choices=swap_choices,
             sections=sections,
+            partial=partial,
         )
 
         return full_config
