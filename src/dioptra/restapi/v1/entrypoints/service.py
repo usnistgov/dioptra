@@ -1570,6 +1570,29 @@ class SwapsValidationService(object):
 
         return swaps
 
+    def _check_duplicate_swap_names(
+        self, task_graph: dict[str, Any]
+    ) -> list[ValidationIssue]:
+        """Validate that each swap name appears only once in the task graph."""
+        swap_counts: dict[str, int] = {}
+        for _step, task in task_graph.items():
+            if isinstance(task, dict):
+                for key in task.keys():
+                    if isinstance(key, str) and key.startswith("?"):
+                        swap_name = key[1:]  # strip leading '?'
+                        swap_counts[swap_name] = swap_counts.get(swap_name, 0) + 1
+        duplicate_issues: list[ValidationIssue] = []
+        for name, count in swap_counts.items():
+            if count > 1:
+                duplicate_issues.append(
+                    ValidationIssue(
+                        type_=IssueType.SEMANTIC,
+                        severity=IssueSeverity.ERROR,
+                        message=f"Duplicate swap name '{name}' found in task graph (appears {count} times).",
+                    )
+                )
+        return duplicate_issues
+
     def validate_single_swap_combinations(
         self,
         task_graph_yaml: dict[str, Any],
@@ -1694,6 +1717,8 @@ class SwapsValidationService(object):
         if swaps_yaml is None:
             raise EmptyGraphError("Provided swaps graph is empty.")
 
+        duplicate_swap_issues = self._check_duplicate_swap_names(swaps_yaml)
+
         #### Pre-render Schema Issues
         entrypoint = build_entrypoint_data_adapter(
             swaps_graph,
@@ -1815,9 +1840,11 @@ class SwapsValidationService(object):
             g for g in collected_required_globals if g not in declared_globals
         ]
 
+        combined_swap_issues = output_issues + duplicate_swap_issues
+
         return {
             "schema_issues": [str(i) for i in schema_issues],
-            "swap_issues": [str(i) for i in output_issues],
+            "swap_issues": [str(i) for i in combined_swap_issues],
             "rendered_validation_errors": [
                 str(i) for i in collected_rendered_validation_issues
             ],
