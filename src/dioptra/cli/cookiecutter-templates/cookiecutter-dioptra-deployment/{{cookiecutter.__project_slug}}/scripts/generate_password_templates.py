@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Render the Jinja templates containing the deployment's passwords."""
+
 from __future__ import annotations
 
 import binascii
@@ -49,7 +50,7 @@ def generate_random_passwords(words_file: str | Path) -> dict[str, Any]:
     """
     logger.info('Generating "Correct Horse Battery Staple" passwords')
     words = _populate_words(words_file)
-    return dict(
+    return dict(  # noqa: C408
         minio_mlflow_tracking_password=_generate_random_password(
             words,
             capitalize=False,
@@ -105,7 +106,7 @@ def render_template_files(
             filepath.
         passwords: A dictionary of template variable to password mappings.
     """
-    variables = passwords | dict(working_directory=str(BASE_DIRECTORY))
+    variables = passwords | {"working_directory": str(BASE_DIRECTORY)}
     for template_name, output_filepath in template_files:
         if (BASE_DIRECTORY / output_filepath).exists():
             logger.info("The file %s already exists, skipping", str(output_filepath))
@@ -198,9 +199,9 @@ def _generate_random_password(
 
 def _password_encoding(password):
 
-    key="word"
+    key = "word"
     ue_param = URL.urlencode({key: password})
-    url_safe_word = ue_param[len(key)+1:]
+    url_safe_word = ue_param[len(key) + 1 :]
 
     return url_safe_word
 
@@ -244,7 +245,7 @@ def _populate_words(
                 line.decode(source_encoding).lower().strip(),
             )
 
-            is_ascii: bool = all([0 <= ord(char) <= 127 for char in normalized_line])
+            is_ascii: bool = all(0 <= ord(char) <= 127 for char in normalized_line)
             is_not_plural: bool = not normalized_line.endswith("'s")
             is_not_short: bool = len(normalized_line) >= 4
 

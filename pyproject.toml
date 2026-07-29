@@ -113,6 +113,7 @@ dioptra-db = "dioptra.restapi.db.alembic.run:cli"
 run-experiment = "dioptra.task_engine.run_experiment:main"
 validate-experiment = "dioptra.task_engine.validate:main"
 dioptra-worker-v1 = "dioptra.worker.dioptra_worker_v1:main"
+dioptra-platform = "dioptra.cli.main:cli"
 
 [project.entry-points."dioptra.generics.estimator_predict"]
 tf_keras_model = "dioptra.generics_plugins.estimator_predict.tf_keras_model"
@@ -126,7 +127,6 @@ dev = [
     "binaryornot>=0.4.0",
     "cookiecutter>=2.0.0,<2.2.0",
     "coverage[toml]>=7.8.0",
-    "cruft>=2.16.0",
     "Faker>=24.0.0",
     "flake8-bugbear>=24.12.12",
     "flake8>=7.2.0",
