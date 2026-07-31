@@ -2606,6 +2606,41 @@ def test_entrypoint_swaps_config_filtering(
     # we didn't specify this swap and are doing a partial render so it should still be there.
     assert '?step3_choice' in response_json['graph']['step3'] 
 
+def test_entrypoint_swaps_config_no_graph(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_swap_entrypoints: dict[str, Any],
+):
+    entrypoint = registered_swap_entrypoints["swap_test"]
+
+    response = dioptra_client.entrypoints.snapshots.get_config(
+        entrypoint["id"], entrypoint["snapshot"], swap_parameters={"step2_choice": "taskalias1"}, partial=True, sections=["types"]
+    )
+
+    assert response.status_code == HTTPStatus.OK
+
+    response_json = response.json()
+
+    assert 'types' in response_json
+
+def test_entrypoint_swaps_config_two_sections(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_swap_entrypoints: dict[str, Any],
+):
+    entrypoint = registered_swap_entrypoints["swap_test"]
+
+    response = dioptra_client.entrypoints.snapshots.get_config(
+        entrypoint["id"], entrypoint["snapshot"], swap_parameters={"step2_choice": "taskalias1"}, partial=True, sections=["types", "graph"]
+    )
+
+    assert response.status_code == HTTPStatus.OK
+
+    response_json = response.json()
+
+    assert 'types' in response_json
+    assert 'graph' in response_json
+
 
 
 def test_entrypoint_swaps_config_unspecified(

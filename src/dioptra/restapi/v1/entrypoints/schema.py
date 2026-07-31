@@ -406,7 +406,7 @@ class DelimitedValues(fields.Field):
         try:
             if value == "":
                 return []
-            return [s.strip() for s in value.split() if s.strip()]
+            return [s.strip() for s in value.split(self.delimiter) if s.strip()]
         except Exception as e:
             raise ValidationError(
                 f"{attr} is not a delimited list {value}. List format should be value1{self.delimiter}value2{self.delimiter}value3."

@@ -1295,12 +1295,13 @@ class EntrypointConfigService(UnitOfWorkService):
             sections=sections,
         )
 
-        try:
-            config["graph"] = render_swaps_graph(
-                config["graph"], swap_choices, raise_unspecified=not partial
-            )
-        except Exception as e:
-            raise EntrypointSwapsRenderError(str(e)) from e
+        if "graph" in config:
+            try:
+                config["graph"] = render_swaps_graph(
+                    config["graph"], swap_choices, raise_unspecified=not partial
+                )
+            except Exception as e:
+                raise EntrypointSwapsRenderError(str(e)) from e
 
         return config
 
