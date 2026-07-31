@@ -133,6 +133,64 @@ the output of those steps).
 
 .. rst-class:: fancy-header header-seealso
 
+Entrypoint Swaps
+~~~~~~~~~~~~~~~~
+
+Often, the structure of a task graph may be reusable. For example in the task graph provided above, 
+we may have two different ways of training the model. Both of these produce a model and so the graph
+would be exactly the same with the difference of one task. In such cases, we can use a swaps, denoted by
+the inclusion of the ``?`` character at the start of the name. 
+
+.. code:: yaml
+   
+   rng:
+      configure_rng:
+         seed: 1234
+
+   trained_model:
+      ?training_method:
+         training_method_A:
+            train_a:
+               model: $model_artifact
+               dataset: $training_ds
+               epochs: $num_epochs
+         training_method_B:
+            train_b:
+               model: $model_artifact
+               dataset: $training_ds
+               epochs: $num_epochs
+
+      dependencies: [rng]
+
+   predictions:
+      predict:
+         model: $defended_model
+         dataset: $testing_ds
+         samples: $num_samples
+      dependencies: [rng]
+
+   defended_model:
+      adversarial_training:
+         model: $trained_model.model
+         dataset: $adversarial_ds
+         split: 0.5
+      dependencies: [rng]
+
+   metrics: 
+      run_metrics:
+         predictions: $predictions
+
+
+In this example, the ``swap name`` is ``training_method``, and there are two ``task aliases``, named ``training_method_A``
+and ``training_method_B``. When running a job, a dictionary such as the following will be provided to indicate which 
+task definition should be used in place of the swap:
+
+.. code:: yaml
+   {
+      "training_method": "training_method_A"
+   }
+
+
 See Also 
 ---------
 

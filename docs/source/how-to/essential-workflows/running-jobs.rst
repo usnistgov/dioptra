@@ -133,10 +133,28 @@ artifact input.
       .. automethod:: dioptra.client.artifacts.ArtifactsCollectionClient.get
          :noindex:
 
+.. rst-class:: header-on-a-card header-steps
+
+Step 4: Make selections for any swaps contained in the task graph (if applicable)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Entrypoints task graphs may contain swaps, which need to be specified during job creation.
+
+.. tabs::
+
+   .. group-tab:: GUI
+
+      TODO: UPDATE BASED ON ACTUAL GUI
+
+   .. group-tab:: Python Client
+
+      Prepare a dictionary mapping swap names to task aliases. Ensure that all swaps present in the 
+      entrypoint task graph are specified, and that all specified swaps exist in the entrypoint task
+      graph.
 
 .. rst-class:: header-on-a-card header-steps
 
-Step 4: Run the job
+Step 5: Run the job
 ~~~~~~~~~~~~~~~~~~~
 
 Once all the inputs are prepared, run the job.
