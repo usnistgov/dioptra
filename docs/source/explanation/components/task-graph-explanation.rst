@@ -131,7 +131,6 @@ the output of those steps).
    chaining of plugin tasks. If a user wants to add additional explicit dependencies in the task graph, this can be done.
    See :ref:`reference-entrypoints-task-graph-dependencies` for more details on this.
 
-.. rst-class:: fancy-header header-seealso
 
 Entrypoint Swaps
 ~~~~~~~~~~~~~~~~
@@ -159,7 +158,6 @@ the inclusion of the ``?`` character at the start of the name.
                model: $model_artifact
                dataset: $training_ds
                epochs: $num_epochs
-
       dependencies: [rng]
 
    predictions:
@@ -181,7 +179,7 @@ the inclusion of the ``?`` character at the start of the name.
          predictions: $predictions
 
 
-In this example, the ``swap name`` is ``training_method``, and there are two ``task aliases``, named ``training_method_A``
+In this example, the swap name is ``training_method``, and there are two task aliases, named ``training_method_A``
 and ``training_method_B``. When running a job, a dictionary such as the following will be provided to indicate which 
 task definition should be used in place of the swap:
 
@@ -190,6 +188,7 @@ task definition should be used in place of the swap:
       "training_method": "training_method_A"
    }
 
+.. rst-class:: fancy-header header-seealso
 
 See Also 
 ---------

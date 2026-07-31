@@ -611,10 +611,13 @@ Below details the structure of a swap:
             task_alias2:
                 plugin2: [arg1, arg2]
 
-A ``swap`` is specified in the task graph as a child of the ``step``. In order to be considered a swap,
-the ``swap name`` must start with the character ``?``. In the example above ``swap_name`` is the name of the swap.
+A swap is specified in the task graph as a child of the step. In order to be considered a swap,
+the swap name in the task graph must start with the character ``?``. The ``?`` is excluded from the
+swap name when providing selections during job creation.
 
-The swap should then contain a mapping of ``task aliases`` to ``task definitions``. In the example above,
+In the example above ``swap_name`` is the name of the swap.
+
+The swap should then contain a mapping of task aliases to task definitions. In the example above,
 ``task_alias1`` maps to a long form mixed invocation style dask definition, and ``task_alias2`` maps to a 
 positional style invocation.
 
