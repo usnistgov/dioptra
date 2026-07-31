@@ -136,9 +136,13 @@ Entrypoint Swaps
 ~~~~~~~~~~~~~~~~
 
 Often, the structure of a task graph may be reusable. For example in the task graph provided above, 
-we may have two different ways of training the model. Both of these produce a model and so the graph
-would be exactly the same with the difference of one task. In such cases, we can use a swaps, denoted by
+we may have two different ways of training the model. Since both of these produce a trained model, the graph
+would be exactly the same with the difference of one task. In such cases, we can use a swap, denoted by
 the inclusion of the ``?`` character at the start of the name. 
+
+.. important::
+
+   Task definitions in a swap *must* have the same output type. 
 
 .. code:: yaml
    

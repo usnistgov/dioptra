@@ -634,7 +634,9 @@ task engine:
             keyword1: arg1
             keyword2: arg2
 
+.. important::
 
+   Task definitions in a swap *must* have the same output type. 
 
 References
 **********
