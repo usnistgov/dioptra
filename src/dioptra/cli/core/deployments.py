@@ -433,7 +433,7 @@ def read_manifest(path: Path) -> dict | None:
     if not manifest_file.exists():
         return None
     with open(manifest_file) as f:
-        manifest : dict = json.load(f)
+        manifest: dict = json.load(f)
         return manifest
 
 
