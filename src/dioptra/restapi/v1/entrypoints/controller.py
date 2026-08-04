@@ -56,7 +56,8 @@ from dioptra.restapi.v1.shared.tags.controller import (
 from .schema import (
     DynamicGlobalParametersResponseSchema,
     EntrypointArtifactPluginMutableFieldsSchema,
-    EntrypointConfigSchema,
+    EntrypointConfigRequestSchema,
+    EntrypointConfigResponseSchema,
     EntrypointDraftSchema,
     EntrypointGetQueryParameters,
     EntrypointMutableFieldsSchema,
@@ -314,8 +315,8 @@ class EntryPointSnapshotConfigEndpoint(Resource):
         super().__init__(*args, **kwargs)
 
     @login_required
-    @accepts(query_params_schema=SwapChoiceRequestSchema, api=api)
-    @responds(schema=EntrypointConfigSchema, api=api)
+    @accepts(query_params_schema=EntrypointConfigRequestSchema, api=api)
+    @responds(schema=EntrypointConfigResponseSchema, api=api)
     def get(self, id: int, snapshotId: int):
         log = LOGGER.new(
             request_id=str(uuid.uuid4()),
@@ -328,13 +329,19 @@ class EntryPointSnapshotConfigEndpoint(Resource):
         parsed_query_params = request.parsed_query_params  # type: ignore # noqa: F841
 
         swap_choices = parsed_query_params.get("swaps", {})
+        sections = parsed_query_params.get("sections", [])
+        partial = parsed_query_params.get("partial", False)
 
-        return self._entrypoint_config_service.get_config(
+        full_config = self._entrypoint_config_service.get_config(
             id=id,
             snapshotId=snapshotId,
             log=log,
             swap_choices=swap_choices,
+            sections=sections,
+            partial=partial,
         )
+
+        return full_config
 
 
 @api.route("/<int:id>/snapshots/<int:snapshotId>/plugins/bundle")
