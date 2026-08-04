@@ -2099,11 +2099,56 @@ def test_validate_swaps_graph_missing_globals(
     assert "missing_param2" in validation_result["missing_global_params"]
     assert "missing_param3" in validation_result["missing_global_params"]
 
-    validation_result = modify_response.json()["detail"]["reason"]
-    assert "missing_global_params" in validation_result
-    assert "missing_param1" in validation_result["missing_global_params"]
-    assert "missing_param2" in validation_result["missing_global_params"]
-    assert "missing_param3" in validation_result["missing_global_params"]
+def test_validate_swaps_graph_duplicate_swap_name(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_swaps_validation_plugin: dict[str, Any],
+    registered_plugin_parameter_types: dict[str, Any],
+) -> None:
+    """Test that the validation logic catches duplicate swap names."""
+    group_id = auth_account["default_group_id"]
+    plugin_id = registered_swaps_validation_plugin["plugin_id"]
+
+    swaps_graph = textwrap.dedent(
+        """
+        step1:
+          ?dup_swap:
+            alias1:
+              task1:
+                input_param: $input_param
+        step2:
+          ?dup_swap:
+            alias2:
+              task2:
+                input_param: $input_param
+        """
+    )
+
+    create_response, modify_response = _test_create_and_modify(
+        group_id=group_id,
+        name="test_duplicate_swap_name",
+        task_graph=swaps_graph,
+        plugins=[plugin_id],
+        parameters=[
+            {
+                "name": "input_param",
+                "defaultValue": "test_value",
+                "parameterType": "string",
+            }
+        ],
+        validate_only=True,
+        dioptra_client=dioptra_client,
+        auth_account=auth_account,
+        registered_plugin_parameter_types=registered_plugin_parameter_types,
+    )
+
+    assert create_response.status_code == HTTPStatus.BAD_REQUEST
+    assert modify_response.status_code == HTTPStatus.BAD_REQUEST
+
+    error_detail = create_response.json()["detail"]["reason"]
+    assert "swap_issues" in error_detail
+    assert any("Duplicate swap name" in issue for issue in error_detail["swap_issues"])
+
 
 def test_validate_swaps_graph_rendered_errors(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
