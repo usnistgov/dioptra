@@ -921,6 +921,21 @@ wheels = [
 ]
 
 [[package]]
+name = "cruft"
+version = "2.16.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "click" },
+    { name = "cookiecutter" },
+    { name = "gitpython" },
+    { name = "typer" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/d1/7e/0e20012f2aa156e5d6a70483a8d90accb7ed4966dddb0c58987d9f6eba12/cruft-2.16.0.tar.gz", hash = "sha256:184662853fbc1c16c0137fe0e9444e0cbe95e40362f5ebb2d9fae33d9223e73f", size = 678333, upload-time = "2024-12-25T14:08:09.46Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c9/76/1e88cda6ba47b593fcea24acce8070bb7cc5780c49f828b7b47c212bf62c/cruft-2.16.0-py3-none-any.whl", hash = "sha256:96adb81f814300a9db0fca690eaa063547f5d3c25f486ac0a366cf8da5cdfb79", size = 26635, upload-time = "2024-12-25T14:08:07.395Z" },
+]
+
+[[package]]
 name = "cryptography"
 version = "46.0.5"
 source = { registry = "https://pypi.org/simple" }
@@ -1172,6 +1187,7 @@ dev = [
     { name = "binaryornot" },
     { name = "cookiecutter" },
     { name = "coverage", extra = ["toml"] },
+    { name = "cruft" },
     { name = "faker" },
     { name = "flake8" },
     { name = "flake8-bugbear" },
@@ -1308,6 +1324,7 @@ dev = [
     { name = "binaryornot", specifier = ">=0.4.0" },
     { name = "cookiecutter", specifier = ">=2.0.0,<2.2.0" },
     { name = "coverage", extras = ["toml"], specifier = ">=7.8.0" },
+    { name = "cruft", specifier = ">=2.16.0" },
     { name = "faker", specifier = ">=24.0.0" },
     { name = "flake8", specifier = ">=7.2.0" },
     { name = "flake8-bugbear", specifier = ">=24.12.12" },
@@ -2993,7 +3010,7 @@ name = "markdown-it-py"
 version = "4.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "mdurl", marker = "(python_full_version < '3.12' and sys_platform == 'emscripten' and extra == 'extra-16-dioptra-platform-tensorflow-gpu') or (platform_machine != 'aarch64' and sys_platform == 'linux' and extra == 'extra-16-dioptra-platform-tensorflow-gpu') or (sys_platform != 'darwin' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-16-dioptra-platform-tensorflow-cpu') or (sys_platform != 'darwin' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-16-dioptra-platform-tensorflow-gpu') or (sys_platform != 'emscripten' and sys_platform != 'linux' and extra == 'extra-16-dioptra-platform-pytorch-cpu' and extra == 'extra-16-dioptra-platform-pytorch-gpu') or (sys_platform != 'emscripten' and sys_platform != 'linux' and extra == 'extra-16-dioptra-platform-pytorch-cpu' and extra == 'extra-16-dioptra-platform-tensorflow-cpu') or (sys_platform != 'emscripten' and sys_platform != 'linux' and extra == 'extra-16-dioptra-platform-pytorch-cpu' and extra == 'extra-16-dioptra-platform-tensorflow-gpu') or (sys_platform == 'darwin' and extra == 'extra-16-dioptra-platform-tensorflow-cpu') or (sys_platform == 'win32' and extra == 'extra-16-dioptra-platform-tensorflow-cpu') or (sys_platform == 'emscripten' and extra == 'extra-16-dioptra-platform-tensorflow-cpu') or (sys_platform == 'linux' and extra == 'extra-16-dioptra-platform-tensorflow-cpu') or (sys_platform == 'darwin' and extra == 'extra-16-dioptra-platform-pytorch-cpu' and extra == 'extra-16-dioptra-platform-pytorch-gpu') or (sys_platform == 'darwin' and extra == 'extra-16-dioptra-platform-pytorch-gpu' and extra == 'extra-16-dioptra-platform-tensorflow-gpu') or (sys_platform == 'win32' and extra == 'extra-16-dioptra-platform-pytorch-cpu' and extra == 'extra-16-dioptra-platform-pytorch-gpu') or (sys_platform == 'win32' and extra == 'extra-16-dioptra-platform-pytorch-gpu' and extra == 'extra-16-dioptra-platform-tensorflow-gpu') or (sys_platform == 'emscripten' and extra == 'extra-16-dioptra-platform-pytorch-cpu' and extra == 'extra-16-dioptra-platform-pytorch-gpu') or (sys_platform == 'emscripten' and extra == 'extra-16-dioptra-platform-pytorch-cpu' and extra == 'extra-16-dioptra-platform-tensorflow-gpu') or (sys_platform == 'emscripten' and extra == 'extra-16-dioptra-platform-pytorch-gpu' and extra == 'extra-16-dioptra-platform-tensorflow-gpu') or (sys_platform == 'linux' and extra == 'extra-16-dioptra-platform-pytorch-cpu' and extra == 'extra-16-dioptra-platform-pytorch-gpu') or (sys_platform == 'linux' and extra == 'extra-16-dioptra-platform-pytorch-cpu' and extra == 'extra-16-dioptra-platform-tensorflow-gpu') or (sys_platform == 'linux' and extra == 'extra-16-dioptra-platform-pytorch-gpu' and extra == 'extra-16-dioptra-platform-tensorflow-gpu') or (sys_platform == 'darwin' and extra == 'extra-16-dioptra-platform-pytorch-cpu' and extra != 'extra-16-dioptra-platform-tensorflow-cpu' and extra == 'extra-16-dioptra-platform-tensorflow-gpu') or (sys_platform == 'win32' and extra == 'extra-16-dioptra-platform-pytorch-cpu' and extra != 'extra-16-dioptra-platform-tensorflow-cpu' and extra == 'extra-16-dioptra-platform-tensorflow-gpu')" },
+    { name = "mdurl" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/5b/f5/4ec618ed16cc4f8fb3b701563655a69816155e79e24a17b651541804721d/markdown_it_py-4.0.0.tar.gz", hash = "sha256:cb0a2b4aa34f932c007117b194e945bd74e0ec24133ceb5bac59009cda1cb9f3", size = 73070, upload-time = "2025-08-11T12:57:52.854Z" }
 wheels = [
@@ -5683,8 +5700,8 @@ name = "rich"
 version = "14.3.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "markdown-it-py", marker = "(python_full_version < '3.12' and sys_platform == 'emscripten' and extra == 'extra-16-dioptra-platform-tensorflow-gpu') or (platform_machine != 'aarch64' and sys_platform == 'linux' and extra == 'extra-16-dioptra-platform-tensorflow-gpu') or (sys_platform != 'darwin' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-16-dioptra-platform-tensorflow-cpu') or (sys_platform != 'darwin' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-16-dioptra-platform-tensorflow-gpu') or (sys_platform != 'emscripten' and sys_platform != 'linux' and extra == 'extra-16-dioptra-platform-pytorch-cpu' and extra == 'extra-16-dioptra-platform-pytorch-gpu') or (sys_platform != 'emscripten' and sys_platform != 'linux' and extra == 'extra-16-dioptra-platform-pytorch-cpu' and extra == 'extra-16-dioptra-platform-tensorflow-cpu') or (sys_platform != 'emscripten' and sys_platform != 'linux' and extra == 'extra-16-dioptra-platform-pytorch-cpu' and extra == 'extra-16-dioptra-platform-tensorflow-gpu') or (sys_platform == 'darwin' and extra == 'extra-16-dioptra-platform-tensorflow-cpu') or (sys_platform == 'win32' and extra == 'extra-16-dioptra-platform-tensorflow-cpu') or (sys_platform == 'emscripten' and extra == 'extra-16-dioptra-platform-tensorflow-cpu') or (sys_platform == 'linux' and extra == 'extra-16-dioptra-platform-tensorflow-cpu') or (sys_platform == 'darwin' and extra == 'extra-16-dioptra-platform-pytorch-cpu' and extra == 'extra-16-dioptra-platform-pytorch-gpu') or (sys_platform == 'darwin' and extra == 'extra-16-dioptra-platform-pytorch-gpu' and extra == 'extra-16-dioptra-platform-tensorflow-gpu') or (sys_platform == 'win32' and extra == 'extra-16-dioptra-platform-pytorch-cpu' and extra == 'extra-16-dioptra-platform-pytorch-gpu') or (sys_platform == 'win32' and extra == 'extra-16-dioptra-platform-pytorch-gpu' and extra == 'extra-16-dioptra-platform-tensorflow-gpu') or (sys_platform == 'emscripten' and extra == 'extra-16-dioptra-platform-pytorch-cpu' and extra == 'extra-16-dioptra-platform-pytorch-gpu') or (sys_platform == 'emscripten' and extra == 'extra-16-dioptra-platform-pytorch-cpu' and extra == 'extra-16-dioptra-platform-tensorflow-gpu') or (sys_platform == 'emscripten' and extra == 'extra-16-dioptra-platform-pytorch-gpu' and extra == 'extra-16-dioptra-platform-tensorflow-gpu') or (sys_platform == 'linux' and extra == 'extra-16-dioptra-platform-pytorch-cpu' and extra == 'extra-16-dioptra-platform-pytorch-gpu') or (sys_platform == 'linux' and extra == 'extra-16-dioptra-platform-pytorch-cpu' and extra == 'extra-16-dioptra-platform-tensorflow-gpu') or (sys_platform == 'linux' and extra == 'extra-16-dioptra-platform-pytorch-gpu' and extra == 'extra-16-dioptra-platform-tensorflow-gpu') or (sys_platform == 'darwin' and extra == 'extra-16-dioptra-platform-pytorch-cpu' and extra != 'extra-16-dioptra-platform-tensorflow-cpu' and extra == 'extra-16-dioptra-platform-tensorflow-gpu') or (sys_platform == 'win32' and extra == 'extra-16-dioptra-platform-pytorch-cpu' and extra != 'extra-16-dioptra-platform-tensorflow-cpu' and extra == 'extra-16-dioptra-platform-tensorflow-gpu')" },
-    { name = "pygments", marker = "(python_full_version < '3.12' and sys_platform == 'emscripten' and extra == 'extra-16-dioptra-platform-tensorflow-gpu') or (platform_machine != 'aarch64' and sys_platform == 'linux' and extra == 'extra-16-dioptra-platform-tensorflow-gpu') or (sys_platform != 'darwin' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-16-dioptra-platform-tensorflow-cpu') or (sys_platform != 'darwin' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-16-dioptra-platform-tensorflow-gpu') or (sys_platform != 'emscripten' and sys_platform != 'linux' and extra == 'extra-16-dioptra-platform-pytorch-cpu' and extra == 'extra-16-dioptra-platform-pytorch-gpu') or (sys_platform != 'emscripten' and sys_platform != 'linux' and extra == 'extra-16-dioptra-platform-pytorch-cpu' and extra == 'extra-16-dioptra-platform-tensorflow-cpu') or (sys_platform != 'emscripten' and sys_platform != 'linux' and extra == 'extra-16-dioptra-platform-pytorch-cpu' and extra == 'extra-16-dioptra-platform-tensorflow-gpu') or (sys_platform == 'darwin' and extra == 'extra-16-dioptra-platform-tensorflow-cpu') or (sys_platform == 'win32' and extra == 'extra-16-dioptra-platform-tensorflow-cpu') or (sys_platform == 'emscripten' and extra == 'extra-16-dioptra-platform-tensorflow-cpu') or (sys_platform == 'linux' and extra == 'extra-16-dioptra-platform-tensorflow-cpu') or (sys_platform == 'darwin' and extra == 'extra-16-dioptra-platform-pytorch-cpu' and extra == 'extra-16-dioptra-platform-pytorch-gpu') or (sys_platform == 'darwin' and extra == 'extra-16-dioptra-platform-pytorch-gpu' and extra == 'extra-16-dioptra-platform-tensorflow-gpu') or (sys_platform == 'win32' and extra == 'extra-16-dioptra-platform-pytorch-cpu' and extra == 'extra-16-dioptra-platform-pytorch-gpu') or (sys_platform == 'win32' and extra == 'extra-16-dioptra-platform-pytorch-gpu' and extra == 'extra-16-dioptra-platform-tensorflow-gpu') or (sys_platform == 'emscripten' and extra == 'extra-16-dioptra-platform-pytorch-cpu' and extra == 'extra-16-dioptra-platform-pytorch-gpu') or (sys_platform == 'emscripten' and extra == 'extra-16-dioptra-platform-pytorch-cpu' and extra == 'extra-16-dioptra-platform-tensorflow-gpu') or (sys_platform == 'emscripten' and extra == 'extra-16-dioptra-platform-pytorch-gpu' and extra == 'extra-16-dioptra-platform-tensorflow-gpu') or (sys_platform == 'linux' and extra == 'extra-16-dioptra-platform-pytorch-cpu' and extra == 'extra-16-dioptra-platform-pytorch-gpu') or (sys_platform == 'linux' and extra == 'extra-16-dioptra-platform-pytorch-cpu' and extra == 'extra-16-dioptra-platform-tensorflow-gpu') or (sys_platform == 'linux' and extra == 'extra-16-dioptra-platform-pytorch-gpu' and extra == 'extra-16-dioptra-platform-tensorflow-gpu') or (sys_platform == 'darwin' and extra == 'extra-16-dioptra-platform-pytorch-cpu' and extra != 'extra-16-dioptra-platform-tensorflow-cpu' and extra == 'extra-16-dioptra-platform-tensorflow-gpu') or (sys_platform == 'win32' and extra == 'extra-16-dioptra-platform-pytorch-cpu' and extra != 'extra-16-dioptra-platform-tensorflow-cpu' and extra == 'extra-16-dioptra-platform-tensorflow-gpu')" },
+    { name = "markdown-it-py" },
+    { name = "pygments" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/74/99/a4cab2acbb884f80e558b0771e97e21e939c5dfb460f488d19df485e8298/rich-14.3.2.tar.gz", hash = "sha256:e712f11c1a562a11843306f5ed999475f09ac31ffb64281f73ab29ffdda8b3b8", size = 230143, upload-time = "2026-02-01T16:20:47.908Z" }
 wheels = [
@@ -5980,6 +5997,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/76/95/faf61eb8363f26aa7e1d762267a8d602a1b26d4f3a1e758e92cb3cb8b054/setuptools-80.10.2.tar.gz", hash = "sha256:8b0e9d10c784bf7d262c4e5ec5d4ec94127ce206e8738f29a437945fbc219b70", size = 1200343, upload-time = "2026-01-25T22:38:17.252Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/94/b8/f1f62a5e3c0ad2ff1d189590bfa4c46b4f3b6e49cef6f26c6ee4e575394d/setuptools-80.10.2-py3-none-any.whl", hash = "sha256:95b30ddfb717250edb492926c92b5221f7ef3fbcc2b07579bcd4a27da21d0173", size = 1064234, upload-time = "2026-01-25T22:38:15.216Z" },
+]
+
+[[package]]
+name = "shellingham"
+version = "1.5.4"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/58/15/8b3609fd3830ef7b27b655beb4b4e9c62313a4e8da8c676e142cc210d58e/shellingham-1.5.4.tar.gz", hash = "sha256:8dbca0739d487e5bd35ab3ca4b36e11c4078f3a234bfce294b0a0291363404de", size = 10310, upload-time = "2023-10-24T04:13:40.426Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e0/f9/0595336914c5619e5f28a1fb793285925a8cd4b432c9da0a987836c7f822/shellingham-1.5.4-py2.py3-none-any.whl", hash = "sha256:7ecfff8f2fd72616f7481040475a65b2bf8af90a56c89140852d1120324e8686", size = 9755, upload-time = "2023-10-24T04:13:38.866Z" },
 ]
 
 [[package]]
@@ -7206,6 +7232,21 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/df/3d/9e7eee57b37c80cec63322c0231bb6da3cfe535a91d7a4d64896fcb89357/triton-3.6.0-cp314-cp314-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:a17a5d5985f0ac494ed8a8e54568f092f7057ef60e1b0fa09d3fd1512064e803", size = 188273063, upload-time = "2026-01-20T16:01:07.278Z" },
     { url = "https://files.pythonhosted.org/packages/48/db/56ee649cab5eaff4757541325aca81f52d02d4a7cd3506776cad2451e060/triton-3.6.0-cp314-cp314t-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:0b3a97e8ed304dfa9bd23bb41ca04cdf6b2e617d5e782a8653d616037a5d537d", size = 176274804, upload-time = "2026-01-20T16:16:31.528Z" },
     { url = "https://files.pythonhosted.org/packages/f6/56/6113c23ff46c00aae423333eb58b3e60bdfe9179d542781955a5e1514cb3/triton-3.6.0-cp314-cp314t-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:46bd1c1af4b6704e554cad2eeb3b0a6513a980d470ccfa63189737340c7746a7", size = 188397994, upload-time = "2026-01-20T16:01:14.236Z" },
+]
+
+[[package]]
+name = "typer"
+version = "0.27.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "annotated-doc" },
+    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'extra-16-dioptra-platform-pytorch-cpu' and extra == 'extra-16-dioptra-platform-pytorch-gpu') or (extra == 'extra-16-dioptra-platform-pytorch-cpu' and extra == 'extra-16-dioptra-platform-tensorflow-cpu') or (extra == 'extra-16-dioptra-platform-pytorch-cpu' and extra == 'extra-16-dioptra-platform-tensorflow-gpu') or (extra == 'extra-16-dioptra-platform-pytorch-gpu' and extra == 'extra-16-dioptra-platform-tensorflow-cpu') or (extra == 'extra-16-dioptra-platform-pytorch-gpu' and extra == 'extra-16-dioptra-platform-tensorflow-gpu') or (extra == 'extra-16-dioptra-platform-tensorflow-cpu' and extra == 'extra-16-dioptra-platform-tensorflow-gpu')" },
+    { name = "rich" },
+    { name = "shellingham" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ae/40/4a3db7990d1f62a53182aa96eaef57aeb2886a27f90a195bc66713565d31/typer-0.27.1.tar.gz", hash = "sha256:a79bef8469a79c45498e7b814ecf8d603cc7644e9acbd9e19cac0334240b18df", size = 203994, upload-time = "2026-08-03T14:41:03.438Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/43/89/9518bc0c3929bee36b3a4a8e3daddd6e03f92f9961c66d4983b837160543/typer-0.27.1-py3-none-any.whl", hash = "sha256:53150287edd11baeb4e4722c8e394fcdf8181c0ae89485cba8d25c778d5edd56", size = 122874, upload-time = "2026-08-03T14:41:04.391Z" },
 ]
 
 [[package]]
