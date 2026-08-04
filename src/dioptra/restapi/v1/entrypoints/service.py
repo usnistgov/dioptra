@@ -1717,7 +1717,11 @@ class SwapsValidationService(object):
         if swaps_yaml is None:
             raise EmptyGraphError("Provided swaps graph is empty.")
 
-        duplicate_swap_issues = self._check_duplicate_swap_names(swaps_yaml)
+        duplicate_swap_issues = (
+            self._check_duplicate_swap_names(swaps_yaml)
+            if isinstance(swaps_yaml, dict)
+            else []
+        )
 
         #### Pre-render Schema Issues
         entrypoint = build_entrypoint_data_adapter(
