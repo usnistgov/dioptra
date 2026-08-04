@@ -65,6 +65,7 @@ class TaskEngineYamlService(object):
         plugin_plugin_files: Sequence[protocols.PluginPluginFileProtocol],
         plugin_parameter_types: Sequence[protocols.PluginTaskParameterTypeProtocol],
         logger: BoundLogger | None = None,
+        sections: list[str] | None = None,
     ) -> dict[str, Any]:
         """Build a dictionary representation of a task engine YAML file.
 
@@ -75,31 +76,52 @@ class TaskEngineYamlService(object):
                 accessible to the entry point.
             logger: A structlog logger object to use for logging. A new logger will be
                 created if None.
+            sections: An optional list which filters the sections included in the return result.
 
         Returns:
             A dictionary representation of a task engine YAML file.
         """
         log = logger or LOGGER.new()  # noqa: F841
-        tasks, parameter_types = self.extract_tasks(
-            plugin_plugin_files, plugin_parameter_types=plugin_parameter_types
-        )
-        # add artifact parameter types if needed
-        self._add_artifact_parameter_types(
-            entry_point.artifact_parameters, parameter_types
-        )
-        parameters = self.extract_parameters(entry_point)
-        graph = self.extract_graph(entry_point)
 
-        artifact_outputs = self.extract_artifact_outputs(entry_point)
-        artifact_inputs = self.extract_artifact_inputs(entry_point.artifact_parameters)
-        return {
-            "types": parameter_types,
-            "parameters": parameters,
-            "tasks": tasks,
-            "graph": graph,
-            "artifact_outputs": artifact_outputs,
-            "artifact_inputs": artifact_inputs,
-        }
+        output = {}
+
+        # assume they want everything if not provided
+        sections = sections or [
+            "types",
+            "parameters",
+            "tasks",
+            "graph",
+            "artifact_outputs",
+            "artifact_inputs",
+        ]
+
+        if {"tasks", "types", "artifact_inputs"} & set(sections):
+            tasks, parameter_types = self.extract_tasks(
+                plugin_plugin_files, plugin_parameter_types=plugin_parameter_types
+            )
+            self._add_artifact_parameter_types(
+                entry_point.artifact_parameters, parameter_types
+            )
+
+            if "tasks" in sections:
+                output["tasks"] = tasks
+            if "types" in sections:
+                output["types"] = parameter_types
+            if "artifact_inputs" in sections:
+                output["artifact_inputs"] = self.extract_artifact_inputs(
+                    entry_point.artifact_parameters
+                )
+
+        if "parameters" in sections:
+            output["parameters"] = self.extract_parameters(entry_point)
+
+        if "graph" in sections:
+            output["graph"] = self.extract_graph(entry_point)
+
+        if "artifact_outputs" in sections:
+            output["artifact_outputs"] = self.extract_artifact_outputs(entry_point)
+
+        return output
 
     def validate(
         self, task_engine_dict: dict[str, Any], schema: dict | None = None

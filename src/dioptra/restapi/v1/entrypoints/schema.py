@@ -392,6 +392,27 @@ class DelimitedKeyValuePairs(fields.Field):
             ) from e
 
 
+class DelimitedValues(fields.Field):
+    def __init__(
+        self,
+        *,
+        delimiter: str = ",",
+        **additional_metadata,
+    ) -> None:
+        super().__init__(**additional_metadata)
+        self.delimiter = delimiter
+
+    def _deserialize(self, value, attr, data, **kwargs) -> list[str]:
+        try:
+            if value == "":
+                return []
+            return [s.strip() for s in value.split(self.delimiter) if s.strip()]
+        except Exception as e:
+            raise ValidationError(
+                f"{attr} is not a delimited list {value}. List format should be value1{self.delimiter}value2{self.delimiter}value3."
+            ) from e
+
+
 class SwapChoiceRequestSchema(Schema):
     swaps = DelimitedKeyValuePairs(
         attribute="swaps",
@@ -402,6 +423,32 @@ class SwapChoiceRequestSchema(Schema):
             )
         },
     )
+
+
+class EntrypointConfigRequestSchema(SwapChoiceRequestSchema):
+    sections = DelimitedValues(
+        attribute="sections",
+        data_key="sections",
+        metadata={"description": "A list of sections to include in the response."},
+    )
+
+    partial = fields.Bool(
+        attribute="partial",
+        data_key="partial",
+        metadata={
+            "description": "If true, allow partial rendering of the task graph from this endpoint."
+        },
+    )  #  type: ignore
+
+    @validates("sections")
+    def validate_sections(self, sections: list[str]) -> None:
+        invalid_sections = (
+            set(sections) - EntrypointConfigResponseSchema().fields.keys()
+        )
+        if invalid_sections:
+            raise ValidationError(
+                f"Invalid config sections: {sorted(invalid_sections)}."
+            )
 
 
 class DynamicGlobalParametersResponseSchema(Schema):
@@ -496,7 +543,7 @@ class ValidateEntrypointIssueSchema(Schema):
         return data
 
 
-class EntrypointConfigSchema(Schema):
+class EntrypointConfigResponseSchema(Schema):
     types = fields.Dict(
         keys=fields.String(),
         values=fields.Raw(),

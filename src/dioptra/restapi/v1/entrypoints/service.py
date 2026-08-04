@@ -1252,6 +1252,8 @@ class EntrypointConfigService(UnitOfWorkService):
         snapshotId: int,
         log: BoundLogger,
         swap_choices: dict[str, str] | None = None,
+        sections: list[str] | None = None,
+        partial: bool = False,
     ) -> dict[str, Any]:
         """Return the rendered YAML configuration dictionary for the given entrypoint.
 
@@ -1261,6 +1263,8 @@ class EntrypointConfigService(UnitOfWorkService):
             log: A BoundLogger object.
             swap_choices: An optional dictionary mapping swap names to task alias choices,
                 which will be used to render the task graph.
+            sections: An optional list which filters the sections included in the return result.
+            partial: If true, will not raise an error for missing swaps, and will return a partially rendered graph.
         Returns:
             A dictionary matching EntrypointConfigSchema.
         """
@@ -1288,15 +1292,16 @@ class EntrypointConfigService(UnitOfWorkService):
             plugin_plugin_files=plugin_files,  # pyright: ignore
             plugin_parameter_types=types,  # pyright: ignore
             logger=log,
+            sections=sections,
         )
 
-        # we should be able to run this in all cases because render_swaps_graph will raise
-        # errors if the graph has unspecified swaps or if swaps are specified that aren't
-        # needed
-        try:
-            config["graph"] = render_swaps_graph(config["graph"], swap_choices)
-        except Exception as e:
-            raise EntrypointSwapsRenderError(str(e)) from e
+        if "graph" in config:
+            try:
+                config["graph"] = render_swaps_graph(
+                    config["graph"], swap_choices, raise_unspecified=not partial
+                )
+            except Exception as e:
+                raise EntrypointSwapsRenderError(str(e)) from e
 
         return config
 
