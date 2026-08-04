@@ -372,6 +372,7 @@ show_error_codes = true
 cache_dir = "/dev/null"
 exclude = [
     'alembic/.*$',  # exclude all files, folders under alembic directory
+    "src/dioptra/cli/cookiecutter-templates/",
 ]
 plugins = "numpy.typing.mypy_plugin"
 
