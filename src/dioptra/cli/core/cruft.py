@@ -31,7 +31,7 @@ from dioptra.cli.core import process, templates
 
 def create(
     output_dir, context, cruft_bin, cookiecutter_bin, branch=None, verbose=False
-):
+) -> None:
     """Render the Dioptra deployment template into output_dir.
 
     In a dev checkout, uses cruft to check out `branch` (or the current HEAD)
@@ -56,7 +56,7 @@ def create(
         _create_from_package(output_dir, context, cookiecutter_bin, verbose)
 
 
-def _create_from_dev_checkout(output_dir, context, cruft_bin, branch, verbose):
+def _create_from_dev_checkout(output_dir, context, cruft_bin, branch, verbose) -> None:
     """Render the template from the local git checkout with the given ref.
 
     Validates the template existence at the ref before invoking cruft,
@@ -97,7 +97,7 @@ def _create_from_dev_checkout(output_dir, context, cruft_bin, branch, verbose):
     process.run(cmd, verbose=verbose)
 
 
-def _create_from_package(output_dir, context, cookiecutter_bin, verbose):
+def _create_from_package(output_dir, context, cookiecutter_bin, verbose) -> None:
     """Render the bundled template using cookiecutter directly.
 
     cookiecutter doesn't require git like cruft does, which is necessary

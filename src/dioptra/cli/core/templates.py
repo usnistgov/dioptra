@@ -92,7 +92,8 @@ def get_current_git_ref() -> str:
             capture_output=True,
             suppress_output=True,
         )
-        return result.stdout.strip()
+        ref: str = result.stdout.strip()
+        return ref
     except RuntimeError:
         return "main"
 

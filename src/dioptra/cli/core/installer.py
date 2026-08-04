@@ -434,7 +434,7 @@ def _validate_images(
             print(f"Using external image: {img}")
 
 
-def _print_install_summary(selection, deployment_path, verbose):
+def _print_install_summary(selection, deployment_path, verbose) -> None:
     """Print a short summary of what's about to be installed."""
     print(f"Installing Dioptra to '{deployment_path}'")
     print(f"  Version:        {selection.version or selection.image_tag}")

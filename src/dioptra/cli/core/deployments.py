@@ -63,12 +63,12 @@ MANIFEST_SCHEMA_VERSION = 1
 #   context:             dict        - cookiecutter render context
 
 
-def get_default_deployments_dir():
+def get_default_deployments_dir() -> Path:
     """Return the default parent directory for new deployments."""
     return DEFAULT_BASE_DIR
 
 
-def get_default_config_dir():
+def get_default_config_dir() -> Path:
     """Return the directory holding Dioptra's CLI configuration and registry."""
     return CONFIG_DIR
 
@@ -88,7 +88,8 @@ def _read_registry() -> dict[str, Any]:
     """Load and return the registry, initializing it if needed."""
     _ensure_registry()
     with open(REGISTRY_FILE) as f:
-        return yaml.safe_load(f) or {"deployments": {}}
+        data: dict[str, Any] = yaml.safe_load(f) or {"deployments": {}}
+        return data
 
 
 def _write_registry(data: Dict[str, Any]) -> None:
@@ -111,7 +112,7 @@ def get_deployment_record(name: str) -> dict:
 
     Raises ValueError if the deployment isn't registered.
     """
-    record = _read_registry()["deployments"].get(name)
+    record: dict[str, Any] = _read_registry()["deployments"].get(name)
     if not record:
         raise ValueError(f"Deployment '{name}' is not registered.")
     return record
@@ -223,7 +224,7 @@ def resolve_new_deployment_name(name: str | None, force: bool) -> str:
         return "default"
 
     if force and len(deployments) == 1:
-        return next(iter(deployments.keys()))
+        return str(next(iter(deployments.keys())))
 
     raise ValueError(
         "A deployment already exists. Please specify a name for the new deployment."
@@ -247,7 +248,7 @@ def resolve_existing_deployment_name(name: str | None) -> str:
         raise ValueError("No deployments found.")
 
     if len(deployments) == 1:
-        return next(iter(deployments.keys()))
+        return str(next(iter(deployments.keys())))
 
     raise ValueError("Multiple deployments exist. Please specify a deployment name.")
 
@@ -432,7 +433,8 @@ def read_manifest(path: Path) -> dict | None:
     if not manifest_file.exists():
         return None
     with open(manifest_file) as f:
-        return json.load(f)
+        manifest : dict = json.load(f)
+        return manifest
 
 
 def get_all_manifests() -> list[dict]:
@@ -503,7 +505,7 @@ def get_registry_resources() -> dict:
     thinks exists against what the live manifests reference.
     """
     registry = _read_registry()
-    all_resources = {
+    all_resources: dict[str, set[str]] = {
         "images": set(),
         "volumes": set(),
         "networks": set(),
@@ -525,7 +527,7 @@ def get_all_manifest_resources(verbose: bool = False) -> dict:
     Used together with get_registry_resources to find orphans.
     """
     registry = _read_registry()
-    all_resources = {
+    all_resources: dict[str, set[str]] = {
         "images": set(),
         "volumes": set(),
         "networks": set(),

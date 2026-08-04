@@ -29,6 +29,7 @@ All shell-outs go through this module to get consistent behavior:
 import subprocess
 from pathlib import Path
 from subprocess import CompletedProcess
+from typing import Any
 
 
 def run(
@@ -90,7 +91,7 @@ def run(
     if verbose:
         print(f"Running {cmd_str}")
 
-    kwargs = {
+    kwargs: dict[str, Any] = {
         "cwd": cwd,
         "env": env,
         "text": True,

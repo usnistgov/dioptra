@@ -96,7 +96,8 @@ def fetch_json(ref: str, path: str, verbose: bool = False) -> dict:
         )
 
     try:
-        return json.loads(body)
+        data: dict = json.loads(body)
+        return data
     except json.JSONDecodeError as e:
         raise RuntimeError(
             f"Fetched {path} from ref '{ref}', but it was not valid JSON."
