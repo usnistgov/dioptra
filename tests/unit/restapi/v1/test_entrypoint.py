@@ -2642,6 +2642,24 @@ def test_entrypoint_swaps_config_two_sections(
     assert 'graph' in response_json
 
 
+@pytest.mark.parametrize("sections", [["invalid"], ["graph", "invalid"]])
+def test_entrypoint_swaps_config_invalid_sections(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_swap_entrypoints: dict[str, Any],
+    sections: list[str],
+) -> None:
+    entrypoint = registered_swap_entrypoints["swap_test"]
+
+    response = dioptra_client.entrypoints.snapshots.get_config(
+        entrypoint["id"],
+        entrypoint["snapshot"],
+        partial=True,
+        sections=sections,
+    )
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+
 
 def test_entrypoint_swaps_config_unspecified(
     dioptra_client: DioptraClient[DioptraResponseProtocol],

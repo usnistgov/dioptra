@@ -440,6 +440,16 @@ class EntrypointConfigRequestSchema(SwapChoiceRequestSchema):
         },
     )  #  type: ignore
 
+    @validates("sections")
+    def validate_sections(self, sections: list[str]) -> None:
+        invalid_sections = (
+            set(sections) - EntrypointConfigResponseSchema().fields.keys()
+        )
+        if invalid_sections:
+            raise ValidationError(
+                f"Invalid config sections: {sorted(invalid_sections)}."
+            )
+
 
 class DynamicGlobalParametersResponseSchema(Schema):
     globalParameters = fields.List(
