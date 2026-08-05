@@ -154,7 +154,7 @@ def main(
 
         # get and save out the yaml
         job_yaml = dioptra_client.jobs.get_config(
-            job_id=job_id,        
+            job_id=job_id,
         )
 
         _save_job_yaml(filepath=context.yaml_path(entrypoint_name), job_yaml=job_yaml)
