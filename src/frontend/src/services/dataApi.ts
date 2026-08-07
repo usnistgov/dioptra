@@ -294,12 +294,21 @@ export async function getResourceDraft<T extends ResourceType>(type: T, id: numb
   return res;
 }
 
-export async function updateItem<T extends keyof UpdateParams>(type: T, id: number, params: UpdateParams[T]) {
-  return await axios.put(`/api/${type}/${id}`, params);
+export async function updateItem<T extends keyof UpdateParams>(
+  type: T,
+  id: number,
+  params: UpdateParams[T],
+  validateOnly = false,
+) {
+  return await axios.put(`/api/${type}/${id}`, params, {
+    params: { validateOnly },
+  });
 }
 
-export async function addItem<T extends keyof CreateParams>(type: T, params: CreateParams[T]) {
-  return await axios.post(`/api/${type}/`, params);
+export async function addItem<T extends keyof CreateParams>(type: T, params: CreateParams[T], validateOnly = false) {
+  return await axios.post(`/api/${type}/`, params, {
+    params: { validateOnly },
+  });
 }
 
 interface JobParams {

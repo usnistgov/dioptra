@@ -325,12 +325,6 @@
           :readOnly="history || entryPoint.deleted"
           style="min-height: 200px"
         />
-        <q-btn
-          label="Validate Inputs"
-          color="primary"
-          class="self-start"
-          @click="validateInputs()"
-        />
       </div>
 
       <div class="col">
@@ -508,6 +502,14 @@
         store.initialPage ? router.push('/entrypoints') : router.back();
       "
     />
+
+    <q-btn
+      label="Validate"
+      color="primary"
+      class="q-mr-lg"
+      @click="validateEntrypoint()"
+    />
+
     <q-btn
       :color="history ? 'blue-2' : 'primary'"
       label="Submit EntryPoint"
@@ -912,8 +914,8 @@ function submit() {
   });
 }
 
-async function addOrModifyEntrypoint() {
-  const submitObject = JSON.parse(JSON.stringify(entryPoint.value));
+function prepareEntrypointPayload() {
+  const payload = JSON.parse(JSON.stringify(entryPoint.value));
   const keysToKeep = [
     "group",
     "name",
@@ -926,23 +928,30 @@ async function addOrModifyEntrypoint() {
     "plugins",
     "artifactPlugins",
   ];
-  for (const key of Object.keys(submitObject)) {
+  for (const key of Object.keys(payload)) {
     if (!keysToKeep.includes(key)) {
-      delete submitObject[key];
+      delete payload[key];
     }
   }
-  // turn objects into ids
-  submitObject.queues = submitObject.queues.map((q) => q.id);
-  submitObject.plugins = submitObject.plugins.map((p) => p.id);
-  submitObject.artifactPlugins = submitObject.artifactPlugins.map((p) => p.id);
 
-  submitObject.artifactParameters = submitObject.artifactParameters.map((param) => ({
+  // turn objects into ids
+  payload.queues = payload.queues.map((queue) => queue.id);
+  payload.plugins = payload.plugins.map((plugin) => plugin.id);
+  payload.artifactPlugins = payload.artifactPlugins.map((plugin) => plugin.id);
+
+  payload.artifactParameters = payload.artifactParameters.map((param) => ({
     ...param,
     outputParams: param.outputParams.map((oParam) => ({
       ...oParam,
       parameterType: oParam.parameterType.id,
     })),
   }));
+
+  return payload;
+}
+
+async function addOrModifyEntrypoint() {
+  const submitObject = prepareEntrypointPayload();
   try {
     if (route.params.id === "new") {
       await api.addItem("entrypoints", submitObject);
@@ -1129,29 +1138,27 @@ async function deleteEntrypoint() {
 const inputErrors = ref([]);
 const displayErrorDialog = ref(false);
 
-async function validateInputs() {
+async function validateEntrypoint() {
+  if (taskGraphError.value) {
+    notify.error(taskGraphError.value);
+    return;
+  }
+  if (!entryPoint.value.name) {
+    notify.error("Please provide an Entrypoint name");
+    return;
+  }
+
+  const submitObject = prepareEntrypointPayload();
+  console.log('payload = ', JSON.parse(JSON.stringify(entryPoint.value)))
   try {
-    const res = await api.validateEntrypoint({
-      group: entryPoint.value.group.id || entryPoint.value.group,
-      taskGraph: entryPoint.value.taskGraph,
-      pluginSnapshots: entryPoint.value.plugins.map((plugin) => plugin.snapshotId || plugin.snapshot),
-      parameters: entryPoint.value.parameters,
-      artifacts: entryPoint.value.artifactParameters.map((param) => ({
-        ...param,
-        outputParams: param.outputParams.map((oParam) => ({
-          ...oParam,
-          parameterType: oParam.parameterType.id,
-        })),
-      })),
-    });
-    if (res?.data?.schemaValid && !taskGraphPlaceholderError.value) {
-      notify.success(`Entrypoint inputs are valid!`);
-    } else if (res?.data?.schemaIssues.length > 0 || taskGraphPlaceholderError.value) {
-      inputErrors.value = res.data.schemaIssues;
-      if (taskGraphPlaceholderError.value) {
-        inputErrors.value.push({ message: taskGraphPlaceholderError.value });
-      }
-      displayErrorDialog.value = true;
+    if (route.params.id === "new") {
+      await api.addItem("entrypoints", submitObject, true);
+      notify.success(`Entrypoint is valid!`);
+    } else {
+      const keysToRemove = ["group", "plugins", "artifactPlugins"];
+      keysToRemove.forEach((key) => delete submitObject[key]);
+      await api.updateItem("entrypoints", route.params.id, submitObject, true);
+      notify.success(`Entrypoint is valid!`);
     }
   } catch (err) {
     notify.error(err.response.data.message);
