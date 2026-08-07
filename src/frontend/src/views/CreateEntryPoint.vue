@@ -348,6 +348,28 @@
           :hideCreateBtn="true"
           @syncResource="({ resource }) => syncPlugin(resource)"
         >
+          <template #body-cell-taskName="cellProps">
+            <span>{{ cellProps.row.name }}</span>
+            <q-icon
+              v-if="swappableTasksByTask.get(cellProps.row)?.length"
+              name="sym_o_sync_alt"
+              size="sm"
+              color="primary"
+              class="q-ml-sm q-mb-xs"
+            >
+              <q-tooltip>
+                <div>Swappable with:</div>
+                <ul class="q-my-none q-pl-md">
+                  <li
+                    v-for="task in swappableTasksByTask.get(cellProps.row)"
+                    :key="`${task.plugin.id}-${task.id || task.name}`"
+                  >
+                    {{ task.name }}
+                  </li>
+                </ul>
+              </q-tooltip>
+            </q-icon>
+          </template>
           <template #body-cell-inputParams="cellProps">
             <div
               v-for="(param, i) in cellProps.row.inputParams"
@@ -1236,6 +1258,8 @@ function findSwappableTasks(task) {
     );
   });
 }
+
+const swappableTasksByTask = computed(() => new Map(tasks.value.map((task) => [task, findSwappableTasks(task)])));
 
 const taskGraphObject = computed(() => {
   try {
