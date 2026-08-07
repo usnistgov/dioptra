@@ -714,15 +714,17 @@
   />
   <InfoPopupDialog v-model="displayErrorDialog">
     <template #title>
-      <label id="modalTitle"> Entrypoint Input Errors </label>
+      <label id="modalTitle"> Entrypoint Validation Errors </label>
     </template>
-    Errors found: {{ inputErrors.length }}
+    Errors found: {{ validationIssues.length }}
     <ul>
       <li
-        v-for="(error, i) in inputErrors"
+        v-for="(issue, i) in validationIssues"
         :key="i"
+        class="q-mb-md"
+        style="white-space: pre-wrap"
       >
-        {{ error.message }}
+        {{ issue }}
       </li>
     </ul>
   </InfoPopupDialog>
@@ -1397,7 +1399,7 @@ async function deleteEntrypoint() {
   }
 }
 
-const inputErrors = ref([]);
+const validationIssues = ref([]);
 const displayErrorDialog = ref(false);
 
 async function validateEntrypoint() {
@@ -1411,7 +1413,6 @@ async function validateEntrypoint() {
   }
 
   const submitObject = prepareEntrypointPayload();
-  console.log("payload = ", JSON.parse(JSON.stringify(entryPoint.value)));
   try {
     if (route.params.id === "new") {
       await api.addItem("entrypoints", submitObject, true);
@@ -1423,7 +1424,17 @@ async function validateEntrypoint() {
       notify.success(`Entrypoint is valid!`);
     }
   } catch (err) {
-    notify.error(err.response.data.message);
+    const reason = err.response?.data?.detail?.reason;
+    const responseValidationIssues = [
+      ...(Array.isArray(reason?.schema_issues) ? reason.schema_issues : []),
+      ...(Array.isArray(reason?.swap_issues) ? reason.swap_issues : []),
+    ];
+    if (responseValidationIssues.length > 0) {
+      validationIssues.value = responseValidationIssues;
+      displayErrorDialog.value = true;
+    } else {
+      notify.error(err.response?.data?.message ?? "Failed to validate Entrypoint");
+    }
   }
 }
 
