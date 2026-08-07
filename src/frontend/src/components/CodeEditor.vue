@@ -131,7 +131,7 @@ function highlightPlaceholder(update) {
   const to = view.value.state.selection.ranges[0].to;
   if (from !== to) return; // short circut if user is dragging cursor
 
-  const placeholders = ["<input-value>", "<step-name>", "<output-name>", "<contents>"];
+  const placeholders = ["<input-value>", "<step-name>", "<swap-name>", "<task-alias>", "<output-name>", "<contents>"];
   placeholders.forEach((placeholder) => {
     let startIndex = code.value.indexOf(placeholder);
     while (startIndex !== -1) {

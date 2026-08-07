@@ -399,8 +399,97 @@
               size="xs"
               color="grey-5"
               text-color="black"
-              @click="addToTaskGraph(cellProps.row)"
-            />
+              aria-label="Add to task graph"
+            >
+              <q-menu>
+                <q-list style="min-width: 240px" dense>
+                  <q-item
+                    v-close-popup
+                    clickable
+                    @click="addToTaskGraph(cellProps.row)"
+                  >
+                    <q-item-section>Add Task</q-item-section>
+                  </q-item>
+
+                  <q-item clickable>
+                    <q-item-section>Add Swappable Task</q-item-section>
+                    <q-item-section side>
+                      <q-icon name="keyboard_arrow_right" />
+                    </q-item-section>
+
+                    <q-menu
+                      anchor="top end"
+                      self="top start"
+                      @before-show="prepareSwappableTaskSelection(cellProps.row)"
+                    >
+                      <q-card style="min-width: 320px">
+                        <q-card-section class="text-subtitle2"> Select tasks to include </q-card-section>
+                        <q-separator />
+
+                        <q-list dense>
+                          <q-item tag="label">
+                            <q-item-section avatar>
+                              <q-checkbox
+                                :model-value="true"
+                                disable
+                              />
+                            </q-item-section>
+                            <q-item-section>
+                              <q-item-label>{{ selectedSwapTask?.name }}</q-item-label>
+                              <q-item-label caption>{{ selectedSwapTask?.plugin?.name }}</q-item-label>
+                            </q-item-section>
+                          </q-item>
+
+                          <q-item
+                            v-for="task in eligibleSwappableTasks"
+                            :key="`${task.plugin.id}-${task.id || task.name}`"
+                            tag="label"
+                          >
+                            <q-item-section avatar>
+                              <q-checkbox
+                                v-model="selectedSwappableTasks"
+                                :val="task"
+                              />
+                            </q-item-section>
+                            <q-item-section>
+                              <q-item-label>{{ task.name }}</q-item-label>
+                              <q-item-label caption>{{ task.plugin.name }}</q-item-label>
+                            </q-item-section>
+                          </q-item>
+
+                          <q-item v-if="eligibleSwappableTasks.length === 0">
+                            <q-item-section class="text-grey-7">
+                              No other tasks with same output parameter types.
+                            </q-item-section>
+                          </q-item>
+                        </q-list>
+
+                        <q-separator />
+                        <q-card-actions align="right">
+                          <q-btn
+                            v-close-popup
+                            flat
+                            color="primary"
+                            label="Cancel"
+                          />
+                          <q-btn
+                            v-close-popup="2"
+                            color="primary"
+                            label="Submit"
+                            :disable="selectedSwappableTasks.length < 2"
+                            @click="addSwappableTaskToGraph"
+                          />
+                        </q-card-actions>
+                      </q-card>
+                    </q-menu>
+                  </q-item>
+
+                  <q-item disable>
+                    <q-item-section>Add to Existing Swappable Task</q-item-section>
+                  </q-item>
+                </q-list>
+              </q-menu>
+            </q-btn>
           </template>
         </TableComponent>
       </div>
@@ -890,14 +979,10 @@ async function checkIfStillValid(type) {
 const taskGraphError = ref("");
 
 const taskGraphPlaceholderError = computed(() => {
-  if (entryPoint.value.taskGraph.includes("<step-name>") && entryPoint.value.taskGraph.includes("<input-value>")) {
-    return "Replace <step-name> and <input-value> placeholders";
-  } else if (entryPoint.value.taskGraph.includes("<step-name>")) {
-    return "Replace <step-name> placeholders";
-  } else if (entryPoint.value.taskGraph.includes("<input-value>")) {
-    return "Replace <input-value> placeholders";
-  }
-  return "";
+  const placeholders = entryPoint.value.taskGraph.match(/<(?:step-name|swap-name|task-alias|input-value)>/g);
+  if (!placeholders) return "";
+
+  return `Replace ${[...new Set(placeholders)].join(", ")} placeholders`;
 });
 
 function submit() {
@@ -1060,6 +1145,56 @@ function addToTaskGraph(task) {
   }
 }
 
+const selectedSwapTask = ref(null);
+const eligibleSwappableTasks = ref([]);
+const selectedSwappableTasks = ref([]);
+
+function getOutputParameterTypes(task) {
+  return task.outputParams.map(
+    (parameter) => parameter.parameterType?.id ?? parameter.parameterType?.name ?? parameter.parameterType,
+  );
+}
+
+function findSwappableTasks(task) {
+  const outputParameterTypes = getOutputParameterTypes(task);
+
+  return tasks.value.filter((candidate) => {
+    if (candidate === task) return false;
+
+    const candidateOutputParameterTypes = getOutputParameterTypes(candidate);
+    return (
+      candidateOutputParameterTypes.length === outputParameterTypes.length &&
+      candidateOutputParameterTypes.every((type, index) => type === outputParameterTypes[index])
+    );
+  });
+}
+
+function prepareSwappableTaskSelection(task) {
+  selectedSwapTask.value = task;
+  eligibleSwappableTasks.value = findSwappableTasks(task);
+  selectedSwappableTasks.value = [task];
+}
+
+function addSwappableTaskToGraph() {
+  let string = `<step-name>:\n  ?<swap-name>:`;
+
+  selectedSwappableTasks.value.forEach((task) => {
+    string += `\n    <task-alias>:\n      task: ${task.name}`;
+    if (task.inputParams.length > 0) {
+      string += `\n      kwargs:`;
+      task.inputParams.forEach((parameter) => {
+        string += `\n        ${parameter.name}: <input-value>`;
+      });
+    }
+  });
+
+  if (entryPoint.value.taskGraph.trim().length === 0) {
+    entryPoint.value.taskGraph = string;
+  } else {
+    entryPoint.value.taskGraph += `\n${string}`;
+  }
+}
+
 function addToArtifactGraph(task) {
   const string = `<output-name>:\n  contents: <contents>\n  task:\n    name: ${task.name}`;
   if (entryPoint.value.artifactGraph.trim().length === 0) {
@@ -1149,7 +1284,7 @@ async function validateEntrypoint() {
   }
 
   const submitObject = prepareEntrypointPayload();
-  console.log('payload = ', JSON.parse(JSON.stringify(entryPoint.value)))
+  console.log("payload = ", JSON.parse(JSON.stringify(entryPoint.value)));
   try {
     if (route.params.id === "new") {
       await api.addItem("entrypoints", submitObject, true);
