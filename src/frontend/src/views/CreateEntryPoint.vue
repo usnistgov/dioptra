@@ -402,7 +402,10 @@
               aria-label="Add to task graph"
             >
               <q-menu>
-                <q-list style="min-width: 240px" dense>
+                <q-list
+                  style="min-width: 240px"
+                  dense
+                >
                   <q-item
                     v-close-popup
                     clickable
@@ -484,8 +487,68 @@
                     </q-menu>
                   </q-item>
 
-                  <q-item disable>
-                    <q-item-section>Add to Existing Swappable Task</q-item-section>
+                  <q-item clickable>
+                    <q-item-section>Add to existing Swap Group</q-item-section>
+                    <q-item-section side>
+                      <q-icon name="keyboard_arrow_right" />
+                    </q-item-section>
+
+                    <q-menu
+                      anchor="top end"
+                      self="top start"
+                      @before-show="prepareSwappableTaskSelection(cellProps.row)"
+                    >
+                      <q-card style="min-width: 320px">
+                        <q-card-section class="text-subtitle2"> Select Swap Group </q-card-section>
+                        <q-separator />
+
+                        <q-list dense>
+                          <q-item v-if="taskGraphError || !taskGraphObject">
+                            <q-item-section class="text-grey-7"> Please resolve task graph errors. </q-item-section>
+                          </q-item>
+
+                          <template v-else>
+                            <q-item
+                              v-for="swapGroup in eligibleSwapGroups"
+                              :key="`${swapGroup.stepName}-${swapGroup.swapName}`"
+                              tag="label"
+                            >
+                              <q-item-section avatar>
+                                <q-checkbox
+                                  v-model="selectedEligibleSwapGroups"
+                                  :val="swapGroup"
+                                />
+                              </q-item-section>
+                              <q-item-section>
+                                <q-item-label>{{ swapGroup.swapName.slice(1) }}</q-item-label>
+                                <q-item-label caption>{{ swapGroup.taskNames.join(", ") }}</q-item-label>
+                              </q-item-section>
+                            </q-item>
+
+                            <q-item v-if="eligibleSwapGroups.length === 0">
+                              <q-item-section class="text-grey-7"> No compatible swap groups found. </q-item-section>
+                            </q-item>
+                          </template>
+                        </q-list>
+
+                        <q-separator />
+                        <q-card-actions align="right">
+                          <q-btn
+                            v-close-popup
+                            flat
+                            color="primary"
+                            label="Cancel"
+                          />
+                          <q-btn
+                            v-close-popup="2"
+                            color="primary"
+                            label="Submit"
+                            :disable="selectedEligibleSwapGroups.length === 0"
+                            @click="addTaskToExistingSwapGroups"
+                          />
+                        </q-card-actions>
+                      </q-card>
+                    </q-menu>
                   </q-item>
                 </q-list>
               </q-menu>
@@ -693,6 +756,7 @@ import ArtifactParamDialog from "@/dialogs/ArtifactParamDialog.vue";
 import EditPluginTaskParamDialog from "@/dialogs/EditPluginTaskParamDialog.vue";
 import AssignPluginsDropdown from "@/components/AssignPluginsDropdown.vue";
 import ResourcePicker from "@/components/ResourcePicker.vue";
+import YAML from "yaml";
 
 const route = useRoute();
 
@@ -1148,6 +1212,8 @@ function addToTaskGraph(task) {
 const selectedSwapTask = ref(null);
 const eligibleSwappableTasks = ref([]);
 const selectedSwappableTasks = ref([]);
+const eligibleSwapGroups = ref([]);
+const selectedEligibleSwapGroups = ref([]);
 
 function getOutputParameterTypes(task) {
   return task.outputParams.map(
@@ -1169,10 +1235,51 @@ function findSwappableTasks(task) {
   });
 }
 
+const taskGraphObject = computed(() => {
+  try {
+    return YAML.parse(entryPoint.value.taskGraph);
+  } catch {
+    return null;
+  }
+});
+
+function findEligibleSwapGroups() {
+  if (!taskGraphObject.value || typeof taskGraphObject.value !== "object") return [];
+
+  const eligibleTaskNames = new Set(eligibleSwappableTasks.value.map((task) => task.name));
+  if (selectedSwapTask.value) {
+    eligibleTaskNames.add(selectedSwapTask.value.name);
+  }
+  const swapGroups = [];
+
+  Object.entries(taskGraphObject.value).forEach(([stepName, step]) => {
+    if (!step || typeof step !== "object" || Array.isArray(step)) return;
+
+    Object.entries(step).forEach(([swapName, swapGroup]) => {
+      if (!swapName.startsWith("?") || !swapGroup || typeof swapGroup !== "object" || Array.isArray(swapGroup)) {
+        return;
+      }
+
+      const taskAliases = Object.entries(swapGroup);
+      const taskNames = taskAliases.map(([, taskDefinition]) => taskDefinition?.task);
+      const allTasksAreSwappable =
+        taskAliases.length > 0 && taskNames.every((taskName) => eligibleTaskNames.has(taskName));
+
+      if (allTasksAreSwappable) {
+        swapGroups.push({ stepName, swapName, taskNames });
+      }
+    });
+  });
+
+  return swapGroups;
+}
+
 function prepareSwappableTaskSelection(task) {
   selectedSwapTask.value = task;
   eligibleSwappableTasks.value = findSwappableTasks(task);
   selectedSwappableTasks.value = [task];
+  eligibleSwapGroups.value = findEligibleSwapGroups();
+  selectedEligibleSwapGroups.value = [];
 }
 
 function addSwappableTaskToGraph() {
@@ -1193,6 +1300,26 @@ function addSwappableTaskToGraph() {
   } else {
     entryPoint.value.taskGraph += `\n${string}`;
   }
+}
+
+function addTaskToExistingSwapGroups() {
+  if (taskGraphError.value || !taskGraphObject.value || !selectedSwapTask.value) return;
+
+  selectedEligibleSwapGroups.value.forEach(({ stepName, swapName }) => {
+    const swapGroup = taskGraphObject.value[stepName]?.[swapName];
+    if (!swapGroup) return;
+
+    const taskDefinition = { task: selectedSwapTask.value.name };
+    if (selectedSwapTask.value.inputParams.length > 0) {
+      taskDefinition.kwargs = Object.fromEntries(
+        selectedSwapTask.value.inputParams.map((parameter) => [parameter.name, "<input-value>"]),
+      );
+    }
+
+    swapGroup["<task-alias>"] = taskDefinition;
+  });
+
+  entryPoint.value.taskGraph = YAML.stringify(taskGraphObject.value).trimEnd();
 }
 
 function addToArtifactGraph(task) {
