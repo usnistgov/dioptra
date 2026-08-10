@@ -131,30 +131,26 @@ function highlightPlaceholder(update) {
   const to = view.value.state.selection.ranges[0].to;
   if (from !== to) return; // short circut if user is dragging cursor
 
-  const placeholders = ["<input-value>", "<step-name>", "<swap-name>", "<task-alias>", "<output-name>", "<contents>"];
-  placeholders.forEach((placeholder) => {
-    let startIndex = code.value.indexOf(placeholder);
-    while (startIndex !== -1) {
-      const endIndex = startIndex + placeholder.length;
+  const placeholderPattern =
+    /<(?:input-value|step-name(?:-\d+)?|swap-name(?:-\d+)?|task-alias(?:-\d+)?|output-name|contents)>/g;
+  for (const match of code.value.matchAll(placeholderPattern)) {
+    const placeholder = match[0];
+    const startIndex = match.index;
+    const endIndex = startIndex + placeholder.length;
 
-      // Check if the cursor position is within the bounds of the current placeholder instance
-      if (from >= startIndex && from <= endIndex && from !== startIndex && from !== endIndex) {
-        console.log(
-          `Cursor is at position ${from}, within the substring '${placeholder}' from index ${startIndex} to ${endIndex}`,
-        );
-        view.value.dispatch({
-          selection: { anchor: startIndex, head: endIndex },
-        });
-        if (placeholder === "<input-value>" || placeholder === "<contents>") {
-          startCompletion(view.value);
-        }
-        return; // Break after the first match to avoid overlapping selection conflicts
+    if (from > startIndex && from < endIndex) {
+      console.log(
+        `Cursor is at position ${from}, within the substring '${placeholder}' from index ${startIndex} to ${endIndex}`,
+      );
+      view.value.dispatch({
+        selection: { anchor: startIndex, head: endIndex },
+      });
+      if (placeholder === "<input-value>" || placeholder === "<contents>") {
+        startCompletion(view.value);
       }
-
-      // Move to the next possible start index to continue searching
-      startIndex = code.value.indexOf(placeholder, startIndex + placeholder.length);
+      break;
     }
-  });
+  }
 }
 
 const yamlLinter = linter((view) => {
@@ -182,7 +178,7 @@ function getTopLevelKeys(code) {
   try {
     if (code) {
       const output = [];
-      const keys = Object.keys(YAML.parse(code)).filter((key) => key !== "<step-name>");
+      const keys = Object.keys(YAML.parse(code)).filter((key) => !/^<step-name(?:-\d+)?>$/.test(key));
       keys.forEach((key) => {
         output.push({
           label: `$${key}`,

@@ -448,11 +448,24 @@
                       @before-show="prepareSwappableTaskSelection(cellProps.row)"
                     >
                       <q-card style="min-width: 320px">
-                        <q-card-section class="text-subtitle2"> Select tasks to include </q-card-section>
+                        <q-card-section>
+                          <q-select
+                            v-model="selectedSwapStep"
+                            :options="swapStepOptions"
+                            option-label="label"
+                            label="Step"
+                            outlined
+                            dense
+                            @update:model-value="resetSelectedSwappableTasks"
+                          />
+                        </q-card-section>
                         <q-separator />
 
                         <q-list dense>
-                          <q-item tag="label">
+                          <q-item
+                            v-if="selectedSwapStep?.createNew"
+                            tag="label"
+                          >
                             <q-item-section avatar>
                               <q-checkbox
                                 :model-value="true"
@@ -466,7 +479,7 @@
                           </q-item>
 
                           <q-item
-                            v-for="task in eligibleSwappableTasks"
+                            v-for="task in selectableSwappableTasks"
                             :key="`${task.plugin.id}-${task.id || task.name}`"
                             tag="label"
                           >
@@ -482,9 +495,13 @@
                             </q-item-section>
                           </q-item>
 
-                          <q-item v-if="eligibleSwappableTasks.length === 0">
+                          <q-item v-if="selectableSwappableTasks.length === 0">
                             <q-item-section class="text-grey-7">
-                              No other tasks with same output parameter types.
+                              {{
+                                selectedSwapStep?.createNew
+                                  ? "No other tasks with same output parameter types."
+                                  : "No compatible tasks available to add."
+                              }}
                             </q-item-section>
                           </q-item>
                         </q-list>
@@ -501,72 +518,8 @@
                             v-close-popup="2"
                             color="primary"
                             label="Submit"
-                            :disable="selectedSwappableTasks.length < 2"
-                            @click="addSwappableTaskToGraph"
-                          />
-                        </q-card-actions>
-                      </q-card>
-                    </q-menu>
-                  </q-item>
-
-                  <q-item clickable>
-                    <q-item-section>Add to existing Swap Group</q-item-section>
-                    <q-item-section side>
-                      <q-icon name="keyboard_arrow_right" />
-                    </q-item-section>
-
-                    <q-menu
-                      anchor="top end"
-                      self="top start"
-                      @before-show="prepareSwappableTaskSelection(cellProps.row)"
-                    >
-                      <q-card style="min-width: 320px">
-                        <q-card-section class="text-subtitle2"> Select Swap Group </q-card-section>
-                        <q-separator />
-
-                        <q-list dense>
-                          <q-item v-if="taskGraphError || !taskGraphObject">
-                            <q-item-section class="text-grey-7"> Please resolve task graph errors. </q-item-section>
-                          </q-item>
-
-                          <template v-else>
-                            <q-item
-                              v-for="swapGroup in eligibleSwapGroups"
-                              :key="`${swapGroup.stepName}-${swapGroup.swapName}`"
-                              tag="label"
-                            >
-                              <q-item-section avatar>
-                                <q-checkbox
-                                  v-model="selectedEligibleSwapGroups"
-                                  :val="swapGroup"
-                                />
-                              </q-item-section>
-                              <q-item-section>
-                                <q-item-label>{{ swapGroup.swapName.slice(1) }}</q-item-label>
-                                <q-item-label caption>{{ swapGroup.taskNames.join(", ") }}</q-item-label>
-                              </q-item-section>
-                            </q-item>
-
-                            <q-item v-if="eligibleSwapGroups.length === 0">
-                              <q-item-section class="text-grey-7"> No compatible swap groups found. </q-item-section>
-                            </q-item>
-                          </template>
-                        </q-list>
-
-                        <q-separator />
-                        <q-card-actions align="right">
-                          <q-btn
-                            v-close-popup
-                            flat
-                            color="primary"
-                            label="Cancel"
-                          />
-                          <q-btn
-                            v-close-popup="2"
-                            color="primary"
-                            label="Submit"
-                            :disable="selectedEligibleSwapGroups.length === 0"
-                            @click="addTaskToExistingSwapGroups"
+                            :disable="!canSubmitSwappableTasks"
+                            @click="addSelectedSwappableTasks"
                           />
                         </q-card-actions>
                       </q-card>
@@ -1067,10 +1020,19 @@ async function checkIfStillValid(type) {
 const taskGraphError = ref("");
 
 const taskGraphPlaceholderError = computed(() => {
-  const placeholders = entryPoint.value.taskGraph.match(/<(?:step-name|swap-name|task-alias|input-value)>/g);
+  const placeholders = entryPoint.value.taskGraph.match(
+    /<(?:step-name(?:-\d+)?|swap-name(?:-\d+)?|task-alias(?:-\d+)?|input-value)>/g,
+  );
   if (!placeholders) return "";
 
-  return `Replace ${[...new Set(placeholders)].join(", ")} placeholders`;
+  const normalizedPlaceholders = placeholders.map((placeholder) => {
+    if (/^<step-name(?:-\d+)?>$/.test(placeholder)) return "<step-name>";
+    if (/^<swap-name(?:-\d+)?>$/.test(placeholder)) return "<swap-name>";
+    if (/^<task-alias(?:-\d+)?>$/.test(placeholder)) return "<task-alias>";
+    return placeholder;
+  });
+
+  return `Replace ${[...new Set(normalizedPlaceholders)].join(", ")} placeholders`;
 });
 
 function submit() {
@@ -1216,10 +1178,31 @@ async function getQueues(val = "", update) {
   });
 }
 
+function getNextStepNamePlaceholder() {
+  let highestStepNumber = 0;
+
+  for (const match of entryPoint.value.taskGraph.matchAll(/^<step-name-(\d+)>:/gm)) {
+    highestStepNumber = Math.max(highestStepNumber, Number(match[1]));
+  }
+
+  return `<step-name-${highestStepNumber + 1}>`;
+}
+
+function getNextSwapNamePlaceholder() {
+  let highestSwapNumber = 0;
+
+  for (const match of entryPoint.value.taskGraph.matchAll(/<swap-name-(\d+)>/g)) {
+    highestSwapNumber = Math.max(highestSwapNumber, Number(match[1]));
+  }
+
+  return `<swap-name-${highestSwapNumber + 1}>`;
+}
+
 function addToTaskGraph(task) {
   console.log("task = ", task);
   // always use Mixed Style Invocation
-  let string = `<step-name>:\n  task: ${task.name}`;
+  const stepNamePlaceholder = getNextStepNamePlaceholder();
+  let string = `${stepNamePlaceholder}:\n  task: ${task.name}`;
   if (task.inputParams.length > 0) {
     string += `\n  kwargs:`;
     task.inputParams.forEach((param) => {
@@ -1237,7 +1220,8 @@ const selectedSwapTask = ref(null);
 const eligibleSwappableTasks = ref([]);
 const selectedSwappableTasks = ref([]);
 const eligibleSwapGroups = ref([]);
-const selectedEligibleSwapGroups = ref([]);
+const swapStepOptions = ref([]);
+const selectedSwapStep = ref(null);
 
 function getOutputParameterTypes(task) {
   return task.outputParams.map(
@@ -1281,38 +1265,71 @@ function findEligibleSwapGroups() {
   Object.entries(taskGraphObject.value).forEach(([stepName, step]) => {
     if (!step || typeof step !== "object" || Array.isArray(step)) return;
 
-    Object.entries(step).forEach(([swapName, swapGroup]) => {
-      if (!swapName.startsWith("?") || !swapGroup || typeof swapGroup !== "object" || Array.isArray(swapGroup)) {
-        return;
-      }
+    const swapEntries = Object.entries(step).filter(
+      ([swapName, swapGroup]) =>
+        swapName.startsWith("?") && swapGroup && typeof swapGroup === "object" && !Array.isArray(swapGroup),
+    );
+    if (swapEntries.length !== 1) return;
 
-      const taskAliases = Object.entries(swapGroup);
-      const taskNames = taskAliases.map(([, taskDefinition]) => taskDefinition?.task);
-      const allTasksAreSwappable =
-        taskAliases.length > 0 && taskNames.every((taskName) => eligibleTaskNames.has(taskName));
+    const [swapName, swapGroup] = swapEntries[0];
+    const taskAliases = Object.entries(swapGroup);
+    const taskNames = taskAliases.map(([, taskDefinition]) => taskDefinition?.task);
+    const allTasksAreSwappable =
+      taskAliases.length > 0 &&
+      taskNames.every(
+        (taskName) => eligibleTaskNames.has(taskName) || (typeof taskName === "string" && /^<[^>]+>$/.test(taskName)),
+      );
 
-      if (allTasksAreSwappable) {
-        swapGroups.push({ stepName, swapName, taskNames });
-      }
-    });
+    if (allTasksAreSwappable) {
+      swapGroups.push({ stepName, swapName, taskNames, label: stepName, createNew: false });
+    }
   });
 
   return swapGroups;
 }
 
+function resetSelectedSwappableTasks() {
+  selectedSwappableTasks.value = [selectedSwapTask.value];
+}
+
 function prepareSwappableTaskSelection(task) {
   selectedSwapTask.value = task;
   eligibleSwappableTasks.value = findSwappableTasks(task);
-  selectedSwappableTasks.value = [task];
   eligibleSwapGroups.value = findEligibleSwapGroups();
-  selectedEligibleSwapGroups.value = [];
+  const newStepName = getNextStepNamePlaceholder();
+  swapStepOptions.value = [
+    {
+      stepName: newStepName,
+      swapName: null,
+      taskNames: [],
+      label: newStepName,
+      createNew: true,
+    },
+    ...eligibleSwapGroups.value,
+  ];
+  selectedSwapStep.value = swapStepOptions.value[0];
+  resetSelectedSwappableTasks();
 }
 
-function addSwappableTaskToGraph() {
-  let string = `<step-name>:\n  ?<swap-name>:`;
+const selectableSwappableTasks = computed(() =>
+  selectedSwapStep.value?.createNew
+    ? eligibleSwappableTasks.value
+    : [selectedSwapTask.value, ...eligibleSwappableTasks.value].filter(Boolean),
+);
 
-  selectedSwappableTasks.value.forEach((task) => {
-    string += `\n    <task-alias>:\n      task: ${task.name}`;
+const canSubmitSwappableTasks = computed(() =>
+  selectedSwapStep.value?.createNew
+    ? selectedSwappableTasks.value.length >= 2
+    : selectedSwappableTasks.value.length >= 1,
+);
+
+function addSwappableTaskToGraph() {
+  const stepNamePlaceholder = getNextStepNamePlaceholder();
+  const swapNamePlaceholder = getNextSwapNamePlaceholder();
+  let string = `${stepNamePlaceholder}:\n  ?${swapNamePlaceholder}:`;
+
+  selectedSwappableTasks.value.forEach((task, index) => {
+    string += `\n    <task-alias-${index + 1}>:\n      task: ${task.name}`;
     if (task.inputParams.length > 0) {
       string += `\n      kwargs:`;
       task.inputParams.forEach((parameter) => {
@@ -1328,24 +1345,46 @@ function addSwappableTaskToGraph() {
   }
 }
 
-function addTaskToExistingSwapGroups() {
-  if (taskGraphError.value || !taskGraphObject.value || !selectedSwapTask.value) return;
+function getNextTaskAliasPlaceholder(swapGroup) {
+  let highestAliasNumber = 0;
 
-  selectedEligibleSwapGroups.value.forEach(({ stepName, swapName }) => {
-    const swapGroup = taskGraphObject.value[stepName]?.[swapName];
-    if (!swapGroup) return;
+  Object.keys(swapGroup).forEach((alias) => {
+    const match = alias.match(/^<task-alias-(\d+)>$/);
+    if (match) {
+      highestAliasNumber = Math.max(highestAliasNumber, Number(match[1]));
+    }
+  });
 
-    const taskDefinition = { task: selectedSwapTask.value.name };
-    if (selectedSwapTask.value.inputParams.length > 0) {
+  return `<task-alias-${highestAliasNumber + 1}>`;
+}
+
+function addTasksToExistingSwapGroup() {
+  if (!taskGraphObject.value || !selectedSwapStep.value) return;
+
+  const { stepName, swapName } = selectedSwapStep.value;
+  const swapGroup = taskGraphObject.value[stepName]?.[swapName];
+  if (!swapGroup) return;
+
+  selectedSwappableTasks.value.forEach((task) => {
+    const taskDefinition = { task: task.name };
+    if (task.inputParams.length > 0) {
       taskDefinition.kwargs = Object.fromEntries(
-        selectedSwapTask.value.inputParams.map((parameter) => [parameter.name, "<input-value>"]),
+        task.inputParams.map((parameter) => [parameter.name, "<input-value>"]),
       );
     }
 
-    swapGroup["<task-alias>"] = taskDefinition;
+    swapGroup[getNextTaskAliasPlaceholder(swapGroup)] = taskDefinition;
   });
 
   entryPoint.value.taskGraph = YAML.stringify(taskGraphObject.value).trimEnd();
+}
+
+function addSelectedSwappableTasks() {
+  if (selectedSwapStep.value?.createNew) {
+    addSwappableTaskToGraph();
+  } else {
+    addTasksToExistingSwapGroup();
+  }
 }
 
 function addToArtifactGraph(task) {
