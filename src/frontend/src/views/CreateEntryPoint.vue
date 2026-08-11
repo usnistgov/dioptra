@@ -630,12 +630,17 @@
       "
     />
 
-    <q-btn
-      label="Validate"
-      color="primary"
-      class="q-mr-lg"
-      @click="validateEntrypoint()"
-    />
+    <span class="q-mr-lg">
+      <q-btn
+        label="Validate"
+        color="primary"
+        :disable="taskPluginsChanged"
+        @click="validateEntrypoint()"
+      />
+      <q-tooltip v-if="taskPluginsChanged">
+        The task plugin selection has changed. Save your changes before validating.
+      </q-tooltip>
+    </span>
 
     <q-btn
       :color="history ? 'blue-2' : 'primary'"
@@ -798,6 +803,10 @@ const enableSubmit = computed(() => {
 });
 
 const copyAtEditStart = ref({});
+
+const taskPluginsChanged = computed(() => {
+  return JSON.stringify(copyAtEditStart.value.plugins) !== JSON.stringify(entryPoint.value.plugins);
+});
 
 onMounted(() => {
   if (route.query.snapshotId && !store.showRightDrawer) {
@@ -1093,11 +1102,6 @@ async function addOrModifyEntrypoint() {
       store.savedForms.entryPoint = null;
       notify.success(`Successfully created '${entryPoint.value.name}'`);
     } else {
-      if (valuesChangedFromEditStartBesidesPlugins.value) {
-        const keysToRemove = ["group", "plugins", "artifactPlugins"];
-        keysToRemove.forEach((key) => delete submitObject[key]);
-        await api.updateItem("entrypoints", route.params.id, submitObject);
-      }
       if (pluginIDsToUpdate.value.length > 0) {
         await api.addPluginsToEntrypoint(route.params.id, pluginIDsToUpdate.value, "plugins");
       }
@@ -1109,6 +1113,11 @@ async function addOrModifyEntrypoint() {
       }
       for (const pluginId of artifactPluginIDsToRemove.value) {
         await api.removePluginFromEntrypoint(route.params.id, pluginId, "artifactPlugins");
+      }
+      if (valuesChangedFromEditStartBesidesPlugins.value) {
+        const keysToRemove = ["group", "plugins", "artifactPlugins"];
+        keysToRemove.forEach((key) => delete submitObject[key]);
+        await api.updateItem("entrypoints", route.params.id, submitObject);
       }
       notify.success(`Successfully updated '${entryPoint.value.name}'`);
     }
@@ -1408,6 +1417,7 @@ onBeforeRouteLeave((to) => {
     leaveForm();
   } else {
     showLeaveDialog.value = true;
+    return false;
   }
 });
 
