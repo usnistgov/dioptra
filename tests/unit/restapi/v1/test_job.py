@@ -35,9 +35,9 @@ from dioptra.client.client import DioptraClient
 from dioptra.sdk.utilities.logging import forward_job_logs_to_api
 
 from ..lib import asserts, helpers, mock_rq, routines
+from ..lib.asserts import assert_retrieving_deleted_resource_snapshots_works
 from ..test_utils import assert_retrieving_resource_works
 
-from ..lib.asserts import assert_retrieving_deleted_resource_snapshots_works
 
 @pytest.fixture
 def registered_job_logs(dioptra_client, registered_jobs):
@@ -315,17 +315,47 @@ def assert_job_metrics_snapshots_matches_expectations(
     history = response.json()["data"]
 
     assert all(
-        [
-            "name" in m and "value" in m and "timestamp" in m and "step" in m
-            for m in history
-        ]
+        "name" in m and "value" in m and "timestamp" in m and "step" in m
+        for m in history
     )
     assert all(
-        [
-            any([e["name"] == m["name"] and e["value"] == e["value"] for e in expected])
-            for m in history
-        ]
+        any(e["name"] == m["name"] and e["value"] == m["value"] for e in expected)
+        for m in history
     )
+
+
+def create_experiment_with_artifact_parameter_entrypoint(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+    registered_plugin_parameter_types: dict[str, Any],
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    artifact_parameter_name = "model_artifact"
+    string_parameter_type_id = registered_plugin_parameter_types["string"]["id"]
+
+    entrypoint = dioptra_client.entrypoints.create(
+        group_id=auth_account["groups"][0]["id"],
+        name="entrypoint_with_artifact_parameter",
+        description="Entrypoint with a required artifact parameter.",
+        task_graph="# artifact input graph\ngraph: {}\n",
+        artifact_parameters=[
+            {
+                "name": artifact_parameter_name,
+                "outputParams": [
+                    {"name": "contents", "parameterType": string_parameter_type_id}
+                ],
+            }
+        ],
+        queues=[registered_queues["queue1"]["id"]],
+    ).json()
+    experiment = dioptra_client.experiments.create(
+        group_id=auth_account["groups"][0]["id"],
+        name="experiment_with_artifact_parameter_entrypoint",
+        description="Experiment with an artifact parameter entrypoint.",
+        entrypoints=[entrypoint["id"]],
+    ).json()
+
+    return experiment, entrypoint
 
 
 # -- Tests -----------------------------------------------------------------------------
@@ -545,6 +575,68 @@ def test_create_job_with_empty_values(
     assert_retrieving_job_by_id_works(
         dioptra_client, job_id=job_response["id"], expected=job_response
     )
+
+
+def test_create_job_missing_artifact_value_reports_missing_parameter(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+    registered_plugin_parameter_types: dict[str, Any],
+    monkeypatch: MonkeyPatch,
+) -> None:
+    import dioptra.restapi.v1.shared.rq_service as rq_service
+
+    monkeypatch.setattr(rq_service, "RQQueue", mock_rq.MockRQQueue)
+
+    experiment, entrypoint = create_experiment_with_artifact_parameter_entrypoint(
+        dioptra_client=dioptra_client,
+        auth_account=auth_account,
+        registered_queues=registered_queues,
+        registered_plugin_parameter_types=registered_plugin_parameter_types,
+    )
+
+    response = dioptra_client.experiments.jobs.create(
+        experiment_id=experiment["id"],
+        entrypoint_id=entrypoint["id"],
+        queue_id=registered_queues["queue1"]["id"],
+        artifact_values={},
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert response_json["error"] == "JobArtifactParameterMissingError"
+    assert "model_artifact" in response_json["message"]
+
+
+def test_create_job_invalid_artifact_value_reports_invalid_parameter(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+    registered_plugin_parameter_types: dict[str, Any],
+    monkeypatch: MonkeyPatch,
+) -> None:
+    import dioptra.restapi.v1.shared.rq_service as rq_service
+
+    monkeypatch.setattr(rq_service, "RQQueue", mock_rq.MockRQQueue)
+
+    experiment, entrypoint = create_experiment_with_artifact_parameter_entrypoint(
+        dioptra_client=dioptra_client,
+        auth_account=auth_account,
+        registered_queues=registered_queues,
+        registered_plugin_parameter_types=registered_plugin_parameter_types,
+    )
+
+    response = dioptra_client.experiments.jobs.create(
+        experiment_id=experiment["id"],
+        entrypoint_id=entrypoint["id"],
+        queue_id=registered_queues["queue1"]["id"],
+        artifact_values={"unknown_artifact": {"id": 1, "snapshotId": 1}},
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert response_json["error"] == "JobInvalidParameterNameError"
+    assert "unknown_artifact" in response_json["message"]
 
 
 def test_create_job_using_entrypoint_snapshot_id(
@@ -800,10 +892,79 @@ def test_metrics(
     )
 
 
+def test_get_metrics_for_deleted_job(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_jobs: dict[str, Any],
+) -> None:
+    job_id = registered_jobs["job1"]["id"]
+
+    _ = dioptra_client.jobs.append_metric_by_id(  # noqa: F841
+        job_id=job_id,
+        metric_name="accuracy",
+        metric_value=4.0,
+    ).json()
+    _ = dioptra_client.jobs.append_metric_by_id(  # noqa: F841
+        job_id=job_id,
+        metric_name="accuracy",
+        metric_value=4.1,
+    ).json()
+    _ = dioptra_client.jobs.append_metric_by_id(  # noqa: F841
+        job_id=job_id,
+        metric_name="roc_auc",
+        metric_value=0.99,
+    ).json()
+
+    response = dioptra_client.jobs.delete_by_id(job_id)
+    assert response.status_code == HTTPStatus.OK
+
+    assert_job_metrics_matches_expectations(
+        dioptra_client,
+        job_id=job_id,
+        expected=[
+            {"name": "accuracy", "value": 4.1},
+            {"name": "roc_auc", "value": 0.99},
+        ],
+    )
+
+
+def test_get_metric_snapshots_for_deleted_job(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_jobs: dict[str, Any],
+) -> None:
+    job_id = registered_jobs["job1"]["id"]
+
+    _ = dioptra_client.jobs.append_metric_by_id(  # noqa: F841
+        job_id=job_id,
+        metric_name="accuracy",
+        metric_value=4.0,
+    ).json()
+    _ = dioptra_client.jobs.append_metric_by_id(  # noqa: F841
+        job_id=job_id,
+        metric_name="accuracy",
+        metric_value=4.1,
+    ).json()
+
+    response = dioptra_client.jobs.delete_by_id(job_id)
+    assert response.status_code == HTTPStatus.OK
+
+    assert_job_metrics_snapshots_matches_expectations(
+        dioptra_client,
+        job_id=job_id,
+        metric_name="accuracy",
+        expected=[
+            {"name": "accuracy", "value": 4.1},
+            {"name": "accuracy", "value": 4.0},
+        ],
+    )
+
+
 def test_metrics_special_float_values(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
+    registered_experiments: dict[str, Any],
 ) -> None:
     """Test that special float values (NaN, Inf, -Inf) are correctly stored/retrieved.
 
@@ -858,6 +1019,24 @@ def test_metrics_special_float_values(
     # Regular float should remain a float
     assert math.isclose(metrics["regular_float"], 3.14159, abs_tol=1e-6)  # type: ignore
     assert isinstance(metrics["regular_float"], float)
+
+    response = dioptra_client.experiments.get_metrics_by_id(
+        experiment_id=registered_experiments["experiment1"]["id"]
+    )
+    assert response.status_code == HTTPStatus.OK
+
+    experiment_metrics = {
+        metric["name"]: metric["value"]
+        for job_metrics in response.json()["data"]
+        if job_metrics["id"] == job_id
+        for metric in job_metrics["metrics"]
+    }
+
+    assert experiment_metrics["loss_nan"] == "nan"
+    assert experiment_metrics["loss_inf"] == "inf"
+    assert experiment_metrics["loss_neg_inf"] == "-inf"
+    assert math.isclose(experiment_metrics["regular_float"], 3.14159, abs_tol=1e-6)  # type: ignore
+    assert isinstance(experiment_metrics["regular_float"], float)
 
 
 def test_metrics_step_and_timestamp(
@@ -1062,12 +1241,17 @@ def test_delete_job(
     sequence of actions:
 
     - The user deletes a job by referencing its id.
-    - The user attempts to retrieve information about the deleted job.
-    - The request fails with an appropriate error message and response code.
+    - The user retrieves information about the deleted job.
+    - The request succeeds and returns the deleted job.
+    - The job snapshots can still be retrieved.
     """
     job_to_delete = registered_jobs["job1"]
-    dioptra_client.jobs.delete_by_id(job_to_delete["id"])
-    assert_job_is_not_found(dioptra_client, job_id=job_to_delete["id"])
+    job_id = job_to_delete["id"]
+
+    dioptra_client.jobs.delete_by_id(job_id)
+
+    response = dioptra_client.jobs.get_by_id(job_id)
+    assert response.status_code == HTTPStatus.OK
 
     assert_retrieving_deleted_resource_snapshots_works(
         dioptra_client.jobs.snapshots,
@@ -1118,6 +1302,54 @@ def test_modify_job_status(
     assert_job_status_matches_expectations(
         dioptra_client, job_id=job_to_change_status["id"], expected=new_status
     )
+
+
+def test_modify_job_status_invalid_transition(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_jobs: dict[str, Any],
+) -> None:
+    job = registered_jobs["job1"]
+
+    response = dioptra_client.experiments.jobs.set_status(
+        experiment_id=job["experiment"]["id"],
+        job_id=job["id"],
+        status="finished",
+    )
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert response.json()["error"] == "JobInvalidStatusTransitionError"
+
+
+def test_modify_job_status_reset_clears_mlflow_run(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_jobs: dict[str, Any],
+    registered_mlflowrun: dict[str, Any],
+) -> None:
+    job = registered_jobs["job1"]
+    job_id = job["id"]
+    experiment_id = job["experiment"]["id"]
+
+    mlflow_response = dioptra_client.jobs.get_mlflow_run_id(job_id=job_id)
+    assert mlflow_response.status_code == HTTPStatus.OK
+    assert mlflow_response.json()["mlflowRunId"] is not None
+
+    response = dioptra_client.experiments.jobs.set_status(
+        experiment_id=experiment_id,
+        job_id=job_id,
+        status="reset",
+    )
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json()["status"] == "queued"
+    assert_job_status_matches_expectations(
+        dioptra_client, job_id=job_id, expected="queued"
+    )
+
+    mlflow_response = dioptra_client.jobs.get_mlflow_run_id(job_id=job_id)
+    assert mlflow_response.status_code == HTTPStatus.OK
+    assert mlflow_response.json()["mlflowRunId"] is None
 
 
 def test_manage_job_snapshots(
@@ -1335,6 +1567,31 @@ def test_get_logs_page(dioptra_client, registered_jobs, registered_job_logs):
     }
 
 
+def test_get_logs_search(dioptra_client, registered_jobs, registered_job_logs):
+    job = registered_jobs["job1"]
+    job_resource_id = job["id"]
+
+    resp = dioptra_client.jobs.get_logs_by_id(
+        job_resource_id,
+        search='message:"*Log message 2*"',
+    )
+    returned_page = resp.json()
+
+    # Validate that createdOn timestamps are present in the logs, then remove them for a
+    # predictable comparison.
+    for log in returned_page["data"]:
+        assert "createdOn" in log
+        del log["createdOn"]
+
+    assert returned_page == {
+        "index": 0,
+        "isComplete": True,
+        "totalNumResults": 1,
+        "first": f"/api/v1/jobs/{job_resource_id}/log?index=0&pageLength=10",
+        "data": [registered_job_logs[1]],
+    }
+
+
 def test_get_logs_past_end(dioptra_client, registered_jobs, registered_job_logs):
     job = registered_jobs["job1"]
     job_resource_id = job["id"]
@@ -1404,6 +1661,18 @@ def test_get_logs_bad_job_id(dioptra_client, registered_jobs, registered_job_log
         1,
         3,
     )
+
+    assert resp.status_code == HTTPStatus.NOT_FOUND
+
+
+def test_get_logs_for_deleted_job(dioptra_client, registered_jobs, registered_job_logs):
+    job = registered_jobs["job1"]
+    job_resource_id = job["id"]
+
+    response = dioptra_client.jobs.delete_by_id(job_resource_id)
+    assert response.status_code == HTTPStatus.OK
+
+    resp = dioptra_client.jobs.get_logs_by_id(job_resource_id)
     returned_page = resp.json()
 
     # Validate that createdOn timestamps are present in the logs, then remove them for a
@@ -1412,14 +1681,13 @@ def test_get_logs_bad_job_id(dioptra_client, registered_jobs, registered_job_log
         assert "createdOn" in log
         del log["createdOn"]
 
-    # Should it be a 404?
+    assert resp.status_code == HTTPStatus.OK
     assert returned_page == {
-        "index": 1,
+        "index": 0,
         "isComplete": True,
-        "totalNumResults": 0,
-        "first": "/api/v1/jobs/999999/log?index=0&pageLength=3",
-        "prev": "/api/v1/jobs/999999/log?index=0&pageLength=3",
-        "data": [],
+        "totalNumResults": 5,
+        "first": f"/api/v1/jobs/{job_resource_id}/log?index=0&pageLength=10",
+        "data": registered_job_logs,
     }
 
 

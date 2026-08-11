@@ -266,6 +266,7 @@ class ExperimentIdJobEndpoint(Resource):
         page_length = parsed_query_params["page_length"]
         sort_by_string = unquote(parsed_query_params["sort_by"])
         descending = parsed_query_params["descending"]
+        show_deleted = parsed_query_params["show_deleted"]
 
         jobs, total_num_jobs = self._experiment_job_service.get(
             experiment_id=id,
@@ -274,6 +275,7 @@ class ExperimentIdJobEndpoint(Resource):
             page_length=page_length,
             sort_by_string=sort_by_string,
             descending=descending,
+            show_deleted=show_deleted,
             log=log,
         )
         return utils.build_paging_envelope(
@@ -288,7 +290,7 @@ class ExperimentIdJobEndpoint(Resource):
             total_num_elements=total_num_jobs,
             sort_by=sort_by_string,
             descending=descending,
-            show_deleted=None,
+            show_deleted=show_deleted,
         )
 
     @login_required
