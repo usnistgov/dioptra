@@ -2481,7 +2481,7 @@ def _create_valid_entrypoint(
         },
     ]
 
-    plugin_ids = plugins if plugins else [registered_plugin["id"]]
+    plugin_ids = [registered_plugin["id"], *(plugins or [])]
 
     response = dioptra_client.entrypoints.create(
         group_id=auth_account["default_group_id"],
@@ -2593,14 +2593,14 @@ def test_validate_unrendered_entrypoint_with_error(
         function_tasks=tasks,
         artifact_tasks=None,
     )
-    
 
-    # Set up the entrypoint inputs
-    #
-    # Schema is invalid because a step must be an object,
+    # Set up the entrypoint inputs with an unregistered task.
     task_graph = textwrap.dedent(
         """# my entrypoint graph
-        hello_step: []
+        hello_step:
+          task: hello_wrld
+          kwargs:
+            name: $name
         """
     )
     parameters = [
@@ -2623,12 +2623,14 @@ def test_validate_unrendered_entrypoint_with_error(
         registered_plugin_parameter_types=registered_plugin_parameter_types
     )
 
-    assert (
-        create_response.status_code == HTTPStatus.BAD_REQUEST
-    )
-    assert (
-        modify_response.status_code == HTTPStatus.BAD_REQUEST
-    )
+    for response in (create_response, modify_response):
+        assert response.status_code == HTTPStatus.BAD_REQUEST
+        validation_result = response.json()["detail"]["reason"]
+        assert "swap_issues" in validation_result
+        assert any(
+            "hello_step" in issue and "hello_wrld" in issue
+            for issue in validation_result["swap_issues"]
+        )
 
 def test_validate_swaps_graph_success(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
