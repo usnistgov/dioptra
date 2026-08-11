@@ -348,28 +348,6 @@
           :hideCreateBtn="true"
           @syncResource="({ resource }) => syncPlugin(resource)"
         >
-          <template #body-cell-taskName="cellProps">
-            <span>{{ cellProps.row.name }}</span>
-            <q-icon
-              v-if="swappableTasksByTask.get(cellProps.row)?.length"
-              name="sym_o_sync_alt"
-              size="sm"
-              color="primary"
-              class="q-ml-sm q-mb-xs"
-            >
-              <q-tooltip>
-                <div>Swappable with:</div>
-                <ul class="q-my-none q-pl-md">
-                  <li
-                    v-for="task in swappableTasksByTask.get(cellProps.row)"
-                    :key="`${task.plugin.id}-${task.id || task.name}`"
-                  >
-                    {{ task.name }}
-                  </li>
-                </ul>
-              </q-tooltip>
-            </q-icon>
-          </template>
           <template #body-cell-inputParams="cellProps">
             <div
               v-for="(param, i) in cellProps.row.inputParams"
@@ -415,40 +393,49 @@
             </div>
           </template>
           <template #body-cell-add="cellProps">
-            <q-btn
-              icon="add"
-              round
-              size="xs"
-              color="grey-5"
-              text-color="black"
-              aria-label="Add to task graph"
+            <div
+              class="row items-center justify-center no-wrap"
+              style="gap: 4px"
             >
-              <q-menu>
-                <q-list
-                  style="min-width: 240px"
-                  dense
+              <div class="row items-center justify-center action-button-slot">
+                <q-btn
+                  icon="add"
+                  round
+                  size="xs"
+                  color="grey-5"
+                  text-color="black"
+                  aria-label="Add Task"
+                  @click="addToTaskGraph(cellProps.row)"
                 >
-                  <q-item
-                    v-close-popup
-                    clickable
-                    @click="addToTaskGraph(cellProps.row)"
-                  >
-                    <q-item-section>Add Task</q-item-section>
-                  </q-item>
+                  <q-tooltip>Add Task</q-tooltip>
+                </q-btn>
+              </div>
 
-                  <q-item
-                    v-close-popup
-                    clickable
-                    @click="openAddSwappableTaskDialog(cellProps.row)"
-                  >
-                    <q-item-section>Add Swappable Task</q-item-section>
-                    <q-item-section side>
-                      <q-icon name="more_horiz" />
-                    </q-item-section>
-                  </q-item>
-                </q-list>
-              </q-menu>
-            </q-btn>
+              <div class="row items-center justify-center action-button-slot">
+                <q-btn
+                  v-if="swappableTasksByTask.get(cellProps.row)?.length"
+                  icon="sym_o_sync_alt"
+                  round
+                  size="xs"
+                  color="primary"
+                  aria-label="Add Swappable Task"
+                  @click="openAddSwappableTaskDialog(cellProps.row)"
+                >
+                  <q-tooltip>
+                    <div class="q-mb-sm">Add Swappable Task</div>
+                    <div>Swappable with:</div>
+                    <ul class="q-my-none q-pl-md">
+                      <li
+                        v-for="task in swappableTasksByTask.get(cellProps.row)"
+                        :key="`${task.plugin.id}-${task.id || task.name}`"
+                      >
+                        {{ task.name }}
+                      </li>
+                    </ul>
+                  </q-tooltip>
+                </q-btn>
+              </div>
+            </div>
           </template>
         </TableComponent>
       </div>
@@ -1503,3 +1490,10 @@ async function syncPlugin(plugin, type = "plugins") {
   }
 }
 </script>
+
+<style scoped>
+.action-button-slot {
+  width: 24px;
+  height: 24px;
+}
+</style>
