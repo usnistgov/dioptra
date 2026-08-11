@@ -329,13 +329,24 @@
 
       <div class="col">
         <h2>Task Plugins</h2>
-        <AssignPluginsDropdown
-          v-model:selectedPlugins="entryPoint.plugins"
-          v-model:pluginIDsToUpdate="pluginIDsToUpdate"
-          v-model:pluginIDsToRemove="pluginIDsToRemove"
-          class="q-mt-lg"
-          :disable="entryPoint.deleted"
-        />
+        <div class="row items-start no-wrap q-mt-lg">
+          <AssignPluginsDropdown
+            ref="taskPluginsDropdown"
+            v-model:selectedPlugins="entryPoint.plugins"
+            v-model:pluginIDsToUpdate="pluginIDsToUpdate"
+            v-model:pluginIDsToRemove="pluginIDsToRemove"
+            class="col"
+            :disable="entryPoint.deleted"
+          />
+          <q-btn
+            label="Save Plugin Selection"
+            color="primary"
+            class="q-ml-sm"
+            :loading="savingPluginType === 'plugins'"
+            :disable="route.params.id === 'new' || history || entryPoint.deleted || !taskPluginChangesPending"
+            @click="savePluginChanges('plugins')"
+          />
+        </div>
         <TableComponent
           :rows="tasks"
           :columns="taskColumns"
@@ -470,13 +481,24 @@
 
       <div class="col">
         <h2>Artifact Task Plugins</h2>
-        <AssignPluginsDropdown
-          v-model:selectedPlugins="entryPoint.artifactPlugins"
-          v-model:pluginIDsToUpdate="artifactPluginIDsToUpdate"
-          v-model:pluginIDsToRemove="artifactPluginIDsToRemove"
-          class="q-mt-lg"
-          :disable="entryPoint.deleted"
-        />
+        <div class="row items-start no-wrap q-mt-lg">
+          <AssignPluginsDropdown
+            ref="artifactTaskPluginsDropdown"
+            v-model:selectedPlugins="entryPoint.artifactPlugins"
+            v-model:pluginIDsToUpdate="artifactPluginIDsToUpdate"
+            v-model:pluginIDsToRemove="artifactPluginIDsToRemove"
+            class="col"
+            :disable="entryPoint.deleted"
+          />
+          <q-btn
+            label="Save Plugin Selection"
+            color="primary"
+            class="q-ml-sm"
+            :loading="savingPluginType === 'artifactPlugins'"
+            :disable="route.params.id === 'new' || history || entryPoint.deleted || !artifactPluginChangesPending"
+            @click="savePluginChanges('artifactPlugins')"
+          />
+        </div>
         <TableComponent
           :rows="artifactTasks"
           :columns="artifactTaskColumns"
@@ -1383,6 +1405,48 @@ const pluginIDsToUpdate = ref([]);
 const artifactPluginIDsToUpdate = ref([]);
 const pluginIDsToRemove = ref([]);
 const artifactPluginIDsToRemove = ref([]);
+const taskPluginsDropdown = ref(null);
+const artifactTaskPluginsDropdown = ref(null);
+const savingPluginType = ref(null);
+
+const taskPluginChangesPending = computed(
+  () => pluginIDsToUpdate.value.length > 0 || pluginIDsToRemove.value.length > 0,
+);
+const artifactPluginChangesPending = computed(
+  () => artifactPluginIDsToUpdate.value.length > 0 || artifactPluginIDsToRemove.value.length > 0,
+);
+
+async function savePluginChanges(pluginType) {
+  const isArtifactPlugin = pluginType === "artifactPlugins";
+  const pluginIDsToSave = isArtifactPlugin ? artifactPluginIDsToUpdate : pluginIDsToUpdate;
+  const pluginIDsToDelete = isArtifactPlugin ? artifactPluginIDsToRemove : pluginIDsToRemove;
+  const dropdown = isArtifactPlugin ? artifactTaskPluginsDropdown : taskPluginsDropdown;
+  const pluginLabel = isArtifactPlugin ? "artifact task plugins" : "task plugins";
+
+  if (route.params.id === "new" || (pluginIDsToSave.value.length === 0 && pluginIDsToDelete.value.length === 0)) {
+    return;
+  }
+
+  savingPluginType.value = pluginType;
+  try {
+    if (pluginIDsToSave.value.length > 0) {
+      await api.addPluginsToEntrypoint(route.params.id, pluginIDsToSave.value, pluginType);
+    }
+    for (const pluginId of pluginIDsToDelete.value) {
+      await api.removePluginFromEntrypoint(route.params.id, pluginId, pluginType);
+    }
+
+    pluginIDsToSave.value = [];
+    pluginIDsToDelete.value = [];
+    copyAtEditStart.value[pluginType] = JSON.parse(JSON.stringify(entryPoint.value[pluginType]));
+    dropdown.value?.resetOriginalSelectedPlugins();
+    notify.success(`Successfully saved ${pluginLabel}`);
+  } catch (err) {
+    notify.error(err.response?.data?.message ?? `Failed to save ${pluginLabel}`);
+  } finally {
+    savingPluginType.value = null;
+  }
+}
 
 const objectForDeletion = ref();
 
