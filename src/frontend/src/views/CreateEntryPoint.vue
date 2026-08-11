@@ -436,94 +436,15 @@
                     <q-item-section>Add Task</q-item-section>
                   </q-item>
 
-                  <q-item clickable>
+                  <q-item
+                    v-close-popup
+                    clickable
+                    @click="openAddSwappableTaskDialog(cellProps.row)"
+                  >
                     <q-item-section>Add Swappable Task</q-item-section>
                     <q-item-section side>
-                      <q-icon name="keyboard_arrow_right" />
+                      <q-icon name="more_horiz" />
                     </q-item-section>
-
-                    <q-menu
-                      anchor="top end"
-                      self="top start"
-                      @before-show="prepareSwappableTaskSelection(cellProps.row)"
-                    >
-                      <q-card style="min-width: 320px">
-                        <q-card-section>
-                          <q-select
-                            v-model="selectedSwapStep"
-                            :options="swapStepOptions"
-                            option-label="label"
-                            label="Step"
-                            outlined
-                            dense
-                            @update:model-value="resetSelectedSwappableTasks"
-                          />
-                        </q-card-section>
-                        <q-separator />
-
-                        <q-list dense>
-                          <q-item
-                            v-if="selectedSwapStep?.createNew"
-                            tag="label"
-                          >
-                            <q-item-section avatar>
-                              <q-checkbox
-                                :model-value="true"
-                                disable
-                              />
-                            </q-item-section>
-                            <q-item-section>
-                              <q-item-label>{{ selectedSwapTask?.name }}</q-item-label>
-                              <q-item-label caption>{{ selectedSwapTask?.plugin?.name }}</q-item-label>
-                            </q-item-section>
-                          </q-item>
-
-                          <q-item
-                            v-for="task in selectableSwappableTasks"
-                            :key="`${task.plugin.id}-${task.id || task.name}`"
-                            tag="label"
-                          >
-                            <q-item-section avatar>
-                              <q-checkbox
-                                v-model="selectedSwappableTasks"
-                                :val="task"
-                              />
-                            </q-item-section>
-                            <q-item-section>
-                              <q-item-label>{{ task.name }}</q-item-label>
-                              <q-item-label caption>{{ task.plugin.name }}</q-item-label>
-                            </q-item-section>
-                          </q-item>
-
-                          <q-item v-if="selectableSwappableTasks.length === 0">
-                            <q-item-section class="text-grey-7">
-                              {{
-                                selectedSwapStep?.createNew
-                                  ? "No other tasks with same output parameter types."
-                                  : "No compatible tasks available to add."
-                              }}
-                            </q-item-section>
-                          </q-item>
-                        </q-list>
-
-                        <q-separator />
-                        <q-card-actions align="right">
-                          <q-btn
-                            v-close-popup
-                            flat
-                            color="primary"
-                            label="Cancel"
-                          />
-                          <q-btn
-                            v-close-popup="2"
-                            color="primary"
-                            label="Submit"
-                            :disable="!canSubmitSwappableTasks"
-                            @click="addSelectedSwappableTasks"
-                          />
-                        </q-card-actions>
-                      </q-card>
-                    </q-menu>
                   </q-item>
                 </q-list>
               </q-menu>
@@ -683,6 +604,17 @@
     v-model="showArtifactParamDialog"
     @submit="addArtifactParam"
   />
+  <AddSwappableTaskDialog
+    v-model="showAddSwappableTaskDialog"
+    v-model:selectedSwapStep="selectedSwapStep"
+    v-model:selectedSwappableTasks="selectedSwappableTasks"
+    :selectedSwapTask="selectedSwapTask"
+    :swapStepOptions="swapStepOptions"
+    :selectableSwappableTasks="selectableSwappableTasks"
+    :canSubmit="canSubmitSwappableTasks"
+    @stepChanged="resetSelectedSwappableTasks"
+    @submit="addSelectedSwappableTasks"
+  />
   <LeaveFormDialog
     v-model="showLeaveDialog"
     type="entrypoint"
@@ -735,6 +667,7 @@ import LeaveFormDialog from "@/dialogs/LeaveFormDialog.vue";
 import ReturnToFormDialog from "@/dialogs/ReturnToFormDialog.vue";
 import InfoPopupDialog from "@/dialogs/InfoPopupDialog.vue";
 import ArtifactParamDialog from "@/dialogs/ArtifactParamDialog.vue";
+import AddSwappableTaskDialog from "@/dialogs/AddSwappableTaskDialog.vue";
 import EditPluginTaskParamDialog from "@/dialogs/EditPluginTaskParamDialog.vue";
 import AssignPluginsDropdown from "@/components/AssignPluginsDropdown.vue";
 import ResourcePicker from "@/components/ResourcePicker.vue";
@@ -1231,6 +1164,7 @@ const selectedSwappableTasks = ref([]);
 const eligibleSwapGroups = ref([]);
 const swapStepOptions = ref([]);
 const selectedSwapStep = ref(null);
+const showAddSwappableTaskDialog = ref(false);
 
 function getOutputParameterTypes(task) {
   return task.outputParams.map(
@@ -1318,6 +1252,11 @@ function prepareSwappableTaskSelection(task) {
   ];
   selectedSwapStep.value = swapStepOptions.value[0];
   resetSelectedSwappableTasks();
+}
+
+function openAddSwappableTaskDialog(task) {
+  prepareSwappableTaskSelection(task);
+  showAddSwappableTaskDialog.value = true;
 }
 
 const selectableSwappableTasks = computed(() =>
