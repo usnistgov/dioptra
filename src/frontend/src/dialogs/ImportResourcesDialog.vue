@@ -68,7 +68,12 @@
             label="Directory Upload"
           />
           <br />
-          <q-input outlined :model-value="store.loggedInGroup.name" disable label="Group" />
+          <q-input
+            outlined
+            :model-value="store.loggedInGroup.name"
+            disable
+            label="Group"
+          />
           <q-input
             v-model="configPath"
             outlined
