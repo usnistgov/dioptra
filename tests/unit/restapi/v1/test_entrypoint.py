@@ -2150,6 +2150,60 @@ def test_validate_swaps_graph_duplicate_swap_name(
     assert any("Duplicate swap name" in issue for issue in error_detail["swap_issues"])
 
 
+@pytest.mark.parametrize("validate_only", [True, False])
+def test_validate_swaps_graph_multiple_swaps_per_step(
+    validate_only: bool,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_swaps_validation_plugin: dict[str, Any],
+    registered_plugin_parameter_types: dict[str, Any],
+) -> None:
+    """Test that a graph step cannot contain multiple swaps."""
+    group_id = auth_account["default_group_id"]
+    plugin_id = registered_swaps_validation_plugin["plugin_id"]
+
+    swaps_graph = textwrap.dedent(
+        """
+        step_name:
+          ?math_swap:
+            add:
+              task1:
+                input_param: $input_param
+          ?string_swap:
+            hi:
+              task2:
+                input_param: $input_param
+        """
+    )
+
+    create_response, modify_response = _test_create_and_modify(
+        group_id=group_id,
+        name=f"test_multiple_swaps_per_step_{validate_only}",
+        task_graph=swaps_graph,
+        plugins=[plugin_id],
+        parameters=[
+            {
+                "name": "input_param",
+                "defaultValue": "test_value",
+                "parameterType": "string",
+            }
+        ],
+        validate_only=validate_only,
+        dioptra_client=dioptra_client,
+        auth_account=auth_account,
+        registered_plugin_parameter_types=registered_plugin_parameter_types,
+    )
+
+    for response in (create_response, modify_response):
+        assert response.status_code == HTTPStatus.BAD_REQUEST
+        error_detail = response.json()["detail"]["reason"]
+        assert "swap_issues" in error_detail
+        assert any(
+            "contains multiple swaps" in issue
+            for issue in error_detail["swap_issues"]
+        )
+
+
 def test_validate_swaps_graph_rendered_errors(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
