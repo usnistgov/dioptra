@@ -1,28 +1,37 @@
 <template>
-  <DialogComponent 
+  <DialogComponent
     v-model="showDialog"
-    @emitSubmit="emitAddOrEdit"
     :hideDraftBtn="true"
+    @emitSubmit="emitAddOrEdit"
   >
     <template #title>
       <label id="modalTitle">
-        {{editTag ? 'Edit Tag' : 'Create Tag'}}
+        {{ editTag ? "Edit Tag" : "Create Tag" }}
       </label>
     </template>
-    <q-input 
-      class="q-mb-xs" 
-      outlined 
-      dense 
-      v-model.trim="name"  
-      autofocus 
-      :rules="[requiredRule]"
+    <q-input
       id="name"
+      v-model.trim="name"
+      class="q-mb-xs"
+      outlined
+      dense
+      autofocus
+      :rules="[requiredRule]"
     >
       <template #before>
-        <label for="name" class="field-label">Name:</label>
+        <label
+          for="name"
+          class="field-label"
+          >Name:</label
+        >
       </template>
     </q-input>
-    <q-input outlined dense :model-value="store.loggedInGroup.name" disable>
+    <q-input
+      outlined
+      dense
+      :model-value="store.loggedInGroup.name"
+      disable
+    >
       <template #before>
         <label class="field-label">Group:</label>
       </template>
@@ -31,45 +40,43 @@
 </template>
 
 <script setup>
-  import { ref, watch } from 'vue'
-  import DialogComponent from './DialogComponent.vue'
-  import { useLoginStore } from '@/stores/LoginStore.ts'
+import { ref, watch } from "vue";
+import DialogComponent from "./DialogComponent.vue";
+import { useLoginStore } from "@/stores/LoginStore.ts";
 
-  const store = useLoginStore()
+const store = useLoginStore();
 
-  const props = defineProps(['editTag'])
-  const emit = defineEmits(['addTag', 'updateTag'])
+const props = defineProps(["editTag"]);
+const emit = defineEmits(["addTag", "updateTag"]);
 
-  function requiredRule(val) {
-    return (!!val) || "This field is required"
+function requiredRule(val) {
+  return !!val || "This field is required";
+}
+
+const showDialog = defineModel();
+
+const name = ref("");
+const locked = ref(true);
+const group = ref("");
+
+watch(showDialog, (newVal) => {
+  if (newVal) {
+    name.value = props.editTag.name;
+    group.value = props.editTag.group;
+  } else {
+    name.value = "";
+    locked.value = true;
   }
-
-  const showDialog = defineModel()
-
-  const name = ref('')
-  const locked = ref(true)
-  const group = ref('')
-
-  watch(showDialog, (newVal) => {
-    if(newVal) {
-      name.value = props.editTag.name
-      group.value = props.editTag.group
-    }
-    else {
-      name.value = ''
-      locked.value = true
-    }
-    if (!group.value) {
-      group.value = store.loggedInGroup.id
-    }
-  })
-
-  function emitAddOrEdit() {
-    if(props.editTag) {
-      emit('updateTag', name.value, props.editTag.id)
-    } else {
-      emit('addTag', name.value, group.value)
-    }
+  if (!group.value) {
+    group.value = store.loggedInGroup.id;
   }
+});
 
+function emitAddOrEdit() {
+  if (props.editTag) {
+    emit("updateTag", name.value, props.editTag.id);
+  } else {
+    emit("addTag", name.value, group.value);
+  }
+}
 </script>

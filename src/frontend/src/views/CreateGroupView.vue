@@ -1,16 +1,26 @@
 <template>
-  <PageTitle title="Create Group" resourceType="group" />
-  <q-banner rounded class="bg-orange-2 text-dark q-mt-md">
+  <PageTitle
+    title="Create Group"
+    resourceType="group"
+  />
+  <q-banner
+    rounded
+    class="bg-orange-2 text-dark q-mt-md"
+  >
     Warning: all future users have access to groups created in this phase.
   </q-banner>
   <div :style="{ width: isMobile ? '100%' : isMedium ? '60%' : '50%' }">
     <fieldset class="q-mt-lg">
       <legend>Basic Info</legend>
-      <q-form ref="form" class="q-ma-lg" @submit="submit">
+      <q-form
+        ref="form"
+        class="q-ma-lg"
+        @submit="submit"
+      >
         <q-input
+          v-model.trim="name"
           outlined
           dense
-          v-model.trim="name"
           :rules="[requiredRule]"
           aria-required="true"
           class="q-mb-sm"
@@ -46,35 +56,35 @@
 </template>
 
 <script setup>
-import { inject, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { inject, ref } from "vue";
+import { useRouter } from "vue-router";
 
-import PageTitle from '@/components/PageTitle.vue'
-import * as api from '@/services/dataApi'
-import * as notify from '../notify'
+import PageTitle from "@/components/PageTitle.vue";
+import * as api from "@/services/dataApi";
+import * as notify from "../notify";
 
-const router = useRouter()
-const isMobile = inject('isMobile')
-const isMedium = inject('isMedium')
+const router = useRouter();
+const isMobile = inject("isMobile");
+const isMedium = inject("isMedium");
 
-const form = ref()
-const name = ref('')
-const isPublic = ref(true)
+const form = ref();
+const name = ref("");
+const isPublic = ref(true);
 
-const requiredRule = (val) => (val && val.length > 0) || 'This field is required'
+const requiredRule = (val) => (val && val.length > 0) || "This field is required";
 
 async function submit() {
-  const valid = await form.value?.validate()
-  if(!valid) {
-    return
+  const valid = await form.value?.validate();
+  if (!valid) {
+    return;
   }
 
   try {
-    await api.addItem('groups', { name: name.value, public: isPublic.value })
-    notify.success('Group created')
-    router.push('/groups')
-  } catch(err) {
-    notify.error(err.response?.data?.message || 'Failed to create group')
+    await api.addItem("groups", { name: name.value, public: isPublic.value });
+    notify.success("Group created");
+    router.push("/groups");
+  } catch (err) {
+    notify.error(err.response?.data?.message || "Failed to create group");
   }
 }
 </script>
