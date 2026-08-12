@@ -2048,6 +2048,45 @@ def test_validate_swaps_graph_bad_schema(
     assert "schema_issues" in validation_result
     assert len(validation_result["schema_issues"]) > 0
 
+
+def test_validate_swaps_graph_invalid_yaml(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_swaps_validation_plugin: dict[str, Any],
+    registered_plugin_parameter_types: dict[str, Any],
+) -> None:
+    """Test that invalid YAML returns a client error via create and modify."""
+    invalid_yaml_graph = textwrap.dedent(
+        """
+        aaa:
+          task: multiply_numbers
+          kwargs:
+            num1: $num1
+            num2
+        """
+    )
+
+    create_response, modify_response = _test_create_and_modify(
+        group_id=auth_account["default_group_id"],
+        name="test_invalid_yaml",
+        task_graph=invalid_yaml_graph,
+        plugins=[registered_swaps_validation_plugin["plugin_id"]],
+        parameters=[],
+        validate_only=True,
+        dioptra_client=dioptra_client,
+        auth_account=auth_account,
+        registered_plugin_parameter_types=registered_plugin_parameter_types,
+    )
+
+    for response in (create_response, modify_response):
+        assert response.status_code == HTTPStatus.BAD_REQUEST
+        assert response.json()["error"] == "InvalidYamlError"
+        assert response.json()["message"].startswith(
+            "Bad Request - Failed to parse entrypoint task graph YAML:"
+        )
+        assert response.json()["detail"] == {}
+
+
 def test_validate_swaps_graph_missing_globals(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
