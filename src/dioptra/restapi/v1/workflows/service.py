@@ -44,8 +44,6 @@ from dioptra.restapi.errors import (
 from dioptra.restapi.utils import read_json_file, verify_filename_is_safe
 from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.entrypoints.service import (
-    EntrypointIdArtifactPluginsService,
-    EntrypointIdPluginsService,
     EntrypointIdService,
     EntrypointNameService,
     EntrypointService,
@@ -161,8 +159,6 @@ class ResourceImportService(object):
         builtin_plugin_parameter_type_service: BuiltinPluginParameterTypeService,
         entrypoint_service: EntrypointService,
         entrypoint_id_service: EntrypointIdService,
-        entrypoint_id_plugins_service: EntrypointIdPluginsService,
-        entrypoint_id_artifact_plugins_service: EntrypointIdArtifactPluginsService,
         entrypoint_name_service: EntrypointNameService,
         io_file_service: IOFileService,
     ) -> None:
@@ -183,8 +179,6 @@ class ResourceImportService(object):
                 object.
             entrypoint_service: An EntrypointService object.
             entrypoint_id_service: An EntrypointIdService object.
-            entrypoint_id_plugins_service: An EntrypointIdPluginsService object.
-            entrypoint_id_artifact_plugins_service: An EntrypointIdArtifactPluginsService object.
             entrypoint_name_service: An EntrypointNameService object.
             io_file_service: An IOFileService object.
         """
@@ -201,10 +195,6 @@ class ResourceImportService(object):
         )
         self._entrypoint_service = entrypoint_service
         self._entrypoint_id_service = entrypoint_id_service
-        self._entrypoint_id_plugins_service = entrypoint_id_plugins_service
-        self._entrypoint_id_artifact_plugins_service = (
-            entrypoint_id_artifact_plugins_service
-        )
         self._entrypoint_name_service = entrypoint_name_service
         self._io_file_service = io_file_service
 
@@ -876,12 +866,6 @@ class ResourceImportService(object):
                         group_id=group_id,
                         commit=False,
                         log=log,
-                    )
-                    self._entrypoint_id_plugins_service.append(
-                        existing.resource_id, plugin_ids
-                    )
-                    self._entrypoint_id_artifact_plugins_service.append(
-                        existing.resource_id, artifact_plugin_ids
                     )
                 else:
                     entrypoint_dict = self._entrypoint_service.create(

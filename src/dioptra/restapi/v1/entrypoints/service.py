@@ -294,6 +294,7 @@ class EntrypointIdService(UnitOfWorkService):
     @inject
     def __init__(
         self,
+        plugin_ids_service: PluginIdsService,
         swaps_validation_service: SwapsValidationService,
         uow: UnitOfWork,
     ) -> None:
@@ -303,6 +304,7 @@ class EntrypointIdService(UnitOfWorkService):
 
         Args:
         """
+        self._plugin_ids_service = plugin_ids_service
         self._swaps_validation_service = swaps_validation_service
         self._uow = uow
 
@@ -359,6 +361,8 @@ class EntrypointIdService(UnitOfWorkService):
         parameters: list[dict[str, Any]],
         artifact_parameters: list[dict[str, Any]],
         queue_ids: list[int],
+        plugin_ids: list[int] | None = None,
+        artifact_plugin_ids: list[int] | None = None,
         commit: bool = True,
         **kwargs,
     ) -> utils.EntrypointDict:
@@ -375,6 +379,10 @@ class EntrypointIdService(UnitOfWorkService):
                 or empty list, all artifact_parameters will be removed.
             queue_ids: A list of queue ids that will replace the current list of
                 entrypoint queues.
+            plugin_ids: Plugins to append or sync to their latest snapshots. If None,
+                the current plugin snapshots are retained.
+            artifact_plugin_ids: Artifact plugins to append or sync to their latest
+                snapshots. If None, the current artifact plugin snapshots are retained.
             commit: If True, commit the transaction. Defaults to True.
 
         Returns:
@@ -403,13 +411,53 @@ class EntrypointIdService(UnitOfWorkService):
             creator=current_user,
         )
 
-        plugins = _copy_plugins(
-            plugins=entrypoint.entry_point_plugins, target_entrypoint=new_entrypoint
-        )
-        artifact_plugins = _copy_artifact_plugins(
-            artifact_plugins=entrypoint.entry_point_artifact_plugins,
-            target_entrypoint=new_entrypoint,
-        )
+        if plugin_ids is None:
+            plugins = _copy_plugins(
+                plugins=entrypoint.entry_point_plugins,
+                target_entrypoint=new_entrypoint,
+            )
+        else:
+            plugin_id_set = set(plugin_ids)
+            plugins = _copy_plugins(
+                plugins=(
+                    plugin
+                    for plugin in entrypoint.entry_point_plugins
+                    if plugin.plugin.resource_id not in plugin_id_set
+                ),
+                target_entrypoint=new_entrypoint,
+            )
+            for plugin in self._plugin_ids_service.get(
+                list(plugin_id_set), error_if_not_found=True
+            ):
+                new_plugin = models.EntryPointPlugin(
+                    entry_point=new_entrypoint, plugin=plugin["plugin"]
+                )
+                new_entrypoint.entry_point_plugins.append(new_plugin)
+                plugins.append(new_plugin.plugin)
+
+        if artifact_plugin_ids is None:
+            artifact_plugins = _copy_artifact_plugins(
+                artifact_plugins=entrypoint.entry_point_artifact_plugins,
+                target_entrypoint=new_entrypoint,
+            )
+        else:
+            artifact_plugin_id_set = set(artifact_plugin_ids)
+            artifact_plugins = _copy_artifact_plugins(
+                artifact_plugins=(
+                    plugin
+                    for plugin in entrypoint.entry_point_artifact_plugins
+                    if plugin.plugin.resource_id not in artifact_plugin_id_set
+                ),
+                target_entrypoint=new_entrypoint,
+            )
+            for plugin in self._plugin_ids_service.get(
+                list(artifact_plugin_id_set), error_if_not_found=True
+            ):
+                new_plugin = models.EntryPointArtifactPlugin(
+                    entry_point=new_entrypoint, plugin=plugin["plugin"]
+                )
+                new_entrypoint.entry_point_artifact_plugins.append(new_plugin)
+                artifact_plugins.append(new_plugin.plugin)
 
         # if we are committing the entrypoint, we run the "rendered" validation.
         # otherwise, we do the lighter validation.
@@ -419,10 +467,7 @@ class EntrypointIdService(UnitOfWorkService):
             artifact_graph=artifact_graph,
             parameters=parameters,
             artifact_parameters=artifact_parameters,
-            plugin_ids=[
-                plugin.plugin_resource_snapshot_id
-                for plugin in entrypoint.entry_point_plugins
-            ],
+            plugin_ids=[plugin.resource_snapshot_id for plugin in plugins],
             on_save=commit,
             log=log,
         )
@@ -1934,9 +1979,7 @@ class SwapsValidationService(object):
         ]
 
         combined_swap_issues = (
-            pre_render_issues
-            + duplicate_swap_issues
-            + multiple_swaps_per_step_issues
+            pre_render_issues + duplicate_swap_issues + multiple_swaps_per_step_issues
         )
 
         return {
