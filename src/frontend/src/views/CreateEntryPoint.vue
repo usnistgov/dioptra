@@ -325,23 +325,28 @@
           :readOnly="history || entryPoint.deleted"
           style="min-height: 200px"
         />
-        <q-btn
-          label="Validate Inputs"
-          color="primary"
-          class="self-start"
-          @click="validateInputs()"
-        />
       </div>
 
       <div class="col">
         <h2>Task Plugins</h2>
-        <AssignPluginsDropdown
-          v-model:selectedPlugins="entryPoint.plugins"
-          v-model:pluginIDsToUpdate="pluginIDsToUpdate"
-          v-model:pluginIDsToRemove="pluginIDsToRemove"
-          class="q-mt-lg"
-          :disable="entryPoint.deleted"
-        />
+        <div class="row items-start no-wrap q-mt-lg">
+          <AssignPluginsDropdown
+            ref="taskPluginsDropdown"
+            v-model:selectedPlugins="entryPoint.plugins"
+            v-model:pluginIDsToUpdate="pluginIDsToUpdate"
+            v-model:pluginIDsToRemove="pluginIDsToRemove"
+            class="col"
+            :disable="entryPoint.deleted"
+          />
+          <q-btn
+            label="Save Plugin Selection"
+            color="primary"
+            class="q-ml-sm"
+            :loading="savingPluginType === 'plugins'"
+            :disable="route.params.id === 'new' || history || entryPoint.deleted || !taskPluginChangesPending"
+            @click="savePluginChanges('plugins')"
+          />
+        </div>
         <TableComponent
           :rows="tasks"
           :columns="taskColumns"
@@ -399,14 +404,49 @@
             </div>
           </template>
           <template #body-cell-add="cellProps">
-            <q-btn
-              icon="add"
-              round
-              size="xs"
-              color="grey-5"
-              text-color="black"
-              @click="addToTaskGraph(cellProps.row)"
-            />
+            <div
+              class="row items-center justify-center no-wrap"
+              style="gap: 4px"
+            >
+              <div class="row items-center justify-center action-button-slot">
+                <q-btn
+                  icon="add"
+                  round
+                  size="xs"
+                  color="grey-5"
+                  text-color="black"
+                  aria-label="Add Task"
+                  @click="addToTaskGraph(cellProps.row)"
+                >
+                  <q-tooltip>Add Task</q-tooltip>
+                </q-btn>
+              </div>
+
+              <div class="row items-center justify-center action-button-slot">
+                <q-btn
+                  v-if="swappableTasksByTask.get(cellProps.row)?.length"
+                  icon="sym_o_sync_alt"
+                  round
+                  size="xs"
+                  color="primary"
+                  aria-label="Add Swappable Task"
+                  @click="openAddSwappableTaskDialog(cellProps.row)"
+                >
+                  <q-tooltip>
+                    <div class="q-mb-sm">Add Swappable Task</div>
+                    <div>Swappable with:</div>
+                    <ul class="q-my-none q-pl-md">
+                      <li
+                        v-for="task in swappableTasksByTask.get(cellProps.row)"
+                        :key="`${task.plugin.id}-${task.id || task.name}`"
+                      >
+                        {{ task.name }}
+                      </li>
+                    </ul>
+                  </q-tooltip>
+                </q-btn>
+              </div>
+            </div>
           </template>
         </TableComponent>
       </div>
@@ -441,13 +481,24 @@
 
       <div class="col">
         <h2>Artifact Task Plugins</h2>
-        <AssignPluginsDropdown
-          v-model:selectedPlugins="entryPoint.artifactPlugins"
-          v-model:pluginIDsToUpdate="artifactPluginIDsToUpdate"
-          v-model:pluginIDsToRemove="artifactPluginIDsToRemove"
-          class="q-mt-lg"
-          :disable="entryPoint.deleted"
-        />
+        <div class="row items-start no-wrap q-mt-lg">
+          <AssignPluginsDropdown
+            ref="artifactTaskPluginsDropdown"
+            v-model:selectedPlugins="entryPoint.artifactPlugins"
+            v-model:pluginIDsToUpdate="artifactPluginIDsToUpdate"
+            v-model:pluginIDsToRemove="artifactPluginIDsToRemove"
+            class="col"
+            :disable="entryPoint.deleted"
+          />
+          <q-btn
+            label="Save Plugin Selection"
+            color="primary"
+            class="q-ml-sm"
+            :loading="savingPluginType === 'artifactPlugins'"
+            :disable="route.params.id === 'new' || history || entryPoint.deleted || !artifactPluginChangesPending"
+            @click="savePluginChanges('artifactPlugins')"
+          />
+        </div>
         <TableComponent
           :rows="artifactTasks"
           :columns="artifactTaskColumns"
@@ -508,6 +559,19 @@
         store.initialPage ? router.push('/entrypoints') : router.back();
       "
     />
+
+    <span class="q-mr-lg">
+      <q-btn
+        label="Validate"
+        color="primary"
+        :disable="taskPluginsChanged"
+        @click="validateEntrypoint()"
+      />
+      <q-tooltip v-if="taskPluginsChanged">
+        The task plugin selection has changed. Save your changes before validating.
+      </q-tooltip>
+    </span>
+
     <q-btn
       :color="history ? 'blue-2' : 'primary'"
       label="Submit EntryPoint"
@@ -549,6 +613,17 @@
     v-model="showArtifactParamDialog"
     @submit="addArtifactParam"
   />
+  <AddSwappableTaskDialog
+    v-model="showAddSwappableTaskDialog"
+    v-model:selectedSwapStep="selectedSwapStep"
+    v-model:selectedSwappableTasks="selectedSwappableTasks"
+    :selectedSwapTask="selectedSwapTask"
+    :swapStepOptions="swapStepOptions"
+    :selectableSwappableTasks="selectableSwappableTasks"
+    :canSubmit="canSubmitSwappableTasks"
+    @stepChanged="resetSelectedSwappableTasks"
+    @submit="addSelectedSwappableTasks"
+  />
   <LeaveFormDialog
     v-model="showLeaveDialog"
     type="entrypoint"
@@ -560,15 +635,17 @@
   />
   <InfoPopupDialog v-model="displayErrorDialog">
     <template #title>
-      <label id="modalTitle"> Entrypoint Input Errors </label>
+      <label id="modalTitle"> Entrypoint Validation Errors </label>
     </template>
-    Errors found: {{ inputErrors.length }}
+    Errors found: {{ validationIssues.length }}
     <ul>
       <li
-        v-for="(error, i) in inputErrors"
+        v-for="(issue, i) in validationIssues"
         :key="i"
+        class="q-mb-md"
+        style="white-space: pre-wrap"
       >
-        {{ error.message }}
+        {{ issue }}
       </li>
     </ul>
   </InfoPopupDialog>
@@ -599,9 +676,11 @@ import LeaveFormDialog from "@/dialogs/LeaveFormDialog.vue";
 import ReturnToFormDialog from "@/dialogs/ReturnToFormDialog.vue";
 import InfoPopupDialog from "@/dialogs/InfoPopupDialog.vue";
 import ArtifactParamDialog from "@/dialogs/ArtifactParamDialog.vue";
+import AddSwappableTaskDialog from "@/dialogs/AddSwappableTaskDialog.vue";
 import EditPluginTaskParamDialog from "@/dialogs/EditPluginTaskParamDialog.vue";
 import AssignPluginsDropdown from "@/components/AssignPluginsDropdown.vue";
 import ResourcePicker from "@/components/ResourcePicker.vue";
+import YAML from "yaml";
 
 const route = useRoute();
 
@@ -666,6 +745,10 @@ const enableSubmit = computed(() => {
 });
 
 const copyAtEditStart = ref({});
+
+const taskPluginsChanged = computed(() => {
+  return JSON.stringify(copyAtEditStart.value.plugins) !== JSON.stringify(entryPoint.value.plugins);
+});
 
 onMounted(() => {
   if (route.query.snapshotId && !store.showRightDrawer) {
@@ -888,14 +971,19 @@ async function checkIfStillValid(type) {
 const taskGraphError = ref("");
 
 const taskGraphPlaceholderError = computed(() => {
-  if (entryPoint.value.taskGraph.includes("<step-name>") && entryPoint.value.taskGraph.includes("<input-value>")) {
-    return "Replace <step-name> and <input-value> placeholders";
-  } else if (entryPoint.value.taskGraph.includes("<step-name>")) {
-    return "Replace <step-name> placeholders";
-  } else if (entryPoint.value.taskGraph.includes("<input-value>")) {
-    return "Replace <input-value> placeholders";
-  }
-  return "";
+  const placeholders = entryPoint.value.taskGraph.match(
+    /<(?:step-name(?:-\d+)?|swap-name(?:-\d+)?|task-alias(?:-\d+)?|input-value)>/g,
+  );
+  if (!placeholders) return "";
+
+  const normalizedPlaceholders = placeholders.map((placeholder) => {
+    if (/^<step-name(?:-\d+)?>$/.test(placeholder)) return "<step-name>";
+    if (/^<swap-name(?:-\d+)?>$/.test(placeholder)) return "<swap-name>";
+    if (/^<task-alias(?:-\d+)?>$/.test(placeholder)) return "<task-alias>";
+    return placeholder;
+  });
+
+  return `Replace ${[...new Set(normalizedPlaceholders)].join(", ")} placeholders`;
 });
 
 function submit() {
@@ -912,8 +1000,8 @@ function submit() {
   });
 }
 
-async function addOrModifyEntrypoint() {
-  const submitObject = JSON.parse(JSON.stringify(entryPoint.value));
+function prepareEntrypointPayload() {
+  const payload = JSON.parse(JSON.stringify(entryPoint.value));
   const keysToKeep = [
     "group",
     "name",
@@ -926,34 +1014,36 @@ async function addOrModifyEntrypoint() {
     "plugins",
     "artifactPlugins",
   ];
-  for (const key of Object.keys(submitObject)) {
+  for (const key of Object.keys(payload)) {
     if (!keysToKeep.includes(key)) {
-      delete submitObject[key];
+      delete payload[key];
     }
   }
-  // turn objects into ids
-  submitObject.queues = submitObject.queues.map((q) => q.id);
-  submitObject.plugins = submitObject.plugins.map((p) => p.id);
-  submitObject.artifactPlugins = submitObject.artifactPlugins.map((p) => p.id);
 
-  submitObject.artifactParameters = submitObject.artifactParameters.map((param) => ({
+  // turn objects into ids
+  payload.queues = payload.queues.map((queue) => queue.id);
+  payload.plugins = payload.plugins.map((plugin) => plugin.id);
+  payload.artifactPlugins = payload.artifactPlugins.map((plugin) => plugin.id);
+
+  payload.artifactParameters = payload.artifactParameters.map((param) => ({
     ...param,
     outputParams: param.outputParams.map((oParam) => ({
       ...oParam,
       parameterType: oParam.parameterType.id,
     })),
   }));
+
+  return payload;
+}
+
+async function addOrModifyEntrypoint() {
+  const submitObject = prepareEntrypointPayload();
   try {
     if (route.params.id === "new") {
       await api.addItem("entrypoints", submitObject);
       store.savedForms.entryPoint = null;
       notify.success(`Successfully created '${entryPoint.value.name}'`);
     } else {
-      if (valuesChangedFromEditStartBesidesPlugins.value) {
-        const keysToRemove = ["group", "plugins", "artifactPlugins"];
-        keysToRemove.forEach((key) => delete submitObject[key]);
-        await api.updateItem("entrypoints", route.params.id, submitObject);
-      }
       if (pluginIDsToUpdate.value.length > 0) {
         await api.addPluginsToEntrypoint(route.params.id, pluginIDsToUpdate.value, "plugins");
       }
@@ -965,6 +1055,11 @@ async function addOrModifyEntrypoint() {
       }
       for (const pluginId of artifactPluginIDsToRemove.value) {
         await api.removePluginFromEntrypoint(route.params.id, pluginId, "artifactPlugins");
+      }
+      if (valuesChangedFromEditStartBesidesPlugins.value) {
+        const keysToRemove = ["group", "plugins", "artifactPlugins"];
+        keysToRemove.forEach((key) => delete submitObject[key]);
+        await api.updateItem("entrypoints", route.params.id, submitObject);
       }
       notify.success(`Successfully updated '${entryPoint.value.name}'`);
     }
@@ -1034,10 +1129,31 @@ async function getQueues(val = "", update) {
   });
 }
 
+function getNextStepNamePlaceholder() {
+  let highestStepNumber = 0;
+
+  for (const match of entryPoint.value.taskGraph.matchAll(/^<step-name-(\d+)>:/gm)) {
+    highestStepNumber = Math.max(highestStepNumber, Number(match[1]));
+  }
+
+  return `<step-name-${highestStepNumber + 1}>`;
+}
+
+function getNextSwapNamePlaceholder() {
+  let highestSwapNumber = 0;
+
+  for (const match of entryPoint.value.taskGraph.matchAll(/<swap-name-(\d+)>/g)) {
+    highestSwapNumber = Math.max(highestSwapNumber, Number(match[1]));
+  }
+
+  return `<swap-name-${highestSwapNumber + 1}>`;
+}
+
 function addToTaskGraph(task) {
   console.log("task = ", task);
   // always use Mixed Style Invocation
-  let string = `<step-name>:\n  task: ${task.name}`;
+  const stepNamePlaceholder = getNextStepNamePlaceholder();
+  let string = `${stepNamePlaceholder}:\n  task: ${task.name}`;
   if (task.inputParams.length > 0) {
     string += `\n  kwargs:`;
     task.inputParams.forEach((param) => {
@@ -1048,6 +1164,183 @@ function addToTaskGraph(task) {
     entryPoint.value.taskGraph = string;
   } else {
     entryPoint.value.taskGraph += `\n${string}`;
+  }
+}
+
+const selectedSwapTask = ref(null);
+const eligibleSwappableTasks = ref([]);
+const selectedSwappableTasks = ref([]);
+const eligibleSwapGroups = ref([]);
+const swapStepOptions = ref([]);
+const selectedSwapStep = ref(null);
+const showAddSwappableTaskDialog = ref(false);
+
+function getOutputParameterTypes(task) {
+  return task.outputParams.map(
+    (parameter) => parameter.parameterType?.id ?? parameter.parameterType?.name ?? parameter.parameterType,
+  );
+}
+
+function findSwappableTasks(task) {
+  const outputParameterTypes = getOutputParameterTypes(task);
+
+  return tasks.value.filter((candidate) => {
+    if (candidate === task) return false;
+
+    const candidateOutputParameterTypes = getOutputParameterTypes(candidate);
+    return (
+      candidateOutputParameterTypes.length === outputParameterTypes.length &&
+      candidateOutputParameterTypes.every((type, index) => type === outputParameterTypes[index])
+    );
+  });
+}
+
+const swappableTasksByTask = computed(() => new Map(tasks.value.map((task) => [task, findSwappableTasks(task)])));
+
+const taskGraphObject = computed(() => {
+  try {
+    return YAML.parse(entryPoint.value.taskGraph);
+  } catch {
+    return null;
+  }
+});
+
+function findEligibleSwapGroups() {
+  if (!taskGraphObject.value || typeof taskGraphObject.value !== "object") return [];
+
+  const eligibleTaskNames = new Set(eligibleSwappableTasks.value.map((task) => task.name));
+  if (selectedSwapTask.value) {
+    eligibleTaskNames.add(selectedSwapTask.value.name);
+  }
+  const swapGroups = [];
+
+  Object.entries(taskGraphObject.value).forEach(([stepName, step]) => {
+    if (!step || typeof step !== "object" || Array.isArray(step)) return;
+
+    const swapEntries = Object.entries(step).filter(
+      ([swapName, swapGroup]) =>
+        swapName.startsWith("?") && swapGroup && typeof swapGroup === "object" && !Array.isArray(swapGroup),
+    );
+    if (swapEntries.length !== 1) return;
+
+    const [swapName, swapGroup] = swapEntries[0];
+    const taskAliases = Object.entries(swapGroup);
+    const taskNames = taskAliases.map(([, taskDefinition]) => taskDefinition?.task);
+    const allTasksAreSwappable =
+      taskAliases.length > 0 &&
+      taskNames.every(
+        (taskName) => eligibleTaskNames.has(taskName) || (typeof taskName === "string" && /^<[^>]+>$/.test(taskName)),
+      );
+
+    if (allTasksAreSwappable) {
+      swapGroups.push({ stepName, swapName, taskNames, label: stepName, createNew: false });
+    }
+  });
+
+  return swapGroups;
+}
+
+function resetSelectedSwappableTasks() {
+  selectedSwappableTasks.value = [selectedSwapTask.value];
+}
+
+function prepareSwappableTaskSelection(task) {
+  selectedSwapTask.value = task;
+  eligibleSwappableTasks.value = findSwappableTasks(task);
+  eligibleSwapGroups.value = findEligibleSwapGroups();
+  const newStepName = getNextStepNamePlaceholder();
+  swapStepOptions.value = [
+    {
+      stepName: newStepName,
+      swapName: null,
+      taskNames: [],
+      label: newStepName,
+      createNew: true,
+    },
+    ...eligibleSwapGroups.value,
+  ];
+  selectedSwapStep.value = swapStepOptions.value[0];
+  resetSelectedSwappableTasks();
+}
+
+function openAddSwappableTaskDialog(task) {
+  prepareSwappableTaskSelection(task);
+  showAddSwappableTaskDialog.value = true;
+}
+
+const selectableSwappableTasks = computed(() =>
+  selectedSwapStep.value?.createNew
+    ? eligibleSwappableTasks.value
+    : [selectedSwapTask.value, ...eligibleSwappableTasks.value].filter(Boolean),
+);
+
+const canSubmitSwappableTasks = computed(() =>
+  selectedSwapStep.value?.createNew
+    ? selectedSwappableTasks.value.length >= 2
+    : selectedSwappableTasks.value.length >= 1,
+);
+
+function addSwappableTaskToGraph() {
+  const stepNamePlaceholder = getNextStepNamePlaceholder();
+  const swapNamePlaceholder = getNextSwapNamePlaceholder();
+  let string = `${stepNamePlaceholder}:\n  ?${swapNamePlaceholder}:`;
+
+  selectedSwappableTasks.value.forEach((task, index) => {
+    string += `\n    <task-alias-${index + 1}>:\n      task: ${task.name}`;
+    if (task.inputParams.length > 0) {
+      string += `\n      kwargs:`;
+      task.inputParams.forEach((parameter) => {
+        string += `\n        ${parameter.name}: <input-value>`;
+      });
+    }
+  });
+
+  if (entryPoint.value.taskGraph.trim().length === 0) {
+    entryPoint.value.taskGraph = string;
+  } else {
+    entryPoint.value.taskGraph += `\n${string}`;
+  }
+}
+
+function getNextTaskAliasPlaceholder(swapGroup) {
+  let highestAliasNumber = 0;
+
+  Object.keys(swapGroup).forEach((alias) => {
+    const match = alias.match(/^<task-alias-(\d+)>$/);
+    if (match) {
+      highestAliasNumber = Math.max(highestAliasNumber, Number(match[1]));
+    }
+  });
+
+  return `<task-alias-${highestAliasNumber + 1}>`;
+}
+
+function addTasksToExistingSwapGroup() {
+  if (!taskGraphObject.value || !selectedSwapStep.value) return;
+
+  const { stepName, swapName } = selectedSwapStep.value;
+  const swapGroup = taskGraphObject.value[stepName]?.[swapName];
+  if (!swapGroup) return;
+
+  selectedSwappableTasks.value.forEach((task) => {
+    const taskDefinition = { task: task.name };
+    if (task.inputParams.length > 0) {
+      taskDefinition.kwargs = Object.fromEntries(
+        task.inputParams.map((parameter) => [parameter.name, "<input-value>"]),
+      );
+    }
+
+    swapGroup[getNextTaskAliasPlaceholder(swapGroup)] = taskDefinition;
+  });
+
+  entryPoint.value.taskGraph = YAML.stringify(taskGraphObject.value).trimEnd();
+}
+
+function addSelectedSwappableTasks() {
+  if (selectedSwapStep.value?.createNew) {
+    addSwappableTaskToGraph();
+  } else {
+    addTasksToExistingSwapGroup();
   }
 }
 
@@ -1072,6 +1365,7 @@ onBeforeRouteLeave((to) => {
     leaveForm();
   } else {
     showLeaveDialog.value = true;
+    return false;
   }
 });
 
@@ -1111,6 +1405,48 @@ const pluginIDsToUpdate = ref([]);
 const artifactPluginIDsToUpdate = ref([]);
 const pluginIDsToRemove = ref([]);
 const artifactPluginIDsToRemove = ref([]);
+const taskPluginsDropdown = ref(null);
+const artifactTaskPluginsDropdown = ref(null);
+const savingPluginType = ref(null);
+
+const taskPluginChangesPending = computed(
+  () => pluginIDsToUpdate.value.length > 0 || pluginIDsToRemove.value.length > 0,
+);
+const artifactPluginChangesPending = computed(
+  () => artifactPluginIDsToUpdate.value.length > 0 || artifactPluginIDsToRemove.value.length > 0,
+);
+
+async function savePluginChanges(pluginType) {
+  const isArtifactPlugin = pluginType === "artifactPlugins";
+  const pluginIDsToSave = isArtifactPlugin ? artifactPluginIDsToUpdate : pluginIDsToUpdate;
+  const pluginIDsToDelete = isArtifactPlugin ? artifactPluginIDsToRemove : pluginIDsToRemove;
+  const dropdown = isArtifactPlugin ? artifactTaskPluginsDropdown : taskPluginsDropdown;
+  const pluginLabel = isArtifactPlugin ? "artifact task plugins" : "task plugins";
+
+  if (route.params.id === "new" || (pluginIDsToSave.value.length === 0 && pluginIDsToDelete.value.length === 0)) {
+    return;
+  }
+
+  savingPluginType.value = pluginType;
+  try {
+    if (pluginIDsToSave.value.length > 0) {
+      await api.addPluginsToEntrypoint(route.params.id, pluginIDsToSave.value, pluginType);
+    }
+    for (const pluginId of pluginIDsToDelete.value) {
+      await api.removePluginFromEntrypoint(route.params.id, pluginId, pluginType);
+    }
+
+    pluginIDsToSave.value = [];
+    pluginIDsToDelete.value = [];
+    copyAtEditStart.value[pluginType] = JSON.parse(JSON.stringify(entryPoint.value[pluginType]));
+    dropdown.value?.resetOriginalSelectedPlugins();
+    notify.success(`Successfully saved ${pluginLabel}`);
+  } catch (err) {
+    notify.error(err.response?.data?.message ?? `Failed to save ${pluginLabel}`);
+  } finally {
+    savingPluginType.value = null;
+  }
+}
 
 const objectForDeletion = ref();
 
@@ -1126,35 +1462,42 @@ async function deleteEntrypoint() {
   }
 }
 
-const inputErrors = ref([]);
+const validationIssues = ref([]);
 const displayErrorDialog = ref(false);
 
-async function validateInputs() {
+async function validateEntrypoint() {
+  if (taskGraphError.value) {
+    notify.error(taskGraphError.value);
+    return;
+  }
+  if (!entryPoint.value.name) {
+    notify.error("Please provide an Entrypoint name");
+    return;
+  }
+
+  const submitObject = prepareEntrypointPayload();
   try {
-    const res = await api.validateEntrypoint({
-      group: entryPoint.value.group.id || entryPoint.value.group,
-      taskGraph: entryPoint.value.taskGraph,
-      pluginSnapshots: entryPoint.value.plugins.map((plugin) => plugin.snapshotId || plugin.snapshot),
-      parameters: entryPoint.value.parameters,
-      artifacts: entryPoint.value.artifactParameters.map((param) => ({
-        ...param,
-        outputParams: param.outputParams.map((oParam) => ({
-          ...oParam,
-          parameterType: oParam.parameterType.id,
-        })),
-      })),
-    });
-    if (res?.data?.schemaValid && !taskGraphPlaceholderError.value) {
-      notify.success(`Entrypoint inputs are valid!`);
-    } else if (res?.data?.schemaIssues.length > 0 || taskGraphPlaceholderError.value) {
-      inputErrors.value = res.data.schemaIssues;
-      if (taskGraphPlaceholderError.value) {
-        inputErrors.value.push({ message: taskGraphPlaceholderError.value });
-      }
-      displayErrorDialog.value = true;
+    if (route.params.id === "new") {
+      await api.addItem("entrypoints", submitObject, true);
+      notify.success(`Entrypoint is valid!`);
+    } else {
+      const keysToRemove = ["group", "plugins", "artifactPlugins"];
+      keysToRemove.forEach((key) => delete submitObject[key]);
+      await api.updateItem("entrypoints", route.params.id, submitObject, true);
+      notify.success(`Entrypoint is valid!`);
     }
   } catch (err) {
-    notify.error(err.response.data.message);
+    const reason = err.response?.data?.detail?.reason;
+    const responseValidationIssues = [
+      ...(Array.isArray(reason?.schema_issues) ? reason.schema_issues : []),
+      ...(Array.isArray(reason?.swap_issues) ? reason.swap_issues : []),
+    ];
+    if (responseValidationIssues.length > 0) {
+      validationIssues.value = responseValidationIssues;
+      displayErrorDialog.value = true;
+    } else {
+      notify.error(err.response?.data?.message ?? "Failed to validate Entrypoint");
+    }
   }
 }
 
@@ -1211,3 +1554,10 @@ async function syncPlugin(plugin, type = "plugins") {
   }
 }
 </script>
+
+<style scoped>
+.action-button-slot {
+  width: 24px;
+  height: 24px;
+}
+</style>

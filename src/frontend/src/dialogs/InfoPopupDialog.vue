@@ -4,7 +4,7 @@
     aria-labelledby="modalTitle"
   >
     <q-card
-      style="width: 95%; max-height: 80vh"
+      style="width: 900px; max-width: 90vw; max-height: 80vh"
       flat
     >
       <q-card-section class="bg-primary text-white q-mb-md">
