@@ -94,6 +94,18 @@ Executing an entrypoint as a job requires a worker.
 By linking queues to entrypoints, workers can be assigned jobs to process the associated task graph logic.
 
 
+Entrypoint Swaps
+----------------
+
+Entrypoint swaps allow for the reuse of a task graph's structure by allowing the user to provide alternatives for a given task in the graph.
+When creating a job based on an entrypoint, if the task graph for the entrypoint has swaps in it, the user must specify choices for each swap in the graph.
+
+The choices are used to render the task graph into a task graph which does not contain swaps, which is then provided to the task engine at runtime.
+
+.. admonition:: Learn more
+
+    For more information about swap syntax, see :ref:`Task Graphs explanation <explanation-task-graph>` and :ref:`Task Graph reference <reference-task-graph>`.
+
 .. rst-class:: fancy-header header-seealso
 
 See Also 

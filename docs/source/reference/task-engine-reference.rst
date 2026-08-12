@@ -355,6 +355,9 @@ For example:
             inputs: "<input_definitions>"
             outputs: "<output_definitions>"
 
+
+
+
 Task Plugin
 ~~~~~~~~~~~
 
@@ -588,6 +591,52 @@ The above example maps the plugin short name to a list, therefore this is a
 positional invocation.  The list has one value in it, which is itself a
 mapping: {prop1: value1, prop2: value2}.  The task plugin will be invoked
 positionally, where its one positional argument will be a Python dict.
+
+Swaps
+^^^^^
+
+Swaps allow for a task definition to be chosen at job creation time. 
+Below details the structure of a swap:
+
+.. code:: YAML
+    
+    step_name:
+        ?swap_name:
+            task_alias1:
+                task: plugin1
+                args: [posarg1, posarg2]
+                kwargs:
+                    keyword1: arg1
+                    keyword2: arg2
+            task_alias2:
+                plugin2: [arg1, arg2]
+
+A swap is specified in the task graph as a child of the step. In order to be considered a swap,
+the swap name in the task graph must start with the character ``?``. The ``?`` is excluded from the
+swap name when providing selections during job creation.
+
+In the example above ``swap_name`` is the name of the swap.
+
+The swap should then contain a mapping of task aliases to task definitions. In the example above,
+``task_alias1`` maps to a long form mixed invocation style dask definition, and ``task_alias2`` maps to a 
+positional style invocation.
+
+``task_alias1`` and ``task_alias2`` represent choices for the given swap. At job creation, if we choose 
+``task_alias1`` for the swap ``swap_name``, the task graph will be rendered as follows when provided to the
+task engine:
+
+.. code:: YAML
+    
+    step_name:
+        task: plugin1
+        args: [posarg1, posarg2]
+        kwargs:
+            keyword1: arg1
+            keyword2: arg2
+
+.. important::
+
+   Task definitions in a swap *must* have the same output type. 
 
 References
 **********
