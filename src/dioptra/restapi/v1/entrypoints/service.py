@@ -1745,7 +1745,12 @@ class SwapsValidationService(object):
 
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        swaps_yaml = yaml.safe_load(swaps_graph)
+        try:
+            swaps_yaml = yaml.safe_load(swaps_graph)
+        except yaml.YAMLError as e:
+            raise InvalidYamlError(
+                f"Failed to parse entrypoint task graph YAML: {e}"
+            ) from e
 
         if swaps_yaml is None:
             raise EmptyGraphError("Provided swaps graph is empty.")
