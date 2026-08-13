@@ -192,9 +192,9 @@ class EntrypointService(object):
             queues = self._uow.entrypoint_repo.create_queues(
                 new_entrypoint, queues=queue_ids
             )
-            self._uow.entrypoint_repo.create_plugins(new_entrypoint, plugins=plugins)
             self._uow.entrypoint_repo.create_plugins(
-                new_entrypoint, plugins=artifact_plugins
+                new_entrypoint,
+                plugins=_deduplicate_plugin_resources(plugins, artifact_plugins),
             )
 
         log.debug(
@@ -431,7 +431,8 @@ class EntrypointIdService(UnitOfWorkService):
             self._uow.entrypoint_repo.create_snapshot(new_entrypoint)
             queues = self._uow.entrypoint_repo.set_queues(new_entrypoint, queue_ids)
             self._uow.entrypoint_repo.set_plugins(
-                new_entrypoint, plugins + artifact_plugins
+                new_entrypoint,
+                _deduplicate_plugin_resources(plugins, artifact_plugins),
             )
 
         log.debug(
@@ -2106,9 +2107,9 @@ def _extract_task_name_from_definition(definition: dict[str, Any]):
 
 
 def _deduplicate_plugin_resources(
-    plugin_resources: list[models.Resource],
-    artifact_plugin_resources: list[models.Resource],
-) -> list[models.Resource]:
+    plugins: list[models.Plugin],
+    artifact_plugins: list[models.Plugin],
+) -> list[models.Plugin]:
     """
     De-duplicates two lists of Plugin resources and returns a combined list.
 
@@ -2116,10 +2117,7 @@ def _deduplicate_plugin_resources(
         A de-duplicated list of Plugin resources
     """
     return list(
-        {
-            resource.resource_id: resource
-            for resource in plugin_resources + artifact_plugin_resources
-        }.values()
+        {plugin.resource_id: plugin for plugin in plugins + artifact_plugins}.values()
     )
 
 
