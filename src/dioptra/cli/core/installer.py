@@ -439,8 +439,8 @@ def _print_install_summary(selection, deployment_path, verbose) -> None:
     print(f"Installing Dioptra to '{deployment_path}'")
     print(f"  Version:        {selection.version or selection.image_tag}")
     print(f"  Image tag:      {selection.image_tag}")
-    print(f"  Init ref:       {selection.init_ref}")
     if verbose:
+        print(f"  Init ref:       {selection.init_ref}")
         print(f"  Template ref:   {selection.template_ref}")
         print(f"  Validation ref: {selection.validation_ref}")
 

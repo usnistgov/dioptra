@@ -25,7 +25,7 @@ from dioptra.cli.core import deployments, docker
 COLUMNS = [
     ("name", "NAME"),
     ("status", "STATUS"),
-    ("version", "VERSION"),
+    ("version", "IMAGE TAG"),
     ("path", "PATH"),
 ]
 COLUMN_GAP = 2  # spaces between adjacent columns in the table
