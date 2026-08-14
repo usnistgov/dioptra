@@ -1599,6 +1599,33 @@ class SwapsValidationService(object):
                 )
         return duplicate_issues
 
+    def _check_multiple_swaps_per_step(
+        self, task_graph: dict[str, Any]
+    ) -> list[ValidationIssue]:
+        """Validate that each graph step contains at most one swap."""
+        issues: list[ValidationIssue] = []
+
+        for step_name, task in task_graph.items():
+            if not isinstance(task, dict):
+                continue
+
+            swap_names = [
+                key for key in task if isinstance(key, str) and key.startswith("?")
+            ]
+            if len(swap_names) > 1:
+                issues.append(
+                    ValidationIssue(
+                        type_=IssueType.SEMANTIC,
+                        severity=IssueSeverity.ERROR,
+                        message=(
+                            f"Step '{step_name}' contains multiple swaps "
+                            f"({', '.join(swap_names)}). Each step may contain only one swap."
+                        ),
+                    )
+                )
+
+        return issues
+
     def validate_single_swap_combinations(
         self,
         task_graph_yaml: dict[str, Any],
@@ -1728,6 +1755,11 @@ class SwapsValidationService(object):
             if isinstance(swaps_yaml, dict)
             else []
         )
+        multiple_swaps_per_step_issues = (
+            self._check_multiple_swaps_per_step(swaps_yaml)
+            if isinstance(swaps_yaml, dict)
+            else []
+        )
 
         #### Pre-render Schema Issues
         entrypoint = build_entrypoint_data_adapter(
@@ -1850,7 +1882,9 @@ class SwapsValidationService(object):
             g for g in collected_required_globals if g not in declared_globals
         ]
 
-        combined_swap_issues = output_issues + duplicate_swap_issues
+        combined_swap_issues = (
+            output_issues + duplicate_swap_issues + multiple_swaps_per_step_issues
+        )
 
         return {
             "schema_issues": [str(i) for i in schema_issues],
