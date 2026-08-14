@@ -20,11 +20,13 @@ This module contains a set of tests that validate the CRUD operations and additi
 functionalities for the group entity. The tests ensure that the groups can be
 registered, queried, and renamed as expected through the REST API.
 """
+
 from http import HTTPStatus
 from typing import Any
 
 import pytest
 from flask.testing import FlaskClient
+from freezegun import freeze_time
 from werkzeug.test import TestResponse
 
 from dioptra.client.base import DioptraResponseProtocol
@@ -113,7 +115,6 @@ def assert_group_response_contents_matches_expectations(
 
     # Validate the that each member is a GroupMember
     for member in response["members"]:
-
         # Validate the UserRef structure for member
         assert isinstance(member["user"]["id"], int)
         assert isinstance(member["user"]["username"], str)
@@ -385,6 +386,52 @@ def test_rename_group(
         group_id=group_to_rename["id"],
         existing_name=existing_group["name"],
     )
+
+
+@freeze_time("Apr 1st, 2025 6:00am", auto_tick_seconds=1)
+def test_cannot_rename_group_owned_by_another_user(
+    client: FlaskClient,
+    auth_account: dict[str, Any],
+    registered_users: dict[str, Any],
+) -> None:
+    group = actions.register_group(client, name="owner_only_rename").get_json()
+    other_user = registered_users["user2"]
+    login_response = actions.login(
+        client, other_user["username"], other_user["password"]
+    )
+    assert login_response.status_code == HTTPStatus.OK
+
+    response = modify_group(client, group["id"], "unauthorized_name")
+
+    assert response.status_code == HTTPStatus.FORBIDDEN
+    assert response.get_json()["error"] == "UserDoesNotOwnGroupError"
+    get_response = client.get(f"/{V1_ROOT}/{V1_GROUPS_ROUTE}/{group['id']}")
+    assert get_response.status_code == HTTPStatus.OK
+    assert get_response.get_json()["name"] == group["name"]
+
+
+@freeze_time("Apr 1st, 2025 6:00am", auto_tick_seconds=1)
+def test_cannot_delete_group_owned_by_another_user(
+    client: FlaskClient,
+    auth_account: dict[str, Any],
+    registered_users: dict[str, Any],
+) -> None:
+    group = actions.register_group(client, name="owner_only_delete").get_json()
+    other_user = registered_users["user2"]
+    login_response = actions.login(
+        client, other_user["username"], other_user["password"]
+    )
+    assert login_response.status_code == HTTPStatus.OK
+
+    response = client.delete(
+        f"/{V1_ROOT}/{V1_GROUPS_ROUTE}/{group['id']}", follow_redirects=True
+    )
+
+    assert response.status_code == HTTPStatus.FORBIDDEN
+    assert response.get_json()["error"] == "UserDoesNotOwnGroupError"
+    get_response = client.get(f"/{V1_ROOT}/{V1_GROUPS_ROUTE}/{group['id']}")
+    assert get_response.status_code == HTTPStatus.OK
+    assert get_response.get_json()["deleted"] is False
 
 
 def test_cannot_modify_default_public_group(
