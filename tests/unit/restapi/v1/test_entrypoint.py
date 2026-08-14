@@ -1965,6 +1965,70 @@ def test_validate_swaps_graph(
     assert modify_response.status_code == HTTPStatus.OK
 
 
+def test_validate_entrypoint_with_plugin_in_both_roles(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_swaps_validation_plugin: dict[str, Any],
+) -> None:
+    """Test validation when one plugin is both a task and artifact plugin."""
+    group_id = auth_account["default_group_id"]
+    plugin_id = registered_swaps_validation_plugin["plugin_id"]
+    task_graph = textwrap.dedent(
+        """
+        step1:
+          task1:
+            input_param: $input_param
+        """
+    )
+    parameters = [
+        {
+            "name": "input_param",
+            "defaultValue": "test_value",
+            "parameterType": "string",
+        }
+    ]
+
+    validation_response = dioptra_client.entrypoints.create(
+        group_id=group_id,
+        name="test_plugin_in_both_roles_validation",
+        task_graph=task_graph,
+        plugins=[plugin_id],
+        artifact_plugins=[plugin_id],
+        parameters=parameters,
+        validate_only=True,
+    )
+
+    assert validation_response.status_code == HTTPStatus.OK
+
+    create_response = dioptra_client.entrypoints.create(
+        group_id=group_id,
+        name="test_plugin_in_both_roles",
+        task_graph=task_graph,
+        plugins=[plugin_id],
+        artifact_plugins=[plugin_id],
+        parameters=parameters,
+    )
+
+    assert create_response.status_code == HTTPStatus.OK
+    entrypoint = create_response.json()
+    assert [plugin["id"] for plugin in entrypoint["plugins"]] == [plugin_id]
+    assert [plugin["id"] for plugin in entrypoint["artifactPlugins"]] == [plugin_id]
+
+    modify_response = dioptra_client.entrypoints.modify_by_id(
+        entrypoint_id=entrypoint["id"],
+        name=entrypoint["name"],
+        description=entrypoint["description"],
+        task_graph=task_graph,
+        artifact_graph=entrypoint["artifactGraph"],
+        parameters=parameters,
+        artifact_parameters=entrypoint["artifactParameters"],
+        queues=[],
+        validate_only=True,
+    )
+
+    assert modify_response.status_code == HTTPStatus.OK
+
+
 def test_validate_non_swaps_graph(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
