@@ -47,6 +47,7 @@ from dioptra.restapi.errors import (
     EntityExistsError,
     GroupNeedsAManagerError,
     GroupNeedsAUserError,
+    UserDoesNotOwnGroupError,
     UserIsManagerError,
     UserNeedsAGroupError,
 )
@@ -428,6 +429,26 @@ class GroupRepository:
         assert num_managers is not None
 
         return num_managers
+
+    def assert_group_owner(self, group: Group, user: User) -> None:
+        """Ensure the user has owner permission for the group.
+
+        Args:
+            group: The group whose ownership should be checked.
+            user: The user expected to own the group.
+
+        Raises:
+            EntityDoesNotExistError: If the group or user does not exist.
+            EntityDeletedError: If the group or user is deleted.
+            UserDoesNotOwnGroupError: If the user is not an owner of the group.
+        """
+
+        assert_group_exists(self.session, group, DeletionPolicy.NOT_DELETED)
+        assert_user_exists(self.session, user, DeletionPolicy.NOT_DELETED)
+
+        manager = self.session.get(GroupManager, (user.user_id, group.group_id))
+        if manager is None or not manager.owner:
+            raise UserDoesNotOwnGroupError(user.user_id, group.group_id)
 
     def add_manager(
         self, group: Group, user: User, owner: bool = False, admin: bool = False

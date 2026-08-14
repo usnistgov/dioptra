@@ -693,6 +693,15 @@ class UserNotInGroupError(DioptraError):
         self.group_id = group_id
 
 
+class UserDoesNotOwnGroupError(DioptraError):
+    """A given user does not own a given group."""
+
+    def __init__(self, user_id: int, group_id: int) -> None:
+        super().__init__(f"User {user_id} does not own group {group_id}")
+        self.user_id = user_id
+        self.group_id = group_id
+
+
 class GroupNeedsAUserError(DioptraError):
     """A group must have at least one user; it can't be empty."""
 
@@ -1063,6 +1072,15 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
     def handle_user_password_error(error: UserPasswordError):
         log.debug(error.to_message())
         return error_result(error, http.HTTPStatus.UNAUTHORIZED, {})
+
+    @api.errorhandler(UserDoesNotOwnGroupError)
+    def handle_user_does_not_own_group_error(error: UserDoesNotOwnGroupError):
+        log.debug(error.to_message(), user_id=error.user_id, group_id=error.group_id)
+        return error_result(
+            error,
+            http.HTTPStatus.FORBIDDEN,
+            {"user_id": error.user_id, "group_id": error.group_id},
+        )
 
     @api.errorhandler(MlflowRunNotFoundError)
     def handle_mlflow_run_not_found_error(error: MlflowRunNotFoundError):
