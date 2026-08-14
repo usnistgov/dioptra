@@ -153,7 +153,7 @@ class GroupIdEndpoint(Resource):
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="Group", request_type="DELETE", id=id
         )
-        return self._group_id_service.delete(id, log=log)
+        return self._group_id_service.delete(id, acting_user=current_user, log=log)
 
     @login_required
     @accepts(schema=GroupMutableFieldsSchema, api=api)
@@ -167,7 +167,11 @@ class GroupIdEndpoint(Resource):
         group = cast(
             models.Group,
             self._group_id_service.modify(
-                id, name=parsed_obj["name"], error_if_not_found=True, log=log
+                id,
+                name=parsed_obj["name"],
+                acting_user=current_user,
+                error_if_not_found=True,
+                log=log,
             ),
         )
         return utils.build_group(group)
