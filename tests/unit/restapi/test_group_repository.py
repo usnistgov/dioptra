@@ -25,6 +25,7 @@ from dioptra.restapi.errors import (
     EntityExistsError,
     GroupNeedsAManagerError,
     GroupNeedsAUserError,
+    UserDoesNotOwnGroupError,
     UserIsManagerError,
     UserNeedsAGroupError,
     UserNotInGroupError,
@@ -109,7 +110,9 @@ def test_group_create_name_collision(group_repo, account):
         group_repo.create(g2)
 
 
-def test_group_create_name_collision_is_user_scoped(group_repo, account, db_session: DBSession):
+def test_group_create_name_collision_is_user_scoped(
+    group_repo, account, db_session: DBSession
+):
     other_user = User("other_user", "password2", "other_user@example.org")
     other_group = Group(account.group.name, other_user)
 
@@ -200,7 +203,9 @@ def test_group_get_all_for_user_membership_and_public(
     assert private_group.group_id not in group_ids
 
 
-def test_group_get_all_for_user_deletion_policy(group_repo, account, db_session: DBSession):
+def test_group_get_all_for_user_deletion_policy(
+    group_repo, account, db_session: DBSession
+):
     group_repo.delete(account.group)
     db_session.commit()
 
@@ -435,6 +440,44 @@ def test_group_num_managers_not_exist(group_repo, account):
 
     with pytest.raises(EntityDoesNotExistError):
         group_repo.num_managers(g2)
+
+
+def test_group_assert_group_owner_creator(group_repo, account):
+    group_repo.assert_group_owner(account.group, account.user)
+
+
+def test_group_assert_group_owner_admin_only(
+    group_repo, user_repo, account, db_session: DBSession
+):
+    user = User("admin", "password", "admin@example.org")
+    user_repo.create(user, account.group)
+    group_repo.add_manager(account.group, user, admin=True)
+    db_session.commit()
+
+    with pytest.raises(UserDoesNotOwnGroupError):
+        group_repo.assert_group_owner(account.group, user)
+
+
+def test_group_assert_group_owner_non_manager(
+    group_repo, user_repo, account, db_session: DBSession
+):
+    user = User("member", "password", "member@example.org")
+    user_repo.create(user, account.group)
+    db_session.commit()
+
+    with pytest.raises(UserDoesNotOwnGroupError):
+        group_repo.assert_group_owner(account.group, user)
+
+
+def test_group_assert_group_owner_non_creator(
+    group_repo, user_repo, account, db_session: DBSession
+):
+    user = User("owner", "password", "owner@example.org")
+    user_repo.create(user, account.group)
+    group_repo.add_manager(account.group, user, owner=True)
+    db_session.commit()
+
+    group_repo.assert_group_owner(account.group, user)
 
 
 def test_group_add_manager(group_repo, user_repo, account, db_session: DBSession):

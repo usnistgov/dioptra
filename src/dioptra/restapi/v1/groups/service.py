@@ -218,6 +218,7 @@ class GroupIdService(object):
         self,
         group_id: int,
         name: str,
+        acting_user: models.User,
         error_if_not_found: bool = False,
         commit: bool = True,
         **kwargs,
@@ -227,6 +228,7 @@ class GroupIdService(object):
         Args:
             group_id: The ID of the group to be modified.
             name: The new name for the group.
+            acting_user: The user requesting the modification.
             error_if_not_found: If True, raise an error if the group is not found.
                 Defaults to False.
             commit: If True, commit the transaction. Defaults to True.
@@ -248,6 +250,8 @@ class GroupIdService(object):
                 raise EntityDoesNotExistError(EntityType.GROUP, group_id=group_id)
 
             return None
+
+        self._uow.group_repo.assert_group_owner(group, acting_user)
 
         if group.group_id == PROTECTED_PUBLIC_GROUP_ID:
             raise QueryParameterValidationError(
@@ -273,11 +277,14 @@ class GroupIdService(object):
 
         return group
 
-    def delete(self, group_id: int, **kwargs) -> dict[str, Any]:
+    def delete(
+        self, group_id: int, acting_user: models.User, **kwargs
+    ) -> dict[str, Any]:
         """Permanently deletes the group by ID.
 
         Args:
             group_id: The ID of the group to be deleted.
+            acting_user: The user requesting the deletion.
 
         Returns:
             A dictionary containing the delete group success message if the group is
@@ -287,6 +294,8 @@ class GroupIdService(object):
         log.debug("Delete group", group_id=group_id)
 
         group = self._uow.group_repo.get_one(group_id, DeletionPolicy.NOT_DELETED)
+
+        self._uow.group_repo.assert_group_owner(group, acting_user)
 
         if group.group_id == PROTECTED_PUBLIC_GROUP_ID:
             raise QueryParameterValidationError(
