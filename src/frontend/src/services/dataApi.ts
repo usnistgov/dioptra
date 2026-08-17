@@ -327,6 +327,10 @@ export async function deleteJob(id: number, jobId: number) {
   return await axios.delete(`/api/experiments/${id}/jobs/${jobId}`);
 }
 
+export async function getSwaps(entrypointId: number, snapshotId: number) {
+  return await axios.get(`/api/entrypoints/${entrypointId}/snapshots/${snapshotId}/swaps`);
+}
+
 export async function addDraft<T extends keyof CreateParams>(type: T, params: CreateParams[T], id: number) {
   if (id) {
     return await axios.post(`/api/${type}/${id}/draft`, params);

@@ -121,7 +121,19 @@
           :hideCreateBtn="true"
           :hideDeleteBtn="true"
           style="margin-top: 0px"
+          :disableSelect="true"
+          class="q-mb-lg"
           @request="getJob"
+        />
+        <h2>Swaps</h2>
+        <TableComponent
+          :columns="swapsColumns"
+          :rows="job?.swaps ?? []"
+          rowKey="swapName"
+          :hideCreateBtn="true"
+          :hideDeleteBtn="true"
+          :disableSelect="true"
+          style="margin-top: 0px"
         />
       </div>
       <div class="col">
@@ -531,6 +543,11 @@ const overviewRows = computed(() => [
 const parametersColumns = [
   { name: "parameter", label: "Parameter", align: "left", field: "parameter", sortable: true },
   { name: "value", label: "Value", align: "left", field: "value", sortable: false },
+];
+
+const swapsColumns = [
+  { name: "swapName", label: "Swap Name", align: "left", field: "swapName", sortable: true },
+  { name: "taskAlias", label: "Task Alias", align: "left", field: "taskAlias", sortable: true },
 ];
 
 const artifactsUsedColumns = [
