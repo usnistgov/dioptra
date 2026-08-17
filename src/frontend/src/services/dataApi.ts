@@ -331,6 +331,20 @@ export async function getSwaps(entrypointId: number, snapshotId: number) {
   return await axios.get(`/api/entrypoints/${entrypointId}/snapshots/${snapshotId}/swaps`);
 }
 
+export async function getGraph(entrypointId: number, snapshotId: number, swaps: Record<string, string>) {
+  const swapsQueryParam = Object.entries(swaps)
+    .map(([swapName, taskAlias]) => `${swapName}:${taskAlias}`)
+    .join(",");
+
+  return await axios.get(`/api/entrypoints/${entrypointId}/snapshots/${snapshotId}/config`, {
+    params: {
+      swaps: swapsQueryParam,
+      sections: "graph",
+      partial: true,
+    },
+  });
+}
+
 export async function addDraft<T extends keyof CreateParams>(type: T, params: CreateParams[T], id: number) {
   if (id) {
     return await axios.post(`/api/${type}/${id}/draft`, params);

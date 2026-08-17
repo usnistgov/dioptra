@@ -202,7 +202,15 @@
     <div :class="`${isMobile ? 'col-12' : 'col-5 q-mr-xl'}`">
       <fieldset>
         <legend>Final YAML</legend>
-        <div class="q-ma-lg"></div>
+        <div class="q-ma-lg">
+          <CodeEditor
+            v-model="partialGraph"
+            language="yaml"
+            :readOnly="true"
+            placeholder="# Select an Entrypoint to preview its task graph"
+            style="min-height: 400px"
+          />
+        </div>
       </fieldset>
     </div>
     <div :class="isMobile ? 'col-12 q-mt-lg' : 'col'">
@@ -552,6 +560,8 @@ import { useLoginStore } from "@/stores/LoginStore";
 import AppendResource from "@/dialogs/AppendResource.vue";
 import TableComponent from "@/components/TableComponent.vue";
 import ResourcePicker from "@/components/ResourcePicker.vue";
+import CodeEditor from "@/components/CodeEditor.vue";
+import YAML from "yaml";
 
 const store = useLoginStore();
 
@@ -595,6 +605,7 @@ const parameters = ref([]);
 const artifactParameters = ref([]);
 const swaps = ref({});
 const selectedSwaps = ref({});
+const partialGraph = ref("");
 
 const computedValue = computed(() => {
   const output = {};
@@ -633,11 +644,29 @@ async function getSwaps() {
   }
 }
 
+async function getGraph() {
+  if (!job.value.entrypoint) return;
+
+  try {
+    const res = await api.getGraph(job.value.entrypoint.id, job.value.entrypoint.snapshot, selectedSwaps.value);
+    partialGraph.value = res.data?.graph ? YAML.stringify(res.data.graph).trimEnd() : "";
+  } catch (err) {
+    partialGraph.value = "";
+    console.warn(err);
+  }
+}
+
 watch(
   () => job.value.entrypoint,
   async (newVal) => {
     selectedSwaps.value = {};
-    swaps.value = await getSwaps();
+    swaps.value = {};
+    partialGraph.value = "";
+
+    if (newVal) {
+      swaps.value = await getSwaps();
+      await getGraph();
+    }
 
     parameters.value = [];
     if (Array.isArray(newVal?.parameters)) {
@@ -691,6 +720,16 @@ watch(
       });
     }
   },
+);
+
+watch(
+  selectedSwaps,
+  async () => {
+    if (job.value.entrypoint && Object.keys(swaps.value).length > 0) {
+      await getGraph();
+    }
+  },
+  { deep: true },
 );
 
 watch(
