@@ -1233,6 +1233,7 @@ docs = [
     { name = "sphinx-autobuild" },
     { name = "sphinx-autodoc-typehints" },
     { name = "sphinx-book-theme" },
+    { name = "sphinx-click" },
     { name = "sphinx-copybutton" },
     { name = "sphinx-design" },
     { name = "sphinx-tabs" },
@@ -1368,6 +1369,7 @@ docs = [
     { name = "sphinx-autobuild", specifier = ">=2024.10.3" },
     { name = "sphinx-autodoc-typehints", specifier = ">=1.19.1" },
     { name = "sphinx-book-theme", specifier = ">=0.3.3" },
+    { name = "sphinx-click", specifier = ">=6.2.0" },
     { name = "sphinx-copybutton", specifier = ">=0.5.0" },
     { name = "sphinx-design", specifier = ">=0.1.0" },
     { name = "sphinx-tabs", specifier = ">=3.4.0" },
@@ -6189,6 +6191,20 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/be/3d/81b2d643d456e3d1bf9069836af7cc32c71e7efaa14faa5858100c9241d7/sphinx_book_theme-1.0.1.tar.gz", hash = "sha256:927b399a6906be067e49c11ef1a87472f1b1964075c9eea30fb82c64b20aedee", size = 290063, upload-time = "2023-03-31T07:13:37.536Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/8e/45/3abe359075154f4d6a8626f4b591a28cc703d7c169cef1f7b87cab1a62f7/sphinx_book_theme-1.0.1-py3-none-any.whl", hash = "sha256:d15f8248b3718a9a6be0ba617a32d1591f9fa39c614469bface777ba06a73b75", size = 396932, upload-time = "2023-03-31T07:13:35.359Z" },
+]
+
+[[package]]
+name = "sphinx-click"
+version = "6.2.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "click" },
+    { name = "docutils" },
+    { name = "sphinx" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/9a/ed/a9767cd1b8b7fbdf260a89d5c8c86e20e3536b9878579e5ab7965a291e55/sphinx_click-6.2.0.tar.gz", hash = "sha256:fc78b4154a4e5159462e36de55b8643747da6cda86b3b52a8bb62289e603776c", size = 27035, upload-time = "2025-12-04T19:33:05.437Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/44/bd/cb244695f67f77b0a36200ce1670fc42a6fe2770847e870daab99cc2b177/sphinx_click-6.2.0-py3-none-any.whl", hash = "sha256:1fb1851cb4f2c286d43cbcd57f55db6ef5a8d208bfc3370f19adde232e5803d7", size = 8939, upload-time = "2025-12-04T19:33:04.037Z" },
 ]
 
 [[package]]
