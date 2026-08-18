@@ -339,6 +339,7 @@
             style="background-color: #cf5c36"
             icon="groups"
             :label="isMobile ? '' : store.loggedInGroup.name"
+            :disable="store.groupContextLocked || store.groupContextResolving"
             dense
             class="q-pl-md q-my-xs"
           >
