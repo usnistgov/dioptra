@@ -8,8 +8,12 @@ type GroupRef = {
   name: string;
 };
 
-function readStoredGroupId(): number | null {
-  const raw = localStorage.getItem(GROUP_STORAGE_KEY);
+function getGroupStorageKey(userId: number) {
+  return `${GROUP_STORAGE_KEY}:${userId}`;
+}
+
+function readStoredGroupId(userId: number): number | null {
+  const raw = localStorage.getItem(getGroupStorageKey(userId));
   if (!raw) {
     return null;
   }
@@ -18,12 +22,12 @@ function readStoredGroupId(): number | null {
   return Number.isNaN(groupId) ? null : groupId;
 }
 
-function writeStoredGroupId(groupId: number) {
-  localStorage.setItem(GROUP_STORAGE_KEY, String(groupId));
+function writeStoredGroupId(userId: number, groupId: number) {
+  localStorage.setItem(getGroupStorageKey(userId), String(groupId));
 }
 
-function clearStoredGroupId() {
-  localStorage.removeItem(GROUP_STORAGE_KEY);
+function clearStoredGroupId(userId: number) {
+  localStorage.removeItem(getGroupStorageKey(userId));
 }
 
 export const useLoginStore = defineStore("login", () => {
@@ -31,7 +35,12 @@ export const useLoginStore = defineStore("login", () => {
   const loggedInUser = ref({});
 
   const groups = ref<GroupRef[]>([]);
-  const selectedGroupId = ref<number | null>(readStoredGroupId());
+  const selectedGroupId = ref<number | null>(null);
+
+  function getLoggedInUserId(): number | null {
+    const userId = Number((loggedInUser.value as { id?: number }).id);
+    return Number.isNaN(userId) ? null : userId;
+  }
 
   const loggedInGroup = computed(() => {
     if (groups.value.length === 0) {
@@ -46,23 +55,32 @@ export const useLoginStore = defineStore("login", () => {
     }
 
     selectedGroupId.value = groups.value[0].id;
-    writeStoredGroupId(groups.value[0].id);
+    const userId = getLoggedInUserId();
+    if (userId !== null) {
+      writeStoredGroupId(userId, groups.value[0].id);
+    }
     return groups.value[0];
   });
 
   function setGroups(newGroups: GroupRef[]) {
     groups.value = newGroups;
+    const userId = getLoggedInUserId();
+    selectedGroupId.value = userId === null ? null : readStoredGroupId(userId);
 
     if (groups.value.length === 0) {
       selectedGroupId.value = null;
-      clearStoredGroupId();
+      if (userId !== null) {
+        clearStoredGroupId(userId);
+      }
       return;
     }
 
     const selected = groups.value.find((group) => group.id === selectedGroupId.value);
     if (!selected) {
       selectedGroupId.value = groups.value[0].id;
-      writeStoredGroupId(groups.value[0].id);
+      if (userId !== null) {
+        writeStoredGroupId(userId, groups.value[0].id);
+      }
     }
   }
 
@@ -73,7 +91,10 @@ export const useLoginStore = defineStore("login", () => {
     }
 
     selectedGroupId.value = groupId;
-    writeStoredGroupId(groupId);
+    const userId = getLoggedInUserId();
+    if (userId !== null) {
+      writeStoredGroupId(userId, groupId);
+    }
   }
 
   const users = ref([
