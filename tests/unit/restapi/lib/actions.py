@@ -456,18 +456,6 @@ def register_group(
     )
 
 
-def get_public_group(client: FlaskClient) -> TestResponse:
-    """Get the public group.
-
-    Args:
-        client: The Flask test client.
-
-    Returns:
-        The response from the API.
-    """
-    return client.get(f"/{V1_ROOT}/{V1_GROUPS_ROUTE}/1", follow_redirects=True)
-
-
 def get_model(client: FlaskClient, model_id: int) -> TestResponse:
     response = client.get(
         f"/{V1_ROOT}/{V1_MODELS_ROUTE}/{model_id}",

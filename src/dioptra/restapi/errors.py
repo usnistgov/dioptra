@@ -730,6 +730,14 @@ class UserNeedsAGroupError(DioptraError):
         self.group_id = group_id
 
 
+class UserNeedsAnOwnedGroupError(DioptraError):
+    """A user must own at least one group."""
+
+    def __init__(self, user_id: int) -> None:
+        super().__init__(f"Can't delete group: user {user_id} must own a group")
+        self.user_id = user_id
+
+
 class GroupNeedsAManagerError(DioptraError):
     """A group must have at least one manager."""
 
@@ -1080,6 +1088,15 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
             error,
             http.HTTPStatus.FORBIDDEN,
             {"user_id": error.user_id, "group_id": error.group_id},
+        )
+
+    @api.errorhandler(UserNeedsAnOwnedGroupError)
+    def handle_user_needs_an_owned_group_error(error: UserNeedsAnOwnedGroupError):
+        log.debug(error.to_message(), user_id=error.user_id)
+        return error_result(
+            error,
+            http.HTTPStatus.CONFLICT,
+            {"user_id": error.user_id},
         )
 
     @api.errorhandler(MlflowRunNotFoundError)

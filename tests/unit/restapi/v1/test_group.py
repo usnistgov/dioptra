@@ -310,10 +310,10 @@ def test_group_get_all(
 @pytest.mark.parametrize(
     "search,expected_group_names",
     [
-        ("name:public", ["public"]),
-        ("public", ["public"]),
-        ("pub*", ["public"]),
-        ("name:pub", []),
+        ("name:user1", ["user1"]),
+        ("user", ["user1", "user2"]),
+        ("user*", ["user1", "user2"]),
+        ("name:user", []),
     ],
 )
 def test_group_search_query(
@@ -434,13 +434,16 @@ def test_cannot_delete_group_owned_by_another_user(
     assert get_response.get_json()["deleted"] is False
 
 
-def test_cannot_modify_default_public_group(
+def test_group_id_one_is_not_immutable(
     client: FlaskClient,
     auth_account: dict[str, Any],
-    registered_groups: dict[str, Any],
 ) -> None:
-    response = modify_group(client, group_id=1, new_name="new_public_name")
-    assert response.status_code == HTTPStatus.BAD_REQUEST
+    response = modify_group(
+        client,
+        group_id=auth_account["default_group_id"],
+        new_name="renamed_personal_group",
+    )
+    assert response.status_code == HTTPStatus.OK
 
 
 def test_group_show_deleted(
@@ -448,12 +451,15 @@ def test_group_show_deleted(
     auth_account: dict[str, Any],
 ) -> None:
     """Test that deleted groups only appear when show_deleted is passed."""
-    group1 = actions.register_group(client, name="show_deleted_group1").get_json()
-    group2 = actions.register_group(client, name="show_deleted_group2").get_json()
+    actions.register_group(client, name="show_deleted_group1")
+    actions.register_group(client, name="show_deleted_group2")
     group3 = actions.register_group(client, name="show_deleted_group3").get_json()
-
-    expected_without = {1, group1["id"], group2["id"]}
-    expected_with = {1, group1["id"], group2["id"], group3["id"]}
+    all_group_ids = {
+        group["id"]
+        for group in client.get(f"/{V1_ROOT}/{V1_GROUPS_ROUTE}/").get_json()["data"]
+    }
+    expected_without = all_group_ids - {group3["id"]}
+    expected_with = all_group_ids
 
     delete_response = client.delete(
         f"/{V1_ROOT}/{V1_GROUPS_ROUTE}/{group3['id']}",
@@ -482,13 +488,16 @@ def test_group_show_deleted(
     assert ids_with_show_deleted == expected_with
 
 
-def test_cannot_delete_default_public_group(
+def test_cannot_delete_last_owned_group(
     client: FlaskClient,
     auth_account: dict[str, Any],
-    registered_groups: dict[str, Any],
 ) -> None:
-    response = client.delete(f"/{V1_ROOT}/{V1_GROUPS_ROUTE}/1", follow_redirects=True)
-    assert response.status_code == HTTPStatus.BAD_REQUEST
+    response = client.delete(
+        f"/{V1_ROOT}/{V1_GROUPS_ROUTE}/{auth_account['default_group_id']}",
+        follow_redirects=True,
+    )
+    assert response.status_code == HTTPStatus.CONFLICT
+    assert response.get_json()["error"] == "UserNeedsAnOwnedGroupError"
 
 
 def test_cannot_create_non_public_group(

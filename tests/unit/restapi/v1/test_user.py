@@ -20,6 +20,7 @@ This module contains a set of tests that validate the CRUD operations and additi
 functionalities for the user entity. The tests ensure that the users can be registered,
 modified, and deleted as expected through the REST API.
 """
+
 from http import HTTPStatus
 from typing import Any
 
@@ -28,7 +29,7 @@ from freezegun import freeze_time
 
 from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
-from dioptra.restapi.routes import V1_ROOT, V1_USERS_ROUTE
+from dioptra.restapi.routes import V1_GROUPS_ROUTE, V1_ROOT, V1_USERS_ROUTE
 
 from ..lib import actions, helpers
 from ..test_utils import assert_retrieving_resource_works
@@ -397,7 +398,10 @@ def assert_new_password_cannot_be_existing(
 # -- Tests -------------------------------------------------------------
 
 
-def test_create_user(dioptra_client: DioptraClient[DioptraResponseProtocol]) -> None:
+def test_create_user(
+    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+) -> None:
     """Test that we can create a user and its response is expected.
 
     This test validates the following sequence of actions:
@@ -425,8 +429,27 @@ def test_create_user(dioptra_client: DioptraClient[DioptraResponseProtocol]) -> 
         current_user=True,
     )
 
+    personal_group = user_response["groups"][0]
+    assert personal_group["name"] == username
+
     dioptra_client.auth.login(username, password)
     assert_retrieving_current_user_works(dioptra_client, expected=user_response)
+
+    group_response = client.get(
+        f"/{V1_ROOT}/{V1_GROUPS_ROUTE}/{personal_group['id']}"
+    ).get_json()
+    assert group_response["public"] is True
+    assert group_response["user"]["id"] == user_response["id"]
+    assert len(group_response["members"]) == 1
+    creator_permissions = group_response["members"][0]["permissions"]
+    assert creator_permissions == {
+        "read": True,
+        "write": True,
+        "shareRead": True,
+        "shareWrite": True,
+        "owner": True,
+        "admin": True,
+    }
 
     # Getting a user by id returns UserSchema.
     user_expected = {

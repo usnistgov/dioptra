@@ -53,7 +53,6 @@ DEFAULT_GROUP_MANAGER_PERMISSIONS: Final[dict[str, bool]] = {
 }
 
 GROUP_TYPE: Final[str] = "group"
-PROTECTED_PUBLIC_GROUP_ID: Final[int] = 1
 
 
 class GroupService(object):
@@ -253,13 +252,6 @@ class GroupIdService(object):
 
         self._uow.group_repo.assert_group_owner(group, acting_user)
 
-        if group.group_id == PROTECTED_PUBLIC_GROUP_ID:
-            raise QueryParameterValidationError(
-                "group_id",
-                "immutable",
-                group_id=group.group_id,
-            )
-
         duplicate = self._uow.group_repo.get_by_name_and_user(
             name,
             group.user_id,
@@ -296,13 +288,7 @@ class GroupIdService(object):
         group = self._uow.group_repo.get_one(group_id, DeletionPolicy.NOT_DELETED)
 
         self._uow.group_repo.assert_group_owner(group, acting_user)
-
-        if group.group_id == PROTECTED_PUBLIC_GROUP_ID:
-            raise QueryParameterValidationError(
-                "group_id",
-                "immutable",
-                group_id=group.group_id,
-            )
+        self._uow.group_repo.assert_user_owns_multiple_groups(acting_user)
 
         with self._uow:
             resources_stmt = sa.select(models.Resource).where(
