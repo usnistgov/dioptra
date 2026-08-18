@@ -36,6 +36,8 @@ export const useLoginStore = defineStore("login", () => {
 
   const groups = ref<GroupRef[]>([]);
   const selectedGroupId = ref<number | null>(null);
+  const groupContextLocked = ref(false);
+  const groupContextResolving = ref(false);
 
   function getLoggedInUserId(): number | null {
     const userId = Number((loggedInUser.value as { id?: number }).id);
@@ -84,10 +86,10 @@ export const useLoginStore = defineStore("login", () => {
     }
   }
 
-  function setLoggedInGroup(groupId: number) {
+  function setLoggedInGroup(groupId: number): boolean {
     const group = groups.value.find((g) => g.id === groupId);
     if (!group) {
-      return;
+      return false;
     }
 
     selectedGroupId.value = groupId;
@@ -95,6 +97,7 @@ export const useLoginStore = defineStore("login", () => {
     if (userId !== null) {
       writeStoredGroupId(userId, groupId);
     }
+    return true;
   }
 
   const users = ref([
@@ -254,6 +257,8 @@ export const useLoginStore = defineStore("login", () => {
     loggedInUser,
     loggedInGroup,
     groups,
+    groupContextLocked,
+    groupContextResolving,
     users,
     savedForms,
     showRightDrawer,
