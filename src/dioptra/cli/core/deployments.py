@@ -59,8 +59,15 @@ MANIFEST_SCHEMA_VERSION = 1
 #   image_tag:           str         - Docker tag pulled and verified
 #   release_version:     str | None  - release the user requested, if any
 #   docker_compose_path: str | None  - override for docker compose command
-#   resources:           dict        - images, volumes, networks
+#   resources:           dict        - images, volumes, networks (no digests)
 #   context:             dict        - cookiecutter render context
+#
+# Manifest schema (per deployment, at manifest.json):
+#   schema_version:      int         - MANIFEST_SCHEMA_VERSION
+#   deployment:          dict        - name, path, template_ref, image_tag,
+#                                       validation_ref, release_version
+#   compose:             dict        - path, command
+#   resources:           dict        - images, image_digests, volumes, networks
 
 
 def get_default_deployments_dir() -> Path:

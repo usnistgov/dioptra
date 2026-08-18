@@ -31,7 +31,7 @@ COLUMNS = [
 COLUMN_GAP = 2  # spaces between adjacent columns in the table
 
 
-@click.command()
+@click.command("list")
 @click.option(
     "--json-output",
     is_flag=True,

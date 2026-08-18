@@ -37,8 +37,7 @@ def update(context, name, ref, verbose):
     NAME may be omitted if exactly one deployment is registered.
 
     Reports both container build updates (applicable via `upgrade`) and
-    Python package updates (which require reinstalling dioptra-platform
-    and the deployment).
+    Python package updates (which require reinstalling dioptra-platform).
     """
     try:
         name = deployments.resolve_existing_deployment_name(name)

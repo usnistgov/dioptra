@@ -272,9 +272,10 @@ def install(
             env=pull_env,
         )
 
-        print("\nPulled image digests:")
         image_digests = docker.get_image_digests(internal_images + external_images)
-        print(docker.format_image_digests(image_digests))
+        if verbose:
+            print("\nPulled image digests:")
+            print(docker.format_image_digests(image_digests))
 
         try:
             deployments.register_deployment(
@@ -287,8 +288,7 @@ def install(
                 context=context,
             )
         except Exception as e:
-            if verbose:
-                print(f"Registration failed, cleaning up directory: {e}")
+            print(f"Registration failed, cleaning up directory: {e}")
             shutil.rmtree(deployment_path, ignore_errors=True)
             raise
 
@@ -300,7 +300,7 @@ def install(
         deployment_venv = deployment_path / ".venv"
         create_venv(deployment_venv, verbose=verbose)
 
-        print("Running the init-deployment script...")
+        print("Running the init-deployment script (may take 5+ minutes) ...")
         run_init_deployment(
             deployment_path,
             deployment_venv,
@@ -428,6 +428,7 @@ def _validate_images(
             branch=validation_ref,
             verbose=verbose,
         )
+        print(f"Verified {len(internal_images)} Dioptra image signatures.")
 
     for img in external_images:
         if verbose:

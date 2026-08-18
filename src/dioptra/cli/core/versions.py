@@ -48,7 +48,7 @@ def parse(version: str) -> tuple[Version, int]:
     """Parse a Dioptra version string into (base, build_number).
 
     The build number defaults to 0 when no -<build> suffix is present;
-    this makes 'X.Y.Z' sort before 'X.Y.Z-1' as desired.
+    this makes 'X.Y.Z' sort before 'X.Y.Z-1'.
 
     Raises InvalidDioptraVersion for malformed inputs.
     """

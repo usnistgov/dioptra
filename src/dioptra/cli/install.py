@@ -40,14 +40,14 @@ def _validate_version(ctx, param, value):
 )
 @click.option(
     "--docker-compose-path",
-    help="Override the docker compose command (e.g., 'docker-compose'). "
+    help="Override the docker compose command ('docker-compose'). "
     "Auto-detected if not specified.",
 )
 @click.option(
     "--version",
     default=None,
     callback=_validate_version,
-    help="Dioptra release version to install (e.g., '1.1.0'). "
+    help="Dioptra release version to install (such as '1.1.0'). "
     "Defaults to the version of dioptra-platform you have installed.",
 )
 @click.option(
