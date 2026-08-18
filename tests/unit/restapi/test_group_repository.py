@@ -28,6 +28,7 @@ from dioptra.restapi.errors import (
     UserDoesNotOwnGroupError,
     UserIsManagerError,
     UserNeedsAGroupError,
+    UserNeedsAnOwnedGroupError,
     UserNotInGroupError,
 )
 
@@ -197,6 +198,7 @@ def test_group_get_all_for_user_membership_and_public(
     groups = group_repo.get_all_for_user(account.user.user_id)
     group_ids = {group.group_id for group in groups}
 
+    assert groups[0] == account.group
     assert account.group.group_id in group_ids
     assert public_group.group_id in group_ids
     assert member_group.group_id in group_ids
@@ -478,6 +480,23 @@ def test_group_assert_group_owner_non_creator(
     db_session.commit()
 
     group_repo.assert_group_owner(account.group, user)
+
+
+def test_group_assert_user_owns_multiple_groups_fails_for_last_group(
+    group_repo, account
+):
+    with pytest.raises(UserNeedsAnOwnedGroupError):
+        group_repo.assert_user_owns_multiple_groups(account.user)
+
+
+def test_group_assert_user_owns_multiple_groups(
+    group_repo, account, db_session: DBSession
+):
+    second_group = Group("second_group", account.user)
+    group_repo.create(second_group)
+    db_session.commit()
+
+    group_repo.assert_user_owns_multiple_groups(account.user)
 
 
 def test_group_add_manager(group_repo, user_repo, account, db_session: DBSession):

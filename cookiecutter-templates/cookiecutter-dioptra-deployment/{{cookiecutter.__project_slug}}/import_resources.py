@@ -71,8 +71,8 @@ def main():
         "--group",
         "-g",
         type=int,
-        default=1,
-        help="The group into which resouces will be imported.",
+        required=True,
+        help="The group into which resources will be imported.",
     )
     parser.add_argument(
         "--overwrite",
