@@ -51,6 +51,7 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
     "recommonmark",
+    "sphinx_click",
     "sphinx_copybutton",
     "sphinx_design",
     "sphinx_togglebutton",

@@ -97,6 +97,7 @@ You can find the source code, license information, and more on the NIST `GitHub 
    :caption: Tutorials
    :hidden:
 
+   tutorials/cli/managing-deployments.rst
    tutorials/hello_world/index.rst
    tutorials/essential_workflows/index.rst
    tutorials/advanced/index.rst
@@ -106,6 +107,7 @@ You can find the source code, license information, and more on the NIST `GitHub 
    :caption: How Tos
    :hidden:
 
+   how-to/cli/index.rst
    how-to/essential-workflows/index.rst
    how-to/import-content/index.rst
    how-to/advanced/index.rst
@@ -117,6 +119,7 @@ You can find the source code, license information, and more on the NIST `GitHub 
    :hidden:
 
    reference/glossary
+   reference/cli-reference.rst
    reference/dioptra-components/index.rst
    reference/python-client/index.rst
    reference/api-reference-restapi

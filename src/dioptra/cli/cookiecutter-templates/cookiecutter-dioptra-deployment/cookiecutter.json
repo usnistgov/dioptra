@@ -24,43 +24,43 @@
         "nginx": {
             "image": "nginx",
             "namespace": "{{ cookiecutter.__container_namespace }}",
-            "tag": "{{ cookiecutter.container_tag }}",
+            "tag": "${CONTAINER_TAG}",
             "registry": "{{ cookiecutter.container_registry }}"
         },
         "mlflow_tracking": {
             "image": "mlflow-tracking",
             "namespace": "{{ cookiecutter.__container_namespace }}",
-            "tag": "{{ cookiecutter.container_tag }}",
+            "tag": "${CONTAINER_TAG}",
             "registry": "{{ cookiecutter.container_registry }}"
         },
         "restapi": {
             "image": "restapi",
             "namespace": "{{ cookiecutter.__container_namespace }}",
-            "tag": "{{ cookiecutter.container_tag }}",
+            "tag": "${CONTAINER_TAG}",
             "registry": "{{ cookiecutter.container_registry }}"
         },
         "tfcpu": {
             "image": "tensorflow2-cpu",
             "namespace": "{{ cookiecutter.__container_namespace }}",
-            "tag": "{{ cookiecutter.container_tag }}",
+            "tag": "${CONTAINER_TAG}",
             "registry": "{{ cookiecutter.container_registry }}"
         },
         "tfgpu": {
             "image": "tensorflow2-gpu",
             "namespace": "{{ cookiecutter.__container_namespace }}",
-            "tag": "{{ cookiecutter.container_tag }}",
+            "tag": "${CONTAINER_TAG}",
             "registry": "{{ cookiecutter.container_registry }}"
         },
         "pytorchcpu": {
             "image": "pytorch-cpu",
             "namespace": "{{ cookiecutter.__container_namespace }}",
-            "tag": "{{ cookiecutter.container_tag }}",
+            "tag": "${CONTAINER_TAG}",
             "registry": "{{ cookiecutter.container_registry }}"
         },
         "pytorchgpu": {
             "image": "pytorch-gpu",
             "namespace": "{{ cookiecutter.__container_namespace }}",
-            "tag": "{{ cookiecutter.container_tag }}",
+            "tag": "${CONTAINER_TAG}",
             "registry": "{{ cookiecutter.container_registry }}"
         },
         "argbash": {
