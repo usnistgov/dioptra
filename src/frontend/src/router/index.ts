@@ -1,7 +1,24 @@
 import { createRouter, createWebHistory, START_LOCATION } from "vue-router";
+import type { RouteLocationNormalizedGeneric } from "vue-router";
 import { useLoginStore } from "@/stores/LoginStore";
 import HomeView from "../views/HomeView.vue";
 import * as api from "@/services/dataApi";
+import type { ResourceType } from "@/services/dataApi";
+import * as notify from "@/notify";
+
+type ResourceGroupContext = {
+  kind: "resource";
+  resource: ResourceType;
+  idParam: string;
+  fallback: string;
+};
+
+type QueueDraftGroupContext = {
+  kind: "queueDraft";
+  fallback: string;
+};
+
+type GroupContext = ResourceGroupContext | QueueDraftGroupContext;
 
 const router = createRouter({
   history: createWebHistory(),
@@ -32,11 +49,17 @@ const router = createRouter({
           path: "/experiments/:id",
           component: () => import("../views/EditExperiment.vue"),
           name: "experimentJobs",
+          meta: {
+            groupContext: { kind: "resource", resource: "experiments", idParam: "id", fallback: "/experiments" },
+          },
         },
         {
           path: "/experiments/:id/jobs/:jobId",
           component: () => import("../views/CreateJob.vue"),
           name: "createExperimentJob",
+          meta: {
+            groupContext: { kind: "resource", resource: "experiments", idParam: "id", fallback: "/experiments" },
+          },
         },
       ],
     },
@@ -52,6 +75,9 @@ const router = createRouter({
         {
           path: "/entrypoints/:id",
           component: () => import("../views/CreateEntryPoint.vue"),
+          meta: {
+            groupContext: { kind: "resource", resource: "entrypoints", idParam: "id", fallback: "/entrypoints" },
+          },
         },
       ],
     },
@@ -72,11 +98,17 @@ const router = createRouter({
           path: "/plugins/:id",
           component: () => import("../views/EditPluginView.vue"),
           name: "editPlugin",
+          meta: {
+            groupContext: { kind: "resource", resource: "plugins", idParam: "id", fallback: "/plugins" },
+          },
         },
         {
           path: "/plugins/:id/files/:fileId",
           component: () => import("../views/CreatePluginFile.vue"),
           name: "pluginFile",
+          meta: {
+            groupContext: { kind: "resource", resource: "plugins", idParam: "id", fallback: "/plugins" },
+          },
         },
       ],
     },
@@ -92,10 +124,16 @@ const router = createRouter({
         {
           path: "/queues/:id/:draftType/:newResourceDraft?",
           component: () => import("../views/QueuesFormDraftView.vue"),
+          meta: {
+            groupContext: { kind: "queueDraft", fallback: "/queues" },
+          },
         },
         {
           path: "/queues/:id",
           component: () => import("../views/QueuesFormView.vue"),
+          meta: {
+            groupContext: { kind: "resource", resource: "queues", idParam: "id", fallback: "/queues" },
+          },
         },
       ],
     },
@@ -116,6 +154,9 @@ const router = createRouter({
           path: "/jobs/:id",
           component: () => import("../views/JobDashboardView.vue"),
           name: "jobDashboard",
+          meta: {
+            groupContext: { kind: "resource", resource: "jobs", idParam: "id", fallback: "/jobs" },
+          },
         },
       ],
     },
@@ -149,6 +190,14 @@ const router = createRouter({
           path: "/pluginParams/:id",
           component: () => import("../views/PluginParamForm.vue"),
           name: "editPluginParam",
+          meta: {
+            groupContext: {
+              kind: "resource",
+              resource: "pluginParameterTypes",
+              idParam: "id",
+              fallback: "/pluginParams",
+            },
+          },
         },
       ],
     },
@@ -169,6 +218,9 @@ const router = createRouter({
         {
           path: "/artifacts/:id",
           component: () => import("../views/EditArtifactView.vue"),
+          meta: {
+            groupContext: { kind: "resource", resource: "artifacts", idParam: "id", fallback: "/artifacts" },
+          },
         },
       ],
     },
@@ -208,9 +260,80 @@ router.beforeEach(async (to, from) => {
     return "/login";
   }
 
+  const groupContext = to.meta.groupContext as GroupContext | undefined;
+  if (!groupContext || isAuthRoute) {
+    store.groupContextLocked = false;
+    store.groupContextResolving = false;
+    return true;
+  }
+
+  store.groupContextResolving = true;
+  try {
+    const groupId = await resolveGroupContext(to, groupContext);
+    if (groupId === null) {
+      store.groupContextLocked = false;
+      return true;
+    }
+    if (!store.setLoggedInGroup(groupId)) {
+      await callGetLoginStatus();
+      if (!store.setLoggedInGroup(groupId)) {
+        throw new Error(`Group ${groupId} is not available to the current user.`);
+      }
+    }
+    store.groupContextLocked = true;
+  } catch (error) {
+    store.groupContextLocked = false;
+    const apiError = error as { response?: { data?: { message?: string } }; message?: string };
+    notify.error(
+      apiError.response?.data?.message || apiError.message || "Failed to resolve the resource group context.",
+    );
+    return groupContext.fallback;
+  } finally {
+    store.groupContextResolving = false;
+  }
+
   // allow navigation
   return true;
 });
+
+function getRouteParam(to: RouteLocationNormalizedGeneric, name: string): string | null {
+  const value = to.params[name];
+  if (Array.isArray(value)) {
+    return value[0] ?? null;
+  }
+  return value ?? null;
+}
+
+async function resolveGroupContext(to: RouteLocationNormalizedGeneric, context: GroupContext): Promise<number | null> {
+  const idParam = context.kind === "queueDraft" ? "id" : context.idParam;
+  const rawId = getRouteParam(to, idParam);
+  if (!rawId || rawId === "new") {
+    return null;
+  }
+
+  const id = Number(rawId);
+  if (!Number.isInteger(id)) {
+    throw new Error(`Invalid resource ID: ${rawId}`);
+  }
+
+  let response;
+  if (context.kind === "queueDraft") {
+    const draftType = getRouteParam(to, "draftType");
+    if (draftType !== "draft" && draftType !== "resourceDraft") {
+      throw new Error(`Unsupported queue draft type: ${draftType}`);
+    }
+    response = await api.getItem("queues", id, draftType === "draft");
+  } else {
+    response = await api.getItem(context.resource, id);
+  }
+
+  const rawGroupId = response.data?.group?.id ?? response.data?.group;
+  const groupId = Number(rawGroupId);
+  if (!Number.isInteger(groupId)) {
+    throw new Error("The resource does not have a valid group context.");
+  }
+  return groupId;
+}
 
 async function callGetLoginStatus() {
   const store = useLoginStore();

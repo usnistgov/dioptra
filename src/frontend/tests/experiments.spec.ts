@@ -78,6 +78,40 @@ test("edit experiment", async ({ page }) => {
   ).toBeVisible();
 });
 
+test("experiment detail sets and locks group context", async ({ page }) => {
+  const timestamp = Date.now();
+  const groupName = `e2e_group_${timestamp}`;
+  const experimentName = `e2e_context_experiment_${timestamp}`;
+
+  await ensureLoggedInAsTestUser(page);
+  const groupResponse = await page.request.post("/api/v1/groups/", {
+    data: { name: groupName },
+  });
+  expect(groupResponse.ok()).toBe(true);
+  const group = await groupResponse.json();
+
+  const experimentResponse = await page.request.post("/api/v1/experiments/", {
+    data: {
+      name: experimentName,
+      description: "Created to test detail context",
+      group: group.id,
+      entrypoints: [],
+    },
+  });
+  expect(experimentResponse.ok()).toBe(true);
+  const experiment = await experimentResponse.json();
+
+  await page.goto(`/experiments/${experiment.id}`);
+  await page.getByRole("heading", { name: experimentName }).waitFor();
+
+  const groupSwitcher = page.getByRole("button", { name: new RegExp(groupName) });
+  await expect(groupSwitcher).toBeDisabled();
+
+  await page.goto("/experiments/new");
+  await page.getByRole("heading", { name: "Create Experiment" }).waitFor();
+  await expect(page.getByRole("button", { name: new RegExp(groupName) })).toBeEnabled();
+});
+
 test("delete experiment", async ({ page }) => {
   const timestamp = Date.now();
   const queueName = `e2e_queue_${timestamp}`;
