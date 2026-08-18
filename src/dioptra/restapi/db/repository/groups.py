@@ -50,6 +50,7 @@ from dioptra.restapi.errors import (
     UserDoesNotOwnGroupError,
     UserIsManagerError,
     UserNeedsAGroupError,
+    UserNeedsAnOwnedGroupError,
 )
 from dioptra.restapi.v1.entity_types import EntityType
 
@@ -275,10 +276,27 @@ class GroupRepository:
         """
         stmt = (
             sa.select(Group)
-            .outerjoin(GroupMember, Group.group_id == GroupMember.group_id)
+            .outerjoin(
+                GroupMember,
+                sa.and_(
+                    Group.group_id == GroupMember.group_id,
+                    GroupMember.user_id == user_id,
+                ),
+            )
+            .outerjoin(
+                GroupManager,
+                sa.and_(
+                    Group.group_id == GroupManager.group_id,
+                    GroupManager.user_id == user_id,
+                    GroupManager.owner.is_(True),
+                ),
+            )
             .where(sa.or_(Group.public.is_(True), GroupMember.user_id == user_id))
-            .distinct()
-            .order_by(Group.group_id)
+            .order_by(
+                sa.case((GroupManager.user_id.is_not(None), 0), else_=1),
+                Group.created_on,
+                Group.group_id,
+            )
         )
         stmt = _apply_deletion_policy(stmt, deletion_policy)
         return self.session.scalars(stmt).all()
@@ -449,6 +467,23 @@ class GroupRepository:
         manager = self.session.get(GroupManager, (user.user_id, group.group_id))
         if manager is None or not manager.owner:
             raise UserDoesNotOwnGroupError(user.user_id, group.group_id)
+
+    def assert_user_owns_multiple_groups(self, user: User) -> None:
+        """Ensure the user owns more than one non-deleted group."""
+
+        assert_user_exists(self.session, user, DeletionPolicy.NOT_DELETED)
+        stmt = (
+            sa.select(sa.func.count())
+            .select_from(GroupManager)
+            .join(Group, Group.group_id == GroupManager.group_id)
+            .where(GroupManager.user_id == user.user_id, GroupManager.owner.is_(True))
+        )
+        stmt = _apply_deletion_policy(stmt, DeletionPolicy.NOT_DELETED)
+        num_owned_groups = self.session.scalar(stmt)
+        assert num_owned_groups is not None
+
+        if num_owned_groups <= 1:
+            raise UserNeedsAnOwnedGroupError(user.user_id)
 
     def add_manager(
         self, group: Group, user: User, owner: bool = False, admin: bool = False
