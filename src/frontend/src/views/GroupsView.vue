@@ -62,15 +62,6 @@ const columns = [
   { name: "name", label: "Name", align: "left", field: "name", sortable: true },
   { name: "read", label: "Read", align: "left", field: "read", sortable: true },
   { name: "write", label: "Write", align: "left", field: "write", sortable: true },
-  { name: "shareRead", label: "Share Read", align: "left", field: "shareRead", sortable: true, style: "width: 200px" },
-  {
-    name: "shareWrite",
-    label: "Share Write",
-    align: "left",
-    field: "shareWrite",
-    sortable: true,
-    style: "width: 200px",
-  },
   { name: "admin", label: "Admin", align: "left", field: "admin", sortable: true },
   { name: "owner", label: "Owner", align: "left", field: "owner", sortable: true },
 ];
@@ -91,8 +82,6 @@ async function getUserGroups(pagination) {
         deleted: group.deleted,
         read: true,
         write: true,
-        shareRead: true,
-        shareWrite: true,
         admin: true,
         owner: true,
       });
@@ -106,8 +95,6 @@ async function getUserGroups(pagination) {
       deleted: group.deleted,
       read: member?.permissions.read ?? false,
       write: member?.permissions.write ?? false,
-      shareRead: member?.permissions.share_read ?? false,
-      shareWrite: member?.permissions.share_write ?? false,
       admin: member?.permissions.admin ?? false,
       owner: member?.permissions.owner ?? false,
     });
