@@ -112,6 +112,37 @@ test("experiment detail sets and locks group context", async ({ page }) => {
   await expect(page.getByRole("button", { name: new RegExp(groupName) })).toBeEnabled();
 });
 
+test("job form only shows linked entrypoints and queues", async ({ page }) => {
+  const timestamp = Date.now();
+  const linkedQueueName = `e2e_linked_queue_${timestamp}`;
+  const unlinkedQueueName = `e2e_unlinked_queue_${timestamp}`;
+  const linkedEntrypointName = `e2e_linked_entrypoint_${timestamp}`;
+  const unlinkedEntrypointName = `e2e_unlinked_entrypoint_${timestamp}`;
+  const experimentName = `e2e_linked_experiment_${timestamp}`;
+
+  await ensureLoggedInAsTestUser(page);
+  await createQueue(page, linkedQueueName);
+  await createQueue(page, unlinkedQueueName);
+  await createEntrypoint(page, linkedEntrypointName, linkedQueueName);
+  await createEntrypoint(page, unlinkedEntrypointName, unlinkedQueueName);
+  const experiment = await createExperiment(page, experimentName, linkedEntrypointName);
+
+  await page.goto(`/experiments/${experiment.id}/jobs/new`);
+  await page.getByRole("heading", { name: "Create Job" }).waitFor();
+
+  const entrypointSelect = page.getByRole("combobox", { name: "Entrypoint:" });
+  await entrypointSelect.click();
+  await expect(page.getByRole("option", { name: linkedEntrypointName })).toBeVisible();
+  await expect(page.getByRole("option", { name: unlinkedEntrypointName })).toHaveCount(0);
+  await page.getByRole("option", { name: linkedEntrypointName }).click();
+
+  const queueSelect = page.getByRole("combobox", { name: "Queue:" });
+  await expect(queueSelect).toBeEnabled();
+  await queueSelect.click();
+  await expect(page.getByRole("option", { name: linkedQueueName })).toBeVisible();
+  await expect(page.getByRole("option", { name: unlinkedQueueName })).toHaveCount(0);
+});
+
 test("delete experiment", async ({ page }) => {
   const timestamp = Date.now();
   const queueName = `e2e_queue_${timestamp}`;
