@@ -137,8 +137,6 @@ function handleCheckboxUpdate(name, value, row) {
   if ((name === "admin" || name === "owner") && value === true) {
     row.read = true;
     row.write = true;
-    row.shareRead = true;
-    row.shareWrite = true;
   }
 }
 </script>
