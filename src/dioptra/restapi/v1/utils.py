@@ -39,9 +39,16 @@ USERS: Final[str] = "users"
 # -- Typed Dictionaries --------------------------------------------------------
 
 
+class UserRefDict(TypedDict):
+    id: int
+    username: str
+    url: str
+
+
 class GroupRefDict(TypedDict):
     id: int
     name: str
+    user: UserRefDict
     url: str
 
 
@@ -200,7 +207,7 @@ def build_experiment_snapshot_ref(experiment: models.Experiment) -> dict[str, An
     }
 
 
-def build_user_ref(user: models.User) -> dict[str, Any]:
+def build_user_ref(user: models.User) -> UserRefDict:
     """Build a UserRef dictionary.
 
     Args:
@@ -228,6 +235,7 @@ def build_group_ref(group: models.Group) -> GroupRefDict:
     return {
         "id": group.group_id,
         "name": group.name,
+        "user": build_user_ref(group.creator),
         "url": build_url(f"{GROUPS}/{group.group_id}"),
     }
 

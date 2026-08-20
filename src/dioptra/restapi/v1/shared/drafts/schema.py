@@ -23,6 +23,7 @@ from dioptra.restapi.v1.schemas import (
     DraftTypeQueryParametersSchema,
     GroupIdQueryParametersSchema,
     PagingQueryParametersSchema,
+    UserRefSchema,
 )
 
 
@@ -49,7 +50,6 @@ class DraftSchema(Schema):
     """A base schema for a draft of a resource."""
 
     from dioptra.restapi.v1.groups.schema import GroupRefSchema
-    from dioptra.restapi.v1.users.schema import UserRefSchema
 
     id = fields.Integer(
         attribute="id",

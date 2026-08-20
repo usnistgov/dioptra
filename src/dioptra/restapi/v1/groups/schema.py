@@ -23,6 +23,7 @@ from dioptra.restapi.v1.schemas import (
     PagingQueryParametersSchema,
     SearchQueryParametersSchema,
     ShowDeletedQueryParametersSchema,
+    UserRefSchema,
 )
 
 
@@ -35,6 +36,11 @@ class GroupRefSchema(Schema):
     )
     name = fields.String(
         attribute="name", metadata={"description": "Name of the Group resource."}
+    )
+    user = fields.Nested(
+        UserRefSchema,
+        attribute="user",
+        metadata={"description": "User that created the Group resource."},
     )
     url = fields.Url(
         attribute="url",
@@ -112,8 +118,6 @@ GroupPermissionsResponseSchema = generate_group_permissions_schema(
 class GroupMemberBaseSchema(Schema):
     """The base schema of a Group Member."""
 
-    from dioptra.restapi.v1.users.schema import UserRefSchema
-
     userId = fields.Integer(
         attribute="user_id",
         data_key="user",
@@ -167,8 +171,6 @@ class GroupCreateSchema(GroupMutableFieldsSchema):
 
 class GroupSchema(GroupMutableFieldsSchema):
     """The schema for the data stored in a Group resource."""
-
-    from dioptra.restapi.v1.users.schema import UserRefSchema
 
     id = fields.Integer(
         attribute="id",

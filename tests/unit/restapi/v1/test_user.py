@@ -94,6 +94,9 @@ def assert_user_response_contents_matches_expectations(
         # Validate the GroupRef structure
         assert isinstance(response["groups"][0]["id"], int)
         assert isinstance(response["groups"][0]["name"], str)
+        assert isinstance(response["groups"][0]["user"]["id"], int)
+        assert isinstance(response["groups"][0]["user"]["username"], str)
+        assert isinstance(response["groups"][0]["user"]["url"], str)
         assert isinstance(response["groups"][0]["url"], str)
 
 
@@ -431,6 +434,8 @@ def test_create_user(
 
     personal_group = user_response["groups"][0]
     assert personal_group["name"] == username
+    assert personal_group["user"]["id"] == user_response["id"]
+    assert personal_group["user"]["username"] == username
 
     dioptra_client.auth.login(username, password)
     assert_retrieving_current_user_works(dioptra_client, expected=user_response)
@@ -503,8 +508,14 @@ def test_current_user_includes_other_users_public_groups(
     current_user_response = client.get(f"/{V1_ROOT}/{V1_USERS_ROUTE}/current")
     assert current_user_response.status_code == HTTPStatus.OK
 
-    group_ids = {group["id"] for group in current_user_response.get_json()["groups"]}
+    current_user_groups = current_user_response.get_json()["groups"]
+    group_ids = {group["id"] for group in current_user_groups}
     assert created_group_id in group_ids
+    created_group_ref = next(
+        group for group in current_user_groups if group["id"] == created_group_id
+    )
+    assert created_group_ref["user"]["id"] == user2["id"]
+    assert created_group_ref["user"]["username"] == user2["username"]
 
 
 def test_user_search_query(

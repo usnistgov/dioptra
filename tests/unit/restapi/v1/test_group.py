@@ -123,6 +123,9 @@ def assert_group_response_contents_matches_expectations(
         # Validate the GroupRef structure for member
         assert isinstance(member["group"]["id"], int)
         assert isinstance(member["group"]["name"], str)
+        assert isinstance(member["group"]["user"]["id"], int)
+        assert isinstance(member["group"]["user"]["username"], str)
+        assert isinstance(member["group"]["user"]["url"], str)
 
         # Validate permissions
         assert isinstance(member["permissions"]["owner"], bool)
