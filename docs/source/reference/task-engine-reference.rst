@@ -356,8 +356,6 @@ For example:
             outputs: "<output_definitions>"
 
 
-
-
 Task Plugin
 ~~~~~~~~~~~
 
