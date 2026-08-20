@@ -636,7 +636,7 @@ class EntrypointRepository:
             EntityDoesNotExistError: if the entrypoint does not exist
         """
 
-        utils.delete_resource(self.session, entrypoint)
+        utils.delete_resource(self.session, entrypoint, EntityType.ENTRY_POINT)
 
     def get_by_filters_paged(
         self,

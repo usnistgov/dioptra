@@ -21,8 +21,6 @@ The type repository: data operations related to types
 from collections.abc import Iterable, Sequence, Set
 from typing import Any, Final, overload
 
-from sqlalchemy import select
-
 import dioptra.restapi.db.repository.utils as utils
 from dioptra.restapi.db.models import (
     Group,
@@ -30,7 +28,6 @@ from dioptra.restapi.db.models import (
     Resource,
     Tag,
 )
-from dioptra.restapi.errors import BackendDatabaseError, EntityDoesNotExistError
 from dioptra.restapi.v1.entity_types import EntityType
 
 
@@ -317,4 +314,6 @@ class TypeRepository:
         Raises:
             EntityDoesNotExistError: if the type does not exist
         """
-        utils.delete_resource(self.session, type_)
+        utils.delete_resource(
+            self.session, type_, EntityType.PLUGIN_TASK_PARAMETER_TYPE
+        )
