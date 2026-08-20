@@ -62,8 +62,10 @@ import { useRouter } from "vue-router";
 import PageTitle from "@/components/PageTitle.vue";
 import * as api from "@/services/dataApi";
 import * as notify from "../notify";
+import { useLoginStore } from "@/stores/LoginStore";
 
 const router = useRouter();
+const store = useLoginStore();
 const isMobile = inject("isMobile");
 const isMedium = inject("isMedium");
 
@@ -80,9 +82,13 @@ async function submit() {
   }
 
   try {
-    await api.addItem("groups", { name: name.value, public: isPublic.value });
+    const createResponse = await api.addItem("groups", { name: name.value, public: isPublic.value });
+    const userInfoResponse = await api.getLoginStatus();
+    store.loggedInUser = userInfoResponse.data;
+    store.setGroups(userInfoResponse.data.groups);
+    store.setLoggedInGroup(createResponse.data.id);
     notify.success("Group created");
-    router.push("/groups");
+    await router.push("/groups");
   } catch (err) {
     notify.error(err.response?.data?.message || "Failed to create group");
   }
