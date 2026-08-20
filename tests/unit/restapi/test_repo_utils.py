@@ -553,6 +553,18 @@ def test_resource_exists(db_session, fake_data, account):
     assert result is utils.ExistenceResult.EXISTS
 
 
+def test_resource_exists_with_type(db_session, fake_data, account):
+    queue = fake_data.queue(account.user, account.group)
+    db_session.add(queue)
+    db_session.commit()
+
+    result = utils.resource_exists(db_session, queue, EntityType.QUEUE)
+    assert result is utils.ExistenceResult.EXISTS
+
+    result = utils.resource_exists(db_session, queue, EntityType.JOB)
+    assert result is utils.ExistenceResult.DOES_NOT_EXIST
+
+
 def test_resource_not_exists(db_session, fake_data, account):
     queue = fake_data.queue(account.user, account.group)
 
@@ -571,6 +583,12 @@ def test_resource_deleted(db_session, fake_data, account):
 
     result = utils.resource_exists(db_session, queue)
     assert result is utils.ExistenceResult.DELETED
+
+    result = utils.resource_exists(db_session, queue, EntityType.QUEUE)
+    assert result is utils.ExistenceResult.DELETED
+
+    result = utils.resource_exists(db_session, queue, EntityType.JOB)
+    assert result is utils.ExistenceResult.DOES_NOT_EXIST
 
 
 def test_resources_exist(db_session, fake_data, account):
@@ -1068,7 +1086,7 @@ def test_delete_resource(db_session, account, fake_data):
     db_session.add(queue)
     db_session.commit()
 
-    utils.delete_resource(db_session, queue)
+    utils.delete_resource(db_session, queue, EntityType.QUEUE)
 
     lock = db_session.get(
         models.ResourceLock, (queue.resource_id, resource_lock_types.DELETE)
@@ -1076,14 +1094,26 @@ def test_delete_resource(db_session, account, fake_data):
     assert lock
 
     # Should be a no-op
-    utils.delete_resource(db_session, queue)
+    utils.delete_resource(db_session, queue, EntityType.QUEUE)
 
 
 def test_delete_resource_not_exists(db_session, account, fake_data):
     queue = fake_data.queue(account.user, account.group)
 
     with pytest.raises(EntityDoesNotExistError):
-        utils.delete_resource(db_session, queue)
+        utils.delete_resource(db_session, queue, EntityType.QUEUE)
+
+
+def test_delete_resource_wrong_type(db_session, account, fake_data):
+    queue = fake_data.queue(account.user, account.group)
+    db_session.add(queue)
+    db_session.commit()
+
+    with pytest.raises(EntityDoesNotExistError) as exc_info:
+        utils.delete_resource(db_session, queue.resource_id, EntityType.JOB)
+
+    assert exc_info.value.entity_type is EntityType.JOB
+    assert queue.resource.is_deleted is False
 
 
 def test_get_resource_lock_types(db_session, account, fake_data):

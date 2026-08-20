@@ -1259,6 +1259,19 @@ def test_delete_job(
     )
 
 
+def test_delete_job_rejects_queue_id(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+) -> None:
+    queue_id = registered_queues["queue1"]["id"]
+
+    response = dioptra_client.jobs.delete_by_id(queue_id)
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert dioptra_client.queues.get_by_id(queue_id).status_code == HTTPStatus.OK
+
+
 def test_job_get_status(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
