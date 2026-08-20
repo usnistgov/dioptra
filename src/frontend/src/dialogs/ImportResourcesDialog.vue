@@ -143,7 +143,6 @@ const sourceType = ref(sourceTypeOptions[0].value);
 const gitUrl = ref(gitUrlDefault);
 const archiveFile = ref(null);
 const files = ref(null);
-const group = ref(store.loggedInGroup.id);
 const conflictStratOptions = [
   { value: "fail", label: "Fail: if any imported resources have the same name, the import will fail" },
   { value: "update", label: "Update: naively match resources by name and update them as defined in import config" },
@@ -155,10 +154,9 @@ const conflictStratOptions = [
 const configPath = ref(conflictStratOptions[0]);
 const conflictStrat = ref(conflictStratDefault);
 
-watch(showDialog, () => {
-  if (!group.value) {
-    group.value = store.loggedInGroup.id;
-  }
+watch(showDialog, (isOpen) => {
+  if (!isOpen) return;
+
   gitUrl.value = gitUrlDefault;
   configPath.value = configPathDefault;
   conflictStrat.value = conflictStratDefault;
@@ -167,8 +165,14 @@ watch(showDialog, () => {
 });
 
 async function submit() {
+  const activeGroup = store.loggedInGroup;
+  if (!activeGroup || typeof activeGroup !== "object") {
+    notify.error("Select a group before importing resources.");
+    return;
+  }
+
   const params = {
-    group: group.value,
+    group: activeGroup.id,
     sourceType: sourceType.value,
     gitUrl: sourceType.value === "git" ? gitUrl.value : null,
     archiveFile: sourceType.value === "upload_archive" ? archiveFile.value : null,
