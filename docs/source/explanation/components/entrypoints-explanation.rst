@@ -83,7 +83,7 @@ The choices are used to render the task graph into a task graph which does not c
 
 .. admonition:: Learn more
 
-    For more information, see :ref:`Task Graphs explanation <explanation-task-graph>`, :ref:`Entrypoint swaps reference <reference-entrypoints-task-graph-syntax-swaps>`, and :ref:`Specifying Swaps for a Job <reference-jobs-specifying-swaps>`.
+    For more information, see :ref:`Task Graph explanation <explanation-task-graph>`, :ref:`Entrypoint swaps reference <reference-entrypoints-task-graph-syntax-swaps>`, and :ref:`Specifying Swaps for a Job <reference-jobs-specifying-swaps>`.
 
 The Artifact Task Graph
 ------------------------
