@@ -21,7 +21,7 @@ function getGroupStorageKey(userId: number) {
 }
 
 function readStoredGroupId(userId: number): number | null {
-  const raw = localStorage.getItem(getGroupStorageKey(userId));
+  const raw = sessionStorage.getItem(getGroupStorageKey(userId));
   if (!raw) {
     return null;
   }
@@ -31,11 +31,11 @@ function readStoredGroupId(userId: number): number | null {
 }
 
 function writeStoredGroupId(userId: number, groupId: number) {
-  localStorage.setItem(getGroupStorageKey(userId), String(groupId));
+  sessionStorage.setItem(getGroupStorageKey(userId), String(groupId));
 }
 
 function clearStoredGroupId(userId: number) {
-  localStorage.removeItem(getGroupStorageKey(userId));
+  sessionStorage.removeItem(getGroupStorageKey(userId));
 }
 
 export const useLoginStore = defineStore("login", () => {
