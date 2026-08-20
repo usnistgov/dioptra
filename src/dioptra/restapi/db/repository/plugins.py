@@ -324,7 +324,7 @@ class PluginRepository:
         Raises:
             EntityDoesNotExistError: if the plugin does not exist
         """
-        utils.delete_resource(self.session, plugin)
+        utils.delete_resource(self.session, plugin, EntityType.PLUGIN)
 
     def associate_plugin_files(
         self,
@@ -630,7 +630,7 @@ class PluginRepository:
         Raises:
             EntityDoesNotExistError: if the plugin file does not exist
         """
-        utils.delete_resource(self.session, plugin_file)
+        utils.delete_resource(self.session, plugin_file, EntityType.PLUGIN_FILE)
 
     def get_one_plugin_plugin_file(
         self,
