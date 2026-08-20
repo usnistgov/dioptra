@@ -344,9 +344,10 @@
             class="q-pl-md q-my-xs"
           >
             <q-list>
+              <q-item-label header>Your Groups</q-item-label>
               <q-item
-                v-for="(group, i) in store.groups"
-                :key="i"
+                v-for="group in store.createdGroups"
+                :key="group.id"
                 v-close-popup
                 clickable
                 :active="group.id === store.loggedInGroup.id"
@@ -355,6 +356,19 @@
               >
                 <q-item-section>
                   <q-item-label>{{ group.name }}</q-item-label>
+                </q-item-section>
+              </q-item>
+              <q-separator />
+              <q-item
+                v-close-popup
+                clickable
+                to="/groups"
+              >
+                <q-item-section>
+                  <q-item-label>View Other Groups</q-item-label>
+                </q-item-section>
+                <q-item-section side>
+                  <q-icon name="chevron_right" />
                 </q-item-section>
               </q-item>
             </q-list>

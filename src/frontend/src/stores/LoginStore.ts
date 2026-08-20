@@ -3,9 +3,17 @@ import { ref, computed } from "vue";
 
 const GROUP_STORAGE_KEY = "dioptra_group_id";
 
+type UserRef = {
+  id: number;
+  username: string;
+  url: string;
+};
+
 type GroupRef = {
   id: number;
   name: string;
+  user: UserRef;
+  url: string;
 };
 
 function getGroupStorageKey(userId: number) {
@@ -38,6 +46,11 @@ export const useLoginStore = defineStore("login", () => {
   const selectedGroupId = ref<number | null>(null);
   const groupContextLocked = ref(false);
   const groupContextResolving = ref(false);
+
+  const createdGroups = computed(() => {
+    const userId = getLoggedInUserId();
+    return userId === null ? [] : groups.value.filter((group) => Number(group.user.id) === userId);
+  });
 
   function getLoggedInUserId(): number | null {
     const userId = Number((loggedInUser.value as { id?: number }).id);
@@ -235,6 +248,7 @@ export const useLoginStore = defineStore("login", () => {
     loggedInUser,
     loggedInGroup,
     groups,
+    createdGroups,
     groupContextLocked,
     groupContextResolving,
     users,
