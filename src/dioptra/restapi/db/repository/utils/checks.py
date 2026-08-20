@@ -127,7 +127,9 @@ def group_exists(
 
 
 def resource_exists(
-    session: CompatibleSession[S], resource: m.Resource | m.ResourceSnapshot | int
+    session: CompatibleSession[S],
+    resource: m.Resource | m.ResourceSnapshot | int,
+    resource_type: EntityType | None = None,
 ) -> ExistenceResult:
     """
     Check whether the given resource exists in the database, and if so, whether
@@ -138,6 +140,7 @@ def resource_exists(
         resource: A resource, snapshot (something with a .resource_id
             attribute we can use to identify a resource), or resource_id
             integer primary key value
+        resource_type: If provided, require that the resource has this type
 
     Returns:
         One of the ExistenceResult enum values
@@ -163,6 +166,8 @@ def resource_exists(
                 )
             )
         )
+        if resource_type is not None:
+            stmt = stmt.where(m.Resource.resource_type == resource_type.db_table_name)
 
         # This really ought to only produce at most one value
         locks = session.scalars(stmt).all()

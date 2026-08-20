@@ -175,8 +175,7 @@ class JobRepository:
         Raises:
             EntityDoesNotExistError: if the job does not exist
         """
-
-        utils.delete_resource(self.session, job)
+        utils.delete_resource(self.session, job, EntityType.JOB)
 
     @overload
     def get(

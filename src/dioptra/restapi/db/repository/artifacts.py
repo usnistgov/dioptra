@@ -164,7 +164,7 @@ class ArtifactRepository:
             EntityDoesNotExistError: if the artifact does not exist
         """
 
-        utils.delete_resource(self.session, artifact)
+        utils.delete_resource(self.session, artifact, EntityType.ARTIFACT)
 
     @overload
     def get(
