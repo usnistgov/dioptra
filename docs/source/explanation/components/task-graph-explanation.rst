@@ -184,13 +184,16 @@ the inclusion of the ``?`` character at the start of the name.
 
 
 In this example, the swap name is ``training_method``, and there are two task aliases, named ``training_method_A``
-and ``training_method_B``. When running a job, a dictionary such as the following will be provided to indicate which 
+and ``training_method_B``. When running a job, a mapping such as the following indicates which
 task definition should be used in place of the swap:
 
-.. code:: yaml
-   {
-      "training_method": "training_method_A"
-   }
+.. code-block:: yaml
+
+   training_method: training_method_A
+
+Every swap in the Task Graph must receive exactly one selection. See
+:ref:`Specifying Swaps <reference-jobs-specifying-swaps>` for the Python client
+and REST API submission formats.
 
 .. rst-class:: fancy-header header-seealso
 

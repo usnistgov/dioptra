@@ -31,18 +31,22 @@ groups, and reduce the number of entrypoints to sift through at job creation.
 Summary: What is a Job?
 -----------------------
 
-A **job** in Dioptra is essentially an execution of an entrypoint with specified parameter values. When creating a job, a user provides parameters
-and artifact parameters that are required by an entrypoint. The set of workflow instructions (the :ref:`entrypoint <explanation-entrypoints>`), 
-parameter values, and any artifact parameters are sent to the queue selected by the user at job creation.
+A **job** in Dioptra is an execution of an entrypoint with a specific configuration. When creating a job, a user provides the parameters,
+artifact parameters, and swap selections required by the entrypoint. The set of workflow instructions (the :ref:`entrypoint <explanation-entrypoints>`),
+parameter values, artifact parameters, and swap selections are sent to the queue selected by the user at job creation.
 
-When a worker listening to that queue claims the job, it attempts to execute the provided entrypoint using the 
-given parameter and artifact parameter values within the worker environment.
+If the entrypoint's task graph contains swaps, the user must select exactly one task alias for each swap. These selections allow the same
+entrypoint structure to execute different task implementations. Dioptra applies the selections to produce a rendered task graph without swaps
+before passing it to the task engine. See :ref:`Specifying Swaps <reference-jobs-specifying-swaps>` for the supported Python client and REST API formats.
+
+When a worker listening to that queue claims the job, it attempts to execute the provided entrypoint using the
+given parameter values, artifact parameter values, and rendered task graph within the worker environment.
 
 Any logs generated during the lifetime of the job, along with any metrics or created artifacts are uploaded to the Dioptra RESTAPI and associated with the job (and are viewable from the **Job
 Dashboard** page.)
 
-Dioptra maintains a job history by recording the experiment, entrypoint, parameters, artifact parameters, logs, metrics
-and generated artifacts for all jobs. Even if a user deletes or changes an entrypoint or plugin associated with a job, 
+Dioptra maintains a job history by recording the experiment, entrypoint, parameters, artifact parameters, swap selections, logs, metrics
+and generated artifacts for all jobs. Even if a user deletes or changes an entrypoint or plugin associated with a job,
 Dioptra retains the executed version as a snapshot.
 
 
@@ -54,4 +58,5 @@ See Also
 * :ref:`how-to-create-experiments` - Step-by-step guide on creating an experiment.
 * :ref:`how-to-running-jobs` - Step-by-step guide on running a job.
 * :ref:`Experiments Reference <reference-experiments>` - Reference page for experiments.
+* :ref:`Jobs Reference <reference-jobs>` - Reference page for jobs and their configuration.
 * :ref:`Entrypoints Explanation <explanation-entrypoints>` - Explanation of entrypoints.
