@@ -355,7 +355,6 @@ For example:
             inputs: "<input_definitions>"
             outputs: "<output_definitions>"
 
-
 Task Plugin
 ~~~~~~~~~~~
 
