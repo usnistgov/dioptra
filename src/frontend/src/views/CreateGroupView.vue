@@ -7,7 +7,7 @@
     rounded
     class="bg-orange-2 text-dark q-mt-md"
   >
-    Warning: all future users have access to groups created in this phase.
+    Warning: All users can read and write resources in every group as permissions are not yet implemented.
   </q-banner>
   <div :style="{ width: isMobile ? '100%' : isMedium ? '60%' : '50%' }">
     <fieldset class="q-mt-lg">

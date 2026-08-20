@@ -352,6 +352,10 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  highlightedRowKeys: {
+    type: Array,
+    default: () => [],
+  },
   rowKey: {
     type: String,
     default: "id",
@@ -682,6 +686,9 @@ function highlightRow(rowProps) {
     return darkMode.value ? "bg-red-dark-soft" : "bg-red-light";
   }
   if (props.disabledRowKeys.includes(rowProps.row[props.rowKey])) return;
+  if (props.highlightedRowKeys.includes(rowProps.row[props.rowKey])) {
+    return darkMode.value ? "bg-blue-grey-9" : "bg-blue-1";
+  }
   if (!props.enableHighlightRow) return;
   if (!rowProps.expand) return;
   if (darkMode.value) {
