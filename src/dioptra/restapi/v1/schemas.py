@@ -29,7 +29,6 @@ def generate_base_resource_schema(name: str, snapshot: bool) -> type[Schema]:
     """Generates the base schema for a Resource."""
     from dioptra.restapi.v1.groups.schema import GroupRefSchema
     from dioptra.restapi.v1.tags.schema import TagRefSchema
-    from dioptra.restapi.v1.users.schema import UserRefSchema
 
     schema: dict[str, fields.Field] = {
         "id": fields.Integer(
@@ -161,6 +160,25 @@ def generate_base_resource_ref_schema(
     else:
         schema.pop("snapshotId")
         return Schema.from_dict(schema, name=f"{name}RefBaseSchema")
+
+
+class UserRefSchema(Schema):
+    """The reference schema for the data stored in a User resource."""
+
+    id = fields.Integer(
+        attribute="id",
+        metadata={"description": "ID for the User resource."},
+        dump_only=True,
+    )
+    username = fields.String(
+        attribute="username",
+        metadata={"description": "Username of the User resource."},
+    )
+    url = fields.Url(
+        attribute="url",
+        metadata={"description": "URL for accessing the full User resource."},
+        relative=True,
+    )
 
 
 class BasePageSchema(Schema):
