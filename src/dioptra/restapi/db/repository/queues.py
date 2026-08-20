@@ -126,7 +126,7 @@ class QueueRepository:
             EntityDoesNotExistError: if the queue does not exist
         """
 
-        utils.delete_resource(self.session, queue)
+        utils.delete_resource(self.session, queue, EntityType.QUEUE)
 
     def unlink_entrypoints(self, queue: Queue | int) -> None:
         """

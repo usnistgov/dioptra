@@ -799,6 +799,18 @@ class TestJobDelete:
         with pytest.raises(errors.EntityDoesNotExistError):
             job_repo.delete(99999)
 
+    def test_job_delete_wrong_resource_type(
+        self, db_session: DBSession, account, fake_data, job_repo
+    ):
+        queue = fake_data.queue(account.user, account.group)
+        db_session.add(queue)
+        db_session.commit()
+
+        with pytest.raises(errors.EntityDoesNotExistError):
+            job_repo.delete(queue.resource_id)
+
+        assert queue.resource.is_deleted is False
+
     def test_job_delete_already_deleted(
         self, db_session: DBSession, account, job_repo, experiment_with_dependencies
     ):

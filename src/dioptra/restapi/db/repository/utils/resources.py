@@ -938,7 +938,9 @@ def unlink_children(
 
 
 def delete_resource(
-    session: CompatibleSession[S], resource: m.Resource | m.ResourceSnapshot | int
+    session: CompatibleSession[S],
+    resource: m.Resource | m.ResourceSnapshot | int,
+    expected_resource_type: EntityType,
 ) -> None:
     """
     Common routine for deleting a resource.  No-op if the resource is already
@@ -949,6 +951,7 @@ def delete_resource(
         session: An SQLAlchemy session
         resource: A resource, snapshot, or resource_id integer primary key
             value
+        expected_resource_type: The type of resource being deleted
 
     Raises:
         EntityDoesNotExistError: if the resource does not exist
@@ -959,14 +962,13 @@ def delete_resource(
         - :py:func:`add_resource_lock_types`
     """
 
-    exists_result = resource_exists(session, resource)
+    exists_result = resource_exists(session, resource, expected_resource_type)
 
     if exists_result is ExistenceResult.DOES_NOT_EXIST:
         resource_id = get_resource_id(resource)
-        resource_type = get_resource_type(resource)
-        raise e.EntityDoesNotExistError(resource_type, resource_id=resource_id)
+        raise e.EntityDoesNotExistError(expected_resource_type, resource_id=resource_id)
 
-    elif exists_result is ExistenceResult.EXISTS:
+    if exists_result is ExistenceResult.EXISTS:
         add_resource_lock_types(session, resource, {ResourceLockType.DELETED})
 
     # else: exists_result is DELETED; nothing to do.
