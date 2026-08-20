@@ -169,7 +169,7 @@ const router = createRouter({
       component: () => import("../views/CreateGroupView.vue"),
     },
     {
-      path: "/groups/admin",
+      path: "/groups/:id/admin",
       component: () => import("../views/GroupsAdminView.vue"),
     },
     {
