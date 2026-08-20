@@ -18,7 +18,13 @@ type QueueDraftGroupContext = {
   fallback: string;
 };
 
-type GroupContext = ResourceGroupContext | QueueDraftGroupContext;
+type GroupSelfContext = {
+  kind: "group";
+  idParam: string;
+  fallback: string;
+};
+
+type GroupContext = ResourceGroupContext | QueueDraftGroupContext | GroupSelfContext;
 
 const router = createRouter({
   history: createWebHistory(),
@@ -171,6 +177,7 @@ const router = createRouter({
     {
       path: "/groups/:id/admin",
       component: () => import("../views/GroupsAdminView.vue"),
+      meta: { groupContext: { kind: "group", idParam: "id", fallback: "/groups" } },
     },
     {
       path: "/tags",
@@ -323,11 +330,13 @@ async function resolveGroupContext(to: RouteLocationNormalizedGeneric, context: 
       throw new Error(`Unsupported queue draft type: ${draftType}`);
     }
     response = await api.getItem("queues", id, draftType === "draft");
+  } else if (context.kind === "group") {
+    response = await api.getItem("groups", id);
   } else {
     response = await api.getItem(context.resource, id);
   }
 
-  const rawGroupId = response.data?.group?.id ?? response.data?.group;
+  const rawGroupId = context.kind === "group" ? response.data?.id : (response.data?.group?.id ?? response.data?.group);
   const groupId = Number(rawGroupId);
   if (!Number.isInteger(groupId)) {
     throw new Error("The resource does not have a valid group context.");
