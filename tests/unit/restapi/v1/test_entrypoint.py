@@ -26,6 +26,7 @@ from http import HTTPStatus
 from typing import Any
 
 import pytest
+from flask.testing import FlaskClient
 
 from dioptra.client.base import DioptraResponseProtocol, FieldNameCollisionError
 from dioptra.client.client import DioptraClient
@@ -1860,6 +1861,29 @@ def test_dynamic_globals_endpoint_without_swaps(
         registered_swap_entrypoints=registered_swap_entrypoints,
         file="no_swap_test"
     )
+
+
+@pytest.mark.parametrize("query_string", [None, {"swaps": ""}])
+def test_dynamic_globals_endpoint_accepts_blank_swaps(
+    client: FlaskClient,
+    auth_account: dict[str, Any],
+    registered_swap_entrypoints: dict[str, Any],
+    query_string: dict[str, str] | None,
+):
+    entrypoint = registered_swap_entrypoints["no_swap_test"]
+    response = client.get(
+        f"/api/v1/entrypoints/{entrypoint['id']}/snapshots/"
+        f"{entrypoint['snapshot']}/dynamicGlobalParameters",
+        query_string=query_string,
+    )
+
+    assert response.status_code == HTTPStatus.OK
+    assert set(response.json["entrypointParams"]) == {
+        "global1",
+        "global6",
+        "global12",
+    }
+
 
 def test_dynamic_globals_endpoint_too_many_swaps(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
