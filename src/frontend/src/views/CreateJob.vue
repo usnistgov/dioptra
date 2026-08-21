@@ -267,76 +267,74 @@
           </q-expansion-item>
         </div>
       </fieldset>
-      <fieldset
-        class="q-px-lg"
-        :disabled="job.entrypoint === ''"
-      >
+      <fieldset class="q-px-lg q-pb-lg">
         <legend>Values</legend>
-        <TableComponent
-          title="Entrypoint Parameters"
-          :columns="columns"
-          :rows="parameters"
-          :hideCreateBtn="true"
-          :hideDeleteBtn="true"
-          :disableSelect="true"
-          :hideSearch="true"
-        >
-          <template #body-cell-value="cellProps">
-            <div style="font-size: 18px">
-              <span v-if="cellProps.row.value === null">
-                <q-chip
-                  label="Needs Parameter Value"
-                  color="negative"
-                  text-color="white"
-                  class="q-ml-none"
-                />
-              </span>
-              <span v-else>
-                {{ cellProps.row.value }}
-              </span>
-              <q-btn
-                icon="edit"
-                round
-                size="sm"
-                color="primary"
-                flat
-              />
-            </div>
-            <q-popup-edit
-              v-slot="scope"
-              v-model="cellProps.row.value"
-              buttons
-            >
-              <div class="text-h6">
-                {{ cellProps.row.name }}
-                <q-chip
-                  v-if="scope.value === null"
-                  label="Needs Parameter Value"
-                  color="negative"
-                  text-color="white"
+        <template v-if="job.entrypoint && areAllSwapsResolved">
+          <TableComponent
+            title="Entrypoint Parameters"
+            :columns="columns"
+            :rows="parameters"
+            :hideCreateBtn="true"
+            :hideDeleteBtn="true"
+            :disableSelect="true"
+            :hideSearch="true"
+          >
+            <template #body-cell-value="cellProps">
+              <div style="font-size: 18px">
+                <span v-if="cellProps.row.value === null">
+                  <q-chip
+                    label="Needs Parameter Value"
+                    color="negative"
+                    text-color="white"
+                    class="q-ml-none"
+                  />
+                </span>
+                <span v-else>
+                  {{ cellProps.row.value }}
+                </span>
+                <q-btn
+                  icon="edit"
+                  round
+                  size="sm"
+                  color="primary"
+                  flat
                 />
               </div>
-              <div class="text-subtitle2 text-grey-7 q-mb-md">Set Entrypoint Parameter Value</div>
-              <q-input
-                v-model="scope.value"
-                outlined
-                dense
-                autofocus
-                class="q-mb-sm"
-                :placeholder="
-                  scope.value === null ? 'Null, please enter value' : scope.value === '' ? '[Empty String]' : ''
-                "
-                @keyup.enter="scope.set"
+              <q-popup-edit
+                v-slot="scope"
+                v-model="cellProps.row.value"
+                buttons
               >
-                <template #before>
-                  <label
-                    :class="`field-label`"
-                    style="width: 125px"
-                    >Parameter Value:</label
-                  >
-                </template>
-              </q-input>
-              <!-- Set Parameter to Empty String:
+                <div class="text-h6">
+                  {{ cellProps.row.name }}
+                  <q-chip
+                    v-if="scope.value === null"
+                    label="Needs Parameter Value"
+                    color="negative"
+                    text-color="white"
+                  />
+                </div>
+                <div class="text-subtitle2 text-grey-7 q-mb-md">Set Entrypoint Parameter Value</div>
+                <q-input
+                  v-model="scope.value"
+                  outlined
+                  dense
+                  autofocus
+                  class="q-mb-sm"
+                  :placeholder="
+                    scope.value === null ? 'Null, please enter value' : scope.value === '' ? '[Empty String]' : ''
+                  "
+                  @keyup.enter="scope.set"
+                >
+                  <template #before>
+                    <label
+                      :class="`field-label`"
+                      style="width: 125px"
+                      >Parameter Value:</label
+                    >
+                  </template>
+                </q-input>
+                <!-- Set Parameter to Empty String:
             <q-checkbox
               :model-value="scope.value === ''"
               @update:model-value="val => {
@@ -345,148 +343,167 @@
                 }
               }"
             /> -->
-              <q-btn
-                label="Set Parameter to Empty String"
-                color="primary"
-                :disable="scope.value === ''"
-                @click="scope.value = ''"
-              />
-              <br />
-              <q-btn
-                label="Revert to Default Value"
-                color="primary"
-                class="q-mt-sm"
-                :disable="scope.value === cellProps.row.originalValue"
-                @click="scope.value = cellProps.row.originalValue"
-              />
-            </q-popup-edit>
-          </template>
-        </TableComponent>
-        <q-btn
-          v-if="
-            !updateEntrypoint &&
-            job.entrypoint?.id === oldEntrypoint?.id &&
-            oldEntrypoint?.snapshot !== latestEntrypoint?.snapshot
-          "
-          square
-          color="red"
-          label="Update Values"
-          icon="sync"
-          size="sm"
-          class="q-mr-md"
-          @click.stop="syncJobParams()"
-        >
-          <q-tooltip> Sync to latest version of entrypoint parameters and values. </q-tooltip>
-        </q-btn>
-        <q-btn
-          v-if="
-            updateEntrypoint &&
-            job.entrypoint?.id === oldEntrypoint?.id &&
-            job.entrypoint.snapshot === latestEntrypoint?.snapshot
-          "
-          square
-          color="red"
-          label="Revert Values"
-          icon="sync"
-          size="sm"
-          class="q-mr-md"
-          @click.stop="revertJobParams()"
-        >
-          <q-tooltip> Revert to original job's entrypoint parameters and values. </q-tooltip>
-        </q-btn>
-        <TableComponent
-          title="Artifact Parameters"
-          :columns="artifactParamColumns"
-          :rows="artifactParameters"
-          :hideCreateBtn="true"
-          :hideDeleteBtn="true"
-          :disableSelect="true"
-          :hideSearch="true"
-        >
-          <template #body-cell-output="cellProps">
-            <div
-              v-for="(param, i) in cellProps.row.outputParams"
-              :key="i"
-            >
-              <q-chip
-                :label="`${param.name}: ${param.parameterType.name}`"
-                color="secondary"
-                text-color="white"
-                dense
-              />
-            </div>
-          </template>
-          <template #body-cell-artifact="cellProps">
-            <div class="row">
+                <q-btn
+                  label="Set Parameter to Empty String"
+                  color="primary"
+                  :disable="scope.value === ''"
+                  @click="scope.value = ''"
+                />
+                <br />
+                <q-btn
+                  label="Revert to Default Value"
+                  color="primary"
+                  class="q-mt-sm"
+                  :disable="scope.value === cellProps.row.originalValue"
+                  @click="scope.value = cellProps.row.originalValue"
+                />
+              </q-popup-edit>
+            </template>
+          </TableComponent>
+          <q-btn
+            v-if="
+              !updateEntrypoint &&
+              job.entrypoint?.id === oldEntrypoint?.id &&
+              oldEntrypoint?.snapshot !== latestEntrypoint?.snapshot
+            "
+            square
+            color="red"
+            label="Update Values"
+            icon="sync"
+            size="sm"
+            class="q-mr-md"
+            @click.stop="syncJobParams()"
+          >
+            <q-tooltip> Sync to latest version of entrypoint parameters and values. </q-tooltip>
+          </q-btn>
+          <q-btn
+            v-if="
+              updateEntrypoint &&
+              job.entrypoint?.id === oldEntrypoint?.id &&
+              job.entrypoint.snapshot === latestEntrypoint?.snapshot
+            "
+            square
+            color="red"
+            label="Revert Values"
+            icon="sync"
+            size="sm"
+            class="q-mr-md"
+            @click.stop="revertJobParams()"
+          >
+            <q-tooltip> Revert to original job's entrypoint parameters and values. </q-tooltip>
+          </q-btn>
+          <TableComponent
+            title="Artifact Parameters"
+            :columns="artifactParamColumns"
+            :rows="artifactParameters"
+            :hideCreateBtn="true"
+            :hideDeleteBtn="true"
+            :disableSelect="true"
+            :hideSearch="true"
+          >
+            <template #body-cell-output="cellProps">
+              <div
+                v-for="(param, i) in cellProps.row.outputParams"
+                :key="i"
+              >
+                <q-chip
+                  :label="`${param.name}: ${param.parameterType.name}`"
+                  color="secondary"
+                  text-color="white"
+                  dense
+                />
+              </div>
+            </template>
+            <template #body-cell-artifact="cellProps">
+              <div class="row">
+                <q-select
+                  v-model="cellProps.row.selectedArtifact"
+                  label="Artifact"
+                  dense
+                  outlined
+                  :options="getMatchingArtifacts(cellProps.row.outputParams)"
+                  option-label="description"
+                  clearable
+                  class="col"
+                  @update:model-value="onSelectArtifact(cellProps.row)"
+                >
+                  <template #option="scope">
+                    <q-item v-bind="scope.itemProps">
+                      <q-item-section>
+                        <q-item-label>Description: {{ scope.opt.description }}</q-item-label>
+                        <q-item-label caption>Job ID: {{ scope.opt.job }}</q-item-label>
+                      </q-item-section>
+                    </q-item>
+                  </template>
+                </q-select>
+                <q-checkbox
+                  v-model="cellProps.row.showSnapshotDropdown"
+                  checked-icon="history"
+                  unchecked-icon="sym_o_history"
+                  size="lg"
+                  @update:model-value="
+                    (value) => {
+                      if (!value) onSelectArtifact(cellProps.row);
+                    }
+                  "
+                >
+                  <q-tooltip> Click to select specific snapshot </q-tooltip>
+                </q-checkbox>
+              </div>
               <q-select
-                v-model="cellProps.row.selectedArtifact"
-                label="Artifact"
+                v-if="cellProps.row.showSnapshotDropdown"
+                v-model="cellProps.row.selectedArtifactSnapshot"
+                label="Artifact Snapshot"
                 dense
                 outlined
-                :options="getMatchingArtifacts(cellProps.row.outputParams)"
+                :options="cellProps.row.artifactSnapshotOptions"
                 option-label="description"
                 clearable
-                class="col"
-                @update:model-value="onSelectArtifact(cellProps.row)"
+                :disable="!cellProps.row.selectedArtifact"
+                @clear="
+                  cellProps.row.showSnapshotDropdown = false;
+                  onSelectArtifact(cellProps.row);
+                "
               >
+                <template #before>
+                  <q-icon name="subdirectory_arrow_right" />
+                </template>
                 <template #option="scope">
                   <q-item v-bind="scope.itemProps">
                     <q-item-section>
                       <q-item-label>Description: {{ scope.opt.description }}</q-item-label>
                       <q-item-label caption>Job ID: {{ scope.opt.job }}</q-item-label>
+                      <q-item-label caption
+                        >Snapshot: {{ scope.opt.snapshot }}
+                        {{ scope.opt.latestSnapshot ? "(latest)" : "" }}</q-item-label
+                      >
+                      <q-item-label caption
+                        >Snapshot Created On: {{ formatDate(scope.opt.snapshotCreatedOn) }}</q-item-label
+                      >
                     </q-item-section>
                   </q-item>
                 </template>
               </q-select>
-              <q-checkbox
-                v-model="cellProps.row.showSnapshotDropdown"
-                checked-icon="history"
-                unchecked-icon="sym_o_history"
-                size="lg"
-                @update:model-value="
-                  (value) => {
-                    if (!value) onSelectArtifact(cellProps.row);
-                  }
-                "
-              >
-                <q-tooltip> Click to select specific snapshot </q-tooltip>
-              </q-checkbox>
-            </div>
-            <q-select
-              v-if="cellProps.row.showSnapshotDropdown"
-              v-model="cellProps.row.selectedArtifactSnapshot"
-              label="Artifact Snapshot"
-              dense
-              outlined
-              :options="cellProps.row.artifactSnapshotOptions"
-              option-label="description"
-              clearable
-              :disable="!cellProps.row.selectedArtifact"
-              @clear="
-                cellProps.row.showSnapshotDropdown = false;
-                onSelectArtifact(cellProps.row);
-              "
-            >
-              <template #before>
-                <q-icon name="subdirectory_arrow_right" />
-              </template>
-              <template #option="scope">
-                <q-item v-bind="scope.itemProps">
-                  <q-item-section>
-                    <q-item-label>Description: {{ scope.opt.description }}</q-item-label>
-                    <q-item-label caption>Job ID: {{ scope.opt.job }}</q-item-label>
-                    <q-item-label caption
-                      >Snapshot: {{ scope.opt.snapshot }} {{ scope.opt.latestSnapshot ? "(latest)" : "" }}</q-item-label
-                    >
-                    <q-item-label caption
-                      >Snapshot Created On: {{ formatDate(scope.opt.snapshotCreatedOn) }}</q-item-label
-                    >
-                  </q-item-section>
-                </q-item>
-              </template>
-            </q-select>
-          </template>
-        </TableComponent>
+            </template>
+          </TableComponent>
+        </template>
+        <div
+          v-else
+          class="column items-center justify-center q-pa-lg text-grey-7"
+        >
+          <q-icon
+            name="info"
+            size="3rem"
+            class="q-mb-sm"
+          />
+          <div class="text-caption text-center">
+            {{
+              !job.entrypoint
+                ? "Please select an Entrypoint to view Parameters."
+                : "Please resolve all swap choices to view Parameters."
+            }}
+          </div>
+        </div>
       </fieldset>
     </div>
   </div>
@@ -606,6 +623,14 @@ const artifactParameters = ref([]);
 const swaps = ref({});
 const selectedSwaps = ref({});
 const partialGraph = ref("");
+const isInitializingEntrypoint = ref(false);
+
+const effectiveEntrypointSnapshot = computed(() => {
+  const isUsingOriginalJobSnapshot =
+    history.state.oldJobId && !updateEntrypoint.value && oldJob.value?.entrypoint.id === job.value.entrypoint?.id;
+
+  return isUsingOriginalJobSnapshot ? oldEntrypoint.value?.snapshot : job.value.entrypoint?.snapshot;
+});
 
 const computedValue = computed(() => {
   const output = {};
@@ -623,7 +648,7 @@ async function getSwaps() {
   if (!job.value.entrypoint) return {};
 
   try {
-    const res = await api.getSwaps(job.value.entrypoint.id, job.value.entrypoint.snapshot);
+    const res = await api.getSwaps(job.value.entrypoint.id, effectiveEntrypointSnapshot.value);
 
     return res.data.reduce((groupedSwaps, swap) => {
       if (!groupedSwaps[swap.swapName]) {
@@ -648,7 +673,8 @@ async function getGraph() {
   if (!job.value.entrypoint) return;
 
   try {
-    const res = await api.getGraph(job.value.entrypoint.id, job.value.entrypoint.snapshot, selectedSwaps.value);
+    console.log('selectedSwaps = ', selectedSwaps.value)
+    const res = await api.getGraph(job.value.entrypoint.id, effectiveEntrypointSnapshot.value, selectedSwaps.value);
     partialGraph.value = res.data?.graph ? YAML.stringify(res.data.graph).trimEnd() : "";
   } catch (err) {
     partialGraph.value = "";
@@ -656,68 +682,108 @@ async function getGraph() {
   }
 }
 
+async function getUsedParams() {
+  if (!job.value.entrypoint || !areAllSwapsResolved.value) return null;
+
+  try {
+    const res = await api.getUsedParams(
+      job.value.entrypoint.id,
+      effectiveEntrypointSnapshot.value,
+      selectedSwaps.value,
+    );
+    console.log("getUsedParams = ", res.data);
+    return res.data?.entrypointParams ?? [];
+  } catch (err) {
+    console.warn(err);
+    return null;
+  }
+}
+
+function setParametersFromUsedParams(usedParams, entrypoint, preserveExistingValues = false) {
+  const existingParameters = new Map(parameters.value.map((parameter) => [parameter.name, parameter]));
+
+  parameters.value = usedParams.flatMap((param) => {
+    const existingParameter = existingParameters.get(param.name);
+
+    if (
+      history.state.oldJobId &&
+      !updateEntrypoint.value &&
+      oldJob.value.entrypoint.id === entrypoint.id &&
+      !(param.name in oldJob.value.values)
+    ) {
+      return [];
+    }
+
+    let value = param.defaultValue;
+
+    if (preserveExistingValues && existingParameter) {
+      value = existingParameter.value;
+    } else if (history.state.oldJobId && !updateEntrypoint.value && oldJob.value.entrypoint.id === entrypoint.id) {
+      value = oldJob.value.values[param.name];
+    }
+
+    return [
+      {
+        name: param.name,
+        value,
+        type: param.parameterType,
+        originalValue: param.defaultValue,
+      },
+    ];
+  });
+}
+
+const areAllSwapsResolved = computed(() => {
+  return Object.entries(swaps.value).every(([swapName, options]) => {
+    const selectedAlias = selectedSwaps.value[swapName];
+
+    return options.some((option) => option.taskAlias === selectedAlias);
+  });
+});
+
 watch(
   () => job.value.entrypoint,
-  async (newVal) => {
-    selectedSwaps.value = {};
-    swaps.value = {};
-    partialGraph.value = "";
+  async (newVal, oldVal) => {
+    const previousSelectedSwaps = newVal?.id === oldVal?.id ? { ...selectedSwaps.value } : {};
 
-    if (newVal) {
-      swaps.value = await getSwaps();
-      await getGraph();
-    }
+    isInitializingEntrypoint.value = true;
 
-    parameters.value = [];
-    if (Array.isArray(newVal?.parameters)) {
-      newVal.parameters.forEach((param) => {
-        // if re-running a job
-        if (history.state.oldJobId) {
-          // if entrypoint parameters are being synced or
-          // a different entrypoint is chosen
-          if (updateEntrypoint.value || oldJob.value.entrypoint.id !== newVal.id) {
-            parameters.value.push({
-              name: param.name,
-              value: param.defaultValue,
-              type: param.parameterType,
-              originalValue: param.defaultValue,
-            });
-          } else {
-            // only add parameters that exist in the original job
-            if (param.name in oldJob.value.values) {
-              parameters.value.push({
-                name: param.name,
-                value: history.state.oldJobId ? oldJob.value.values[param.name] : param.defaultValue,
-                type: param.parameterType,
-                originalValue: param.defaultValue,
-              });
-            }
-          }
+    try {
+      selectedSwaps.value = {};
+      swaps.value = {};
+      partialGraph.value = "";
+      parameters.value = [];
+
+      if (newVal) {
+        swaps.value = await getSwaps();
+        selectedSwaps.value = Object.fromEntries(
+          Object.entries(previousSelectedSwaps).filter(([swapName, taskAlias]) =>
+            swaps.value[swapName]?.some((option) => option.taskAlias === taskAlias),
+          ),
+        );
+        await getGraph();
+
+        const usedParams = await getUsedParams();
+        if (usedParams !== null) {
+          setParametersFromUsedParams(usedParams, newVal);
         }
-        // if creating a new job
-        else {
-          parameters.value.push({
-            name: param.name,
-            value: param.defaultValue,
-            type: param.parameterType,
-            originalValue: param.defaultValue,
+      }
+
+      artifactParameters.value = [];
+      if (Array.isArray(newVal?.artifactParameters)) {
+        newVal?.artifactParameters.forEach((artifactParam) => {
+          artifactParameters.value.push({
+            name: artifactParam.name,
+            outputParams: artifactParam.outputParams,
+            selectedArtifact: null,
+            selectedArtifactSnapshot: null,
+            artifactSnapshotOptions: [],
+            showSnapshotDropdown: false,
           });
-        }
-      });
-    }
-
-    artifactParameters.value = [];
-    if (Array.isArray(newVal?.artifactParameters)) {
-      newVal?.artifactParameters.forEach((artifactParam) => {
-        artifactParameters.value.push({
-          name: artifactParam.name,
-          outputParams: artifactParam.outputParams,
-          selectedArtifact: null,
-          selectedArtifactSnapshot: null,
-          artifactSnapshotOptions: [],
-          showSnapshotDropdown: false,
         });
-      });
+      }
+    } finally {
+      isInitializingEntrypoint.value = false;
     }
   },
 );
@@ -725,8 +791,15 @@ watch(
 watch(
   selectedSwaps,
   async () => {
+    if (isInitializingEntrypoint.value) return;
+
     if (job.value.entrypoint && Object.keys(swaps.value).length > 0) {
       await getGraph();
+
+      const usedParams = await getUsedParams();
+      if (usedParams !== null) {
+        setParametersFromUsedParams(usedParams, job.value.entrypoint, true);
+      }
     }
   },
   { deep: true },

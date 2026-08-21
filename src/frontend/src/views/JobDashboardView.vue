@@ -92,6 +92,14 @@
               :resource="entrypoint"
               resourceType="entrypoint"
             />
+            <q-btn
+              color="primary"
+              label="View Graph"
+              size="sm"
+              class="q-ml-sm"
+              :loading="isTaskGraphLoading"
+              @click="viewGraph"
+            />
           </template>
           <template #queue="{ queue }">
             <ResourceBadge
@@ -316,6 +324,21 @@
     :name="job?.description || `Job ID ${job?.id}`"
     @submit="deleteJob"
   />
+  <InfoPopupDialog
+    v-model="showTaskGraphDialog"
+    @show="refreshTaskGraphEditor"
+  >
+    <template #title>
+      <label id="modalTitle"> Task Graph YAML </label>
+    </template>
+    <CodeEditor
+      ref="taskGraphEditor"
+      v-model="taskGraphYaml"
+      language="yaml"
+      :readOnly="true"
+      style="height: 50vh"
+    />
+  </InfoPopupDialog>
 </template>
 
 <script setup>
@@ -334,6 +357,8 @@ import CodeEditor from "@/components/CodeEditor.vue";
 import JobArtifactsTable from "@/components/JobArtifactsTable.vue";
 import { useLoginStore } from "@/stores/LoginStore.ts";
 import ResourceBadge from "@/components/ResourceBadge.vue";
+import InfoPopupDialog from "@/dialogs/InfoPopupDialog.vue";
+import YAML from "yaml";
 
 const store = useLoginStore();
 
@@ -351,14 +376,81 @@ const selectedParam = ref([]);
 const selectedUsedArtifact = ref([]);
 const selectedMetric = ref([]);
 const metrics = ref([]);
+const showTaskGraphDialog = ref(false);
+const isTaskGraphLoading = ref(false);
+const taskGraphYaml = ref("");
+const taskGraphEditor = ref();
 
 async function getJob() {
   try {
     const res = await api.getItem("jobs", route.params.id);
     job.value = res.data;
+    await getUsedParams();
   } catch (err) {
     console.log(err);
   }
+}
+
+async function getGraph() {
+  const selectedSwaps = Object.fromEntries(
+    (job.value.swaps ?? []).map(({ swapName, taskAlias }) => [swapName, taskAlias]),
+  );
+
+  const res = await api.getGraph(job.value.entrypoint.id, job.value.entrypoint.snapshotId, selectedSwaps);
+  return res.data?.graph ?? {};
+}
+
+function collectReferences(value, parameterNames) {
+  if (typeof value === "string") {
+    if (value.length > 1 && value.startsWith("$") && !value.startsWith("$$")) {
+      parameterNames.add(value.slice(1).split(".")[0]);
+    }
+  } else if (Array.isArray(value)) {
+    value.forEach((item) => collectReferences(item, parameterNames));
+  } else if (value && typeof value === "object") {
+    Object.values(value).forEach((item) => collectReferences(item, parameterNames));
+  }
+}
+
+function collectKwargParameterNames(value, parameterNames = new Set()) {
+  if (!value || typeof value !== "object") return parameterNames;
+
+  if (!Array.isArray(value) && Object.hasOwn(value, "kwargs")) {
+    collectReferences(value.kwargs, parameterNames);
+  }
+
+  Object.values(value).forEach((item) => collectKwargParameterNames(item, parameterNames));
+  return parameterNames;
+}
+
+async function getUsedParams() {
+  const graph = await getGraph();
+  const usedParamNames = collectKwargParameterNames(graph);
+
+  paramRows.value = Object.entries(job.value.values ?? {})
+    .filter(([name]) => usedParamNames.has(name))
+    .map(([parameter, value]) => ({ parameter, value }));
+}
+
+async function viewGraph() {
+  if (!job.value?.entrypoint) return;
+
+  isTaskGraphLoading.value = true;
+
+  try {
+    const graph = await getGraph();
+    taskGraphYaml.value = Object.keys(graph).length > 0 ? YAML.stringify(graph).trimEnd() : "";
+    showTaskGraphDialog.value = true;
+  } catch (err) {
+    console.warn(err);
+    notify.error(err.response?.data?.message ?? "Unable to load the task graph");
+  } finally {
+    isTaskGraphLoading.value = false;
+  }
+}
+
+function refreshTaskGraphEditor() {
+  taskGraphEditor.value?.refreshLayout();
 }
 
 onMounted(() => {
@@ -582,13 +674,14 @@ const logColumns = [
   { name: "message", label: "Message", align: "left", field: "message", sortable: false },
 ];
 
-const paramRows = computed(() => {
-  if (!job.value?.values) return [];
-  return Object.entries(job.value?.values).map(([key, value]) => ({
-    parameter: key,
-    value: value,
-  }));
-});
+const paramRows = ref([]);
+// const paramRows = computed(() => {
+//   if (!job.value?.values) return [];
+//   return Object.entries(job.value?.values).map(([key, value]) => ({
+//     parameter: key,
+//     value: value,
+//   }));
+// });
 
 async function deleteJob() {
   try {

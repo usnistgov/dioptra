@@ -125,6 +125,12 @@ const handleReady = (payload) => {
   view.value = payload.view;
 };
 
+function refreshLayout() {
+  view.value?.requestMeasure();
+}
+
+defineExpose({ refreshLayout });
+
 function highlightPlaceholder(update) {
   if (!view.value || update.docChanged || props.language === "python") return;
   const from = view.value.state.selection.ranges[0].from;

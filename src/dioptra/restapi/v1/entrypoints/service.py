@@ -1380,7 +1380,14 @@ class DynamicGlobalParametersService(object):
                 active_plugins.append(epp.plugin)
 
         return {
-            "entrypoint_params": list(needed_vars),
+            "entrypoint_params": [
+                parameter
+                for parameter in sorted(
+                    entry_point.parameters,
+                    key=lambda parameter: parameter.parameter_number,
+                )
+                if parameter.name in needed_vars
+            ],
             "topological_sort": topsorted,
             "active_plugins": active_plugins,
         }
