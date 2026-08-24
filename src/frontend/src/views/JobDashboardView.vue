@@ -640,6 +640,7 @@ const parametersColumns = [
 const swapsColumns = [
   { name: "swapName", label: "Swap Name", align: "left", field: "swapName", sortable: true },
   { name: "taskAlias", label: "Task Alias", align: "left", field: "taskAlias", sortable: true },
+  { name: "taskName", label: "Task Name", align: "left", field: "taskName", sortable: true },
 ];
 
 const artifactsUsedColumns = [
