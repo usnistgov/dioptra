@@ -224,8 +224,15 @@ function submitDraft() {
 }
 
 async function createQueue() {
+  const groupId = getActiveGroupId();
+  if (groupId === null) return;
+
   try {
-    const res = await api.addItem("queues", queue.value);
+    const res = await api.addItem("queues", {
+      name: queue.value.name,
+      description: queue.value.description,
+      group: groupId,
+    });
     notify.success(`Successfully created '${res.data.name}'`);
     store.savedForms.queue = null;
     router.push("/queues");
@@ -235,11 +242,14 @@ async function createQueue() {
 }
 
 async function createDraft() {
+  const groupId = getActiveGroupId();
+  if (groupId === null) return;
+
   try {
     const params = {
       name: queue.value.name,
       description: queue.value.description,
-      group: queue.value.group,
+      group: groupId,
     };
     const res = await api.addDraft("queues", params);
     notify.success(`Successfully created '${res.data.payload.name}'`);
@@ -248,6 +258,15 @@ async function createDraft() {
   } catch (err) {
     notify.error(err.response.data.message);
   }
+}
+
+function getActiveGroupId() {
+  const activeGroup = store.loggedInGroup;
+  if (!activeGroup || typeof activeGroup !== "object") {
+    notify.error("Select a group before creating a queue.");
+    return null;
+  }
+  return activeGroup.id;
 }
 
 async function updateQueue() {
