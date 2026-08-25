@@ -29,7 +29,8 @@ Users
 User Definition
 ---------------
 
-A **User** in Dioptra represents an account which provides access to other resources (entrypoints, plugins, jobs, experiments, etc.). 
+A **User** in Dioptra represents an account that provides authenticated access to resources such as entrypoints, plugins,
+jobs, and experiments. Registering a User also creates a public personal Group initially named after the username.
 
 
 .. _reference-users-attributes:
@@ -54,11 +55,22 @@ System-Managed State
 ~~~~~~~~~~~~~~~~~~~~
 
 - **ID**: (integer) Unique identifier assigned upon creation.
-- **Groups**: (List of Group IDs)  List of groups that the user is in. Determines access to resources. Each user is in the Public Group by default.
+- **Groups**: (list of Group references) Groups accessible to the current User. Because all current Groups are public, this
+  includes non-deleted public Groups even when the User is not a member. Each reference contains the Group ``id``, ``name``,
+  creator ``user``, and ``url``.
 - **Created On**: (timestamp) When the User was created.
 - **Last Modified On**: (timestamp) When the User was last modified.
 - **Last Login On**: (timestamp) When the User last logged in.
 - **Password Expires On**: (timestamp) When the User's password will expire.
+
+.. _reference-users-personal-group:
+
+Personal Group
+--------------
+
+User registration creates a public personal Group with the User as its creator, initial member, administrator, and owner.
+The Group's initial name matches the username, but later username changes do not automatically rename the Group. A
+personal Group is public in the current release; it is not a private workspace.
 
 .. _reference-users-registration-interfaces:
 
