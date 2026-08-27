@@ -441,6 +441,8 @@ def get_one_latest_child_snapshot(
     parent_snapshot_fk: typing.Any,
     child_snapshot_fk: typing.Any,
     deletion_policy: DeletionPolicy,
+    *,
+    parent_resource_type: EntityType,
 ) -> ResourceT:
     """
     Get the latest child snapshot scoped to the latest parent snapshot.
@@ -455,6 +457,7 @@ def get_one_latest_child_snapshot(
         child_resource_id: The child resource ID
         parent_class: The ResourceSnapshot subclass representing the parent type
         parent_resource_id: The parent resource ID
+        parent_resource_type: The expected parent entity type
         association_class: The ORM class for the snapshot association table
         parent_snapshot_fk: The association column referencing the parent snapshot
         child_snapshot_fk: The association column referencing the child snapshot
@@ -478,6 +481,7 @@ def get_one_latest_child_snapshot(
         session,
         parent_resource_id,
         deletion_policy=DeletionPolicy.NOT_DELETED,
+        resource_type=parent_resource_type,
     )
 
     parent_resource = sao.aliased(m.Resource)
@@ -535,6 +539,8 @@ def get_latest_child_snapshots(
     child_class: typing.Type[ResourceT],
     parent: m.Resource | m.ResourceSnapshot | int,
     deletion_policy: DeletionPolicy,
+    *,
+    parent_resource_type: EntityType,
 ) -> Sequence[ResourceT]:
     """
     Get the children of the given resource as their latest snapshots.  If
@@ -550,6 +556,7 @@ def get_latest_child_snapshots(
             value
         deletion_policy: Whether to look at deleted child resources,
             non-deleted resources, or all resources
+        parent_resource_type: The expected parent entity type
 
     Returns:
         The child snapshots
@@ -563,6 +570,7 @@ def get_latest_child_snapshots(
         session,
         parent,
         deletion_policy=DeletionPolicy.ANY,
+        resource_type=parent_resource_type,
     )
 
     child_resources: Sequence[m.Resource | int]
@@ -797,6 +805,8 @@ def append_resource_children(
     child_class: typing.Type[ResourceT],
     parent: m.Resource | m.ResourceSnapshot | int,
     new_children: Iterable[m.Resource | ResourceT | int],
+    *,
+    parent_resource_type: EntityType,
 ) -> Sequence[ResourceT]:
     """
     Add the given children to the given parent.
@@ -808,6 +818,7 @@ def append_resource_children(
         parent: A resource, snapshot, or resource_id integer primary key
             value
         new_children: The children to add
+        parent_resource_type: The expected parent entity type
 
     Returns:
         The complete list of resulting children, as latest snapshots (including
@@ -818,11 +829,21 @@ def append_resource_children(
         EntityDeletedError: if parent or any new child is deleted
     """
 
+    assert_resource_exists(
+        session,
+        parent,
+        DeletionPolicy.NOT_DELETED,
+        resource_type=parent_resource_type,
+    )
     parent = get_one_resource(session, parent, DeletionPolicy.NOT_DELETED)
 
     assert_resources_exist(session, new_children, DeletionPolicy.NOT_DELETED)
     existing_child_snaps = get_latest_child_snapshots(
-        session, child_class, parent, DeletionPolicy.ANY
+        session,
+        child_class,
+        parent,
+        DeletionPolicy.ANY,
+        parent_resource_type=parent_resource_type,
     )
 
     new_child_ids = {get_resource_id(new_child) for new_child in new_children}

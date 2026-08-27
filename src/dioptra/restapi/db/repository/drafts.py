@@ -348,6 +348,8 @@ class DraftsRepository:
         self,
         user: User | int,
         resource: Resource | ResourceSnapshot | int,
+        *,
+        resource_type: EntityType,
     ) -> DraftResource | None:
         """
         Get the first draft modification created by the given user, of the
@@ -357,6 +359,7 @@ class DraftsRepository:
             user: A User object or user_id integer primary key value
             resource: A resource, snapshot, or resource_id integer primary key
                 value
+            resource_type: The expected entity type of the resource
 
         Returns:
             A DraftResource, or None if one was not found
@@ -367,7 +370,12 @@ class DraftsRepository:
         """
 
         assert_user_exists(self._session, user, DeletionPolicy.NOT_DELETED)
-        assert_resource_exists(self._session, resource, DeletionPolicy.NOT_DELETED)
+        assert_resource_exists(
+            self._session,
+            resource,
+            DeletionPolicy.NOT_DELETED,
+            resource_type=resource_type,
+        )
 
         user_id = get_user_id(user)
         resource_id = get_resource_id(resource)
@@ -384,6 +392,8 @@ class DraftsRepository:
         self,
         resource: Resource | ResourceSnapshot | int,
         except_user: User | int | None = None,
+        *,
+        resource_type: EntityType,
     ) -> int:
         """
         Get the number of draft modifications of the given resource, which
@@ -393,6 +403,7 @@ class DraftsRepository:
             resource: The resource whose drafts should be counted
             except_user: The user whose drafts should not be counted; None
                 to count them all
+            resource_type: The expected entity type of the resource
 
         Returns:
             A draft count
@@ -407,7 +418,12 @@ class DraftsRepository:
         if except_user is not None:
             assert_user_exists(self._session, except_user, DeletionPolicy.NOT_DELETED)
 
-        assert_resource_exists(self._session, resource, DeletionPolicy.NOT_DELETED)
+        assert_resource_exists(
+            self._session,
+            resource,
+            DeletionPolicy.NOT_DELETED,
+            resource_type=resource_type,
+        )
 
         resource_id = get_resource_id(resource)
 
@@ -440,6 +456,8 @@ class DraftsRepository:
         base_resource_id: int | None = None,
         page_start: int = 0,
         page_length: int = -1,
+        *,
+        base_resource_type: EntityType | None = None,
     ) -> tuple[Sequence[DraftResource], int]:
         """
         Get some drafts according to search criteria.
@@ -455,6 +473,7 @@ class DraftsRepository:
             page_start: A row index where the returned page should start
             page_length: A row count representing the page length; use <= 0
                 for unlimited length
+            base_resource_type: The expected base resource entity type
 
         Returns:
             A 2-tuple including a page of DraftResource objects, and a count
@@ -482,7 +501,10 @@ class DraftsRepository:
 
         if base_resource_id is not None:
             assert_resource_exists(
-                self._session, base_resource_id, DeletionPolicy.NOT_DELETED
+                self._session,
+                base_resource_id,
+                DeletionPolicy.NOT_DELETED,
+                resource_type=base_resource_type,
             )
 
         filters = [
