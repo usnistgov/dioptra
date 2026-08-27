@@ -243,7 +243,7 @@ def get_one_resource(
 
     stmt = sa.select(m.Resource).where(m.Resource.resource_id == resource_id)
     if lock_for_update:
-        stmt = stmt.with_for_update()
+        stmt = stmt.with_for_update(of=m.Resource)
     resource_obj = session.scalar(stmt)
 
     if resource_obj is None:
