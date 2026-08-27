@@ -759,7 +759,8 @@ class DynamicGlobalParametersEntrypoint(Resource):
 
         entrypoint_id = id
         entrypoint_snapshot_id = snapshotId
-        swap_choices = request.parsed_query_params["swaps"]  # type: ignore
+        parsed_query_params = request.parsed_query_params  # type: ignore
+        swap_choices = parsed_query_params.get("swaps", {})
 
         return self._dynamic_global_parameters_service.get_params(
             entrypoint_id=entrypoint_id,
