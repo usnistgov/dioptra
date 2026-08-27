@@ -487,7 +487,9 @@ def test_drafts_create_draft_resource_invalid_base_resource_type(
     )
 
     with pytest.raises(e.DraftBaseInvalidError):
-        drafts_repo.create_draft_resource(draft)
+        drafts_repo.create_draft_resource(
+            draft, expected_base_resource_type=EntityType.ENTRY_POINT
+        )
 
 
 def test_drafts_create_draft_modification(
@@ -937,6 +939,7 @@ def test_drafts_get_modification_by_user(drafts_repo, draft_stuff):
     found_draft = drafts_repo.get_draft_modification_by_user(
         draft.creator,
         queue,
+        resource_type=EntityType.QUEUE,
     )
 
     assert found_draft is not None
@@ -945,6 +948,7 @@ def test_drafts_get_modification_by_user(drafts_repo, draft_stuff):
     found_draft = drafts_repo.get_draft_modification_by_user(
         draft.creator.user_id,
         queue.resource_id,
+        resource_type=EntityType.QUEUE,
     )
 
     assert found_draft is not None
@@ -958,6 +962,7 @@ def test_drafts_get_modification_by_user_user_not_exist(drafts_repo, draft_stuff
         drafts_repo.get_draft_modification_by_user(
             999999,
             queue,
+            resource_type=EntityType.QUEUE,
         )
 
 
@@ -987,6 +992,7 @@ def test_drafts_get_modification_by_user_user_deleted(
         drafts_repo.get_draft_modification_by_user(
             user2,
             queue,
+            resource_type=EntityType.QUEUE,
         )
 
 
@@ -997,7 +1003,24 @@ def test_drafts_get_modification_by_user_resource_not_exist(drafts_repo, draft_s
         drafts_repo.get_draft_modification_by_user(
             draft.creator,
             999999,
+            resource_type=EntityType.QUEUE,
         )
+
+
+def test_drafts_get_modification_by_user_rejects_wrong_resource_type(
+    drafts_repo, draft_stuff
+):
+    draft = draft_stuff["draft_mods"][1]
+    base_resource = draft_stuff["base_resource"]
+
+    with pytest.raises(e.EntityDoesNotExistError) as exc_info:
+        drafts_repo.get_draft_modification_by_user(
+            draft.creator,
+            base_resource.resource_id,
+            resource_type=EntityType.QUEUE,
+        )
+
+    assert exc_info.value.entity_type is EntityType.QUEUE
 
 
 def test_drafts_get_modification_by_user_resource_deleted(
@@ -1014,6 +1037,7 @@ def test_drafts_get_modification_by_user_resource_deleted(
         drafts_repo.get_draft_modification_by_user(
             draft.creator,
             queue,
+            resource_type=EntityType.QUEUE,
         )
 
 
@@ -1035,22 +1059,31 @@ def test_drafts_get_modification_by_user_not_found(
     db_session.add(user2)
     db_session.commit()
 
-    found_draft = drafts_repo.get_draft_modification_by_user(user2, queue)
+    found_draft = drafts_repo.get_draft_modification_by_user(
+        user2, queue, resource_type=EntityType.QUEUE
+    )
     assert found_draft is None
 
 
 def test_drafts_get_num_draft_modifications(drafts_repo, draft_stuff):
 
-    num = drafts_repo.get_num_draft_modifications(draft_stuff["queues"][0][0].resource)
-
-    assert num == 1
-
-    num = drafts_repo.get_num_draft_modifications(draft_stuff["queues"][0][0])
+    num = drafts_repo.get_num_draft_modifications(
+        draft_stuff["queues"][0][0].resource,
+        resource_type=EntityType.QUEUE,
+    )
 
     assert num == 1
 
     num = drafts_repo.get_num_draft_modifications(
-        draft_stuff["queues"][0][0].resource_id
+        draft_stuff["queues"][0][0],
+        resource_type=EntityType.QUEUE,
+    )
+
+    assert num == 1
+
+    num = drafts_repo.get_num_draft_modifications(
+        draft_stuff["queues"][0][0].resource_id,
+        resource_type=EntityType.QUEUE,
     )
 
     assert num == 1
@@ -1061,29 +1094,49 @@ def test_drafts_get_num_draft_modifications_except(drafts_repo, draft_stuff):
     # alpha created the groupa draft mods, so excluding him, there should be
     # none found.
     num = drafts_repo.get_num_draft_modifications(
-        draft_stuff["queues"][0][0].resource, except_user=draft_stuff["alpha"]
+        draft_stuff["queues"][0][0].resource,
+        except_user=draft_stuff["alpha"],
+        resource_type=EntityType.QUEUE,
     )
 
     assert num == 0
 
     num = drafts_repo.get_num_draft_modifications(
-        draft_stuff["queues"][0][0].resource, except_user=draft_stuff["alpha"].user_id
+        draft_stuff["queues"][0][0].resource,
+        except_user=draft_stuff["alpha"].user_id,
+        resource_type=EntityType.QUEUE,
     )
 
     assert num == 0
 
     # excluding a different user, 1 should be found
     num = drafts_repo.get_num_draft_modifications(
-        draft_stuff["queues"][0][0].resource, except_user=draft_stuff["dixon"]
+        draft_stuff["queues"][0][0].resource,
+        except_user=draft_stuff["dixon"],
+        resource_type=EntityType.QUEUE,
     )
 
     assert num == 1
 
     num = drafts_repo.get_num_draft_modifications(
-        draft_stuff["queues"][0][0].resource, except_user=draft_stuff["dixon"].user_id
+        draft_stuff["queues"][0][0].resource,
+        except_user=draft_stuff["dixon"].user_id,
+        resource_type=EntityType.QUEUE,
     )
 
     assert num == 1
+
+
+def test_drafts_get_num_modifications_rejects_wrong_resource_type(
+    drafts_repo, draft_stuff
+):
+    with pytest.raises(e.EntityDoesNotExistError) as exc_info:
+        drafts_repo.get_num_draft_modifications(
+            draft_stuff["base_resource"].resource_id,
+            resource_type=EntityType.QUEUE,
+        )
+
+    assert exc_info.value.entity_type is EntityType.QUEUE
 
 
 def test_drafts_get_by_filters_draft_type(drafts_repo, draft_stuff):
@@ -1221,6 +1274,7 @@ def test_drafts_get_by_filters_base_resource(drafts_repo, draft_stuff):
         draft_stuff["dell"],
         None,
         draft_stuff["base_resource"].resource_id,
+        base_resource_type=EntityType.ENTRY_POINT,
     )
 
     assert len(drafts) == 10
@@ -1236,16 +1290,35 @@ def test_drafts_get_by_filters_base_resource_not_found(drafts_repo, draft_stuff)
             None,
             # bad base resource ID
             999999,
+            base_resource_type=EntityType.ENTRY_POINT,
         )
+
+
+def test_drafts_get_by_filters_rejects_wrong_base_resource_type(
+    drafts_repo, draft_stuff
+):
+    queue = draft_stuff["queues"][0][0]
+
+    with pytest.raises(e.EntityDoesNotExistError) as exc_info:
+        drafts_repo.get_by_filters_paged(
+            DraftType.ANY,
+            "queue",
+            draft_stuff["abi"],
+            None,
+            queue.resource_id,
+            base_resource_type=EntityType.ENTRY_POINT,
+        )
+
+    assert exc_info.value.entity_type is EntityType.ENTRY_POINT
 
 
 def test_drafts_get_by_filters_base_resource_deleted(
     db_session: DBSession, drafts_repo, draft_stuff
 ):
 
-    queue_resource = draft_stuff["queues"][0][0].resource
+    base_resource = draft_stuff["base_resource"]
 
-    delete_lock = m.ResourceLock(resource_lock_types.DELETE, queue_resource)
+    delete_lock = m.ResourceLock(resource_lock_types.DELETE, base_resource.resource)
     db_session.add(delete_lock)
     db_session.commit()
 
@@ -1256,7 +1329,8 @@ def test_drafts_get_by_filters_base_resource_deleted(
             draft_stuff["abi"],
             None,
             # deleted base resource ID
-            queue_resource.resource_id,
+            base_resource.resource_id,
+            base_resource_type=EntityType.ENTRY_POINT,
         )
 
 
