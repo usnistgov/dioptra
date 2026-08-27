@@ -106,6 +106,7 @@ class ResourceDraftsService(object):
             base_resource_id,
             page_index,
             page_length,
+            base_resource_type=self._base_resource_type,
         )
 
         return drafts, total_num_drafts
@@ -323,6 +324,7 @@ class ResourceIdDraftService(object):
             # a service.
             current_user,
             resource_id,
+            resource_type=self._resource_type,
         )
 
         if draft is None and error_if_not_found:
@@ -331,6 +333,7 @@ class ResourceIdDraftService(object):
         num_other_drafts = self._uow.drafts_repo.get_num_draft_modifications(
             resource_id,
             current_user,
+            resource_type=self._resource_type,
         )
 
         return draft, num_other_drafts
@@ -377,6 +380,7 @@ class ResourceIdDraftService(object):
             # a service.
             resource,
             current_user,
+            resource_type=self._resource_type,
         )
 
         draft_payload = {
