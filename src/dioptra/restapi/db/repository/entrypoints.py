@@ -296,6 +296,7 @@ class EntrypointRepository:
             Queue,
             entrypoint,
             deletion_policy,
+            parent_resource_type=EntityType.ENTRY_POINT,
         )
 
     def create_queues(
@@ -339,7 +340,13 @@ class EntrypointRepository:
             EntityDoesNotExistError: if parent or any new child does not exist
             EntityDeletedError: if parent or any new child is deleted
         """
-        snaps = utils.append_resource_children(self.session, Queue, entrypoint, queues)
+        snaps = utils.append_resource_children(
+            self.session,
+            Queue,
+            entrypoint,
+            queues,
+            parent_resource_type=EntityType.ENTRY_POINT,
+        )
         return [snap for snap in snaps if isinstance(snap, Queue)]
 
     def set_queues(
