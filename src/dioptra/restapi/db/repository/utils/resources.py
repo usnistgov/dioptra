@@ -225,7 +225,7 @@ def get_one_resource(
         deletion_policy: Whether to look at deleted resources, non-deleted
             resources, or all resources
         lock_for_update: Whether to lock the resource row until the current
-            transaction completes. 
+            transaction completes.
 
     Returns:
         A resource
@@ -745,9 +745,7 @@ def unlink_child(
     Raises:
         EntityDoesNotExistError: if parent or child do not exist
     """
-    parent = get_one_resource(
-        session, parent, DeletionPolicy.ANY, lock_for_update=True
-    )
+    parent = get_one_resource(session, parent, DeletionPolicy.ANY, lock_for_update=True)
     child = get_one_resource(session, child, DeletionPolicy.ANY)
 
     if child.resource_type != child_resource_type.db_table_name:
@@ -777,9 +775,7 @@ def unlink_parents(
         EntityDoesNotExistError: if the child do not exist
     """
 
-    child = get_one_resource(
-        session, child, DeletionPolicy.ANY, lock_for_update=True
-    )
+    child = get_one_resource(session, child, DeletionPolicy.ANY, lock_for_update=True)
     child.parents.clear()
 
 
@@ -800,9 +796,7 @@ def unlink_children(
         child: A resource, snapshot, or resource_id integer primary key
             value
     """
-    parent = get_one_resource(
-        session, parent, DeletionPolicy.ANY, lock_for_update=True
-    )
+    parent = get_one_resource(session, parent, DeletionPolicy.ANY, lock_for_update=True)
 
     resource_ids = {child.resource_id for child in parent.children}
     if resource_type is EntityType.NONE:
