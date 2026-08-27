@@ -28,6 +28,7 @@ from dioptra.restapi.db.models.constants import (
     resource_lock_types,
     user_lock_types,
 )
+from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.shared.search_parser import parse_search_text
 
 
@@ -1020,6 +1021,24 @@ def test_plugin_get_one_file_wrong_parent(db_session: DBSession, account, plugin
         )
 
 
+def test_plugin_get_one_file_rejects_non_plugin_parent(
+    db_session: DBSession, account, fake_data, plugin_repo
+):
+    plugin = create_plugin_with_files(db_session, plugin_repo, account)
+    queue = fake_data.queue(account.user, account.group)
+    db_session.add(queue)
+    db_session.commit()
+
+    with pytest.raises(errors.EntityDoesNotExistError) as exc_info:
+        plugin_repo.get_one_file(
+            queue.resource_id,
+            plugin.plugin_files[0].resource_id,
+            utils.DeletionPolicy.NOT_DELETED,
+        )
+
+    assert exc_info.value.entity_type is EntityType.PLUGIN
+
+
 def test_plugin_get_one_file_deleted(db_session: DBSession, account, plugin_repo):
     plugin = create_plugin_with_files(db_session, plugin_repo, account)
     plugin_file = plugin.plugin_files[0]
@@ -1243,6 +1262,26 @@ def test_plugin_get_by_filters_paged_files_only_returns_parent_files(
 
     assert [plugin_file.filename for plugin_file in result] == ["plugin1.py"]
     assert count == 1
+
+
+def test_plugin_get_by_filters_paged_files_rejects_non_plugin_parent(
+    db_session: DBSession, account, fake_data, plugin_repo
+):
+    queue = fake_data.queue(account.user, account.group)
+    db_session.add(queue)
+    db_session.commit()
+
+    with pytest.raises(errors.EntityDoesNotExistError) as exc_info:
+        plugin_repo.get_by_filters_paged_files(
+            queue.resource_id,
+            [],
+            0,
+            10,
+            None,
+            False,
+        )
+
+    assert exc_info.value.entity_type is EntityType.PLUGIN
 
 
 def test_plugin_get_by_filters_paged_files_invalid_filter(

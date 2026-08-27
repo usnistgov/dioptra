@@ -535,6 +535,7 @@ class PluginRepository:
             m.PluginPluginFile.plugin_resource_snapshot_id,
             m.PluginPluginFile.plugin_file_resource_snapshot_id,
             deletion_policy,
+            parent_resource_type=EntityType.PLUGIN,
         )
 
     def get_by_filters_paged_files(
@@ -577,7 +578,10 @@ class PluginRepository:
         )
 
         utils.assert_resource_exists(
-            self.session, plugin_resource_id, utils.DeletionPolicy.ANY
+            self.session,
+            plugin_resource_id,
+            utils.DeletionPolicy.ANY,
+            resource_type=EntityType.PLUGIN,
         )
 
         plugin_subq = (

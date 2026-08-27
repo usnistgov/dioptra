@@ -960,6 +960,24 @@ def test_get_metric_snapshots_for_deleted_job(
     )
 
 
+def test_job_child_endpoints_reject_queue_id(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+) -> None:
+    queue_id = registered_queues["queue1"]["id"]
+
+    responses = (
+        dioptra_client.jobs.get_metrics_by_id(job_id=queue_id),
+        dioptra_client.jobs.get_metrics_snapshots_by_id(
+            job_id=queue_id, metric_name="accuracy"
+        ),
+        dioptra_client.jobs.get_logs_by_id(job_id=queue_id),
+    )
+
+    assert all(response.status_code == HTTPStatus.NOT_FOUND for response in responses)
+
+
 def test_metrics_special_float_values(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],

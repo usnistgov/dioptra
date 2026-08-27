@@ -716,6 +716,22 @@ def test_assert_resource_exists_bad_id(db_session):
         utils.assert_resource_exists(db_session, 999999, utils.DeletionPolicy.DELETED)
 
 
+def test_assert_resource_exists_wrong_resource_type(db_session, fake_data, account):
+    queue = fake_data.queue(account.user, account.group)
+    db_session.add(queue)
+    db_session.commit()
+
+    with pytest.raises(EntityDoesNotExistError) as exc_info:
+        utils.assert_resource_exists(
+            db_session,
+            queue.resource_id,
+            utils.DeletionPolicy.ANY,
+            EntityType.JOB,
+        )
+
+    assert exc_info.value.entity_type is EntityType.JOB
+
+
 def test_assert_resource_does_not_exist(db_session, resource_status, deletion_policy):
     snap, status = resource_status
 
@@ -1400,7 +1416,11 @@ def test_get_latest_child_snapshots(db_session, resource_parent_combo, deletion_
     )
 
     latest_snaps = utils.get_latest_child_snapshots(
-        db_session, child_class, parent, deletion_policy
+        db_session,
+        child_class,
+        parent,
+        deletion_policy,
+        parent_resource_type=EntityType.get_from_db_table_name(parent.resource_type),
     )
 
     assert _same_snapshots(latest_snaps, expected_latest_snaps)
@@ -1413,7 +1433,27 @@ def test_get_latest_child_snapshots_parent_not_exist(db_session, deletion_policy
             models.Queue,
             999999,
             deletion_policy,
+            parent_resource_type=EntityType.EXPERIMENT,
         )
+
+
+def test_get_latest_child_snapshots_rejects_wrong_parent_type(
+    db_session, fake_data, account
+):
+    queue = fake_data.queue(account.user, account.group)
+    db_session.add(queue)
+    db_session.commit()
+
+    with pytest.raises(EntityDoesNotExistError) as exc_info:
+        utils.get_latest_child_snapshots(
+            db_session,
+            models.EntryPoint,
+            queue.resource_id,
+            utils.DeletionPolicy.ANY,
+            parent_resource_type=EntityType.EXPERIMENT,
+        )
+
+    assert exc_info.value.entity_type is EntityType.EXPERIMENT
 
 
 def test_get_latest_child_snapshots_parent_deleted(
@@ -1429,6 +1469,7 @@ def test_get_latest_child_snapshots_parent_deleted(
         models.Queue,
         exp,
         deletion_policy,
+        parent_resource_type=EntityType.EXPERIMENT,
     )
 
 
@@ -1830,11 +1871,21 @@ def test_append_resource_children(
 
     if exc:
         with pytest.raises(exc):
-            utils.append_resource_children(db_session, snap_class, exp, snaps)
+            utils.append_resource_children(
+                db_session,
+                snap_class,
+                exp,
+                snaps,
+                parent_resource_type=EntityType.EXPERIMENT,
+            )
 
     else:
         result_children = utils.append_resource_children(
-            db_session, snap_class, exp, snaps
+            db_session,
+            snap_class,
+            exp,
+            snaps,
+            parent_resource_type=EntityType.EXPERIMENT,
         )
         db_session.commit()
 
@@ -1844,7 +1895,11 @@ def test_append_resource_children(
         # children and will not add the same child twice, we should be able
         # to append the children again with no effect.
         result_children = utils.append_resource_children(
-            db_session, snap_class, exp, snaps
+            db_session,
+            snap_class,
+            exp,
+            snaps,
+            parent_resource_type=EntityType.EXPERIMENT,
         )
         db_session.commit()
 
@@ -1853,7 +1908,32 @@ def test_append_resource_children(
 
 def test_append_resource_children_parent_not_exist(db_session):
     with pytest.raises(EntityDoesNotExistError):
-        utils.append_resource_children(db_session, models.Queue, 999999, [])
+        utils.append_resource_children(
+            db_session,
+            models.Queue,
+            999999,
+            [],
+            parent_resource_type=EntityType.EXPERIMENT,
+        )
+
+
+def test_append_resource_children_rejects_wrong_parent_type(
+    db_session, fake_data, account
+):
+    queue = fake_data.queue(account.user, account.group)
+    db_session.add(queue)
+    db_session.commit()
+
+    with pytest.raises(EntityDoesNotExistError) as exc_info:
+        utils.append_resource_children(
+            db_session,
+            models.EntryPoint,
+            queue.resource_id,
+            [],
+            parent_resource_type=EntityType.EXPERIMENT,
+        )
+
+    assert exc_info.value.entity_type is EntityType.EXPERIMENT
 
 
 def test_append_resource_children_parent_deleted(db_session, fake_data, account):
@@ -1863,7 +1943,13 @@ def test_append_resource_children_parent_deleted(db_session, fake_data, account)
     db_session.commit()
 
     with pytest.raises(EntityDeletedError):
-        utils.append_resource_children(db_session, models.EntryPoint, exp, [])
+        utils.append_resource_children(
+            db_session,
+            models.EntryPoint,
+            exp,
+            [],
+            parent_resource_type=EntityType.EXPERIMENT,
+        )
 
 
 def test_unlink_child(db_session, fake_data, account):

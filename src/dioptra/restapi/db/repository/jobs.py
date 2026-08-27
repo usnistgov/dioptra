@@ -438,7 +438,9 @@ class JobRepository:
         Raises:
             EntityDoesNotExistError: If the job does not exist.
         """
-        utils.assert_resource_exists(self.session, job_id, DeletionPolicy.ANY)
+        utils.assert_resource_exists(
+            self.session, job_id, DeletionPolicy.ANY, EntityType.JOB
+        )
 
         stmt = select(JobMetric).where(
             JobMetric.is_latest, JobMetric.job_resource_id == job_id
@@ -491,7 +493,9 @@ class JobRepository:
             EntityDoesNotExistError: If the job does not exist.
             EntityDeletedError: If the job is deleted.
         """
-        utils.assert_resource_exists(self.session, job_id, DeletionPolicy.NOT_DELETED)
+        utils.assert_resource_exists(
+            self.session, job_id, DeletionPolicy.NOT_DELETED, EntityType.JOB
+        )
 
         stmt = select(JobMetric).where(
             JobMetric.job_resource_id == job_id,
@@ -514,7 +518,9 @@ class JobRepository:
         Raises:
             EntityDoesNotExistError: If the job does not exist.
         """
-        utils.assert_resource_exists(self.session, job_id, DeletionPolicy.ANY)
+        utils.assert_resource_exists(
+            self.session, job_id, DeletionPolicy.ANY, EntityType.JOB
+        )
 
         stmt = (
             select(JobMetric)
@@ -552,7 +558,9 @@ class JobRepository:
         Raises:
             EntityDoesNotExistError: If the job does not exist.
         """
-        utils.assert_resource_exists(self.session, job_id, DeletionPolicy.ANY)
+        utils.assert_resource_exists(
+            self.session, job_id, DeletionPolicy.ANY, EntityType.JOB
+        )
 
         count_stmt = (
             select(func.count())
@@ -645,7 +653,9 @@ class JobRepository:
             each complying with JobLogRecordSchema, and (2) the total number of
             records across all pages.
         """
-        utils.assert_resource_exists(self.session, job_id, DeletionPolicy.ANY)
+        utils.assert_resource_exists(
+            self.session, job_id, DeletionPolicy.ANY, EntityType.JOB
+        )
         sql_filter = utils.construct_sql_query_filters(
             filters, JobRepository.SEARCHABLE_LOG_FIELDS
         )

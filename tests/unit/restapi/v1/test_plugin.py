@@ -1674,6 +1674,25 @@ def test_manage_new_plugin_file_drafts(
     )
 
 
+def test_plugin_file_drafts_reject_wrong_resource_types(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_plugins: dict[str, Any],
+    registered_queues: dict[str, Any],
+) -> None:
+    plugin_id = registered_plugins["plugin1"]["id"]
+    queue_id = registered_queues["queue1"]["id"]
+
+    responses = (
+        dioptra_client.plugins.files.new_resource_drafts.get(queue_id),
+        dioptra_client.plugins.files.modify_resource_drafts.get_by_id(
+            plugin_id, plugin_id
+        ),
+    )
+
+    assert all(response.status_code == HTTPStatus.NOT_FOUND for response in responses)
+
+
 def test_manage_plugin_snapshots(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],

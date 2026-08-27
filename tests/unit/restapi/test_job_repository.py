@@ -507,7 +507,10 @@ class TestJobStatusTransition:
 
         assert new_job.status == "started"
         assert new_job.resource_id == job.resource_id
-        assert job_repo.get_one(job.resource_id, utils.DeletionPolicy.NOT_DELETED) == new_job
+        assert (
+            job_repo.get_one(job.resource_id, utils.DeletionPolicy.NOT_DELETED)
+            == new_job
+        )
         assert len(job.resource.versions) == 2
 
     def test_job_set_status_invalid_transition(
@@ -1394,6 +1397,25 @@ class TestJobMetrics:
         result = job_repo.get_metric_history(job.resource_id, "accuracy")
         assert result == [metric4, metric2, metric1]
 
+    def test_metric_reads_reject_non_job_resource(
+        self, db_session: DBSession, account, fake_data, job_repo
+    ):
+        queue = fake_data.queue(account.user, account.group)
+        db_session.add(queue)
+        db_session.commit()
+        queue_id = queue.resource_id
+
+        metric_reads = (
+            lambda: job_repo.get_latest_metrics(queue_id),
+            lambda: job_repo.get_metric_step(queue_id, "accuracy", 1),
+            lambda: job_repo.get_metric_history(queue_id, "accuracy"),
+            lambda: job_repo.get_metric_history_paged(queue_id, "accuracy", 0, 10),
+        )
+
+        for metric_read in metric_reads:
+            with pytest.raises(errors.EntityDoesNotExistError):
+                metric_read()
+
 
 class TestJobLogs:
     """Tests for JobRepository log methods"""
@@ -1468,6 +1490,23 @@ class TestJobLogs:
         )
         assert count == 2
         assert len(result) == 2
+
+    def test_get_logs_rejects_non_job_resource(
+        self, db_session: DBSession, account, fake_data, job_repo
+    ):
+        queue = fake_data.queue(account.user, account.group)
+        db_session.add(queue)
+        db_session.commit()
+
+        with pytest.raises(errors.EntityDoesNotExistError):
+            job_repo.get_logs(
+                job_id=queue.resource_id,
+                filters=[],
+                page_start=0,
+                page_length=10,
+                sort_by=None,
+                descending=False,
+            )
 
     def test_get_logs_with_severity_filter(
         self, db_session: DBSession, account, job_repo, experiment_with_dependencies
