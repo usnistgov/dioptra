@@ -19,6 +19,8 @@ from types import TracebackType
 from typing import Type
 
 from injector import inject
+from psycopg2.errors import UniqueViolation
+from sqlalchemy.exc import DatabaseError, IntegrityError
 
 from dioptra.restapi.db.db import db
 from dioptra.restapi.db.repository.drafts import DraftsRepository
@@ -28,6 +30,10 @@ from dioptra.restapi.db.repository.groups import GroupRepository
 from dioptra.restapi.db.repository.queues import QueueRepository
 from dioptra.restapi.db.repository.types import TypeRepository
 from dioptra.restapi.db.repository.users import UserRepository
+from dioptra.restapi.errors import (
+    BackendDatabaseError,
+    BackendDatabaseErrorAlreadyExists,
+)
 
 
 class UnitOfWork(contextlib.AbstractContextManager):
@@ -73,7 +79,16 @@ class UnitOfWork(contextlib.AbstractContextManager):
         if exc_type:
             self.rollback()
 
-        self.commit()
+        try:
+            self.commit()
+        except IntegrityError as e:
+            if (
+                isinstance(e.orig, UniqueViolation)
+                and e.orig.diag.constraint_name == "pk_resource_dependencies"
+            ):
+                raise BackendDatabaseErrorAlreadyExists(str(e.orig)) from e
+        except DatabaseError as e:
+            raise BackendDatabaseError from e
 
         self._do_commit = True
 
