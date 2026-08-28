@@ -212,8 +212,6 @@ def get_one_resource(
     session: CompatibleSession[S],
     resource: m.Resource | m.ResourceSnapshot | int,
     deletion_policy: DeletionPolicy,
-    *,
-    lock_for_update: bool = False,
 ) -> m.Resource:
     """
     Get the a resource given the resource, resource snapshot, or resource ID; require
@@ -224,8 +222,6 @@ def get_one_resource(
         resource: A resource or resource snapshot or integer resource ID
         deletion_policy: Whether to look at deleted resources, non-deleted
             resources, or all resources
-        lock_for_update: Whether to lock the resource row until the current
-            transaction completes.
 
     Returns:
         A resource
@@ -242,8 +238,6 @@ def get_one_resource(
     resource_type = get_resource_type(resource)
 
     stmt = sa.select(m.Resource).where(m.Resource.resource_id == resource_id)
-    if lock_for_update:
-        stmt = stmt.with_for_update(of=m.Resource)
     resource_obj = session.scalar(stmt)
 
     if resource_obj is None:
@@ -265,8 +259,6 @@ def get_one_resource(
     # The above assert_exists() function would have raised an exception, so
     # latest can't be None here.
     assert resource_obj is not None
-    if lock_for_update:
-        session.expire(resource_obj, ["children"])
     return resource_obj
 
 
@@ -643,9 +635,7 @@ def set_resource_children(
 
     assert_resources_exist(session, new_children, DeletionPolicy.NOT_DELETED)
 
-    parent = get_one_resource(
-        session, parent, DeletionPolicy.NOT_DELETED, lock_for_update=True
-    )
+    parent = get_one_resource(session, parent, DeletionPolicy.NOT_DELETED)
 
     child_snaps = get_latest_snapshots(
         session,
@@ -692,9 +682,7 @@ def append_resource_children(
         EntityDeletedError: if parent or any new child is deleted
     """
 
-    parent = get_one_resource(
-        session, parent, DeletionPolicy.NOT_DELETED, lock_for_update=True
-    )
+    parent = get_one_resource(session, parent, DeletionPolicy.NOT_DELETED)
 
     assert_resources_exist(session, new_children, DeletionPolicy.NOT_DELETED)
     existing_child_snaps = get_latest_child_snapshots(
@@ -745,7 +733,7 @@ def unlink_child(
     Raises:
         EntityDoesNotExistError: if parent or child do not exist
     """
-    parent = get_one_resource(session, parent, DeletionPolicy.ANY, lock_for_update=True)
+    parent = get_one_resource(session, parent, DeletionPolicy.ANY)
     child = get_one_resource(session, child, DeletionPolicy.ANY)
 
     if child.resource_type != child_resource_type.db_table_name:
@@ -775,7 +763,7 @@ def unlink_parents(
         EntityDoesNotExistError: if the child do not exist
     """
 
-    child = get_one_resource(session, child, DeletionPolicy.ANY, lock_for_update=True)
+    child = get_one_resource(session, child, DeletionPolicy.ANY)
     child.parents.clear()
 
 
@@ -796,7 +784,7 @@ def unlink_children(
         child: A resource, snapshot, or resource_id integer primary key
             value
     """
-    parent = get_one_resource(session, parent, DeletionPolicy.ANY, lock_for_update=True)
+    parent = get_one_resource(session, parent, DeletionPolicy.ANY)
 
     resource_ids = {child.resource_id for child in parent.children}
     if resource_type is EntityType.NONE:
