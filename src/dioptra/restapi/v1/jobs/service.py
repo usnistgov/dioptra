@@ -29,6 +29,8 @@ from sqlalchemy.orm import aliased
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
+from dioptra.restapi.db.models.entry_points import EntryPoint
+from dioptra.restapi.db.models.jobs import Job, JobSwap
 from dioptra.restapi.errors import (
     BackendDatabaseError,
     DioptraError,
@@ -40,11 +42,17 @@ from dioptra.restapi.errors import (
     JobMlflowRunAlreadySetError,
     JobParameterMissingError,
     SortParameterValidationError,
+    SwapChoiceError,
+    UnspecifiedSwapsError,
 )
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.artifacts.snapshot import ArtifactSnapshotIdService
 from dioptra.restapi.v1.entity_types import EntityType
-from dioptra.restapi.v1.entrypoints.service import EntrypointIdService
+from dioptra.restapi.v1.entrypoints.service import (
+    EntrypointConfigService,
+    EntrypointIdService,
+    SwapsRetrievalService,
+)
 from dioptra.restapi.v1.experiments.service import ExperimentIdService
 from dioptra.restapi.v1.groups.service import GroupIdService
 from dioptra.restapi.v1.queues.service import QueueIdService
@@ -107,6 +115,7 @@ class JobService(object):
         entrypoint_id_service: EntrypointIdService,
         group_id_service: GroupIdService,
         artifact_snapshot_id_service: ArtifactSnapshotIdService,
+        swaps_retrieval_service: SwapsRetrievalService,
         rq_service: RQServiceV1,
     ) -> None:
         """Initialize the job service.
@@ -126,6 +135,7 @@ class JobService(object):
         self._artifact_snapshot_id_service = artifact_snapshot_id_service
         self._group_id_service = group_id_service
         self._rq_service = rq_service
+        self._swaps_retrieval_service = swaps_retrieval_service
 
     def create(
         self,
@@ -137,6 +147,7 @@ class JobService(object):
         description: str,
         timeout: str,
         entrypoint_snapshot_id: int | None = None,
+        swaps: list[dict[str, str]] | None = None,
         **kwargs,
     ) -> utils.JobDict:
         """Create a new job.
@@ -303,6 +314,11 @@ class JobService(object):
             job_resource=job_resource,
             queue=queue,
         )
+
+        new_job.job_swaps = self._build_job_swaps(
+            swaps, entrypoint=entrypoint, new_job=new_job
+        )
+
         db.session.commit()
         self._rq_service.submit(
             job_id=new_job.resource_id,
@@ -318,7 +334,71 @@ class JobService(object):
             job=new_job,
             artifacts=[],
             has_draft=False,
+            swap_task_names=_build_swap_task_name_lookup(
+                new_job, self._swaps_retrieval_service, log
+            ),
         )
+
+    def _build_job_swaps(
+        self,
+        swaps: list[dict[str, str]] | None,
+        entrypoint: EntryPoint,
+        new_job: Job,
+    ) -> list[JobSwap]:
+        swaps = swaps or []
+        job_swaps = []
+        swap_choice_errors = []
+        used_swaps = set()
+
+        retrieved_swaps = self._swaps_retrieval_service.get_swaps(
+            entrypoint_id=entrypoint.resource_id,
+            entrypoint_snapshot_id=entrypoint.resource_snapshot_id,
+        )
+
+        required_swaps = {s["swap_name"] for s in retrieved_swaps}
+        for swap in swaps:
+            swap_name = swap["swap_name"]
+            task_alias = swap["task_alias"]
+
+            # look up the corresponding object for this swap/choice combination
+            retrieved = next(
+                (
+                    s
+                    for s in retrieved_swaps
+                    if s["swap_name"] == swap_name and s["task_alias"] == task_alias
+                ),
+                None,
+            )
+
+            if not retrieved:
+                swap_choice_errors.append((swap_name, task_alias))
+            else:
+                job_swap = models.JobSwap(
+                    swap_name=swap["swap_name"],
+                    task_alias=swap["task_alias"],
+                )
+                job_swap.plugin_file_resource_snapshot_id = retrieved[
+                    "plugin_file_resource_snapshot_id"
+                ]
+                job_swap.job_resource_id = new_job.resource_id
+                job_swap.job = new_job
+                job_swaps.append(job_swap)
+
+                used_swaps.add(swap_name)
+
+        unused_swaps = required_swaps - used_swaps
+
+        if len(swap_choice_errors) > 0:
+            raise SwapChoiceError(
+                f"The following swap choices were invalid for the entrypoint: {swap_choice_errors}"
+            )
+
+        if len(unused_swaps) > 0:
+            raise UnspecifiedSwapsError(
+                f"The following swaps were required by the entrypoint but not specified: {unused_swaps}"
+            )
+
+        return job_swaps
 
     def _create_entrypoint_artifact_values(
         self,
@@ -476,11 +556,18 @@ class JobService(object):
             )
 
         jobs = list(db.session.scalars(jobs_stmt).all())
-        return _build_job_dict(jobs), total_num_jobs
+        return (
+            _build_job_dict(jobs, self._swaps_retrieval_service, log),
+            total_num_jobs,
+        )
 
 
 class JobIdService(object):
     """The service methods for registering and managing jobs by their unique id."""
+
+    @inject
+    def __init__(self, swaps_retrieval_service: SwapsRetrievalService) -> None:
+        self._swaps_retrieval_service = swaps_retrieval_service
 
     def get(
         self,
@@ -529,6 +616,9 @@ class JobIdService(object):
             job=job,
             artifacts=artifacts,
             has_draft=False,
+            swap_task_names=_build_swap_task_name_lookup(
+                job, self._swaps_retrieval_service, log
+            ),
         )
 
     def delete(self, job_id: int, **kwargs) -> dict[str, Any]:
@@ -603,6 +693,52 @@ class JobIdService(object):
             models.EntryPointArtifactParameterValue.job_resource_id == job_id,
         )
         return list(db.session.scalars(entry_point_artifact_values_stmt).unique().all())
+
+
+class JobConfigService(object):
+    """Service to retrieve the rendered YAML configuration for a Job."""
+
+    @inject
+    def __init__(
+        self,
+        entrypoint_config_service: EntrypointConfigService,
+    ) -> None:
+        self._entrypoint_config_service = entrypoint_config_service
+
+    def get(self, job_id: int, **kwargs) -> dict[str, Any]:
+        """Return the rendered YAML configuration dictionary for the given job.
+
+        Args:
+            job_id: The unique identifier of the Job.
+
+        Returns:
+            A dictionary matching JobConfigSchema.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+
+        job_stmt = (
+            select(models.Job)
+            .join(models.EntryPointJob)
+            .join(models.EntryPoint)
+            .where(models.Job.resource_id == job_id)
+        )
+        job = db.session.scalars(job_stmt).first()
+
+        if job is None:
+            raise EntityDoesNotExistError(EntityType.JOB, job_id=job_id)
+
+        swap_choices = {swap.swap_name: swap.task_alias for swap in job.job_swaps}
+
+        entrypoint = job.entry_point_job.entry_point
+
+        rendered: dict[str, Any] = self._entrypoint_config_service.get_config(
+            id=entrypoint.resource_id,
+            snapshotId=entrypoint.resource_snapshot_id,
+            log=log,
+            swap_choices=swap_choices,
+        )
+
+        return rendered
 
 
 class JobIdStatusService(object):
@@ -832,7 +968,10 @@ class ExperimentJobService(object):
 
     @inject
     def __init__(
-        self, experiment_id_service: ExperimentIdService, job_service: JobService
+        self,
+        experiment_id_service: ExperimentIdService,
+        job_service: JobService,
+        swaps_retrieval_service: SwapsRetrievalService,
     ) -> None:
         """Initialize the ExperimentIdJob service.
 
@@ -844,6 +983,7 @@ class ExperimentJobService(object):
         """
         self._experiment_id_service = experiment_id_service
         self._job_service = job_service
+        self._swaps_retrieval_service = swaps_retrieval_service
 
     def create(
         self,
@@ -855,6 +995,7 @@ class ExperimentJobService(object):
         description: str,
         timeout: str,
         entrypoint_snapshot_id: int | None = None,
+        swaps: list[dict[str, str]] | None = None,
         **kwargs,
     ) -> utils.JobDict:
         """Create a new job within an experiment.
@@ -883,6 +1024,7 @@ class ExperimentJobService(object):
             description=description,
             timeout=timeout,
             entrypoint_snapshot_id=entrypoint_snapshot_id,
+            swaps=swaps,
             log=log,
         )
 
@@ -986,7 +1128,10 @@ class ExperimentJobService(object):
             )
 
         jobs = list(db.session.scalars(jobs_stmt).all())
-        return _build_job_dict(jobs), total_num_jobs
+        return (
+            _build_job_dict(jobs, self._swaps_retrieval_service, log),
+            total_num_jobs,
+        )
 
 
 class ExperimentJobIdService(object):
@@ -1547,12 +1692,44 @@ class JobLogService(object):
         return records, total_count
 
 
-def _build_job_dict(jobs: list[models.Job]) -> list[utils.JobDict]:
+def _build_swap_task_name_lookup(
+    job: models.Job,
+    swaps_retrieval_service: SwapsRetrievalService,
+    logger: BoundLogger,
+) -> dict[tuple[int, str, str], str]:
+    if not job.job_swaps:
+        return {}
+
+    entrypoint = job.entry_point_job.entry_point
+    available_swaps = swaps_retrieval_service.get_swaps(
+        entrypoint_id=entrypoint.resource_id,
+        entrypoint_snapshot_id=entrypoint.resource_snapshot_id,
+        logger=logger,
+    )
+
+    return {
+        (
+            swap["plugin_file_resource_snapshot_id"],
+            swap["swap_name"],
+            swap["task_alias"],
+        ): swap["task_name"]
+        for swap in available_swaps
+    }
+
+
+def _build_job_dict(
+    jobs: list[models.Job],
+    swaps_retrieval_service: SwapsRetrievalService,
+    logger: BoundLogger,
+) -> list[utils.JobDict]:
     job_dicts: dict[int, utils.JobDict] = {
         job.resource_id: utils.JobDict(
             job=job,
             artifacts=[],
             has_draft=False,
+            swap_task_names=_build_swap_task_name_lookup(
+                job, swaps_retrieval_service, logger
+            ),
         )
         for job in jobs
     }
