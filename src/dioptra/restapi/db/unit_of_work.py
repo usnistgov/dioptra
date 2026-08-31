@@ -21,6 +21,7 @@ from typing import Type
 from injector import inject
 from psycopg2.errors import UniqueViolation
 from sqlalchemy.exc import DatabaseError, IntegrityError
+from sqlalchemy.orm.exc import StaleDataError
 
 from dioptra.restapi.db.db import db
 from dioptra.restapi.db.repository.drafts import DraftsRepository
@@ -33,6 +34,7 @@ from dioptra.restapi.db.repository.users import UserRepository
 from dioptra.restapi.errors import (
     BackendDatabaseError,
     BackendDatabaseErrorAlreadyExists,
+    BackendDatabaseErrorStaleData,
 )
 
 
@@ -87,6 +89,8 @@ class UnitOfWork(contextlib.AbstractContextManager):
                 and e.orig.diag.constraint_name == "pk_resource_dependencies"
             ):
                 raise BackendDatabaseErrorAlreadyExists(str(e.orig)) from e
+        except StaleDataError as e:
+            raise BackendDatabaseErrorStaleData(str(e)) from e
         except DatabaseError as e:
             raise BackendDatabaseError from e
 
