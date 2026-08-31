@@ -334,6 +334,9 @@ class JobService(object):
             job=new_job,
             artifacts=[],
             has_draft=False,
+            swap_task_names=_build_swap_task_name_lookup(
+                new_job, self._swaps_retrieval_service, log
+            ),
         )
 
     def _build_job_swaps(
@@ -553,11 +556,18 @@ class JobService(object):
             )
 
         jobs = list(db.session.scalars(jobs_stmt).all())
-        return _build_job_dict(jobs), total_num_jobs
+        return (
+            _build_job_dict(jobs, self._swaps_retrieval_service, log),
+            total_num_jobs,
+        )
 
 
 class JobIdService(object):
     """The service methods for registering and managing jobs by their unique id."""
+
+    @inject
+    def __init__(self, swaps_retrieval_service: SwapsRetrievalService) -> None:
+        self._swaps_retrieval_service = swaps_retrieval_service
 
     def get(
         self,
@@ -606,6 +616,9 @@ class JobIdService(object):
             job=job,
             artifacts=artifacts,
             has_draft=False,
+            swap_task_names=_build_swap_task_name_lookup(
+                job, self._swaps_retrieval_service, log
+            ),
         )
 
     def delete(self, job_id: int, **kwargs) -> dict[str, Any]:
@@ -955,7 +968,10 @@ class ExperimentJobService(object):
 
     @inject
     def __init__(
-        self, experiment_id_service: ExperimentIdService, job_service: JobService
+        self,
+        experiment_id_service: ExperimentIdService,
+        job_service: JobService,
+        swaps_retrieval_service: SwapsRetrievalService,
     ) -> None:
         """Initialize the ExperimentIdJob service.
 
@@ -967,6 +983,7 @@ class ExperimentJobService(object):
         """
         self._experiment_id_service = experiment_id_service
         self._job_service = job_service
+        self._swaps_retrieval_service = swaps_retrieval_service
 
     def create(
         self,
@@ -1111,7 +1128,10 @@ class ExperimentJobService(object):
             )
 
         jobs = list(db.session.scalars(jobs_stmt).all())
-        return _build_job_dict(jobs), total_num_jobs
+        return (
+            _build_job_dict(jobs, self._swaps_retrieval_service, log),
+            total_num_jobs,
+        )
 
 
 class ExperimentJobIdService(object):
@@ -1672,12 +1692,44 @@ class JobLogService(object):
         return records, total_count
 
 
-def _build_job_dict(jobs: list[models.Job]) -> list[utils.JobDict]:
+def _build_swap_task_name_lookup(
+    job: models.Job,
+    swaps_retrieval_service: SwapsRetrievalService,
+    logger: BoundLogger,
+) -> dict[tuple[int, str, str], str]:
+    if not job.job_swaps:
+        return {}
+
+    entrypoint = job.entry_point_job.entry_point
+    available_swaps = swaps_retrieval_service.get_swaps(
+        entrypoint_id=entrypoint.resource_id,
+        entrypoint_snapshot_id=entrypoint.resource_snapshot_id,
+        logger=logger,
+    )
+
+    return {
+        (
+            swap["plugin_file_resource_snapshot_id"],
+            swap["swap_name"],
+            swap["task_alias"],
+        ): swap["task_name"]
+        for swap in available_swaps
+    }
+
+
+def _build_job_dict(
+    jobs: list[models.Job],
+    swaps_retrieval_service: SwapsRetrievalService,
+    logger: BoundLogger,
+) -> list[utils.JobDict]:
     job_dicts: dict[int, utils.JobDict] = {
         job.resource_id: utils.JobDict(
             job=job,
             artifacts=[],
             has_draft=False,
+            swap_task_names=_build_swap_task_name_lookup(
+                job, swaps_retrieval_service, logger
+            ),
         )
         for job in jobs
     }

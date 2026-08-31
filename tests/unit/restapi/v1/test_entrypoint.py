@@ -1802,7 +1802,16 @@ def _test_dynamic_globals_endpoint(
             ).json()
         )
 
-        assert set(expected_globals) == set(evaluated["entrypointParams"])
+        entrypoint_params = evaluated["entrypointParams"]
+        assert set(expected_globals) == {
+            parameter["name"] for parameter in entrypoint_params
+        }
+        for parameter in entrypoint_params:
+            assert parameter == {
+                "name": parameter["name"],
+                "defaultValue": "default",
+                "parameterType": "string",
+            }
 
         assert evaluated["topologicalSort"] in expected_sort_order
         assert len(expected_active_plugins) == len(evaluated["activePlugins"])

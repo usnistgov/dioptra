@@ -510,6 +510,7 @@ def test_create_job_with_swaps(
             {
                 "swapName": swap["swapName"],
                 "taskAlias": swap["taskAlias"],
+                "taskName": swap["taskName"],
                 "pluginFileResourceSnapshotId": swap["pluginFileResourceSnapshotId"],
             }
             for swap in swaps_response_json

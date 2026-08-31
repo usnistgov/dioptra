@@ -238,6 +238,12 @@ class JobSwapSchema(Schema):
         metadata={"description": "Alias of the chosen task."},
         dump_only=True,
     )
+    taskName = fields.String(
+        attribute="task_name",
+        data_key="taskName",
+        metadata={"description": "Name of the chosen task."},
+        dump_only=True,
+    )
     pluginFileResourceSnapshotId = fields.Integer(
         attribute="plugin_file_resource_snapshot_id",
         data_key="pluginFileResourceSnapshotId",

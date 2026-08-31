@@ -452,10 +452,11 @@ class EntrypointConfigRequestSchema(SwapChoiceRequestSchema):
 
 
 class DynamicGlobalParametersResponseSchema(Schema):
-    globalParameters = fields.List(
-        fields.String(),
+    globalParameters = fields.Nested(
+        EntrypointParameterSchema,
         attribute="entrypoint_params",
         data_key="entrypointParams",
+        many=True,
         metadata={
             "description": (
                 "A list of global parameters used in the entrypoint task graph."

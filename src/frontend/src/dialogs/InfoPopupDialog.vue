@@ -2,6 +2,7 @@
   <q-dialog
     v-model="showDialog"
     aria-labelledby="modalTitle"
+    @show="emit('show')"
   >
     <q-card
       style="width: 900px; max-width: 90vw; max-height: 80vh"
@@ -33,4 +34,5 @@
 
 <script setup>
 const showDialog = defineModel();
+const emit = defineEmits(["show"]);
 </script>
