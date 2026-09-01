@@ -17,7 +17,22 @@
 import pytest
 
 from dioptra.task_engine.issues import IssueSeverity
-from dioptra.task_engine.validation import is_valid, validate
+from dioptra.task_engine.validation import is_valid, schema_validate, validate
+
+
+def test_schema_validate_with_custom_schema() -> None:
+    schema = {
+        "type": "object",
+        "properties": {"name": {"type": "string"}},
+        "required": ["name"],
+    }
+
+    assert schema_validate({"name": "example"}, schema) == []
+
+    issues = schema_validate({}, schema)
+
+    assert len(issues) == 1
+    assert issues[0].severity == IssueSeverity.ERROR
 
 
 @pytest.mark.parametrize(

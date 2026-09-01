@@ -18,6 +18,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass, replace
 from typing import Any, Iterable, cast
 
 import structlog
@@ -33,6 +34,7 @@ from dioptra.restapi.db.repository.utils.common import DeletionPolicy
 from dioptra.restapi.db.unit_of_work import UnitOfWork, UnitOfWorkService
 from dioptra.restapi.errors import (
     EmptyGraphError,
+    EntityDoesNotExistError,
     EntityRelationshipDoesNotExistError,
     EntrypointSwapsRenderError,
     EntrypointValidationError,
@@ -41,32 +43,94 @@ from dioptra.restapi.errors import (
 )
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.entity_types import EntityType
-from dioptra.restapi.v1.plugins.service import (
-    PluginIdsService,
-    get_plugin_task_parameter_types_by_id,
-)
-from dioptra.restapi.v1.shared.entrypoint_validation import (
-    build_entrypoint_data_adapter,
-)
-from dioptra.restapi.v1.shared.search_parser import parse_search_text
-from dioptra.restapi.v1.shared.task_engine_yaml.service import (
-    TaskEngineYamlService,
+from dioptra.restapi.v1.entrypoints.task_engine_yaml import (
+    build_task_engine_dict,
     coerce_entrypoint_default_param_types,
 )
+from dioptra.restapi.v1.plugins.service import PluginIdsService
+from dioptra.restapi.v1.shared.search_parser import parse_search_text
 from dioptra.restapi.v1.shared.views import (
-    get_plugin_parameter_types,
     get_plugin_plugin_files_from_plugin_snapshot_ids,
 )
 from dioptra.sdk.api.swappable_validation import (
     get_swappable_experiment_schema,
     get_swappable_json_schema_resources,
 )
-from dioptra.sdk.utilities.entrypoint_swaps import render_swaps_graph
+from dioptra.sdk.utilities.entrypoint_swaps import (
+    check_duplicate_swap_names,
+    check_multiple_swaps_per_step,
+    extract_swaps,
+    render_swaps_graph,
+)
 from dioptra.task_engine import util
 from dioptra.task_engine.issues import IssueSeverity, IssueType, ValidationIssue
-from dioptra.task_engine.validation import _schema_validate
+from dioptra.task_engine.validation import schema_validate
+from dioptra.task_engine.validation import validate as validate_task_engine_dict
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
+
+
+@dataclass
+class EntryPointParameterDataAdapter:
+    parameter_type: str
+    name: str
+    default_value: str | None
+
+
+@dataclass
+class TaskOutputParameterDataAdapter:
+    parameter_number: int
+    name: str
+    parameter_type: models.PluginTaskParameterType
+
+
+@dataclass
+class EntryPointArtifactDataAdapter:
+    name: str
+    output_parameters: list[TaskOutputParameterDataAdapter]
+
+
+@dataclass
+class EntryPointDataAdapter:
+    task_graph: str
+    artifact_graph: str
+    parameters: list[EntryPointParameterDataAdapter]
+    artifact_parameters: list[EntryPointArtifactDataAdapter]
+
+
+def _build_entrypoint_data_adapter(
+    task_graph: str,
+    artifact_graph: str,
+    entrypoint_parameters: list[dict[str, Any]],
+    entrypoint_artifacts: list[dict[str, Any]],
+    id_type_map: dict[int, models.PluginTaskParameterType],
+) -> EntryPointDataAdapter:
+    return EntryPointDataAdapter(
+        task_graph=task_graph,
+        artifact_graph=artifact_graph,
+        parameters=[
+            EntryPointParameterDataAdapter(
+                parameter_type=param["parameter_type"],
+                name=param["name"],
+                default_value=param["default_value"],
+            )
+            for param in entrypoint_parameters
+        ],
+        artifact_parameters=[
+            EntryPointArtifactDataAdapter(
+                name=artifact["name"],
+                output_parameters=[
+                    TaskOutputParameterDataAdapter(
+                        name=param["name"],
+                        parameter_number=parameter_number,
+                        parameter_type=id_type_map[param["parameter_type_id"]],
+                    )
+                    for parameter_number, param in enumerate(artifact["output_params"])
+                ],
+            )
+            for artifact in entrypoint_artifacts
+        ],
+    )
 
 
 class EntrypointService(object):
@@ -137,6 +201,18 @@ class EntrypointService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         owner = self._uow.group_repo.get_one(group_id, DeletionPolicy.NOT_DELETED)
+        type_ids = _get_artifact_parameter_type_ids(artifact_parameters)
+        artifact_parameter_types = (
+            list(
+                cast(
+                    Iterable[models.PluginTaskParameterType],
+                    self._uow.type_repo.get(list(type_ids), DeletionPolicy.NOT_DELETED),
+                )
+            )
+            if type_ids
+            else []
+        )
+        id_type_map = _require_parameter_types(type_ids, artifact_parameter_types)
 
         resource = models.Resource(EntityType.ENTRY_POINT.db_table_name, owner)
         new_entrypoint = models.EntryPoint(
@@ -146,7 +222,8 @@ class EntrypointService(object):
             artifact_graph=artifact_graph,
             parameters=_create_parameters(parameters),
             artifact_parameters=_create_artifact_parameters(
-                artifact_parameters=artifact_parameters, log=log
+                artifact_parameters=artifact_parameters,
+                id_type_map=id_type_map,
             ),
             resource=resource,
             creator=current_user,
@@ -397,6 +474,18 @@ class EntrypointIdService(UnitOfWorkService):
         entrypoint = self._uow.entrypoint_repo.get_one(
             entrypoint_id, DeletionPolicy.NOT_DELETED
         )
+        type_ids = _get_artifact_parameter_type_ids(artifact_parameters)
+        artifact_parameter_types = (
+            list(
+                cast(
+                    Iterable[models.PluginTaskParameterType],
+                    self._uow.type_repo.get(list(type_ids), DeletionPolicy.NOT_DELETED),
+                )
+            )
+            if type_ids
+            else []
+        )
+        id_type_map = _require_parameter_types(type_ids, artifact_parameter_types)
 
         new_entrypoint = models.EntryPoint(
             name=name,
@@ -405,7 +494,8 @@ class EntrypointIdService(UnitOfWorkService):
             artifact_graph=artifact_graph,
             parameters=_create_parameters(parameters),
             artifact_parameters=_create_artifact_parameters(
-                artifact_parameters=artifact_parameters, log=log
+                artifact_parameters=artifact_parameters,
+                id_type_map=id_type_map,
             ),
             resource=entrypoint.resource,
             creator=current_user,
@@ -1286,11 +1376,9 @@ class EntrypointConfigService(UnitOfWorkService):
     @inject
     def __init__(
         self,
-        entrypoint_snapshot_id_service: EntrypointSnapshotIdService,
-        yaml_service: TaskEngineYamlService,
+        uow: UnitOfWork,
     ):
-        self._entrypoint_snapshot_id_service = entrypoint_snapshot_id_service
-        self._yaml_service = yaml_service
+        self._uow = uow
 
     def get_config(
         self,
@@ -1317,8 +1405,8 @@ class EntrypointConfigService(UnitOfWorkService):
 
         swap_choices = swap_choices if swap_choices else {}
 
-        entry_point = self._entrypoint_snapshot_id_service.get(
-            entrypoint_id=id, entrypoint_snapshot_id=snapshotId, log=log
+        entry_point = self._uow.entrypoint_repo.get_one_snapshot(
+            id, snapshotId, DeletionPolicy.NOT_DELETED
         )
 
         plugin_files = [
@@ -1329,15 +1417,19 @@ class EntrypointConfigService(UnitOfWorkService):
         # this call is part of a HACK fully explained in extract_tasks, which is called
         # internally by build_task_engine_dict, the service call would not be needed
         # if this issue is more permanantly resolved
-        types = self._entrypoint_snapshot_id_service.get_group_plugin_parameter_types(
-            entry_point.resource.group_id, log=log
+        types, _ = self._uow.type_repo.get_by_filters_paged(
+            entry_point.resource.group_id,
+            filters=[],
+            page_start=0,
+            page_length=-1,
+            sort_by=None,
+            descending=False,
         )
 
-        config = self._yaml_service.build_dict(
-            entry_point=entry_point,  # pyright: ignore
-            plugin_plugin_files=plugin_files,  # pyright: ignore
-            plugin_parameter_types=types,  # pyright: ignore
-            logger=log,
+        config = build_task_engine_dict(
+            entry_point=entry_point,
+            plugin_plugin_files=plugin_files,
+            plugin_parameter_types=types,
             sections=sections,
         )
 
@@ -1352,22 +1444,18 @@ class EntrypointConfigService(UnitOfWorkService):
         return config
 
 
-class DynamicGlobalParametersService(object):
+class DynamicGlobalParametersService(UnitOfWorkService):
     @inject
     def __init__(
         self,
-        entrypoint_snapshot_id_service: EntrypointSnapshotIdService,
-        task_engine_yaml_service: TaskEngineYamlService,
+        uow: UnitOfWork,
     ) -> None:
         """Initialize the entrypoint service.
 
         All arguments are provided via dependency injection.
 
-        Args:
-            task_engine_yaml_service: A TaskEngineYamlService object.
         """
-        self._entrypoint_snapshot_id_service = entrypoint_snapshot_id_service
-        self._task_engine_yaml_service = task_engine_yaml_service
+        self._uow = uow
 
     def get_params(
         self,
@@ -1376,8 +1464,10 @@ class DynamicGlobalParametersService(object):
         swaps: dict[str, str],
         logger: BoundLogger | None = None,
     ) -> dict[str, Any]:
-        entry_point = self._entrypoint_snapshot_id_service.get(
-            entrypoint_id=entrypoint_id, entrypoint_snapshot_id=entrypoint_snapshot_id
+        entry_point = self._uow.entrypoint_repo.get_one_snapshot(
+            entrypoint_id,
+            entrypoint_snapshot_id,
+            DeletionPolicy.NOT_DELETED,
         )
 
         task_graph = entry_point.task_graph
@@ -1389,7 +1479,7 @@ class DynamicGlobalParametersService(object):
         except Exception as e:
             raise EntrypointSwapsRenderError(str(e)) from e
 
-        needed_vars, used_tasks = self.get_required_globals(rendered)
+        needed_vars, used_tasks = _get_required_globals(rendered)
 
         topsorted = util.get_sorted_steps(rendered)
 
@@ -1399,15 +1489,19 @@ class DynamicGlobalParametersService(object):
             for plugin_plugin_file in entry_point_plugin.plugin.plugin_plugin_files
         ]
 
-        types = self._entrypoint_snapshot_id_service.get_group_plugin_parameter_types(
-            entry_point.resource.group_id, log=logger
+        types, _ = self._uow.type_repo.get_by_filters_paged(
+            entry_point.resource.group_id,
+            filters=[],
+            page_start=0,
+            page_length=-1,
+            sort_by=None,
+            descending=False,
         )
 
-        task_engine_yaml = self._task_engine_yaml_service.build_dict(
+        task_engine_yaml = build_task_engine_dict(
             entry_point=entry_point,
             plugin_plugin_files=plugin_files,
             plugin_parameter_types=types,
-            logger=logger,
         )
 
         active_plugin_names = set()
@@ -1437,53 +1531,15 @@ class DynamicGlobalParametersService(object):
             "active_plugins": active_plugins,
         }
 
-    def get_required_globals(
-        self, rendered: dict[str, Any]
-    ) -> tuple[set[str], set[str]]:
-        vars = rendered.keys()
-        needed_vars = set()
-        used_tasks = set()
 
-        for step in rendered:
-            for task in rendered[step]:
-                used_tasks.add(task)
-
-                refs = self.get_keywords_for_one_task(rendered[step][task])
-
-                needed_vars.update({ref for ref in refs if ref not in vars})
-                # if it is not a step output, it must be a global param
-
-        return needed_vars, used_tasks
-
-    def get_keywords_for_one_task(self, task: dict[str, Any]) -> set[str]:
-        refs = set()
-        for ref in util.get_references(task):
-            potential_step_name = ref.split(".")[0]
-            refs.add(potential_step_name)
-        return refs
-
-
-class SwapsValidationService(object):
-    """Initialize the graph validation resource.
+class SwapsValidationService(UnitOfWorkService):
+    """Validate proposed entrypoint graphs, including swap definitions.
 
     All arguments are provided via dependency injection.
 
     Args:
-        entrypoint_snapshot_id_service: An EntrypointSnapshotIdService object.
-        task_engine_yaml_service: A TaskEngineYamlService object.
-        dynamic_global_parameter_service: A DynamicGlobalParametersService object.
+        uow: A UnitOfWork instance.
     """
-
-    @inject
-    def __init__(
-        self,
-        entrypoint_snapshot_id_service: EntrypointSnapshotIdService,
-        task_engine_yaml_service: TaskEngineYamlService,
-        dynamic_global_parameter_service: DynamicGlobalParametersService,
-    ) -> None:
-        self._entrypoint_snapshot_id_service = entrypoint_snapshot_id_service
-        self._task_engine_yaml_service = task_engine_yaml_service
-        self._dynamic_global_parameter_service = dynamic_global_parameter_service
 
     def swaps_graph_validation(
         self,
@@ -1493,9 +1549,8 @@ class SwapsValidationService(object):
             get_swap_graph_schema,
             get_swappable_json_schema_resources,
         )
-        from dioptra.task_engine.validation import _schema_validate
 
-        return _schema_validate(
+        return schema_validate(
             pre_rendered_task_graph,
             get_swap_graph_schema(),
             resources=get_swappable_json_schema_resources(),
@@ -1617,116 +1672,12 @@ class SwapsValidationService(object):
             for swap_name, types in mismatched_aliases.items()
         ], swap_tasks
 
-    def build_task_lookup_dict(
-        self, plugins: list[models.PluginPluginFile]
-    ) -> dict[str, Any]:
-        """Generates a lookup dictionary for function tasks.
-
-        Args:
-            plugins: A list of PluginPluginFile objects.
-
-        Returns:
-            A dictionary mapping function tasks to their plugin snapshot IDs, plugin filenames,
-            task names, and output parameters.
-        """
-        lookup = {}
-
-        for pair in plugins:
-            plugin = pair.plugin
-            file = pair.plugin_file
-
-            for task in file.tasks:
-                if isinstance(task, models.FunctionTask):
-                    # there must be a better way to check this
-
-                    lookup[task.plugin_task_name] = {
-                        "plugin_file_snapshot_id": file.resource_snapshot_id,
-                        "plugin_snapshot_id": plugin.resource_snapshot_id,
-                        "pluginfile_filename": file.filename,
-                        "task_name": task.plugin_task_name,
-                        "output_parameters": task.output_parameters,
-                    }
-
-        return lookup
-
-    def extract_swaps(self, task_graph: dict[str, Any]) -> dict[str, list[str]]:
-        """Extract all swaps from a task graph.
-
-        Args:
-            task_graph: The task graph dictionary.
-
-        Returns:
-            A dictionary mapping swap names to lists of available aliases.
-        """
-        swaps = {}
-
-        for _step, task in task_graph.items():
-            for swap_name, aliased_defns in task.items():
-                if swap_name.startswith("?"):
-                    swap_name_clean = swap_name[1:]  # Remove the '?' prefix
-                    if swap_name_clean not in swaps:
-                        swaps[swap_name_clean] = list(aliased_defns.keys())
-
-        return swaps
-
-    def _check_duplicate_swap_names(
-        self, task_graph: dict[str, Any]
-    ) -> list[ValidationIssue]:
-        """Validate that each swap name appears only once in the task graph."""
-        swap_counts: dict[str, int] = {}
-        for _step, task in task_graph.items():
-            if isinstance(task, dict):
-                for key in task.keys():
-                    if isinstance(key, str) and key.startswith("?"):
-                        swap_name = key[1:]  # strip leading '?'
-                        swap_counts[swap_name] = swap_counts.get(swap_name, 0) + 1
-        duplicate_issues: list[ValidationIssue] = []
-        for name, count in swap_counts.items():
-            if count > 1:
-                duplicate_issues.append(
-                    ValidationIssue(
-                        type_=IssueType.SEMANTIC,
-                        severity=IssueSeverity.ERROR,
-                        message=f"Duplicate swap name '{name}' found in task graph (appears {count} times).",
-                    )
-                )
-        return duplicate_issues
-
-    def _check_multiple_swaps_per_step(
-        self, task_graph: dict[str, Any]
-    ) -> list[ValidationIssue]:
-        """Validate that each graph step contains at most one swap."""
-        issues: list[ValidationIssue] = []
-
-        for step_name, task in task_graph.items():
-            if not isinstance(task, dict):
-                continue
-
-            swap_names = [
-                key for key in task if isinstance(key, str) and key.startswith("?")
-            ]
-            if len(swap_names) > 1:
-                issues.append(
-                    ValidationIssue(
-                        type_=IssueType.SEMANTIC,
-                        severity=IssueSeverity.ERROR,
-                        message=(
-                            f"Step '{step_name}' contains multiple swaps "
-                            f"({', '.join(swap_names)}). Each step may contain only one swap."
-                        ),
-                    )
-                )
-
-        return issues
-
     def validate_single_swap_combinations(
         self,
         task_graph_yaml: dict[str, Any],
-        artifact_graph: str,
+        entrypoint_data: EntryPointDataAdapter,
         plugin_plugin_files: list[models.PluginPluginFile],
         plugin_parameter_types: list[models.PluginTaskParameterType],
-        entrypoint_parameters: list[dict[str, Any]],
-        entrypoint_artifacts: list[dict[str, Any]],
         swap_choices: dict[str, Any],
         log: BoundLogger,
     ) -> tuple[list[ValidationIssue], set[str]]:
@@ -1735,11 +1686,9 @@ class SwapsValidationService(object):
 
         Args:
             task_graph_yaml: The task graph dictionary.
-            artifact_graph: The artifact graph dictionary.
+            entrypoint_data: Proposed entrypoint data adapted for task-engine use.
             plugin_plugin_files: A list of Plugin-PluginFile objects.
             plugin_parameter_types: A list of plugin parameter types.
-            entrypoint_parameters: A list of entrypoint parameters.
-            entrypoint_artifacts: A list of entrypoint artifacts parameters.
             swap_choices: A dictionary representing the choices for each swap.
             log: A BoundLogger instance.
 
@@ -1748,41 +1697,30 @@ class SwapsValidationService(object):
         """
         import json
 
-        from dioptra.restapi.v1.shared.entrypoint_validation import (
-            build_entrypoint_data_adapter,
-        )
-
         issues_for_swap = []
         required_globals: set[str] = set()
 
         try:
             rendered_graph = render_swaps_graph(task_graph_yaml, swap_choices)
 
-            entrypoint_data = build_entrypoint_data_adapter(
-                json.dumps(rendered_graph),
-                artifact_graph,
-                entrypoint_parameters,
-                entrypoint_artifacts,
-                log,
+            rendered_entrypoint_data = replace(
+                entrypoint_data,
+                task_graph=json.dumps(rendered_graph),
             )
-            task_engine_dict = self._task_engine_yaml_service.build_dict(
-                entry_point=entrypoint_data,
+            task_engine_dict = build_task_engine_dict(
+                entry_point=rendered_entrypoint_data,
                 plugin_plugin_files=plugin_plugin_files,
                 plugin_parameter_types=plugin_parameter_types,
             )
             # this is a schema check and deeper validation no longer present in workflows
-            issues = self._task_engine_yaml_service.validate(task_engine_dict)
+            issues = validate_task_engine_dict(task_engine_dict)
 
             for issue in issues:
                 issue.message = f"[Swap combination {swap_choices}] {issue.message}"
                 issues_for_swap.append(issue)
 
             # collect any globals needed for this rendering
-            required_globals, _ = (
-                self._dynamic_global_parameter_service.get_required_globals(
-                    rendered_graph
-                )
-            )
+            required_globals, _ = _get_required_globals(rendered_graph)
 
         except Exception as e:
             issues_for_swap.append(
@@ -1850,38 +1788,56 @@ class SwapsValidationService(object):
             raise EmptyGraphError("Provided swaps graph is empty.")
 
         duplicate_swap_issues = (
-            self._check_duplicate_swap_names(swaps_yaml)
+            check_duplicate_swap_names(swaps_yaml)
             if isinstance(swaps_yaml, dict)
             else []
         )
         multiple_swaps_per_step_issues = (
-            self._check_multiple_swaps_per_step(swaps_yaml)
+            check_multiple_swaps_per_step(swaps_yaml)
             if isinstance(swaps_yaml, dict)
             else []
         )
 
+        type_ids = _get_artifact_parameter_type_ids(entrypoint_artifacts)
+        artifact_parameter_types = (
+            list(
+                cast(
+                    Iterable[models.PluginTaskParameterType],
+                    self._uow.type_repo.get(list(type_ids), DeletionPolicy.NOT_DELETED),
+                )
+            )
+            if type_ids
+            else []
+        )
+        id_type_map = _require_parameter_types(type_ids, artifact_parameter_types)
+
         #### Pre-render Schema Issues
-        entrypoint = build_entrypoint_data_adapter(
+        entrypoint = _build_entrypoint_data_adapter(
             swaps_graph,
             artifact_graph,
             entrypoint_parameters,
             entrypoint_artifacts,
-            log,
+            id_type_map,
         )
 
-        plugin_parameter_types = get_plugin_parameter_types(
-            group_id=group_id, logger=log
+        plugin_parameter_types, _ = self._uow.type_repo.get_by_filters_paged(
+            group_id,
+            filters=[],
+            page_start=0,
+            page_length=-1,
+            sort_by=None,
+            descending=False,
         )
+        plugin_parameter_types = list(plugin_parameter_types)
         plugin_plugin_files = get_plugin_plugin_files_from_plugin_snapshot_ids(
             plugin_snapshot_ids=plugin_snapshot_ids, logger=log
         )
 
         try:
-            task_engine_dict = self._task_engine_yaml_service.build_dict(
-                entry_point=entrypoint,  # pyright: ignore
-                plugin_plugin_files=plugin_plugin_files,  # pyright: ignore
-                plugin_parameter_types=plugin_parameter_types,  # pyright: ignore
-                logger=log,
+            task_engine_dict = build_task_engine_dict(
+                entry_point=entrypoint,
+                plugin_plugin_files=plugin_plugin_files,
+                plugin_parameter_types=plugin_parameter_types,
             )
         except InvalidYamlError as e:
             return {
@@ -1897,10 +1853,9 @@ class SwapsValidationService(object):
 
         merged_schema = get_swappable_experiment_schema()
 
-        # Using this instead of _task_engine_yaml_service.validate, because that one requires a rendered task graph
-        # which we are no longer guaranteed to have. _task_engine_yaml_service.validate should remain unchanged (to
-        # preserve the task engine's functionality) and also be used in a new, heavier validation endpoint
-        schema_issues = _schema_validate(
+        # Full task-engine validation requires a rendered graph, which is not
+        # guaranteed at this stage.
+        schema_issues = schema_validate(
             task_engine_dict,
             merged_schema,
             resources=get_swappable_json_schema_resources(),
@@ -1919,7 +1874,7 @@ class SwapsValidationService(object):
             #### Perform pre-render semantic validation
 
             # build a lookup dictionary for tasks from the plugin files
-            task_lookup_dict = self.build_task_lookup_dict(plugin_plugin_files)
+            task_lookup_dict = _build_task_lookup_dict(plugin_plugin_files)
 
             task_reference_issues = self.validate_task_references(
                 pre_rendered_task_graph=swaps_yaml,
@@ -1936,7 +1891,7 @@ class SwapsValidationService(object):
             #### Specifically for saving and modifying entrypoints, perform in-depth validation
             if rendered_validation:
                 # extract a mapping of swaps to possible swap choices
-                swaps = self.extract_swaps(
+                swaps = extract_swaps(
                     swaps_yaml
                 )  # { swap1: [alias1, alias2, alias3], swap2: [alias4, alias5, alias6], etc. }
                 swap_names = list(swaps.keys())  # [swap1, swap2, etc.]
@@ -1959,14 +1914,10 @@ class SwapsValidationService(object):
                 for combination in combinations:
                     rendered_validation_issues, required_globals = (
                         self.validate_single_swap_combinations(
-                            artifact_graph=artifact_graph,
                             task_graph_yaml=swaps_yaml,
+                            entrypoint_data=entrypoint,
                             plugin_plugin_files=plugin_plugin_files,
-                            plugin_parameter_types=self._entrypoint_snapshot_id_service.get_group_plugin_parameter_types(
-                                group_id=group_id, logger=log
-                            ),
-                            entrypoint_parameters=entrypoint_parameters,
-                            entrypoint_artifacts=entrypoint_artifacts,
+                            plugin_parameter_types=plugin_parameter_types,
                             swap_choices=combination,
                             log=log,
                         )
@@ -2046,7 +1997,7 @@ class SwapsValidationService(object):
         return validation_results
 
 
-class SwapsRetrievalService(object):
+class SwapsRetrievalService(UnitOfWorkService):
     """Service for retrieving available swaps for an entrypoint snapshot.
 
     Currently this implementation returns an empty mapping. It can be extended to
@@ -2057,13 +2008,9 @@ class SwapsRetrievalService(object):
     @inject
     def __init__(
         self,
-        entrypoint_snapshot_id_service: EntrypointSnapshotIdService,
-        swaps_validation_service: SwapsValidationService,
-        dynamic_global_parameters_service: DynamicGlobalParametersService,
+        uow: UnitOfWork,
     ) -> None:
-        self._entrypoint_snapshot_id_service = entrypoint_snapshot_id_service
-        self._swaps_validation_service = swaps_validation_service
-        self._dynamic_global_parameters_service = dynamic_global_parameters_service
+        self._uow = uow
 
     def get_swaps(
         self,
@@ -2090,13 +2037,11 @@ class SwapsRetrievalService(object):
                 }
             ]
         """
-        log = logger or LOGGER.new()
-
         # Retrieve the snapshot entrypoint to get the graph.
-        entry_point = self._entrypoint_snapshot_id_service.get(
-            entrypoint_id=entrypoint_id,
-            entrypoint_snapshot_id=entrypoint_snapshot_id,
-            log=log,
+        entry_point = self._uow.entrypoint_repo.get_one_snapshot(
+            entrypoint_id,
+            entrypoint_snapshot_id,
+            DeletionPolicy.NOT_DELETED,
         )
 
         # Load the graph YAML
@@ -2106,7 +2051,7 @@ class SwapsRetrievalService(object):
             raise InvalidYamlError("Failed to load YAML") from e
 
         # this looks like {'swap_name1' : ['alias1', 'alias2'], 'swap_name2': ...}
-        swaps = self._swaps_validation_service.extract_swaps(graph)
+        swaps = extract_swaps(graph)
 
         # need this to know which entrypoint keyword args to NOT include in return
         step_names = set(graph.keys())
@@ -2120,9 +2065,7 @@ class SwapsRetrievalService(object):
             for plugin_plugin_file in entry_point_plugin.plugin.plugin_plugin_files
         ]
 
-        task_lookup_dict = self._swaps_validation_service.build_task_lookup_dict(
-            plugin_plugin_files
-        )
+        task_lookup_dict = _build_task_lookup_dict(plugin_plugin_files)
         not_found_tasks = set()
 
         for swap_name in swaps:
@@ -2132,12 +2075,7 @@ class SwapsRetrievalService(object):
                     for alias in task_defs:
                         task_def = task_defs[alias]
 
-                        keyword_args = (
-                            self._dynamic_global_parameters_service.get_keywords_for_one_task(
-                                task_def
-                            )
-                            - step_names
-                        )
+                        keyword_args = _get_keywords_for_one_task(task_def) - step_names
 
                         if "task" in task_def:
                             # long form definition
@@ -2166,6 +2104,53 @@ class SwapsRetrievalService(object):
             raise TasksNotFoundError(list(not_found_tasks))
 
         return swaps_list
+
+
+def _build_task_lookup_dict(
+    plugins: list[models.PluginPluginFile],
+) -> dict[str, Any]:
+    """Build task metadata indexed by function task name."""
+    lookup = {}
+
+    for pair in plugins:
+        plugin = pair.plugin
+        plugin_file = pair.plugin_file
+
+        for task in plugin_file.tasks:
+            if isinstance(task, models.FunctionTask):
+                lookup[task.plugin_task_name] = {
+                    "plugin_file_snapshot_id": plugin_file.resource_snapshot_id,
+                    "plugin_snapshot_id": plugin.resource_snapshot_id,
+                    "pluginfile_filename": plugin_file.filename,
+                    "task_name": task.plugin_task_name,
+                    "output_parameters": task.output_parameters,
+                }
+
+    return lookup
+
+
+def _get_keywords_for_one_task(task: dict[str, Any]) -> set[str]:
+    """Return graph reference roots used by one task definition."""
+    return {reference.split(".")[0] for reference in util.get_references(task)}
+
+
+def _get_required_globals(
+    rendered_graph: dict[str, Any],
+) -> tuple[set[str], set[str]]:
+    """Return external graph references and task names used by a graph."""
+    graph_steps = rendered_graph.keys()
+    needed_globals: set[str] = set()
+    used_tasks: set[str] = set()
+
+    for step in rendered_graph.values():
+        for task_name, task_definition in step.items():
+            used_tasks.add(task_name)
+            references = _get_keywords_for_one_task(task_definition)
+            needed_globals.update(
+                reference for reference in references if reference not in graph_steps
+            )
+
+    return needed_globals, used_tasks
 
 
 def _get_entrypoint_plugin_snapshots(
@@ -2281,17 +2266,11 @@ def _copy_parameters(
 
 
 def _create_artifact_parameters(
-    artifact_parameters: list[dict[str, Any]], log: BoundLogger
+    artifact_parameters: list[dict[str, Any]],
+    id_type_map: dict[int, models.PluginTaskParameterType],
 ) -> Iterable[models.EntryPointArtifactParameter]:
     if artifact_parameters is None or len(artifact_parameters) == 0:
         return []
-
-    type_ids = [
-        parameter["parameter_type_id"]
-        for artifact in artifact_parameters
-        for parameter in artifact["output_params"]
-    ]
-    id_type_map = get_plugin_task_parameter_types_by_id(ids=type_ids, log=log)
 
     return [
         models.EntryPointArtifactParameter(
@@ -2308,6 +2287,37 @@ def _create_artifact_parameters(
         )
         for a, artifact in enumerate(artifact_parameters)
     ]
+
+
+def _get_artifact_parameter_type_ids(
+    artifact_parameters: list[dict[str, Any]],
+) -> set[int]:
+    return {
+        parameter["parameter_type_id"]
+        for artifact in artifact_parameters
+        for parameter in artifact["output_params"]
+    }
+
+
+def _require_parameter_types(
+    requested_ids: Iterable[int],
+    parameter_types: Iterable[models.PluginTaskParameterType],
+) -> dict[int, models.PluginTaskParameterType]:
+    requested_id_set = set(requested_ids)
+    id_type_map = {
+        parameter_type.resource_id: parameter_type for parameter_type in parameter_types
+    }
+    missing_ids = requested_id_set - id_type_map.keys()
+
+    if missing_ids:
+        raise EntityDoesNotExistError(
+            EntityType.PLUGIN_TASK_PARAMETER_TYPE,
+            num_expected=len(requested_id_set),
+            num_found=len(id_type_map),
+            ids_not_found=sorted(missing_ids),
+        )
+
+    return id_type_map
 
 
 def _copy_artifact_parameters(

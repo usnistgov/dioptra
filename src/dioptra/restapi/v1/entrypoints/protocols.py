@@ -78,14 +78,10 @@ class PluginTaskProtocol(Protocol):
     plugin_task_name: str
 
     @property
-    def input_parameters(
-        self,
-    ) -> Sequence[PluginTaskInputParameterProtocol]: ...
+    def input_parameters(self) -> Sequence[PluginTaskInputParameterProtocol]: ...
 
     @property
-    def output_parameters(
-        self,
-    ) -> Sequence[PluginTaskOutputParameterProtocol]: ...
+    def output_parameters(self) -> Sequence[PluginTaskOutputParameterProtocol]: ...
 
 
 class PluginFileProtocol(Protocol):

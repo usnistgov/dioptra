@@ -20,6 +20,9 @@ import pytest
 import yaml
 
 from dioptra.sdk.utilities.entrypoint_swaps import (
+    check_duplicate_swap_names,
+    check_multiple_swaps_per_step,
+    extract_swaps,
     render_swaps_graph,
     validate_swaps_graph,
 )
@@ -91,7 +94,7 @@ def test_swap_render(yaml_file: str):
     graph = yaml.safe_load(data)
 
     issues = verify_correct_yaml(graph, available_swaps)
-    assert all([issue == [] for issue in issues])
+    assert all(issue == [] for issue in issues)
 
 
 @pytest.mark.parametrize("yaml_file", ["no_swaps_test.yml"])
@@ -103,7 +106,7 @@ def test_without_swaps(yaml_file: str):
     rendered_graph = render_swaps_graph(graph, {})
     assert rendered_graph == graph
 
-    extra = set(["load", "transform_data", "extra"])
+    extra = {"load", "transform_data", "extra"}
     with pytest.raises(Exception, match=f"Swaps {extra} were provided but not used."):
         rendered_graph = render_swaps_graph(
             graph,
@@ -122,27 +125,62 @@ def test_swap_errors(yaml_file: str):
         data = f.read()
     graph = yaml.safe_load(data)
 
-    missing = set(["load", "transform_data"])
+    missing = {"load", "transform_data"}
     with pytest.raises(
         Exception, match=f"Swaps {missing} needed by graph but not provided."
     ):
-        rendered_graph = render_swaps_graph(graph, {})
+        render_swaps_graph(graph, {})
 
-    extra = set(["extra"])
+    extra = {"extra"}
     with pytest.raises(Exception, match=f"Swaps {extra} were provided but not used."):
-        rendered_graph = render_swaps_graph(
+        render_swaps_graph(
             graph,
             {"load": "ignore", "transform_data": "patch", "extra": "function_name"},
         )
 
-    nonexistant = set(["nonexistant"])
+    nonexistant = {"nonexistant"}
     with pytest.raises(
         Exception, match=f"Tasks {nonexistant} requested for swaps but were not found."
     ):
-        rendered_graph = render_swaps_graph(
+        render_swaps_graph(
             graph,
             {
                 "load": "ignore",
                 "transform_data": "nonexistant",
             },
         )
+
+
+def test_extract_swaps() -> None:
+    graph = {
+        "step": {"?transform": {"clean": {}, "augment": {}}},
+        "other": {"task": {}},
+    }
+
+    assert extract_swaps(graph) == {"transform": ["clean", "augment"]}
+
+
+def test_check_duplicate_swap_names() -> None:
+    graph = {
+        "first": {"?transform": {"clean": {}}},
+        "second": {"?transform": {"augment": {}}},
+    }
+
+    issues = check_duplicate_swap_names(graph)
+
+    assert len(issues) == 1
+    assert "Duplicate swap name 'transform'" in issues[0].message
+
+
+def test_check_multiple_swaps_per_step() -> None:
+    graph = {
+        "step": {
+            "?load": {"disk": {}},
+            "?transform": {"clean": {}},
+        }
+    }
+
+    issues = check_multiple_swaps_per_step(graph)
+
+    assert len(issues) == 1
+    assert "Step 'step' contains multiple swaps" in issues[0].message

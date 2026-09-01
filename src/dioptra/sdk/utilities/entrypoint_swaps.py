@@ -17,6 +17,7 @@
 from typing import Any
 
 from dioptra.task_engine import validation
+from dioptra.task_engine.issues import IssueSeverity, IssueType, ValidationIssue
 
 
 def render_swaps_graph(
@@ -89,4 +90,72 @@ def validate_swaps_graph(graph):
     issues += validation._find_non_string_keys(graph, "graph")
     issues += validation._check_graph_dependencies({"graph": graph})
     issues += validation._check_step_structure({"graph": graph})
+    return issues
+
+
+def extract_swaps(task_graph: dict[str, Any]) -> dict[str, list[str]]:
+    """Extract swap names and aliases from a task graph."""
+    swaps = {}
+
+    for task in task_graph.values():
+        for swap_name, aliased_definitions in task.items():
+            if swap_name.startswith("?"):
+                clean_name = swap_name[1:]
+                if clean_name not in swaps:
+                    swaps[clean_name] = list(aliased_definitions.keys())
+
+    return swaps
+
+
+def check_duplicate_swap_names(
+    task_graph: dict[str, Any],
+) -> list[ValidationIssue]:
+    """Validate that each swap name appears only once in a task graph."""
+    swap_counts: dict[str, int] = {}
+    for task in task_graph.values():
+        if isinstance(task, dict):
+            for key in task:
+                if isinstance(key, str) and key.startswith("?"):
+                    swap_name = key[1:]
+                    swap_counts[swap_name] = swap_counts.get(swap_name, 0) + 1
+
+    return [
+        ValidationIssue(
+            type_=IssueType.SEMANTIC,
+            severity=IssueSeverity.ERROR,
+            message=(
+                f"Duplicate swap name '{name}' found in task graph "
+                f"(appears {count} times)."
+            ),
+        )
+        for name, count in swap_counts.items()
+        if count > 1
+    ]
+
+
+def check_multiple_swaps_per_step(
+    task_graph: dict[str, Any],
+) -> list[ValidationIssue]:
+    """Validate that each graph step contains at most one swap."""
+    issues = []
+
+    for step_name, task in task_graph.items():
+        if not isinstance(task, dict):
+            continue
+
+        swap_names = [
+            key for key in task if isinstance(key, str) and key.startswith("?")
+        ]
+        if len(swap_names) > 1:
+            issues.append(
+                ValidationIssue(
+                    type_=IssueType.SEMANTIC,
+                    severity=IssueSeverity.ERROR,
+                    message=(
+                        f"Step '{step_name}' contains multiple swaps "
+                        f"({', '.join(swap_names)}). Each step may contain only one swap."
+                    ),
+                )
+            )
+
     return issues
