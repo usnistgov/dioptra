@@ -1887,7 +1887,9 @@ def test_dynamic_globals_endpoint_accepts_blank_swaps(
     )
 
     assert response.status_code == HTTPStatus.OK
-    assert set(response.json["entrypointParams"]) == {
+    assert {
+        parameter["name"] for parameter in response.json["entrypointParams"]
+    } == {
         "global1",
         "global6",
         "global12",
