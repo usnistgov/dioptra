@@ -68,10 +68,6 @@ test("group table shows context and owner-specific actions", async ({ page }) =>
   await ensureLoggedInAsTestUser(page);
 
   const adminGroupName = `e2e_admin_group_${Date.now()}`;
-  const createGroupResponse = await page.request.post("/api/v1/groups/", { data: { name: adminGroupName } });
-  expect(createGroupResponse.ok()).toBe(true);
-  const adminGroup = await createGroupResponse.json();
-
   const groupsResponse = await page.request.get("/api/v1/groups/?pageLength=100");
   expect(groupsResponse.ok()).toBe(true);
   const groups = (await groupsResponse.json()).data;
@@ -88,6 +84,10 @@ test("group table shows context and owner-specific actions", async ({ page }) =>
   await expect(page.getByRole("columnheader", { name: "Owner" })).toBeVisible();
   await expect(page.getByRole("columnheader", { name: "Context" })).toBeVisible();
 
+  const createGroupResponse = await page.request.post("/api/v1/groups/", { data: { name: adminGroupName } });
+  expect(createGroupResponse.ok()).toBe(true);
+  const adminGroup = await createGroupResponse.json();
+
   const search = page.getByPlaceholder("Search");
   await search.fill(testUser.username);
   const ownedRow = page.locator("tbody tr").filter({ hasText: testUser.username });
@@ -96,11 +96,27 @@ test("group table shows context and owner-specific actions", async ({ page }) =>
   await expect(ownedRow.getByRole("button", { name: "Delete group" })).toBeEnabled();
   await expect(ownedRow).toHaveClass(/bg-blue-1/);
 
-  const searchResponsePromise = page.waitForResponse(
+  const adminSearchResponsePromise = page.waitForResponse(
+    (response) => new URL(response.url()).pathname === "/api/v1/groups/" && response.request().method() === "GET",
+  );
+  await search.fill(adminGroupName);
+  expect((await adminSearchResponsePromise).ok()).toBe(true);
+  const adminRow = page.locator("tbody tr").filter({ hasText: adminGroupName });
+  await expect(adminRow.getByRole("button", { name: "Set Context" })).toBeVisible();
+
+  const loginStatusRefreshPromise = page.waitForResponse(
+    (response) => new URL(response.url()).pathname === "/api/v1/users/current" && response.request().method() === "GET",
+  );
+  await adminRow.getByRole("button", { name: "Set Context" }).click();
+  expect((await loginStatusRefreshPromise).ok()).toBe(true);
+  await expect(adminRow.getByRole("button", { name: "Active Context" })).toBeVisible();
+  await expect(adminRow).toHaveClass(/bg-blue-1/);
+
+  const otherSearchResponsePromise = page.waitForResponse(
     (response) => new URL(response.url()).pathname === "/api/v1/groups/" && response.request().method() === "GET",
   );
   await search.fill(otherGroup.name);
-  expect((await searchResponsePromise).ok()).toBe(true);
+  expect((await otherSearchResponsePromise).ok()).toBe(true);
   const otherRow = page.locator("tbody tr").filter({ hasText: otherGroup.name });
   await expect(otherRow.getByText(`${otherGroup.user.username}/${otherGroup.name}`)).toBeVisible();
   await expect(otherRow.getByRole("button", { name: "Delete group" })).toBeDisabled();

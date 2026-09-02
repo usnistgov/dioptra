@@ -43,7 +43,7 @@
         :disable="props.row.id === store.loggedInGroup.id || props.row.deleted"
         dense
         no-caps
-        @click.stop="store.setLoggedInGroup(props.row.id)"
+        @click.stop="setGroupContext(props.row.id)"
       />
     </template>
     <template #body-cell-delete="props">
@@ -131,6 +131,21 @@ function requestDelete(group) {
   showDeleteDialog.value = true;
 }
 
+async function setGroupContext(groupId) {
+  if (store.setLoggedInGroup(groupId)) {
+    return;
+  }
+
+  try {
+    await api.refreshLoginState();
+    if (!store.setLoggedInGroup(groupId)) {
+      throw new Error(`Group ${groupId} is not available to the current user.`);
+    }
+  } catch (err) {
+    notify.error(err.response?.data?.message || err.message || "Failed to refresh available groups");
+  }
+}
+
 function openGroup(openInNewTab = false) {
   if (selected.value.length === 0) {
     return;
@@ -155,9 +170,7 @@ async function deleteGroup() {
   try {
     await api.deleteItem("groups", deletedGroupId);
 
-    const userInfoRes = await api.getLoginStatus();
-    store.loggedInUser = userInfoRes.data;
-    store.setGroups(userInfoRes.data.groups);
+    await api.refreshLoginState();
 
     notify.success(`Successfully deleted '${deletedGroupName}'`);
     showDeleteDialog.value = false;
