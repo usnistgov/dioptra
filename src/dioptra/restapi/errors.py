@@ -235,6 +235,23 @@ class BackendDatabaseError(DioptraError):
         )
 
 
+class BackendDatabaseErrorAlreadyExists(DioptraError):
+    """The backend database rejected an insert because it already exists."""
+
+    def __init__(self) -> None:
+        super().__init__("The requested update conflicts with existing data.")
+
+
+class BackendDatabaseErrorStaleData(DioptraError):
+    """The database operation failed because the ORM data was stale."""
+
+    def __init__(self) -> None:
+        super().__init__(
+            "The requested resource was modified by another request. "
+            "Refresh it and try again."
+        )
+
+
 class SearchNotImplementedError(DioptraError):
     """The search functionality has not been implemented."""
 
@@ -933,6 +950,20 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
     def handle_backend_database_error(error: BackendDatabaseError):
         log.error(error.to_message())
         return error_result(error, http.HTTPStatus.INTERNAL_SERVER_ERROR, {})
+
+    @api.errorhandler(BackendDatabaseErrorAlreadyExists)
+    def handle_backend_database_error_already_exists(
+        error: BackendDatabaseErrorAlreadyExists,
+    ):
+        log.error(error.to_message())
+        return error_result(error, http.HTTPStatus.CONFLICT, {})
+
+    @api.errorhandler(BackendDatabaseErrorStaleData)
+    def handle_backend_database_error_stale_data(
+        error: BackendDatabaseErrorStaleData,
+    ):
+        log.error(error.to_message())
+        return error_result(error, http.HTTPStatus.CONFLICT, {})
 
     @api.errorhandler(SearchNotImplementedError)
     def handle_search_not_implemented_error(error: SearchNotImplementedError):

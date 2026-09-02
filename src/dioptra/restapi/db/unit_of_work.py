@@ -19,6 +19,8 @@ from types import TracebackType
 from typing import Type
 
 from injector import inject
+from sqlalchemy.exc import DatabaseError, IntegrityError
+from sqlalchemy.orm.exc import StaleDataError
 
 from dioptra.restapi.db.db import db
 from dioptra.restapi.db.repository.drafts import DraftsRepository
@@ -28,6 +30,11 @@ from dioptra.restapi.db.repository.groups import GroupRepository
 from dioptra.restapi.db.repository.queues import QueueRepository
 from dioptra.restapi.db.repository.types import TypeRepository
 from dioptra.restapi.db.repository.users import UserRepository
+from dioptra.restapi.errors import (
+    BackendDatabaseError,
+    BackendDatabaseErrorAlreadyExists,
+    BackendDatabaseErrorStaleData,
+)
 
 
 class UnitOfWork(contextlib.AbstractContextManager):
@@ -50,7 +57,26 @@ class UnitOfWork(contextlib.AbstractContextManager):
         self._do_commit = True
 
     def commit(self) -> None:
-        self.session.commit()
+        try:
+            self.session.commit()
+        except IntegrityError as error:
+            self.rollback()
+
+            constraint_name = getattr(
+                getattr(error.orig, "diag", None),
+                "constraint_name",
+                None,
+            )
+            if constraint_name == "pk_resource_dependencies":
+                raise BackendDatabaseErrorAlreadyExists() from error
+
+            raise BackendDatabaseError from error
+        except StaleDataError as error:
+            self.rollback()
+            raise BackendDatabaseErrorStaleData() from error
+        except DatabaseError as error:
+            self.rollback()
+            raise BackendDatabaseError from error
 
     def rollback(self) -> None:
         self.session.rollback()
@@ -69,13 +95,13 @@ class UnitOfWork(contextlib.AbstractContextManager):
             self._do_commit = True
             return
 
-        # Rollback if exiting due to a thrown exception
-        if exc_type:
-            self.rollback()
-
-        self.commit()
-
-        self._do_commit = True
+        try:
+            if exc_type:
+                self.rollback()
+            else:
+                self.commit()
+        finally:
+            self._do_commit = True
 
         return None
 
