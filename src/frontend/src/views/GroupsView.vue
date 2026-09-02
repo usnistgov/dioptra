@@ -77,6 +77,7 @@ import { useLoginStore } from "@/stores/LoginStore";
 import { useRouter } from "vue-router";
 import PageTitle from "@/components/PageTitle.vue";
 import DeleteDialog from "@/dialogs/DeleteDialog.vue";
+import { openInNewTab as openRouteInNewTab } from "@/services/navigation";
 
 const router = useRouter();
 
@@ -153,7 +154,7 @@ function openGroup(openInNewTab = false) {
 
   const route = router.resolve(`/groups/${selected.value[0].id}/admin`);
   if (openInNewTab) {
-    window.open(route.href, "_blank");
+    openRouteInNewTab(route.href);
     return;
   }
   router.push(route);
