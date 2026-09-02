@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 import { createPlugin } from "./helpers/createResourceHelper";
-import { ensureLoggedInAsTestUser } from "./helpers/testUserHelper";
+import { ensureLoggedInAsTestUser, testUser } from "./helpers/testUserHelper";
 
 test("create plugin", async ({ page }) => {
   const pluginName = `e2e_plugin_${Date.now()}`;
@@ -51,4 +51,47 @@ test("delete plugin", async ({ page }) => {
     }),
   ).toBeVisible();
   await expect(page).toHaveURL(/\/plugins$/);
+});
+
+test("does not restore another user's unsaved plugin form", async ({ page }) => {
+  const unsavedPluginName = `unsaved_plugin_${Date.now()}`;
+  const secondUser = {
+    username: `e2e_second_user_${Date.now()}`,
+    email: `e2e_second_user_${Date.now()}@example.com`,
+    password: "Password123!",
+  };
+
+  await ensureLoggedInAsTestUser(page);
+  await page.goto("/plugins/new");
+  await page.getByRole("textbox", { name: "Name:" }).fill(unsavedPluginName);
+
+  await page.getByRole("link", { name: testUser.username }).click();
+  await expect(page).toHaveURL(/\/login$/);
+  await page.getByRole("button", { name: "Log Out" }).click();
+  await expect(page.getByRole("heading", { name: "Login" })).toBeVisible();
+
+  const registerResponse = await page.request.post("/api/v1/users", {
+    data: {
+      username: secondUser.username,
+      email: secondUser.email,
+      password: secondUser.password,
+      confirmPassword: secondUser.password,
+    },
+  });
+  expect(registerResponse.ok()).toBe(true);
+
+  await page.getByRole("textbox", { name: "Username" }).fill(secondUser.username);
+  await page.getByRole("textbox", { name: "Password", exact: true }).fill(secondUser.password);
+  await page.getByRole("button", { name: "Login" }).click();
+  await expect(
+    page.getByRole("alert").filter({
+      hasText: `Login successful for ${secondUser.username}`,
+    }),
+  ).toBeVisible();
+
+  await page.locator("nav").getByRole("link", { name: "Plugins", exact: true }).click();
+  await page.getByRole("button", { name: "Create" }).click();
+  await expect(page).toHaveURL(/\/plugins\/new$/);
+  await expect(page.getByRole("heading", { name: "Load Unsaved Form?" })).toHaveCount(0);
+  await expect(page.getByRole("textbox", { name: "Name:" })).toHaveValue("");
 });

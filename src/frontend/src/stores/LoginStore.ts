@@ -16,6 +16,19 @@ type GroupRef = {
   url: string;
 };
 
+type LoggedInUser = {
+  id: number;
+  groups: GroupRef[];
+  [key: string]: unknown;
+};
+
+function createEmptySavedForms() {
+  return {
+    jobs: {},
+    files: {},
+  };
+}
+
 function getGroupStorageKey(userId: number) {
   return `${GROUP_STORAGE_KEY}:${userId}`;
 }
@@ -40,7 +53,7 @@ function clearStoredGroupId(userId: number) {
 
 export const useLoginStore = defineStore("login", () => {
   // ref()'s are state properties
-  const loggedInUser = ref({});
+  const loggedInUser = ref<LoggedInUser | "">("");
 
   const groups = ref<GroupRef[]>([]);
   const selectedGroupId = ref<number | null>(null);
@@ -213,10 +226,7 @@ export const useLoginStore = defineStore("login", () => {
     { name: "Mila", id: "20", read: true, write: false, admin: false, owner: false },
   ]);
 
-  const savedForms = ref({
-    jobs: {},
-    files: {},
-  });
+  const savedForms = ref(createEmptySavedForms());
 
   const triggerPopup = ref(false);
 
@@ -240,6 +250,33 @@ export const useLoginStore = defineStore("login", () => {
     >
   >({});
 
+  function resetUserScopedState() {
+    groups.value = [];
+    selectedGroupId.value = null;
+    groupContextLocked.value = false;
+    groupContextResolving.value = false;
+    savedForms.value = createEmptySavedForms();
+    triggerPopup.value = false;
+    showRightDrawer.value = false;
+    selectedSnapshot.value = undefined;
+    tablePaginationCache.value = {};
+  }
+
+  function setSession(user: LoggedInUser) {
+    const currentUserId = getLoggedInUserId();
+    if (currentUserId !== Number(user.id)) {
+      resetUserScopedState();
+    }
+
+    loggedInUser.value = user;
+    setGroups(Array.isArray(user.groups) ? user.groups : []);
+  }
+
+  function clearSession() {
+    resetUserScopedState();
+    loggedInUser.value = "";
+  }
+
   // computed()'s are getters
 
   // function()'s are actions
@@ -258,6 +295,8 @@ export const useLoginStore = defineStore("login", () => {
     triggerPopup,
     initialPage,
     tablePaginationCache,
+    setSession,
+    clearSession,
     setGroups,
     setLoggedInGroup,
   };

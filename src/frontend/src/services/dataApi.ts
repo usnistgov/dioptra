@@ -522,8 +522,7 @@ export async function getLoginStatus() {
 export async function refreshLoginState() {
   const response = await getLoginStatus();
   const store = useLoginStore();
-  store.loggedInUser = response.data;
-  store.setGroups(response.data.groups);
+  store.setSession(response.data);
   return response.data;
 }
 

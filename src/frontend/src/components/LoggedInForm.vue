@@ -171,7 +171,7 @@ async function callLogout() {
   const previousUser = JSON.parse(JSON.stringify(loggedInUser.value.username));
   try {
     await api.logout(allDevices.value);
-    loggedInUser.value = "";
+    store.clearSession();
     notify.success(`Successfully logged out from ${previousUser}`);
   } catch {
     notify.error(`Error logging out from user: ${previousUser}`);
@@ -182,7 +182,7 @@ async function callChangePassword() {
   const previousUser = JSON.parse(JSON.stringify(loggedInUser.value.username));
   try {
     const res = await api.changePassword(password.value, newPassword.value, confirmNewPassword.value);
-    loggedInUser.value = "";
+    store.clearSession();
     notify.success(`${res.data.status} for user: ${previousUser}`);
   } catch (err) {
     notify.error(err.response.data.message);
@@ -194,7 +194,7 @@ async function callDeleteUser() {
   try {
     const res = await api.deleteUser(deleteRequestPassword.value);
     console.log("delete user res = ", res);
-    loggedInUser.value = "";
+    store.clearSession();
     notify.success(`Successfully deleted user '${previousUser}'`);
   } catch (err) {
     console.log("delete user err = ", err);
