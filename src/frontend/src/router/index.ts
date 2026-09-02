@@ -347,11 +347,9 @@ async function resolveGroupContext(to: RouteLocationNormalizedGeneric, context: 
 async function callGetLoginStatus() {
   const store = useLoginStore();
   try {
-    const res = await api.getLoginStatus();
-    store.loggedInUser = res.data;
-    store.setGroups(res.data.groups);
+    await api.refreshLoginState();
   } catch {
-    store.loggedInUser = "";
+    store.clearSession();
   }
 }
 
