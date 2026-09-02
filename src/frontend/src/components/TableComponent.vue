@@ -376,6 +376,10 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
+  refreshOnGroupChange: {
+    type: Boolean,
+    default: true,
+  },
   tagLimit: {
     type: Number,
     default: 3,
@@ -546,7 +550,7 @@ onMounted(() => {
 });
 
 watch(activeGroupId, (newGroupId, oldGroupId) => {
-  if (!isTableMounted.value || newGroupId === oldGroupId) {
+  if (!props.refreshOnGroupChange || !isTableMounted.value || newGroupId === oldGroupId) {
     return;
   }
 
