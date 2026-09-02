@@ -75,20 +75,11 @@ const showPassword = ref(false);
 async function submit() {
   try {
     const res = await api.login(username.value, password.value);
-    callGetLoginStatus();
+    await api.refreshLoginState();
     notify.success(`${res.data.status} for ${username.value}`);
   } catch (err) {
+    store.clearSession();
     notify.error(err.response.data.message);
-  }
-}
-
-async function callGetLoginStatus() {
-  try {
-    const res = await api.getLoginStatus();
-    store.loggedInUser = res.data;
-    store.setGroups(res.data.groups);
-  } catch {
-    store.loggedInUser = "";
   }
 }
 </script>
