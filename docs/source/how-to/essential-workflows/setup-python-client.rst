@@ -120,14 +120,20 @@ In your python interpreter, set the username, email, and password, then use the 
                 response = client.users.create(username, email=email, password=password)
                 print(response)
 
-        You should see a successful response similar to the below:
+        You should see a successful response similar to the abbreviated example below. Numeric IDs are illustrative, and
+        the ``groups`` list can contain other accessible public groups.
 
         .. code-block:: bash
 
             {'username': 'user',
              'email': 'user@localhost',
              'id': 1,
-             'groups': [{'id': 1, 'name': 'public', 'url': '/api/v1/groups/1'}],
+             'groups': [{'id': 1,
+                         'name': 'user',
+                         'user': {'id': 1,
+                                  'username': 'user',
+                                  'url': '/api/v1/users/1'},
+                         'url': '/api/v1/groups/1'}],
              'createdOn': '2026-02-02T18:47:44.794278+00:00',
              'lastModifiedOn': '2026-02-02T18:47:44.794278+00:00',
              'lastLoginOn': None,
@@ -145,16 +151,22 @@ In your python interpreter, set the username, email, and password, then use the 
                 email = "user@localhost"
                 password = "pass"
                 response = client.users.create(username, email=email, password=password)
-                print(response.json)
+                print(response.json())
 
-        You should see a successful response similar to the below:
+        You should see a successful response similar to the abbreviated example below. Numeric IDs are illustrative, and
+        the ``groups`` list can contain other accessible public groups.
 
         .. code-block:: bash
 
             {'username': 'user',
              'email': 'user@localhost',
              'id': 1,
-             'groups': [{'id': 1, 'name': 'public', 'url': '/api/v1/groups/1'}],
+             'groups': [{'id': 1,
+                         'name': 'user',
+                         'user': {'id': 1,
+                                  'username': 'user',
+                                  'url': '/api/v1/users/1'},
+                         'url': '/api/v1/groups/1'}],
              'createdOn': '2026-02-02T18:47:44.794278+00:00',
              'lastModifiedOn': '2026-02-02T18:47:44.794278+00:00',
              'lastLoginOn': None,
@@ -221,7 +233,8 @@ There are many resource IDs you will need for access to downstream methods in th
 
 Some of these include:
 
-- **Group ID**: The ID for the user group in Dioptra
+- **Group ID**: The ID of the group that owns or will receive a resource. Group names are scoped to their creator, so use
+  both the creator reference and name when identifying a group by its natural key.
 - **User ID**: The IDs for users, useful for searching for resources
 - **Queue IDs**: Queues are attached to entrypoints, and by extension also experiments and jobs
 - **Plugin Parameter Type IDs**: These IDs are used for task registration and entrypoint parameters
@@ -234,7 +247,8 @@ Some of these include:
 
             .. code-block:: python
 
-                client.groups.get()
+                response = client.groups.get()
+                print(response)
 
         *Full Client Method Documentation:*
 
