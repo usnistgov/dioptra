@@ -238,15 +238,18 @@ class BackendDatabaseError(DioptraError):
 class BackendDatabaseErrorAlreadyExists(DioptraError):
     """The backend database rejected an insert because it already exists."""
 
-    def __init__(self, message: str):
-        super().__init__(message)
+    def __init__(self) -> None:
+        super().__init__("The requested update conflicts with existing data.")
 
 
 class BackendDatabaseErrorStaleData(DioptraError):
     """The database operation failed because the ORM data was stale."""
 
-    def __init__(self, message: str):
-        super().__init__(message)
+    def __init__(self) -> None:
+        super().__init__(
+            "The requested resource was modified by another request. "
+            "Refresh it and try again."
+        )
 
 
 class SearchNotImplementedError(DioptraError):

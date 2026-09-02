@@ -19,7 +19,6 @@ from types import TracebackType
 from typing import Type
 
 from injector import inject
-from psycopg2.errors import UniqueViolation
 from sqlalchemy.exc import DatabaseError, IntegrityError
 from sqlalchemy.orm.exc import StaleDataError
 
@@ -58,7 +57,26 @@ class UnitOfWork(contextlib.AbstractContextManager):
         self._do_commit = True
 
     def commit(self) -> None:
-        self.session.commit()
+        try:
+            self.session.commit()
+        except IntegrityError as error:
+            self.rollback()
+
+            constraint_name = getattr(
+                getattr(error.orig, "diag", None),
+                "constraint_name",
+                None,
+            )
+            if constraint_name == "pk_resource_dependencies":
+                raise BackendDatabaseErrorAlreadyExists() from error
+
+            raise BackendDatabaseError from error
+        except StaleDataError as error:
+            self.rollback()
+            raise BackendDatabaseErrorStaleData() from error
+        except DatabaseError as error:
+            self.rollback()
+            raise BackendDatabaseError from error
 
     def rollback(self) -> None:
         self.session.rollback()
@@ -77,24 +95,13 @@ class UnitOfWork(contextlib.AbstractContextManager):
             self._do_commit = True
             return
 
-        # Rollback if exiting due to a thrown exception
-        if exc_type:
-            self.rollback()
-
         try:
-            self.commit()
-        except IntegrityError as e:
-            if (
-                isinstance(e.orig, UniqueViolation)
-                and e.orig.diag.constraint_name == "pk_resource_dependencies"
-            ):
-                raise BackendDatabaseErrorAlreadyExists(str(e.orig)) from e
-        except StaleDataError as e:
-            raise BackendDatabaseErrorStaleData(str(e)) from e
-        except DatabaseError as e:
-            raise BackendDatabaseError from e
-
-        self._do_commit = True
+            if exc_type:
+                self.rollback()
+            else:
+                self.commit()
+        finally:
+            self._do_commit = True
 
         return None
 
