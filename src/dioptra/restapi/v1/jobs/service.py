@@ -59,7 +59,7 @@ from dioptra.restapi.v1.queues.service import QueueIdService
 from dioptra.restapi.v1.shared.job_run_store import JobRunStoreProtocol
 from dioptra.restapi.v1.shared.rq_service import RQServiceV1
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
-from dioptra.restapi.v1.shared.task_engine_yaml.service import (
+from dioptra.restapi.v1.type_coercions import (
     check_artifact_param_type_mismatch,
     coerce_entrypoint_param_types,
 )

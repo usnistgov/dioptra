@@ -125,7 +125,7 @@ def get_json_schema(default: bool = False) -> dict:
     return schema
 
 
-def _schema_validate(
+def schema_validate(
     experiment_desc: Mapping[str, Any],
     schema: dict | None = None,
     resources: list[tuple[str, dict]] | None = None,
@@ -1195,7 +1195,7 @@ def validate(
         experiment description was valid.
     """
 
-    issues = _schema_validate(experiment_desc, schema)
+    issues = schema_validate(experiment_desc, schema)
 
     # If the description is not schema-valid, the basic structure is incorrect,
     # so we won't even try to dig inside it to check anything.
