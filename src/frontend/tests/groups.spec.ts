@@ -177,3 +177,41 @@ test("group table shows context and owner-specific actions", async ({ page }) =>
   expect((await deleteResponsePromise).ok()).toBe(true);
   await expect(page).toHaveURL(/\/groups$/);
 });
+
+test("opening a group in a new tab keeps the parent context isolated", async ({ page }) => {
+  const groupName = `e2e_new_tab_group_${Date.now()}`;
+
+  await ensureLoggedInAsTestUser(page);
+  await page.goto("/groups");
+  await expect(page.getByRole("button", { name: new RegExp(testUser.username) })).toBeEnabled();
+
+  const createResponse = await page.request.post("/api/v1/groups/", { data: { name: groupName } });
+  expect(createResponse.ok()).toBe(true);
+  const group = await createResponse.json();
+
+  const searchResponsePromise = page.waitForResponse(
+    (response) => new URL(response.url()).pathname === "/api/v1/groups/" && response.request().method() === "GET",
+  );
+  await page.getByPlaceholder("Search").fill(groupName);
+  expect((await searchResponsePromise).ok()).toBe(true);
+  const groupRow = page.locator("tbody tr").filter({ hasText: `${testUser.username}/${groupName}` });
+  await expect(groupRow).toBeVisible();
+
+  const popupPromise = page.waitForEvent("popup");
+  await groupRow.click({ button: "right" });
+  await page.locator(".q-menu:visible").getByText("Open In New Tab", { exact: true }).click();
+  const popup = await popupPromise;
+
+  await popup.waitForLoadState();
+  await expect(popup).toHaveURL(new RegExp(`/groups/${group.id}/admin$`));
+  await expect(popup.getByRole("heading", { name: "Group Admin" })).toBeVisible();
+  await expect(popup.getByRole("button", { name: new RegExp(groupName) })).toBeDisabled();
+  expect(await popup.evaluate(() => window.opener)).toBeNull();
+
+  await expect(page).toHaveURL(/\/groups$/);
+  await expect(page.getByRole("button", { name: new RegExp(testUser.username) })).toBeEnabled();
+
+  await popup.close();
+  const deleteResponse = await page.request.delete(`/api/v1/groups/${group.id}`);
+  expect(deleteResponse.ok()).toBe(true);
+});
