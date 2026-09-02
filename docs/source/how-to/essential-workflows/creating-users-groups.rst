@@ -20,7 +20,7 @@
 Create Users and Groups
 ========================
 
-This how-to explains how to create :ref:`Users <explanation-users-and-groups>` in Dioptra. 
+This how-to explains how to create :ref:`Users and Groups <explanation-users-and-groups>` in Dioptra.
 
 
 Prerequisites
@@ -42,7 +42,8 @@ Prerequisites
 User Creation Workflow
 ----------------------
 
-Follow these steps to create and register a new user. You can perform these actions via the Graphical User Interface (GUI) or programmatically using the Python Client.
+Follow these steps to create and register a new user. You can perform these actions through the graphical user interface
+(GUI) or programmatically using the Python client.
 
 .. rst-class:: header-on-a-card header-steps
 
@@ -64,6 +65,9 @@ Register a user with a username, email address, and password to be able to creat
 
       Click **Register** when finished to create the user.
 
+      Registration also creates a public personal group whose initial name matches the username. The new user is the
+      group's creator, initial member, administrator, and owner.
+
    .. group-tab:: Python Client
 
       **Client Method:**
@@ -73,15 +77,48 @@ Register a user with a username, email address, and password to be able to creat
       .. automethod:: dioptra.client.users.UsersCollectionClient.create
          :noindex:
 
+      The registration response includes the new public personal group. It can also include other public groups that are
+      accessible to the user.
+
 Group Creation Workflow
 -----------------------
 
-.. note::
-    Dioptra does not currently support the creation of additional groups. All resources are under the same default public group.
+Follow these steps to create an additional group and use it as the active resource context.
+
+.. warning::
+
+   All groups created in this release are public. Authenticated users can read and write resources in public groups even
+   when they are not members.
+
+.. rst-class:: header-on-a-card header-steps
+
+Step 1: Create the Group
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+In the Dioptra GUI, select **Groups**, and then select **Create**. Enter a name for the group. The **Public** setting is
+enabled and cannot currently be disabled. Select **Submit** to create the group.
+
+The new group becomes the active group context. Its name must be unique among groups created by the same user, but a group
+created by another user can have the same name.
+
+The Python client can list groups and retrieve a group by ID, but it does not currently expose group creation. Use the GUI
+or the ``POST /api/v1/groups/`` REST API endpoint to create a group.
+
+.. rst-class:: header-on-a-card header-steps
+
+Step 2: Select or Manage a Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The header group switcher lists groups created by the logged-in user. Select **View Other Groups** to browse all available
+public groups. On the Groups page, select **Set Context** to make a group active. Resource lists and creation forms then use
+that group.
+
+Select a row to open the Group Admin page. Every authenticated user can inspect a public group, but only an owner can
+rename or delete it. Deleting a group also marks its resources as deleted. A user cannot delete their final owned group.
 
 .. rst-class:: fancy-header header-seealso
 
-See Also 
+See Also
 ---------
 
 * :ref:`Users and Groups <explanation-users-and-groups>` - Understand what users and groups are for.

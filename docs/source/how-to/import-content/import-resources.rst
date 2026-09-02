@@ -20,8 +20,9 @@
 Import Resources
 ================
 
-This how-to explains how to import Dioptra Resources (e.g. :ref:`Plugins <explanation-plugins>`, :ref:`Entrypoints <explanation-entrypoints>`, :ref:`Types <explanation-plugin-parameter-types>`) to a Dioptra deployment
-via an externally provided :ref:`Resource Import TOML <reference-resource-import-syntax>` file.
+This how-to explains how to import Dioptra resources, such as :ref:`Plugins <explanation-plugins>`,
+:ref:`Entrypoints <explanation-entrypoints>`, and :ref:`Types <explanation-plugin-parameter-types>`, into a deployment using
+an externally provided :ref:`Resource Import TOML <reference-resource-import-syntax>` file.
 
 
 Prerequisites
@@ -49,7 +50,8 @@ Follow these steps to import resources (plugins, entrypoints, and types) into Di
 
 .. note::
 
-    There are several name conflict resolution strategies for imported resources, which apply to all import options:
+    There are several name conflict resolution strategies for imported resources. Conflicts are resolved against
+    resources in the destination group:
 
     * **Fail** - The import will fail if there is a name conflict.
     * **Update** - The previously registered resources will be updated with new definitions.
@@ -59,8 +61,8 @@ Follow these steps to import resources (plugins, entrypoints, and types) into Di
 .. rst-class:: header-on-a-card header-steps
 
 
-Step 1: Select the source to import from. (GUI only)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Step 1: Select the destination and source. (GUI only)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Import resources from a Git repository.
 
@@ -68,7 +70,8 @@ Import resources from a Git repository.
 
    .. group-tab:: GUI
 
-      1. In the Dioptra GUI, **click the wrench symbol** on the navigation bar. Select **Import Resources** from the drop down. 
+      1. Use the header group switcher or the Groups page to select the destination group. In the Dioptra GUI, **click the
+         wrench symbol** on the navigation bar and select **Import Resources** from the drop-down menu.
       
       2. Select the either **GIT REPO**, **UPLOAD ARCHIVE** or **UPLOAD DIRECTORY** depending on where you would like to import resources from.
 
@@ -95,30 +98,27 @@ Step 2: Import the Resources.
 
    .. group-tab:: GUI
 
-      1. **Select a group** to import these resources under.
-
-      .. note:: 
-          Dioptra does not currently support the creation of additional groups. All resources are under the same default public group.
-
-      2. **Enter the path** to the TOML file. (For example - ``extra/dioptra.toml``)
+      1. Confirm that the read-only **Group** field shows the intended destination group. The import uses the active group
+         at submission time.
+      2. **Enter the path** to the TOML file, for example ``extra/dioptra.toml``.
       3. Select a **name conflict resolution strategy**.
-      4. Select **IMPORT**.
+      4. Select **Import**.
 
    .. group-tab:: Python Client
 
       **Client Method:**
 
-      Use the client to import the resources.
+      Use the client to import the resources. Pass the destination group explicitly as ``group_id``; Python-client imports
+      do not use the active group context from a browser session.
 
       .. automethod:: dioptra.client.workflows.WorkflowsCollectionClient.import_resources
          :noindex:
 
 .. rst-class:: fancy-header header-seealso
 
-See Also 
+See Also
 ---------
 
 * :ref:`Resource Import Reference <reference-resource-import-syntax>` - More information on syntax requirements for the Resource Import file
 * :ref:`Plugins Reference <reference-plugins>` - More information on syntax requirements for Plugins
 * :ref:`Entrypoints Reference <reference-entrypoints>` - More information on syntax requirements for Entrypoints
-
