@@ -229,12 +229,6 @@ async function loadGroup(id) {
   }
 }
 
-async function refreshLoginState() {
-  const response = await api.getLoginStatus();
-  store.loggedInUser = response.data;
-  store.setGroups(response.data.groups);
-}
-
 async function renameGroup() {
   if (!isOwner.value || !nameChanged.value) return;
 
@@ -246,7 +240,7 @@ async function renameGroup() {
     group.value = response.data;
     name.value = response.data.name;
     originalName.value = response.data.name;
-    await refreshLoginState();
+    await api.refreshLoginState();
     notify.success(`Successfully renamed group to '${qualifiedName.value}'`);
   } catch (error) {
     notify.error(error.response?.data?.message || "Failed to rename group");
@@ -259,7 +253,7 @@ async function deleteGroup() {
   try {
     const deletedName = qualifiedName.value;
     await api.deleteItem("groups", group.value.id);
-    await refreshLoginState();
+    await api.refreshLoginState();
     showDeleteDialog.value = false;
     notify.success(`Successfully deleted '${deletedName}'`);
     router.push("/groups");

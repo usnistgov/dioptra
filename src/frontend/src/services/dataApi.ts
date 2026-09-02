@@ -519,6 +519,14 @@ export async function getLoginStatus() {
   return await axios.get(`/api/users/current`);
 }
 
+export async function refreshLoginState() {
+  const response = await getLoginStatus();
+  const store = useLoginStore();
+  store.loggedInUser = response.data;
+  store.setGroups(response.data.groups);
+  return response.data;
+}
+
 export async function login(username: string, password: string) {
   return await axios.post(`/api/auth/login`, {
     username: username,
