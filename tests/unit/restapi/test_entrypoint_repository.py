@@ -1317,6 +1317,7 @@ def test_entrypoint_set_entrypoint_plugins_success(
 
     ep = make_entrypoint(account.user, account.group)
     entrypoint_repo.create(ep)
+    db_session.commit()
 
     plugin_result, artifact_plugin_result = entrypoint_repo.set_entrypoint_plugins(
         ep,
