@@ -83,9 +83,7 @@ async function submit() {
 
   try {
     const createResponse = await api.addItem("groups", { name: name.value, public: isPublic.value });
-    const userInfoResponse = await api.getLoginStatus();
-    store.loggedInUser = userInfoResponse.data;
-    store.setGroups(userInfoResponse.data.groups);
+    await api.refreshLoginState();
     store.setLoggedInGroup(createResponse.data.id);
     notify.success("Group created");
     await router.push("/groups");
