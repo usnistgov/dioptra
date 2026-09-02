@@ -17,6 +17,7 @@
     :rows="userGroups"
     :columns="columns"
     :highlightedRowKeys="activeGroupIds"
+    :refresh-on-group-change="false"
     title="Groups"
     :showDeletedToggle="true"
     :hideCreateBtn="false"
@@ -97,14 +98,18 @@ const userGroups = ref([]);
 const showDeleteDialog = ref(false);
 const showDeleted = ref(false);
 const activeGroupIds = computed(() => (store.loggedInGroup ? [store.loggedInGroup.id] : []));
+let latestGroupsRequest = 0;
 
 async function getUserGroups(pagination) {
-  userGroups.value = [];
+  const requestId = ++latestGroupsRequest;
   const res = await api.getData("groups", pagination, false, showDeleted.value);
-  const groups = res.data.data;
-  groups.forEach((group) => {
+  if (requestId !== latestGroupsRequest) {
+    return;
+  }
+
+  userGroups.value = res.data.data.map((group) => {
     const member = group.members.find((m) => Number(m.user.id) === Number(store.loggedInUser?.id));
-    userGroups.value.push({
+    return {
       id: group.id,
       name: group.name,
       qualifiedName: `${group.user.username}/${group.name}`,
@@ -113,7 +118,7 @@ async function getUserGroups(pagination) {
       write: group.public || (member?.permissions.write ?? false),
       admin: member?.permissions.admin ?? false,
       owner: member?.permissions.owner ?? false,
-    });
+    };
   });
 
   tableRef.value.updateTotalRows(res.data.totalNumResults);
@@ -146,7 +151,6 @@ async function deleteGroup() {
 
   const deletedGroupId = selected.value[0].id;
   const deletedGroupName = selected.value[0].name;
-  const wasActiveGroup = store.loggedInGroup?.id === deletedGroupId;
 
   try {
     await api.deleteItem("groups", deletedGroupId);
@@ -154,10 +158,6 @@ async function deleteGroup() {
     const userInfoRes = await api.getLoginStatus();
     store.loggedInUser = userInfoRes.data;
     store.setGroups(userInfoRes.data.groups);
-
-    if (wasActiveGroup && store.groups.length > 0) {
-      store.setLoggedInGroup(store.groups[0].id);
-    }
 
     notify.success(`Successfully deleted '${deletedGroupName}'`);
     showDeleteDialog.value = false;

@@ -34,8 +34,34 @@ test("created group becomes the active context", async ({ page }) => {
   await groupMenu.getByRole("link", { name: "View Other Groups" }).click();
   await expect(page).toHaveURL(/\/groups$/);
 
-  const deleteResponse = await page.request.delete(`/api/v1/groups/${createdGroup.id}`);
-  expect(deleteResponse.ok()).toBe(true);
+  let groupListRequests = 0;
+  page.on("request", (request) => {
+    const url = new URL(request.url());
+    if (request.method() === "GET" && url.pathname === "/api/v1/groups/") {
+      groupListRequests++;
+    }
+  });
+
+  const searchResponsePromise = page.waitForResponse(
+    (response) => new URL(response.url()).pathname === "/api/v1/groups/" && response.request().method() === "GET",
+  );
+  await search.fill(groupName);
+  expect((await searchResponsePromise).ok()).toBe(true);
+  await expect(createdRow).toBeVisible();
+  const requestsBeforeDelete = groupListRequests;
+  const deleteResponsePromise = page.waitForResponse(
+    (response) =>
+      response.url().includes(`/api/v1/groups/${createdGroup.id}`) && response.request().method() === "DELETE",
+  );
+  const refreshResponsePromise = page.waitForResponse(
+    (response) => new URL(response.url()).pathname === "/api/v1/groups/" && response.request().method() === "GET",
+  );
+  await createdRow.getByRole("button", { name: "Delete group" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Confirm" }).click();
+  expect((await deleteResponsePromise).ok()).toBe(true);
+  expect((await refreshResponsePromise).ok()).toBe(true);
+  expect(groupListRequests - requestsBeforeDelete).toBe(1);
+  await expect(createdRow).toHaveCount(0);
 });
 
 test("group table shows context and owner-specific actions", async ({ page }) => {
@@ -70,13 +96,26 @@ test("group table shows context and owner-specific actions", async ({ page }) =>
   await expect(ownedRow.getByRole("button", { name: "Delete group" })).toBeEnabled();
   await expect(ownedRow).toHaveClass(/bg-blue-1/);
 
+  const searchResponsePromise = page.waitForResponse(
+    (response) => new URL(response.url()).pathname === "/api/v1/groups/" && response.request().method() === "GET",
+  );
   await search.fill(otherGroup.name);
+  expect((await searchResponsePromise).ok()).toBe(true);
   const otherRow = page.locator("tbody tr").filter({ hasText: otherGroup.name });
   await expect(otherRow.getByText(`${otherGroup.user.username}/${otherGroup.name}`)).toBeVisible();
   await expect(otherRow.getByRole("button", { name: "Delete group" })).toBeDisabled();
+
+  let groupListRequests = 0;
+  page.on("request", (request) => {
+    const url = new URL(request.url());
+    if (request.method() === "GET" && url.pathname === "/api/v1/groups/") {
+      groupListRequests++;
+    }
+  });
   await otherRow.getByRole("button", { name: "Set Context" }).click();
   await expect(otherRow.getByRole("button", { name: "Active Context" })).toBeVisible();
   await expect(otherRow).toHaveClass(/bg-blue-1/);
+  expect(groupListRequests).toBe(0);
 
   await page.getByRole("button", { name: new RegExp(otherGroup.name) }).click();
   const groupMenu = page.locator(".q-menu:visible");
