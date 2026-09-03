@@ -73,6 +73,9 @@ import * as api from "@/services/dataApi";
 import * as notify from "../notify";
 import PageTitle from "@/components/PageTitle.vue";
 import AssignTagsDialog from "@/dialogs/AssignTagsDialog.vue";
+import { useLoginStore } from "@/stores/LoginStore";
+
+const store = useLoginStore();
 
 const selected = ref([]);
 const editing = ref(false);
@@ -107,12 +110,12 @@ const columns = [
   { name: "tags", label: "Tags", align: "left", field: "tags", sortable: false },
 ];
 
-async function addModel(name, group, description) {
+async function addModel(name, description) {
   try {
     const res = await api.addItem("models", {
       name,
       description,
-      group,
+      group: store.loggedInGroup.id,
     });
     showAddEditDialog.value = false;
     notify.success(`Successfully created '${res.data.name}'`);
