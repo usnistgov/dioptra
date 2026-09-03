@@ -223,7 +223,10 @@ onMounted(async () => {
   if (store.savedForms?.pluginParamType && route.params.id === "new") {
     copyAtEditStart.value = JSON.parse(JSON.stringify(pluginParamType.value));
     showReturnDialog.value = true;
-    pluginParamType.value = store.savedForms.pluginParamType;
+    pluginParamType.value = {
+      ...store.savedForms.pluginParamType,
+      group: store.loggedInGroup.id,
+    };
     if (pluginParamType.value.structure && Object.keys(pluginParamType.value.structure).length > 0) {
       jsonString.value = JSON.stringify(pluginParamType.value.structure, null, 2);
     }
@@ -234,6 +237,15 @@ onMounted(async () => {
     copyAtEditStart.value = JSON.parse(JSON.stringify(pluginParamType.value));
   }
 });
+
+watch(
+  () => store.loggedInGroup.id,
+  (groupId) => {
+    if (route.params.id !== "new") return;
+    pluginParamType.value.group = groupId;
+    ORIGINAL_COPY.group = groupId;
+  },
+);
 
 async function getPluginParamType() {
   try {
@@ -319,7 +331,12 @@ onBeforeRouteLeave((to) => {
 });
 
 function clearForm() {
-  pluginParamType.value = ORIGINAL_COPY;
+  pluginParamType.value = {
+    name: "",
+    group: store.loggedInGroup.id,
+    description: "",
+    structure: null,
+  };
   jsonString.value = "";
   basicInfoForm.value.reset();
   store.savedForms.pluginParamType = null;
@@ -341,7 +358,10 @@ async function submit() {
 
 async function createPluginParamType() {
   try {
-    const res = await api.addItem("pluginParameterTypes", pluginParamType.value);
+    const res = await api.addItem("pluginParameterTypes", {
+      ...pluginParamType.value,
+      group: store.loggedInGroup.id,
+    });
     notify.success(`Successfully created '${res.data.name}'`);
     store.savedForms.pluginParamType = null;
     confirmLeave.value = true;

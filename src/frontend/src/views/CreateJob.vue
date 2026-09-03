@@ -927,6 +927,8 @@ watch(
     entrypoints.value = [];
     queues.value = [];
     artifacts.value = [];
+    parameters.value = [];
+    artifactParameters.value = [];
     store.savedForms.jobs.allJobs = null;
     basicInfoForm.value?.reset();
     await Promise.all([getExperiments(), getArtifacts()]);
@@ -981,8 +983,16 @@ const expJobOrAllJobs = computed(() => {
 });
 
 async function createJob() {
-  if (!resourcesShareGroup(job.value.experiment, job.value.entrypoint, job.value.queue)) {
-    notify.error("The experiment, entrypoint, and queue must belong to the same group.");
+  const activeGroupId = Number(store.loggedInGroup.id);
+  const selectedResources = [job.value.experiment, job.value.entrypoint, job.value.queue];
+  if (
+    !resourcesShareGroup(...selectedResources) ||
+    selectedResources.some((resource) => getResourceGroupId(resource) !== activeGroupId) ||
+    artifactParameters.value.some(
+      (parameter) => parameter.selectedArtifact && getResourceGroupId(parameter.selectedArtifact) !== activeGroupId,
+    )
+  ) {
+    notify.error("The experiment, entrypoint, queue, and artifacts must belong to the active group.");
     return;
   }
   const payload = {
@@ -1136,8 +1146,8 @@ function getResourceGroupId(resource) {
 }
 
 function resourcesShareGroup(...resources) {
-  const groupIds = resources.map(getResourceGroupId).filter((groupId) => groupId !== null);
-  return groupIds.length < 2 || groupIds.every((groupId) => groupId === groupIds[0]);
+  const groupIds = resources.map(getResourceGroupId);
+  return groupIds.every((groupId) => groupId !== null && groupId === groupIds[0]);
 }
 
 async function getExperiment(id) {
@@ -1288,7 +1298,14 @@ onMounted(async () => {
   }
 
   if (store.savedForms.jobs[expJobOrAllJobs.value] && !history.state.oldJobId) {
-    job.value = store.savedForms.jobs[expJobOrAllJobs.value];
+    const savedJob = store.savedForms.jobs[expJobOrAllJobs.value];
+    const savedGroupId = savedJob.groupId ?? getResourceGroupId(savedJob.experiment);
+    if (Number(savedGroupId) !== Number(store.loggedInGroup.id)) {
+      store.savedForms.jobs[expJobOrAllJobs.value] = null;
+      await clearForm();
+      return;
+    }
+    job.value = savedJob;
     // check if saved values are still valid
     // load latest version of each resource
     // if a child is no longer linked to parent resource, discard
@@ -1342,7 +1359,10 @@ onBeforeRouteLeave((to) => {
   } else if (confirmLeave.value) {
     return true;
   } else {
-    store.savedForms.jobs[expJobOrAllJobs.value] = job.value;
+    store.savedForms.jobs[expJobOrAllJobs.value] = {
+      ...job.value,
+      groupId: store.loggedInGroup.id,
+    };
     return true;
   }
 });

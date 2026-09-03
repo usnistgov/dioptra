@@ -10,6 +10,49 @@ test("create plugin", async ({ page }) => {
   await createPlugin(page, pluginName);
 });
 
+test("creates a plugin in the context selected after the form opens", async ({ page }) => {
+  const groupName = `e2e_plugin_group_${Date.now()}`;
+  const pluginName = `e2e_context_plugin_${Date.now()}`;
+
+  await ensureLoggedInAsTestUser(page);
+  const userResponse = await page.request.get("/api/v1/users/current");
+  expect(userResponse.ok()).toBe(true);
+  const user = await userResponse.json();
+  const originalGroup = user.groups.find(
+    (group) => group.name === testUser.username && group.user.username === testUser.username,
+  );
+  expect(originalGroup).toBeTruthy();
+
+  await page.goto("/groups/new");
+  await page.getByRole("textbox", { name: "Name:" }).fill(groupName);
+  const groupResponsePromise = page.waitForResponse(
+    (response) => new URL(response.url()).pathname === "/api/v1/groups/" && response.request().method() === "POST",
+  );
+  await page.getByRole("button", { name: "Submit" }).click();
+  const groupResponse = await groupResponsePromise;
+  expect(groupResponse.ok()).toBe(true);
+  const group = await groupResponse.json();
+
+  await page.goto("/plugins/new");
+  await page.getByRole("textbox", { name: "Name:" }).fill(pluginName);
+  await page.getByRole("button", { name: new RegExp(groupName) }).click();
+  await page.locator(".q-menu:visible").getByText(originalGroup.name, { exact: true }).click();
+  await expect(page.getByRole("textbox", { name: "Group:" })).toHaveValue(originalGroup.name);
+
+  const pluginResponsePromise = page.waitForResponse(
+    (response) => new URL(response.url()).pathname === "/api/v1/plugins/" && response.request().method() === "POST",
+  );
+  await page.getByRole("button", { name: "Submit" }).click();
+  const pluginResponse = await pluginResponsePromise;
+  expect(pluginResponse.ok()).toBe(true);
+  expect(pluginResponse.request().postDataJSON().group).toBe(originalGroup.id);
+  const plugin = await pluginResponse.json();
+  expect(plugin.group.id).toBe(originalGroup.id);
+
+  expect((await page.request.delete(`/api/v1/plugins/${plugin.id}`)).ok()).toBe(true);
+  expect((await page.request.delete(`/api/v1/groups/${group.id}`)).ok()).toBe(true);
+});
+
 test("edit plugin", async ({ page }) => {
   const pluginName = `e2e_plugin_${Date.now()}`;
   const updatedPluginName = `${pluginName}_update`;
@@ -65,7 +108,7 @@ test("does not restore another user's unsaved plugin form", async ({ page }) => 
   await page.goto("/plugins/new");
   await page.getByRole("textbox", { name: "Name:" }).fill(unsavedPluginName);
 
-  await page.getByRole("link", { name: testUser.username }).click();
+  await page.locator('a[href="/login"]:visible').click();
   await expect(page).toHaveURL(/\/login$/);
   await page.getByRole("button", { name: "Log Out" }).click();
   await expect(page.getByRole("heading", { name: "Login" })).toBeVisible();
@@ -89,7 +132,8 @@ test("does not restore another user's unsaved plugin form", async ({ page }) => 
     }),
   ).toBeVisible();
 
-  await page.locator("nav").getByRole("link", { name: "Plugins", exact: true }).click();
+  await page.getByRole("button", { name: "Navigation Menu" }).click();
+  await page.locator(".q-menu:visible").getByText("Plugins", { exact: true }).click();
   await page.getByRole("button", { name: "Create" }).click();
   await expect(page).toHaveURL(/\/plugins\/new$/);
   await expect(page.getByRole("heading", { name: "Load Unsaved Form?" })).toHaveCount(0);
