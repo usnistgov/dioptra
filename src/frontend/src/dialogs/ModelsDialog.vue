@@ -72,20 +72,15 @@ function requiredRule(val) {
 const showDialog = defineModel();
 
 const name = ref("");
-const group = ref("");
 const description = ref("");
 
 watch(showDialog, (newVal) => {
   if (newVal) {
     name.value = props.editModel.name;
     description.value = props.editModel.description;
-    group.value = props.editModel.group;
   } else {
     name.value = "";
     description.value = "";
-  }
-  if (!group.value) {
-    group.value = store.loggedInGroup.id;
   }
 });
 
@@ -93,7 +88,7 @@ function emitAddOrEdit() {
   if (props.editModel) {
     emit("updateModel", name.value, props.editModel.id, description.value);
   } else {
-    emit("addModel", name.value, group.value, description.value);
+    emit("addModel", name.value, description.value);
   }
 }
 </script>

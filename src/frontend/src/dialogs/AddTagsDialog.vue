@@ -57,18 +57,13 @@ const showDialog = defineModel();
 
 const name = ref("");
 const locked = ref(true);
-const group = ref("");
 
 watch(showDialog, (newVal) => {
   if (newVal) {
     name.value = props.editTag.name;
-    group.value = props.editTag.group;
   } else {
     name.value = "";
     locked.value = true;
-  }
-  if (!group.value) {
-    group.value = store.loggedInGroup.id;
   }
 });
 
@@ -76,7 +71,7 @@ function emitAddOrEdit() {
   if (props.editTag) {
     emit("updateTag", name.value, props.editTag.id);
   } else {
-    emit("addTag", name.value, group.value);
+    emit("addTag", name.value);
   }
 }
 </script>

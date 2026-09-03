@@ -854,8 +854,24 @@ async function getEntrypoint() {
   if (route.params.id === "new") {
     if (store.savedForms?.entryPoint) {
       showReturnDialog.value = true;
-      await checkIfStillValid("queues");
-      await checkIfStillValid("plugins");
+      const savedGroupId = store.savedForms.entryPoint.group?.id ?? store.savedForms.entryPoint.group;
+      if (Number(savedGroupId) !== Number(store.loggedInGroup.id)) {
+        store.savedForms.entryPoint = {
+          ...store.savedForms.entryPoint,
+          group: store.loggedInGroup.id,
+          parameters: [],
+          artifactParameters: [],
+          taskGraph: "",
+          artifactGraph: "",
+          queues: [],
+          plugins: [],
+          artifactPlugins: [],
+        };
+      } else {
+        await checkIfStillValid("queues");
+        await checkIfStillValid("plugins");
+        await checkIfStillValid("artifactPlugins", "plugins");
+      }
       entryPoint.value = store.savedForms.entryPoint;
       copyAtEditStart.value = JSON.parse(JSON.stringify(store.savedForms.entryPoint));
     } else {
@@ -873,13 +889,17 @@ async function getEntrypoint() {
   }
 }
 
-async function checkIfStillValid(type) {
-  for (let index = store.savedForms.entryPoint[type].length - 1; index >= 0; index--) {
-    const id = store.savedForms.entryPoint[type][index].id;
+async function checkIfStillValid(field, resourceType = field) {
+  for (let index = store.savedForms.entryPoint[field].length - 1; index >= 0; index--) {
+    const id = store.savedForms.entryPoint[field][index].id;
     try {
-      await api.getItem(type, id);
+      const response = await api.getItem(resourceType, id);
+      const groupId = response.data.group?.id ?? response.data.group;
+      if (Number(groupId) !== Number(store.loggedInGroup.id)) {
+        store.savedForms.entryPoint[field].splice(index, 1);
+      }
     } catch (err) {
-      await store.savedForms.entryPoint[type].splice(index, 1);
+      store.savedForms.entryPoint[field].splice(index, 1);
       console.warn(err);
     }
   }
@@ -914,6 +934,9 @@ function submit() {
 
 async function addOrModifyEntrypoint() {
   const submitObject = JSON.parse(JSON.stringify(entryPoint.value));
+  if (route.params.id === "new") {
+    submitObject.group = store.loggedInGroup.id;
+  }
   const keysToKeep = [
     "group",
     "name",
@@ -1112,6 +1135,33 @@ const artifactPluginIDsToUpdate = ref([]);
 const pluginIDsToRemove = ref([]);
 const artifactPluginIDsToRemove = ref([]);
 
+watch(
+  () => store.loggedInGroup.id,
+  async (groupId, previousGroupId) => {
+    if (route.params.id !== "new" || groupId === previousGroupId) return;
+
+    entryPoint.value = {
+      ...entryPoint.value,
+      group: groupId,
+      parameters: [],
+      artifactParameters: [],
+      taskGraph: "",
+      artifactGraph: "",
+      queues: [],
+      plugins: [],
+      artifactPlugins: [],
+    };
+    ORIGINAL_COPY.group = groupId;
+    pluginParameterTypes.value = [];
+    pluginIDsToUpdate.value = [];
+    artifactPluginIDsToUpdate.value = [];
+    pluginIDsToRemove.value = [];
+    artifactPluginIDsToRemove.value = [];
+    store.savedForms.entryPoint = null;
+    await getPluginParameterTypes();
+  },
+);
+
 const objectForDeletion = ref();
 
 async function deleteEntrypoint() {
@@ -1132,7 +1182,7 @@ const displayErrorDialog = ref(false);
 async function validateInputs() {
   try {
     const res = await api.validateEntrypoint({
-      group: entryPoint.value.group.id || entryPoint.value.group,
+      group: route.params.id === "new" ? store.loggedInGroup.id : entryPoint.value.group.id || entryPoint.value.group,
       taskGraph: entryPoint.value.taskGraph,
       pluginSnapshots: entryPoint.value.plugins.map((plugin) => plugin.snapshotId || plugin.snapshot),
       parameters: entryPoint.value.parameters,
