@@ -16,19 +16,17 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform plugin parameter type endpoint operations."""
 
-from typing import Any, Iterable
+from typing import Any
 
 import structlog
 from flask_login import current_user
 from injector import inject
-from sqlalchemy import select
 from structlog.stdlib import BoundLogger
 
 import dioptra.restapi.db.repository.utils as repoutils
-from dioptra.restapi.db import db, models
+from dioptra.restapi.db import models
 from dioptra.restapi.db.unit_of_work import UnitOfWork
 from dioptra.restapi.errors import (
-    BackendDatabaseError,
     EntityDoesNotExistError,
     InconsistentBuiltinPluginParameterTypesError,
     PluginParameterTypeMatchesBuiltinTypeError,
@@ -112,14 +110,10 @@ class PluginParameterTypeService(object):
             creator=current_user,
         )
 
-        try:
+        with self._uow(commit):
             self._uow.type_repo.create(new_plugin_parameter_type)
-        except Exception:
-            self._uow.rollback()
-            raise
 
         if commit:
-            self._uow.commit()
             log.debug(
                 "Plugin Parameter Type registration successful",
                 plugin_parameter_type_id=new_plugin_parameter_type.resource_id,
@@ -322,14 +316,10 @@ class PluginParameterTypeIdService(object):
             creator=current_user,
         )
 
-        try:
+        with self._uow(commit):
             self._uow.type_repo.create_snapshot(new_plugin_parameter_type)
-        except Exception:
-            self._uow.rollback()
-            raise
 
         if commit:
-            self._uow.commit()
             log.debug(
                 "Plugin Parameter Type modification successful",
                 plugin_parameter_type_id=plugin_parameter_type_id,
@@ -352,7 +342,7 @@ class PluginParameterTypeIdService(object):
             A dictionary reporting the status of the request.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
-        with self._uow:
+        with self._uow():
             self._uow.type_repo.delete(plugin_parameter_type_id)
 
         log.debug(
@@ -384,7 +374,6 @@ class PluginParameterTypeNameService(object):
         self,
         name: str,
         group_id: int,
-        error_if_not_found: bool = False,
         **kwargs,
     ) -> models.PluginTaskParameterType | None:
         """Fetch a plugin parameter type by its name.
@@ -392,15 +381,11 @@ class PluginParameterTypeNameService(object):
         Args:
             name: The name of the plugin parameter type.
             group_id: The the group id of the plugin parameter type.
-            error_if_not_found: If True, raise an error if the plugin parameter
-                type is not found. Defaults to False.
-
         Returns:
             The plugin parameter type object if found, otherwise None.
 
         Raises:
-            EntityDoesNotExistError: If the given group does not exist or if the
-                plugin parameter type is not found and `error_if_not_found` is True.
+            EntityDoesNotExistError: If the given group does not exist.
             EntityDeletedError: If the given group is deleted.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -415,11 +400,6 @@ class PluginParameterTypeNameService(object):
         )
 
         if plugin_parameter_type is None:
-            if error_if_not_found:
-                raise EntityDoesNotExistError(
-                    EntityType.PLUGIN_TASK_PARAMETER_TYPE, name=name, group_id=group_id
-                )
-
             return None
 
         return plugin_parameter_type
@@ -442,22 +422,16 @@ class BuiltinPluginParameterTypeService(object):
     def get(
         self,
         group_id: int,
-        error_if_not_found: bool = False,
         **kwargs,
     ) -> list[models.PluginTaskParameterType]:
         """Fetch a list of builtin plugin parameter types.
 
         Args:
             group_id: The group id of the plugin parameter type.
-            error_if_not_found: Deprecated, does not control anything. Kept for
-                backwards compatibility purposes.
-
         Returns:
             The plugin parameter type object if found, otherwise None.
 
         Raises:
-            PluginParameterTypeDoesNotExistError: If the plugin parameter type
-                is not found and `error_if_not_found` is True.
             EntityDoesNotExistError: If the given group does not exist.
             EntityDeletedError: If the given group is deleted.
             InconsistentBuiltinPluginParameterTypesError: If the number of
@@ -508,25 +482,21 @@ class BuiltinPluginParameterTypeService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         new_builtin_parameter_types = []
-        for builtin_type_name in BUILTIN_TYPES:
-            type_ = models.PluginTaskParameterType(
-                None,
-                models.Resource("plugin_task_parameter_type", group),
-                user,
-                builtin_type_name,
-                None,
-            )
+        with self._uow(commit):
+            for builtin_type_name in BUILTIN_TYPES:
+                type_ = models.PluginTaskParameterType(
+                    None,
+                    models.Resource("plugin_task_parameter_type", group),
+                    user,
+                    builtin_type_name,
+                    None,
+                )
 
-            try:
                 self._uow.type_repo.create(type_, {repoutils.ResourceLockType.READONLY})
-            except Exception:
-                self._uow.rollback()
-                raise
 
-            new_builtin_parameter_types.append(type_)
+                new_builtin_parameter_types.append(type_)
 
         if commit:
-            self._uow.commit()
             log.debug(
                 "Built-in Plugin Parameter Types registration successful",
                 builtin_parameter_type_ids=[
@@ -540,60 +510,3 @@ class BuiltinPluginParameterTypeService(object):
             )
             for new_builtin_parameter_type in new_builtin_parameter_types
         ]
-
-
-def get_plugin_task_parameter_types_by_id(
-    ids: Iterable[int], log: BoundLogger
-) -> dict[int, models.PluginTaskParameterType]:
-    """Gets all of the PluginTaskParameterType instances based on the given ids
-    iterable
-
-    Args:
-        ids: an iterable containing all of the ids
-        log: where log messages should go
-
-    Returns:
-        The a dictionary of ids to PluginTaskParameterType instances
-
-    Raises:
-        ValueError: if ids does not contain at least one value
-        EntityDoesNotExistError: if one or more of the ids does not exist in the
-            PluginTaskParameterType table
-    """
-    id_list = set(ids)
-    num_ids = len(id_list)
-    if num_ids < 1:
-        return {}
-    parameter_types_stmt = (
-        select(models.PluginTaskParameterType)
-        .join(models.Resource)
-        .where(
-            models.PluginTaskParameterType.resource_id.in_(tuple(id_list)),
-            models.Resource.is_deleted == False,  # noqa: E712
-            models.Resource.latest_snapshot_id
-            == models.PluginTaskParameterType.resource_snapshot_id,
-        )
-    )
-    parameter_types = db.session.scalars(parameter_types_stmt).all()
-
-    if parameter_types is None:
-        log.error(
-            "The database query returned a None when it should return plugin "
-            "parameter types.",
-            sql=str(parameter_types_stmt),
-            num_expected=num_ids,
-        )
-        raise BackendDatabaseError
-
-    if not len(parameter_types) == num_ids:
-        returned_parameter_type_ids = {x.resource_id for x in parameter_types}
-        ids_not_found = id_list - returned_parameter_type_ids
-        raise EntityDoesNotExistError(
-            EntityType.PLUGIN_TASK_PARAMETER_TYPE,
-            num_expected=num_ids,
-            num_found=len(parameter_types),
-            ids_not_found=sorted(ids_not_found),
-        )
-
-    return {x.resource_id: x for x in parameter_types}
-    return {x.resource_id: x for x in parameter_types}

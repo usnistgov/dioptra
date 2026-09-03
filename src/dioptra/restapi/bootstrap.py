@@ -27,7 +27,10 @@ from mlflow import MlflowClient
 from passlib.context import CryptContext
 from redis import Redis
 
+from dioptra.restapi.db.unit_of_work import UnitOfWork
 from dioptra.restapi.request_scope import request
+from dioptra.restapi.service_context import ServiceContext
+from dioptra.restapi.v1.shared.job_queue import JobQueueProtocol
 from dioptra.restapi.v1.shared.job_run_store import (
     JobRunStoreProtocol,
     MlFlowJobRunStore,
@@ -56,8 +59,24 @@ class RQServiceV1Module(Module):
     @provider
     def provide_rq_service_module(
         self, configuration: RQServiceConfiguration
-    ) -> RQServiceV1:
+    ) -> JobQueueProtocol:
         return RQServiceV1(redis=configuration.redis)
+
+
+class ServiceContextModule(Module):
+    @request
+    @provider
+    def provide_service_context_module(
+        self,
+        uow: UnitOfWork,
+        job_queue: JobQueueProtocol,
+        job_run_store: JobRunStoreProtocol,
+    ) -> ServiceContext:
+        return ServiceContext(
+            uow=uow,
+            job_queue=job_queue,
+            job_run_store=job_run_store,
+        )
 
 
 @dataclass
@@ -128,4 +147,5 @@ def register_providers(modules: List[Callable[..., Any]]) -> None:
 
     modules.append(JobRunStoreModule)
     modules.append(RQServiceV1Module)
+    modules.append(ServiceContextModule)
     modules.append(PasswordServiceModule)

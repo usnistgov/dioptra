@@ -232,6 +232,7 @@ class ExperimentRepository:
             EntryPoint,
             experiment,
             deletion_policy,
+            parent_resource_type=EntityType.EXPERIMENT,
         )
 
     def create_entrypoints(
@@ -311,7 +312,11 @@ class ExperimentRepository:
             EntityDeletedError: if parent or any new child is deleted
         """
         return utils.append_resource_children(
-            self.session, EntryPoint, experiment, children
+            self.session,
+            EntryPoint,
+            experiment,
+            children,
+            parent_resource_type=EntityType.EXPERIMENT,
         )
 
     def unlink_entrypoint(
@@ -362,7 +367,7 @@ class ExperimentRepository:
             EntityDoesNotExistError: if the experiment does not exist
         """
 
-        utils.delete_resource(self.session, experiment)
+        utils.delete_resource(self.session, experiment, EntityType.EXPERIMENT)
 
     def get_by_filters_paged(
         self,

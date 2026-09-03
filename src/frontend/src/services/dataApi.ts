@@ -221,7 +221,7 @@ export async function getJobMetricHistory(id: string, name: string) {
   return res;
 }
 
-export async function getJobs(id: number, pagination: Pagination) {
+export async function getJobs(id: number, pagination: Pagination, showDeleted: boolean = false) {
   const res = await axios.get(`/api/experiments/${id}/jobs`, {
     params: {
       index: pagination.index,
@@ -229,6 +229,7 @@ export async function getJobs(id: number, pagination: Pagination) {
       search: pagination.search,
       sortBy: pagination.sortBy,
       descending: pagination.descending,
+      showDeleted,
     },
   });
 
@@ -356,7 +357,7 @@ export async function convertToResource(id: number) {
   return await axios.post(`/api/workflows/draftCommit/${id}`);
 }
 
-export async function getFiles(id: number, pagination: Pagination) {
+export async function getFiles(id: number, pagination: Pagination, showDeleted = false) {
   const res = await axios.get(`/api/plugins/${id}/files`, {
     params: {
       index: pagination.index,
@@ -364,6 +365,7 @@ export async function getFiles(id: number, pagination: Pagination) {
       search: pagination.search,
       sortBy: pagination.sortBy,
       descending: pagination.descending,
+      showDeleted,
     },
   });
 

@@ -31,7 +31,6 @@ from dioptra.restapi.db.models import (
     Resource,
     ResourceSnapshot,
     User,
-    resource_dependency_types_table,
 )
 from dioptra.restapi.db.repository.utils import (
     CompatibleSession,
@@ -79,6 +78,7 @@ class DraftsRepository:
     def create_draft_resource(
         self,
         draft: DraftResource,
+        expected_base_resource_type: EntityType | None = None,
     ) -> None:
         """
         Create a draft resource.
@@ -108,51 +108,7 @@ class DraftsRepository:
         assert_user_exists(self._session, draft.creator, DeletionPolicy.NOT_DELETED)
         assert_user_in_group(self._session, draft.creator, draft.target_owner)
 
-        base_resource_id = draft.payload["base_resource_id"]
-        if base_resource_id is not None:
-            # trying to kill two birds with one stone here: check for base
-            # resource existence/deletion, and check for legal base/draft
-            # resource types.
-            types_stmt = (
-                sa.select(
-                    Resource.is_deleted,
-                    Resource.resource_type,
-                    resource_dependency_types_table.c.child_resource_type,
-                )
-                .select_from(Resource)
-                .where(
-                    Resource.resource_id == base_resource_id,
-                )
-                .outerjoin(
-                    resource_dependency_types_table,
-                    sa.and_(
-                        Resource.resource_type
-                        == resource_dependency_types_table.c.parent_resource_type,
-                        resource_dependency_types_table.c.child_resource_type
-                        == draft.resource_type,
-                    ),
-                )
-            )
-
-            result = self._session.execute(types_stmt).first()
-
-            if result:
-                is_deleted, parent_resource_type, child_resource_type = result
-                parent_entity_type = EntityType.get_from_db_table_name(
-                    parent_resource_type
-                )
-
-                if is_deleted:
-                    raise EntityDeletedError(parent_entity_type, base_resource_id)
-
-                if not child_resource_type:
-                    raise DraftBaseInvalidError(
-                        base_resource_id,
-                        parent_entity_type,
-                        get_resource_type(draft),
-                    )
-            else:
-                raise DraftBaseResourceDoesNotExistError(base_resource_id)
+        self._assert_base_resource_valid(draft, expected_base_resource_type)
 
         # TODO: verify that the draft payload is for a draft resource, not a
         # draft modification?  Any other sanity checks necessary?
@@ -162,6 +118,7 @@ class DraftsRepository:
     def create_draft_modification(
         self,
         draft: DraftResource,
+        expected_base_resource_type: EntityType | None = None,
     ):
         """
         Create a draft modification of an existing resource.
@@ -228,6 +185,8 @@ class DraftsRepository:
                 resource_owner_id,
             )
 
+        self._assert_base_resource_valid(draft, expected_base_resource_type)
+
         # I guess a user may not have more than one draft modification per
         # resource?
         if self.has_draft_modification(resource_obj, draft.creator):
@@ -239,6 +198,35 @@ class DraftsRepository:
         # a draft resource?  Any other sanity checks necessary?
 
         self._session.add(draft)
+
+    def _assert_base_resource_valid(
+        self,
+        draft: DraftResource,
+        expected_base_resource_type: EntityType | None,
+    ) -> None:
+        base_resource_id = draft.payload["base_resource_id"]
+        if base_resource_id is None:
+            return
+
+        base_resource = self.get_resource(base_resource_id, DeletionPolicy.ANY)
+        if base_resource is None:
+            raise DraftBaseResourceDoesNotExistError(base_resource_id)
+
+        parent_entity_type = EntityType.get_from_db_table_name(
+            base_resource.resource_type
+        )
+        if base_resource.is_deleted:
+            raise EntityDeletedError(parent_entity_type, base_resource_id)
+
+        if (
+            expected_base_resource_type is not None
+            and base_resource.resource_type != expected_base_resource_type.db_table_name
+        ):
+            raise DraftBaseInvalidError(
+                base_resource_id,
+                parent_entity_type,
+                get_resource_type(draft),
+            )
 
     def get(
         self,
@@ -360,6 +348,8 @@ class DraftsRepository:
         self,
         user: User | int,
         resource: Resource | ResourceSnapshot | int,
+        *,
+        resource_type: EntityType,
     ) -> DraftResource | None:
         """
         Get the first draft modification created by the given user, of the
@@ -369,6 +359,7 @@ class DraftsRepository:
             user: A User object or user_id integer primary key value
             resource: A resource, snapshot, or resource_id integer primary key
                 value
+            resource_type: The expected entity type of the resource
 
         Returns:
             A DraftResource, or None if one was not found
@@ -379,7 +370,12 @@ class DraftsRepository:
         """
 
         assert_user_exists(self._session, user, DeletionPolicy.NOT_DELETED)
-        assert_resource_exists(self._session, resource, DeletionPolicy.NOT_DELETED)
+        assert_resource_exists(
+            self._session,
+            resource,
+            DeletionPolicy.NOT_DELETED,
+            resource_type=resource_type,
+        )
 
         user_id = get_user_id(user)
         resource_id = get_resource_id(resource)
@@ -396,6 +392,8 @@ class DraftsRepository:
         self,
         resource: Resource | ResourceSnapshot | int,
         except_user: User | int | None = None,
+        *,
+        resource_type: EntityType,
     ) -> int:
         """
         Get the number of draft modifications of the given resource, which
@@ -405,6 +403,7 @@ class DraftsRepository:
             resource: The resource whose drafts should be counted
             except_user: The user whose drafts should not be counted; None
                 to count them all
+            resource_type: The expected entity type of the resource
 
         Returns:
             A draft count
@@ -419,7 +418,12 @@ class DraftsRepository:
         if except_user is not None:
             assert_user_exists(self._session, except_user, DeletionPolicy.NOT_DELETED)
 
-        assert_resource_exists(self._session, resource, DeletionPolicy.NOT_DELETED)
+        assert_resource_exists(
+            self._session,
+            resource,
+            DeletionPolicy.NOT_DELETED,
+            resource_type=resource_type,
+        )
 
         resource_id = get_resource_id(resource)
 
@@ -452,6 +456,8 @@ class DraftsRepository:
         base_resource_id: int | None = None,
         page_start: int = 0,
         page_length: int = -1,
+        *,
+        base_resource_type: EntityType | None = None,
     ) -> tuple[Sequence[DraftResource], int]:
         """
         Get some drafts according to search criteria.
@@ -467,6 +473,7 @@ class DraftsRepository:
             page_start: A row index where the returned page should start
             page_length: A row count representing the page length; use <= 0
                 for unlimited length
+            base_resource_type: The expected base resource entity type
 
         Returns:
             A 2-tuple including a page of DraftResource objects, and a count
@@ -494,7 +501,10 @@ class DraftsRepository:
 
         if base_resource_id is not None:
             assert_resource_exists(
-                self._session, base_resource_id, DeletionPolicy.NOT_DELETED
+                self._session,
+                base_resource_id,
+                DeletionPolicy.NOT_DELETED,
+                resource_type=base_resource_type,
             )
 
         filters = [

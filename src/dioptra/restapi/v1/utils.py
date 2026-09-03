@@ -338,7 +338,9 @@ def build_plugin_snapshot_ref(plugin: models.Plugin) -> dict[str, Any]:
     }
 
 
-def build_plugin_file_ref(plugin_file: models.PluginFile) -> dict[str, Any]:
+def build_plugin_file_ref(
+    plugin_file: models.PluginFile, plugin: models.Plugin
+) -> dict[str, Any]:
     """Build a PluginRef dictionary.
 
     Args:
@@ -347,7 +349,7 @@ def build_plugin_file_ref(plugin_file: models.PluginFile) -> dict[str, Any]:
     Returns:
         The PluginRef dictionary.
     """
-    plugin_id = plugin_file.plugin_id
+    plugin_id = plugin.resource_id
 
     return {
         "id": plugin_file.resource_id,
@@ -1067,7 +1069,7 @@ def build_plugin(plugin_with_files: PluginWithFilesDict) -> dict[str, Any]:
 
     if plugin_files is not None:
         data["files"] = [
-            build_plugin_file_ref(plugin_file) for plugin_file in plugin_files
+            build_plugin_file_ref(plugin_file, plugin) for plugin_file in plugin_files
         ]
 
     if has_draft is not None:

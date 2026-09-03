@@ -170,9 +170,45 @@ def get_latest_snapshots(
     if isinstance(resources, (int, m.Resource, m.ResourceSnapshot)):
         snaps = session.scalar(stmt)
     else:
-        snaps = session.scalars(stmt).all()
+        snaps = session.scalars(stmt).unique().all()
 
     return snaps
+
+
+def get_latest_snapshots_where(
+    session: CompatibleSession[S],
+    snap_class: typing.Type[ResourceT],
+    *where_clauses: sa.ColumnExpressionArgument,
+    deletion_policy: DeletionPolicy,
+) -> Sequence[ResourceT]:
+    """
+    Get the latest snapshot(s) of the given resource(s), filtered by the given where
+    clause(s).
+
+    Args:
+        session: An SQLAlchemy session
+        snap_class: A ResourceSnapshot subclass, which represents the type
+            of resource to get
+        resources: A single or iterable of resources, resource snapshots,
+            or integer resource IDs, for which to obtain the latest snapshots
+        deletion_policy: Whether to look at deleted resources, non-deleted
+            resources, or all resources
+
+    Returns:
+        A snapshot/list of snapshots, or None/empty list if none were found
+        with the given ID(s)
+    """
+    stmt = (
+        sa.select(snap_class)
+        .join(m.Resource)
+        .where(
+            *where_clauses,
+            snap_class.resource_snapshot_id == m.Resource.latest_snapshot_id,
+        )
+    )
+    stmt = apply_resource_deletion_policy(stmt, deletion_policy)
+
+    return session.scalars(stmt).all()
 
 
 def get_exact_latest_snapshots(
@@ -394,11 +430,116 @@ def get_one_snapshot(
     return snapshot_obj
 
 
+def get_one_latest_child_snapshot(
+    session: CompatibleSession[S],
+    child_class: typing.Type[ResourceT],
+    child_resource_type: EntityType,
+    child_resource_id: int,
+    parent_class: typing.Type[m.ResourceSnapshot],
+    parent_resource_id: int,
+    association_class: type,
+    parent_snapshot_fk: typing.Any,
+    child_snapshot_fk: typing.Any,
+    deletion_policy: DeletionPolicy,
+    *,
+    parent_resource_type: EntityType,
+) -> ResourceT:
+    """
+    Get the latest child snapshot scoped to the latest parent snapshot.
+
+    This supports resources whose parent/child membership is represented by a
+    snapshot association table instead of the resource_dependencies table.
+
+    Args:
+        session: An SQLAlchemy session
+        child_class: The ResourceSnapshot subclass representing the child type
+        child_resource_type: The child entity type to use in errors
+        child_resource_id: The child resource ID
+        parent_class: The ResourceSnapshot subclass representing the parent type
+        parent_resource_id: The parent resource ID
+        parent_resource_type: The expected parent entity type
+        association_class: The ORM class for the snapshot association table
+        parent_snapshot_fk: The association column referencing the parent snapshot
+        child_snapshot_fk: The association column referencing the child snapshot
+        deletion_policy: Whether to look at deleted child resources,
+            non-deleted child resources, or all child resources
+
+    Returns:
+        The child snapshot
+
+    Raises:
+        EntityDoesNotExistError: if the parent resource does not exist, or if the
+            child resource does not exist in the database or is not associated with
+            the parent's latest snapshot
+        EntityDeletedError: if the parent is deleted, or if the child is deleted
+            but policy was to find a non-deleted child
+        EntityExistsError: if the child exists and is not deleted, but policy was
+            to find a deleted child
+    """
+
+    assert_resource_exists(
+        session,
+        parent_resource_id,
+        deletion_policy=DeletionPolicy.ANY,
+        resource_type=parent_resource_type,
+    )
+
+    parent_resource = sao.aliased(m.Resource)
+    parent_snapshot = sao.aliased(parent_class, flat=True)
+    child_resource = sao.aliased(m.Resource)
+
+    stmt = (
+        sa.select(child_class)
+        .join(
+            child_resource,
+            child_class.resource_id == child_resource.resource_id,
+        )
+        .join(
+            association_class,
+            child_snapshot_fk == child_class.resource_snapshot_id,
+        )
+        .join(
+            parent_snapshot,
+            parent_snapshot_fk == parent_snapshot.resource_snapshot_id,
+        )
+        .join(
+            parent_resource,
+            parent_snapshot.resource_id == parent_resource.resource_id,
+        )
+        .where(
+            child_class.resource_id == child_resource_id,
+            child_class.resource_snapshot_id == child_resource.latest_snapshot_id,
+            parent_snapshot.resource_id == parent_resource_id,
+        )
+    )
+
+    child = session.scalars(stmt).unique().one_or_none()
+
+    if child is None:
+        existence_result = ExistenceResult.DOES_NOT_EXIST
+    elif child.resource.is_deleted:
+        existence_result = ExistenceResult.DELETED
+    else:
+        existence_result = ExistenceResult.EXISTS
+
+    assert_exists(
+        deletion_policy,
+        existence_result,
+        child_resource_type,
+        child_resource_id,
+    )
+
+    assert child is not None
+    return child
+
+
 def get_latest_child_snapshots(
     session: CompatibleSession[S],
     child_class: typing.Type[ResourceT],
     parent: m.Resource | m.ResourceSnapshot | int,
     deletion_policy: DeletionPolicy,
+    *,
+    parent_resource_type: EntityType,
 ) -> Sequence[ResourceT]:
     """
     Get the children of the given resource as their latest snapshots.  If
@@ -414,6 +555,7 @@ def get_latest_child_snapshots(
             value
         deletion_policy: Whether to look at deleted child resources,
             non-deleted resources, or all resources
+        parent_resource_type: The expected parent entity type
 
     Returns:
         The child snapshots
@@ -427,6 +569,7 @@ def get_latest_child_snapshots(
         session,
         parent,
         deletion_policy=DeletionPolicy.ANY,
+        resource_type=parent_resource_type,
     )
 
     child_resources: Sequence[m.Resource | int]
@@ -661,6 +804,8 @@ def append_resource_children(
     child_class: typing.Type[ResourceT],
     parent: m.Resource | m.ResourceSnapshot | int,
     new_children: Iterable[m.Resource | ResourceT | int],
+    *,
+    parent_resource_type: EntityType,
 ) -> Sequence[ResourceT]:
     """
     Add the given children to the given parent.
@@ -672,6 +817,7 @@ def append_resource_children(
         parent: A resource, snapshot, or resource_id integer primary key
             value
         new_children: The children to add
+        parent_resource_type: The expected parent entity type
 
     Returns:
         The complete list of resulting children, as latest snapshots (including
@@ -682,11 +828,21 @@ def append_resource_children(
         EntityDeletedError: if parent or any new child is deleted
     """
 
+    assert_resource_exists(
+        session,
+        parent,
+        DeletionPolicy.NOT_DELETED,
+        resource_type=parent_resource_type,
+    )
     parent = get_one_resource(session, parent, DeletionPolicy.NOT_DELETED)
 
     assert_resources_exist(session, new_children, DeletionPolicy.NOT_DELETED)
     existing_child_snaps = get_latest_child_snapshots(
-        session, child_class, parent, DeletionPolicy.ANY
+        session,
+        child_class,
+        parent,
+        DeletionPolicy.ANY,
+        parent_resource_type=parent_resource_type,
     )
 
     new_child_ids = {get_resource_id(new_child) for new_child in new_children}
@@ -802,7 +958,9 @@ def unlink_children(
 
 
 def delete_resource(
-    session: CompatibleSession[S], resource: m.Resource | m.ResourceSnapshot | int
+    session: CompatibleSession[S],
+    resource: m.Resource | m.ResourceSnapshot | int,
+    expected_resource_type: EntityType,
 ) -> None:
     """
     Common routine for deleting a resource.  No-op if the resource is already
@@ -813,6 +971,7 @@ def delete_resource(
         session: An SQLAlchemy session
         resource: A resource, snapshot, or resource_id integer primary key
             value
+        expected_resource_type: The type of resource being deleted
 
     Raises:
         EntityDoesNotExistError: if the resource does not exist
@@ -823,14 +982,13 @@ def delete_resource(
         - :py:func:`add_resource_lock_types`
     """
 
-    exists_result = resource_exists(session, resource)
+    exists_result = resource_exists(session, resource, expected_resource_type)
 
     if exists_result is ExistenceResult.DOES_NOT_EXIST:
         resource_id = get_resource_id(resource)
-        resource_type = get_resource_type(resource)
-        raise e.EntityDoesNotExistError(resource_type, resource_id=resource_id)
+        raise e.EntityDoesNotExistError(expected_resource_type, resource_id=resource_id)
 
-    elif exists_result is ExistenceResult.EXISTS:
+    if exists_result is ExistenceResult.EXISTS:
         add_resource_lock_types(session, resource, {ResourceLockType.DELETED})
 
     # else: exists_result is DELETED; nothing to do.
@@ -960,6 +1118,10 @@ def get_by_filters_paged(
     sort_by: str | None,
     descending: bool,
     deletion_policy: DeletionPolicy = DeletionPolicy.NOT_DELETED,
+    additional_query_terms: typing.Sequence[
+        typing.Callable[[sa.Select], sa.Select]
+    ] = (),
+    unique_results: bool = False,
 ) -> tuple[Sequence[ResourceT], int]:
     """
     Get some resources according to search criteria.
@@ -989,6 +1151,8 @@ def get_by_filters_paged(
             if sort_by is given
         deletion_policy: Whether to look at deleted resources, non-deleted
             resources, or all resources
+        unique_results: Whether to deduplicate the scalar result; required for
+            snapshots with joined-eager collection relationships
 
     Returns:
         A 2-tuple including the page of resources and total count of matching
@@ -1003,6 +1167,7 @@ def get_by_filters_paged(
     sql_filter = construct_sql_query_filters(filters, searchable_fields)
     if sort_by and sort_by not in sortable_fields:
         raise e.SortParameterValidationError("resource", sort_by)
+
     group_id = None if group is None else get_group_id(group)
 
     if group_id is not None:
@@ -1022,6 +1187,9 @@ def get_by_filters_paged(
         count_stmt = count_stmt.where(sql_filter)
 
     count_stmt = apply_resource_deletion_policy(count_stmt, deletion_policy)
+
+    count_stmt = _apply_query_terms(count_stmt, additional_query_terms)
+
     current_count = session.scalar(count_stmt)
 
     # For mypy: a "SELECT count(*)..." query should never return NULL.
@@ -1055,12 +1223,27 @@ def get_by_filters_paged(
         page_stmt = page_stmt.order_by(sort_criteria)
 
         page_stmt = page_stmt.offset(page_start)
+
         if page_length > 0:
             page_stmt = page_stmt.limit(page_length)
 
-        snaps = session.scalars(page_stmt).all()
+        page_stmt = _apply_query_terms(page_stmt, additional_query_terms)
+
+        scalar_result = session.scalars(page_stmt)
+        if unique_results:
+            scalar_result = scalar_result.unique()
+        snaps = scalar_result.all()
 
     return snaps, current_count
+
+
+def _apply_query_terms(
+    stmt: sa.Select,
+    query_terms: typing.Iterable[typing.Callable[[sa.Select], sa.Select]],
+) -> sa.Select:
+    for query_term in query_terms:
+        stmt = query_term(stmt)
+    return stmt
 
 
 __all__ = [
@@ -1074,7 +1257,9 @@ __all__ = [
     "get_by_filters_paged",
     "get_latest_child_snapshots",
     "get_latest_snapshots",
+    "get_latest_snapshots_where",
     "get_exact_latest_snapshots",
+    "get_one_latest_child_snapshot",
     "get_one_latest_snapshot",
     "get_one_resource",
     "get_one_snapshot",
