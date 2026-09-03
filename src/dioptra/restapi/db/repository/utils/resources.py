@@ -480,7 +480,7 @@ def get_one_latest_child_snapshot(
     assert_resource_exists(
         session,
         parent_resource_id,
-        deletion_policy=DeletionPolicy.NOT_DELETED,
+        deletion_policy=DeletionPolicy.ANY,
         resource_type=parent_resource_type,
     )
 
@@ -510,7 +510,6 @@ def get_one_latest_child_snapshot(
             child_class.resource_id == child_resource_id,
             child_class.resource_snapshot_id == child_resource.latest_snapshot_id,
             parent_snapshot.resource_id == parent_resource_id,
-            parent_snapshot.resource_snapshot_id == parent_resource.latest_snapshot_id,
         )
     )
 

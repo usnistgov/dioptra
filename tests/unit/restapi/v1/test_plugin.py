@@ -215,21 +215,22 @@ def assert_plugin_name_matches_expected_name(
     )
 
 
-def assert_plugin_is_not_found(
+def assert_plugin_is_deleted(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     plugin_id: int,
 ) -> None:
-    """Assert that a plugin is not found.
+    """Assert that a plugin is deleted.
 
     Args:
         client: The Flask test client.
         plugin_id: The id of the plugin to retrieve.
 
     Raises:
-        AssertionError: If the response status code is not 404.
+        AssertionError: If the response status code is not 200 or if the response does
+            not indicate that the plugin is deleted.
     """
     response = dioptra_client.plugins.get_by_id(plugin_id)
-    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response.status_code == HTTPStatus.OK and response.json()["deleted"]
 
 
 def assert_cannot_rename_plugin_with_existing_name(
@@ -517,6 +518,28 @@ def assert_plugin_file_is_not_found(
         plugin_id=plugin_id, plugin_file_id=plugin_file_id
     )
     assert response.status_code == HTTPStatus.NOT_FOUND
+
+
+def assert_plugin_file_is_deleted(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    plugin_id: int,
+    plugin_file_id: int,
+) -> None:
+    """Assert that a plugin file is deleted.
+
+    Args:
+        client: The Flask test client.
+        plugin_id: The id of the plugin with files.
+        plugin_file_id: The id of the plugin file to retrieve.
+
+    Raises:
+        AssertionError: If the response status code is not 200 or if the response does
+            not indicate that the plugin file is deleted.
+    """
+    response = dioptra_client.plugins.files.get_by_id(
+        plugin_id=plugin_id, plugin_file_id=plugin_file_id
+    )
+    assert response.status_code == HTTPStatus.OK and response.json()["deleted"]
 
 
 # -- Assertions Plugin Tasks -----------------------------------------------------------
@@ -815,11 +838,11 @@ def test_delete_plugin_by_id(
 
     - The user deletes a plugin by referencing its id.
     - The user attempts to retrieve information about the deleted plugin.
-    - The request fails with an appropriate error message and response code.
+    - The response indicates that the plugin is deleted.
     """
     plugin_to_delete = registered_plugins["plugin1"]
     dioptra_client.plugins.delete_by_id(plugin_id=plugin_to_delete["id"])
-    assert_plugin_is_not_found(dioptra_client, plugin_id=plugin_to_delete["id"])
+    assert_plugin_is_deleted(dioptra_client, plugin_id=plugin_to_delete["id"])
 
     assert_retrieving_deleted_resource_snapshots_works(
         dioptra_client.plugins.snapshots,
@@ -1291,7 +1314,7 @@ def test_delete_plugin_file_by_id(
 
     - The user deletes a plugin file by referencing its id.
     - The user attempts to retrieve information about the deleted plugin file.
-    - The request fails with an appropriate error message and response code.
+    - The response indicates that the plugin file is deleted.
     """
     registered_plugin = registered_plugin_with_files["plugin"]
     plugin_file_to_delete = registered_plugin_with_files["plugin_file1"]
@@ -1300,7 +1323,7 @@ def test_delete_plugin_file_by_id(
         plugin_id=registered_plugin["id"],
         plugin_file_id=plugin_file_to_delete["id"],
     )
-    assert_plugin_file_is_not_found(
+    assert_plugin_file_is_deleted(
         dioptra_client,
         plugin_id=registered_plugin["id"],
         plugin_file_id=plugin_file_to_delete["id"],

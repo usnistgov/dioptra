@@ -58,10 +58,11 @@
     <q-card class="q-pa-md">
       <KeyValueTable
         :rows="pluginRows"
+        :style="{ pointerEvents: plugin?.deleted ? 'none' : 'auto' }"
         :secondColumnFullWidth="true"
       >
         <template #name="{}">
-          {{ name }}
+          <span :disabled="plugin?.deleted">{{ plugin?.name }}</span>
           <q-btn
             v-if="!plugin?.deleted"
             icon="edit"
@@ -91,7 +92,10 @@
         </template>
         <template #description="{}">
           <div class="row items-center no-wrap">
-            <div style="white-space: pre-line; overflow-wrap: break-word">
+            <div
+              style="white-space: pre-line; overflow-wrap: break-word"
+              :disabled="plugin?.deleted"
+            >
               {{ description }}
             </div>
             <q-btn
@@ -144,6 +148,7 @@
   </q-expansion-item>
 
   <TableComponent
+    v-if="plugin"
     ref="tableRef"
     v-model:selected="selected"
     v-model:showDeleted="showDeletedFiles"
@@ -229,6 +234,7 @@ async function getPlugin() {
   try {
     const res = await api.getItem("plugins", route.params.id);
     plugin.value = res.data;
+    showDeletedFiles.value = plugin.value.deleted;
     name.value = res.data.name;
     description.value = res.data.description;
     ORIGINAL_PLUGIN.value = JSON.parse(JSON.stringify(plugin.value));

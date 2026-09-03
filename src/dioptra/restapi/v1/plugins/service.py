@@ -169,7 +169,7 @@ class PluginIdService(ServiceContextService):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get plugin by id", plugin_id=plugin_id)
 
-        plugin = self._uow.plugin_repo.get(plugin_id, DeletionPolicy.NOT_DELETED)
+        plugin = self._uow.plugin_repo.get(plugin_id, DeletionPolicy.ANY)
         if plugin is None:
             raise EntityDoesNotExistError(EntityType.PLUGIN, plugin_id=plugin_id)
 
@@ -541,7 +541,7 @@ class PluginIdFileIdService(ServiceContextService):
         plugin_file = self._uow.plugin_repo.get_one_file(
             plugin_id, plugin_file_id, DeletionPolicy.ANY
         )
-        plugin = self._uow.plugin_repo.get_one(plugin_id, DeletionPolicy.NOT_DELETED)
+        plugin = self._uow.plugin_repo.get_one(plugin_id, DeletionPolicy.ANY)
 
         has_draft = self._uow.drafts_repo.has_draft_modification(
             plugin_file, current_user
