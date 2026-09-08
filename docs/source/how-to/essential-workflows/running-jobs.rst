@@ -106,7 +106,7 @@ Entrypoints are parameterizable, and jobs can populate these parameters with val
 
    .. group-tab:: Python Client
 
-      The parameter values are provided as a dictionary during job creation (step 5).
+      The parameter values are provided as a dictionary during job creation (step 4).
 
 .. rst-class:: header-on-a-card header-steps
 
@@ -136,36 +136,7 @@ artifact input.
 
 .. rst-class:: header-on-a-card header-steps
 
-Step 4: Select swap choices (if applicable)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-If the selected entrypoint contains swappable tasks, choose which task alias
-to run for each swap before submitting the job.
-
-.. tabs::
-
-   .. group-tab:: GUI
-
-      On the job creation page, use the **Swaps** section to select one task
-      alias for each swap in the entrypoint.
-
-      .. figure:: ../../images/screenshots/jobs/select_swap_choice.png
-         :alt: Screenshot of the Swaps section on the job creation page with a task alias selected.
-         :figclass: border-image clickable-image
-
-   .. group-tab:: Python Client
-
-      Provide a dictionary that maps every swap name to its selected task alias
-      in the ``swaps`` argument during job creation. For example:
-
-      .. code-block:: python
-
-         swaps={"training_method": "training_method_A"}
-
-
-.. rst-class:: header-on-a-card header-steps
-
-Step 5: Run the job
+Step 4: Run the job
 ~~~~~~~~~~~~~~~~~~~
 
 Once all the inputs are prepared, run the job.
@@ -193,3 +164,4 @@ See Also
 
 * :ref:`Experiments and Jobs Explanation <explanation-experiments-and-jobs>` - Explanation of the purpose of experiments and jobs and how they relate to each other.
 * :ref:`Artifacts Explanation <explanation-artifacts>` - Learn about artifacts.
+
