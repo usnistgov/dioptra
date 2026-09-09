@@ -244,6 +244,7 @@ export const useLoginStore = defineStore("login", () => {
         rowsPerPage: number;
         sortBy?: string;
         descending?: boolean;
+        showDeleted?: boolean;
         lastScrollPosition?: number;
         search?: string;
       }
