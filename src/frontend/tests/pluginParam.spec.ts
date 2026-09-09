@@ -30,7 +30,7 @@ async function createPluginParam(page: Page, pluginParamName: string) {
       hasText: `Successfully created '${pluginParamName}'`,
     }),
   ).toBeVisible();
-  await expect(page).toHaveURL(/\/pluginParams$/);
+  await expect(page).toHaveURL(/\/pluginParams\?groupId=\d+$/);
 
   return createdPluginParam;
 }
@@ -59,7 +59,7 @@ test("edit pluginParam", async ({ page }) => {
       hasText: `Successfully updated '${updatedPluginParamName}'`,
     }),
   ).toBeVisible();
-  await expect(page).toHaveURL(/\/pluginParams$/);
+  await expect(page).toHaveURL(/\/pluginParams\?groupId=\d+$/);
 });
 
 test("delete pluginParam", async ({ page }) => {
@@ -78,5 +78,5 @@ test("delete pluginParam", async ({ page }) => {
       hasText: `Successfully deleted '${pluginParamName}'`,
     }),
   ).toBeVisible();
-  await expect(page).toHaveURL(/\/pluginParams$/);
+  await expect(page).toHaveURL(/\/pluginParams\?groupId=\d+$/);
 });

@@ -93,7 +93,7 @@ test("delete plugin", async ({ page }) => {
       hasText: `Successfully deleted '${pluginName}'`,
     }),
   ).toBeVisible();
-  await expect(page).toHaveURL(/\/plugins$/);
+  await expect(page).toHaveURL(/\/plugins\?groupId=\d+$/);
 });
 
 test("does not restore another user's unsaved plugin form", async ({ page }) => {
@@ -135,7 +135,7 @@ test("does not restore another user's unsaved plugin form", async ({ page }) => 
   await page.getByRole("button", { name: "Navigation Menu" }).click();
   await page.locator(".q-menu:visible").getByText("Plugins", { exact: true }).click();
   await page.getByRole("button", { name: "Create" }).click();
-  await expect(page).toHaveURL(/\/plugins\/new$/);
+  await expect(page).toHaveURL(/\/plugins\/new\?groupId=\d+$/);
   await expect(page.getByRole("heading", { name: "Load Unsaved Form?" })).toHaveCount(0);
   await expect(page.getByRole("textbox", { name: "Name:" })).toHaveValue("");
 });
