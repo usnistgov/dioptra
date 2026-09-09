@@ -85,11 +85,11 @@ def coerce_entrypoint_default_param_types(
     return params
 
 
-_EXPLICIT_GLOBAL_TYPES: Final[set[str]] = {
-    STRING_PARAM_TYPE,
-    BOOLEAN_PARAM_TYPE,
-    INTEGER_PARAM_TYPE,
-    FLOAT_PARAM_TYPE,
+_ENTRYPOINT_TO_TASK_ENGINE_TYPES: Final[dict[str, str]] = {
+    STRING_PARAM_TYPE: "string",
+    BOOLEAN_PARAM_TYPE: "boolean",
+    INTEGER_PARAM_TYPE: "integer",
+    FLOAT_PARAM_TYPE: "number",
 }
 
 
@@ -156,10 +156,9 @@ def _extract_parameters(entry_point: EntryPointProtocol) -> dict[str, Any]:
     parameters = coerce_entrypoint_default_param_types(entry_point.parameters)
 
     for param in entry_point.parameters:
-        if param.parameter_type in _EXPLICIT_GLOBAL_TYPES:
-            parameters[param.name]["type"] = (
-                _convert_parameter_type_to_task_engine_type(param.parameter_type)
-            )
+        task_engine_type = _ENTRYPOINT_TO_TASK_ENGINE_TYPES.get(param.parameter_type)
+        if task_engine_type is not None:
+            parameters[param.name]["type"] = task_engine_type
 
     return parameters
 
@@ -276,15 +275,3 @@ def _build_outputs(
         {output_param.name: output_param.parameter_type.name}
         for output_param in output_parameters
     ]
-
-
-def _convert_parameter_type_to_task_engine_type(parameter_type: str) -> Any:
-    conversion_map = {
-        "boolean": "boolean",
-        "string": "string",
-        "float": "number",
-        "integer": "integer",
-        "list": {"list": "any"},
-        "mapping": {"mapping": ["string", "any"]},
-    }
-    return conversion_map[parameter_type]
