@@ -59,6 +59,7 @@ export const useLoginStore = defineStore("login", () => {
   const selectedGroupId = ref<number | null>(null);
   const groupContextLocked = ref(false);
   const groupContextResolving = ref(false);
+  const sessionGeneration = ref(0);
 
   const createdGroups = computed(() => {
     const userId = getLoggedInUserId();
@@ -252,6 +253,7 @@ export const useLoginStore = defineStore("login", () => {
   >({});
 
   function resetUserScopedState() {
+    sessionGeneration.value++;
     groups.value = [];
     selectedGroupId.value = null;
     groupContextLocked.value = false;
@@ -289,6 +291,7 @@ export const useLoginStore = defineStore("login", () => {
     createdGroups,
     groupContextLocked,
     groupContextResolving,
+    sessionGeneration,
     users,
     savedForms,
     showRightDrawer,

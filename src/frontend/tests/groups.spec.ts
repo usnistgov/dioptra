@@ -2,6 +2,63 @@ import { expect, test } from "@playwright/test";
 
 import { ensureLoggedInAsTestUser, testUser } from "./helpers/testUserHelper";
 
+test("focus refresh recovers a remotely deleted active group", async ({ page }) => {
+  await ensureLoggedInAsTestUser(page);
+  const response = await page.request.post("/api/v1/groups/", {
+    data: { name: `e2e_focus_group_${Date.now()}` },
+  });
+  expect(response.ok()).toBe(true);
+  const group = await response.json();
+  await page.goto(`/experiments?groupId=${group.id}`);
+  await expect(page.getByRole("button", { name: new RegExp(group.name) })).toBeEnabled();
+  expect((await page.request.delete(`/api/v1/groups/${group.id}`)).ok()).toBe(true);
+
+  const refreshResponse = page.waitForResponse(
+    (res) => new URL(res.url()).pathname === "/api/v1/users/current" && res.request().method() === "GET",
+  );
+  await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+  expect((await refreshResponse).ok()).toBe(true);
+  await expect(page).toHaveURL(
+    (url) => url.pathname === "/experiments" && url.searchParams.get("groupId") !== String(group.id),
+  );
+  await expect(page.getByRole("button", { name: new RegExp(group.name) })).toHaveCount(0);
+});
+
+test("a delayed focus refresh cannot restore a logged-out session", async ({ page }) => {
+  await ensureLoggedInAsTestUser(page);
+  await page.goto("/login");
+  await expect(page.getByRole("button", { name: "Log Out", exact: true })).toBeVisible();
+  let release!: () => void;
+  const pending = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let started!: () => void;
+  const captured = new Promise<void>((resolve) => {
+    started = resolve;
+  });
+  let requests = 0;
+  await page.route("**/api/v1/users/current", async (route) => {
+    requests++;
+    const response = await route.fetch();
+    started();
+    await pending;
+    await route.fulfill({ response });
+  });
+  await page.evaluate(() => {
+    window.dispatchEvent(new Event("focus"));
+    window.dispatchEvent(new Event("focus"));
+  });
+  await captured;
+  await page.getByRole("button", { name: "Log Out", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Login", exact: true })).toBeVisible();
+  const finished = page.waitForResponse("**/api/v1/users/current");
+  release();
+  await finished;
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  await expect(page.getByRole("heading", { name: "Login", exact: true })).toBeVisible();
+  expect(requests).toBe(1);
+});
+
 test("created group becomes the active context", async ({ page }) => {
   const groupName = `e2e_created_group_${Date.now()}`;
 
