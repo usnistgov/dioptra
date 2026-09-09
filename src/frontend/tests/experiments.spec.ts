@@ -32,7 +32,7 @@ async function createExperiment(page: Page, experimentName: string, entrypointNa
       hasText: `Successfully created '${experimentName}'`,
     }),
   ).toBeVisible();
-  await expect(page).toHaveURL(/\/experiments$/);
+  await expect(page).toHaveURL(/\/experiments\?groupId=\d+$/);
 
   return createdExperiment;
 }
@@ -84,6 +84,9 @@ test("experiment detail sets and locks group context", async ({ page }) => {
   const experimentName = `e2e_context_experiment_${timestamp}`;
 
   await ensureLoggedInAsTestUser(page);
+  const userResponse = await page.request.get("/api/v1/users/current");
+  expect(userResponse.ok()).toBe(true);
+  const originalGroup = (await userResponse.json()).groups[0];
   const groupResponse = await page.request.post("/api/v1/groups/", {
     data: { name: groupName },
   });
@@ -101,7 +104,7 @@ test("experiment detail sets and locks group context", async ({ page }) => {
   expect(experimentResponse.ok()).toBe(true);
   const experiment = await experimentResponse.json();
 
-  await page.goto(`/experiments/${experiment.id}`);
+  await page.goto(`/experiments/${experiment.id}?groupId=${originalGroup.id}`);
   await page.getByRole("heading", { name: experimentName }).waitFor();
 
   const groupSwitcher = page.getByRole("button", { name: new RegExp(groupName) });
@@ -109,6 +112,7 @@ test("experiment detail sets and locks group context", async ({ page }) => {
 
   await page.goto("/experiments/new");
   await page.getByRole("heading", { name: "Create Experiment" }).waitFor();
+  await expect(page).toHaveURL(new RegExp(`/experiments/new\\?groupId=${group.id}$`));
   await expect(page.getByRole("button", { name: new RegExp(groupName) })).toBeEnabled();
 });
 
@@ -164,5 +168,5 @@ test("delete experiment", async ({ page }) => {
       hasText: `Successfully deleted '${experimentName}'`,
     }),
   ).toBeVisible();
-  await expect(page).toHaveURL(/\/experiments$/);
+  await expect(page).toHaveURL(/\/experiments\?groupId=\d+$/);
 });

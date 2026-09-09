@@ -24,7 +24,16 @@ type GroupSelfContext = {
   fallback: string;
 };
 
-type GroupContext = ResourceGroupContext | QueueDraftGroupContext | GroupSelfContext;
+type SelectedGroupContext = {
+  kind: "selected";
+};
+
+type GroupContext = ResourceGroupContext | QueueDraftGroupContext | GroupSelfContext | SelectedGroupContext;
+
+let isHistoryTraversal = false;
+window.addEventListener("popstate", () => {
+  isHistoryTraversal = true;
+});
 
 const router = createRouter({
   history: createWebHistory(),
@@ -40,7 +49,7 @@ const router = createRouter({
     },
     {
       path: "/experiments",
-      meta: { type: "experiments" },
+      meta: { type: "experiments", groupContext: { kind: "selected" } },
       children: [
         {
           path: "",
@@ -71,7 +80,7 @@ const router = createRouter({
     },
     {
       path: "/entrypoints",
-      meta: { type: "entrypoints" },
+      meta: { type: "entrypoints", groupContext: { kind: "selected" } },
       children: [
         {
           path: "",
@@ -89,7 +98,7 @@ const router = createRouter({
     },
     {
       path: "/plugins",
-      meta: { type: "plugins" },
+      meta: { type: "plugins", groupContext: { kind: "selected" } },
       children: [
         {
           path: "",
@@ -120,7 +129,7 @@ const router = createRouter({
     },
     {
       path: "/queues",
-      meta: { type: "queues" },
+      meta: { type: "queues", groupContext: { kind: "selected" } },
       children: [
         {
           path: "",
@@ -145,7 +154,7 @@ const router = createRouter({
     },
     {
       path: "/jobs",
-      meta: { type: "jobs" },
+      meta: { type: "jobs", groupContext: { kind: "selected" } },
       children: [
         {
           path: "",
@@ -183,10 +192,11 @@ const router = createRouter({
       path: "/tags",
       component: () => import("../views/TagsView.vue"),
       name: "tags",
+      meta: { groupContext: { kind: "selected" } },
     },
     {
       path: "/pluginParams",
-      meta: { type: "pluginParams" },
+      meta: { type: "pluginParams", groupContext: { kind: "selected" } },
       children: [
         {
           path: "",
@@ -212,10 +222,11 @@ const router = createRouter({
       path: "/models",
       component: () => import("../views/ModelsView.vue"),
       name: "models",
+      meta: { groupContext: { kind: "selected" } },
     },
     {
       path: "/artifacts",
-      meta: { type: "artifacts" },
+      meta: { type: "artifacts", groupContext: { kind: "selected" } },
       children: [
         {
           path: "/artifacts",
@@ -244,6 +255,8 @@ const router = createRouter({
 
 router.beforeEach(async (to, from) => {
   const store = useLoginStore();
+  delete to.meta.backButton;
+  delete to.meta.viaBadgeLink;
 
   // on every route change, close snapshot drawer if open
   if (store.showRightDrawer) {
@@ -271,6 +284,51 @@ router.beforeEach(async (to, from) => {
   if (!groupContext || isAuthRoute) {
     store.groupContextLocked = false;
     store.groupContextResolving = false;
+    return true;
+  }
+
+  if (groupContext.kind === "selected" || isNewResourceRoute(to, groupContext)) {
+    store.groupContextLocked = false;
+    store.groupContextResolving = true;
+    try {
+      const requestedGroupId = parseGroupIdQuery(to.query.groupId);
+      if (requestedGroupId !== null && !store.setLoggedInGroup(requestedGroupId)) {
+        await api.refreshLoginState();
+        if (!store.setLoggedInGroup(requestedGroupId)) {
+          notify.error(`Group ${requestedGroupId} is not available to the current user.`);
+        }
+      }
+
+      const selectedGroup = store.loggedInGroup;
+      if (!selectedGroup || typeof selectedGroup !== "object") {
+        return true;
+      }
+
+      const canonicalGroupId = String(selectedGroup.id);
+      if (to.query.groupId !== canonicalGroupId) {
+        return {
+          path: to.path,
+          query: { ...to.query, groupId: canonicalGroupId },
+          hash: to.hash,
+          replace: from === START_LOCATION,
+        };
+      }
+    } catch (error) {
+      const apiError = error as { response?: { data?: { message?: string } }; message?: string };
+      notify.error(apiError.response?.data?.message || apiError.message || "Failed to restore group context.");
+
+      const selectedGroup = store.loggedInGroup;
+      if (selectedGroup && typeof selectedGroup === "object") {
+        return {
+          path: to.path,
+          query: { ...to.query, groupId: String(selectedGroup.id) },
+          hash: to.hash,
+          replace: from === START_LOCATION,
+        };
+      }
+    } finally {
+      store.groupContextResolving = false;
+    }
     return true;
   }
 
@@ -311,7 +369,31 @@ function getRouteParam(to: RouteLocationNormalizedGeneric, name: string): string
   return value ?? null;
 }
 
+function isNewResourceRoute(to: RouteLocationNormalizedGeneric, context: GroupContext): boolean {
+  if (context.kind !== "resource") {
+    return false;
+  }
+  return getRouteParam(to, context.idParam) === "new";
+}
+
+function parseGroupIdQuery(value: unknown): number | null {
+  if (value === undefined) {
+    return null;
+  }
+  if (typeof value !== "string" || !/^[1-9]\d*$/.test(value)) {
+    throw new Error("The groupId query parameter must be a positive integer.");
+  }
+  const groupId = Number(value);
+  if (!Number.isSafeInteger(groupId)) {
+    throw new Error("The groupId query parameter must be a positive integer.");
+  }
+  return groupId;
+}
+
 async function resolveGroupContext(to: RouteLocationNormalizedGeneric, context: GroupContext): Promise<number | null> {
+  if (context.kind === "selected") {
+    return null;
+  }
   const idParam = context.kind === "queueDraft" ? "id" : context.idParam;
   const rawId = getRouteParam(to, idParam);
   if (!rawId || rawId === "new") {
@@ -353,27 +435,15 @@ async function callGetLoginStatus() {
   }
 }
 
-router.afterEach((to, from) => {
-  // remember pagination when clicking into a resource then going back to the table
-  const backButton = window.event?.type === "popstate";
-  const backToSameType = to.meta?.type === from.meta?.type;
-  const jobBackToExperiment = to.name === "experimentJobs" && from.name === "jobDashboard";
+router.afterEach((to) => {
   const viaBadgeLink = window.history.state?.viaBadgeLink === true;
   if (viaBadgeLink) {
     to.meta.viaBadgeLink = true;
   }
-  if (backButton && (backToSameType || jobBackToExperiment || from.meta?.viaBadgeLink)) {
+  if (isHistoryTraversal) {
     to.meta.backButton = true;
   }
-
-  // ensure only to and from pagination settings are stored
-  const store = useLoginStore();
-  const keep = new Set<string>([to.path, from.path]);
-  Object.keys(store.tablePaginationCache).forEach((k) => {
-    if (!keep.has(k)) {
-      delete (store.tablePaginationCache as any)[k];
-    }
-  });
+  isHistoryTraversal = false;
 });
 
 export default router;

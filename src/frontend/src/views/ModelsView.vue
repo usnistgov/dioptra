@@ -90,13 +90,17 @@ watch(showAddEditDialog, (newVal) => {
 });
 
 const models = ref([]);
+let latestModelsRequest = 0;
 
 async function getModels(pagination) {
+  const requestId = ++latestModelsRequest;
   try {
     const res = await api.getData("models", pagination);
+    if (requestId !== latestModelsRequest) return;
     models.value = res.data.data;
     tableRef.value.updateTotalRows(res.data.totalNumResults);
   } catch (err) {
+    if (requestId !== latestModelsRequest) return;
     console.log("err = ", err);
     notify.error(err.response.data.message);
   }

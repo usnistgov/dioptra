@@ -352,7 +352,7 @@
                 clickable
                 :active="group.id === store.loggedInGroup.id"
                 active-class="bg-blue-3 text-bold"
-                @click="store.setLoggedInGroup(group.id)"
+                @click="selectGroupContext(group.id)"
               >
                 <q-item-section>
                   <q-item-label>{{ group.name }}</q-item-label>
@@ -385,15 +385,35 @@ import { useQuasar } from "quasar";
 import { watch, inject, ref, onMounted } from "vue";
 import { useLoginStore } from "@/stores/LoginStore";
 import * as api from "@/services/dataApi";
+import { useRoute, useRouter } from "vue-router";
 
 import ImportResourcesDialog from "../dialogs/ImportResourcesDialog.vue";
 const showImportDialog = defineModel();
 
 const store = useLoginStore();
+const route = useRoute();
+const router = useRouter();
 
 const $q = useQuasar();
 
 const isMobile = inject("isMobile");
+
+async function selectGroupContext(groupId) {
+  const context = route.meta.groupContext;
+  const isSelectedRoute =
+    context?.kind === "selected" || (context?.kind === "resource" && String(route.params[context.idParam]) === "new");
+
+  if (isSelectedRoute) {
+    await router.replace({
+      path: route.path,
+      query: { ...route.query, groupId: String(groupId) },
+      hash: route.hash,
+    });
+    return;
+  }
+
+  store.setLoggedInGroup(groupId);
+}
 
 const darkToggle = ref($q.dark.isActive);
 
