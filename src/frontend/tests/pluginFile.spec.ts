@@ -1,39 +1,7 @@
-import { expect, Page, test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
-import { createPlugin } from "./helpers/createResourceHelper";
+import { createPlugin, createPluginFile } from "./helpers/createResourceHelper";
 import { ensureLoggedInAsTestUser } from "./helpers/testUserHelper";
-
-async function createPluginFile(page: Page, pluginId: number, filename: string) {
-  await page.goto(`/plugins/${pluginId}/files/new`);
-
-  await page.getByRole("heading", { name: "Create Plugin File" }).waitFor();
-  await page.getByRole("textbox", { name: "Filename:" }).fill(filename);
-  await page.getByRole("textbox", { name: "Description:" }).fill("Created by Playwright");
-  await page.locator(".cm-content").first().click();
-  await page.keyboard.insertText("def e2e_task():\n    return None\n");
-
-  const createResponsePromise = page.waitForResponse(
-    (response) =>
-      response.url().includes(`/api/v1/plugins/${pluginId}/files`) && response.request().method() === "POST",
-  );
-
-  await page.getByRole("button", { name: "Submit File" }).click();
-  const createResponse = await createResponsePromise;
-  expect(
-    createResponse.ok(),
-    `Expected POST ${createResponse.url()} to succeed, got ${createResponse.status()} ${createResponse.statusText()}`,
-  ).toBe(true);
-  const createdPluginFile = await createResponse.json();
-
-  await expect(
-    page.getByRole("alert").filter({
-      hasText: `Successfully created '${filename}'`,
-    }),
-  ).toBeVisible();
-  await expect(page).toHaveURL(new RegExp(`/plugins/${pluginId}$`));
-
-  return createdPluginFile;
-}
 
 test("create pluginFile", async ({ page }) => {
   const timestamp = Date.now();

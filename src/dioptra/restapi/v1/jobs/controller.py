@@ -46,6 +46,7 @@ from dioptra.restapi.v1.workflows.lib.export_job_parameters import (
 )
 
 from .schema import (
+    JobConfigSchema,
     JobGetQueryParameters,
     JobLogGetQueryParameters,
     JobLogRecordSchema,
@@ -61,6 +62,7 @@ from .schema import (
 )
 from .service import (
     SEARCHABLE_FIELDS,
+    JobConfigService,
     JobIdMetricsService,
     JobIdMetricsSnapshotsService,
     JobIdMlflowrunService,
@@ -164,6 +166,29 @@ class JobIdEndpoint(Resource):
             request_id=str(uuid.uuid4()), resource="Job", request_type="DELETE", id=id
         )
         return self._job_id_service.delete(job_id=id, log=log)
+
+
+@api.route("/<int:id>/config")
+@api.param("id", "ID for the Job resource.")
+class JobConfigEndpoint(Resource):
+    """Endpoint to retrieve the rendered YAML configuration for a Job."""
+
+    @inject
+    def __init__(self, job_config_service: JobConfigService, *args, **kwargs) -> None:
+        self._job_config_service = job_config_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    @responds(schema=JobConfigSchema, api=api)
+    def get(self, id: int):
+        """Return the YAML configuration dictionary for the specified Job."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="JobConfig",
+            request_type="GET",
+            id=id,
+        )
+        return self._job_config_service.get(job_id=id, log=log)
 
 
 @api.route("/<int:id>/parameters")

@@ -17,7 +17,6 @@
 """The server-side functions that perform workflows endpoint operations."""
 
 from collections import defaultdict
-from dataclasses import dataclass
 from hashlib import sha256
 from io import BytesIO
 from pathlib import Path
@@ -41,13 +40,10 @@ from dioptra.restapi.errors import (
     EntityDoesNotExistError,
     GitError,
     ImportFailedError,
-    InvalidYamlError,
 )
 from dioptra.restapi.utils import read_json_file, verify_filename_is_safe
 from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.entrypoints.service import (
-    EntrypointIdArtifactPluginsService,
-    EntrypointIdPluginsService,
     EntrypointIdService,
     EntrypointNameService,
     EntrypointService,
@@ -57,7 +53,6 @@ from dioptra.restapi.v1.plugin_parameter_types.service import (
     PluginParameterTypeIdService,
     PluginParameterTypeNameService,
     PluginParameterTypeService,
-    get_plugin_task_parameter_types_by_id,
 )
 from dioptra.restapi.v1.plugins.schema import ALLOWED_PLUGIN_FILENAME_REGEX
 from dioptra.restapi.v1.plugins.service import (
@@ -67,18 +62,16 @@ from dioptra.restapi.v1.plugins.service import (
     PluginNameService,
     PluginService,
 )
+from dioptra.restapi.v1.shared import views
 from dioptra.restapi.v1.shared.io_file_service import IOFileService
 from dioptra.restapi.v1.shared.resource_service import (
     ResourceIdService,
     ResourceService,
 )
 from dioptra.restapi.v1.shared.signature_analysis import get_plugin_signatures
-from dioptra.restapi.v1.shared.task_engine_yaml.service import TaskEngineYamlService
 from dioptra.restapi.v1.utils import PluginParameterTypeDict, PluginWithFilesDict
 from dioptra.sdk.utilities.paths import set_cwd
-from dioptra.task_engine.issues import IssueSeverity, IssueType, ValidationIssue
 
-from .lib import views
 from .lib.clone_git_repository import clone_git_repository
 from .schema import (
     ResourceImportResolveNameConflictsStrategy,
@@ -166,8 +159,6 @@ class ResourceImportService(object):
         builtin_plugin_parameter_type_service: BuiltinPluginParameterTypeService,
         entrypoint_service: EntrypointService,
         entrypoint_id_service: EntrypointIdService,
-        entrypoint_id_plugins_service: EntrypointIdPluginsService,
-        entrypoint_id_artifact_plugins_service: EntrypointIdArtifactPluginsService,
         entrypoint_name_service: EntrypointNameService,
         io_file_service: IOFileService,
     ) -> None:
@@ -188,8 +179,6 @@ class ResourceImportService(object):
                 object.
             entrypoint_service: An EntrypointService object.
             entrypoint_id_service: An EntrypointIdService object.
-            entrypoint_id_plugins_service: An EntrypointIdPluginsService object.
-            entrypoint_id_artifact_plugins_service: An EntrypointIdArtifactPluginsService object.
             entrypoint_name_service: An EntrypointNameService object.
             io_file_service: An IOFileService object.
         """
@@ -206,10 +195,6 @@ class ResourceImportService(object):
         )
         self._entrypoint_service = entrypoint_service
         self._entrypoint_id_service = entrypoint_id_service
-        self._entrypoint_id_plugins_service = entrypoint_id_plugins_service
-        self._entrypoint_id_artifact_plugins_service = (
-            entrypoint_id_artifact_plugins_service
-        )
         self._entrypoint_name_service = entrypoint_name_service
         self._io_file_service = io_file_service
 
@@ -882,12 +867,6 @@ class ResourceImportService(object):
                         commit=False,
                         log=log,
                     )
-                    self._entrypoint_id_plugins_service.append(
-                        existing.resource_id, plugin_ids
-                    )
-                    self._entrypoint_id_artifact_plugins_service.append(
-                        existing.resource_id, artifact_plugin_ids
-                    )
                 else:
                     entrypoint_dict = self._entrypoint_service.create(
                         name=entrypoint.get("name", Path(entrypoint["path"]).stem),
@@ -1204,158 +1183,3 @@ class DraftCommitService(object):
         if draft.payload["base_resource_id"] is not None:
             resource_ids = [draft.payload["base_resource_id"]] + resource_ids
         return {"status": "Success", "id": resource_ids}
-
-
-@dataclass
-class EntryPointParameterDataAdapter(object):
-    parameter_type: str
-    name: str
-    default_value: str | None
-
-
-@dataclass
-class TaskOutputParameterDataAdapter(object):
-    parameter_number: int
-    name: str
-    parameter_type: models.PluginTaskParameterType
-
-
-@dataclass
-class EntryPointArtifactDataAdapter(object):
-    name: str
-    output_parameters: list[TaskOutputParameterDataAdapter]
-
-
-@dataclass
-class EntryPointDataAdapter(object):
-    task_graph: str
-    artifact_graph: str
-    parameters: list[EntryPointParameterDataAdapter]
-    artifact_parameters: list[EntryPointArtifactDataAdapter]
-
-
-class ValidateEntrypointService(object):
-    """The service for validating the inputs to an entrypoint resource."""
-
-    @inject
-    def __init__(
-        self,
-        task_engine_yaml_service: TaskEngineYamlService,
-    ) -> None:
-        """Initialize the entrypoint service.
-
-        All arguments are provided via dependency injection.
-
-        Args:
-            task_engine_yaml_service: A TaskEngineYamlService object.
-        """
-        self._task_engine_yaml_service = task_engine_yaml_service
-
-    def validate(
-        self,
-        group_id: int,
-        task_graph: str,
-        artifact_graph: str,
-        plugin_snapshot_ids: list[int],
-        entrypoint_parameters: list[dict[str, Any]],
-        entrypoint_artifacts: list[dict[str, Any]],
-        **kwargs,
-    ) -> dict[str, Any]:
-        """Validate the proposed inputs to an entrypoint resource.
-
-        Args:
-            group_id: The ID of the group validating the entrypoint resource.
-            task_graph: The proposed task graph for the entrypoint resource.
-            artifact_graph: The proposed artifact graph for the entrypoint resource.
-            plugin_snapshot_ids: A list of identifiers for the plugin snapshots that
-                will be attached to the Entrypoint resource.
-            entrypoint_parameters: The proposed list of parameters for the entrypoint
-                resource.
-            entrypoint_artifacts: The proposed list of Artifacts for the entrypoint
-                resource.
-
-        Returns:
-            A dictionary containing the validation result. The dictionary contains two
-            keys:
-                - "schema_valid": A boolean indicating whether the schema is valid.
-                - "schema_issues": A list of issues found in the schema, if any.
-
-        Raises:
-            DioptraError: If two or more plugin_snapshot_ids point at the same
-                resource_id.
-        """
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
-        log.debug(
-            "Validating input for an entrypoint resource",
-            task_graph=task_graph,
-            artifact_graph=artifact_graph,
-            plugin_ids=plugin_snapshot_ids,
-            entrypoint_parameters=entrypoint_parameters,
-            entrypoint_artifacts=entrypoint_artifacts,
-        )
-
-        type_ids = [
-            parameter["parameter_type_id"]
-            for artifact in entrypoint_artifacts
-            for parameter in artifact["output_params"]
-        ]
-        id_type_map = get_plugin_task_parameter_types_by_id(ids=type_ids, log=log)
-        entrypoint = EntryPointDataAdapter(
-            task_graph=task_graph,
-            artifact_graph=artifact_graph,
-            parameters=[
-                EntryPointParameterDataAdapter(
-                    parameter_type=param["parameter_type"],
-                    name=param["name"],
-                    default_value=param["default_value"],
-                )
-                for param in entrypoint_parameters
-            ],
-            artifact_parameters=[
-                EntryPointArtifactDataAdapter(
-                    name=artifact["name"],
-                    output_parameters=[
-                        TaskOutputParameterDataAdapter(
-                            name=param["name"],
-                            parameter_number=p,
-                            parameter_type=id_type_map[param["parameter_type_id"]],
-                        )
-                        for p, param in enumerate(artifact["output_params"])
-                    ],
-                )
-                for artifact in entrypoint_artifacts
-            ],
-        )
-        plugin_parameter_types = views.get_plugin_parameter_types(
-            group_id=group_id, logger=log
-        )
-        plugin_plugin_files = views.get_plugin_plugin_files_from_plugin_snapshot_ids(
-            plugin_snapshot_ids=plugin_snapshot_ids, logger=log
-        )
-        try:
-            task_engine_dict = self._task_engine_yaml_service.build_dict(
-                entry_point=entrypoint,  # pyright: ignore
-                plugin_plugin_files=plugin_plugin_files,  # pyright: ignore
-                plugin_parameter_types=plugin_parameter_types,  # pyright: ignore
-                logger=log,
-            )
-        except InvalidYamlError as e:
-            return {
-                "schema_valid": False,
-                "schema_issues": [
-                    ValidationIssue(
-                        type_=IssueType.SYNTAX,
-                        severity=IssueSeverity.ERROR,
-                        message=str(e),
-                    )
-                ],
-            }
-
-        issues = self._task_engine_yaml_service.validate(
-            task_engine_dict=task_engine_dict
-        )
-
-        if issues:
-            return {"schema_valid": False, "schema_issues": issues}
-
-        return {"schema_valid": True, "schema_issues": []}

@@ -35,7 +35,7 @@ How to guides on essential workflows in Dioptra.
       creating-a-plugin
       use-metrics
       creating-an-entrypoint
+      creating-a-swappable-task
       creating-an-experiment
       running-jobs
-
 

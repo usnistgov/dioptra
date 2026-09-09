@@ -15,7 +15,18 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 import json
+from collections.abc import Sequence
 from typing import Any, Final, cast
+
+from dioptra.restapi.db.models.entry_points import (
+    EntryPointArtifactOutputParameter,
+    EntryPointParameterValue,
+)
+from dioptra.restapi.db.models.plugins import PluginTaskOutputParameter
+from dioptra.restapi.errors import (
+    ArtifactParameterTypeMismatchError,
+    EntrypointParameterTypeMismatchError,
+)
 
 JsonType = dict[str, Any] | list[Any]
 GlobalParameterType = str | float | int | bool | dict[str, Any] | list[Any] | None
@@ -88,3 +99,62 @@ def to_mapping_type(x: str) -> dict[str, Any]:
         raise ValueError(f"Not a mapping: {x}")
 
     return x_coerced
+
+
+def coerce_entrypoint_param_types(
+    parameters: Sequence[EntryPointParameterValue],
+) -> dict[str, Any]:
+    """Coerce job-provided entrypoint parameter values to declared types."""
+    param_values = []
+    param_names = []
+    correct_types = []
+    coerced_params = {}
+
+    for param in parameters:
+        passed_value = param.value
+
+        try:
+            coerced = coerce_to_type(
+                x=passed_value,
+                type_name=param.parameter.parameter_type,
+            )
+            coerced_params[param.parameter.name] = coerced
+        except ValueError:
+            param_values.append(passed_value)
+            param_names.append(param.parameter.name)
+            correct_types.append(param.parameter.parameter_type)
+
+    if param_names:
+        raise EntrypointParameterTypeMismatchError(
+            values=param_values,
+            parameter_names=param_names,
+            correct_types=correct_types,
+        )
+
+    return coerced_params
+
+
+def check_artifact_param_type_mismatch(
+    expected_parameters: list[EntryPointArtifactOutputParameter],
+    given_parameters: list[PluginTaskOutputParameter],
+) -> None:
+    """Raise when artifact output parameter types differ from expected types."""
+    parameter_names = []
+    given_types = []
+    expected_types = []
+
+    for expected, given in zip(
+        sorted(expected_parameters, key=lambda x: x.parameter_number),
+        sorted(given_parameters, key=lambda x: x.parameter_number),
+    ):
+        if expected.parameter_type.resource_id != given.parameter_type.resource_id:
+            parameter_names.append(expected.name)
+            given_types.append(given.parameter_type.name)
+            expected_types.append(expected.parameter_type.name)
+
+    if parameter_names:
+        raise ArtifactParameterTypeMismatchError(
+            parameter_names=parameter_names,
+            given_types=given_types,
+            correct_types=expected_types,
+        )

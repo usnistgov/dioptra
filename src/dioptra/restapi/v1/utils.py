@@ -148,6 +148,7 @@ class JobDict(TypedDict):
     job: models.Job
     artifacts: list[models.Artifact]
     has_draft: bool | None
+    swap_task_names: dict[tuple[int, str, str], str]
 
 
 class ModelWithVersionDict(TypedDict):
@@ -790,6 +791,7 @@ def build_job(job_dict: JobDict) -> dict[str, Any]:
     job = job_dict["job"]
     artifacts = job_dict.get("artifacts", None)
     has_draft = job_dict.get("has_draft", None)
+    swap_task_names = job_dict.get("swap_task_names", {})
 
     data = {
         "id": job.resource_id,
@@ -804,6 +806,21 @@ def build_job(job_dict: JobDict) -> dict[str, Any]:
             av.artifact_parameter.name: build_artifact_value(av.artifact)
             for av in job.entry_point_job.entry_point_artifact_parameter_values
         },
+        "swaps": [
+            {
+                "swap_name": swap.swap_name,
+                "task_alias": swap.task_alias,
+                "task_name": swap_task_names.get(
+                    (
+                        swap.plugin_file_resource_snapshot_id,
+                        swap.swap_name,
+                        swap.task_alias,
+                    )
+                ),
+                "plugin_file_resource_snapshot_id": swap.plugin_file_resource_snapshot_id,
+            }
+            for swap in sorted(job.job_swaps, key=lambda swap: swap.swap_name)
+        ],
         "timeout": job.timeout,
         "user": build_user_ref(job.creator),
         "group": build_group_ref(job.resource.owner),

@@ -30,6 +30,7 @@ STATUS: Final[str] = "status"
 LOG: Final[str] = "log"
 PARAMETERS: Final[str] = "parameters"
 ARTIFACT_PARAMETERS: Final[str] = "artifactParameters"
+CONFIG: Final[str] = "config"
 
 T = TypeVar("T")
 
@@ -419,3 +420,16 @@ class JobsCollectionClient(CollectionClient[T]):
         json_ = {"data": list(logs)}
 
         return self._session.post(self.url, str(job_id), LOG, json_=json_)
+
+    def get_config(self, job_id: int) -> T:
+        """
+        Retrieve the rendered YAML for a given job.
+
+        Args:
+            job_id: The resource ID of a job.
+
+        Returns:
+            The response from the Dioptra API.
+        """
+
+        return self._session.get(self.url, str(job_id), CONFIG)

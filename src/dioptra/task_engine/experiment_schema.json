@@ -328,18 +328,21 @@
                     "$ref": "#/$defs/step_dependencies"
                 }
             },
-            "additionalProperties": {
-                "$comment": "The task plugin short name + arg value(s)",
-                "type": [
-                    "string",
-                    "number",
-                    "boolean",
-                    "null",
-                    "array"
-                ]
+            "patternProperties": {
+                    "^(?!dependencies$)[a-zA-Z0-9_]+$": {
+                    "$comment": "The task plugin short name + arg value(s)",
+                    "type": [
+                        "string",
+                        "number",
+                        "boolean",
+                        "null",
+                        "array"
+                    ]
+                }
             },
             "minProperties": 1,
-            "maxProperties": 2
+            "maxProperties": 2,
+            "additionalProperties": false
         },
         "keyword_invocation": {
             "title": "Keyword invocation",
@@ -355,12 +358,15 @@
                     "$ref": "#/$defs/step_dependencies"
                 }
             },
-            "additionalProperties": {
-                "$comment": "The task plugin short name + kwargs",
-                "type": "object"
+            "patternProperties": {
+                    "^(?!dependencies$)[a-zA-Z0-9_]+$": {
+                    "$comment": "The task plugin short name + arg value(s)",
+                    "type": "object"
+                }
             },
             "minProperties": 1,
-            "maxProperties": 2
+            "maxProperties": 2,
+            "additionalProperties": false
         },
         "mixed_invocation": {
             "title": "Mixed position/keyword invocation",
@@ -368,6 +374,7 @@
             "properties": {
                 "task": {
                     "$comment": "Task plugin short name",
+                    "pattern": "^(?!dependencies$)[a-zA-Z0-9_]+$",
                     "type": "string",
                     "minLength": 1
                 },
@@ -418,8 +425,7 @@
             "properties": {
                 "name": {
                     "title": "The name of the artifact task",
-                    "type": "string",
-                    "enum": []
+                    "type": "string"
                 },
                 "args": {
                     "$comment": "Place holder for arguments for the artifact tasks. Built-up by the code.",

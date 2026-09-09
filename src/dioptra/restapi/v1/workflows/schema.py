@@ -311,22 +311,54 @@ class ValidateEntrypointIssueSchema(Schema):
         return data
 
 
+class TaskRefSchema(Schema):
+    pluginSnapshotId = fields.Integer(
+        attribute="plugin_snapshot_id",
+        metadata={
+            "description": "The plugin snapshot ID for the plugin containing this task"
+        },
+    )
+    pluginFileName = fields.String(
+        attribute="pluginfile_filename",
+        metadata={
+            "description": "The filename of the plugin file containing this task"
+        },
+    )
+    taskName = fields.String(
+        attribute="task_name", metadata={"description": "The name of the task"}
+    )
+
+
+class ChoiceAliasToTaskRefSchema(Schema):
+    alias_map = fields.Dict(
+        keys=fields.Str(),
+        values=fields.Nested(TaskRefSchema),
+        metadata={"description": "Mapping of choice alias to task reference."},
+    )
+
+
 class ValidateEntrypointResponseSchema(Schema):
     """The response for the validateEntrypoint endpoint."""
 
-    schemaValid = fields.Bool(
-        attribute="schema_valid",
-        metadata={
-            "description": (
-                "Indicates whether the proposed inputs for the Entrypoint resource "
-                "are valid. If False, the schemaIssues field will contain a list of "
-                "validation issues."
-            ),
-        },
-    )
     schemaIssues = fields.Nested(
         ValidateEntrypointIssueSchema,
         attribute="schema_issues",
         metadata={"description": "A list of validation issues detected in the schema."},
         many=True,
+    )
+
+    swapIssues = fields.Nested(
+        ValidateEntrypointIssueSchema,
+        attribute="swap_issues",
+        metadata={"description": "A list of validation issues detected in the schema."},
+        many=True,
+    )
+
+    swaps = fields.Dict(
+        keys=fields.Str(),
+        values=fields.Nested(ChoiceAliasToTaskRefSchema),
+        attribute="swaps",
+        metadata={
+            "description": "Mapping of swap names to a mapping of choice aliases to task references."
+        },
     )

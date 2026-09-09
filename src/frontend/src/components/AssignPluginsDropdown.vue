@@ -72,4 +72,10 @@ function removePlugin(plugin) {
   }
   pluginIDsToUpdate.value = pluginIDsToUpdate.value.filter((id) => id !== plugin.id);
 }
+
+function resetOriginalSelectedPlugins() {
+  originalSelectedPluginIds.value = selectedPlugins.value.map((plugin) => plugin.id);
+}
+
+defineExpose({ resetOriginalSelectedPlugins });
 </script>

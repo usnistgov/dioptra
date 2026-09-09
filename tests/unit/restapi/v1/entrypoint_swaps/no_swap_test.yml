@@ -1,0 +1,20 @@
+step1:
+  task1:
+    arg1: $global1
+
+step2:
+  task10:
+    arg3: $step3.out
+    arg4: $step4
+
+step4:
+  task4:
+    arg5: $global6
+  dependencies:
+    - step3
+
+step3:
+  task2:
+    arg2: $global12
+    arg3: $step1.out
+

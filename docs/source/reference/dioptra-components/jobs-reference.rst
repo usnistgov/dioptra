@@ -32,7 +32,7 @@ Job Definition
 
 A **Job** in Dioptra is a parameterized execution of an :ref:`Entrypoint <reference-entrypoints>`. While an Experiment defines the scope and available workflows, a Job represents the actual run of a workflow.
 
-When a Job is created, it is sent to a specific :ref:`Queue <reference-queues>`. A :ref:`Worker <reference-workers>` listening to that queue claims the Job and executes the entrypoint code using the provided parameters and artifact inputs.
+When a Job is created, it is sent to a specific :ref:`Queue <reference-queues>`. A :ref:`Worker <reference-workers>` listening to that queue claims the Job and executes the entrypoint code using the provided parameters, artifact inputs, and swap selections.
 Dioptra maintains a full history of every Job, including its logs, metrics, and any generated artifacts, creating a permanent record of the execution even if the underlying entrypoint or plugins are later modified.
 
 .. _reference-jobs-attributes:
@@ -58,6 +58,9 @@ Required Attributes
    - **Name**: (string) The name of the artifact parameter defined in the entrypoint
    - **Artifact ID**: (integer ID) The unique identifier of the Artifact, which was created by another Job execution
    - **Snapshot ID**: (integer ID) The unique identifier of the specific Snapshot to load for this Artifact.
+- **Swaps**: (list, conditionally required) The task alias selected for each swap in the Entrypoint's task graph. A selection is required for every swap when the selected Entrypoint contains swaps.
+   - **Swap Name**: (string) The swap name without the leading ``?`` used in the task graph.
+   - **Task Alias**: (string) The task alias selected from the choices defined for the swap.
 
 .. _reference-jobs-optional-attributes:
 
@@ -97,6 +100,42 @@ System-Managed State
 - **Artifacts**: A list of new Artifact resources created and registered as a result of the Job.
 - **MLflow Run ID**: The unique identifier for the associated MLflow run, used for tracking experiments and parameters.
 
+.. _reference-jobs-specifying-swaps:
+
+Specifying Swaps
+----------------
+
+If the selected Entrypoint contains swaps, the Job must provide exactly one
+task alias for every swap. Swap names and task aliases must match those defined
+in the Entrypoint's task graph. The leading ``?`` used to identify a swap in
+the task graph is not included in the Job selection.
+
+The Python client accepts a dictionary that maps each swap name to its selected
+task alias:
+
+.. code-block:: python
+
+    swaps={"training_method": "training_method_A"}
+
+When using the REST API directly, provide the selections as a list of objects:
+
+.. code-block:: json
+
+    {
+      "swaps": [
+        {
+          "swap_name": "training_method",
+          "task_alias": "training_method_A"
+        }
+      ]
+    }
+
+Dioptra rejects a Job if a required swap is missing, a swap is specified more
+than once, or a swap name or task alias is not defined by the selected
+Entrypoint. The selections are used to render a task graph without swaps before
+the graph is passed to the task engine. For the task graph syntax, see
+:ref:`Entrypoint swaps <reference-entrypoints-task-graph-syntax-swaps>`.
+
 .. _reference-jobs-registration-interfaces:
 
 Registration Interfaces
@@ -122,7 +161,7 @@ Jobs can be submitted directly via the HTTP API, usually via an experiment-speci
 
 **Create Job**
 
-See the :http:post:`POST /api/v1/experiments/{experimentId}/jobs </api/v1/experiments/{id}/jobs>` endpoint documentation for the required JSON payload, including parameters and artifact IDs.
+See the :http:post:`POST /api/v1/experiments/{experimentId}/jobs </api/v1/experiments/{id}/jobs>` endpoint documentation for the required JSON payload, including parameters, artifact IDs, and swap selections.
 
 .. rst-class:: fancy-header header-seealso
 
@@ -133,5 +172,6 @@ Additional reference pages:
 
 * :ref:`Experiments Reference <reference-experiments>`
 * :ref:`Entrypoints Reference <reference-entrypoints>`
+* :ref:`Entrypoint Swaps <reference-entrypoints-task-graph-syntax-swaps>`
 * :ref:`Queues Reference <reference-queues>`
 * :ref:`Metrics Reference <reference-metrics>`
