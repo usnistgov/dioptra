@@ -31,7 +31,7 @@ test("created group becomes the active context", async ({ page }) => {
   const groupMenu = page.locator(".q-menu:visible");
   await expect(groupMenu.getByText("Your Groups", { exact: true })).toBeVisible();
   await expect(groupMenu.getByText(groupName, { exact: true })).toBeVisible();
-  await groupMenu.getByRole("link", { name: "View Other Groups" }).click();
+  await groupMenu.getByText("View Other Groups", { exact: true }).click();
   await expect(page).toHaveURL(/\/groups$/);
 
   let groupListRequests = 0;
@@ -136,7 +136,7 @@ test("group table shows context and owner-specific actions", async ({ page }) =>
   await page.getByRole("button", { name: new RegExp(otherGroup.name) }).click();
   const groupMenu = page.locator(".q-menu:visible");
   await expect(groupMenu.getByText(otherGroup.name, { exact: true })).toHaveCount(0);
-  await expect(groupMenu.getByRole("link", { name: "View Other Groups" })).toBeVisible();
+  await expect(groupMenu.getByText("View Other Groups", { exact: true })).toBeVisible();
   await page.keyboard.press("Escape");
 
   await otherRow.click();
@@ -212,6 +212,79 @@ test("opening a group in a new tab keeps the parent context isolated", async ({ 
   await expect(page.getByRole("button", { name: new RegExp(testUser.username) })).toBeEnabled();
 
   await popup.close();
+  const deleteResponse = await page.request.delete(`/api/v1/groups/${group.id}`);
+  expect(deleteResponse.ok()).toBe(true);
+});
+
+test("browser history restores group context from the URL", async ({ page }) => {
+  const groupName = `e2e_history_group_${Date.now()}`;
+
+  await ensureLoggedInAsTestUser(page);
+  const userResponse = await page.request.get("/api/v1/users/current");
+  expect(userResponse.ok()).toBe(true);
+  const user = await userResponse.json();
+  const originalGroup = user.groups.find(
+    (group) => group.name === testUser.username && group.user.username === testUser.username,
+  );
+  expect(originalGroup).toBeTruthy();
+
+  await page.goto("/groups/new");
+  await page.getByRole("textbox", { name: "Name:" }).fill(groupName);
+  const createResponsePromise = page.waitForResponse(
+    (response) => new URL(response.url()).pathname === "/api/v1/groups/" && response.request().method() === "POST",
+  );
+  await page.getByRole("button", { name: "Submit" }).click();
+  const createResponse = await createResponsePromise;
+  expect(createResponse.ok()).toBe(true);
+  const group = await createResponse.json();
+
+  await page.getByRole("button", { name: "Navigation Menu" }).click();
+  await page.locator(".q-menu:visible").getByText("Experiments", { exact: true }).click();
+  await expect(page).toHaveURL(new RegExp(`/experiments\\?groupId=${group.id}$`));
+
+  await page.getByRole("button", { name: new RegExp(groupName) }).click();
+  await page.locator(".q-menu:visible").getByText(originalGroup.name, { exact: true }).click();
+  await expect(page).toHaveURL(new RegExp(`/experiments\\?groupId=${originalGroup.id}$`));
+
+  await page.reload();
+  await expect(page).toHaveURL(new RegExp(`/experiments\\?groupId=${originalGroup.id}$`));
+  await expect(page.getByRole("button", { name: new RegExp(originalGroup.name) })).toBeEnabled();
+
+  const searchTerm = "history-search";
+  const searchResponsePromise = page.waitForResponse(
+    (response) =>
+      new URL(response.url()).pathname === "/api/v1/experiments/" &&
+      response.url().includes(searchTerm) &&
+      response.request().method() === "GET",
+  );
+  await page.getByPlaceholder("Search").fill(searchTerm);
+  expect((await searchResponsePromise).ok()).toBe(true);
+
+  await page.getByRole("button", { name: "Navigation Menu" }).click();
+  await page.locator(".q-menu:visible").getByText("Plugins", { exact: true }).click();
+  await expect(page).toHaveURL(new RegExp(`/plugins\\?groupId=${originalGroup.id}$`));
+
+  await page.getByRole("button", { name: new RegExp(originalGroup.name) }).click();
+  await page.locator(".q-menu:visible").getByText(groupName, { exact: true }).click();
+  await expect(page).toHaveURL(new RegExp(`/plugins\\?groupId=${group.id}$`));
+
+  await page.getByRole("button", { name: "Navigation Menu" }).click();
+  await page.locator(".q-menu:visible").getByText("Jobs", { exact: true }).click();
+  await expect(page).toHaveURL(new RegExp(`/jobs\\?groupId=${group.id}$`));
+
+  await page.goBack();
+  await expect(page).toHaveURL(new RegExp(`/plugins\\?groupId=${group.id}$`));
+  await expect(page.getByRole("button", { name: new RegExp(groupName) })).toBeEnabled();
+
+  await page.goBack();
+  await expect(page).toHaveURL(new RegExp(`/experiments\\?groupId=${originalGroup.id}$`));
+  await expect(page.getByRole("button", { name: new RegExp(originalGroup.name) })).toBeEnabled();
+  await expect(page.getByPlaceholder("Search")).toHaveValue(searchTerm);
+
+  await page.goForward();
+  await expect(page).toHaveURL(new RegExp(`/plugins\\?groupId=${group.id}$`));
+  await expect(page.getByRole("button", { name: new RegExp(groupName) })).toBeEnabled();
+
   const deleteResponse = await page.request.delete(`/api/v1/groups/${group.id}`);
   expect(deleteResponse.ok()).toBe(true);
 });

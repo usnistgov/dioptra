@@ -493,7 +493,7 @@ watch(
     if (!newVal) {
       await nextTick();
       // after loading, scroll to saved position
-      const cached = loginStore.tablePaginationCache[getCacheKey()] ?? loginStore.tablePaginationCache[route.path];
+      const cached = loginStore.tablePaginationCache[getCacheKey()];
       if (route.meta.backButton && cached) {
         window.scrollTo({
           top: cached.lastScrollPosition,
@@ -509,15 +509,20 @@ function getSelectedColor(selected) {
   else if (selected) return "bg-blue-grey-1";
 }
 
-const pagination = ref({
-  page: 1,
-  rowsPerPage: props.showAll ? 0 : 15,
-  sortBy: props.defaultSort.sortBy,
-  descending: props.defaultSort.descending,
-});
+function getDefaultPagination() {
+  return {
+    page: 1,
+    rowsPerPage: props.showAll ? 0 : 15,
+    sortBy: props.defaultSort.sortBy,
+    descending: props.defaultSort.descending,
+  };
+}
+
+const pagination = ref(getDefaultPagination());
 
 const tableRef = ref();
 const isTableMounted = ref(false);
+const tablePath = route.path;
 
 const activeGroupId = computed(() => {
   const group = loginStore.loggedInGroup;
@@ -527,37 +532,61 @@ const activeGroupId = computed(() => {
   return group.id;
 });
 
-function getCacheKey(groupId = activeGroupId.value) {
-  return `${route.path}::group:${groupId ?? "none"}`;
+const displayedGroupId = ref(activeGroupId.value);
+
+function getCacheKey(groupId = displayedGroupId.value) {
+  return `${tablePath}::group:${groupId ?? "none"}`;
+}
+
+function saveTableState(groupId) {
+  if (!props.preserveSort) return;
+  loginStore.tablePaginationCache[getCacheKey(groupId)] = {
+    page: pagination.value.page,
+    rowsPerPage: pagination.value.rowsPerPage,
+    sortBy: pagination.value.sortBy,
+    descending: pagination.value.descending,
+    showDeleted: showDeleted.value,
+    search: filter.value,
+    lastScrollPosition: window.scrollY,
+  };
+}
+
+function restoreTableState(groupId) {
+  const cached = loginStore.tablePaginationCache[getCacheKey(groupId)];
+  pagination.value = cached ? { ...getDefaultPagination(), ...cached } : getDefaultPagination();
+  showDeleted.value = cached?.showDeleted ?? false;
+  filter.value = cached?.search ?? "";
 }
 
 onMounted(() => {
   // Restore cached pagination when arriving via back; otherwise use defaults
   const key = getCacheKey();
-  const legacyKey = route.path;
-  const cached = loginStore.tablePaginationCache[key] ?? loginStore.tablePaginationCache[legacyKey];
+  const cached = loginStore.tablePaginationCache[key];
   if (route.meta.backButton && cached) {
-    pagination.value = { ...pagination.value, ...cached };
-    showDeleted.value = cached.showDeleted;
-    filter.value = cached.search;
+    restoreTableState(displayedGroupId.value);
   } else if (cached) {
     delete loginStore.tablePaginationCache[key];
-    delete loginStore.tablePaginationCache[legacyKey];
   }
   isTableMounted.value = true;
   // get initial data from server with current pagination
   tableRef.value.requestServerInteraction();
 });
 
-watch(activeGroupId, (newGroupId, oldGroupId) => {
-  if (!props.refreshOnGroupChange || !isTableMounted.value || newGroupId === oldGroupId) {
-    return;
-  }
+watch(
+  activeGroupId,
+  (newGroupId, oldGroupId) => {
+    if (!props.refreshOnGroupChange || !isTableMounted.value || newGroupId === oldGroupId || route.path !== tablePath) {
+      return;
+    }
 
-  selected.value = [];
-  pagination.value.page = 1;
-  refreshTable();
-});
+    saveTableState(oldGroupId);
+    displayedGroupId.value = newGroupId;
+    restoreTableState(newGroupId);
+    selected.value = [];
+    refreshTable();
+  },
+  { flush: "post" },
+);
 
 defineExpose({ refreshTable, updateTotalRows });
 function refreshTable() {
@@ -630,19 +659,7 @@ function checkSearch(string) {
 
 onBeforeUnmount(() => {
   invalidSearchNotification();
-
-  // cache current pagination keyed by route path
-  if (props.preserveSort) {
-    loginStore.tablePaginationCache[getCacheKey()] = {
-      page: pagination.value.page,
-      rowsPerPage: pagination.value.rowsPerPage,
-      sortBy: pagination.value.sortBy,
-      descending: pagination.value.descending,
-      showDeleted: props.showDeleted,
-      search: filter.value,
-      lastScrollPosition: window.scrollY,
-    };
-  }
+  saveTableState(displayedGroupId.value);
 });
 
 function updateTotalRows(totalRows) {
