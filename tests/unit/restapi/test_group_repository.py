@@ -15,9 +15,18 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 import pytest
+import sqlalchemy as sa
 from sqlalchemy.orm.session import Session as DBSession
 
-from dioptra.restapi.db.models import Group, GroupMember, User
+from dioptra.restapi.db.models import (
+    Group,
+    GroupLock,
+    GroupMember,
+    Resource,
+    ResourceLock,
+    User,
+)
+from dioptra.restapi.db.models.constants import resource_lock_types
 from dioptra.restapi.db.repository.utils import DeletionPolicy
 from dioptra.restapi.errors import (
     EntityDeletedError,
@@ -31,6 +40,33 @@ from dioptra.restapi.errors import (
     UserNeedsAnOwnedGroupError,
     UserNotInGroupError,
 )
+
+
+def test_group_delete_cascades_idempotently(group_repo, account, db_session):
+    group = Group("cascade_group", account.user)
+    group_repo.create(group)
+    active = Resource("queue", group)
+    deleted = Resource("queue", group)
+    unrelated = Resource("queue", account.group)
+    existing_lock = ResourceLock(resource_lock_types.DELETE, deleted)
+    db_session.add_all([active, deleted, unrelated, existing_lock])
+    db_session.commit()
+
+    group_repo.delete(group)
+    group_repo.delete(group)
+    db_session.commit()
+    group_repo.delete(group)
+    db_session.commit()
+    db_session.expire_all()
+
+    assert group.is_deleted
+    assert active.is_deleted
+    assert deleted.is_deleted
+    assert not unrelated.is_deleted
+    assert len(db_session.scalars(sa.select(GroupLock)).all()) == 1
+    locks = db_session.scalars(sa.select(ResourceLock)).all()
+    assert len(locks) == 2
+    assert existing_lock in locks
 
 
 def test_group_create_with_existing_user(group_repo, account, db_session: DBSession):

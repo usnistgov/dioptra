@@ -292,7 +292,7 @@ class UserCurrentService(object):
         )
 
     def delete(self, password: str, **kwargs) -> dict[str, Any]:
-        """Permanently deletes the current user.
+        """Soft-delete the current user and groups left without an active owner.
 
         Args:
             password: The current user's password.

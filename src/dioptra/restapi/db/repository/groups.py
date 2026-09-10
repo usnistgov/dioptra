@@ -23,8 +23,16 @@ from typing import Any, Final
 
 import sqlalchemy as sa
 
-from dioptra.restapi.db.models import Group, GroupLock, GroupManager, GroupMember, User
-from dioptra.restapi.db.models.constants import GroupLockTypes
+from dioptra.restapi.db.models import (
+    Group,
+    GroupLock,
+    GroupManager,
+    GroupMember,
+    Resource,
+    ResourceLock,
+    User,
+)
+from dioptra.restapi.db.models.constants import GroupLockTypes, resource_lock_types
 from dioptra.restapi.db.repository.utils import (
     CompatibleSession,
     DeletionPolicy,
@@ -145,7 +153,10 @@ class GroupRepository:
 
     def delete(self, group: Group) -> None:
         """
-        Delete a group.  No-op if the group is already deleted.
+        Soft-delete a group and its active resources in the current transaction.
+
+        Existing group and resource delete locks are preserved, so repeated
+        calls do not create duplicate locks.
 
         Args:
             group: The group to delete
@@ -154,9 +165,6 @@ class GroupRepository:
             EntityDoesNotExistError: if the group does not exist
         """
 
-        # TODO: This is very simple, so far.  Do we remove group members?  What
-        #     about owned resources?
-
         exists_result = group_exists(self.session, group)
         if exists_result is ExistenceResult.DOES_NOT_EXIST:
             raise EntityDoesNotExistError(EntityType.GROUP, group_id=group.group_id)
@@ -164,6 +172,20 @@ class GroupRepository:
         if exists_result is ExistenceResult.EXISTS:
             lock = GroupLock(GroupLockTypes.DELETE, group)
             self.session.add(lock)
+
+        resources = self.session.scalars(
+            sa.select(Resource).where(
+                Resource.group_id == group.group_id,
+                Resource.is_deleted == False,  # noqa: E712
+            )
+        ).all()
+        for resource in resources:
+            self.session.add(
+                ResourceLock(
+                    resource_lock_type=resource_lock_types.DELETE,
+                    resource=resource,
+                )
+            )
 
     def get(
         self,
