@@ -1029,7 +1029,12 @@ def get_by_filters_paged(
     group_id = None if group is None else get_group_id(group)
 
     if group_id is not None:
-        assert_group_exists(session, group_id, DeletionPolicy.NOT_DELETED)
+        group_policy = (
+            DeletionPolicy.NOT_DELETED
+            if deletion_policy is DeletionPolicy.NOT_DELETED
+            else DeletionPolicy.ANY
+        )
+        assert_group_exists(session, group_id, group_policy)
 
     count_stmt = (
         sa.select(sa.func.count())

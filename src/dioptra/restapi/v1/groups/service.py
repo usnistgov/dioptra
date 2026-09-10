@@ -182,7 +182,11 @@ class GroupIdService(object):
         self._uow = uow
 
     def get(
-        self, group_id: int, error_if_not_found: bool = False, **kwargs
+        self,
+        group_id: int,
+        error_if_not_found: bool = False,
+        show_deleted: bool = False,
+        **kwargs,
     ) -> models.Group | None:
         """Fetch a group by its unique id.
 
@@ -190,6 +194,7 @@ class GroupIdService(object):
             group_id: The unique id of the group.
             error_if_not_found: If True, raise an error if the group is not found.
                 Defaults to False.
+            show_deleted: Include deleted groups for read-only archive browsing.
 
         Returns:
             The group object if found, otherwise None.
@@ -201,7 +206,9 @@ class GroupIdService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Lookup group by unique id", group_id=group_id)
 
-        group = self._uow.group_repo.get(group_id, DeletionPolicy.NOT_DELETED)
+        group = self._uow.group_repo.get(
+            group_id, DeletionPolicy.ANY if show_deleted else DeletionPolicy.NOT_DELETED
+        )
 
         if group is None:
             if error_if_not_found:

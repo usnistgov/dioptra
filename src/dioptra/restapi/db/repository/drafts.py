@@ -456,9 +456,13 @@ class DraftsRepository:
         base_resource_id: int | None = None,
         page_start: int = 0,
         page_length: int = -1,
+        show_deleted: bool = False,
     ) -> tuple[Sequence[DraftResource], int]:
         """
         Get some drafts according to search criteria.
+
+        With show_deleted, retained drafts may be read from deleted groups.
+        Drafts remain scoped to their creator and are not individually soft-deleted.
 
         Args:
             draft_type: the type of draft to get
@@ -493,7 +497,11 @@ class DraftsRepository:
         if group is None:
             group_id = None
         else:
-            assert_group_exists(self._session, group, DeletionPolicy.NOT_DELETED)
+            assert_group_exists(
+                self._session,
+                group,
+                DeletionPolicy.ANY if show_deleted else DeletionPolicy.NOT_DELETED,
+            )
             group_id = get_group_id(group)
 
         if base_resource_id is not None:

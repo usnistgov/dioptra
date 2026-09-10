@@ -519,6 +519,16 @@ export async function getLoginStatus() {
   return await axios.get(`/api/users/current`);
 }
 
+export async function getArchivedGroup(id: number) {
+  return axios.get(`/api/groups/${id}`, { params: { showDeleted: true } });
+}
+
+export async function getArchivedResources(type: ResourceType, groupId: number, index: number, drafts = false) {
+  return axios.get(`/api/${type}/${drafts ? "drafts/" : ""}`, {
+    params: { groupId, showDeleted: true, index, pageLength: 15, ...(drafts ? { draftType: "all" } : {}) },
+  });
+}
+
 export async function refreshLoginState() {
   const response = await getLoginStatus();
   const store = useLoginStore();
