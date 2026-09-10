@@ -30,7 +30,10 @@ from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
 from dioptra.restapi.v1 import utils
-from dioptra.restapi.v1.schemas import IdStatusResponseSchema
+from dioptra.restapi.v1.schemas import (
+    IdStatusResponseSchema,
+    ShowDeletedQueryParametersSchema,
+)
 
 from .schema import (
     GroupCreateSchema,
@@ -134,6 +137,7 @@ class GroupIdEndpoint(Resource):
         super().__init__(*args, **kwargs)
 
     @login_required
+    @accepts(query_params_schema=ShowDeletedQueryParametersSchema, api=api)
     @responds(schema=GroupSchema, api=api)
     def get(self, id: int):
         """Gets a Group resource."""
@@ -142,7 +146,12 @@ class GroupIdEndpoint(Resource):
         )
         group = cast(
             models.Group,
-            self._group_id_service.get(id, error_if_not_found=True, log=log),
+            self._group_id_service.get(
+                id,
+                error_if_not_found=True,
+                show_deleted=request.parsed_query_params["show_deleted"],  # type: ignore[attr-defined]
+                log=log,
+            ),
         )
         return utils.build_group(group)
 
