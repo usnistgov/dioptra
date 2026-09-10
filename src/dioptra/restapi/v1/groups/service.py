@@ -19,13 +19,11 @@
 import datetime
 from typing import Any, Final
 
-import sqlalchemy as sa
 import structlog
 from injector import inject
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
-from dioptra.restapi.db.models.constants import resource_lock_types
 from dioptra.restapi.db.repository.utils import DeletionPolicy
 from dioptra.restapi.db.unit_of_work import UnitOfWork
 from dioptra.restapi.errors import (
@@ -272,7 +270,7 @@ class GroupIdService(object):
     def delete(
         self, group_id: int, acting_user: models.User, **kwargs
     ) -> dict[str, Any]:
-        """Permanently deletes the group by ID.
+        """Soft-delete the group and its resources by ID.
 
         Args:
             group_id: The ID of the group to be deleted.
@@ -291,17 +289,6 @@ class GroupIdService(object):
         self._uow.group_repo.assert_user_owns_multiple_groups(acting_user)
 
         with self._uow:
-            resources_stmt = sa.select(models.Resource).where(
-                models.Resource.group_id == group.group_id,
-                models.Resource.is_deleted == False,  # noqa: E712
-            )
-            resources = self._uow.session.scalars(resources_stmt).all()
-            for resource in resources:
-                lock = models.ResourceLock(
-                    resource_lock_type=resource_lock_types.DELETE,
-                    resource=resource,
-                )
-                self._uow.session.add(lock)
             self._uow.group_repo.delete(group)
 
         log.debug("Group deleted", group_id=group.group_id)

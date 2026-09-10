@@ -19,7 +19,15 @@ import uuid
 import pytest
 from sqlalchemy.orm.session import Session as DBSession
 
-from dioptra.restapi.db.models import Group, GroupMember, User
+from dioptra.restapi.db.models import (
+    Group,
+    GroupManager,
+    GroupMember,
+    Resource,
+    User,
+    UserLock,
+)
+from dioptra.restapi.db.models.constants import UserLockTypes
 from dioptra.restapi.db.repository.utils import DeletionPolicy, assert_user_exists
 from dioptra.restapi.errors import (
     EntityDeletedError,
@@ -83,6 +91,42 @@ def test_user_delete_not_exists(user_repo, account):
     u2 = User("user2", "password2", "user2@example.org")
     with pytest.raises(EntityDoesNotExistError):
         user_repo.delete(u2)
+
+
+@pytest.mark.parametrize("co_owner", ["none", "active", "deleted", "admin"])
+def test_user_delete_reconciles_owned_groups(
+    user_repo, group_repo, account, db_session: DBSession, co_owner
+):
+    group = Group("retirement_group", account.user)
+    group_repo.create(group)
+    resource = Resource("queue", group)
+    db_session.add(resource)
+    db_session.commit()
+
+    if co_owner != "none":
+        other = User("co_owner", "password", "co_owner@example.org")
+        user_repo.create(other, group, read=True, write=True)
+        db_session.flush()
+        group_repo.add_manager(group, other, owner=co_owner != "admin", admin=True)
+        if co_owner == "deleted":
+            # Simulate a legacy deleted owner whose manager role remains.
+            db_session.add(UserLock(UserLockTypes.DELETE, other))
+        db_session.commit()
+
+    creator_id = account.user.user_id
+    user_repo.delete(account.user)
+    db_session.commit()
+    db_session.expire_all()
+
+    assert account.user.is_deleted
+    assert group.is_deleted == (co_owner != "active")
+    assert resource.is_deleted == (co_owner != "active")
+    assert group.creator.user_id == creator_id
+    assert group.creator.username == account.user.username
+    assert db_session.get(GroupManager, (creator_id, group.group_id)) is None
+    assert db_session.get(GroupMember, (creator_id, group.group_id)) is None
+    if co_owner == "active":
+        group_repo.assert_group_owner(group, other)
 
 
 def test_user_get(user_repo, account):
