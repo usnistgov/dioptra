@@ -37,6 +37,16 @@
     </template>
     <template #body-cell-context="props">
       <q-btn
+        v-if="props.row.deleted"
+        label="Browse Deleted Resources"
+        color="primary"
+        dense
+        no-caps
+        :to="`/groups/${props.row.id}/archive`"
+        @click.stop
+      />
+      <q-btn
+        v-else
         :label="props.row.id === store.loggedInGroup.id ? 'Active Context' : 'Set Context'"
         :color="props.row.id === store.loggedInGroup.id ? 'secondary' : 'primary'"
         :outline="props.row.id !== store.loggedInGroup.id"
@@ -152,7 +162,8 @@ function openGroup(openInNewTab = false) {
     return;
   }
 
-  const route = router.resolve(`/groups/${selected.value[0].id}/admin`);
+  const group = selected.value[0];
+  const route = router.resolve(`/groups/${group.id}/${group.deleted ? "archive" : "admin"}`);
   if (openInNewTab) {
     openRouteInNewTab(route.href);
     return;

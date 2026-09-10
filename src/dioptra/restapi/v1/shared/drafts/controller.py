@@ -106,6 +106,7 @@ def generate_resource_drafts_endpoint(
                 draft_type=draft_type,
                 group_id=group_id,
                 base_resource_id=None,
+                show_deleted=parsed_query_params["show_deleted"],
                 page_index=page_index,
                 page_length=page_length,
                 log=log,
@@ -124,7 +125,7 @@ def generate_resource_drafts_endpoint(
                 total_num_elements=total_num_drafts,
                 sort_by=None,
                 descending=None,
-                show_deleted=None,
+                show_deleted=parsed_query_params["show_deleted"],
             )
 
         @login_required

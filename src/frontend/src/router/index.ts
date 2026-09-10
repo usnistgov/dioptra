@@ -184,6 +184,10 @@ const router = createRouter({
       component: () => import("../views/CreateGroupView.vue"),
     },
     {
+      path: "/groups/:id/archive",
+      component: () => import("../views/GroupArchiveView.vue"),
+    },
+    {
       path: "/groups/:id/admin",
       component: () => import("../views/GroupsAdminView.vue"),
       meta: { groupContext: { kind: "group", idParam: "id", fallback: "/groups" } },
