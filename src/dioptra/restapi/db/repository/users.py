@@ -26,6 +26,7 @@ import sqlalchemy as sa
 
 from dioptra.restapi.db.models import Group, GroupManager, GroupMember, User, UserLock
 from dioptra.restapi.db.models.constants import UserLockTypes
+from dioptra.restapi.db.repository.groups import GroupRepository
 from dioptra.restapi.db.repository.utils import (
     CompatibleSession,
     DeletionPolicy,
@@ -108,7 +109,10 @@ class UserRepository:
 
     def delete(self, user: User) -> None:
         """
-        Delete a user.  No-op if the user is already deleted.
+        Soft-delete a user and retire groups left without an active owner.
+
+        Removes operational membership and manager roles while retaining the
+        user row for historical attribution. No-op if already deleted.
 
         Args:
             user: The user to delete
@@ -117,14 +121,44 @@ class UserRepository:
             EntityDoesNotExistError: if the user does not exist
         """
 
-        # TODO: This is very simple, so far.  Do we remove group memberships?
-        #     What about owned resource snapshots?
-
         exists_result = user_exists(self.session, user)
         if exists_result is ExistenceResult.DOES_NOT_EXIST:
             raise EntityDoesNotExistError(EntityType.USER, user_id=user.user_id)
 
         elif exists_result is ExistenceResult.EXISTS:
+            owned_groups = self.session.scalars(
+                sa.select(Group)
+                .join(GroupManager, GroupManager.group_id == Group.group_id)
+                .where(
+                    GroupManager.user_id == user.user_id,
+                    GroupManager.owner.is_(True),
+                    Group.is_deleted == False,  # noqa: E712
+                )
+            ).all()
+            group_repo = GroupRepository(self.session)
+            for group in owned_groups:
+                other_owner = self.session.scalar(
+                    sa.select(GroupManager.user_id)
+                    .join(User, User.user_id == GroupManager.user_id)
+                    .where(
+                        GroupManager.group_id == group.group_id,
+                        GroupManager.user_id != user.user_id,
+                        GroupManager.owner.is_(True),
+                        User.is_deleted == False,  # noqa: E712
+                    )
+                    .limit(1)
+                )
+                if other_owner is None:
+                    group_repo.delete(group)
+
+            # Account retirement is exempt from active-user membership invariants.
+            # Keep the User row itself for immutable creator/snapshot attribution.
+            for role_type in (GroupManager, GroupMember):
+                roles = self.session.scalars(
+                    sa.select(role_type).where(role_type.user_id == user.user_id)
+                ).all()
+                for role in roles:
+                    self.session.delete(role)
             lock = UserLock(UserLockTypes.DELETE, user)
             self.session.add(lock)
 

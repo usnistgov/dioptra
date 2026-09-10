@@ -324,7 +324,7 @@ class UserCurrentService(object):
         return cast(models.User, current_user)
 
     def delete(self, password: str, **kwargs) -> dict[str, Any]:
-        """Permanently deletes the current user.
+        """Soft-delete the current user and groups left without an active owner.
 
         Args:
             password: The current user's password.
