@@ -72,6 +72,17 @@ User registration creates a public personal Group with the User as its creator, 
 The Group's initial name matches the username, but later username changes do not automatically rename the Group. A
 personal Group is public in the current release; it is not a private workspace.
 
+Account Deletion
+----------------
+
+Deleting an account deletes the User and removes their membership and manager roles. Groups that retain another
+active owner remain operational. Groups with no other active owner are deleted along with their resources, including
+when the deleted User was an owner but not the original creator.
+
+The User record remains for historical creator and resource attribution. Deleted usernames and email addresses remain
+reserved. Account deletion and the associated group/resource soft deletions occur in one transaction. The web interface
+clears saved forms and other user-scoped state after account deletion or logout.
+
 .. _reference-users-registration-interfaces:
 
 
