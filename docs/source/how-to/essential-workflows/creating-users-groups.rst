@@ -116,6 +116,25 @@ that group.
 Select a row to open the Group Admin page. Every authenticated user can inspect a public group, but only an owner can
 rename or delete it. Deleting a group also marks its resources as deleted. A user cannot delete their final owned group.
 
+Resource list and creation URLs include ``groupId`` so reloads and browser Back/Forward restore context. The interface
+refreshes available groups when the tab regains focus and falls back to an available group if the selected group was
+deleted elsewhere.
+
+Browse a Deleted Group
+----------------------
+
+1. Open **Groups** and enable **Show Deleted**.
+2. Find the deleted group and select **Browse Deleted Resources**.
+3. Select a supported resource type, such as experiments or queues, then use **View record** to inspect a read-only JSON
+   record.
+4. For supported resource types, enable **My retained drafts** to inspect your own saved drafts.
+
+The archive does not change your active group. Tags and drafts are retained records rather than individually deleted
+resources. See :ref:`reference-groups-archives` for API access and supported resource types.
+
+Deleted plugins, jobs, artifacts, and models are not yet returned by their list endpoints, even though the archive selector
+offers those types. Their show-deleted support will be added with the artifact work.
+
 .. rst-class:: fancy-header header-seealso
 
 See Also
