@@ -56,13 +56,20 @@ roles. These fields support a future permission model, but they are not access b
 in the current release.
 
 Ownership is enforced for group-level administration. Only an owner can rename or delete a group, and every user must
-retain at least one owned group. Deleting a group also marks its resources as deleted.
+retain at least one owned group while their account remains active. Deleting a group deletes the group and its resources.
+Deleting an account preserves groups with another active owner and deletes groups with no remaining active owner. Creator
+attribution remains available after account deletion.
 
 Active Group Context
 --------------------
 
 The web interface maintains one active group context per user and browser tab. The selection is stored for the lifetime
 of the tab and survives navigation and page reloads in that tab. A different browser tab can use a different active group.
+
+Unlocked resource lists and creation routes include the selected group in the URL, for example
+``/experiments?groupId=12``. Back and Forward restore the group recorded in each URL. Changing the group with the header
+switcher replaces the current history entry rather than adding a separate navigation step. Table pagination, search,
+sorting, and deleted-resource visibility are cached by route and group within the session.
 
 The header switcher lists groups created by the logged-in user. Select **View Other Groups** to open the Groups page,
 where all available public groups can be inspected and selected as context. Resource tables are filtered by the active
@@ -71,6 +78,18 @@ group, and new resources and GUI resource imports use that group unless the oper
 Opening an existing resource changes the active context to the resource's owning group. The switcher is disabled while
 viewing or editing that resource so the displayed resource and its group context cannot diverge. Leaving the detail route
 unlocks the switcher.
+
+Resource detail routes derive context from the resource itself, even if a conflicting ``groupId`` is supplied in the URL.
+Opening a resource in a new tab selects its owning group in the child tab without changing the parent tab's context.
+Create requests use the current group at submission; changing context clears linked selections from the previous group.
+Logging out clears saved forms and other user-scoped interface state.
+
+When an authenticated tab regains focus, the interface refreshes its group catalog. If the selected group was deleted in
+another session, it selects an available group and updates the list URL. If the deleted group was locked by a detail page,
+the interface returns to the Groups page. Repeated focus events are throttled and overlapping requests are suppressed.
+
+Deleted groups are browsed through a separate :ref:`read-only archive <reference-groups-archives>`. Browsing an archive
+does not select the deleted group as the active context.
 
 The active group is a web interface concept. REST API and Python client operations that require a group use an explicit
 group ID rather than the browser's active context.

@@ -115,6 +115,33 @@ User must retain at least one owned Group, so deleting a User's final owned Grou
 
 Deleting a Group marks the Group and its resources as deleted. Deletion does not make the Group name available for reuse.
 
+Groups without a remaining active owner are deleted with their resources in the account deletion transaction.
+
+.. _reference-groups-archives:
+
+Deleted Group Archives
+----------------------
+
+On the Groups page, enable **Show Deleted** and select **Browse Deleted Resources** for a deleted Group. The archive at
+``/groups/<id>/archive`` displays the Group's qualified name and a read-only banner. It does not change the active Group.
+
+Choose a resource type to browse a paginated list, then select **View record** to inspect its JSON representation.
+The archive has no resource creation, editing, import, or deletion controls.
+
+Deleted-resource listing is currently available for experiments, queues, entrypoints, and plugin parameter types. The
+resource selector also offers plugins, jobs, artifacts, and models, but their list endpoints currently exclude deleted
+resources. Show-deleted support for those types is deferred to the artifact work; an empty list for one of those types does
+not establish that the deleted Group had no such resources.
+
+Tags are retained records and have no individual delete marker. For resource types with draft support, **My retained
+drafts** shows the current User's new-resource and modification drafts. Drafts are also retained records, not individually
+deleted resources; drafts belonging to other Users are not included.
+
+API clients can read a deleted Group with ``GET /api/v1/groups/<id>?showDeleted=true``. Supported resource lists use an
+explicit ``groupId`` together with ``showDeleted=true`` to include deleted resources. Draft lists also accept
+``showDeleted=true``; for drafts, this permits reading retained drafts in deleted Groups while preserving creator scoping.
+Tags are queried by ``groupId`` and do not use an individual deletion flag.
+
 .. _reference-groups-registration-interfaces:
 
 Registration Interfaces
