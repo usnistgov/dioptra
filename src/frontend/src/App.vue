@@ -31,6 +31,9 @@ import { useQuasar } from "quasar";
 import { computed, provide } from "vue";
 import { useLoginStore } from "@/stores/LoginStore";
 import SnapshotList from "./components/SnapshotList.vue";
+import { useFocusRefresh } from "@/services/useFocusRefresh";
+
+useFocusRefresh();
 
 const store = useLoginStore();
 

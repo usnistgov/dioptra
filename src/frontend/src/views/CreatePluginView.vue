@@ -22,27 +22,17 @@
             <label :class="`field-label`">Name:</label>
           </template>
         </q-input>
-        <q-select
-          id="pluginGroup"
-          v-model="plugin.group"
+        <q-input
           outlined
-          :options="store.groups"
-          option-label="name"
-          option-value="id"
-          emit-value
-          map-options
           dense
-          :rules="[requiredRule]"
+          :model-value="store.loggedInGroup.name"
+          disable
           class="q-mb-sm"
         >
           <template #before>
-            <label
-              for="pluginGroup"
-              class="field-label"
-              >Group:</label
-            >
+            <label class="field-label">Group:</label>
           </template>
-        </q-select>
+        </q-input>
         <q-input
           id="pluginDescription"
           v-model="plugin.description"
@@ -91,7 +81,7 @@
 
 <script setup>
 import PageTitle from "@/components/PageTitle.vue";
-import { ref, computed, onMounted, inject } from "vue";
+import { ref, computed, onMounted, inject, watch } from "vue";
 import { useLoginStore } from "@/stores/LoginStore.ts";
 import { useRouter, onBeforeRouteLeave } from "vue-router";
 import * as api from "@/services/dataApi";
@@ -118,9 +108,20 @@ const ORIGINAL_COPY = {
 onMounted(() => {
   if (store.savedForms?.plugin) {
     showReturnDialog.value = true;
-    plugin.value = store.savedForms.plugin;
+    plugin.value = {
+      ...store.savedForms.plugin,
+      group: store.loggedInGroup.id,
+    };
   }
 });
+
+watch(
+  () => store.loggedInGroup.id,
+  (groupId) => {
+    plugin.value.group = groupId;
+    ORIGINAL_COPY.group = groupId;
+  },
+);
 
 const valuesChangedFromOriginal = computed(() => {
   for (const key in ORIGINAL_COPY) {
@@ -164,7 +165,10 @@ function submit() {
 
 async function addPlugin() {
   try {
-    const res = await api.addItem("plugins", plugin.value);
+    const res = await api.addItem("plugins", {
+      ...plugin.value,
+      group: store.loggedInGroup.id,
+    });
     notify.success(`Successfully created '${res.data.name}'`);
     store.savedForms.plugin = null;
     router.push("/plugins");

@@ -141,6 +141,7 @@ def test_type_create_user_not_member(
 ):
     user2 = models.User("user2", "pass2", "user2@example.org")
     group2 = models.Group("group2", user2)
+    group2.public = False
     db_session.add_all((user2, group2))
     db_session.commit()
 
@@ -148,6 +149,20 @@ def test_type_create_user_not_member(
 
     with pytest.raises(errors.UserNotInGroupError):
         type_repo.create(type_)
+
+
+def test_type_create_user_not_member_public_group(
+    db_session: DBSession, fake_data, account, type_repo
+):
+    user2 = models.User("user2", "pass2", "user2@example.org")
+    group2 = models.Group("group2", user2)
+    group2.public = True
+    db_session.add_all((user2, group2))
+    db_session.commit()
+
+    type_ = fake_data.plugin_task_parameter_type(account.user, group2, "test_type")
+    type_repo.create(type_)
+    db_session.commit()
 
 
 def test_type_create_wrong_resource_type(
@@ -272,8 +287,11 @@ def test_type_create_snapshot_user_deleted(
 def test_type_create_snapshot_user_not_member(
     db_session: DBSession, type_repo, point_type
 ):
+    point_type.resource.owner.public = False
+
     user2 = models.User("user2", "pass2", "user2@example.org")
     group2 = models.Group("group2", user2)
+    group2.public = False
     db_session.add_all((user2, group2))
     db_session.commit()
 
@@ -283,6 +301,24 @@ def test_type_create_snapshot_user_not_member(
 
     with pytest.raises(errors.UserNotInGroupError):
         type_repo.create_snapshot(point_type_v2)
+
+
+def test_type_create_snapshot_user_not_member_public_group(
+    db_session: DBSession, type_repo, point_type, account
+):
+    user2 = models.User("user2", "pass2", "user2@example.org")
+    group2 = models.Group("group2", user2)
+    group2.public = True
+    db_session.add_all((user2, group2))
+    db_session.commit()
+
+    point_type.resource.owner = group2
+    point_type_v2 = models.PluginTaskParameterType(
+        point_type.description, point_type.resource, account.user, "point2", None
+    )
+
+    type_repo.create_snapshot(point_type_v2)
+    db_session.commit()
 
 
 # Fails: the queue's resource_type gets changed to

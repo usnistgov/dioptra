@@ -35,7 +35,6 @@ from dioptra.restapi.errors import (
     UserPasswordChangeError,
     UserPasswordError,
 )
-from dioptra.restapi.v1.groups.service import GroupMemberService
 from dioptra.restapi.v1.plugin_parameter_types.service import (
     BuiltinPluginParameterTypeService,
 )
@@ -44,13 +43,6 @@ from dioptra.restapi.v1.shared.search_parser import parse_search_text
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
-DEFAULT_GROUP_NAME: Final[str] = "public"
-DEFAULT_GROUP_PERMISSIONS: Final[dict[str, Any]] = {
-    "read": True,
-    "write": True,
-    "share_read": False,
-    "share_write": False,
-}
 DAYS_TO_EXPIRE_PASSWORD_DEFAULT: Final[int] = 365
 
 
@@ -61,7 +53,6 @@ class UserService(object):
     def __init__(
         self,
         user_password_service: "UserPasswordService",
-        group_member_service: GroupMemberService,
         builtin_plugin_parameter_type_service: BuiltinPluginParameterTypeService,
         uow: UnitOfWork,
     ) -> None:
@@ -71,13 +62,11 @@ class UserService(object):
 
         Args:
             user_password_service: A UserPasswordService object.
-            group_member_service: A GroupMemberService object.
             builtin_plugin_parameter_type_service: A BuiltinPluginParameterTypeService
                 object.
             uow: A UnitOfWork instance
         """
         self._user_password_service = user_password_service
-        self._group_member_service = group_member_service
         self._builtin_plugin_parameter_type_service = (
             builtin_plugin_parameter_type_service
         )
@@ -123,16 +112,15 @@ class UserService(object):
             username=username, password=hashed_password, email_address=email_address
         )
 
-        default_group = self._create_or_get_default_group(
+        default_group = models.Group(name=username, creator=new_user, public=True)
+        self._uow.group_repo.create(default_group)
+        self._uow.session.flush()
+        self._builtin_plugin_parameter_type_service.create_all(
             user=new_user,
+            group=default_group,
+            commit=False,
             log=log,
         )
-        # If this user was created at the same time as the group, i.e. as the
-        # creator/initial member, we need not create the user separately.
-        if new_user != default_group.creator:
-            self._uow.user_repo.create(
-                new_user, default_group, **DEFAULT_GROUP_PERMISSIONS
-            )
 
         if commit:
             self._uow.commit()
@@ -172,32 +160,6 @@ class UserService(object):
         )
 
         return list(users), total_num_users
-
-    def _create_or_get_default_group(
-        self,
-        user: models.User,
-        **kwargs,
-    ) -> models.Group:
-        """Returns the default group if it exists, otherwise create and return it.
-
-        Args:
-            user: The user to assign as the creator of the group. If group already
-                exists, then this does nothing.
-
-        Returns:
-            The group object if found, otherwise None.
-        """
-        if (group := self._uow.group_repo.get_by_name(DEFAULT_GROUP_NAME)) is not None:
-            return group
-
-        default_group = models.Group(name=DEFAULT_GROUP_NAME, creator=user)
-        with self._uow:
-            self._uow.group_repo.create(default_group)
-        # Register the built-in plugin parameter types when creating a new group.
-        self._builtin_plugin_parameter_type_service.create_all(
-            user=user, group=default_group, commit=False
-        )
-        return default_group
 
 
 class UserIdService(object):
@@ -322,6 +284,19 @@ class UserCurrentService(object):
 
         return cast(models.User, current_user)
 
+    def get_accessible_groups(
+        self,
+        user: models.User,
+        deletion_policy: DeletionPolicy = DeletionPolicy.NOT_DELETED,
+    ) -> list[models.Group]:
+        """Return groups accessible to the provided user.
+
+        Accessible groups are those that are public or where the user is a member.
+        """
+        return list(
+            self._uow.group_repo.get_all_for_user(user.user_id, deletion_policy)
+        )
+
     def modify(
         self, username: str, email_address: str, commit: bool = True, **kwargs
     ) -> models.User:
@@ -349,7 +324,7 @@ class UserCurrentService(object):
         return cast(models.User, current_user)
 
     def delete(self, password: str, **kwargs) -> dict[str, Any]:
-        """Permanently deletes the current user.
+        """Soft-delete the current user and groups left without an active owner.
 
         Args:
             password: The current user's password.

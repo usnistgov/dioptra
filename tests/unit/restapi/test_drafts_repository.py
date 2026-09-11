@@ -391,6 +391,7 @@ def test_drafts_create_draft_resource_user_not_in_group(
 ):
     acct1 = fake_data.account()
     acct2 = fake_data.account()
+    acct1.group.public = False
 
     db_session.add_all([acct1.user, acct1.group, acct2.user, acct2.group])
     db_session.commit()
@@ -404,6 +405,27 @@ def test_drafts_create_draft_resource_user_not_in_group(
 
     with pytest.raises(e.UserNotInGroupError):
         drafts_repo.create_draft_resource(draft)
+
+
+def test_drafts_create_draft_resource_user_not_in_group_public_group(
+    db_session: DBSession, drafts_repo, draft_content, fake_data
+):
+    acct1 = fake_data.account()
+    acct2 = fake_data.account()
+    acct1.group.public = True
+
+    db_session.add_all([acct1.user, acct1.group, acct2.user, acct2.group])
+    db_session.commit()
+
+    draft = m.DraftResource(
+        "queue",
+        draft_content,
+        acct1.group,
+        acct2.user,
+    )
+
+    drafts_repo.create_draft_resource(draft)
+    db_session.commit()
 
 
 def test_drafts_create_draft_resource_already_exists(
@@ -699,6 +721,7 @@ def test_drafts_create_draft_modification_user_not_in_group(
 
     acct1 = fake_data.account()
     acct2 = fake_data.account()
+    acct1.group.public = False
     queue = fake_data.queue(acct1.user, acct1.group)
 
     db_session.add_all([acct1.user, acct1.group, acct2.user, acct2.group, queue])
@@ -723,6 +746,38 @@ def test_drafts_create_draft_modification_user_not_in_group(
 
     with pytest.raises(e.UserNotInGroupError):
         drafts_repo.create_draft_modification(draft)
+
+
+def test_drafts_create_draft_modification_user_not_in_group_public_group(
+    db_session: DBSession, drafts_repo, fake_data
+):
+    acct1 = fake_data.account()
+    acct2 = fake_data.account()
+    acct1.group.public = True
+    queue = fake_data.queue(acct1.user, acct1.group)
+
+    db_session.add_all([acct1.user, acct1.group, acct2.user, acct2.group, queue])
+    db_session.commit()
+
+    toplevel_data = {
+        "resource_data": {
+            "draft": "stuff",
+            "number": 5,
+        },
+        "resource_id": queue.resource_id,
+        "resource_snapshot_id": queue.resource_snapshot_id,
+        "base_resource_id": None,
+    }
+
+    draft = m.DraftResource(
+        "queue",
+        toplevel_data,
+        acct1.group,
+        acct2.user,
+    )
+
+    drafts_repo.create_draft_modification(draft)
+    db_session.commit()
 
 
 def test_drafts_create_draft_modification_draft_already_exists(

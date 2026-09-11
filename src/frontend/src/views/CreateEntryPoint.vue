@@ -71,24 +71,17 @@
               <label :class="`field-label`">Name:</label>
             </template>
           </q-input>
-          <q-select
-            v-model="entryPoint.group"
+          <q-input
             outlined
-            :options="store.groups"
-            option-label="name"
-            option-value="id"
-            emit-value
-            map-options
             dense
-            :rules="[requiredRule]"
-            aria-required="true"
-            :disable="history || entryPoint.deleted"
+            :model-value="groupDisplayName"
+            disable
             class="q-mb-sm"
           >
             <template #before>
               <div class="field-label">Group:</div>
             </template>
-          </q-select>
+          </q-input>
           <ResourcePicker
             v-if="!history"
             v-model="entryPoint.queues"
@@ -164,18 +157,18 @@
             showEntrypointParamDialog = true;
           "
         >
-          <template #body-cell-defaultValue="cellProps">
+          <template #body-cell-defaultValue="props">
             <q-chip
-              v-if="cellProps.row.defaultValue === null"
+              v-if="props.row.defaultValue === null"
               label="No Default"
               color="negative"
               text-color="white"
             />
             <div v-else>
-              {{ cellProps.row.defaultValue }}
+              {{ props.row.defaultValue }}
             </div>
           </template>
-          <template #body-cell-actions="cellProps">
+          <template #body-cell-actions="props">
             <q-btn
               icon="edit"
               round
@@ -183,8 +176,8 @@
               color="primary"
               flat
               @click="
-                selectedParam = cellProps.row;
-                selectedParamIndex = cellProps.rowIndex;
+                selectedParam = props.row;
+                selectedParamIndex = props.rowIndex;
                 showEntrypointParamDialog = true;
                 selectedParamType = 'parameters';
               "
@@ -196,7 +189,7 @@
               color="negative"
               flat
               @click="
-                selectedParam = cellProps.row;
+                selectedParam = props.row;
                 showDeleteDialogParam = true;
                 selectedParamType = 'parameters';
               "
@@ -220,9 +213,9 @@
           style="margin-top: 0"
           @create="showArtifactParamDialog = true"
         >
-          <template #body-cell-name="cellProps">
+          <template #body-cell-name="props">
             <div style="font-size: 18px">
-              {{ cellProps.row.name }}
+              {{ props.row.name }}
               <q-btn
                 icon="edit"
                 round
@@ -233,7 +226,7 @@
             </div>
             <q-popup-edit
               v-slot="scope"
-              v-model="cellProps.row.name"
+              v-model="props.row.name"
             >
               <q-input
                 v-model="scope.value"
@@ -244,9 +237,9 @@
               />
             </q-popup-edit>
           </template>
-          <template #body-cell-outputParams="cellProps">
+          <template #body-cell-outputParams="props">
             <div
-              v-for="(param, i) in cellProps.row.outputParams"
+              v-for="(param, i) in props.row.outputParams"
               :key="i"
             >
               <q-chip
@@ -257,11 +250,11 @@
                 removable
                 :label="`${param.name}: ${param.parameterType.name}`"
                 @click="
-                  handleSelectedParam('edit', cellProps, i, 'outputParams', 'artifacts');
+                  handleSelectedParam('edit', props, i, 'outputParams', 'artifacts');
                   showEditArtifactParamDialog = true;
                   console.log('param = ', param);
                 "
-                @remove="entryPoint.artifactParameters[cellProps.rowIndex].outputParams.splice(i, 1)"
+                @remove="entryPoint.artifactParameters[props.rowIndex].outputParams.splice(i, 1)"
               />
               <div
                 v-if="!param.parameterType"
@@ -278,12 +271,12 @@
               text-color="black"
               class="q-mr-xs q-my-xs"
               @click="
-                handleSelectedParam('create', cellProps, i, 'outputParams', 'artifacts');
+                handleSelectedParam('create', props, i, 'outputParams', 'artifacts');
                 showEditArtifactParamDialog = true;
               "
             />
           </template>
-          <template #body-cell-delete="cellProps">
+          <template #body-cell-delete="props">
             <q-btn
               icon="sym_o_delete"
               round
@@ -291,7 +284,7 @@
               color="negative"
               flat
               @click="
-                selectedArtifactParamProps = cellProps;
+                selectedArtifactParamProps = props;
                 showDeleteDialogArtifactParam = true;
               "
             />
@@ -354,9 +347,9 @@
           :hideCreateBtn="true"
           @syncResource="({ resource }) => syncPlugin(resource)"
         >
-          <template #body-cell-inputParams="cellProps">
+          <template #body-cell-inputParams="props">
             <div
-              v-for="(param, i) in cellProps.row.inputParams"
+              v-for="(param, i) in props.row.inputParams"
               :key="i"
             >
               <q-chip
@@ -376,9 +369,9 @@
               </q-chip>
             </div>
           </template>
-          <template #body-cell-outputParams="cellProps">
+          <template #body-cell-outputParams="props">
             <div
-              v-for="(param, i) in cellProps.row.outputParams"
+              v-for="(param, i) in props.row.outputParams"
               :key="i"
             >
               <q-chip
@@ -398,14 +391,14 @@
               </q-chip>
             </div>
           </template>
-          <template #body-cell-add="cellProps">
+          <template #body-cell-add="props">
             <q-btn
               icon="add"
               round
               size="xs"
               color="grey-5"
               text-color="black"
-              @click="addToTaskGraph(cellProps.row)"
+              @click="addToTaskGraph(props.row)"
             />
           </template>
         </TableComponent>
@@ -460,9 +453,9 @@
           :hideCreateBtn="true"
           @syncResource="({ resource }) => syncPlugin(resource, 'artifactPlugins')"
         >
-          <template #body-cell-outputParams="cellProps">
+          <template #body-cell-outputParams="props">
             <div
-              v-for="(param, i) in cellProps.row.outputParams"
+              v-for="(param, i) in props.row.outputParams"
               :key="i"
             >
               <q-chip
@@ -482,14 +475,14 @@
               </q-chip>
             </div>
           </template>
-          <template #body-cell-add="cellProps">
+          <template #body-cell-add="props">
             <q-btn
               icon="add"
               round
               size="xs"
               color="grey-5"
               text-color="black"
-              @click="addToArtifactGraph(cellProps.row)"
+              @click="addToArtifactGraph(props.row)"
             />
           </template>
         </TableComponent>
@@ -565,8 +558,8 @@
     Errors found: {{ inputErrors.length }}
     <ul>
       <li
-        v-for="(error, i) in inputErrors"
-        :key="i"
+        v-for="error in inputErrors"
+        :key="error.message"
       >
         {{ error.message }}
       </li>
@@ -714,6 +707,29 @@ const valuesChangedFromEditStartBesidesPlugins = computed(() => {
   return JSON.stringify(copyRest) !== JSON.stringify(entryRest);
 });
 
+const groupDisplayName = computed(() => {
+  if (route.params.id === "new") {
+    return store.loggedInGroup.name;
+  }
+
+  const groupValue = entryPoint.value?.group;
+
+  if (groupValue && typeof groupValue === "object" && "name" in groupValue) {
+    return groupValue.name;
+  }
+
+  const groupId = groupValue && typeof groupValue === "object" && "id" in groupValue ? groupValue.id : groupValue;
+
+  if (typeof groupId === "number") {
+    const group = store.groups.find((g) => g.id === groupId);
+    if (group) {
+      return group.name;
+    }
+  }
+
+  return store.loggedInGroup.name;
+});
+
 const tasks = ref([]);
 const artifactTasks = ref([]);
 
@@ -757,16 +773,6 @@ const autocompletions = computed(() => {
     };
   });
 });
-
-// const autocompletionsArtifacts = computed(() => {
-//   if (entryPoint.value.artifactParameters.length === 0) return [];
-//   return entryPoint.value.artifactParameters.map((param) => {
-//     return {
-//       label: `$${param.name}`,
-//       type: "variable",
-//     };
-//   });
-// });
 
 const basicInfoForm = ref(null);
 
@@ -830,13 +836,7 @@ const artifactTaskColumns = [
     resourceType: "plugin",
     sort: (a, b) => a.name.localeCompare(b.name),
   },
-  {
-    name: "taskName",
-    label: "Task",
-    align: "left",
-    field: "name",
-    sortable: true,
-  },
+  { name: "taskName", label: "Task", align: "left", field: "name", sortable: true },
   {
     name: "outputParams",
     label: "Output Parameters",
@@ -854,8 +854,24 @@ async function getEntrypoint() {
   if (route.params.id === "new") {
     if (store.savedForms?.entryPoint) {
       showReturnDialog.value = true;
-      await checkIfStillValid("queues");
-      await checkIfStillValid("plugins");
+      const savedGroupId = store.savedForms.entryPoint.group?.id ?? store.savedForms.entryPoint.group;
+      if (Number(savedGroupId) !== Number(store.loggedInGroup.id)) {
+        store.savedForms.entryPoint = {
+          ...store.savedForms.entryPoint,
+          group: store.loggedInGroup.id,
+          parameters: [],
+          artifactParameters: [],
+          taskGraph: "",
+          artifactGraph: "",
+          queues: [],
+          plugins: [],
+          artifactPlugins: [],
+        };
+      } else {
+        await checkIfStillValid("queues");
+        await checkIfStillValid("plugins");
+        await checkIfStillValid("artifactPlugins", "plugins");
+      }
       entryPoint.value = store.savedForms.entryPoint;
       copyAtEditStart.value = JSON.parse(JSON.stringify(store.savedForms.entryPoint));
     } else {
@@ -873,13 +889,17 @@ async function getEntrypoint() {
   }
 }
 
-async function checkIfStillValid(type) {
-  for (let index = store.savedForms.entryPoint[type].length - 1; index >= 0; index--) {
-    const id = store.savedForms.entryPoint[type][index].id;
+async function checkIfStillValid(field, resourceType = field) {
+  for (let index = store.savedForms.entryPoint[field].length - 1; index >= 0; index--) {
+    const id = store.savedForms.entryPoint[field][index].id;
     try {
-      await api.getItem(type, id);
+      const response = await api.getItem(resourceType, id);
+      const groupId = response.data.group?.id ?? response.data.group;
+      if (Number(groupId) !== Number(store.loggedInGroup.id)) {
+        store.savedForms.entryPoint[field].splice(index, 1);
+      }
     } catch (err) {
-      await store.savedForms.entryPoint[type].splice(index, 1);
+      store.savedForms.entryPoint[field].splice(index, 1);
       console.warn(err);
     }
   }
@@ -914,6 +934,9 @@ function submit() {
 
 async function addOrModifyEntrypoint() {
   const submitObject = JSON.parse(JSON.stringify(entryPoint.value));
+  if (route.params.id === "new") {
+    submitObject.group = store.loggedInGroup.id;
+  }
   const keysToKeep = [
     "group",
     "name",
@@ -1112,6 +1135,33 @@ const artifactPluginIDsToUpdate = ref([]);
 const pluginIDsToRemove = ref([]);
 const artifactPluginIDsToRemove = ref([]);
 
+watch(
+  () => store.loggedInGroup.id,
+  async (groupId, previousGroupId) => {
+    if (route.params.id !== "new" || groupId === previousGroupId) return;
+
+    entryPoint.value = {
+      ...entryPoint.value,
+      group: groupId,
+      parameters: [],
+      artifactParameters: [],
+      taskGraph: "",
+      artifactGraph: "",
+      queues: [],
+      plugins: [],
+      artifactPlugins: [],
+    };
+    ORIGINAL_COPY.group = groupId;
+    pluginParameterTypes.value = [];
+    pluginIDsToUpdate.value = [];
+    artifactPluginIDsToUpdate.value = [];
+    pluginIDsToRemove.value = [];
+    artifactPluginIDsToRemove.value = [];
+    store.savedForms.entryPoint = null;
+    await getPluginParameterTypes();
+  },
+);
+
 const objectForDeletion = ref();
 
 async function deleteEntrypoint() {
@@ -1132,7 +1182,7 @@ const displayErrorDialog = ref(false);
 async function validateInputs() {
   try {
     const res = await api.validateEntrypoint({
-      group: entryPoint.value.group.id || entryPoint.value.group,
+      group: route.params.id === "new" ? store.loggedInGroup.id : entryPoint.value.group.id || entryPoint.value.group,
       taskGraph: entryPoint.value.taskGraph,
       pluginSnapshots: entryPoint.value.plugins.map((plugin) => plugin.snapshotId || plugin.snapshot),
       parameters: entryPoint.value.parameters,

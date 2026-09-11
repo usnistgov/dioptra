@@ -85,8 +85,9 @@ Experiments/Jobs
 Other
 ~~~~~
 
-- ``User``: A user profile with login credentials and permissions. Belongs to one or more ``Groups``.
-- ``Group``: A set of ``Users`` and permission rules for resource access. Currently, there is only a single "public" ``Group``.
+- ``User``: An authenticated account. Registration creates a public personal ``Group`` initially named after the username.
+- ``Group``: A creator-scoped resource namespace and GUI context. Groups are currently public, and member permission flags
+  are not yet enforced for public-group resources.
 - ``Snapshot``: A specific version of a Resource (e.g. Experiment, Plugin, Entrypoint, Artifact) in time.
 - ``Tag``: String values that are associated in many to many relationships with various Dioptra resources. Used for filtering tables, etc.
 

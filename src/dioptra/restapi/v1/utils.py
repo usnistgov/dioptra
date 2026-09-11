@@ -39,9 +39,16 @@ USERS: Final[str] = "users"
 # -- Typed Dictionaries --------------------------------------------------------
 
 
+class UserRefDict(TypedDict):
+    id: int
+    username: str
+    url: str
+
+
 class GroupRefDict(TypedDict):
     id: int
     name: str
+    user: UserRefDict
     url: str
 
 
@@ -200,7 +207,7 @@ def build_experiment_snapshot_ref(experiment: models.Experiment) -> dict[str, An
     }
 
 
-def build_user_ref(user: models.User) -> dict[str, Any]:
+def build_user_ref(user: models.User) -> UserRefDict:
     """Build a UserRef dictionary.
 
     Args:
@@ -228,6 +235,7 @@ def build_group_ref(group: models.Group) -> GroupRefDict:
     return {
         "id": group.group_id,
         "name": group.name,
+        "user": build_user_ref(group.creator),
         "url": build_url(f"{GROUPS}/{group.group_id}"),
     }
 
@@ -516,23 +524,27 @@ def build_user(user: models.User) -> dict[str, Any]:
     }
 
 
-def build_current_user(user: models.User) -> dict[str, Any]:
+def build_current_user(
+    user: models.User, groups: list[models.Group] | None = None
+) -> dict[str, Any]:
     """Build a response dictionary for the current user.
 
     Args:
         user: The User object representing the current user to convert into a response
             dictionary.
+        groups: Optional list of accessible groups to include in the response.
 
     Returns:
         The response dictionary for the current user.
     """
+    if groups is None:
+        groups = [membership.group for membership in user.group_memberships]
+
     return {
         "id": user.user_id,
         "username": user.username,
         "email": user.email_address,
-        "groups": [
-            build_group_ref(membership.group) for membership in user.group_memberships
-        ],
+        "groups": [build_group_ref(group) for group in groups],
         "created_on": user.created_on,
         "last_modified_on": user.last_modified_on,
         "last_login_on": user.last_login_on,
@@ -572,6 +584,8 @@ def build_group(group: models.Group) -> dict[str, Any]:
     return {
         "id": group.group_id,
         "name": group.name,
+        "public": group.public,
+        "deleted": group.is_deleted,
         "user": build_user_ref(group.creator),
         "members": list(members.values()),
         "created_on": group.created_on,

@@ -122,6 +122,7 @@ def test_queue_create_user_not_member(
 ):
     u2 = m.User("user2", "password2", "user2@example.org")
     g2 = m.Group("group2", u2)
+    g2.public = False
     db_session.add(g2)
     db_session.add(u2)
     db_session.commit()
@@ -130,6 +131,20 @@ def test_queue_create_user_not_member(
     queue = m.Queue("description", resource, account.user, "a queue")
     with pytest.raises(UserNotInGroupError):
         queue_repo.create(queue)
+
+
+def test_queue_create_user_not_member_public_group(queue_repo, account, db_session: DBSession):
+    u2 = m.User("user2", "password2", "user2@example.org")
+    g2 = m.Group("group2", u2)
+    g2.public = True
+    db_session.add(g2)
+    db_session.add(u2)
+    db_session.commit()
+
+    resource = m.Resource("queue", g2)
+    queue = m.Queue("description", resource, account.user, "a queue")
+    queue_repo.create(queue)
+    db_session.commit()
 
 
 def test_queue_create_name_collision(
@@ -222,6 +237,7 @@ def test_queue_create_snapshot_resource_not_exists(queue_repo, account):
 def test_queue_create_snapshot_creator_not_member(
     queue_repo, account, db_session: DBSession, fake_data
 ):
+    account.group.public = False
 
     queue_snap1 = fake_data.queue(account.user, account.group)
     queue_repo.create(queue_snap1)
@@ -229,6 +245,7 @@ def test_queue_create_snapshot_creator_not_member(
 
     u2 = m.User("user2", "password2", "user2@example.org")
     g2 = m.Group("group2", u2)
+    g2.public = False
     db_session.add(g2)
     db_session.add(u2)
     db_session.commit()
@@ -239,6 +256,27 @@ def test_queue_create_snapshot_creator_not_member(
 
     with pytest.raises(UserNotInGroupError):
         queue_repo.create_snapshot(queue_snap2)
+
+
+def test_queue_create_snapshot_creator_not_member_public_group(
+    queue_repo, account, db_session: DBSession, fake_data
+):
+    queue_snap1 = fake_data.queue(account.user, account.group)
+    queue_repo.create(queue_snap1)
+    db_session.commit()
+
+    u2 = m.User("user2", "password2", "user2@example.org")
+    g2 = m.Group("group2", u2)
+    g2.public = True
+    db_session.add(g2)
+    db_session.add(u2)
+    db_session.commit()
+
+    queue_snap2 = m.Queue(
+        queue_snap1.description, queue_snap1.resource, u2, queue_snap1.name
+    )
+    queue_repo.create_snapshot(queue_snap2)
+    db_session.commit()
 
 
 def test_queue_create_snapshot_name_collision(

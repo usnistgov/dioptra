@@ -23,8 +23,16 @@ from typing import Any, Final
 
 import sqlalchemy as sa
 
-from dioptra.restapi.db.models import Group, GroupLock, GroupManager, GroupMember, User
-from dioptra.restapi.db.models.constants import GroupLockTypes
+from dioptra.restapi.db.models import (
+    Group,
+    GroupLock,
+    GroupManager,
+    GroupMember,
+    Resource,
+    ResourceLock,
+    User,
+)
+from dioptra.restapi.db.models.constants import GroupLockTypes, resource_lock_types
 from dioptra.restapi.db.repository.utils import (
     CompatibleSession,
     DeletionPolicy,
@@ -47,8 +55,10 @@ from dioptra.restapi.errors import (
     EntityExistsError,
     GroupNeedsAManagerError,
     GroupNeedsAUserError,
+    UserDoesNotOwnGroupError,
     UserIsManagerError,
     UserNeedsAGroupError,
+    UserNeedsAnOwnedGroupError,
 )
 from dioptra.restapi.v1.entity_types import EntityType
 
@@ -102,7 +112,11 @@ class GroupRepository:
 
         assert_group_does_not_exist(self.session, group, DeletionPolicy.ANY)
 
-        dupe_group = self.get_by_name(group.name, DeletionPolicy.ANY)
+        dupe_group = self.get_by_name_and_user(
+            group.name,
+            group.creator.user_id,
+            DeletionPolicy.ANY,
+        )
         if group.name is not None and dupe_group:
             # Assume this name uniqueness constraint applies with respect to
             # all groups, not just non-deleted groups.
@@ -139,7 +153,10 @@ class GroupRepository:
 
     def delete(self, group: Group) -> None:
         """
-        Delete a group.  No-op if the group is already deleted.
+        Soft-delete a group and its active resources in the current transaction.
+
+        Existing group and resource delete locks are preserved, so repeated
+        calls do not create duplicate locks.
 
         Args:
             group: The group to delete
@@ -148,9 +165,6 @@ class GroupRepository:
             EntityDoesNotExistError: if the group does not exist
         """
 
-        # TODO: This is very simple, so far.  Do we remove group members?  What
-        #     about owned resources?
-
         exists_result = group_exists(self.session, group)
         if exists_result is ExistenceResult.DOES_NOT_EXIST:
             raise EntityDoesNotExistError(EntityType.GROUP, group_id=group.group_id)
@@ -158,6 +172,20 @@ class GroupRepository:
         if exists_result is ExistenceResult.EXISTS:
             lock = GroupLock(GroupLockTypes.DELETE, group)
             self.session.add(lock)
+
+        resources = self.session.scalars(
+            sa.select(Resource).where(
+                Resource.group_id == group.group_id,
+                Resource.is_deleted == False,  # noqa: E712
+            )
+        ).all()
+        for resource in resources:
+            self.session.add(
+                ResourceLock(
+                    resource_lock_type=resource_lock_types.DELETE,
+                    resource=resource,
+                )
+            )
 
     def get(
         self,
@@ -225,10 +253,11 @@ class GroupRepository:
         return group
 
     def get_by_name(
-        self, name: str, deletion_policy: DeletionPolicy = DeletionPolicy.NOT_DELETED
+        self,
+        name: str,
+        deletion_policy: DeletionPolicy = DeletionPolicy.NOT_DELETED,
     ) -> Group | None:
-        """
-        Get a group by name.
+        """Get a group by name.
 
         Args:
             name: a group name
@@ -241,11 +270,58 @@ class GroupRepository:
         stmt = sa.select(Group).where(Group.name == name)
         stmt = _apply_deletion_policy(stmt, deletion_policy)
 
-        # Shouldn't we either return a list or put a unique constraint on the
-        # name column?
         group = self.session.scalar(stmt)
 
         return group
+
+    def get_by_name_and_user(
+        self,
+        name: str,
+        user_id: int,
+        deletion_policy: DeletionPolicy = DeletionPolicy.NOT_DELETED,
+    ) -> Group | None:
+        """Get a group by name scoped to a creator user."""
+        stmt = sa.select(Group).where(Group.name == name, Group.user_id == user_id)
+        stmt = _apply_deletion_policy(stmt, deletion_policy)
+        group = self.session.scalar(stmt)
+        return group
+
+    def get_all_for_user(
+        self,
+        user_id: int,
+        deletion_policy: DeletionPolicy = DeletionPolicy.NOT_DELETED,
+    ) -> Sequence[Group]:
+        """Get all groups accessible to a user.
+
+        Accessibility is defined as either direct membership in the group or the group
+        being public.
+        """
+        stmt = (
+            sa.select(Group)
+            .outerjoin(
+                GroupMember,
+                sa.and_(
+                    Group.group_id == GroupMember.group_id,
+                    GroupMember.user_id == user_id,
+                ),
+            )
+            .outerjoin(
+                GroupManager,
+                sa.and_(
+                    Group.group_id == GroupManager.group_id,
+                    GroupManager.user_id == user_id,
+                    GroupManager.owner.is_(True),
+                ),
+            )
+            .where(sa.or_(Group.public.is_(True), GroupMember.user_id == user_id))
+            .order_by(
+                sa.case((GroupManager.user_id.is_not(None), 0), else_=1),
+                Group.created_on,
+                Group.group_id,
+            )
+        )
+        stmt = _apply_deletion_policy(stmt, deletion_policy)
+        return self.session.scalars(stmt).all()
 
     def get_by_filters_paged(
         self,
@@ -393,6 +469,43 @@ class GroupRepository:
         assert num_managers is not None
 
         return num_managers
+
+    def assert_group_owner(self, group: Group, user: User) -> None:
+        """Ensure the user has owner permission for the group.
+
+        Args:
+            group: The group whose ownership should be checked.
+            user: The user expected to own the group.
+
+        Raises:
+            EntityDoesNotExistError: If the group or user does not exist.
+            EntityDeletedError: If the group or user is deleted.
+            UserDoesNotOwnGroupError: If the user is not an owner of the group.
+        """
+
+        assert_group_exists(self.session, group, DeletionPolicy.NOT_DELETED)
+        assert_user_exists(self.session, user, DeletionPolicy.NOT_DELETED)
+
+        manager = self.session.get(GroupManager, (user.user_id, group.group_id))
+        if manager is None or not manager.owner:
+            raise UserDoesNotOwnGroupError(user.user_id, group.group_id)
+
+    def assert_user_owns_multiple_groups(self, user: User) -> None:
+        """Ensure the user owns more than one non-deleted group."""
+
+        assert_user_exists(self.session, user, DeletionPolicy.NOT_DELETED)
+        stmt = (
+            sa.select(sa.func.count())
+            .select_from(GroupManager)
+            .join(Group, Group.group_id == GroupManager.group_id)
+            .where(GroupManager.user_id == user.user_id, GroupManager.owner.is_(True))
+        )
+        stmt = _apply_deletion_policy(stmt, DeletionPolicy.NOT_DELETED)
+        num_owned_groups = self.session.scalar(stmt)
+        assert num_owned_groups is not None
+
+        if num_owned_groups <= 1:
+            raise UserNeedsAnOwnedGroupError(user.user_id)
 
     def add_manager(
         self, group: Group, user: User, owner: bool = False, admin: bool = False

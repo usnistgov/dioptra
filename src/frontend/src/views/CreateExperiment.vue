@@ -24,22 +24,16 @@
                 <label :class="`field-label`">Name:</label>
               </template>
             </q-input>
-            <q-select
-              v-model="experiment.group"
+            <q-input
               outlined
-              :options="store.groups"
-              option-label="name"
-              option-value="id"
-              emit-value
-              map-options
               dense
-              :rules="[requiredRule]"
-              aria-required="true"
+              :model-value="store.loggedInGroup.name"
+              disable
             >
               <template #before>
                 <div class="field-label">Group:</div>
               </template>
-            </q-select>
+            </q-input>
             <q-input
               v-model.trim="experiment.description"
               outlined
@@ -104,7 +98,7 @@
 </template>
 
 <script setup>
-import { ref, inject, computed, onMounted } from "vue";
+import { ref, inject, computed, onMounted, watch } from "vue";
 import { useLoginStore } from "@/stores/LoginStore.ts";
 import { useRouter, onBeforeRouteLeave } from "vue-router";
 import * as api from "@/services/dataApi";
@@ -145,9 +139,13 @@ async function checkIfStillValid() {
   for (let index = store.savedForms.experiment.entrypoints.length - 1; index >= 0; index--) {
     const id = store.savedForms.experiment.entrypoints[index].id;
     try {
-      await api.getItem("entrypoints", id);
+      const response = await api.getItem("entrypoints", id);
+      const groupId = response.data.group?.id ?? response.data.group;
+      if (Number(groupId) !== Number(store.loggedInGroup.id)) {
+        store.savedForms.experiment.entrypoints.splice(index, 1);
+      }
     } catch (err) {
-      await store.savedForms.experiment.entrypoints.splice(index, 1);
+      store.savedForms.experiment.entrypoints.splice(index, 1);
       console.warn(err);
     }
   }
@@ -189,6 +187,7 @@ async function getExperiment() {
   title.value = "Create Experiment";
   if (store.savedForms?.experiment) {
     showReturnDialog.value = true;
+    store.savedForms.experiment.group = store.loggedInGroup.id;
     await checkIfStillValid();
     copyAtEditStart.value = JSON.parse(
       JSON.stringify({
@@ -213,6 +212,7 @@ function submit() {
 
 async function addorModifyExperiment() {
   const experimentCopy = JSON.parse(JSON.stringify(experiment.value));
+  experimentCopy.group = store.loggedInGroup.id;
   experimentCopy.entrypoints.forEach((entrypoint, index, array) => {
     if (typeof entrypoint === "object") {
       array[index] = entrypoint.id;
@@ -230,6 +230,16 @@ async function addorModifyExperiment() {
 }
 
 const entrypoints = ref([]);
+
+watch(
+  () => store.loggedInGroup.id,
+  (groupId) => {
+    experiment.value.group = groupId;
+    experiment.value.entrypoints = [];
+    entrypoints.value = [];
+    ORIGINAL_COPY.group = groupId;
+  },
+);
 
 async function getEntrypoints(val = "", update) {
   update(async () => {

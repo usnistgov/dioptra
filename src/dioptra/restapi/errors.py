@@ -693,6 +693,15 @@ class UserNotInGroupError(DioptraError):
         self.group_id = group_id
 
 
+class UserDoesNotOwnGroupError(DioptraError):
+    """A given user does not own a given group."""
+
+    def __init__(self, user_id: int, group_id: int) -> None:
+        super().__init__(f"User {user_id} does not own group {group_id}")
+        self.user_id = user_id
+        self.group_id = group_id
+
+
 class GroupNeedsAUserError(DioptraError):
     """A group must have at least one user; it can't be empty."""
 
@@ -719,6 +728,14 @@ class UserNeedsAGroupError(DioptraError):
 
         self.user_id = user_id
         self.group_id = group_id
+
+
+class UserNeedsAnOwnedGroupError(DioptraError):
+    """A user must own at least one group."""
+
+    def __init__(self, user_id: int) -> None:
+        super().__init__(f"Can't delete group: user {user_id} must own a group")
+        self.user_id = user_id
 
 
 class GroupNeedsAManagerError(DioptraError):
@@ -758,6 +775,27 @@ class MismatchedResourceTypeError(DioptraError):
 
         self.expected_type = expected_type
         self.found_type = found_type
+
+
+class CrossGroupResourceAssociationError(DioptraError):
+    """Resources from different groups cannot be associated."""
+
+    def __init__(
+        self,
+        parent_resource_id: int | None,
+        parent_group_id: int,
+        mismatched_children: list[tuple[int, int]],
+    ) -> None:
+        msg = (
+            "Cross-group resource association is not allowed: "
+            f"parent resource {parent_resource_id} belongs to group {parent_group_id}, "
+            f"but child resources belong to different groups: {mismatched_children}"
+        )
+        super().__init__(msg)
+
+        self.parent_resource_id = parent_resource_id
+        self.parent_group_id = parent_group_id
+        self.mismatched_children = mismatched_children
 
 
 class MalformedDraftResourceError(DioptraError):
@@ -1042,6 +1080,24 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
     def handle_user_password_error(error: UserPasswordError):
         log.debug(error.to_message())
         return error_result(error, http.HTTPStatus.UNAUTHORIZED, {})
+
+    @api.errorhandler(UserDoesNotOwnGroupError)
+    def handle_user_does_not_own_group_error(error: UserDoesNotOwnGroupError):
+        log.debug(error.to_message(), user_id=error.user_id, group_id=error.group_id)
+        return error_result(
+            error,
+            http.HTTPStatus.FORBIDDEN,
+            {"user_id": error.user_id, "group_id": error.group_id},
+        )
+
+    @api.errorhandler(UserNeedsAnOwnedGroupError)
+    def handle_user_needs_an_owned_group_error(error: UserNeedsAnOwnedGroupError):
+        log.debug(error.to_message(), user_id=error.user_id)
+        return error_result(
+            error,
+            http.HTTPStatus.CONFLICT,
+            {"user_id": error.user_id},
+        )
 
     @api.errorhandler(MlflowRunNotFoundError)
     def handle_mlflow_run_not_found_error(error: MlflowRunNotFoundError):

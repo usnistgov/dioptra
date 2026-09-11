@@ -31,7 +31,8 @@ Worker Definition
 
 A :ref:`Worker <explanation-queues-and-workers>` in Dioptra is an execution environment for running Jobs. It should contain all of the requirements needed for a given entrypoint, such as any local files, python packages, or executables needed as part of the job.
 
-A worker must run the dioptra-worker-v1 executable, which will watch a named :ref:`Queue <explanation-queues-and-workers>` in the Dioptra REST API for jobs.
+A worker must run the ``dioptra-worker-v1`` executable, which consumes jobs from a named RQ queue in Redis. The REST API
+enqueues jobs using the name of the selected :ref:`Queue <explanation-queues-and-workers>` resource.
 When a new job is added to the queue being watched by the worker, the worker will take the job from the queue and attempt to execute it. Upon finishing the job, the worker will update the job status in the REST API.
 
 .. _reference-workers-configuration:
@@ -62,6 +63,29 @@ Optional Configuration
 ~~~~~~~~~~~~~~~~~~~~~~
 
 * **OBJC_DISABLE_INITIALIZE_FORK_SAFETY**: (macOS Only) Set to ``YES`` to resolve stability issues with the Python ``fork()`` safety check when running RQ workers on Darwin kernels.
+
+Worker Accounts and Group Context
+---------------------------------
+
+Registering the User named by ``DIOPTRA_WORKER_USERNAME`` creates a public personal Group just as it does for any other
+User. That Group does not limit which RQ queues the worker consumes. The worker uses its credentials to communicate with
+the REST API; the web interface's active group selection has no effect on the worker process.
+
+Create the API Queue in the Group that owns the experiment and entrypoint, and associate it with the entrypoint before
+submitting a job. The Queue name must match a name consumed by an enabled worker, for example:
+
+.. code-block:: shell
+
+   dioptra-worker-v1 tensorflow-cpu
+
+This command assumes the required environment variables and the RQ Redis connection are configured.
+
+API Queues are group-owned resources, but RQ routing currently uses the Queue name without a group ID prefix. Queues with
+the same name in different Groups therefore share the same RQ destination when using the same Redis instance. Use distinct
+Queue names and matching worker subscriptions when separate execution pools are required.
+
+Changing or deleting the worker's account is separate from managing the worker process. Account deletion removes its
+operational roles and deletes any Groups left without an active owner, so use an active account for API communication.
 
 Pre-Configured Workers
 -----------------------

@@ -66,13 +66,6 @@
               <template #hint>
                 <span v-if="!job.experiment">Select experiment first</span>
                 <span
-                  v-else-if="allEntrypoints.length === 0"
-                  :style="{ color: entrypointError ? '#C10015' : 'grey' }"
-                >
-                  No existing Entrypoints. Create one
-                  <router-link to="/entrypoints/new">here</router-link>
-                </span>
-                <span
                   v-else-if="allowableEntrypointIds.length === 0"
                   :style="{ color: entrypointError ? '#C10015' : 'grey' }"
                 >
@@ -122,13 +115,6 @@
               <template #hint>
                 <span v-if="!job.experiment && !job.entrypoint">Select Experiment and Entrypoint first</span>
                 <span v-else-if="!job.entrypoint">Select Entrypoint first</span>
-                <span
-                  v-else-if="allQueues.length === 0"
-                  :style="{ color: queueError ? '#C10015' : 'grey' }"
-                >
-                  No current Queues. Create one
-                  <router-link to="/queues">here</router-link>
-                </span>
                 <span
                   v-else-if="allowableQueueIds.length === 0"
                   :style="{ color: queueError ? '#C10015' : 'grey' }"
@@ -600,6 +586,7 @@ watch(
     if (newVal) {
       await getEntrypoints();
     } else {
+      entrypoints.value = [];
       entrypointError.value = false;
     }
   },
@@ -609,17 +596,43 @@ watch(
   () => job.value.entrypoint,
   async (newVal) => {
     if (newVal) {
-      await getQueues();
+      if (!Array.isArray(newVal.queues)) {
+        await getEntrypoint(newVal.id);
+        return;
+      }
+      getQueues();
       if (queues.value.length == 1) {
         job.value.queue = queues.value[0];
       }
     } else {
+      queues.value = [];
       queueError.value = false;
     }
   },
 );
 
 const basicInfoForm = ref(null);
+
+watch(
+  () => (store.loggedInGroup && typeof store.loggedInGroup === "object" ? store.loggedInGroup.id : null),
+  async (groupId, previousGroupId) => {
+    if (groupId === previousGroupId || Object.hasOwn(route.params, "id")) {
+      return;
+    }
+    job.value.experiment = "";
+    job.value.entrypoint = "";
+    job.value.queue = "";
+    experiments.value = [];
+    entrypoints.value = [];
+    queues.value = [];
+    artifacts.value = [];
+    parameters.value = [];
+    artifactParameters.value = [];
+    store.savedForms.jobs.allJobs = null;
+    basicInfoForm.value?.reset();
+    await Promise.all([getExperiments(), getArtifacts()]);
+  },
+);
 
 const columns = [
   { name: "name", label: "Name", align: "left", field: "name", sortable: true },
@@ -644,18 +657,10 @@ function submit() {
     if (!job.value.experiment && experiments.value.length === 0 && !Object.hasOwn(route.params, "id")) {
       experimentError.value = true;
     }
-    if (
-      job.value.experiment &&
-      !job.value.entrypoint &&
-      (allEntrypoints.value.length === 0 || allowableEntrypointIds.value.length === 0)
-    ) {
+    if (job.value.experiment && !job.value.entrypoint && allowableEntrypointIds.value.length === 0) {
       entrypointError.value = true;
     }
-    if (
-      job.value.entrypoint &&
-      !job.value.queue &&
-      (allQueues.value.length === 0 || allowableQueueIds.value.length === 0)
-    ) {
+    if (job.value.entrypoint && !job.value.queue && allowableQueueIds.value.length === 0) {
       queueError.value = true;
     }
     if (success && job.value.experiment && job.value.entrypoint && job.value.queue) {
@@ -677,6 +682,18 @@ const expJobOrAllJobs = computed(() => {
 });
 
 async function createJob() {
+  const activeGroupId = Number(store.loggedInGroup.id);
+  const selectedResources = [job.value.experiment, job.value.entrypoint, job.value.queue];
+  if (
+    !resourcesShareGroup(...selectedResources) ||
+    selectedResources.some((resource) => getResourceGroupId(resource) !== activeGroupId) ||
+    artifactParameters.value.some(
+      (parameter) => parameter.selectedArtifact && getResourceGroupId(parameter.selectedArtifact) !== activeGroupId,
+    )
+  ) {
+    notify.error("The experiment, entrypoint, queue, and artifacts must belong to the active group.");
+    return;
+  }
   const payload = {
     description: job.value.description,
     queue: job.value.queue.id,
@@ -734,9 +751,7 @@ function updateParam(parameter) {
 // const experiment = ref()
 const experiments = ref([]);
 const queues = ref([]);
-const allQueues = ref([]);
 const entrypoints = ref([]);
-const allEntrypoints = ref([]);
 
 async function getExperiments(val = "", update) {
   const fetchData = async () => {
@@ -767,26 +782,17 @@ const allowableQueueIds = computed(() => {
 });
 
 async function getQueues(val = "", update) {
-  const fetchData = async () => {
-    try {
-      const res = await api.getData("queues", {
-        search: val,
-        rowsPerPage: 0, // get all
-        index: 0,
-      });
-      allQueues.value = res.data.data;
-      queues.value = res.data.data.filter((q) => allowableQueueIds.value.includes(q.id));
-    } catch (err) {
-      notify.error(err.response.data.message);
-    }
+  const filterData = () => {
+    const linkedQueues = Array.isArray(job.value.entrypoint?.queues) ? job.value.entrypoint.queues : [];
+    queues.value = linkedQueues.filter(
+      (queue) => resourcesShareGroup(job.value.experiment, job.value.entrypoint, queue) && matchesSearch(queue, val),
+    );
   };
 
   if (update) {
-    // when used by the dropdown
-    await update(fetchData);
+    update(filterData);
   } else {
-    // when used by mounted
-    await fetchData();
+    filterData();
   }
 }
 
@@ -812,27 +818,32 @@ watch(
 );
 
 async function getEntrypoints(val = "", update) {
-  const fetchData = async () => {
-    try {
-      const res = await api.getData("entrypoints", {
-        search: val,
-        rowsPerPage: 0, // get all
-        index: 0,
-      });
-      allEntrypoints.value = res.data.data;
-      entrypoints.value = res.data.data.filter((ep) => allowableEntrypointIds.value.includes(ep.id));
-    } catch (err) {
-      notify.error(err.response.data.message);
-    }
+  const filterData = () => {
+    const linkedEntrypoints = Array.isArray(job.value.experiment?.entrypoints) ? job.value.experiment.entrypoints : [];
+    entrypoints.value = linkedEntrypoints.filter(
+      (entrypoint) => resourcesShareGroup(job.value.experiment, entrypoint) && matchesSearch(entrypoint, val),
+    );
   };
 
   if (update) {
-    // when used by the dropdown
-    await update(fetchData);
+    update(filterData);
   } else {
-    // when used by mounted
-    await fetchData();
+    filterData();
   }
+}
+
+function matchesSearch(resource, search) {
+  return !search || resource.name?.toLowerCase().includes(search.toLowerCase());
+}
+
+function getResourceGroupId(resource) {
+  const groupId = resource?.group?.id ?? resource?.group;
+  return Number.isInteger(Number(groupId)) ? Number(groupId) : null;
+}
+
+function resourcesShareGroup(...resources) {
+  const groupIds = resources.map(getResourceGroupId);
+  return groupIds.every((groupId) => groupId !== null && groupId === groupIds[0]);
 }
 
 async function getExperiment(id) {
@@ -849,6 +860,11 @@ async function getEntrypoint(id) {
   if (!id) return;
   try {
     const res = await api.getItem("entrypoints", id);
+    if (!resourcesShareGroup(job.value.experiment, res.data)) {
+      notify.error(`Entrypoint ${res.data.name} is not in the same group as ${job.value.experiment.name}.`);
+      job.value.entrypoint = "";
+      return;
+    }
     job.value.entrypoint = res.data;
 
     // display the old job's values when re-running a job
@@ -975,7 +991,14 @@ onMounted(async () => {
   }
 
   if (store.savedForms.jobs[expJobOrAllJobs.value] && !history.state.oldJobId) {
-    job.value = store.savedForms.jobs[expJobOrAllJobs.value];
+    const savedJob = store.savedForms.jobs[expJobOrAllJobs.value];
+    const savedGroupId = savedJob.groupId ?? getResourceGroupId(savedJob.experiment);
+    if (Number(savedGroupId) !== Number(store.loggedInGroup.id)) {
+      store.savedForms.jobs[expJobOrAllJobs.value] = null;
+      await clearForm();
+      return;
+    }
+    job.value = savedJob;
     // check if saved values are still valid
     // load latest version of each resource
     // if a child is no longer linked to parent resource, discard
@@ -1029,7 +1052,10 @@ onBeforeRouteLeave((to) => {
   } else if (confirmLeave.value) {
     return true;
   } else {
-    store.savedForms.jobs[expJobOrAllJobs.value] = job.value;
+    store.savedForms.jobs[expJobOrAllJobs.value] = {
+      ...job.value,
+      groupId: store.loggedInGroup.id,
+    };
     return true;
   }
 });

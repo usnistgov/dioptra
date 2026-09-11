@@ -26,26 +26,16 @@
         >
       </template>
     </q-input>
-    <q-select
-      id="group"
-      v-model="group"
+    <q-input
       outlined
-      :options="store.groups"
-      option-label="name"
-      option-value="id"
-      emit-value
-      map-options
       dense
-      :rules="[requiredRule]"
+      :model-value="store.loggedInGroup.name"
+      disable
     >
       <template #before>
-        <label
-          for="group"
-          class="field-label"
-          >Group:</label
-        >
+        <label class="field-label">Group:</label>
       </template>
-    </q-select>
+    </q-input>
   </DialogComponent>
 </template>
 
@@ -67,18 +57,13 @@ const showDialog = defineModel();
 
 const name = ref("");
 const locked = ref(true);
-const group = ref("");
 
 watch(showDialog, (newVal) => {
   if (newVal) {
     name.value = props.editTag.name;
-    group.value = props.editTag.group;
   } else {
     name.value = "";
     locked.value = true;
-  }
-  if (!group.value) {
-    group.value = store.loggedInGroup.id;
   }
 });
 
@@ -86,7 +71,7 @@ function emitAddOrEdit() {
   if (props.editTag) {
     emit("updateTag", name.value, props.editTag.id);
   } else {
-    emit("addTag", name.value, group.value);
+    emit("addTag", name.value);
   }
 }
 </script>

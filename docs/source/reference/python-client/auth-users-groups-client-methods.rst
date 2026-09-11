@@ -20,7 +20,8 @@
 Auth, Users, and Groups Client Methods
 ======================================
 
-This page lists all relevant methods for Dioptra Authentication, User management, and Group management that are available via the Python Client.
+This page lists the Dioptra authentication, user management, and group retrieval methods available through the Python
+client.
 
 .. contents:: Contents
    :local:
@@ -113,11 +114,13 @@ Delete Current User
 Groups Methods
 --------------
 
-These methods relate to group management and retrieval. They can be executed via ``client.groups.METHOD_NAME()``.
+These methods retrieve groups. They can be executed via ``client.groups.METHOD_NAME()``.
 
 .. important::
     
-    Groups are only partially implemented in Dioptra currently. All users are created under a single "Public" group. At this time, the creation of custom groups is not yet supported. 
+    The Python client currently exposes read operations for groups. Group creation, rename, and deletion are available
+    through the GUI and REST API but are not wrapped by the Python client. Registering a user automatically creates a
+    public personal group whose initial name matches the username.
 
 Get All Groups
 ~~~~~~~~~~~~~~

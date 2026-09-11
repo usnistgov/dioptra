@@ -39,6 +39,7 @@ class Group(db.Model):  # type: ignore[name-defined]
     # Database fields
     group_id: Mapped[intpk] = mapped_column(init=False)
     name: Mapped[text_] = mapped_column(nullable=False)
+    public: Mapped[bool] = mapped_column(kw_only=True, nullable=False, default=True)
     user_id: Mapped[bigint] = mapped_column(
         ForeignKey("users.user_id"), init=False, nullable=False, index=True
     )
@@ -57,7 +58,9 @@ class Group(db.Model):  # type: ignore[name-defined]
     )
 
     # Relationships
-    creator: Mapped["User"] = relationship(back_populates="created_groups")
+    creator: Mapped["User"] = relationship(
+        back_populates="created_groups", lazy="joined", innerjoin=True
+    )
     members: Mapped[list["GroupMember"]] = relationship(
         init=False, back_populates="group"
     )

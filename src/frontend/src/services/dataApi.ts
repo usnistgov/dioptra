@@ -1,4 +1,5 @@
 import axios from "axios";
+import { useLoginStore } from "@/stores/LoginStore";
 
 export const API_VERSION = "v1";
 
@@ -64,6 +65,9 @@ type CreateParams = {
     job: number;
     uri: string;
   };
+  groups: {
+    name: string;
+  };
 };
 
 type UpdateParams = {
@@ -108,6 +112,9 @@ type UpdateParams = {
   artifacts: {
     description: string;
   };
+  groups: {
+    name: string;
+  };
 };
 
 type WorkflowParams = {
@@ -136,17 +143,37 @@ export interface Pagination {
   search?: string;
 }
 
+function shouldApplyGroupContext(type: ResourceType): boolean {
+  return type !== "groups";
+}
+
+function getActiveGroupId(type: ResourceType): number | null {
+  if (!shouldApplyGroupContext(type)) {
+    return null;
+  }
+
+  const store = useLoginStore();
+  const group = store.loggedInGroup;
+  if (!group || typeof group !== "object" || !("id" in group)) {
+    return null;
+  }
+
+  return group.id as number;
+}
+
 export async function getData<T extends ResourceType>(
   type: T,
   pagination: Pagination,
   showDrafts: boolean = false,
   showDeleted = false,
 ) {
+  const groupId = getActiveGroupId(type);
   const res = await axios.get(`/api/${type}/${showDrafts ? "drafts/" : ""}`, {
     params: {
       index: pagination.index,
       pageLength: pagination.rowsPerPage === 0 ? 100 : pagination.rowsPerPage, // 0 means GET ALL
       search: pagination.search,
+      groupId,
       draftType: showDrafts ? "new" : "",
       sortBy: pagination.sortBy,
       descending: pagination.descending,
@@ -490,6 +517,23 @@ export async function suggestPluginTasks(pythonCode: string) {
 
 export async function getLoginStatus() {
   return await axios.get(`/api/users/current`);
+}
+
+export async function getArchivedGroup(id: number) {
+  return axios.get(`/api/groups/${id}`, { params: { showDeleted: true } });
+}
+
+export async function getArchivedResources(type: ResourceType, groupId: number, index: number, drafts = false) {
+  return axios.get(`/api/${type}/${drafts ? "drafts/" : ""}`, {
+    params: { groupId, showDeleted: true, index, pageLength: 15, ...(drafts ? { draftType: "all" } : {}) },
+  });
+}
+
+export async function refreshLoginState() {
+  const response = await getLoginStatus();
+  const store = useLoginStore();
+  store.setSession(response.data);
+  return response.data;
 }
 
 export async function login(username: string, password: string) {

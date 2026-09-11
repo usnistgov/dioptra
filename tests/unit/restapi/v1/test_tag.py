@@ -20,6 +20,7 @@ This module contains a set of tests that validate the CRUD operations and additi
 functionalities for the tag entity. The tests ensure that the tags can be
 registered, renamed, deleted, and queried as expected through the REST API.
 """
+
 from http import HTTPStatus
 from typing import Any
 
@@ -67,6 +68,9 @@ def assert_tag_response_contents_matches_expectations(
     # Validate the GroupRef structure
     assert isinstance(response["group"]["id"], int)
     assert isinstance(response["group"]["name"], str)
+    assert isinstance(response["group"]["user"]["id"], int)
+    assert isinstance(response["group"]["user"]["username"], str)
+    assert isinstance(response["group"]["user"]["url"], str)
     assert isinstance(response["group"]["url"], str)
     assert response["group"]["id"] == expected_contents["group_id"]
 

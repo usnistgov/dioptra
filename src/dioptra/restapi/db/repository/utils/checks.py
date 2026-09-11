@@ -575,6 +575,87 @@ def assert_resource_children_exist(
     _assert_exists_multi(deletion_policy, child_status, num_children)
 
 
+def assert_resource_children_same_owner_group(
+    session: CompatibleSession[S],
+    resource: m.Resource | m.ResourceSnapshot | int,
+    children: Iterable[m.Resource | m.ResourceSnapshot | int],
+    deletion_policy: DeletionPolicy = DeletionPolicy.ANY,
+) -> None:
+    """
+    Check whether child resources are owned by the same group as the parent.
+
+    Args:
+        session: An SQLAlchemy session
+        resource: A resource, snapshot (something with a .resource_id
+            attribute we can use to identify a resource), or resource_id
+            integer primary key value
+        children: An iterable of child resources, snapshots (something with
+            a .resource_id attribute we can use to identify a resource), or
+            resource_id integer primary key values
+        deletion_policy: One of the DeletionPolicy enum values
+
+    Raises:
+        EntityDoesNotExistError: if the parent resource does not exist
+        EntityDeletedError: if policy is NOT_DELETED, all children exist,
+            but some were deleted.
+        EntityExistsError: if policy is DELETED, all children exist, and
+            some were not deleted.
+    """
+
+    if isinstance(resource, m.ResourceSnapshot):
+        parent_resource = resource.resource
+    elif isinstance(resource, m.Resource):
+        parent_resource = resource
+    else:
+        parent_resource = None
+
+    parent_resource_id = get_resource_id(resource)
+    parent_group_id = None
+    if parent_resource is not None:
+        parent_group_id = parent_resource.group_id
+        if parent_group_id is None and parent_resource.owner:
+            parent_group_id = parent_resource.owner.group_id
+    else:
+        assert_resource_exists(session, resource, DeletionPolicy.ANY)
+        parent_group_id = session.scalar(
+            sa.select(m.Resource.group_id).where(
+                m.Resource.resource_id == parent_resource_id
+            )
+        )
+
+    if parent_group_id is None:
+        raise e.EntityDoesNotExistError(
+            EntityType.RESOURCE, resource_id=parent_resource_id
+        )
+
+    assert_resources_exist(session, children, deletion_policy)
+
+    child_resource_ids = [get_resource_id(child) for child in children]
+
+    child_group_ids = dict(
+        session.execute(
+            sa.select(m.Resource.resource_id, m.Resource.group_id).where(
+                m.Resource.resource_id.in_(child_resource_ids)
+            )
+        )
+        .tuples()
+        .all()
+    )
+
+    mismatched_children = [
+        (int(child_resource_id), int(child_group_ids[child_resource_id]))
+        for child_resource_id in child_resource_ids
+        if child_group_ids[child_resource_id] != parent_group_id
+    ]
+
+    if mismatched_children:
+        raise e.CrossGroupResourceAssociationError(
+            parent_resource_id=parent_resource_id,
+            parent_group_id=parent_group_id,
+            mismatched_children=mismatched_children,
+        )
+
+
 def assert_resource_modifiable(
     session: CompatibleSession[S],
     resource: m.Resource | m.ResourceSnapshot | int,
@@ -898,8 +979,11 @@ def assert_can_create_resource(
     assert_snapshot_does_not_exist(session, snap)
     assert_user_exists(session, snap.creator, DeletionPolicy.NOT_DELETED)
     assert_group_exists(session, snap.resource.owner, DeletionPolicy.NOT_DELETED)
-    assert_user_in_group(session, snap.creator, snap.resource.owner)
+    assert_user_in_group_or_group_public(session, snap.creator, snap.resource.owner)
     assert_resource_children_exist(session, snap, DeletionPolicy.NOT_DELETED)
+    assert_resource_children_same_owner_group(
+        session, snap, snap.children, deletion_policy=DeletionPolicy.NOT_DELETED
+    )
     assert_resource_type(session, snap, resource_type)
 
     # TODO: should check if the children are already parented to a different
@@ -938,8 +1022,11 @@ def assert_can_create_snapshot(
     assert_snapshot_does_not_exist(session, snap)
     assert_resource_modifiable(session, snap)
     assert_user_exists(session, snap.creator, DeletionPolicy.NOT_DELETED)
-    assert_user_in_group(session, snap.creator, snap.resource.owner)
+    assert_user_in_group_or_group_public(session, snap.creator, snap.resource.owner)
     assert_resource_children_exist(session, snap, DeletionPolicy.NOT_DELETED)
+    assert_resource_children_same_owner_group(
+        session, snap, snap.children, deletion_policy=DeletionPolicy.NOT_DELETED
+    )
     assert_resource_type(session, snap, resource_type)
 
     # TODO: should check if the children are already parented to a different
@@ -1156,6 +1243,23 @@ def assert_user_in_group(
         raise e.UserNotInGroupError(user.user_id, group.group_id)
 
 
+def assert_user_in_group_or_group_public(
+    session: CompatibleSession[S], user: m.User, group: m.Group
+) -> None:
+    """Ensure the given user can write in the group.
+
+    Access is allowed when the user is a direct member, or when the group is
+    public.
+    """
+
+    if group.public:
+        return
+
+    membership = session.get(m.GroupMember, (user.user_id, group.group_id))
+    if not membership:
+        raise e.UserNotInGroupError(user.user_id, group.group_id)
+
+
 def check_user_collision(session: CompatibleSession[S], user: m.User) -> None:
     """
     Factored out check from user and group repositories.  Their create methods
@@ -1292,6 +1396,7 @@ __all__ = [
     "assert_group_does_not_exist",
     "assert_group_exists",
     "assert_resource_children_exist",
+    "assert_resource_children_same_owner_group",
     "assert_resource_does_not_exist",
     "assert_resource_exists",
     "assert_resource_modifiable",
@@ -1304,6 +1409,7 @@ __all__ = [
     "assert_user_does_not_exist",
     "assert_user_exists",
     "assert_user_in_group",
+    "assert_user_in_group_or_group_public",
     "check_user_collision",
     "draft_exists",
     "group_exists",

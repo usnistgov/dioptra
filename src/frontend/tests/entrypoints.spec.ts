@@ -33,7 +33,7 @@ test("edit entrypoint", async ({ page }) => {
       hasText: `Successfully updated '${updatedEntrypointName}'`,
     }),
   ).toBeVisible();
-  await expect(page).toHaveURL(/\/entrypoints$/);
+  await expect(page).toHaveURL(/\/entrypoints\?groupId=\d+$/);
 });
 
 test("delete entrypoint", async ({ page }) => {
@@ -55,5 +55,5 @@ test("delete entrypoint", async ({ page }) => {
       hasText: `Successfully deleted '${entrypointName}'`,
     }),
   ).toBeVisible();
-  await expect(page).toHaveURL(/\/entrypoints$/);
+  await expect(page).toHaveURL(/\/entrypoints\?groupId=\d+$/);
 });

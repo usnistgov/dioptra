@@ -27,7 +27,7 @@ test("edit queue", async ({ page }) => {
       hasText: `Successfully updated '${updatedQueueName}'`,
     }),
   ).toBeVisible();
-  await expect(page).toHaveURL(/\/queues$/);
+  await expect(page).toHaveURL(/\/queues\?groupId=\d+$/);
 });
 
 test("delete queue", async ({ page }) => {
@@ -46,5 +46,5 @@ test("delete queue", async ({ page }) => {
       hasText: `Successfully deleted '${queueName}'`,
     }),
   ).toBeVisible();
-  await expect(page).toHaveURL(/\/queues$/);
+  await expect(page).toHaveURL(/\/queues\?groupId=\d+$/);
 });

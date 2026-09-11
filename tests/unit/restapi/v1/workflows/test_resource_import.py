@@ -39,25 +39,26 @@ from dioptra.client.utils import select_one_or_more_files
 def assert_imported_resources_match_expected(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     expected: dict[str, Any],
+    group_id: int,
 ):
     response = dioptra_client.plugins.get()
-    response_plugins = set(plugin["name"] for plugin in response.json()["data"])
-    expected_plugins = set(Path(plugin["path"]).stem for plugin in expected["plugins"])
+    response_plugins = {plugin["name"] for plugin in response.json()["data"]}
+    expected_plugins = {Path(plugin["path"]).stem for plugin in expected["plugins"]}
     assert (
         response.status_code == HTTPStatus.OK and response_plugins == expected_plugins
     )
 
-    response = dioptra_client.plugin_parameter_types.get()
-    response_types = set(param["name"] for param in response.json()["data"])
-    expected_types = set(param["name"] for param in expected["plugin_param_types"])
+    response = dioptra_client.plugin_parameter_types.get(group_id=group_id)
+    response_types = {param["name"] for param in response.json()["data"]}
+    expected_types = {param["name"] for param in expected["plugin_param_types"]}
     assert (
         response.status_code == HTTPStatus.OK
         and response_types & expected_types == expected_types
     )
 
     response = dioptra_client.entrypoints.get()
-    response_entrypoints = set(ep["name"] for ep in response.json()["data"])
-    expected_entrypoints = set(ep["name"] for ep in expected["entrypoints"])
+    response_entrypoints = {ep["name"] for ep in response.json()["data"]}
+    expected_entrypoints = {ep["name"] for ep in expected["entrypoints"]}
     assert (
         response.status_code == HTTPStatus.OK
         and response_entrypoints == expected_entrypoints
@@ -153,7 +154,9 @@ def test_resource_import_from_archive_file(
     group_id = auth_account["groups"][0]["id"]
     dioptra_client.workflows.import_resources(group_id, source=resources_tar_file)
 
-    assert_imported_resources_match_expected(dioptra_client, resources_import_config)
+    assert_imported_resources_match_expected(
+        dioptra_client, resources_import_config, group_id
+    )
 
 
 def test_resource_import_from_files(
@@ -165,7 +168,9 @@ def test_resource_import_from_files(
     group_id = auth_account["groups"][0]["id"]
     dioptra_client.workflows.import_resources(group_id, source=resources_files)
 
-    assert_imported_resources_match_expected(dioptra_client, resources_import_config)
+    assert_imported_resources_match_expected(
+        dioptra_client, resources_import_config, group_id
+    )
 
 
 @pytest.mark.skipif(shutil.which("git") is None, reason="git was not found.")
@@ -178,7 +183,9 @@ def test_resource_import_from_repo(
     group_id = auth_account["groups"][0]["id"]
     dioptra_client.workflows.import_resources(group_id, source=resources_repo)
 
-    assert_imported_resources_match_expected(dioptra_client, resources_import_config)
+    assert_imported_resources_match_expected(
+        dioptra_client, resources_import_config, group_id
+    )
 
 
 def test_resource_import_fails_from_name_clash(

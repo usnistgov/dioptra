@@ -24,7 +24,7 @@ export async function createQueue(page: Page, queueName: string) {
       hasText: `Successfully created '${queueName}'`,
     }),
   ).toBeVisible();
-  await expect(page).toHaveURL(/\/queues$/);
+  await expect(page).toHaveURL(/\/queues\?groupId=\d+$/);
 
   return createdQueue;
 }
@@ -61,7 +61,7 @@ export async function createEntrypoint(page: Page, entrypointName: string, queue
       hasText: `Successfully created '${entrypointName}'`,
     }),
   ).toBeVisible();
-  await expect(page).toHaveURL(/\/entrypoints$/);
+  await expect(page).toHaveURL(/\/entrypoints\?groupId=\d+$/);
 
   return createdEntrypoint;
 }
@@ -90,7 +90,7 @@ export async function createPlugin(page: Page, pluginName: string) {
       hasText: `Successfully created '${pluginName}'`,
     }),
   ).toBeVisible();
-  await expect(page).toHaveURL(/\/plugins$/);
+  await expect(page).toHaveURL(/\/plugins\?groupId=\d+$/);
 
   return createdPlugin;
 }

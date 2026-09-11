@@ -63,28 +63,17 @@
             <label :class="`field-label`">Name:</label>
           </template>
         </q-input>
-        <q-select
-          id="queueGroup"
-          v-model="queue.group"
+        <q-input
           outlined
-          :options="store.groups"
-          option-label="name"
-          option-value="id"
-          emit-value
-          map-options
           dense
-          :rules="[requiredRule]"
+          :model-value="groupDisplayName"
+          disable
           class="q-mb-sm"
-          :disable="queue.deleted || history"
         >
           <template #before>
-            <label
-              for="queueGroup"
-              class="field-label"
-              >Group:</label
-            >
+            <label class="field-label">Group:</label>
           </template>
-        </q-select>
+        </q-input>
         <q-input
           id="queueDescription"
           v-model="queue.description"
@@ -235,8 +224,15 @@ function submitDraft() {
 }
 
 async function createQueue() {
+  const groupId = getActiveGroupId();
+  if (groupId === null) return;
+
   try {
-    const res = await api.addItem("queues", queue.value);
+    const res = await api.addItem("queues", {
+      name: queue.value.name,
+      description: queue.value.description,
+      group: groupId,
+    });
     notify.success(`Successfully created '${res.data.name}'`);
     store.savedForms.queue = null;
     router.push("/queues");
@@ -246,11 +242,14 @@ async function createQueue() {
 }
 
 async function createDraft() {
+  const groupId = getActiveGroupId();
+  if (groupId === null) return;
+
   try {
     const params = {
       name: queue.value.name,
       description: queue.value.description,
-      group: queue.value.group,
+      group: groupId,
     };
     const res = await api.addDraft("queues", params);
     notify.success(`Successfully created '${res.data.payload.name}'`);
@@ -259,6 +258,15 @@ async function createDraft() {
   } catch (err) {
     notify.error(err.response.data.message);
   }
+}
+
+function getActiveGroupId() {
+  const activeGroup = store.loggedInGroup;
+  if (!activeGroup || typeof activeGroup !== "object") {
+    notify.error("Select a group before creating a queue.");
+    return null;
+  }
+  return activeGroup.id;
 }
 
 async function updateQueue() {
@@ -303,6 +311,29 @@ function clearForm() {
 
 const history = computed(() => {
   return store.showRightDrawer;
+});
+
+const groupDisplayName = computed(() => {
+  if (route.params.id === "new") {
+    return store.loggedInGroup.name;
+  }
+
+  const groupValue = queue.value?.group;
+
+  if (groupValue && typeof groupValue === "object" && "name" in groupValue) {
+    return groupValue.name;
+  }
+
+  const groupId = groupValue && typeof groupValue === "object" && "id" in groupValue ? groupValue.id : groupValue;
+
+  if (typeof groupId === "number") {
+    const group = store.groups.find((g) => g.id === groupId);
+    if (group) {
+      return group.name;
+    }
+  }
+
+  return store.loggedInGroup.name;
 });
 
 watch(
