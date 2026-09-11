@@ -1,6 +1,41 @@
-import { expect, test } from "@playwright/test";
+import { randomUUID } from "node:crypto";
+import { expect, test as base } from "@playwright/test";
 
 import { ensureLoggedInAsTestUser, testUser } from "./helpers/testUserHelper";
+
+type OtherGroup = { id: number; name: string; user: { username: string } };
+
+const test = base.extend<{ otherGroup: OtherGroup }>({
+  otherGroup: async ({ playwright, baseURL }, use) => {
+    const username = `e2e_group_owner_${randomUUID()}`;
+    const password = "Password123!";
+    const ownerApi = await playwright.request.newContext({ baseURL });
+    let loggedIn = false;
+    try {
+      const registration = await ownerApi.post("/api/v1/users", {
+        data: { username, email: `${username}@example.com`, password, confirmPassword: password },
+      });
+      expect(registration.ok()).toBe(true);
+      const login = await ownerApi.post("/api/v1/auth/login", { data: { username, password } });
+      expect(login.ok()).toBe(true);
+      loggedIn = true;
+      const creation = await ownerApi.post("/api/v1/groups/", {
+        data: { name: `e2e_other_group_${randomUUID()}`, public: true },
+      });
+      expect(creation.ok()).toBe(true);
+      await use(await creation.json());
+    } finally {
+      try {
+        if (loggedIn) {
+          const deletion = await ownerApi.delete("/api/v1/users/current", { data: { password } });
+          expect(deletion.ok()).toBe(true);
+        }
+      } finally {
+        await ownerApi.dispose();
+      }
+    }
+  },
+});
 
 test("focus refresh recovers a remotely deleted active group", async ({ page }) => {
   await ensureLoggedInAsTestUser(page);
@@ -121,15 +156,10 @@ test("created group becomes the active context", async ({ page }) => {
   await expect(createdRow).toHaveCount(0);
 });
 
-test("group table shows context and owner-specific actions", async ({ page }) => {
+test("group table shows context and owner-specific actions", async ({ page, otherGroup }) => {
   await ensureLoggedInAsTestUser(page);
 
   const adminGroupName = `e2e_admin_group_${Date.now()}`;
-  const groupsResponse = await page.request.get("/api/v1/groups/?pageLength=100");
-  expect(groupsResponse.ok()).toBe(true);
-  const groups = (await groupsResponse.json()).data;
-  const otherGroup = groups.find((group) => group.user.username !== testUser.username);
-  expect(otherGroup).toBeTruthy();
 
   await page.goto("/groups");
 
@@ -147,7 +177,9 @@ test("group table shows context and owner-specific actions", async ({ page }) =>
 
   const search = page.getByPlaceholder("Search");
   await search.fill(testUser.username);
-  const ownedRow = page.locator("tbody tr").filter({ hasText: testUser.username });
+  const ownedRow = page.locator("tbody tr").filter({
+    has: page.getByText(`${testUser.username}/${testUser.username}`, { exact: true }),
+  });
   await expect(ownedRow.getByText(`${testUser.username}/${testUser.username}`)).toBeVisible();
   await expect(ownedRow.getByRole("button", { name: "Active Context" })).toBeVisible();
   await expect(ownedRow.getByRole("button", { name: "Delete group" })).toBeEnabled();
@@ -174,7 +206,9 @@ test("group table shows context and owner-specific actions", async ({ page }) =>
   );
   await search.fill(otherGroup.name);
   expect((await otherSearchResponsePromise).ok()).toBe(true);
-  const otherRow = page.locator("tbody tr").filter({ hasText: otherGroup.name });
+  const otherRow = page.locator("tbody tr").filter({
+    has: page.getByText(`${otherGroup.user.username}/${otherGroup.name}`, { exact: true }),
+  });
   await expect(otherRow.getByText(`${otherGroup.user.username}/${otherGroup.name}`)).toBeVisible();
   await expect(otherRow.getByRole("button", { name: "Delete group" })).toBeDisabled();
 
