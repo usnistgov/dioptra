@@ -125,7 +125,7 @@
           v-model:selected="selectedParam"
           :columns="parametersColumns"
           :rows="paramRows"
-          rowKey="parameter"
+          rowKey="name"
           :hideCreateBtn="true"
           :hideDeleteBtn="true"
           style="margin-top: 0px"
@@ -400,36 +400,22 @@ async function getGraph() {
   return res.data?.graph ?? {};
 }
 
-function collectReferences(value, parameterNames) {
-  if (typeof value === "string") {
-    if (value.length > 1 && value.startsWith("$") && !value.startsWith("$$")) {
-      parameterNames.add(value.slice(1).split(".")[0]);
-    }
-  } else if (Array.isArray(value)) {
-    value.forEach((item) => collectReferences(item, parameterNames));
-  } else if (value && typeof value === "object") {
-    Object.values(value).forEach((item) => collectReferences(item, parameterNames));
-  }
-}
-
-function collectKwargParameterNames(value, parameterNames = new Set()) {
-  if (!value || typeof value !== "object") return parameterNames;
-
-  if (!Array.isArray(value) && Object.hasOwn(value, "kwargs")) {
-    collectReferences(value.kwargs, parameterNames);
-  }
-
-  Object.values(value).forEach((item) => collectKwargParameterNames(item, parameterNames));
-  return parameterNames;
-}
-
 async function getUsedParams() {
-  const graph = await getGraph();
-  const usedParamNames = collectKwargParameterNames(graph);
-
-  paramRows.value = Object.entries(job.value.values ?? {})
-    .filter(([name]) => usedParamNames.has(name))
-    .map(([parameter, value]) => ({ parameter, value }));
+  try {
+    const selectedSwaps = Object.fromEntries(
+      (job.value.swaps ?? []).map(({ swapName, taskAlias }) => [swapName, taskAlias]),
+    );
+    const res = await api.getUsedParams(job.value.entrypoint.id, job.value.entrypoint.snapshotId, selectedSwaps);
+    console.log("getUsedParams = ", res.data);
+    const paramsWithoutValues = res.data.entrypointParams;
+    // dynamicGlobalParameters endpoint doesnt have value, need to add
+    paramsWithoutValues.forEach((param) => {
+      param.value = job.value.values?.[param.name];
+    });
+    paramRows.value = paramsWithoutValues;
+  } catch (err) {
+    console.warn(err);
+  }
 }
 
 async function viewGraph() {
@@ -438,8 +424,8 @@ async function viewGraph() {
   isTaskGraphLoading.value = true;
 
   try {
-    const graph = await getGraph();
-    taskGraphYaml.value = Object.keys(graph).length > 0 ? YAML.stringify(graph).trimEnd() : "";
+    const graphObject = await getGraph();
+    taskGraphYaml.value = Object.keys(graphObject).length > 0 ? YAML.stringify(graphObject).trimEnd() : "";
     showTaskGraphDialog.value = true;
   } catch (err) {
     console.warn(err);
@@ -633,7 +619,8 @@ const overviewRows = computed(() => [
 ]);
 
 const parametersColumns = [
-  { name: "parameter", label: "Parameter", align: "left", field: "parameter", sortable: true },
+  { name: "parameter", label: "Parameter", align: "left", field: "name", sortable: true },
+  { name: "parameterType", label: "Type", align: "left", field: "parameterType", sortable: true },
   { name: "value", label: "Value", align: "left", field: "value", sortable: false },
 ];
 
@@ -676,13 +663,6 @@ const logColumns = [
 ];
 
 const paramRows = ref([]);
-// const paramRows = computed(() => {
-//   if (!job.value?.values) return [];
-//   return Object.entries(job.value?.values).map(([key, value]) => ({
-//     parameter: key,
-//     value: value,
-//   }));
-// });
 
 async function deleteJob() {
   try {
