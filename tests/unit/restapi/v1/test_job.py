@@ -24,20 +24,22 @@ registered, renamed, queried, and deleted as expected through the REST API.
 import datetime
 import logging
 import math
+import textwrap
 from http import HTTPStatus
 from typing import Any
 
 import pytest
+from flask.testing import FlaskClient
 from pytest import MonkeyPatch
 
 from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
 from dioptra.sdk.utilities.logging import forward_job_logs_to_api
 
-from ..lib import asserts, helpers, mock_rq, routines
+from ..lib import actions, asserts, helpers, mock_rq, routines
+from ..lib.asserts import assert_retrieving_deleted_resource_snapshots_works
 from ..test_utils import assert_retrieving_resource_works
 
-from ..lib.asserts import assert_retrieving_deleted_resource_snapshots_works
 
 @pytest.fixture
 def registered_job_logs(dioptra_client, registered_jobs):
@@ -554,6 +556,90 @@ def test_create_job_with_swaps(
     assert preview.json()["tasks"] == job_config["tasks"]
     assert "task10" in rendered_yaml["step2"]["?step2_choice"]["taskalias1:v2"]
     assert "task2" in rendered_yaml["step3"]["?step3_choice"]["taskalias3,v3"]
+
+
+@pytest.mark.parametrize(
+    ("parameter_name", "parameter_value"),
+    [("epsilon", "0.1"), ("iterations", "10")],
+)
+@pytest.mark.parametrize("supply_selected_parameter", [True, False])
+def test_create_job_with_unselected_required_swap_parameter(
+    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+    registered_swap_plugins: dict[str, Any],
+    monkeypatch: MonkeyPatch,
+    parameter_name: str,
+    parameter_value: str,
+    supply_selected_parameter: bool,
+) -> None:
+    """Test that only parameters used by the selected swap are required by a job."""
+    import dioptra.restapi.v1.shared.rq_service as rq_service
+
+    monkeypatch.setattr(rq_service, "RQQueue", mock_rq.MockRQQueue)
+
+    queue = registered_queues["queue1"]
+    entrypoint_response = actions.register_entrypoint(
+        client,
+        name="required_swap_parameters",
+        description="An entrypoint with mutually exclusive required parameters.",
+        group_id=auth_account["default_group_id"],
+        task_graph=textwrap.dedent(
+            """\
+            step1:
+              ?parameter_choice:
+                epsilon_task:
+                  task1:
+                    arg1: $epsilon
+                iterations_task:
+                  task1:
+                    arg1: $iterations
+            """
+        ),
+        parameters=[
+            {"name": "epsilon", "parameterType": "string"},
+            {"name": "iterations", "parameterType": "string"},
+        ],
+        plugin_ids=[registered_swap_plugins["plugin1"]["id"]],
+        queue_ids=[queue["id"]],
+    )
+    assert entrypoint_response.status_code == HTTPStatus.OK
+    entrypoint = entrypoint_response.get_json()
+
+    experiment_response = actions.register_experiment(
+        client,
+        name="required_swap_parameters",
+        group_id=auth_account["default_group_id"],
+        entrypoint_ids=[entrypoint["id"]],
+    )
+    assert experiment_response.status_code == HTTPStatus.OK
+    experiment = experiment_response.get_json()
+
+    values = {parameter_name: parameter_value} if supply_selected_parameter else {}
+    response = dioptra_client.experiments.jobs.create(
+        experiment_id=experiment["id"],
+        entrypoint_id=entrypoint["id"],
+        queue_id=queue["id"],
+        values=values,
+        swaps={"parameter_choice": f"{parameter_name}_task"},
+    )
+
+    if not supply_selected_parameter:
+        assert response.status_code == HTTPStatus.BAD_REQUEST
+        error = response.json()
+        assert error["error"] == "JobParameterMissingError"
+        assert error["message"].endswith(f": {parameter_name}.")
+        return
+
+    assert response.status_code == HTTPStatus.OK
+    job = response.json()
+    assert job["values"] == values
+    assert dioptra_client.jobs.get_parameters(job["id"]).json() == values
+    assert set(dioptra_client.jobs.get_config(job["id"]).json()["parameters"]) == {
+        parameter_name
+    }
+
 
 def test_create_job_with_extra_swaps(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
