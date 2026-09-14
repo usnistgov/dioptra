@@ -14,6 +14,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+import ast
 from copy import deepcopy
 from pathlib import Path
 from unittest.mock import patch
@@ -203,6 +204,16 @@ available_swaps = {
 }
 
 
+def assert_unordered_names_message(
+    message: str, expected_names: set[str], prefix: str, suffix: str
+) -> None:
+    assert message.startswith(prefix)
+    assert message.endswith(suffix)
+
+    names = ast.literal_eval(message[len(prefix) : -len(suffix)])
+    assert names == expected_names
+
+
 def verify_correct_yaml(graph, all_swaps):
     issues = []
     for output_file in all_swaps.keys():
@@ -247,11 +258,14 @@ def test_without_swaps(yaml_file: str):
     assert rendered_graph == graph
 
     extra = {"load", "transform_data", "extra"}
-    with pytest.raises(Exception, match=f"Swaps {extra} were provided but not used."):
+    with pytest.raises(Exception) as exc_info:
         rendered_graph = render_swaps_graph(
             graph,
             {"load": "ignore", "transform_data": "patch", "extra": "function_name"},
         )
+    assert_unordered_names_message(
+        str(exc_info.value), extra, "Swaps ", " were provided but not used."
+    )
 
 
 @pytest.mark.parametrize(
@@ -293,22 +307,24 @@ def test_swap_errors(yaml_file: str):
     graph = yaml.safe_load(data)
 
     missing = {"load", "transform_data"}
-    with pytest.raises(
-        Exception, match=f"Swaps {missing} needed by graph but not provided."
-    ):
+    with pytest.raises(Exception) as exc_info:
         render_swaps_graph(graph, {})
+    assert_unordered_names_message(
+        str(exc_info.value), missing, "Swaps ", " needed by graph but not provided."
+    )
 
     extra = {"extra"}
-    with pytest.raises(Exception, match=f"Swaps {extra} were provided but not used."):
+    with pytest.raises(Exception) as exc_info:
         render_swaps_graph(
             graph,
             {"load": "ignore", "transform_data": "patch", "extra": "function_name"},
         )
+    assert_unordered_names_message(
+        str(exc_info.value), extra, "Swaps ", " were provided but not used."
+    )
 
     nonexistant = {"nonexistant"}
-    with pytest.raises(
-        Exception, match=f"Tasks {nonexistant} requested for swaps but were not found."
-    ):
+    with pytest.raises(Exception) as exc_info:
         render_swaps_graph(
             graph,
             {
@@ -316,6 +332,12 @@ def test_swap_errors(yaml_file: str):
                 "transform_data": "nonexistant",
             },
         )
+    assert_unordered_names_message(
+        str(exc_info.value),
+        nonexistant,
+        "Tasks ",
+        " requested for swaps but were not found.",
+    )
 
 
 def test_extract_swaps() -> None:

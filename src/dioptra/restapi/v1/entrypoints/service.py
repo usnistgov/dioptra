@@ -2307,12 +2307,16 @@ def _get_required_globals(
     used_tasks: set[str] = set()
 
     for step in rendered_graph.values():
-        for task_name, task_definition in step.items():
+        task_name = util.step_get_plugin_short_name(step)
+
+        # since it is rendered we can assume the entrypoint has been validated
+        if task_name is not None:
             used_tasks.add(task_name)
-            references = _get_keywords_for_one_task(task_definition)
-            needed_globals.update(
-                reference for reference in references if reference not in graph_steps
-            )
+
+        references = _get_keywords_for_one_task(step)
+        needed_globals.update(
+            reference for reference in references if reference not in graph_steps
+        )
 
     return needed_globals, used_tasks
 
