@@ -744,7 +744,13 @@ const areAllSwapsResolved = computed(() => {
 watch(
   () => job.value.entrypoint,
   async (newVal, oldVal) => {
-    const previousSelectedSwaps = newVal?.id === oldVal?.id ? { ...selectedSwaps.value } : {};
+    const isUsingOriginalJobSnapshot =
+      history.state.oldJobId && !updateEntrypoint.value && newVal?.id === oldJob.value?.entrypoint.id;
+    const previousSelectedSwaps = isUsingOriginalJobSnapshot
+      ? Object.fromEntries(oldJob.value.swaps.map(({ swapName, taskAlias }) => [swapName, taskAlias]))
+      : newVal?.id === oldVal?.id
+        ? { ...selectedSwaps.value }
+        : {};
 
     isInitializingEntrypoint.value = true;
 
@@ -1161,6 +1167,9 @@ onMounted(async () => {
   // if re-running a job
   if (history.state.oldJobId) {
     oldJob.value = (await api.getSnapshot("jobs", history.state.oldJobId, history.state.jobSnapshotId)).data;
+    selectedSwaps.value = Object.fromEntries(
+      oldJob.value.swaps.map(({ swapName, taskAlias }) => [swapName, taskAlias]),
+    );
     oldEntrypoint.value = (
       await api.getSnapshot("entrypoints", oldJob.value.entrypoint.id, oldJob.value.entrypoint.snapshotId)
     ).data;
