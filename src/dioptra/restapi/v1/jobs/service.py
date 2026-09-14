@@ -22,6 +22,7 @@ from collections.abc import Iterable
 from typing import Any, Final, cast
 
 import structlog
+import yaml
 from flask_login import current_user
 from injector import inject
 from sqlalchemy import delete, func, select
@@ -36,6 +37,7 @@ from dioptra.restapi.errors import (
     DioptraError,
     EntityDoesNotExistError,
     EntityNotRegisteredError,
+    EntrypointSwapsRenderError,
     JobArtifactParameterMissingError,
     JobInvalidParameterNameError,
     JobInvalidStatusTransitionError,
@@ -52,6 +54,7 @@ from dioptra.restapi.v1.entrypoints.service import (
     EntrypointConfigService,
     EntrypointIdService,
     SwapsRetrievalService,
+    _get_required_globals,
 )
 from dioptra.restapi.v1.experiments.service import ExperimentIdService
 from dioptra.restapi.v1.groups.service import GroupIdService
@@ -63,6 +66,7 @@ from dioptra.restapi.v1.type_coercions import (
     check_artifact_param_type_mismatch,
     coerce_entrypoint_param_types,
 )
+from dioptra.sdk.utilities.entrypoint_swaps import render_swaps_graph
 
 from .schema import JobLogSeverity
 
@@ -264,6 +268,33 @@ class JobService(object):
             owner=experiment.resource.owner,
         )
 
+        new_job = models.Job(
+            timeout=timeout,
+            status=status,
+            description=description,
+            resource=job_resource,
+            creator=current_user,
+        )
+        new_job.job_swaps = self._build_job_swaps(
+            swaps, entrypoint=entrypoint, new_job=new_job
+        )
+
+        if new_job.job_swaps:
+            swap_choices = {
+                swap.swap_name: swap.task_alias for swap in new_job.job_swaps
+            }
+            try:
+                rendered_graph = render_swaps_graph(
+                    yaml.safe_load(entrypoint.task_graph), swap_choices
+                )
+            except Exception as e:
+                raise EntrypointSwapsRenderError(str(e)) from e
+            required_parameter_names, _ = _get_required_globals(rendered_graph)
+        else:
+            required_parameter_names = {
+                parameter.name for parameter in entrypoint.parameters
+            }
+
         entrypoint_parameter_values = [
             models.EntryPointParameterValue(
                 value=values.get(
@@ -273,6 +304,8 @@ class JobService(object):
                 parameter=entrypoint_parameter,
             )
             for entrypoint_parameter in entrypoint.parameters
+            if entrypoint_parameter.name in required_parameter_names
+            or entrypoint_parameter.name in values
         ]
 
         missing_parameter_values = [
@@ -292,13 +325,6 @@ class JobService(object):
             log=log,
         )
 
-        new_job = models.Job(
-            timeout=timeout,
-            status=status,
-            description=description,
-            resource=job_resource,
-            creator=current_user,
-        )
         db.session.add(new_job)
         new_job.entry_point_job = models.EntryPointJob(
             job_resource=job_resource,
@@ -313,10 +339,6 @@ class JobService(object):
         new_job.queue_job = models.QueueJob(
             job_resource=job_resource,
             queue=queue,
-        )
-
-        new_job.job_swaps = self._build_job_swaps(
-            swaps, entrypoint=entrypoint, new_job=new_job
         )
 
         db.session.commit()
