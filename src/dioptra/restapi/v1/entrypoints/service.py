@@ -1433,13 +1433,33 @@ class EntrypointConfigService(UnitOfWorkService):
             sections=sections,
         )
 
+        graph = config.get("graph", {})
+        if "graph" not in config and "parameters" in config and not partial:
+            graph = yaml.safe_load(entry_point.task_graph)
+
+        rendered_graph = None
         if "graph" in config:
             try:
-                config["graph"] = render_swaps_graph(
-                    config["graph"], swap_choices, raise_unspecified=not partial
+                rendered_graph = render_swaps_graph(
+                    graph, swap_choices, raise_unspecified=not partial
                 )
+                config["graph"] = rendered_graph
             except Exception as e:
                 raise EntrypointSwapsRenderError(str(e)) from e
+
+        if "parameters" in config and not partial and extract_swaps(graph):
+            try:
+                if rendered_graph is None:
+                    rendered_graph = render_swaps_graph(graph, swap_choices)
+            except Exception as e:
+                raise EntrypointSwapsRenderError(str(e)) from e
+
+            required_globals, _ = _get_required_globals(rendered_graph)
+            config["parameters"] = {
+                name: value
+                for name, value in config["parameters"].items()
+                if name in required_globals
+            }
 
         return config
 
