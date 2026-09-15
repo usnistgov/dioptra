@@ -372,7 +372,7 @@
             icon="sync"
             size="sm"
             class="q-mr-md"
-            @click.stop="syncJobParams()"
+            @click.stop="setUseLatestEntrypoint(true)"
           >
             <q-tooltip> Sync to latest version of entrypoint parameters and values. </q-tooltip>
           </q-btn>
@@ -388,7 +388,7 @@
             icon="sync"
             size="sm"
             class="q-mr-md"
-            @click.stop="revertJobParams()"
+            @click.stop="setUseLatestEntrypoint(false)"
           >
             <q-tooltip> Revert to original job's entrypoint parameters and values. </q-tooltip>
           </q-btn>
@@ -625,12 +625,13 @@ const selectedSwaps = ref({});
 const partialGraph = ref("");
 const isInitializingEntrypoint = ref(false);
 
-const effectiveEntrypointSnapshot = computed(() => {
-  const isUsingOriginalJobSnapshot =
-    history.state.oldJobId && !updateEntrypoint.value && oldJob.value?.entrypoint.id === job.value.entrypoint?.id;
+function usesOriginalJobSnapshot(entrypoint) {
+  return Boolean(history.state.oldJobId && !updateEntrypoint.value && oldJob.value?.entrypoint.id === entrypoint?.id);
+}
 
-  return isUsingOriginalJobSnapshot ? oldEntrypoint.value?.snapshot : job.value.entrypoint?.snapshot;
-});
+const effectiveEntrypointSnapshot = computed(() =>
+  usesOriginalJobSnapshot(job.value.entrypoint) ? oldEntrypoint.value?.snapshot : job.value.entrypoint?.snapshot,
+);
 
 const computedValue = computed(() => {
   const output = {};
@@ -701,16 +702,12 @@ async function getUsedParams() {
 
 function setParametersFromUsedParams(usedParams, entrypoint, preserveExistingValues = false) {
   const existingParameters = new Map(parameters.value.map((parameter) => [parameter.name, parameter]));
+  const useOriginalValues = usesOriginalJobSnapshot(entrypoint);
 
   parameters.value = usedParams.flatMap((param) => {
     const existingParameter = existingParameters.get(param.name);
 
-    if (
-      history.state.oldJobId &&
-      !updateEntrypoint.value &&
-      oldJob.value.entrypoint.id === entrypoint.id &&
-      !(param.name in oldJob.value.values)
-    ) {
+    if (useOriginalValues && !(param.name in oldJob.value.values)) {
       return [];
     }
 
@@ -718,7 +715,7 @@ function setParametersFromUsedParams(usedParams, entrypoint, preserveExistingVal
 
     if (preserveExistingValues && existingParameter) {
       value = existingParameter.value;
-    } else if (history.state.oldJobId && !updateEntrypoint.value && oldJob.value.entrypoint.id === entrypoint.id) {
+    } else if (useOriginalValues) {
       value = oldJob.value.values[param.name];
     }
 
@@ -744,7 +741,11 @@ const areAllSwapsResolved = computed(() => {
 watch(
   () => job.value.entrypoint,
   async (newVal, oldVal) => {
-    const previousSelectedSwaps = newVal?.id === oldVal?.id ? { ...selectedSwaps.value } : {};
+    const previousSelectedSwaps = usesOriginalJobSnapshot(newVal)
+      ? Object.fromEntries(oldJob.value.swaps.map(({ swapName, taskAlias }) => [swapName, taskAlias]))
+      : newVal?.id === oldVal?.id
+        ? { ...selectedSwaps.value }
+        : {};
 
     isInitializingEntrypoint.value = true;
 
@@ -899,8 +900,7 @@ async function createJob() {
     })),
     artifactValues: {},
     timeout: job.value.timeout,
-    entrypointSnapshot:
-      history.state.oldJobId && !updateEntrypoint.value ? oldEntrypoint.value.snapshot : job.value.entrypoint.snapshot,
+    entrypointSnapshot: effectiveEntrypointSnapshot.value,
   };
   artifactParameters.value.forEach((param) => {
     if (param.selectedArtifactSnapshot) {
@@ -1067,7 +1067,7 @@ async function getEntrypoint(id) {
     job.value.entrypoint = res.data;
 
     // display the old job's values when re-running a job
-    if (history.state.oldJobId && !updateEntrypoint.value) {
+    if (usesOriginalJobSnapshot(job.value.entrypoint)) {
       job.value.entrypoint.parameters = oldEntrypoint.value.parameters;
       job.value.values = oldJob.value.values;
     }
@@ -1271,21 +1271,12 @@ async function clearForm() {
 const showAppendEntrypointDialog = ref(false);
 const showAppendQueueDialog = ref(false);
 
-async function syncJobParams() {
+async function setUseLatestEntrypoint(useLatest) {
   try {
-    updateEntrypoint.value = true;
+    updateEntrypoint.value = useLatest;
     await getEntrypoint(oldJob.value.entrypoint.id);
-    notify.success(`Successfully updated to use the latest entrypoint parameters and values`);
-  } catch (err) {
-    console.warn(err);
-  }
-}
-
-async function revertJobParams() {
-  try {
-    updateEntrypoint.value = false;
-    await getEntrypoint(oldJob.value.entrypoint.id);
-    notify.success(`Successfully updated to use the original job parameters and values`);
+    const source = useLatest ? "latest entrypoint" : "original job";
+    notify.success(`Successfully updated to use the ${source} parameters and values`);
   } catch (err) {
     console.warn(err);
   }
