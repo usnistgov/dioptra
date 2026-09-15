@@ -153,9 +153,10 @@ def main(
         _validate_environment(log)
 
         # get and save out the yaml
-        job_yaml = dioptra_client.entrypoints.snapshots.get_config(
-            entrypoint_id=entrypoint_id, entrypoint_snapshot_id=entrypoint_snapshot_id
+        job_yaml = dioptra_client.jobs.get_config(
+            job_id=job_id,
         )
+
         _save_job_yaml(filepath=context.yaml_path(entrypoint_name), job_yaml=job_yaml)
 
         # download artifact plugins

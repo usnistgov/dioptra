@@ -16,46 +16,144 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform entrypoint endpoint operations."""
 
+from __future__ import annotations
+
+from dataclasses import dataclass, replace
 from typing import Any, Iterable, cast
 
 import structlog
+import yaml
 from flask_login import current_user
 from injector import inject
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
+from dioptra.restapi.db.models.plugins import PluginTaskOutputParameter
 from dioptra.restapi.db.models.users import User
 from dioptra.restapi.db.repository.utils.common import DeletionPolicy
 from dioptra.restapi.db.unit_of_work import UnitOfWork, UnitOfWorkService
-from dioptra.restapi.errors import EntityRelationshipDoesNotExistError
+from dioptra.restapi.errors import (
+    EmptyGraphError,
+    EntityDoesNotExistError,
+    EntityRelationshipDoesNotExistError,
+    EntrypointSwapsRenderError,
+    EntrypointValidationError,
+    InvalidYamlError,
+    TasksNotFoundError,
+)
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.entity_types import EntityType
-from dioptra.restapi.v1.plugins.service import (
-    PluginIdsService,
-    get_plugin_task_parameter_types_by_id,
-)
-from dioptra.restapi.v1.shared.search_parser import parse_search_text
-from dioptra.restapi.v1.shared.task_engine_yaml.service import (
+from dioptra.restapi.v1.entrypoints.task_engine_yaml import (
+    build_task_engine_dict,
     coerce_entrypoint_default_param_types,
 )
+from dioptra.restapi.v1.plugins.service import PluginIdsService
+from dioptra.restapi.v1.shared.search_parser import parse_search_text
+from dioptra.restapi.v1.shared.views import (
+    get_plugin_plugin_files_from_plugin_snapshot_ids,
+)
+from dioptra.sdk.api.swappable_validation import (
+    get_swappable_experiment_schema,
+    get_swappable_json_schema_resources,
+)
+from dioptra.sdk.utilities.entrypoint_swaps import (
+    check_duplicate_swap_names,
+    check_multiple_swaps_per_step,
+    extract_swaps,
+    render_swaps_graph,
+)
+from dioptra.task_engine import util
+from dioptra.task_engine.issues import IssueSeverity, IssueType, ValidationIssue
+from dioptra.task_engine.validation import schema_validate
+from dioptra.task_engine.validation import validate as validate_task_engine_dict
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
+
+
+@dataclass
+class EntryPointParameterDataAdapter:
+    parameter_type: str
+    name: str
+    default_value: str | None
+
+
+@dataclass
+class TaskOutputParameterDataAdapter:
+    parameter_number: int
+    name: str
+    parameter_type: models.PluginTaskParameterType
+
+
+@dataclass
+class EntryPointArtifactDataAdapter:
+    name: str
+    output_parameters: list[TaskOutputParameterDataAdapter]
+
+
+@dataclass
+class EntryPointDataAdapter:
+    task_graph: str
+    artifact_graph: str
+    parameters: list[EntryPointParameterDataAdapter]
+    artifact_parameters: list[EntryPointArtifactDataAdapter]
+
+
+def _build_entrypoint_data_adapter(
+    task_graph: str,
+    artifact_graph: str,
+    entrypoint_parameters: list[dict[str, Any]],
+    entrypoint_artifacts: list[dict[str, Any]],
+    id_type_map: dict[int, models.PluginTaskParameterType],
+) -> EntryPointDataAdapter:
+    return EntryPointDataAdapter(
+        task_graph=task_graph,
+        artifact_graph=artifact_graph,
+        parameters=[
+            EntryPointParameterDataAdapter(
+                parameter_type=param["parameter_type"],
+                name=param["name"],
+                default_value=param["default_value"],
+            )
+            for param in entrypoint_parameters
+        ],
+        artifact_parameters=[
+            EntryPointArtifactDataAdapter(
+                name=artifact["name"],
+                output_parameters=[
+                    TaskOutputParameterDataAdapter(
+                        name=param["name"],
+                        parameter_number=parameter_number,
+                        parameter_type=id_type_map[param["parameter_type_id"]],
+                    )
+                    for parameter_number, param in enumerate(artifact["output_params"])
+                ],
+            )
+            for artifact in entrypoint_artifacts
+        ],
+    )
 
 
 class EntrypointService(object):
     """The service methods for creating and managing entrypoints."""
 
     @inject
-    def __init__(self, plugin_ids_service: PluginIdsService, uow: UnitOfWork) -> None:
+    def __init__(
+        self,
+        plugin_ids_service: PluginIdsService,
+        swaps_validation_service: SwapsValidationService,
+        uow: UnitOfWork,
+    ) -> None:
         """Initialize the entrypoint service.
 
         All arguments are provided via dependency injection.
 
         Args:
             plugin_ids_service: A PluginIdsService object.
+            swaps_validation_service: A SwapsValidationService object.
             uow: A UnitOfWork instance
         """
         self._plugin_ids_service = plugin_ids_service
+        self._swaps_validation_service = swaps_validation_service
         self._uow = uow
 
     def create(
@@ -102,9 +200,19 @@ class EntrypointService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        # TODO: need to add a check here that graphs are valid yaml
-
         owner = self._uow.group_repo.get_one(group_id, DeletionPolicy.NOT_DELETED)
+        type_ids = _get_artifact_parameter_type_ids(artifact_parameters)
+        artifact_parameter_types = (
+            list(
+                cast(
+                    Iterable[models.PluginTaskParameterType],
+                    self._uow.type_repo.get(list(type_ids), DeletionPolicy.NOT_DELETED),
+                )
+            )
+            if type_ids
+            else []
+        )
+        id_type_map = _require_parameter_types(type_ids, artifact_parameter_types)
 
         resource = models.Resource(EntityType.ENTRY_POINT.db_table_name, owner)
         new_entrypoint = models.EntryPoint(
@@ -114,7 +222,8 @@ class EntrypointService(object):
             artifact_graph=artifact_graph,
             parameters=_create_parameters(parameters),
             artifact_parameters=_create_artifact_parameters(
-                artifact_parameters=artifact_parameters, log=log
+                artifact_parameters=artifact_parameters,
+                id_type_map=id_type_map,
             ),
             resource=resource,
             creator=current_user,
@@ -142,14 +251,27 @@ class EntrypointService(object):
             for artifact_plugin in artifact_plugins
         ]
 
+        # if we are committing the entrypoint, we run the "rendered" validation.
+        # otherwise, we do the lighter validation.
+        self._swaps_validation_service.raise_validation_errors(
+            group_id=group_id,
+            task_graph=task_graph,
+            artifact_graph=artifact_graph,
+            parameters=parameters,
+            artifact_parameters=artifact_parameters,
+            plugin_ids=[plugin.resource_snapshot_id for plugin in plugins],
+            on_save=commit,
+            log=log,
+        )
+
         with self._uow(commit):
             self._uow.entrypoint_repo.create(new_entrypoint)
             queues = self._uow.entrypoint_repo.create_queues(
                 new_entrypoint, queues=queue_ids
             )
-            self._uow.entrypoint_repo.create_plugins(new_entrypoint, plugins=plugins)
             self._uow.entrypoint_repo.create_plugins(
-                new_entrypoint, plugins=artifact_plugins
+                new_entrypoint,
+                plugins=_deduplicate_plugin_resources(plugins, artifact_plugins),
             )
 
         log.debug(
@@ -246,6 +368,23 @@ class EntrypointIdService(UnitOfWorkService):
     """The service methods for creating and managing entrypoints by
     their unique id."""
 
+    @inject
+    def __init__(
+        self,
+        plugin_ids_service: PluginIdsService,
+        swaps_validation_service: SwapsValidationService,
+        uow: UnitOfWork,
+    ) -> None:
+        """Initialize the entrypoint service.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+        """
+        self._plugin_ids_service = plugin_ids_service
+        self._swaps_validation_service = swaps_validation_service
+        self._uow = uow
+
     def get(
         self,
         entrypoint_id: int,
@@ -299,6 +438,8 @@ class EntrypointIdService(UnitOfWorkService):
         parameters: list[dict[str, Any]],
         artifact_parameters: list[dict[str, Any]],
         queue_ids: list[int],
+        plugin_ids: list[int] | None = None,
+        artifact_plugin_ids: list[int] | None = None,
         commit: bool = True,
         **kwargs,
     ) -> utils.EntrypointDict:
@@ -315,6 +456,10 @@ class EntrypointIdService(UnitOfWorkService):
                 or empty list, all artifact_parameters will be removed.
             queue_ids: A list of queue ids that will replace the current list of
                 entrypoint queues.
+            plugin_ids: Plugins to append or sync to their latest snapshots. If None,
+                the current plugin snapshots are retained.
+            artifact_plugin_ids: Artifact plugins to append or sync to their latest
+                snapshots. If None, the current artifact plugin snapshots are retained.
             commit: If True, commit the transaction. Defaults to True.
 
         Returns:
@@ -329,6 +474,18 @@ class EntrypointIdService(UnitOfWorkService):
         entrypoint = self._uow.entrypoint_repo.get_one(
             entrypoint_id, DeletionPolicy.NOT_DELETED
         )
+        type_ids = _get_artifact_parameter_type_ids(artifact_parameters)
+        artifact_parameter_types = (
+            list(
+                cast(
+                    Iterable[models.PluginTaskParameterType],
+                    self._uow.type_repo.get(list(type_ids), DeletionPolicy.NOT_DELETED),
+                )
+            )
+            if type_ids
+            else []
+        )
+        id_type_map = _require_parameter_types(type_ids, artifact_parameter_types)
 
         new_entrypoint = models.EntryPoint(
             name=name,
@@ -337,25 +494,80 @@ class EntrypointIdService(UnitOfWorkService):
             artifact_graph=artifact_graph,
             parameters=_create_parameters(parameters),
             artifact_parameters=_create_artifact_parameters(
-                artifact_parameters=artifact_parameters, log=log
+                artifact_parameters=artifact_parameters,
+                id_type_map=id_type_map,
             ),
             resource=entrypoint.resource,
             creator=current_user,
         )
 
-        plugins = _copy_plugins(
-            plugins=entrypoint.entry_point_plugins, target_entrypoint=new_entrypoint
-        )
-        artifact_plugins = _copy_artifact_plugins(
-            artifact_plugins=entrypoint.entry_point_artifact_plugins,
-            target_entrypoint=new_entrypoint,
+        if plugin_ids is None:
+            plugins = _copy_plugins(
+                plugins=entrypoint.entry_point_plugins,
+                target_entrypoint=new_entrypoint,
+            )
+        else:
+            plugin_id_set = set(plugin_ids)
+            plugins = _copy_plugins(
+                plugins=(
+                    plugin
+                    for plugin in entrypoint.entry_point_plugins
+                    if plugin.plugin.resource_id not in plugin_id_set
+                ),
+                target_entrypoint=new_entrypoint,
+            )
+            for plugin in self._plugin_ids_service.get(
+                list(plugin_id_set), error_if_not_found=True
+            ):
+                new_plugin = models.EntryPointPlugin(
+                    entry_point=new_entrypoint, plugin=plugin["plugin"]
+                )
+                new_entrypoint.entry_point_plugins.append(new_plugin)
+                plugins.append(new_plugin.plugin)
+
+        if artifact_plugin_ids is None:
+            artifact_plugins = _copy_artifact_plugins(
+                artifact_plugins=entrypoint.entry_point_artifact_plugins,
+                target_entrypoint=new_entrypoint,
+            )
+        else:
+            artifact_plugin_id_set = set(artifact_plugin_ids)
+            artifact_plugins = _copy_artifact_plugins(
+                artifact_plugins=(
+                    plugin
+                    for plugin in entrypoint.entry_point_artifact_plugins
+                    if plugin.plugin.resource_id not in artifact_plugin_id_set
+                ),
+                target_entrypoint=new_entrypoint,
+            )
+            for plugin in self._plugin_ids_service.get(
+                list(artifact_plugin_id_set), error_if_not_found=True
+            ):
+                new_plugin = models.EntryPointArtifactPlugin(
+                    entry_point=new_entrypoint, plugin=plugin["plugin"]
+                )
+                new_entrypoint.entry_point_artifact_plugins.append(new_plugin)
+                artifact_plugins.append(new_plugin.plugin)
+
+        # if we are committing the entrypoint, we run the "rendered" validation.
+        # otherwise, we do the lighter validation.
+        self._swaps_validation_service.raise_validation_errors(
+            group_id=entrypoint.resource.group_id,
+            task_graph=task_graph,
+            artifact_graph=artifact_graph,
+            parameters=parameters,
+            artifact_parameters=artifact_parameters,
+            plugin_ids=[plugin.resource_snapshot_id for plugin in plugins],
+            on_save=commit,
+            log=log,
         )
 
         with self._uow(commit):
             self._uow.entrypoint_repo.create_snapshot(new_entrypoint)
             queues = self._uow.entrypoint_repo.set_queues(new_entrypoint, queue_ids)
             self._uow.entrypoint_repo.set_plugins(
-                new_entrypoint, plugins + artifact_plugins
+                new_entrypoint,
+                _deduplicate_plugin_resources(plugins, artifact_plugins),
             )
 
         log.debug(
@@ -1158,6 +1370,789 @@ class EntrypointNameService(UnitOfWorkService):
         )
 
 
+class EntrypointConfigService(UnitOfWorkService):
+    """Service to retrieve a rendered YAML configuration for an Entrypoint."""
+
+    @inject
+    def __init__(
+        self,
+        uow: UnitOfWork,
+    ):
+        self._uow = uow
+
+    def get_config(
+        self,
+        id: int,
+        snapshotId: int,
+        log: BoundLogger,
+        swap_choices: dict[str, str] | None = None,
+        sections: list[str] | None = None,
+        partial: bool = False,
+    ) -> dict[str, Any]:
+        """Return the rendered YAML configuration dictionary for the given entrypoint.
+
+        Args:
+            id: The unique identifier of the Entrypoint.
+            snapshotId: The unique snapshot identifier of the Entrypoint.
+            log: A BoundLogger object.
+            swap_choices: An optional dictionary mapping swap names to task alias choices,
+                which will be used to render the task graph.
+            sections: An optional list which filters the sections included in the return result.
+            partial: If true, will not raise an error for missing swaps, and will return a partially rendered graph.
+        Returns:
+            A dictionary matching EntrypointConfigSchema.
+        """
+
+        swap_choices = swap_choices if swap_choices else {}
+
+        entry_point = self._uow.entrypoint_repo.get_one_snapshot(
+            id, snapshotId, DeletionPolicy.NOT_DELETED
+        )
+
+        plugin_files = [
+            plugin_plugin_file
+            for entry_point_plugin in entry_point.entry_point_plugins
+            for plugin_plugin_file in entry_point_plugin.plugin.plugin_plugin_files
+        ]
+        # this call is part of a HACK fully explained in extract_tasks, which is called
+        # internally by build_task_engine_dict, the service call would not be needed
+        # if this issue is more permanantly resolved
+        types, _ = self._uow.type_repo.get_by_filters_paged(
+            entry_point.resource.group_id,
+            filters=[],
+            page_start=0,
+            page_length=-1,
+            sort_by=None,
+            descending=False,
+        )
+
+        config = build_task_engine_dict(
+            entry_point=entry_point,
+            plugin_plugin_files=plugin_files,
+            plugin_parameter_types=types,
+            sections=sections,
+        )
+
+        if "graph" in config:
+            try:
+                config["graph"] = render_swaps_graph(
+                    config["graph"], swap_choices, raise_unspecified=not partial
+                )
+            except Exception as e:
+                raise EntrypointSwapsRenderError(str(e)) from e
+
+        return config
+
+
+class DynamicGlobalParametersService(UnitOfWorkService):
+    @inject
+    def __init__(
+        self,
+        uow: UnitOfWork,
+    ) -> None:
+        """Initialize the entrypoint service.
+
+        All arguments are provided via dependency injection.
+
+        """
+        self._uow = uow
+
+    def get_params(
+        self,
+        entrypoint_id: int,
+        entrypoint_snapshot_id: int,
+        swaps: dict[str, str],
+        logger: BoundLogger | None = None,
+    ) -> dict[str, Any]:
+        entry_point = self._uow.entrypoint_repo.get_one_snapshot(
+            entrypoint_id,
+            entrypoint_snapshot_id,
+            DeletionPolicy.NOT_DELETED,
+        )
+
+        task_graph = entry_point.task_graph
+
+        graph = yaml.safe_load(task_graph)
+
+        try:
+            rendered = render_swaps_graph(graph, swaps)
+        except Exception as e:
+            raise EntrypointSwapsRenderError(str(e)) from e
+
+        needed_vars, used_tasks = _get_required_globals(rendered)
+
+        topsorted = util.get_sorted_steps(rendered)
+
+        plugin_files = [
+            plugin_plugin_file
+            for entry_point_plugin in entry_point.entry_point_plugins
+            for plugin_plugin_file in entry_point_plugin.plugin.plugin_plugin_files
+        ]
+
+        types, _ = self._uow.type_repo.get_by_filters_paged(
+            entry_point.resource.group_id,
+            filters=[],
+            page_start=0,
+            page_length=-1,
+            sort_by=None,
+            descending=False,
+        )
+
+        task_engine_yaml = build_task_engine_dict(
+            entry_point=entry_point,
+            plugin_plugin_files=plugin_files,
+            plugin_parameter_types=types,
+        )
+
+        active_plugin_names = set()
+
+        for task in task_engine_yaml["tasks"]:
+            if task in used_tasks:
+                active_plugin_names.add(
+                    task_engine_yaml["tasks"][task]["plugin"].split(".")[0]
+                )
+
+        active_plugins = []
+
+        for epp in entry_point.entry_point_plugins:
+            if epp.plugin.name in active_plugin_names:
+                active_plugins.append(epp.plugin)
+
+        return {
+            "entrypoint_params": [
+                parameter
+                for parameter in sorted(
+                    entry_point.parameters,
+                    key=lambda parameter: parameter.parameter_number,
+                )
+                if parameter.name in needed_vars
+            ],
+            "topological_sort": topsorted,
+            "active_plugins": active_plugins,
+        }
+
+
+class SwapsValidationService(UnitOfWorkService):
+    """Validate proposed entrypoint graphs, including swap definitions.
+
+    All arguments are provided via dependency injection.
+
+    Args:
+        uow: A UnitOfWork instance.
+    """
+
+    def swaps_graph_validation(
+        self,
+        pre_rendered_task_graph: dict[str, Any],
+    ) -> list[ValidationIssue]:
+        from dioptra.sdk.api.swappable_validation import (
+            get_swap_graph_schema,
+            get_swappable_json_schema_resources,
+        )
+
+        return schema_validate(
+            pre_rendered_task_graph,
+            get_swap_graph_schema(),
+            resources=get_swappable_json_schema_resources(),
+        )
+
+    def validate_task_references(
+        self, pre_rendered_task_graph: dict[str, Any], task_lookup_dict: dict[str, Any]
+    ) -> list[ValidationIssue]:
+        """Validate that all tasks in the graph are registered.
+
+        Args:
+            pre_rendered_task_graph: The task graph dictionary, before it is rendered.
+            task_lookup_dict: A dictionary mapping tasks to their plugins, generated by build_task_lookup_dict.
+
+        Returns:
+            A list of validation issues for unregistered task references.
+        """
+
+        collected_no_tasks_found = []
+
+        for step_name, definition in pre_rendered_task_graph.items():
+            swap_definitions = {
+                name: aliases
+                for name, aliases in definition.items()
+                if isinstance(name, str) and name.startswith("?")
+            }
+
+            if not swap_definitions:
+                task_name = util.step_get_plugin_short_name(definition)
+                if task_name not in task_lookup_dict:
+                    collected_no_tasks_found.append(
+                        ValidationIssue(
+                            type_=IssueType.SEMANTIC,
+                            severity=IssueSeverity.ERROR,
+                            message=f"In step '{step_name}', task with name '{task_name}' not found in registered tasks.",
+                        )
+                    )
+                continue
+
+            for swap_name, aliased_defns in swap_definitions.items():
+                for swap_definition in aliased_defns.values():
+                    task_name = util.step_get_plugin_short_name(swap_definition)
+                    if task_name not in task_lookup_dict:
+                        collected_no_tasks_found.append(
+                            ValidationIssue(
+                                type_=IssueType.SEMANTIC,
+                                severity=IssueSeverity.ERROR,
+                                message=f"In swap '{swap_name}', task with name '{task_name}' not found in registered tasks.",
+                            )
+                        )
+
+        return collected_no_tasks_found
+
+    def validate_swap_outputs(
+        self, pre_rendered_task_graph: dict[str, Any], task_lookup_dict: dict[str, Any]
+    ) -> tuple[list[ValidationIssue], dict[str, Any]]:
+        """Validate swap output types and collect the tasks used by each swap.
+
+        Args:
+            pre_rendered_task_graph: The task graph dictionary, before it is rendered.
+            task_lookup_dict: A dictionary mapping tasks to their plugins, generated by build_task_lookup_dict.
+
+        Returns:
+            A list of output type issues and tasks needed for the graph's swaps.
+        """
+
+        mismatched_aliases = {}
+        swap_tasks: dict[str, Any] = {}
+
+        for definition in pre_rendered_task_graph.values():
+            swap_definitions = {
+                name: aliases
+                for name, aliases in definition.items()
+                if isinstance(name, str) and name.startswith("?")
+            }
+
+            for swap_name, aliased_defns in swap_definitions.items():
+                output_types = set()
+                swap_dict = {}
+
+                for alias, swap_definition in aliased_defns.items():
+                    task_name = util.step_get_plugin_short_name(swap_definition)
+                    if task_name not in task_lookup_dict:
+                        continue
+
+                    swap_dict[alias] = {
+                        "plugin_snapshot_id": task_lookup_dict[task_name][
+                            "plugin_snapshot_id"
+                        ],
+                        "pluginfile_filename": task_lookup_dict[task_name][
+                            "pluginfile_filename"
+                        ],
+                        "task_name": task_lookup_dict[task_name]["task_name"],
+                    }
+
+                    output_parameters: list[PluginTaskOutputParameter] = (
+                        task_lookup_dict[task_name]["output_parameters"]
+                    )
+                    output_types.add(
+                        tuple(
+                            [
+                                parameter.parameter_type.name
+                                for parameter in output_parameters
+                            ]
+                        )
+                    )
+
+                swap_tasks[swap_name] = swap_dict
+
+                if len(output_types) > 1:
+                    mismatched_aliases[swap_name] = output_types
+
+        return [
+            ValidationIssue(
+                type_=IssueType.TYPE,
+                severity=IssueSeverity.ERROR,
+                message=f"Swap '{swap_name}' contains mismatched output types: {types}",
+            )
+            for swap_name, types in mismatched_aliases.items()
+        ], swap_tasks
+
+    def validate_single_swap_combinations(
+        self,
+        task_graph_yaml: dict[str, Any],
+        entrypoint_data: EntryPointDataAdapter,
+        plugin_plugin_files: list[models.PluginPluginFile],
+        plugin_parameter_types: list[models.PluginTaskParameterType],
+        swap_choices: dict[str, Any],
+        log: BoundLogger,
+    ) -> tuple[list[ValidationIssue], set[str]]:
+        """Renders a graph containing swaps for a given set of swap_choices, and performs
+        validation on the rendered graph.
+
+        Args:
+            task_graph_yaml: The task graph dictionary.
+            entrypoint_data: Proposed entrypoint data adapted for task-engine use.
+            plugin_plugin_files: A list of Plugin-PluginFile objects.
+            plugin_parameter_types: A list of plugin parameter types.
+            swap_choices: A dictionary representing the choices for each swap.
+            log: A BoundLogger instance.
+
+        Returns:
+            A list of validation issues and a list of global parameters required for the graph.
+        """
+        import json
+
+        issues_for_swap = []
+        required_globals: set[str] = set()
+
+        try:
+            rendered_graph = render_swaps_graph(task_graph_yaml, swap_choices)
+
+            rendered_entrypoint_data = replace(
+                entrypoint_data,
+                task_graph=json.dumps(rendered_graph),
+            )
+            task_engine_dict = build_task_engine_dict(
+                entry_point=rendered_entrypoint_data,
+                plugin_plugin_files=plugin_plugin_files,
+                plugin_parameter_types=plugin_parameter_types,
+            )
+            # this is a schema check and deeper validation no longer present in workflows
+            issues = validate_task_engine_dict(task_engine_dict)
+
+            for issue in issues:
+                issue.message = f"[Swap combination {swap_choices}] {issue.message}"
+                issues_for_swap.append(issue)
+
+            # collect any globals needed for this rendering
+            required_globals, _ = _get_required_globals(rendered_graph)
+
+        except Exception as e:
+            issues_for_swap.append(
+                ValidationIssue(
+                    type_=IssueType.SEMANTIC,
+                    severity=IssueSeverity.ERROR,
+                    message=f"[Swap combination {swap_choices}] Error rendering graph: {str(e)}",
+                )
+            )
+
+        return issues_for_swap, required_globals
+
+    def validate(
+        self,
+        group_id: int,
+        swaps_graph: str,
+        artifact_graph: str,
+        entrypoint_parameters: list[dict[str, Any]],
+        entrypoint_artifacts: list[dict[str, Any]],
+        plugin_snapshot_ids: list[int],
+        rendered_validation: bool = False,
+        **kwargs,
+    ) -> dict[str, Any]:
+        """Validation for a proposed entrypoint graph.
+
+        This validation checks the following:
+            * Validates just the graph against a JSON schema which accounts for swaps (though swaps are not
+            required).
+            * Validates that all tasks in the graph are registered.
+            * Validates that all the output types for tasks in a given swap match.
+            * Collects all the tasks needed for the given graph and provides it in the response.
+
+        If the rendered_validation flag is set, this entrypoint also:
+            * Iterates over swaps, renders the graph using different swap combinations, and performs in-depth
+            validation on the experiment with the rendered graph.
+            * Validates that all global parameters required for the graph are declared as entrypoint inputs.
+
+        Args:
+            group_id: The group ID.
+            swaps_graph: The task graph dictionary.
+            artifact_graph: The artifact graph dictionary.
+            entrypoint_parameters: A list of entrypoint parameters.
+            entrypoint_artifacts: A list of entrypoint artifacts parameters.
+            plugin_snapshot_ids: A list of plugin snapshot IDs needed for the entrypoint.
+            rendered_validation: Whether to perform in-depth validation by looping over any swaps to render the task graph.
+        Returns:
+            A dictionary containing the following fields:
+                schema_issues - if applicable, a list of schema validation issues
+                swap_issues - if applicable, a list of task reference or swap validation errors.
+                rendered_validation_errors - if applicable, a list of validation errors found when
+                  validating via swap rendering.
+                missing_global_params - if applicable, a list of required global parameters that were not declared
+        """
+
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+
+        try:
+            swaps_yaml = yaml.safe_load(swaps_graph)
+        except yaml.YAMLError as e:
+            raise InvalidYamlError(
+                f"Failed to parse entrypoint task graph YAML: {e}"
+            ) from e
+
+        if swaps_yaml is None:
+            raise EmptyGraphError("Provided swaps graph is empty.")
+
+        duplicate_swap_issues = (
+            check_duplicate_swap_names(swaps_yaml)
+            if isinstance(swaps_yaml, dict)
+            else []
+        )
+        multiple_swaps_per_step_issues = (
+            check_multiple_swaps_per_step(swaps_yaml)
+            if isinstance(swaps_yaml, dict)
+            else []
+        )
+
+        type_ids = _get_artifact_parameter_type_ids(entrypoint_artifacts)
+        artifact_parameter_types = (
+            list(
+                cast(
+                    Iterable[models.PluginTaskParameterType],
+                    self._uow.type_repo.get(list(type_ids), DeletionPolicy.NOT_DELETED),
+                )
+            )
+            if type_ids
+            else []
+        )
+        id_type_map = _require_parameter_types(type_ids, artifact_parameter_types)
+
+        #### Pre-render Schema Issues
+        entrypoint = _build_entrypoint_data_adapter(
+            swaps_graph,
+            artifact_graph,
+            entrypoint_parameters,
+            entrypoint_artifacts,
+            id_type_map,
+        )
+
+        plugin_parameter_types, _ = self._uow.type_repo.get_by_filters_paged(
+            group_id,
+            filters=[],
+            page_start=0,
+            page_length=-1,
+            sort_by=None,
+            descending=False,
+        )
+        plugin_parameter_types = list(plugin_parameter_types)
+        plugin_plugin_files = get_plugin_plugin_files_from_plugin_snapshot_ids(
+            plugin_snapshot_ids=plugin_snapshot_ids, logger=log
+        )
+
+        try:
+            task_engine_dict = build_task_engine_dict(
+                entry_point=entrypoint,
+                plugin_plugin_files=plugin_plugin_files,
+                plugin_parameter_types=plugin_parameter_types,
+            )
+        except InvalidYamlError as e:
+            return {
+                "schema_valid": False,
+                "schema_issues": [
+                    ValidationIssue(
+                        type_=IssueType.SYNTAX,
+                        severity=IssueSeverity.ERROR,
+                        message=str(e),
+                    )
+                ],
+            }
+
+        merged_schema = get_swappable_experiment_schema()
+
+        # Full task-engine validation requires a rendered graph, which is not
+        # guaranteed at this stage.
+        schema_issues = schema_validate(
+            task_engine_dict,
+            merged_schema,
+            resources=get_swappable_json_schema_resources(),
+        )
+
+        schema_valid = schema_issues == []
+
+        #### Pre-render Schema Issues complete
+
+        pre_render_issues: list[ValidationIssue] = []
+        collected_rendered_validation_issues: list[ValidationIssue] = []
+        collected_required_globals = set()
+        tasks: dict[str, Any] = {}
+
+        if schema_valid:
+            #### Perform pre-render semantic validation
+
+            # build a lookup dictionary for tasks from the plugin files
+            task_lookup_dict = _build_task_lookup_dict(plugin_plugin_files)
+
+            task_reference_issues = self.validate_task_references(
+                pre_rendered_task_graph=swaps_yaml,
+                task_lookup_dict=task_lookup_dict,
+            )
+            swap_output_issues, tasks = self.validate_swap_outputs(
+                pre_rendered_task_graph=swaps_yaml,
+                task_lookup_dict=task_lookup_dict,
+            )
+            pre_render_issues = task_reference_issues + swap_output_issues
+
+            #### Pre-render semantic validation complete
+
+            #### Specifically for saving and modifying entrypoints, perform in-depth validation
+            if rendered_validation:
+                # extract a mapping of swaps to possible swap choices
+                swaps = extract_swaps(
+                    swaps_yaml
+                )  # { swap1: [alias1, alias2, alias3], swap2: [alias4, alias5, alias6], etc. }
+                swap_names = list(swaps.keys())  # [swap1, swap2, etc.]
+
+                combinations = []
+
+                # create a list of swap choice combinations to try
+                for swap_name in swap_names:
+                    for alias in swaps[swap_name]:
+                        current_swap_choice = {
+                            s: swaps[s][0] for s in swaps.keys() if s != swap_name
+                        }  # keeping the first swap from every *other* swap, as we vary the *current* swap, O(n) instead of O(w*x*y*z*...)!
+                        current_swap_choice[swap_name] = alias
+
+                        combinations.append(current_swap_choice)
+
+                combinations = [{}] if combinations == [] else combinations  #
+
+                # loop over the combinations, render each, and validate as a normal experiment description
+                for combination in combinations:
+                    rendered_validation_issues, required_globals = (
+                        self.validate_single_swap_combinations(
+                            task_graph_yaml=swaps_yaml,
+                            entrypoint_data=entrypoint,
+                            plugin_plugin_files=plugin_plugin_files,
+                            plugin_parameter_types=plugin_parameter_types,
+                            swap_choices=combination,
+                            log=log,
+                        )
+                    )
+                    collected_required_globals.update(required_globals)
+                    collected_rendered_validation_issues.extend(
+                        rendered_validation_issues
+                    )
+
+        # compile a set of all declared parameter names
+        declared_globals = {p["name"] for p in entrypoint_parameters}
+        declared_globals.update({a["name"] for a in entrypoint_artifacts})
+
+        # any variable we have used that is not declared is missing
+        missing_globals = [
+            g for g in collected_required_globals if g not in declared_globals
+        ]
+
+        combined_swap_issues = (
+            pre_render_issues + duplicate_swap_issues + multiple_swaps_per_step_issues
+        )
+
+        return {
+            "schema_issues": [str(i) for i in schema_issues],
+            "swap_issues": [str(i) for i in combined_swap_issues],
+            "rendered_validation_errors": [
+                str(i) for i in collected_rendered_validation_issues
+            ],
+            "missing_global_params": missing_globals,
+            "swaps": tasks,
+        }
+
+    def raise_validation_errors(
+        self,
+        task_graph: str,
+        artifact_graph: str,
+        parameters: list[dict[str, Any]],
+        artifact_parameters: list[dict[str, Any]],
+        plugin_ids: list[int],
+        group_id: int,
+        log: BoundLogger,
+        on_save: bool = False,
+    ) -> dict[str, Any]:
+
+        validation_results = self.validate(
+            group_id=group_id,
+            swaps_graph=task_graph,
+            artifact_graph=artifact_graph,
+            entrypoint_parameters=parameters,
+            entrypoint_artifacts=artifact_parameters,
+            plugin_snapshot_ids=plugin_ids,
+            rendered_validation=on_save,
+            log=log,
+        )
+
+        validation_errors = {}
+
+        if len(validation_results["missing_global_params"]) > 0:
+            validation_errors["missing_global_params"] = validation_results[
+                "missing_global_params"
+            ]
+        if len(validation_results["rendered_validation_errors"]) > 0:
+            validation_errors["rendered_validation_errors"] = validation_results[
+                "rendered_validation_errors"
+            ]
+        if len(validation_results["swap_issues"]) > 0:
+            validation_errors["swap_issues"] = validation_results["swap_issues"]
+        if len(validation_results["schema_issues"]) > 0:
+            validation_errors["schema_issues"] = validation_results["schema_issues"]
+
+        if validation_errors != {}:
+            raise EntrypointValidationError(
+                message="Validation failed for provided entrypoint",
+                validation_error_dict=validation_errors,
+            )
+
+        return validation_results
+
+
+class SwapsRetrievalService(UnitOfWorkService):
+    """Service for retrieving available swaps for an entrypoint snapshot.
+
+    Currently this implementation returns an empty mapping. It can be extended to
+    introspect the entrypoint graph and plugin metadata to provide detailed swap
+    information.
+    """
+
+    @inject
+    def __init__(
+        self,
+        uow: UnitOfWork,
+    ) -> None:
+        self._uow = uow
+
+    def get_swaps(
+        self,
+        entrypoint_id: int,
+        entrypoint_snapshot_id: int,
+        logger: BoundLogger | None = None,
+    ) -> list[dict[str, Any]]:
+        """
+        Retrieve information about the list of swaps for a given entrypoint snapshot.
+
+        Args:
+            entrypoint_id: The entrypoint ID.
+            entrypoint_snapshot_id: The entrypoint snapshot ID.
+        Returns:
+            An object of the form:
+            [
+                {
+                    "swap_name": [{
+                        "task_alias": ...,
+                        "task_name": ...,
+                        "entrypoint_keyword_args": [...],
+                        "plugin_file_resource_snapshot_id": ...,
+                    }, ...]
+                }
+            ]
+        """
+        # Retrieve the snapshot entrypoint to get the graph.
+        entry_point = self._uow.entrypoint_repo.get_one_snapshot(
+            entrypoint_id,
+            entrypoint_snapshot_id,
+            DeletionPolicy.NOT_DELETED,
+        )
+
+        # Load the graph YAML
+        try:
+            graph = yaml.safe_load(entry_point.task_graph) or {}
+        except Exception as e:
+            raise InvalidYamlError("Failed to load YAML") from e
+
+        # this looks like {'swap_name1' : ['alias1', 'alias2'], 'swap_name2': ...}
+        swaps = extract_swaps(graph)
+
+        # need this to know which entrypoint keyword args to NOT include in return
+        step_names = set(graph.keys())
+
+        swaps_list: list[dict[str, Any]] = []
+
+        # build a list of all plugin‑plugin‑file pairs for this entrypoint.
+        plugin_plugin_files = [
+            plugin_plugin_file
+            for entry_point_plugin in entry_point.entry_point_plugins
+            for plugin_plugin_file in entry_point_plugin.plugin.plugin_plugin_files
+        ]
+
+        task_lookup_dict = _build_task_lookup_dict(plugin_plugin_files)
+        not_found_tasks = set()
+
+        for swap_name in swaps:
+            for step in step_names:
+                if f"?{swap_name}" in graph[step]:
+                    task_defs = graph[step][f"?{swap_name}"]
+                    for alias in task_defs:
+                        task_def = task_defs[alias]
+
+                        keyword_args = _get_keywords_for_one_task(task_def) - step_names
+
+                        if "task" in task_def:
+                            # long form definition
+                            task_name = task_def["task"]
+                        else:
+                            # short form definition
+                            task_name = list(task_def.keys())[0]
+
+                        if task_name in task_lookup_dict:
+                            plugin_file_resource_snapshot_id = task_lookup_dict[
+                                task_name
+                            ]["plugin_file_snapshot_id"]
+                            swap_info = {
+                                "swap_name": swap_name,
+                                "task_alias": alias,
+                                "task_name": task_name,
+                                "entrypoint_keyword_args": list(keyword_args),
+                                "plugin_file_resource_snapshot_id": plugin_file_resource_snapshot_id,
+                            }
+
+                            swaps_list.append(swap_info)
+                        else:
+                            not_found_tasks.add(task_name)
+
+        if len(not_found_tasks) > 0:
+            raise TasksNotFoundError(list(not_found_tasks))
+
+        return swaps_list
+
+
+def _build_task_lookup_dict(
+    plugins: list[models.PluginPluginFile],
+) -> dict[str, Any]:
+    """Build task metadata indexed by function task name."""
+    lookup = {}
+
+    for pair in plugins:
+        plugin = pair.plugin
+        plugin_file = pair.plugin_file
+
+        for task in plugin_file.tasks:
+            if isinstance(task, models.FunctionTask):
+                lookup[task.plugin_task_name] = {
+                    "plugin_file_snapshot_id": plugin_file.resource_snapshot_id,
+                    "plugin_snapshot_id": plugin.resource_snapshot_id,
+                    "pluginfile_filename": plugin_file.filename,
+                    "task_name": task.plugin_task_name,
+                    "output_parameters": task.output_parameters,
+                }
+
+    return lookup
+
+
+def _get_keywords_for_one_task(task: dict[str, Any]) -> set[str]:
+    """Return graph reference roots used by one task definition."""
+    return {reference.split(".")[0] for reference in util.get_references(task)}
+
+
+def _get_required_globals(
+    rendered_graph: dict[str, Any],
+) -> tuple[set[str], set[str]]:
+    """Return external graph references and task names used by a graph."""
+    graph_steps = rendered_graph.keys()
+    needed_globals: set[str] = set()
+    used_tasks: set[str] = set()
+
+    for step in rendered_graph.values():
+        for task_name, task_definition in step.items():
+            used_tasks.add(task_name)
+            references = _get_keywords_for_one_task(task_definition)
+            needed_globals.update(
+                reference for reference in references if reference not in graph_steps
+            )
+
+    return needed_globals, used_tasks
+
+
 def _get_entrypoint_plugin_snapshots(
     entrypoint: models.EntryPoint,
 ) -> list[utils.PluginWithFilesDict]:
@@ -1223,6 +2218,21 @@ def _copy_artifact_plugins(
     )
 
 
+def _deduplicate_plugin_resources(
+    plugins: list[models.Plugin],
+    artifact_plugins: list[models.Plugin],
+) -> list[models.Plugin]:
+    """
+    De-duplicates two lists of Plugin resources and returns a combined list.
+
+    Returns:
+        A de-duplicated list of Plugin resources
+    """
+    return list(
+        {plugin.resource_id: plugin for plugin in plugins + artifact_plugins}.values()
+    )
+
+
 def _create_parameters(
     parameters: list[dict[str, Any]],
 ) -> Iterable[models.EntryPointParameter]:
@@ -1256,17 +2266,11 @@ def _copy_parameters(
 
 
 def _create_artifact_parameters(
-    artifact_parameters: list[dict[str, Any]], log: BoundLogger
+    artifact_parameters: list[dict[str, Any]],
+    id_type_map: dict[int, models.PluginTaskParameterType],
 ) -> Iterable[models.EntryPointArtifactParameter]:
     if artifact_parameters is None or len(artifact_parameters) == 0:
         return []
-
-    type_ids = [
-        parameter["parameter_type_id"]
-        for artifact in artifact_parameters
-        for parameter in artifact["output_params"]
-    ]
-    id_type_map = get_plugin_task_parameter_types_by_id(ids=type_ids, log=log)
 
     return [
         models.EntryPointArtifactParameter(
@@ -1283,6 +2287,37 @@ def _create_artifact_parameters(
         )
         for a, artifact in enumerate(artifact_parameters)
     ]
+
+
+def _get_artifact_parameter_type_ids(
+    artifact_parameters: list[dict[str, Any]],
+) -> set[int]:
+    return {
+        parameter["parameter_type_id"]
+        for artifact in artifact_parameters
+        for parameter in artifact["output_params"]
+    }
+
+
+def _require_parameter_types(
+    requested_ids: Iterable[int],
+    parameter_types: Iterable[models.PluginTaskParameterType],
+) -> dict[int, models.PluginTaskParameterType]:
+    requested_id_set = set(requested_ids)
+    id_type_map = {
+        parameter_type.resource_id: parameter_type for parameter_type in parameter_types
+    }
+    missing_ids = requested_id_set - id_type_map.keys()
+
+    if missing_ids:
+        raise EntityDoesNotExistError(
+            EntityType.PLUGIN_TASK_PARAMETER_TYPE,
+            num_expected=len(requested_id_set),
+            num_found=len(id_type_map),
+            ids_not_found=sorted(missing_ids),
+        )
+
+    return id_type_map
 
 
 def _copy_artifact_parameters(

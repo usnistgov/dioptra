@@ -1,0 +1,99 @@
+artifacts:
+  adversarial_dataset:
+    contents: $adversarial_dataset
+    task:
+      name: DatasetArtifactTask
+  adversarial_dataset_sample:
+    contents: $adversarial_dataset
+    task:
+      name: DatasetSamplerArtifactTask
+  predictions:
+    contents: $predictions
+    task:
+      name: DataframeArtifactTask
+      args:
+        format: csv
+  metrics:
+    contents: $metrics
+    task:
+      name: DataframeArtifactTask
+      args:
+        format: csv
+
+graph:
+  random_seed:
+    set_random_seed:
+      seed: $seed
+
+  dataset:
+    load_dataset_from_tfds:
+      name: $dataset_name
+      data_dir: $dataset_dir
+      split: $dataset_split
+      normalize: $normalize
+      image_size: $image_size
+      batch_size: $batch_size
+    dependencies:
+      - random_seed
+
+  adversarial_dataset:
+    ?attack:
+      fgm:
+        fast_gradient_method:
+          model: $model_artifact
+          dataset: $dataset.test
+          target: $target
+          norm: $norm
+          eps: $eps
+          eps_step: $eps_step
+          minimal: $minimal
+          save_dataset: true
+      cw:
+        carlini_wagner:
+          model: $model_artifact
+          dataset: $dataset.test
+          target: $target
+          norm: $norm
+          confidence: $confidence
+          learning_rate: $learning_rate
+          max_iter: $max_iter
+          initial_const: $initial_const
+          save_dataset: true
+      bim:
+        basic_iterative_method:
+          model: $model_artifact
+          dataset: $dataset.test
+          target: $target
+          eps: $eps
+          eps_step: $eps_step
+          max_iter: $max_iter
+          save_dataset: true
+      pgd:
+        projected_gradient_descent:
+          model: $model_artifact
+          dataset: $dataset.test
+          target: $target
+          norm: $norm
+          eps: $eps
+          eps_step: $eps_step
+          decay: $decay
+          max_iter: $max_iter
+          random_eps: $random_eps
+          num_random_init: $num_random_init
+          save_dataset: true
+    dependencies:
+      - dataset
+
+  predictions:
+    model_predict:
+      model: $model_artifact
+      dataset: $adversarial_dataset
+    dependencies:
+      - adversarial_dataset
+
+  metrics:
+    evaluate_predictions:
+      predictions: $predictions
+      dataset: $adversarial_dataset
+    dependencies:
+      - predictions

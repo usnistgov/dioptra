@@ -31,7 +31,7 @@ from .drafts import (
 )
 from .snapshots import SnapshotsSubCollectionClient
 from .tags import TagsSubCollectionClient
-from .utils import FileTypes
+from .utils import FileTypes, delimited_values
 
 DRAFT_FIELDS: Final[set[str]] = {
     "name",
@@ -64,6 +64,8 @@ CONFIG: Final[str] = "config"
 PLUGINS: Final[str] = "plugins"
 ARTIFACT_PLUGINS: Final[str] = "artifactPlugins"
 BUNDLE: Final[str] = "bundle"
+DYNAMIC_GLOBAL_PARAMETERS: Final[str] = "dynamicGlobalParameters"
+VALIDATE_SWAPS: Final[str] = "validate"
 
 T = TypeVar("T")
 
@@ -387,21 +389,40 @@ class EntrypointsSnapshotCollectionClient(SnapshotsSubCollectionClient[T]):
         super().__init__(session=session, root_collection=root_collection)
 
     def get_config(
-        self, entrypoint_id: str | int, entrypoint_snapshot_id: str | int
+        self,
+        entrypoint_id: str | int,
+        entrypoint_snapshot_id: str | int,
+        swap_parameters: dict[str, str] | None = None,
+        sections: list[str] | None = None,
+        partial: bool = False,
     ) -> T:
         """Get the config for the entrypoint matching the provided snapshot id.
 
         Args:
             entrypoint_id: The entrypoint id, an integer.
             entrypoint_snapshot_id: The entrypoint snapshot id, an integer.
-
+            swap_parameters: A dictionary mapping swap names to task alias choices.
+            sections: A list of sections of the job YAML to include in the response.
+            partial: If true, will not raise an error for missing swaps, and will return a partially rendered graph.
         Returns:
             The response from the Dioptra API.
         """
+
+        get_params = {}
+
+        if swap_parameters is not None:
+            get_params["swaps"] = delimited_values(swap_parameters)
+
+        if sections:
+            get_params["sections"] = ",".join(sections)
+
+        get_params["partial"] = str(partial)
+
         return self._session.get(
             self.build_sub_collection_url(entrypoint_id),
             str(entrypoint_snapshot_id),
             CONFIG,
+            params=get_params,
         )
 
     def get_plugins_bundle(
@@ -504,6 +525,42 @@ class EntrypointsSnapshotCollectionClient(SnapshotsSubCollectionClient[T]):
             BUNDLE,
             output_path=bundle_path,
             params=params,
+        )
+
+    def get_task_graph_global_params(
+        self, entrypoint_id: int, entrypoint_snapshot_id: int, swaps: dict[str, str]
+    ) -> T:
+        """Get the global parameters used by an entrypoint graph with specified swap tasks (if applicable).
+
+        Args:
+            entrypoint_id: The entrypoint id, an integer.
+            entrypoint_snapshot_id: The entrypoint snapshot id, an integer.
+            swaps: The selected task for each swappable step in the entrypoint graph.
+
+        Returns:
+            The response from the Dioptra API.
+        """
+        return self._session.get(
+            self.build_sub_collection_url(entrypoint_id),
+            str(entrypoint_snapshot_id),
+            DYNAMIC_GLOBAL_PARAMETERS,
+            params={"swaps": delimited_values(swaps)},
+        )
+
+    def get_swaps(self, entrypoint_id: int, entrypoint_snapshot_id: int) -> T:
+        """Retrieve the list of possible swaps for a given entrypoint snapshot.
+
+        Args:
+            entrypoint_id: The entrypoint id, an integer.
+            entrypoint_snapshot_id: The entrypoint snapshot id, an integer.
+
+        Returns:
+            The response from the Dioptra API containing swap information.
+        """
+        return self._session.get(
+            self.build_sub_collection_url(entrypoint_id),
+            str(entrypoint_snapshot_id),
+            "swaps",
         )
 
 
@@ -782,6 +839,7 @@ class EntrypointsCollectionClient(CollectionClient[T]):
         queues: list[int] | None = None,
         plugins: list[int] | None = None,
         artifact_plugins: list[int] | None = None,
+        validate_only: bool = False,
     ) -> T:
         """Creates a entrypoint.
 
@@ -805,6 +863,9 @@ class EntrypointsCollectionClient(CollectionClient[T]):
                 Optional, defaults to None.
             artifact_plugins: A list of artifact plugin ids to associate with the new
                 entrypoint. Optional, defaults to None.
+            validate_only: If set to False, this will perform full validation and save
+                the entrypoint. If false, a lighter validation will be performed and
+                the entrypoint will not be saved.
 
         Example:
             Create an entrypoint called "hello_world" with artifact input parameters and artifact output graph.
@@ -872,7 +933,9 @@ class EntrypointsCollectionClient(CollectionClient[T]):
         if artifact_plugins is not None:
             json_["artifactPlugins"] = artifact_plugins
 
-        return self._session.post(self.url, json_=json_)
+        params = {"validateOnly": validate_only}
+
+        return self._session.post(self.url, params=params, json_=json_)
 
     def modify_by_id(
         self,
@@ -884,6 +947,7 @@ class EntrypointsCollectionClient(CollectionClient[T]):
         parameters: list[dict[str, Any]] | None,
         artifact_parameters: list[dict[str, Any]] | None,
         queues: list[int] | None,
+        validate_only: bool = False,
     ) -> T:
         """Modify the entrypoint matching the provided id.
 
@@ -902,6 +966,9 @@ class EntrypointsCollectionClient(CollectionClient[T]):
                 To remove all artifact parameters, pass None.
             queues: The new list of queue ids to associate with the entrypoint. To
                 remove all associated queues, pass None.
+            validate_only: If set to False, this will perform full validation and save
+                the entrypoint. If false, a lighter validation will be performed and
+                the entrypoint will not be saved.
 
         Returns:
             The response from the Dioptra API.
@@ -923,7 +990,11 @@ class EntrypointsCollectionClient(CollectionClient[T]):
         if queues is not None:
             json_["queues"] = queues
 
-        return self._session.put(self.url, str(entrypoint_id), json_=json_)
+        params = {"validateOnly": validate_only}
+
+        return self._session.put(
+            self.url, str(entrypoint_id), params=params, json_=json_
+        )
 
     def delete_by_id(self, entrypoint_id: str | int) -> T:
         """Delete the entrypoint matching the provided id.

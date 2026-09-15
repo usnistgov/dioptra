@@ -294,12 +294,21 @@ export async function getResourceDraft<T extends ResourceType>(type: T, id: numb
   return res;
 }
 
-export async function updateItem<T extends keyof UpdateParams>(type: T, id: number, params: UpdateParams[T]) {
-  return await axios.put(`/api/${type}/${id}`, params);
+export async function updateItem<T extends keyof UpdateParams>(
+  type: T,
+  id: number,
+  params: UpdateParams[T],
+  validateOnly = false,
+) {
+  return await axios.put(`/api/${type}/${id}`, params, {
+    params: { validateOnly },
+  });
 }
 
-export async function addItem<T extends keyof CreateParams>(type: T, params: CreateParams[T]) {
-  return await axios.post(`/api/${type}/`, params);
+export async function addItem<T extends keyof CreateParams>(type: T, params: CreateParams[T], validateOnly = false) {
+  return await axios.post(`/api/${type}/`, params, {
+    params: { validateOnly },
+  });
 }
 
 interface JobParams {
@@ -316,6 +325,33 @@ export async function addJob(id: number, params: JobParams) {
 
 export async function deleteJob(id: number, jobId: number) {
   return await axios.delete(`/api/experiments/${id}/jobs/${jobId}`);
+}
+
+export async function getSwaps(entrypointId: number, snapshotId: number) {
+  return await axios.get(`/api/entrypoints/${entrypointId}/snapshots/${snapshotId}/swaps`);
+}
+
+export async function getGraph(entrypointId: number, snapshotId: number, swaps: Record<string, string>) {
+  const swapsQueryParam = Object.entries(swaps)
+    .map(([swapName, taskAlias]) => `${swapName}:${taskAlias}`)
+    .join(",");
+
+  return await axios.get(`/api/entrypoints/${entrypointId}/snapshots/${snapshotId}/config`, {
+    params: {
+      swaps: swapsQueryParam,
+      sections: "graph",
+      partial: true,
+    },
+  });
+}
+
+export async function getUsedParams(entrypointId: number, snapshotId: number, swaps: Record<string, string>) {
+  const swapsQueryParam = Object.entries(swaps)
+    .map(([swapName, taskAlias]) => `${swapName}:${taskAlias}`)
+    .join(",");
+  return await axios.get(`/api/entrypoints/${entrypointId}/snapshots/${snapshotId}/dynamicGlobalParameters`, {
+    params: { swaps: swapsQueryParam },
+  });
 }
 
 export async function addDraft<T extends keyof CreateParams>(type: T, params: CreateParams[T], id: number) {

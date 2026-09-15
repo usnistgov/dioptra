@@ -18,12 +18,14 @@
 
 from typing import Any
 
-from marshmallow import Schema, fields, validate, validates
+from marshmallow import Schema, fields, pre_dump, validate, validates
+from marshmallow.exceptions import ValidationError
 
 from dioptra.restapi.errors import InputParameterNotUniqueError
 from dioptra.restapi.utils import find_non_unique
 from dioptra.restapi.v1.plugins.schema import (
     ALLOWED_PLUGIN_TASK_PARAMETER_REGEX,
+    PluginSnapshotRefSchema,
     PluginTaskContainerSchema,
     PluginTaskParameterSchema,
 )
@@ -38,6 +40,7 @@ from dioptra.restapi.v1.schemas import (
     generate_base_resource_ref_schema,
     generate_base_resource_schema,
 )
+from dioptra.task_engine.issues import ValidationIssue
 
 
 class EntrypointPluginFileSchema(Schema):
@@ -247,6 +250,17 @@ class EntrypointMutableFieldsSchema(Schema):
                 )
 
 
+class ValidateOnlySchema(Schema):
+    validateOnly = fields.Bool(
+        attribute="validate_only",
+        data_key="validateOnly",
+        load_default=False,
+        metadata={
+            "description": "Flag indicating whether to perform a full validation and save the entrypoint, or perform a lighter validation and not save the entrypoint."
+        },
+    )
+
+
 class EntrypointPluginMutableFieldsSchema(Schema):
     pluginIds = fields.List(
         fields.Integer(),
@@ -350,3 +364,244 @@ class EntrypointGetQueryParameters(
     ShowDeletedQueryParametersSchema,
 ):
     """The query parameters for the GET method of the /entrypoints endpoint."""
+
+
+class DelimitedKeyValuePairs(fields.Field):
+    def __init__(
+        self,
+        *,
+        delimiter: str = ",",
+        equality: str = ":",
+        **additional_metadata,
+    ) -> None:
+        super().__init__(**additional_metadata)
+        self.delimiter = delimiter
+        self.equality = equality
+
+    def _deserialize(self, value, attr, data, **kwargs) -> dict[str, str]:
+        try:
+            if value == "":
+                return {}
+            return {
+                str(pair.split(self.equality)[0]): str(pair.split(self.equality)[1])
+                for pair in value.split(self.delimiter)
+            }
+        except Exception as e:
+            raise ValidationError(
+                f"{attr} is not a delimited list {value}. List format should be key{self.equality}value{self.delimiter}key2{self.equality}value2{self.delimiter}key3{self.equality}value3."
+            ) from e
+
+
+class DelimitedValues(fields.Field):
+    def __init__(
+        self,
+        *,
+        delimiter: str = ",",
+        **additional_metadata,
+    ) -> None:
+        super().__init__(**additional_metadata)
+        self.delimiter = delimiter
+
+    def _deserialize(self, value, attr, data, **kwargs) -> list[str]:
+        try:
+            if value == "":
+                return []
+            return [s.strip() for s in value.split(self.delimiter) if s.strip()]
+        except Exception as e:
+            raise ValidationError(
+                f"{attr} is not a delimited list {value}. List format should be value1{self.delimiter}value2{self.delimiter}value3."
+            ) from e
+
+
+class SwapChoiceRequestSchema(Schema):
+    swaps = DelimitedKeyValuePairs(
+        attribute="swaps",
+        data_key="swaps",
+        metadata={
+            "description": (
+                "A list of swap choices to be applied to the entrypoint task graph."
+            )
+        },
+    )
+
+
+class EntrypointConfigRequestSchema(SwapChoiceRequestSchema):
+    sections = DelimitedValues(
+        attribute="sections",
+        data_key="sections",
+        metadata={"description": "A list of sections to include in the response."},
+    )
+
+    partial = fields.Bool(
+        attribute="partial",
+        data_key="partial",
+        metadata={
+            "description": "If true, allow partial rendering of the task graph from this endpoint."
+        },
+    )  #  type: ignore
+
+    @validates("sections")
+    def validate_sections(self, sections: list[str]) -> None:
+        invalid_sections = (
+            set(sections) - EntrypointConfigResponseSchema().fields.keys()
+        )
+        if invalid_sections:
+            raise ValidationError(
+                f"Invalid config sections: {sorted(invalid_sections)}."
+            )
+
+
+class DynamicGlobalParametersResponseSchema(Schema):
+    globalParameters = fields.Nested(
+        EntrypointParameterSchema,
+        attribute="entrypoint_params",
+        data_key="entrypointParams",
+        many=True,
+        metadata={
+            "description": (
+                "A list of global parameters used in the entrypoint task graph."
+            )
+        },
+    )
+    topologicalSort = fields.List(
+        fields.String(),
+        attribute="topological_sort",
+        data_key="topologicalSort",
+        metadata={
+            "description": ("A list of task names topologically sorted by dependency.")
+        },
+    )
+    activePlugins = fields.Nested(
+        PluginSnapshotRefSchema,
+        attribute="active_plugins",
+        data_key="activePlugins",
+        metadata={"description": ("A list of plugin objects used in the entrypoint.")},
+        many=True,
+    )
+
+
+class SwapInfoSchema(Schema):
+    """Schema representing a single swap option (SwapInfo)."""
+
+    swapName = fields.String(
+        attribute="swap_name",
+        metadata={"description": "The name of the swap this definition belongs to."},
+        required=True,
+    )
+    taskAlias = fields.String(
+        attribute="task_alias",
+        metadata={"description": "Alias for the task definition."},
+        required=True,
+    )
+    taskName = fields.String(
+        attribute="task_name",
+        metadata={"description": "Name of the task that can be swapped in."},
+        required=True,
+    )
+    entrypointKeywordArgs = fields.List(
+        fields.String(),
+        attribute="entrypoint_keyword_args",
+        metadata={
+            "description": "A list of the keyword arguments that need to be specified for this task."
+        },
+        required=True,
+    )
+    pluginFileResourceSnapshotId = fields.Integer(
+        attribute="plugin_file_resource_snapshot_id",
+        metadata={
+            "description": "Resource snapshot ID of the plugin file containing the task."
+        },
+        required=True,
+    )
+
+
+class ValidateEntrypointIssueSchema(Schema):
+    """The response for the validateEntrypoint endpoint."""
+
+    type_ = fields.String(
+        attribute="type",
+        data_key="type",
+        metadata={"description": "The validation issue type."},
+    )
+    severity = fields.String(
+        attribute="severity",
+        metadata={"description": "The severity of the validation issue."},
+    )
+    message = fields.String(
+        attribute="message",
+        metadata={"description": "A message describing the validation issue."},
+    )
+
+    @pre_dump
+    def stringify_enums(self, data, **kwargs):
+        if isinstance(data, ValidationIssue):
+            return {
+                "type": data.type.name,
+                "severity": data.severity.name,
+                "message": data.message,
+            }
+
+        return data
+
+
+class EntrypointConfigResponseSchema(Schema):
+    types = fields.Dict(
+        keys=fields.String(),
+        values=fields.Raw(),
+        attribute="types",
+        allow_none=True,
+        metadata={
+            "description": "A dictionary of types defined for this experiment.",
+        },
+        load_default=dict,
+    )
+    parameters = fields.Dict(
+        keys=fields.String(),
+        values=fields.Raw(),
+        attribute="parameters",
+        allow_none=True,
+        metadata={
+            "description": "A dictionary of parameters defined for this experiment.",
+        },
+        load_default=dict,
+    )
+    tasks = fields.Dict(
+        keys=fields.String(),
+        values=fields.Raw(),
+        attribute="tasks",
+        allow_none=True,
+        metadata={
+            "description": "A dictionary of tasks defined for this experiment.",
+        },
+        load_default=dict,
+    )
+    graph = fields.Dict(
+        keys=fields.String(),
+        values=fields.Raw(),
+        attribute="graph",
+        allow_none=True,
+        metadata={
+            "description": "A dictionary representing the task graph for this experiment.",
+        },
+        load_default=dict,
+    )
+    artifact_outputs = fields.Dict(
+        keys=fields.String(),
+        values=fields.Raw(),
+        attribute="artifact_outputs",
+        allow_none=True,
+        metadata={
+            "description": "A dictionary representing the artifact outputs for this experiment.",
+        },
+        load_default=dict,
+    )
+    artifact_inputs = fields.Dict(
+        keys=fields.String(),
+        values=fields.Raw(),
+        attribute="artifact_inputs",
+        allow_none=True,
+        metadata={
+            "description": "A dictionary representing the artifact inputs for this experiment.",
+        },
+        load_default=dict,
+    )

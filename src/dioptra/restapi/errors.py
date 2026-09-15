@@ -385,6 +385,24 @@ class QueryParameterValidationError(DioptraError):
         self.parameters = kwargs
 
 
+class SwapsNotFoundError(DioptraError):
+    """Could not find swaps with the given name."""
+
+    def __init__(self, swaps: list[str]):
+        super().__init__(
+            f"Could not find swaps with the given name(s): {swaps}",
+        )
+
+
+class TasksNotFoundError(DioptraError):
+    """Could not find tasks with the given name."""
+
+    def __init__(self, tasks: list[str]):
+        super().__init__(
+            f"Could not find tasks with the given name(s): {tasks}",
+        )
+
+
 class InputParameterNotUniqueError(DioptraError):
     """Input Parameters failed unique validation check."""
 
@@ -660,8 +678,36 @@ class UserPasswordError(DioptraError):
         super().__init__(message)
 
 
+class EntrypointSwapsRenderError(DioptraError):
+    """Entrypoint Swaps Rendering Error."""
+
+    def __init__(self, message: str):
+        super().__init__(message)
+
+
+class EmptyGraphError(DioptraError):
+    """Empty Graph Error."""
+
+    def __init__(self, message: str):
+        super().__init__(message)
+
+
 class JobStoreError(DioptraError):
     """JobStoreError Error."""
+
+    def __init__(self, message: str):
+        super().__init__(message)
+
+
+class SwapChoiceError(DioptraError):
+    """Swap Choice Error."""
+
+    def __init__(self, message: str):
+        super().__init__(message)
+
+
+class UnspecifiedSwapsError(DioptraError):
+    """Unspecified Swaps Error."""
 
     def __init__(self, message: str):
         super().__init__(message)
@@ -680,6 +726,16 @@ class ImportFailedError(DioptraError):
     def __init__(self, message: str, reason: str = ""):
         super().__init__(message)
         self._reason = reason
+
+
+class EntrypointValidationError(DioptraError):
+    """Entrypoint validation failed Error."""
+
+    def __init__(
+        self, message: str, validation_error_dict: dict[str, typing.Any] | None = None
+    ):
+        super().__init__(f"{validation_error_dict}")
+        self._validation_error_dict = validation_error_dict or {}
 
 
 class UserNotInGroupError(DioptraError):
@@ -1065,6 +1121,22 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
             error,
             http.HTTPStatus.BAD_REQUEST,
             {"reason": error._reason} if error._reason else {},
+        )
+
+    @api.errorhandler(EntrypointSwapsRenderError)
+    def handle_entrypoint_swaps_error(error: EntrypointSwapsRenderError):
+        log.debug(error.to_message())
+        return error_result(error, http.HTTPStatus.BAD_REQUEST, {})
+
+    @api.errorhandler(EntrypointValidationError)
+    def handle_entrypoint_validation_error(error: EntrypointValidationError):
+        log.debug(error.to_message())
+        return error_result(
+            error,
+            http.HTTPStatus.BAD_REQUEST,
+            {"reason": error._validation_error_dict}
+            if error._validation_error_dict
+            else {},
         )
 
     @api.errorhandler(DioptraError)

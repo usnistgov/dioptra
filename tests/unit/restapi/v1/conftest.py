@@ -330,14 +330,16 @@ def registered_plugins(
 @pytest.fixture
 @freeze_time("Apr 1st, 2025 8:30am", auto_tick_seconds=1)
 def registered_plugin_with_files(
-    client: FlaskClient, auth_account: dict[str, Any]
+    client: FlaskClient, auth_account: dict[str, Any], registered_plugin_parameter_types: dict[str, Any]
 ) -> dict[str, Any]:
+    
     plugin_response = actions.register_plugin(
         client,
         name="plugin",
         description="The plugin with files.",
         group_id=auth_account["default_group_id"],
     ).get_json()
+
     contents = textwrap.dedent(
         """from dioptra import pyplugs
 
@@ -347,18 +349,32 @@ def registered_plugin_with_files(
         """
     )
 
+    hello_world_task = {
+        "name": "hello_world",
+        "inputParams": [{"name": "name", "parameterType": registered_plugin_parameter_types["string"]["id"]}],
+        "outputParams": [
+            {
+                "name": "hello_world_message",
+                "parameterType": registered_plugin_parameter_types["string"]["id"],
+            }
+        ],
+    }
+
     plugin_file1_response = actions.register_plugin_file(
         client,
         plugin_id=plugin_response["id"],
         filename="plugin_file_one.py",
         description="The first plugin file.",
+        function_tasks=[hello_world_task],
         contents=contents,
     ).get_json()
+
     plugin_file2_response = actions.register_plugin_file(
         client,
         plugin_id=plugin_response["id"],
         filename="plugin_file_two.py",
         description="The second plugin file.",
+        function_tasks=[hello_world_task],
         contents=contents,
     ).get_json()
     plugin_file3_response = actions.register_plugin_file(
@@ -366,8 +382,10 @@ def registered_plugin_with_files(
         plugin_id=plugin_response["id"],
         filename="plugin_file_three.py",
         description="Not Retrieved.",
+        function_tasks=[hello_world_task],
         contents=contents,
     ).get_json()
+
     return {
         "plugin": plugin_response,
         "plugin_file1": plugin_file1_response,
@@ -663,11 +681,17 @@ def registered_entrypoints(
 ) -> dict[str, Any]:
     task_graph = textwrap.dedent(
         """# my entrypoint graph
-        graph:
-          message:
-            my_entrypoint: $name
+        message:
+          hello_world: $entrypoint_param_1
         """
     )
+    task_graph_no_params = textwrap.dedent(
+        """# my entrypoint graph
+        message:
+          hello_world: world
+        """
+    )
+
     parameters = [
         {
             "name": "entrypoint_param_1",
@@ -732,7 +756,7 @@ def registered_entrypoints(
         name="entrypoint_no_params",
         description="No params Entry-Point.",
         group_id=auth_account["groups"][0]["id"],
-        task_graph=task_graph,
+        task_graph=task_graph_no_params,
         parameters=[],
         plugin_ids=plugin_ids,
         queue_ids=queue_ids,
@@ -912,3 +936,396 @@ def mockup_mlflow(monkeypatch: MonkeyPatch) -> mock_mlflow.MockMlflowClient:
         mlflow.artifacts, "download_artifacts", mock_mlflow.download_artifacts
     )
     return mock_mlflow.MockMlflowClient()
+
+swap_plugins = {
+    "plugin1": {"filename": "plugin1.py", "tasks": {"task1": ["arg1"]}},
+    "plugin9": {
+        "filename": "plugin9.py",
+        "tasks": {
+            "task2": ["arg2", "arg3"],
+            "task4": ["arg5"],
+        },
+    },
+    "plugin13": {
+        "filename": "plugin13.py",
+        "tasks": {
+            "task10": ["arg3", "arg4"],
+        },
+    },
+}
+
+swap_entrypoints = {
+    "swap_test.yml": {
+        "name": "swap_test",
+        "params": ["global1", "global3", "global6", "global9", "global12"],
+    },
+    "no_swap_test.yml": {
+        "name": "no_swap_test",
+        "params": ["global1", "global6", "global12"],
+    },
+}
+
+@pytest.fixture
+@freeze_time("Apr 1st, 2025 11:00am", auto_tick_seconds=1)
+def registered_multi_task_plugin(
+    client: FlaskClient,
+    auth_account: dict[str, Any],
+    registered_plugin_parameter_types: dict[str, Any],
+) -> int:
+    """Create a plugin with multiple tasks for testing swaps validation.
+
+    Returns:
+        The plugin ID.
+    """
+    registered_plugin = actions.register_plugin(
+        client,
+        group_id=auth_account["default_group_id"],
+        name="swap_test_plugin",
+        description="A plugin exposing four tasks.",
+    ).get_json()
+
+    filename = "tasks.py"
+    description = "The task plugin file exposing four tasks."
+    contents = textwrap.dedent(
+        """from dioptra import pyplugs
+
+        @pyplugs.register
+        def task_one(name: str) -> str:
+            return f'Task One says hello to {name}!'
+
+        @pyplugs.register
+        def task_two(name: str) -> str:
+            return f'Task Two greets {name}!'
+
+        @pyplugs.register
+        def task_three(name: str) -> str:
+            return f'Task Three welcomes {name}!'
+
+        @pyplugs.register
+        def task_int(name: str) -> int:
+            return len(name)
+        """
+    )
+
+    string_parameter_type = registered_plugin_parameter_types["string"]
+    integer_parameter_type = registered_plugin_parameter_types["integer"]
+
+    tasks = [
+        {
+            "name": "task_one",
+            "inputParams": [
+                {
+                    "name": "name",
+                    "parameterType": string_parameter_type["id"],
+                    "required": True,
+                }
+            ],
+            "outputParams": [
+                {
+                    "name": "greeting",
+                    "parameterType": string_parameter_type["id"],
+                }
+            ],
+        },
+        {
+            "name": "task_two",
+            "inputParams": [
+                {
+                    "name": "name",
+                    "parameterType": string_parameter_type["id"],
+                    "required": True,
+                }
+            ],
+            "outputParams": [
+                {
+                    "name": "greeting",
+                    "parameterType": string_parameter_type["id"],
+                }
+            ],
+        },
+        {
+            "name": "task_three",
+            "inputParams": [
+                {
+                    "name": "name",
+                    "parameterType": string_parameter_type["id"],
+                    "required": True,
+                }
+            ],
+            "outputParams": [
+                {
+                    "name": "greeting",
+                    "parameterType": string_parameter_type["id"],
+                }
+            ],
+        },
+        {
+            "name": "task_int",
+            "inputParams": [
+                {
+                    "name": "name",
+                    "parameterType": string_parameter_type["id"],
+                    "required": True,
+                }
+            ],
+            "outputParams": [
+                {
+                    "name": "value",
+                    "parameterType": integer_parameter_type["id"],
+                }
+            ],
+        },
+    ]
+
+    actions.register_plugin_file(
+        client,
+        plugin_id=registered_plugin["id"],
+        filename=filename,
+        description=description,
+        contents=contents,
+        function_tasks=tasks,
+        artifact_tasks=None,
+    )
+
+    return registered_plugin["id"]
+
+@pytest.fixture
+@freeze_time("Apr 1st, 2025 11:00am", auto_tick_seconds=1)
+def registered_swap_plugins(
+    client: FlaskClient,
+    auth_account: dict[str, Any],
+    registered_plugin_parameter_types: dict[str, Any]
+) -> dict[str, Any]:
+    output = {}
+
+    string_type_response = registered_plugin_parameter_types["string"]
+
+    for plugin_name in swap_plugins:
+        plugin_response = actions.register_plugin(
+            client,
+            name=plugin_name,
+            description=f"{plugin_name} description",
+            group_id=auth_account["groups"][0]["id"],
+        ).get_json()
+
+        plugin_tasks = swap_plugins[plugin_name]["tasks"]
+
+        tasks = [
+            {
+                "name": t,
+                "inputParams": [
+                    {"name": arg, "parameterType": string_type_response["id"]}
+                    for arg in plugin_tasks[t]
+                ],
+                "outputParams": [
+                    {"name": "out", "parameterType": string_type_response["id"]}
+                ],
+            }
+            for t in plugin_tasks
+        ]
+
+        plugin_filename = swap_plugins[plugin_name]["filename"]
+
+        plugin_file_contents = ""
+
+        plugin_file_response = actions.register_plugin_file(
+            client,
+            plugin_id=plugin_response["id"],
+            description="The plugin file with tasks.",
+            filename=plugin_filename,
+            contents=plugin_file_contents,
+            function_tasks=tasks,
+        ).get_json()
+
+        output[plugin_name] = plugin_response
+    return output
+
+
+@pytest.fixture
+@freeze_time("Apr 1st, 2025 11:00am", auto_tick_seconds=1)
+def registered_swap_entrypoints(
+    client: FlaskClient,
+    auth_account: dict[str, Any],
+    registered_swap_plugins: dict[str, Any],
+    registered_queues: dict[str, Any],
+    registered_plugin_parameter_types: dict[str, Any],
+) -> dict[str, Any]:
+    output = {}
+    queue_ids = [queue["id"] for queue in list(registered_queues.values())]
+    for fname in swap_entrypoints:
+        entrypoint = swap_entrypoints[fname]
+
+        with (Path(__file__).absolute().parent / "entrypoint_swaps" / fname).open("r") as f:
+            task_graph = f.read()
+        
+        parameters = [
+            {"name": p, "defaultValue": "default", "parameterType": "string"}
+            for p in entrypoint["params"]
+        ]
+        
+        plugin_ids = [plugin["id"] for plugin in list(registered_swap_plugins.values())]
+
+        response = actions.register_entrypoint(
+            client,
+            name=entrypoint["name"],
+            description="A swap entrypoint.",
+            group_id=auth_account["groups"][0]["id"],
+            task_graph=task_graph,
+            parameters=parameters,
+            plugin_ids=plugin_ids,
+            queue_ids=queue_ids,
+        ).get_json()
+
+        output[entrypoint["name"]] = response
+    return output
+
+@pytest.fixture
+@freeze_time("Apr 1st, 2025 12:00pm", auto_tick_seconds=1)
+def registered_swap_experiments(
+    client: FlaskClient,
+    auth_account: dict[str, Any],
+    registered_swap_entrypoints: dict[str, Any],
+) -> dict[str, Any]:
+    entrypoint_ids = [
+        entrypoint["id"] for entrypoint in registered_swap_entrypoints.values()
+    ]
+    experiment1_response = actions.register_experiment(
+        client,
+        name="swap_experiment1",
+        group_id=auth_account["default_group_id"],
+        description="test description",
+        entrypoint_ids=entrypoint_ids,
+    ).get_json()
+    return {
+        "experiment1": experiment1_response,
+    }
+
+@pytest.fixture
+@freeze_time("Apr 1st, 2025 9:00am", auto_tick_seconds=1)
+def registered_swaps_validation_plugin(
+    client: FlaskClient,
+    auth_account: dict[str, Any],
+    registered_plugin_parameter_types: dict[str, Any],
+) -> dict[str, Any]:
+    """Fixture for creating a plugin with tasks for swaps validation testing.
+
+    Returns a dictionary containing:
+    - plugin: The registered plugin
+    - plugin_snapshot_id: The latest snapshot ID of the plugin
+    - tasks: The task definitions
+    """
+    group_id = auth_account["default_group_id"]
+    string_parameter_type = registered_plugin_parameter_types["string"]
+
+    registered_plugin = actions.register_plugin(
+        client,
+        name="swaps_validation_plugin",
+        description="Plugin for testing swaps validation.",
+        group_id=group_id,
+    ).get_json()
+
+    filename = "tasks.py"
+    description = "The task plugin file for swaps testing."
+    contents = textwrap.dedent(
+        """"from dioptra import pyplugs
+
+        @pyplugs.register
+        def task1(input_param: str) -> str:
+            return f"task1 result: {input_param}"
+
+        @pyplugs.register
+        def task2(input_param: str) -> str:
+            return f"task2 result: {input_param}"
+
+        @pyplugs.register
+        def task3(input_param: str) -> str:
+            return f"task3 result: {input_param}"
+
+        @pyplugs.register
+        def task4(input_param: str) -> str:
+            return f"task4 result: {input_param}"
+        """
+    )
+    tasks = [
+        {
+            "name": "task1",
+            "inputParams": [
+                {
+                    "name": "input_param",
+                    "parameterType": string_parameter_type["id"],
+                    "required": True,
+                },
+            ],
+            "outputParams": [
+                {
+                    "name": "output",
+                    "parameterType": string_parameter_type["id"],
+                },
+            ],
+        },
+        {
+            "name": "task2",
+            "inputParams": [
+                {
+                    "name": "input_param",
+                    "parameterType": string_parameter_type["id"],
+                    "required": True,
+                },
+            ],
+            "outputParams": [
+                {
+                    "name": "output",
+                    "parameterType": string_parameter_type["id"],
+                },
+            ],
+        },
+        {
+            "name": "task3",
+            "inputParams": [
+                {
+                    "name": "input_param",
+                    "parameterType": string_parameter_type["id"],
+                    "required": True,
+                },
+            ],
+            "outputParams": [
+                {
+                    "name": "output",
+                    "parameterType": string_parameter_type["id"],
+                },
+            ],
+        },
+        {
+            "name": "task4",
+            "inputParams": [
+                {
+                    "name": "input_param",
+                    "parameterType": string_parameter_type["id"],
+                    "required": True,
+                },
+            ],
+            "outputParams": [
+                {
+                    "name": "output",
+                    "parameterType": string_parameter_type["id"],
+                },
+            ],
+        },
+    ]
+    actions.register_plugin_file(
+        client,
+        plugin_id=registered_plugin["id"],
+        filename=filename,
+        description=description,
+        contents=contents,
+        function_tasks=tasks,
+        artifact_tasks=None,
+    )
+    
+
+    return {
+        "plugin": registered_plugin,
+        "plugin_id": registered_plugin['id'],
+        "tasks": tasks,
+        "string_parameter_type": string_parameter_type,
+    }
