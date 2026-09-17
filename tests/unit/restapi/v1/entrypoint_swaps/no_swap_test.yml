@@ -3,7 +3,8 @@ step1:
     arg1: $global1
 
 step2:
-  task10:
+  task: task10
+  kwargs:
     arg3: $step3.out
     arg4: $step4
 
@@ -17,4 +18,3 @@ step3:
   task2:
     arg2: $global12
     arg3: $step1.out
-
