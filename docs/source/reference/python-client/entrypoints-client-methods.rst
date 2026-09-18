@@ -130,14 +130,52 @@ For example:
         validate_only=True,
     )
 
-Dry runs perform lightweight schema, task-reference, and swap checks without
-saving the entrypoint. They do not perform the full rendered-graph checks used
-when saving, so a successful dry run does not guarantee that a subsequent save
-will pass full validation. These lightweight checks are available through
-``validateOnly``; there is no separate lint endpoint in the current API.
+Dry runs perform the same permission, association, name, and full graph validation
+checks as saving, then roll back without committing changes. Database flushes may
+occur within the transaction, but resources, snapshots, and associations are not
+saved. Errors have the same status and details as the corresponding save. Successful requests
+return the proposed entrypoint representation, omitting the new snapshot ID,
+snapshot timestamp, and modification timestamp. The ``latestSnapshot`` and
+``deleted`` fields are retained. Creation dry runs additionally omit the generated resource
+ID and creation timestamp. Update dry runs retain the existing resource ID and
+original creation timestamp.
 
 Omitting ``validateOnly`` or setting it to ``false`` (``validate_only=False`` in
 the Python client) performs full validation and saves the entrypoint.
+
+Lightweight lint reports
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+For inexpensive editor feedback, use ``POST /api/v1/entrypoints:lint`` or
+``POST /api/v1/entrypoints/{id}:lint`` with the corresponding create or update
+request body. The colon is a literal part of the URL. Item lint uses the saved
+plugin associations, just like an update. These endpoints perform schema,
+task-reference, and swap checks without full rendered-graph validation. Changes
+are rolled back on both success and failure.
+
+.. code-block:: python
+
+    report = client.entrypoints.lint({
+        "group": GROUP_ID,
+        "name": "hello_world",
+        "taskGraph": TASK_GRAPH_YAML_STR,
+        "plugins": PLUGIN_IDS,
+    }).json()
+
+    report = client.entrypoints.lint_by_id(ENTRYPOINT_ID, {
+        "name": "hello_world",
+        "taskGraph": TASK_GRAPH_YAML_STR,
+    }).json()
+
+A completed check returns HTTP 200 with a report such as:
+
+.. code-block:: json
+
+    {"valid": false, "issues": [{"path": "graph", "message": "Unknown task"}]}
+
+Malformed requests, authorization failures, missing resources, and operational
+failures return normal API errors. A successful lint report does not replace a
+full dry run or save-time validation.
 
 
 .. _reference-entrypoints-client-methods-plugins-methods:

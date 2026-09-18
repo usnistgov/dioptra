@@ -868,9 +868,9 @@ class EntrypointsCollectionClient(CollectionClient[T]):
                 Optional, defaults to None.
             artifact_plugins: A list of artifact plugin ids to associate with the new
                 entrypoint. Optional, defaults to None.
-            validate_only: If True, perform a dry run with lighter validation without
-                saving the entrypoint. If False (the default), perform full validation
-                and save the entrypoint.
+            validate_only: If True, run all save-time checks, then roll back without
+                committing changes. The response omits generated IDs/timestamps.
+                If False (the default), validate and save the entrypoint.
 
         Example:
             Create an entrypoint called "hello_world" with artifact input parameters and artifact output graph.
@@ -971,9 +971,9 @@ class EntrypointsCollectionClient(CollectionClient[T]):
                 To remove all artifact parameters, pass None.
             queues: The new list of queue ids to associate with the entrypoint. To
                 remove all associated queues, pass None.
-            validate_only: If True, perform a dry run with lighter validation without
-                saving the entrypoint. If False (the default), perform full validation
-                and save the entrypoint.
+            validate_only: If True, run all save-time checks, then roll back without
+                committing changes. The response omits generated IDs/timestamps.
+                If False (the default), validate and save the entrypoint.
 
         Returns:
             The response from the Dioptra API.
@@ -1000,6 +1000,17 @@ class EntrypointsCollectionClient(CollectionClient[T]):
         return self._session.put(
             self.url, str(entrypoint_id), params=params, json_=json_
         )
+
+    def lint(self, content: dict[str, Any]) -> T:
+        """Lint a proposed entrypoint using a create-request body with API field names.
+
+        Returns a report with ``valid`` and ``issues`` without full swap rendering.
+        """
+        return self._session.post(f"{self.url.rstrip('/')}\u003alint", json_=content)
+
+    def lint_by_id(self, entrypoint_id: str | int, content: dict[str, Any]) -> T:
+        """Lint an update-request body against the saved plugin associations."""
+        return self._session.post(self.url, f"{entrypoint_id}:lint", json_=content)
 
     def delete_by_id(self, entrypoint_id: str | int) -> T:
         """Delete the entrypoint matching the provided id.

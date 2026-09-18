@@ -256,7 +256,7 @@ class ValidateOnlySchema(Schema):
         data_key="validateOnly",
         load_default=False,
         metadata={
-            "description": "Flag indicating whether to perform a full validation and save the entrypoint, or perform a lighter validation and not save the entrypoint."
+            "description": "If true, perform the same checks as saving, then roll back without committing changes. Return the entrypoint representation, omitting generated IDs and timestamps."
         },
     )
 
@@ -385,6 +385,16 @@ class DelimitedValues(fields.Field):
             raise ValidationError(
                 f"{attr} is not a delimited list {value}. List format should be value1{self.delimiter}value2{self.delimiter}value3."
             ) from e
+
+
+class EntrypointLintIssueSchema(Schema):
+    path = fields.String(required=True)
+    message = fields.String(required=True)
+
+
+class EntrypointLintResponseSchema(Schema):
+    valid = fields.Boolean(required=True)
+    issues = fields.List(fields.Nested(EntrypointLintIssueSchema), required=True)
 
 
 class SwapChoiceRequestSchema(Schema):

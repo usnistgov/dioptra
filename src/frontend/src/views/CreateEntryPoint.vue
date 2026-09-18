@@ -1491,6 +1491,10 @@ async function validateEntrypoint() {
     const responseValidationIssues = [
       ...(Array.isArray(reason?.schema_issues) ? reason.schema_issues : []),
       ...(Array.isArray(reason?.swap_issues) ? reason.swap_issues : []),
+      ...(Array.isArray(reason?.rendered_validation_errors) ? reason.rendered_validation_errors : []),
+      ...(Array.isArray(reason?.missing_global_params)
+        ? reason.missing_global_params.map((name) => `Missing global parameter: ${name}`)
+        : []),
     ];
     if (responseValidationIssues.length > 0) {
       validationIssues.value = responseValidationIssues;
