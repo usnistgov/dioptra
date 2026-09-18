@@ -27,13 +27,232 @@ from typing import Any
 
 import pytest
 from flask.testing import FlaskClient
+from sqlalchemy import func, select
 
 from dioptra.client.base import DioptraResponseProtocol, FieldNameCollisionError
 from dioptra.client.client import DioptraClient
+from dioptra.restapi.db import models
 
 from ..lib import helpers, routines
 from ..lib.asserts import assert_retrieving_deleted_resource_snapshots_works
 from ..test_utils import assert_retrieving_resource_works, assert_searchable_field_works
+
+# -- Dry runs and lint -----------------------------------------------------------------
+
+
+def _entrypoint_row_counts(db_session):
+    return {
+        model.__tablename__: db_session.scalar(select(func.count()).select_from(model))
+        for model in (
+            models.Resource,
+            models.ResourceSnapshot,
+            models.EntryPoint,
+            models.EntryPointPlugin,
+            models.EntryPointArtifactPlugin,
+            models.EntryPointParameter,
+            models.EntryPointArtifactParameter,
+        )
+    }
+
+
+@pytest.fixture
+def proposed_entrypoint(auth_account, registered_swaps_validation_plugin):
+    return {
+        "group": auth_account["default_group_id"],
+        "name": "dry-run-entrypoint",
+        "taskGraph": "selected:\n  task1:\n    input_param: valid\n",
+        "plugins": [registered_swaps_validation_plugin["plugin_id"]],
+    }
+
+
+def _prepare_entrypoint_request(client, payload, modifying):
+    if not modifying:
+        return client.post, "/api/v1/entrypoints/", payload
+    response = client.post("/api/v1/entrypoints/", json=payload)
+    assert response.status_code == HTTPStatus.OK, response.json
+    payload = {k: v for k, v in payload.items() if k not in ("group", "plugins")}
+    return client.put, f"/api/v1/entrypoints/{response.json['id']}", payload
+
+
+@pytest.mark.parametrize("modifying", [False, True])
+def test_dry_run_success_does_not_persist(
+    client, proposed_entrypoint, modifying, db_session
+):
+    """Return the live representation while rolling back all proposed changes."""
+    request, url, payload = _prepare_entrypoint_request(
+        client, proposed_entrypoint, modifying
+    )
+    before = client.get(url).json if modifying else None
+    queue = client.post(
+        "/api/v1/queues/",
+        json={"name": "preview-queue", "group": proposed_entrypoint["group"]},
+    )
+    assert queue.status_code == HTTPStatus.OK, queue.json
+    payload = {**payload, "queues": [queue.json["id"]], "name": "preview-name"}
+    counts_before = _entrypoint_row_counts(db_session)
+    response = request(url, json=payload, query_string={"validateOnly": "true"})
+    # A later commit (which also flushes) must not persist dry-run changes.
+    db_session.commit()
+
+    assert response.status_code == HTTPStatus.OK, response.json
+    assert _entrypoint_row_counts(db_session) == counts_before
+    if modifying:
+        assert client.get(url).json == before
+    else:
+        assert client.get(url).json["data"] == []
+    saved = request(url, json=payload)
+    assert saved.status_code == response.status_code, saved.json
+    assert response.json["deleted"] is False
+    assert response.json["latestSnapshot"] is True
+    omitted = {"snapshot", "snapshotCreatedOn", "lastModifiedOn"}
+    if not modifying:
+        omitted |= {"id", "createdOn"}
+    assert response.json == {k: v for k, v in saved.json.items() if k not in omitted}
+
+
+@pytest.mark.parametrize("modifying", [False, True])
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        pytest.param(
+            {"taskGraph": "selected:\n  task1:\n    input_param: $missing_global\n"},
+            id="missing-global",
+        ),
+        pytest.param({"queues": [999999]}, id="queue"),
+        pytest.param({"artifactGraph": "[invalid yaml"}, id="artifact-yaml"),
+        pytest.param({"name": "taken"}, id="duplicate-name"),
+    ],
+)
+def test_dry_run_error_matches_save(
+    client, proposed_entrypoint, modifying, overrides, db_session
+):
+    """Dry runs reject graph, association, and name errors exactly as saves do."""
+    request, url, payload = _prepare_entrypoint_request(
+        client, proposed_entrypoint, modifying
+    )
+    if "name" in overrides:
+        other = {**proposed_entrypoint, "name": "taken"}
+        assert (
+            client.post("/api/v1/entrypoints/", json=other).status_code == HTTPStatus.OK
+        )
+    payload = {**payload, **overrides}
+
+    counts_before = _entrypoint_row_counts(db_session)
+    preview = request(url, json=payload, query_string={"validateOnly": "true"})
+    db_session.commit()
+    assert _entrypoint_row_counts(db_session) == counts_before
+    saved = request(url, json=payload)
+    assert preview.status_code == saved.status_code
+    assert preview.status_code >= 400
+    assert preview.json["error"] == saved.json["error"]
+    assert preview.json["message"] == saved.json["message"]
+    assert preview.json.get("detail") == saved.json.get("detail")
+
+
+@pytest.mark.parametrize("modifying", [False, True])
+@pytest.mark.parametrize(
+    "graph, expected_status, expected_valid",
+    [
+        pytest.param(
+            "selected:\n  task1:\n    input_param: $missing_global\n",
+            HTTPStatus.OK,
+            True,
+            id="lightweight-success",
+        ),
+        pytest.param(
+            "selected:\n  unregistered_task: {}\n",
+            HTTPStatus.OK,
+            False,
+            id="finding",
+        ),
+        pytest.param(None, HTTPStatus.BAD_REQUEST, None, id="malformed-request"),
+    ],
+)
+def test_lint_is_lightweight(
+    client,
+    dioptra_client,
+    proposed_entrypoint,
+    modifying,
+    monkeypatch,
+    db_session,
+    graph,
+    expected_status,
+    expected_valid,
+):
+    """Colon routes report lint issues while leaving full checks to dry runs."""
+    _, url, payload = _prepare_entrypoint_request(client, proposed_entrypoint, modifying)
+    from dioptra.restapi.v1.entrypoints.service import SwapsValidationService
+
+    def unexpected_render(*args, **kwargs):
+        pytest.fail("Lint must not render swap combinations")
+
+    monkeypatch.setattr(
+        SwapsValidationService, "validate_single_swap_combinations", unexpected_render
+    )
+
+    counts_before = _entrypoint_row_counts(db_session)
+    before = client.get(url).json if modifying else None
+
+    payload = {**payload, "taskGraph": graph} if graph is not None else {}
+    if modifying:
+        response = dioptra_client.entrypoints.lint_by_id(
+            int(url.rsplit("/", 1)[1]), payload
+        )
+    else:
+        response = dioptra_client.entrypoints.lint(payload)
+
+    db_session.commit()
+    assert _entrypoint_row_counts(db_session) == counts_before
+    if modifying:
+        assert client.get(url).json == before
+
+    assert response.status_code == expected_status, response.text
+    if expected_status == HTTPStatus.OK:
+        report = response.json()
+        assert report["valid"] is expected_valid
+        assert bool(report["issues"]) == (not expected_valid)
+        assert all(issue["path"] and issue["message"] for issue in report["issues"])
+
+
+@pytest.mark.parametrize("modifying", [False, True])
+def test_dry_run_and_lint_require_group_membership(
+    client, proposed_entrypoint, auth_account, modifying, db_session
+):
+    """Authorization failures remain errors, including for invalid lint content."""
+    user = db_session.get(models.User, auth_account["id"])
+    group = models.Group(name="private", creator=user)
+    member = models.GroupMember(
+        user=user, read=True, write=True, share_read=True, share_write=True
+    )
+    group.members.append(member)
+    db_session.add(group)
+    db_session.commit()
+    payload = {**proposed_entrypoint, "group": group.group_id}
+    request, url, payload = _prepare_entrypoint_request(client, payload, modifying)
+    db_session.delete(member)
+    db_session.commit()
+    preview = request(url, json=payload, query_string={"validateOnly": "true"})
+    saved = request(url, json=payload)
+    assert preview.status_code == saved.status_code == HTTPStatus.BAD_REQUEST
+    assert preview.json["error"] == saved.json["error"] == "UserNotInGroupError"
+    payload["taskGraph"] = "selected:\n  unknown_task: {}\n"
+    lint = client.post(f"{url.rstrip('/')}:lint", json=payload)
+    assert lint.status_code == saved.status_code, lint.json
+    assert lint.json["error"] == saved.json["error"]
+
+
+def test_lint_missing_resource_and_documented_routes(client, auth_account):
+    """Missing resources remain errors and both colon routes appear in OpenAPI."""
+    response = client.post(
+        "/api/v1/entrypoints/999999:lint",
+        json={"name": "missing", "taskGraph": "{}"},
+    )
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    schema = client.get("/swagger.json")
+    assert schema.status_code == HTTPStatus.OK
+    assert "/api/v1/entrypoints:lint" in schema.json["paths"]
+    assert "/api/v1/entrypoints/{id}:lint" in schema.json["paths"]
+
 
 # -- Assertions ------------------------------------------------------------------------
 
@@ -2500,7 +2719,7 @@ def _create_valid_entrypoint(
         task_graph=task_graph,
         plugins=plugin_ids,
         parameters=parameters,
-        validate_only=True,
+        validate_only=False,
     )
 
     return response

@@ -60,6 +60,7 @@ from .schema import (
     EntrypointConfigResponseSchema,
     EntrypointDraftSchema,
     EntrypointGetQueryParameters,
+    EntrypointLintResponseSchema,
     EntrypointMutableFieldsSchema,
     EntrypointPageSchema,
     EntrypointPluginMutableFieldsSchema,
@@ -157,24 +158,37 @@ class EntrypointEndpoint(Resource):
         parsed_obj = request.parsed_obj  # noqa: F841
 
         parsed_query_params = request.parsed_query_params  # noqa: F841
-        commit = not bool(parsed_query_params.get("validate_only", False))
+        validate_only = bool(parsed_query_params.get("validate_only", False))
 
-        entrypoint = self._entrypoint_service.create(
-            name=parsed_obj["name"],
-            description=parsed_obj["description"],
-            task_graph=parsed_obj["task_graph"],
-            artifact_graph=parsed_obj.get("artifact_graph", ""),
-            parameters=parsed_obj["parameters"],
-            artifact_parameters=parsed_obj.get("artifact_parameters", []),
-            plugin_ids=parsed_obj["plugin_ids"],
-            artifact_plugin_ids=parsed_obj.get("artifact_plugin_ids", []),
-            queue_ids=parsed_obj["queue_ids"],
-            group_id=int(parsed_obj["group_id"]),
-            commit=commit,
-            on_save=commit,
-            log=log,
-        )
-        return utils.build_entrypoint(entrypoint)
+        arguments = {
+            "name": parsed_obj["name"],
+            "description": parsed_obj["description"],
+            "task_graph": parsed_obj["task_graph"],
+            "artifact_graph": parsed_obj.get("artifact_graph", ""),
+            "parameters": parsed_obj["parameters"],
+            "artifact_parameters": parsed_obj.get("artifact_parameters", []),
+            "plugin_ids": parsed_obj["plugin_ids"],
+            "artifact_plugin_ids": parsed_obj.get("artifact_plugin_ids", []),
+            "queue_ids": parsed_obj["queue_ids"],
+            "group_id": int(parsed_obj["group_id"]),
+            "log": log,
+        }
+
+        if validate_only:
+            with self._entrypoint_service.validate_create(**arguments) as entrypoint:
+                response = utils.build_entrypoint(entrypoint)
+                for field in (
+                    "id",
+                    "created_on",
+                    "snapshot_id",
+                    "snapshot_created_on",
+                    "last_modified_on",
+                ):
+                    response.pop(field, None)
+                return response
+        else:
+            entrypoint = self._entrypoint_service.create(**arguments)
+            return utils.build_entrypoint(entrypoint)
 
 
 @api.route("/<int:id>")
@@ -224,21 +238,34 @@ class EntrypointIdEndpoint(Resource):
         )
         parsed_obj = request.parsed_obj  # type: ignore # noqa: F841
         parsed_query_params = request.parsed_query_params  # type: ignore  # noqa: F841
-        commit = not bool(parsed_query_params.get("validate_only", False))
-        entrypoint = self._entrypoint_id_service.modify(
-            id,
-            name=parsed_obj["name"],
-            description=parsed_obj["description"],
-            task_graph=parsed_obj["task_graph"],
-            artifact_graph=parsed_obj.get("artifact_graph", ""),
-            parameters=parsed_obj["parameters"],
-            artifact_parameters=parsed_obj.get("artifact_parameters", []),
-            queue_ids=parsed_obj["queue_ids"],
-            commit=commit,
-            on_save=commit,
-            log=log,
-        )
-        return utils.build_entrypoint(entrypoint)
+        validate_only = bool(parsed_query_params.get("validate_only", False))
+
+        arguments = {
+            "name": parsed_obj["name"],
+            "description": parsed_obj["description"],
+            "task_graph": parsed_obj["task_graph"],
+            "artifact_graph": parsed_obj.get("artifact_graph", ""),
+            "parameters": parsed_obj["parameters"],
+            "artifact_parameters": parsed_obj.get("artifact_parameters", []),
+            "queue_ids": parsed_obj["queue_ids"],
+            "log": log,
+        }
+
+        if validate_only:
+            with self._entrypoint_id_service.validate_modify(
+                id, **arguments
+            ) as entrypoint:
+                response = utils.build_entrypoint(entrypoint)
+                for field in (
+                    "snapshot_id",
+                    "snapshot_created_on",
+                    "last_modified_on",
+                ):
+                    response.pop(field, None)
+                return response
+        else:
+            entrypoint = self._entrypoint_id_service.modify(id, **arguments)
+            return utils.build_entrypoint(entrypoint)
 
     @login_required
     @responds(schema=IdStatusResponseSchema, api=api)
@@ -251,6 +278,39 @@ class EntrypointIdEndpoint(Resource):
             id=id,
         )
         return self._entrypoint_id_service.delete(entrypoint_id=id, log=log)
+
+
+@api.route(":lint")
+class EntrypointLintEndpoint(Resource):
+    @inject
+    def __init__(self, entrypoint_service: EntrypointService, *args, **kwargs):
+        self._service = entrypoint_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    @accepts(schema=EntrypointSchema, api=api)
+    @responds(schema=EntrypointLintResponseSchema, api=api)
+    def post(self):
+        """Lint a proposed entrypoint without full rendering or persistence."""
+        return self._service.lint(**request.parsed_obj)
+
+
+@api.route("/<int:id>:lint")
+class EntrypointIdLintEndpoint(Resource):
+    @inject
+    def __init__(self, entrypoint_id_service: EntrypointIdService, *args, **kwargs):
+        self._service = entrypoint_id_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    @accepts(schema=EntrypointMutableFieldsSchema, api=api)
+    @responds(schema=EntrypointLintResponseSchema, api=api)
+    def post(self, id: int):
+        """Lint proposed content using the entrypoint's saved plugin selections."""
+        return self._service.lint(
+            id,
+            **request.parsed_obj,  # type: ignore[attr-defined]
+        )
 
 
 @api.route("/<int:id>/plugins")
