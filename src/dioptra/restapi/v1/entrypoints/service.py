@@ -1438,8 +1438,8 @@ class EntrypointConfigService(UnitOfWorkService):
                 config["graph"] = render_swaps_graph(
                     config["graph"], swap_choices, raise_unspecified=not partial
                 )
-            except Exception as e:
-                raise EntrypointSwapsRenderError(str(e)) from e
+            except ValueError as error:
+                raise EntrypointSwapsRenderError(str(error)) from error
 
         return config
 
@@ -1476,8 +1476,8 @@ class DynamicGlobalParametersService(UnitOfWorkService):
 
         try:
             rendered = render_swaps_graph(graph, swaps)
-        except Exception as e:
-            raise EntrypointSwapsRenderError(str(e)) from e
+        except ValueError as error:
+            raise EntrypointSwapsRenderError(str(error)) from error
 
         needed_vars, used_tasks = _get_required_globals(rendered)
 
