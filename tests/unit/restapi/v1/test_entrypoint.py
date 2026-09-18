@@ -3199,6 +3199,114 @@ def test_entrypoint_swaps_config(
             response = client.get(url, query_string={malformed: "taskalias1:v2"})
             assert response.status_code == HTTPStatus.BAD_REQUEST
 
+@pytest.mark.parametrize("sections", [None, ["graph"]])
+def test_entrypoint_config_rejects_unresolved_rendered_task(
+    client,
+    dioptra_client,
+    auth_account,
+    registered_plugin_parameter_types,
+    db_session,
+    sections,
+):
+    group_id = auth_account["default_group_id"]
+    string_id = registered_plugin_parameter_types["string"]["id"]
+    plugin_ids = []
+    for suffix in ("a", "b"):
+        response = client.post(
+            "/api/v1/plugins/",
+            json={"name": f"plugin_{suffix}", "group": group_id},
+        )
+        assert response.status_code == HTTPStatus.OK, response.json
+        plugin_ids.append(response.json["id"])
+        response = client.post(
+            f"/api/v1/plugins/{plugin_ids[-1]}/files",
+            json={
+                "filename": "tasks.py",
+                "contents": "# task plugin",
+                "tasks": {
+                    "functions": [
+                        {
+                            "name": f"task_from_plugin_{suffix}",
+                            "inputParams": [
+                                {"name": "input_param", "parameterType": string_id}
+                            ],
+                            "outputParams": [
+                                {"name": "value", "parameterType": string_id}
+                            ],
+                        }
+                    ]
+                },
+            },
+        )
+        assert response.status_code == HTTPStatus.OK, response.json
+
+    response = client.post(
+        "/api/v1/entrypoints/",
+        json={
+            "name": "unresolved-task-config",
+            "group": group_id,
+            "plugins": plugin_ids,
+            "parameters": [
+                {
+                    "name": "input_param",
+                    "parameterType": "string",
+                    "defaultValue": "value",
+                }
+            ],
+            "taskGraph": textwrap.dedent("""\
+                choose:
+                  ?implementation:
+                    use_plugin_a:
+                      task_from_plugin_a:
+                        input_param: $input_param
+                    use_plugin_b:
+                      task_from_plugin_b:
+                        input_param: $input_param
+            """),
+        },
+    )
+    assert response.status_code == HTTPStatus.OK, response.json
+    saved = response.json
+    entrypoint = db_session.get(models.EntryPoint, saved["snapshot"])
+    # Reproduce the removed association directly: DELETE now rejects this change.
+    # Plugin A itself and the entrypoint's saved graph remain intact.
+    removed = next(
+        p
+        for p in entrypoint.entry_point_plugins
+        if p.plugin.resource_id == plugin_ids[0]
+    )
+    db_session.delete(removed)
+    db_session.commit()
+
+    response = dioptra_client.entrypoints.snapshots.get_config(
+        saved["id"],
+        saved["snapshot"],
+        swap_parameters={"implementation": "use_plugin_a"},
+        sections=sections,
+    )
+    assert response.status_code == HTTPStatus.BAD_REQUEST, response.text
+    errors = response.json()["detail"]["reason"]["rendered_validation_errors"]
+    assert any(
+        "unrecognized task plugin: task_from_plugin_a" in error for error in errors
+    )
+
+    # An unselected invalid choice does not invalidate the selected configuration.
+    response = dioptra_client.entrypoints.snapshots.get_config(
+        saved["id"],
+        saved["snapshot"],
+        swap_parameters={"implementation": "use_plugin_b"},
+        sections=sections,
+    )
+    assert response.status_code == HTTPStatus.OK, response.text
+    assert response.json()["graph"] == {
+        "choose": {"task_from_plugin_b": {"input_param": "$input_param"}}
+    }
+    if sections:
+        assert set(response.json()) == set(sections)
+    else:
+        assert set(response.json()["tasks"]) == {"task_from_plugin_b"}
+
+
 def test_entrypoint_swaps_config_partial(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
@@ -3244,15 +3352,17 @@ def test_entrypoint_swaps_config_filtering(
     # we didn't specify this swap and are doing a partial render so it should still be there.
     assert '?step3_choice' in response_json['graph']['step3'] 
 
+@pytest.mark.parametrize("partial", [False, True])
 def test_entrypoint_swaps_config_no_graph(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_swap_entrypoints: dict[str, Any],
+    partial: bool,
 ):
     entrypoint = registered_swap_entrypoints["swap_test"]
 
     response = dioptra_client.entrypoints.snapshots.get_config(
-        entrypoint["id"], entrypoint["snapshot"], swap_parameters={"step2_choice": "taskalias1"}, partial=True, sections=["types"]
+        entrypoint["id"], entrypoint["snapshot"], partial=partial, sections=["types"]
     )
 
     assert response.status_code == HTTPStatus.OK

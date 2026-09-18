@@ -1508,11 +1508,12 @@ class EntrypointConfigService(UnitOfWorkService):
             descending=False,
         )
 
+        validate_rendered = not partial and (not sections or "graph" in sections)
         config = build_task_engine_dict(
             entry_point=entry_point,
             plugin_plugin_files=plugin_files,
             plugin_parameter_types=types,
-            sections=sections,
+            sections=None if validate_rendered else sections,
         )
 
         if "graph" in config:
@@ -1522,6 +1523,23 @@ class EntrypointConfigService(UnitOfWorkService):
                 )
             except Exception as e:
                 raise EntrypointSwapsRenderError(str(e)) from e
+
+        if validate_rendered:
+            # Validate against all task/type definitions before projecting sections.
+            errors = [
+                str(issue)
+                for issue in validate_task_engine_dict(config)
+                if issue.severity is IssueSeverity.ERROR
+            ]
+            if errors:
+                raise EntrypointValidationError(
+                    message="Rendered entrypoint configuration is invalid",
+                    validation_error_dict={"rendered_validation_errors": errors},
+                )
+            if sections:
+                config = {
+                    name: value for name, value in config.items() if name in sections
+                }
 
         return config
 
