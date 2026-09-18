@@ -1525,8 +1525,8 @@ class EntrypointConfigService(UnitOfWorkService):
                 config = render_swaps_config(
                     config, swap_choices, raise_unspecified=not partial
                 )
-            except Exception as e:
-                raise EntrypointSwapsRenderError(str(e)) from e
+            except ValueError as error:
+                raise EntrypointSwapsRenderError(str(error)) from error
 
         if validate_rendered:
             # Validate against all task/type definitions before projecting sections.
@@ -1581,8 +1581,8 @@ class DynamicGlobalParametersService(UnitOfWorkService):
 
         try:
             rendered = render_swaps_graph(graph, swaps)
-        except Exception as e:
-            raise EntrypointSwapsRenderError(str(e)) from e
+        except ValueError as error:
+            raise EntrypointSwapsRenderError(str(error)) from error
 
         needed_vars, used_tasks = _get_required_globals(rendered)
 
