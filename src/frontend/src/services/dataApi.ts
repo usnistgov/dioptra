@@ -331,14 +331,14 @@ export async function getSwaps(entrypointId: number, snapshotId: number) {
   return await axios.get(`/api/entrypoints/${entrypointId}/snapshots/${snapshotId}/swaps`);
 }
 
-export async function getGraph(entrypointId: number, snapshotId: number, swaps: Record<string, string>) {
-  const swapsQueryParam = Object.entries(swaps)
-    .map(([swapName, taskAlias]) => `${swapName}:${taskAlias}`)
-    .join(",");
+function swapQueryParams(swaps: Record<string, string>) {
+  return Object.fromEntries(Object.entries(swaps).map(([name, alias]) => [`swaps[${name}]`, alias]));
+}
 
+export async function getGraph(entrypointId: number, snapshotId: number, swaps: Record<string, string>) {
   return await axios.get(`/api/entrypoints/${entrypointId}/snapshots/${snapshotId}/config`, {
     params: {
-      swaps: swapsQueryParam,
+      ...swapQueryParams(swaps),
       sections: "graph",
       partial: true,
     },
@@ -346,11 +346,8 @@ export async function getGraph(entrypointId: number, snapshotId: number, swaps: 
 }
 
 export async function getUsedParams(entrypointId: number, snapshotId: number, swaps: Record<string, string>) {
-  const swapsQueryParam = Object.entries(swaps)
-    .map(([swapName, taskAlias]) => `${swapName}:${taskAlias}`)
-    .join(",");
   return await axios.get(`/api/entrypoints/${entrypointId}/snapshots/${snapshotId}/dynamicGlobalParameters`, {
-    params: { swaps: swapsQueryParam },
+    params: swapQueryParams(swaps),
   });
 }
 

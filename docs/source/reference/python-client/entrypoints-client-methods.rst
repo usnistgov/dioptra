@@ -33,6 +33,39 @@ Requirements
 * :ref:`explanation-install-dioptra` - an installation and deployment of Dioptra must be available
 * :ref:`how-to-set-up-the-python-client` - the Python client must be configured and initialized
 
+Swap selections in snapshot queries
+----------------------------------
+
+The snapshot ``config`` and ``dynamicGlobalParameters`` GET endpoints accept
+swap selections using the OpenAPI 3 ``deepObject`` wire representation
+(``style: deepObject``, ``explode: true``):
+
+.. code-block:: text
+
+    ?swaps[method]=attack%3Av2&swaps[secondary]=attack%2Cv3
+
+This selects ``attack:v2`` for ``method`` and ``attack,v3`` for ``secondary``.
+Swap names and aliases are preserved exactly. Each ``swaps[name]`` parameter
+must occur only once; repeated keys, including repeated identical values, return
+HTTP 400. Omit swap parameters when there are no selections. The former
+``swaps=name:alias,name2:alias2`` format is no longer accepted.
+
+The Python client's ``get_config(swap_parameters=...)`` and
+``get_task_graph_global_params(swaps=...)`` methods accept dictionaries and handle
+this serialization automatically. Pass the original names and aliases without
+pre-encoding them. For direct HTTP calls, let the URL library encode both keys
+and values:
+
+.. code-block:: python
+
+    params = {
+        "swaps[method]": "attack:v2",
+        "swaps[secondary]": "attack,v3",
+    }
+
+The current Swagger 2 documentation describes this bracketed format in the
+parameter description; Swagger 2 cannot express OpenAPI 3 ``deepObject`` metadata.
+
 .. _reference-entrypoints-client-methods-crud-methods:
 
 Entrypoints - CRUD methods
