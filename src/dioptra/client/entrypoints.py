@@ -31,7 +31,7 @@ from .drafts import (
 )
 from .snapshots import SnapshotsSubCollectionClient
 from .tags import TagsSubCollectionClient
-from .utils import FileTypes, delimited_values
+from .utils import FileTypes
 
 DRAFT_FIELDS: Final[set[str]] = {
     "name",
@@ -68,6 +68,11 @@ DYNAMIC_GLOBAL_PARAMETERS: Final[str] = "dynamicGlobalParameters"
 VALIDATE_SWAPS: Final[str] = "validate"
 
 T = TypeVar("T")
+
+
+def _swap_query_params(swaps: dict[str, str]) -> dict[str, str]:
+    """Encode swap selections as deepObject keys; the session escapes the URL."""
+    return {f"swaps[{name}]": alias for name, alias in swaps.items()}
 
 
 class EntrypointArtifactPluginsSubCollectionClient(SubCollectionClient[T]):
@@ -411,7 +416,7 @@ class EntrypointsSnapshotCollectionClient(SnapshotsSubCollectionClient[T]):
         get_params = {}
 
         if swap_parameters is not None:
-            get_params["swaps"] = delimited_values(swap_parameters)
+            get_params.update(_swap_query_params(swap_parameters))
 
         if sections:
             get_params["sections"] = ",".join(sections)
@@ -544,7 +549,7 @@ class EntrypointsSnapshotCollectionClient(SnapshotsSubCollectionClient[T]):
             self.build_sub_collection_url(entrypoint_id),
             str(entrypoint_snapshot_id),
             DYNAMIC_GLOBAL_PARAMETERS,
-            params={"swaps": delimited_values(swaps)},
+            params=_swap_query_params(swaps),
         )
 
     def get_swaps(self, entrypoint_id: int, entrypoint_snapshot_id: int) -> T:

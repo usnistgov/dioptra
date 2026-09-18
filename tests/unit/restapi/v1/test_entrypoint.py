@@ -1758,19 +1758,19 @@ test_cases_for_file["swap_test"] = [
         "active_plugins": ["plugin1", "plugin9"],
     },
     {
-        "swaps": {"step2_choice": "taskalias1", "step3_choice": "taskalias4"},
+        "swaps": {"step2_choice": "taskalias1", "step3_choice": "taskalias3,v3"},
         "globals": ["global1", "global3", "global6", "global12"],
         "sort_order": [["step1", "step2", "step3", "step4"]],
         "active_plugins": ["plugin1", "plugin9"],
     },
     {
-        "swaps": {"step2_choice": "taskalias2", "step3_choice": "taskalias3"},
+        "swaps": {"step2_choice": "taskalias1:v2", "step3_choice": "taskalias3"},
         "globals": ["global1", "global6", "global9"],
         "sort_order": [["step1", "step3", "step4", "step2"]],
         "active_plugins": ["plugin1", "plugin9", "plugin13"],
     },
     {
-        "swaps": {"step2_choice": "taskalias2", "step3_choice": "taskalias4"},
+        "swaps": {"step2_choice": "taskalias1:v2", "step3_choice": "taskalias3,v3"},
         "globals": ["global1", "global6", "global12"],
         "sort_order": [["step1", "step3", "step4", "step2"]],
         "active_plugins": ["plugin1", "plugin9", "plugin13"],
@@ -1872,7 +1872,7 @@ def test_dynamic_globals_endpoint_without_swaps(
     )
 
 
-@pytest.mark.parametrize("query_string", [None, {"swaps": ""}])
+@pytest.mark.parametrize("query_string", [None, {}])
 def test_dynamic_globals_endpoint_accepts_blank_swaps(
     client: FlaskClient,
     auth_account: dict[str, Any],
@@ -2784,6 +2784,7 @@ def test_validate_swaps_graph_mixed_output_error(
 
 
 def test_entrypoint_swaps_config(
+    client: FlaskClient,
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_swap_entrypoints: dict[str, Any],
@@ -2791,14 +2792,32 @@ def test_entrypoint_swaps_config(
     entrypoint = registered_swap_entrypoints["swap_test"]
 
     response = dioptra_client.entrypoints.snapshots.get_config(
-        entrypoint["id"], entrypoint["snapshot"], swap_parameters={"step2_choice": "taskalias1", "step3_choice": "taskalias4" }
+        entrypoint["id"], entrypoint["snapshot"], swap_parameters={"step2_choice": "taskalias1:v2", "step3_choice": "taskalias3,v3"}
     )
 
     assert response.status_code == HTTPStatus.OK
 
     response_json = response.json()
-    assert 'task2' in response_json['graph']['step2']
+    assert 'task10' in response_json['graph']['step2']
     assert 'task2' in response_json['graph']['step3']
+
+    for endpoint in ("config", "dynamicGlobalParameters"):
+        url = (
+            f"/api/v1/entrypoints/{entrypoint['id']}/snapshots/"
+            f"{entrypoint['snapshot']}/{endpoint}"
+        )
+        for duplicate in ("taskalias1:v2", "taskalias1"):
+            response = client.get(url, query_string=[
+                ("swaps[step2_choice]", "taskalias1:v2"),
+                ("swaps[step2_choice]", duplicate),
+                ("swaps[step3_choice]", "taskalias3,v3"),
+            ])
+            assert response.status_code == HTTPStatus.BAD_REQUEST
+            assert "exactly one alias" in response.get_data(as_text=True)
+
+        for malformed in ("swaps", "swaps[step2_choice", "swaps[]"):
+            response = client.get(url, query_string={malformed: "taskalias1:v2"})
+            assert response.status_code == HTTPStatus.BAD_REQUEST
 
 def test_entrypoint_swaps_config_partial(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
@@ -2928,7 +2947,7 @@ def test_entrypoint_swaps_config_nonexistent(
 
     # oops step4_choice doesn't exist
     response = dioptra_client.entrypoints.snapshots.get_config(
-        entrypoint["id"], entrypoint["snapshot"], swap_parameters={"step2_choice": "taskalias1", "step3_choice": "taskalias4", "step4_choice": "taskalias1"}
+        entrypoint["id"], entrypoint["snapshot"], swap_parameters={"step2_choice": "taskalias1", "step3_choice": "taskalias3,v3", "step4_choice": "taskalias1"}
     )
 
     assert response.status_code == HTTPStatus.BAD_REQUEST
@@ -2961,7 +2980,7 @@ def test_get_swaps_success(
     expected = {
         "step2_choice": {
             "tasks": ["task2", "task10"],
-            "aliases": ["taskalias1", "taskalias2"],
+            "aliases": ["taskalias1", "taskalias1:v2"],
             "params": {
                 "task2" : ["global3"],
                 "task10": []
@@ -2969,7 +2988,7 @@ def test_get_swaps_success(
         },
         "step3_choice": {
             "tasks": ["task1", "task2"],
-            "aliases": ["taskalias3", "taskalias4"],
+            "aliases": ["taskalias3", "taskalias3,v3"],
             "params": {
                 "task1" : ["global9"],
                 "task2": ["global12"]

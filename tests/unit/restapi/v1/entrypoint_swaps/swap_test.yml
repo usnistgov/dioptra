@@ -8,7 +8,7 @@ step2:
       task2:
         arg2: $step1.out
         arg3: $global3
-    taskalias2:
+    "taskalias1:v2":
       task10:
         arg3: $step3.out
         arg4: $step4
@@ -24,8 +24,7 @@ step3:
     taskalias3:
       task1:
         arg1: $global9
-    taskalias4:
+    "taskalias3,v3":
       task2:
         arg2: $global12
         arg3: $step1.out
-
