@@ -171,6 +171,7 @@ class EntrypointEndpoint(Resource):
             queue_ids=parsed_obj["queue_ids"],
             group_id=int(parsed_obj["group_id"]),
             commit=commit,
+            on_save=commit,
             log=log,
         )
         return utils.build_entrypoint(entrypoint)
@@ -234,6 +235,7 @@ class EntrypointIdEndpoint(Resource):
             artifact_parameters=parsed_obj.get("artifact_parameters", []),
             queue_ids=parsed_obj["queue_ids"],
             commit=commit,
+            on_save=commit,
             log=log,
         )
         return utils.build_entrypoint(entrypoint)

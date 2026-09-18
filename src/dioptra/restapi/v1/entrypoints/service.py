@@ -169,6 +169,7 @@ class EntrypointService(object):
         queue_ids: list[int],
         group_id: int,
         commit: bool = True,
+        on_save: bool = True,
         **kwargs,
     ) -> utils.EntrypointDict:
         """Create a new entrypoint.
@@ -191,6 +192,8 @@ class EntrypointService(object):
             queue_ids: A list of queue ids to associate with the new entrypoint.
             group_id: The id of the group that will own the entrypoint.
             commit: If True, commit the transaction. Defaults to True.
+            on_save: If True, perform full save-time validation independently of
+                committing the transaction. Defaults to True.
 
         Returns:
             The newly created entrypoint object.
@@ -251,8 +254,6 @@ class EntrypointService(object):
             for artifact_plugin in artifact_plugins
         ]
 
-        # if we are committing the entrypoint, we run the "rendered" validation.
-        # otherwise, we do the lighter validation.
         self._swaps_validation_service.raise_validation_errors(
             group_id=group_id,
             task_graph=task_graph,
@@ -260,7 +261,7 @@ class EntrypointService(object):
             parameters=parameters,
             artifact_parameters=artifact_parameters,
             plugin_ids=[plugin.resource_snapshot_id for plugin in plugins],
-            on_save=commit,
+            on_save=on_save,
             log=log,
         )
 
@@ -441,6 +442,7 @@ class EntrypointIdService(UnitOfWorkService):
         plugin_ids: list[int] | None = None,
         artifact_plugin_ids: list[int] | None = None,
         commit: bool = True,
+        on_save: bool = True,
         **kwargs,
     ) -> utils.EntrypointDict:
         """Modify an entrypoint.
@@ -461,6 +463,8 @@ class EntrypointIdService(UnitOfWorkService):
             artifact_plugin_ids: Artifact plugins to append or sync to their latest
                 snapshots. If None, the current artifact plugin snapshots are retained.
             commit: If True, commit the transaction. Defaults to True.
+            on_save: If True, perform full save-time validation independently of
+                committing the transaction. Defaults to True.
 
         Returns:
             The updated entrypoint object.
@@ -549,8 +553,6 @@ class EntrypointIdService(UnitOfWorkService):
                 new_entrypoint.entry_point_artifact_plugins.append(new_plugin)
                 artifact_plugins.append(new_plugin.plugin)
 
-        # if we are committing the entrypoint, we run the "rendered" validation.
-        # otherwise, we do the lighter validation.
         self._swaps_validation_service.raise_validation_errors(
             group_id=entrypoint.resource.group_id,
             task_graph=task_graph,
@@ -558,7 +560,7 @@ class EntrypointIdService(UnitOfWorkService):
             parameters=parameters,
             artifact_parameters=artifact_parameters,
             plugin_ids=[plugin.resource_snapshot_id for plugin in plugins],
-            on_save=commit,
+            on_save=on_save,
             log=log,
         )
 
