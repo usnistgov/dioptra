@@ -22,6 +22,7 @@ from collections.abc import Iterable
 from typing import Any, Final, cast
 
 import structlog
+import yaml
 from flask_login import current_user
 from injector import inject
 from sqlalchemy import delete, func, select
@@ -36,6 +37,7 @@ from dioptra.restapi.errors import (
     DioptraError,
     EntityDoesNotExistError,
     EntityNotRegisteredError,
+    EntrypointValidationError,
     JobArtifactParameterMissingError,
     JobInvalidParameterNameError,
     JobInvalidStatusTransitionError,
@@ -63,6 +65,7 @@ from dioptra.restapi.v1.type_coercions import (
     check_artifact_param_type_mismatch,
     coerce_entrypoint_param_types,
 )
+from dioptra.sdk.utilities.entrypoint_swaps import check_swaps_graph_dependencies
 
 from .schema import JobLogSeverity
 
@@ -249,6 +252,18 @@ class JobService(object):
             entrypoint_id, entrypoint_snapshot_id=entrypoint_snapshot_id, log=log
         )
         entrypoint = entrypoint_dict["entry_point"]
+
+        # Also protect jobs using snapshots saved before dependency-union validation.
+        dependency_issues = check_swaps_graph_dependencies(
+            yaml.safe_load(entrypoint.task_graph)
+        )
+        if dependency_issues:
+            raise EntrypointValidationError(
+                message="Invalid entrypoint dependencies",
+                validation_error_dict={
+                    "swap_issues": [str(issue) for issue in dependency_issues]
+                },
+            )
 
         # Validate the keys in values against the registered entrypoint parameter names
         invalid_job_params = list(
