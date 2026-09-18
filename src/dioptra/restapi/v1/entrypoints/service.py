@@ -1828,24 +1828,28 @@ class SwapsValidationService(UnitOfWorkService):
             task_engine_dict["graph"] = task_graph_yaml
             task_engine_dict = render_swaps_config(task_engine_dict, swap_choices)
             compiled = compile_swaps_config(task_engine_dict)
-            # this is a schema check and deeper validation no longer present in workflows
-            issues = compiled.validate()
-
-            for issue in issues:
-                issue.message = f"[Swap combination {swap_choices}] {issue.message}"
-                issues_for_swap.append(issue)
-
-            # collect any globals needed for this rendering
-            required_globals, _ = _get_required_globals(compiled.config["graph"])
-
-        except Exception as e:
+        except ValueError as error:
             issues_for_swap.append(
                 ValidationIssue(
                     type_=IssueType.SEMANTIC,
                     severity=IssueSeverity.ERROR,
-                    message=f"[Swap combination {swap_choices}] Error rendering graph: {str(e)}",
+                    message=(
+                        f"[Swap combination {swap_choices}] "
+                        f"Error rendering graph: {error}"
+                    ),
                 )
             )
+            return issues_for_swap, required_globals
+
+        # this is a schema check and deeper validation no longer present in workflows
+        issues = compiled.validate()
+
+        for issue in issues:
+            issue.message = f"[Swap combination {swap_choices}] {issue.message}"
+            issues_for_swap.append(issue)
+
+        # collect any globals needed for this rendering
+        required_globals, _ = _get_required_globals(compiled.config["graph"])
 
         return issues_for_swap, required_globals
 
