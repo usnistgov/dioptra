@@ -14,6 +14,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+from copy import deepcopy
 from pathlib import Path
 
 import pytest
@@ -22,12 +23,141 @@ import yaml
 from dioptra.sdk.utilities.entrypoint_swaps import (
     check_duplicate_swap_names,
     check_multiple_swaps_per_step,
+    check_swaps_graph_dependencies,
     extract_swaps,
     render_swaps_graph,
     validate_swaps_graph,
 )
 
 FILES_LOCATION = "entrypoint_swaps_files"
+
+
+@pytest.mark.parametrize(
+    "graph, cyclic",
+    [
+        # Both cross choices together make left depend on right and right on left;
+        # either cross choice paired with the other default is acyclic.
+        pytest.param(
+            {
+                "left": {
+                    "?left-choice": {
+                        "default": {"task": "constant"},
+                        "cross": {"passthrough": {"value": "$right.value"}},
+                    }
+                },
+                "right": {
+                    "?right-choice": {
+                        "default": {"task": "constant"},
+                        "cross": {"passthrough": {"value": "$left.value"}},
+                    }
+                },
+            },
+            True,
+            id="two-nondefault-choices",
+        ),
+        # The alias named task makes left depend on right. The ordinary step's
+        # nested reference makes right depend on left, closing the cycle.
+        pytest.param(
+            {
+                "left": {"?choice": {"task": {"consume": "$right.value"}}},
+                "right": {"prepare": {"nested": ["$left.value"]}},
+            },
+            True,
+            id="ordinary-step-and-alias-named-task",
+        ),
+        # The swap's keyword argument depends on right, while right's positional
+        # argument depends on left: a cycle across mixed invocation forms.
+        pytest.param(
+            {
+                "left": {
+                    "?choice": {
+                        "cross": {"task": "consume", "kwargs": {"value": "$right"}}
+                    }
+                },
+                "right": {"task": "prepare", "args": ["$left.value"]},
+            },
+            True,
+            id="mixed-invocations",
+        ),
+        # String-form and list-form explicit dependencies create opposing edges:
+        # left depends on right, and right depends on left.
+        pytest.param(
+            {
+                "left": {
+                    "dependencies": "right",
+                    "?choice": {"default": {"constant": None}},
+                },
+                "right": {"dependencies": ["left"], "constant": None},
+            },
+            True,
+            id="explicit-string-and-list",
+        ),
+        # Selecting self makes left depend on its own output, creating a self-cycle.
+        pytest.param(
+            {
+                "left": {
+                    "?choice": {
+                        "default": {"constant": None},
+                        "self": {"consume": "$left.value"},
+                    }
+                },
+            },
+            True,
+            id="self-reference",
+        ),
+        # Only right depends on left. Global/artifact references and the escaped
+        # $$right.value string add no reverse step dependency, so there is no cycle.
+        pytest.param(
+            {
+                "left": {
+                    "?choice": {
+                        "global": {
+                            "task": "consume",
+                            "args": ["$global", "$$right.value"],
+                        },
+                        "artifact": {"consume": {"value": "$artifact.value"}},
+                    }
+                },
+                "right": {"dependencies": "left", "consume": "$left.value"},
+            },
+            False,
+            id="globals-artifacts-and-escaped-references",
+        ),
+        # The cross choice makes left depend on right, but neither right-hand
+        # choice depends on left. The union remains acyclic for every selection.
+        pytest.param(
+            {
+                "left": {
+                    "?choice": {
+                        "default": {"constant": None},
+                        "cross": {"consume": "$right.value"},
+                    }
+                },
+                "right": {"?other": {"one": {"constant": 1}, "two": {"constant": 2}}},
+            },
+            False,
+            id="acyclic-union",
+        ),
+    ],
+)
+def test_check_swaps_graph_dependencies(graph, cyclic):
+    original = deepcopy(graph)
+    issues = check_swaps_graph_dependencies(graph)
+    assert graph == original
+    if cyclic:
+        assert len(issues) == 1
+        assert "Step cycle detected" in issues[0].message
+    else:
+        assert issues == []
+
+
+def test_check_swaps_graph_missing_explicit_dependency():
+    issues = check_swaps_graph_dependencies(
+        {"step": {"dependencies": "missing", "task": "constant"}}
+    )
+    assert len(issues) == 1
+    assert "missing" in issues[0].message
+
 
 available_swaps = {
     "output/output_load_defend.yml": {

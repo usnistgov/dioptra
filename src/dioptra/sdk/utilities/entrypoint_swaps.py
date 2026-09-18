@@ -16,7 +16,8 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from typing import Any
 
-from dioptra.task_engine import validation
+from dioptra.sdk.exceptions.base import BaseTaskEngineError
+from dioptra.task_engine import util, validation
 from dioptra.task_engine.issues import IssueSeverity, IssueType, ValidationIssue
 
 
@@ -97,6 +98,47 @@ def validate_swaps_graph(graph):
     issues += validation._check_graph_dependencies({"graph": graph})
     issues += validation._check_step_structure({"graph": graph})
     return issues
+
+
+def check_swaps_graph_dependencies(graph: dict[str, Any]) -> list[ValidationIssue]:
+    """Check the dependency union of a schema-valid graph without rendering choices.
+
+    With unique swap names and at most one swap per step, a cycle in this union
+    can be realized by selecting the option contributing each step's cycle edge.
+    """
+    union_graph = {}
+    for step_name, step in graph.items():
+        explicit = step.get("dependencies", [])
+        dependencies = set([explicit] if isinstance(explicit, str) else explicit)
+        invocations = [
+            {
+                name: value
+                for name, value in step.items()
+                if name != "dependencies" and not name.startswith("?")
+            }
+        ]
+        for name, aliases in step.items():
+            if name.startswith("?"):
+                # Inspect each invocation separately: an alias may itself be named task.
+                invocations.extend(aliases.values())
+        for invocation in invocations:
+            for reference in util.get_references(invocation):
+                referenced_step, _ = util.get_reference_coords(reference)
+                if referenced_step in graph:
+                    dependencies.add(referenced_step)
+        union_graph[step_name] = {"dependencies": sorted(dependencies)}
+
+    try:
+        util.get_sorted_steps(union_graph)
+    except BaseTaskEngineError as error:
+        return [
+            ValidationIssue(
+                type_=IssueType.SEMANTIC,
+                severity=IssueSeverity.ERROR,
+                message=str(error),
+            )
+        ]
+    return []
 
 
 def extract_swaps(task_graph: dict[str, Any]) -> dict[str, list[str]]:

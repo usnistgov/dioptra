@@ -61,6 +61,7 @@ from dioptra.sdk.api.swappable_validation import (
 from dioptra.sdk.utilities.entrypoint_swaps import (
     check_duplicate_swap_names,
     check_multiple_swaps_per_step,
+    check_swaps_graph_dependencies,
     extract_swaps,
     render_swaps_graph,
 )
@@ -1835,6 +1836,7 @@ class SwapsValidationService(UnitOfWorkService):
             * Collects all the tasks needed for the given graph and provides it in the response.
 
         If the rendered_validation flag is set, this entrypoint also:
+            * Checks the union of dependencies across all swap choices for cycles.
             * Iterates over swaps, renders the graph using different swap combinations, and performs in-depth
             validation on the experiment with the rendered graph.
             * Validates that all global parameters required for the graph are declared as entrypoint inputs.
@@ -1976,6 +1978,8 @@ class SwapsValidationService(UnitOfWorkService):
 
             #### Specifically for saving and modifying entrypoints, perform in-depth validation
             if rendered_validation:
+                if not duplicate_swap_issues and not multiple_swaps_per_step_issues:
+                    pre_render_issues += check_swaps_graph_dependencies(swaps_yaml)
                 # extract a mapping of swaps to possible swap choices
                 swaps = extract_swaps(
                     swaps_yaml

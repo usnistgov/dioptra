@@ -75,6 +75,52 @@ def _prepare_entrypoint_request(client, payload, modifying):
 
 
 @pytest.mark.parametrize("modifying", [False, True])
+@pytest.mark.parametrize("cyclic", [False, True])
+def test_full_validation_checks_all_swap_dependencies(
+    client, proposed_entrypoint, modifying, cyclic, db_session
+):
+    request, url, payload = _prepare_entrypoint_request(
+        client, proposed_entrypoint, modifying
+    )
+    before = client.get(url).json if modifying else None
+    payload["taskGraph"] = textwrap.dedent("""\
+        left:
+          ?left-choice:
+            default:
+              task1: left
+            cross:
+              task1: $right.output
+        right:
+          ?right-choice:
+            default:
+              task1: right
+            cross:
+              task1: $left.output
+    """)
+    if not cyclic:
+        payload["taskGraph"] = payload["taskGraph"].replace(
+            "$left.output", "independent"
+        )
+
+    counts_before = _entrypoint_row_counts(db_session)
+    preview = request(url, json=payload, query_string={"validateOnly": "true"})
+    db_session.commit()
+    assert _entrypoint_row_counts(db_session) == counts_before
+    saved = request(url, json=payload)
+    assert preview.status_code == saved.status_code
+    if cyclic:
+        assert saved.status_code == HTTPStatus.BAD_REQUEST
+        assert "Step cycle detected" in str(saved.json)
+        assert preview.json.get("detail") == saved.json.get("detail")
+        db_session.commit()
+        assert _entrypoint_row_counts(db_session) == counts_before
+        if modifying:
+            assert client.get(url).json == before
+    else:
+        assert saved.status_code == HTTPStatus.OK, saved.json
+
+
+@pytest.mark.parametrize("modifying", [False, True])
 def test_dry_run_success_does_not_persist(
     client, proposed_entrypoint, modifying, db_session
 ):
