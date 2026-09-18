@@ -68,17 +68,21 @@ def render_swaps_graph(
             else:
                 rendered_graph[step][task_name] = task_defn
 
-    unused_swaps = swaps.keys() - used_swaps
+    unused_swaps = sorted(swaps.keys() - used_swaps)
+    not_found_swaps_list = sorted(not_found_swaps)
+    not_found_tasks_list = sorted(not_found_tasks)
 
-    if raise_unspecified and len(not_found_swaps) > 0:
-        raise Exception(f"Swaps {not_found_swaps} needed by graph but not provided.")
+    if raise_unspecified and not_found_swaps_list:
+        raise ValueError(
+            f"Swaps {not_found_swaps_list} needed by graph but not provided."
+        )
 
-    if len(unused_swaps) > 0:
-        raise Exception(f"Swaps {unused_swaps} were provided but not used.")
+    if unused_swaps:
+        raise ValueError(f"Swaps {unused_swaps} were provided but not used.")
 
-    if len(not_found_tasks) > 0:
-        raise Exception(
-            f"Tasks {not_found_tasks} requested for swaps but were not found."
+    if not_found_tasks_list:
+        raise ValueError(
+            f"Tasks {not_found_tasks_list} requested for swaps but were not found."
         )
 
     return rendered_graph

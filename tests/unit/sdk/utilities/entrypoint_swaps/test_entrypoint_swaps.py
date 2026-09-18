@@ -106,8 +106,9 @@ def test_without_swaps(yaml_file: str):
     rendered_graph = render_swaps_graph(graph, {})
     assert rendered_graph == graph
 
-    extra = {"load", "transform_data", "extra"}
-    with pytest.raises(Exception, match=f"Swaps {extra} were provided but not used."):
+    extra = ["extra", "load", "transform_data"]
+    
+    with pytest.raises(ValueError, check=validate_unused_swap(extra)):
         rendered_graph = render_swaps_graph(
             graph,
             {"load": "ignore", "transform_data": "patch", "extra": "function_name"},
@@ -125,23 +126,21 @@ def test_swap_errors(yaml_file: str):
         data = f.read()
     graph = yaml.safe_load(data)
 
-    missing = {"load", "transform_data"}
-    with pytest.raises(
-        Exception, match=f"Swaps {missing} needed by graph but not provided."
-    ):
+    missing = ["load", "transform_data"]
+    
+    with pytest.raises(ValueError, check=validate_missing_swap(missing)):
         render_swaps_graph(graph, {})
 
-    extra = {"extra"}
-    with pytest.raises(Exception, match=f"Swaps {extra} were provided but not used."):
+    extra = ["extra"]
+
+    with pytest.raises(ValueError, check=validate_unused_swap(extra)):
         render_swaps_graph(
             graph,
             {"load": "ignore", "transform_data": "patch", "extra": "function_name"},
         )
 
-    nonexistant = {"nonexistant"}
-    with pytest.raises(
-        Exception, match=f"Tasks {nonexistant} requested for swaps but were not found."
-    ):
+    nonexistant = ["nonexistant"]
+    with pytest.raises(ValueError, check=validate_nonexistant_swap(nonexistant)):
         render_swaps_graph(
             graph,
             {
@@ -184,3 +183,23 @@ def test_check_multiple_swaps_per_step() -> None:
 
     assert len(issues) == 1
     assert "Step 'step' contains multiple swaps" in issues[0].message
+
+def validate_missing_swap(expected: list[str]):
+    def val(error: ValueError):
+        return validate_swap_error(error, expected, "Swaps {} needed by graph but not provided.")
+    return val
+
+def validate_nonexistant_swap(expected: list[str]):
+    def val(error: ValueError):
+        return validate_swap_error(error, expected, "Tasks {} requested for swaps but were not found.")
+    return val
+
+def validate_unused_swap(expected: list[str]):
+    def val(error: ValueError):
+        return validate_swap_error(error, expected, "Swaps {} were provided but not used.")
+    return val
+
+def validate_swap_error(error: ValueError, expected: list[str], template) -> bool:
+    return str(error) == (
+        template.format(str(expected))
+    )
