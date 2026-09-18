@@ -1703,26 +1703,7 @@ class SwapsValidationService(UnitOfWorkService):
         try:
             rendered_graph = render_swaps_graph(task_graph_yaml, swap_choices)
 
-            rendered_entrypoint_data = replace(
-                entrypoint_data,
-                task_graph=json.dumps(rendered_graph),
-            )
-            task_engine_dict = build_task_engine_dict(
-                entry_point=rendered_entrypoint_data,
-                plugin_plugin_files=plugin_plugin_files,
-                plugin_parameter_types=plugin_parameter_types,
-            )
-            # this is a schema check and deeper validation no longer present in workflows
-            issues = validate_task_engine_dict(task_engine_dict)
-
-            for issue in issues:
-                issue.message = f"[Swap combination {swap_choices}] {issue.message}"
-                issues_for_swap.append(issue)
-
-            # collect any globals needed for this rendering
-            required_globals, _ = _get_required_globals(rendered_graph)
-
-        except Exception as e:
+        except ValueError as e:
             issues_for_swap.append(
                 ValidationIssue(
                     type_=IssueType.SEMANTIC,
@@ -1730,6 +1711,26 @@ class SwapsValidationService(UnitOfWorkService):
                     message=f"[Swap combination {swap_choices}] Error rendering graph: {str(e)}",
                 )
             )
+            return issues_for_swap, required_globals
+
+        rendered_entrypoint_data = replace(
+            entrypoint_data,
+            task_graph=json.dumps(rendered_graph),
+        )
+        task_engine_dict = build_task_engine_dict(
+            entry_point=rendered_entrypoint_data,
+            plugin_plugin_files=plugin_plugin_files,
+            plugin_parameter_types=plugin_parameter_types,
+        )
+        # this is a schema check and deeper validation no longer present in workflows
+        issues = validate_task_engine_dict(task_engine_dict)
+
+        for issue in issues:
+            issue.message = f"[Swap combination {swap_choices}] {issue.message}"
+            issues_for_swap.append(issue)
+
+        # collect any globals needed for this rendering
+        required_globals, _ = _get_required_globals(rendered_graph)
 
         return issues_for_swap, required_globals
 
