@@ -863,9 +863,9 @@ class EntrypointsCollectionClient(CollectionClient[T]):
                 Optional, defaults to None.
             artifact_plugins: A list of artifact plugin ids to associate with the new
                 entrypoint. Optional, defaults to None.
-            validate_only: If set to False, this will perform full validation and save
-                the entrypoint. If false, a lighter validation will be performed and
-                the entrypoint will not be saved.
+            validate_only: If True, perform a dry run with lighter validation without
+                saving the entrypoint. If False (the default), perform full validation
+                and save the entrypoint.
 
         Example:
             Create an entrypoint called "hello_world" with artifact input parameters and artifact output graph.
@@ -966,9 +966,9 @@ class EntrypointsCollectionClient(CollectionClient[T]):
                 To remove all artifact parameters, pass None.
             queues: The new list of queue ids to associate with the entrypoint. To
                 remove all associated queues, pass None.
-            validate_only: If set to False, this will perform full validation and save
-                the entrypoint. If false, a lighter validation will be performed and
-                the entrypoint will not be saved.
+            validate_only: If True, perform a dry run with lighter validation without
+                saving the entrypoint. If False (the default), perform full validation
+                and save the entrypoint.
 
         Returns:
             The response from the Dioptra API.
