@@ -57,7 +57,7 @@ def render_swaps_graph(
 
                     try:
                         swap = task_defn[task_alias]
-                        rendered_graph[step] = swap
+                        rendered_graph[step].update(swap)
                     except KeyError:
                         not_found_tasks.add(task_alias)
                 except KeyError:
@@ -65,8 +65,14 @@ def render_swaps_graph(
                     if not raise_unspecified:
                         # Preserve the original placeholder in the output.
                         rendered_graph[step][task_name] = task_defn
-            else:
-                rendered_graph[step][task_name] = task_defn
+
+        # The step metadata takes precedence regardless of key order.
+        # Merge into a fresh mapping so rendering does not modify a swap option.
+        rendered_graph[step].update(
+            (name, definition)
+            for name, definition in task.items()
+            if not name.startswith("?")
+        )
 
     unused_swaps = swaps.keys() - used_swaps
 
