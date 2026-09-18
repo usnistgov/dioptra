@@ -33,6 +33,39 @@ Requirements
 * :ref:`explanation-install-dioptra` - an installation and deployment of Dioptra must be available
 * :ref:`how-to-set-up-the-python-client` - the Python client must be configured and initialized
 
+Swap selections in snapshot queries
+----------------------------------
+
+The snapshot ``config`` and ``dynamicGlobalParameters`` GET endpoints accept
+swap selections using the OpenAPI 3 ``deepObject`` wire representation
+(``style: deepObject``, ``explode: true``):
+
+.. code-block:: text
+
+    ?swaps[method]=attack%3Av2&swaps[secondary]=attack%2Cv3
+
+This selects ``attack:v2`` for ``method`` and ``attack,v3`` for ``secondary``.
+Swap names and aliases are preserved exactly. Each ``swaps[name]`` parameter
+must occur only once; repeated keys, including repeated identical values, return
+HTTP 400. Omit swap parameters when there are no selections. The former
+``swaps=name:alias,name2:alias2`` format is no longer accepted.
+
+The Python client's ``get_config(swap_parameters=...)`` and
+``get_task_graph_global_params(swaps=...)`` methods accept dictionaries and handle
+this serialization automatically. Pass the original names and aliases without
+pre-encoding them. For direct HTTP calls, let the URL library encode both keys
+and values:
+
+.. code-block:: python
+
+    params = {
+        "swaps[method]": "attack:v2",
+        "swaps[secondary]": "attack,v3",
+    }
+
+The current Swagger 2 documentation describes this bracketed format in the
+parameter description; Swagger 2 cannot express OpenAPI 3 ``deepObject`` metadata.
+
 .. _reference-entrypoints-client-methods-crud-methods:
 
 Entrypoints - CRUD methods
@@ -67,6 +100,82 @@ Delete Entrypoint
 
     .. automethod:: dioptra.client.entrypoints.EntrypointsCollectionClient.delete_by_id
 
+
+
+.. _reference-entrypoints-client-methods-validation:
+
+Entrypoints - Validation Dry Runs
+--------------------------------
+
+Use the ordinary entrypoint create or update interface with ``validateOnly=true``
+to validate a proposed entrypoint without saving it:
+
+- ``POST /api/v1/entrypoints/?validateOnly=true``
+- ``PUT /api/v1/entrypoints/{id}?validateOnly=true``
+
+Send the same request body as for an ordinary create or update. In the Python
+client, pass ``validate_only=True`` to
+:meth:`~dioptra.client.entrypoints.EntrypointsCollectionClient.create` or
+:meth:`~dioptra.client.entrypoints.EntrypointsCollectionClient.modify_by_id`.
+For example:
+
+.. code-block:: python
+
+    response = client.entrypoints.create(
+        group_id=GROUP_ID,
+        name="hello_world",
+        task_graph=TASK_GRAPH_YAML_STR,
+        plugins=PLUGIN_IDS,
+        parameters=PARAMETERS,
+        validate_only=True,
+    )
+
+Dry runs perform the same permission, association, name, and full graph validation
+checks as saving, then roll back without committing changes. Database flushes may
+occur within the transaction, but resources, snapshots, and associations are not
+saved. Errors have the same status and details as the corresponding save. Successful requests
+return the proposed entrypoint representation, omitting the new snapshot ID,
+snapshot timestamp, and modification timestamp. The ``latestSnapshot`` and
+``deleted`` fields are retained. Creation dry runs additionally omit the generated resource
+ID and creation timestamp. Update dry runs retain the existing resource ID and
+original creation timestamp.
+
+Omitting ``validateOnly`` or setting it to ``false`` (``validate_only=False`` in
+the Python client) performs full validation and saves the entrypoint.
+
+Lightweight lint reports
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+For inexpensive editor feedback, use ``POST /api/v1/entrypoints:lint`` or
+``POST /api/v1/entrypoints/{id}:lint`` with the corresponding create or update
+request body. The colon is a literal part of the URL. Item lint uses the saved
+plugin associations, just like an update. These endpoints perform schema,
+task-reference, and swap checks without full rendered-graph validation. Changes
+are rolled back on both success and failure.
+
+.. code-block:: python
+
+    report = client.entrypoints.lint({
+        "group": GROUP_ID,
+        "name": "hello_world",
+        "taskGraph": TASK_GRAPH_YAML_STR,
+        "plugins": PLUGIN_IDS,
+    }).json()
+
+    report = client.entrypoints.lint_by_id(ENTRYPOINT_ID, {
+        "name": "hello_world",
+        "taskGraph": TASK_GRAPH_YAML_STR,
+    }).json()
+
+A completed check returns HTTP 200 with a report such as:
+
+.. code-block:: json
+
+    {"valid": false, "issues": [{"path": "graph", "message": "Unknown task"}]}
+
+Malformed requests, authorization failures, missing resources, and operational
+failures return normal API errors. A successful lint report does not replace a
+full dry run or save-time validation.
 
 
 .. _reference-entrypoints-client-methods-plugins-methods:
@@ -227,4 +336,3 @@ See Also
 * :ref:`Entrypoints reference <reference-entrypoints>`
 * :ref:`Entrypoints explanation <explanation-entrypoints>`
 * :ref:`How to create Entrypoints <how-to-create-entrypoints>`
-

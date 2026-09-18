@@ -31,7 +31,7 @@ from .drafts import (
 )
 from .snapshots import SnapshotsSubCollectionClient
 from .tags import TagsSubCollectionClient
-from .utils import FileTypes, delimited_values
+from .utils import FileTypes
 
 DRAFT_FIELDS: Final[set[str]] = {
     "name",
@@ -68,6 +68,11 @@ DYNAMIC_GLOBAL_PARAMETERS: Final[str] = "dynamicGlobalParameters"
 VALIDATE_SWAPS: Final[str] = "validate"
 
 T = TypeVar("T")
+
+
+def _swap_query_params(swaps: dict[str, str]) -> dict[str, str]:
+    """Encode swap selections as deepObject keys; the session escapes the URL."""
+    return {f"swaps[{name}]": alias for name, alias in swaps.items()}
 
 
 class EntrypointArtifactPluginsSubCollectionClient(SubCollectionClient[T]):
@@ -411,7 +416,7 @@ class EntrypointsSnapshotCollectionClient(SnapshotsSubCollectionClient[T]):
         get_params = {}
 
         if swap_parameters is not None:
-            get_params["swaps"] = delimited_values(swap_parameters)
+            get_params.update(_swap_query_params(swap_parameters))
 
         if sections:
             get_params["sections"] = ",".join(sections)
@@ -544,7 +549,7 @@ class EntrypointsSnapshotCollectionClient(SnapshotsSubCollectionClient[T]):
             self.build_sub_collection_url(entrypoint_id),
             str(entrypoint_snapshot_id),
             DYNAMIC_GLOBAL_PARAMETERS,
-            params={"swaps": delimited_values(swaps)},
+            params=_swap_query_params(swaps),
         )
 
     def get_swaps(self, entrypoint_id: int, entrypoint_snapshot_id: int) -> T:
@@ -863,9 +868,9 @@ class EntrypointsCollectionClient(CollectionClient[T]):
                 Optional, defaults to None.
             artifact_plugins: A list of artifact plugin ids to associate with the new
                 entrypoint. Optional, defaults to None.
-            validate_only: If set to False, this will perform full validation and save
-                the entrypoint. If false, a lighter validation will be performed and
-                the entrypoint will not be saved.
+            validate_only: If True, run all save-time checks, then roll back without
+                committing changes. The response omits generated IDs/timestamps.
+                If False (the default), validate and save the entrypoint.
 
         Example:
             Create an entrypoint called "hello_world" with artifact input parameters and artifact output graph.
@@ -966,9 +971,9 @@ class EntrypointsCollectionClient(CollectionClient[T]):
                 To remove all artifact parameters, pass None.
             queues: The new list of queue ids to associate with the entrypoint. To
                 remove all associated queues, pass None.
-            validate_only: If set to False, this will perform full validation and save
-                the entrypoint. If false, a lighter validation will be performed and
-                the entrypoint will not be saved.
+            validate_only: If True, run all save-time checks, then roll back without
+                committing changes. The response omits generated IDs/timestamps.
+                If False (the default), validate and save the entrypoint.
 
         Returns:
             The response from the Dioptra API.
@@ -995,6 +1000,17 @@ class EntrypointsCollectionClient(CollectionClient[T]):
         return self._session.put(
             self.url, str(entrypoint_id), params=params, json_=json_
         )
+
+    def lint(self, content: dict[str, Any]) -> T:
+        """Lint a proposed entrypoint using a create-request body with API field names.
+
+        Returns a report with ``valid`` and ``issues`` without full swap rendering.
+        """
+        return self._session.post(f"{self.url.rstrip('/')}\u003alint", json_=content)
+
+    def lint_by_id(self, entrypoint_id: str | int, content: dict[str, Any]) -> T:
+        """Lint an update-request body against the saved plugin associations."""
+        return self._session.post(self.url, f"{entrypoint_id}:lint", json_=content)
 
     def delete_by_id(self, entrypoint_id: str | int) -> T:
         """Delete the entrypoint matching the provided id.

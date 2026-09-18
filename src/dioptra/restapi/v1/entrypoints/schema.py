@@ -18,7 +18,8 @@
 
 from typing import Any
 
-from marshmallow import Schema, fields, pre_dump, validate, validates
+from flask import has_request_context, request
+from marshmallow import Schema, fields, pre_load, validate, validates
 from marshmallow.exceptions import ValidationError
 
 from dioptra.restapi.errors import InputParameterNotUniqueError
@@ -40,7 +41,6 @@ from dioptra.restapi.v1.schemas import (
     generate_base_resource_ref_schema,
     generate_base_resource_schema,
 )
-from dioptra.task_engine.issues import ValidationIssue
 
 
 class EntrypointPluginFileSchema(Schema):
@@ -256,7 +256,7 @@ class ValidateOnlySchema(Schema):
         data_key="validateOnly",
         load_default=False,
         metadata={
-            "description": "Flag indicating whether to perform a full validation and save the entrypoint, or perform a lighter validation and not save the entrypoint."
+            "description": "If true, perform the same checks as saving, then roll back without committing changes. Return the entrypoint representation, omitting generated IDs and timestamps."
         },
     )
 
@@ -366,32 +366,6 @@ class EntrypointGetQueryParameters(
     """The query parameters for the GET method of the /entrypoints endpoint."""
 
 
-class DelimitedKeyValuePairs(fields.Field):
-    def __init__(
-        self,
-        *,
-        delimiter: str = ",",
-        equality: str = ":",
-        **additional_metadata,
-    ) -> None:
-        super().__init__(**additional_metadata)
-        self.delimiter = delimiter
-        self.equality = equality
-
-    def _deserialize(self, value, attr, data, **kwargs) -> dict[str, str]:
-        try:
-            if value == "":
-                return {}
-            return {
-                str(pair.split(self.equality)[0]): str(pair.split(self.equality)[1])
-                for pair in value.split(self.delimiter)
-            }
-        except Exception as e:
-            raise ValidationError(
-                f"{attr} is not a delimited list {value}. List format should be key{self.equality}value{self.delimiter}key2{self.equality}value2{self.delimiter}key3{self.equality}value3."
-            ) from e
-
-
 class DelimitedValues(fields.Field):
     def __init__(
         self,
@@ -413,16 +387,58 @@ class DelimitedValues(fields.Field):
             ) from e
 
 
+class EntrypointLintIssueSchema(Schema):
+    path = fields.String(required=True)
+    message = fields.String(required=True)
+
+
+class EntrypointLintResponseSchema(Schema):
+    valid = fields.Boolean(required=True)
+    issues = fields.List(fields.Nested(EntrypointLintIssueSchema), required=True)
+
+
 class SwapChoiceRequestSchema(Schema):
-    swaps = DelimitedKeyValuePairs(
+    swaps = fields.Dict(
+        keys=fields.String(),
+        values=fields.String(),
+        load_default=dict,
         attribute="swaps",
         data_key="swaps",
         metadata={
             "description": (
-                "A list of swap choices to be applied to the entrypoint task graph."
+                "Swap choices encoded as deepObject query parameters: "
+                "swaps[method]=attack%3Av2&swaps[secondary]=attack%2Cv3. "
+                "Each swap key must occur exactly once. Omit for no selections."
             )
         },
     )
+
+    @pre_load
+    def parse_swap_choices(self, data, **kwargs):
+        # flask_accepts flattens request.args before calling Schema.load().
+        # Read the original MultiDict to detect duplicate selections.
+        query = request.args if has_request_context() else data
+        if "swaps" in query:
+            raise ValidationError(
+                {"swaps": ["Use swaps[name]=alias query parameters."]}
+            )
+
+        parsed = dict(data)
+        choices = {}
+        for key in query:
+            if not key.startswith("swaps["):
+                continue
+            if not key.endswith("]") or not key[6:-1]:
+                raise ValidationError({"swaps": [f"Invalid swap parameter: {key}"]})
+            values = query.getlist(key) if hasattr(query, "getlist") else [query[key]]
+            if len(values) != 1:
+                raise ValidationError(
+                    {"swaps": [f"Provide exactly one alias for {key}."]}
+                )
+            choices[key[6:-1]] = values[0]
+            parsed.pop(key, None)
+        parsed["swaps"] = choices
+        return parsed
 
 
 class EntrypointConfigRequestSchema(SwapChoiceRequestSchema):
@@ -513,35 +529,6 @@ class SwapInfoSchema(Schema):
         },
         required=True,
     )
-
-
-class ValidateEntrypointIssueSchema(Schema):
-    """The response for the validateEntrypoint endpoint."""
-
-    type_ = fields.String(
-        attribute="type",
-        data_key="type",
-        metadata={"description": "The validation issue type."},
-    )
-    severity = fields.String(
-        attribute="severity",
-        metadata={"description": "The severity of the validation issue."},
-    )
-    message = fields.String(
-        attribute="message",
-        metadata={"description": "A message describing the validation issue."},
-    )
-
-    @pre_dump
-    def stringify_enums(self, data, **kwargs):
-        if isinstance(data, ValidationIssue):
-            return {
-                "type": data.type.name,
-                "severity": data.severity.name,
-                "message": data.message,
-            }
-
-        return data
 
 
 class EntrypointConfigResponseSchema(Schema):

@@ -18,8 +18,9 @@
 
 from __future__ import annotations
 
+from contextlib import contextmanager
 from dataclasses import dataclass, replace
-from typing import Any, Iterable, cast
+from typing import Any, Callable, Iterable, Iterator, cast
 
 import structlog
 import yaml
@@ -30,6 +31,7 @@ from structlog.stdlib import BoundLogger
 from dioptra.restapi.db import models
 from dioptra.restapi.db.models.plugins import PluginTaskOutputParameter
 from dioptra.restapi.db.models.users import User
+from dioptra.restapi.db.repository.utils import assert_user_in_group
 from dioptra.restapi.db.repository.utils.common import DeletionPolicy
 from dioptra.restapi.db.unit_of_work import UnitOfWork, UnitOfWorkService
 from dioptra.restapi.errors import (
@@ -59,6 +61,7 @@ from dioptra.sdk.api.swappable_validation import (
 from dioptra.sdk.utilities.entrypoint_swaps import (
     check_duplicate_swap_names,
     check_multiple_swaps_per_step,
+    check_swaps_graph_dependencies,
     extract_swaps,
     render_swaps_graph,
 )
@@ -133,6 +136,33 @@ def _build_entrypoint_data_adapter(
     )
 
 
+def _lint_report(
+    operation: Callable[..., utils.EntrypointDict], uow: UnitOfWork, **kwargs: Any
+) -> dict[str, Any]:
+    """Run lightweight validation and roll back on success or failure."""
+    kwargs.setdefault("artifact_graph", "")
+    if "entrypoint_id" not in kwargs:
+        kwargs.setdefault("artifact_plugin_ids", [])
+    try:
+        operation(commit=False, on_save=False, **kwargs)
+        uow.session.flush()
+    except EntrypointValidationError as error:
+        issues = [
+            {
+                "path": "entrypoint" if category == "schema_issues" else "graph",
+                "message": str(message),
+            }
+            for category, messages in error._validation_error_dict.items()
+            for message in messages
+        ]
+        return {"valid": False, "issues": issues}
+    except (InvalidYamlError, EmptyGraphError) as error:
+        return {"valid": False, "issues": [{"path": "graph", "message": str(error)}]}
+    finally:
+        uow.rollback()
+    return {"valid": True, "issues": []}
+
+
 class EntrypointService(object):
     """The service methods for creating and managing entrypoints."""
 
@@ -156,6 +186,20 @@ class EntrypointService(object):
         self._swaps_validation_service = swaps_validation_service
         self._uow = uow
 
+    @contextmanager
+    def validate_create(self, **kwargs: Any) -> Iterator[utils.EntrypointDict]:
+        """Yield the validated entrypoint for serialization, then always roll back."""
+        try:
+            entrypoint = self.create(commit=False, on_save=True, **kwargs)
+            self._uow.session.flush()
+            yield entrypoint
+        finally:
+            self._uow.rollback()
+
+    def lint(self, **kwargs: Any) -> dict[str, Any]:
+        """Return lightweight findings without committing the proposed entrypoint."""
+        return _lint_report(self.create, self._uow, **kwargs)
+
     def create(
         self,
         name: str,
@@ -169,6 +213,7 @@ class EntrypointService(object):
         queue_ids: list[int],
         group_id: int,
         commit: bool = True,
+        on_save: bool = True,
         **kwargs,
     ) -> utils.EntrypointDict:
         """Create a new entrypoint.
@@ -191,6 +236,8 @@ class EntrypointService(object):
             queue_ids: A list of queue ids to associate with the new entrypoint.
             group_id: The id of the group that will own the entrypoint.
             commit: If True, commit the transaction. Defaults to True.
+            on_save: If True, perform full save-time validation independently of
+                committing the transaction. Defaults to True.
 
         Returns:
             The newly created entrypoint object.
@@ -201,6 +248,7 @@ class EntrypointService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         owner = self._uow.group_repo.get_one(group_id, DeletionPolicy.NOT_DELETED)
+        assert_user_in_group(self._uow.session, current_user, owner)
         type_ids = _get_artifact_parameter_type_ids(artifact_parameters)
         artifact_parameter_types = (
             list(
@@ -251,8 +299,6 @@ class EntrypointService(object):
             for artifact_plugin in artifact_plugins
         ]
 
-        # if we are committing the entrypoint, we run the "rendered" validation.
-        # otherwise, we do the lighter validation.
         self._swaps_validation_service.raise_validation_errors(
             group_id=group_id,
             task_graph=task_graph,
@@ -260,7 +306,7 @@ class EntrypointService(object):
             parameters=parameters,
             artifact_parameters=artifact_parameters,
             plugin_ids=[plugin.resource_snapshot_id for plugin in plugins],
-            on_save=commit,
+            on_save=on_save,
             log=log,
         )
 
@@ -385,6 +431,26 @@ class EntrypointIdService(UnitOfWorkService):
         self._swaps_validation_service = swaps_validation_service
         self._uow = uow
 
+    @contextmanager
+    def validate_modify(
+        self, entrypoint_id: int, **kwargs: Any
+    ) -> Iterator[utils.EntrypointDict]:
+        """Yield the validated update for serialization, then always roll back."""
+        try:
+            entrypoint = self.modify(
+                entrypoint_id, commit=False, on_save=True, **kwargs
+            )
+            self._uow.session.flush()
+            yield entrypoint
+        finally:
+            self._uow.rollback()
+
+    def lint(self, entrypoint_id: int, **kwargs: Any) -> dict[str, Any]:
+        """Lint an update against saved plugin associations, then roll it back."""
+        return _lint_report(
+            self.modify, self._uow, entrypoint_id=entrypoint_id, **kwargs
+        )
+
     def get(
         self,
         entrypoint_id: int,
@@ -441,6 +507,7 @@ class EntrypointIdService(UnitOfWorkService):
         plugin_ids: list[int] | None = None,
         artifact_plugin_ids: list[int] | None = None,
         commit: bool = True,
+        on_save: bool = True,
         **kwargs,
     ) -> utils.EntrypointDict:
         """Modify an entrypoint.
@@ -461,6 +528,8 @@ class EntrypointIdService(UnitOfWorkService):
             artifact_plugin_ids: Artifact plugins to append or sync to their latest
                 snapshots. If None, the current artifact plugin snapshots are retained.
             commit: If True, commit the transaction. Defaults to True.
+            on_save: If True, perform full save-time validation independently of
+                committing the transaction. Defaults to True.
 
         Returns:
             The updated entrypoint object.
@@ -474,6 +543,7 @@ class EntrypointIdService(UnitOfWorkService):
         entrypoint = self._uow.entrypoint_repo.get_one(
             entrypoint_id, DeletionPolicy.NOT_DELETED
         )
+        assert_user_in_group(self._uow.session, current_user, entrypoint.resource.owner)
         type_ids = _get_artifact_parameter_type_ids(artifact_parameters)
         artifact_parameter_types = (
             list(
@@ -549,8 +619,6 @@ class EntrypointIdService(UnitOfWorkService):
                 new_entrypoint.entry_point_artifact_plugins.append(new_plugin)
                 artifact_plugins.append(new_plugin.plugin)
 
-        # if we are committing the entrypoint, we run the "rendered" validation.
-        # otherwise, we do the lighter validation.
         self._swaps_validation_service.raise_validation_errors(
             group_id=entrypoint.resource.group_id,
             task_graph=task_graph,
@@ -558,7 +626,7 @@ class EntrypointIdService(UnitOfWorkService):
             parameters=parameters,
             artifact_parameters=artifact_parameters,
             plugin_ids=[plugin.resource_snapshot_id for plugin in plugins],
-            on_save=commit,
+            on_save=on_save,
             log=log,
         )
 
@@ -727,6 +795,7 @@ class EntrypointIdPluginsService(object):
     def __init__(
         self,
         plugin_ids_service: PluginIdsService,
+        swaps_validation_service: SwapsValidationService,
         uow: UnitOfWork,
     ) -> None:
         """Initialize the entrypoint service.
@@ -735,9 +804,11 @@ class EntrypointIdPluginsService(object):
 
         Args:
             plugin_ids_service: A PluginIdsService object.
+            swaps_validation_service: Full validation for prospective entrypoint snapshots.
             uow: A UnitOfWork instance
         """
         self._plugin_ids_service = plugin_ids_service
+        self._swaps_validation_service = swaps_validation_service
         self._uow = uow
 
     def get(
@@ -791,6 +862,7 @@ class EntrypointIdPluginsService(object):
             entrypoint_id, DeletionPolicy.NOT_DELETED
         )
 
+        assert_user_in_group(self._uow.session, current_user, entrypoint.resource.owner)
         # make sure the ids are unique
         # TODO: add schema post hook to dedupe
         plugin_id_set = set(plugin_ids)
@@ -833,6 +905,7 @@ class EntrypointIdPluginsService(object):
         )
 
         with self._uow():
+            self._swaps_validation_service.validate_snapshot(new_entrypoint, log)
             self._uow.entrypoint_repo.create_snapshot(new_entrypoint)
             self._uow.entrypoint_repo.add_plugins(new_entrypoint, plugin_ids)
 
@@ -847,6 +920,13 @@ class EntrypointIdPluginsService(object):
 
 class EntrypointIdPluginsIdService(UnitOfWorkService):
     """The service methods for creating and managing entrypoints by their unique id."""
+
+    @inject
+    def __init__(
+        self, swaps_validation_service: SwapsValidationService, uow: UnitOfWork
+    ) -> None:
+        super().__init__(uow)
+        self._swaps_validation_service = swaps_validation_service
 
     def get(
         self,
@@ -913,6 +993,7 @@ class EntrypointIdPluginsIdService(UnitOfWorkService):
             entrypoint_id, DeletionPolicy.NOT_DELETED
         )
 
+        assert_user_in_group(self._uow.session, current_user, entrypoint.resource.owner)
         # should this be a no-op? i.e. return success and don't make a new snapshot
         # the other repo implementations changed resource deletion to be a no-op if not
         # found instead of raising an error
@@ -955,6 +1036,7 @@ class EntrypointIdPluginsIdService(UnitOfWorkService):
         )
 
         with self._uow():
+            self._swaps_validation_service.validate_snapshot(new_entrypoint, log)
             # if the removed plugin is also an artifact plugin do not remove the
             # resource dependency relationship
             if plugin_id not in artifact_plugins:
@@ -1426,11 +1508,12 @@ class EntrypointConfigService(UnitOfWorkService):
             descending=False,
         )
 
+        validate_rendered = not partial and (not sections or "graph" in sections)
         config = build_task_engine_dict(
             entry_point=entry_point,
             plugin_plugin_files=plugin_files,
             plugin_parameter_types=types,
-            sections=sections,
+            sections=None if validate_rendered else sections,
         )
 
         if "graph" in config:
@@ -1440,6 +1523,23 @@ class EntrypointConfigService(UnitOfWorkService):
                 )
             except Exception as e:
                 raise EntrypointSwapsRenderError(str(e)) from e
+
+        if validate_rendered:
+            # Validate against all task/type definitions before projecting sections.
+            errors = [
+                str(issue)
+                for issue in validate_task_engine_dict(config)
+                if issue.severity is IssueSeverity.ERROR
+            ]
+            if errors:
+                raise EntrypointValidationError(
+                    message="Rendered entrypoint configuration is invalid",
+                    validation_error_dict={"rendered_validation_errors": errors},
+                )
+            if sections:
+                config = {
+                    name: value for name, value in config.items() if name in sections
+                }
 
         return config
 
@@ -1754,6 +1854,7 @@ class SwapsValidationService(UnitOfWorkService):
             * Collects all the tasks needed for the given graph and provides it in the response.
 
         If the rendered_validation flag is set, this entrypoint also:
+            * Checks the union of dependencies across all swap choices for cycles.
             * Iterates over swaps, renders the graph using different swap combinations, and performs in-depth
             validation on the experiment with the rendered graph.
             * Validates that all global parameters required for the graph are declared as entrypoint inputs.
@@ -1839,16 +1940,21 @@ class SwapsValidationService(UnitOfWorkService):
                 plugin_plugin_files=plugin_plugin_files,
                 plugin_parameter_types=plugin_parameter_types,
             )
-        except InvalidYamlError as e:
+        except (InvalidYamlError, yaml.YAMLError) as e:
             return {
-                "schema_valid": False,
                 "schema_issues": [
-                    ValidationIssue(
-                        type_=IssueType.SYNTAX,
-                        severity=IssueSeverity.ERROR,
-                        message=str(e),
+                    str(
+                        ValidationIssue(
+                            type_=IssueType.SYNTAX,
+                            severity=IssueSeverity.ERROR,
+                            message=str(e),
+                        )
                     )
                 ],
+                "swap_issues": [],
+                "rendered_validation_errors": [],
+                "missing_global_params": [],
+                "swaps": {},
             }
 
         merged_schema = get_swappable_experiment_schema()
@@ -1890,6 +1996,8 @@ class SwapsValidationService(UnitOfWorkService):
 
             #### Specifically for saving and modifying entrypoints, perform in-depth validation
             if rendered_validation:
+                if not duplicate_swap_issues and not multiple_swaps_per_step_issues:
+                    pre_render_issues += check_swaps_graph_dependencies(swaps_yaml)
                 # extract a mapping of swaps to possible swap choices
                 swaps = extract_swaps(
                     swaps_yaml
@@ -1949,6 +2057,46 @@ class SwapsValidationService(UnitOfWorkService):
             "missing_global_params": missing_globals,
             "swaps": tasks,
         }
+
+    def validate_snapshot(
+        self, entrypoint: models.EntryPoint, log: BoundLogger
+    ) -> None:
+        """Apply ordinary save-time validation to prospective plugin associations."""
+        self.raise_validation_errors(
+            task_graph=entrypoint.task_graph,
+            artifact_graph=entrypoint.artifact_graph,
+            parameters=[
+                {
+                    "name": p.name,
+                    "parameter_type": p.parameter_type,
+                    "default_value": p.default_value,
+                }
+                for p in sorted(entrypoint.parameters, key=lambda p: p.parameter_number)
+            ],
+            artifact_parameters=[
+                {
+                    "name": a.name,
+                    "output_params": [
+                        {
+                            "name": p.name,
+                            "parameter_type_id": p.parameter_type.resource_id,
+                        }
+                        for p in sorted(
+                            a.output_parameters, key=lambda p: p.parameter_number
+                        )
+                    ],
+                }
+                for a in sorted(
+                    entrypoint.artifact_parameters, key=lambda a: a.artifact_number
+                )
+            ],
+            plugin_ids=[
+                p.plugin.resource_snapshot_id for p in entrypoint.entry_point_plugins
+            ],
+            group_id=entrypoint.resource.group_id,
+            log=log,
+            on_save=True,
+        )
 
     def raise_validation_errors(
         self,

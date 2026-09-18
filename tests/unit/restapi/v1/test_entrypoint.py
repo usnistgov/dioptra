@@ -27,13 +27,278 @@ from typing import Any
 
 import pytest
 from flask.testing import FlaskClient
+from sqlalchemy import func, select
 
 from dioptra.client.base import DioptraResponseProtocol, FieldNameCollisionError
 from dioptra.client.client import DioptraClient
+from dioptra.restapi.db import models
 
 from ..lib import helpers, routines
 from ..lib.asserts import assert_retrieving_deleted_resource_snapshots_works
 from ..test_utils import assert_retrieving_resource_works, assert_searchable_field_works
+
+# -- Dry runs and lint -----------------------------------------------------------------
+
+
+def _entrypoint_row_counts(db_session):
+    return {
+        model.__tablename__: db_session.scalar(select(func.count()).select_from(model))
+        for model in (
+            models.Resource,
+            models.ResourceSnapshot,
+            models.EntryPoint,
+            models.EntryPointPlugin,
+            models.EntryPointArtifactPlugin,
+            models.EntryPointParameter,
+            models.EntryPointArtifactParameter,
+        )
+    }
+
+
+@pytest.fixture
+def proposed_entrypoint(auth_account, registered_swaps_validation_plugin):
+    return {
+        "group": auth_account["default_group_id"],
+        "name": "dry-run-entrypoint",
+        "taskGraph": "selected:\n  task1:\n    input_param: valid\n",
+        "plugins": [registered_swaps_validation_plugin["plugin_id"]],
+    }
+
+
+def _prepare_entrypoint_request(client, payload, modifying):
+    if not modifying:
+        return client.post, "/api/v1/entrypoints/", payload
+    response = client.post("/api/v1/entrypoints/", json=payload)
+    assert response.status_code == HTTPStatus.OK, response.json
+    payload = {k: v for k, v in payload.items() if k not in ("group", "plugins")}
+    return client.put, f"/api/v1/entrypoints/{response.json['id']}", payload
+
+
+@pytest.mark.parametrize("modifying", [False, True])
+@pytest.mark.parametrize("cyclic", [False, True])
+def test_full_validation_checks_all_swap_dependencies(
+    client, proposed_entrypoint, modifying, cyclic, db_session
+):
+    request, url, payload = _prepare_entrypoint_request(
+        client, proposed_entrypoint, modifying
+    )
+    before = client.get(url).json if modifying else None
+    payload["taskGraph"] = textwrap.dedent("""\
+        left:
+          ?left-choice:
+            default:
+              task1: left
+            cross:
+              task1: $right.output
+        right:
+          ?right-choice:
+            default:
+              task1: right
+            cross:
+              task1: $left.output
+    """)
+    if not cyclic:
+        payload["taskGraph"] = payload["taskGraph"].replace(
+            "$left.output", "independent"
+        )
+
+    counts_before = _entrypoint_row_counts(db_session)
+    preview = request(url, json=payload, query_string={"validateOnly": "true"})
+    db_session.commit()
+    assert _entrypoint_row_counts(db_session) == counts_before
+    saved = request(url, json=payload)
+    assert preview.status_code == saved.status_code
+    if cyclic:
+        assert saved.status_code == HTTPStatus.BAD_REQUEST
+        assert "Step cycle detected" in str(saved.json)
+        assert preview.json.get("detail") == saved.json.get("detail")
+        db_session.commit()
+        assert _entrypoint_row_counts(db_session) == counts_before
+        if modifying:
+            assert client.get(url).json == before
+    else:
+        assert saved.status_code == HTTPStatus.OK, saved.json
+
+
+@pytest.mark.parametrize("modifying", [False, True])
+def test_dry_run_success_does_not_persist(
+    client, proposed_entrypoint, modifying, db_session
+):
+    """Return the live representation while rolling back all proposed changes."""
+    request, url, payload = _prepare_entrypoint_request(
+        client, proposed_entrypoint, modifying
+    )
+    before = client.get(url).json if modifying else None
+    queue = client.post(
+        "/api/v1/queues/",
+        json={"name": "preview-queue", "group": proposed_entrypoint["group"]},
+    )
+    assert queue.status_code == HTTPStatus.OK, queue.json
+    payload = {**payload, "queues": [queue.json["id"]], "name": "preview-name"}
+    counts_before = _entrypoint_row_counts(db_session)
+    response = request(url, json=payload, query_string={"validateOnly": "true"})
+    # A later commit (which also flushes) must not persist dry-run changes.
+    db_session.commit()
+
+    assert response.status_code == HTTPStatus.OK, response.json
+    assert _entrypoint_row_counts(db_session) == counts_before
+    if modifying:
+        assert client.get(url).json == before
+    else:
+        assert client.get(url).json["data"] == []
+    saved = request(url, json=payload)
+    assert saved.status_code == response.status_code, saved.json
+    assert response.json["deleted"] is False
+    assert response.json["latestSnapshot"] is True
+    omitted = {"snapshot", "snapshotCreatedOn", "lastModifiedOn"}
+    if not modifying:
+        omitted |= {"id", "createdOn"}
+    assert response.json == {k: v for k, v in saved.json.items() if k not in omitted}
+
+
+@pytest.mark.parametrize("modifying", [False, True])
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        pytest.param(
+            {"taskGraph": "selected:\n  task1:\n    input_param: $missing_global\n"},
+            id="missing-global",
+        ),
+        pytest.param({"queues": [999999]}, id="queue"),
+        pytest.param({"artifactGraph": "[invalid yaml"}, id="artifact-yaml"),
+        pytest.param({"name": "taken"}, id="duplicate-name"),
+    ],
+)
+def test_dry_run_error_matches_save(
+    client, proposed_entrypoint, modifying, overrides, db_session
+):
+    """Dry runs reject graph, association, and name errors exactly as saves do."""
+    request, url, payload = _prepare_entrypoint_request(
+        client, proposed_entrypoint, modifying
+    )
+    if "name" in overrides:
+        other = {**proposed_entrypoint, "name": "taken"}
+        assert (
+            client.post("/api/v1/entrypoints/", json=other).status_code == HTTPStatus.OK
+        )
+    payload = {**payload, **overrides}
+
+    counts_before = _entrypoint_row_counts(db_session)
+    preview = request(url, json=payload, query_string={"validateOnly": "true"})
+    db_session.commit()
+    assert _entrypoint_row_counts(db_session) == counts_before
+    saved = request(url, json=payload)
+    assert preview.status_code == saved.status_code
+    assert preview.status_code >= 400
+    assert preview.json["error"] == saved.json["error"]
+    assert preview.json["message"] == saved.json["message"]
+    assert preview.json.get("detail") == saved.json.get("detail")
+
+
+@pytest.mark.parametrize("modifying", [False, True])
+@pytest.mark.parametrize(
+    "graph, expected_status, expected_valid",
+    [
+        pytest.param(
+            "selected:\n  task1:\n    input_param: $missing_global\n",
+            HTTPStatus.OK,
+            True,
+            id="lightweight-success",
+        ),
+        pytest.param(
+            "selected:\n  unregistered_task: {}\n",
+            HTTPStatus.OK,
+            False,
+            id="finding",
+        ),
+        pytest.param(None, HTTPStatus.BAD_REQUEST, None, id="malformed-request"),
+    ],
+)
+def test_lint_is_lightweight(
+    client,
+    dioptra_client,
+    proposed_entrypoint,
+    modifying,
+    monkeypatch,
+    db_session,
+    graph,
+    expected_status,
+    expected_valid,
+):
+    """Colon routes report lint issues while leaving full checks to dry runs."""
+    _, url, payload = _prepare_entrypoint_request(client, proposed_entrypoint, modifying)
+    from dioptra.restapi.v1.entrypoints.service import SwapsValidationService
+
+    def unexpected_render(*args, **kwargs):
+        pytest.fail("Lint must not render swap combinations")
+
+    monkeypatch.setattr(
+        SwapsValidationService, "validate_single_swap_combinations", unexpected_render
+    )
+
+    counts_before = _entrypoint_row_counts(db_session)
+    before = client.get(url).json if modifying else None
+
+    payload = {**payload, "taskGraph": graph} if graph is not None else {}
+    if modifying:
+        response = dioptra_client.entrypoints.lint_by_id(
+            int(url.rsplit("/", 1)[1]), payload
+        )
+    else:
+        response = dioptra_client.entrypoints.lint(payload)
+
+    db_session.commit()
+    assert _entrypoint_row_counts(db_session) == counts_before
+    if modifying:
+        assert client.get(url).json == before
+
+    assert response.status_code == expected_status, response.text
+    if expected_status == HTTPStatus.OK:
+        report = response.json()
+        assert report["valid"] is expected_valid
+        assert bool(report["issues"]) == (not expected_valid)
+        assert all(issue["path"] and issue["message"] for issue in report["issues"])
+
+
+@pytest.mark.parametrize("modifying", [False, True])
+def test_dry_run_and_lint_require_group_membership(
+    client, proposed_entrypoint, auth_account, modifying, db_session
+):
+    """Authorization failures remain errors, including for invalid lint content."""
+    user = db_session.get(models.User, auth_account["id"])
+    group = models.Group(name="private", creator=user)
+    member = models.GroupMember(
+        user=user, read=True, write=True, share_read=True, share_write=True
+    )
+    group.members.append(member)
+    db_session.add(group)
+    db_session.commit()
+    payload = {**proposed_entrypoint, "group": group.group_id}
+    request, url, payload = _prepare_entrypoint_request(client, payload, modifying)
+    db_session.delete(member)
+    db_session.commit()
+    preview = request(url, json=payload, query_string={"validateOnly": "true"})
+    saved = request(url, json=payload)
+    assert preview.status_code == saved.status_code == HTTPStatus.BAD_REQUEST
+    assert preview.json["error"] == saved.json["error"] == "UserNotInGroupError"
+    payload["taskGraph"] = "selected:\n  unknown_task: {}\n"
+    lint = client.post(f"{url.rstrip('/')}:lint", json=payload)
+    assert lint.status_code == saved.status_code, lint.json
+    assert lint.json["error"] == saved.json["error"]
+
+
+def test_lint_missing_resource_and_documented_routes(client, auth_account):
+    """Missing resources remain errors and both colon routes appear in OpenAPI."""
+    response = client.post(
+        "/api/v1/entrypoints/999999:lint",
+        json={"name": "missing", "taskGraph": "{}"},
+    )
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    schema = client.get("/swagger.json")
+    assert schema.status_code == HTTPStatus.OK
+    assert "/api/v1/entrypoints:lint" in schema.json["paths"]
+    assert "/api/v1/entrypoints/{id}:lint" in schema.json["paths"]
+
 
 # -- Assertions ------------------------------------------------------------------------
 
@@ -1540,22 +1805,137 @@ def test_delete_plugin_snapshot_by_id_for_entrypoint(
     registered_plugin_with_files: dict[str, Any],
     registered_entrypoints: dict[str, Any],
 ) -> None:
-    """Test that plugins associated with the entrypoint can be deleted by id.
-    Given an authenticated user, registered entrypoints, and registered plugins,
-    this test validates the following sequence of actions:
-    - A user deletes an associated plugin with the entrypoint.
-    - A user retrieves a list of associated plugins that does not include the deleted.
-    """
+    """A plugin required by the graph cannot be removed from the entrypoint."""
     entrypoint_id = registered_entrypoints["entrypoint1"]["id"]
     plugin_id_to_delete = registered_plugin_with_files["plugin"]["id"]
-    dioptra_client.entrypoints.plugins.delete_by_id(
+    response = dioptra_client.entrypoints.plugins.delete_by_id(
         entrypoint_id=entrypoint_id, plugin_id=plugin_id_to_delete
     )
+    assert response.status_code == HTTPStatus.BAD_REQUEST
     assert_retrieving_all_plugin_snapshots_for_entrypoint_works(
         dioptra_client,
         entrypoint_id=entrypoint_id,
-        expected=[],
+        expected=[plugin_id_to_delete],
     )
+
+@pytest.mark.parametrize("operation", ["remove", "sync"])
+@pytest.mark.parametrize("valid", [False, True])
+def test_plugin_changes_validate_prospective_snapshot(
+    client,
+    auth_account,
+    registered_plugin_parameter_types,
+    db_session,
+    operation,
+    valid,
+):
+    """Association changes validate all choices against their prospective snapshots."""
+    group_id = auth_account["default_group_id"]
+    string_id = registered_plugin_parameter_types["string"]["id"]
+    plugins = []
+    files = []
+    file_payloads = []
+    for name in ("a", "b"):
+        response = client.post(
+            "/api/v1/plugins/", json={"name": name, "group": group_id}
+        )
+        assert response.status_code == HTTPStatus.OK, response.json
+        plugins.append(response.json["id"])
+        payload = {
+            "filename": "tasks.py",
+            "contents": "# plugin tasks",
+            "tasks": {
+                "functions": [
+                    {
+                        "name": f"task_{name}",
+                        "inputParams": [
+                            {"name": "input_param", "parameterType": string_id}
+                        ],
+                        "outputParams": [{"name": "value", "parameterType": string_id}],
+                    }
+                ]
+            },
+        }
+        response = client.post(f"/api/v1/plugins/{plugins[-1]}/files", json=payload)
+        assert response.status_code == HTTPStatus.OK, response.json
+        files.append(response.json["id"])
+        file_payloads.append(payload)
+
+    graph = textwrap.dedent("""\
+        choose:
+          ?implementation:
+            use_b:
+              task_b:
+                input_param: $input_param
+            use_a:
+              task_a:
+                input_param: $input_param
+    """)
+    if operation == "remove" and valid:
+        graph = "choose:\n  task_b:\n    input_param: $input_param\n"
+    response = client.post(
+        "/api/v1/entrypoints/",
+        json={
+            "name": "plugin-association-validation",
+            "group": group_id,
+            "plugins": plugins,
+            "taskGraph": graph,
+            "parameters": [
+                {
+                    "name": "input_param",
+                    "parameterType": "string",
+                    "defaultValue": "value",
+                }
+            ],
+        },
+    )
+    assert response.status_code == HTTPStatus.OK, response.json
+    before = response.json
+    url = f"/api/v1/entrypoints/{before['id']}"
+
+    if operation == "sync":
+        payload = {**file_payloads[0], "description": "new plugin snapshot"}
+        if not valid:
+            payload["tasks"] = {"functions": []}
+        response = client.put(
+            f"/api/v1/plugins/{plugins[0]}/files/{files[0]}", json=payload
+        )
+        assert response.status_code == HTTPStatus.OK, response.json
+
+    # Plugin updates legitimately change latestSnapshot metadata on old references.
+    before = client.get(url).json
+    associations_before = client.get(f"{url}/plugins").json
+    counts_before = _entrypoint_row_counts(db_session)
+    if operation == "remove":
+        response = client.delete(f"{url}/plugins/{plugins[0]}")
+    else:
+        response = client.post(f"{url}/plugins", json={"plugins": [plugins[0]]})
+    assert response.status_code == (
+        HTTPStatus.OK if valid else HTTPStatus.BAD_REQUEST
+    ), response.json
+    db_session.commit()
+    after = client.get(url).json
+    associations_after = client.get(f"{url}/plugins").json
+    assert (
+        client.get(f"{url}/snapshots/{after['snapshot']}/swaps").status_code
+        == HTTPStatus.OK
+    )
+    if not valid:
+        assert "task_a" in str(response.json)
+        assert after == before
+        assert associations_after == associations_before
+        assert _entrypoint_row_counts(db_session) == counts_before
+    else:
+        assert after["snapshot"] != before["snapshot"]
+        assert next(p for p in associations_after if p["id"] == plugins[1]) == next(
+            p for p in associations_before if p["id"] == plugins[1]
+        )
+        if operation == "remove":
+            assert [p["id"] for p in associations_after] == [plugins[1]]
+        else:
+            old_a = next(p for p in associations_before if p["id"] == plugins[0])
+            new_a = next(p for p in associations_after if p["id"] == plugins[0])
+            assert new_a["snapshotId"] != old_a["snapshotId"]
+
 
 def test_append_plugins_to_deleted_entrypoint_fails(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
@@ -1758,19 +2138,19 @@ test_cases_for_file["swap_test"] = [
         "active_plugins": ["plugin1", "plugin9"],
     },
     {
-        "swaps": {"step2_choice": "taskalias1", "step3_choice": "taskalias4"},
+        "swaps": {"step2_choice": "taskalias1", "step3_choice": "taskalias3,v3"},
         "globals": ["global1", "global3", "global6", "global12"],
         "sort_order": [["step1", "step2", "step3", "step4"]],
         "active_plugins": ["plugin1", "plugin9"],
     },
     {
-        "swaps": {"step2_choice": "taskalias2", "step3_choice": "taskalias3"},
+        "swaps": {"step2_choice": "taskalias1:v2", "step3_choice": "taskalias3"},
         "globals": ["global1", "global6", "global9"],
         "sort_order": [["step1", "step3", "step4", "step2"]],
         "active_plugins": ["plugin1", "plugin9", "plugin13"],
     },
     {
-        "swaps": {"step2_choice": "taskalias2", "step3_choice": "taskalias4"},
+        "swaps": {"step2_choice": "taskalias1:v2", "step3_choice": "taskalias3,v3"},
         "globals": ["global1", "global6", "global12"],
         "sort_order": [["step1", "step3", "step4", "step2"]],
         "active_plugins": ["plugin1", "plugin9", "plugin13"],
@@ -1872,7 +2252,7 @@ def test_dynamic_globals_endpoint_without_swaps(
     )
 
 
-@pytest.mark.parametrize("query_string", [None, {"swaps": ""}])
+@pytest.mark.parametrize("query_string", [None, {}])
 def test_dynamic_globals_endpoint_accepts_blank_swaps(
     client: FlaskClient,
     auth_account: dict[str, Any],
@@ -2500,7 +2880,7 @@ def _create_valid_entrypoint(
         task_graph=task_graph,
         plugins=plugin_ids,
         parameters=parameters,
-        validate_only=True,
+        validate_only=False,
     )
 
     return response
@@ -2784,6 +3164,7 @@ def test_validate_swaps_graph_mixed_output_error(
 
 
 def test_entrypoint_swaps_config(
+    client: FlaskClient,
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_swap_entrypoints: dict[str, Any],
@@ -2791,14 +3172,140 @@ def test_entrypoint_swaps_config(
     entrypoint = registered_swap_entrypoints["swap_test"]
 
     response = dioptra_client.entrypoints.snapshots.get_config(
-        entrypoint["id"], entrypoint["snapshot"], swap_parameters={"step2_choice": "taskalias1", "step3_choice": "taskalias4" }
+        entrypoint["id"], entrypoint["snapshot"], swap_parameters={"step2_choice": "taskalias1:v2", "step3_choice": "taskalias3,v3"}
     )
 
     assert response.status_code == HTTPStatus.OK
 
     response_json = response.json()
-    assert 'task2' in response_json['graph']['step2']
+    assert 'task10' in response_json['graph']['step2']
     assert 'task2' in response_json['graph']['step3']
+
+    for endpoint in ("config", "dynamicGlobalParameters"):
+        url = (
+            f"/api/v1/entrypoints/{entrypoint['id']}/snapshots/"
+            f"{entrypoint['snapshot']}/{endpoint}"
+        )
+        for duplicate in ("taskalias1:v2", "taskalias1"):
+            response = client.get(url, query_string=[
+                ("swaps[step2_choice]", "taskalias1:v2"),
+                ("swaps[step2_choice]", duplicate),
+                ("swaps[step3_choice]", "taskalias3,v3"),
+            ])
+            assert response.status_code == HTTPStatus.BAD_REQUEST
+            assert "exactly one alias" in response.get_data(as_text=True)
+
+        for malformed in ("swaps", "swaps[step2_choice", "swaps[]"):
+            response = client.get(url, query_string={malformed: "taskalias1:v2"})
+            assert response.status_code == HTTPStatus.BAD_REQUEST
+
+@pytest.mark.parametrize("sections", [None, ["graph"]])
+def test_entrypoint_config_rejects_unresolved_rendered_task(
+    client,
+    dioptra_client,
+    auth_account,
+    registered_plugin_parameter_types,
+    db_session,
+    sections,
+):
+    group_id = auth_account["default_group_id"]
+    string_id = registered_plugin_parameter_types["string"]["id"]
+    plugin_ids = []
+    for suffix in ("a", "b"):
+        response = client.post(
+            "/api/v1/plugins/",
+            json={"name": f"plugin_{suffix}", "group": group_id},
+        )
+        assert response.status_code == HTTPStatus.OK, response.json
+        plugin_ids.append(response.json["id"])
+        response = client.post(
+            f"/api/v1/plugins/{plugin_ids[-1]}/files",
+            json={
+                "filename": "tasks.py",
+                "contents": "# task plugin",
+                "tasks": {
+                    "functions": [
+                        {
+                            "name": f"task_from_plugin_{suffix}",
+                            "inputParams": [
+                                {"name": "input_param", "parameterType": string_id}
+                            ],
+                            "outputParams": [
+                                {"name": "value", "parameterType": string_id}
+                            ],
+                        }
+                    ]
+                },
+            },
+        )
+        assert response.status_code == HTTPStatus.OK, response.json
+
+    response = client.post(
+        "/api/v1/entrypoints/",
+        json={
+            "name": "unresolved-task-config",
+            "group": group_id,
+            "plugins": plugin_ids,
+            "parameters": [
+                {
+                    "name": "input_param",
+                    "parameterType": "string",
+                    "defaultValue": "value",
+                }
+            ],
+            "taskGraph": textwrap.dedent("""\
+                choose:
+                  ?implementation:
+                    use_plugin_a:
+                      task_from_plugin_a:
+                        input_param: $input_param
+                    use_plugin_b:
+                      task_from_plugin_b:
+                        input_param: $input_param
+            """),
+        },
+    )
+    assert response.status_code == HTTPStatus.OK, response.json
+    saved = response.json
+    entrypoint = db_session.get(models.EntryPoint, saved["snapshot"])
+    # Reproduce the removed association directly: DELETE now rejects this change.
+    # Plugin A itself and the entrypoint's saved graph remain intact.
+    removed = next(
+        p
+        for p in entrypoint.entry_point_plugins
+        if p.plugin.resource_id == plugin_ids[0]
+    )
+    db_session.delete(removed)
+    db_session.commit()
+
+    response = dioptra_client.entrypoints.snapshots.get_config(
+        saved["id"],
+        saved["snapshot"],
+        swap_parameters={"implementation": "use_plugin_a"},
+        sections=sections,
+    )
+    assert response.status_code == HTTPStatus.BAD_REQUEST, response.text
+    errors = response.json()["detail"]["reason"]["rendered_validation_errors"]
+    assert any(
+        "unrecognized task plugin: task_from_plugin_a" in error for error in errors
+    )
+
+    # An unselected invalid choice does not invalidate the selected configuration.
+    response = dioptra_client.entrypoints.snapshots.get_config(
+        saved["id"],
+        saved["snapshot"],
+        swap_parameters={"implementation": "use_plugin_b"},
+        sections=sections,
+    )
+    assert response.status_code == HTTPStatus.OK, response.text
+    assert response.json()["graph"] == {
+        "choose": {"task_from_plugin_b": {"input_param": "$input_param"}}
+    }
+    if sections:
+        assert set(response.json()) == set(sections)
+    else:
+        assert set(response.json()["tasks"]) == {"task_from_plugin_b"}
+
 
 def test_entrypoint_swaps_config_partial(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
@@ -2845,15 +3352,17 @@ def test_entrypoint_swaps_config_filtering(
     # we didn't specify this swap and are doing a partial render so it should still be there.
     assert '?step3_choice' in response_json['graph']['step3'] 
 
+@pytest.mark.parametrize("partial", [False, True])
 def test_entrypoint_swaps_config_no_graph(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_swap_entrypoints: dict[str, Any],
+    partial: bool,
 ):
     entrypoint = registered_swap_entrypoints["swap_test"]
 
     response = dioptra_client.entrypoints.snapshots.get_config(
-        entrypoint["id"], entrypoint["snapshot"], swap_parameters={"step2_choice": "taskalias1"}, partial=True, sections=["types"]
+        entrypoint["id"], entrypoint["snapshot"], partial=partial, sections=["types"]
     )
 
     assert response.status_code == HTTPStatus.OK
@@ -2928,7 +3437,7 @@ def test_entrypoint_swaps_config_nonexistent(
 
     # oops step4_choice doesn't exist
     response = dioptra_client.entrypoints.snapshots.get_config(
-        entrypoint["id"], entrypoint["snapshot"], swap_parameters={"step2_choice": "taskalias1", "step3_choice": "taskalias4", "step4_choice": "taskalias1"}
+        entrypoint["id"], entrypoint["snapshot"], swap_parameters={"step2_choice": "taskalias1", "step3_choice": "taskalias3,v3", "step4_choice": "taskalias1"}
     )
 
     assert response.status_code == HTTPStatus.BAD_REQUEST
@@ -2961,7 +3470,7 @@ def test_get_swaps_success(
     expected = {
         "step2_choice": {
             "tasks": ["task2", "task10"],
-            "aliases": ["taskalias1", "taskalias2"],
+            "aliases": ["taskalias1", "taskalias1:v2"],
             "params": {
                 "task2" : ["global3"],
                 "task10": []
@@ -2969,7 +3478,7 @@ def test_get_swaps_success(
         },
         "step3_choice": {
             "tasks": ["task1", "task2"],
-            "aliases": ["taskalias3", "taskalias4"],
+            "aliases": ["taskalias3", "taskalias3,v3"],
             "params": {
                 "task1" : ["global9"],
                 "task2": ["global12"]

@@ -328,21 +328,18 @@
                     "$ref": "#/$defs/step_dependencies"
                 }
             },
-            "patternProperties": {
-                    "^(?!dependencies$)[a-zA-Z0-9_]+$": {
-                    "$comment": "The task plugin short name + arg value(s)",
-                    "type": [
-                        "string",
-                        "number",
-                        "boolean",
-                        "null",
-                        "array"
-                    ]
-                }
+            "additionalProperties": {
+                "$comment": "The task plugin short name + arg value(s)",
+                "type": [
+                    "string",
+                    "number",
+                    "boolean",
+                    "null",
+                    "array"
+                ]
             },
             "minProperties": 1,
-            "maxProperties": 2,
-            "additionalProperties": false
+            "maxProperties": 2
         },
         "keyword_invocation": {
             "title": "Keyword invocation",
@@ -358,15 +355,12 @@
                     "$ref": "#/$defs/step_dependencies"
                 }
             },
-            "patternProperties": {
-                    "^(?!dependencies$)[a-zA-Z0-9_]+$": {
-                    "$comment": "The task plugin short name + arg value(s)",
-                    "type": "object"
-                }
+            "additionalProperties": {
+                "$comment": "The task plugin short name + kwargs",
+                "type": "object"
             },
             "minProperties": 1,
-            "maxProperties": 2,
-            "additionalProperties": false
+            "maxProperties": 2
         },
         "mixed_invocation": {
             "title": "Mixed position/keyword invocation",
@@ -374,7 +368,6 @@
             "properties": {
                 "task": {
                     "$comment": "Task plugin short name",
-                    "pattern": "^(?!dependencies$)[a-zA-Z0-9_]+$",
                     "type": "string",
                     "minLength": 1
                 },

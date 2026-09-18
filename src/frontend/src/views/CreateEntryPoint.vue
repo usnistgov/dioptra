@@ -564,11 +564,11 @@
       <q-btn
         label="Validate"
         color="primary"
-        :disable="taskPluginsChanged"
+        :disable="route.params.id !== 'new' && (taskPluginsChanged || artifactPluginChangesPending)"
         @click="validateEntrypoint()"
       />
-      <q-tooltip v-if="taskPluginsChanged">
-        The task plugin selection has changed. Save your changes before validating.
+      <q-tooltip v-if="route.params.id !== 'new' && (taskPluginsChanged || artifactPluginChangesPending)">
+        Plugin selections have changed. Save your plugin changes before validating.
       </q-tooltip>
     </span>
 
@@ -1491,6 +1491,10 @@ async function validateEntrypoint() {
     const responseValidationIssues = [
       ...(Array.isArray(reason?.schema_issues) ? reason.schema_issues : []),
       ...(Array.isArray(reason?.swap_issues) ? reason.swap_issues : []),
+      ...(Array.isArray(reason?.rendered_validation_errors) ? reason.rendered_validation_errors : []),
+      ...(Array.isArray(reason?.missing_global_params)
+        ? reason.missing_global_params.map((name) => `Missing global parameter: ${name}`)
+        : []),
     ];
     if (responseValidationIssues.length > 0) {
       validationIssues.value = responseValidationIssues;
