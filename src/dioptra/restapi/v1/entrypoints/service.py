@@ -794,6 +794,7 @@ class EntrypointIdPluginsService(object):
     def __init__(
         self,
         plugin_ids_service: PluginIdsService,
+        swaps_validation_service: SwapsValidationService,
         uow: UnitOfWork,
     ) -> None:
         """Initialize the entrypoint service.
@@ -802,9 +803,11 @@ class EntrypointIdPluginsService(object):
 
         Args:
             plugin_ids_service: A PluginIdsService object.
+            swaps_validation_service: Full validation for prospective entrypoint snapshots.
             uow: A UnitOfWork instance
         """
         self._plugin_ids_service = plugin_ids_service
+        self._swaps_validation_service = swaps_validation_service
         self._uow = uow
 
     def get(
@@ -858,6 +861,7 @@ class EntrypointIdPluginsService(object):
             entrypoint_id, DeletionPolicy.NOT_DELETED
         )
 
+        assert_user_in_group(self._uow.session, current_user, entrypoint.resource.owner)
         # make sure the ids are unique
         # TODO: add schema post hook to dedupe
         plugin_id_set = set(plugin_ids)
@@ -900,6 +904,7 @@ class EntrypointIdPluginsService(object):
         )
 
         with self._uow():
+            self._swaps_validation_service.validate_snapshot(new_entrypoint, log)
             self._uow.entrypoint_repo.create_snapshot(new_entrypoint)
             self._uow.entrypoint_repo.add_plugins(new_entrypoint, plugin_ids)
 
@@ -914,6 +919,13 @@ class EntrypointIdPluginsService(object):
 
 class EntrypointIdPluginsIdService(UnitOfWorkService):
     """The service methods for creating and managing entrypoints by their unique id."""
+
+    @inject
+    def __init__(
+        self, swaps_validation_service: SwapsValidationService, uow: UnitOfWork
+    ) -> None:
+        super().__init__(uow)
+        self._swaps_validation_service = swaps_validation_service
 
     def get(
         self,
@@ -980,6 +992,7 @@ class EntrypointIdPluginsIdService(UnitOfWorkService):
             entrypoint_id, DeletionPolicy.NOT_DELETED
         )
 
+        assert_user_in_group(self._uow.session, current_user, entrypoint.resource.owner)
         # should this be a no-op? i.e. return success and don't make a new snapshot
         # the other repo implementations changed resource deletion to be a no-op if not
         # found instead of raising an error
@@ -1022,6 +1035,7 @@ class EntrypointIdPluginsIdService(UnitOfWorkService):
         )
 
         with self._uow():
+            self._swaps_validation_service.validate_snapshot(new_entrypoint, log)
             # if the removed plugin is also an artifact plugin do not remove the
             # resource dependency relationship
             if plugin_id not in artifact_plugins:
@@ -2021,6 +2035,46 @@ class SwapsValidationService(UnitOfWorkService):
             "missing_global_params": missing_globals,
             "swaps": tasks,
         }
+
+    def validate_snapshot(
+        self, entrypoint: models.EntryPoint, log: BoundLogger
+    ) -> None:
+        """Apply ordinary save-time validation to prospective plugin associations."""
+        self.raise_validation_errors(
+            task_graph=entrypoint.task_graph,
+            artifact_graph=entrypoint.artifact_graph,
+            parameters=[
+                {
+                    "name": p.name,
+                    "parameter_type": p.parameter_type,
+                    "default_value": p.default_value,
+                }
+                for p in sorted(entrypoint.parameters, key=lambda p: p.parameter_number)
+            ],
+            artifact_parameters=[
+                {
+                    "name": a.name,
+                    "output_params": [
+                        {
+                            "name": p.name,
+                            "parameter_type_id": p.parameter_type.resource_id,
+                        }
+                        for p in sorted(
+                            a.output_parameters, key=lambda p: p.parameter_number
+                        )
+                    ],
+                }
+                for a in sorted(
+                    entrypoint.artifact_parameters, key=lambda a: a.artifact_number
+                )
+            ],
+            plugin_ids=[
+                p.plugin.resource_snapshot_id for p in entrypoint.entry_point_plugins
+            ],
+            group_id=entrypoint.resource.group_id,
+            log=log,
+            on_save=True,
+        )
 
     def raise_validation_errors(
         self,

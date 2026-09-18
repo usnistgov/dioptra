@@ -1759,22 +1759,137 @@ def test_delete_plugin_snapshot_by_id_for_entrypoint(
     registered_plugin_with_files: dict[str, Any],
     registered_entrypoints: dict[str, Any],
 ) -> None:
-    """Test that plugins associated with the entrypoint can be deleted by id.
-    Given an authenticated user, registered entrypoints, and registered plugins,
-    this test validates the following sequence of actions:
-    - A user deletes an associated plugin with the entrypoint.
-    - A user retrieves a list of associated plugins that does not include the deleted.
-    """
+    """A plugin required by the graph cannot be removed from the entrypoint."""
     entrypoint_id = registered_entrypoints["entrypoint1"]["id"]
     plugin_id_to_delete = registered_plugin_with_files["plugin"]["id"]
-    dioptra_client.entrypoints.plugins.delete_by_id(
+    response = dioptra_client.entrypoints.plugins.delete_by_id(
         entrypoint_id=entrypoint_id, plugin_id=plugin_id_to_delete
     )
+    assert response.status_code == HTTPStatus.BAD_REQUEST
     assert_retrieving_all_plugin_snapshots_for_entrypoint_works(
         dioptra_client,
         entrypoint_id=entrypoint_id,
-        expected=[],
+        expected=[plugin_id_to_delete],
     )
+
+@pytest.mark.parametrize("operation", ["remove", "sync"])
+@pytest.mark.parametrize("valid", [False, True])
+def test_plugin_changes_validate_prospective_snapshot(
+    client,
+    auth_account,
+    registered_plugin_parameter_types,
+    db_session,
+    operation,
+    valid,
+):
+    """Association changes validate all choices against their prospective snapshots."""
+    group_id = auth_account["default_group_id"]
+    string_id = registered_plugin_parameter_types["string"]["id"]
+    plugins = []
+    files = []
+    file_payloads = []
+    for name in ("a", "b"):
+        response = client.post(
+            "/api/v1/plugins/", json={"name": name, "group": group_id}
+        )
+        assert response.status_code == HTTPStatus.OK, response.json
+        plugins.append(response.json["id"])
+        payload = {
+            "filename": "tasks.py",
+            "contents": "# plugin tasks",
+            "tasks": {
+                "functions": [
+                    {
+                        "name": f"task_{name}",
+                        "inputParams": [
+                            {"name": "input_param", "parameterType": string_id}
+                        ],
+                        "outputParams": [{"name": "value", "parameterType": string_id}],
+                    }
+                ]
+            },
+        }
+        response = client.post(f"/api/v1/plugins/{plugins[-1]}/files", json=payload)
+        assert response.status_code == HTTPStatus.OK, response.json
+        files.append(response.json["id"])
+        file_payloads.append(payload)
+
+    graph = textwrap.dedent("""\
+        choose:
+          ?implementation:
+            use_b:
+              task_b:
+                input_param: $input_param
+            use_a:
+              task_a:
+                input_param: $input_param
+    """)
+    if operation == "remove" and valid:
+        graph = "choose:\n  task_b:\n    input_param: $input_param\n"
+    response = client.post(
+        "/api/v1/entrypoints/",
+        json={
+            "name": "plugin-association-validation",
+            "group": group_id,
+            "plugins": plugins,
+            "taskGraph": graph,
+            "parameters": [
+                {
+                    "name": "input_param",
+                    "parameterType": "string",
+                    "defaultValue": "value",
+                }
+            ],
+        },
+    )
+    assert response.status_code == HTTPStatus.OK, response.json
+    before = response.json
+    url = f"/api/v1/entrypoints/{before['id']}"
+
+    if operation == "sync":
+        payload = {**file_payloads[0], "description": "new plugin snapshot"}
+        if not valid:
+            payload["tasks"] = {"functions": []}
+        response = client.put(
+            f"/api/v1/plugins/{plugins[0]}/files/{files[0]}", json=payload
+        )
+        assert response.status_code == HTTPStatus.OK, response.json
+
+    # Plugin updates legitimately change latestSnapshot metadata on old references.
+    before = client.get(url).json
+    associations_before = client.get(f"{url}/plugins").json
+    counts_before = _entrypoint_row_counts(db_session)
+    if operation == "remove":
+        response = client.delete(f"{url}/plugins/{plugins[0]}")
+    else:
+        response = client.post(f"{url}/plugins", json={"plugins": [plugins[0]]})
+    assert response.status_code == (
+        HTTPStatus.OK if valid else HTTPStatus.BAD_REQUEST
+    ), response.json
+    db_session.commit()
+    after = client.get(url).json
+    associations_after = client.get(f"{url}/plugins").json
+    assert (
+        client.get(f"{url}/snapshots/{after['snapshot']}/swaps").status_code
+        == HTTPStatus.OK
+    )
+    if not valid:
+        assert "task_a" in str(response.json)
+        assert after == before
+        assert associations_after == associations_before
+        assert _entrypoint_row_counts(db_session) == counts_before
+    else:
+        assert after["snapshot"] != before["snapshot"]
+        assert next(p for p in associations_after if p["id"] == plugins[1]) == next(
+            p for p in associations_before if p["id"] == plugins[1]
+        )
+        if operation == "remove":
+            assert [p["id"] for p in associations_after] == [plugins[1]]
+        else:
+            old_a = next(p for p in associations_before if p["id"] == plugins[0])
+            new_a = next(p for p in associations_after if p["id"] == plugins[0])
+            assert new_a["snapshotId"] != old_a["snapshotId"]
+
 
 def test_append_plugins_to_deleted_entrypoint_fails(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
