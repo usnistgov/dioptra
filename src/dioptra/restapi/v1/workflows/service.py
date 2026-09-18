@@ -818,6 +818,7 @@ class ResourceImportService(object):
                     queue_ids=[],
                     group_id=group_id,
                     commit=False,
+                    on_save=True,
                     log=log,
                 )
             elif conflict_strat == ResourceImportResolveNameConflictsStrategy.OVERWRITE:
@@ -840,6 +841,7 @@ class ResourceImportService(object):
                     queue_ids=[],
                     group_id=group_id,
                     commit=False,
+                    on_save=True,
                     log=log,
                 )
             elif conflict_strat == ResourceImportResolveNameConflictsStrategy.UPDATE:
@@ -865,6 +867,7 @@ class ResourceImportService(object):
                         queue_ids=queue_ids,
                         group_id=group_id,
                         commit=False,
+                        on_save=True,
                         log=log,
                     )
                 else:
@@ -880,6 +883,7 @@ class ResourceImportService(object):
                         queue_ids=[],
                         group_id=group_id,
                         commit=False,
+                        on_save=True,
                         log=log,
                     )
 

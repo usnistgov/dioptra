@@ -145,6 +145,89 @@ def assert_resource_import_overwrite_works(
 # -- Tests -----------------------------------------------------------------------------
 
 
+@pytest.mark.parametrize(
+    ("strategy", "existing"),
+    [("fail", False), ("overwrite", False), ("update", False), ("update", True)],
+)
+def test_resource_import_rejects_missing_global(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    tmp_path: Path,
+    strategy: str,
+    existing: bool,
+):
+    """Reject undeclared global references during import creation and updates.
+
+    Verify that imports run full save-time validation even though entry-point
+    services defer committing the transaction to the batch import service.
+    """
+    group_id = auth_account["groups"][0]["id"]
+    config = tmp_path / "dioptra.toml"
+    plugin = tmp_path / "tasks" / "tasks.py"
+    plugin.parent.mkdir()
+    entrypoint = tmp_path / "entrypoint.yaml"
+    config.write_text(
+        textwrap.dedent("""\
+        [[plugins]]
+        path = "tasks"
+        [[plugins.tasks.functions]]
+        filename = "tasks.py"
+        name = "alpha"
+        input_params = [{ name = "value", type = "string", required = true }]
+        output_params = [{ name = "result", type = "string" }]
+
+        [[entrypoints]]
+        name = "Imported entrypoint"
+        path = "entrypoint.yaml"
+        plugins = ["tasks"]
+    """)
+    )
+    plugin.write_text("def alpha(value):\n    return value\n")
+
+    def import_resources():
+        files = select_one_or_more_files(
+            [str(config), str(plugin), str(entrypoint)],
+            renames={
+                str(path): path.relative_to(tmp_path).as_posix()
+                for path in (config, plugin, entrypoint)
+            },
+        )
+        return dioptra_client.workflows.import_resources(
+            group_id,
+            source=files,
+            resolve_name_conflicts_strategy=strategy,
+        )
+
+    if existing:
+        entrypoint.write_text(
+            textwrap.dedent("""\
+                graph:
+                  selected:
+                    alpha:
+                      value: valid
+            """)
+        )
+        response = import_resources()
+        assert response.status_code == HTTPStatus.OK, response.text
+
+    entrypoint.write_text(
+        textwrap.dedent("""\
+            graph:
+              selected:
+                alpha:
+                  value: $missing_global
+        """)
+    )
+    response = import_resources()
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST, response.text
+    reason = response.json()["detail"]["reason"]
+    assert "missing_global" in reason["missing_global_params"]
+    assert any(
+        "missing_global" in error for error in reason["rendered_validation_errors"]
+    )
+
+
 def test_resource_import_from_archive_file(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
