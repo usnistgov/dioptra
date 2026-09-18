@@ -624,6 +624,16 @@ const swaps = ref({});
 const selectedSwaps = ref({});
 const partialGraph = ref("");
 const isInitializingEntrypoint = ref(false);
+let latestFormRefreshId = 0;
+
+function beginFormRefresh() {
+  latestFormRefreshId += 1;
+  return latestFormRefreshId;
+}
+
+function isCurrentFormRefresh(refreshId) {
+  return refreshId === latestFormRefreshId;
+}
 
 function usesOriginalJobSnapshot(entrypoint) {
   return Boolean(history.state.oldJobId && !updateEntrypoint.value && oldJob.value?.entrypoint.id === entrypoint?.id);
@@ -671,15 +681,15 @@ async function getSwaps() {
 }
 
 async function getGraph() {
-  if (!job.value.entrypoint) return;
+  if (!job.value.entrypoint) return null;
 
   try {
     console.log("selectedSwaps = ", selectedSwaps.value);
     const res = await api.getGraph(job.value.entrypoint.id, effectiveEntrypointSnapshot.value, selectedSwaps.value);
-    partialGraph.value = res.data?.graph ? YAML.stringify(res.data.graph).trimEnd() : "";
+    return res.data?.graph ? YAML.stringify(res.data.graph).trimEnd() : "";
   } catch (err) {
-    partialGraph.value = "";
     console.warn(err);
+    return null;
   }
 }
 
@@ -741,6 +751,7 @@ const areAllSwapsResolved = computed(() => {
 watch(
   () => job.value.entrypoint,
   async (newVal, oldVal) => {
+    const refreshId = beginFormRefresh();
     const previousSelectedSwaps = usesOriginalJobSnapshot(newVal)
       ? Object.fromEntries(oldJob.value.swaps.map(({ swapName, taskAlias }) => [swapName, taskAlias]))
       : newVal?.id === oldVal?.id
@@ -756,23 +767,42 @@ watch(
       parameters.value = [];
 
       if (newVal) {
-        swaps.value = await getSwaps();
+        const loadedSwaps = await getSwaps();
+        if (!isCurrentFormRefresh(refreshId)) return;
+
+        swaps.value = loadedSwaps;
         selectedSwaps.value = Object.fromEntries(
           Object.entries(previousSelectedSwaps).filter(([swapName, taskAlias]) =>
             swaps.value[swapName]?.some((option) => option.taskAlias === taskAlias),
           ),
         );
-        await getGraph();
 
-        const usedParams = await getUsedParams();
-        if (usedParams !== null) {
-          setParametersFromUsedParams(usedParams, newVal);
+        const graph = await getGraph();
+
+        if (!isCurrentFormRefresh(refreshId)) return;
+
+        if (graph === null) {
+          partialGraph.value = "";
+          parameters.value = [];
+        } else {
+          partialGraph.value = graph;
+
+          const usedParams = await getUsedParams();
+          if (!isCurrentFormRefresh(refreshId)) return;
+
+          if (usedParams === null) {
+            parameters.value = [];
+          } else {
+            setParametersFromUsedParams(usedParams, newVal);
+          }
         }
       }
 
+      if (!isCurrentFormRefresh(refreshId)) return;
+
       artifactParameters.value = [];
       if (Array.isArray(newVal?.artifactParameters)) {
-        newVal?.artifactParameters.forEach((artifactParam) => {
+        newVal.artifactParameters.forEach((artifactParam) => {
           artifactParameters.value.push({
             name: artifactParam.name,
             outputParams: artifactParam.outputParams,
@@ -784,7 +814,9 @@ watch(
         });
       }
     } finally {
-      isInitializingEntrypoint.value = false;
+      if (isCurrentFormRefresh(refreshId)) {
+        isInitializingEntrypoint.value = false;
+      }
     }
   },
 );
@@ -794,14 +826,41 @@ watch(
   async () => {
     if (isInitializingEntrypoint.value) return;
 
-    if (job.value.entrypoint && Object.keys(swaps.value).length > 0) {
-      await getGraph();
+    const refreshId = beginFormRefresh();
 
-      const usedParams = await getUsedParams();
-      if (usedParams !== null) {
-        setParametersFromUsedParams(usedParams, job.value.entrypoint, true);
-      }
+    if (!job.value.entrypoint || Object.keys(swaps.value).length === 0) {
+      partialGraph.value = "";
+      parameters.value = [];
+      return;
     }
+
+    const graph = await getGraph();
+
+    if (!isCurrentFormRefresh(refreshId)) return;
+
+    if (graph === null) {
+      partialGraph.value = "";
+      parameters.value = [];
+      return;
+    }
+
+    partialGraph.value = graph;
+
+    if (!areAllSwapsResolved.value) {
+      parameters.value = [];
+      return;
+    }
+
+    const usedParams = await getUsedParams();
+
+    if (!isCurrentFormRefresh(refreshId)) return;
+
+    if (usedParams === null) {
+      parameters.value = [];
+      return;
+    }
+
+    setParametersFromUsedParams(usedParams, job.value.entrypoint, true);
   },
   { deep: true },
 );
