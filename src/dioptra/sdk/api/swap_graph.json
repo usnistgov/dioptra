@@ -59,13 +59,25 @@
             ]
         },
         "positional_invocation": {
-            "$ref": "experiment_schema.json#/$defs/positional_invocation"
+            "$ref": "experiment_schema.json#/$defs/positional_invocation",
+            "propertyNames": {
+                "$comment": "Keys beginning with ? are swap placeholders, not ordinary invocations.",
+                "not": { "pattern": "^\\?" }
+            }
         },
         "keyword_invocation": {
-            "$ref": "experiment_schema.json#/$defs/keyword_invocation"
+            "$ref": "experiment_schema.json#/$defs/keyword_invocation",
+            "propertyNames": {
+                "$comment": "Keys beginning with ? are swap placeholders, not ordinary invocations.",
+                "not": { "pattern": "^\\?" }
+            }
         },
         "mixed_invocation": {
-            "$ref": "experiment_schema.json#/$defs/mixed_invocation"
+            "$ref": "experiment_schema.json#/$defs/mixed_invocation",
+            "propertyNames": {
+                "$comment": "Keys beginning with ? are swap placeholders, not ordinary invocations.",
+                "not": { "pattern": "^\\?" }
+            }
         },
         "swap_positional_invocation": {
             "title": "Positional invocation",
