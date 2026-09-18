@@ -24,7 +24,6 @@ from .base import (
 
 T = TypeVar("T")
 
-VALIDATE_ENTRYPOINT: Final[str] = "validateEntrypoint"
 SIGNATURE_ANALYSIS: Final[str] = "pluginTaskSignatureAnalysis"
 RESOURCE_IMPORT: Final[str] = "resourceImport"
 DRAFT_COMMIT: Final[str] = "draftCommit"

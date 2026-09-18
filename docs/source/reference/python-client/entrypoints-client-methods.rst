@@ -69,6 +69,44 @@ Delete Entrypoint
 
 
 
+.. _reference-entrypoints-client-methods-validation:
+
+Entrypoints - Validation Dry Runs
+--------------------------------
+
+Use the ordinary entrypoint create or update interface with ``validateOnly=true``
+to validate a proposed entrypoint without saving it:
+
+- ``POST /api/v1/entrypoints/?validateOnly=true``
+- ``PUT /api/v1/entrypoints/{id}?validateOnly=true``
+
+Send the same request body as for an ordinary create or update. In the Python
+client, pass ``validate_only=True`` to
+:meth:`~dioptra.client.entrypoints.EntrypointsCollectionClient.create` or
+:meth:`~dioptra.client.entrypoints.EntrypointsCollectionClient.modify_by_id`.
+For example:
+
+.. code-block:: python
+
+    response = client.entrypoints.create(
+        group_id=GROUP_ID,
+        name="hello_world",
+        task_graph=TASK_GRAPH_YAML_STR,
+        plugins=PLUGIN_IDS,
+        parameters=PARAMETERS,
+        validate_only=True,
+    )
+
+Dry runs perform lightweight schema, task-reference, and swap checks without
+saving the entrypoint. They do not perform the full rendered-graph checks used
+when saving, so a successful dry run does not guarantee that a subsequent save
+will pass full validation. These lightweight checks are available through
+``validateOnly``; there is no separate lint endpoint in the current API.
+
+Omitting ``validateOnly`` or setting it to ``false`` (``validate_only=False`` in
+the Python client) performs full validation and saves the entrypoint.
+
+
 .. _reference-entrypoints-client-methods-plugins-methods:
 
 Entrypoint Plugins - Methods
@@ -227,4 +265,3 @@ See Also
 * :ref:`Entrypoints reference <reference-entrypoints>`
 * :ref:`Entrypoints explanation <explanation-entrypoints>`
 * :ref:`How to create Entrypoints <how-to-create-entrypoints>`
-

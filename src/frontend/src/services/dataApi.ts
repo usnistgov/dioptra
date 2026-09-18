@@ -516,10 +516,6 @@ export async function getVersions(id: string) {
   return await axios.get(`/api/models/${id}/versions`);
 }
 
-export async function validateEntrypoint(payload: any) {
-  return await axios.post(`/api/workflows/validateEntrypoint`, payload);
-}
-
 export async function suggestPluginTasks(pythonCode: string) {
   return await axios.post(`/api/workflows/pluginTaskSignatureAnalysis`, { pythonCode });
 }
