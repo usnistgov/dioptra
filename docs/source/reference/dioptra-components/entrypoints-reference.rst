@@ -354,15 +354,21 @@ Swaps
 
 Swaps allow an Entrypoint to provide multiple task definitions for a graph
 step. When submitting a Job, the user selects which task definition Dioptra
-should use for each swap. Dioptra uses these selections to produce a rendered
-task graph without swaps before passing the graph to the task engine.
+should use for each swap. Configuration responses and graph previews preserve
+the names from the entrypoint. Selected swaps retain their output interface and
+only the selected choice.
 
 The following rules apply when using swaps:
 
 * A graph step may define at most one swap.
 * Each swap name must be unique within the Task Graph.
 * Exactly one task alias must be selected for each swap when executing a Job.
-* All task definitions within a swap must have the same output type.
+* Every swap must declare an ordered ``?outputs`` list of unique, nonempty names.
+  Use an empty list for tasks without outputs.
+* All choices must match the declared output count and have identical registered
+  type names at each output position. Registered output names may differ.
+* References to a swap step use only its declared output names. Input signatures
+  may differ between choices.
 
 A swap is identified by a name beginning with ``?``:
 
@@ -370,6 +376,7 @@ A swap is identified by a name beginning with ``?``:
 
     step_name:
         ?swap_name:
+            ?outputs: [result]
             task_alias1:
                 task: plugin1
                 args: [posarg1, posarg2]
@@ -393,11 +400,24 @@ With this selection, Dioptra renders the graph step as follows:
 .. code-block:: yaml
 
     step_name:
-        task: plugin1
-        args: [posarg1, posarg2]
-        kwargs:
-            keyword1: arg1
-            keyword2: arg2
+        ?swap_name:
+            ?outputs: [result]
+            task_alias1:
+                task: plugin1
+                args: [posarg1, posarg2]
+                kwargs:
+                    keyword1: arg1
+                    keyword2: arg2
+
+Downstream steps reference ``$step_name.result`` for either choice. The
+configuration's ``tasks`` section retains the registered task names and
+definitions. Dioptra maps returned values to the declared interface by position
+when running the job. A downloaded configuration is a Dioptra job configuration;
+the Dioptra worker prepares it for task-engine execution.
+
+Full rendering selects one choice for every swap. Partial rendering selects
+only the supplied choices and preserves all choices in unresolved swaps,
+including their ``?outputs`` declarations.
 
 Argument Structure
 ~~~~~~~~~~~~~~~~~~

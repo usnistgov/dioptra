@@ -19,7 +19,7 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from typing import Any, Callable, Iterable, Iterator, cast
 
 import structlog
@@ -62,13 +62,15 @@ from dioptra.sdk.utilities.entrypoint_swaps import (
     check_duplicate_swap_names,
     check_multiple_swaps_per_step,
     check_swaps_graph_dependencies,
+    compile_swaps_config,
     extract_swaps,
+    get_swap_choices,
+    render_swaps_config,
     render_swaps_graph,
 )
 from dioptra.task_engine import util
 from dioptra.task_engine.issues import IssueSeverity, IssueType, ValidationIssue
 from dioptra.task_engine.validation import schema_validate
-from dioptra.task_engine.validation import validate as validate_task_engine_dict
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -1513,33 +1515,33 @@ class EntrypointConfigService(UnitOfWorkService):
             entry_point=entry_point,
             plugin_plugin_files=plugin_files,
             plugin_parameter_types=types,
-            sections=None if validate_rendered else sections,
         )
 
-        if "graph" in config:
+        if not sections or {"graph", "tasks"} & set(sections):
             try:
-                config["graph"] = render_swaps_graph(
-                    config["graph"], swap_choices, raise_unspecified=not partial
+                config = render_swaps_config(
+                    config, swap_choices, raise_unspecified=not partial
                 )
             except Exception as e:
                 raise EntrypointSwapsRenderError(str(e)) from e
 
         if validate_rendered:
             # Validate against all task/type definitions before projecting sections.
-            errors = [
-                str(issue)
-                for issue in validate_task_engine_dict(config)
-                if issue.severity is IssueSeverity.ERROR
-            ]
+            try:
+                errors = [
+                    str(issue)
+                    for issue in compile_swaps_config(config).validate()
+                    if issue.severity is IssueSeverity.ERROR
+                ]
+            except ValueError as error:
+                errors = [str(error)]
             if errors:
                 raise EntrypointValidationError(
                     message="Rendered entrypoint configuration is invalid",
                     validation_error_dict={"rendered_validation_errors": errors},
                 )
-            if sections:
-                config = {
-                    name: value for name, value in config.items() if name in sections
-                }
+        if sections:
+            config = {name: value for name, value in config.items() if name in sections}
 
         return config
 
@@ -1691,7 +1693,7 @@ class SwapsValidationService(UnitOfWorkService):
                 continue
 
             for swap_name, aliased_defns in swap_definitions.items():
-                for swap_definition in aliased_defns.values():
+                for swap_definition in get_swap_choices(aliased_defns).values():
                     task_name = util.step_get_plugin_short_name(swap_definition)
                     if task_name not in task_lookup_dict:
                         collected_no_tasks_found.append(
@@ -1707,7 +1709,7 @@ class SwapsValidationService(UnitOfWorkService):
     def validate_swap_outputs(
         self, pre_rendered_task_graph: dict[str, Any], task_lookup_dict: dict[str, Any]
     ) -> tuple[list[ValidationIssue], dict[str, Any]]:
-        """Validate swap output types and collect the tasks used by each swap.
+        """Validate output interface counts/types and collect each swap's tasks.
 
         Args:
             pre_rendered_task_graph: The task graph dictionary, before it is rendered.
@@ -1718,6 +1720,7 @@ class SwapsValidationService(UnitOfWorkService):
         """
 
         mismatched_aliases = {}
+        count_issues = []
         swap_tasks: dict[str, Any] = {}
 
         for definition in pre_rendered_task_graph.values():
@@ -1731,7 +1734,7 @@ class SwapsValidationService(UnitOfWorkService):
                 output_types = set()
                 swap_dict = {}
 
-                for alias, swap_definition in aliased_defns.items():
+                for alias, swap_definition in get_swap_choices(aliased_defns).items():
                     task_name = util.step_get_plugin_short_name(swap_definition)
                     if task_name not in task_lookup_dict:
                         continue
@@ -1749,11 +1752,26 @@ class SwapsValidationService(UnitOfWorkService):
                     output_parameters: list[PluginTaskOutputParameter] = (
                         task_lookup_dict[task_name]["output_parameters"]
                     )
+                    expected_count = len(aliased_defns["?outputs"])
+                    if len(output_parameters) != expected_count:
+                        count_issues.append(
+                            ValidationIssue(
+                                type_=IssueType.TYPE,
+                                severity=IssueSeverity.ERROR,
+                                message=(
+                                    f"Swap '{swap_name}' choice '{alias}' task "
+                                    f"'{task_name}' has {len(output_parameters)} outputs; "
+                                    f"its interface requires {expected_count}."
+                                ),
+                            )
+                        )
                     output_types.add(
                         tuple(
                             [
                                 parameter.parameter_type.name
-                                for parameter in output_parameters
+                                for parameter in sorted(
+                                    output_parameters, key=lambda p: p.parameter_number
+                                )
                             ]
                         )
                     )
@@ -1763,7 +1781,7 @@ class SwapsValidationService(UnitOfWorkService):
                 if len(output_types) > 1:
                     mismatched_aliases[swap_name] = output_types
 
-        return [
+        return count_issues + [
             ValidationIssue(
                 type_=IssueType.TYPE,
                 severity=IssueSeverity.ERROR,
@@ -1795,32 +1813,27 @@ class SwapsValidationService(UnitOfWorkService):
         Returns:
             A list of validation issues and a list of global parameters required for the graph.
         """
-        import json
-
         issues_for_swap = []
         required_globals: set[str] = set()
 
         try:
-            rendered_graph = render_swaps_graph(task_graph_yaml, swap_choices)
-
-            rendered_entrypoint_data = replace(
-                entrypoint_data,
-                task_graph=json.dumps(rendered_graph),
-            )
             task_engine_dict = build_task_engine_dict(
-                entry_point=rendered_entrypoint_data,
+                entry_point=entrypoint_data,
                 plugin_plugin_files=plugin_plugin_files,
                 plugin_parameter_types=plugin_parameter_types,
             )
+            task_engine_dict["graph"] = task_graph_yaml
+            task_engine_dict = render_swaps_config(task_engine_dict, swap_choices)
+            compiled = compile_swaps_config(task_engine_dict)
             # this is a schema check and deeper validation no longer present in workflows
-            issues = validate_task_engine_dict(task_engine_dict)
+            issues = compiled.validate()
 
             for issue in issues:
                 issue.message = f"[Swap combination {swap_choices}] {issue.message}"
                 issues_for_swap.append(issue)
 
             # collect any globals needed for this rendering
-            required_globals, _ = _get_required_globals(rendered_graph)
+            required_globals, _ = _get_required_globals(compiled.config["graph"])
 
         except Exception as e:
             issues_for_swap.append(
@@ -1850,7 +1863,8 @@ class SwapsValidationService(UnitOfWorkService):
             * Validates just the graph against a JSON schema which accounts for swaps (though swaps are not
             required).
             * Validates that all tasks in the graph are registered.
-            * Validates that all the output types for tasks in a given swap match.
+            * Validates output counts against each swap interface and matching
+              registered type names at each output position.
             * Collects all the tasks needed for the given graph and provides it in the response.
 
         If the rendered_validation flag is set, this entrypoint also:
@@ -1995,28 +2009,29 @@ class SwapsValidationService(UnitOfWorkService):
             #### Pre-render semantic validation complete
 
             #### Specifically for saving and modifying entrypoints, perform in-depth validation
-            if rendered_validation:
-                if not duplicate_swap_issues and not multiple_swaps_per_step_issues:
-                    pre_render_issues += check_swaps_graph_dependencies(swaps_yaml)
+            if (
+                rendered_validation
+                and not pre_render_issues
+                and not duplicate_swap_issues
+                and not multiple_swaps_per_step_issues
+            ):
+                pre_render_issues += check_swaps_graph_dependencies(swaps_yaml)
                 # extract a mapping of swaps to possible swap choices
                 swaps = extract_swaps(
                     swaps_yaml
                 )  # { swap1: [alias1, alias2, alias3], swap2: [alias4, alias5, alias6], etc. }
                 swap_names = list(swaps.keys())  # [swap1, swap2, etc.]
 
-                combinations = []
+                defaults = {name: aliases[0] for name, aliases in swaps.items()}
+                combinations = [defaults]
 
-                # create a list of swap choice combinations to try
+                # Validate the baseline once, then vary each nondefault choice.
                 for swap_name in swap_names:
-                    for alias in swaps[swap_name]:
-                        current_swap_choice = {
-                            s: swaps[s][0] for s in swaps.keys() if s != swap_name
-                        }  # keeping the first swap from every *other* swap, as we vary the *current* swap, O(n) instead of O(w*x*y*z*...)!
+                    for alias in swaps[swap_name][1:]:
+                        current_swap_choice = defaults.copy()
                         current_swap_choice[swap_name] = alias
 
                         combinations.append(current_swap_choice)
-
-                combinations = [{}] if combinations == [] else combinations  #
 
                 # loop over the combinations, render each, and validate as a normal experiment description
                 for combination in combinations:
@@ -2220,9 +2235,7 @@ class SwapsRetrievalService(UnitOfWorkService):
             for step in step_names:
                 if f"?{swap_name}" in graph[step]:
                     task_defs = graph[step][f"?{swap_name}"]
-                    for alias in task_defs:
-                        task_def = task_defs[alias]
-
+                    for alias, task_def in get_swap_choices(task_defs).items():
                         keyword_args = _get_keywords_for_one_task(task_def) - step_names
 
                         if "task" in task_def:

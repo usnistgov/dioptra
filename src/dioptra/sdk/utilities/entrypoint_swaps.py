@@ -14,11 +14,177 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+import re
+from collections.abc import Iterator, Mapping
+from contextlib import contextmanager
+from copy import deepcopy
+from dataclasses import dataclass
 from typing import Any
 
+from dioptra.sdk.api.swappable_validation import (
+    get_swappable_experiment_schema,
+    get_swappable_json_schema_resources,
+)
 from dioptra.sdk.exceptions.base import BaseTaskEngineError
 from dioptra.task_engine import util, validation
 from dioptra.task_engine.issues import IssueSeverity, IssueType, ValidationIssue
+
+
+def get_swap_choices(declaration: dict[str, Any]) -> dict[str, Any]:
+    """Return invocations without the swap's output interface metadata."""
+    return {name: value for name, value in declaration.items() if name != "?outputs"}
+
+
+def render_swaps_config(
+    config: dict[str, Any],
+    swaps: dict[str, str],
+    raise_unspecified: bool = True,
+) -> dict[str, Any]:
+    """Render a public configuration using only user-provided names.
+
+    Selected swaps retain their interface and just the selected alias. Unselected
+    partial swaps retain all aliases. Registered task definitions are unchanged.
+    """
+    rendered = deepcopy(config)
+    graph = rendered["graph"]
+    # Share selection validation with the graph-only introspection helper.
+    render_swaps_graph(graph, swaps, raise_unspecified)
+    for step in graph.values():
+        for swap_name, declaration in step.items():
+            if swap_name.startswith("?") and swap_name[1:] in swaps:
+                alias = swaps[swap_name[1:]]
+                step[swap_name] = {
+                    "?outputs": declaration["?outputs"],
+                    alias: declaration[alias],
+                }
+    return rendered
+
+
+@dataclass
+class CompiledSwapsConfig:
+    """Internal engine configuration with provenance for public diagnostics.
+
+    Never serialize this configuration into API responses or job artifacts.
+    """
+
+    config: dict[str, Any]
+    task_names: dict[str, str]
+
+    def public_message(self, message: str) -> str:
+        """Translate exact internal identifiers using their recorded provenance."""
+        if not self.task_names:
+            return message
+        pattern = (
+            r"(?<![\w-])(?:" + "|".join(map(re.escape, self.task_names)) + r")(?![\w-])"
+        )
+        return re.sub(pattern, lambda match: self.task_names[match[0]], message)
+
+    @contextmanager
+    def public_errors(self) -> Iterator[None]:
+        """Translate exceptions before worker logging or API error handling."""
+        try:
+            yield
+        except Exception as error:
+            message = self.public_message(str(error))
+            if message != str(error):
+                raise RuntimeError(message) from None
+            raise
+
+    def validate(self) -> list[ValidationIssue]:
+        """Validate internally while returning only author-facing diagnostics."""
+        with self.public_errors():
+            return [
+                ValidationIssue(
+                    issue.type, issue.severity, self.public_message(issue.message)
+                )
+                for issue in validation.validate(self.config)
+            ]
+
+
+def _normalize_swap_task(
+    task: dict[str, Any], names: list[str], swap_name: str, task_name: str
+) -> dict[str, Any]:
+    """Copy a task definition and remap its output names positionally."""
+    task = deepcopy(task)
+    outputs = task.get("outputs", [])
+    output_list = [outputs] if isinstance(outputs, dict) else outputs
+    if len(names) != len(output_list):
+        raise ValueError(
+            f"Swap '{swap_name}' task '{task_name}' has {len(output_list)} "
+            f"outputs; its interface requires {len(names)}."
+        )
+    normalized_outputs = [
+        {name: next(iter(output.values()))} for name, output in zip(names, output_list)
+    ]
+    if isinstance(outputs, dict):
+        task["outputs"] = normalized_outputs[0]
+    elif "outputs" in task:
+        task["outputs"] = normalized_outputs
+    return task
+
+
+def compile_swaps_config(config: Mapping[str, Any]) -> CompiledSwapsConfig:
+    """Compile a fully selected public configuration for in-memory engine use.
+
+    Each remaining swap must contain exactly one choice. Generated definitions
+    are local to each step; original task definitions and the source are retained.
+    """
+    schema_issues = validation.schema_validate(
+        config,
+        get_swappable_experiment_schema(),
+        resources=get_swappable_json_schema_resources(),
+    )
+    if schema_issues:
+        raise ValueError(
+            "Invalid job configuration: " + "; ".join(map(str, schema_issues))
+        )
+    rendered = deepcopy(dict(config))
+    graph = rendered["graph"]
+    structure_issues = check_duplicate_swap_names(
+        graph
+    ) + check_multiple_swaps_per_step(graph)
+    if structure_issues:
+        raise ValueError("Invalid swaps: " + "; ".join(map(str, structure_issues)))
+    swaps = {}
+    for name, choices in extract_swaps(graph).items():
+        if len(choices) != 1:
+            raise ValueError(f"Swap '{name}' requires exactly one selected choice.")
+        swaps[name] = choices[0]
+    rendered_graph = render_swaps_graph(graph, swaps)
+    tasks = rendered["tasks"]
+    task_names = {}
+    for step_name, step in graph.items():
+        for swap_name, declaration in step.items():
+            if not swap_name.startswith("?") or swap_name[1:] not in swaps:
+                continue
+            invocation = get_swap_choices(declaration)[swaps[swap_name[1:]]]
+            task_name = util.step_get_plugin_short_name(invocation)
+            assert task_name is not None  # The invocation has passed schema validation.
+            if task_name not in tasks:
+                # Leave unresolved invocations for ordinary engine validation.
+                continue
+            task = _normalize_swap_task(
+                tasks[task_name], declaration["?outputs"], swap_name, task_name
+            )
+
+            generated_name = f"{step_name}_{task_name}"
+            # Step/task pairs (train_model, score) and (train, model_score)
+            # both yield train_model_score; a registered task may also use that
+            # name. Append underscores until the local task key is unique.
+            while generated_name in tasks:
+                generated_name += "_"
+            tasks[generated_name] = task
+            task_names[generated_name] = (
+                f"{task_name} (step '{step_name}', swap '{swap_name}', "
+                f"choice '{swaps[swap_name[1:]]}')"
+            )
+            rendered_step = rendered_graph[step_name]
+            if "task" in invocation:
+                rendered_step["task"] = generated_name
+            else:
+                rendered_step[generated_name] = rendered_step.pop(task_name)
+    rendered["graph"] = rendered_graph
+    return CompiledSwapsConfig(rendered, task_names)
 
 
 def render_swaps_graph(
@@ -30,6 +196,10 @@ def render_swaps_graph(
     Renders a task graph given a graph containing swaps and dictionary
     specifying the swap choices. Can perform partial renders through setting
     raise_unspecified to False.
+
+    This graph-only helper retains registered task names for introspection
+    (for example, required globals and active plugins). Public configurations use
+    render_swaps_config; compile_swaps_config prepares them for engine execution.
 
     Args:
         graph: A dictionary representing the task graph.
@@ -57,7 +227,7 @@ def render_swaps_graph(
                     used_swaps.add(swap_name)
 
                     try:
-                        swap = task_defn[task_alias]
+                        swap = get_swap_choices(task_defn)[task_alias]
                         rendered_graph[step].update(swap)
                     except KeyError:
                         not_found_tasks.add(task_alias)
@@ -120,7 +290,7 @@ def check_swaps_graph_dependencies(graph: dict[str, Any]) -> list[ValidationIssu
         for name, aliases in step.items():
             if name.startswith("?"):
                 # Inspect each invocation separately: an alias may itself be named task.
-                invocations.extend(aliases.values())
+                invocations.extend(get_swap_choices(aliases).values())
         for invocation in invocations:
             for reference in util.get_references(invocation):
                 referenced_step, _ = util.get_reference_coords(reference)
@@ -150,7 +320,7 @@ def extract_swaps(task_graph: dict[str, Any]) -> dict[str, list[str]]:
             if swap_name.startswith("?"):
                 clean_name = swap_name[1:]
                 if clean_name not in swaps:
-                    swaps[clean_name] = list(aliased_definitions.keys())
+                    swaps[clean_name] = list(get_swap_choices(aliased_definitions))
 
     return swaps
 

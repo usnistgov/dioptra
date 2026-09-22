@@ -4,6 +4,7 @@ step1:
 
 step2:
   ?step2_choice:
+    ?outputs: [out]
     taskalias1:
       task2:
         arg2: $step1.out
@@ -21,6 +22,7 @@ step4:
 
 step3:
   ?step3_choice:
+    ?outputs: [out]
     taskalias3:
       task1:
         arg1: $global9

@@ -425,6 +425,10 @@ class JobsCollectionClient(CollectionClient[T]):
         """
         Retrieve the rendered YAML for a given job.
 
+        Swap declarations retain their ``?outputs`` interface and selected alias,
+        using the original registered task names. The Dioptra worker prepares
+        this configuration for execution.
+
         Args:
             job_id: The resource ID of a job.
 
