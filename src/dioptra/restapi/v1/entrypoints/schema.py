@@ -568,7 +568,11 @@ class EntrypointConfigResponseSchema(Schema):
         attribute="graph",
         allow_none=True,
         metadata={
-            "description": "A dictionary representing the task graph for this experiment.",
+            "description": (
+                "The task graph using registered task names. Selected swaps retain "
+                "their ?outputs interface and only the selected alias; unresolved "
+                "partial swaps retain all aliases."
+            ),
         },
         load_default=dict,
     )

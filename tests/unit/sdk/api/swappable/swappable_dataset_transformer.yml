@@ -1,5 +1,6 @@
 load:
   ?load:
+    ?outputs: []
     load_artifact:
       load_artifacts_for_job:
         job_id: $job_id
@@ -29,6 +30,7 @@ model:
 
 transformed:
   ?transform_data:
+    ?outputs: [dataset]
     augment:
       augment_data:
         dataset: $dataset.testing

@@ -26,6 +26,7 @@ from http import HTTPStatus
 from typing import Any
 
 import pytest
+import yaml
 from flask.testing import FlaskClient
 from sqlalchemy import func, select
 
@@ -86,12 +87,14 @@ def test_full_validation_checks_all_swap_dependencies(
     payload["taskGraph"] = textwrap.dedent("""\
         left:
           ?left-choice:
+            ?outputs: [output]
             default:
               task1: left
             cross:
               task1: $right.output
         right:
           ?right-choice:
+            ?outputs: [output]
             default:
               task1: right
             cross:
@@ -1863,6 +1866,7 @@ def test_plugin_changes_validate_prospective_snapshot(
     graph = textwrap.dedent("""\
         choose:
           ?implementation:
+            ?outputs: [value]
             use_b:
               task_b:
                 input_param: $input_param
@@ -2329,6 +2333,198 @@ def test_dynamic_globals_endpoint_nonexistent_swaps(
 
         assert imaginary_tasks.status_code == HTTPStatus.BAD_REQUEST
 
+@pytest.fixture
+def swap_payload(client, auth_account, registered_plugin_parameter_types):
+    """Register differently named producer outputs and build a two-swap request."""
+    group = auth_account["default_group_id"]
+    number = registered_plugin_parameter_types["number"]["id"]
+    string = registered_plugin_parameter_types["string"]["id"]
+    response = client.post(
+        "/api/v1/plugins/", json={"name": "interfaces", "group": group}
+    )
+    assert response.status_code == HTTPStatus.OK
+    plugin_id = response.json["id"]
+    response = client.post(
+        f"/api/v1/plugins/{plugin_id}/files",
+        json={
+            "filename": "tasks.py",
+            "contents": "# interface regression tasks",
+            "tasks": {
+                "functions": [
+                    {
+                        "name": "emit_x",
+                        "inputParams": [],
+                        "outputParams": [{"name": "x", "parameterType": number}],
+                    },
+                    {
+                        "name": "emit_y",
+                        "inputParams": [],
+                        "outputParams": [{"name": "y", "parameterType": number}],
+                    },
+                    {
+                        "name": "emit_string",
+                        "inputParams": [],
+                        "outputParams": [{"name": "y", "parameterType": string}],
+                    },
+                    {"name": "constant", "inputParams": [], "outputParams": []},
+                    {
+                        "name": "consume",
+                        "outputParams": [],
+                        "inputParams": [
+                            {"name": "value", "parameterType": number, "required": True}
+                        ],
+                    },
+                ]
+            },
+        },
+    )
+    assert response.status_code == HTTPStatus.OK, response.json
+    return {
+        "name": "stable-interface",
+        "group": group,
+        "plugins": [plugin_id],
+        "taskGraph": yaml.safe_dump(
+            {
+                "producer": {
+                    "?producer-choice": {
+                        "?outputs": ["value"],
+                        "x-output": {"emit_x": []},
+                        "y-output": {"emit_y": []},
+                    }
+                },
+                "consumer": {
+                    "?consumer-choice": {
+                        "?outputs": [],
+                        "independent": {"constant": []},
+                        "use-value": {"consume": {"value": "$producer.value"}},
+                    }
+                },
+            },
+            sort_keys=False,
+        ),
+    }
+
+
+@pytest.mark.parametrize("modifying", [False, True])
+def test_save_and_dry_run_accept_swap_interfaces(client, swap_payload, modifying):
+    """Accept canonical swap interfaces on both save and dry-run create/modify paths."""
+    request, url, swap_payload = _prepare_entrypoint_request(
+        client, swap_payload, modifying
+    )
+    preview = request(url, json=swap_payload, query_string={"validateOnly": "true"})
+    assert preview.status_code == HTTPStatus.OK, preview.json
+    saved = request(url, json=swap_payload)
+    assert saved.status_code == HTTPStatus.OK, saved.json
+
+
+def test_entrypoint_config_preserves_swap_interfaces(client, swap_payload):
+    """Return selected aliases and canonical interfaces without renaming tasks.
+
+    Both producers must work with the consuming choice, including the nondefault
+    combination that previously failed when registered output names differed.
+    """
+    saved = client.post("/api/v1/entrypoints/", json=swap_payload)
+    assert saved.status_code == HTTPStatus.OK, saved.json
+    config_url = f"/api/v1/entrypoints/{saved.json['id']}/snapshots/{saved.json['snapshot']}/config"
+    graph = yaml.safe_load(swap_payload["taskGraph"])
+    # Include the formerly omitted nondefault producer + consuming choice pair.
+    for producer in ("x-output", "y-output"):
+        selections = {
+            "swaps[producer-choice]": producer,
+            "swaps[consumer-choice]": "use-value",
+        }
+        response = client.get(config_url, query_string=selections)
+        assert response.status_code == HTTPStatus.OK, response.json
+        config = response.json
+        assert config["graph"] == {
+            "producer": {
+                "?producer-choice": {
+                    "?outputs": ["value"],
+                    producer: graph["producer"]["?producer-choice"][producer],
+                }
+            },
+            "consumer": {
+                "?consumer-choice": {
+                    "?outputs": [],
+                    "use-value": graph["consumer"]["?consumer-choice"]["use-value"],
+                }
+            },
+        }
+        assert set(config["tasks"]) == {
+            "emit_x",
+            "emit_y",
+            "emit_string",
+            "constant",
+            "consume",
+        }
+        assert config["tasks"]["emit_x"]["outputs"] == {"x": "number"}
+        assert config["tasks"]["emit_y"]["outputs"] == {"y": "number"}
+
+
+@pytest.mark.parametrize(
+    "problem, modifying",
+    [
+        ("registered-name", False),
+        ("output-count", False),
+        ("output-type", False),
+        ("missing-interface", False),
+        ("invalid-input", False),
+        ("registered-name", True),
+        ("output-type", True),
+    ],
+)
+def test_invalid_interfaces_and_inputs_rejected_before_save(
+    client, swap_payload, problem, modifying
+):
+    """Return categorized validation errors for invalid interfaces and choice inputs.
+
+    Save and dry-run requests must reject all five failure categories on create;
+    noncanonical references and output-type mismatches also check the modify path.
+    """
+    request, url, swap_payload = _prepare_entrypoint_request(
+        client, swap_payload, modifying
+    )
+    graph = yaml.safe_load(swap_payload["taskGraph"])
+    producer = graph["producer"]["?producer-choice"]
+    consumer = graph["consumer"]["?consumer-choice"]
+    if problem == "registered-name":
+        consumer["use-value"]["consume"]["value"] = "$producer.x"
+        category = "rendered_validation_errors"
+        expected = "unrecognized output: x"
+    elif problem == "output-count":
+        producer["?outputs"] = []
+        category = "swap_issues"
+        expected = "interface requires 0"
+    elif problem == "output-type":
+        producer["y-output"] = {"emit_string": []}
+        category = "swap_issues"
+        expected = "mismatched output types"
+    elif problem == "missing-interface":
+        del producer["?outputs"]
+        category = "schema_issues"
+        expected = None
+    else:
+        consumer["use-value"] = {"consume": []}
+        category = "rendered_validation_errors"
+        expected = (
+            'In step "consumer": illegal task invocation: required task '
+            "parameter is not assigned a value: value"
+        )
+    invalid = {
+        **swap_payload,
+        "taskGraph": yaml.safe_dump(graph, sort_keys=False),
+    }
+    for preview in (True, False):
+        response = request(
+            url, json=invalid, query_string={"validateOnly": str(preview).lower()}
+        )
+        assert response.status_code == HTTPStatus.BAD_REQUEST, response.json
+        messages = response.json["detail"]["reason"][category]
+        assert messages
+        if expected is not None:
+            assert any(expected in message for message in messages), messages
+
+
 def test_validate_swaps_graph(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
@@ -2347,6 +2543,7 @@ def test_validate_swaps_graph(
               input_param: $input_param
           step2:
             ?step2_choice:
+              ?outputs: [output]
               alias1:
                 task2:
                   input_param: $input_param
@@ -2494,6 +2691,7 @@ def test_validate_swaps_graph_bad_schema(
     bad_schema_graph = textwrap.dedent("""
           step1:
             ?step1_choice:
+              ?outputs: []
               task: []
               kwargs: []
     """) # for keyword invocations, task must be a string, and kwargs must be an object
@@ -2583,6 +2781,7 @@ def test_validate_swaps_graph_missing_globals(
                 input_param: $missing_param1
         step2:
             ?step2_choice:
+                ?outputs: [output]
                 alias1:
                     task2:
                         input_param: $missing_param2
@@ -2631,11 +2830,13 @@ def test_validate_swaps_graph_duplicate_swap_name(
         """
         step1:
           ?dup_swap:
+            ?outputs: [output]
             alias1:
               task1:
                 input_param: $input_param
         step2:
           ?dup_swap:
+            ?outputs: [output]
             alias2:
               task2:
                 input_param: $input_param
@@ -2684,10 +2885,12 @@ def test_validate_swaps_graph_multiple_swaps_per_step(
         """
         step_name:
           ?math_swap:
+            ?outputs: [output]
             add:
               task1:
                 input_param: $input_param
           ?string_swap:
+            ?outputs: [output]
             hi:
               task2:
                 input_param: $input_param
@@ -2738,6 +2941,7 @@ def test_validate_swaps_graph_rendered_errors(
                 input_param: $input_param
         step2:
             ?step2_choice:
+                ?outputs: [output]
                 alias1:
                     task2:
                         input_param: $input_param
@@ -2768,14 +2972,10 @@ def test_validate_swaps_graph_rendered_errors(
     assert modify_response.status_code == HTTPStatus.BAD_REQUEST
 
     validation_result = create_response.json()["detail"]["reason"]
-    assert "rendered_validation_errors" in validation_result
-    assert len(validation_result["rendered_validation_errors"]) > 0
-    assert any("non_existent_task" in error for error in validation_result["rendered_validation_errors"])
+    assert any("non_existent_task" in error for error in validation_result["swap_issues"])
 
     validation_result = modify_response.json()["detail"]["reason"]
-    assert "rendered_validation_errors" in validation_result
-    assert len(validation_result["rendered_validation_errors"]) > 0
-    assert any("non_existent_task" in error for error in validation_result["rendered_validation_errors"])
+    assert any("non_existent_task" in error for error in validation_result["swap_issues"])
 
 
 # -- Tests -----------------------------------------------------------------------------
@@ -3037,6 +3237,7 @@ def test_validate_swaps_graph_success(
         """
         step1:
           ?swap1:
+            ?outputs: [result]
             alias1:
               task_one: arthur
             alias2:
@@ -3086,6 +3287,7 @@ def test_validate_swaps_graph_invalid_task(
         """
         step1:
           ?swap1:
+            ?outputs: [result]
             alias1:
               task: nonexistent_task
         """
@@ -3116,53 +3318,6 @@ def test_validate_swaps_graph_invalid_task(
     )
 
 
-def test_validate_swaps_graph_mixed_output_error(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
-    auth_account: dict[str, Any],
-    registered_multi_task_plugin: int,
-    registered_plugin_parameter_types: dict[str, Any],
-) -> None:
-    """Test that it errors for different types within a single swap.
-    """
-    plugin_id = registered_multi_task_plugin
-
-    swaps_graph = textwrap.dedent(
-        """
-        step1:
-          ?swap1:
-            alias_str:
-              task: task_one
-            alias_int:
-              task: task_int
-        """
-    )
-    
-    create_response, modify_response = _test_create_and_modify(
-        group_id=auth_account["default_group_id"],
-        name="test_swaps_graph_mixed_output_error",
-        task_graph=swaps_graph,
-        plugins=[plugin_id],
-        parameters=[],
-        validate_only=True,
-        dioptra_client=dioptra_client,
-        auth_account=auth_account,
-        registered_plugin_parameter_types=registered_plugin_parameter_types
-    )
-    create_error_details = create_response.json()['detail']['reason']
-    modify_error_details = modify_response.json()['detail']['reason']
-
-    assert (
-        create_response.status_code == HTTPStatus.BAD_REQUEST
-        and 'swap_issues' in create_error_details
-        and len(create_error_details["swap_issues"]) > 0
-    )    
-    assert (
-        modify_response.status_code == HTTPStatus.BAD_REQUEST
-        and 'swap_issues' in modify_error_details
-        and len(modify_error_details["swap_issues"]) > 0
-    )
-
-
 def test_entrypoint_swaps_config(
     client: FlaskClient,
     dioptra_client: DioptraClient[DioptraResponseProtocol],
@@ -3178,8 +3333,14 @@ def test_entrypoint_swaps_config(
     assert response.status_code == HTTPStatus.OK
 
     response_json = response.json()
-    assert 'task10' in response_json['graph']['step2']
-    assert 'task2' in response_json['graph']['step3']
+    for step, swap, alias, task in (
+        ("step2", "?step2_choice", "taskalias1:v2", "task10"),
+        ("step3", "?step3_choice", "taskalias3,v3", "task2"),
+    ):
+        declaration = response_json["graph"][step][swap]
+        assert set(declaration) == {"?outputs", alias}
+        assert declaration["?outputs"] == ["out"]
+        assert task in declaration[alias]
 
     for endpoint in ("config", "dynamicGlobalParameters"):
         url = (
@@ -3256,6 +3417,7 @@ def test_entrypoint_config_rejects_unresolved_rendered_task(
             "taskGraph": textwrap.dedent("""\
                 choose:
                   ?implementation:
+                    ?outputs: [value]
                     use_plugin_a:
                       task_from_plugin_a:
                         input_param: $input_param
@@ -3299,7 +3461,10 @@ def test_entrypoint_config_rejects_unresolved_rendered_task(
     )
     assert response.status_code == HTTPStatus.OK, response.text
     assert response.json()["graph"] == {
-        "choose": {"task_from_plugin_b": {"input_param": "$input_param"}}
+        "choose": {"?implementation": {
+            "?outputs": ["value"],
+            "use_plugin_b": {"task_from_plugin_b": {"input_param": "$input_param"}},
+        }}
     }
     if sections:
         assert set(response.json()) == set(sections)
@@ -3307,50 +3472,60 @@ def test_entrypoint_config_rejects_unresolved_rendered_task(
         assert set(response.json()["tasks"]) == {"task_from_plugin_b"}
 
 
-def test_entrypoint_swaps_config_partial(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
-    auth_account: dict[str, Any],
-    registered_swap_entrypoints: dict[str, Any],
-):
-    entrypoint = registered_swap_entrypoints["swap_test"]
+@pytest.mark.parametrize(
+    "partial, sections",
+    [
+        (False, ["graph"]),
+        (False, ["tasks"]),
+        (True, None),
+        (True, ["graph"]),
+        (True, ["tasks"]),
+        (True, ["types", "graph"]),
+    ],
+)
+def test_entrypoint_swaps_config_projection(client, swap_payload, partial, sections):
+    """Preserve public names and unresolved choices when rendering and filtering.
 
-    response = dioptra_client.entrypoints.snapshots.get_config(
-        entrypoint["id"], entrypoint["snapshot"], swap_parameters={"step2_choice": "taskalias1"}, partial=True
-    )
+    Requested sections must equal the corresponding unfiltered response, and
+    partial renders must retain every unresolved alias and its output interface.
+    """
+    saved = client.post("/api/v1/entrypoints/", json=swap_payload)
+    assert saved.status_code == HTTPStatus.OK, saved.json
+    url = f"/api/v1/entrypoints/{saved.json['id']}/snapshots/{saved.json['snapshot']}/config"
+    query = {"swaps[producer-choice]": "y-output", "partial": str(partial).lower()}
+    if not partial:
+        query["swaps[consumer-choice]"] = "use-value"
+    response = client.get(url, query_string=query)
+    assert response.status_code == HTTPStatus.OK, response.json
+    config = response.json
+    assert set(config) == {
+        "graph",
+        "tasks",
+        "types",
+        "parameters",
+        "artifact_inputs",
+        "artifact_outputs",
+    }
+    assert set(config["tasks"]) == {
+        "emit_x",
+        "emit_y",
+        "emit_string",
+        "constant",
+        "consume",
+    }
+    expected_graph = yaml.safe_load(swap_payload["taskGraph"])
+    del expected_graph["producer"]["?producer-choice"]["x-output"]
+    if not partial:
+        del expected_graph["consumer"]["?consumer-choice"]["independent"]
+    # Partial renders must retain every unresolved alias and the output interface.
+    assert config["graph"] == expected_graph
+    if sections is not None:
+        projected = client.get(
+            url, query_string={**query, "sections": ",".join(sections)}
+        )
+        assert projected.status_code == HTTPStatus.OK, projected.json
+        assert projected.json == {section: config[section] for section in sections}
 
-    assert response.status_code == HTTPStatus.OK
-
-    response_json = response.json()
-
-    assert all([k in response_json for k in ["graph", "tasks", "types", "parameters", "artifact_inputs", "artifact_outputs"]])
-
-    assert 'task2' in response_json['graph']['step2']
-
-    # we didn't specify this swap and are doing a partial render so it should still be there.
-    assert '?step3_choice' in response_json['graph']['step3'] 
-
-def test_entrypoint_swaps_config_filtering(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
-    auth_account: dict[str, Any],
-    registered_swap_entrypoints: dict[str, Any],
-):
-    entrypoint = registered_swap_entrypoints["swap_test"]
-
-    response = dioptra_client.entrypoints.snapshots.get_config(
-        entrypoint["id"], entrypoint["snapshot"], swap_parameters={"step2_choice": "taskalias1"}, partial=True, sections=["graph"]
-    )
-
-    assert response.status_code == HTTPStatus.OK
-
-    response_json = response.json()
-
-    assert 'graph' in response_json
-    assert len(response_json.keys()) == 1
-
-    assert 'task2' in response_json['graph']['step2']
-    
-    # we didn't specify this swap and are doing a partial render so it should still be there.
-    assert '?step3_choice' in response_json['graph']['step3'] 
 
 @pytest.mark.parametrize("partial", [False, True])
 def test_entrypoint_swaps_config_no_graph(
@@ -3370,24 +3545,6 @@ def test_entrypoint_swaps_config_no_graph(
     response_json = response.json()
 
     assert 'types' in response_json
-
-def test_entrypoint_swaps_config_two_sections(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
-    auth_account: dict[str, Any],
-    registered_swap_entrypoints: dict[str, Any],
-):
-    entrypoint = registered_swap_entrypoints["swap_test"]
-
-    response = dioptra_client.entrypoints.snapshots.get_config(
-        entrypoint["id"], entrypoint["snapshot"], swap_parameters={"step2_choice": "taskalias1"}, partial=True, sections=["types", "graph"]
-    )
-
-    assert response.status_code == HTTPStatus.OK
-
-    response_json = response.json()
-
-    assert 'types' in response_json
-    assert 'graph' in response_json
 
 
 @pytest.mark.parametrize("sections", [["invalid"], ["graph", "invalid"]])

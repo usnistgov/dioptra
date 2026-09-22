@@ -1224,7 +1224,7 @@ function findEligibleSwapGroups() {
     if (swapEntries.length !== 1) return;
 
     const [swapName, swapGroup] = swapEntries[0];
-    const taskAliases = Object.entries(swapGroup);
+    const taskAliases = Object.entries(swapGroup).filter(([name]) => name !== "?outputs");
     const taskNames = taskAliases.map(([, taskDefinition]) => taskDefinition?.task);
     const allTasksAreSwappable =
       taskAliases.length > 0 &&
@@ -1284,6 +1284,8 @@ function addSwappableTaskToGraph() {
   const stepNamePlaceholder = getNextStepNamePlaceholder();
   const swapNamePlaceholder = getNextSwapNamePlaceholder();
   let string = `${stepNamePlaceholder}:\n  ?${swapNamePlaceholder}:`;
+  const outputNames = selectedSwapTask.value.outputParams.map((parameter) => parameter.name);
+  string += `\n    ?outputs: ${JSON.stringify(outputNames)}`;
 
   selectedSwappableTasks.value.forEach((task, index) => {
     string += `\n    <task-alias-${index + 1}>:\n      task: ${task.name}`;

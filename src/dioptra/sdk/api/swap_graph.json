@@ -40,6 +40,15 @@
         "swap_choice": {
             "title": "Alias for the swap choice.",
             "type": "object",
+            "properties": {
+                "?outputs": {
+                    "type": "array",
+                    "items": { "type": "string", "minLength": 1 },
+                    "uniqueItems": true
+                }
+            },
+            "required": ["?outputs"],
+            "minProperties": 2,
             "patternProperties": {
                 "^(?!\\?).*": { "$ref": "#/$defs/swap_choice_content" } 
             },

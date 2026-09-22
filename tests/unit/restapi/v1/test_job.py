@@ -541,7 +541,8 @@ def test_create_job_with_swaps(
         dioptra_client, job_id=job_response["id"], expected=job_response
     )
 
-    rendered_yaml = dioptra_client.jobs.get_config(job_response['id']).json()['graph']
+    job_config = dioptra_client.jobs.get_config(job_response['id']).json()
+    rendered_yaml = job_config['graph']
 
     preview = dioptra_client.entrypoints.snapshots.get_config(
         entrypoint_id,
@@ -550,8 +551,9 @@ def test_create_job_with_swaps(
     )
     assert preview.status_code == HTTPStatus.OK
     assert preview.json()["graph"] == rendered_yaml
-    assert 'task10' in rendered_yaml['step2']
-    assert 'task2' in rendered_yaml['step3']
+    assert preview.json()["tasks"] == job_config["tasks"]
+    assert "task10" in rendered_yaml["step2"]["?step2_choice"]["taskalias1:v2"]
+    assert "task2" in rendered_yaml["step3"]["?step3_choice"]["taskalias3,v3"]
 
 def test_create_job_with_extra_swaps(
     dioptra_client: DioptraClient[DioptraResponseProtocol],

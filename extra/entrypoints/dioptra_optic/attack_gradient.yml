@@ -38,6 +38,7 @@ graph:
 
   adversarial_dataset:
     ?attack:
+      ?outputs: [adversarial_dataset]
       fgm:
         fast_gradient_method:
           model: $model_artifact

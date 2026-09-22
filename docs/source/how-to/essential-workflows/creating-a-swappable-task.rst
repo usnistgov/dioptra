@@ -36,8 +36,9 @@ Prerequisites
 * :ref:`how-to-create-entrypoints` - Create an entrypoint and attach the plugins that contain those tasks.
 
 The tasks in a swap must have the same number of output parameters and the
-same output parameter types in the same order. Their input parameters may be
-different.
+same output parameter types in the same order. Their registered output names
+and input parameters may be different. Each swap declares its own ordered
+``?outputs`` list, which names the outputs exposed to the rest of the graph.
 
 
 Add a Swappable Task
@@ -105,6 +106,7 @@ For example, a completed swap step can look like this:
 
    trained_model:
      ?training_method:
+       ?outputs: [model]
        train_with_method_a:
          task: train_a
          kwargs:
@@ -114,8 +116,24 @@ For example, a completed swap step can look like this:
          kwargs:
            dataset: $dataset
 
-The name following ``?`` is the swap name. The names beneath it are task
-aliases; a job uses an alias to select which task runs.
+The name following ``?`` is the swap name. Except for the reserved ``?outputs``
+list, the names beneath it are task aliases; a job uses an alias to select
+which task runs.
+
+The editor seeds ``?outputs`` from the initially selected task's output names.
+Edit these names in YAML as needed; adding choices preserves this interface.
+Downstream steps reference ``$trained_model.model`` regardless of the selected
+task's registered output name. Registered names are not exposed unless they
+also appear in ``?outputs``. Names must be unique and nonempty; use
+``?outputs: []`` for tasks without outputs.
+
+Each choice must match the interface's output count and have the same type name
+at each position. Dioptra maps the selected task's returned values to the declared
+names by position when running the job.
+
+Configuration responses and graph previews retain your step, swap, alias, and
+registered task names. A selected swap shows its ``?outputs`` declaration and
+only the selected choice. Partial previews keep all choices for unresolved swaps.
 
 .. rst-class:: header-on-a-card header-steps
 

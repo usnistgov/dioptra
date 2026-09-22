@@ -403,6 +403,10 @@ class EntrypointsSnapshotCollectionClient(SnapshotsSubCollectionClient[T]):
     ) -> T:
         """Get the config for the entrypoint matching the provided snapshot id.
 
+        Selected swaps retain their ``?outputs`` interface and only the selected
+        alias. Task definitions and invocations use the registered task names.
+        Unresolved partial swaps retain all choices.
+
         Args:
             entrypoint_id: The entrypoint id, an integer.
             entrypoint_snapshot_id: The entrypoint snapshot id, an integer.
