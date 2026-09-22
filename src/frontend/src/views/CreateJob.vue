@@ -202,7 +202,7 @@
     <div :class="`${isMobile ? 'col-12' : 'col-5 q-mr-xl'}`">
       <fieldset>
         <legend>Final YAML</legend>
-        <div class="q-ma-lg">
+        <div class="q-ma-lg relative-position">
           <CodeEditor
             v-model="partialGraph"
             language="yaml"
@@ -210,13 +210,19 @@
             placeholder="# Select an Entrypoint to preview its task graph"
             style="min-height: 400px"
           />
+          <q-inner-loading
+            :showing="isInitializingEntrypoint"
+            color="primary"
+            size="3rem"
+            label="Loading final YAML..."
+          />
         </div>
       </fieldset>
     </div>
     <div :class="isMobile ? 'col-12 q-mt-lg' : 'col'">
       <fieldset
         v-if="Object.keys(swaps).length > 0"
-        class="q-px-lg q-mb-lg"
+        class="q-px-lg q-mb-lg relative-position"
       >
         <legend>Swaps</legend>
         <div class="q-ma-md">
@@ -227,6 +233,7 @@
             default-opened
             expand-separator
             class="q-mb-md text-bold"
+            :disable="isInitializingEntrypoint"
             :header-class="
               selectedSwaps[swapName] !== undefined
                 ? $q.dark.isActive
@@ -255,6 +262,7 @@
                   <q-radio
                     v-model="selectedSwaps[swapName]"
                     :val="option.taskAlias"
+                    :disable="isInitializingEntrypoint"
                   />
                 </q-item-section>
                 <q-item-section>
@@ -266,10 +274,16 @@
             </q-list>
           </q-expansion-item>
         </div>
+        <q-inner-loading
+          :showing="isInitializingEntrypoint"
+          color="primary"
+          size="3rem"
+          label="Loading swap choices..."
+        />
       </fieldset>
       <fieldset class="q-px-lg q-pb-lg">
         <legend>Values</legend>
-        <template v-if="job.entrypoint && areAllSwapsResolved">
+        <template v-if="!isInitializingEntrypoint && job.entrypoint && areAllSwapsResolved">
           <TableComponent
             title="Entrypoint Parameters"
             :columns="columns"
@@ -489,18 +503,30 @@
         </template>
         <div
           v-else
-          class="column items-center justify-center q-pa-lg text-grey-7"
+          class="column items-center justify-center q-pa-lg"
         >
-          <q-icon
-            name="info"
+          <q-spinner
+            v-if="isInitializingEntrypoint"
+            color="primary"
             size="3rem"
             class="q-mb-sm"
           />
-          <div class="text-caption text-center">
+          <q-icon
+            v-else
+            name="info"
+            size="3rem"
+            class="q-mb-sm text-grey-7"
+          />
+          <div
+            class="text-center"
+            :class="{ 'text-grey-8': !isInitializingEntrypoint }"
+          >
             {{
-              !job.entrypoint
-                ? "Please select an Entrypoint to view Parameters."
-                : "Please resolve all swap choices to view Parameters."
+              isInitializingEntrypoint
+                ? "Loading Parameters..."
+                : !job.entrypoint
+                  ? "Please select an Entrypoint to view Parameters."
+                  : "Please resolve all swap choices to view Parameters."
             }}
           </div>
         </div>
@@ -702,7 +728,6 @@ async function getUsedParams() {
       effectiveEntrypointSnapshot.value,
       selectedSwaps.value,
     );
-    console.log("getUsedParams = ", res.data);
     return res.data?.entrypointParams ?? [];
   } catch (err) {
     console.warn(err);
