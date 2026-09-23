@@ -1041,7 +1041,8 @@ class EntrypointIdPluginsIdService(UnitOfWorkService):
             self._swaps_validation_service.validate_snapshot(new_entrypoint, log)
             # if the removed plugin is also an artifact plugin do not remove the
             # resource dependency relationship
-            if plugin_id not in artifact_plugins:
+            artifact_plugin_ids = {artifact_plugin.resource_id for artifact_plugin in artifact_plugins}
+            if plugin_id not in artifact_plugin_ids:
                 self._uow.entrypoint_repo.unlink_plugin(new_entrypoint, plugin_id)
             self._uow.entrypoint_repo.create_snapshot(new_entrypoint)
 
