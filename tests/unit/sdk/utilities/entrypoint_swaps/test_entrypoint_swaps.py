@@ -255,6 +255,33 @@ def test_without_swaps(yaml_file: str):
 
 
 @pytest.mark.parametrize(
+    "step2",
+    [
+        {
+            "dependencies": ["step1"],
+            "?step2_choice": {"taskalias1": {"task2": None}},
+        },
+        {
+            "?step2_choice": {"taskalias1": {"task2": None}},
+            "dependencies": ["step1"],
+        },
+    ],
+)
+def test_swap_render_dependency_order(step2):
+    graph = {
+        "step1": {"task1": None},
+        "step2": step2,
+    }
+
+    rendered_graph = render_swaps_graph(graph, {"step2_choice": "taskalias1"})
+
+    assert rendered_graph == {
+        "step1": {"task1": None},
+        "step2": {"task2": None, "dependencies": ["step1"]},
+    }
+
+
+@pytest.mark.parametrize(
     "yaml_file",
     [
         "dataset_transformer.yml",

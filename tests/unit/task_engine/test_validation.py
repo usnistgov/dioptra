@@ -175,6 +175,24 @@ def test_valid_tasks(tasks) -> None:
     assert is_valid(experiment_desc)
 
 
+def test_valid_task_name_with_colon() -> None:
+    experiment_desc = {
+        "tasks": {"taskalias1:v2": {"plugin": "org.example.task1"}},
+        "graph": {"step2_choice": {"taskalias1:v2": []}},
+    }
+
+    assert is_valid(experiment_desc)
+
+
+def test_valid_task_name_with_comma() -> None:
+    experiment_desc = {
+        "tasks": {"taskalias3,v3": {"plugin": "org.example.task3"}},
+        "graph": {"step3_choice": {"task": "taskalias3,v3"}},
+    }
+
+    assert is_valid(experiment_desc)
+
+
 @pytest.mark.parametrize(
     "tasks",
     [
