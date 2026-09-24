@@ -1145,7 +1145,7 @@ async function getExperiment(id) {
 }
 
 async function getEntrypoint(id) {
-  if (!id) return;
+  if (!id) return false;
   try {
     const res = await api.getItem("entrypoints", id);
     job.value.entrypoint = res.data;
@@ -1157,7 +1157,10 @@ async function getEntrypoint(id) {
     }
   } catch (err) {
     console.warn(err);
+    notify.error(err.response?.data?.message ?? "Unable to load the entrypoint");
+    return false;
   }
+  return true;
 }
 
 async function getResource(type, id) {
@@ -1356,9 +1359,18 @@ const showAppendEntrypointDialog = ref(false);
 const showAppendQueueDialog = ref(false);
 
 async function setUseLatestEntrypoint(useLatest) {
+  beginFormRefresh();
+  isInitializingEntrypoint.value = true;
+
   try {
     updateEntrypoint.value = useLatest;
-    await getEntrypoint(oldJob.value.entrypoint.id);
+    const loaded = await getEntrypoint(oldJob.value.entrypoint.id);
+
+    if (!loaded) {
+      isInitializingEntrypoint.value = false;
+      return;
+    }
+
     const source = useLatest ? "latest entrypoint" : "original job";
     notify.success(`Successfully updated to use the ${source} parameters and values`);
   } catch (err) {
