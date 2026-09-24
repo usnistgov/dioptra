@@ -312,6 +312,7 @@ class ExperimentIdJobEndpoint(Resource):
             description=parsed_obj.get("description", ""),
             timeout=parsed_obj.get("timeout", "60"),
             entrypoint_snapshot_id=parsed_obj["entrypoint_snapshot_id"],
+            swaps=parsed_obj.get("swaps", []),
             log=log,
         )
         return utils.build_job(job)

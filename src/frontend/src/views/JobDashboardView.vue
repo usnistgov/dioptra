@@ -92,6 +92,14 @@
               :resource="entrypoint"
               resourceType="entrypoint"
             />
+            <q-btn
+              color="primary"
+              label="View Graph"
+              size="sm"
+              class="q-ml-sm"
+              :loading="isTaskGraphLoading"
+              @click="viewGraph"
+            />
           </template>
           <template #queue="{ queue }">
             <ResourceBadge
@@ -117,11 +125,23 @@
           v-model:selected="selectedParam"
           :columns="parametersColumns"
           :rows="paramRows"
-          rowKey="parameter"
+          rowKey="name"
           :hideCreateBtn="true"
           :hideDeleteBtn="true"
           style="margin-top: 0px"
+          :disableSelect="true"
+          class="q-mb-lg"
           @request="getJob"
+        />
+        <h2>Swaps</h2>
+        <TableComponent
+          :columns="swapsColumns"
+          :rows="job?.swaps ?? []"
+          rowKey="swapName"
+          :hideCreateBtn="true"
+          :hideDeleteBtn="true"
+          :disableSelect="true"
+          style="margin-top: 0px"
         />
       </div>
       <div class="col">
@@ -304,6 +324,21 @@
     :name="job?.description || `Job ID ${job?.id}`"
     @submit="deleteJob"
   />
+  <InfoPopupDialog
+    v-model="showTaskGraphDialog"
+    @show="refreshTaskGraphEditor"
+  >
+    <template #title>
+      <label id="modalTitle"> Task Graph YAML </label>
+    </template>
+    <CodeEditor
+      ref="taskGraphEditor"
+      v-model="taskGraphYaml"
+      language="yaml"
+      :readOnly="true"
+      style="height: 50vh"
+    />
+  </InfoPopupDialog>
 </template>
 
 <script setup>
@@ -322,6 +357,8 @@ import CodeEditor from "@/components/CodeEditor.vue";
 import JobArtifactsTable from "@/components/JobArtifactsTable.vue";
 import { useLoginStore } from "@/stores/LoginStore.ts";
 import ResourceBadge from "@/components/ResourceBadge.vue";
+import InfoPopupDialog from "@/dialogs/InfoPopupDialog.vue";
+import YAML from "yaml";
 
 const store = useLoginStore();
 
@@ -339,14 +376,67 @@ const selectedParam = ref([]);
 const selectedUsedArtifact = ref([]);
 const selectedMetric = ref([]);
 const metrics = ref([]);
+const showTaskGraphDialog = ref(false);
+const isTaskGraphLoading = ref(false);
+const taskGraphYaml = ref("");
+const taskGraphEditor = ref();
 
 async function getJob() {
   try {
     const res = await api.getItem("jobs", route.params.id);
     job.value = res.data;
+    await getUsedParams();
   } catch (err) {
     console.log(err);
   }
+}
+
+async function getGraph() {
+  const selectedSwaps = Object.fromEntries(
+    (job.value.swaps ?? []).map(({ swapName, taskAlias }) => [swapName, taskAlias]),
+  );
+
+  const res = await api.getGraph(job.value.entrypoint.id, job.value.entrypoint.snapshotId, selectedSwaps);
+  return res.data?.graph ?? {};
+}
+
+async function getUsedParams() {
+  try {
+    const selectedSwaps = Object.fromEntries(
+      (job.value.swaps ?? []).map(({ swapName, taskAlias }) => [swapName, taskAlias]),
+    );
+    const res = await api.getUsedParams(job.value.entrypoint.id, job.value.entrypoint.snapshotId, selectedSwaps);
+    console.log("getUsedParams = ", res.data);
+    const paramsWithoutValues = res.data.entrypointParams;
+    // dynamicGlobalParameters endpoint doesnt have value, need to add
+    paramsWithoutValues.forEach((param) => {
+      param.value = job.value.values?.[param.name];
+    });
+    paramRows.value = paramsWithoutValues;
+  } catch (err) {
+    console.warn(err);
+  }
+}
+
+async function viewGraph() {
+  if (!job.value?.entrypoint) return;
+
+  isTaskGraphLoading.value = true;
+
+  try {
+    const graphObject = await getGraph();
+    taskGraphYaml.value = Object.keys(graphObject).length > 0 ? YAML.stringify(graphObject).trimEnd() : "";
+    showTaskGraphDialog.value = true;
+  } catch (err) {
+    console.warn(err);
+    notify.error(err.response?.data?.message ?? "Unable to load the task graph");
+  } finally {
+    isTaskGraphLoading.value = false;
+  }
+}
+
+function refreshTaskGraphEditor() {
+  taskGraphEditor.value?.refreshLayout();
 }
 
 onMounted(() => {
@@ -529,8 +619,15 @@ const overviewRows = computed(() => [
 ]);
 
 const parametersColumns = [
-  { name: "parameter", label: "Parameter", align: "left", field: "parameter", sortable: true },
+  { name: "parameter", label: "Parameter", align: "left", field: "name", sortable: true },
+  { name: "parameterType", label: "Type", align: "left", field: "parameterType", sortable: true },
   { name: "value", label: "Value", align: "left", field: "value", sortable: false },
+];
+
+const swapsColumns = [
+  { name: "swapName", label: "Swap Name", align: "left", field: "swapName", sortable: true },
+  { name: "taskAlias", label: "Task Alias", align: "left", field: "taskAlias", sortable: true },
+  { name: "taskName", label: "Task Name", align: "left", field: "taskName", sortable: true },
 ];
 
 const artifactsUsedColumns = [
@@ -565,13 +662,7 @@ const logColumns = [
   { name: "message", label: "Message", align: "left", field: "message", sortable: false },
 ];
 
-const paramRows = computed(() => {
-  if (!job.value?.values) return [];
-  return Object.entries(job.value?.values).map(([key, value]) => ({
-    parameter: key,
-    value: value,
-  }));
-});
+const paramRows = ref([]);
 
 async function deleteJob() {
   try {

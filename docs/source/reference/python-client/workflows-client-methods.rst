@@ -57,15 +57,17 @@ Commit Draft
 Workflows - Analysis and Validation
 -----------------------------------
 
-These methods allow for the validation of entrypoint parameters and the analysis of plugin task signatures within the workflow context.
+Use the workflow method below to analyze plugin task signatures.
 
 Validate Entrypoint
 ~~~~~~~~~~~~~~~~~~~
 
-   .. automethod:: dioptra.client.workflows.WorkflowsCollectionClient.validate_entrypoint
+For entrypoint dry runs, use ``client.entrypoints.create(..., validate_only=True)``
+or ``client.entrypoints.modify_by_id(..., validate_only=True)``.
+See :ref:`reference-entrypoints-client-methods-validation` for the supported
+interface and its validation behavior.
 
 Analyze Plugin Task Signatures
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
    .. automethod:: dioptra.client.workflows.WorkflowsCollectionClient.analyze_plugin_task_signatures
-

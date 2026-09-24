@@ -18,12 +18,15 @@
 
 from typing import Any
 
-from marshmallow import Schema, fields, validate, validates
+from flask import has_request_context, request
+from marshmallow import Schema, fields, pre_load, validate, validates
+from marshmallow.exceptions import ValidationError
 
 from dioptra.restapi.errors import InputParameterNotUniqueError
 from dioptra.restapi.utils import find_non_unique
 from dioptra.restapi.v1.plugins.schema import (
     ALLOWED_PLUGIN_TASK_PARAMETER_REGEX,
+    PluginSnapshotRefSchema,
     PluginTaskContainerSchema,
     PluginTaskParameterSchema,
 )
@@ -247,6 +250,17 @@ class EntrypointMutableFieldsSchema(Schema):
                 )
 
 
+class ValidateOnlySchema(Schema):
+    validateOnly = fields.Bool(
+        attribute="validate_only",
+        data_key="validateOnly",
+        load_default=False,
+        metadata={
+            "description": "If true, perform the same checks as saving, then roll back without committing changes. Return the entrypoint representation, omitting generated IDs and timestamps."
+        },
+    )
+
+
 class EntrypointPluginMutableFieldsSchema(Schema):
     pluginIds = fields.List(
         fields.Integer(),
@@ -350,3 +364,235 @@ class EntrypointGetQueryParameters(
     ShowDeletedQueryParametersSchema,
 ):
     """The query parameters for the GET method of the /entrypoints endpoint."""
+
+
+class DelimitedValues(fields.Field):
+    def __init__(
+        self,
+        *,
+        delimiter: str = ",",
+        **additional_metadata,
+    ) -> None:
+        super().__init__(**additional_metadata)
+        self.delimiter = delimiter
+
+    def _deserialize(self, value, attr, data, **kwargs) -> list[str]:
+        try:
+            if value == "":
+                return []
+            return [s.strip() for s in value.split(self.delimiter) if s.strip()]
+        except Exception as e:
+            raise ValidationError(
+                f"{attr} is not a delimited list {value}. List format should be value1{self.delimiter}value2{self.delimiter}value3."
+            ) from e
+
+
+class EntrypointLintIssueSchema(Schema):
+    path = fields.String(required=True)
+    message = fields.String(required=True)
+
+
+class EntrypointLintResponseSchema(Schema):
+    valid = fields.Boolean(required=True)
+    issues = fields.List(fields.Nested(EntrypointLintIssueSchema), required=True)
+
+
+class SwapChoiceRequestSchema(Schema):
+    swaps = fields.Dict(
+        keys=fields.String(),
+        values=fields.String(),
+        load_default=dict,
+        attribute="swaps",
+        data_key="swaps",
+        metadata={
+            "description": (
+                "Swap choices encoded as deepObject query parameters: "
+                "swaps[method]=attack%3Av2&swaps[secondary]=attack%2Cv3. "
+                "Each swap key must occur exactly once. Omit for no selections."
+            )
+        },
+    )
+
+    @pre_load
+    def parse_swap_choices(self, data, **kwargs):
+        # flask_accepts flattens request.args before calling Schema.load().
+        # Read the original MultiDict to detect duplicate selections.
+        query = request.args if has_request_context() else data
+        if "swaps" in query:
+            raise ValidationError(
+                {"swaps": ["Use swaps[name]=alias query parameters."]}
+            )
+
+        parsed = dict(data)
+        choices = {}
+        for key in query:
+            if not key.startswith("swaps["):
+                continue
+            if not key.endswith("]") or not key[6:-1]:
+                raise ValidationError({"swaps": [f"Invalid swap parameter: {key}"]})
+            values = query.getlist(key) if hasattr(query, "getlist") else [query[key]]
+            if len(values) != 1:
+                raise ValidationError(
+                    {"swaps": [f"Provide exactly one alias for {key}."]}
+                )
+            choices[key[6:-1]] = values[0]
+            parsed.pop(key, None)
+        parsed["swaps"] = choices
+        return parsed
+
+
+class EntrypointConfigRequestSchema(SwapChoiceRequestSchema):
+    sections = DelimitedValues(
+        attribute="sections",
+        data_key="sections",
+        metadata={"description": "A list of sections to include in the response."},
+    )
+
+    partial = fields.Bool(
+        attribute="partial",
+        data_key="partial",
+        metadata={
+            "description": "If true, allow partial rendering of the task graph from this endpoint."
+        },
+    )  #  type: ignore
+
+    @validates("sections")
+    def validate_sections(self, sections: list[str]) -> None:
+        invalid_sections = (
+            set(sections) - EntrypointConfigResponseSchema().fields.keys()
+        )
+        if invalid_sections:
+            raise ValidationError(
+                f"Invalid config sections: {sorted(invalid_sections)}."
+            )
+
+
+class DynamicGlobalParametersResponseSchema(Schema):
+    globalParameters = fields.Nested(
+        EntrypointParameterSchema,
+        attribute="entrypoint_params",
+        data_key="entrypointParams",
+        many=True,
+        metadata={
+            "description": (
+                "A list of global parameters used in the entrypoint task graph."
+            )
+        },
+    )
+    topologicalSort = fields.List(
+        fields.String(),
+        attribute="topological_sort",
+        data_key="topologicalSort",
+        metadata={
+            "description": ("A list of task names topologically sorted by dependency.")
+        },
+    )
+    activePlugins = fields.Nested(
+        PluginSnapshotRefSchema,
+        attribute="active_plugins",
+        data_key="activePlugins",
+        metadata={"description": ("A list of plugin objects used in the entrypoint.")},
+        many=True,
+    )
+
+
+class SwapInfoSchema(Schema):
+    """Schema representing a single swap option (SwapInfo)."""
+
+    swapName = fields.String(
+        attribute="swap_name",
+        metadata={"description": "The name of the swap this definition belongs to."},
+        required=True,
+    )
+    taskAlias = fields.String(
+        attribute="task_alias",
+        metadata={"description": "Alias for the task definition."},
+        required=True,
+    )
+    taskName = fields.String(
+        attribute="task_name",
+        metadata={"description": "Name of the task that can be swapped in."},
+        required=True,
+    )
+    entrypointKeywordArgs = fields.List(
+        fields.String(),
+        attribute="entrypoint_keyword_args",
+        metadata={
+            "description": "A list of the keyword arguments that need to be specified for this task."
+        },
+        required=True,
+    )
+    pluginFileResourceSnapshotId = fields.Integer(
+        attribute="plugin_file_resource_snapshot_id",
+        metadata={
+            "description": "Resource snapshot ID of the plugin file containing the task."
+        },
+        required=True,
+    )
+
+
+class EntrypointConfigResponseSchema(Schema):
+    types = fields.Dict(
+        keys=fields.String(),
+        values=fields.Raw(),
+        attribute="types",
+        allow_none=True,
+        metadata={
+            "description": "A dictionary of types defined for this experiment.",
+        },
+        load_default=dict,
+    )
+    parameters = fields.Dict(
+        keys=fields.String(),
+        values=fields.Raw(),
+        attribute="parameters",
+        allow_none=True,
+        metadata={
+            "description": "A dictionary of parameters defined for this experiment.",
+        },
+        load_default=dict,
+    )
+    tasks = fields.Dict(
+        keys=fields.String(),
+        values=fields.Raw(),
+        attribute="tasks",
+        allow_none=True,
+        metadata={
+            "description": "A dictionary of tasks defined for this experiment.",
+        },
+        load_default=dict,
+    )
+    graph = fields.Dict(
+        keys=fields.String(),
+        values=fields.Raw(),
+        attribute="graph",
+        allow_none=True,
+        metadata={
+            "description": (
+                "The task graph using registered task names. Selected swaps retain "
+                "their ?outputs interface and only the selected alias; unresolved "
+                "partial swaps retain all aliases."
+            ),
+        },
+        load_default=dict,
+    )
+    artifact_outputs = fields.Dict(
+        keys=fields.String(),
+        values=fields.Raw(),
+        attribute="artifact_outputs",
+        allow_none=True,
+        metadata={
+            "description": "A dictionary representing the artifact outputs for this experiment.",
+        },
+        load_default=dict,
+    )
+    artifact_inputs = fields.Dict(
+        keys=fields.String(),
+        values=fields.Raw(),
+        attribute="artifact_inputs",
+        allow_none=True,
+        metadata={
+            "description": "A dictionary representing the artifact inputs for this experiment.",
+        },
+        load_default=dict,
+    )

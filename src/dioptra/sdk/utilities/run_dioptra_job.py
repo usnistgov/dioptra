@@ -39,13 +39,14 @@ from dioptra.client.base import StatusCodeError
 from dioptra.client.utils import FileTypes
 from dioptra.sdk.api.artifact import ArtifactTaskInterface
 from dioptra.sdk.utilities.contexts import env_vars, import_temp
+from dioptra.sdk.utilities.entrypoint_swaps import compile_swaps_config
 from dioptra.task_engine.issues import IssueSeverity
 from dioptra.task_engine.task_engine import (
     ArtifactOutputEntry,
     ArtifactTaskEntry,
     run_experiment,
 )
-from dioptra.task_engine.validation import SCHEMA_FILENAME, get_json_schema, validate
+from dioptra.task_engine.validation import SCHEMA_FILENAME, get_json_schema
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -153,9 +154,10 @@ def main(
         _validate_environment(log)
 
         # get and save out the yaml
-        job_yaml = dioptra_client.entrypoints.snapshots.get_config(
-            entrypoint_id=entrypoint_id, entrypoint_snapshot_id=entrypoint_snapshot_id
+        job_yaml = dioptra_client.jobs.get_config(
+            job_id=job_id,
         )
+
         _save_job_yaml(filepath=context.yaml_path(entrypoint_name), job_yaml=job_yaml)
 
         # download artifact plugins
@@ -375,16 +377,18 @@ def _run_job(
             will be created
     """
     try:
-        run_experiment(
-            experiment_desc=job_yaml,
-            global_parameters=job_parameters,
-            artifact_parameters=artifact_parameters,
-            artifact_tasks=artifact_tasks,
-            artifacts_dir=context.artifacts_dir,
-            plugins_dir=context.plugins_dir,
-            serialize_dir=context.serialize_dir,
-            deserialize_dir=context.deserialize_dir,
-        )
+        compiled = compile_swaps_config(job_yaml)
+        with compiled.public_errors():
+            run_experiment(
+                experiment_desc=compiled.config,
+                global_parameters=job_parameters,
+                artifact_parameters=artifact_parameters,
+                artifact_tasks=artifact_tasks,
+                artifacts_dir=context.artifacts_dir,
+                plugins_dir=context.plugins_dir,
+                serialize_dir=context.serialize_dir,
+                deserialize_dir=context.deserialize_dir,
+            )
 
         log.info("=== Run succeeded ===")
 
@@ -428,9 +432,10 @@ def _run_tracked_job(
 
         # plug-ins might need the job id for things like metrics
         # should consider an alternate way to enable this functionality in the future
-        with env_vars({"__JOB_ID": str(job_id)}):
+        compiled = compile_swaps_config(job_yaml)
+        with env_vars({"__JOB_ID": str(job_id)}), compiled.public_errors():
             run_experiment(
-                experiment_desc=job_yaml,
+                experiment_desc=compiled.config,
                 global_parameters=job_parameters,
                 artifact_parameters=artifact_parameters,
                 artifact_tasks=artifact_tasks,
@@ -575,7 +580,7 @@ def _validate_yaml(
     job_yaml: Mapping[str, Any],
     log: BoundLogger,
 ) -> None:
-    issues = validate(job_yaml)
+    issues = compile_swaps_config(job_yaml).validate()
     errors: list[str] = []
 
     for issue in issues:
