@@ -211,7 +211,7 @@
             style="min-height: 400px"
           />
           <q-inner-loading
-            :showing="isInitializingEntrypoint"
+            :showing="isLoadingGraphAndParameters"
             color="primary"
             size="3rem"
             label="Loading final YAML..."
@@ -283,7 +283,7 @@
       </fieldset>
       <fieldset class="q-px-lg q-pb-lg">
         <legend>Values</legend>
-        <template v-if="!isInitializingEntrypoint && job.entrypoint && areAllSwapsResolved">
+        <template v-if="!isLoadingGraphAndParameters && job.entrypoint && areAllSwapsResolved">
           <TableComponent
             title="Entrypoint Parameters"
             :columns="columns"
@@ -506,7 +506,7 @@
           class="column items-center justify-center q-pa-lg"
         >
           <q-spinner
-            v-if="isInitializingEntrypoint"
+            v-if="isLoadingGraphAndParameters"
             color="primary"
             size="3rem"
             class="q-mb-sm"
@@ -519,10 +519,10 @@
           />
           <div
             class="text-center"
-            :class="{ 'text-grey-8': !isInitializingEntrypoint }"
+            :class="{ 'text-grey-8': !isLoadingGraphAndParameters }"
           >
             {{
-              isInitializingEntrypoint
+              isLoadingGraphAndParameters
                 ? "Loading Parameters..."
                 : !job.entrypoint
                   ? "Please select an Entrypoint to view Parameters."
@@ -548,6 +548,7 @@
     <q-btn
       color="primary"
       label="Submit Job"
+      :loading="isLoadingGraphAndParameters"
       @click="submit()"
     />
   </div>
@@ -650,6 +651,8 @@ const swaps = ref({});
 const selectedSwaps = ref({});
 const partialGraph = ref("");
 const isInitializingEntrypoint = ref(false);
+const isLoadingSwapSelection = ref(false);
+const isLoadingGraphAndParameters = computed(() => isInitializingEntrypoint.value || isLoadingSwapSelection.value);
 let latestFormRefreshId = 0;
 
 function beginFormRefresh() {
@@ -783,6 +786,7 @@ watch(
         ? { ...selectedSwaps.value }
         : {};
 
+    isLoadingSwapSelection.value = false;
     isInitializingEntrypoint.value = true;
 
     try {
@@ -852,40 +856,47 @@ watch(
     if (isInitializingEntrypoint.value) return;
 
     const refreshId = beginFormRefresh();
+    isLoadingSwapSelection.value = true;
 
-    if (!job.value.entrypoint || Object.keys(swaps.value).length === 0) {
-      partialGraph.value = "";
-      parameters.value = [];
-      return;
+    try {
+      if (!job.value.entrypoint || Object.keys(swaps.value).length === 0) {
+        partialGraph.value = "";
+        parameters.value = [];
+        return;
+      }
+
+      const graph = await getGraph();
+
+      if (!isCurrentFormRefresh(refreshId)) return;
+
+      if (graph === null) {
+        partialGraph.value = "";
+        parameters.value = [];
+        return;
+      }
+
+      partialGraph.value = graph;
+
+      if (!areAllSwapsResolved.value) {
+        parameters.value = [];
+        return;
+      }
+
+      const usedParams = await getUsedParams();
+
+      if (!isCurrentFormRefresh(refreshId)) return;
+
+      if (usedParams === null) {
+        parameters.value = [];
+        return;
+      }
+
+      setParametersFromUsedParams(usedParams, job.value.entrypoint, true);
+    } finally {
+      if (isCurrentFormRefresh(refreshId)) {
+        isLoadingSwapSelection.value = false;
+      }
     }
-
-    const graph = await getGraph();
-
-    if (!isCurrentFormRefresh(refreshId)) return;
-
-    if (graph === null) {
-      partialGraph.value = "";
-      parameters.value = [];
-      return;
-    }
-
-    partialGraph.value = graph;
-
-    if (!areAllSwapsResolved.value) {
-      parameters.value = [];
-      return;
-    }
-
-    const usedParams = await getUsedParams();
-
-    if (!isCurrentFormRefresh(refreshId)) return;
-
-    if (usedParams === null) {
-      parameters.value = [];
-      return;
-    }
-
-    setParametersFromUsedParams(usedParams, job.value.entrypoint, true);
   },
   { deep: true },
 );
