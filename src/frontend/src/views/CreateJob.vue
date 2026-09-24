@@ -1363,10 +1363,12 @@ async function setUseLatestEntrypoint(useLatest) {
   isInitializingEntrypoint.value = true;
 
   try {
+    const previousUpdateEntrypoint = updateEntrypoint.value;
     updateEntrypoint.value = useLatest;
     const loaded = await getEntrypoint(oldJob.value.entrypoint.id);
 
     if (!loaded) {
+      updateEntrypoint.value = previousUpdateEntrypoint;
       isInitializingEntrypoint.value = false;
       return;
     }
