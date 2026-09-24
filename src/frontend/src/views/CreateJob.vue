@@ -202,7 +202,7 @@
     <div :class="`${isMobile ? 'col-12' : 'col-5 q-mr-xl'}`">
       <fieldset>
         <legend>Final YAML</legend>
-        <div class="q-ma-lg">
+        <div class="q-ma-lg relative-position">
           <CodeEditor
             v-model="partialGraph"
             language="yaml"
@@ -210,13 +210,19 @@
             placeholder="# Select an Entrypoint to preview its task graph"
             style="min-height: 400px"
           />
+          <q-inner-loading
+            :showing="isLoadingGraphAndParameters"
+            color="primary"
+            size="3rem"
+            label="Loading final YAML..."
+          />
         </div>
       </fieldset>
     </div>
     <div :class="isMobile ? 'col-12 q-mt-lg' : 'col'">
       <fieldset
         v-if="Object.keys(swaps).length > 0"
-        class="q-px-lg q-mb-lg"
+        class="q-px-lg q-mb-lg relative-position"
       >
         <legend>Swaps</legend>
         <div class="q-ma-md">
@@ -227,6 +233,7 @@
             default-opened
             expand-separator
             class="q-mb-md text-bold"
+            :disable="isInitializingEntrypoint"
             :header-class="
               selectedSwaps[swapName] !== undefined
                 ? $q.dark.isActive
@@ -255,6 +262,7 @@
                   <q-radio
                     v-model="selectedSwaps[swapName]"
                     :val="option.taskAlias"
+                    :disable="isInitializingEntrypoint"
                   />
                 </q-item-section>
                 <q-item-section>
@@ -266,8 +274,14 @@
             </q-list>
           </q-expansion-item>
         </div>
+        <q-inner-loading
+          :showing="isInitializingEntrypoint"
+          color="primary"
+          size="3rem"
+          label="Loading swap choices..."
+        />
       </fieldset>
-      <fieldset class="q-px-lg q-pb-lg">
+      <fieldset class="q-px-lg q-pb-lg relative-position">
         <legend>Values</legend>
         <template v-if="job.entrypoint && areAllSwapsResolved">
           <TableComponent
@@ -489,14 +503,14 @@
         </template>
         <div
           v-else
-          class="column items-center justify-center q-pa-lg text-grey-7"
+          class="column items-center justify-center q-pa-lg text-grey-8"
         >
           <q-icon
             name="info"
             size="3rem"
-            class="q-mb-sm"
+            class="q-mb-sm text-grey-7"
           />
-          <div class="text-caption text-center">
+          <div class="text-center">
             {{
               !job.entrypoint
                 ? "Please select an Entrypoint to view Parameters."
@@ -504,6 +518,12 @@
             }}
           </div>
         </div>
+        <q-inner-loading
+          :showing="isLoadingGraphAndParameters"
+          color="primary"
+          size="3rem"
+          label="Loading Parameters..."
+        />
       </fieldset>
     </div>
   </div>
@@ -522,6 +542,7 @@
     <q-btn
       color="primary"
       label="Submit Job"
+      :loading="isLoadingGraphAndParameters"
       @click="submit()"
     />
   </div>
@@ -624,6 +645,18 @@ const swaps = ref({});
 const selectedSwaps = ref({});
 const partialGraph = ref("");
 const isInitializingEntrypoint = ref(false);
+const isLoadingSwapSelection = ref(false);
+const isLoadingGraphAndParameters = computed(() => isInitializingEntrypoint.value || isLoadingSwapSelection.value);
+let latestFormRefreshId = 0;
+
+function beginFormRefresh() {
+  latestFormRefreshId += 1;
+  return latestFormRefreshId;
+}
+
+function isCurrentFormRefresh(refreshId) {
+  return refreshId === latestFormRefreshId;
+}
 
 function usesOriginalJobSnapshot(entrypoint) {
   return Boolean(history.state.oldJobId && !updateEntrypoint.value && oldJob.value?.entrypoint.id === entrypoint?.id);
@@ -671,15 +704,15 @@ async function getSwaps() {
 }
 
 async function getGraph() {
-  if (!job.value.entrypoint) return;
+  if (!job.value.entrypoint) return null;
 
   try {
     console.log("selectedSwaps = ", selectedSwaps.value);
     const res = await api.getGraph(job.value.entrypoint.id, effectiveEntrypointSnapshot.value, selectedSwaps.value);
-    partialGraph.value = res.data?.graph ? YAML.stringify(res.data.graph).trimEnd() : "";
+    return res.data?.graph ? YAML.stringify(res.data.graph).trimEnd() : "";
   } catch (err) {
-    partialGraph.value = "";
     console.warn(err);
+    return null;
   }
 }
 
@@ -692,7 +725,6 @@ async function getUsedParams() {
       effectiveEntrypointSnapshot.value,
       selectedSwaps.value,
     );
-    console.log("getUsedParams = ", res.data);
     return res.data?.entrypointParams ?? [];
   } catch (err) {
     console.warn(err);
@@ -741,12 +773,14 @@ const areAllSwapsResolved = computed(() => {
 watch(
   () => job.value.entrypoint,
   async (newVal, oldVal) => {
+    const refreshId = beginFormRefresh();
     const previousSelectedSwaps = usesOriginalJobSnapshot(newVal)
       ? Object.fromEntries(oldJob.value.swaps.map(({ swapName, taskAlias }) => [swapName, taskAlias]))
       : newVal?.id === oldVal?.id
         ? { ...selectedSwaps.value }
         : {};
 
+    isLoadingSwapSelection.value = false;
     isInitializingEntrypoint.value = true;
 
     try {
@@ -756,23 +790,42 @@ watch(
       parameters.value = [];
 
       if (newVal) {
-        swaps.value = await getSwaps();
+        const loadedSwaps = await getSwaps();
+        if (!isCurrentFormRefresh(refreshId)) return;
+
+        swaps.value = loadedSwaps;
         selectedSwaps.value = Object.fromEntries(
           Object.entries(previousSelectedSwaps).filter(([swapName, taskAlias]) =>
             swaps.value[swapName]?.some((option) => option.taskAlias === taskAlias),
           ),
         );
-        await getGraph();
 
-        const usedParams = await getUsedParams();
-        if (usedParams !== null) {
-          setParametersFromUsedParams(usedParams, newVal);
+        const graph = await getGraph();
+
+        if (!isCurrentFormRefresh(refreshId)) return;
+
+        if (graph === null) {
+          partialGraph.value = "";
+          parameters.value = [];
+        } else {
+          partialGraph.value = graph;
+
+          const usedParams = await getUsedParams();
+          if (!isCurrentFormRefresh(refreshId)) return;
+
+          if (usedParams === null) {
+            parameters.value = [];
+          } else {
+            setParametersFromUsedParams(usedParams, newVal);
+          }
         }
       }
 
+      if (!isCurrentFormRefresh(refreshId)) return;
+
       artifactParameters.value = [];
       if (Array.isArray(newVal?.artifactParameters)) {
-        newVal?.artifactParameters.forEach((artifactParam) => {
+        newVal.artifactParameters.forEach((artifactParam) => {
           artifactParameters.value.push({
             name: artifactParam.name,
             outputParams: artifactParam.outputParams,
@@ -784,7 +837,9 @@ watch(
         });
       }
     } finally {
-      isInitializingEntrypoint.value = false;
+      if (isCurrentFormRefresh(refreshId)) {
+        isInitializingEntrypoint.value = false;
+      }
     }
   },
 );
@@ -794,12 +849,46 @@ watch(
   async () => {
     if (isInitializingEntrypoint.value) return;
 
-    if (job.value.entrypoint && Object.keys(swaps.value).length > 0) {
-      await getGraph();
+    const refreshId = beginFormRefresh();
+    isLoadingSwapSelection.value = true;
+
+    try {
+      if (!job.value.entrypoint || Object.keys(swaps.value).length === 0) {
+        partialGraph.value = "";
+        parameters.value = [];
+        return;
+      }
+
+      const graph = await getGraph();
+
+      if (!isCurrentFormRefresh(refreshId)) return;
+
+      if (graph === null) {
+        partialGraph.value = "";
+        parameters.value = [];
+        return;
+      }
+
+      partialGraph.value = graph;
+
+      if (!areAllSwapsResolved.value) {
+        parameters.value = [];
+        return;
+      }
 
       const usedParams = await getUsedParams();
-      if (usedParams !== null) {
-        setParametersFromUsedParams(usedParams, job.value.entrypoint, true);
+
+      if (!isCurrentFormRefresh(refreshId)) return;
+
+      if (usedParams === null) {
+        parameters.value = [];
+        return;
+      }
+
+      setParametersFromUsedParams(usedParams, job.value.entrypoint, true);
+    } finally {
+      if (isCurrentFormRefresh(refreshId)) {
+        isLoadingSwapSelection.value = false;
       }
     }
   },
@@ -1061,7 +1150,7 @@ async function getExperiment(id) {
 }
 
 async function getEntrypoint(id) {
-  if (!id) return;
+  if (!id) return false;
   try {
     const res = await api.getItem("entrypoints", id);
     job.value.entrypoint = res.data;
@@ -1073,7 +1162,10 @@ async function getEntrypoint(id) {
     }
   } catch (err) {
     console.warn(err);
+    notify.error(err.response?.data?.message ?? "Unable to load the entrypoint");
+    return false;
   }
+  return true;
 }
 
 async function getResource(type, id) {
@@ -1272,9 +1364,20 @@ const showAppendEntrypointDialog = ref(false);
 const showAppendQueueDialog = ref(false);
 
 async function setUseLatestEntrypoint(useLatest) {
+  beginFormRefresh();
+  isInitializingEntrypoint.value = true;
+
   try {
+    const previousUpdateEntrypoint = updateEntrypoint.value;
     updateEntrypoint.value = useLatest;
-    await getEntrypoint(oldJob.value.entrypoint.id);
+    const loaded = await getEntrypoint(oldJob.value.entrypoint.id);
+
+    if (!loaded) {
+      updateEntrypoint.value = previousUpdateEntrypoint;
+      isInitializingEntrypoint.value = false;
+      return;
+    }
+
     const source = useLatest ? "latest entrypoint" : "original job";
     notify.success(`Successfully updated to use the ${source} parameters and values`);
   } catch (err) {
