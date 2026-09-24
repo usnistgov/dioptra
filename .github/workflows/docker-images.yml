@@ -213,65 +213,20 @@ jobs:
             $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
             $(printf '${{ env.REGISTRY_IMAGE }}/${{ matrix.dioptra-app }}@sha256:%s ' *)
 
-      - name: Inspect image
+      - name: Inspect image and capture digest
+        id: digest
         run: |
-          docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}/${{ matrix.dioptra-app }}:${{ steps.meta.outputs.version }}
+          set -euo pipefail
+          IMAGE="${{ env.REGISTRY_IMAGE }}/${{ matrix.dioptra-app }}:${{ steps.meta.outputs.version }}"
+          docker buildx imagetools inspect "${IMAGE}"
+          # Resolve the manifest-list digest so we sign an immutable reference.
+          DIGEST="$(docker buildx imagetools inspect "${IMAGE}" --format '{{.Manifest.Digest}}')"
+          echo "ref=${{ env.REGISTRY_IMAGE }}/${{ matrix.dioptra-app }}@${DIGEST}" >> "$GITHUB_OUTPUT"
 
-      # Signing: Sign the manifest list with FIPS-compliant OpenSSL
-      - name: Install rekor-cli
-        uses: ./.github/actions/install-rekor-cli
-
-      - name: Install cosign
-        uses: sigstore/cosign-installer@v4.1.1
-
-      - name: Extract first image tag
-        id: extract_tag
-        run: |
-          IMAGE_TAG=$(echo '${{ steps.meta.outputs.tags }}' | head -n1)
-          echo "Using image tag: $IMAGE_TAG"
-          echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
-
-      - name: Generate cosign payload
-        id: gen_cosign_payload
-        run: |
-          IMAGE="${{ steps.extract_tag.outputs.image_tag }}"
-          mkdir -p "${{ github.workspace }}/tmp"
-          cosign generate "${IMAGE}" > ${{ github.workspace }}/tmp/image_payload.json
-          echo "payload=$(cat ${{ github.workspace }}/tmp/image_payload.json)" >> $GITHUB_OUTPUT
-
-      - name: Sign payload with FIPS-compliant OpenSSL
-        uses: ./.github/actions/sign-payload-fips
-        id: sign_payload_fips
+      # Signing: FIPS-mode cosign via the reusable action
+      - name: Sign image (FIPS)
+        uses: usnistgov/sign-image-fips@v1
         with:
-          payload: ${{ steps.gen_cosign_payload.outputs.payload }}
+          image: ${{ steps.digest.outputs.ref }}
           private-key: ${{ secrets.DIOPTRA_PRIVATE_KEY }}
           public-key: ${{ secrets.DIOPTRA_PUBLIC_KEY }}
-
-      - name: Attach OpenSSL signature using cosign
-        run: |
-          IMAGE="${{ steps.extract_tag.outputs.image_tag }}"
-          echo "${{ steps.sign_payload_fips.outputs.signature }}" | tr -d '\n' > ${{ github.workspace }}/tmp/payload_b64.sig
-          cosign attach signature \
-            --payload "${{ github.workspace }}/tmp/image_payload.json" \
-            --signature "${{ github.workspace }}/tmp/payload_b64.sig" \
-            "${IMAGE}"
-
-      - name: Create Rekor entry
-        uses: ./.github/actions/create-rekor-entry
-        id: create_rekor_entry
-        with:
-          payload: ${{ steps.gen_cosign_payload.outputs.payload }}
-          public-key: ${{ secrets.DIOPTRA_PUBLIC_KEY }}
-          signature: ${{ steps.sign_payload_fips.outputs.signature }}
-
-      - name: Verify Rekor entry
-        run: |
-          UUID="${{ steps.create_rekor_entry.outputs.uuid }}"
-          echo "Checking Rekor for UUID=${UUID}"
-          rekor-cli get --uuid "${UUID}" --rekor_server https://rekor.sigstore.dev
-
-      - name: Verify signature with cosign
-        run: |
-          IMAGE="${{ steps.extract_tag.outputs.image_tag }}"
-          echo "${{ secrets.DIOPTRA_PUBLIC_KEY }}" > "${{ github.workspace }}/tmp/dioptra.pub"
-          cosign verify --key "${{ github.workspace }}/tmp/dioptra.pub" "${IMAGE}"
