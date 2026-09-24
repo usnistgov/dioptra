@@ -281,9 +281,9 @@
           label="Loading swap choices..."
         />
       </fieldset>
-      <fieldset class="q-px-lg q-pb-lg">
+      <fieldset class="q-px-lg q-pb-lg relative-position">
         <legend>Values</legend>
-        <template v-if="!isLoadingGraphAndParameters && job.entrypoint && areAllSwapsResolved">
+        <template v-if="job.entrypoint && areAllSwapsResolved">
           <TableComponent
             title="Entrypoint Parameters"
             :columns="columns"
@@ -503,33 +503,27 @@
         </template>
         <div
           v-else
-          class="column items-center justify-center q-pa-lg"
+          class="column items-center justify-center q-pa-lg text-grey-8"
         >
-          <q-spinner
-            v-if="isLoadingGraphAndParameters"
-            color="primary"
-            size="3rem"
-            class="q-mb-sm"
-          />
           <q-icon
-            v-else
             name="info"
             size="3rem"
             class="q-mb-sm text-grey-7"
           />
-          <div
-            class="text-center"
-            :class="{ 'text-grey-8': !isLoadingGraphAndParameters }"
-          >
+          <div class="text-center">
             {{
-              isLoadingGraphAndParameters
-                ? "Loading Parameters..."
-                : !job.entrypoint
-                  ? "Please select an Entrypoint to view Parameters."
-                  : "Please resolve all swap choices to view Parameters."
+              !job.entrypoint
+                ? "Please select an Entrypoint to view Parameters."
+                : "Please resolve all swap choices to view Parameters."
             }}
           </div>
         </div>
+        <q-inner-loading
+          :showing="isLoadingGraphAndParameters"
+          color="primary"
+          size="3rem"
+          label="Loading Parameters..."
+        />
       </fieldset>
     </div>
   </div>
