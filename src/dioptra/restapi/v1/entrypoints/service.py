@@ -1528,6 +1528,21 @@ class EntrypointConfigService(UnitOfWorkService):
             except Exception as e:
                 raise EntrypointSwapsRenderError(str(e)) from e
 
+        if "parameters" in config and not partial and swap_choices:
+            graph = config["graph"]
+            if extract_swaps(graph):
+                try:
+                    rendered_graph = render_swaps_graph(graph, swap_choices)
+                except Exception as e:
+                    raise EntrypointSwapsRenderError(str(e)) from e
+
+                required_globals, _ = _get_required_globals(rendered_graph)
+                config["parameters"] = {
+                    name: value
+                    for name, value in config["parameters"].items()
+                    if name in required_globals
+                }
+
         if validate_rendered:
             # Validate against all task/type definitions before projecting sections.
             try:
