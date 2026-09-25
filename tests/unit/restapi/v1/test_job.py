@@ -589,6 +589,7 @@ def test_create_job_with_unselected_required_swap_parameter(
             """\
             step1:
               ?parameter_choice:
+                ?outputs: [out]
                 epsilon_task:
                   task1:
                     arg1: $epsilon
