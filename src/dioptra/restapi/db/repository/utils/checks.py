@@ -1216,8 +1216,7 @@ def assert_resource_name_available(
         .where(
             resource_type_class.name == snap.name,
             resource_type_class.resource_snapshot_id == m.Resource.latest_snapshot_id,
-            # Dunno why mypy has trouble with this expression...
-            m.Resource.owner == snap.resource.owner,  # type: ignore
+            m.Resource.owner == snap.resource.owner,
             m.Resource.is_deleted == False,  # noqa: E712
         )
     )
@@ -1266,8 +1265,7 @@ def assert_snapshot_name_available(
         .where(
             resource_type_class.name == snap.name,
             resource_type_class.resource_snapshot_id == m.Resource.latest_snapshot_id,
-            # Dunno why mypy has trouble with this expression...
-            m.Resource.owner == snap.resource.owner,  # type: ignore
+            m.Resource.owner == snap.resource.owner,
             m.Resource.is_deleted == False,  # noqa: E712
             resource_type_class.resource_id != snap.resource_id,
         )
