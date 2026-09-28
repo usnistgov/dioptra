@@ -45,7 +45,7 @@ import { Codemirror } from "vue-codemirror";
 import { yaml } from "@codemirror/lang-yaml";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { linter, lintGutter } from "@codemirror/lint";
-import parser from "js-yaml";
+import * as parser from "js-yaml";
 import { python } from "@codemirror/lang-python";
 import { autocompletion, startCompletion } from "@codemirror/autocomplete";
 import YAML from "yaml";
@@ -160,9 +160,12 @@ function highlightPlaceholder(update) {
 }
 
 const yamlLinter = linter((view) => {
+  const source = view.state.doc.toString();
+  if (!source.trim()) return [];
+
   const diagnostics = [];
   try {
-    parser.load(view.state.doc);
+    parser.load(source);
   } catch (e) {
     const loc = e.mark;
     const from = loc ? loc.position : 0;

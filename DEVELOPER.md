@@ -109,15 +109,17 @@ To run the unit tests:
 
 This project stores Playwright tests in the `src/frontend/tests` folder.  To run them, please do the following:
 
-1. If you haven't installed the frontend packages, in `src/frontend` run `npm install` to make sure Playwright is installed. You do not need to repeat this step.
+1. In `src/frontend`, run `npm install` if the frontend packages are not installed or the lockfile has changed.
 
-2. Ensure your backend Flask server is stopped.  The test script starts it's own backend using a test database.  The test script will also start the frontend for you if it's not already running.
+2. Run `npm run test:e2e:install` to download the Chromium browser used by Playwright. Repeat this step after upgrading Playwright if it requires a new browser version.
 
-3. If your [env-dev.cfg](https://github.com/usnistgov/dioptra/blob/main/dev-kb/local-setup/README.md#a-configuration-file-) is not in your project root or the directory above it, please specify it's location location using this command
+3. Ensure your backend Flask server is stopped. The test script starts its own backend using a test database. It also starts the frontend if it is not already running.
+
+4. If your [env-dev.cfg](https://github.com/usnistgov/dioptra/blob/main/dev-kb/local-setup/README.md#a-configuration-file-) is not in your project root or the directory above it, specify its location with this command:
 
         export DIOPTRA_E2E_ENV_FILE=/path/to/env-dev.cfg
 
-4. To run the tests, execute the following from `src/frontend`
+5. To run the tests, execute the following from `src/frontend`
 
         npm run test:e2e:with-backend
 
