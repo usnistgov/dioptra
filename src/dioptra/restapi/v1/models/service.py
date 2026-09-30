@@ -292,6 +292,7 @@ class ModelService(object):
             ),
             models.DraftResource.user_id == current_user.user_id,
         )
+        resource_id: int
         for resource_id in db.session.scalars(drafts_stmt):
             models_dict[resource_id]["has_draft"] = True
 

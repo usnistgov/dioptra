@@ -259,7 +259,7 @@ class ResourceIdService(object):
         stmt = select(models.Resource).filter_by(
             resource_id=resource_id, resource_type=self._resource_type, is_deleted=False
         )
-        resource = db.session.scalar(stmt)
+        resource: models.Resource | None = db.session.scalar(stmt)
 
         if resource is None:
             raise EntityDoesNotExistError(
