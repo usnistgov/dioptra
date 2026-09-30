@@ -203,7 +203,7 @@ def get_exact_latest_snapshots(
     snaps = get_latest_snapshots(session, snap_class, resource_ids, deletion_policy)
     if len(snaps) != len(resource_ids):
         missing = set(resource_ids) - {snap.resource_id for snap in snaps}
-        raise e.EntityDoesNotExistError(EntityType.NONE, resource_ids=missing)
+        raise e.EntityDoesNotExistError(EntityType.NONE, resource_ids=sorted(missing))
 
     return snaps
 

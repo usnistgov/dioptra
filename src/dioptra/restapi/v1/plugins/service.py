@@ -413,11 +413,12 @@ class PluginIdService(object):
             plugin=new_plugin, plugin_files=plugin_files, has_draft=False
         )
 
-    def delete(self, plugin_id: int, **kwargs) -> dict[str, Any]:
+    def delete(self, plugin_id: int, commit: bool = True, **kwargs) -> dict[str, Any]:
         """Delete a plugin.
 
         Args:
             plugin_id: The unique id of the plugin.
+            commit: If True, commit the transaction. Defaults to True.
 
         Returns:
             A dictionary reporting the status of the request.
@@ -457,7 +458,8 @@ class PluginIdService(object):
                 )
                 db.session.add(deleted_resource_lock)
 
-        db.session.commit()
+        if commit:
+            db.session.commit()
 
         log.debug(
             "Plugin and associated files deleted",

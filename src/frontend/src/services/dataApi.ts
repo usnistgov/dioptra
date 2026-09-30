@@ -294,12 +294,21 @@ export async function getResourceDraft<T extends ResourceType>(type: T, id: numb
   return res;
 }
 
-export async function updateItem<T extends keyof UpdateParams>(type: T, id: number, params: UpdateParams[T]) {
-  return await axios.put(`/api/${type}/${id}`, params);
+export async function updateItem<T extends keyof UpdateParams>(
+  type: T,
+  id: number,
+  params: UpdateParams[T],
+  validateOnly = false,
+) {
+  return await axios.put(`/api/${type}/${id}`, params, {
+    params: { validateOnly },
+  });
 }
 
-export async function addItem<T extends keyof CreateParams>(type: T, params: CreateParams[T]) {
-  return await axios.post(`/api/${type}/`, params);
+export async function addItem<T extends keyof CreateParams>(type: T, params: CreateParams[T], validateOnly = false) {
+  return await axios.post(`/api/${type}/`, params, {
+    params: { validateOnly },
+  });
 }
 
 interface JobParams {
@@ -316,6 +325,30 @@ export async function addJob(id: number, params: JobParams) {
 
 export async function deleteJob(id: number, jobId: number) {
   return await axios.delete(`/api/experiments/${id}/jobs/${jobId}`);
+}
+
+export async function getSwaps(entrypointId: number, snapshotId: number) {
+  return await axios.get(`/api/entrypoints/${entrypointId}/snapshots/${snapshotId}/swaps`);
+}
+
+function swapQueryParams(swaps: Record<string, string>) {
+  return Object.fromEntries(Object.entries(swaps).map(([name, alias]) => [`swaps[${name}]`, alias]));
+}
+
+export async function getGraph(entrypointId: number, snapshotId: number, swaps: Record<string, string>) {
+  return await axios.get(`/api/entrypoints/${entrypointId}/snapshots/${snapshotId}/config`, {
+    params: {
+      ...swapQueryParams(swaps),
+      sections: "graph",
+      partial: true,
+    },
+  });
+}
+
+export async function getUsedParams(entrypointId: number, snapshotId: number, swaps: Record<string, string>) {
+  return await axios.get(`/api/entrypoints/${entrypointId}/snapshots/${snapshotId}/dynamicGlobalParameters`, {
+    params: swapQueryParams(swaps),
+  });
 }
 
 export async function addDraft<T extends keyof CreateParams>(type: T, params: CreateParams[T], id: number) {
@@ -478,10 +511,6 @@ export async function removeResourceFromResource<T extends ResourceType>(
 
 export async function getVersions(id: string) {
   return await axios.get(`/api/models/${id}/versions`);
-}
-
-export async function validateEntrypoint(payload: any) {
-  return await axios.post(`/api/workflows/validateEntrypoint`, payload);
 }
 
 export async function suggestPluginTasks(pythonCode: string) {

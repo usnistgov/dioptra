@@ -1,0 +1,3 @@
+step1:
+  ?my_task:
+    arg1: $global1

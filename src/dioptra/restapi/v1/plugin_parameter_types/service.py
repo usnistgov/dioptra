@@ -342,17 +342,20 @@ class PluginParameterTypeIdService(object):
             plugin_task_parameter_type=new_plugin_parameter_type, has_draft=False
         )
 
-    def delete(self, plugin_parameter_type_id: int, **kwargs) -> dict[str, Any]:
+    def delete(
+        self, plugin_parameter_type_id: int, commit: bool = True, **kwargs
+    ) -> dict[str, Any]:
         """Delete a plugin parameter type.
 
         Args:
             plugin_parameter_type_id: The unique id of the plugin parameter type.
+            commit: If True, commit the transaction. Defaults to True.
 
         Returns:
             A dictionary reporting the status of the request.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
-        with self._uow:
+        with self._uow(commit):
             self._uow.type_repo.delete(plugin_parameter_type_id)
 
         log.debug(
