@@ -956,6 +956,8 @@ class EntrypointsCollectionClient(CollectionClient[T]):
         parameters: list[dict[str, Any]] | None,
         artifact_parameters: list[dict[str, Any]] | None,
         queues: list[int] | None,
+        plugin_snapshot_ids: list[int],
+        artifact_plugin_snapshot_ids: list[int],
         validate_only: bool = False,
     ) -> T:
         """Modify the entrypoint matching the provided id.
@@ -975,6 +977,12 @@ class EntrypointsCollectionClient(CollectionClient[T]):
                 To remove all artifact parameters, pass None.
             queues: The new list of queue ids to associate with the entrypoint. To
                 remove all associated queues, pass None.
+            plugin_snapshot_ids: The complete desired task-plugin snapshot list.
+                Retain the currently bound snapshot or select latest independently for
+                each plugin. New associations require latest; omitted plugins are removed.
+                Pass an empty list to remove all task plugins, subject to graph validation.
+            artifact_plugin_snapshot_ids: The complete desired artifact-plugin snapshot
+                list, with the same eligibility and removal rules for this role.
             validate_only: If True, run all save-time checks, then roll back without
                 committing changes. The response omits generated IDs/timestamps.
                 If False (the default), validate and save the entrypoint.
@@ -982,7 +990,12 @@ class EntrypointsCollectionClient(CollectionClient[T]):
         Returns:
             The response from the Dioptra API.
         """
-        json_: dict[str, Any] = {"name": name, "taskGraph": task_graph}
+        json_: dict[str, Any] = {
+            "name": name,
+            "taskGraph": task_graph,
+            "pluginSnapshotIds": plugin_snapshot_ids,
+            "artifactPluginSnapshotIds": artifact_plugin_snapshot_ids,
+        }
 
         if artifact_graph is not None:
             json_["artifactGraph"] = artifact_graph

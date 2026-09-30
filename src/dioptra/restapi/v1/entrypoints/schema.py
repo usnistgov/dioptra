@@ -250,6 +250,29 @@ class EntrypointMutableFieldsSchema(Schema):
                 )
 
 
+class EntrypointUpdateSchema(EntrypointMutableFieldsSchema):
+    """Complete content and exact plugin bindings for an entrypoint PUT."""
+
+    pluginSnapshotIds = fields.List(
+        fields.Integer(),
+        attribute="plugin_snapshot_ids",
+        required=True,
+        metadata={
+            "description": "Complete task-plugin snapshot list. Select each plugin's "
+            "currently bound or latest snapshot; omitted plugins are removed."
+        },
+    )
+    artifactPluginSnapshotIds = fields.List(
+        fields.Integer(),
+        attribute="artifact_plugin_snapshot_ids",
+        required=True,
+        metadata={
+            "description": "Complete artifact-plugin snapshot list. Select each "
+            "plugin's currently bound or latest snapshot; omitted plugins are removed."
+        },
+    )
+
+
 class ValidateOnlySchema(Schema):
     validateOnly = fields.Bool(
         attribute="validate_only",

@@ -30,13 +30,19 @@ import yaml
 from flask.testing import FlaskClient
 from pytest import MonkeyPatch
 from sqlalchemy import func, select
+from sqlalchemy.orm.attributes import set_committed_value
 
 from dioptra.client.base import DioptraResponseProtocol, FieldNameCollisionError
 from dioptra.client.client import DioptraClient
 from dioptra.restapi.db import models
 from dioptra.restapi.db.models.resources import resource_dependencies_table
+from dioptra.restapi.db.repository.entrypoints import EntrypointRepository
 from dioptra.restapi.errors import EntrypointValidationError
-from dioptra.restapi.v1.entrypoints.service import EntrypointIdService
+from dioptra.restapi.v1.entrypoints.service import (
+    EntrypointIdService,
+    SwapsValidationService,
+)
+from dioptra.restapi.v1.plugins.service import PluginIdService
 
 from ..lib import helpers, routines
 from ..lib.asserts import assert_retrieving_deleted_resource_snapshots_works
@@ -76,6 +82,10 @@ def _prepare_entrypoint_request(client, payload, modifying):
     response = client.post("/api/v1/entrypoints/", json=payload)
     assert response.status_code == HTTPStatus.OK, response.json
     payload = {k: v for k, v in payload.items() if k not in ("group", "plugins")}
+    payload["pluginSnapshotIds"] = [p["snapshotId"] for p in response.json["plugins"]]
+    payload["artifactPluginSnapshotIds"] = [
+        p["snapshotId"] for p in response.json["artifactPlugins"]
+    ]
     return client.put, f"/api/v1/entrypoints/{response.json['id']}", payload
 
 
@@ -233,7 +243,9 @@ def test_lint_is_lightweight(
     expected_valid,
 ):
     """Colon routes report lint issues while leaving full checks to dry runs."""
-    _, url, payload = _prepare_entrypoint_request(client, proposed_entrypoint, modifying)
+    _, url, payload = _prepare_entrypoint_request(
+        client, proposed_entrypoint, modifying
+    )
     from dioptra.restapi.v1.entrypoints.service import SwapsValidationService
 
     def unexpected_render(*args, **kwargs):
@@ -249,7 +261,12 @@ def test_lint_is_lightweight(
     payload = {**payload, "taskGraph": graph} if graph is not None else {}
     if modifying:
         response = dioptra_client.entrypoints.lint_by_id(
-            int(url.rsplit("/", 1)[1]), payload
+            int(url.rsplit("/", 1)[1]),
+            {
+                k: v
+                for k, v in payload.items()
+                if k not in ("pluginSnapshotIds", "artifactPluginSnapshotIds")
+            },
         )
     else:
         response = dioptra_client.entrypoints.lint(payload)
@@ -289,7 +306,14 @@ def test_dry_run_and_lint_require_group_membership(
     assert preview.status_code == saved.status_code == HTTPStatus.BAD_REQUEST
     assert preview.json["error"] == saved.json["error"] == "UserNotInGroupError"
     payload["taskGraph"] = "selected:\n  unknown_task: {}\n"
-    lint = client.post(f"{url.rstrip('/')}:lint", json=payload)
+    lint = client.post(
+        f"{url.rstrip('/')}:lint",
+        json={
+            k: v
+            for k, v in payload.items()
+            if k not in ("pluginSnapshotIds", "artifactPluginSnapshotIds")
+        },
+    )
     assert lint.status_code == saved.status_code, lint.json
     assert lint.json["error"] == saved.json["error"]
 
@@ -584,6 +608,18 @@ def assert_modifying_deleted_entrypoint_fails(
         parameters=parameters,
         artifact_parameters=artifact_parameters,
         queues=queues,
+        plugin_snapshot_ids=[
+            p["snapshotId"]
+            for p in dioptra_client.entrypoints.get_by_id(entrypoint_id).json()[
+                "plugins"
+            ]
+        ],
+        artifact_plugin_snapshot_ids=[
+            p["snapshotId"]
+            for p in dioptra_client.entrypoints.get_by_id(entrypoint_id).json()[
+                "artifactPlugins"
+            ]
+        ],
     )
     assert response.status_code == HTTPStatus.LOCKED
 
@@ -623,6 +659,18 @@ def assert_cannot_rename_entrypoint_with_existing_name(
         parameters=existing_parameters,
         artifact_parameters=existing_artifact_parameters,
         queues=existing_queue_ids,
+        plugin_snapshot_ids=[
+            p["snapshotId"]
+            for p in dioptra_client.entrypoints.get_by_id(entrypoint_id).json()[
+                "plugins"
+            ]
+        ],
+        artifact_plugin_snapshot_ids=[
+            p["snapshotId"]
+            for p in dioptra_client.entrypoints.get_by_id(entrypoint_id).json()[
+                "artifactPlugins"
+            ]
+        ],
     )
     assert response.status_code == HTTPStatus.BAD_REQUEST
 
@@ -1151,6 +1199,10 @@ def test_rename_entrypoint(
         parameters=entrypoint_to_rename["parameters"],
         artifact_parameters=entrypoint_to_rename["artifactParameters"],
         queues=queue_ids,
+        plugin_snapshot_ids=[p["snapshotId"] for p in entrypoint_to_rename["plugins"]],
+        artifact_plugin_snapshot_ids=[
+            p["snapshotId"] for p in entrypoint_to_rename["artifactPlugins"]
+        ],
     ).json()
     assert_entrypoint_name_matches_expected_name(
         dioptra_client,
@@ -1176,6 +1228,10 @@ def test_rename_entrypoint(
         parameters=entrypoint_to_rename["parameters"],
         artifact_parameters=entrypoint_to_rename["artifactParameters"],
         queues=queue_ids,
+        plugin_snapshot_ids=[p["snapshotId"] for p in entrypoint_to_rename["plugins"]],
+        artifact_plugin_snapshot_ids=[
+            p["snapshotId"] for p in entrypoint_to_rename["artifactPlugins"]
+        ],
     ).json()
     assert_entrypoint_name_matches_expected_name(
         dioptra_client,
@@ -1356,6 +1412,13 @@ def test_manage_existing_entrypoint_draft(
         draft_mod=draft_mod,
         draft_expected=draft_expected,
         draft_mod_expected=draft_mod_expected,
+        resource_data_adapters=lambda data: {
+            **data,
+            "plugin_snapshot_ids": [p["snapshotId"] for p in entrypoint["plugins"]],
+            "artifact_plugin_snapshot_ids": [
+                p["snapshotId"] for p in entrypoint["artifactPlugins"]
+            ],
+        },
     )
 
 def test_manage_new_entrypoint_drafts(
@@ -1586,6 +1649,10 @@ def test_manage_entrypoint_snapshots(
         parameters=entrypoint_to_rename["parameters"],
         artifact_parameters=entrypoint_to_rename["artifactParameters"],
         queues=queue_ids,
+        plugin_snapshot_ids=[p["snapshotId"] for p in entrypoint_to_rename["plugins"]],
+        artifact_plugin_snapshot_ids=[
+            p["snapshotId"] for p in entrypoint_to_rename["artifactPlugins"]
+        ],
     ).json()
 
     # Run routine: resource snapshots tests
@@ -2112,7 +2179,7 @@ def _combined_interface_update(dependency_injector, entrypoint, graph, plugins):
 def test_interface_lifecycle_public_orders_reject_intermediate_state(
     client, dioptra_client, entrypoint_interface_lifecycle, db_session, first
 ):
-    """Characterize both public orders before coordinated PUT support exists."""
+    """Reject graph-only and synchronization-only incompatible intermediate states."""
     case = entrypoint_interface_lifecycle
     entrypoint = case["entrypoint"]
     for index in range(2):
@@ -2133,6 +2200,10 @@ def test_interface_lifecycle_public_orders_reject_intermediate_state(
                 [],
                 [],
                 [],
+                plugin_snapshot_ids=[p["snapshotId"] for p in entrypoint["plugins"]],
+                artifact_plugin_snapshot_ids=[
+                    p["snapshotId"] for p in entrypoint["artifactPlugins"]
+                ],
             )
             expected = "interface requires 2"
         else:
@@ -2261,7 +2332,6 @@ def test_interface_lifecycle_ordinary_signature_requires_combined_update(
     client,
     dioptra_client,
     entrypoint_interface_lifecycle,
-    dependency_injector,
     db_session,
     first,
 ):
@@ -2271,7 +2341,18 @@ def test_interface_lifecycle_ordinary_signature_requires_combined_update(
     old_graph = "choose:\n  task_a: []\n"
     new_graph = "choose:\n  task_a:\n    value: supplied\n"
     response = dioptra_client.entrypoints.modify_by_id(
-        entrypoint["id"], entrypoint["name"], old_graph, None, None, [], [], []
+        entrypoint["id"],
+        entrypoint["name"],
+        old_graph,
+        None,
+        None,
+        [],
+        [],
+        [],
+        plugin_snapshot_ids=[p["snapshotId"] for p in entrypoint["plugins"]],
+        artifact_plugin_snapshot_ids=[
+            p["snapshotId"] for p in entrypoint["artifactPlugins"]
+        ],
     )
     assert response.status_code == HTTPStatus.OK, response.text
     original = response.json()
@@ -2288,6 +2369,10 @@ def test_interface_lifecycle_ordinary_signature_requires_combined_update(
                 [],
                 [],
                 [],
+                plugin_snapshot_ids=[p["snapshotId"] for p in entrypoint["plugins"]],
+                artifact_plugin_snapshot_ids=[
+                    p["snapshotId"] for p in entrypoint["artifactPlugins"]
+                ],
             )
         else:
             response = dioptra_client.entrypoints.plugins.create(
@@ -2296,10 +2381,34 @@ def test_interface_lifecycle_ordinary_signature_requires_combined_update(
         assert response.status_code == HTTPStatus.BAD_REQUEST, response.text
         assert "value" in response.text
         assert _entrypoint_lifecycle_state(db_session, entrypoint["id"]) == state
-    _combined_interface_update(
-        dependency_injector, entrypoint, new_graph, [case["plugins"][0]]
-    )
-    saved = client.get(f"/api/v1/entrypoints/{entrypoint['id']}").json
+    selected = {**case["pins"], case["plugins"][0]: latest}
+    for validate_only in (True, False):
+        response = dioptra_client.entrypoints.modify_by_id(
+            entrypoint["id"],
+            entrypoint["name"],
+            new_graph,
+            None,
+            None,
+            [],
+            [],
+            [],
+            plugin_snapshot_ids=list(selected.values()),
+            artifact_plugin_snapshot_ids=[],
+            validate_only=validate_only,
+        )
+        assert response.status_code == HTTPStatus.OK, response.text
+        if validate_only:
+            preview = response.json()
+            assert _entrypoint_lifecycle_state(db_session, entrypoint["id"]) == state
+        else:
+            saved = response.json()
+            for representation in (preview, saved):
+                representation["plugins"].sort(key=lambda plugin: plugin["id"])
+            assert preview == {
+                k: v
+                for k, v in saved.items()
+                if k not in ("snapshot", "snapshotCreatedOn", "lastModifiedOn")
+            }
     after = _entrypoint_lifecycle_state(db_session, entrypoint["id"])
     assert after["snapshots"][saved["snapshot"]] == {
         "graph": new_graph,
@@ -2394,6 +2503,10 @@ def test_interface_lifecycle_unchanged_put_creates_history_snapshots(
             [],
             [],
             [],
+            plugin_snapshot_ids=[p["snapshotId"] for p in previous["plugins"]],
+            artifact_plugin_snapshot_ids=[
+                p["snapshotId"] for p in previous["artifactPlugins"]
+            ],
         )
         assert response.status_code == HTTPStatus.OK, response.text
         saved = response.json()
@@ -2413,6 +2526,492 @@ def test_interface_lifecycle_unchanged_put_creates_history_snapshots(
         for field in ("name", "description", "taskGraph", "parameters", "queues"):
             assert saved[field] == previous[field]
         previous, before = saved, after
+
+
+def _interface_update_payload(case):
+    """Build a complete PUT from the saved lifecycle candidate."""
+    entrypoint = case["entrypoint"]
+    return {
+        "name": entrypoint["name"],
+        "taskGraph": case["old_graph"],
+        "pluginSnapshotIds": list(case["pins"].values()),
+        "artifactPluginSnapshotIds": [],
+    }
+
+
+@pytest.mark.parametrize("validate_only", [False, True])
+@pytest.mark.parametrize("advance_both", [False, True])
+def test_put_interface_replacement_is_atomic(
+    client, entrypoint_interface_lifecycle, db_session, validate_only, advance_both
+):
+    """Validate and persist the edited graph and exact bindings together."""
+    case = entrypoint_interface_lifecycle
+    entrypoint = case["entrypoint"]
+    latest = {
+        plugin: case["publish"](index, split_outputs=True)
+        for index, plugin in enumerate(case["plugins"])
+    }
+    payload = _interface_update_payload(case)
+    payload["taskGraph"] = case["new_graph"]
+    selected = (
+        latest
+        if advance_both
+        else {**case["pins"], case["plugins"][0]: latest[case["plugins"][0]]}
+    )
+    payload["pluginSnapshotIds"] = list(selected.values())
+    before = _entrypoint_lifecycle_state(db_session, entrypoint["id"])
+    response = client.put(
+        f"/api/v1/entrypoints/{entrypoint['id']}",
+        json=payload,
+        query_string={"validateOnly": str(validate_only).lower()},
+    )
+    assert response.status_code == (
+        HTTPStatus.OK if advance_both else HTTPStatus.BAD_REQUEST
+    ), response.json
+    after = _entrypoint_lifecycle_state(db_session, entrypoint["id"])
+    if validate_only or not advance_both:
+        assert after == before
+    else:
+        assert after["snapshots"][response.json["snapshot"]] == {
+            "graph": case["new_graph"],
+            "plugins": latest,
+            "artifact_plugins": {},
+        }
+        assert (
+            after["snapshots"][entrypoint["snapshot"]]
+            == before["snapshots"][entrypoint["snapshot"]]
+        )
+        assert after["dependencies"] == before["dependencies"]
+        for alias in case["configs"]:
+            result = client.get(
+                f"/api/v1/entrypoints/{entrypoint['id']}/snapshots/{response.json['snapshot']}/config",
+                query_string={"swaps[implementation]": alias},
+            )
+            assert result.status_code == HTTPStatus.OK, result.json
+            assert result.json["tasks"]["task_a"]["outputs"] == [
+                {"x": "string"},
+                {"y": "string"},
+            ]
+    if advance_both:
+        assert {p["id"]: p["snapshotId"] for p in response.json["plugins"]} == latest
+    else:
+        assert "interface requires 2" in str(response.json)
+
+
+@pytest.mark.parametrize("selected_index", [0, 1])
+def test_put_independent_selection_and_retry_after_publication(
+    dioptra_client, entrypoint_interface_lifecycle, db_session, selected_index
+):
+    """Retain and advance independently, then keep accepted pins after publication."""
+    case = entrypoint_interface_lifecycle
+    entrypoint = case["entrypoint"]
+    latest = {
+        plugin: case["publish"](index) for index, plugin in enumerate(case["plugins"])
+    }
+    selected = {
+        **case["pins"],
+        case["plugins"][selected_index]: latest[case["plugins"][selected_index]],
+    }
+    first = None
+    for _ in range(2):
+        response = dioptra_client.entrypoints.modify_by_id(
+            entrypoint["id"],
+            entrypoint["name"],
+            case["old_graph"],
+            None,
+            None,
+            [],
+            [],
+            [],
+            plugin_snapshot_ids=list(selected.values()),
+            artifact_plugin_snapshot_ids=[],
+        )
+        assert response.status_code == HTTPStatus.OK, response.text
+        saved = response.json()
+        state = _entrypoint_lifecycle_state(db_session, entrypoint["id"])
+        assert state["snapshots"][saved["snapshot"]]["plugins"] == selected
+        if first:
+            assert saved["snapshot"] != first["snapshot"]
+            assert (
+                state["snapshots"][saved["snapshot"]]
+                == state["snapshots"][first["snapshot"]]
+            )
+        else:
+            first = saved
+            case["publish"](selected_index, description="published after acceptance")
+
+
+@pytest.mark.parametrize("validate_only", [False, True])
+@pytest.mark.parametrize("role", ["pluginSnapshotIds", "artifactPluginSnapshotIds"])
+@pytest.mark.parametrize(
+    "problem",
+    [
+        "missing",
+        "null",
+        "wrong-resource",
+        "unknown",
+        "historical",
+        "duplicate",
+        "two-snapshots",
+    ],
+)
+def test_put_invalid_snapshot_selections_leave_persistence_unchanged(
+    client, entrypoint_interface_lifecycle, db_session, validate_only, role, problem
+):
+    """Reject incomplete, ineligible, and ambiguous selections for either role."""
+    case = entrypoint_interface_lifecycle
+    entrypoint = case["entrypoint"]
+    stale = case["publish"](0)
+    latest = case["publish"](0, description="latest")
+    payload = _interface_update_payload(case)
+    if problem == "missing":
+        payload.pop(role)
+    elif problem == "null":
+        payload[role] = None
+    elif problem == "wrong-resource":
+        payload[role] = [entrypoint["snapshot"]]
+    elif problem == "unknown":
+        payload[role] = [999999]
+    elif problem == "historical":
+        payload[role] = [stale]
+    elif problem == "duplicate":
+        payload[role] = [latest, latest]
+    else:
+        payload[role] = [latest, case["pins"][case["plugins"][0]]]
+    before = _entrypoint_lifecycle_state(db_session, entrypoint["id"])
+    response = client.put(
+        f"/api/v1/entrypoints/{entrypoint['id']}",
+        json=payload,
+        query_string={"validateOnly": str(validate_only).lower()},
+    )
+    expected = (
+        HTTPStatus.NOT_FOUND
+        if problem in ("wrong-resource", "unknown")
+        else HTTPStatus.BAD_REQUEST
+    )
+    assert response.status_code == expected, response.json
+    assert _entrypoint_lifecycle_state(db_session, entrypoint["id"]) == before
+
+
+@pytest.mark.parametrize("validate_only", [False, True])
+@pytest.mark.parametrize("retain_as_artifacts", [False, True])
+def test_put_empty_task_list_requires_valid_complete_graph(
+    client,
+    entrypoint_interface_lifecycle,
+    db_session,
+    validate_only,
+    retain_as_artifacts,
+):
+    """Empty lists remove bindings only when the remaining graph is valid."""
+    case = entrypoint_interface_lifecycle
+    payload = _interface_update_payload(case)
+    payload["pluginSnapshotIds"] = []
+    if retain_as_artifacts:
+        payload["artifactPluginSnapshotIds"] = list(case["pins"].values())
+    before = _entrypoint_lifecycle_state(db_session, case["entrypoint"]["id"])
+    response = client.put(
+        f"/api/v1/entrypoints/{case['entrypoint']['id']}",
+        json=payload,
+        query_string={"validateOnly": str(validate_only).lower()},
+    )
+    assert response.status_code == HTTPStatus.BAD_REQUEST, response.json
+    assert _entrypoint_lifecycle_state(db_session, case["entrypoint"]["id"]) == before
+
+
+@pytest.mark.parametrize("remaining_role", ["task", "artifact", "neither"])
+@pytest.mark.parametrize("advanced_role", ["task", "artifact"])
+def test_put_dual_roles_replace_bindings_and_dependencies(
+    client, entrypoint_interface_lifecycle, db_session, remaining_role, advanced_role
+):
+    """Maintain independent role pins and remove a dependency only after both roles."""
+    case = entrypoint_interface_lifecycle
+    entrypoint = case["entrypoint"]
+    a, b = case["plugins"]
+    url = f"/api/v1/entrypoints/{entrypoint['id']}"
+    response = client.post(f"{url}/artifactPlugins", json={"artifactPlugins": [a]})
+    assert response.status_code == HTTPStatus.OK, response.json
+    old = client.get(url).json
+    latest = case["publish"](0)
+    payload = _interface_update_payload(case)
+    task_pin = latest if advanced_role == "task" else case["pins"][a]
+    artifact_pin = latest if advanced_role == "artifact" else case["pins"][a]
+    payload["artifactPluginSnapshotIds"] = [artifact_pin]
+    payload["pluginSnapshotIds"] = [task_pin, case["pins"][b]]
+    response = client.put(url, json=payload)
+    assert response.status_code == HTTPStatus.OK, response.json
+    both = response.json
+    state = _entrypoint_lifecycle_state(db_session, entrypoint["id"])
+    assert state["snapshots"][both["snapshot"]]["plugins"][a] == task_pin
+    assert state["snapshots"][both["snapshot"]]["artifact_plugins"] == {a: artifact_pin}
+    assert state["snapshots"][old["snapshot"]]["plugins"][a] == case["pins"][a]
+    payload["taskGraph"] = "choose:\n  task_b: []\n"
+    payload["pluginSnapshotIds"] = [case["pins"][b]] + (
+        [task_pin] if remaining_role == "task" else []
+    )
+    payload["artifactPluginSnapshotIds"] = (
+        [artifact_pin] if remaining_role == "artifact" else []
+    )
+    response = client.put(url, json=payload)
+    assert response.status_code == HTTPStatus.OK, response.json
+    after = _entrypoint_lifecycle_state(db_session, entrypoint["id"])
+    selected = after["snapshots"][response.json["snapshot"]]
+    assert selected["plugins"] == {
+        b: case["pins"][b],
+        **({a: task_pin} if remaining_role == "task" else {}),
+    }
+    assert selected["artifact_plugins"] == (
+        {a: artifact_pin} if remaining_role == "artifact" else {}
+    )
+    dependencies = {row[1] for row in after["dependencies"]}
+    assert dependencies == ({a, b} if remaining_role != "neither" else {b})
+    assert after["snapshots"][both["snapshot"]] == state["snapshots"][both["snapshot"]]
+
+
+@pytest.mark.parametrize("role", ["pluginSnapshotIds", "artifactPluginSnapshotIds"])
+def test_put_new_association_requires_latest_in_its_role(
+    client, entrypoint_interface_lifecycle, db_session, role
+):
+    """A pin current in another role is ineligible for a new association."""
+    case = entrypoint_interface_lifecycle
+    a, b = case["plugins"]
+    url = f"/api/v1/entrypoints/{case['entrypoint']['id']}"
+    payload = _interface_update_payload(case)
+    payload["taskGraph"] = "choose:\n  task_b: []\n"
+    payload["pluginSnapshotIds"] = [case["pins"][b]]
+    if role == "pluginSnapshotIds":
+        payload["artifactPluginSnapshotIds"] = [case["pins"][a]]
+    else:
+        payload["pluginSnapshotIds"].append(case["pins"][a])
+    response = client.put(url, json=payload)
+    assert response.status_code == HTTPStatus.OK, response.json
+    latest = case["publish"](0)
+    payload[role].append(case["pins"][a])
+    before = _entrypoint_lifecycle_state(db_session, case["entrypoint"]["id"])
+    response = client.put(url, json=payload)
+    assert response.status_code == HTTPStatus.BAD_REQUEST, response.json
+    assert _entrypoint_lifecycle_state(db_session, case["entrypoint"]["id"]) == before
+    payload[role][-1] = latest
+    response = client.put(url, json=payload)
+    assert response.status_code == HTTPStatus.OK, response.json
+    field = "plugins" if role == "pluginSnapshotIds" else "artifactPlugins"
+    assert {p["id"]: p["snapshotId"] for p in response.json[field]}[a] == latest
+
+
+@pytest.mark.parametrize("validate_only", [False, True])
+@pytest.mark.parametrize("role", ["pluginSnapshotIds", "artifactPluginSnapshotIds"])
+@pytest.mark.parametrize("problem", ["deleted", "inaccessible"])
+def test_put_snapshot_selection_checks_resource_access_and_deletion(
+    client,
+    entrypoint_interface_lifecycle,
+    db_session,
+    registered_users,
+    validate_only,
+    role,
+    problem,
+):
+    """Snapshot identifiers do not bypass plugin resource restrictions."""
+    case = entrypoint_interface_lifecycle
+    a = case["plugins"][0]
+    resource = db_session.get(models.Resource, a)
+    if problem == "deleted":
+        response = client.delete(f"/api/v1/plugins/{a}")
+        assert response.status_code == HTTPStatus.OK, response.json
+    else:
+        owner = db_session.get(models.User, registered_users["user2"]["id"])
+        resource.owner = models.Group(name="private-plugin-group", creator=owner)
+        db_session.commit()
+    payload = _interface_update_payload(case)
+    payload[role] = [case["pins"][a]]
+    if role == "artifactPluginSnapshotIds":
+        payload["taskGraph"] = "choose:\n  task_b: []\n"
+        payload["pluginSnapshotIds"] = [case["pins"][case["plugins"][1]]]
+    before = _entrypoint_lifecycle_state(db_session, case["entrypoint"]["id"])
+    response = client.put(
+        f"/api/v1/entrypoints/{case['entrypoint']['id']}",
+        json=payload,
+        query_string={"validateOnly": str(validate_only).lower()},
+    )
+    assert response.status_code == (
+        HTTPStatus.LOCKED if problem == "deleted" else HTTPStatus.BAD_REQUEST
+    ), response.json
+    assert response.json["error"] == (
+        "EntityDeletedError" if problem == "deleted" else "UserNotInGroupError"
+    )
+    assert _entrypoint_lifecycle_state(db_session, case["entrypoint"]["id"]) == before
+
+
+def test_put_accepted_snapshot_is_not_substituted_after_plugin_publication(
+    client, entrypoint_interface_lifecycle, dependency_injector, monkeypatch, db_session
+):
+    """Publish after eligibility and validate/save the originally selected IDs."""
+    case = entrypoint_interface_lifecycle
+    selected = case["publish"](0)
+    payload = _interface_update_payload(case)
+    payload["pluginSnapshotIds"][0] = selected
+    validation = SwapsValidationService.raise_validation_errors
+    published = []
+
+    def publish_then_validate(self, **kwargs):
+        plugin = dependency_injector.get(PluginIdService).modify(
+            plugin_id=case["plugins"][0],
+            name="a",
+            description="published after eligibility",
+            error_if_not_found=True,
+        )["plugin"]
+        published.append(plugin.resource_snapshot_id)
+        return validation(self, **kwargs)
+
+    monkeypatch.setattr(
+        SwapsValidationService, "raise_validation_errors", publish_then_validate
+    )
+    response = client.put(
+        f"/api/v1/entrypoints/{case['entrypoint']['id']}", json=payload
+    )
+    assert response.status_code == HTTPStatus.OK, response.json
+    assert len(published) == 1 and published[0] != selected
+    state = _entrypoint_lifecycle_state(db_session, case["entrypoint"]["id"])
+    assert (
+        state["snapshots"][response.json["snapshot"]]["plugins"][case["plugins"][0]]
+        == selected
+    )
+
+
+@pytest.mark.parametrize("role", ["task", "artifact"])
+def test_put_eligibility_uses_current_database_latest_with_cached_resource(
+    client, entrypoint_interface_lifecycle, monkeypatch, db_session, role
+):
+    """A stale ORM latest value cannot qualify an unbound historical selection."""
+    case = entrypoint_interface_lifecycle
+    a, b = case["plugins"]
+    stale = case["publish"](0)
+    latest = case["publish"](0, description="latest before selection")
+    payload = _interface_update_payload(case)
+    if role == "task":
+        payload["pluginSnapshotIds"][0] = stale
+    else:
+        payload["taskGraph"] = "choose:\n  task_b: []\n"
+        payload["pluginSnapshotIds"] = [case["pins"][b]]
+        payload["artifactPluginSnapshotIds"] = [stale]
+    select_snapshots = EntrypointIdService._select_plugin_snapshots
+    checked = []
+
+    def select_with_cached_latest(self, snapshot_ids, current_plugins, selected_role):
+        if selected_role == role:
+            resource = self._uow.session.get(models.Resource, a)
+            assert resource.latest_snapshot_id == latest
+            set_committed_value(resource, "latest_snapshot_id", stale)
+            checked.append(True)
+        return select_snapshots(self, snapshot_ids, current_plugins, selected_role)
+
+    monkeypatch.setattr(
+        EntrypointIdService, "_select_plugin_snapshots", select_with_cached_latest
+    )
+    before = _entrypoint_lifecycle_state(db_session, case["entrypoint"]["id"])
+    response = client.put(
+        f"/api/v1/entrypoints/{case['entrypoint']['id']}", json=payload
+    )
+    assert response.status_code == HTTPStatus.BAD_REQUEST, response.json
+    assert "currently bound or latest" in str(response.json)
+    assert checked == [True]
+    assert _entrypoint_lifecycle_state(db_session, case["entrypoint"]["id"]) == before
+
+
+@pytest.mark.parametrize("validate_only", [False, True])
+def test_put_removes_omitted_deleted_bindings_from_candidate_dependencies(
+    client, entrypoint_interface_lifecycle, db_session, validate_only
+):
+    """Validate the replacement's dependencies instead of removed old bindings."""
+    case = entrypoint_interface_lifecycle
+    a, b = case["plugins"]
+    url = f"/api/v1/entrypoints/{case['entrypoint']['id']}"
+    response = client.post(f"{url}/artifactPlugins", json={"artifactPlugins": [a]})
+    assert response.status_code == HTTPStatus.OK, response.json
+    response = client.delete(f"/api/v1/plugins/{a}")
+    assert response.status_code == HTTPStatus.OK, response.json
+    payload = _interface_update_payload(case)
+    payload["taskGraph"] = "choose:\n  task_b: []\n"
+    payload["pluginSnapshotIds"] = [case["pins"][b]]
+    before = _entrypoint_lifecycle_state(db_session, case["entrypoint"]["id"])
+    response = client.put(
+        url, json=payload, query_string={"validateOnly": str(validate_only).lower()}
+    )
+    assert response.status_code == HTTPStatus.OK, response.json
+    assert [p["id"] for p in response.json["plugins"]] == [b]
+    assert response.json["artifactPlugins"] == []
+    after = _entrypoint_lifecycle_state(db_session, case["entrypoint"]["id"])
+    if validate_only:
+        assert after == before
+    else:
+        assert {row[1] for row in after["dependencies"]} == {b}
+        assert len(after["snapshots"]) == len(before["snapshots"]) + 1
+        for snapshot_id, snapshot in before["snapshots"].items():
+            assert after["snapshots"][snapshot_id] == snapshot
+
+
+@pytest.mark.parametrize("validate_only", [False, True])
+def test_put_name_conflict_rolls_back_replaced_dependencies(
+    client,
+    entrypoint_interface_lifecycle,
+    registered_queues,
+    db_session,
+    monkeypatch,
+    validate_only,
+):
+    """Roll back flushed replacement links when snapshot persistence rejects a name."""
+    case = entrypoint_interface_lifecycle
+    a, b = case["plugins"]
+    entrypoint = case["entrypoint"]
+    url = f"/api/v1/entrypoints/{entrypoint['id']}"
+    response = client.post(f"{url}/artifactPlugins", json={"artifactPlugins": [a]})
+    assert response.status_code == HTTPStatus.OK, response.json
+    original = client.get(url).json
+    response = client.post(
+        "/api/v1/entrypoints/",
+        json={
+            "name": "occupied",
+            "group": entrypoint["group"]["id"],
+            "taskGraph": "choose:\n  task_b: []\n",
+            "plugins": [b],
+        },
+    )
+    assert response.status_code == HTTPStatus.OK, response.json
+    queue = next(iter(registered_queues.values()))["id"]
+    payload = _interface_update_payload(case)
+    payload.update(
+        {
+            "name": "occupied",
+            "taskGraph": "choose:\n  task_b: []\n",
+            "pluginSnapshotIds": [case["pins"][b]],
+            "queues": [queue],
+        }
+    )
+    before = _entrypoint_lifecycle_state(db_session, entrypoint["id"])
+    persist = EntrypointRepository.create_snapshot
+    replaced = []
+
+    def inspect_dependencies_then_persist(self, candidate):
+        self.session.flush()
+        dependencies = self.session.execute(
+            select(resource_dependencies_table).where(
+                resource_dependencies_table.c.parent_resource_id == entrypoint["id"]
+            )
+        ).all()
+        replaced.append({row[1] for row in dependencies})
+        assert replaced[-1] == {b, queue}
+        assert candidate.resource.latest_snapshot_id == original["snapshot"]
+        return persist(self, candidate)
+
+    monkeypatch.setattr(
+        EntrypointRepository, "create_snapshot", inspect_dependencies_then_persist
+    )
+    response = client.put(
+        url, json=payload, query_string={"validateOnly": str(validate_only).lower()}
+    )
+    assert response.status_code == HTTPStatus.CONFLICT, response.json
+    assert response.json["error"] == "EntityExistsError"
+    assert replaced == [{b, queue}]
+    assert _entrypoint_lifecycle_state(db_session, entrypoint["id"]) == before
+    assert client.get(url).json == original
 
 
 def test_append_plugins_to_deleted_entrypoint_fails(
@@ -3110,6 +3709,10 @@ def test_validate_entrypoint_with_plugin_in_both_roles(
         artifact_parameters=entrypoint["artifactParameters"],
         queues=[],
         validate_only=True,
+        plugin_snapshot_ids=[p["snapshotId"] for p in entrypoint["plugins"]],
+        artifact_plugin_snapshot_ids=[
+            p["snapshotId"] for p in entrypoint["artifactPlugins"]
+        ],
     )
 
     assert modify_response.status_code == HTTPStatus.OK
@@ -3579,7 +4182,13 @@ def _test_create_and_modify(
         validate_only=validate_only,
     )
 
-    response = _create_valid_entrypoint(dioptra_client, auth_account, registered_plugin_parameter_types, plugins=plugins, name=name + "_to_modify")
+    response = _create_valid_entrypoint(
+        dioptra_client,
+        auth_account,
+        registered_plugin_parameter_types,
+        plugins=plugins,
+        name=name + "_to_modify",
+    )
 
     modify_response = dioptra_client.entrypoints.modify_by_id(
         entrypoint_id=response.json()["id"],
@@ -3591,6 +4200,10 @@ def _test_create_and_modify(
         artifact_parameters=[],
         queues=[],
         validate_only=validate_only,
+        plugin_snapshot_ids=[p["snapshotId"] for p in response.json()["plugins"]],
+        artifact_plugin_snapshot_ids=[
+            p["snapshotId"] for p in response.json()["artifactPlugins"]
+        ],
     )
 
     return create_response, modify_response

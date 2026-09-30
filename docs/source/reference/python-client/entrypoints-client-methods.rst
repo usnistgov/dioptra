@@ -92,6 +92,12 @@ Get One Entrypoint
 Modify Entrypoint
 ~~~~~~~~~~~~~~~~~
 
+``modify_by_id`` requires ``plugin_snapshot_ids`` and ``artifact_plugin_snapshot_ids``. Each list supplies the complete desired bindings for its role using plugin resource snapshot IDs. Retain a plugin's currently bound snapshot or select its latest snapshot independently of other plugins. A new association requires the latest snapshot. Other historical snapshots and multiple selections for one plugin within a role are rejected. An empty list removes all bindings in that role, subject to validation of the complete graph. Omitting an existing binding removes it.
+
+The client submits the edited graph, parameters, and both binding lists in one PUT. The API validates and saves that candidate together. Historical entrypoint snapshots retain their graphs and exact bindings. Repeating an accepted request retains its selected snapshots even after newer plugin versions are published; each successful PUT still creates a new entrypoint history snapshot.
+
+Existing callers of ``modify_by_id`` must supply both new arguments. Read retained snapshot IDs from each plugin reference's ``snapshotId`` field. Creation and the plugin association methods continue to accept plugin resource IDs and resolve selected plugins to latest. Their add-or-sync behavior remains separate from PUT replacement.
+
     .. automethod:: dioptra.client.entrypoints.EntrypointsCollectionClient.modify_by_id
 
 Delete Entrypoint
@@ -148,8 +154,8 @@ Lightweight lint reports
 
 For inexpensive editor feedback, use ``POST /api/v1/entrypoints:lint`` or
 ``POST /api/v1/entrypoints/{id}:lint`` with the corresponding create or update
-request body. The colon is a literal part of the URL. Item lint uses the saved
-plugin associations, just like an update. These endpoints perform schema,
+content fields. The colon is a literal part of the URL. Item lint uses the saved
+plugin associations and accepts entrypoint content without PUT's snapshot lists. These endpoints perform schema,
 task-reference, and swap checks without full rendered-graph validation. Changes
 are rolled back on both success and failure.
 

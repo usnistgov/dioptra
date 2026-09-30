@@ -70,6 +70,19 @@ Optional Attributes
 - **Queues**: (list of integer IDs, optional) A list of the queues that can pick up Job submissions of this entrypoint and carry out their execution. Job will not be runnable without at least one attached Queue. Defaults to empty. (See: :ref:`Queues Reference <reference-queues>`)
 - **Tags**: (list of Tag Objects, optional) A list of tags for organizational purposes. 
 
+.. _reference-entrypoints-put-bindings:
+
+PUT Plugin Bindings
+~~~~~~~~~~~~~~~~~~~
+
+``PUT /api/v1/entrypoints/{id}`` requires ``pluginSnapshotIds`` and ``artifactPluginSnapshotIds`` alongside the entrypoint content. Both fields are complete lists of plugin resource snapshot IDs. The first supplies task-plugin bindings; the second supplies artifact-plugin bindings. Each plugin may independently retain its currently bound snapshot in that role or advance to latest. New associations require latest. Any other snapshot and multiple snapshots for one plugin within a role are rejected. Access, ownership, and deletion checks apply to the selected plugin resources.
+
+Omitted bindings are removed, and an empty list requests removal of all bindings in its role. The API validates the graph, parameters, and selected bindings together before saving a new entrypoint snapshot. Removing one of a plugin's two roles preserves its remaining role and resource dependency. Failed updates preserve the saved graph and bindings. ``validateOnly=true`` uses the same selection and validation rules and rolls back the candidate.
+
+A plugin publication before eligibility checking can make an unbound selection ineligible. The API rejects that selection rather than substituting another snapshot. Once accepted, the candidate uses those exact IDs for validation and persistence. Historical entrypoint snapshots retain their original bindings. Repeating a successful request retains its effective configuration and creates another history snapshot.
+
+The snapshot lists are required for every PUT, including content-only updates. Creation, import UPDATE, and plugin association POST/DELETE retain their resource-ID contracts. The Python client exposes the required PUT lists as ``plugin_snapshot_ids`` and ``artifact_plugin_snapshot_ids`` in :ref:`reference-entrypoint-client-methods`.
+
 .. _reference-entrypoints-system-generated-attributes:
 
 System-Managed State

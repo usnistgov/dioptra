@@ -66,6 +66,7 @@ from .schema import (
     EntrypointPluginMutableFieldsSchema,
     EntrypointPluginSchema,
     EntrypointSchema,
+    EntrypointUpdateSchema,
     SwapChoiceRequestSchema,
     SwapInfoSchema,
     ValidateOnlySchema,
@@ -224,7 +225,7 @@ class EntrypointIdEndpoint(Resource):
     @login_required
     @accepts(
         query_params_schema=ValidateOnlySchema,
-        schema=EntrypointMutableFieldsSchema,
+        schema=EntrypointUpdateSchema,
         api=api,
     )
     @responds(schema=EntrypointSchema, api=api)
@@ -248,6 +249,8 @@ class EntrypointIdEndpoint(Resource):
             "parameters": parsed_obj["parameters"],
             "artifact_parameters": parsed_obj.get("artifact_parameters", []),
             "queue_ids": parsed_obj["queue_ids"],
+            "plugin_snapshot_ids": parsed_obj["plugin_snapshot_ids"],
+            "artifact_plugin_snapshot_ids": parsed_obj["artifact_plugin_snapshot_ids"],
             "log": log,
         }
 

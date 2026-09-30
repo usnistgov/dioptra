@@ -979,7 +979,7 @@
                     {
                         "name": "validateOnly",
                         "in": "query",
-                        "description": "Flag indicating whether to perform a full validation and save the entrypoint, or perform a lighter validation and not save the entrypoint.",
+                        "description": "If true, perform the same permission, eligibility, and candidate validation as saving, then roll back without committing changes.",
                         "schema": {
                             "type": "boolean"
                         }
@@ -998,7 +998,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/EntrypointMutableFields-load"
+                                "$ref": "#/components/schemas/EntrypointUpdate-load"
                             }
                         }
                     },
@@ -1006,7 +1006,8 @@
                 },
                 "tags": [
                     "Entrypoints"
-                ]
+                ],
+                "description": "Replace entrypoint content and task/artifact plugin bindings together. The body requires pluginSnapshotIds and artifactPluginSnapshotIds as complete lists of plugin resource snapshot IDs. Each plugin may retain its currently bound snapshot in that role or select latest; new associations require latest. Omitted bindings are removed, including when a list is empty, subject to validation of the complete candidate. Other historical snapshots and multiple selections for one plugin within a role are rejected. validateOnly=true performs the same checks and rolls back. Successful saves create a new entrypoint history snapshot."
             },
             "get": {
                 "responses": {
@@ -16957,6 +16958,79 @@
                     "description": {
                         "type": "string",
                         "description": "The annotation the suggestion is attempting to represent"
+                    }
+                },
+                "type": "object"
+            },
+            "EntrypointUpdate-load": {
+                "required": [
+                    "name",
+                    "taskGraph",
+                    "pluginSnapshotIds",
+                    "artifactPluginSnapshotIds"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Name of the Entrypoint resource."
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Description of the Entrypoint resource."
+                    },
+                    "taskGraph": {
+                        "type": "string",
+                        "description": "Task graph of the Entrypoint resource."
+                    },
+                    "artifactGraph": {
+                        "type": "string",
+                        "description": "Artifact graph of the Entrypoint resource."
+                    },
+                    "parameters": {
+                        "type": "array",
+                        "items": {
+                            "description": "List of parameters for the entrypoint.",
+                            "default": [],
+                            "allOf": [
+                                {
+                                    "$ref": "#/components/schemas/EntrypointParameter"
+                                }
+                            ]
+                        }
+                    },
+                    "artifactParameters": {
+                        "type": "array",
+                        "items": {
+                            "description": "List of artifacts for the entrypoint.",
+                            "default": [],
+                            "allOf": [
+                                {
+                                    "$ref": "#/components/schemas/EntrypointArtifact"
+                                }
+                            ]
+                        }
+                    },
+                    "queues": {
+                        "type": "array",
+                        "description": "The queue for the entrypoint.",
+                        "default": [],
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    "pluginSnapshotIds": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "description": "Complete task-plugin snapshot list. Select each plugin's currently bound or latest snapshot; omitted plugins are removed. New associations require latest. Multiple snapshots for one plugin in a role are rejected."
+                    },
+                    "artifactPluginSnapshotIds": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "description": "Complete artifact-plugin snapshot list. Select each plugin's currently bound or latest snapshot; omitted plugins are removed. New associations require latest. Multiple snapshots for one plugin in a role are rejected."
                     }
                 },
                 "type": "object"
