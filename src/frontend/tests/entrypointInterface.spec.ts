@@ -23,7 +23,7 @@ test("save a one-to-two-output swap change with its exact plugin snapshots", asy
   );
   expect(stringType).toBeDefined();
   const pairType = await post("pluginParameterTypes/", {
-    name: "string_pair",
+    name: `string_pair_${runId}`,
     group,
     structure: { tuple: ["string", "string"] },
   });
