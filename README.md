@@ -52,7 +52,7 @@ Dioptra strives for the following key properties:
 
 ### Install Dioptra
 
-See the [Install Dioptra](https://pages.nist.gov/dioptra/getting-started/install-dioptra-explanation.html) section of the documentation for more detailed instructions.
+See the [Install Dioptra](https://pages.nist.gov/dioptra/how-to/setup-dioptra/install-dioptra-explanation.html) section of the documentation for more detailed instructions.
 
 1. Pull the Dioptra docker images:
 ```sh
