@@ -24,20 +24,22 @@ registered, renamed, queried, and deleted as expected through the REST API.
 import datetime
 import logging
 import math
+import textwrap
 from http import HTTPStatus
 from typing import Any
 
 import pytest
+from flask.testing import FlaskClient
 from pytest import MonkeyPatch
 
 from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
 from dioptra.sdk.utilities.logging import forward_job_logs_to_api
 
-from ..lib import asserts, helpers, mock_rq, routines
+from ..lib import actions, asserts, helpers, mock_rq, routines
+from ..lib.asserts import assert_retrieving_deleted_resource_snapshots_works
 from ..test_utils import assert_retrieving_resource_works
 
-from ..lib.asserts import assert_retrieving_deleted_resource_snapshots_works
 
 @pytest.fixture
 def registered_job_logs(dioptra_client, registered_jobs):
@@ -118,6 +120,7 @@ def assert_job_response_contents_matches_expectations(
         "entrypoint",
         "artifacts",
         "artifactValues",
+        "swaps",
         "deleted",
     }
     assert set(response.keys()) == expected_keys
@@ -129,10 +132,12 @@ def assert_job_response_contents_matches_expectations(
     assert isinstance(response["description"], str)
     assert isinstance(response["timeout"], str)
     assert isinstance(response["values"], dict)
+    assert isinstance(response["swaps"], list)
 
     assert response["description"] == expected_contents["description"]
     assert response["timeout"] == expected_contents["timeout"]
     assert response["values"] == expected_contents["values"]
+    assert response["swaps"] == expected_contents.get("swaps", [])
 
     assert helpers.is_timeout_format(response["timeout"])
 
@@ -405,9 +410,6 @@ def test_create_job(
     experiment_snapshot_id = registered_experiments["experiment1"]["snapshot"]
     entrypoint_snapshot_id = registered_entrypoints["entrypoint1"]["snapshot"]
 
-    for param in registered_entrypoints["entrypoint1"]["parameters"][1:]:
-        values[param["name"]] = param["defaultValue"]
-
     assert_job_response_contents_matches_expectations(
         response=job_response,
         expected_contents={
@@ -435,6 +437,579 @@ def test_create_job(
     """
     assert_retrieving_job_by_id_works(
         dioptra_client, job_id=job_response["id"], expected=job_response
+    )
+
+
+def test_create_job_with_unused_no_swap_parameters(
+    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+    registered_plugin_with_files: dict[str, Any],
+    monkeypatch: MonkeyPatch,
+) -> None:
+    """Require graph references while retaining explicitly supplied declarations."""
+    import dioptra.restapi.v1.shared.rq_service as rq_service
+
+    monkeypatch.setattr(rq_service, "RQQueue", mock_rq.MockRQQueue)
+
+    queue = registered_queues["queue1"]
+    entrypoint_response = actions.register_entrypoint(
+        client,
+        name="used_no_swap_parameters",
+        description="An entrypoint with used and unused parameters.",
+        group_id=auth_account["default_group_id"],
+        task_graph=textwrap.dedent(
+            """\
+            provided:
+              hello_world: $used
+            defaulted:
+              hello_world: $used_default
+            """
+        ),
+        parameters=[
+            {"name": "used", "parameterType": "string"},
+            {
+                "name": "used_default",
+                "parameterType": "string",
+                "defaultValue": "fallback",
+            },
+            {"name": "unused", "parameterType": "string"},
+            {"name": "unused_default", "parameterType": "integer", "defaultValue": "7"},
+        ],
+        plugin_ids=[registered_plugin_with_files["plugin"]["id"]],
+        queue_ids=[queue["id"]],
+    )
+    assert entrypoint_response.status_code == HTTPStatus.OK
+    entrypoint = entrypoint_response.get_json()
+
+    experiment_response = actions.register_experiment(
+        client,
+        name="used_no_swap_parameters",
+        group_id=auth_account["default_group_id"],
+        entrypoint_ids=[entrypoint["id"]],
+    )
+    assert experiment_response.status_code == HTTPStatus.OK
+    experiment = experiment_response.get_json()
+
+    expected_names = {"used", "used_default"}
+    full_config = dioptra_client.entrypoints.snapshots.get_config(
+        entrypoint["id"], entrypoint["snapshot"]
+    )
+    assert full_config.status_code == HTTPStatus.OK
+    assert set(full_config.json()["parameters"]) == expected_names
+
+    parameters_only = dioptra_client.entrypoints.snapshots.get_config(
+        entrypoint["id"], entrypoint["snapshot"], sections=["parameters"]
+    )
+    assert parameters_only.status_code == HTTPStatus.OK
+    assert parameters_only.json() == {"parameters": full_config.json()["parameters"]}
+
+    dynamic = dioptra_client.entrypoints.snapshots.get_task_graph_global_params(
+        entrypoint["id"], entrypoint["snapshot"], swaps={}
+    )
+    assert dynamic.status_code == HTTPStatus.OK
+    assert {
+        param["name"] for param in dynamic.json()["entrypointParams"]
+    } == expected_names
+
+    partial = dioptra_client.entrypoints.snapshots.get_config(
+        entrypoint["id"], entrypoint["snapshot"], partial=True
+    )
+    assert partial.status_code == HTTPStatus.OK
+    assert set(partial.json()["parameters"]) == {
+        "used",
+        "used_default",
+        "unused",
+        "unused_default",
+    }
+
+    def create_job(values: dict[str, str]):
+        return dioptra_client.experiments.jobs.create(
+            experiment_id=experiment["id"],
+            entrypoint_id=entrypoint["id"],
+            queue_id=queue["id"],
+            values=values,
+        )
+
+    used_only = create_job({"used": "provided"})
+    assert used_only.status_code == HTTPStatus.OK
+    job = used_only.json()
+    assert job["values"] == {"used": "provided", "used_default": "fallback"}
+    assert dioptra_client.jobs.get_parameters(job["id"]).json() == job["values"]
+    job_config = dioptra_client.jobs.get_config(job["id"])
+    assert job_config.status_code == HTTPStatus.OK
+    assert job_config.json()["parameters"] == full_config.json()["parameters"]
+
+    with_unused = create_job(
+        {"used": "provided", "unused": "still accepted", "unused_default": "9"}
+    )
+    assert with_unused.status_code == HTTPStatus.OK
+    extra_job = with_unused.json()
+    assert extra_job["values"] == {
+        "used": "provided",
+        "used_default": "fallback",
+        "unused": "still accepted",
+        "unused_default": "9",
+    }
+    assert dioptra_client.jobs.get_parameters(extra_job["id"]).json() == {
+        **extra_job["values"],
+        "unused_default": 9,
+    }
+    assert (
+        set(dioptra_client.jobs.get_config(extra_job["id"]).json()["parameters"])
+        == expected_names
+    )
+
+    missing = create_job({})
+    assert missing.status_code == HTTPStatus.BAD_REQUEST
+    assert missing.json()["error"] == "JobParameterMissingError"
+    assert "used" in missing.json()["message"]
+
+    undeclared = create_job({"used": "provided", "unknown": "value"})
+    assert undeclared.status_code == HTTPStatus.BAD_REQUEST
+    assert undeclared.json()["error"] == "JobInvalidParameterNameError"
+    assert "unknown" in undeclared.json()["message"]
+
+    invalid_type = create_job({"used": "provided", "unused_default": "not an integer"})
+    assert invalid_type.status_code == HTTPStatus.BAD_REQUEST
+    assert invalid_type.json()["error"] == "EntrypointParameterTypeMismatchError"
+
+
+def test_create_job_with_no_referenced_parameters(
+    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+    registered_plugin_with_files: dict[str, Any],
+    monkeypatch: MonkeyPatch,
+) -> None:
+    """Allow an empty values mapping when declarations are unused."""
+    import dioptra.restapi.v1.shared.rq_service as rq_service
+
+    monkeypatch.setattr(rq_service, "RQQueue", mock_rq.MockRQQueue)
+
+    queue = registered_queues["queue1"]
+    entrypoint_response = actions.register_entrypoint(
+        client,
+        name="zero_referenced_parameters",
+        description="An entrypoint with only unused parameters.",
+        group_id=auth_account["default_group_id"],
+        task_graph="message:\n  hello_world: literal\n",
+        parameters=[
+            {"name": "unused_required", "parameterType": "string"},
+            {
+                "name": "unused_default",
+                "parameterType": "string",
+                "defaultValue": "fallback",
+            },
+        ],
+        plugin_ids=[registered_plugin_with_files["plugin"]["id"]],
+        queue_ids=[queue["id"]],
+    )
+    assert entrypoint_response.status_code == HTTPStatus.OK
+    entrypoint = entrypoint_response.get_json()
+
+    experiment_response = actions.register_experiment(
+        client,
+        name="zero_referenced_parameters",
+        group_id=auth_account["default_group_id"],
+        entrypoint_ids=[entrypoint["id"]],
+    )
+    assert experiment_response.status_code == HTTPStatus.OK
+    experiment = experiment_response.get_json()
+
+    job_response = dioptra_client.experiments.jobs.create(
+        experiment_id=experiment["id"],
+        entrypoint_id=entrypoint["id"],
+        queue_id=queue["id"],
+        values={},
+    )
+    assert job_response.status_code == HTTPStatus.OK
+    job = job_response.json()
+    assert job["values"] == {}
+    assert dioptra_client.jobs.get_parameters(job["id"]).json() == {}
+
+    entrypoint_config = dioptra_client.entrypoints.snapshots.get_config(
+        entrypoint["id"], entrypoint["snapshot"]
+    )
+    assert entrypoint_config.status_code == HTTPStatus.OK
+    assert entrypoint_config.json()["parameters"] == {}
+    parameters_only = dioptra_client.entrypoints.snapshots.get_config(
+        entrypoint["id"], entrypoint["snapshot"], sections=["parameters"]
+    )
+    assert parameters_only.status_code == HTTPStatus.OK
+    assert parameters_only.json() == {"parameters": {}}
+    assert dioptra_client.jobs.get_config(job["id"]).json()["parameters"] == {}
+
+    dynamic = dioptra_client.entrypoints.snapshots.get_task_graph_global_params(
+        entrypoint["id"], entrypoint["snapshot"], swaps={}
+    )
+    assert dynamic.status_code == HTTPStatus.OK
+    assert dynamic.json()["entrypointParams"] == []
+
+
+def test_create_job_with_swaps(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+    registered_swap_experiments: dict[str, Any],
+    registered_swap_entrypoints: dict[str, Any],
+    monkeypatch: MonkeyPatch,
+):
+    # Inline import necessary to prevent circular import
+    import dioptra.restapi.v1.shared.rq_service as rq_service
+
+    monkeypatch.setattr(rq_service, "RQQueue", mock_rq.MockRQQueue)
+
+    entrypoint_name = "swap_test"
+    description = "The new job."
+    queue_id = registered_queues["queue1"]["id"]
+    experiment_id = registered_swap_experiments["experiment1"]["id"]
+    entrypoint_id = registered_swap_entrypoints[entrypoint_name]["id"]
+    values = {
+        "global1": "default",
+        "global3": "default",
+        "global6": "default",
+        "global9": "default",
+        "global12": "default",
+    }
+    timeout = "24h"
+
+    job_response = dioptra_client.experiments.jobs.create(
+        experiment_id=experiment_id,
+        entrypoint_id=entrypoint_id,
+        queue_id=queue_id,
+        values=values,
+        timeout=timeout,
+        description=description,
+        swaps={
+            "step2_choice": "taskalias1:v2",
+            "step3_choice": "taskalias3,v3",
+        },
+    ).json()
+
+    (queue_snapshot_id, queue_id) = (
+        registered_queues["queue1"]["snapshot"],
+        registered_queues["queue1"]["id"],
+    )
+
+    (experiment_snapshot_id, experiment_id, group_id) = (
+        registered_swap_experiments["experiment1"]["snapshot"],
+        registered_swap_experiments["experiment1"]["id"],
+        registered_swap_experiments["experiment1"]["group"]["id"],
+    )
+
+    (entrypoint_snapshot_id, entrypoint_id) = (
+        registered_swap_entrypoints[entrypoint_name]["snapshot"],
+        registered_swap_entrypoints[entrypoint_name]["id"],
+    )
+
+    swaps_response = dioptra_client.entrypoints.snapshots.get_swaps(
+        entrypoint_id=entrypoint_id, entrypoint_snapshot_id=entrypoint_snapshot_id
+    )
+    assert swaps_response.status_code == HTTPStatus.OK
+    swaps_response_json = swaps_response.json()
+    selected_swaps = {
+        ("step2_choice", "taskalias1:v2"),
+        ("step3_choice", "taskalias3,v3"),
+    }
+    expected_swaps = sorted(
+        [
+            {
+                "swapName": swap["swapName"],
+                "taskAlias": swap["taskAlias"],
+                "taskName": swap["taskName"],
+                "pluginFileResourceSnapshotId": swap["pluginFileResourceSnapshotId"],
+            }
+            for swap in swaps_response_json
+            if (swap["swapName"], swap["taskAlias"]) in selected_swaps
+        ],
+        key=lambda swap: swap["swapName"],
+    )
+
+    assert_job_response_contents_matches_expectations(
+        response=job_response,
+        expected_contents={
+            "description": description,
+            "timeout": timeout,
+            "values": values,
+            "swaps": expected_swaps,
+            "user_id": auth_account["id"],
+            "group_id": group_id,
+            "queue_id": queue_id,
+            "experiment_id": experiment_id,
+            "entrypoint_id": entrypoint_id,
+            "queue_snapshot_id": queue_snapshot_id,
+            "experiment_snapshot_id": experiment_snapshot_id,
+            "entrypoint_snapshot_id": entrypoint_snapshot_id,
+        },
+    )
+
+    assert_retrieving_job_by_id_works(
+        dioptra_client, job_id=job_response["id"], expected=job_response
+    )
+
+    job_config = dioptra_client.jobs.get_config(job_response['id']).json()
+    rendered_yaml = job_config['graph']
+
+    preview = dioptra_client.entrypoints.snapshots.get_config(
+        entrypoint_id,
+        entrypoint_snapshot_id,
+        swap_parameters=dict(selected_swaps),
+    )
+    assert preview.status_code == HTTPStatus.OK
+    assert preview.json()["graph"] == rendered_yaml
+    assert preview.json()["tasks"] == job_config["tasks"]
+    assert "task10" in rendered_yaml["step2"]["?step2_choice"]["taskalias1:v2"]
+    assert "task2" in rendered_yaml["step3"]["?step3_choice"]["taskalias3,v3"]
+
+
+@pytest.mark.parametrize(
+    ("exception_type", "expected_status"),
+    [
+        (ValueError, HTTPStatus.BAD_REQUEST),
+        (RuntimeError, HTTPStatus.INTERNAL_SERVER_ERROR),
+    ],
+)
+def test_create_job_classifies_swap_rendering_errors(
+    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    registered_queues: dict[str, Any],
+    registered_swap_experiments: dict[str, Any],
+    registered_swap_entrypoints: dict[str, Any],
+    monkeypatch: MonkeyPatch,
+    exception_type: type[Exception],
+    expected_status: HTTPStatus,
+) -> None:
+    """Return client errors only for expected swap-rendering failures."""
+    import dioptra.restapi.v1.jobs.service as jobs_service
+    import dioptra.restapi.v1.shared.rq_service as rq_service
+
+    monkeypatch.setattr(rq_service, "RQQueue", mock_rq.MockRQQueue)
+    monkeypatch.setitem(client.application.config, "PROPAGATE_EXCEPTIONS", False)
+
+    def fail_render(*args: Any, **kwargs: Any) -> None:
+        raise exception_type("Injected rendering failure")
+
+    monkeypatch.setattr(jobs_service, "render_swaps_graph", fail_render)
+
+    response = dioptra_client.experiments.jobs.create(
+        experiment_id=registered_swap_experiments["experiment1"]["id"],
+        entrypoint_id=registered_swap_entrypoints["swap_test"]["id"],
+        queue_id=registered_queues["queue1"]["id"],
+        values={
+            "global1": "default",
+            "global3": "default",
+            "global6": "default",
+            "global9": "default",
+            "global12": "default",
+        },
+        swaps={
+            "step2_choice": "taskalias1:v2",
+            "step3_choice": "taskalias3,v3",
+        },
+    )
+
+    assert response.status_code == expected_status
+    if exception_type is ValueError:
+        assert response.json()["error"] == "EntrypointSwapsRenderError"
+
+
+@pytest.mark.parametrize(
+    ("parameter_name", "parameter_value"),
+    [("epsilon", "0.1"), ("iterations", "10")],
+)
+@pytest.mark.parametrize("supply_selected_parameter", [True, False])
+def test_create_job_with_unselected_required_swap_parameter(
+    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+    registered_swap_plugins: dict[str, Any],
+    monkeypatch: MonkeyPatch,
+    parameter_name: str,
+    parameter_value: str,
+    supply_selected_parameter: bool,
+) -> None:
+    """Test that only parameters used by the selected swap are required by a job."""
+    import dioptra.restapi.v1.shared.rq_service as rq_service
+
+    monkeypatch.setattr(rq_service, "RQQueue", mock_rq.MockRQQueue)
+
+    queue = registered_queues["queue1"]
+    entrypoint_response = actions.register_entrypoint(
+        client,
+        name="required_swap_parameters",
+        description="An entrypoint with mutually exclusive required parameters.",
+        group_id=auth_account["default_group_id"],
+        task_graph=textwrap.dedent(
+            """\
+            step1:
+              ?parameter_choice:
+                ?outputs: [out]
+                epsilon_task:
+                  task1:
+                    arg1: $epsilon
+                iterations_task:
+                  task1:
+                    arg1: $iterations
+            """
+        ),
+        parameters=[
+            {"name": "epsilon", "parameterType": "string"},
+            {"name": "iterations", "parameterType": "string"},
+        ],
+        plugin_ids=[registered_swap_plugins["plugin1"]["id"]],
+        queue_ids=[queue["id"]],
+    )
+    assert entrypoint_response.status_code == HTTPStatus.OK
+    entrypoint = entrypoint_response.get_json()
+
+    experiment_response = actions.register_experiment(
+        client,
+        name="required_swap_parameters",
+        group_id=auth_account["default_group_id"],
+        entrypoint_ids=[entrypoint["id"]],
+    )
+    assert experiment_response.status_code == HTTPStatus.OK
+    experiment = experiment_response.get_json()
+
+    values = {parameter_name: parameter_value} if supply_selected_parameter else {}
+    response = dioptra_client.experiments.jobs.create(
+        experiment_id=experiment["id"],
+        entrypoint_id=entrypoint["id"],
+        queue_id=queue["id"],
+        values=values,
+        swaps={"parameter_choice": f"{parameter_name}_task"},
+    )
+
+    if not supply_selected_parameter:
+        assert response.status_code == HTTPStatus.BAD_REQUEST
+        error = response.json()
+        assert error["error"] == "JobParameterMissingError"
+        assert error["message"].endswith(f": {parameter_name}.")
+        return
+
+    assert response.status_code == HTTPStatus.OK
+    job = response.json()
+    assert job["values"] == values
+    assert dioptra_client.jobs.get_parameters(job["id"]).json() == values
+    assert set(dioptra_client.jobs.get_config(job["id"]).json()["parameters"]) == {
+        parameter_name
+    }
+
+    unused_name = "iterations" if parameter_name == "epsilon" else "epsilon"
+    extra_values = {**values, unused_name: "additional"}
+    with_unused = dioptra_client.experiments.jobs.create(
+        experiment_id=experiment["id"],
+        entrypoint_id=entrypoint["id"],
+        queue_id=queue["id"],
+        values=extra_values,
+        swaps={"parameter_choice": f"{parameter_name}_task"},
+    )
+    assert with_unused.status_code == HTTPStatus.OK
+    extra_job = with_unused.json()
+    assert extra_job["values"] == extra_values
+    assert dioptra_client.jobs.get_parameters(extra_job["id"]).json() == extra_values
+    assert set(
+        dioptra_client.jobs.get_config(extra_job["id"]).json()["parameters"]
+    ) == {parameter_name}
+
+
+def test_create_job_with_extra_swaps(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+    registered_swap_experiments: dict[str, Any],
+    registered_swap_entrypoints: dict[str, Any],
+    monkeypatch: MonkeyPatch,
+):
+    # Inline import necessary to prevent circular import
+    import dioptra.restapi.v1.shared.rq_service as rq_service
+
+    monkeypatch.setattr(rq_service, "RQQueue", mock_rq.MockRQQueue)
+
+    entrypoint_name = "no_swap_test"
+    description = "The new job."
+    queue_id = registered_queues["queue1"]["id"]
+    experiment_id = registered_swap_experiments["experiment1"]["id"]
+    entrypoint_id = registered_swap_entrypoints[entrypoint_name]["id"]
+    values = {
+        "global1": "default",
+        "global6": "default",
+        "global12": "default",
+    }
+    timeout = "24h"
+
+    job_response = dioptra_client.experiments.jobs.create(
+        experiment_id=experiment_id,
+        entrypoint_id=entrypoint_id,
+        queue_id=queue_id,
+        values=values,
+        timeout=timeout,
+        description=description,
+        swaps={
+            "step2_choice": "taskalias1",
+            "step3_choice": "taskalias3",
+        },
+    )
+
+    assert job_response.status_code == HTTPStatus.BAD_REQUEST
+    assert (
+        "('step2_choice', 'taskalias1')"
+        in job_response.json()["message"]
+        and
+        "('step3_choice', 'taskalias3')"
+        in job_response.json()["message"]
+    )
+
+
+def test_create_job_with_missing_swaps(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+    registered_swap_experiments: dict[str, Any],
+    registered_swap_entrypoints: dict[str, Any],
+    monkeypatch: MonkeyPatch,
+):
+    # Inline import necessary to prevent circular import
+    import dioptra.restapi.v1.shared.rq_service as rq_service
+
+    monkeypatch.setattr(rq_service, "RQQueue", mock_rq.MockRQQueue)
+
+    entrypoint_name = "swap_test"
+    description = "The new job."
+    queue_id = registered_queues["queue1"]["id"]
+    experiment_id = registered_swap_experiments["experiment1"]["id"]
+    entrypoint_id = registered_swap_entrypoints[entrypoint_name]["id"]
+    values = {
+        "global1": "default",
+        "global3": "default",
+        "global6": "default",
+        "global9": "default",
+        "global12": "default",
+    }
+    timeout = "24h"
+
+    job_response = dioptra_client.experiments.jobs.create(
+        experiment_id=experiment_id,
+        entrypoint_id=entrypoint_id,
+        queue_id=queue_id,
+        values=values,
+        timeout=timeout,
+        description=description,
+        swaps={},
+    )
+
+    assert job_response.status_code == HTTPStatus.BAD_REQUEST
+    assert "UnspecifiedSwapsError" in job_response.json()["error"]
+    assert (
+        "step2_choice"
+        in job_response.json()["message"]
+        and
+        "step3_choice"
+        in job_response.json()["message"]
     )
 
 

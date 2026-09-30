@@ -5,6 +5,7 @@
 #     "click",
 #     "tensorflow",
 #     "tensorflow-datasets",
+#     "importlib-resources",
 # ]
 # ///
 import click

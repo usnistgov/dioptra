@@ -33,6 +33,7 @@ from typing import (
 
 import jsonschema
 import jsonschema.exceptions
+import referencing
 
 # Type alias for general JSON schemas
 _JsonSchema = Union[dict[str, Any], bool]
@@ -85,10 +86,11 @@ def _schema_reference_to_path(ref: str) -> list[str]:
         # I think "#" is legal, and refers to the whole document.
         ref_schema_path = []
 
-    else:
-        # Else, assume references start with "#/", i.e. are URL fragments
-        # containing JSON pointers which start with "/".
+    elif ref.startswith("#/"):
         ref = ref[2:]  # strip the "#/"
+        ref_schema_path = ref.split("/")
+    else:
+        # this should trigger when we have one that looks like a file.json#/something
         ref_schema_path = ref.split("/")
 
     return ref_schema_path
@@ -98,6 +100,7 @@ def _extract_schema_by_schema_path(
     schema_path: Iterable[Union[int, str]],
     full_schema: _JsonSchemaNonBool,
     schema: Optional[Union[dict[str, Any], list[Any]]] = None,
+    registry: referencing.Registry | None = None,
 ) -> Union[dict[str, Any], list[Any]]:
     """
     Find the schema sub-document referred to by a path.  The path must not
@@ -116,6 +119,9 @@ def _extract_schema_by_schema_path(
     Returns:
         The sub-part of schema referred to by the given path
     """
+
+    if registry is None:
+        registry = referencing.Registry()
 
     if schema is None:
         schema = full_schema
@@ -143,7 +149,9 @@ def _extract_schema_by_schema_path(
         # Here, schema_path may have integer list indices.  That's okay.
         ref_schema_path.extend(schema_path)
 
-        result_schema = _extract_schema_by_schema_path(ref_schema_path, full_schema)
+        result_schema = _extract_schema_by_schema_path(
+            ref_schema_path, full_schema, None, registry=registry
+        )
 
     else:
         schema_path_it = iter(schema_path)
@@ -170,17 +178,30 @@ def _extract_schema_by_schema_path(
             # lookup in a list.  As a static type checker, mypy seems to want
             # one meaning, and I couldn't figure out how to make that pass mypy
             # checks.
-            subschema = schema[next_path_component]  # type: ignore
+            if isinstance(next_path_component, str) and next_path_component.endswith(
+                "#"
+            ):
+                filename = next_path_component[:-1]  # remove the '#'
 
-            result_schema = _extract_schema_by_schema_path(
-                schema_path_it, full_schema, subschema
-            )
+                # Attempt to resolve via provided registry first
+                external_schema = registry.contents(filename)
+                result_schema = _extract_schema_by_schema_path(
+                    schema_path_it, full_schema, external_schema, registry=registry
+                )
+            else:
+                subschema = schema[next_path_component]  # type: ignore
+
+                result_schema = _extract_schema_by_schema_path(
+                    schema_path_it, full_schema, subschema, registry=registry
+                )
 
     return result_schema
 
 
 def _get_one_of_alternative_names(
-    alternative_schemas: Iterable[Any], full_schema: _JsonSchemaNonBool
+    alternative_schemas: Iterable[Any],
+    full_schema: _JsonSchemaNonBool,
+    registry: Optional[referencing.Registry] = None,
 ) -> list[str]:
     """
     Find names for the given alternative schemas.  The names are derived from
@@ -207,7 +228,7 @@ def _get_one_of_alternative_names(
         if isinstance(alternative_schema, dict):
             # dereference if it's just a "$ref" schema
             alternative_schema = _extract_schema_by_schema_path(
-                [], full_schema, alternative_schema
+                [], full_schema, alternative_schema, registry
             )
 
             if isinstance(alternative_schema, dict):
@@ -237,6 +258,7 @@ def _one_of_no_alternatives_satisfied_message_lines(
     error: jsonschema.exceptions.ValidationError,
     schema: _JsonSchemaNonBool,
     location_desc_callback: Callable[[Sequence[Union[int, str]]], str],
+    registry: Optional[referencing.Registry] = None,
 ) -> list[str]:
     """
     Create an error message specifically about the situation where none of the
@@ -265,7 +287,7 @@ def _one_of_no_alternatives_satisfied_message_lines(
 
     # First error message line describes the error in basic terms.
 
-    alt_names = _get_one_of_alternative_names(alt_schemas, schema)
+    alt_names = _get_one_of_alternative_names(alt_schemas, schema, registry=registry)
     basic_desc = (
         "Must be exactly one of: {}; all alternatives failed validation."
     ).format(", ".join(alt_names))
@@ -306,7 +328,7 @@ def _one_of_no_alternatives_satisfied_message_lines(
 
         for alt_error in alt_errors:
             sub_message_lines = _validation_error_to_message_lines(
-                alt_error, schema, location_desc_callback
+                alt_error, schema, location_desc_callback, registry=registry
             )
             message_lines.extend(_indent_lines(sub_message_lines))
 
@@ -317,6 +339,7 @@ def _validation_error_to_message_lines(
     error: jsonschema.exceptions.ValidationError,
     schema: _JsonSchema,
     location_desc_callback: Callable[[Sequence[Union[int, str]]], str],
+    registry: Optional[referencing.Registry] = None,
 ) -> list[str]:
     """
     Create a nice error message for the given error object.
@@ -348,7 +371,7 @@ def _validation_error_to_message_lines(
 
         if error.context:
             what_lines = _one_of_no_alternatives_satisfied_message_lines(
-                error, schema, location_desc_callback
+                error, schema, location_desc_callback, registry=registry
             )
 
         else:
@@ -393,6 +416,7 @@ def validation_error_to_message(
     error: jsonschema.exceptions.ValidationError,
     schema: _JsonSchema,
     location_desc_callback: Optional[Callable[[Sequence[Union[int, str]]], str]] = None,
+    registry: Optional[referencing.Registry] = None,
 ) -> str:
     """
     Create a nice error message for the given error object.
@@ -415,7 +439,7 @@ def validation_error_to_message(
         location_desc_callback = json_path_to_string
 
     message_lines = _validation_error_to_message_lines(
-        error, schema, location_desc_callback
+        error, schema, location_desc_callback, registry=registry
     )
 
     message = "\n".join(message_lines)

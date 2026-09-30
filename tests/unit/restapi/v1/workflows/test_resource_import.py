@@ -22,6 +22,7 @@ registered, renamed, deleted, and locked/unlocked as expected through the REST A
 """
 
 import shutil
+import textwrap
 from http import HTTPStatus
 from pathlib import Path
 from tempfile import NamedTemporaryFile
@@ -144,6 +145,89 @@ def assert_resource_import_overwrite_works(
 # -- Tests -----------------------------------------------------------------------------
 
 
+@pytest.mark.parametrize(
+    ("strategy", "existing"),
+    [("fail", False), ("overwrite", False), ("update", False), ("update", True)],
+)
+def test_resource_import_rejects_missing_global(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    tmp_path: Path,
+    strategy: str,
+    existing: bool,
+):
+    """Reject undeclared global references during import creation and updates.
+
+    Verify that imports run full save-time validation even though entry-point
+    services defer committing the transaction to the batch import service.
+    """
+    group_id = auth_account["groups"][0]["id"]
+    config = tmp_path / "dioptra.toml"
+    plugin = tmp_path / "tasks" / "tasks.py"
+    plugin.parent.mkdir()
+    entrypoint = tmp_path / "entrypoint.yaml"
+    config.write_text(
+        textwrap.dedent("""\
+        [[plugins]]
+        path = "tasks"
+        [[plugins.tasks.functions]]
+        filename = "tasks.py"
+        name = "alpha"
+        input_params = [{ name = "value", type = "string", required = true }]
+        output_params = [{ name = "result", type = "string" }]
+
+        [[entrypoints]]
+        name = "Imported entrypoint"
+        path = "entrypoint.yaml"
+        plugins = ["tasks"]
+    """)
+    )
+    plugin.write_text("def alpha(value):\n    return value\n")
+
+    def import_resources():
+        files = select_one_or_more_files(
+            [str(config), str(plugin), str(entrypoint)],
+            renames={
+                str(path): path.relative_to(tmp_path).as_posix()
+                for path in (config, plugin, entrypoint)
+            },
+        )
+        return dioptra_client.workflows.import_resources(
+            group_id,
+            source=files,
+            resolve_name_conflicts_strategy=strategy,
+        )
+
+    if existing:
+        entrypoint.write_text(
+            textwrap.dedent("""\
+                graph:
+                  selected:
+                    alpha:
+                      value: valid
+            """)
+        )
+        response = import_resources()
+        assert response.status_code == HTTPStatus.OK, response.text
+
+    entrypoint.write_text(
+        textwrap.dedent("""\
+            graph:
+              selected:
+                alpha:
+                  value: $missing_global
+        """)
+    )
+    response = import_resources()
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST, response.text
+    reason = response.json()["detail"]["reason"]
+    assert "missing_global" in reason["missing_global_params"]
+    assert any(
+        "missing_global" in error for error in reason["rendered_validation_errors"]
+    )
+
+
 def test_resource_import_from_archive_file(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
@@ -198,21 +282,38 @@ def test_resource_import_update(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     resources_tar_file: NamedTemporaryFile,
+    registered_plugin_with_files: dict[str, Any],
 ):
     group_id = auth_account["groups"][0]["id"]
     description_to_replace = "original description"
+    plugin_ids = [registered_plugin_with_files["plugin"]["id"]]
+
+    task_graph = textwrap.dedent(
+        """
+        message:
+          hello_world: $name
+        """
+    )
+    dioptra_client.plugin_parameter_types.create(
+        group_id=group_id, name="message", description=description_to_replace
+    )
 
     dioptra_client.entrypoints.create(
         group_id=group_id,
         name="Hello World",
-        task_graph="",
+        task_graph=task_graph,
+        parameters=[
+            {
+                "name": "name",
+                "defaultValue": "test",
+                "parameterType": "string",
+            }
+        ],
         description=description_to_replace,
+        plugins=plugin_ids,
     )
     dioptra_client.plugins.create(
         group_id=group_id, name="hello_world", description=description_to_replace
-    )
-    dioptra_client.plugin_parameter_types.create(
-        group_id=group_id, name="message", description=description_to_replace
     )
     assert_resource_import_update_works(
         dioptra_client,
@@ -226,21 +327,39 @@ def test_resource_import_update_deleted_queue(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     resources_tar_file: NamedTemporaryFile,
+    registered_plugin_with_files: dict[str, Any],
 ):
     group_id = auth_account["groups"][0]["id"]
     description_to_replace = "original description"
+    plugin_ids = [registered_plugin_with_files["plugin"]["id"]]
+
+    task_graph = textwrap.dedent(
+        """
+        message:
+          hello_world: $name
+        """
+    )
+
+    dioptra_client.plugin_parameter_types.create(
+        group_id=group_id, name="message", description=description_to_replace
+    )
 
     entrypoint_response = dioptra_client.entrypoints.create(
         group_id=group_id,
         name="Hello World",
-        task_graph="",
+        task_graph=task_graph,
+        parameters=[
+            {
+                "name": "name",
+                "defaultValue": "test",
+                "parameterType": "string",
+            }
+        ],
         description=description_to_replace,
+        plugins=plugin_ids,
     )
     dioptra_client.plugins.create(
         group_id=group_id, name="hello_world", description=description_to_replace
-    )
-    dioptra_client.plugin_parameter_types.create(
-        group_id=group_id, name="message", description=description_to_replace
     )
     queue_response = dioptra_client.queues.create(group_id=group_id, name="queue")
     dioptra_client.entrypoints.queues.create(
@@ -258,15 +377,35 @@ def test_resource_import_update_deleted_queue(
 def test_resource_import_overwrite(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
+    registered_plugin_parameter_types: dict[str, Any],
     resources_tar_file: NamedTemporaryFile,
 ):
     group_id = auth_account["groups"][0]["id"]
 
-    dioptra_client.entrypoints.create(
-        group_id=group_id, name="Hello World", task_graph=""
+    task_graph = textwrap.dedent(
+        """
+        message:
+          shout: $name
+        """
     )
-    dioptra_client.plugins.create(group_id=group_id, name="hello_world")
+
+    dioptra_client.entrypoints.create(
+        group_id=group_id,
+        name="Hello World",
+        task_graph=task_graph,
+        parameters=[
+            {
+                "name": "name",
+                "defaultValue": "test",
+                "parameterType": "string",
+            }
+        ],
+    )
+
     dioptra_client.plugin_parameter_types.create(group_id=group_id, name="message")
+
+    dioptra_client.plugins.create(group_id=group_id, name="hello_world")
+
     assert_resource_import_overwrite_works(
         dioptra_client, group_id=group_id, archive_file=resources_tar_file
     )

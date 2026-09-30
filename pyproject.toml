@@ -144,7 +144,7 @@ dev = [
     "pytest-cookies>=0.7.0",
     "pytest-cov>=6.1.1",
     "pytest-datadir>=1.7.2",
-    "pytest>=8.3.5",
+    "pytest>=8.4",
     "pytoml>=0.1.21",
     "tomli>=2.2.1",
     "tox>=4.25.0",
@@ -384,7 +384,7 @@ exclude = [
 ]
 
 [tool.pytest.ini_options]
-minversion = "7.0"
+minversion = "8.4"
 addopts = "--import-mode=importlib -ra"
 testpaths = [
     "tests/unit",

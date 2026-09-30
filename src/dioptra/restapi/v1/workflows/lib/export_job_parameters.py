@@ -20,10 +20,10 @@ import structlog
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
-from dioptra.restapi.v1.shared.task_engine_yaml.service import (
+from dioptra.restapi.v1.type_coercions import (
+    GlobalParameterType,
     coerce_entrypoint_param_types,
 )
-from dioptra.restapi.v1.type_coercions import GlobalParameterType
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 

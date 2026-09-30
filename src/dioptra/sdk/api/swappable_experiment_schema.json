@@ -1,0 +1,46 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+        "types": {
+            "$ref": "experiment_schema.json#/properties/types"
+        },
+        "parameters": {
+            "$ref": "experiment_schema.json#/properties/parameters"
+        },
+        "tasks": {
+            "$ref": "experiment_schema.json#/properties/tasks"
+        },
+        "graph": {
+            "type": "object",
+            "additionalProperties": {
+                "$ref": "swap_graph.json#/$defs/graph_step"
+            },
+            "minProperties": 1
+        },
+        "artifact_outputs": {
+            "$ref": "experiment_schema.json#/properties/artifact_outputs"
+        },
+        "artifact_inputs": {
+            "$ref": "experiment_schema.json#/properties/artifact_inputs"
+        }
+    },
+    "required": [
+        "tasks",
+        "graph"
+    ],
+    "additionalProperties": false,
+    "$defs": {
+        "graph_step": { "$ref": "swap_graph.json#/$defs/graph_step" },
+        "swap": { "$ref": "swap_graph.json#/$defs/swap" },
+        "swap_choice": { "$ref": "swap_graph.json#/$defs/swap_choice" },
+        "swap_choice_content": { "$ref": "swap_graph.json#/$defs/swap_choice_content" },
+        "positional_invocation": { "$ref": "swap_graph.json#/$defs/positional_invocation" },
+        "keyword_invocation": { "$ref": "swap_graph.json#/$defs/keyword_invocation" },
+        "mixed_invocation": { "$ref": "swap_graph.json#/$defs/mixed_invocation" },
+        "swap_positional_invocation": { "$ref": "swap_graph.json#/$defs/swap_positional_invocation" },
+        "swap_keyword_invocation": { "$ref": "swap_graph.json#/$defs/swap_keyword_invocation" },
+        "swap_mixed_invocation": { "$ref": "swap_graph.json#/$defs/swap_mixed_invocation" },
+        "step_dependencies": { "$ref": "swap_graph.json#/$defs/step_dependencies" }
+    }
+}
