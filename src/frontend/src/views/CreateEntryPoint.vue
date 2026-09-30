@@ -331,20 +331,10 @@
         <h2>Task Plugins</h2>
         <div class="row items-start no-wrap q-mt-lg">
           <AssignPluginsDropdown
-            ref="taskPluginsDropdown"
             v-model:selectedPlugins="entryPoint.plugins"
-            v-model:pluginIDsToUpdate="pluginIDsToUpdate"
-            v-model:pluginIDsToRemove="pluginIDsToRemove"
+            :allowSync="true"
             class="col"
             :disable="entryPoint.deleted"
-          />
-          <q-btn
-            label="Save Plugin Selection"
-            color="primary"
-            class="q-ml-sm"
-            :loading="savingPluginType === 'plugins'"
-            :disable="route.params.id === 'new' || history || entryPoint.deleted || !taskPluginChangesPending"
-            @click="savePluginChanges('plugins')"
           />
         </div>
         <TableComponent
@@ -483,20 +473,10 @@
         <h2>Artifact Task Plugins</h2>
         <div class="row items-start no-wrap q-mt-lg">
           <AssignPluginsDropdown
-            ref="artifactTaskPluginsDropdown"
             v-model:selectedPlugins="entryPoint.artifactPlugins"
-            v-model:pluginIDsToUpdate="artifactPluginIDsToUpdate"
-            v-model:pluginIDsToRemove="artifactPluginIDsToRemove"
+            :allowSync="true"
             class="col"
             :disable="entryPoint.deleted"
-          />
-          <q-btn
-            label="Save Plugin Selection"
-            color="primary"
-            class="q-ml-sm"
-            :loading="savingPluginType === 'artifactPlugins'"
-            :disable="route.params.id === 'new' || history || entryPoint.deleted || !artifactPluginChangesPending"
-            @click="savePluginChanges('artifactPlugins')"
           />
         </div>
         <TableComponent
@@ -564,12 +544,9 @@
       <q-btn
         label="Validate"
         color="primary"
-        :disable="pluginChangesBlockValidation"
+        :disable="history || entryPoint.deleted"
         @click="validateEntrypoint()"
       />
-      <q-tooltip v-if="pluginChangesBlockValidation">
-        Plugin selections have changed. Save your plugin changes before validating.
-      </q-tooltip>
     </span>
 
     <q-btn
@@ -771,7 +748,7 @@ watch(
   (ep) => {
     if (ep) {
       entryPoint.value = ep;
-      copyAtEditStart.value = entryPoint.value;
+      copyAtEditStart.value = JSON.parse(JSON.stringify(entryPoint.value));
     } else {
       getEntrypoint();
     }
@@ -785,12 +762,6 @@ const valuesChangedFromEditStart = computed(() => {
     }
   }
   return false;
-});
-
-const valuesChangedFromEditStartBesidesPlugins = computed(() => {
-  const { plugins: _1, artifactPlugins: _2, ...copyRest } = copyAtEditStart.value;
-  const { plugins: _3, artifactPlugins: _4, ...entryRest } = entryPoint.value;
-  return JSON.stringify(copyRest) !== JSON.stringify(entryRest);
 });
 
 const tasks = ref([]);
@@ -988,7 +959,6 @@ function submit() {
   }
   basicInfoForm.value.validate().then((success) => {
     if (success && taskGraphError.value === "") {
-      confirmLeave.value = true;
       addOrModifyEntrypoint();
     } else {
       // error
@@ -1018,8 +988,16 @@ function prepareEntrypointPayload() {
 
   // turn objects into ids
   payload.queues = payload.queues.map((queue) => queue.id);
-  payload.plugins = payload.plugins.map((plugin) => plugin.id);
-  payload.artifactPlugins = payload.artifactPlugins.map((plugin) => plugin.id);
+  if (route.params.id === "new") {
+    payload.plugins = payload.plugins.map((plugin) => plugin.id);
+    payload.artifactPlugins = payload.artifactPlugins.map((plugin) => plugin.id);
+  } else {
+    payload.pluginSnapshotIds = payload.plugins.map((plugin) => plugin.snapshotId ?? plugin.snapshot);
+    payload.artifactPluginSnapshotIds = payload.artifactPlugins.map((plugin) => plugin.snapshotId ?? plugin.snapshot);
+    delete payload.group;
+    delete payload.plugins;
+    delete payload.artifactPlugins;
+  }
 
   payload.artifactParameters = payload.artifactParameters.map((param) => ({
     ...param,
@@ -1040,28 +1018,13 @@ async function addOrModifyEntrypoint() {
       store.savedForms.entryPoint = null;
       notify.success(`Successfully created '${entryPoint.value.name}'`);
     } else {
-      if (pluginIDsToUpdate.value.length > 0) {
-        await api.addPluginsToEntrypoint(route.params.id, pluginIDsToUpdate.value, "plugins");
-      }
-      if (artifactPluginIDsToUpdate.value.length > 0) {
-        await api.addPluginsToEntrypoint(route.params.id, artifactPluginIDsToUpdate.value, "artifactPlugins");
-      }
-      for (const pluginId of pluginIDsToRemove.value) {
-        await api.removePluginFromEntrypoint(route.params.id, pluginId, "plugins");
-      }
-      for (const pluginId of artifactPluginIDsToRemove.value) {
-        await api.removePluginFromEntrypoint(route.params.id, pluginId, "artifactPlugins");
-      }
-      if (valuesChangedFromEditStartBesidesPlugins.value) {
-        const keysToRemove = ["group", "plugins", "artifactPlugins"];
-        keysToRemove.forEach((key) => delete submitObject[key]);
-        await api.updateItem("entrypoints", route.params.id, submitObject);
-      }
+      await api.updateItem("entrypoints", route.params.id, submitObject);
       notify.success(`Successfully updated '${entryPoint.value.name}'`);
     }
+    confirmLeave.value = true;
     router.push("/entrypoints");
   } catch (err) {
-    notify.error(err.response.data.message);
+    showValidationError(err, "Failed to save Entrypoint");
   }
 }
 
@@ -1399,56 +1362,6 @@ function leaveForm() {
   router.push(toPath.value);
 }
 
-const pluginIDsToUpdate = ref([]);
-const artifactPluginIDsToUpdate = ref([]);
-const pluginIDsToRemove = ref([]);
-const artifactPluginIDsToRemove = ref([]);
-const taskPluginsDropdown = ref(null);
-const artifactTaskPluginsDropdown = ref(null);
-const savingPluginType = ref(null);
-
-const taskPluginChangesPending = computed(
-  () => pluginIDsToUpdate.value.length > 0 || pluginIDsToRemove.value.length > 0,
-);
-const artifactPluginChangesPending = computed(
-  () => artifactPluginIDsToUpdate.value.length > 0 || artifactPluginIDsToRemove.value.length > 0,
-);
-const pluginChangesBlockValidation = computed(
-  () => route.params.id !== "new" && (taskPluginChangesPending.value || artifactPluginChangesPending.value),
-);
-
-async function savePluginChanges(pluginType) {
-  const isArtifactPlugin = pluginType === "artifactPlugins";
-  const pluginIDsToSave = isArtifactPlugin ? artifactPluginIDsToUpdate : pluginIDsToUpdate;
-  const pluginIDsToDelete = isArtifactPlugin ? artifactPluginIDsToRemove : pluginIDsToRemove;
-  const dropdown = isArtifactPlugin ? artifactTaskPluginsDropdown : taskPluginsDropdown;
-  const pluginLabel = isArtifactPlugin ? "artifact task plugins" : "task plugins";
-
-  if (route.params.id === "new" || (pluginIDsToSave.value.length === 0 && pluginIDsToDelete.value.length === 0)) {
-    return;
-  }
-
-  savingPluginType.value = pluginType;
-  try {
-    if (pluginIDsToSave.value.length > 0) {
-      await api.addPluginsToEntrypoint(route.params.id, pluginIDsToSave.value, pluginType);
-    }
-    for (const pluginId of pluginIDsToDelete.value) {
-      await api.removePluginFromEntrypoint(route.params.id, pluginId, pluginType);
-    }
-
-    pluginIDsToSave.value = [];
-    pluginIDsToDelete.value = [];
-    copyAtEditStart.value[pluginType] = JSON.parse(JSON.stringify(entryPoint.value[pluginType]));
-    dropdown.value?.resetOriginalSelectedPlugins();
-    notify.success(`Successfully saved ${pluginLabel}`);
-  } catch (err) {
-    notify.error(err.response?.data?.message ?? `Failed to save ${pluginLabel}`);
-  } finally {
-    savingPluginType.value = null;
-  }
-}
-
 const objectForDeletion = ref();
 
 async function deleteEntrypoint() {
@@ -1482,27 +1395,29 @@ async function validateEntrypoint() {
       await api.addItem("entrypoints", submitObject, true);
       notify.success(`Entrypoint is valid!`);
     } else {
-      const keysToRemove = ["group", "plugins", "artifactPlugins"];
-      keysToRemove.forEach((key) => delete submitObject[key]);
       await api.updateItem("entrypoints", route.params.id, submitObject, true);
       notify.success(`Entrypoint is valid!`);
     }
   } catch (err) {
-    const reason = err.response?.data?.detail?.reason;
-    const responseValidationIssues = [
-      ...(Array.isArray(reason?.schema_issues) ? reason.schema_issues : []),
-      ...(Array.isArray(reason?.swap_issues) ? reason.swap_issues : []),
-      ...(Array.isArray(reason?.rendered_validation_errors) ? reason.rendered_validation_errors : []),
-      ...(Array.isArray(reason?.missing_global_params)
-        ? reason.missing_global_params.map((name) => `Missing global parameter: ${name}`)
-        : []),
-    ];
-    if (responseValidationIssues.length > 0) {
-      validationIssues.value = responseValidationIssues;
-      displayErrorDialog.value = true;
-    } else {
-      notify.error(err.response?.data?.message ?? "Failed to validate Entrypoint");
-    }
+    showValidationError(err, "Failed to validate Entrypoint");
+  }
+}
+
+function showValidationError(err, fallbackMessage) {
+  const reason = err.response?.data?.detail?.reason;
+  const responseValidationIssues = [
+    ...(Array.isArray(reason?.schema_issues) ? reason.schema_issues : []),
+    ...(Array.isArray(reason?.swap_issues) ? reason.swap_issues : []),
+    ...(Array.isArray(reason?.rendered_validation_errors) ? reason.rendered_validation_errors : []),
+    ...(Array.isArray(reason?.missing_global_params)
+      ? reason.missing_global_params.map((name) => `Missing global parameter: ${name}`)
+      : []),
+  ];
+  if (responseValidationIssues.length > 0) {
+    validationIssues.value = responseValidationIssues;
+    displayErrorDialog.value = true;
+  } else {
+    notify.error(err.response?.data?.message ?? fallbackMessage);
   }
 }
 
@@ -1544,15 +1459,10 @@ async function syncPlugin(plugin, type = "plugins") {
     const res = await api.getItem("plugins", plugin.id);
 
     const index = entryPoint.value[type].findIndex((p) => p.id === plugin.id);
+    if (index === -1) return;
     entryPoint.value[type].splice(index, 1, res.data);
 
-    if (type === "plugins" && !pluginIDsToUpdate.value.includes(plugin.id)) {
-      pluginIDsToUpdate.value.push(plugin.id);
-    } else if (type === "artifactPlugins" && !artifactPluginIDsToUpdate.value.includes(plugin.id)) {
-      artifactPluginIDsToUpdate.value.push(plugin.id);
-    }
-
-    notify.success(`Synced '${res.data.name}'`);
+    notify.success(`Selected latest version of '${res.data.name}'. Submit Entrypoint to save.`);
   } catch (err) {
     console.warn(err);
     notify.error(err?.response?.data?.message || "Failed to sync plugin");

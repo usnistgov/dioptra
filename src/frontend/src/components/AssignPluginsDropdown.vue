@@ -5,10 +5,11 @@
     resourceType="plugin"
     label="Plugins:"
     :stacked-badges="true"
+    :allowSync="allowSync"
     @filter="getPlugins"
     @add="(added) => addPlugin(added.value)"
     @remove="(removed) => removePlugin(removed.value)"
-    @sync="(plugin, index) => syncPlugin(plugin.id, index)"
+    @sync="(plugin) => syncPlugin(plugin.id)"
   />
 </template>
 
@@ -17,6 +18,8 @@ import { ref, watch } from "vue";
 import * as api from "@/services/dataApi";
 import ResourcePicker from "@/components/ResourcePicker.vue";
 import * as notify from "../notify";
+
+const props = defineProps({ allowSync: { type: Boolean, default: false } });
 
 const selectedPlugins = defineModel("selectedPlugins");
 const originalSelectedPluginIds = ref([]);
@@ -29,8 +32,8 @@ watch(
   { once: true },
 );
 
-const pluginIDsToUpdate = defineModel("pluginIDsToUpdate");
-const pluginIDsToRemove = defineModel("pluginIDsToRemove");
+const pluginIDsToUpdate = defineModel("pluginIDsToUpdate", { default: () => [] });
+const pluginIDsToRemove = defineModel("pluginIDsToRemove", { default: () => [] });
 
 const pluginOptions = ref([]);
 
@@ -49,12 +52,18 @@ async function getPlugins(val = "", update) {
   });
 }
 
-async function syncPlugin(pluginId, index) {
+async function syncPlugin(pluginId) {
   try {
     const res = await api.getItem("plugins", pluginId);
-    selectedPlugins.value.splice(index, 1, res.data);
+    const currentIndex = selectedPlugins.value.findIndex((plugin) => plugin.id === pluginId);
+    if (currentIndex === -1) return;
+    selectedPlugins.value.splice(currentIndex, 1, res.data);
     pluginIDsToUpdate.value.push(pluginId);
-    notify.success(`Synced '${res.data.name}'`);
+    notify.success(
+      props.allowSync
+        ? `Selected latest version of '${res.data.name}'. Submit Entrypoint to save.`
+        : `Synced '${res.data.name}'`,
+    );
   } catch (err) {
     console.warn(err);
     notify.error(err?.response?.data?.message || "Failed to sync plugin");
