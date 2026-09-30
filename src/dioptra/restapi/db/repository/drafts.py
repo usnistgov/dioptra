@@ -669,7 +669,7 @@ class DraftsRepository:
                 resource_ids.append(resource_id)
 
         if not resource_ids:
-            resource_ids_with_drafts = set()
+            resource_ids_with_drafts: set[int] = set()
 
         else:
             stmt = sa.select(DraftResource.payload["resource_id"].as_integer()).where(

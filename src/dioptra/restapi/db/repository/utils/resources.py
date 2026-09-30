@@ -238,7 +238,7 @@ def get_one_resource(
     resource_type = get_resource_type(resource)
 
     stmt = sa.select(m.Resource).where(m.Resource.resource_id == resource_id)
-    resource_obj = session.scalar(stmt)
+    resource_obj: m.Resource | None = session.scalar(stmt)
 
     if resource_obj is None:
         existence_result = ExistenceResult.DOES_NOT_EXIST
@@ -369,7 +369,7 @@ def get_one_snapshot(
         )
     )
 
-    snapshot_obj = session.scalar(stmt)
+    snapshot_obj: ResourceT | None = session.scalar(stmt)
 
     if snapshot_obj is None:
         existence_result = ExistenceResult.DOES_NOT_EXIST

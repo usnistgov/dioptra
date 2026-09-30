@@ -256,6 +256,7 @@ class PluginService(object):
             ),
             models.DraftResource.user_id == current_user.user_id,
         )
+        resource_id: int
         for resource_id in db.session.scalars(drafts_stmt):
             plugins_dict[resource_id]["has_draft"] = True
 
@@ -575,6 +576,7 @@ class PluginIdsService(object):
             ),
             models.DraftResource.user_id == current_user.user_id,
         )
+        resource_id: int
         for resource_id in db.session.scalars(drafts_stmt):
             plugins_dict[resource_id]["has_draft"] = True
 
@@ -670,7 +672,7 @@ class PluginFileNameService(object):
                 == models.PluginFile.resource_snapshot_id,
             )
         )
-        plugin_file = db.session.scalar(stmt)
+        plugin_file: models.PluginFile | None = db.session.scalar(stmt)
 
         if plugin_file is None:
             if error_if_not_found:
@@ -937,6 +939,7 @@ class PluginIdFileService(object):
             ),
             models.DraftResource.user_id == current_user.user_id,
         )
+        resource_id: int
         for resource_id in db.session.scalars(drafts_stmt):
             plugin_files_dict[resource_id]["has_draft"] = True
 
@@ -1028,7 +1031,7 @@ class PluginIdSnapshotIdService(object):
                 models.Resource.is_deleted == False,  # noqa: E712
             )
         )
-        plugin = db.session.scalar(plugin_resource_snapshot_stmt)
+        plugin: models.Plugin | None = db.session.scalar(plugin_resource_snapshot_stmt)
 
         if plugin is None:
             raise EntityDoesNotExistError(
@@ -1082,7 +1085,7 @@ class PluginTaskIdService(object):
         task_snapshot_stmt = select(models.PluginTask).where(
             models.PluginTask.task_id == task_id
         )
-        task = db.session.scalar(task_snapshot_stmt)
+        task: models.PluginTask | None = db.session.scalar(task_snapshot_stmt)
 
         if task is None:
             raise PluginTaskDoesNotExistError(task_id=task_id)

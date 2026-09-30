@@ -345,6 +345,7 @@ class ArtifactService(object):
             artifact.resource_id: utils.ArtifactDict(artifact=artifact, has_draft=False)
             for artifact in artifacts
         }
+        resource_id: int
         for resource_id in db.session.scalars(drafts_stmt):
             artifacts_dict[resource_id]["has_draft"] = True
 

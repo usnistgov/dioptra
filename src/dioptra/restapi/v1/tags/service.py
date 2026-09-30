@@ -227,7 +227,7 @@ class TagIdService(object):
         log.debug("Get tag by id", tag_id=tag_id)
 
         stmt = select(models.Tag).where(models.Tag.tag_id == tag_id)
-        tag = db.session.scalar(stmt)
+        tag: models.Tag | None = db.session.scalar(stmt)
 
         if tag is None:
             if error_if_not_found:

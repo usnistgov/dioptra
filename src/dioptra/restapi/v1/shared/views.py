@@ -45,7 +45,7 @@ def get_entry_point(
         .join(models.EntryPointJob)
         .where(models.EntryPointJob.job_resource_id == job_id)
     )
-    entry_point = db.session.scalar(entry_point_stmt)
+    entry_point: models.EntryPoint | None = db.session.scalar(entry_point_stmt)
 
     if entry_point is None:
         raise EntityDoesNotExistError(EntityType.ENTRY_POINT, job_id=job_id)
@@ -71,7 +71,7 @@ def get_experiment(job_id: int, logger: BoundLogger | None = None) -> models.Exp
         .join(models.ExperimentJob)
         .where(models.ExperimentJob.job_resource_id == job_id)
     )
-    experiment = db.session.scalar(experiment_stmt)
+    experiment: models.Experiment | None = db.session.scalar(experiment_stmt)
 
     if experiment is None:
         raise EntityDoesNotExistError(EntityType.EXPERIMENT, job_id=job_id)
@@ -340,7 +340,7 @@ def get_resource_snapshot(
             models.Resource.is_deleted == False,  # noqa: E712
         )
     )
-    snapshot = db.session.scalar(snapshot_stmt)
+    snapshot: models.ResourceSnapshot | None = db.session.scalar(snapshot_stmt)
 
     if snapshot is None:
         raise EntityDoesNotExistError(

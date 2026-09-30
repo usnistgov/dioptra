@@ -58,7 +58,9 @@ class ArtifactSnapshotIdService(object):
             models.Artifact.resource_id == artifact_id,
             models.Artifact.resource_snapshot_id == artifact_snapshot_id,
         )
-        artifact = db.session.scalar(artifact_resource_snapshot_stmt)
+        artifact: models.Artifact | None = db.session.scalar(
+            artifact_resource_snapshot_stmt
+        )
 
         if artifact is None:
             raise EntityDoesNotExistError(
