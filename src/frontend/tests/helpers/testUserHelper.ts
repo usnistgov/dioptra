@@ -56,15 +56,6 @@ export async function registerTestUser(page: Page) {
 }
 
 export async function ensureLoggedInAsTestUser(page: Page) {
-  // Allow isolated test backends on an alternate port without changing Vite's proxy.
-  const apiUrl = process.env.DIOPTRA_E2E_API_URL;
-  if (apiUrl) {
-    await page.route("**/api/v1/**", async (route) => {
-      const url = new URL(route.request().url());
-      const response = await route.fetch({ url: new URL(url.pathname + url.search, apiUrl).href });
-      await route.fulfill({ response });
-    });
-  }
   if (!testUserRegistered) {
     await registerTestUser(page);
     testUserRegistered = true;

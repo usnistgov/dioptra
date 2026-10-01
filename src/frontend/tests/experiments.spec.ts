@@ -1,4 +1,6 @@
-import { expect, Page, test } from "@playwright/test";
+import { Page } from "@playwright/test";
+
+import { expect, test } from "./fixtures/test";
 
 import { createEntrypoint, createQueue } from "./helpers/createResourceHelper";
 import { ensureLoggedInAsTestUser } from "./helpers/testUserHelper";
