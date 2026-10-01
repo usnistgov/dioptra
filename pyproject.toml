@@ -219,6 +219,7 @@ worker = [
     "opencv-python>=4",
     "pyarrow>=18.0.0",
     "scikit-learn>=1.8.0",
+    "tensorflow-metadata<1.21.0",
 ]
 
 [tool.black]
