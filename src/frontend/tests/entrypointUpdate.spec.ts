@@ -13,7 +13,7 @@ function expectMutations(mutations: Mutation[], dryRuns: boolean[]) {
   );
 }
 
-function plugin(id: number, snapshotId: number, latestSnapshot = true) {
+function plugin(id: number, snapshotId: number, latestSnapshot = true, outputTypes: number[] = []) {
   return {
     id,
     snapshotId,
@@ -23,7 +23,13 @@ function plugin(id: number, snapshotId: number, latestSnapshot = true) {
     files: [
       {
         tasks: {
-          functions: [{ name: `task_${id}`, inputParams: [], outputParams: [] }],
+          functions: [
+            {
+              name: `task_${id}`,
+              inputParams: [],
+              outputParams: outputTypes.map((id, index) => ({ name: `output_${index}`, parameterType: { id } })),
+            },
+          ],
           artifacts: [{ name: `artifact_${id}`, outputParams: [] }],
         },
       },
@@ -31,7 +37,16 @@ function plugin(id: number, snapshotId: number, latestSnapshot = true) {
   };
 }
 
-async function mockEditor(page: Page, latestSelections = false) {
+async function mockEditor(
+  page: Page,
+  latestSelections = false,
+  options: {
+    taskGraph?: string;
+    outputTypes?: number[];
+    latestOutputTypes?: number[];
+    secondOutputTypes?: number[];
+  } = {},
+) {
   const current = {
     id: 101,
     snapshot: 1001,
@@ -41,13 +56,21 @@ async function mockEditor(page: Page, latestSelections = false) {
     queues: [],
     parameters: [],
     artifactParameters: [],
-    taskGraph: "step:\n  task: task_1\n",
+    taskGraph: options.taskGraph ?? "step:\n  task: task_1\n",
     artifactGraph: "",
-    plugins: [plugin(1, 11, latestSelections), plugin(2, 21, latestSelections)],
+    plugins: [
+      plugin(1, 11, latestSelections, options.outputTypes),
+      plugin(2, 21, latestSelections, options.secondOutputTypes ?? options.outputTypes),
+      ...(options.secondOutputTypes ? [plugin(4, 41, latestSelections, options.outputTypes)] : []),
+    ],
     artifactPlugins: [plugin(1, 11, latestSelections), plugin(3, 31, latestSelections)],
   };
   function latestPlugin(id: number, snapshot: number) {
-    const { snapshotId: _snapshotId, latestSnapshot: _latestSnapshot, ...resource } = plugin(id, snapshot);
+    const {
+      snapshotId: _snapshotId,
+      latestSnapshot: _latestSnapshot,
+      ...resource
+    } = plugin(id, snapshot, true, options.latestOutputTypes ?? options.outputTypes);
     return { ...resource, snapshot };
   }
   const latest = new Map([1, 2, 3, 4].map((id) => [id, latestPlugin(id, id * 10 + (latestSelections ? 1 : 2))]));
@@ -372,3 +395,53 @@ test("same-snapshot refresh changes display metadata without enabling a save", a
   await expect(page.getByRole("dialog")).toHaveCount(0);
   expect(mutations).toHaveLength(0);
 });
+
+async function expectSwapStep(page: Page, stepName: string, visible: boolean) {
+  await taskInfo(page).getByRole("button", { name: "Add Swappable Task", exact: true }).first().click();
+  await page.getByRole("dialog").getByRole("combobox", { name: "Step", exact: true }).click();
+  const option = page.getByRole("option", { name: stepName, exact: true });
+  if (visible) await expect(option).toBeVisible();
+  else await expect(option).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await page.getByRole("dialog").getByRole("button", { name: "Cancel", exact: true }).click();
+}
+
+for (const invocation of ["mixed", "positional", "keyword"]) {
+  test(`exclude an outdated swap interface after plugin sync (${invocation})`, async ({ page }) => {
+    const choice = (name: string) =>
+      invocation === "mixed" ? `task: ${name}` : `${name}: ${invocation === "positional" ? "[]" : "{}"}`;
+    await mockEditor(page, false, {
+      taskGraph: `old_step:\n  ?choice:\n    ?outputs: [first, second]\n    one:\n      ${choice("task_1")}\n    two:\n      ${choice("task_2")}\n`,
+      outputTypes: [1, 1],
+      latestOutputTypes: [1],
+    });
+    await expectSwapStep(page, "old_step", true);
+    await syncEntrypointPlugin(page, taskInfo(page), 1, "plugin-1");
+    await syncEntrypointPlugin(page, taskInfo(page), 2, "plugin-2");
+    await expectSwapStep(page, "old_step", false);
+  });
+}
+
+for (const secondOutputTypes of [
+  [2, 1],
+  [1, 2],
+]) {
+  test(`exclude a swap with mismatched output types ${secondOutputTypes}`, async ({ page }) => {
+    await mockEditor(page, false, {
+      taskGraph:
+        "incompatible_step:\n  ?choice:\n    ?outputs: [first, second]\n    one:\n      task: task_1\n    two:\n      task: task_2\n",
+      outputTypes: [1, 1],
+      secondOutputTypes,
+    });
+    await expectSwapStep(page, "incompatible_step", false);
+  });
+}
+
+for (const taskName of ["<task-name>", "unknown_task"]) {
+  test(`exclude a swap containing unresolved choice ${taskName}`, async ({ page }) => {
+    await mockEditor(page, false, {
+      taskGraph: `unresolved_step:\n  ?choice:\n    ?outputs: []\n    one:\n      task: task_1\n    two:\n      task: ${taskName}\n`,
+    });
+    await expectSwapStep(page, "unresolved_step", false);
+  });
+}
